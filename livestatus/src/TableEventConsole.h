@@ -38,6 +38,7 @@
 #include "DoubleColumn.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
+#include "MonitoringCore.h"
 #include "OffsetTimeColumn.h"
 #include "Renderer.h"
 #include "StringColumn.h"
@@ -46,25 +47,20 @@
 class Query;
 
 #ifdef CMC
-#include "cmc.h"
-class Core;
+#include "cmc.h"  // for contact
 #else
-#include "nagios.h"
-class Logger;
+#include "nagios.h"  // for contact
 #endif
 
 class TableEventConsole : public Table {
 public:
-#ifdef CMC
-    explicit TableEventConsole(Core *core);
-#else
-    explicit TableEventConsole(Logger *logger);
-#endif
+    explicit TableEventConsole(MonitoringCore *core);
+
     void answerQuery(Query *) override;
 
     struct Row {
         std::map<std::string, std::string> _map;
-        host *_host;
+        MonitoringCore::Host *_host;
     };
 
 protected:
@@ -198,9 +194,7 @@ protected:
     };
 
 private:
-#ifdef CMC
-    Core *_core;
-#endif
+    MonitoringCore *_core;
 };
 
 #endif  // TableEventConsole_h

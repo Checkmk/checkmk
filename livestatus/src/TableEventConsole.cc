@@ -31,16 +31,8 @@
 #include <vector>
 #include "Column.h"
 #include "EventConsoleConnection.h"
+#include "MonitoringCore.h"
 #include "Query.h"
-#ifdef CMC
-#include "Config.h"
-#include "Core.h"
-#include "World.h"
-class Logger;
-#else
-host *getHostByDesignation(const char *designation);
-extern char g_mkeventd_socket_path[4096];
-#endif
 
 using std::ostream;
 using std::string;
@@ -49,21 +41,12 @@ using std::vector;
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(Logger *logger, string path, string table_name,
-                      Query *query
-#ifdef CMC
-                      ,
-                      Core *core
-#endif
-                      )
-        : EventConsoleConnection(logger, path)
-        , _table_name(move(table_name))
-        , _query(query)
-#ifdef CMC
+    ECTableConnection(MonitoringCore *core, string table_name, Query *query)
+        : EventConsoleConnection(core->loggerLivestatus(),
+                                 core->mkeventdSocketPath())
         , _core(core)
-#endif
-    {
-    }
+        , _table_name(move(table_name))
+        , _query(query) {}
 
 private:
     void sendRequest(std::ostream &os) override {
@@ -100,49 +83,25 @@ private:
                 }
 
                 auto it = row._map.find("event_host");
-#ifdef CMC
-                row._host =
-                    it == row._map.end()
-                        ? nullptr
-                        : _core->_world->getHostByDesignation(it->second);
-#else
                 row._host = it == row._map.end()
                                 ? nullptr
-                                : getHostByDesignation(it->second.c_str());
-#endif
+                                : _core->getHostByDesignation(it->second);
                 _query->processDataset(&row);
             }
         } while (true);
         return true;
     }
 
+    MonitoringCore *_core;
     std::string _table_name;
     Query *_query;
-#ifdef CMC
-    Core *_core;
-#endif
 };
 }  // namespace
 
-#ifdef CMC
-TableEventConsole::TableEventConsole(Core *core)
-    : Table(core->_logger_livestatus), _core(core) {}
-#else
-TableEventConsole::TableEventConsole(Logger *logger) : Table(logger) {}
-#endif
+TableEventConsole::TableEventConsole(MonitoringCore *core)
+    : Table(core->loggerLivestatus()), _core(core) {}
 
 void TableEventConsole::answerQuery(Query *query) {
-#ifdef CMC
-    string path = _core->_world->_config->_mkeventd_socket_path;
-#else
-    string path = g_mkeventd_socket_path;
-#endif
-    // skip "eventconsole" prefix :-P
-    string internal_name = name().substr(12);
-#ifdef CMC
-    ECTableConnection(_logger, path, internal_name, query, _core)
-#else
-    ECTableConnection(_logger, path, internal_name, query)
-#endif
-        .run();
+    string internal_name = name().substr(12);  // skip "eventconsole" prefix :-P
+    ECTableConnection(_core, internal_name, query).run();
 }

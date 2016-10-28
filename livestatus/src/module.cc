@@ -50,6 +50,7 @@
 #include "ClientQueue.h"
 #include "InputBuffer.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "OutputBuffer.h"
 #include "Store.h"
 #include "StringUtils.h"
@@ -155,11 +156,6 @@ void count_services() {
     for (service *s = service_list; s != nullptr; s = s->next) {
         g_num_services++;
     }
-}
-
-host *getHostByDesignation(const char *designation) {
-    auto it = fl_hosts_by_designation.find(unsafe_tolower(designation));
-    return it == fl_hosts_by_designation.end() ? nullptr : it->second;
 }
 
 void *voidp;
@@ -578,6 +574,24 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
     return 0;
 }
 
+class NagiosCore : public MonitoringCore {
+public:
+    Host *getHostByDesignation(const std::string &designation) override {
+        auto it = fl_hosts_by_designation.find(unsafe_tolower(designation));
+        return it == fl_hosts_by_designation.end() ? nullptr
+                                                   : fromImpl(it->second);
+    }
+
+    string mkeventdSocketPath() override { return g_mkeventd_socket_path; }
+
+    Logger *loggerLivestatus() override { return fl_logger_livestatus; }
+
+private:
+    static Host *fromImpl(host *h) { return reinterpret_cast<Host *>(h); }
+};
+
+NagiosCore core;
+
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
     struct nebstruct_process_struct *ps =
         reinterpret_cast<struct nebstruct_process_struct *>(data);
@@ -592,7 +606,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
                 }
                 fl_hosts_by_designation[unsafe_tolower(hst->name)] = hst;
             }
-            fl_store = new Store(fl_logger_livestatus);
+            fl_store = new Store(&core);
             fl_client_queue = new ClientQueue();
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;

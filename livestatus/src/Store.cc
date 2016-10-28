@@ -30,6 +30,7 @@
 #include <utility>
 #include "InputBuffer.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "OutputBuffer.h"
 #include "Query.h"
 #include "Table.h"
@@ -48,30 +49,30 @@ using std::lock_guard;
 using std::mutex;
 using std::string;
 
-Store::Store(Logger *logger)
-    : _log_cache(logger, _commands_holder, g_max_cached_messages)
-    , _table_contacts(logger)
-    , _table_commands(_commands_holder, logger)
-    , _table_hostgroups(logger)
-    , _table_hosts(_downtimes, _comments, logger)
-    , _table_hostsbygroup(_downtimes, _comments, logger)
-    , _table_servicegroups(logger)
-    , _table_services(_downtimes, _comments, logger)
-    , _table_servicesbygroup(_downtimes, _comments, logger)
-    , _table_servicesbyhostgroup(_downtimes, _comments, logger)
-    , _table_timeperiods(logger)
-    , _table_contactgroups(logger)
-    , _table_downtimes(_downtimes, _comments, logger)
-    , _table_comments(_downtimes, _comments, logger)
-    , _table_status(logger)
-    , _table_log(&_log_cache, _downtimes, _comments, logger)
-    , _table_statehistory(&_log_cache, _downtimes, _comments, logger)
-    , _table_columns(logger)
-    , _table_eventconsoleevents(_downtimes, _comments, logger)
-    , _table_eventconsolehistory(_downtimes, _comments, logger)
-    , _table_eventconsolestatus(logger)
-    , _table_eventconsolereplication(logger)
-    , _logger(logger) {
+Store::Store(MonitoringCore *mc)
+    : _logger(mc->loggerLivestatus())
+    , _log_cache(_logger, _commands_holder, g_max_cached_messages)
+    , _table_contacts(_logger)
+    , _table_commands(_commands_holder, _logger)
+    , _table_hostgroups(_logger)
+    , _table_hosts(_downtimes, _comments, _logger)
+    , _table_hostsbygroup(_downtimes, _comments, _logger)
+    , _table_servicegroups(_logger)
+    , _table_services(_downtimes, _comments, _logger)
+    , _table_servicesbygroup(_downtimes, _comments, _logger)
+    , _table_servicesbyhostgroup(_downtimes, _comments, _logger)
+    , _table_timeperiods(_logger)
+    , _table_contactgroups(_logger)
+    , _table_downtimes(_downtimes, _comments, _logger)
+    , _table_comments(_downtimes, _comments, _logger)
+    , _table_status(_logger)
+    , _table_log(&_log_cache, _downtimes, _comments, _logger)
+    , _table_statehistory(&_log_cache, _downtimes, _comments, _logger)
+    , _table_columns(_logger)
+    , _table_eventconsoleevents(mc, _downtimes, _comments)
+    , _table_eventconsolehistory(mc, _downtimes, _comments)
+    , _table_eventconsolestatus(mc)
+    , _table_eventconsolereplication(mc) {
     addTable(&_table_columns);
     addTable(&_table_commands);
     addTable(&_table_comments);

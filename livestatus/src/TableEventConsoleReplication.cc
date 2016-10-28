@@ -24,28 +24,15 @@
 
 #include "TableEventConsoleReplication.h"
 #include "DynamicEventConsoleReplicationColumn.h"
+#include "MonitoringCore.h"
 #include "Query.h"
-#ifdef CMC
-#include "Core.h"
-#endif
 
 using std::string;
 
-#ifdef CMC
-TableEventConsoleReplication::TableEventConsoleReplication(Core *core)
-    : Table(core->_logger_livestatus)
-#else
-TableEventConsoleReplication::TableEventConsoleReplication(Logger *logger)
-    : Table(logger)
-#endif
-{
+TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *core)
+    : Table(core->loggerLivestatus()) {
     addDynamicColumn(new DynamicEventConsoleReplicationColumn(
-        "value", "The replication value", -1, -1, _logger
-#ifdef CMC
-        ,
-        core
-#endif
-        ));
+        "value", "The replication value", -1, -1, core));
 }
 
 string TableEventConsoleReplication::name() const {

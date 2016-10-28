@@ -28,20 +28,12 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Table.h"
-#ifdef CMC
-class Core;
-#else
-class Logger;
-#endif
+class MonitoringCore;
 class Query;
 
 class TableEventConsoleReplication : public Table {
 public:
-#ifdef CMC
-    explicit TableEventConsoleReplication(Core *core);
-#else
-    explicit TableEventConsoleReplication(Logger *logger);
-#endif
+    explicit TableEventConsoleReplication(MonitoringCore *core);
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;

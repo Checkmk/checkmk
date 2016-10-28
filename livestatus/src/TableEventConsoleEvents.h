@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "TableEventConsole.h"
+class MonitoringCore;
 class Table;
 
 #ifdef CMC
@@ -38,7 +39,6 @@ class Core;
 #else
 #include "nagios.h"
 class DowntimesOrComments;
-class Logger;
 #endif
 
 class TableEventConsoleEvents : public TableEventConsole {
@@ -47,7 +47,8 @@ public:
     std::string namePrefix() const override;
 
 #ifdef CMC
-    TableEventConsoleEvents(const Downtimes &downtimes_holder,
+    TableEventConsoleEvents(MonitoringCore *mc,
+                            const Downtimes &downtimes_holder,
                             const Comments &comments_holder,
                             std::recursive_mutex &holder_lock, Core *core);
 
@@ -55,9 +56,9 @@ public:
                            const Comments &comments_holder,
                            std::recursive_mutex &holder_lock, Core *core);
 #else
-    TableEventConsoleEvents(const DowntimesOrComments &downtimes_holder,
-                            const DowntimesOrComments &comments_holder,
-                            Logger *logger);
+    TableEventConsoleEvents(MonitoringCore *mc,
+                            const DowntimesOrComments &downtimes_holder,
+                            const DowntimesOrComments &comments_holder);
     static void addColumns(Table *table,
                            const DowntimesOrComments &downtimes_holder,
                            const DowntimesOrComments &comments_holder);

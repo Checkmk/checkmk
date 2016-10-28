@@ -22,27 +22,25 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef DynamicEventConsoleReplicationColumn_h
-#define DynamicEventConsoleReplicationColumn_h
+#ifndef MonitoringCore_h
+#define MonitoringCore_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
-#include "DynamicColumn.h"
-class Column;
-class MonitoringCore;
+class Logger;
 
-class DynamicEventConsoleReplicationColumn : public DynamicColumn {
+/// An abstraction layer for the monitoring core (nagios or cmc)
+class MonitoringCore {
 public:
-    DynamicEventConsoleReplicationColumn(const std::string &name,
-                                         const std::string &description,
-                                         int indirect_offset, int extra_offset,
-                                         MonitoringCore *core);
+    class Host;
 
-    Column *createColumn(const std::string &name,
-                         const std::string &arguments) override;
+    virtual ~MonitoringCore() = default;
 
-private:
-    MonitoringCore *_core;
+    virtual Host *getHostByDesignation(const std::string &designation) = 0;
+
+    virtual std::string mkeventdSocketPath() = 0;
+
+    virtual Logger *loggerLivestatus() = 0;
 };
 
-#endif  // DynamicEventConsoleReplicationColumn_h
+#endif  // MonitoringCore_h

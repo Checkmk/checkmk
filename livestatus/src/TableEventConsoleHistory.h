@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "TableEventConsole.h"
+class MonitoringCore;
 
 #ifdef CMC
 #include <mutex>
@@ -37,19 +38,19 @@ class Core;
 #else
 #include "nagios.h"
 class DowntimesOrComments;
-class Logger;
 #endif
 
 class TableEventConsoleHistory : public TableEventConsole {
 public:
 #ifdef CMC
-    TableEventConsoleHistory(const Downtimes &downtimes_holder,
+    TableEventConsoleHistory(MonitoringCore *mc,
+                             const Downtimes &downtimes_holder,
                              const Comments &comments_holder,
                              std::recursive_mutex &holder_lock, Core *core);
 #else
-    TableEventConsoleHistory(const DowntimesOrComments &downtimes_holder,
-                             const DowntimesOrComments &comments_holder,
-                             Logger *logger);
+    TableEventConsoleHistory(MonitoringCore *mc,
+                             const DowntimesOrComments &downtimes_holder,
+                             const DowntimesOrComments &comments_holder);
 #endif
     std::string name() const override;
     std::string namePrefix() const override;

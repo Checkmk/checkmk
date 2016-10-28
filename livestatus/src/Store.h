@@ -57,18 +57,20 @@
 #include "nagios.h"
 class Logger;
 class InputBuffer;
+class MonitoringCore;
 class OutputBuffer;
 class Table;
 
 class Store {
 public:
-    explicit Store(Logger *logger);
+    explicit Store(MonitoringCore *mc);
     bool answerRequest(InputBuffer *, OutputBuffer *);
 
     void registerDowntime(nebstruct_downtime_data *);
     void registerComment(nebstruct_comment_data *);
 
 private:
+    Logger *const _logger;
     CommandsHolderNagios _commands_holder;
     DowntimesOrComments _downtimes;
     DowntimesOrComments _comments;
@@ -94,7 +96,6 @@ private:
     TableEventConsoleHistory _table_eventconsolehistory;
     TableEventConsoleStatus _table_eventconsolestatus;
     TableEventConsoleReplication _table_eventconsolereplication;
-    Logger *const _logger;
 
     std::map<std::string, Table *> _tables;
 

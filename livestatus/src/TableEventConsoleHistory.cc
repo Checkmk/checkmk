@@ -24,6 +24,7 @@
 
 #include "TableEventConsoleHistory.h"
 #include <string>
+#include "MonitoringCore.h"
 #include "TableEventConsoleEvents.h"
 
 #ifdef CMC
@@ -38,14 +39,15 @@ using std::string;
 
 #ifdef CMC
 TableEventConsoleHistory::TableEventConsoleHistory(
-    const Downtimes &downtimes_holder, const Comments &comments_holder,
-    std::recursive_mutex &holder_lock, Core *core)
-    : TableEventConsole(core)
+    MonitoringCore *mc, const Downtimes &downtimes_holder,
+    const Comments &comments_holder, std::recursive_mutex &holder_lock,
+    Core *core)
+    : TableEventConsole(mc)
 #else
 TableEventConsoleHistory::TableEventConsoleHistory(
-    const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder, Logger *logger)
-    : TableEventConsole(logger)
+    MonitoringCore *mc, const DowntimesOrComments &downtimes_holder,
+    const DowntimesOrComments &comments_holder)
+    : TableEventConsole(mc)
 #endif
 {
     addColumn(new IntEventConsoleColumn(
@@ -79,11 +81,11 @@ string TableEventConsoleHistory::namePrefix() const {
 
 // TODO(sp) Move this into some kind of abstraction layer.
 namespace {
-bool hasContact(host *hst, contact *ctc) {
+bool hasContact(MonitoringCore::Host *hst, contact *ctc) {
 #ifdef CMC
-    return hst != nullptr && hst->hasContact(ctc);
+    return hst != nullptr && reinterpret_cast<Host *>(hst)->hasContact(ctc);
 #else
-    return is_authorized_for(ctc, hst, nullptr);
+    return is_authorized_for(ctc, reinterpret_cast<host *>(hst), nullptr);
 #endif
 }
 
@@ -107,7 +109,7 @@ contactgroup *getContactGroup(const string &name) {
 
 // TODO(sp) This is copy-n-pasted in TableEventConsoleEvents.
 bool TableEventConsoleHistory::isAuthorized(contact *ctc, void *data) {
-    if (host *hst = static_cast<Row *>(data)->_host) {
+    if (MonitoringCore::Host *hst = static_cast<Row *>(data)->_host) {
         return hasContact(hst, ctc);
     }
 

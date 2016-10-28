@@ -26,14 +26,8 @@
 
 using std::string;
 
-#ifdef CMC
-TableEventConsoleStatus::TableEventConsoleStatus(Core *core)
-    : TableEventConsole(core)
-#else
-TableEventConsoleStatus::TableEventConsoleStatus(Logger *logger)
-    : TableEventConsole(logger)
-#endif
-{
+TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
+    : TableEventConsole(mc) {
     addColumn(new IntEventConsoleColumn(
         "status_config_load_time",
         "The time when the Event Console config was loaded"));

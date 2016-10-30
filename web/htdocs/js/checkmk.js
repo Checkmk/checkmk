@@ -2238,7 +2238,7 @@ function vs_autocomplete(input, completion_ident, completion_params, on_change)
 
     // Terminate pending request
     if (g_autocomplete_ajax) {
-        g_autocomplete_ajax.abort();       
+        g_autocomplete_ajax.abort();
     }
 
     g_autocomplete_ajax = call_ajax("ajax_vs_autocomplete.py?ident=" + encodeURIComponent(completion_ident), {
@@ -2299,7 +2299,7 @@ function vs_autocomplete_show_choices(input_id, on_change, choices)
         var label = choices[i][1];
 
         code += "<li onclick=\"vs_autocomplete_choose('"
-                    + input_id + "', '" + value + "');" 
+                    + input_id + "', '" + value + "');"
                     + on_change + "\">" + label + "</li>";
     }
     code += "</ul>";

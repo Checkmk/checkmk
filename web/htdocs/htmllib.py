@@ -931,7 +931,7 @@ class HTMLCheck_MK(HTMLGenerator):
         self.open_table(class_="header")
         self.open_tr()
         self.open_td(width="*", class_="heading")
-        self.a(title, href="#", onfocus="if (this.blur) this.blur();", 
+        self.a(title, href="#", onfocus="if (this.blur) this.blur();",
                onclick="this.innerHTML=\'%s\'; document.location.reload();" % _("Reloading..."))
         self.close_td()
 

@@ -72,7 +72,7 @@ def check_chrony(_no_item, params, info):
         params = {
             "ntp_levels": params,
             "alert_delay": (300, 3600),
-        } 
+        }
     crit_stratum, warn, crit = params["ntp_levels"]
 
     # Check offset and stratum, output a few info texsts

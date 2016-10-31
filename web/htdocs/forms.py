@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from htmllib import HTML
 from lib import *
 
 # A input function with the same call syntax as htmllib.textinput()

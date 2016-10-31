@@ -353,7 +353,7 @@ class HTMLGenerator(OutputFunnel):
 
 
     # these tags can be called by their tag names, e.g. 'self.title(content)'
-    _shortcut_tags = set(['title', 'h1', 'h2', 'h3', 'th', 'tr', 'td', 'center', 'pre',\
+    _shortcut_tags = set(['title', 'h1', 'h2', 'h3', 'th', 'tr', 'td', 'center', 'pre', 'style', 'iframe',\
                           'div', 'p', 'span', 'canvas', 'strong', 'sub', 'tt', 'u', 'i', 'b'])
 
     # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
@@ -530,7 +530,7 @@ class HTMLGenerator(OutputFunnel):
                 'onclick', 'onsubmit', 'onmouseover', 'onmouseout', 'onfocus', 'value', \
                 'content',  'href', 'http-equiv', 'rel', 'for', 'title', 'target',\
                 'align', 'valign', 'style', 'width', 'height', 'colspan', 'data-role',\
-                'cellspacing', 'cellpadding', 'border'], key
+                'cellspacing', 'cellpadding', 'border', 'allowTransparency', 'frameborder'], key
 
         for k, v in attrs.iteritems():
             if v is None: continue

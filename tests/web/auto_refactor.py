@@ -67,6 +67,17 @@ def split_html(text):
         index += 1
     return text[:index], text[index:]
 
+
+def stripper(x):
+    x = re.sub(r' %\s+\(.*', '', x)
+    index = len(x) - 1
+    while index >= 0 and x[index] in ['n', ' ', ')', '"', '\'']:
+        if x[index] == 'n' and index > 0 and x[index - 1] == '\\':
+            index -= 1
+        index -= 1
+    return x[:index+1]
+
+
 # this function does a big chunk of the refactoring for me
 def replace_tags(html, indent = 0):
 
@@ -81,6 +92,9 @@ def replace_tags(html, indent = 0):
     html, rest = split_html(html)
     orig_html = html
 
+    # strip all comments
+    html = re.sub(r'#.*', '', html)
+
     if len(html.split(" % ")) == 2:
         html, string_input = html.split(" % ")
         string_input = string_input.lstrip("(").rstrip("$").rstrip("\n").rstrip(' ').rstrip(")")
@@ -93,7 +107,7 @@ def replace_tags(html, indent = 0):
         return orig_html + rest
 
     inbetween = re.split(r'<[^<]*>', re.sub(r'\s*html\.write\([\'|"]?', '', html, 1))
-    inbetween[-1] = ''.join(list(reversed(re.sub(r'\n\)["|\']', '', ''.join(list(reversed(inbetween[-1]))), count=1))))
+    inbetween = map(stripper, inbetween)
 
     html = orig_html + "\n(new)"
 
@@ -115,7 +129,7 @@ def replace_tags(html, indent = 0):
         if not skip_next and inbetween[counter].strip(' ') not in ['', '\n']:
             html = append_to_html(html, indent, "html.write(%s)" % inbetween[counter])
 
-    return html + rest + "\n(/new)"
+    return html + "\n(/new)" + rest
 
 
 import re

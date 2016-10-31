@@ -895,17 +895,68 @@ div.varname {
 /* Replication */
 .wato table.data td.repprogress {
     width: 160px;
+    position: relative;
+    padding: 0;
+    margin: 0;
 }
-.wato div.repprogress {
-    height: 16px;
-    background-image: url("images/repprogress.png");
-    background-repeat: repeat;
-    float: left;
+
+.wato td.repprogress div.msg {
+    position: absolute;
+    z-index: 20;
+    width: 160px;
     text-align: center;
+    top: 6px;
+    left: 0;
+    height: 16px;
+}
+
+.wato td.repprogress div.progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    top: 3px;
+
+    height: 16px;
+
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#00bfe2+0,5dddf5+57,05c1e3+74,00bee0+100 */
+    background: #00bfe2; /* Old browsers */
+    background: -moz-linear-gradient(top, #00bfe2 0%, #5dddf5 57%, #05c1e3 74%, #00bee0 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #00bfe2 0%,#5dddf5 57%,#05c1e3 74%,#00bee0 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #00bfe2 0%,#5dddf5 57%,#05c1e3 74%,#00bee0 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00bfe2', endColorstr='#00bee0',GradientType=0 ); /* IE6-9 */
+
     padding-top: 4px;
     font-size: 8pt;
     box-shadow: 0.5px 0.5px 1px #224466 inset;
     color: black;
+}
+
+.wato td.repprogress div.progress.state_success {
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#bfd255+0,8eb92a+50,72aa00+51,9ecb2d+100;Green+Gloss */
+    background: #bfd255; /* Old browsers */
+    background: -moz-linear-gradient(top, #bfd255 0%, #8eb92a 50%, #72aa00 51%, #9ecb2d 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #bfd255 0%,#8eb92a 50%,#72aa00 51%,#9ecb2d 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #bfd255 0%,#8eb92a 50%,#72aa00 51%,#9ecb2d 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#bfd255', endColorstr='#9ecb2d',GradientType=0 ); /* IE6-9 */
+}
+
+.wato td.repprogress div.progress.state_error {
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#f3c5bd+0,e86c57+50,ea2803+51,ff6600+75,c72200+100;Red+Gloss */
+    background: #f3c5bd; /* Old browsers */
+    background: -moz-linear-gradient(top, #f3c5bd 0%, #e86c57 50%, #ea2803 51%, #ff6600 75%, #c72200 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #f3c5bd 0%,#e86c57 50%,#ea2803 51%,#ff6600 75%,#c72200 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #f3c5bd 0%,#e86c57 50%,#ea2803 51%,#ff6600 75%,#c72200 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f3c5bd', endColorstr='#c72200',GradientType=0 ); /* IE6-9 */
+}
+
+.wato td.repprogress div.progress.state_warning {
+    /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#fceabb+0,fccd4d+50,f8b500+51,fbdf93+100;Orange+3D+%235 */
+    background: #fceabb; /* Old browsers */
+    background: -moz-linear-gradient(top, #fceabb 0%, #fccd4d 50%, #f8b500 51%, #fbdf93 100%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top, #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom, #fceabb 0%,#fccd4d 50%,#f8b500 51%,#fbdf93 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fceabb', endColorstr='#fbdf93',GradientType=0 ); /* IE6-9 */
 }
 
 .wato td.tag-ellipsis {

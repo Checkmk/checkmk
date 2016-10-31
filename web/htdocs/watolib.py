@@ -3614,25 +3614,6 @@ def update_replication_status(site_id, vars, changes=None):
     save_replication_status(repstatus)
 
 
-def update_activation_time(site_id, ty, duration):
-    repstatus = load_replication_status(lock=True)
-
-    repstatus.setdefault(site_id, {})
-    times = repstatus[site_id].setdefault("times", {})
-
-    if ty not in times:
-        times[ty] = duration
-    else:
-        times[ty] = 0.8 * times[ty] + 0.2 * duration
-
-    save_replication_status(repstatus)
-
-
-def get_activation_time(site_id, ty):
-    repstatus = load_replication_status(lock=True)
-    return repstatus.get(site_id, {}).get("times", {}).get(ty)
-
-
 # Returns a list of site ids where users can login
 def get_login_sites():
     sites = []
@@ -4125,11 +4106,17 @@ class ActivateChangesManager(ActivateChanges):
 
 
 
-PHASE_STARTED   = "started"  # Just started, nothing happened yet
-PHASE_SYNC      = "sync"     # About to sync
-PHASE_ACTIVATE  = "activate" # sync done activating changes
-PHASE_FINISHING = "finishin" # Remote work done, finalizing local state
-PHASE_DONE      = "done"     # Done (with good or bad result)
+PHASE_STARTED   = "started"   # Just started, nothing happened yet
+PHASE_SYNC      = "sync"      # About to sync
+PHASE_ACTIVATE  = "activate"  # sync done activating changes
+PHASE_FINISHING = "finishing" # Remote work done, finalizing local state
+PHASE_DONE      = "done"      # Done (with good or bad result)
+
+# PHASE_DONE can have these different states:
+
+STATE_SUCCESS   = "success"   # Everything is ok
+STATE_ERROR     = "error"     # Something went really wrong
+STATE_WARNING   = "warning"   # e.g. in case of core config warnings
 
 
 class ActivateChangesSite(threading.Thread):
@@ -4142,11 +4129,13 @@ class ActivateChangesSite(threading.Thread):
         self._changes       = self._get_changes()
         self.daemon         = True
 
-        self._time_started  = None
-        self._time_updated  = None
-        self._time_ended    = None
-        self._phase         = None
-        self._status_text   = None
+        self._time_started   = None
+        self._time_updated   = None
+        self._time_ended     = None
+        self._phase          = None
+        self._state          = None
+        self._status_text    = None
+        self._status_details = None
 
 
     def run(self):
@@ -4162,20 +4151,25 @@ class ActivateChangesSite(threading.Thread):
             if self._is_restart_needed():
                 self._do_restart()
 
+            # TODO: STATE_WARNING in case of config warnings?
+
             self._confirm_changes()
 
-            self._unlock_activation()
-
-            self._set_result(PHASE_DONE, _("Success"))
+            self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
         except Exception, e:
             log_exception()
-            self._set_result(PHASE_DONE, _("Failed to activate: %s") % e)
+            self._set_result(PHASE_DONE, _("Failed"),
+                             _("Failed to activate: %s") % e,
+                             state=STATE_ERROR)
+
+        finally:
+            self._unlock_activation()
 
 
     def _lock_activation(self):
         repstatus = load_replication_status(lock=True)
 
-        if self._is_already_activating(repstatus.get(self._site_id, {})):
+        if self._is_currently_activating(repstatus.get(self._site_id, {})):
             raise MKGeneralException(_("The site is currently locked by another activation process. Please try again later"))
 
         # This call unlocks the replication status file after setting "current_activation"
@@ -4187,7 +4181,7 @@ class ActivateChangesSite(threading.Thread):
         if not rep_status.get("current_activation"):
             return False
 
-        current_activation_id = repstatus.get(self._site_id, {}).get("current_activation")
+        current_activation_id = rep_status.get(self._site_id, {}).get("current_activation")
         # TODO: Is this activation still in progress?
         # - Check whether or not activation still exists
         # - Check whether or not site threads are still working
@@ -4222,7 +4216,7 @@ class ActivateChangesSite(threading.Thread):
         self._cleanup_snapshot()
         duration = time.time() - start
 
-        update_activation_time(self._site_id, "sync", duration)
+        self._update_activation_time(self._site_id, "sync", duration)
 
         # Pre 1.2.7i3 sites return True on success and a string on error.
         # 1.2.7i3 and later return a list of warning messages on success.
@@ -4283,10 +4277,30 @@ class ActivateChangesSite(threading.Thread):
         start = time.time()
         configuration_warnings = check_mk_automation(site["id"], config.wato_activation_method)
         duration = time.time() - start
-        update_activation_time(self._site_id, "restart", duration)
+        self._update_activation_time(self._site_id, "restart", duration)
         return configuration_warnings
 
 
+    def _update_activation_time(self, ty, duration):
+        repstatus = load_replication_status(lock=True)
+
+        repstatus.setdefault(self._site_id, {})
+        times = repstatus[self._site_id].setdefault("times", {})
+
+        if ty not in times:
+            times[ty] = duration
+        else:
+            times[ty] = 0.8 * times[ty] + 0.2 * duration
+
+        save_replication_status(repstatus)
+
+
+    def _get_activation_times(self):
+        repstatus = load_replication_status(lock=False)
+        return repstatus.get(self._site_id, {}).get("times", {})
+
+
+    # TODO: Consolidate with ActivateChanges/ActivateChangesManager?
     def _get_changes(self):
         manager = ActivateChangesManager()
         manager.load(self._activation_id)
@@ -4327,14 +4341,15 @@ class ActivateChangesSite(threading.Thread):
             save_replication_status(repstatus)
 
 
-    def _set_result(self, phase, msg):
-        self._phase       = phase
-        self._status_text = msg
+    def _set_result(self, phase, status_text, status_details=None, state=STATE_SUCCESS):
+        self._phase          = phase
+        self._status_text    = status_text
+        self._status_details = status_details
 
+        self._time_updated = time.time()
         if phase == PHASE_DONE:
-            self._time_ended, self._time_updated = time.time()
-        else:
-            self._time_updated = time.time()
+            self._time_ended = self._time_updated
+            self._state      = state
 
         self._save_state()
 
@@ -4346,11 +4361,19 @@ class ActivateChangesSite(threading.Thread):
         return store.save_data_to_file(state_path, {
             "_site_id"          : self._site_id,
             "_phase"            : self._phase,
+            "_state"            : self._state,
             "_status_text"      : self._status_text,
+            "_status_details"   : self._status_details,
             "_time_started"     : self._time_started,
             "_time_updated"     : self._time_updated,
             "_time_ended"       : self._time_ended,
+            "_expected_duration": self._expected_duration(),
         })
+
+
+    def _expected_duration(self):
+        # TODO: Handle differences of sync only and sync+activate
+        return sum(self._get_activation_times().values())
 
 
 #.

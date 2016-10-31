@@ -217,6 +217,18 @@ function wato_fix_visibility() {
     }
 }
 
+function wato_randomize_secret(id, len)
+{
+    var secret = "";
+    for (var i=0; i<len; i++) {
+        var c = parseInt(26 * Math.random() + 64);
+        secret += String.fromCharCode(c);
+    }
+    var oInput = document.getElementById(id);
+    oInput.value = secret;
+}
+
+
 // ----------------------------------------------------------------------------
 // Interactive progress code
 // ----------------------------------------------------------------------------
@@ -672,113 +684,98 @@ function handle_activation_progress(activation_id, response_json)
         return; // Abort on error!
     } else {
         update_activation_state(response.result);
-        setTimeout(function() { return monitor_activation_progress(activation_id); }, 500);
+
+	if (!activation_progress_finished(response.result)) {
+            setTimeout(function() {
+		return monitor_activation_progress(activation_id);
+	    }, 500);
+	}
+	else {
+	    finish_activation();
+	}
     }
+}
+
+function activation_progress_finished(response)
+{
+    for (var site_id in response["sites"]) {
+        // skip loop if the property is from prototype
+        if (!response["sites"].hasOwnProperty(site_id))
+            continue;
+    
+        var site_state = response["sites"][site_id];
+        if (site_state["_phase"] != "done")
+            return false;
+    }
+
+    return true;
 }
 
 function update_activation_state(response)
 {
-    console.log(response);
+    for (var site_id in response["sites"]) {
+        // skip loop if the property is from prototype
+        if (!response["sites"].hasOwnProperty(site_id))
+            continue;
+    
+        var site_state = response["sites"][site_id];
+        update_site_activation_state(site_state);
+    }
 }
+
+function update_site_activation_state(site_state)
+{
+    // TODO: Show status details!
+    var msg = document.getElementById("site_" + site_state["_site_id"] + "_msg");
+    msg.innerHTML = site_state["_status_text"];
+
+    update_site_progress(site_state);
+}
+
+function update_site_progress(site_state)
+{
+    var max_width = 160;
+
+    var progress = document.getElementById("site_" + site_state["_site_id"] + "_progress");
+
+    if (site_state["_phase"] == "done") {
+        progress.style.width = max_width + "px";
+        add_class(progress, "state_" + site_state["_state"]);
+        return;
+    }
+
+    var duration = parseFloat(time() - site_state["_time_started"]);
+
+    // In case expected is 0, calculate with 10 seconds instead of failing
+    if (site_state["_expected_duration"] == 0.0)
+        var expected_duration = 10.0;
+    else
+        var expected_duration = site_state["_expected_duration"];
+
+    var duration_percent = duration * 100.0 / expected_duration;
+    var width = parseInt(parseFloat(max_width) * duration_percent / 100);
+
+    if (width > max_width)
+        width = pax_width;
+
+    progress.style.width = width + "px";
+}
+
 
 function handle_activation_progress_error(activation_id, status_code, error_msg)
 {
     show_activation_error("Failed to fetch activation state ["+status_code+"]: " + error_msg + ". " +
                           "Retrying in 1 second.");
 
-    setTimeout(function() { return monitor_activation_progress(activation_id); }, 1000);
+    setTimeout(function() {
+        return monitor_activation_progress(activation_id);
+    }, 1000);
 }
 
 function finish_activation()
 {
+    show_activation_info("Activation has finished");
     lock_activation_controls(false);
-}
-
-//
-// DEPRECATED CODE BELOW. CLEAN UP!
-//
-
-
-var replication_progress = new Array();
-
-function wato_do_replication(siteid, est) {
-    get_url("wato_ajax_replication.py?site=" + siteid,
-            wato_replication_result, siteid);
-    replication_progress[siteid] = 20; // 10 of 10 10ths
-    setTimeout("replication_step('"+siteid+"',"+est+");", est/10);
-}
-
-function replication_step(siteid, est) {
-    if (replication_progress[siteid] > 0) {
-        replication_progress[siteid]--;
-        var oDiv = document.getElementById("repstate_" + siteid);
-        p = replication_progress[siteid];
-        oDiv.innerHTML = "<div class=repprogress style='width: " + ((20-p)*8) + "px;'></div>"
-        setTimeout("replication_step('"+siteid+"',"+est+");", est/20);
-    }
-}
-
-
-// num_replsites is set by the page code in wat.py to the number async jobs started
-// in total
-function wato_replication_result(siteid, code) {
-    replication_progress[siteid] = 0;
-    var oDiv = document.getElementById("repstate_" + siteid);
-    if (code.substr(0, 3) == "OK:") {
-        oDiv.innerHTML = "<div class='repprogress ok' style='width: 160px;'>" +
-                         code.substr(3) + "</div>";
-        num_replsites--;
-    }
-    else
-        oDiv.innerHTML = code;
-
-    if (0 == num_replsites) {
-        setTimeout(finish_replication, 1000);
-    }
-}
-
-function finish_replication()
-{
-    // check if we have a sidebar-main frame setup
-    if (this.parent && parent && parent.frames[1] == this)
-        reload_sidebar();
-
-    hide_changes_buttons();
-    hide_pending_changes_container();
-}
-
-function hide_pending_changes_container()
-{
-    var oPending = document.getElementById("pending_changes");
-    if (oPending) {
-        oPending.style.display = "none";
-        oPending = null
-    }
-}
-
-function hide_changes_buttons()
-{
-    var button = document.getElementById('act_changes_button');
-    if (button) {
-        button.style.display = 'none';
-        button = null;
-    }
-
-    button = document.getElementById('discard_changes_button');
-    if (button) {
-        button.style.display = 'none';
-        button = null;
-    }
-}
-
-function wato_randomize_secret(id, len) {
-    var secret = "";
-    for (var i=0; i<len; i++) {
-        var c = parseInt(26 * Math.random() + 64);
-        secret += String.fromCharCode(c);
-    }
-    var oInput = document.getElementById(id);
-    oInput.value = secret;
 }
 
 // .-Profile Repl----------------------------------------------------------.

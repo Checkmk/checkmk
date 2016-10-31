@@ -4570,6 +4570,9 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             has_foreign = self._site_has_foreign_changes(site_id)
             can_activate_all = not has_foreign or config.user.may("wato.activateforeign")
 
+            # TODO: Handle not logged in sites
+            # if not config.site_is_local(site_id) and not "secret" in site:
+
             # Activation checkbox
             table.cell("", css="buttons")
             if can_activate_all:
@@ -4673,8 +4676,10 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             #if activation_blocked_reasons:
             #    table.cell(_("Update status"))
             #else:
-            table.cell(_("Last Result"))
+            table.cell(_("Last result / State"), css="repprogress")
+            html.open_div(id_="site_%s_msg" % site_id, class_=["msg"])
 
+            # TODO: Fetch result from correct place
             #site_reason = activation_blocked_reasons.get("sites", {}).get(site_id)
             #if site_reason:
             #    html.write(html.attrencode(site_reason))
@@ -4689,6 +4694,11 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
                 configuration_warnings = repl_status.get("warnings", [])
                 if configuration_warnings:
                     html.write(render_replication_warnings(configuration_warnings))
+
+            html.close_div()
+
+            html.open_div(id_="site_%s_progress" % site_id, class_=["progress"])
+            html.close_div()
 
         table.end()
 

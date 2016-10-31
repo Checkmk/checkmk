@@ -4394,7 +4394,8 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
     def buttons(self):
         home_button()
 
-        html.context_button(_("Site Configuration"), folder_preserving_link([("mode", "sites")]), "sites")
+        if config.user.may("wato.sites"):
+            html.context_button(_("Site Configuration"), folder_preserving_link([("mode", "sites")]), "sites")
 
         if config.user.may("wato.auditlog"):
             html.context_button(_("Audit Log"), folder_preserving_link([("mode", "auditlog")]), "auditlog")
@@ -4408,9 +4409,6 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
 
 
     def page(self):
-        # TODO: Prevent activation when:
-        # a) Foreign changes and not permitted
-        # c) Activation currently in progress (for some sites)
         self._activation_msg()
         self._activation_form()
 
@@ -4436,6 +4434,11 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             html.show_info(_("Currently there are no changes to activate."))
             return
 
+        if not config.user.may("wato.activateforeign") \
+           and self._has_foreign_changes_on_all_sites():
+            html.show_warning(_("Sorry, you are not allowed to activate changes of other users."))
+            return
+
         valuespec = self._vs_activation()
 
         html.begin_form("activate", method="POST", action="")
@@ -4445,6 +4448,21 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
         valuespec.render_input("activate", self._value)
         valuespec.set_focus("activate")
         html.help(valuespec.help())
+
+        if self._has_foreign_changes():
+            if config.user.may("wato.activateforeign"):
+                html.show_warning(
+                    _("There are some changes made by your colleagues that you will "
+                      "activate if you proceed. You need to enable the checkbox above "
+                      "to confirm the activation of these changes."))
+            else:
+                html.show_warning(
+                    _("There are some changes made by your colleagues that you can not "
+                      "activate because you are not permitted to. You can only activate "
+                      "the changes on the sites that are not affected by these changes. "
+                      "<br>"
+                      "If you need to activate your changes on all sites, please contact "
+                      "a permitted user to do it for you."))
 
         forms.end()
         html.jsbutton("activate_affected", _("Activate affected"),
@@ -4457,8 +4475,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
 
 
     def _vs_activation(self):
-        if self._has_foreign_changes():
-            # TODO: Hier noch eine Meldung mit foreign changes anzeigen
+        if self._has_foreign_changes() and config.user.may("wato.activateforeign"):
             foreign_changes_elements = [
                 ("foreign", Checkbox(
                     title = _("Activate foreign changes"),
@@ -4485,16 +4502,16 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
         )
 
 
-    def _has_foreign_changes(self):
-        return any([ change for change_id, change in self._changes
-                     if change.get("user_id") != config.user.id ])
-
-
     def _change_table(self):
-        table.begin("changes", sortable=False, searchable=False)
+        table.begin("changes", sortable=False, searchable=False, css="changes")
         for change_id, change in reversed(self._changes):
-            # TODO: Hightlight foreign changes
-            table.row()
+            css = []
+            if self._is_foreign(change):
+                css.append("foreign")
+            if not config.user.may("wato.activateforeign"):
+                css.append("not_permitted")
+
+            table.row(css=" ".join(css))
 
             table.cell(_("Object"))
             rendered = self._render_change_object(change["object"])
@@ -4506,7 +4523,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             table.cell(_("Change"), html.permissive_attrencode(change["text"]))
 
             table.cell(_("Affected sites"))
-            if len(change["affected_sites"]) == len(config.sitenames()):
+            if self._affects_all_sites(change):
                 html.write("<i>%s</i>" % _("All sites"))
             else:
                 html.write(", ".join(sorted(change["affected_sites"])))
@@ -4539,8 +4556,6 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
     def _activation_status(self):
         table.begin("site-status", searchable=False, sortable=False)
 
-        repstatus = load_replication_status()
-
         for site_id, site in sort_sites(wato_activation_sites()):
             table.row()
 
@@ -4551,17 +4566,22 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
                 site_status = sites.state(site_id, {})
                 status = site_status.get("state", "unknown")
 
-            repl_status = repstatus.get(site_id, {})
-            changes     = repl_status.get("changes", [])
+            repl_status = self._repstatus.get(site_id, {})
+            has_foreign = self._site_has_foreign_changes(site_id)
+            can_activate_all = not has_foreign or config.user.may("wato.activateforeign")
 
             # Activation checkbox
             table.cell("", css="buttons")
-            html.checkbox("site_%s" % site_id, cssclass="site_checkbox")
+            if can_activate_all:
+                html.checkbox("site_%s" % site_id, cssclass="site_checkbox")
 
             # Iconbuttons
             table.cell(_("Actions"), css="buttons")
-            edit_url = folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
-            html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
+
+            if config.user.may("wato.sites"):
+                edit_url = folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
+                html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
+
             site_url = site.get("multisiteurl")
             if site_url:
                 html.icon_button(site_url, _("Open this site's local web user interface"), "url", target="_blank")
@@ -4586,6 +4606,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             table.cell(_("Services"), css="number")
             html.a(site_status.get("num_services", ""), href="view.py?view_name=sitesvcs&site=%s" % site_id)
 
+            # TODO: need_restart/need_sync are obsolete. Replace this!
             need_restart = repl_status.get("need_restart")
             need_sync    = repl_status.get("need_sync") and not config.site_is_local(site_id)
             uptodate = not (need_restart or need_sync)
@@ -4620,9 +4641,9 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             if uptodate:
                 html.icon(_("This site is up-to-date."), "siteuptodate")
 
-            table.cell(_("Changes"), "%d" % len(changes), css="number")
+            table.cell(_("Changes"), "%d" % len(self._changes_of_site(site_id)), css="number")
             table.cell(_("Activate"))
-            if repl_status.get("need_sync") or repl_status.get("need_restart"):
+            if can_activate_all and (repl_status.get("need_sync") or repl_status.get("need_restart")):
                 html.jsbutton("activate_%s" % site_id, _("Activate"),
                               "activate_changes(\"site\", \"%s\")" % site_id, cssclass="activate_site")
 

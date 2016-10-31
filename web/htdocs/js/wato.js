@@ -543,7 +543,8 @@ function activate_changes(mode, site_id)
         }
 
         if (sites.length == 0) {
-            // TODO: Error, you have to select a site
+            show_activation_error("You have to select a site.");
+            return;
         }
         
     } else if (mode == "site") {
@@ -575,8 +576,6 @@ function start_activation(sites, activate_until, comment, activate_foreign)
                   + "&sites=" + encodeURIComponent(sites.join(","))
                   + "&comment=" + encodeURIComponent(comment)
                   + "&activate_foreign=" + encodeURIComponent(activate_foreign);
-
-    console.log(post_data);
 
     call_ajax("ajax_start_activation.py", {
         response_handler : handle_start_activation,
@@ -643,9 +642,9 @@ function lock_activation_controls(lock)
     elements.push(document.getElementById("activate_affected"));
     elements.push(document.getElementById("activate_selected"));
 
-    elements.concat(document.getElementsByName("activate_p_comment"));
-    elements.concat(document.getElementsByClassName("site_checkbox"));
-    elements.concat(document.getElementsByClassName("activate_site"));
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByName("activate_p_comment"), 0));
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("site_checkbox"), 0));
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("activate_site"), 0));
 
     for (var i = 0; i < elements.length; i++) {
         elements[i].disabled = lock ? "disabled" : false;

@@ -305,18 +305,12 @@ def add_change_to_site(site_id, change_id, action_name, text, obj, add_user, nee
     }])
 
 
-def get_changes_of_site(site_id):
-    repstatus = load_replication_status()
-    return load_replication_status()[site_id].get("changes", [])
-
-
 # Returns a list of changes ordered by time and grouped by the change.
 # Each change contains a list of affected sites.
-def get_pending_changes_grouped():
+def get_pending_changes_grouped(repstatus):
     changes = {}
 
-    repstatus = load_replication_status()
-    for site_id, status in load_replication_status().items():
+    for site_id, status in repstatus.items():
         if not status.get("changes"):
             continue
 
@@ -333,7 +327,7 @@ def get_pending_changes_grouped():
 
 
 def get_number_of_pending_changes():
-    return len(get_pending_changes_grouped())
+    return len(get_pending_changes_grouped(load_replication_status()))
 
 
 class ConfigDomain(object):
@@ -3847,17 +3841,52 @@ def add_profile_replication_change(site_id, result):
 
 class ActivateChanges(object):
     def __init__(self):
-        self._changes = self._get_changes()
+        self._repstatus = {}
+        self._changes   = []
+
+        self._load_changes()
+
         super(ActivateChanges, self).__init__()
 
 
-    def _get_changes(self):
-        changes = get_pending_changes_grouped()
-        return sorted(changes.items(), key=lambda (k, v): v["time"])
+    def _load_changes(self):
+        self._repstatus = load_replication_status()
+
+        changes = get_pending_changes_grouped(self._repstatus)
+        self._changes = sorted(changes.items(), key=lambda (k, v): v["time"])
+
+
+    def _changes_of_site(self, site_id):
+        return self._repstatus[site_id].get("changes", [])
+
+
+    def _site_has_foreign_changes(self, site_id):
+        changes = self._changes_of_site(site_id)
+        return bool([ c for c in changes if self._is_foreign(c) ])
 
 
     def _get_last_change_id(self):
         return self._changes[-1][1]["id"]
+
+
+    def _has_foreign_changes(self):
+        return any([ change for change_id, change in self._changes
+                     if self._is_foreign(change) ])
+
+
+    def _has_foreign_changes_on_all_sites(self):
+        return any([ change for change_id, change in self._changes
+                     if self._is_foreign(change) and self._affects_all_sites(change) ])
+
+
+    def _is_foreign(self, change):
+        return change["user_id"] and change["user_id"] != config.user.id
+
+
+    def _affects_all_sites(self, change):
+        return len(change["affected_sites"]) == len(config.sitenames())
+
+
 
 
 
@@ -4003,6 +4032,24 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _create_site_sync_snapshot(self, site_id):
+        has_foreign = self._site_has_foreign_changes(site_id)
+
+        if has_foreign and config.user.may("wato.activateforeign"):
+            raise MKUserError(None,
+                _("There are some changes made by your colleagues that you can not "
+                  "activate because you are not permitted to. You can only activate "
+                  "the changes on the sites that are not affected by these changes. "
+                  "<br>"
+                  "If you need to activate your changes on all sites, please contact "
+                  "a permitted user to do it for you."))
+
+        if has_foreign and not self._activate_foreign:
+            raise MKUserError(None,
+                _("There are some changes made by your colleagues and you did not "
+                  "confirm to activate these changes. In order to proceed, you will "
+                  "have to confirm the activation or ask you colleagues to activate "
+                  "these changes in their own."))
+
         snapshot_path = self._site_snapshot_file(site_id)
 
         # Add site-specific global settings.

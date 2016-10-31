@@ -65,10 +65,9 @@ def page_crashed(what):
 
     if what == "gui":
         html.show_error("<b>%s:</b> %s" % (_("Internal error"), sys.exc_info()[1]))
-        html.write("<p>%s</p>" %
-                    _("An internal error occured while processing your request. "
-                     "You can report this issue to the Check_MK team to help "
-                     "fixing this issue. Please use the form below for reporting."))
+        html.p(_("An internal error occured while processing your request. "
+                 "You can report this issue to the Check_MK team to help "
+                 "fixing this issue. Please use the form below for reporting."))
 
     if info:
         warn_about_local_files(info)
@@ -158,10 +157,10 @@ def fetch_file_from_tar(tardata, filename):
 
 
 def output_box(title, content):
-    html.write('<h3>%s</h3>' % title)
-    html.write('<div class=log_output>%s</div>'
-               % html.attrencode(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
-
+    html.h3(title)
+    html.open_div(class_="log_output")
+    html.write(html.attrencode(content).replace("\n", "<br>").replace(' ', '&nbsp;'))
+    html.close_div()
 
 def vs_crash_report():
     return Dictionary(
@@ -192,10 +191,10 @@ def handle_report_form(tardata, what):
         url_encoded_params = html.urlencode_vars(details.items() + [
             ("crashdump", base64.b64encode(tardata)),
         ])
-        html.write("<div id=\"pending_msg\" style=\"display:none\">")
+        html.open_div(id_="pending_msg", style="display:none")
         html.message(_("Submitting crash report..."))
-        html.write("</div>")
-        html.write("<div id=\"success_msg\" style=\"display:none\">")
+        html.close_div()
+        html.open_div(id_="success_msg", style="display:none")
         html.message(HTML(_(
             "Your crash report has been submitted (ID: ###ID###). Thanks for your participation, "
             "it is very important for the quality of Check_MK.<br><br>"
@@ -213,14 +212,14 @@ def handle_report_form(tardata, what):
             "report.<br>If you are interested in the details about support, "
             "you find details on <a href=\"http://mathias-kettner.com/"
             "checkmk_support_contract.html\" target=_blank>our website</a>.")))
-        html.write("</div>")
-        html.write("<div id=\"fail_msg\" style=\"display:none\">")
+        html.close_div()
+        html.open_div(id_="fail_msg", style="display:none")
         report_url = mailto_url = html.makeuri([
             ("subject", "Check_MK Crash Report - " + get_version(what)),
         ], filename="mailto:" + get_crash_report_target(what))
         html.show_error(_("Failed to send the crash report. Please download it manually and send it "
                           "to <a href=\"%s\">%s</a>") % (report_url , get_crash_report_target(what)))
-        html.write("</div>")
+        html.close_div()
         html.javascript("submit_crash_report('https://mathias-kettner.de/crash_report.php', " \
                                             "'%s');" % url_encoded_params)
     except MKUserError, e:
@@ -287,37 +286,40 @@ def add_gui_user_infos_to_details(details):
     details.setdefault("mail", user.get("mail"))
 
 
-def show_crash_report(info):
-    html.write("<h2>%s</h2>" % _("Crash Report"))
-    html.write("<table class=\"data\">")
-    html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Crash Type"))
-    html.write("<td>%s</td></tr>" % html.attrencode(info["crash_type"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Time"))
-    html.write("<td>%s</td></tr>" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Operating System"))
-    html.write("<td>%s</td></tr>" % html.attrencode(info["os"]))
+def _crash_row(title, infotext, odd=True, legend=False, pre=False):
+    trclass = "data odd0" if odd else "data even0"
+    tdclass = "left legend" if legend else "left"
+    html.open_tr(class_=trclass)
+    html.td(title, class_=tdclass)
+    if pre:
+        html.td( html.render_pre(infotext) )
+    else:
+        html.td(infotext)
+    html.close_tr()
 
+
+def show_crash_report(info):
+
+    html.h2(_("Crash Report"))
+    html.open_table(class_="data")
+
+    _crash_row(_("Crash Type"), info["crash_type"], odd=False,  legend=True)
+    _crash_row(_("Time"), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(info["time"])), odd=True)
+    _crash_row(_("Operating System"), info["os"], False)
     if info["crash_type"] == "cma":
         version_title = _("CMA Version")
     else:
         version_title = _("Check_MK Version")
-
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % version_title)
-    html.write("<td>%s</td></tr>" % html.attrencode(info["version"]))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Python Version"))
-    html.write("<td>%s</td></tr>" % html.attrencode(info.get("python_version", _("Unknown"))))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Exception"))
-    html.write("<td><pre>%s (%s)</pre></td></tr>" % (html.attrencode(info["exc_type"]),
-                                                     html.attrencode(info["exc_value"])))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Traceback"))
-    html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_traceback(info["exc_traceback"])))
+    _crash_row(version_title, info["version"], True)
+    _crash_row(_("Python Version"), info.get("python_version", _("Unknown")), False)
+    _crash_row(_("Exception"), "%s (%s)" % (info["exc_type"], info["exc_value"]), odd=True, pre=True)
+    _crash_row(_("Traceback"), format_traceback(info["exc_traceback"]), odd=False, pre=True)
     if "local_vars" in info:
-        html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Local Variables"))
-        html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_local_vars(info["local_vars"])))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Python Module Paths"))
+        _crash_row(_("Local Variables"), format_local_vars(info["local_vars"]), odd=True, pre=True)
     joined_paths = "<br>".join([ html.attrencode(p) for p in info.get("python_paths", [_("Unknown")]) ])
-    html.write("<td>%s</td></tr>" % joined_paths)
-    html.write("</table>")
+    _crash_row(_("Python Module Paths"), joined_paths, odd=False)
+
+    html.close_table()
 
 
 # Local vars are a base64 encoded repr of the python dict containing the local vars of
@@ -335,37 +337,21 @@ def show_crashed_check_details(info):
         }[val]
 
     details = info["details"]
-    html.write("<h2>%s</h2>" % _("Details"))
-    html.write("<table class=\"data\">")
 
-    html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Host"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details["host"]))
+    html.h2(_("Details"))
+    html.open_table(class_="data")
 
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Is Cluster Host"))
-    html.write("<td>%s</td></tr>" % format_bool(details.get("is_cluster")))
+    _crash_row(_("Host"), details["host"], odd=False, legend=True)
+    _crash_row(_("Is Cluster Host"), format_bool(details.get("is_cluster")), odd=True)
+    _crash_row(_("Check Type"), details["check_type"], odd=False)
+    _crash_row(_("Manual Check"), format_bool(details.get("manual_check")), odd=True, pre=True)
+    _crash_row(_("Uses SNMP"), format_bool(details.get("uses_snmp")), odd=False, pre=True)
+    _crash_row(_("Inline-SNMP"), format_bool(details.get("inline_snmp")), odd=True, pre=True)
+    _crash_row(_("Check Item"), details["item"], odd=False)
+    _crash_row(_("Description"), details["description"], odd=True)
+    _crash_row(_("Parameters"), format_params(details["params"]), odd=False, pre=True)
 
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Check Type"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details["check_type"]))
-
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Manual Check"))
-    html.write("<td><pre>%s</pre></td></tr>" % format_bool(details.get("manual_check")))
-
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Uses SNMP"))
-    html.write("<td><pre>%s</pre></td></tr>" % format_bool(details.get("uses_snmp")))
-
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Inline-SNMP"))
-    html.write("<td><pre>%s</pre></td></tr>" % format_bool(details.get("inline_snmp")))
-
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Check Item"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details["item"]))
-
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Description"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details["description"]))
-
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Parameters"))
-    html.write("<td><pre>%s</pre></td></tr>" % html.attrencode(format_params(details["params"])))
-
-    html.write("</table>")
+    html.close_table()
 
 
 def format_traceback(tb):
@@ -378,30 +364,26 @@ def format_params(params):
 
 def show_gui_crash_details(info):
     details = info["details"]
-    html.write("<h2>%s</h2>" % _("Details"))
-    html.write("<table class=\"data\">")
-    html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Page"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details["page"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Request Method"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details.get("request_method", _("Unknown"))))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("HTTP Parameters"))
-    html.write("<td>")
-    html.debug_vars(vars=details["vars"], hide_with_mouse=False)
-    html.write("</td></tr>")
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Referer"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details.get("referer", _("Unknown"))))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Username"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details["username"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("User Agent"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details["user_agent"]))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Mobile GUI"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details["is_mobile"]))
-    html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("SSL"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details["is_ssl_request"]))
-    html.write("<tr class=\"data even0\"><td class=\"left\">%s</td>" % _("Language"))
-    html.write("<td>%s</td></tr>" % html.attrencode(details["language"]))
 
-    html.write("</table>")
+    html.h2(_("Details"))
+    html.open_table(class_="data")
+
+    _crash_row(_("Page"), details["page"], odd=False, legend=True)
+    _crash_row(_("Request Method"), details.get("request_method", _("Unknown")))
+    html.open_tr(class_="data even0")
+    html.td(_("HTTP Parameters"), class_="left")
+    html.open_td()
+    html.debug_vars(vars=details["vars"], hide_with_mouse=False)
+    html.close_td()
+    html.close_tr()
+    _crash_row(_("Referer"), details.get("referer", _("Unknown")))
+    _crash_row(_("Username"), details["username"], odd=False)
+    _crash_row(_("User Agent"), details["user_agent"])
+    _crash_row(_("Mobile GUI"), details["is_mobile"], odd=False)
+    _crash_row(_("SSL"), details["is_ssl_request"])
+    _crash_row(_("Language"), details["language"], odd=False)
+
+    html.close_table()
 
 
 def show_old_dump_trace(tardata):

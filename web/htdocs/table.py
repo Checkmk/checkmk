@@ -126,7 +126,7 @@ def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True
         # buttons are never sortable
         if css and 'buttons' in css and sortable:
             sortable = False
-        table["headers"].append((title, help, sortable))
+        table["headers"].append((title, css, help, sortable))
     table["rows"][-1][0].append((htmlcode, css, colspan))
 
 def end():
@@ -263,16 +263,25 @@ def end():
             return
 
         if do_csv:
-            html.write(csv_separator.join([html.strip_tags(header) or "" for (header, help, sortable) in table["headers"]]) + "\n")
+            html.write(csv_separator.join([html.strip_tags(header) or "" for (header, css, help, sortable) in table["headers"]]) + "\n")
         else:
             html.write("  <tr>")
             first_col = True
-            for nr, (header, help, sortable) in enumerate(table["headers"]):
+            for nr, (header, css, help, sortable) in enumerate(table["headers"]):
                 text = header
+
                 if help:
                     header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
+
+                if css:
+                    css_def   = " class=\"header_%s\"" % css
+                    css_class = " header_%s" % css
+                else:
+                    css_def   = ""
+                    css_class = ""
+
                 if not table["sortable"] or not sortable:
-                    html.write("  <th>")
+                    html.write("  <th%s>" % css_def)
                 else:
                     reverse = 0
                     sort = html.var('_%s_sort' % table_id)
@@ -280,8 +289,8 @@ def end():
                         sort_col, sort_reverse = map(int, sort.split(',', 1))
                         if sort_col == nr:
                             reverse = sort_reverse == 0 and 1 or 0
-                    html.write("  <th class=\"sort\" title=\"%s\" onclick=\"location.href='%s'\">" %
-                                (_('Sort by %s') % text, html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])))
+                    html.write("  <th class=\"sort%s\" title=\"%s\" onclick=\"location.href='%s'\">" %
+                                (css_class, _('Sort by %s') % text, html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])))
 
                 # Add the table action link
                 if first_col:

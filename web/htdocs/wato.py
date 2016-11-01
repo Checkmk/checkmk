@@ -4672,33 +4672,25 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             #    else:
             #        html.buttonlink(restart_url, _("Restart"))
 
-            # Last result
-            #if activation_blocked_reasons:
-            #    table.cell(_("Update status"))
-            #else:
-            table.cell(_("Last result / State"), css="repprogress")
-            html.open_div(id_="site_%s_msg" % site_id, class_=["msg"])
-
-            # TODO: Fetch result from correct place
-            #site_reason = activation_blocked_reasons.get("sites", {}).get(site_id)
-            #if site_reason:
-            #    html.write(html.attrencode(site_reason))
-            #else:
-            result = repl_status.get("result", "")
-            if len(result) > 20:
-                result = html.strip_tags(result)
-                html.write('<span title="%s">%s...</span>' % \
-                    (html.attrencode(result), result[:20]))
-
-            else:
-                configuration_warnings = repl_status.get("warnings", [])
-                if configuration_warnings:
-                    html.write(render_replication_warnings(configuration_warnings))
-
+            table.cell(_("Progress"), css="repprogress")
+            html.open_div(id_="site_%s_status" % site_id, class_=["msg"])
             html.close_div()
-
             html.open_div(id_="site_%s_progress" % site_id, class_=["progress"])
             html.close_div()
+
+            # Hidden on initial rendering and shown on activation start
+            table.cell(_("Details"), css="details")
+            html.open_div(id_="site_%s_details" % site_id)
+
+            # Shown on initial rendering and hidden on activation start
+            table.cell(_("Last result"), css="last_result")
+            last_state = self._last_activation_state(site_id)
+            if not last_state:
+                html.write(_("Has never been activated"))
+            else:
+                html.write("%s" % last_state["_status_text"])
+                if last_state["_status_details"]:
+                    html.write(": %s" % (last_state["_status_details"]))
 
         table.end()
 
@@ -5135,17 +5127,6 @@ class ModeAjaxActivationState(WatoWebApiMode):
 #            html.write('<div id=pending_changes>')
 #            render_audit_log(pending, "pending", hilite_others=True)
 #            html.write('</div>')
-
-
-#def render_replication_warnings(configuration_warnings):
-#    html_code  = "<div class=warning>"
-#    html_code += "<b>%s</b>" % _("Warnings:")
-#    html_code += "<ul>"
-#    for warning in configuration_warnings:
-#        html_code += "<li>%s</li>" % html.attrencode(warning)
-#    html_code += "</ul>"
-#    html_code += "</div>"
-#    return html_code
 
 
 def clear_audit_log_after_confirm():

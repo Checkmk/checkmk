@@ -959,6 +959,13 @@ div.varname {
     filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fceabb', endColorstr='#fbdf93',GradientType=0 ); /* IE6-9 */
 }
 
+.wato td.details,
+.wato th.header_details,
+.wato td.repprogress,
+.wato th.header_repprogress {
+    display: none;
+}
+
 .wato td.tag-ellipsis {
     max-width: 300px;
     white-space: nowrap;

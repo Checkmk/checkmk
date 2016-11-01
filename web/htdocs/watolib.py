@@ -50,6 +50,7 @@ import ast
 import threading
 import tarfile
 import cStringIO
+import fcntl
 from lib import *
 from valuespec import *
 
@@ -3846,6 +3847,17 @@ class ActivateChanges(object):
         return bool([ c for c in changes if self._is_foreign(c) ])
 
 
+    def _last_activation_state(self, site_id):
+        last_activation_id = self._repstatus[site_id].get("last_activation")
+        manager = ActivateChangesManager()
+        try:
+            manager.load(last_activation_id)
+        except MKUserError:
+            return {}
+
+        return manager.get_site_state(site_id)
+
+
     def _get_last_change_id(self):
         return self._changes[-1][1]["id"]
 
@@ -3882,10 +3894,6 @@ class ActivateChangesManager(ActivateChanges):
         self._activation_id    = None
         self._snapshot_id      = None
         super(ActivateChangesManager, self).__init__()
-
-
-    def activate_until(self):
-        return self._activate_until
 
 
     def load(self, activation_id):
@@ -3932,6 +3940,22 @@ class ActivateChangesManager(ActivateChanges):
         self._do_housekeeping()
 
         return self._activation_id
+
+
+    def activate_until(self):
+        return self._activate_until
+
+
+    # Check whether or not at least one site thread is still working
+    # (flock on the <activation_id>/site_<site_id>.mk file)
+    def is_running(self, site_id):
+        lock_fd = os.open(self._info_path(), os.O_RDONLY)
+        try:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+            return False # -> Not running!
+        except IOError, e:
+            return True # -> Running!
 
 
     def _new_activation_id(self):
@@ -4093,6 +4117,10 @@ class ActivateChangesManager(ActivateChanges):
         return state
 
 
+    def get_site_state(self, site_id):
+        return self._load_site_state(site_id)
+
+
     def _load_site_state(self, site_id):
         state_path = "%s/%s/site_%s.mk" % \
             (self.activation_base_dir, self._activation_id, site_id)
@@ -4120,14 +4148,14 @@ STATE_WARNING   = "warning"   # e.g. in case of core config warnings
 
 
 class ActivateChangesSite(threading.Thread):
-    # TODO: Hier weiter!
     def __init__(self, site_id, activation_id, site_snapshot_file):
         super(ActivateChangesSite, self).__init__()
 
-        self._site_id       = site_id
-        self._activation_id = activation_id
-        self._changes       = self._get_changes()
-        self.daemon         = True
+        self._site_id        = site_id
+        self._activation_id  = activation_id
+        self._changes        = self._get_changes()
+        self._running_fd     = None
+        self.daemon          = True
 
         self._time_started   = None
         self._time_updated   = None
@@ -4148,29 +4176,51 @@ class ActivateChangesSite(threading.Thread):
             if self._is_sync_needed():
                 self._synchronize_site()
 
-            if self._is_restart_needed():
-                self._do_restart()
-
-            # TODO: STATE_WARNING in case of config warnings?
+            if self._is_activate_needed():
+                configuration_warnings = self._do_activate()
 
             self._confirm_changes()
 
-            self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
+            self._set_done_result(configuration_warnings)
         except Exception, e:
             log_exception()
             self._set_result(PHASE_DONE, _("Failed"),
-                             _("Failed to activate: %s") % e,
+                             _("Failed: %s") % e,
                              state=STATE_ERROR)
 
         finally:
             self._unlock_activation()
 
 
+    def _set_done_result(self, configuration_warnings):
+        if not configuration_warnings:
+            self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
+        else:
+            details = self._render_warnings(configuration_warnings)
+            self._set_result(PAHSE_DONE, _("Activated"), details, state=STATE_WARNING)
+
+
+    def _render_warnings(self, configuration_warnings):
+        html_code  = "<div class=warning>"
+        html_code += "<b>%s</b>" % _("Warnings:")
+        html_code += "<ul>"
+        for warning in configuration_warnings:
+            html_code += "<li>%s</li>" % html.attrencode(warning)
+        html_code += "</ul>"
+        html_code += "</div>"
+        return html_code
+
+
     def _lock_activation(self):
+        # This locks the global replication status file
         repstatus = load_replication_status(lock=True)
 
         if self._is_currently_activating(repstatus.get(self._site_id, {})):
             raise MKGeneralException(_("The site is currently locked by another activation process. Please try again later"))
+
+        # This is needed to detect stale activation progress entries
+        # (where activation thread is not running anymore)
+        self._mark_running()
 
         # This call unlocks the replication status file after setting "current_activation"
         # which will prevent other users from starting an activation for this site.
@@ -4181,12 +4231,36 @@ class ActivateChangesSite(threading.Thread):
         if not rep_status.get("current_activation"):
             return False
 
-        current_activation_id = rep_status.get(self._site_id, {}).get("current_activation")
-        # TODO: Is this activation still in progress?
-        # - Check whether or not activation still exists
-        # - Check whether or not site threads are still working
-        #   (flock on the <activation_id>/site_<site_id>.mk file)
+        #
+        # Is this activation still in progress?
+        #
 
+        current_activation_id = rep_status.get(self._site_id, {}).get("current_activation")
+
+        manager = ActivateChangesManager()
+
+        try:
+            manager.load(current_activation_id)
+        except MKUserError:
+            return False # Not existant anymore!
+
+        if manager.is_running(self._site_id):
+            return True
+
+        return False
+
+
+    def _mark_running(self):
+        self._running_fd = os.open(self._state_path(), os.O_RDONLY)
+        try:
+            fcntl.flock(self._running_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            # -> locked :-)
+        except IOError, e:
+            raise MKUserError(None, _("Failed to mark the activation as running: %s" % e))
+
+
+    def _mark_finished(self):
+        fcntl.flock(self._running_fd, fcntl.LOCK_UN)
 
 
     def _unlock_activation(self):
@@ -4194,17 +4268,14 @@ class ActivateChangesSite(threading.Thread):
             "last_activation"    : self._activation_id,
             "current_activation" : None,
         })
+        self._mark_finished()
 
 
     def _is_sync_needed(self):
         if config.site_is_local(self._site_id):
             return False
 
-        need_sync = False
-        for change in self._changes:
-            need_sync |= change["need_sync"]
-
-        return need_sync
+        return any([ c["need_sync"] for c in self._changes ])
 
 
     # This is not done on the local site
@@ -4263,19 +4334,18 @@ class ActivateChangesSite(threading.Thread):
 
 
     def _is_activate_needed(self):
-        need_restart = False
-        for change in self._changes:
-            need_restart |= change["need_restart"]
-
-        return need_restart
+        return any([ c["need_restart"] for c in self._changes ])
 
 
     def _do_activate(self):
         self._set_result(PHASE_ACTIVATE, _("Activating"))
 
-        # TODO: Hand over the affected domains to remote site to restart/reload the needed parts
         start = time.time()
-        configuration_warnings = check_mk_automation(site["id"], config.wato_activation_method)
+
+        # TODO: Hand over the affected domains to remote site to restart/reload the needed parts
+        # TODO: Mustn't this use the wato_activation_mode of the remote site?
+        configuration_warnings = check_mk_automation(self._site_id, config.wato_activation_method)
+
         duration = time.time() - start
         self._update_activation_time(self._site_id, "restart", duration)
         return configuration_warnings
@@ -4355,10 +4425,7 @@ class ActivateChangesSite(threading.Thread):
 
 
     def _save_state(self):
-        state_path = "%s/%s/site_%s.mk" % \
-            (ActivateChangesManager.activation_base_dir, self._activation_id, self._site_id)
-
-        return store.save_data_to_file(state_path, {
+        return store.save_data_to_file(self._state_path(), {
             "_site_id"          : self._site_id,
             "_phase"            : self._phase,
             "_state"            : self._state,
@@ -4369,6 +4436,11 @@ class ActivateChangesSite(threading.Thread):
             "_time_ended"       : self._time_ended,
             "_expected_duration": self._expected_duration(),
         })
+
+
+    def _state_path(self):
+        return "%s/%s/site_%s.mk" % \
+            (ActivateChangesManager.activation_base_dir, self._activation_id, self._site_id)
 
 
     def _expected_duration(self):

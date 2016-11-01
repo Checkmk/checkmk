@@ -598,6 +598,8 @@ function start_activation(sites, activate_until, comment, activate_foreign)
     });
 
     lock_activation_controls(true);
+    hide_last_results();
+    show_details(false);
 }
 
 function handle_start_activation(_unused, response_json)
@@ -663,6 +665,39 @@ function lock_activation_controls(lock)
     }
 }
 
+function hide_last_results()
+{
+    var elements = [];
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("last_result"), 0));
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("header_last_result"), 0));
+
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].style.display = "none";
+    }
+}
+
+function show_details(show)
+{
+    var elements = [];
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("details"), 0));
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("header_details"), 0));
+
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].style.display = show ? "table-cell" : "none";
+    }
+}
+
+function show_progress(show)
+{
+    var elements = [];
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("repprogress"), 0));
+    elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("header_repprogress"), 0));
+
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].style.display = show ? "table-cell" : "none";
+    }
+}
+
 function monitor_activation_progress(activation_id)
 {
     show_activation_info("Activating...");
@@ -725,9 +760,17 @@ function update_activation_state(response)
 
 function update_site_activation_state(site_state)
 {
-    // TODO: Show status details!
-    var msg = document.getElementById("site_" + site_state["_site_id"] + "_msg");
+    // Show status text (overlay text on the progress bar)
+    var msg = document.getElementById("site_" + site_state["_site_id"] + "_status");
     msg.innerHTML = site_state["_status_text"];
+
+    // Show status details
+    if (site_state["_status_details"]) {
+        show_details(true);
+
+        var msg = document.getElementById("site_" + site_state["_site_id"] + "_details");
+        msg.innerHTML = site_state["_status_details"];
+    }
 
     update_site_progress(site_state);
 }
@@ -737,6 +780,7 @@ function update_site_progress(site_state)
     var max_width = 160;
 
     var progress = document.getElementById("site_" + site_state["_site_id"] + "_progress");
+    show_progress(true);
 
     if (site_state["_phase"] == "done") {
         progress.style.width = max_width + "px";

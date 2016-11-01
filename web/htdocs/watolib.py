@@ -3312,7 +3312,7 @@ def create_nagvis_backends(sites):
     file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.paths.omd_root, 'w').write('\n'.join(cfg))
 
 
-def create_distributed_wato_file(siteid, mode):
+def create_distributed_wato_file(siteid):
     out = create_user_file(cmk.paths.check_mk_config_dir + "/distributed_wato.mk", "w")
     out.write(wato_fileheader())
     out.write("# This file has been created by the master site\n"
@@ -3349,7 +3349,7 @@ def update_distributed_wato_file(sites):
             distributed = True
         if config.site_is_local(siteid):
             found_local = True
-            create_distributed_wato_file(siteid, site.get("replication"))
+            create_distributed_wato_file(siteid)
 
     # Remove the distributed wato file
     # a) If there is no distributed WATO setup
@@ -3394,6 +3394,8 @@ def do_site_login(site_id, name, password):
         except:
             raise MKAutomationException(response)
 
+# TODO: Better to use native python requests module instead of
+#       this curl call.
 def get_url(url, insecure, user=None, password=None, params = '', post_data = None):
     cred = ''
     if user:
@@ -3663,11 +3665,10 @@ def automation_push_snapshot():
         site_id = html.var("siteid")
         if not site_id:
             raise MKGeneralException(_("Missing variable siteid"))
-        mode = html.var("mode", "slave")
 
         our_id = our_site_id()
 
-        if mode == "slave" and not config.is_single_local_site():
+        if not config.is_single_local_site():
             raise MKGeneralException(_("Configuration error. You treat us as "
                "a <b>slave</b>, but we have an own distributed WATO configuration!"))
 
@@ -3713,30 +3714,20 @@ def automation_push_snapshot():
         except Exception, e:
             logger(LOG_WARNING, "Warning: cannot extract site-specific global settings: %s" % e)
 
+        # TODO: This needs to be changed to the new mechanism
         log_commit_pending() # pending changes are lost
 
         call_hook_snapshot_pushed()
 
         # Create rule making this site only monitor our hosts
-        create_distributed_wato_file(site_id, mode)
+        create_distributed_wato_file(site_id)
         log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
 
-        # Restart/reload monitoring core, if neccessary
-        if html.var("restart", "no") == "yes":
-            configuration_warnings = check_mk_local_automation(config.wato_activation_method)
-        else:
-            configuration_warnings = []
-
-            # When core restart/reload is done above the EC is reloaded regularly. But
-            # even when the core does not need to be restarted, EC rules might have
-            # changed. So reload the EC in all cases.
-            if hasattr(config, "mkeventd_enabled") and config.mkeventd_enabled:
-                mkeventd_reload()
-
-        return configuration_warnings
+        return True
     except Exception, e:
         if config.debug:
-            return _("Internal automation error: %s\n%s") % (e, traceback.format_exc())
+            return _("Internal automation error: %s\n%s") % \
+                                (e, traceback.format_exc())
         else:
             return _("Internal automation error: %s") % e
 
@@ -4103,7 +4094,8 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _start_site_activation(self, site_id):
-        ActivateChangesSite(site_id, self._activation_id, self._site_snapshot_file(site_id)).start()
+        ActivateChangesSite(site_id, self._activation_id,
+                            self._site_snapshot_file(site_id)).start()
 
 
     def get_state(self):
@@ -4153,6 +4145,7 @@ class ActivateChangesSite(threading.Thread):
 
         self._site_id        = site_id
         self._activation_id  = activation_id
+        self._snapshot_file  = snapshot_file
         self._changes        = self._get_changes()
         self._running_fd     = None
         self.daemon          = True
@@ -4278,31 +4271,29 @@ class ActivateChangesSite(threading.Thread):
         return any([ c["need_sync"] for c in self._changes ])
 
 
-    # This is not done on the local site
+    # This is done on the central site to initiate the sync process
     def _synchronize_site(self):
         self._set_result(PHASE_SYNC, _("Sychronizing"))
 
         start = time.time()
-        result = self._push_snapshot_to_site()
-        self._cleanup_snapshot()
-        duration = time.time() - start
 
+        try:
+            result = self._push_snapshot_to_site()
+        finally:
+            self._cleanup_snapshot()
+
+        duration = time.time() - start
         self._update_activation_time(self._site_id, "sync", duration)
 
-        # Pre 1.2.7i3 sites return True on success and a string on error.
+        # Pre 1.2.7i3 and sites return True on success and a string on error.
         # 1.2.7i3 and later return a list of warning messages on success.
-        # [] means OK and no warnings. The error handling is unchanged
-        if result == True:
-            result = []
+        # [] means OK and no warnings. The error handling is unchanged.
+        # Since 1.4.0i3 the old API (True -> success, <unicode>/<str> -> error)
+        if isinstance(result, list):
+            result = True
 
-        if type(result) == list:
-            update_replication_status(self._site_id, {
-                "result"   : _("Success"),
-                "warnings" : result,
-            })
-        else:
-            update_replication_status(site["id"], { "result" : result })
-        return result
+        if result != True:
+            raise MKGeneralException(_("Failed to synchronize with site: %s" % result))
 
 
     def _push_snapshot_to_site(self):
@@ -4311,16 +4302,16 @@ class ActivateChangesSite(threading.Thread):
         url = html.makeuri_contextless([
             ("command",    "push-snapshot"),
             ("secret",     site["secret"]),
-            ("siteid",     site["id"]),         # This site must know it's ID
+            ("siteid",     site["id"]),
             ("debug",      config.debug and "1" or ""),
-            ("mode",       "slave"), # TODO: Deprecated. Remove it!
-            ("restart",    "no"), # TODO: Deprecated. Remove it!
         ], filename=site["multisiteurl"] + "automation.py")
 
-        response_text = self._upload_file(url, sync_snapshot_file(self._site_id), site.get('insecure', False))
+        response_text = self._upload_file(url, self._snapshot_file,
+                                          site.get('insecure', False))
+
         try:
             return ast.literal_eval(response_text)
-        except:
+        except SyntaxError:
             raise MKAutomationException(_("Garbled automation response from site %s: '%s'") %
                 (site["id"], response_text))
 
@@ -4330,7 +4321,13 @@ class ActivateChangesSite(threading.Thread):
 
 
     def _cleanup_snapshot(self):
-        pass # TODO: Snapshot is not needed anymore
+        try:
+            os.unlink(self._snapshot_file)
+        except OSError, e:
+            if e.errno == 2:
+                pass # Not existant -> OK
+            else:
+                raise
 
 
     def _is_activate_needed(self):
@@ -4349,6 +4346,20 @@ class ActivateChangesSite(threading.Thread):
         duration = time.time() - start
         self._update_activation_time(self._site_id, "restart", duration)
         return configuration_warnings
+
+        ## Restart/reload monitoring core, if neccessary
+        #if html.var("restart", "no") == "yes":
+        #    configuration_warnings = check_mk_local_automation(config.wato_activation_method)
+        #else:
+        #    configuration_warnings = []
+
+        #    # When core restart/reload is done above the EC is reloaded regularly. But
+        #    # even when the core does not need to be restarted, EC rules might have
+        #    # changed. So reload the EC in all cases.
+        #    if hasattr(config, "mkeventd_enabled") and config.mkeventd_enabled:
+        #        mkeventd_reload()
+
+        #return configuration_warnings
 
 
     def _update_activation_time(self, ty, duration):

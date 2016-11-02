@@ -60,6 +60,7 @@ import cmk.store as store
 replication_paths = []
 backup_paths = []
 backup_domains = {}
+automation_commands = {}
 
 def initialize_before_loading_plugins():
     # Directories and files to synchronize during replication
@@ -282,7 +283,7 @@ def add_service_change(host, action_name, text):
 def add_change_to_site(site_id, change_id, action_name, text, obj, add_user, need_sync, need_restart, domains):
     # Individual changes may override the domain restart default value
     if need_restart == None:
-        need_restart = any([ d.needs_restart for d in domains ])
+        need_restart = any([ d.needs_activation for d in domains ])
 
     if need_sync == None:
         need_sync = any([ d.needs_sync for d in domains ])
@@ -339,23 +340,35 @@ class ConfigDomain(object):
                 return domain_class
         raise NotImplementedError()
 
-    def restart(self):
+    def activate(self):
         raise NotImplementedError()
 
 
 
 class ConfigDomainCore(ConfigDomain):
-    needs_sync    = True
-    needs_restart = True
-    ident = "check_mk"
+    needs_sync       = True
+    needs_activation = True
+    ident            = "check_mk"
+
+    def activate(self):
+        return check_mk_local_automation(config.wato_activation_method)
 
 
 
 class ConfigDomainGUI(ConfigDomain):
-    needs_sync    = True
-    needs_restart = False
-    ident = "multisite"
+    needs_sync       = True
+    needs_activation = False
+    ident            = "multisite"
 
+
+class ConfigDomainEventConsole(ConfigDomain):
+    needs_sync       = True
+    needs_activation = False
+    ident            = "ec"
+
+    def activate(self):
+        if hasattr(config, "mkeventd_enabled") and config.mkeventd_enabled:
+            mkeventd_reload()
 
 
 #.
@@ -3661,75 +3674,73 @@ def get_dirty_sites():
 
 
 def automation_push_snapshot():
+    verify_slave_site_config(html.var("siteid"))
+
+    tarcontent = html.uploaded_file("snapshot")
+    if not tarcontent:
+        raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
+    tarcontent = tarcontent[2]
+
+    multitar.extract_from_buffer(tarcontent, replication_paths)
+
+    # We expect one file containing sitespecific global settings.
+    # That is contained in the sub-tarball "sitespecific.tar" and
+    # just contains one file: "sitespecific.mk". The contains a repr()
+    # of all global settings, that should override the ones in global.mk
+    # in various directories.
     try:
-        site_id = html.var("siteid")
-        if not site_id:
-            raise MKGeneralException(_("Missing variable siteid"))
+        tmp_dir = cmk.paths.tmp_dir + "/sitespecific-%s" % id(html)
+        if not os.path.exists(tmp_dir):
+            make_nagios_directory(tmp_dir)
+        multitar.extract_from_buffer(tarcontent, [ ("dir", "sitespecific", tmp_dir) ])
 
-        our_id = our_site_id()
+        site_globals = store.load_data_from_file(tmp_dir + "/sitespecific.mk", {})
 
-        if not config.is_single_local_site():
-            raise MKGeneralException(_("Configuration error. You treat us as "
-               "a <b>slave</b>, but we have an own distributed WATO configuration!"))
+        current_settings = load_configuration_settings()
+        current_settings.update(site_globals)
+        save_configuration_settings(current_settings)
 
-        if our_id != None and our_id != site_id:
-            raise MKGeneralException(
-              _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
-                (our_id, site_id))
-
-        # Make sure there are no local changes we would lose! But only if we are
-        # distributed ourselves (meaning we are a peer).
-        if is_distributed():
-            pending = parse_audit_log("pending")
-            if len(pending) > 0:
-                message = _("There are %d pending changes that would get lost. The most recent are: ") % len(pending)
-                message += ", ".join([e[-1] for e in pending[:10]])
-                raise MKGeneralException(message)
-
-        tarcontent = html.uploaded_file("snapshot")
-        if not tarcontent:
-            raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
-        tarcontent = tarcontent[2]
-
-        multitar.extract_from_buffer(tarcontent, replication_paths)
-
-        # We expect one file containing sitespecific global settings.
-        # That is contained in the sub-tarball "sitespecific.tar" and
-        # just contains one file: "sitespecific.mk". The contains a repr()
-        # of all global settings, that should override the ones in global.mk
-        # in various directories.
-        try:
-            tmp_dir = cmk.paths.tmp_dir + "/sitespecific-%s" % id(html)
-            if not os.path.exists(tmp_dir):
-                make_nagios_directory(tmp_dir)
-            multitar.extract_from_buffer(tarcontent, [ ("dir", "sitespecific", tmp_dir) ])
-
-            site_globals = store.load_data_from_file(tmp_dir + "/sitespecific.mk", {})
-
-            current_settings = load_configuration_settings()
-            current_settings.update(site_globals)
-            save_configuration_settings(current_settings)
-
-            shutil.rmtree(tmp_dir)
-        except Exception, e:
-            logger(LOG_WARNING, "Warning: cannot extract site-specific global settings: %s" % e)
-
-        # TODO: This needs to be changed to the new mechanism
-        log_commit_pending() # pending changes are lost
-
-        call_hook_snapshot_pushed()
-
-        # Create rule making this site only monitor our hosts
-        create_distributed_wato_file(site_id)
-        log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
-
-        return True
+        shutil.rmtree(tmp_dir)
     except Exception, e:
-        if config.debug:
-            return _("Internal automation error: %s\n%s") % \
-                                (e, traceback.format_exc())
-        else:
-            return _("Internal automation error: %s") % e
+        logger(LOG_WARNING, "Warning: cannot extract site-specific global settings: %s" % e)
+
+    # TODO: This needs to be changed to the new mechanism
+    log_commit_pending() # pending changes are lost
+
+    call_hook_snapshot_pushed()
+
+    # Create rule making this site only monitor our hosts
+    create_distributed_wato_file(site_id)
+    log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
+
+    return True
+
+
+automation_commands["push-snapshot"] = automation_push_snapshot
+
+
+def verify_slave_site_config(site_id):
+    if not site_id:
+        raise MKGeneralException(_("Missing variable siteid"))
+
+    our_id = our_site_id()
+
+    if not config.is_single_local_site():
+        raise MKGeneralException(_("Configuration error. You treat us as "
+           "a <b>slave</b>, but we have an own distributed WATO configuration!"))
+
+    if our_id != None and our_id != site_id:
+        raise MKGeneralException(
+          _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
+            (our_id, site_id))
+
+    # Make sure there are no local changes we would lose!
+    if is_distributed():
+        pending = parse_audit_log("pending")
+        if len(pending) > 0:
+            message = _("There are %d pending changes that would get lost. The most recent are: ") % len(pending)
+            message += ", ".join([e[-1] for e in pending[:10]])
+            raise MKGeneralException(message)
 
 
 def mkeventd_reload():
@@ -3869,8 +3880,6 @@ class ActivateChanges(object):
 
     def _affects_all_sites(self, change):
         return len(change["affected_sites"]) == len(config.sitenames())
-
-
 
 
 
@@ -4021,6 +4030,8 @@ class ActivateChangesManager(ActivateChanges):
         # Create (legacy) WATO config snapshot
         create_snapshot()
 
+        # TODO: This can easily be parallelized by executing all sites in own threads and wait for
+        # completion of all the threads.
         for site_id in self._sites:
             self._create_site_sync_snapshot(site_id)
 
@@ -4339,27 +4350,24 @@ class ActivateChangesSite(threading.Thread):
 
         start = time.time()
 
-        # TODO: Hand over the affected domains to remote site to restart/reload the needed parts
-        # TODO: Mustn't this use the wato_activation_mode of the remote site?
-        configuration_warnings = check_mk_automation(self._site_id, config.wato_activation_method)
+        configuration_warnings = self._call_activate_changes_automation()
 
         duration = time.time() - start
         self._update_activation_time(self._site_id, "restart", duration)
         return configuration_warnings
 
-        ## Restart/reload monitoring core, if neccessary
-        #if html.var("restart", "no") == "yes":
-        #    configuration_warnings = check_mk_local_automation(config.wato_activation_method)
-        #else:
-        #    configuration_warnings = []
 
-        #    # When core restart/reload is done above the EC is reloaded regularly. But
-        #    # even when the core does not need to be restarted, EC rules might have
-        #    # changed. So reload the EC in all cases.
-        #    if hasattr(config, "mkeventd_enabled") and config.mkeventd_enabled:
-        #        mkeventd_reload()
+    def _call_activate_changes_automation(self):
+        response = do_remote_automation(
+            config.site(self._site_id), "activate-changes", [
+                ("domains", repr(args)),
+                ("site_id", self._site_id),
+            ])
 
-        #return configuration_warnings
+        try:
+            return ast.literal_eval(response_text)
+        except SyntaxError:
+            raise MKAutomationException(_("Garbled automation response: '%s'") % response_text)
 
 
     def _update_activation_time(self, ty, duration):

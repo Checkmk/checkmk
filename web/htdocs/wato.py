@@ -4798,6 +4798,32 @@ class ModeAjaxActivationState(WatoWebApiMode):
 
         return manager.get_state()
 
+
+
+def do_activate_changes_automation():
+    verify_slave_site_config(html.var("site_id"))
+
+    try:
+        domains = ast.literal_eval(html.var("domains"))
+    except SyntaxError:
+        raise MKAutomationException(_("Garbled automation response: '%s'") % response_text)
+
+    results = {}
+    for domain in domains:
+        try:
+            domain_class = ConfigDomain.get_class(domain)
+            if not domain_class.needs_activation:
+                raise MKGeneralException(_("The domain \"%s\" does not support activation."))
+
+            results[domain] = (0, domain_class().activate())
+        except Exception, e:
+            results[domain] = (1, "%s" % e)
+
+    return results
+
+
+automation_commands["activate-changes"] = do_activate_changes_automation
+
 # TODO: Remove this!
 #def get_activation_blocked_reasons():
 #    act_blocked_reasons = {}
@@ -9801,7 +9827,6 @@ def page_automation_login():
     # the fly.
     html.write_text(repr(get_login_secret(True)))
 
-automation_commands = {}
 
 def page_automation():
     secret = html.var("secret")
@@ -9834,50 +9859,54 @@ def page_automation():
         result = check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
         html.write_text(repr(result))
 
-    elif command == "push-snapshot":
-        html.write_text(repr(automation_push_snapshot()))
-
     elif command == "push-profile":
-        html.write_text(mk_repr(automation_push_profile()))
+        try:
+            html.write_text(mk_repr(automation_push_profile()))
+        except Exception, e:
+            if config.debug:
+                html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
+            else:
+                html.write_text(_("Internal automation error: %s") % e)
 
     elif command in automation_commands:
-        html.write_text(repr(automation_commands[command]()))
+        try:
+            html.write_text(repr(automation_commands[command]()))
+        except Exception, e:
+            if config.debug:
+                html.write_text(_("Internal automation error: %s\n%s") % \
+                                    (e, traceback.format_exc()))
+            else:
+                html.write_text(_("Internal automation error: %s") % e)
 
     else:
         raise MKGeneralException(_("Invalid automation command: %s.") % command)
 
 def automation_push_profile():
-    try:
-        site_id = html.var("siteid")
-        if not site_id:
-            raise MKGeneralException(_("Missing variable siteid"))
+    site_id = html.var("siteid")
+    if not site_id:
+        raise MKGeneralException(_("Missing variable siteid"))
 
-        user_id = html.var("user_id")
-        if not user_id:
-            raise MKGeneralException(_("Missing variable user_id"))
+    user_id = html.var("user_id")
+    if not user_id:
+        raise MKGeneralException(_("Missing variable user_id"))
 
-        our_id = our_site_id()
+    our_id = our_site_id()
 
-        if our_id != None and our_id != site_id:
-            raise MKGeneralException(
-              _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
-                (our_id, site_id))
+    if our_id != None and our_id != site_id:
+        raise MKGeneralException(
+          _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
+            (our_id, site_id))
 
-        profile = html.var("profile")
-        if not profile:
-            raise MKGeneralException(_('Invalid call: The profile is missing.'))
+    profile = html.var("profile")
+    if not profile:
+        raise MKGeneralException(_('Invalid call: The profile is missing.'))
 
-        users = userdb.load_users(lock = True)
-        profile = mk_eval(profile)
-        users[user_id] = profile
-        userdb.save_users(users)
+    users = userdb.load_users(lock = True)
+    profile = mk_eval(profile)
+    users[user_id] = profile
+    userdb.save_users(users)
 
-        return True
-    except Exception, e:
-        if config.debug:
-            return _("Internal automation error: %s\n%s") % (e, traceback.format_exc())
-        else:
-            return _("Internal automation error: %s") % e
+    return True
 
 
 #.

@@ -3467,9 +3467,9 @@ def check_mk_remote_automation(siteid, command, args, indata, stdin_data=None, t
 
     # If the site is not up-to-date, synchronize it first.
     # TODO: Where is this done/needed?
-    repstatus = load_replication_status()
-    if repstatus.get(siteid, {}).get("need_sync"):
-        synchronize_site(config.site(siteid), restart=False)
+    #repstatus = load_replication_status()
+    #if repstatus.get(siteid, {}).get("need_sync"):
+    #    synchronize_site(config.site(siteid), restart=False)
 
     # Now do the actual remote command
     response = do_remote_automation(
@@ -3930,8 +3930,6 @@ class ActivateChangesManager(ActivateChanges):
 
         self._save_activation()
 
-        # TODO: Log activation log entry + comment
-
         self._start_activation()
 
         self._do_housekeeping()
@@ -4025,7 +4023,7 @@ class ActivateChangesManager(ActivateChanges):
                                 "activation again."))
 
         # Create (legacy) WATO config snapshot
-        create_snapshot()
+        create_snapshot(self._comment)
 
         # TODO: This can easily be parallelized by executing all sites in own threads and wait for
         # completion of all the threads.
@@ -4096,14 +4094,24 @@ class ActivateChangesManager(ActivateChanges):
         file(tmp_dir + "/sitespecific.mk", "w").write("%r\n" % config)
 
 
+
     def _start_activation(self):
         for site_id in self._sites:
             self._start_site_activation(site_id)
 
 
     def _start_site_activation(self, site_id):
+        self._log_activation(site_id)
         ActivateChangesSite(site_id, self._activation_id,
                             self._site_snapshot_file(site_id)).start()
+
+
+    def _log_activation(self, site_id):
+        log_msg = _("Started activation of site %s") % site_id
+        if self._comment:
+            log_msg += " (%s: %s)" % (_("Comment"), self._comment)
+
+        log_audit(None, "activate-changes", log_msg)
 
 
     def get_state(self):
@@ -4494,21 +4502,29 @@ def execute_activate_changes(domains):
 #   '----------------------------------------------------------------------'
 # TODO: May be removed in near future.
 
-def create_snapshot():
+def create_snapshot(comment):
     make_nagios_directory(snapshot_dir)
 
     snapshot_name = "wato-snapshot-%s.tar" % time.strftime("%Y-%m-%d-%H-%M-%S",
                                                         time.localtime(time.time()))
 
     data = {}
-    data["comment"]       = _("Activated changes by %s") % config.user.id
+    data["comment"] = _("Activated changes by %s.") % config.user.id
+
+    if comment:
+        data["comment"] = _("Comment: %s") % comment
+
     data["created_by"]    = config.user.id
     data["type"]          = "automatic"
     data["snapshot_name"] = snapshot_name
 
     do_create_snapshot(data)
 
-    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
+    log_msg = _("Created snapshot %s") % snapshot_name
+    if comment:
+        log_msg += " (%s: %s)" % (_("Comment"), comment)
+
+    log_audit(None, "snapshot-created", log_msg)
     do_snapshot_maintenance()
 
     return snapshot_name

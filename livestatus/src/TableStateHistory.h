@@ -59,8 +59,7 @@ class TableStateHistory : public Table {
     int _until;
 
     // Notification periods information, name: active(1)/inactive(0)
-    typedef std::map<std::string, int> _notification_periods_t;
-    _notification_periods_t _notification_periods;
+    std::map<std::string, int> _notification_periods;
 
     // Helper functions to traverse through logfiles
     _logfiles_t::iterator _it_logs;

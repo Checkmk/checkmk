@@ -40,8 +40,7 @@ public:
     void terminate();
 
 private:
-    typedef std::deque<int> _queue_t;
-    _queue_t _queue;
+    std::deque<int> _queue;
     std::mutex _mutex;
     std::condition_variable _cond;
     bool _should_terminate;

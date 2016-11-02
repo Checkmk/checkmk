@@ -619,7 +619,7 @@ void TableStateHistory::answerQuery(Query *query) {
 
                         // Determine initial in_notification_period status
                     }
-                    _notification_periods_t::const_iterator tmp_period =
+                    auto tmp_period =
                         _notification_periods.find(state->_notification_period);
                     if (tmp_period != _notification_periods.end()) {
                         state->_in_notification_period = tmp_period->second;
@@ -791,7 +791,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
 
         // Apply latest notification period information and set the host_state
         // to unmonitored
-        _notification_periods_t::const_iterator it_status =
+        auto it_status =
             _notification_periods.find(hs_state->_notification_period);
         if (it_status != _notification_periods.end()) {
             hs_state->_in_notification_period = it_status->second;

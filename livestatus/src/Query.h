@@ -93,9 +93,9 @@ private:
     Logger *const _logger;
 
     // normal queries
-    typedef std::vector<Column *> _columns_t;
-    _columns_t _columns;
-    _columns_t _dummy_columns;  // dynamically allocated. Must delete them.
+    std::vector<Column *> _columns;
+    // dynamically allocated. Must delete them.
+    std::vector<Column *> _dummy_columns;
 
     // stats queries
     std::vector<StatsColumn *> _stats_columns;  // must also delete

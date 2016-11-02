@@ -11,6 +11,7 @@
     Multisite:
     * 3970 SEC: Fixed possible URL injection on index page...
     * 4037 FIX: Fix graphs that have optional metrics...
+    * 3974 FIX: Sorting comments in hover menu of comments icon by time now
 
 
 1.2.8p13:

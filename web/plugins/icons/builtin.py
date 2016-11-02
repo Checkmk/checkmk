@@ -556,7 +556,7 @@ def paint_comment_icon(what, row, tags, host_custom_vars):
     comments = row[what + "_comments_with_extra_info"]
     if len(comments) > 0:
         text = ""
-        for c in comments:
+        for c in sorted(comments, key=lambda x: x[4]):
             id, author, comment, ty, timestamp = c
             comment = comment.replace("\n", "<br>")
             text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0, 'abs')[1], author, comment)

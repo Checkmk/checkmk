@@ -57,6 +57,7 @@
     * 3969 FIX: CentOS 5.5: Fixed incompatibility with the available OpenSSL 0.98...
     * 4037 FIX: Fix graphs that have optional metrics...
     * 3973 FIX: Backup: Fixed displaying wrong finish time after backup completion
+    * 3974 FIX: Sorting comments in hover menu of comments icon by time now
 
     WATO:
     * 3915 User access times: New icon when never logged in; New column "last seen"

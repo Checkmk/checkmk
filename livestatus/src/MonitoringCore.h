@@ -32,11 +32,18 @@ class Logger;
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
 public:
+    class Contact;
+    class ContactGroup;
     class Host;
 
     virtual ~MonitoringCore() = default;
 
     virtual Host *getHostByDesignation(const std::string &designation) = 0;
+    virtual ContactGroup *find_contactgroup(const std::string &name) = 0;
+
+    virtual bool host_has_contact(Host *host, Contact *contact) = 0;
+    virtual bool is_contact_member_of_contactgroup(ContactGroup *group,
+                                                   Contact *contact) = 0;
 
     virtual std::string mkeventdSocketPath() = 0;
 

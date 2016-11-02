@@ -576,10 +576,25 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
 
 class NagiosCore : public MonitoringCore {
 public:
-    Host *getHostByDesignation(const std::string &designation) override {
+    Host *getHostByDesignation(const string &designation) override {
         auto it = fl_hosts_by_designation.find(unsafe_tolower(designation));
         return it == fl_hosts_by_designation.end() ? nullptr
                                                    : fromImpl(it->second);
+    }
+
+    bool host_has_contact(Host *host, Contact *contact) override {
+        return is_authorized_for(toImpl(contact), toImpl(host), nullptr);
+    }
+
+    ContactGroup *find_contactgroup(const std::string &name) override {
+        // Older Nagios headers are not const-correct... :-P
+        return fromImpl(::find_contactgroup(const_cast<char *>(name.c_str())));
+    }
+
+    bool is_contact_member_of_contactgroup(ContactGroup *group,
+                                           Contact *contact) override {
+        return ::is_contact_member_of_contactgroup(toImpl(group),
+                                                   toImpl(contact)) != 0;
     }
 
     string mkeventdSocketPath() override { return g_mkeventd_socket_path; }
@@ -587,6 +602,19 @@ public:
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
 private:
+    static contact *toImpl(Contact *c) {
+        return reinterpret_cast<contact *>(c);
+    }
+
+    static contactgroup *toImpl(ContactGroup *g) {
+        return reinterpret_cast<contactgroup *>(g);
+    }
+
+    static ContactGroup *fromImpl(contactgroup *g) {
+        return reinterpret_cast<ContactGroup *>(g);
+    }
+
+    static host *toImpl(Host *h) { return reinterpret_cast<host *>(h); }
     static Host *fromImpl(host *h) { return reinterpret_cast<Host *>(h); }
 };
 

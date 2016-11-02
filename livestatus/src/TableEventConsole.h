@@ -193,7 +193,7 @@ protected:
         }
     };
 
-private:
+protected:
     MonitoringCore *_core;
 };
 

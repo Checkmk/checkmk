@@ -77,13 +77,14 @@ def check_netscaler_health_fan(item, params, info):
             return check_fan(int(value), params)
 
 check_info["netscaler_health.fan"] = {
-    "check_function"          : check_netscaler_health_fan,
     "inventory_function"      : inventory_netscaler_health_fan,
+    "check_function"          : check_netscaler_health_fan,
     "service_description"     : "FAN %s",
-    "group"                   : "hw_fans",
     "snmp_info"               : netscaler_health_info,
     "snmp_scan_function"      : netscaler_health_scan,
+    "has_perfdata"            : True,
     "default_levels_variable" : "netscaler_health_fan_default_levels",
+    "group"                   : "hw_fans",
     "includes"                : [ "fan.include" ],
 }
 #.

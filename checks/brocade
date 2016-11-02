@@ -77,7 +77,8 @@ check_info["brocade.fan"] = {
     "service_description"   : "FAN %s",
     "group"                 : "hw_fans",
     "snmp_info"             : brocade_info,
-    'snmp_scan_function'    : brocade_scan,
+    "snmp_scan_function"    : brocade_scan,
+    "has_perfdata"          : True,
     "includes"              : [ "fan.include" ],
 }
 

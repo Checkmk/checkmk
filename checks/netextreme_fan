@@ -58,6 +58,7 @@ check_info['netextreme_fan'] = {
                                         "4",    # extremeFanSpeed (RPM)
                                   ]),
     'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1916.2"),
+    'has_perfdata'              : True,
     'group'                     : 'hw_fans',
     'default_levels_variable'   : 'netextreme_fan_default_levels',
     'includes'                  : [ "fan.include" ],

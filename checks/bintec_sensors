@@ -66,6 +66,7 @@ check_info["bintec_sensors.fan"] = {
     "service_description"        : "%s",
     "snmp_info"                  : bintec_sensors_info,
     "snmp_scan_function"         : bintec_sensors_scan,
+    "has_perfdata"               : True,
     "default_levels_variable"    : "bintec_sensors_fan_default_levels",
     "group"                      : "hw_fans",
     "includes"                   : [ "fan.include" ],

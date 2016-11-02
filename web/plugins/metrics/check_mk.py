@@ -216,6 +216,12 @@ unit_info["l/s"] = {
     "render"    : lambda v: physical_precision(v, 3, _("l/s")),
 }
 
+unit_info["rpm"] = {
+    "title"  : _("Rounds Per Minute"),
+    "symbol" : _("rpm"),
+    "render" : lambda v: physical_precision(v, 4, _("rpm")),
+}
+
 #.
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
@@ -3745,6 +3751,12 @@ metric_info["filehandler_perc"] = {
     "color" : "#4800ff",
 }
 
+metric_info["fan"] = {
+    "title" : _("Fan speed"),
+    "unit"  : "rpm",
+    "color" : "16/b"
+}
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -5702,6 +5714,13 @@ perfometer_info.append({
     "total"    : 100.0,
 })
 
+perfometer_info.append({
+    "type"      : "logarithmic",
+    "metric"    : "fan",
+    "half_value": 3000,
+    "exponent"  : 2,
+})
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -5722,6 +5741,13 @@ perfometer_info.append({
 # The first one must be the bigger one, then descending.
 # Example: ('tablespace_size', 'area'),
 #          ('tablespace_used', 'area')
+
+graph_info.append({
+    "title"     : _("Fan speed"),
+    "metrics"   : [
+        ( "fan_speed", "area" ),
+    ]
+})
 
 graph_info.append({
     "title"   : _("Context switches"),

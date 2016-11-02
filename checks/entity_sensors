@@ -238,6 +238,7 @@ check_info['entity_sensors.fan'] = {
     'inventory_function'        : lambda parsed: inventory_entity_sensors(parsed, "fan"),
     'check_function'            : check_entity_sensors_fan,
     'service_description'       : 'Fan %s',
+    'has_perfdata'              : True,
     'default_levels_variable'   : 'entity_sensors_fan_default_variables',
     'group'                     : 'hw_fans',
     'includes'                  : ['fan.include'],

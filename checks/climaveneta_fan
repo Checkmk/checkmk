@@ -46,6 +46,7 @@ check_info["climaveneta_fan"] = {
     "service_description"      : "Fan %s",
     "snmp_scan_function"       : lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "pCO Gateway",
     "snmp_info"                : (".1.3.6.1.4.1.9839.2.1.2", [ 42, 43 ] ),
+    "has_perfdata"             : True,
     "default_levels_variable"  : "climaveneta_fan_default_levels",
     "group"                    : "hw_fans",
     "includes"                 : [ "fan.include" ],

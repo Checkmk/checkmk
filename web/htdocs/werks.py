@@ -195,8 +195,10 @@ def acknowledge_werk(werk):
     acknowledge_werks([werk])
 
 
-def acknowledge_werks(werks):
-    config.user.need_permission("general.acknowledge_werks")
+def acknowledge_werks(werks, check_permission=True):
+    if check_permission:
+        config.user.need_permission("general.acknowledge_werks")
+
     ack_ids = load_acknowledgements()
     for werk in werks:
         ack_ids.append(werk["id"])
@@ -208,9 +210,9 @@ def save_acknowledgements(acknowledged_werks):
     store.save_data_to_file(acknowledgement_path, acknowledged_werks)
 
 
-def acknowledge_all_werks():
+def acknowledge_all_werks(check_permission=True):
     load_werks()
-    acknowledge_werks(unacknowledged_incompatible_werks())
+    acknowledge_werks(unacknowledged_incompatible_werks(), check_permission)
 
 
 def werk_is_pre_127(werk):

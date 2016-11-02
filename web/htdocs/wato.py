@@ -14632,7 +14632,7 @@ def create_sample_config():
     # This is not really the correct place for such kind of action, but the best place we could
     # find to execute it only for new created sites.
     import werks
-    werks.acknowledge_all_werks()
+    werks.acknowledge_all_werks(check_permission=False)
 
     save_mkeventd_sample_config()
 

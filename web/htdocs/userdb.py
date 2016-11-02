@@ -665,7 +665,7 @@ def load_custom_attr(userid, key, conv_func, default = None):
 def save_custom_attr(userid, key, val):
     path = custom_attr_path(userid, key)
     make_nagios_directory(os.path.dirname(path))
-    create_user_file(path, 'w').write('%s\n' % val)
+    store.save_file(path, '%s\n' % val)
 
 
 def remove_custom_attr(userid, key):
@@ -780,7 +780,8 @@ def save_users(profiles):
         # authentication secret for local processes
         auth_file = user_dir + "/automation.secret"
         if "automation_secret" in user:
-            create_user_file(auth_file, "w").write("%s\n" % user["automation_secret"])
+            with create_user_file(auth_file, "w") as f:
+                f.write("%s\n" % user["automation_secret"])
         else:
             remove_user_file(auth_file)
 

@@ -45,6 +45,7 @@ public:
     virtual bool is_contact_member_of_contactgroup(ContactGroup *group,
                                                    Contact *contact) = 0;
 
+    virtual bool mkeventdEnabled() = 0;
     virtual std::string mkeventdSocketPath() = 0;
 
     virtual Logger *loggerLivestatus() = 0;

@@ -597,6 +597,9 @@ public:
                                                    toImpl(contact)) != 0;
     }
 
+    // TODO(sp) Do we need a separate NEB argument for this?
+    bool mkeventdEnabled() override { return true; }
+
     string mkeventdSocketPath() override { return g_mkeventd_socket_path; }
 
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }

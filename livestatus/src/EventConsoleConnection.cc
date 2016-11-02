@@ -38,7 +38,7 @@ using std::string;
 
 EventConsoleConnection::EventConsoleConnection(Logger *logger, string path)
     : _path(move(path)), _socket(-1), _logger(logger, [this](ostream &os) {
-        os << "[mkeventd at " << getPath() << "] ";
+        os << "[mkeventd at " << _path << "] ";
     }) {}
 
 void EventConsoleConnection::run() {

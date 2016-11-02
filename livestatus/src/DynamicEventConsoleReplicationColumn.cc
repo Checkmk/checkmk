@@ -79,8 +79,11 @@ DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
 
 Column *DynamicEventConsoleReplicationColumn::createColumn(
     const std::string &name, const std::string &arguments) {
-    ECTableConnection ec(_core, "REPLICATE " + arguments);
-    ec.run();
-    return new ReplicationColumn(name, "replication value", -1, -1,
-                                 ec.getResult());
+    string result;
+    if (_core->mkeventdEnabled()) {
+        ECTableConnection ec(_core, "REPLICATE " + arguments);
+        ec.run();
+        result = ec.getResult();
+    }
+    return new ReplicationColumn(name, "replication value", -1, -1, result);
 }

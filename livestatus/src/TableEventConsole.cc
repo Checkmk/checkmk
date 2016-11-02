@@ -102,6 +102,9 @@ TableEventConsole::TableEventConsole(MonitoringCore *core)
     : Table(core->loggerLivestatus()), _core(core) {}
 
 void TableEventConsole::answerQuery(Query *query) {
-    string internal_name = name().substr(12);  // skip "eventconsole" prefix :-P
-    ECTableConnection(_core, internal_name, query).run();
+    if (_core->mkeventdEnabled()) {
+        string internal_name =
+            name().substr(12);  // skip "eventconsole" prefix :-P
+        ECTableConnection(_core, internal_name, query).run();
+    }
 }

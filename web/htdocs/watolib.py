@@ -146,6 +146,7 @@ php_api_dir    = var_dir + "php-api/"
 #   '----------------------------------------------------------------------'
 
 # This is the single site activation mode
+# TODO: Can this be removed now?
 def activate_changes():
     try:
         start = time.time()
@@ -161,6 +162,7 @@ def activate_changes():
 
 
 # Determine if other users have made pending changes
+# TODO: remove or recode!
 def foreign_changes():
     changes = {}
     for t, linkinfo, user, action, text in parse_audit_log("pending"):
@@ -206,41 +208,6 @@ def log_audit(linkinfo, what, message, user_id = None):
             message = html.strip_tags(message.value)
         g_git_messages.append(message)
     log_entry(linkinfo, what, message, "audit.log", user_id)
-
-
-def log_exists(what):
-    path = log_dir + what + ".log"
-    return os.path.exists(path)
-
-
-def clear_audit_log():
-    path = log_dir + "audit.log"
-    if os.path.exists(path):
-        newpath = path + time.strftime(".%Y-%m-%d")
-        if os.path.exists(newpath):
-            n = 1
-            while True:
-                n += 1
-                with_num = newpath + "-%d" % n
-                if not os.path.exists(with_num):
-                    newpath = with_num
-                    break
-        os.rename(path, newpath)
-
-
-def parse_audit_log(what):
-    path = log_dir + what + ".log"
-    if os.path.exists(path):
-        entries = []
-        for line in file(path):
-            line = line.rstrip().decode("utf-8")
-            splitted = line.split(None, 4)
-            if len(splitted) == 5 and splitted[0].isdigit():
-                splitted[0] = int(splitted[0])
-                entries.append(splitted)
-        entries.reverse()
-        return entries
-    return []
 
 
 def confirm_all_local_changes():

@@ -151,6 +151,10 @@ Boston, MA 02110-1301 USA.
     white-space: nowrap;
 }
 
+.wato table.auditlog td.fill {
+    width: 100%;
+}
+
 .wato table.auditlog img {
     width: 14px;
     height: 14px;

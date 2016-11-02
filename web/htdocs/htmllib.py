@@ -985,9 +985,7 @@ class HTMLCheck_MK(HTMLGenerator):
         raise NotImplementedError()
 
 
-
-    #FIXME: Change order of input arguments in one: icon and render_icon!!
-
+    # FIXME: Change order of input arguments in one: icon and render_icon!!
     def icon(self, help, icon, **kwargs):
 
         #TODO: Refactor

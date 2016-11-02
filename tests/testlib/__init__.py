@@ -287,6 +287,7 @@ class Site(object):
         # Call WATO once for creating the default WATO configuration
         response = web.get("wato.py").text
         assert "<title>WATO" in response
+        print "Got response: %s" % response
         assert "<div class=title>Manual Checks</div>" in response
 
         for f in [

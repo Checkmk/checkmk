@@ -3890,9 +3890,31 @@ class ActivateChangesManager(ActivateChanges):
         self._time_started     = time.time()
         self._snapshot_id      = None
 
+        # TODO
+        #            # Let host validators do their work
+        #            defective_hosts = validate_all_hosts([], force_all = True)
+        #            if defective_hosts:
+        #                raise MKUserError(None, _("You cannot activate changes while some hosts have "
+        #                  "an invalid configuration: ") + ", ".join(
+        #                    [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_host"), ("host", hn)]), hn)
+        #                      for hn in defective_hosts.keys() ]))
+
         self._save_activation()
 
         self._pre_activate_changes()
+
+        # TODO:
+        #        # Give hooks chance to do some pre-activation things (and maybe stop
+        #        # the activation)
+        #        try:
+        #            call_hook_pre_distribute_changes()
+        #        except Exception, e:
+        #            if config.debug:
+        #                raise
+        #            else:
+        #                raise MKUserError(None, "<h1>%s</h1>%s" % (_("Cannot activate changes"), e))
+        #
+
         self._create_snapshots()
 
         self._save_activation()

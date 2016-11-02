@@ -818,8 +818,12 @@ function handle_activation_progress_error(activation_id, status_code, error_msg)
 
 function finish_activation()
 {
-    show_activation_info("Activation has finished");
+    show_activation_info("Activation has finished. Reloading in 1 second.");
     lock_activation_controls(false);
+
+    // Maybe change this not to make a reload and only update the relevant
+    // parts of the activate changes page.
+    schedule_reload('', 1000);
 }
 
 // .-Profile Repl----------------------------------------------------------.

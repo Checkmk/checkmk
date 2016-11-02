@@ -1504,7 +1504,7 @@ def mode_bulk_rename_host(phase):
         c = wato_confirm(_("Confirm renaming of %d hosts") % len(renamings), HTML(message))
         if c:
             actions, auth_problems = rename_hosts(renamings) # Already activates the changes!
-            log_commit_pending() # All activated by the underlying rename automation
+            confirm_all_local_changes() # All activated by the underlying rename automation
             action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
             message = _("Renamed %d hosts at the following places:<br><ul>%s</ul>") % (len(renamings), action_txt)
             if auth_problems:
@@ -1742,7 +1742,7 @@ def mode_rename_host(phase):
             # Creating pending entry. That makes the site dirty and that will force a sync of
             # the config to that site before the automation is being done.
             actions, auth_problems = rename_hosts([(Folder.current(), host.name(), newname)])
-            log_commit_pending() # All activated by the underlying rename automation
+            confirm_all_local_changes() # All activated by the underlying rename automation
             html.set_var("host", newname)
             action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
             return "edit_host", HTML(_("Renamed host <b>%s</b> into <b>%s</b> at the following places:<br><ul>%s</ul>") % (
@@ -4566,7 +4566,6 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
                 site_status = sites.state(site_id, {})
                 status = site_status.get("state", "unknown")
 
-            repl_status = self._repstatus.get(site_id, {})
             has_foreign = self._site_has_foreign_changes(site_id)
             can_activate_all = not has_foreign or config.user.may("wato.activateforeign")
 
@@ -4609,9 +4608,8 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             table.cell(_("Services"), css="number")
             html.a(site_status.get("num_services", ""), href="view.py?view_name=sitesvcs&site=%s" % site_id)
 
-            # TODO: need_restart/need_sync are obsolete. Replace this!
-            need_restart = repl_status.get("need_restart")
-            need_sync    = repl_status.get("need_sync") and not config.site_is_local(site_id)
+            need_restart = self._is_activate_needed(site_id)
+            need_sync    = self._is_sync_needed(site_id)
             uptodate = not (need_restart or need_sync)
 
             # Start asynchronous replication
@@ -4637,16 +4635,16 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             #else:
             # State
             table.cell("", css="buttons")
-            if repl_status.get("need_sync") and not config.site_is_local(site_id):
+            if need_sync:
                 html.icon(_("This site is not update and needs a replication."), "need_replicate")
-            if repl_status.get("need_restart"):
+            if need_restart:
                 html.icon(_("This site needs a restart for activating the changes."), "need_restart")
             if uptodate:
                 html.icon(_("This site is up-to-date."), "siteuptodate")
 
             table.cell(_("Changes"), "%d" % len(self._changes_of_site(site_id)), css="number")
             table.cell(_("Activate"))
-            if can_activate_all and (repl_status.get("need_sync") or repl_status.get("need_restart")):
+            if can_activate_all and (need_sync or need_restart):
                 html.jsbutton("activate_%s" % site_id, _("Activate"),
                               "activate_changes(\"site\", \"%s\")" % site_id, cssclass="activate_site")
 
@@ -4808,18 +4806,7 @@ def do_activate_changes_automation():
     except SyntaxError:
         raise MKAutomationException(_("Garbled automation response: '%s'") % response_text)
 
-    results = {}
-    for domain in domains:
-        try:
-            domain_class = ConfigDomain.get_class(domain)
-            if not domain_class.needs_activation:
-                raise MKGeneralException(_("The domain \"%s\" does not support activation."))
-
-            results[domain] = (0, domain_class().activate())
-        except Exception, e:
-            results[domain] = (1, "%s" % e)
-
-    return results
+    return execute_activate_changes(domains)
 
 
 automation_commands["activate-changes"] = do_activate_changes_automation
@@ -4879,7 +4866,7 @@ automation_commands["activate-changes"] = do_activate_changes_automation
 #        home_button()
 #        # Commit pending log right here, if all sites are up-to-date
 #        if is_distributed() and global_replication_state() == "clean":
-#            log_commit_pending()
+#            confirm_all_local_changes()
 #
 #
 #        if html.var("_action") != "activate":
@@ -14239,6 +14226,7 @@ def user_profile_async_replication_dialog():
 
         html.icon(status_txt, icon)
         if start_sync:
+            # TODO: Change to new functions
             estimated_duration = srs.get("times", {}).get("profile-sync", 2.0)
             html.javascript('wato_do_profile_replication(\'%s\', %d, \'%s\');' %
                       (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))

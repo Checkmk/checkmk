@@ -43,8 +43,6 @@
 #   '----------------------------------------------------------------------'
 
 import os, shutil, subprocess, base64, pickle, pwd
-import config, hooks, userdb, multitar
-import sites
 import traceback
 import ast
 import threading
@@ -53,6 +51,10 @@ import cStringIO
 import fcntl
 from lib import *
 from valuespec import *
+
+import config, hooks, userdb, multitar
+import sites
+import mkeventd
 
 import cmk.paths
 import cmk.store as store
@@ -241,10 +243,15 @@ def parse_audit_log(what):
     return []
 
 
-def log_commit_pending():
-    pending = log_dir + "pending.log"
-    if os.path.exists(pending):
-        os.remove(pending)
+def confirm_all_local_changes():
+    site_id = our_site_id()
+    repl_status = load_replication_status(lock=True)
+
+    try:
+        repl_status[site_id]["changes"] = []
+    finally:
+        save_replication_status(repl_status)
+
     need_sidebar_reload()
 
 
@@ -367,7 +374,7 @@ class ConfigDomainEventConsole(ConfigDomain):
     ident            = "ec"
 
     def activate(self):
-        if hasattr(config, "mkeventd_enabled") and config.mkeventd_enabled:
+        if getattr(config, "mkeventd_enabled", False):
             mkeventd_reload()
 
 
@@ -3644,26 +3651,6 @@ def update_login_sites_replication_status():
         update_replication_status(site_id, {'need_sync': True})
 
 
-# TODO: Remove this?
-def global_replication_state():
-    repstatus = load_replication_status()
-    some_dirty = False
-
-    for site_id in config.sitenames():
-        site = config.site(site_id)
-        if not config.site_is_local(site_id) and not site.get("replication"):
-            continue
-
-        srs = repstatus.get(site_id, {})
-        if srs.get("need_sync") or srs.get("need_restart"):
-            some_dirty = True
-
-    if get_dirty_sites():
-        return "dirty"
-    else:
-        return "clean"
-
-
 def get_dirty_sites():
     dirty = []
     repstatus = load_replication_status()
@@ -3704,8 +3691,7 @@ def automation_push_snapshot():
     except Exception, e:
         logger(LOG_WARNING, "Warning: cannot extract site-specific global settings: %s" % e)
 
-    # TODO: This needs to be changed to the new mechanism
-    log_commit_pending() # pending changes are lost
+    confirm_all_local_changes() # pending changes are lost
 
     call_hook_snapshot_pushed()
 
@@ -3744,7 +3730,6 @@ def verify_slave_site_config(site_id):
 
 
 def mkeventd_reload():
-    import mkeventd
     mkeventd.execute_command("RELOAD", site=config.omd_site())
     try:
         os.remove(log_dir + "mkeventd.log")
@@ -3785,6 +3770,7 @@ def synchronize_profile(site, user_id):
     start = time.time()
     result = push_user_profile_to_site(site, user_id, users[user_id])
     duration = time.time() - start
+    # TODO: Auf neue Funktionen umbauen
     update_replication_status(site["id"], {}, {"profile-sync": duration})
     return result
 
@@ -3847,6 +3833,17 @@ class ActivateChanges(object):
     def _site_has_foreign_changes(self, site_id):
         changes = self._changes_of_site(site_id)
         return bool([ c for c in changes if self._is_foreign(c) ])
+
+
+    def _is_sync_needed(self, site_id):
+        if config.site_is_local(site_id):
+            return False
+
+        return any([ c["need_sync"] for c in self._changes_of_site(site_id) ])
+
+
+    def _is_activate_needed(self, site_id):
+        return any([ c["need_restart"] for c in self._changes_of_site(site_id) ])
 
 
     def _last_activation_state(self, site_id):
@@ -4150,16 +4147,17 @@ STATE_ERROR     = "error"     # Something went really wrong
 STATE_WARNING   = "warning"   # e.g. in case of core config warnings
 
 
-class ActivateChangesSite(threading.Thread):
+class ActivateChangesSite(threading.Thread, ActivateChanges):
     def __init__(self, site_id, activation_id, site_snapshot_file):
         super(ActivateChangesSite, self).__init__()
 
         self._site_id        = site_id
         self._activation_id  = activation_id
-        self._snapshot_file  = snapshot_file
-        self._changes        = self._get_changes()
+        self._snapshot_file  = site_snapshot_file
         self._running_fd     = None
         self.daemon          = True
+
+        self._load_changes()
 
         self._time_started   = None
         self._time_updated   = None
@@ -4170,6 +4168,23 @@ class ActivateChangesSite(threading.Thread):
         self._status_details = None
 
 
+    def _load_changes(self):
+        super(ActivateChangesSite, self)._load_changes()
+        all_changes = self._changes_of_site(self._site_id)
+
+        change_id = self._activate_until_change_id()
+
+        # Find the last activated change and return all changes till this entry
+        # (including the one we were searching for)
+        changes = []
+        for change in all_changes:
+            changes.append(change)
+            if change["id"] == change_id:
+                break
+
+        self._site_changes = changes
+
+
     def run(self):
         try:
             self._time_started = time.time()
@@ -4177,13 +4192,13 @@ class ActivateChangesSite(threading.Thread):
 
             self._lock_activation()
 
-            if self._is_sync_needed():
+            if self._is_sync_needed(self._site_id):
                 self._synchronize_site()
 
-            if self._is_activate_needed():
+            if self._is_activate_needed(self._site_id):
                 configuration_warnings = self._do_activate()
 
-            self._confirm_changes()
+            self._confirm_activated_changes()
 
             self._set_done_result(configuration_warnings)
         except Exception, e:
@@ -4196,20 +4211,34 @@ class ActivateChangesSite(threading.Thread):
             self._unlock_activation()
 
 
+    def _activate_until_change_id(self):
+        manager = ActivateChangesManager()
+        manager.load(self._activation_id)
+        manager.activate_until()
+
+
     def _set_done_result(self, configuration_warnings):
-        if not configuration_warnings:
+        has_warnings = False
+        for domain, warnings in configuration_warnings.items():
+            if warnings:
+                has_warnings = True
+                break
+
+        if not has_warnings:
             self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
         else:
             details = self._render_warnings(configuration_warnings)
-            self._set_result(PAHSE_DONE, _("Activated"), details, state=STATE_WARNING)
+            self._set_result(PHASE_DONE, _("Activated"), details, state=STATE_WARNING)
 
 
     def _render_warnings(self, configuration_warnings):
         html_code  = "<div class=warning>"
         html_code += "<b>%s</b>" % _("Warnings:")
         html_code += "<ul>"
-        for warning in configuration_warnings:
-            html_code += "<li>%s</li>" % html.attrencode(warning)
+        for domain, warnings in sorted(configuration_warnings.items()):
+            for warning in warnings:
+                html_code += "<li>%s: %s</li>" % \
+                    (html.attrencode(domain), html.attrencode(warning))
         html_code += "</ul>"
         html_code += "</div>"
         return html_code
@@ -4275,13 +4304,6 @@ class ActivateChangesSite(threading.Thread):
         self._mark_finished()
 
 
-    def _is_sync_needed(self):
-        if config.site_is_local(self._site_id):
-            return False
-
-        return any([ c["need_sync"] for c in self._changes ])
-
-
     # This is done on the central site to initiate the sync process
     def _synchronize_site(self):
         self._set_result(PHASE_SYNC, _("Sychronizing"))
@@ -4294,7 +4316,7 @@ class ActivateChangesSite(threading.Thread):
             self._cleanup_snapshot()
 
         duration = time.time() - start
-        self._update_activation_time(self._site_id, "sync", duration)
+        self._update_activation_time("sync", duration)
 
         # Pre 1.2.7i3 and sites return True on success and a string on error.
         # 1.2.7i3 and later return a list of warning messages on success.
@@ -4341,10 +4363,6 @@ class ActivateChangesSite(threading.Thread):
                 raise
 
 
-    def _is_activate_needed(self):
-        return any([ c["need_restart"] for c in self._changes ])
-
-
     def _do_activate(self):
         self._set_result(PHASE_ACTIVATE, _("Activating"))
 
@@ -4353,21 +4371,34 @@ class ActivateChangesSite(threading.Thread):
         configuration_warnings = self._call_activate_changes_automation()
 
         duration = time.time() - start
-        self._update_activation_time(self._site_id, "restart", duration)
+        self._update_activation_time("restart", duration)
         return configuration_warnings
 
 
     def _call_activate_changes_automation(self):
-        response = do_remote_automation(
-            config.site(self._site_id), "activate-changes", [
-                ("domains", repr(args)),
-                ("site_id", self._site_id),
-            ])
+        domains = self._get_domains_needing_activation()
 
-        try:
-            return ast.literal_eval(response_text)
-        except SyntaxError:
-            raise MKAutomationException(_("Garbled automation response: '%s'") % response_text)
+        if config.site_is_local(self._site_id):
+            return execute_activate_changes(domains)
+        else:
+            response = do_remote_automation(
+                config.site(self._site_id), "activate-changes", [
+                    ("domains", domains),
+                    ("site_id", self._site_id),
+                ])
+
+            try:
+                return ast.literal_eval(response_text)
+            except SyntaxError:
+                raise MKAutomationException(_("Garbled automation response: '%s'") % response_text)
+
+
+    def _get_domains_needing_activation(self):
+        domains = set([])
+        for change in self._site_changes:
+            if change["need_restart"]:
+                domains.update(change["domains"])
+        return sorted(list(domains))
 
 
     def _update_activation_time(self, ty, duration):
@@ -4389,43 +4420,13 @@ class ActivateChangesSite(threading.Thread):
         return repstatus.get(self._site_id, {}).get("times", {})
 
 
-    # TODO: Consolidate with ActivateChanges/ActivateChangesManager?
-    def _get_changes(self):
-        manager = ActivateChangesManager()
-        manager.load(self._activation_id)
-        change_id = manager.activate_until()
-
-        repstatus = load_replication_status(lock=False)
-        all_changes = repstatus.get(self._site_id, {}).get("changes", [])
-
-        # Find the last activated change and return all changes till this entry
-        # (including the one we were searching for)
-        changes = []
-        for change in all_changes:
-            changes.append(change)
-            if change["id"] == change_id:
-                break
-        return changes
-
-
-    def _confirm_changes(self):
+    def _confirm_activated_changes(self):
         self._set_result(PHASE_FINISHING, _("Finalizing"))
 
         repstatus = load_replication_status(lock=True)
         try:
-            changes = repstatus.get(self._site_id, {}).get("changes", [])
-
-            # Find the last activated change and delete all changes till this entry
-            # (including the one we were searching for)
-            del_index = None
-            for index, change in enumerate(changes):
-                if change["id"] == change_id:
-                    del_index = index + 1
-                    break
-
-            if del_index:
-                changes = changes[del_index:]
-
+            changes = repstatus[self._site_id].get("changes", [])
+            repstatus[self._site_id]["changes"] = changes[len(self._site_changes):]
         finally:
             save_replication_status(repstatus)
 
@@ -4465,6 +4466,19 @@ class ActivateChangesSite(threading.Thread):
     def _expected_duration(self):
         # TODO: Handle differences of sync only and sync+activate
         return sum(self._get_activation_times().values())
+
+
+
+def execute_activate_changes(domains):
+    results = {}
+    for domain in domains:
+        domain_class = ConfigDomain.get_class(domain)
+        if not domain_class.needs_activation:
+            raise MKGeneralException(_("The domain \"%s\" does not support activation."))
+
+        results[domain] = domain_class().activate()
+
+    return results
 
 
 #.

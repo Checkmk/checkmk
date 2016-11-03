@@ -160,7 +160,8 @@ struct GlobalConfig {
     Configurable<bool> encrypted_rt;
     Configurable<bool> support_ipv6;
     Configurable<std::string> passphrase;
-    SplittingListConfigurable<only_from_t, BlockMode::FileExclusive<only_from_t>>
+    SplittingListConfigurable<only_from_t,
+                              BlockMode::FileExclusive<only_from_t>>
         only_from;
 
     GlobalConfig(const Environment &env)

@@ -687,6 +687,7 @@ function show_details(show)
     }
 }
 
+// Make the cells visible which are needed during sync
 function show_progress(show)
 {
     var elements = [];
@@ -698,6 +699,8 @@ function show_progress(show)
     }
 }
 
+// Is called after the activation has been started (got the activation_id) and
+// then in interval of 500 ms for updating the dialog state
 function monitor_activation_progress(activation_id)
 {
     show_activation_info("Activating...");
@@ -752,8 +755,21 @@ function update_activation_state(response)
         // skip loop if the property is from prototype
         if (!response["sites"].hasOwnProperty(site_id))
             continue;
-    
+
         var site_state = response["sites"][site_id];
+
+        // Catch empty site states
+        var is_empty = true;
+        for (var prop in site_state) {
+            if (site_state.hasOwnProperty(prop)) {
+                is_empty = false;
+                break;
+            }
+        }
+
+        if (is_empty)
+            throw "Empty site state for " + site_id;
+
         update_site_activation_state(site_state);
     }
 }
@@ -788,14 +804,11 @@ function update_site_progress(site_state)
         return;
     }
 
+    // TODO: Visualize overdue
+
     var duration = parseFloat(time() - site_state["_time_started"]);
 
-    // In case expected is 0, calculate with 10 seconds instead of failing
-    if (site_state["_expected_duration"] == 0.0)
-        var expected_duration = 10.0;
-    else
-        var expected_duration = site_state["_expected_duration"];
-
+    var expected_duration = site_state["_expected_duration"];
     var duration_percent = duration * 100.0 / expected_duration;
     var width = parseInt(parseFloat(max_width) * duration_percent / 100);
 
@@ -804,7 +817,6 @@ function update_site_progress(site_state)
 
     progress.style.width = width + "px";
 }
-
 
 function handle_activation_progress_error(activation_id, status_code, error_msg)
 {

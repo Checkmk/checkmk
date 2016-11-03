@@ -56,7 +56,7 @@ def render_wato(mini):
             else:
                 iconlink(title, url, icon)
 
-    num_pending = wato.num_pending_changes()
+    num_pending = wato.get_number_of_pending_changes()
     if num_pending:
         footnotelinks([(_("%d changes") % num_pending, "wato.py?mode=changelog")])
         html.div('', class_="clear")

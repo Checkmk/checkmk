@@ -1745,7 +1745,7 @@ def mode_rename_host(phase):
         return
 
     elif phase == "action":
-        if parse_audit_log("pending"):
+        if get_number_of_pending_changes():
             raise MKUserError("newname", _("You cannot rename a host while you have pending changes."))
 
         newname = html.var("newname")
@@ -4409,7 +4409,6 @@ class ModeAuditLog(WatoMode):
             self._display_multiple_days_audit_log(audit)
 
 
-    # TODO: Handle self._options
     def _display_daily_audit_log(self, log):
         log, times = self._get_next_daily_paged_log(log)
 
@@ -4812,7 +4811,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
         valuespec.set_focus("activate")
         html.help(valuespec.help())
 
-        if self._has_foreign_changes():
+        if self.has_foreign_changes():
             if config.user.may("wato.activateforeign"):
                 html.show_warning(
                     _("There are some changes made by your colleagues that you will "
@@ -4838,7 +4837,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
 
 
     def _vs_activation(self):
-        if self._has_foreign_changes() and config.user.may("wato.activateforeign"):
+        if self.has_foreign_changes() and config.user.may("wato.activateforeign"):
             foreign_changes_elements = [
                 ("foreign", Checkbox(
                     title = _("Activate foreign changes"),
@@ -4942,6 +4941,8 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             # TODO: Handle not logged in sites
             # if not config.site_is_local(site_id) and not "secret" in site:
 
+            # TODO: Disable actions for offline sites
+
             # Activation checkbox
             if can_activate_all and need_action:
                 table.cell("", css="buttons")
@@ -4978,28 +4979,6 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             table.cell(_("Services"), css="number")
             html.a(site_status.get("num_services", ""), href="view.py?view_name=sitesvcs&site=%s" % site_id)
 
-            # TODO: Cleanup
-            # Start asynchronous replication
-            #if sitestatus_do_async_replication:
-            #    table.cell(_("Activation"), css="repprogress")
-            #    # Do only include sites that are known to be up
-            #    if not config.site_is_local(site_id) and not "secret" in site:
-            #        html.write("<b>%s</b>" % _("Not logged in."))
-            #    else:
-            #        html.write('<div id="repstate_%s">%s</div>' %
-            #                (site_id, uptodate and _("nothing to do") or ""))
-            #        if not uptodate:
-            #            if need_restart and need_sync:
-            #                what = "sync+restart"
-            #            elif need_restart:
-            #                what = "restart"
-            #            else:
-            #                what = "sync"
-            #            estimated_duration = repl_status.get("times", {}).get(what, 2.0)
-            #            html.javascript("wato_do_replication('%s', %d);" %
-            #              (site_id, int(estimated_duration * 1000.0)))
-            #            num_replsites += 1
-            #else:
             # State
             table.cell("", css="buttons")
             if need_sync:
@@ -5012,31 +4991,9 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             table.cell(_("Changes"), "%d" % len(self._changes_of_site(site_id)), css="number")
             if can_activate_all and need_action:
                 table.cell(_("Activate"))
+                # TODO: Enable separate action for sync (if needed)?
                 html.jsbutton("activate_%s" % site_id, _("Activate"),
                               "activate_changes(\"site\", \"%s\")" % site_id, cssclass="activate_site")
-
-            # TODO: Cleanup
-            ## Actions
-            #table.cell(_("Activate"), css="buttons")
-            ##if site_id not in activation_blocked_reasons.get("sites", {}):
-            #sync_url = make_action_link([("mode", "changelog"),
-            #        ("_site", site_id), ("_siteaction", "sync")])
-            #restart_url = make_action_link([("mode", "changelog"),
-            #        ("_site", site_id), ("_siteaction", "restart")])
-            #sync_restart_url = make_action_link([("mode", "changelog"),
-            #        ("_site", site_id), ("_siteaction", "sync_restart")])
-            #if not config.site_is_local(site_id) and "secret" not in site:
-            #    html.write("<b>%s</b>" % _("Not logged in."))
-            #elif not uptodate:
-            #    if not config.site_is_local(site_id):
-            #        if repl_status.get("need_sync"):
-            #            html.buttonlink(sync_url, _("Sync"))
-            #            if repl_status.get("need_restart"):
-            #                html.buttonlink(sync_restart_url, _("Sync & Restart"))
-            #        else:
-            #            html.buttonlink(restart_url, _("Restart"))
-            #    else:
-            #        html.buttonlink(restart_url, _("Restart"))
 
             table.cell(_("Progress"), css="repprogress")
             html.open_div(id_="site_%s_status" % site_id, class_=["msg"])
@@ -5126,42 +5083,6 @@ def do_activate_changes_automation():
 
 
 automation_commands["activate-changes"] = do_activate_changes_automation
-
-# TODO: Remove this!
-#def get_activation_blocked_reasons():
-#    act_blocked_reasons = {}
-#    repstatus = load_replication_status()
-#    for site, values in repstatus.items():
-#        if values.get("update_started"):
-#            what, update_start_time = values["update_started"]
-#
-#            times = values.get("times")
-#            if not times:
-#                continue
-#
-#            # Fix for a strange scenario. Syncing a slave site actually updates the "restart" field...
-#            last_duration = times.get(what, times.get("restart"))
-#            if not last_duration:
-#                continue
-#
-#            if time.time() - update_start_time > 2 * last_duration:
-#                # Ignore updates which take way too long.
-#                # We do not modify the replication status file. The update_started value will
-#                # be automatically reset on the activation call
-#                continue
-#            else:
-#                act_blocked_reasons.setdefault("sites", {})
-#                infotext = _("Activation running since: %s.") % fmt_time(update_start_time)
-#                if last_duration:
-#                    est_time_left = last_duration - (time.time() - update_start_time)
-#                    if est_time_left < 0:
-#                        infotext += " " + _("Takes %.1f seconds longer than expected") % abs(est_time_left)
-#                    else:
-#                        infotext += " " + _("Approximately finishes in %.1f seconds") % est_time_left
-#
-#                act_blocked_reasons["sites"][site] = infotext
-#
-#    return act_blocked_reasons
 
 #.
 #   .--Progress------------------------------------------------------------.
@@ -9440,9 +9361,20 @@ def mode_edit_site(phase):
         # update_replication_status(our_site_id(), { "need_restart" : True })
 
         if new:
-            add_change("edit-sites", _("Created new connection to site %s") % id, sites=[id])
+            msg = _("Created new connection to site %s") % id
         else:
-            add_change("edit-sites", _("Modified site connection %s") % id, sites=[id])
+            msg = _("Modified site connection %s") % id
+
+        # Don't know exactly what have been changed, so better issue a change
+        # affecting all domains
+        add_change("edit-sites", msg, sites=[id], domains=ConfigDomain.all_classes())
+
+        if id != our_site_id():
+            # On central site issue a change only for the GUI
+            # NOTE: Was marking all to be restarted (ec and core) before, but I don't
+            # think that this was really needed.
+            add_change("edit-sites", msg, sites=[id], domains=ConfigDomainGUI)
+
         return "sites"
 
     html.begin_form("site")
@@ -14050,7 +13982,7 @@ def user_profile_async_replication_dialog():
         html.icon(status_txt, icon)
         if start_sync:
             # TODO: Change to new functions
-            estimated_duration = srs.get("times", {}).get("profile-sync", 2.0)
+            estimated_duration = srs.get("times", {}).get(ACTIVATION_TIME_PROFILE_SYNC, 2.0)
             html.javascript('wato_do_profile_replication(\'%s\', %d, \'%s\');' %
                       (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
             num_replsites += 1
@@ -17146,11 +17078,6 @@ def get_folder_title(path):
         return folder.title()
     else:
         return path
-
-
-# TODO: Recode or remove!
-def num_pending_changes():
-    return len(parse_audit_log("pending"))
 
 
 # Create an URL to a certain WATO folder when we just know its path

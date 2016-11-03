@@ -292,6 +292,7 @@ api_actions["discover_services"] = {
 
 ###############
 
+# TODO: Recode to new activation code
 def action_activate_changes(request):
     validate_request_keys(request, ["mode", "sites", "allow_foreign_changes"])
 
@@ -303,7 +304,9 @@ def action_activate_changes(request):
 
     sites = request.get("sites")
 
-    if foreign_changes():
+    changes = ActivateChanges()
+
+    if changes.has_foreign_changes():
         if not config.user.may("wato.activateforeign"):
             raise MKAuthException(_("You are not allowed to activate changes of other users."))
         if not allow_foreign_changes:

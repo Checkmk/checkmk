@@ -58,6 +58,7 @@ import mkeventd
 
 import cmk.paths
 import cmk.store as store
+import cmk.render as render
 
 replication_paths = []
 backup_paths = []
@@ -146,33 +147,6 @@ php_api_dir    = var_dir + "php-api/"
 #   | Functions for logging changes and keeping the "Activate Changes"     |
 #   | state and finally activating changes.                                |
 #   '----------------------------------------------------------------------'
-
-# This is the single site activation mode
-# TODO: Can this be removed now?
-def activate_changes():
-    try:
-        start = time.time()
-        check_mk_local_automation(config.wato_activation_method)
-        duration = time.time() - start
-        update_replication_status(None, {}, { 'act': duration })
-    except Exception:
-        if config.debug:
-            raise MKUserError(None, "Error executing hooks: %s" %
-                              traceback.format_exc().replace('\n', '<br />'))
-        else:
-            raise
-
-
-# Determine if other users have made pending changes
-# TODO: remove or recode!
-def foreign_changes():
-    changes = {}
-    for t, linkinfo, user, action, text in parse_audit_log("pending"):
-        if user != '-' and user != config.user.id:
-            changes.setdefault(user, 0)
-            changes[user] += 1
-    return changes
-
 
 # linkinfo identifies the object operated on. It can be a Host or a Folder
 # or a text.
@@ -282,32 +256,15 @@ def add_change_to_site(site_id, change_id, action_name, text, obj, add_user, nee
     }])
 
 
-# Returns a list of changes ordered by time and grouped by the change.
-# Each change contains a list of affected sites.
-def get_pending_changes_grouped(repstatus):
-    changes = {}
-
-    for site_id, status in repstatus.items():
-        if not status.get("changes"):
-            continue
-
-        for change in status["changes"]:
-            change_id = change["id"]
-
-            if change_id not in changes:
-                changes[change_id] = change.copy()
-
-            affected_sites = changes[change_id].setdefault("affected_sites", [])
-            affected_sites.append(site_id)
-
-    return changes
-
-
 def get_number_of_pending_changes():
-    return len(get_pending_changes_grouped(load_replication_status()))
+    return len(ActivateChanges().grouped_changes())
 
 
 class ConfigDomain(object):
+    @classmethod
+    def all_classes(cls):
+        return cls.__subclasses__() # pylint: disable=no-member
+
     @classmethod
     def get_class(cls, ident):
         for domain_class in cls.__subclasses__(): # pylint: disable=no-member
@@ -3689,12 +3646,13 @@ def verify_slave_site_config(site_id):
             (our_id, site_id))
 
     # Make sure there are no local changes we would lose!
-    if is_distributed():
-        pending = parse_audit_log("pending")
-        if len(pending) > 0:
-            message = _("There are %d pending changes that would get lost. The most recent are: ") % len(pending)
-            message += ", ".join([e[-1] for e in pending[:10]])
-            raise MKGeneralException(message)
+    changes = ActivateChanges()
+    pending = reversed(ActivateChanges().grouped_changes())
+    if pending:
+        message = _("There are %d pending changes that would get lost. The most recent are: ") % len(pending)
+        message += ", ".join([ change["text"] for change_id, change in pending[:10] ])
+
+        raise MKGeneralException(message)
 
 
 def mkeventd_reload():
@@ -3706,6 +3664,7 @@ def mkeventd_reload():
     log_audit(None, "mkeventd-activate", _("Activated changes of event console configuration"))
 
 
+# TODO: Recode to new sync?
 def push_user_profile_to_site(site, user_id, profile):
     url = site["multisiteurl"] + "automation.py?" + html.urlencode_vars([
         ("command",    "push-profile"),
@@ -3739,13 +3698,9 @@ def synchronize_profile(site, user_id):
     result = push_user_profile_to_site(site, user_id, users[user_id])
     duration = time.time() - start
     # TODO: Auf neue Funktionen umbauen
-    update_replication_status(site["id"], {}, {"profile-sync": duration})
+    update_replication_status(site["id"], {}, {ACTIVATION_TIME_PROFILE_SYNC: duration})
     return result
 
-
-def cmc_reload():
-    log_audit(None, "activate-config", "Reloading Check_MK Micro Core on the fly")
-    sites.live().command("[%d] RELOAD_CONFIG" % time.time())
 
 # AJAX handler for asynchronous replication of user profiles (changed passwords)
 def ajax_profile_repl():
@@ -3773,7 +3728,8 @@ def ajax_profile_repl():
 
 # Add pending entry to make sync possible later for admins
 def add_profile_replication_change(site_id, result):
-    add_change("edit-users", _('Profile changed (sync failed: %s)') % result, sites=[site_id], need_restart=False)
+    add_change("edit-users", _('Profile changed (sync failed: %s)') % result,
+               sites=[site_id], need_restart=False)
 
 
 
@@ -3790,8 +3746,33 @@ class ActivateChanges(object):
     def _load_changes(self):
         self._repstatus = load_replication_status()
 
-        changes = get_pending_changes_grouped(self._repstatus)
+        changes = self._group_changes_by_id(self._repstatus)
         self._changes = sorted(changes.items(), key=lambda (k, v): v["time"])
+
+
+    # Returns a list of changes ordered by time and grouped by the change.
+    # Each change contains a list of affected sites.
+    def _group_changes_by_id(self, repstatus):
+        changes = {}
+
+        for site_id, status in repstatus.items():
+            if not status.get("changes"):
+                continue
+
+            for change in status["changes"]:
+                change_id = change["id"]
+
+                if change_id not in changes:
+                    changes[change_id] = change.copy()
+
+                affected_sites = changes[change_id].setdefault("affected_sites", [])
+                affected_sites.append(site_id)
+
+        return changes
+
+
+    def grouped_changes(self):
+        return self._changes
 
 
     def _changes_of_site(self, site_id):
@@ -3829,7 +3810,7 @@ class ActivateChanges(object):
         return self._changes[-1][1]["id"]
 
 
-    def _has_foreign_changes(self):
+    def has_foreign_changes(self):
         return any([ change for change_id, change in self._changes
                      if self._is_foreign(change) ])
 
@@ -4144,26 +4125,32 @@ STATE_SUCCESS   = "success"   # Everything is ok
 STATE_ERROR     = "error"     # Something went really wrong
 STATE_WARNING   = "warning"   # e.g. in case of core config warnings
 
+# Available activation time keys
+
+ACTIVATION_TIME_RESTART      = "restart"
+ACTIVATION_TIME_SYNC         = "sync"
+ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 class ActivateChangesSite(threading.Thread, ActivateChanges):
     def __init__(self, site_id, activation_id, site_snapshot_file):
         super(ActivateChangesSite, self).__init__()
 
-        self._site_id        = site_id
-        self._activation_id  = activation_id
-        self._snapshot_file  = site_snapshot_file
-        self._running_fd     = None
-        self.daemon          = True
+        self._site_id           = site_id
+        self._activation_id     = activation_id
+        self._snapshot_file     = site_snapshot_file
+        self._running_fd        = None
+        self.daemon             = True
 
         self._load_changes()
 
-        self._time_started   = None
-        self._time_updated   = None
-        self._time_ended     = None
-        self._phase          = None
-        self._state          = None
-        self._status_text    = None
-        self._status_details = None
+        self._time_started      = None
+        self._time_updated      = None
+        self._time_ended        = None
+        self._phase             = None
+        self._state             = None
+        self._status_text       = None
+        self._status_details    = None
+        self._expected_duration = self._get_expected_duration()
 
 
     def _load_changes(self):
@@ -4314,7 +4301,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
             self._cleanup_snapshot()
 
         duration = time.time() - start
-        self._update_activation_time("sync", duration)
+        self._update_activation_time(ACTIVATION_TIME_SYNC, duration)
 
         # Pre 1.2.7i3 and sites return True on success and a string on error.
         # 1.2.7i3 and later return a list of warning messages on success.
@@ -4369,7 +4356,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         configuration_warnings = self._call_activate_changes_automation()
 
         duration = time.time() - start
-        self._update_activation_time("restart", duration)
+        self._update_activation_time(ACTIVATION_TIME_RESTART, duration)
         return configuration_warnings
 
 
@@ -4432,7 +4419,8 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
     def _set_result(self, phase, status_text, status_details=None, state=STATE_SUCCESS):
         self._phase          = phase
         self._status_text    = status_text
-        self._status_details = status_details
+
+        self._set_status_details(status_details)
 
         self._time_updated = time.time()
         if phase == PHASE_DONE:
@@ -4440,6 +4428,25 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
             self._state      = state
 
         self._save_state()
+
+
+    def _set_status_details(self, status_details):
+        if status_details == None:
+            self._status_details = ""
+        else:
+            self._status_details = status_details + "<br>"
+        self._status_details += _("Started at: %s.") % render.time_of_day(self._time_started)
+
+        if phase != PHASE_DONE:
+            estimated_time_left = self._expected_duration - (time.time() - self._time_started)
+            if estimated_time_left < 0:
+                self._status_details += " " + _("Takes %.1f seconds longer than expected") % \
+                                                                        abs(estimated_time_left)
+            else:
+                self._status_details += " " + _("Approximately finishes in %.1f seconds") % \
+                                                                        estimated_time_left
+        else:
+            self._status_details += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
 
 
     def _save_state(self):
@@ -4452,7 +4459,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
             "_time_started"     : self._time_started,
             "_time_updated"     : self._time_updated,
             "_time_ended"       : self._time_ended,
-            "_expected_duration": self._expected_duration(),
+            "_expected_duration": self._expected_duration,
         })
 
 
@@ -4461,9 +4468,21 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
             (ActivateChangesManager.activation_base_dir, self._activation_id, self._site_id)
 
 
-    def _expected_duration(self):
-        # TODO: Handle differences of sync only and sync+activate
-        return sum(self._get_activation_times().values())
+    def _get_expected_duration(self):
+        times = self._get_activation_times()
+        duration = 0.0
+
+        if self._is_sync_needed(self._site_id):
+            duration += times.get(ACTIVATION_TIME_SYNC, 0)
+
+        if self._is_activate_needed(self._site_id):
+            duration += times.get(ACTIVATION_TIME_RESTART, 0)
+
+        # In case expected is 0, calculate with 10 seconds instead of failing
+        if duration == 0.0:
+            duration = 10.0
+
+        return duration
 
 
 

@@ -4354,7 +4354,7 @@ def create_random_hosts(folder, count, folders, levels):
 #   '----------------------------------------------------------------------'
 
 class ModeAuditLog(WatoMode):
-    log_path = "%s/audit.log" % log_dir
+    log_path = audit_log_path
 
     def __init__(self):
         self._options  = self._vs_audit_log_options().default_value()
@@ -4935,12 +4935,16 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             has_foreign = self._site_has_foreign_changes(site_id)
             can_activate_all = not has_foreign or config.user.may("wato.activateforeign")
 
+            need_restart = self._is_activate_needed(site_id)
+            need_sync    = self._is_sync_needed(site_id)
+            need_action  = need_restart or need_sync
+
             # TODO: Handle not logged in sites
             # if not config.site_is_local(site_id) and not "secret" in site:
 
             # Activation checkbox
-            table.cell("", css="buttons")
-            if can_activate_all:
+            if can_activate_all and need_action:
+                table.cell("", css="buttons")
                 html.checkbox("site_%s" % site_id, cssclass="site_checkbox")
 
             # Iconbuttons
@@ -4974,10 +4978,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             table.cell(_("Services"), css="number")
             html.a(site_status.get("num_services", ""), href="view.py?view_name=sitesvcs&site=%s" % site_id)
 
-            need_restart = self._is_activate_needed(site_id)
-            need_sync    = self._is_sync_needed(site_id)
-            uptodate = not (need_restart or need_sync)
-
+            # TODO: Cleanup
             # Start asynchronous replication
             #if sitestatus_do_async_replication:
             #    table.cell(_("Activation"), css="repprogress")
@@ -5005,15 +5006,16 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
                 html.icon(_("This site is not update and needs a replication."), "need_replicate")
             if need_restart:
                 html.icon(_("This site needs a restart for activating the changes."), "need_restart")
-            if uptodate:
+            if not need_action:
                 html.icon(_("This site is up-to-date."), "siteuptodate")
 
             table.cell(_("Changes"), "%d" % len(self._changes_of_site(site_id)), css="number")
-            table.cell(_("Activate"))
-            if can_activate_all and (need_sync or need_restart):
+            if can_activate_all and need_action:
+                table.cell(_("Activate"))
                 html.jsbutton("activate_%s" % site_id, _("Activate"),
                               "activate_changes(\"site\", \"%s\")" % site_id, cssclass="activate_site")
 
+            # TODO: Cleanup
             ## Actions
             #table.cell(_("Activate"), css="buttons")
             ##if site_id not in activation_blocked_reasons.get("sites", {}):
@@ -5090,58 +5092,6 @@ class ModeAjaxStartActivation(WatoWebApiMode):
         return {
             "activation_id": activation_id,
         }
-
-
-class ActivateChangesManager(object):
-    def __init__(self, sites, activate_until, comment=None, activate_foreign=False):
-        self._sites            = sites
-        self._activate_until   = activate_until
-        self._comment          = comment
-        self._activate_foreign = activate_foreign
-
-
-    # Creates the snapshot and starts the single site sync processes. In case these
-    # steps could not be started, exceptions are raised and have to be handled by
-    # the caller.
-    #
-    # On success a separate thread is started that writes it's state to a state file
-    # below "var/check_mk/wato/activation/<id>_general.state". The <id> is written to
-    # the javascript code and can be used for fetching the activation state while
-    # the activation is running.
-    #
-    # For each site a separate thread is started that controls the activation of the
-    # configuration on that site. The state is checked by the general activation
-    # thread.
-    def start(self):
-        self._create_snapshot()
-        self._start_activation()
-
-
-    # Lock WATO modifications during snapshot creation
-    def _create_snapshot(self):
-        lock_exclusive()
-
-        # TODO: Check that self._activate_until is the last made modification.
-        # If not, terminate this!
-
-        # TODO: Create the snapshot (check naming that multiple activations can be made)
-
-        unlock_exclusive()
-
-
-    def _start_activation(self):
-        for site_id in self._sites:
-            self._start_site_activation(site_id)
-
-
-    def _start_site_activation(self):
-        # TODO: Lock the site activation
-
-        # TODO: Perform the activation
-        # TODO: Confirm changes till (self._activate_until)
-
-        # TODO: Unlock site activation
-        pass
 
 
 

@@ -128,6 +128,7 @@ sites_mk       = cmk.paths.default_config_dir + "/multisite.d/sites.mk"
 var_dir        = cmk.paths.var_dir + "/wato/"
 # TODO: Clean this up!
 log_dir        = var_dir + "log/"
+audit_log_path = log_dir + "audit.log"
 snapshot_dir   = var_dir + "snapshots/"
 repstatus_file = var_dir + "replication_status.mk"
 php_api_dir    = var_dir + "php-api/"
@@ -197,9 +198,8 @@ def log_entry(linkinfo, action, message, user_id=None):
     elif user_id == '':
         user_id = '-'
 
-    log_file = ModeAuditLog.log_path
-    make_nagios_directory(os.path.dirname(log_file))
-    with create_user_file(log_file, "ab") as f:
+    make_nagios_directory(os.path.dirname(audit_log_path))
+    with create_user_file(audit_log_path, "ab") as f:
         f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id, action, message))
 
 

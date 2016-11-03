@@ -1,0 +1,27 @@
+Title: Fix UnicodeEncodeError exception in WATO folder display
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.4.0i2p1
+Date: 1478185543
+Class: fix
+
+This fixes the following exception, which happens in some situations
+when using the WATO hosts management:
+
+F+:
+Traceback (most recent call last):
+File "/omd/sites/heute/share/check_mk/web/htdocs/wato.py", line 263, in page_handler
+modefunc("content")
+File "/omd/sites/heute/share/check_mk/web/htdocs/wato.py", line 482, in mode_folder
+show_hosts(folder)
+File "/omd/sites/heute/share/check_mk/web/htdocs/wato.py", line 805, in show_hosts
+table.cell(_("Permissions"), ", ".join(map(render_contact_group, permitted_groups)))
+File "/omd/sites/heute/share/check_mk/web/htdocs/table.py", line 112, in cell
+finish_previous()
+File "/omd/sites/heute/share/check_mk/web/htdocs/table.py", line 83, in finish_previous
+next_func(*next_args[0], **next_args[1])
+File "/omd/sites/heute/share/check_mk/web/htdocs/table.py", line 119, in add_cell
+text = str(text)
+UnicodeEncodeError: 'ascii' codec can't encode character u'\xfc' in position 60: ordinal not in range(128)
+F-:

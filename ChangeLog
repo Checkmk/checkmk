@@ -1,6 +1,7 @@
 1.4.0i2p1:
     WATO:
     * 4038 FIX: Fix exception in WATO when adding a new host...
+    * 4039 FIX: Fix UnicodeEncodeError exception in WATO folder display...
 
 
 1.4.0i2:

@@ -6497,15 +6497,14 @@ def render_global_configuration_variables(group_names, default_values, current_s
                         "snapin_switch_" + (current_settings[varname] and "on" or "off"),
                         cssclass="modified")
                 else:
-                    html.a(to_text, href=edit_url, class_="modified")
+                    html.a(HTML(to_text), href=edit_url, class_="modified")
             else:
                 if is_a_checkbox(valuespec):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"),
                     # "snapin_greyswitch_" + (defaultvalue and "on" or "off"))
                     "snapin_switch_" + (defaultvalue and "on" or "off"))
                 else:
-                    # TODO: IS THIS RIGHT????
-                    html.a(to_text, href=edit_url)
+                    html.a(HTML(to_text), href=edit_url)
 
         if header_is_painted:
             forms.end()

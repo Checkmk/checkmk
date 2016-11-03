@@ -5003,7 +5003,7 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     for num, (label, value) in enumerate(stats):
         html.open_tr()
         html.th(label)
-        html.td(num, id_="progress_stat%d" % value)
+        html.td(value, id_="progress_stat%d" % num)
         html.close_tr()
     html.close_table()
     html.close_td()

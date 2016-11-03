@@ -1,4 +1,6 @@
 1.4.0i2p1:
+    WATO:
+    * 4038 FIX: Fix exception in WATO when adding a new host...
 
 
 1.4.0i2:

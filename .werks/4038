@@ -1,0 +1,27 @@
+Title: Fix exception in WATO when adding a new host
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.4.0i2p1
+Date: 1478185078
+Class: fix
+
+This fixes the following traceback:
+
+F+:
+Traceback (most recent call last):
+File "/omd/sites/test140i2/share/check_mk/web/htdocs/wato.py", line 263, in page_handler
+modefunc("content")
+File "/omd/sites/test140i2/share/check_mk/web/htdocs/wato.py", line 16732, in <lambda>
+"newhost" : (["hosts", "manage_hosts"], lambda phase: mode_edit_host(phase, new=True, is_cluster=False)),
+File "/omd/sites/test140i2/share/check_mk/web/htdocs/wato.py", line 1324, in mode_edit_host
+configure_attributes(new, {hostname: host}, "host", parent = Folder.current())
+File "/omd/sites/test140i2/share/check_mk/web/htdocs/wato.py", line 16587, in configure_attributes
+forms.section(_u(attr.title()), checkbox=checkbox_code, id="attr_" + attrname)
+File "/omd/sites/test140i2/share/check_mk/web/htdocs/forms.py", line 280, in section
+name, active, attrname = checkbox
+ValueError: too many values to unpack
+F-:
+
+
+

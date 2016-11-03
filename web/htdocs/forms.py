@@ -274,7 +274,7 @@ def section(title = None, checkbox = None, id = None, simple=False, hide = False
             html.close_div()
         if checkbox:
             html.open_div(class_="checkbox")
-            if type(checkbox) == str:
+            if type(checkbox) in (str, unicode, HTML):
                 html.write(checkbox)
             else:
                 name, active, attrname = checkbox

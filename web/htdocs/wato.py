@@ -154,6 +154,11 @@ def page_handler():
     current_mode = html.var("mode") or "main"
     modeperms, modefunc = get_mode_function(current_mode)
 
+    weblib.prepare_display_options(globals())
+
+    if display_options.disabled(display_options.N):
+        html.add_body_css_class("inline")
+
     # If we do an action, we aquire an exclusive lock on the complete
     # WATO.
     if html.is_transaction():
@@ -169,12 +174,19 @@ def page_handler():
             raise
 
     if modefunc == None:
-        html.header(_("Sorry"), stylesheets=wato_styles)
-        html.begin_context_buttons()
-        home_button()
-        html.end_context_buttons()
+        html.header(_("Sorry"), stylesheets=wato_styles,
+                    show_body_start=display_options.enabled(display_options.H),
+                    show_top_heading=display_options.enabled(display_options.T))
+
+        if display_options.enabled(display_options.B):
+            html.begin_context_buttons()
+            home_button()
+            html.end_context_buttons()
+
         html.message(_("This module has not yet been implemented."))
-        html.footer()
+
+        html.footer(display_options.enabled(display_options.Z),
+                    display_options.enabled(display_options.H))
         return
 
     # Check general permission for this mode
@@ -235,24 +247,27 @@ def page_handler():
             html.add_user_error(None, e.reason)
 
     # Title
-    html.header(modefunc("title"), javascripts=["wato"], stylesheets=wato_styles)
+    html.header(modefunc("title"), javascripts=["wato"], stylesheets=wato_styles,
+                show_body_start=display_options.enabled(display_options.H),
+                show_top_heading=display_options.enabled(display_options.T))
     html.open_div(class_="wato")
 
     try:
-        # Show contexts buttons
-        html.begin_context_buttons()
-        modefunc("buttons")
-        for inmode, buttontext, target in extra_buttons:
-            if inmode == current_mode:
-                if hasattr(target, '__call__'):
-                    target = target()
-                    if not target:
-                        continue
-                if '/' == target[0] or target.startswith('../') or '://' in target:
-                    html.context_button(buttontext, target)
-                else:
-                    html.context_button(buttontext, folder_preserving_link([("mode", target)]))
-        html.end_context_buttons()
+        if display_options.enabled(display_options.B):
+            # Show contexts buttons
+            html.begin_context_buttons()
+            modefunc("buttons")
+            for inmode, buttontext, target in extra_buttons:
+                if inmode == current_mode:
+                    if hasattr(target, '__call__'):
+                        target = target()
+                        if not target:
+                            continue
+                    if '/' == target[0] or target.startswith('../') or '://' in target:
+                        html.context_button(buttontext, target)
+                    else:
+                        html.context_button(buttontext, folder_preserving_link([("mode", target)]))
+            html.end_context_buttons()
 
         # Show outcome of action
         if html.has_user_errors():
@@ -284,7 +299,8 @@ def page_handler():
     if config.wato_use_git and html.is_transaction():
         do_git_commit()
 
-    html.footer()
+    html.footer(display_options.enabled(display_options.Z),
+                display_options.enabled(display_options.H))
 
 
 def get_mode_function(mode):
@@ -4338,8 +4354,10 @@ def create_random_hosts(folder, count, folders, levels):
 #   '----------------------------------------------------------------------'
 
 class ModeAuditLog(WatoMode):
+    log_path = "%s/audit.log" % log_dir
+
     def __init__(self):
-        self._options = self._vs_audit_log_options().default_value()
+        self._options  = self._vs_audit_log_options().default_value()
         super(ModeAuditLog, self).__init__()
 
 
@@ -4359,8 +4377,7 @@ class ModeAuditLog(WatoMode):
 
 
     def _log_exists(self):
-        path = "%s/audit.log" % log_dir
-        return os.path.exists(path)
+        return os.path.exists(self.log_path)
 
 
     def action(self):
@@ -4381,22 +4398,49 @@ class ModeAuditLog(WatoMode):
 
     def page(self):
         audit = self._parse_audit_log()
+
         if not audit:
             html.show_info(_("The audit log is empty."))
+
+        elif self._options["display"] == "daily":
+            self._display_daily_audit_log(audit)
+
         else:
-            self._display_audit_log(audit)
+            self._display_multiple_days_audit_log(audit)
 
 
     # TODO: Handle self._options
-    def _display_audit_log(self, log):
-        log, times = self._get_next_paged_log(log)
+    def _display_daily_audit_log(self, log):
+        log, times = self._get_next_daily_paged_log(log)
 
         self._display_audit_log_options()
 
-        self._display_paged(times)
-        html.h3(_("Audit log for %s") % render.date(times[0]))
+        self._display_page_controls(*times)
 
-        table.begin(css="data wato auditlog audit", limit=None, sortable=False, searchable=False)
+        if display_options.enabled(display_options.T):
+            html.h3(_("Audit log for %s") % render.date(times[0]))
+
+        self._display_log(log)
+
+        self._display_page_controls(*times)
+
+
+    def _display_multiple_days_audit_log(self, log):
+        log = self._get_multiple_days_log_entries(log)
+
+        self._display_audit_log_options()
+
+        if display_options.enabled(display_options.T):
+            html.h3(_("Audit log for %s and %d days ago") %
+                    (render.date(self._get_start_date()),
+                    self._options["display"][1]))
+
+        self._display_log(log)
+
+
+    def _display_log(self, log):
+        table.begin(css="data wato auditlog audit", limit=None,
+                    sortable=False, searchable=False)
         even = "even"
         for t, linkinfo, user, action, text in log:
             table.row()
@@ -4409,13 +4453,9 @@ class ModeAuditLog(WatoMode):
             table.cell(_("Change"), text, css="fill")
         table.end()
 
-        self._display_paged(times)
 
-
-    def _get_next_paged_log(self, log):
-        start = int(html.var('start', 0))
-        if not start:
-            start = int(time.time())
+    def _get_next_daily_paged_log(self, log):
+        start = self._get_start_date()
 
         while True:
             log_today, times = self._paged_log_from(log, start)
@@ -4423,6 +4463,27 @@ class ModeAuditLog(WatoMode):
                 return log_today, times
             else: # No entries today, but log not empty -> go back in time
                 start -= 24 * 3600
+
+
+    def _get_start_date(self):
+        if self._options["start"] == "now":
+            return int(time.time()) / 86400 * 86400
+        else:
+            return int(self._options["start"][1])
+
+
+    def _get_multiple_days_log_entries(self, log):
+        start_time = self._get_start_date() + 86399
+        end_time   = start_time \
+                     - ((self._options["display"][1] * 86400) + 86399)
+
+        logs = []
+
+        for entry in log:
+            if entry[0] <= start_time and entry[0] >= end_time:
+                logs.append(entry)
+
+        return logs
 
 
     def _paged_log_from(self, log, start):
@@ -4459,25 +4520,36 @@ class ModeAuditLog(WatoMode):
         return log[first_log_index:last_log_index], (start_time, end_time, previous_log_time, next_log_time)
 
 
-    def _display_paged(self, (start_time, end_time, previous_log_time, next_log_time)):
+    def _display_page_controls(self, start_time, end_time, previous_log_time, next_log_time):
         html.open_div(class_="paged_controls")
 
+        def time_url_args(t):
+            return [
+                ("options_p_start_1_day",   time.strftime("%d", time.localtime(t))),
+                ("options_p_start_1_month", time.strftime("%m", time.localtime(t))),
+                ("options_p_start_1_year",  time.strftime("%Y", time.localtime(t))),
+                ("options_p_start_sel",     "1"),
+            ]
+
         if next_log_time is not None:
-            html.icon_button(html.makeuri([('start', self._get_timerange(int(time.time()))[0])]),
-                            _("Most recent events"), "start")
-            html.icon_button(html.makeuri([('start', next_log_time)]),
-                            '%s: %s' % (_("Newer events"), render.date(next_log_time)),
-                            "back")
+            html.icon_button(html.makeactionuri([
+                ("options_p_start_sel", "0"),
+            ]), _("Most recent events"), "start")
+
+            html.icon_button(html.makeactionuri(time_url_args(next_log_time)),
+               "%s: %s" % (_("Newer events"), render.date(next_log_time)),
+               "back")
         else:
             html.empty_icon_button()
             html.empty_icon_button()
 
         if previous_log_time is not None:
-            html.icon_button(html.makeuri([('start', previous_log_time)]),
-                            '%s: %s' % (_("Older events"), render.date(previous_log_time)),
-                            "forth")
+            html.icon_button(html.makeactionuri(time_url_args(previous_log_time)),
+                "%s: %s" % (_("Older events"), render.date(previous_log_time)),
+                "forth")
         else:
             html.empty_icon_button()
+
         html.close_div()
 
 
@@ -4489,6 +4561,9 @@ class ModeAuditLog(WatoMode):
 
 
     def _display_audit_log_options(self):
+        if display_options.disabled(display_options.C):
+            return
+
         valuespec = self._vs_audit_log_options()
 
         html.begin_form("options", method="GET")
@@ -4507,6 +4582,15 @@ class ModeAuditLog(WatoMode):
                     title = _("Filter pattern (RegExp)"),
                     mode = "infix",
                 )),
+                ("start", CascadingDropdown(
+                    title = _("Start log from"),
+                    default_value = "now",
+                    orientation = "horizontal",
+                    choices = [
+                        ("now",  _("Current date")),
+                        ("time", _("Specific date"), AbsoluteDate()),
+                    ],
+                )),
                 ("display", CascadingDropdown(
                     title = _("Display mode of entries"),
                     default_value = "daily",
@@ -4517,6 +4601,7 @@ class ModeAuditLog(WatoMode):
                             minval = 1,
                             unit = _("days"),
                             default_value = 1,
+                            allow_empty = False,
                         )),
                     ],
                 )),
@@ -4538,18 +4623,20 @@ class ModeAuditLog(WatoMode):
 
 
     def _clear_audit_log(self):
-        path = "%s/audit.log" % log_dir
-        if os.path.exists(path):
-            newpath = path + time.strftime(".%Y-%m-%d")
-            if os.path.exists(newpath):
-                n = 1
-                while True:
-                    n += 1
-                    with_num = newpath + "-%d" % n
-                    if not os.path.exists(with_num):
-                        newpath = with_num
-                        break
-            os.rename(path, newpath)
+        if not os.path.exists(self.log_path):
+            return
+
+        newpath = self.log_path + time.strftime(".%Y-%m-%d")
+        if os.path.exists(newpath):
+            n = 1
+            while True:
+                n += 1
+                with_num = newpath + "-%d" % n
+                if not os.path.exists(with_num):
+                    newpath = with_num
+                    break
+
+        os.rename(self.log_path, newpath)
 
 
 
@@ -4609,6 +4696,29 @@ class ModeAuditLog(WatoMode):
         return False
 
 
+    def _parse_audit_log(self):
+        if not os.path.exists(self.log_path):
+            return []
+
+        entries = []
+        for line in file(self.log_path):
+            line = line.rstrip().decode("utf-8")
+            splitted = line.split(None, 4)
+
+            if len(splitted) == 5 and splitted[0].isdigit():
+                splitted[0] = int(splitted[0])
+
+                user, action, text = splitted[2:]
+                if self._filter_entry(user, action, text):
+                    continue
+
+                entries.append(splitted)
+
+        entries.reverse()
+
+        return entries
+
+
     def _filter_entry(self, user, action, text):
         if not self._options["filter_regex"]:
             return False
@@ -4619,20 +4729,6 @@ class ModeAuditLog(WatoMode):
 
         return True
 
-
-    def _parse_audit_log(self):
-        path = "%s/audit.log" % log_dir
-        if os.path.exists(path):
-            entries = []
-            for line in file(path):
-                line = line.rstrip().decode("utf-8")
-                splitted = line.split(None, 4)
-                if len(splitted) == 5 and splitted[0].isdigit():
-                    splitted[0] = int(splitted[0])
-                    entries.append(splitted)
-            entries.reverse()
-            return entries
-        return []
 
 #.
 #   .--Pending & Replication-----------------------------------------------.

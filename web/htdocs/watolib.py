@@ -126,6 +126,7 @@ wato_root_dir  = cmk.paths.check_mk_config_dir + "/wato/"
 multisite_dir  = cmk.paths.default_config_dir + "/multisite.d/wato/"
 sites_mk       = cmk.paths.default_config_dir + "/multisite.d/sites.mk"
 var_dir        = cmk.paths.var_dir + "/wato/"
+# TODO: Clean this up!
 log_dir        = var_dir + "log/"
 snapshot_dir   = var_dir + "snapshots/"
 repstatus_file = var_dir + "replication_status.mk"
@@ -174,7 +175,7 @@ def foreign_changes():
 
 # linkinfo identifies the object operated on. It can be a Host or a Folder
 # or a text.
-def log_entry(linkinfo, action, message, logfilename, user_id = None):
+def log_entry(linkinfo, action, message, user_id=None):
     # Using attrencode here is against our regular rule to do the escaping
     # at the last possible time: When rendering. But this here is the last
     # place where we can distinguish between HTML() encapsulated (already)
@@ -196,18 +197,18 @@ def log_entry(linkinfo, action, message, logfilename, user_id = None):
     elif user_id == '':
         user_id = '-'
 
-    log_file = log_dir + logfilename
-    make_nagios_directory(log_dir)
-    f = create_user_file(log_file, "ab")
-    f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id, action, message))
+    log_file = ModeAuditLog.log_path
+    make_nagios_directory(os.path.dirname(log_file))
+    with create_user_file(log_file, "ab") as f:
+        f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id, action, message))
 
 
-def log_audit(linkinfo, what, message, user_id = None):
+def log_audit(linkinfo, action, message, user_id = None):
     if config.wato_use_git:
         if isinstance(message, HTML):
             message = html.strip_tags(message.value)
         g_git_messages.append(message)
-    log_entry(linkinfo, what, message, "audit.log", user_id)
+    log_entry(linkinfo, action, message, user_id)
 
 
 def confirm_all_local_changes():

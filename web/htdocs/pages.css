@@ -70,6 +70,11 @@ body.main {
     background-color: #426D8A;
 }
 
+/* Can be toggled with N/n display option */
+body.main.inline {
+    padding: 0;
+}
+
 /* Special mode for creating screenshots of single elements. Omit background.
    This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
    on the URL */

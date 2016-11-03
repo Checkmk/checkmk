@@ -1677,6 +1677,7 @@ def mode_mkeventd_changes(phase):
 
 def log_mkeventd(what, message):
     log_entry(None, what, message, "audit.log")    # central WATO audit log
+    # TODO: Change to new changes tracking!
     log_entry(None, what, message, "mkeventd.log")  # pending changes for mkeventd
 
     # Mark all sites as "need sync" that have opted for EC replication

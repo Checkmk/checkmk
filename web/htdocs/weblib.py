@@ -158,6 +158,8 @@ class DisplayOptions(object):
             # with the name main. This is useful when using views as elements in the dashboard.
     L = "L" # The column title links in multisite views
     W = "W" # The limit and livestatus error message in views
+    N = "N" # Switching to inline display mode when disabled
+            # (e.g. no padding round page)
 
 
     @classmethod

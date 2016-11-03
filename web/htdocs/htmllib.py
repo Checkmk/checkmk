@@ -895,12 +895,16 @@ class HTMLCheck_MK(HTMLGenerator):
 
 
 
-    def header(self, title='', javascripts=None, stylesheets=None, force=False):
+    def header(self, title='', javascripts=None, stylesheets=None, force=False,
+               show_body_start=True, show_top_heading=True):
         if self.output_format == "html":
             if not self.header_sent:
-                self.body_start(title, javascripts=javascripts, stylesheets=stylesheets, force=force)
+                if show_body_start:
+                    self.body_start(title, javascripts=javascripts, stylesheets=stylesheets, force=force)
+
                 self.header_sent = True
-                if self.render_headfoot:
+
+                if self.render_headfoot and show_top_heading:
                     self.top_heading(title)
 
 
@@ -2202,10 +2206,13 @@ class html(DeprecationWrapper):
         self.end_foldable_container()
 
 
-    def footer(self):
+    def footer(self, show_footer=True, show_body_end=True):
         if self.output_format == "html":
-            self.bottom_footer()
-            self.body_end()
+            if show_footer:
+                self.bottom_footer()
+
+            if show_body_end:
+                self.body_end()
 
 
     def bottom_footer(self):

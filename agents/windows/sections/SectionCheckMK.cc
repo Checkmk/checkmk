@@ -104,7 +104,7 @@ bool SectionCheckMK::produceOutputInner(std::ostream &out,
     // reset script statistics for next round
     memset(&g_script_stat, 0, sizeof(g_script_stat));
 
-    out << "Only From:";
+    out << "OnlyFrom:";
     // only from, isn't this static too?
     if (_only_from->size() == 0) {
         out << " 0.0.0.0/0\n";

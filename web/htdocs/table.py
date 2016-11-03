@@ -115,7 +115,7 @@ def cell(*posargs, **kwargs):
     next_args = posargs, kwargs
 
 def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True):
-    if type(text) != unicode:
+    if type(text) not in (unicode, HTML):
         text = str(text)
     htmlcode = text + html.drain()
     if table["collect_headers"] == True:

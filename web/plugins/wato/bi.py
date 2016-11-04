@@ -161,10 +161,6 @@ class ModeBI(WatoMode):
             out.write("bi_packs[%r] = %s\n\n" % (
                 pack_id, self._replace_bi_constants(pprint.pformat(converted_pack, width=50))))
 
-        # Make sure that BI aggregates are replicated to all other sites that allow
-        # direct user login
-        update_login_sites_replication_status()
-
 
     def _convert_pack_to_bi(self, pack):
         converted_rules = dict([
@@ -859,7 +855,7 @@ class ModeBIPacks(ModeBI):
                              _("Do you really want to delete the BI pack <b>%s</b> <i>%s</i> with <b>%d</b> rules and <b>%d</b> aggregations?") %
                                (pack_id, pack["title"], len(pack["rules"]), len(pack["aggregations"])))
             if c:
-                log_mkeventd("delete-bi-pack", _("Deleted BI pack %s") % pack_id)
+                self._add_change("delete-bi-pack", _("Deleted BI pack %s") % pack_id)
                 del self._packs[pack_id]
                 self.save_config()
             elif c == False:

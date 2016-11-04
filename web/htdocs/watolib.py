@@ -127,9 +127,7 @@ wato_root_dir  = cmk.paths.check_mk_config_dir + "/wato/"
 multisite_dir  = cmk.paths.default_config_dir + "/multisite.d/wato/"
 sites_mk       = cmk.paths.default_config_dir + "/multisite.d/sites.mk"
 var_dir        = cmk.paths.var_dir + "/wato/"
-# TODO: Clean this up!
-log_dir        = var_dir + "log/"
-audit_log_path = log_dir + "audit.log"
+audit_log_path = var_dir + "log/audit.log"
 snapshot_dir   = var_dir + "snapshots/"
 repstatus_file = var_dir + "replication_status.mk"
 php_api_dir    = var_dir + "php-api/"
@@ -310,7 +308,7 @@ class ConfigDomainGUI(ConfigDomain):
 
 class ConfigDomainEventConsole(ConfigDomain):
     needs_sync       = True
-    needs_activation = False
+    needs_activation = True
     ident            = "ec"
 
     def activate(self):
@@ -3590,12 +3588,6 @@ def get_event_console_sync_sites():
         if config.site_is_local(site_id) or site.get("replicate_ec"):
             sites.append(site_id)
     return sites
-
-
-# TODO: This needs to to be recoded to new mechanism
-def update_login_sites_replication_status():
-    for site_id in get_login_sites():
-        update_replication_status(site_id, {'need_sync': True})
 
 
 def automation_push_snapshot():

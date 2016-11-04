@@ -836,6 +836,9 @@ function finish_activation()
     // Maybe change this not to make a reload and only update the relevant
     // parts of the activate changes page.
     schedule_reload('', 1000);
+
+    // Trigger a reload of the sidebar (to update changes in WATO snapin)
+    reload_sidebar();
 }
 
 // .-Profile Repl----------------------------------------------------------.

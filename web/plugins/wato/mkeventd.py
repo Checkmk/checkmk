@@ -992,8 +992,8 @@ def mode_mkeventd_rule_packs(phase):
         return _("Event Console Rule Packages")
 
     elif phase == "buttons":
-        home_button()
         mkeventd_changes_button()
+        home_button()
         if config.user.may("mkeventd.edit"):
             html.context_button(_("New Rule Pack"), html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack")]), "new")
             html.context_button(_("Reset Counters"),
@@ -1017,7 +1017,7 @@ def mode_mkeventd_rule_packs(phase):
                              _("Do you really want to delete the rule pack <b>%s</b> <i>%s</i> with <b>%s</b> rules?") %
                                (rule_pack["id"], rule_pack["title"], len(rule_pack["rules"])))
             if c:
-                log_mkeventd("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
+                add_ec_change("delete-rule-pack", _("Deleted rule pack %s") % rule_pack["id"])
                 del rule_packs[nr]
                 save_mkeventd_rules(legacy_rules, rule_packs)
             elif c == False:
@@ -1029,7 +1029,7 @@ def mode_mkeventd_rule_packs(phase):
                              _("Do you really want to reset all rule hit counters in <b>all rule packs</b> to zero?"))
             if c:
                 mkeventd.execute_command("RESETCOUNTERS", site=config.omd_site())
-                log_mkeventd("counter-reset", _("Resetted all rule hit counters to zero"))
+                add_ec_change("counter-reset", _("Resetted all rule hit counters to zero"))
             elif c == False:
                 return ""
 
@@ -1040,7 +1040,7 @@ def mode_mkeventd_rule_packs(phase):
                                "replace your local configuration with them?"))
             if c:
                 copy_rules_from_master()
-                log_mkeventd("copy-rules-from-master", _("Copied the event rules from the master "
+                add_ec_change("copy-rules-from-master", _("Copied the event rules from the master "
                              "into the local configuration"))
                 return None, _("Copied rules from master")
             elif c == False:
@@ -1055,7 +1055,7 @@ def mode_mkeventd_rule_packs(phase):
             del rule_packs[from_pos] # make to_pos now match!
             rule_packs[to_pos:to_pos] = [rule_pack]
             save_mkeventd_rules(legacy_rules, rule_packs)
-            log_mkeventd("move-rule-pack", _("Changed position of rule pack %s") % rule_pack["id"])
+            add_ec_change("move-rule-pack", _("Changed position of rule pack %s") % rule_pack["id"])
 
         return
 
@@ -1240,7 +1240,7 @@ def mode_mkeventd_rules(phase):
                         other_pack["rules"][0:0] = [ rule ]
                         del rule_pack["rules"][move_nr]
                         save_mkeventd_rules(legacy_rules, rule_packs)
-                        log_mkeventd("move-rule-to-pack", _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
+                        add_ec_change("move-rule-to-pack", _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
                         return None, _("Moved rule %s to pack %s") % (rule["id"], html.attrencode(other_pack["title"]))
                         break
 
@@ -1255,7 +1255,7 @@ def mode_mkeventd_rules(phase):
                              _("Do you really want to delete the rule <b>%s</b> <i>%s</i>?") %
                                (rule["id"], rule.get("description","")))
             if c:
-                log_mkeventd("delete-rule", _("Deleted rule %s") % rules[nr]["id"])
+                add_ec_change("delete-rule", _("Deleted rule %s") % rules[nr]["id"])
                 del rules[nr]
                 save_mkeventd_rules(legacy_rules, rule_packs)
             elif c == False:
@@ -1271,7 +1271,7 @@ def mode_mkeventd_rules(phase):
                 del rules[from_pos] # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
                 save_mkeventd_rules(legacy_rules, rule_packs)
-                log_mkeventd("move-rule", _("Changed position of rule %s") % rule["id"])
+                add_ec_change("move-rule", _("Changed position of rule %s") % rule["id"])
         return
 
     # Simulator
@@ -1489,9 +1489,9 @@ def mode_mkeventd_edit_rule_pack(phase):
         save_mkeventd_rules(legacy_rules, rule_packs)
 
         if new:
-            log_mkeventd("new-rule-pack", _("Created new rule pack with id %s") % rule_pack["id"])
+            add_ec_change("new-rule-pack", _("Created new rule pack with id %s") % rule_pack["id"])
         else:
-            log_mkeventd("edit-rule-pack", _("Modified rule pack %s") % rule_pack["id"])
+            add_ec_change("edit-rule-pack", _("Modified rule pack %s") % rule_pack["id"])
         return "mkeventd_rule_packs"
 
 
@@ -1621,9 +1621,9 @@ def mode_mkeventd_edit_rule(phase):
 
         save_mkeventd_rules(legacy_rules, rule_packs)
         if new:
-            log_mkeventd("new-rule", _("Created new event correlation rule with id %s") % rule["id"])
+            add_ec_change("new-rule", _("Created new event correlation rule with id %s") % rule["id"])
         else:
-            log_mkeventd("edit-rule", _("Modified event correlation rule %s") % rule["id"])
+            add_ec_change("edit-rule", _("Modified event correlation rule %s") % rule["id"])
             # Reset hit counters of this rule
             mkeventd.execute_command("RESETCOUNTERS", [rule["id"]], config.omd_site())
         return "mkeventd_rules"
@@ -1637,95 +1637,14 @@ def mode_mkeventd_edit_rule(phase):
     html.end_form()
 
 
-# This hook is executed when one applies the pending configuration changes
-# related to the mkeventd via WATO on the local system. The hook is called
-# without parameters.
-def call_hook_mkeventd_activate_changes():
-    if hooks.registered('mkeventd-activate-changes'):
-        hooks.call("mkeventd-activate-changes")
-
-def mode_mkeventd_changes(phase):
-    if phase == "title":
-        return _("Event Console - Pending Changes")
-
-    elif phase == "buttons":
-        home_button()
-        mkeventd_rules_button()
-        if config.user.may("mkeventd.activate") and parse_audit_log("mkeventd") and mkeventd.daemon_running():
-            html.context_button(_("Reload Config!"),
-                    html.makeactionuri([("_activate", "now")]), "apply", hot=True)
-        mkeventd_config_button()
-        mkeventd_mibs_button()
-
-    elif phase == "action":
-        if html.check_transaction():
-            mkeventd_reload()
-            call_hook_mkeventd_activate_changes()
-            return "mkeventd_rule_packs", _("The new configuration has successfully been activated.")
-
-    else:
-        if not mkeventd.daemon_running():
-            warning = _("The Event Console Daemon is currently not running. ")
-            warning += _("Please make sure that you have activated it with <tt>omd config set MKEVENTD on</tt> "
-                         "before starting this site.")
-            html.show_warning(warning)
-        entries = parse_audit_log("mkeventd")
-        if entries:
-            render_audit_log(entries, "pending", hilite_others=True)
-        else:
-            html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
-
-
-# TODO: Remove when wato recode finished
-def parse_audit_log(name):
-    log_path = log_dir + "/" + name + ".log"
-    if not os.path.exists(log_path):
-        return []
-
-    entries = []
-    for line in file(log_path):
-        line = line.rstrip().decode("utf-8")
-        splitted = line.split(None, 4)
-
-        if len(splitted) == 5 and splitted[0].isdigit():
-            splitted[0] = int(splitted[0])
-            entries.append(splitted)
-
-    entries.reverse()
-
-    return entries
-
-
-def log_mkeventd(what, message):
-    log_entry(None, what, message, "audit.log")    # central WATO audit log
-    # TODO: Change to new changes tracking!
-    log_entry(None, what, message, "mkeventd.log")  # pending changes for mkeventd
-
-    # Mark all sites as "need sync" that have opted for EC replication
-    at_least_one = False
-    if is_distributed():
-        for site_id, site in config.sites.items():
-            if site.get("replicate_ec") and not config.site_is_local(site_id):
-                update_replication_status(site_id, { "need_sync" : True })
-                remove_sync_snapshot(site_id)
-                at_least_one = True
-
-    if at_least_one:
-        log_entry(None, what, message, "pending.log")
-
+def add_ec_change(what, message):
+    add_change(what, message, domains=[ConfigDomainEventConsole],
+               sites=get_event_console_sync_sites())
 
 
 def mkeventd_changes_button():
-    pending = parse_audit_log("mkeventd")
-    if len(pending) > 0:
-        buttontext = "%d " % len(pending) + _("EC-Changes")
-        hot = True
-        icon = "mkeventd"
-    else:
-        buttontext = _("No EC-Changes")
-        hot = False
-        icon = "mkeventd"
-    html.context_button(buttontext, html.makeuri_contextless([("mode", "mkeventd_changes")]), icon, hot)
+    changelog_button()
+
 
 def mkeventd_rules_button():
     html.context_button(_("Rule Packs"), html.makeuri_contextless([("mode", "mkeventd_rule_packs")]), "back")
@@ -2022,7 +1941,7 @@ def bulk_delete_custom_mibs_after_confirm():
 
 
 def delete_mib(filename, mib_name):
-    log_mkeventd("delete-mib", _("Deleted MIB %s") % filename)
+    add_ec_change("delete-mib", _("Deleted MIB %s") % filename)
 
     # Delete the uploaded mib file
     os.remove(mkeventd.mib_upload_dir + "/" + filename)
@@ -2216,7 +2135,7 @@ def process_uploaded_mib_file(filename, content):
 
     msg = validate_and_compile_mib(mibname.upper(), content)
     file(mkeventd.mib_upload_dir + "/" + filename, "w").write(content)
-    log_mkeventd("uploaded-mib", _("MIB %s: %s") % (filename, msg))
+    add_ec_change("uploaded-mib", _("MIB %s: %s") % (filename, msg))
     return msg
 
 
@@ -2225,7 +2144,6 @@ if mkeventd_enabled:
     modes["mkeventd_rules"]          = (["mkeventd.edit"], mode_mkeventd_rules)
     modes["mkeventd_edit_rule"]      = (["mkeventd.edit"], mode_mkeventd_edit_rule)
     modes["mkeventd_edit_rule_pack"] = (["mkeventd.edit"], mode_mkeventd_edit_rule_pack)
-    modes["mkeventd_changes"]        = (["mkeventd.edit"], mode_mkeventd_changes)
     modes["mkeventd_status"]         = ([], mode_mkeventd_status)
     modes["mkeventd_config"]         = (['mkeventd.config'], mode_mkeventd_config)
     modes["mkeventd_edit_configvar"] = (['mkeventd.config'], lambda p: mode_edit_configvar(p, 'mkeventd'))
@@ -2295,7 +2213,7 @@ if mkeventd_enabled:
 
 if mkeventd_enabled:
     register_configvar_domain("mkeventd", mkeventd_config_dir,
-            pending = lambda msg: log_mkeventd('config-change', msg), in_global_settings = False)
+            pending = lambda msg: add_ec_change('config-change', msg), in_global_settings = False)
 
     start_order = 18
     groups = {}

@@ -9375,7 +9375,7 @@ def mode_edit_site(phase):
             # On central site issue a change only for the GUI
             # NOTE: Was marking all to be restarted (ec and core) before, but I don't
             # think that this was really needed.
-            add_change("edit-sites", msg, sites=[id], domains=ConfigDomainGUI)
+            add_change("edit-sites", msg, sites=[id], domains=[ConfigDomainGUI])
 
         return "sites"
 

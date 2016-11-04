@@ -267,9 +267,14 @@ def get_number_of_pending_changes():
 
 
 class ConfigDomain(object):
+    needs_sync       = True
+    needs_activation = True
+    ident            = None
+
     @classmethod
     def all_classes(cls):
         return cls.__subclasses__() # pylint: disable=no-member
+
 
     @classmethod
     def get_class(cls, ident):
@@ -278,8 +283,9 @@ class ConfigDomain(object):
                 return domain_class
         raise NotImplementedError()
 
+
     def activate(self):
-        raise NotImplementedError()
+        raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
 
 
 
@@ -298,6 +304,9 @@ class ConfigDomainGUI(ConfigDomain):
     needs_activation = False
     ident            = "multisite"
 
+    def activate(self):
+        pass
+
 
 class ConfigDomainEventConsole(ConfigDomain):
     needs_sync       = True
@@ -307,6 +316,7 @@ class ConfigDomainEventConsole(ConfigDomain):
     def activate(self):
         if getattr(config, "mkeventd_enabled", False):
             mkeventd_reload()
+            call_hook_mkeventd_activate_changes()
 
 
 #.
@@ -3573,6 +3583,16 @@ def get_login_sites():
     return sites
 
 
+# Returns a list of site ids which gets the Event Console configuration replicated
+def get_event_console_sync_sites():
+    sites = []
+    for site_id, site in config.sites.items():
+        if config.site_is_local(site_id) or site.get("replicate_ec"):
+            sites.append(site_id)
+    return sites
+
+
+# TODO: This needs to to be recoded to new mechanism
 def update_login_sites_replication_status():
     for site_id in get_login_sites():
         update_replication_status(site_id, {'need_sync': True})
@@ -3652,10 +3672,6 @@ def verify_slave_site_config(site_id):
 
 def mkeventd_reload():
     mkeventd.execute_command("RELOAD", site=config.omd_site())
-    try:
-        os.remove(log_dir + "mkeventd.log")
-    except OSError:
-        pass # ignore not existing logfile
     log_audit(None, "mkeventd-activate", _("Activated changes of event console configuration"))
 
 
@@ -4219,7 +4235,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
             if self._is_activate_needed(self._site_id):
                 configuration_warnings = self._do_activate()
             else:
-                configuration_warnings = []
+                configuration_warnings = {}
 
             self._confirm_activated_changes()
 
@@ -4524,9 +4540,6 @@ def execute_activate_changes(domains):
     results = {}
     for domain in domains:
         domain_class = ConfigDomain.get_class(domain)
-        if not domain_class.needs_activation:
-            raise MKGeneralException(_("The domain \"%s\" does not support activation."))
-
         results[domain] = domain_class().activate()
 
     return results
@@ -5178,6 +5191,14 @@ def call_hook_folder_created(folder):
 def call_hook_folder_deleted(folder):
     # CLEANUP: Gucken, welche Hooks es gibt und anpassen auf das neue Objekt
     hooks.call("folder-deleted", folder)
+
+
+# This hook is executed when one applies the pending configuration changes
+# related to the mkeventd via WATO on the local system. The hook is called
+# without parameters.
+def call_hook_mkeventd_activate_changes():
+    if hooks.registered('mkeventd-activate-changes'):
+        hooks.call("mkeventd-activate-changes")
 
 
 # This hook is executed before distributing changes to the remote

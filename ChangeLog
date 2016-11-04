@@ -61,6 +61,7 @@
     * 3973 FIX: Backup: Fixed displaying wrong finish time after backup completion
     * 3974 FIX: Sorting comments in hover menu of comments icon by time now
     * 4040 FIX: Fix error in view about "No WATO folder ..." in case of host imported via cmcdump...
+    * 4046 FIX: Repaired html rendering....
 
     WATO:
     * 3915 User access times: New icon when never logged in; New column "last seen"

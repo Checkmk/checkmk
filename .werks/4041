@@ -1,0 +1,11 @@
+Title: Fix exception when editing global configuration settings
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.4.0i2
+Date: 1478256770
+Class: fix
+
+The exception just happened when you clicked on the name of the
+configuration variable. If you clicked on the value everything is
+fine.

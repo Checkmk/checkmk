@@ -1,0 +1,12 @@
+Title: Fix error in view about "No WATO folder ..." in case of host imported via cmcdump
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p14
+Date: 1478255430
+
+If you import a host with <tt>cmcdump</tt> and that host has a folder that is not
+present on the central system then a red error message was printed and the layout
+of the view was broken. This has been fixed.

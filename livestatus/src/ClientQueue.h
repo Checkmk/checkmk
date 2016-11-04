@@ -28,7 +28,6 @@
 #include "config.h"  // IWYU pragma: keep
 #include <condition_variable>
 #include <deque>
-#include <memory>
 #include <mutex>
 
 class ClientQueue {

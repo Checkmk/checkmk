@@ -28,11 +28,14 @@
 #include <ctime>
 #include <ostream>
 #include <utility>
+#include <vector>
+#include "EventConsoleConnection.h"
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "OutputBuffer.h"
 #include "Query.h"
+#include "StringUtils.h"
 #include "Table.h"
 #include "data_encoding.h"
 #include "mk_logwatch.h"
@@ -41,6 +44,8 @@
 extern Encoding g_data_encoding;
 extern unsigned long g_max_cached_messages;
 
+using mk::split;
+using mk::starts_with;
 using std::chrono::duration_cast;
 using std::chrono::milliseconds;
 using std::chrono::system_clock;
@@ -49,8 +54,9 @@ using std::lock_guard;
 using std::mutex;
 using std::string;
 
-Store::Store(MonitoringCore *mc)
-    : _logger(mc->loggerLivestatus())
+Store::Store(MonitoringCore *core)
+    : _core(core)
+    , _logger(core->loggerLivestatus())
     , _log_cache(_logger, _commands_holder, g_max_cached_messages)
     , _table_contacts(_logger)
     , _table_commands(_commands_holder, _logger)
@@ -69,10 +75,10 @@ Store::Store(MonitoringCore *mc)
     , _table_log(&_log_cache, _downtimes, _comments, _logger)
     , _table_statehistory(&_log_cache, _downtimes, _comments, _logger)
     , _table_columns(_logger)
-    , _table_eventconsoleevents(mc, _downtimes, _comments)
-    , _table_eventconsolehistory(mc, _downtimes, _comments)
-    , _table_eventconsolestatus(mc)
-    , _table_eventconsolereplication(mc) {
+    , _table_eventconsoleevents(core, _downtimes, _comments)
+    , _table_eventconsolehistory(core, _downtimes, _comments)
+    , _table_eventconsolestatus(core)
+    , _table_eventconsolereplication(core) {
     addTable(&_table_columns);
     addTable(&_table_commands);
     addTable(&_table_comments);
@@ -190,7 +196,14 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
 }
 
 void Store::answerCommandRequest(const char *command) {
-    if (answerLogwatchCommandRequest(command)) {
+    int len = strlen(command);
+    if (len < 14 || command[0] != '[' || command[11] != ']' ||
+        command[12] != ' ') {
+        Warning(_logger) << "Ignoring malformed command '" << command << "'";
+        return;
+    }
+
+    if (handleCommand(command + 13)) {
         return;
     }
 
@@ -204,23 +217,54 @@ void Store::answerCommandRequest(const char *command) {
 #endif
 }
 
-bool Store::answerLogwatchCommandRequest(const char *command) {
-    // Handle special command "[1462191638]
-    // MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog"
-    if (strlen(command) >= 37 && command[0] == '[' && command[11] == ']' &&
-        (strncmp(command + 13, "MK_LOGWATCH_ACKNOWLEDGE;", 24) == 0)) {
-        const char *host_name_begin = command + 37;
-        const char *host_name_end = strchr(host_name_begin, ';');
-        if (host_name_end == nullptr) {
+namespace {
+class ECTableConnection : public EventConsoleConnection {
+public:
+    ECTableConnection(Logger *logger, string path, string command)
+        : EventConsoleConnection(logger, path), _command(move(command)) {}
+
+private:
+    void sendRequest(std::ostream &os) override { os << _command; }
+    bool receiveReply() override { return true; }
+    string _command;
+};
+}  // namespace
+
+bool Store::handleCommand(const string &command) {
+    auto parts = split(command, ';');
+    if (parts.empty()) {
+        return false;
+    }
+    string command_name = parts[0];
+
+    if (command_name == "MK_LOGWATCH_ACKNOWLEDGE") {
+        // COMMAND [1462191638] MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog
+        if (parts.size() != 3) {
+            Warning(_logger) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
             return false;
         }
-        std::string host_name(host_name_begin, host_name_end - host_name_begin);
-        std::string file_name(host_name_end + 1);
         extern char g_mk_logwatch_path[];
-        mk_logwatch_acknowledge(_logger, g_mk_logwatch_path, host_name,
-                                file_name);
+        mk_logwatch_acknowledge(_logger, g_mk_logwatch_path, parts[1],
+                                parts[2]);
         return true;
     }
+
+    if (starts_with(command_name, "EC_")) {
+        if (parts.size() != 1) {
+            Warning(_logger) << command_name << "expects 0 arguments";
+            return false;
+        }
+        if (_core->mkeventdEnabled()) {
+            ECTableConnection(_logger, _core->mkeventdSocketPath(),
+                              "COMMAND " + command_name.substr(3))
+                .run();
+        } else {
+            Notice(_logger) << "event console disabled, ignoring command '"
+                            << command << "'";
+        }
+        return true;
+    }
+
     return false;
 }
 

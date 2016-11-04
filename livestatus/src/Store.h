@@ -63,13 +63,14 @@ class Table;
 
 class Store {
 public:
-    explicit Store(MonitoringCore *mc);
+    explicit Store(MonitoringCore *core);
     bool answerRequest(InputBuffer *, OutputBuffer *);
 
     void registerDowntime(nebstruct_downtime_data *);
     void registerComment(nebstruct_comment_data *);
 
 private:
+    MonitoringCore *_core;
     Logger *const _logger;
     CommandsHolderNagios _commands_holder;
     DowntimesOrComments _downtimes;
@@ -108,7 +109,7 @@ private:
     void answerGetRequest(const std::list<std::string> &lines, OutputBuffer *,
                           const char *);
     void answerCommandRequest(const char *);
-    bool answerLogwatchCommandRequest(const char *);
+    bool handleCommand(const std::string &command);
 };
 
 #endif  // Store_h

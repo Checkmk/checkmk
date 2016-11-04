@@ -813,7 +813,7 @@ function update_site_progress(site_state)
     var width = parseInt(parseFloat(max_width) * duration_percent / 100);
 
     if (width > max_width)
-        width = pax_width;
+        width = max_width;
 
     progress.style.width = width + "px";
 }

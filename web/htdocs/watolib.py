@@ -191,6 +191,8 @@ def confirm_all_local_changes():
 
     try:
         repl_status[site_id]["changes"] = []
+    except KeyError:
+        pass # No change for this site. Fine...
     finally:
         save_replication_status(repl_status)
 
@@ -2874,10 +2876,11 @@ def declare_host_attribute(a, show_in_table = True, show_in_folder = True, show_
 
 
 def undeclare_host_attribute(attrname):
+    global g_host_attributes
+
     if attrname in g_host_attribute:
         attr = g_host_attribute[attrname]
         del g_host_attribute[attrname]
-        global g_host_attributes
         g_host_attributes = [ ha for ha in g_host_attributes if ha[0] != attr ]
 
 
@@ -3425,13 +3428,14 @@ def do_remote_automation(site, command, vars):
                        post_data=vars_encoded)
 
     if not response:
-        raise MKAutomationException("Empty output from remote site.")
+        raise MKAutomationException(_("Empty output from remote site."))
 
     try:
         response = ast.literal_eval(response)
     except:
         # The remote site will send non-Python data in case of an error.
-        raise MKAutomationException("<pre>%s</pre>" % response)
+        raise MKAutomationException("%s: <pre>%s</pre>" %
+                            (_("Got invalid data"), response))
 
     return response
 
@@ -3586,7 +3590,9 @@ def get_dirty_sites():
 
 
 def automation_push_snapshot():
-    verify_slave_site_config(html.var("siteid"))
+    site_id = html.var("siteid")
+
+    verify_slave_site_config(site_id)
 
     tarcontent = html.uploaded_file("snapshot")
     if not tarcontent:
@@ -3647,7 +3653,7 @@ def verify_slave_site_config(site_id):
 
     # Make sure there are no local changes we would lose!
     changes = ActivateChanges()
-    pending = reversed(ActivateChanges().grouped_changes())
+    pending = list(reversed(ActivateChanges().grouped_changes()))
     if pending:
         message = _("There are %d pending changes that would get lost. The most recent are: ") % len(pending)
         message += ", ".join([ change["text"] for change_id, change in pending[:10] ])
@@ -3679,13 +3685,14 @@ def push_user_profile_to_site(site, user_id, profile):
 
     response = get_url(url, site.get('insecure', False), post_data = content)
     if not response:
-        raise MKAutomationException("Empty output from remote site.")
+        raise MKAutomationException(_("Empty output from remote site."))
 
     try:
         response = mk_eval(response)
     except:
         # The remote site will send non-Python data in case of an error.
-        raise MKAutomationException('Invalid response: %s' % response)
+        raise MKAutomationException("%s: <pre>%s</pre>" %
+                            (_("Got invalid data"), response))
     return response
 
 
@@ -4324,8 +4331,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
             ("debug",      config.debug and "1" or ""),
         ], filename=site["multisiteurl"] + "automation.py")
 
-        response_text = self._upload_file(url, self._snapshot_file,
-                                          site.get('insecure', False))
+        response_text = self._upload_file(url, site.get('insecure', False))
 
         try:
             return ast.literal_eval(response_text)
@@ -4334,8 +4340,8 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
                 (site["id"], response_text))
 
 
-    def _upload_file(url, file_path, insecure):
-        return get_url(url, insecure, params = ' -F snapshot=@%s' % file_path)
+    def _upload_file(self, url, insecure):
+        return get_url(url, insecure, params = ' -F snapshot=@%s' % self._snapshot_file)
 
 
     def _cleanup_snapshot(self):
@@ -4354,6 +4360,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         start = time.time()
 
         configuration_warnings = self._call_activate_changes_automation()
+        html.debug(configuration_warnings)
 
         duration = time.time() - start
         self._update_activation_time(ACTIVATION_TIME_RESTART, duration)
@@ -4368,14 +4375,11 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         else:
             response = do_remote_automation(
                 config.site(self._site_id), "activate-changes", [
-                    ("domains", domains),
+                    ("domains", repr(domains)),
                     ("site_id", self._site_id),
                 ])
 
-            try:
-                return ast.literal_eval(response_text)
-            except SyntaxError:
-                raise MKAutomationException(_("Garbled automation response: '%s'") % response_text)
+            return response
 
 
     def _get_domains_needing_activation(self):
@@ -4420,7 +4424,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         self._phase          = phase
         self._status_text    = status_text
 
-        self._set_status_details(status_details)
+        self._set_status_details(phase, status_details)
 
         self._time_updated = time.time()
         if phase == PHASE_DONE:
@@ -4430,12 +4434,8 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         self._save_state()
 
 
-    def _set_status_details(self, status_details):
-        if status_details == None:
-            self._status_details = ""
-        else:
-            self._status_details = status_details + "<br>"
-        self._status_details += _("Started at: %s.") % render.time_of_day(self._time_started)
+    def _set_status_details(self, phase, status_details):
+        self._status_details = _("Started at: %s.") % render.time_of_day(self._time_started)
 
         if phase != PHASE_DONE:
             estimated_time_left = self._expected_duration - (time.time() - self._time_started)
@@ -4447,6 +4447,9 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
                                                                         estimated_time_left
         else:
             self._status_details += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
+
+        if status_details:
+            self._status_details += "<br>" + status_details
 
 
     def _save_state(self):

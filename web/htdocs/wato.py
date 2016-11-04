@@ -4683,7 +4683,6 @@ class ModeAuditLog(WatoMode):
         )
         html.write(','.join(titles) + '\n')
         for t, linkinfo, user, action, text in self._parse_audit_log():
-            # TODO: Use linkinfo rendering from new changes handling?
             if linkinfo == '-':
                 linkinfo = ''
 
@@ -4926,27 +4925,34 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
 
             if site.get("disabled"):
                 site_status = {}
-                status = "disabled"
+                status      = "disabled"
             else:
                 site_status = sites.state(site_id, {})
-                status = site_status.get("state", "unknown")
+                status      = site_status.get("state", "unknown")
 
-            has_foreign = self._site_has_foreign_changes(site_id)
+            is_online        = status in [ "online", "disabled" ]
+            is_logged_in     = config.site_is_local(site_id) or "secret" in site
+            has_foreign      = self._site_has_foreign_changes(site_id)
             can_activate_all = not has_foreign or config.user.may("wato.activateforeign")
+
+            # Disable actions for offline sites and not logged in sites
+            if not is_online or not is_logged_in:
+                can_activate_all = False
 
             need_restart = self._is_activate_needed(site_id)
             need_sync    = self._is_sync_needed(site_id)
             need_action  = need_restart or need_sync
 
-            # TODO: Handle not logged in sites
-            # if not config.site_is_local(site_id) and not "secret" in site:
-
-            # TODO: Disable actions for offline sites
-
             # Activation checkbox
+            table.cell("", css="buttons")
             if can_activate_all and need_action:
-                table.cell("", css="buttons")
                 html.checkbox("site_%s" % site_id, cssclass="site_checkbox")
+
+            table.cell(_("Activate"))
+            if can_activate_all and need_action:
+                # TODO: Enable separate action for sync (if needed)?
+                html.jsbutton("activate_%s" % site_id, _("Activate"),
+                              "activate_changes(\"site\", \"%s\")" % site_id, cssclass="activate_site")
 
             # Iconbuttons
             table.cell(_("Actions"), css="buttons")
@@ -4989,11 +4995,6 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
                 html.icon(_("This site is up-to-date."), "siteuptodate")
 
             table.cell(_("Changes"), "%d" % len(self._changes_of_site(site_id)), css="number")
-            if can_activate_all and need_action:
-                table.cell(_("Activate"))
-                # TODO: Enable separate action for sync (if needed)?
-                html.jsbutton("activate_%s" % site_id, _("Activate"),
-                              "activate_changes(\"site\", \"%s\")" % site_id, cssclass="activate_site")
 
             table.cell(_("Progress"), css="repprogress")
             html.open_div(id_="site_%s_status" % site_id, class_=["msg"])
@@ -5008,12 +5009,16 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             # Shown on initial rendering and hidden on activation start
             table.cell(_("Last result"), css="last_result")
             last_state = self._last_activation_state(site_id)
+
+            if not is_logged_in:
+                html.write_text(_("Is not logged in.") + " ")
+
             if not last_state:
-                html.write(_("Has never been activated"))
+                html.write_text(_("Has never been activated"))
             else:
-                html.write("%s" % last_state["_status_text"])
+                html.write_text("%s: %s. " % (_("State"), last_state["_status_text"]))
                 if last_state["_status_details"]:
-                    html.write(": %s" % (last_state["_status_details"]))
+                    html.write(last_state["_status_details"])
 
         table.end()
 
@@ -9599,26 +9604,29 @@ def page_automation():
         stdin_data  = mk_eval(html.var("stdin_data"))
         timeout     = mk_eval(html.var("timeout"))
         result = check_mk_local_automation(cmk_command, args, indata, stdin_data, timeout)
-        html.write_text(repr(result))
+        # Don't use write_text() here (not needed, because no HTML document is rendered)
+        html.write(repr(result))
 
     elif command == "push-profile":
         try:
-            html.write_text(mk_repr(automation_push_profile()))
+            # Don't use write_text() here (not needed, because no HTML document is rendered)
+            html.write(mk_repr(automation_push_profile()))
         except Exception, e:
+            log_exception()
             if config.debug:
-                html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
-            else:
-                html.write_text(_("Internal automation error: %s") % e)
+                raise
+            html.write_text(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
     elif command in automation_commands:
         try:
-            html.write_text(repr(automation_commands[command]()))
+            # Don't use write_text() here (not needed, because no HTML document is rendered)
+            html.write(repr(automation_commands[command]()))
         except Exception, e:
+            log_exception()
             if config.debug:
-                html.write_text(_("Internal automation error: %s\n%s") % \
-                                    (e, traceback.format_exc()))
-            else:
-                html.write_text(_("Internal automation error: %s") % e)
+                raise
+            html.write_text(_("Internal automation error: %s\n%s") % \
+                            (e, traceback.format_exc()))
 
     else:
         raise MKGeneralException(_("Invalid automation command: %s.") % command)

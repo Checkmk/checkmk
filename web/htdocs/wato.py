@@ -6382,9 +6382,9 @@ def render_global_configuration_variables(group_names, default_values, current_s
             edit_url = folder_preserving_link([("mode", edit_mode),
                                                ("varname", varname),
                                                ("site", html.var("site", ""))])
-            title = '<a href="%s" class=%s title="%s">%s</a>' % \
+            title = HTML('<a href="%s" class=%s title="%s">%s</a>' % \
                     (edit_url, varname in current_settings and '"modified"' or '""',
-                     html.strip_tags(help_text), title_text)
+                     html.strip_tags(help_text), title_text))
 
             if varname in current_settings:
                 to_text = valuespec.value_to_text(current_settings[varname])

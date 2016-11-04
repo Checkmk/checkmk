@@ -115,8 +115,9 @@ def cell(*posargs, **kwargs):
     next_args = posargs, kwargs
 
 def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True):
-    if type(text) == HTML:
-        text = text.value
+
+    if isinstance(text, HTML):
+        text = "%s" % text
     if type(text) != unicode:
         text = str(text)
     htmlcode = text + html.drain()

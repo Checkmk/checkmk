@@ -120,6 +120,14 @@ class HTML(object):
         return self.value
 
 
+    def __unicode__(self):
+        return self.value
+
+
+    def __repr__(self):
+        return "HTML(%s)" % repr(self.value)
+
+
     def __add__(self, other):
         if isinstance(other, HTML):
             return self.value + other.value
@@ -233,7 +241,7 @@ class OutputFunnel(object):
             return
 
         if isinstance(text, HTML):
-            text = text.value
+            text = "%s" % text
 
         if type(text) not in [str, unicode]: # also possible: type Exception!
             raise MKGeneralException(_('Type Error: html.write accepts str and unicode input objects only!'))
@@ -489,7 +497,7 @@ class HTMLGenerator(OutputFunnel):
     def strip_tags(self, ht):
 
         if isinstance(ht, HTML):
-            return self.strip_tags(ht.value)
+            ht = "%s" % ht
 
         if type(ht) not in [str, unicode]:
             return ht

@@ -476,6 +476,7 @@ class TextAscii(ValueSpec):
 
         ValueSpec.custom_validate(self, value, varprefix)
 
+
 class TextUnicode(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)

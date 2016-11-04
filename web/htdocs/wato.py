@@ -2307,7 +2307,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
 
     elif known_settings is not PARAMETERS_UNKNOWN:
         try:
-            html.write_text(valuespec.value_to_text(known_settings))
+            html.write(valuespec.value_to_text(known_settings))
         except Exception, e:
             if config.debug:
                 raise
@@ -2332,7 +2332,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
             # If there is a factory default then show that one
             elif rulespec["factory_default"] is not NO_FACTORY_DEFAULT:
                 setting = rulespec["factory_default"]
-                html.write_text(valuespec.value_to_text(setting))
+                html.write(valuespec.value_to_text(setting))
 
             # Rulesets that build lists are empty if no rule matches
             elif rulespec["match"] in ("all", "list"):
@@ -2340,14 +2340,14 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
 
             # Else we use the default value of the valuespec
             else:
-                html.write_text(valuespec.value_to_text(valuespec.default_value()))
+                html.write(valuespec.value_to_text(valuespec.default_value()))
 
         # We have a setting
         elif valuespec:
             if rulespec["match"] in ( "all", "list" ):
-                html.write_text(", ".join([valuespec.value_to_text(e) for e in setting]))
+                html.write(", ".join([valuespec.value_to_text(e) for e in setting]))
             else:
-                html.write_text(valuespec.value_to_text(setting))
+                html.write(valuespec.value_to_text(setting))
 
         # Binary rule, no valuespec, outcome is True or False
         else:
@@ -6626,7 +6626,7 @@ def mode_edit_configvar(phase, what = 'globalvars'):
         if curvalue == defvalue:
             html.write_text(_("Your setting and factory settings are identical."))
         else:
-            html.write_text(valuespec.value_to_text(defvalue))
+            html.write(valuespec.value_to_text(defvalue))
 
     forms.end()
     html.button("save", _("Save"))
@@ -8085,9 +8085,9 @@ def mode_notifications(phase):
             table.cell(_("Plugin parameters"), ", ".join(parameters))
             table.cell(_("Bulking"))
             if bulk:
-                html.write_text(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
+                html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
                 html.write_text(", %s: %d" % (_("Maximum count"), bulk["count"]))
-                html.write_text(", %s %s" % (_("group by"), vs_notification_bulkby().value_to_text(bulk["groupby"])))
+                html.write(", %s %s" % (_("group by"), vs_notification_bulkby().value_to_text(bulk["groupby"])))
 
         table.end()
 
@@ -10226,7 +10226,7 @@ def mode_users(phase):
         for name, attr in visible_custom_attrs:
             vs = attr['valuespec']
             table.cell(_u(vs.title()))
-            html.write_text(vs.value_to_text(user.get(name, vs.default_value())))
+            html.write(vs.value_to_text(user.get(name, vs.default_value())))
 
     table.end()
 
@@ -10352,7 +10352,7 @@ def mode_edit_user(phase):
             if attr['user_editable'] and not is_locked(name):
                 vs.render_input("ua_" + name, user.get(name, vs.default_value()))
             else:
-                html.write_text(vs.value_to_text(user.get(name, vs.default_value())))
+                html.write(vs.value_to_text(user.get(name, vs.default_value())))
                 # Render hidden to have the values kept after saving
                 html.open_div(style="display:none")
                 vs.render_input("ua_" + name, user.get(name, vs.default_value()))
@@ -14404,7 +14404,7 @@ def page_user_profile(change_pw=False):
                         vs.render_input("ua_" + name, value)
                         html.help(_u(vs.help()))
                     else:
-                        html.write_text(vs.value_to_text(value))
+                        html.write(vs.value_to_text(value))
 
     # Save button
     forms.end()

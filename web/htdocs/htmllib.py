@@ -415,6 +415,7 @@ class HTMLGenerator(OutputFunnel):
         text = self._unescaper_text.sub(r'<\1\2>', text)
         # Also repair link definitions
         text = self._unescaper_href.sub(r'<a href="\1">', text)
+        text = re.sub(r'&amp;nbsp;', '&nbsp;', text)
         return text
 
 

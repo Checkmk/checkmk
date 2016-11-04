@@ -4830,7 +4830,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
                       "activate_changes(\"affected\")")
         html.jsbutton("activate_selected", _("Activate selected"),
                       "activate_changes(\"selected\")")
-        # TODO: Revert button?
+
         html.hidden_fields()
         html.end_form()
 
@@ -9358,10 +9358,6 @@ def mode_edit_site(phase):
 
         save_sites(configured_sites)
 
-        # TODO: Why?
-        # Own site needs RESTART in any case
-        # update_replication_status(our_site_id(), { "need_restart" : True })
-
         if new:
             msg = _("Created new connection to site %s") % id
         else:
@@ -9371,7 +9367,7 @@ def mode_edit_site(phase):
         # affecting all domains
         add_change("edit-sites", msg, sites=[id], domains=ConfigDomain.all_classes())
 
-        if id != our_site_id():
+        if id != config.omd_site():
             # On central site issue a change only for the GUI
             # NOTE: Was marking all to be restarted (ec and core) before, but I don't
             # think that this was really needed.
@@ -9637,7 +9633,7 @@ def automation_push_profile():
     if not user_id:
         raise MKGeneralException(_("Missing variable user_id"))
 
-    our_id = our_site_id()
+    our_id = config.omd_site()
 
     if our_id != None and our_id != site_id:
         raise MKGeneralException(
@@ -13986,7 +13982,6 @@ def user_profile_async_replication_dialog():
 
         html.icon(status_txt, icon)
         if start_sync:
-            # TODO: Change to new functions
             estimated_duration = srs.get("times", {}).get(ACTIVATION_TIME_PROFILE_SYNC, 2.0)
             html.javascript('wato_do_profile_replication(\'%s\', %d, \'%s\');' %
                       (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))

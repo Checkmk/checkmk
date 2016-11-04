@@ -188,7 +188,7 @@ def log_audit(linkinfo, action, message, user_id = None):
 
 
 def confirm_all_local_changes():
-    site_id = our_site_id()
+    site_id = config.omd_site()
     repl_status = load_replication_status(lock=True)
 
     try:
@@ -3155,8 +3155,6 @@ def get_login_secret(create_on_demand = False):
 # Returns the ID of our site. This function only works in replication
 # mode and looks for an entry connecting to the local socket.
 def our_site_id():
-    if not is_distributed():
-        return None
     for site_id in config.allsites():
         if config.site_is_local(site_id):
             return site_id
@@ -3641,7 +3639,7 @@ def verify_slave_site_config(site_id):
     if not site_id:
         raise MKGeneralException(_("Missing variable siteid"))
 
-    our_id = our_site_id()
+    our_id = config.omd_site()
 
     if not config.is_single_local_site():
         raise MKGeneralException(_("Configuration error. You treat us as "

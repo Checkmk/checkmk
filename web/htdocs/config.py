@@ -662,6 +662,7 @@ def site(site_id):
     return s
 
 
+# TODO: Does this work when using liveproxyd locally?
 def site_is_local(site_name):
     s = sites.get(site_name, {})
     sock = s.get("socket")

@@ -735,7 +735,7 @@ class CMKEventConsole(CMKWebSession):
 
     def enable_remote_status_port(self, web):
         html = web.get("wato.py?mode=mkeventd_config").text
-        assert "mode=mkeventd_edit_configvar&site=&varname=remote_status" in html
+        assert "mode=mkeventd_edit_configvar&amp;site=&amp;varname=remote_status" in html
 
         html = web.get("wato.py?folder=&mode=mkeventd_edit_configvar&site=&varname=remote_status").text
         assert "Save" in html

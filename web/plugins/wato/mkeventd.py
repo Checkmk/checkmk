@@ -1675,6 +1675,27 @@ def mode_mkeventd_changes(phase):
         else:
             html.write("<div class=info>" + _("There are no pending changes.") + "</div>")
 
+
+# TODO: Remove when wato recode finished
+def parse_audit_log(name):
+    log_path = log_dir + "/" + name + ".log"
+    if not os.path.exists(log_path):
+        return []
+
+    entries = []
+    for line in file(log_path):
+        line = line.rstrip().decode("utf-8")
+        splitted = line.split(None, 4)
+
+        if len(splitted) == 5 and splitted[0].isdigit():
+            splitted[0] = int(splitted[0])
+            entries.append(splitted)
+
+    entries.reverse()
+
+    return entries
+
+
 def log_mkeventd(what, message):
     log_entry(None, what, message, "audit.log")    # central WATO audit log
     # TODO: Change to new changes tracking!

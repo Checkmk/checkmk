@@ -4920,18 +4920,13 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
     def _activation_status(self):
         table.begin("site-status", searchable=False, sortable=False)
 
-        for site_id, site in sort_sites(wato_activation_sites()):
+        for site_id, site in sort_sites(self._activation_sites()):
             table.row()
 
-            if site.get("disabled"):
-                site_status = {}
-                status      = "disabled"
-            else:
-                site_status = sites.state(site_id, {})
-                status      = site_status.get("state", "unknown")
+            site_status, status = self._get_site_status(site_id, site)
 
-            is_online        = status in [ "online", "disabled" ]
-            is_logged_in     = config.site_is_local(site_id) or "secret" in site
+            is_online        = self._site_is_online(status)
+            is_logged_in     = self._site_is_logged_in(site_id, site)
             has_foreign      = self._site_has_foreign_changes(site_id)
             can_activate_all = not has_foreign or config.user.may("wato.activateforeign")
 
@@ -5036,9 +5031,11 @@ class ModeAjaxStartActivation(WatoWebApiMode):
         if not activate_until:
             raise MKUserError("activate_until", _("Missing parameter \"%s\".") % "activate_until")
 
+        manager = ActivateChangesManager()
+
         sites = request.get("sites", "").strip()
         if not sites:
-            sites = get_dirty_sites()
+            sites = manager.dirty_and_active_activation_sites()
         else:
             sites = sites.split(",")
 
@@ -5048,12 +5045,12 @@ class ModeAjaxStartActivation(WatoWebApiMode):
 
         activate_foreign = request.get("activate_foreign", "0") == "1"
 
-        manager = ActivateChangesManager()
         activation_id = manager.start(sites, activate_until, comment, activate_foreign)
 
         return {
             "activation_id": activation_id,
         }
+
 
 
 

@@ -1478,7 +1478,7 @@ class html(DeprecationWrapper):
 
         for key, val in self.all_vars().items():
             if key not in [ "request", "output_format" ] + exclude_vars:
-                request[key] = val
+                request[key] = val.decode("utf-8")
 
         return request
 

@@ -168,13 +168,17 @@ def log_entry(linkinfo, action, message, user_id=None):
         link = linkinfo
 
     if user_id == None and config.user.id != None:
-        user_id = config.user.id.encode("utf-8")
+        user_id = config.user.id
     elif user_id == '':
         user_id = '-'
 
+    if user_id:
+        user_id = user_id.encode("utf-8")
+
     make_nagios_directory(os.path.dirname(audit_log_path))
     with create_user_file(audit_log_path, "ab") as f:
-        f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id, action, message))
+        f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id,
+                                      action, message))
 
 
 def log_audit(linkinfo, action, message, user_id = None):
@@ -3481,12 +3485,6 @@ def wato_slave_sites():
                                                   if site.get("replication") ]
 
 
-def wato_activation_sites():
-    return [ (site_id, site) for site_id, site in config.configured_sites()
-                if config.site_is_local(site_id)
-                   or site.get("replication") ]
-
-
 def declare_site_attribute():
     undeclare_host_attribute("site")
     declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)
@@ -3578,15 +3576,6 @@ def get_login_sites():
 def update_login_sites_replication_status():
     for site_id in get_login_sites():
         update_replication_status(site_id, {'need_sync': True})
-
-
-def get_dirty_sites():
-    dirty = []
-    repstatus = load_replication_status()
-    for site_id, _unused_site in wato_activation_sites():
-        if repstatus[site_id].get("changes", []):
-            dirty.append(site_id)
-    return dirty
 
 
 def automation_push_snapshot():
@@ -3783,7 +3772,47 @@ class ActivateChanges(object):
 
 
     def _changes_of_site(self, site_id):
-        return self._repstatus[site_id].get("changes", [])
+        return self._repstatus.get(site_id, {}).get("changes", [])
+
+
+    # Returns the list of sites that should be shown on activation page
+    def _activation_sites(self):
+        return [ (site_id, site) for site_id, site in config.configured_sites()
+                    if config.site_is_local(site_id)
+                       or site.get("replication") ]
+
+
+    # Returns the list of sites that should be used when activating all
+    # affected sites.
+    def dirty_and_active_activation_sites(self):
+        dirty = []
+        for site_id, site in self._activation_sites():
+            status       = self._get_site_status(site_id, site)[1]
+            is_online    = self._site_is_online(status)
+            is_logged_in = self._site_is_logged_in(site_id, site)
+
+            if is_online and is_logged_in and self._changes_of_site(site_id):
+                dirty.append(site_id)
+        return dirty
+
+
+    def _site_is_logged_in(self, site_id, site):
+        return config.site_is_local(site_id) or "secret" in site
+
+
+    def _site_is_online(self, status):
+        return status in [ "online", "disabled" ]
+
+
+    def _get_site_status(self, site_id, site):
+        if site.get("disabled"):
+            site_status = {}
+            status      = "disabled"
+        else:
+            site_status = sites.state(site_id, {})
+            status      = site_status.get("state", "unknown")
+
+        return site_status, status
 
 
     def _site_has_foreign_changes(self, site_id):
@@ -3803,7 +3832,7 @@ class ActivateChanges(object):
 
 
     def _last_activation_state(self, site_id):
-        last_activation_id = self._repstatus[site_id].get("last_activation")
+        last_activation_id = self._repstatus.get(site_id, {}).get("last_activation")
         manager = ActivateChangesManager()
         try:
             manager.load(last_activation_id)
@@ -3937,7 +3966,7 @@ class ActivateChangesManager(ActivateChanges):
 
     def _get_sites(self, sites):
         for site_id in sites:
-            if site_id not in dict(wato_activation_sites()):
+            if site_id not in dict(self._activation_sites()):
                 raise MKUserError("sites", _("The site \"%s\" does not exist.") % site_id)
 
         return sites
@@ -4189,6 +4218,8 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
 
             if self._is_activate_needed(self._site_id):
                 configuration_warnings = self._do_activate()
+            else:
+                configuration_warnings = []
 
             self._confirm_activated_changes()
 
@@ -4524,7 +4555,7 @@ def create_snapshot(comment):
     data["comment"] = _("Activated changes by %s.") % config.user.id
 
     if comment:
-        data["comment"] = _("Comment: %s") % comment
+        data["comment"] += _("Comment: %s") % comment
 
     data["created_by"]    = config.user.id
     data["type"]          = "automatic"

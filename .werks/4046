@@ -1,0 +1,10 @@
+Title: Repaired html rendering.
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i2p2
+Date: 1478263134
+Class: fix
+
+Inplace html tags were visible in the GUI, this has been fixed.
+

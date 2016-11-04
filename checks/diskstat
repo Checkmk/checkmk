@@ -292,9 +292,9 @@ def diskstat_extract_name_info(info):
 
     return timestamp, info_plain, name_info
 
-def diskstat_convert_info(info):
-    disks, multipath_info = info
-    converted_disks = dict(disks.items()) # we must not mody info!
+def diskstat_convert_info(parsed):
+    disks, multipath_info = parsed
+    converted_disks = dict(disks.items()) # we must not modify info!
 
     # If we have information about multipathing, then remove the
     # physical path devices from the disks array. But only do this,
@@ -322,8 +322,8 @@ def diskstat_convert_info(info):
     return converted_disks
 
 
-def inventory_diskstat(info):
-    converted_disks = diskstat_convert_info(info)
+def inventory_diskstat(parsed):
+    converted_disks = diskstat_convert_info(parsed)
 
     # Use generic diskstat inventory function that is used also for other
     # Disk IO checks. That expects a table of (node, device, ...)

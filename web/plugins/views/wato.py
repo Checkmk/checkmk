@@ -39,7 +39,11 @@ def get_wato_folder(row, how, with_links = True):
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return ""
     wato_path = filename[6:-9]
-    title_path = wato.get_folder_title_path(wato_path, with_links)
+    try:
+        title_path = wato.get_folder_title_path(wato_path, with_links)
+    except Exception, e:
+        return "%s" % e
+
     if how == "plain":
         return title_path[-1]
     elif how == "abs":

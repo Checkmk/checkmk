@@ -289,14 +289,29 @@ class Site(object):
         assert "<title>WATO" in response
         assert "<div class=\"title\">Manual Checks</div>" in response
 
-        for f in [
-                "etc/check_mk/conf.d/wato/rules.mk",
-                "etc/check_mk/multisite.d/wato/hosttags.mk",
-                "etc/check_mk/conf.d/wato/global.mk",
-                "var/check_mk/web/automation",
-                "var/check_mk/web/automation/automation.secret" ]:
-            assert self.file_exists(f), \
-                    "Failed to initialize WATO data structures (%s missing)" % f
+        missing_files = [
+            "etc/check_mk/conf.d/wato/rules.mk",
+            "etc/check_mk/multisite.d/wato/hosttags.mk",
+            "etc/check_mk/conf.d/wato/global.mk",
+            "var/check_mk/web/automation",
+            "var/check_mk/web/automation/automation.secret"
+        ]
+
+        wait_time = 10
+        while missing_files and wait_time >= 0:
+            for f in missing_files[:]:
+                if self.file_exists(f):
+                    missing_files.remove(f)
+
+            if not missing_files:
+                break
+
+            time.sleep(0.5)
+            wait_time -= 0.5
+
+        assert not missing_files, \
+            "Failed to initialize WATO data structures " \
+            "(Still missing: %s)" % missing_files
 
 
     # This opens a currently free TCP port and remembers it in the object for later use

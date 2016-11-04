@@ -304,7 +304,8 @@ def diskstat_convert_info(parsed):
     # with multipath names like "SDataCoreSANsymphony_DAT07-fscl"
     if multipath_info:
         for uuid, multipath in multipath_info.items():
-            if multipath["device"] in converted_disks:
+            if multipath["device"] in converted_disks or \
+               "DM %s" % multipath["alias"] in converted_disks:
                 for path in multipath["paths"]:
                     if path in converted_disks:
                         del converted_disks[path]
@@ -312,6 +313,11 @@ def diskstat_convert_info(parsed):
             if multipath["device"] in converted_disks:
                 converted_disks[uuid] = converted_disks[multipath["device"]]
                 del converted_disks[multipath["device"]]
+
+            if "DM %s" % multipath["alias"] in converted_disks:
+                alias = "DM %s" % multipath["alias"]
+                converted_disks[uuid] = converted_disks[alias]
+                del converted_disks[alias]
 
     # Remove any left-over device mapper devices that are not part of a
     # known multipath device, LVM device or whatever

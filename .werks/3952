@@ -1,0 +1,9 @@
+Title: diskstat: fixed bug if multipath devices having an alias
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1478255992
+Class: fix
+
+Previously detectiong of multipath devices has only been working if there is no alias for these devices. This Bug is now fixed.

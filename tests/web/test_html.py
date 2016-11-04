@@ -21,10 +21,12 @@ def test_class_HTML():
     a = "One"
     b = "two"
     c = "Three"
+    d = unicode('u')
 
     A = HTML(a)
     B = HTML(b)
     C = HTML(c)
+    D = HTML(d)
 
     assert (A + B) == (a + b)
     print A
@@ -62,3 +64,9 @@ def test_class_HTML():
     assert isinstance("TEST%s" % A, str)
 
     assert "test" + C == "test" + c
+
+    assert D == d
+    assert "%s" % D == "%s" % d
+    assert isinstance(D.value, unicode)
+
+    assert repr(D) == "HTML(%s)" % repr(d)

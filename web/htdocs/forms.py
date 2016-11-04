@@ -269,7 +269,7 @@ def section(title = None, checkbox = None, id = None, simple=False, hide = False
         html.open_td(class_=["legend", "simple" if simple else None])
         if title:
             html.open_div(class_=["title", "withcheckbox" if checkbox else None])
-            html.write_text(title)
+            html.write(title)
             html.span('.'*100, class_="dots")
             html.close_div()
         if checkbox:

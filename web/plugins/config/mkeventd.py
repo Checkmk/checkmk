@@ -33,7 +33,6 @@ mkeventd_connect_timeout        = 10
 log_level                       = 0
 log_rulehits                    = False
 rule_optimizer                  = True
-mkeventd_contact_group_handling = "host"
 
 mkeventd_service_levels = [
     (0,  _("(no Service level)")),

@@ -804,6 +804,13 @@ div.tacticalalert {
 div.spacertop {
     padding-top: 5px;
 }
+#snapin_tactical_overview img {
+    width: 15px;
+    height: auto;
+    position: relative;
+    top: -1px;
+}
+
 """ % snapin_width
 
 

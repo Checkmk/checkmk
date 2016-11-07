@@ -65,33 +65,6 @@ import sys
 import os
 
 
-def install():
-    dest = os.path.dirname(os.path.realpath(__file__))
-    print("installing tinkerforge python api to %s" % dest)
-    if os.path.exists(os.path.join(dest, "tinkerforge")):
-        print("already installed")
-        return 1
-
-    import urllib2
-    import shutil
-    from fnmatch import fnmatch
-    from zipfile import ZipFile
-    from cStringIO import StringIO
-    url = "http://download.tinkerforge.com/bindings/python/tinkerforge_python_bindings_latest.zip"
-    response = urllib2.urlopen(url)
-    buf = StringIO(response.read())
-    z = ZipFile(buf)
-
-    extract_files = [f for f in z.namelist() if f.startswith("source/tinkerforge")]
-    z.extractall(dest, extract_files)
-
-    shutil.move(os.path.join(dest, "source", "tinkerforge"),
-                os.path.join(dest, "tinkerforge"))
-    shutil.rmtree(os.path.join(dest, "source"))
-
-    return 0
-
-
 DEFAULT_SETTINGS = {
     'host':                       "localhost",
     'port':                       4223,
@@ -271,8 +244,6 @@ def main():
     parser.add_option("--segment_display_brightness", type=int,
                         dest="brightness", default=settings['segment_display_brightness'],
                         help="brightness of the 7-segment display (0-7)")
-    parser.add_option("--install", action="store_true",
-                      help="install tinkerforge python api to same directory as the plugin")
 
     (options, args) = parser.parse_args()
 
@@ -282,9 +253,6 @@ def main():
         'segment_display_uid': options.uid,
         'segment_display_brightness': options.brightness
     }
-
-    if options.install:
-        return install()
 
     try:
         from tinkerforge.ip_connection import IPConnection

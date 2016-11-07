@@ -1,4 +1,4 @@
-Title: Windows agent: no global option disabled_sections
+Title: Windows agent: new global option disabled_sections
 Level: 1
 Component: checks
 Compatible: compat

@@ -52,6 +52,7 @@
     * 3987 FIX: Check_MK Agent Access: Windows agent reported incorrect only from value
     * 3952 FIX: diskstat: fixed bug if multipath devices having an alias...
     * 3939 FIX: f5_bigip_conns: readded performance data and graphs...
+    * 3979 FIX: vbox_guest: Only try to fetch VBox state in case the vboxguest module is loaded
 
     Multisite:
     * 3959 Two new filters for the comment view: author and comment text field

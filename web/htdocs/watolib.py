@@ -4237,6 +4237,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
                              state=STATE_ERROR)
 
         finally:
+            self._cleanup_snapshot()
             self._unlock_activation()
 
 
@@ -4339,10 +4340,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
 
         start = time.time()
 
-        try:
-            result = self._push_snapshot_to_site()
-        finally:
-            self._cleanup_snapshot()
+        result = self._push_snapshot_to_site()
 
         duration = time.time() - start
         self._update_activation_time(ACTIVATION_TIME_SYNC, duration)
@@ -4410,13 +4408,45 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         if config.site_is_local(self._site_id):
             return execute_activate_changes(domains)
         else:
-            response = do_remote_automation(
-                config.site(self._site_id), "activate-changes", [
-                    ("domains", repr(domains)),
-                    ("site_id", self._site_id),
-                ])
+            try:
+                response = do_remote_automation(
+                    config.site(self._site_id), "activate-changes", [
+                        ("domains", repr(domains)),
+                        ("site_id", self._site_id),
+                    ])
+            except MKAutomationException, e:
+                if "Invalid automation command: activate-changes" in "%s" % e:
+                    return self._call_legacy_activate_changes_automation()
+                else:
+                    raise
 
             return response
+
+
+    # This is needed to be able to activate the changes on legacy (pre 1.4.0i3) slave sites.
+    # Sadly this is only possible by syncing the snapshot a second time.
+    def _call_legacy_activate_changes_automation(self):
+        site = config.site(self._site_id)
+
+        url = html.makeuri_contextless([
+            ("command",    "push-snapshot"),
+            ("secret",     site["secret"]),
+            ("siteid",     site["id"]),
+            ("mode",       "slave"),
+            ("restart",    "yes"),
+            ("debug",      config.debug and "1" or ""),
+        ], filename=site["multisiteurl"] + "automation.py")
+
+        response_text = self._upload_file(url, site.get('insecure', False))
+
+        try:
+            cmk_configuration_warnings = ast.literal_eval(response_text)
+            return {
+                "check_mk": cmk_configuration_warnings
+            }
+        except:
+            raise MKAutomationException(_("Garbled automation response from site %s: '%s'") %
+                (site["id"], response_text))
 
 
     def _get_domains_needing_activation(self):

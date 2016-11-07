@@ -46,8 +46,8 @@ def output(text, *args, **kwargs):
     stream = kwargs.get("stream", sys.stdout)
 
     try:
-        sys.stdout.write(text)
-        sys.stdout.flush()
+        stream.write(text)
+        stream.flush()
     except:
         # TODO: Way to generic!
         pass # avoid exception on broken pipe (e.g. due to | head)

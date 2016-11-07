@@ -1,0 +1,10 @@
+Title: f5_bigip_conns: readded performance data and graphs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p14
+Date: 1478528863
+Class: fix
+
+f5_bigip_conns check was missing perfdata and graphs since werk #3692. This has been fixed now.
+

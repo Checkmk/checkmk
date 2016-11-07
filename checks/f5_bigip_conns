@@ -41,9 +41,9 @@ def inventory_f5_bigip_conns(info):
 
 
 def check_f5_bigip_conns(item, params, info):
-    for val, what, title in [
-        (info[0][0], "conns",     "Connections"),
-        (info[0][1], "ssl_conns", "SSL connections")]:
+    for val, what, perfkey, title in [
+        (info[0][0], "conns",     "connections",     "Connections"),
+        (info[0][1], "ssl_conns", "connections_ssl", "SSL connections")]:
 
         state    = 0
         infotext = "%s:" % title
@@ -54,8 +54,14 @@ def check_f5_bigip_conns(item, params, info):
             infotext += " not configured"
 
         else:
-            state, extrainfo, perfdata = check_levels(int(val), what, params.get(what))
+            warn, crit = params.get(what)
+            perfdata.append((perfkey, val, warn, crit))
+
+            state, extrainfo, extraperf = check_levels(int(val), what, params.get(what))
             infotext += " %s%s" % (val, extrainfo)
+
+            if len(extraperf) > 0:
+                perfdata.append(extraperf[0])
 
         yield state, infotext, perfdata
 

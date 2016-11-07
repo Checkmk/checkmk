@@ -1,0 +1,10 @@
+Title: Logwatch patterns: now able to change state of context lines
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1478525175
+Class: feature
+
+You can now reclassify the state of context lines to a different state.
+For example to IGNORE, which prevents that the line is forwarded to the event console.

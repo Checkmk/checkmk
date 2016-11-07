@@ -3397,21 +3397,19 @@ def get_url(url, insecure, user=None, password=None, params = '', post_data = No
 
     return response_body
 
-def check_mk_remote_automation(siteid, command, args, indata, stdin_data=None, timeout=None):
-    site = config.site(siteid)
+
+def check_mk_remote_automation(site_id, command, args, indata, stdin_data=None, timeout=None, sync=True):
+    site = config.site(site_id)
     if "secret" not in site:
         raise MKGeneralException(_("Cannot access site %s - you are not logged in.")
-           % site.get("alias", siteid))
+           % site.get("alias", site_id))
 
-    # If the site is not up-to-date, synchronize it first.
-    # TODO: Where is this done/needed?
-    #repstatus = load_replication_status()
-    #if repstatus.get(siteid, {}).get("need_sync"):
-    #    synchronize_site(config.site(siteid), restart=False)
+    if sync:
+        sync_changes_before_remote_automation(site_id)
 
     # Now do the actual remote command
     response = do_remote_automation(
-        config.site(siteid), "checkmk-automation",
+        config.site(site_id), "checkmk-automation",
         [
             ("automation", command),             # The Check_MK automation command
             ("arguments",  mk_repr(args)),       # The arguments for the command
@@ -3420,6 +3418,31 @@ def check_mk_remote_automation(siteid, command, args, indata, stdin_data=None, t
             ("timeout",    mk_repr(timeout)),     # The timeout
         ])
     return response
+
+
+# If the site is not up-to-date, synchronize it first.
+def sync_changes_before_remote_automation(site_id):
+    manager = ActivateChangesManager()
+
+    if not manager.is_sync_needed(site_id):
+        return
+
+    logger(LOG_INFO, "Syncing %s" % site_id)
+
+    activation_id = manager.start([site_id], manager.get_last_change_id(), activate_foreign=True,
+                                  prevent_activate=True)
+
+    # Wait maximum 30 seconds for sync to finish
+    timeout = 30
+    while manager.is_running(site_id) and timeout > 0.0:
+        time.sleep(0.5)
+        timeout -= 0.5
+
+    state = manager.get_site_state(site_id)
+    if state["_state"] != "success":
+        logger(LOG_ERR, _("Remote automation tried to sync pending changes but failed: %s") %
+                            state.get("_status_details"))
+
 
 def do_remote_automation(site, command, vars):
     base_url = site["multisiteurl"]
@@ -3826,7 +3849,7 @@ class ActivateChanges(object):
         return bool([ c for c in changes if self._is_foreign(c) ])
 
 
-    def _is_sync_needed(self, site_id):
+    def is_sync_needed(self, site_id):
         if config.site_is_local(site_id):
             return False
 
@@ -3848,7 +3871,7 @@ class ActivateChanges(object):
         return manager.get_site_state(site_id)
 
 
-    def _get_last_change_id(self):
+    def get_last_change_id(self):
         return self._changes[-1][1]["id"]
 
 
@@ -3905,7 +3928,8 @@ class ActivateChangesManager(ActivateChanges):
     # For each site a separate thread is started that controls the activation of the
     # configuration on that site. The state is checked by the general activation
     # thread.
-    def start(self, sites, activate_until, comment=None, activate_foreign=False):
+    def start(self, sites, activate_until, comment=None, activate_foreign=False,
+              prevent_activate=False):
         self._sites            = self._get_sites(sites)
         self._activate_until   = activate_until
         self._comment          = comment
@@ -3913,6 +3937,7 @@ class ActivateChangesManager(ActivateChanges):
         self._activation_id    = self._new_activation_id()
         self._time_started     = time.time()
         self._snapshot_id      = None
+        self._prevent_activate = prevent_activate
 
         self._verify_valid_host_config()
         self._save_activation()
@@ -3943,7 +3968,23 @@ class ActivateChangesManager(ActivateChanges):
     # Check whether or not at least one site thread is still working
     # (flock on the <activation_id>/site_<site_id>.mk file)
     def is_running(self, site_id):
-        lock_fd = os.open(self._info_path(), os.O_RDONLY)
+        # Short after start the thread has not yet created nor locked the
+        # state path. Wait some time for it.
+        lock_fd, timeout = None, 3.0
+        while lock_fd is None and timeout > 0:
+            try:
+                lock_fd = os.open(self._site_state_path(site_id), os.O_RDONLY)
+            except OSError, e:
+                if e.errno == 2:
+                    time.sleep(0.5)
+                    timeout -= 0.5
+                    continue # No such file or directory
+                else:
+                    raise
+
+        if lock_fd is None:
+            raise MKGeneralException(_("Sites \"%s\" sync thread did not start") % site_id)
+
         try:
             fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
             fcntl.flock(lock_fd, fcntl.LOCK_UN)
@@ -4015,7 +4056,7 @@ class ActivateChangesManager(ActivateChanges):
         if not self._changes:
             raise MKUserError(None, _("Currently there are no changes to activate."))
 
-        if self._get_last_change_id() != self._activate_until:
+        if self.get_last_change_id() != self._activate_until:
             raise MKUserError(None,
                               _("Another change has been made in the meantime. Please review it "
                                 "to ensure you also want to activate it now and start the "
@@ -4102,7 +4143,7 @@ class ActivateChangesManager(ActivateChanges):
     def _start_site_activation(self, site_id):
         self._log_activation(site_id)
         ActivateChangesSite(site_id, self._activation_id,
-                            self._site_snapshot_file(site_id)).start()
+                            self._site_snapshot_file(site_id), self._prevent_activate).start()
 
 
     def _log_activation(self, site_id):
@@ -4129,15 +4170,54 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _load_site_state(self, site_id):
-        state_path = "%s/%s/site_%s.mk" % \
+        return store.load_data_from_file(self._site_state_path(site_id), {})
+
+
+    def _site_state_path(self, site_id):
+        return "%s/%s/site_%s.mk" % \
             (self.activation_base_dir, self._activation_id, site_id)
 
-        return store.load_data_from_file(state_path, {})
 
-
+    # Cleanup stale activations?
     def _do_housekeeping(self):
-        # TODO: Cleanup stale activations?
-        pass
+        lock_exclusive()
+        try:
+            for activation_id in self._existing_activation_ids():
+                # skip the current activation_id
+                if self._activation_id == activation_id:
+                    continue
+
+                delete = False
+                manager = ActivateChangesManager()
+
+                try:
+                    try:
+                        manager.load(activation_id)
+                    except MKUserError:
+                        # Not existant anymore!
+                        delete = True
+                        raise
+
+                    running_sites = [ site_id for site_id in self._sites
+                                          if manager.is_running(site_id) ]
+                    delete = not running_sites
+                finally:
+                    if delete:
+                        shutil.rmtree("%s/%s" %
+                            (ActivateChangesManager.activation_base_dir, activation_id))
+        finally:
+            unlock_exclusive()
+
+
+    def _existing_activation_ids(self):
+        ids = []
+
+        for activation_id in os.listdir(ActivateChangesManager.activation_base_dir):
+            if len(activation_id) == 36 and activation_id[8] == "-" and activation_id[13] == "-":
+                ids.append(activation_id)
+
+        return ids
+
 
 
 
@@ -4160,7 +4240,7 @@ ACTIVATION_TIME_SYNC         = "sync"
 ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 class ActivateChangesSite(threading.Thread, ActivateChanges):
-    def __init__(self, site_id, activation_id, site_snapshot_file):
+    def __init__(self, site_id, activation_id, site_snapshot_file, prevent_activate=False):
         super(ActivateChangesSite, self).__init__()
 
         self._site_id           = site_id
@@ -4168,6 +4248,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         self._snapshot_file     = site_snapshot_file
         self._running_fd        = None
         self.daemon             = True
+        self._prevent_activate  = prevent_activate
 
         self._load_changes()
 
@@ -4205,15 +4286,17 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
 
             self._lock_activation()
 
-            if self._is_sync_needed(self._site_id):
+            if self.is_sync_needed(self._site_id):
                 self._synchronize_site()
 
-            if self._is_activate_needed(self._site_id):
-                configuration_warnings = self._do_activate()
+            self._set_result(PHASE_FINISHING, _("Finalizing"))
+            configuration_warnings = {}
+            if self._prevent_activate:
+                self._confirm_synchronized_changes()
             else:
-                configuration_warnings = {}
-
-            self._confirm_activated_changes()
+                if self._is_activate_needed(self._site_id):
+                    configuration_warnings = self._do_activate()
+                self._confirm_activated_changes()
 
             self._set_done_result(configuration_warnings)
         except Exception, e:
@@ -4463,12 +4546,19 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
 
 
     def _confirm_activated_changes(self):
-        self._set_result(PHASE_FINISHING, _("Finalizing"))
-
         repstatus = load_replication_status(lock=True)
         try:
             changes = repstatus[self._site_id].get("changes", [])
             repstatus[self._site_id]["changes"] = changes[len(self._site_changes):]
+        finally:
+            save_replication_status(repstatus)
+
+
+    def _confirm_synchronized_changes(self):
+        repstatus = load_replication_status(lock=True)
+        try:
+            for change in repstatus[self._site_id].get("changes", []):
+                change["need_sync"] = False
         finally:
             save_replication_status(repstatus)
 
@@ -4528,7 +4618,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         times = self._get_activation_times()
         duration = 0.0
 
-        if self._is_sync_needed(self._site_id):
+        if self.is_sync_needed(self._site_id):
             duration += times.get(ACTIVATION_TIME_SYNC, 0)
 
         if self._is_activate_needed(self._site_id):
@@ -5286,11 +5376,11 @@ class MKAutomationException(Exception):
         Exception.__init__(self, msg)
 
 
-def check_mk_automation(siteid, command, args=[], indata="", stdin_data=None, timeout=None):
+def check_mk_automation(siteid, command, args=[], indata="", stdin_data=None, timeout=None, sync=True):
     if not siteid or config.site_is_local(siteid):
         return check_mk_local_automation(command, args, indata, stdin_data, timeout)
     else:
-        return check_mk_remote_automation(siteid, command, args, indata, stdin_data, timeout)
+        return check_mk_remote_automation(siteid, command, args, indata, stdin_data, timeout, sync)
 
 
 def check_mk_local_automation(command, args=[], indata="", stdin_data=None, timeout=None):

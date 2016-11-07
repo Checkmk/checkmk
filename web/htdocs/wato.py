@@ -2871,6 +2871,7 @@ def show_service_table(host, firsttime):
     except Exception, e:
         if config.debug:
             raise
+        log_exception()
         url = html.makeuri([("ignoreerrors", "1"), ("_scan", html.var("_scan"))])
         retry_link = '<a href="%s">%s</a>' % (url, _("Retry discovery while ignoring this error (Result might be incomplete)."))
         html.show_warning("<b>%s</b>: %s<br><br>%s" %
@@ -3047,7 +3048,7 @@ def ajax_execute_check():
     checktype = html.var("checktype")
     item      = html.var("item")
     try:
-        status, output = check_mk_automation(site, "active-check", [ hostname, checktype, item ])
+        status, output = check_mk_automation(site, "active-check", [ hostname, checktype, item ], sync=False)
     except Exception, e:
         status = 1
         output = "%s" % e
@@ -4803,7 +4804,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
         valuespec = self._vs_activation()
 
         html.begin_form("activate", method="POST", action="")
-        html.hidden_field("activate_until", self._get_last_change_id(), id="activate_until")
+        html.hidden_field("activate_until", self.get_last_change_id(), id="activate_until")
         forms.header(valuespec.title())
 
         valuespec.render_input("activate", self._value)
@@ -4935,7 +4936,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
                 can_activate_all = False
 
             need_restart = self._is_activate_needed(site_id)
-            need_sync    = self._is_sync_needed(site_id)
+            need_sync    = self.is_sync_needed(site_id)
             need_action  = need_restart or need_sync
 
             # Activation checkbox

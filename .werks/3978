@@ -1,0 +1,11 @@
+Title: mkbackup: Fixed backup to some CIFS shares ([Errno 13] Permission denied) '...')
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2p3
+Date: 1478522063
+
+On some CIFS shares the backup was not possible because chown / chmod operation failed
+with a permission denied error during backup.

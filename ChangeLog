@@ -1,4 +1,7 @@
 1.4.0i2p3:
+    Core & Setup:
+    * 3978 FIX: mkbackup: Fixed backup to some CIFS shares ([Errno 13] Permission denied) '...')...
+
     Multisite:
     * 3938 FIX: tactical overview: fixed wrong display of number of host/service problems...
 

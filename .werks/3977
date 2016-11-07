@@ -1,0 +1,9 @@
+Title: Fixed poping up changes button in sidebar snapin after a change
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i2
+Date: 1478516650
+Class: fix
+
+

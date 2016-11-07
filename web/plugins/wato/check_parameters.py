@@ -3897,6 +3897,91 @@ register_check_parameters(
     "first"
 )
 
+register_check_parameters(
+    subgroup_storage,
+    "storcli_vdrives",
+    _("LSI RAID VDrives (StorCLI)"),
+    Dictionary(
+        title = _("Evaluation of VDrive States"),
+        elements = [
+            ( "Optimal",
+              MonitoringState(
+                    title = _("State for <i>Optimal</i>"),
+                    default_value = 0,
+            )),
+            ( "Partially Degraded",
+              MonitoringState(
+                    title = _("State for <i>Partially Degraded</i>"),
+                    default_value = 1,
+            )),
+            ( "Degraded",
+              MonitoringState(
+                    title = _("State for <i>Degraded</i>"),
+                    default_value = 2,
+            )),
+            ( "Offline",
+              MonitoringState(
+                    title = _("State for <i>Offline</i>"),
+                    default_value = 1,
+            )),
+            ( "Recovery",
+              MonitoringState(
+                    title = _("State for <i>Recovery</i>"),
+                    default_value = 1,
+            )),
+        ]),
+    TextAscii(
+        title = _("Virtual Drive"),
+        allow_empty = False,
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "storcli_pdisks",
+    _("LSI RAID physical disks (StorCLI)"),
+    Dictionary(
+        title = _("Evaluation of PDisk States"),
+        elements = [
+            ( "Dedicated Hot Spare",
+              MonitoringState(
+                    title = _("State for <i>Dedicated Hot Spare</i>"),
+                    default_value = 0,
+            )),
+            ( "Global Hot Spare",
+              MonitoringState(
+                    title = _("State for <i>Global Hot Spare</i>"),
+                    default_value = 0,
+            )),
+            ( "Unconfigured Good",
+              MonitoringState(
+                    title = _("State for <i>Unconfigured Good</i>"),
+                    default_value = 0,
+            )),
+            ( "Unconfigured Bad",
+              MonitoringState(
+                    title = _("State for <i>Unconfigured Bad</i>"),
+                    default_value = 1,
+            )),
+            ( "Online",
+              MonitoringState(
+                    title = _("State for <i>Online</i>"),
+                    default_value = 0,
+            )),
+            ( "Offline",
+              MonitoringState(
+                    title = _("State for <i>Offline</i>"),
+                    default_value = 2,
+            )),
+        ]),
+    TextAscii(
+        title = _("PDisk EID:Slot-Device"),
+        allow_empty = False,
+    ),
+    "dict"
+)
+
 #.
 #   .--Printing------------------------------------------------------------.
 #   |                ____       _       _   _                              |

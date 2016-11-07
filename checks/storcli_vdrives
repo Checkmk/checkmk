@@ -90,5 +90,6 @@ check_info["storcli_vdrives"] = {
     "parse_function"            : parse_storcli_vdrives,
     "inventory_function"        : inventory_storcli_vdrives,
     "check_function"            : check_storcli_vdrives,
-    "service_description"       : "RAID Virtual Drive %s"
+    "service_description"       : "RAID Virtual Drive %s",
+    "group"                     : "storcli_vdrives",
 }

@@ -85,5 +85,6 @@ check_info["storcli_pdisks"] = {
     "parse_function"            : parse_storcli_pdisks,
     "inventory_function"        : inventory_storcli_pdisks,
     "check_function"            : check_storcli_pdisks,
-    "service_description"       : "RAID PDisk EID:Slot-Device %s"
+    "service_description"       : "RAID PDisk EID:Slot-Device %s",
+    "group"                     : "storcli_pdisks",
 }

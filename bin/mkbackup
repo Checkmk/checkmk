@@ -170,8 +170,7 @@ def acquire_backup_lock():
     if not os.path.exists(lock_file_path):
         try:
             g_backup_lock_f = tempfile.NamedTemporaryFile(mode="a+", dir="/tmp", delete=False)
-            os.chown(g_backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid)
-            os.chmod(g_backup_lock_f.name, 0660)
+            set_permissions(g_backup_lock_f.name, -1, grp.getgrnam("omd").gr_gid, 0660)
             os.rename(g_backup_lock_f.name, lock_file_path)
         except (IOError, OSError), e:
             raise MKGeneralException("Failed to open lock file \"%s\": %s" %
@@ -192,6 +191,26 @@ def acquire_backup_lock():
         cloexec_flag = 1
     fd = g_backup_lock_f.fileno()
     fcntl.fcntl(fd, fcntl.F_SETFD, fcntl.fcntl(fd, fcntl.F_GETFD) | cloexec_flag)
+
+
+def set_permissions(path, uid, gid, mode):
+    try:
+        os.chown(path, uid, gid)
+    except OSError, e:
+        if e.errno == 13:
+            pass # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
+                 # are set, this is not possible. So skip over.
+        else:
+            raise
+
+    try:
+        os.chmod(path, mode)
+    except OSError, e:
+        if e.errno == 13:
+            pass # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
+                 # are set, this is not possible. So skip over.
+        else:
+            raise
 
 
 # TODO: Move to cmklib?
@@ -229,8 +248,7 @@ def makedir(path, user=None, group=None, mode=None):
     else:
         gid = -1
 
-    os.chown(path, uid, gid)
-    os.chmod(path, mode)
+    set_permissions(path, uid, gid, mode)
 
 
 # Wenn als root ausgeführt:
@@ -1487,8 +1505,7 @@ def do_site_restore(opts, info, site=None):
         omd_root = "/omd/sites/%s" % site
         if not os.path.exists(omd_root):
             os.mkdir(omd_root)
-            os.chown(omd_root, pwd.getpwnam(site).pw_uid, grp.getgrnam(site).gr_gid)
-            os.chmod(omd_root, 0755)
+            set_permissions(omd_root, pwd.getpwnam(site).pw_uid, grp.getgrnam(site).gr_gid, 0775)
 
     cmd.append("-")
 

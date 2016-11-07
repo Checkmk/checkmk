@@ -6537,7 +6537,11 @@ def mode_edit_configvar(phase, what = 'globalvars'):
         return
 
     varname = html.var("varname")
-    domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
+    try:
+        domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
+    except KeyError:
+        raise MKGeneralException(_("The global setting \"%s\" does not exist.") % varname)
+
     if siteid:
         current_settings = site.setdefault("globals", {})
     else:

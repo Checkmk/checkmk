@@ -1,0 +1,11 @@
+Title: tactical overview: fixed wrong display of number of service problems when stale services are available
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i2
+Date: 1478503370
+Class: fix
+
+When stale services where available number of "service problems" and "service problems unhandled" where the same as stale services in tactical overview snapin.
+This has been fixed now.
+

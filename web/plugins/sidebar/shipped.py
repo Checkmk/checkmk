@@ -729,7 +729,7 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
         for value, ty in [ (problems, "handled"), (unhandled_problems, "unhandled") ]:
             url = html.makeuri_contextless(row["views"][ty] + extra_url_variables, filename="view.py")
             html.open_td(class_=[td_class, "states prob" if value != 0 else None])
-            link(str(stales), url)
+            link(str(value), url)
             html.close_td()
 
         if td_class == 'col4':

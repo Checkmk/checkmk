@@ -1,4 +1,7 @@
 1.4.0i2p3:
+    Multisite:
+    * 3938 FIX: tactical overview: fixed wrong display of number of service problems when stale services are available...
+
 
 1.4.0i2p2:
     Multisite:

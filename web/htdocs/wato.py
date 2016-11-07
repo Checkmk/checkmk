@@ -277,7 +277,7 @@ def page_handler():
         html.show_error(traceback.format_exc().replace('\n', '<br />'))
 
     html.close_div()
-    if g_need_sidebar_reload == id(html):
+    if is_sidebar_reload_needed():
         html.reload_sidebar()
 
     if config.wato_use_git and html.is_transaction():

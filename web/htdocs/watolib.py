@@ -4629,6 +4629,10 @@ def need_sidebar_reload():
     g_need_sidebar_reload = id(html)
 
 
+def is_sidebar_reload_needed():
+    return g_need_sidebar_reload == id(html)
+
+
 def folder_preserving_link(add_vars):
     return Folder.current().url(add_vars)
 

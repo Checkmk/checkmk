@@ -45,6 +45,11 @@ class SectionManager {
     SplittingListConfigurable<std::set<std::string>,
                               BlockMode::BlockExclusive<std::set<std::string>>,
                               AddMode::SetInserter<std::set<std::string>>>
+        _disabled_sections;
+
+    SplittingListConfigurable<std::set<std::string>,
+                              BlockMode::BlockExclusive<std::set<std::string>>,
+                              AddMode::SetInserter<std::set<std::string>>>
         _realtime_sections;
 
     KeyedListConfigurable<std::string> _script_local_includes;

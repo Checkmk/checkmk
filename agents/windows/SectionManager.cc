@@ -22,6 +22,7 @@
 SectionManager::SectionManager(Configuration &config, const Environment &env)
     : _ps_use_wmi(config, "ps", "use_wmi", false)
     , _enabled_sections(config, "global", "sections")
+    , _disabled_sections(config, "global", "disabled_sections")
     , _realtime_sections(config, "global", "realtime_sections")
     , _script_local_includes(config, "local", "include")
     , _script_plugin_includes(config, "plugin", "include")
@@ -41,8 +42,11 @@ void SectionManager::addSection(Section *section) {
 
 bool SectionManager::sectionEnabled(const std::string &name) const {
     // if no sections were set, assume they are all enabled
-    return !_enabled_sections.wasAssigned() ||
-           (_enabled_sections->find(name) != _enabled_sections->end());
+    bool is_disabled = _disabled_sections->find(name) != _disabled_sections->end();
+
+    bool is_enabled = !_enabled_sections.wasAssigned() ||
+                      (_enabled_sections->find(name) != _enabled_sections->end());
+    return !is_disabled && is_enabled;
 }
 
 bool SectionManager::realtimeSectionEnabled(const std::string &name) const {

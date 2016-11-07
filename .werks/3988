@@ -1,0 +1,12 @@
+Title: Windows agent: no global option disabled_sections
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1478512041
+Class: feature
+
+This options allows you to disable specific sections.
+If a section is mentioned in <i>sections</i> and <i>disabled_sections</i> the
+<i>disabled_sections</i> takes precedence.
+

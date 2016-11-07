@@ -4,6 +4,7 @@
 
     WATO:
     * 3975 FIX: Improved error handling when trying to edit not existing global setting
+    * 3976 FIX: Fixed broken link in LDAP automatic sync help text
 
 
 1.4.0i2p2:

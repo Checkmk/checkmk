@@ -6066,7 +6066,7 @@ def vs_ldap_connection(new, connection_id):
             title = _('Sync Interval'),
             help  = _('This option defines the interval of the LDAP synchronization. This setting is only '
                       'used by sites which have the '
-                      '<a href="wato.py?mode=edit_configvar&varname=userdb_automatic_sync">Automatic User '
+                      '<a href="wato.py?mode=sites">Automatic User '
                       'Synchronization</a> enabled.<br><br>'
                       'Please note: Passwords of the users are never stored in WATO and therefor never cached!'),
             minvalue = 60,

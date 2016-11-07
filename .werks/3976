@@ -1,0 +1,10 @@
+Title: Fixed broken link in LDAP automatic sync help text
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2
+Date: 1478509127
+
+

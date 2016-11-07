@@ -10,6 +10,9 @@
     * 3976 FIX: Fixed broken link in LDAP automatic sync help text
     * 3977 FIX: Fixed poping up changes button in sidebar snapin after a change
 
+    Notifications:
+    * 4042 FIX: Fix missing From address in synchronous SMTP notifications...
+
 
 1.4.0i2p2:
     Multisite:

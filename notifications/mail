@@ -35,7 +35,7 @@
 # attached graphs and such neat stuff. Sweet!
 
 
-import os, re, sys, subprocess
+import os, re, sys, subprocess, socket
 import urllib
 import urllib2
 import base64
@@ -443,7 +443,6 @@ def send_mail_sendmail(m, target, from_address):
 
 def send_mail_smtp(message, target, from_address, context):
     import smtplib  # for the error messages
-    import socket
     host_index = 1
 
     retry_possible = False
@@ -456,14 +455,14 @@ def send_mail_smtp(message, target, from_address, context):
         else:
             host_index += 1
 
-        host = context[host_var]
+        smarthost = context[host_var]
         try:
-            send_mail_smtp_impl(message, target, host, from_address, context)
+            send_mail_smtp_impl(message, target, smarthost, from_address, context)
             success = True
         except socket.timeout, e:
-            sys.stderr.write("timeout connecting to \"%s\": %s\n" % (host, str(e)))
+            sys.stderr.write("timeout connecting to \"%s\": %s\n" % (smarthost, str(e)))
         except socket.gaierror, e:
-            sys.stderr.write("socket error connecting to \"%s\": %s\n" % (host, str(e)))
+            sys.stderr.write("socket error connecting to \"%s\": %s\n" % (smarthost, str(e)))
         except smtplib.SMTPRecipientsRefused, e:
             # the exception contains a dict of failed recipients to the respective error. since we
             # only have one recipient there has to be exactly one element
@@ -479,18 +478,18 @@ def send_mail_smtp(message, target, from_address, context):
             sys.stderr.write("mail to \"%s\" refused: %d, %s\n" % (target, errorcode, message))
         except smtplib.SMTPHeloError, e:
             retry_possible = True  # server is acting up, this may be fixed quickly
-            sys.stderr.write("protocol error from \"%s\": %s\n" % (host, str(e)))
+            sys.stderr.write("protocol error from \"%s\": %s\n" % (smarthost, str(e)))
         except smtplib.SMTPSenderRefused, e:
             sys.stderr.write("server didn't accept from-address \"%s\" refused: %s\n" %\
                              (from_address, str(e)))
         except smtplib.SMTPAuthenticationError, e:
-            sys.stderr.write("authentication failed on \"%s\": %s\n" % (host, str(e)))
+            sys.stderr.write("authentication failed on \"%s\": %s\n" % (smarthost, str(e)))
         except smtplib.SMTPDataError, e:
             retry_possible = True  # unexpected error - give retry a chance
-            sys.stderr.write("unexpected error code from \"%s\": %s\n" % (host, str(e)))
+            sys.stderr.write("unexpected error code from \"%s\": %s\n" % (smarthost, str(e)))
         except smtplib.SMTPException, e:
             retry_possible = True  # who knows what went wrong, a retry might just work
-            sys.stderr.write("undocumented error code from \"%s\": %s\n" % (host, str(e)))
+            sys.stderr.write("undocumented error code from \"%s\": %s\n" % (smarthost, str(e)))
 
     if success:
         return 0
@@ -499,7 +498,12 @@ def send_mail_smtp(message, target, from_address, context):
     else:
         return 2
 
-def send_mail_smtp_impl(message, target, host, from_address, context):
+
+def default_from_address():
+    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
+
+
+def send_mail_smtp_impl(message, target, smarthost, from_address, context):
     import smtplib
     import types
     def getreply_wrapper(self):
@@ -511,9 +515,9 @@ def send_mail_smtp_impl(message, target, host, from_address, context):
     encryption = context.get('PARAMETER_SMTP_ENCRYPTION', "NONE")
 
     if encryption == "SSL_TLS":
-        conn = smtplib.SMTP_SSL(host, port, from_address)
+        conn = smtplib.SMTP_SSL(smarthost, port) # , from_address)
     else:
-        conn = smtplib.SMTP(host, port, from_address)
+        conn = smtplib.SMTP(smarthost, port) # , from_address)
 
     # evil hack: the smtplib doesn't allow access to the reply code/message
     #  in case of success. But we want it!
@@ -913,7 +917,7 @@ def main():
         sys.exit(2)
 
     # Create the mail and send it
-    from_address = context.get("PARAMETER_FROM")
+    from_address = context.get("PARAMETER_FROM") or default_from_address()
     reply_to = context.get("PARAMETER_REPLY_TO")
     m = multipart_mail(mailto, subject, from_address, reply_to, content_txt, content_html, attachments)
     try:

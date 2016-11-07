@@ -40,6 +40,7 @@
 #include "HostlistColumn.h"
 #include "LogwatchListColumn.h"
 #include "MetricsColumn.h"
+#include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
@@ -58,9 +59,9 @@ using std::string;
 
 TableHosts::TableHosts(const DowntimesOrComments &downtimes_holder,
                        const DowntimesOrComments &comments_holder,
-                       Logger *logger)
-    : Table(logger) {
-    addColumns(this, "", -1, -1, downtimes_holder, comments_holder);
+                       MonitoringCore *core)
+    : Table(core->loggerLivestatus()) {
+    addColumns(this, "", -1, -1, downtimes_holder, comments_holder, core);
 }
 
 string TableHosts::name() const { return "hosts"; }
@@ -71,7 +72,8 @@ string TableHosts::namePrefix() const { return "host_"; }
 void TableHosts::addColumns(Table *table, const string &prefix,
                             int indirect_offset, int extra_offset,
                             const DowntimesOrComments &downtimes_holder,
-                            const DowntimesOrComments &comments_holder) {
+                            const DowntimesOrComments &comments_holder,
+                            MonitoringCore *core) {
     host hst;
     char *ref = reinterpret_cast<char *>(&hst);
     table->addColumn(new OffsetStringColumn(
@@ -666,7 +668,7 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         prefix + "contact_groups",
         "A list of all contact groups this host is in",
         reinterpret_cast<char *>(&hst.contact_groups) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, core));
 
     table->addColumn(new ServicelistColumn(
         prefix + "services", "A list of all services of the host",

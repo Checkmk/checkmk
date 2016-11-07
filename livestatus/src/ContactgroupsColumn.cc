@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactgroupsColumn.h"
+#include "MonitoringCore.h"
 #include "Renderer.h"
 
 using std::make_unique;
@@ -45,7 +46,7 @@ unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
     const string &name) {
     class ContainsContactGroup : public Contains {
     public:
-        ContainsContactGroup(contactgroup *element, int offset)
+        ContainsContactGroup(MonitoringCore::ContactGroup *element, int offset)
             : _element(element), _offset(offset) {}
 
         bool operator()(void *row) override {
@@ -59,7 +60,9 @@ unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
                      *reinterpret_cast<contactgroupsmember **>(
                          reinterpret_cast<char *>(row) + _offset);
                  cgm != nullptr; cgm = cgm->next) {
-                if (cgm->group_ptr == _element) {
+                // TODO(sp) Remove evil cast below.
+                if (cgm->group_ptr ==
+                    reinterpret_cast<contactgroup *>(_element)) {
                     return true;
                 }
             }
@@ -67,12 +70,12 @@ unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
         }
 
     private:
-        contactgroup *const _element;
+        MonitoringCore::ContactGroup *const _element;
         int _offset;
     };
 
-    return make_unique<ContainsContactGroup>(
-        find_contactgroup(const_cast<char *>(name.c_str())), _offset);
+    return make_unique<ContainsContactGroup>(_core->find_contactgroup(name),
+                                             _offset);
 }
 
 bool ContactgroupsColumn::isEmpty(void *data) {

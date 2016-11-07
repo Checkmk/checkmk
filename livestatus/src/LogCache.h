@@ -26,17 +26,16 @@
 #define LogCache_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <ctime>
 #include <map>
 #include <mutex>
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
 class CommandsHolder;
-#ifdef CMC
-class Core;
-#endif
 class Logfile;
 class Logger;
+class MonitoringCore;
 
 typedef std::map<time_t, Logfile *> _logfiles_t;
 
@@ -56,7 +55,7 @@ public:
 #ifdef CMC
     void setMaxCachedMessages(unsigned long m);
 #endif
-    time_t _last_index_update;
+    std::chrono::system_clock::time_point _last_index_update;
 
     const char *name() { return "log"; }
     const char *namePrefix() { return "logs"; }
@@ -68,11 +67,7 @@ public:
     void forgetLogfiles();
     void updateLogfileIndex();
 
-    bool logCachePreChecks(
-#ifdef CMC
-        Core *core
-#endif
-        );
+    bool logCachePreChecks(MonitoringCore *core);
 
 private:
     void scanLogfile(char *path, bool watch);

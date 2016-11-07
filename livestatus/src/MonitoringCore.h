@@ -26,6 +26,7 @@
 #define MonitoringCore_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <string>
 class Logger;
 
@@ -44,6 +45,8 @@ public:
     virtual bool host_has_contact(Host *host, Contact *contact) = 0;
     virtual bool is_contact_member_of_contactgroup(ContactGroup *group,
                                                    Contact *contact) = 0;
+
+    virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
 
     virtual bool mkeventdEnabled() = 0;
     virtual std::string mkeventdSocketPath() = 0;

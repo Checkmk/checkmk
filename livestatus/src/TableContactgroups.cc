@@ -24,6 +24,7 @@
 
 #include "TableContactgroups.h"
 #include "ContactgroupsMemberColumn.h"
+#include "MonitoringCore.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "nagios.h"
@@ -32,7 +33,8 @@ using std::string;
 
 extern contactgroup *contactgroup_list;
 
-TableContactgroups::TableContactgroups(Logger *logger) : Table(logger) {
+TableContactgroups::TableContactgroups(MonitoringCore *core)
+    : Table(core->loggerLivestatus()), _core(core) {
     contactgroup cg;
     char *ref = reinterpret_cast<char *>(&cg);
     addColumn(
@@ -58,5 +60,5 @@ void TableContactgroups::answerQuery(Query *query) {
 }
 
 void *TableContactgroups::findObject(const string &objectspec) {
-    return find_contactgroup(const_cast<char *>(objectspec.c_str()));
+    return _core->find_contactgroup(objectspec);
 }

@@ -27,6 +27,7 @@
 #include <utility>
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"  // IWYU pragma: keep
+#include "MonitoringCore.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
 #include "OffsetTimeColumn.h"
@@ -41,8 +42,8 @@ using std::string;
 
 TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
                              const DowntimesOrComments &comments_holder,
-                             Logger *logger)
-    : Table(logger), _holder(comments_holder) {
+                             MonitoringCore *core)
+    : Table(core->loggerLivestatus()), _holder(comments_holder) {
     Comment *ref = nullptr;
     addColumn(new OffsetSStringColumn(
         "author", "The contact that entered the comment",
@@ -94,11 +95,11 @@ TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
     TableHosts::addColumns(
         this, "host_",
         reinterpret_cast<char *>(&(ref->_host)) - reinterpret_cast<char *>(ref),
-        -1, downtimes_holder, comments_holder);
+        -1, downtimes_holder, comments_holder, core);
     TableServices::addColumns(
         this, "service_", reinterpret_cast<char *>(&(ref->_service)) -
                               reinterpret_cast<char *>(ref),
-        false /* no hosts table */, downtimes_holder, comments_holder);
+        false /* no hosts table */, downtimes_holder, comments_holder, core);
 }
 
 string TableComments::name() const { return "comments"; }

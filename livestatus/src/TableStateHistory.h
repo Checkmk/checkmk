@@ -33,24 +33,46 @@
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
+class HostServiceState;
+class LogEntry;
+class MonitoringCore;
+class Query;
+
 #ifdef CMC
 #include <mutex>
 #include "Notes.h"
 class Core;
 #else
 class DowntimesOrComments;
-class Logger;
 #endif
-class Query;
-class HostServiceState;
-class LogEntry;
 
 #define CLASSMASK_STATEHIST 0xC6
 
 class TableStateHistory : public Table {
+public:
 #ifdef CMC
-    Core *_core;
+    TableStateHistory(LogCache *log_cache, const Downtimes &downtimes_holder,
+                      const Comments &comments_holder,
+                      std::recursive_mutex &holder_lock, Core *core,
+                      MonitoringCore *mc);
+#else
+    TableStateHistory(LogCache *log_cache,
+                      const DowntimesOrComments &downtimes_holder,
+                      const DowntimesOrComments &comments_holder,
+                      MonitoringCore *mc);
 #endif
+
+    std::string name() const override;
+    std::string namePrefix() const override;
+    void answerQuery(Query *query) override;
+    bool isAuthorized(contact *ctc, void *data) override;
+    Column *column(std::string colname) override;
+
+protected:
+    bool _abort_query;
+
+private:
+    MonitoringCore *_core;
     LogCache *_log_cache;
 
     int _query_timeframe;
@@ -66,28 +88,6 @@ class TableStateHistory : public Table {
     logfile_entries_t *_entries;
     logfile_entries_t::iterator _it_entries;
 
-protected:
-    bool _abort_query;
-
-public:
-#ifdef CMC
-    TableStateHistory(LogCache *log_cache, const Downtimes &downtimes_holder,
-                      const Comments &comments_holder,
-                      std::recursive_mutex &holder_lock, Core *core);
-#else
-    TableStateHistory(LogCache *log_cache,
-                      const DowntimesOrComments &downtimes_holder,
-                      const DowntimesOrComments &comments_holder,
-                      Logger *logger);
-#endif
-
-    std::string name() const override;
-    std::string namePrefix() const override;
-    void answerQuery(Query *query) override;
-    bool isAuthorized(contact *ctc, void *data) override;
-    Column *column(std::string colname) override;
-
-private:
     LogEntry *getPreviousLogentry();
     LogEntry *getNextLogentry();
     void process(Query *query, HostServiceState *hs_state);

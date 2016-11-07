@@ -33,6 +33,7 @@
 #include "DownCommColumn.h"
 #include "FixedIntColumn.h"
 #include "MetricsColumn.h"
+#include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
@@ -54,9 +55,9 @@ using std::string;
 
 TableServices::TableServices(const DowntimesOrComments &downtimes_holder,
                              const DowntimesOrComments &comments_holder,
-                             Logger *logger)
-    : Table(logger) {
-    addColumns(this, "", -1, true, downtimes_holder, comments_holder);
+                             MonitoringCore *core)
+    : Table(core->loggerLivestatus()) {
+    addColumns(this, "", -1, true, downtimes_holder, comments_holder, core);
 }
 
 string TableServices::name() const { return "services"; }
@@ -67,7 +68,8 @@ string TableServices::namePrefix() const { return "service_"; }
 void TableServices::addColumns(Table *table, const string &prefix,
                                int indirect_offset, bool add_hosts,
                                const DowntimesOrComments &downtimes_holder,
-                               const DowntimesOrComments &comments_holder) {
+                               const DowntimesOrComments &comments_holder,
+                               MonitoringCore *core) {
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
 
@@ -448,7 +450,7 @@ void TableServices::addColumns(Table *table, const string &prefix,
     if (add_hosts) {
         TableHosts::addColumns(table, "host_",
                                reinterpret_cast<char *>(&svc.host_ptr) - ref,
-                               -1, downtimes_holder, comments_holder);
+                               -1, downtimes_holder, comments_holder, core);
     }
 
     table->addColumn(new CustomVarsNamesColumn(
@@ -473,7 +475,8 @@ void TableServices::addColumns(Table *table, const string &prefix,
     table->addColumn(new ContactgroupsColumn(
         prefix + "contact_groups",
         "A list of all contact groups this service is in",
-        reinterpret_cast<char *>(&svc.contact_groups) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.contact_groups) - ref, indirect_offset,
+        -1, core));
 
     table->addColumn(new MetricsColumn(
         prefix + "metrics",

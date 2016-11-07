@@ -32,6 +32,7 @@
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logfile.h"
+#include "MonitoringCore.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
@@ -41,9 +42,7 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 
-#ifdef CMC
-#include "Core.h"
-#else
+#ifndef CMC
 #include "auth.h"
 #endif
 
@@ -60,16 +59,11 @@ TableLog::TableLog(LogCache *log_cache,
                    std::recursive_mutex &holder_lock, Core *core
 #else
                    const DowntimesOrComments &downtimes_holder,
-                   const DowntimesOrComments &comments_holder, Logger *logger
+                   const DowntimesOrComments &comments_holder
 #endif
-                   )
-#ifdef CMC
-    : Table(core->_logger_livestatus)
-    , _core(core)
-#else
-    : Table(logger)
-#endif
-    , _log_cache(log_cache) {
+                   ,
+                   MonitoringCore *mc)
+    : Table(mc->loggerLivestatus()), _core(mc), _log_cache(log_cache) {
     LogEntry *ref = nullptr;
     addColumn(new OffsetTimeColumn("time",
                                    "Time of the log event (UNIX timestamp)",
@@ -148,6 +142,9 @@ TableLog::TableLog(LogCache *log_cache,
 #ifdef CMC
         ,
         holder_lock, core
+#else
+        ,
+        mc
 #endif
         );
     TableServices::addColumns(
@@ -157,6 +154,9 @@ TableLog::TableLog(LogCache *log_cache,
 #ifdef CMC
         ,
         holder_lock, core
+#else
+        ,
+        mc
 #endif
         );
     TableContacts::addColumns(this, "current_contact_",
@@ -173,11 +173,7 @@ string TableLog::namePrefix() const { return "log_"; }
 
 void TableLog::answerQuery(Query *query) {
     lock_guard<mutex> lg(_log_cache->_lock);
-    _log_cache->logCachePreChecks(
-#ifdef CMC
-        _core
-#endif
-        );
+    _log_cache->logCachePreChecks(_core);
 
     int since = 0;
     int until = time(nullptr) + 1;

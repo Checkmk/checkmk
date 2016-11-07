@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableServicesByGroup.h"
+#include "MonitoringCore.h"
 #include "Query.h"
 #include "TableServicegroups.h"
 #include "TableServices.h"
@@ -42,11 +43,11 @@ struct servicebygroup {
 
 TableServicesByGroup::TableServicesByGroup(
     const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder, Logger *logger)
-    : Table(logger) {
+    const DowntimesOrComments &comments_holder, MonitoringCore *core)
+    : Table(core->loggerLivestatus()) {
     struct servicebygroup sgref;
     TableServices::addColumns(this, "", -1, true, downtimes_holder,
-                              comments_holder);
+                              comments_holder, core);
     TableServicegroups::addColumns(
         this, "servicegroup_",
         reinterpret_cast<char *>(&(sgref._servicegroup)) -

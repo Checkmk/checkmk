@@ -35,7 +35,7 @@
 class Core;
 #else
 class DowntimesOrComments;
-class Logger;
+class MonitoringCore;
 #endif
 class Query;
 
@@ -48,7 +48,7 @@ public:
 #else
     TableHostsByGroup(const DowntimesOrComments &_downtimes_holder,
                       const DowntimesOrComments &_comments_holder,
-                      Logger *logger);
+                      MonitoringCore *core);
 #endif
 
     std::string name() const override;

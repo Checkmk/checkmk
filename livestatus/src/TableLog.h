@@ -37,10 +37,10 @@ class Column;
 class Core;
 #else
 class DowntimesOrComments;
-class Logger;
 #endif
 class Logfile;
 class LogCache;
+class MonitoringCore;
 class Query;
 
 class TableLog : public Table {
@@ -48,10 +48,10 @@ public:
 #ifdef CMC
     TableLog(LogCache *log_cache, const Downtimes &downtimes_holder,
              const Comments &comments_holder, std::recursive_mutex &holder_lock,
-             Core *core);
+             Core *core, MonitoringCore *mc);
 #else
     TableLog(LogCache *log_cache, const DowntimesOrComments &downtimes_holder,
-             const DowntimesOrComments &comments_holder, Logger *logger);
+             const DowntimesOrComments &comments_holder, MonitoringCore *mc);
 #endif
     std::string name() const override;
     std::string namePrefix() const override;
@@ -60,9 +60,7 @@ public:
     Column *column(std::string colname) override;
 
 private:
-#ifdef CMC
-    Core *_core;
-#endif
+    MonitoringCore *_core;
     LogCache *_log_cache;
     bool answerQuery(Query *, Logfile *, time_t, time_t);
 };

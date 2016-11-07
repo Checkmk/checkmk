@@ -35,7 +35,7 @@
 class Core;
 #else
 class DowntimesOrComments;
-class Logger;
+class MonitoringCore;
 #endif
 class Query;
 
@@ -52,11 +52,13 @@ public:
                            std::recursive_mutex &holder_lock, Core *core);
 #else
     TableHosts(const DowntimesOrComments &downtimes_holder,
-               const DowntimesOrComments &comments_holder, Logger *logger);
+               const DowntimesOrComments &comments_holder,
+               MonitoringCore *core);
     static void addColumns(Table *, const std::string &prefix,
                            int indirect_offset, int extra_offset,
                            const DowntimesOrComments &downtimes_holder,
-                           const DowntimesOrComments &comments_holder);
+                           const DowntimesOrComments &comments_holder,
+                           MonitoringCore *core);
 #endif
 
     std::string name() const override;

@@ -38,6 +38,7 @@
 #include "HostServiceState.h"
 #include "LogEntry.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
@@ -50,7 +51,6 @@ class NegatingFilter;
 class VariadicFilter;
 
 #ifdef CMC
-#include "Core.h"
 #include "Host.h"
 #include "Service.h"
 #include "Timeperiod.h"
@@ -92,17 +92,11 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
 #else
                                      const DowntimesOrComments
                                          &downtimes_holder,
-                                     const DowntimesOrComments &comments_holder,
-                                     Logger *logger
+                                     const DowntimesOrComments &comments_holder
 #endif
-                                     )
-#ifdef CMC
-    : Table(core->_logger_livestatus)
-    , _core(core)
-#else
-    : Table(logger)
-#endif
-    , _log_cache(log_cache) {
+                                     ,
+                                     MonitoringCore *mc)
+    : Table(mc->loggerLivestatus()), _core(mc), _log_cache(log_cache) {
     HostServiceState *ref = nullptr;
     addColumn(new OffsetTimeColumn(
         "time", "Time of the log event (seconds since 1/1/1970)",
@@ -269,6 +263,9 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
 #ifdef CMC
         ,
         holder_lock, core
+#else
+        ,
+        mc
 #endif
         );
     TableServices::addColumns(
@@ -278,6 +275,9 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
 #ifdef CMC
         ,
         holder_lock, core
+#else
+        ,
+        mc
 #endif
         );
 }
@@ -355,11 +355,7 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     lock_guard<mutex> lg(_log_cache->_lock);
-    _log_cache->logCachePreChecks(
-#ifdef CMC
-        _core
-#endif
-        );
+    _log_cache->logCachePreChecks(_core);
 
     // This flag might be set to true by the return value of processDataset(...)
     _abort_query = false;

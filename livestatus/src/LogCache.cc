@@ -25,6 +25,7 @@
 #include "LogCache.h"
 #include <dirent.h>
 #include <unistd.h>
+#include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -34,14 +35,8 @@
 #include <utility>
 #include "Logfile.h"
 #include "Logger.h"
-
-#ifdef CMC
-#include <chrono>
-#include "Core.h"
+#include "MonitoringCore.h"
 using std::chrono::system_clock;
-#else
-extern time_t last_log_rotation;
-#endif  // CMC
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
@@ -73,25 +68,16 @@ void LogCache::setMaxCachedMessages(unsigned long m) {
 
 LogCache::~LogCache() { forgetLogfiles(); }
 
-bool LogCache::logCachePreChecks(
-#ifdef CMC
-    Core *core
-#endif
-    ) {
+bool LogCache::logCachePreChecks(MonitoringCore *core) {
     // Do we have any logfiles (should always be the case, but we don't want to
     // crash...
     if (_logfiles.empty()) {
         Informational(_logger) << "no log file found, not even " << log_file;
         return false;
     }
-// Has Nagios rotated logfiles? => Update our file index. And delete all
-// memorized log messages.
-#ifdef CMC
-    if (core->_last_logfile_rotation >
-        system_clock::from_time_t(_last_index_update)) {
-#else
-    if (last_log_rotation > _last_index_update) {
-#endif
+    // Has Nagios rotated logfiles? => Update our file index. And delete all
+    // memorized log messages.
+    if (core->last_logfile_rotation() > _last_index_update) {
         Informational(_logger)
             << "core has rotated log files, rebuilding log file index";
         forgetLogfiles();
@@ -110,10 +96,9 @@ void LogCache::forgetLogfiles() {
 }
 
 void LogCache::updateLogfileIndex() {
-    _last_index_update = time(nullptr);
-    // We need to find all relevant logfiles. This includes
-    // directory.
-    // the current nagios.log and all files in the archive
+    _last_index_update = system_clock::now();
+    // We need to find all relevant logfiles. This includes directory, the
+    // current nagios.log and all files in the archive.
     scanLogfile(log_file, true);
 
     DIR *dir = opendir(log_archive_path);

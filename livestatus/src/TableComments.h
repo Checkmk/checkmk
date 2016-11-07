@@ -30,13 +30,14 @@
 #include "Table.h"
 #include "nagios.h"
 class DowntimesOrComments;
-class Logger;
+class MonitoringCore;
 class Query;
 
 class TableComments : public Table {
 public:
     TableComments(const DowntimesOrComments &downtimes_holder,
-                  const DowntimesOrComments &comments_holder, Logger *logger);
+                  const DowntimesOrComments &comments_holder,
+                  MonitoringCore *core);
 
     std::string name() const override;
     std::string namePrefix() const override;

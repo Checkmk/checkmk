@@ -35,6 +35,7 @@
 #include <sys/types.h>  // IWYU pragma: keep
 #include <sys/un.h>
 #include <unistd.h>
+#include <chrono>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -64,6 +65,7 @@
 #include "waittriggers.h"
 
 using mk::unsafe_tolower;
+using std::chrono::system_clock;
 using std::make_unique;
 using std::ostream;
 using std::ostringstream;
@@ -595,6 +597,13 @@ public:
                                            Contact *contact) override {
         return ::is_contact_member_of_contactgroup(toImpl(group),
                                                    toImpl(contact)) != 0;
+    }
+
+    system_clock::time_point last_logfile_rotation() override {
+        // TODO(sp) We should better listen to NEBCALLBACK_PROGRAM_STATUS_DATA
+        // instead of this 'extern' hack...
+        extern time_t last_log_rotation;
+        return system_clock::from_time_t(last_log_rotation);
     }
 
     // TODO(sp) Do we need a separate NEB argument for this?

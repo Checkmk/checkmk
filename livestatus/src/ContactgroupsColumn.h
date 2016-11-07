@@ -30,19 +30,24 @@
 #include <string>
 #include "ListColumn.h"
 #include "nagios.h"
+class MonitoringCore;
 class RowRenderer;
 
 class ContactgroupsColumn : public ListColumn {
-    int _offset;
-
 public:
     ContactgroupsColumn(const std::string &name, const std::string &description,
-                        int offset, int indirect_offset, int extra_offset = -1)
+                        int offset, int indirect_offset, int extra_offset,
+                        MonitoringCore *core)
         : ListColumn(name, description, indirect_offset, extra_offset)
+        , _core(core)
         , _offset(offset) {}
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
     bool isEmpty(void *data) override;
+
+private:
+    MonitoringCore *_core;
+    int _offset;
 };
 
 #endif  // ContactgroupsColumn_h

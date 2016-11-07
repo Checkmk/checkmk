@@ -43,7 +43,7 @@ TableEventConsoleEvents::TableEventConsoleEvents(
     MonitoringCore *mc, const DowntimesOrComments &downtimes_holder,
     const DowntimesOrComments &comments_holder)
     : TableEventConsole(mc) {
-    addColumns(this, downtimes_holder, comments_holder);
+    addColumns(this, downtimes_holder, comments_holder, mc);
 }
 #endif
 
@@ -57,7 +57,7 @@ void TableEventConsoleEvents::addColumns(Table *table,
 #else
 void TableEventConsoleEvents::addColumns(
     Table *table, const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder)
+    const DowntimesOrComments &comments_holder, MonitoringCore *core)
 #endif
 {
     table->addColumn(
@@ -113,9 +113,10 @@ void TableEventConsoleEvents::addColumns(
         -1, downtimes_holder, comments_holder
 #ifdef CMC
         ,
-        holder_lock, core
+        holder_lock
 #endif
-        );
+        ,
+        core);
 }
 
 string TableEventConsoleEvents::name() const { return "eventconsoleevents"; }

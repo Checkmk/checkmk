@@ -28,17 +28,20 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Table.h"
-class Logger;
+class MonitoringCore;
 class Query;
 
 class TableContactgroups : public Table {
 public:
-    explicit TableContactgroups(Logger *logger);
+    explicit TableContactgroups(MonitoringCore *core);
 
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     void *findObject(const std::string &objectspec) override;
+
+private:
+    MonitoringCore *_core;
 };
 
 #endif  // TableContactgroups_h

@@ -37,9 +37,9 @@ TableEventConsoleHistory::TableEventConsoleHistory(
     : TableEventConsole(mc)
 #else
 TableEventConsoleHistory::TableEventConsoleHistory(
-    MonitoringCore *mc, const DowntimesOrComments &downtimes_holder,
+    MonitoringCore *core, const DowntimesOrComments &downtimes_holder,
     const DowntimesOrComments &comments_holder)
-    : TableEventConsole(mc)
+    : TableEventConsole(core)
 #endif
 {
     addColumn(new IntEventConsoleColumn(
@@ -60,9 +60,10 @@ TableEventConsoleHistory::TableEventConsoleHistory(
     TableEventConsoleEvents::addColumns(this, downtimes_holder, comments_holder
 #ifdef CMC
                                         ,
-                                        holder_lock, core
+                                        holder_lock
 #endif
-                                        );
+                                        ,
+                                        core);
 }
 
 string TableEventConsoleHistory::name() const { return "eventconsolehistory"; }

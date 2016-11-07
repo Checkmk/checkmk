@@ -24,6 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+factory_settings["storcli_pdisks_default_levels"] = {
+    "Dedicated Hot Spare"  : 0,
+    "Global Hot Spare"     : 0,
+    "Unconfigured Good"    : 0,
+    "Unconfigured Bad"     : 1,
+    "Online"               : 0,
+    "Offline"              : 2,
+}
+
 
 def parse_storcli_pdisks(info):
 
@@ -56,32 +65,25 @@ def parse_storcli_pdisks(info):
 
 def inventory_storcli_pdisks(parsed):
     for item in parsed:
-        yield (item, None)
+        yield (item, {})
 
 
-def check_storcli_pdisks(item, _no_params, parsed):
+def check_storcli_pdisks(item, params, parsed):
 
     infotext = "Size: %f %s" % parsed[item]["size"]
 
     diskstate = parsed[item]["state"]
-    state_severities = {
-        "Dedicated Hot Spare"  : 0,
-        "Global Hot Spare"     : 0,
-        "Unconfigured Good"    : 0,
-        "Unconfigured Bad"     : 1,
-        "Online"               : 0,
-        "Offline"              : 2,
-    }
-
     infotext += ", Disk State: %s" % diskstate
-    status = state_severities.get(diskstate, 3)
+
+    status = params.get(diskstate, 3)
 
     return status, infotext
 
 
 check_info["storcli_pdisks"] = {
-    "parse_function"        : parse_storcli_pdisks,
-    "inventory_function"    : inventory_storcli_pdisks,
-    "check_function"        : check_storcli_pdisks,
-    "service_description"   : "RAID PDisk EID:Slot-Device %s"
+    "default_levels_variable"   : "storcli_pdisks_default_levels",
+    "parse_function"            : parse_storcli_pdisks,
+    "inventory_function"        : inventory_storcli_pdisks,
+    "check_function"            : check_storcli_pdisks,
+    "service_description"       : "RAID PDisk EID:Slot-Device %s"
 }

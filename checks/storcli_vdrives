@@ -24,10 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+factory_settings["storcli_vdrives_default_levels"] = {
+        "Optimal"               : 0,
+        "Partially Degraded"    : 1,
+        "Degraded"              : 2,
+        "Offline"               : 1,
+        "Recovery"              : 1,
+}
+
 
 def parse_storcli_vdrives(info):
 
-    raid_statedict = {
+    raid_statenames = {
         "Optl"      : "Optimal",
         "Pdgd"      : "Partially Degraded",
         "dgrd"      : "Degraded",
@@ -45,7 +53,7 @@ def parse_storcli_vdrives(info):
             item, raid_type, rawstate, access, consistent = line[:5]
             parsed[item] = {
                 "raid_type"     : raid_type,
-                "state"         : raid_statedict.get(rawstate, rawstate),
+                "state"         : raid_statenames.get(rawstate, rawstate),
                 "access"        : access,
                 "consistent"    : consistent,
             }
@@ -57,10 +65,10 @@ def parse_storcli_vdrives(info):
 
 def inventory_storcli_vdrives(parsed):
     for item in parsed:
-        yield (item, None)
+        yield (item, {})
 
 
-def check_storcli_vdrives(item, _no_params, parsed):
+def check_storcli_vdrives(item, params, parsed):
 
     yield 0, "Raid type is " + parsed[item]["raid_type"]
     yield 0, "Access: " + parsed[item]["access"]
@@ -72,24 +80,15 @@ def check_storcli_vdrives(item, _no_params, parsed):
 
     device_state = parsed[item]["state"]
     infotext = "State is %s" % device_state
-    if device_state == "Optimal":
-        status = 0
-    elif device_state == "Partially Degraded":
-        status = 1
-    elif device_state == "Degraded":
-        status = 2
-    elif device_state == "Offline":
-        status = 1
-    elif device_state == "Recovery":
-        status = 1
-    else:
-        status = 3
+
+    status = params.get(device_state, 3)
     yield status, infotext
 
 
 check_info["storcli_vdrives"] = {
-    "parse_function"        : parse_storcli_vdrives,
-    "inventory_function"    : inventory_storcli_vdrives,
-    "check_function"        : check_storcli_vdrives,
-    "service_description"   : "RAID Virtual Drive %s"
+    "default_levels_variable"   : "storcli_vdrives_default_levels",
+    "parse_function"            : parse_storcli_vdrives,
+    "inventory_function"        : inventory_storcli_vdrives,
+    "check_function"            : check_storcli_vdrives,
+    "service_description"       : "RAID Virtual Drive %s"
 }

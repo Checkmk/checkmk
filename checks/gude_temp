@@ -36,12 +36,17 @@ factory_settings["gude_temp_default_levels"] = {
 
 
 def inventory_gude_temp(info):
-    if info[0][0].split(".")[-1] != "-9999":
-        return [ ("Sensor", {}) ]
+    for oid_index, reading_str in info:
+        oid, index = oid_index.split(".")
+        if reading_str != "-9999":
+            yield "Sensor %s" % index, {}
 
 
 def check_gude_temp(item, params, info):
-    return check_temperature(float(info[0][0].split(".")[-1])/10, params, "gude_temp.%s" % item)
+    for oid_index, reading_str in info:
+        oid, index = oid_index.split(".")
+        if "Sensor %s" % index == item:
+            return check_temperature(float(reading_str)/10, params, "gude_temp.%s" % item)
 
 
 check_info['gude_temp'] = {
@@ -50,7 +55,8 @@ check_info['gude_temp'] = {
     'service_description'     : 'Temperature %s',
     'has_perfdata'            : True,
     'snmp_info'               : ('.1.3.6.1.4.1.28507', [ "19", "38" ], [
-                                      "1.6.1.1.2.1",  # GUDEADS-EPC****-MIB::epc****TempSensor
+                                    OID_END,
+                                    "1.6.1.1.2",    # GUDEADS-EPC****-MIB::epc****TempSensor
                                 ]),
     'snmp_scan_function'      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.19") or \
                                             oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.38"),

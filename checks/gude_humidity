@@ -34,12 +34,17 @@ gude_humidity_default_levels = (0, 0, 60, 70)
 
 
 def inventory_gude_humidity(info):
-    if info[0][0].split(".")[-1] != "-9999":
-        return [ ("Sensor", "gude_humidity_default_levels") ]
+    for oid_index, reading_str in info:
+        oid, index = oid_index.split(".")
+        if reading_str != "-9999":
+            yield "Sensor %s" % index, "gude_humidity_default_levels"
 
 
 def check_gude_humidity(item, params, info):
-    return check_humidity(float(info[0][0].split(".")[-1])/10, params)
+    for oid_index, reading_str in info:
+        oid, index = oid_index.split(".")
+        if "Sensor %s" % index == item:
+            return check_humidity(float(reading_str)/10, params)
 
 
 check_info['gude_humidity'] = {
@@ -48,7 +53,8 @@ check_info['gude_humidity'] = {
     'service_description'     : 'Humidity %s',
     'has_perfdata'            : True,
     'snmp_info'               : ('.1.3.6.1.4.1.28507', [ "19", "38" ], [
-                                      "1.6.1.1.3.1",  # GUDEADS-EPC****-MIB::epc****HygroSensor
+                                    OID_END,
+                                    "1.6.1.1.3",    # GUDEADS-EPC****-MIB::epc****HygroSensor
                                 ]),
     'snmp_scan_function'      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.19") or \
                                             oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.38"),

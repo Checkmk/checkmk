@@ -84,6 +84,7 @@
     * 3972 It's now possible to bulk notifications based on Event console contacts
     * 3900 FIX: Notification analysis: Fixed wrong color for host notification states
     * 3968 FIX: Notifications / Alert handling: Fixed configuring nth notifications without state changes...
+    * 4042 FIX: Fix missing From address in synchronous SMTP notifications...
 
     BI:
     * 3955 BI rule ID can now be renamed

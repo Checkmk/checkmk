@@ -1,6 +1,6 @@
 1.4.0i2p3:
     Multisite:
-    * 3938 FIX: tactical overview: fixed wrong display of number of service problems when stale services are available...
+    * 3938 FIX: tactical overview: fixed wrong display of number of host/service problems...
 
     WATO:
     * 3975 FIX: Improved error handling when trying to edit not existing global setting

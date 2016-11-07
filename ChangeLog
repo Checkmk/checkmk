@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * 3939 FIX: f5_bigip_conns: readded performance data and graphs...
+    * 3979 FIX: vbox_guest: Only try to fetch VBox state in case the vboxguest module is loaded
 
     Multisite:
     * 3938 FIX: tactical overview: fixed wrong display of number of host/service problems...

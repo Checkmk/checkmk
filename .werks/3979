@@ -1,0 +1,10 @@
+Title: vbox_guest: Only try to fetch VBox state in case the vboxguest module is loaded
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2p3
+Date: 1478529917
+
+

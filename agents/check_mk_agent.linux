@@ -518,7 +518,7 @@ fi
 # check would not be executed in case no guest additions are installed.
 # And that is something the check wants to detect
 echo '<<<vbox_guest>>>'
-if type VBoxControl >/dev/null 2>&1 ; then
+if type VBoxControl >/dev/null 2>&1 && lsmod | grep vboxguest >/dev/null 2>&1; then
     VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
     [ ${PIPESTATUS[0]} = 0 ] || echo "ERROR"
 fi

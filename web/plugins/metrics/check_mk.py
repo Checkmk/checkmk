@@ -1289,6 +1289,12 @@ metric_info["connections"] = {
     "color" : "#a080b0",
 }
 
+metric_info["connections_ssl"] = {
+    "title" : _("SSL connections"),
+    "unit"  : "count",
+    "color" : "13/a",
+}
+
 metric_info["connections_async_writing"] = {
     "title" : _("Asynchronous writing connections"),
     "unit"  : "count",
@@ -4351,6 +4357,11 @@ check_metrics["check_mk-openvpn_clients"] = {
 check_metrics["check_mk-f5_bigip_interfaces"] = {
     "bytes_in" : { "name" : "if_in_octets" },
     "bytes_out": { "name" : "if_out_octets" }
+}
+
+check_metrics["check_mk-f5_bigip_conns"] = {
+    "conns"     : { "name" : "connections" },
+    "ssl_conns" : { "name" : "connections_ssl" },
 }
 
 check_metrics["check_mk-mbg_lantime_state"] = {

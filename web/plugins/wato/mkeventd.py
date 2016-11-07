@@ -347,9 +347,7 @@ vs_mkeventd_rule = Dictionary(
                      "1. If you activate this option and do not specify any group, then "
                      "users with restricted permissions can never see these events.<br>"
                      "2. If both the host is found in the monitoring <b>and</b> contact groups are "
-                     "specified in the rule then usually the host's contact groups have precedence. "
-                     "But you can change that via a "
-                     "<a href=\"wato.py?mode=mkeventd_edit_configvar&varname=mkeventd_contact_group_handling\">global setting</a>.<br> "),
+                     "specified in the rule then usually the host's contact groups have precedence. "),
             optional_keys = [],
         )),
         ( "actions",

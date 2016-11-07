@@ -313,12 +313,21 @@ class TestCrawler(object):
 
     def update_total_stats(self, finished):
         stats = self.stats.setdefault("_TOTAL_", {})
+
         stats["last_num_visited"] = len(self.visited)
         stats["last_duration"]    = time.time() - self.started
         stats["last_errors"]      = self.errors
         stats["last_finished"]    = finished
 
         if finished:
+            if stats.get("last_finished_num_visited", 0) > 0:
+                perc = float(stats["last_num_visited"]) * 100 / stats["last_finished_num_visited"]
+                if perc < 80.0:
+                    self.error("Finished and walked %d URLs, previous run walked %d URLs. That "
+                               "is %0.2f %% of the previous run. Something seems to be wrong."
+                                 % (stats["last_num_visited"], stats["last_finished_num_visited"],
+                                    perc))
+
             stats["last_finished_num_visited"] = stats["last_num_visited"]
             stats["last_finished_duration"]    = stats["last_duration"]
             stats["last_finished_errors"]      = stats["last_errors"]

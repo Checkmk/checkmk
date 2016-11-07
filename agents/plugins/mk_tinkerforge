@@ -76,7 +76,6 @@ def install():
 
     import urllib2
     import shutil
-    from fnmatch import fnmatch
     from zipfile import ZipFile
     from cStringIO import StringIO
     url = "http://download.tinkerforge.com/bindings/python/tinkerforge_python_bindings_latest.zip"

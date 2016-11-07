@@ -324,7 +324,6 @@ def send_mail():
     now = time.time()
     key = random.randint(1, 1000)
 
-    from email.mime.text import MIMEText as text
     mail = email.mime.text.MIMEText("")
     mail['From']    = mail_from
     mail['To']      = mail_from

@@ -30,8 +30,10 @@ using std::vector;
 
 CommandsHolder::Command CommandsHolderNagios::find(string name) const {
     // Older Nagios headers are not const-correct... :-P
-    command *cmd = find_command(const_cast<char *>(name.c_str()));
-    return {cmd->name, cmd->command_line};
+    if (command *cmd = find_command(const_cast<char *>(name.c_str()))) {
+        return {cmd->name, cmd->command_line};
+    }
+    return {"", ""};
 }
 
 vector<CommandsHolder::Command> CommandsHolderNagios::commands() const {

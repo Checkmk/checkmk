@@ -30,6 +30,7 @@ import pprint
 import sys
 import tarfile
 import time
+import subprocess
 from cStringIO import StringIO
 
 import cmk.tty as tty
@@ -343,7 +344,8 @@ def create_mkp_file(package, file_name=None, file_object=None):
             for f in filenames:
                 logger.verbose("    %s", f)
             subtarname = part + ".tar"
-            subdata = os.popen("tar cf - --dereference --force-local -C '%s' %s" % (dir, " ".join(filenames))).read()
+            subdata = subprocess.check_output(["tar", "cf", "-", "--dereference", "--force-local",
+                                               "-C", dir] + filenames)
             info = create_info(subtarname, len(subdata))
             tar.addfile(info, StringIO(subdata))
     tar.close()
@@ -481,19 +483,23 @@ def install_package(file_name=None, file_object=None):
             logger.verbose("  %s%s%s:", tty.bold, title, tty.normal)
             for fn in filenames:
                 logger.verbose("    %s", fn)
+
             # make sure target directory exists
             if not os.path.exists(dir):
                 logger.verbose("    Creating directory %s", dir)
                 os.makedirs(dir)
+
             tarsource = tar.extractfile(part + ".tar")
-            subtar = "tar xf - -C %s %s" % (dir, " ".join(filenames))
-            tardest = os.popen(subtar, "w")
+
+            tardest = subprocess.Popen(["tar", "xf", "-", "-C", dir] + filenames,
+                                       stdin=subprocess.PIPE)
             while True:
                 data = tarsource.read(4096)
                 if not data:
                     break
-                tardest.write(data)
-            tardest.close()
+                tardest.stdin.write(data)
+
+            tardest.stdin.close()
 
             # Fix permissions of extracted files
             for filename in filenames:

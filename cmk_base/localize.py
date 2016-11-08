@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import sys, getopt, os, datetime
+import subprocess
 
 import cmk.tty as tty
 import cmk.paths
@@ -39,9 +40,6 @@ class LocalizeException(Exception):
     def __str__(self):
         return self.reason
 
-def verbose_system(command):
-    logger.verbose("Running %s...", command)
-    return os.system(command)
 
 domain = 'multisite'
 
@@ -150,15 +148,15 @@ def init_files(lang):
 def localize_update_po():
     # Merge the current .pot file with a given .po file
     logger.verbose("Merging translations...")
-    if verbose_system('msgmerge -U %s %s >/dev/null' % (po_file, pot_file)) != 0:
+    if subprocess.call(['msgmerge', '-U', po_file, pot_file], stdout=open(os.devnull, "wb")) != 0:
         logger.error('Failed!')
     else:
         logger.info('Success! Output: %s', po_file)
 
 
 def localize_init_po(lang):
-    if verbose_system('msginit -i %s --no-translator -l %s -o %s >/dev/null' % \
-                                            (pot_file, lang, po_file)) != 0:
+    if subprocess.call(['msginit', '-i', pot_file, '--no-translator', '-l', lang,
+                '-o', po_file], stdout=open(os.devnull, "wb")) != 0:
         logger.error('Failed!\n')
 
 
@@ -170,10 +168,19 @@ def localize_sniff():
     if os.path.exists(cmk.paths.local_web_dir):
         paths.append(cmk.paths.local_web_dir)
 
-    if verbose_system('xgettext --no-wrap --sort-output --force-po '
-                 '-L Python --from-code=utf-8 --omit-header '
-                 '-o %s $(find %s -type f -name \*.py -o -name \*.mk | xargs) >/dev/null' % \
-                   (pot_file, ' '.join(paths))) != 0:
+    sniff_files = []
+    for path in paths:
+        for root, dirs, files in os.walk(path):
+            for f in files:
+                if f.endswith(".py") or f.endswith(".mk"):
+                    sniff_files.append(os.path.join(root, f))
+
+    print len(files)
+
+    if subprocess.call(['xgettext', '--no-wrap', '--sort-output', '--force-po',
+                 '-L', 'Python', '--from-code=utf-8', '--omit-header',
+                 '-o', pot_file ] + sniff_files,
+                 stdout=open(os.devnull, "wb")) != 0:
         logger.error('Failed!\n')
     else:
         header = '''# +------------------------------------------------------------------+
@@ -226,7 +233,7 @@ def localize_edit(lang):
     if not os.path.exists(editor):
         editor = 'vi'
 
-    if 0 == verbose_system("%s '%s'" % (editor, po_file)):
+    if 0 == subprocess.call([editor, po_file]):
         localize_compile(lang)
     else:
         logger.error("Aborted.")
@@ -279,7 +286,7 @@ def localize_compile(lang):
     if not os.path.exists(po_file):
         raise LocalizeException('The .po file %s does not exist.' % po_file)
 
-    if verbose_system('msgfmt %s -o %s' % (po_file, mo_file)) != 0:
+    if subprocess.call(['msgfmt', po_file, '-o', mo_file]) != 0:
         logger.error('Failed!')
     else:
         logger.info('Success! Output: %s', mo_file)

@@ -440,7 +440,7 @@ class TicketInterface(object):
 
 class InterfaceGLPI(TicketInterface):
 
-    from xmlrpclib import ServerProxy, Error, ProtocolError, ResponseError, Fault
+    from xmlrpclib import ServerProxy, Error, ProtocolError, ResponseError, Fault # nosec
 
     urgency_map = {
         TicketInterface.Urgency.Low    : 1,

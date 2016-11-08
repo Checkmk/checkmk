@@ -93,7 +93,7 @@ else:
 try:
     command = "curl -u \"%s:%s\" -b /dev/null -L --noproxy localhost %s --silent '%s'" % \
                     (user, password, cert_option, url)
-    output = os.popen(command).read()
+    output = os.popen(command).read() # nosec
     data = eval(output)
 except:
     sys.stderr.write("Invalid output from URL %s:\n" % url)

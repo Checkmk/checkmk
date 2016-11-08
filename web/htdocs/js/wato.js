@@ -607,7 +607,8 @@ function handle_start_activation(_unused, response_json)
     var response = JSON.parse(response_json);
 
     if (response.result_code == 1) {
-        show_activation_error(response.result);       
+        show_activation_error(response.result);
+        lock_activation_controls(false);
     } else {
         monitor_activation_progress(response.result.activation_id);
     }

@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AndingFilter.h"
-#include <set>
 #include "Filter.h"
 
 using std::string;

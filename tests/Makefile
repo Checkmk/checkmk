@@ -17,16 +17,16 @@ test-bandit-ci:
 	# Currently only care about high severity reported issues. Once this is
 	# reached, go and enable the medium/low checks.
 	CMK_DIR="$(realpath ..)" ; \
-	CMC_DIR="$(realpath ..)" ; \
+	CMC_DIR="$(realpath ../../cmc/)" ; \
 	bandit \
 		-c "$$CMK_DIR/bandit.yaml" \
 		-r \
-		-f xml -o "$$WORKDIR/bandit_results.xml" \
 		-lll \
+		-f xml -o "$$WORKDIR/bandit_results.xml" \
 		"$$CMK_DIR" \
-		"$$CMK_DIR/checks/*" \
-		"$$CMK_DIR/inventory/*" \
-		"$$CMC_DIR"
+		"$$CMK_DIR"/{checks,inventory}/* \
+		"$$CMC_DIR" \
+		"$$CMC_DIR"/agents/{plugins,bakery}/*
 
 
 test-pylint-ci:

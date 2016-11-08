@@ -24,10 +24,7 @@
 
 #include "TableLog.h"
 #include <cstdint>
-#include <ctime>
 #include <map>
-#include <mutex>
-#include <string>
 #include <utility>
 #include "LogCache.h"
 #include "LogEntry.h"
@@ -43,6 +40,7 @@
 #include "TableServices.h"
 
 #ifndef CMC
+#include <mutex>
 #include "auth.h"
 #endif
 

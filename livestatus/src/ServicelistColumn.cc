@@ -28,7 +28,6 @@
 #include "ServicelistFilter.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
-#include "opids.h"
 
 extern TimeperiodsCache *g_timeperiods_cache;
 

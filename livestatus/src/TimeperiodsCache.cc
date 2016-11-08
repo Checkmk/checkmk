@@ -24,7 +24,6 @@
 
 #include "TimeperiodsCache.h"
 #include <cstring>
-#include <ctime>
 #include <ostream>
 #include <string>
 #include <utility>

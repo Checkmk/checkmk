@@ -26,7 +26,6 @@
 #include <cstdio>
 #include "DoubleFilter.h"
 #include "Renderer.h"
-#include "opids.h"
 
 using std::string;
 

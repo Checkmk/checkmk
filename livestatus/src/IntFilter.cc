@@ -26,9 +26,7 @@
 #include <cstdlib>
 #include <ostream>
 #include <utility>
-#include "IntColumn.h"
 #include "Logger.h"
-#include "opids.h"
 
 using std::move;
 using std::string;

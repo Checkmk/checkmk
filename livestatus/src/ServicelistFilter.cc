@@ -27,8 +27,6 @@
 #include <cstring>
 #include <ostream>
 #include "Logger.h"
-#include "ServicelistColumn.h"
-#include "nagios.h"
 
 using std::string;
 

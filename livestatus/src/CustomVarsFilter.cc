@@ -28,7 +28,6 @@
 #include <sstream>
 #include <tuple>
 #include "Column.h"
-#include "CustomVarsColumn.h"
 #include "Logger.h"
 #include "StringUtils.h"
 

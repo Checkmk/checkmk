@@ -30,7 +30,6 @@
 #include <ostream>
 #include <stdexcept>
 #include <utility>
-#include <vector>
 #include "Aggregator.h"
 #include "Column.h"
 #include "ColumnFilter.h"
@@ -39,13 +38,10 @@
 #include "Logger.h"
 #include "NegatingFilter.h"
 #include "NullColumn.h"
-#include "OutputBuffer.h"
 #include "StatsColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
-#include "VariadicFilter.h"
 #include "auth.h"
-#include "opids.h"
 #include "strutil.h"
 #include "waittriggers.h"
 

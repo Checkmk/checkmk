@@ -25,9 +25,7 @@
 #include "ListFilter.h"
 #include <algorithm>
 #include <ostream>
-#include "ListColumn.h"
 #include "Logger.h"
-#include "opids.h"
 
 using std::move;
 using std::string;

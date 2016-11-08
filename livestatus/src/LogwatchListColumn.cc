@@ -29,8 +29,6 @@
 
 #ifdef CMC
 #include "Host.h"
-#else
-#include "nagios.h"
 #endif
 
 using std::string;

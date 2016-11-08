@@ -29,7 +29,6 @@
 #include <cstring>
 #include <sstream>
 #include <utility>
-#include "Logger.h"
 
 using std::move;
 using std::ostream;

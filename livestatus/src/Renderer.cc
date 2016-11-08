@@ -32,7 +32,6 @@
 #include "RendererJSON.h"
 #include "RendererPython.h"
 #include "RendererPython3.h"
-#include "data_encoding.h"
 
 using std::chrono::system_clock;
 using std::hex;

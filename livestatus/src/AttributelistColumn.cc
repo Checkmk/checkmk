@@ -32,7 +32,6 @@
 #include "AttributelistFilter.h"
 #include "Logger.h"
 #include "Renderer.h"
-#include "opids.h"
 #include "strutil.h"
 class Filter;
 

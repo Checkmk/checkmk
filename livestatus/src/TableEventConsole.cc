@@ -23,15 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsole.h"
-#include <algorithm>
 #include <iosfwd>
 #include <iostream>
-#include <string>
 #include <utility>
-#include <vector>
 #include "Column.h"
 #include "EventConsoleConnection.h"
-#include "MonitoringCore.h"
 #include "Query.h"
 
 using std::ostream;

@@ -27,7 +27,6 @@
 #include <cstring>
 #include <ctime>
 #include <deque>
-#include <mutex>
 #include <ostream>
 #include <set>
 #include <utility>
@@ -59,6 +58,7 @@ class VariadicFilter;
 #define STATE_CRITICAL 2
 #define STATE_UNKNOWN 3
 #else
+#include <mutex>
 #include "auth.h"
 #endif
 

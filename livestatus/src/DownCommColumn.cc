@@ -25,12 +25,10 @@
 #include "DownCommColumn.h"
 #include <cstdlib>
 #include <ctime>
-#include <memory>
 #include <utility>
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"
 #include "Renderer.h"
-#include "nagios.h"
 
 using std::make_unique;
 using std::string;

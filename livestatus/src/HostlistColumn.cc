@@ -26,7 +26,6 @@
 #include "HostlistFilter.h"
 #include "Renderer.h"
 #include "auth.h"
-#include "opids.h"
 
 using std::string;
 

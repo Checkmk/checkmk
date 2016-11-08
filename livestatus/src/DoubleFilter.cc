@@ -25,9 +25,7 @@
 #include "DoubleFilter.h"
 #include <cstdlib>
 #include <ostream>
-#include "DoubleColumn.h"
 #include "Logger.h"
-#include "opids.h"
 
 using std::string;
 

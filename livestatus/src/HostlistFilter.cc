@@ -25,10 +25,7 @@
 #include "HostlistFilter.h"
 #include <ostream>
 #include <utility>
-#include "HostlistColumn.h"
 #include "Logger.h"
-#include "nagios.h"
-#include "opids.h"
 
 using std::move;
 using std::string;

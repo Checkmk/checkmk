@@ -25,7 +25,6 @@
 #include "StringColumn.h"
 #include "Renderer.h"
 #include "StringFilter.h"
-#include "opids.h"
 
 using std::string;
 

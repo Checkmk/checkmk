@@ -26,8 +26,6 @@
 #include <algorithm>
 #include <cstring>
 #include <sstream>
-#include "StringColumn.h"
-#include "opids.h"
 
 using std::move;
 using std::regex;

@@ -24,7 +24,6 @@
 
 #include "AttributelistFilter.h"
 #include <ostream>
-#include "AttributelistColumn.h"
 #include "Logger.h"
 
 AttributelistFilter::AttributelistFilter(AttributelistColumn *column,

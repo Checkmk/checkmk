@@ -25,11 +25,9 @@
 #include "LogCache.h"
 #include <dirent.h>
 #include <unistd.h>
-#include <chrono>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>
 #include <ostream>
 #include <string>
 #include <utility>

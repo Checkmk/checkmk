@@ -1059,6 +1059,7 @@ class ListOfStrings(ValueSpec):
         self._vertical = kwargs.get("orientation", "vertical") == "vertical"
         self._allow_empty = kwargs.get("allow_empty", True)
         self._empty_text  = kwargs.get("empty_text", "")
+        self._max_entries = kwargs.get("max_entries")
 
 
     def help(self):
@@ -1136,6 +1137,11 @@ class ListOfStrings(ValueSpec):
             else:
                 msg = _("Please specify at least one value")
             raise MKUserError(vp + "_0", msg)
+
+        if self._max_entries != None and len(value) > self._max_entries:
+            raise MKUserError(vp + "_%d" % self._max_entries,
+                  _("You can specify at most %d entries") % self._max_entries)
+
         if self._valuespec:
             for nr, s in enumerate(value):
                 self._valuespec.validate_value(s, vp + "_%d" % nr)

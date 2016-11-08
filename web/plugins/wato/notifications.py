@@ -24,6 +24,68 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+if config.mknotifyd_enabled:
+    smtp_sync_option = [(
+         'smtp',
+         Dictionary(
+             title = _("Enable synchronous delivery via SMTP"),
+             help = _("Configuring this to have the notification plugin connect directly to "
+                      "the smtp server. This has the advantage of providing better error "
+                      "messages in case of an error but it does require more configuration "
+                      "and is strictly synchronous so we advice use only on enterprise "
+                      "installations using the notification spooler."),
+             elements = [
+                 ("smarthosts",
+                  ListOfStrings(
+                      title = _("Smarthosts"),
+                      orientation = "horizontal",
+                      max_entries = 2,
+                      allow_empty = False,
+                  )),
+                 ("port",
+                  Integer(
+                      title = _("Port"),
+                      default_value = 25
+                  )),
+                 ("auth",
+                  Dictionary(
+                      title = _("Authentication"),
+                      elements = [
+                          ("method",
+                           DropdownChoice(
+                               title = _("Authmethod"),
+                               choices = [
+                                   ("plaintext", _("Plaintext"))
+                               ]
+                           )),
+                          ("user",
+                           TextAscii(
+                               title = _("User")
+                           )),
+                          ("password",
+                           Password(
+                               title = _("Password")
+                           ))
+                      ],
+                      optional_keys = []
+                  )),
+                 ("encryption",
+                  DropdownChoice(
+                      title = ("Encryption"),
+                      choices = [
+                          ("ssl_tls", _("SSL/TLS")),
+                          ("starttls", _("STARTTLS"))
+                      ]
+                  )),
+             ],
+             optional_keys = ["auth", "encryption"]
+         )
+    )]
+
+else:
+    smtp_sync_option = []
+
+
 register_notification_parameters(
     "mail",
     Dictionary(
@@ -78,6 +140,14 @@ register_notification_parameters(
                     default_value = [ "perfdata", "graph", "abstime", "address", "longoutput" ],
                 )
             ),
+            ( "insert_html_section",
+                TextAreaUnicode(
+                    title = _("Insert HTML section between body and table"),
+                    default_value = "<HTMLTAG>CONTENT</HTMLTAG>",
+                    cols = 40,
+                    rows = "auto",
+                ),
+            ),
             ( "url_prefix",
                 TextAscii(
                     title = _("URL prefix for links to Check_MK"),
@@ -115,69 +185,8 @@ register_notification_parameters(
                     title = _("Notification sort order for bulk notifications"),
                     default = "oldest_first"
                 )
-            ),
-            ('smtp',
-             Dictionary(
-                 title = _("Enable synchronous delivery via SMTP"),
-                 help = _("Configuring this to have the notification plugin connect directly to "
-                          "the smtp server. This has the advantage of providing better error "
-                          "messages in case of an error but it does require more configuration "
-                          "and is strictly synchronous so we advice use only on enterprise "
-                          "installations using the notification spooler."),
-                 elements = [
-                     ("smarthosts",
-                      ListOfStrings(
-                          title = _("Smarthosts"),
-                          orientation = "horizontal"
-                      )),
-                     ("port",
-                      Integer(
-                          title = _("Port"),
-                          default_value = 25
-                      )),
-                     ("auth",
-                      Dictionary(
-                          title = _("Authentication"),
-                          elements = [
-                              ("method",
-                               DropdownChoice(
-                                   title = _("Authmethod"),
-                                   choices = [
-                                       ("plaintext", _("Plaintext"))
-                                   ]
-                               )),
-                              ("user",
-                               TextAscii(
-                                   title = _("User")
-                               )),
-                              ("password",
-                               Password(
-                                   title = _("Password")
-                               ))
-                          ],
-                          optional_keys = []
-                      )),
-                     ("encryption",
-                      DropdownChoice(
-                          title = ("Encryption"),
-                          choices = [
-                              ("ssl_tls", _("SSL/TLS")),
-                              ("starttls", _("STARTTLS"))
-                          ]
-                      )),
-                 ],
-                 optional_keys = ["auth", "encryption"]
-             )
-            ),
-            ("insert_html_section",
-                TextAreaUnicode(
-                    title = _("Insert HTML section between body and table"),
-                    default_value = "<HTMLTAG>CONTENT</HTMLTAG>",
-                    cols = 40,
-                    rows = "auto",
-                ),
-            ),
-        ]
+            )
+        ] + smtp_sync_option
     )
 )
 

@@ -40,7 +40,7 @@ CLANG_TIDY         := clang-tidy-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 CPPCHECK           := cppcheck
 DOXYGEN            := doxygen
-IWYU_TOOL          := iwyu_tool.py
+IWYU_TOOL          := tests/iwyu_tool_jenkins.py
 BEAR               := bear
 
 # File to pack into livestatus-$(VERSION).tar.gz
@@ -297,7 +297,7 @@ tidy: compile_commands.json
 
 # Not really perfect rules, but better than nothing
 iwyu: compile_commands.json
-	@$(IWYU_TOOL) -p .
+	@$(IWYU_TOOL) --clang-style -p .
 
 # Not really perfect rules, but better than nothing
 analyze: livestatus/config.h

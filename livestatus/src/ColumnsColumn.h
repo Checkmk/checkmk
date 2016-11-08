@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "StringColumn.h"
-class TableColumns;
+#include "TableColumns.h"
 
 #define COLCOL_TABLE 1
 #define COLCOL_NAME 2

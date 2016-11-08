@@ -45,10 +45,9 @@
 import os, shutil, subprocess, base64, pickle, pwd
 import traceback
 import ast
-import threading
+import multiprocessing
 import tarfile
 import cStringIO
-import fcntl
 from lib import *
 from valuespec import *
 
@@ -189,12 +188,13 @@ def log_audit(linkinfo, action, message, user_id = None):
 
 def confirm_all_local_changes():
     site_id = config.omd_site()
-    repl_status = load_replication_status(lock=True)
 
     try:
+        repl_status = load_replication_status(lock=True)
         repl_status[site_id]["changes"] = []
     except KeyError:
         pass # No change for this site. Fine...
+
     finally:
         save_replication_status(repl_status)
 
@@ -279,7 +279,7 @@ class ConfigDomain(object):
         for domain_class in cls.__subclasses__(): # pylint: disable=no-member
             if domain_class.ident == ident:
                 return domain_class
-        raise NotImplementedError()
+        raise NotImplementedError(_("The domain \"%s\" does not exist") % ident)
 
 
     def activate(self):
@@ -304,6 +304,17 @@ class ConfigDomainGUI(ConfigDomain):
 
     def activate(self):
         pass
+
+
+
+class ConfigDomainDiskspace(ConfigDomain):
+    needs_sync       = True
+    needs_activation = False
+    ident            = "diskspace"
+
+    def activate(self):
+        pass
+
 
 
 class ConfigDomainEventConsole(ConfigDomain):
@@ -3429,12 +3440,11 @@ def sync_changes_before_remote_automation(site_id):
 
     logger(LOG_INFO, "Syncing %s" % site_id)
 
-    activation_id = manager.start([site_id], manager.get_last_change_id(), activate_foreign=True,
-                                  prevent_activate=True)
+    activation_id = manager.start([site_id], activate_foreign=True, prevent_activate=True)
 
     # Wait maximum 30 seconds for sync to finish
     timeout = 30
-    while manager.is_running(site_id) and timeout > 0.0:
+    while manager.is_running() and timeout > 0.0:
         time.sleep(0.5)
         timeout -= 0.5
 
@@ -3578,19 +3588,20 @@ def clear_replication_status(site_id):
 # Updates one or more dict elements of a site in an atomic way.
 def update_replication_status(site_id, vars, changes=None):
     make_nagios_directory(var_dir)
+
     repstatus = load_replication_status(lock=True)
+    try:
+        repstatus.setdefault(site_id, {})
+        repstatus[site_id].setdefault("times", {})
+        repstatus[site_id].setdefault("changes", [])
 
-    repstatus.setdefault(site_id, {})
-    repstatus[site_id].setdefault("times", {})
-    repstatus[site_id].setdefault("changes", [])
+        repstatus[site_id].update(vars)
 
-    repstatus[site_id].update(vars)
-
-    # Optionally add new pending change entries
-    if changes:
-        repstatus[site_id]["changes"] += changes
-
-    save_replication_status(repstatus)
+        # Optionally add new pending change entries
+        if changes:
+            repstatus[site_id]["changes"] += changes
+    finally:
+        save_replication_status(repstatus)
 
 
 # Returns a list of site ids where users can login
@@ -3871,8 +3882,12 @@ class ActivateChanges(object):
         return manager.get_site_state(site_id)
 
 
-    def get_last_change_id(self):
+    def _get_last_change_id(self):
         return self._changes[-1][1]["id"]
+
+
+    def has_changes(self):
+        return bool(self._changes)
 
 
     def has_foreign_changes(self):
@@ -3928,10 +3943,15 @@ class ActivateChangesManager(ActivateChanges):
     # For each site a separate thread is started that controls the activation of the
     # configuration on that site. The state is checked by the general activation
     # thread.
-    def start(self, sites, activate_until, comment=None, activate_foreign=False,
+    def start(self, sites, activate_until=None, comment=None, activate_foreign=False,
               prevent_activate=False):
         self._sites            = self._get_sites(sites)
-        self._activate_until   = activate_until
+
+        if activate_until == None:
+            self._activate_until = self._get_last_change_id()
+        else:
+            self._activate_until   = activate_until
+
         self._comment          = comment
         self._activate_foreign = activate_foreign
         self._activation_id    = self._new_activation_id()
@@ -3965,32 +3985,35 @@ class ActivateChangesManager(ActivateChanges):
         return self._activate_until
 
 
+    def wait_for_completion(self):
+        while self.is_running():
+            time.sleep(0.5)
+
+
     # Check whether or not at least one site thread is still working
     # (flock on the <activation_id>/site_<site_id>.mk file)
-    def is_running(self, site_id):
-        # Short after start the thread has not yet created nor locked the
-        # state path. Wait some time for it.
-        lock_fd, timeout = None, 3.0
-        while lock_fd is None and timeout > 0:
+    def is_running(self):
+        state = self.get_state()
+
+        for site_id in self._sites:
+            site_state = state["sites"][site_id]
+
+            if site_state == {} or site_state["_phase"] == PHASE_INITIALIZED:
+                # Just been initialized. Treat as running as it has not been
+                # started and could not lock the site stat file yet.
+                return True # -> running
+
+            # Check whether or not the process is still there
             try:
-                lock_fd = os.open(self._site_state_path(site_id), os.O_RDONLY)
+                os.kill(site_state["_pid"], 0)
+                return True # -> running
             except OSError, e:
-                if e.errno == 2:
-                    time.sleep(0.5)
-                    timeout -= 0.5
-                    continue # No such file or directory
+                if e.errno == 3:
+                    pass # -> not running
                 else:
                     raise
 
-        if lock_fd is None:
-            raise MKGeneralException(_("Sites \"%s\" sync thread did not start") % site_id)
-
-        try:
-            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            fcntl.flock(lock_fd, fcntl.LOCK_UN)
-            return False # -> Not running!
-        except IOError, e:
-            return True # -> Running!
+        return False # No site reported running -> not running
 
 
     def _new_activation_id(self):
@@ -4056,7 +4079,7 @@ class ActivateChangesManager(ActivateChanges):
         if not self._changes:
             raise MKUserError(None, _("Currently there are no changes to activate."))
 
-        if self.get_last_change_id() != self._activate_until:
+        if self._get_last_change_id() != self._activate_until:
             raise MKUserError(None,
                               _("Another change has been made in the meantime. Please review it "
                                 "to ensure you also want to activate it now and start the "
@@ -4076,7 +4099,7 @@ class ActivateChangesManager(ActivateChanges):
     def _create_site_sync_snapshot(self, site_id):
         has_foreign = self._site_has_foreign_changes(site_id)
 
-        if has_foreign and config.user.may("wato.activateforeign"):
+        if has_foreign and not config.user.may("wato.activateforeign"):
             raise MKUserError(None,
                 _("There are some changes made by your colleagues that you can not "
                   "activate because you are not permitted to. You can only activate "
@@ -4142,8 +4165,19 @@ class ActivateChangesManager(ActivateChanges):
 
     def _start_site_activation(self, site_id):
         self._log_activation(site_id)
+
+        # This is doing the first fork and the ActivateChangesSite() is doing the second
+        # (to avoid zombie processes when sync processes exit)
+        p = multiprocessing.Process(target=self._do_start_site_activation, args=[site_id])
+        p.start()
+        p.join()
+
+
+    def _do_start_site_activation(self, site_id):
         ActivateChangesSite(site_id, self._activation_id,
                             self._site_snapshot_file(site_id), self._prevent_activate).start()
+        p.start()
+        os._exit(0)
 
 
     def _log_activation(self, site_id):
@@ -4198,9 +4232,7 @@ class ActivateChangesManager(ActivateChanges):
                         delete = True
                         raise
 
-                    running_sites = [ site_id for site_id in self._sites
-                                          if manager.is_running(site_id) ]
-                    delete = not running_sites
+                    delete = not manager.is_running()
                 finally:
                     if delete:
                         shutil.rmtree("%s/%s" %
@@ -4221,11 +4253,12 @@ class ActivateChangesManager(ActivateChanges):
 
 
 
-PHASE_STARTED   = "started"   # Just started, nothing happened yet
-PHASE_SYNC      = "sync"      # About to sync
-PHASE_ACTIVATE  = "activate"  # sync done activating changes
-PHASE_FINISHING = "finishing" # Remote work done, finalizing local state
-PHASE_DONE      = "done"      # Done (with good or bad result)
+PHASE_INITIALIZED = "initialized" # Thread object has been initialized (not in thread yet)
+PHASE_STARTED     = "started"     # Thread just started, nothing happened yet
+PHASE_SYNC        = "sync"        # About to sync
+PHASE_ACTIVATE    = "activate"    # sync done activating changes
+PHASE_FINISHING   = "finishing"   # Remote work done, finalizing local state
+PHASE_DONE        = "done"        # Done (with good or bad result)
 
 # PHASE_DONE can have these different states:
 
@@ -4239,14 +4272,13 @@ ACTIVATION_TIME_RESTART      = "restart"
 ACTIVATION_TIME_SYNC         = "sync"
 ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
-class ActivateChangesSite(threading.Thread, ActivateChanges):
+class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
     def __init__(self, site_id, activation_id, site_snapshot_file, prevent_activate=False):
         super(ActivateChangesSite, self).__init__()
 
         self._site_id           = site_id
         self._activation_id     = activation_id
         self._snapshot_file     = site_snapshot_file
-        self._running_fd        = None
         self.daemon             = True
         self._prevent_activate  = prevent_activate
 
@@ -4259,7 +4291,11 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         self._state             = None
         self._status_text       = None
         self._status_details    = None
+        self._warnings          = []
+        self._pid               = None
         self._expected_duration = self._get_expected_duration()
+
+        self._set_result(PHASE_INITIALIZED, _("Initialized"))
 
 
     def _load_changes(self):
@@ -4282,8 +4318,6 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
     def run(self):
         try:
             self._time_started = time.time()
-            self._set_result(PHASE_STARTED, _("Started"))
-
             self._lock_activation()
 
             if self.is_sync_needed(self._site_id):
@@ -4326,6 +4360,7 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         if not has_warnings:
             self._set_result(PHASE_DONE, _("Success"), state=STATE_SUCCESS)
         else:
+            self._warnings = configuration_warnings
             details = self._render_warnings(configuration_warnings)
             self._set_result(PHASE_DONE, _("Activated"), details, state=STATE_WARNING)
 
@@ -4346,17 +4381,17 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
     def _lock_activation(self):
         # This locks the global replication status file
         repstatus = load_replication_status(lock=True)
+        try:
+            if self._is_currently_activating(repstatus.get(self._site_id, {})):
+                raise MKGeneralException(_("The site is currently locked by another activation process. Please try again later"))
 
-        if self._is_currently_activating(repstatus.get(self._site_id, {})):
-            raise MKGeneralException(_("The site is currently locked by another activation process. Please try again later"))
-
-        # This is needed to detect stale activation progress entries
-        # (where activation thread is not running anymore)
-        self._mark_running()
-
-        # This call unlocks the replication status file after setting "current_activation"
-        # which will prevent other users from starting an activation for this site.
-        update_replication_status(self._site_id, {"current_activation": self._activation_id})
+            # This is needed to detect stale activation progress entries
+            # (where activation thread is not running anymore)
+            self._mark_running()
+        finally:
+            # This call unlocks the replication status file after setting "current_activation"
+            # which will prevent other users from starting an activation for this site.
+            update_replication_status(self._site_id, {"current_activation": self._activation_id})
 
 
     def _is_currently_activating(self, rep_status):
@@ -4376,23 +4411,15 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         except MKUserError:
             return False # Not existant anymore!
 
-        if manager.is_running(self._site_id):
+        if manager.is_running():
             return True
 
         return False
 
 
     def _mark_running(self):
-        self._running_fd = os.open(self._state_path(), os.O_RDONLY)
-        try:
-            fcntl.flock(self._running_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            # -> locked :-)
-        except IOError, e:
-            raise MKUserError(None, _("Failed to mark the activation as running: %s" % e))
-
-
-    def _mark_finished(self):
-        fcntl.flock(self._running_fd, fcntl.LOCK_UN)
+        self._pid = os.getpid()
+        self._set_result(PHASE_STARTED, _("Started"))
 
 
     def _unlock_activation(self):
@@ -4400,7 +4427,6 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
             "last_activation"    : self._activation_id,
             "current_activation" : None,
         })
-        self._mark_finished()
 
 
     # This is done on the central site to initiate the sync process
@@ -4464,7 +4490,6 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         start = time.time()
 
         configuration_warnings = self._call_activate_changes_automation()
-        html.debug(configuration_warnings)
 
         duration = time.time() - start
         self._update_activation_time(ACTIVATION_TIME_RESTART, duration)
@@ -4528,20 +4553,20 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
 
     def _update_activation_time(self, ty, duration):
         repstatus = load_replication_status(lock=True)
+        try:
+            repstatus.setdefault(self._site_id, {})
+            times = repstatus[self._site_id].setdefault("times", {})
 
-        repstatus.setdefault(self._site_id, {})
-        times = repstatus[self._site_id].setdefault("times", {})
-
-        if ty not in times:
-            times[ty] = duration
-        else:
-            times[ty] = 0.8 * times[ty] + 0.2 * duration
-
-        save_replication_status(repstatus)
+            if ty not in times:
+                times[ty] = duration
+            else:
+                times[ty] = 0.8 * times[ty] + 0.2 * duration
+        finally:
+            save_replication_status(repstatus)
 
 
     def _get_activation_times(self):
-        repstatus = load_replication_status(lock=False)
+        repstatus = load_replication_status()
         return repstatus.get(self._site_id, {}).get("times", {})
 
 
@@ -4567,7 +4592,8 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
         self._phase          = phase
         self._status_text    = status_text
 
-        self._set_status_details(phase, status_details)
+        if phase != PHASE_INITIALIZED:
+            self._set_status_details(phase, status_details)
 
         self._time_updated = time.time()
         if phase == PHASE_DONE:
@@ -4602,10 +4628,12 @@ class ActivateChangesSite(threading.Thread, ActivateChanges):
             "_state"            : self._state,
             "_status_text"      : self._status_text,
             "_status_details"   : self._status_details,
+            "_warnings"         : self._warnings,
             "_time_started"     : self._time_started,
             "_time_updated"     : self._time_updated,
             "_time_ended"       : self._time_ended,
             "_expected_duration": self._expected_duration,
+            "_pid"              : self._pid,
         })
 
 

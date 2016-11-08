@@ -101,6 +101,7 @@ def page_api():
     except Exception, e:
         if config.debug:
             raise
+        log_exception()
         response = { "result_code": 1, "result": "%s" % e }
 
     if html.output_format == "json":

@@ -294,7 +294,7 @@ api_actions["discover_services"] = {
 
 # TODO: Recode to new activation code
 def action_activate_changes(request):
-    validate_request_keys(request, ["mode", "sites", "allow_foreign_changes"])
+    validate_request_keys(request, ["mode", "sites", "allow_foreign_changes", "comment"])
 
     mode = html.var("mode") and html.var("mode") or "dirty"
     if html.var("allow_foreign_changes"):
@@ -318,23 +318,22 @@ def action_activate_changes(request):
             if site not in config.allsites().keys():
                 raise MKUserError(None, _("Unknown site %s") % html.attrencode(site))
 
-    ### Start activate changes
-    errors    = []
-    repstatus = load_replication_status()
-    for site in config.allsites().values():
-        if mode == "all" or (mode == "dirty" and repstatus.get(site["id"],{}).get("need_restart")) or\
-            (sites and site["id"] in sites):
-            try:
-                synchronize_site(site, True)
-            except Exception, e:
-                errors.append("%s: %s" % (site["id"], e))
-            if not config.site_is_local(site["id"]):
-                remove_sync_snapshot(site["id"])
 
-    if not errors:
-        log_commit_pending()
-    else:
-        raise MKUserError(None, ", ".join(errors))
+    manager = ActivateChangesManager()
+
+    if not manager.has_changes():
+        raise MKUserError(None, _("Currently there are no changes to activate."))
+
+    if not sites:
+        sites = manager.dirty_and_active_activation_sites()
+
+    comment = request.get("comment", "").strip()
+    if comment == "":
+        comment = None
+
+    manager.start(sites, comment=comment, activate_foreign=allow_foreign_changes)
+    manager.wait_for_completion()
+    return manager.get_state()
 
 api_actions["activate_changes"] = {
     "handler"         : action_activate_changes,

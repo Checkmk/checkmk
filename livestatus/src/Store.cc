@@ -27,6 +27,7 @@
 #include <cstring>
 #include <ctime>
 #include <ostream>
+#include <memory>
 #include <utility>
 #include <vector>
 #include "EventConsoleConnection.h"

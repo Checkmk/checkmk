@@ -3524,6 +3524,26 @@ def wato_slave_sites():
                                                   if site.get("replication") ]
 
 
+# Returns a list of site ids which are WATO slave sites and users can login
+def get_login_sites():
+    sites = []
+    for site_id, site in wato_slave_sites():
+        if site.get('user_login', True) and not config.site_is_local(site_id):
+            sites.append(site_id)
+    return sites
+
+
+# Returns a list of site ids which gets the Event Console configuration replicated
+def get_event_console_sync_sites():
+    sites = []
+    for site_id, site in config.sites.items():
+        if config.site_is_local(site_id) or site.get("replicate_ec"):
+            sites.append(site_id)
+    return sites
+
+
+
+
 def declare_site_attribute():
     undeclare_host_attribute("site")
     declare_host_attribute(SiteAttribute(), show_in_table = True, show_in_folder = True)
@@ -3602,24 +3622,6 @@ def update_replication_status(site_id, vars, changes=None):
             repstatus[site_id]["changes"] += changes
     finally:
         save_replication_status(repstatus)
-
-
-# Returns a list of site ids where users can login
-def get_login_sites():
-    sites = []
-    for site_id, site in config.sites.items():
-        if site.get('user_login', True) and not config.site_is_local(site_id):
-            sites.append(site_id)
-    return sites
-
-
-# Returns a list of site ids which gets the Event Console configuration replicated
-def get_event_console_sync_sites():
-    sites = []
-    for site_id, site in config.sites.items():
-        if config.site_is_local(site_id) or site.get("replicate_ec"):
-            sites.append(site_id)
-    return sites
 
 
 def automation_push_snapshot():
@@ -3725,7 +3727,7 @@ def push_user_profile_to_site(site, user_id, profile):
     return response
 
 
-def synchronize_profile(site, user_id):
+def synchronize_profile(site_id, site, user_id):
     users = userdb.load_users(lock = False)
     if not user_id in users:
         raise MKUserError(None, _('The requested user does not exist'))
@@ -3733,8 +3735,7 @@ def synchronize_profile(site, user_id):
     start = time.time()
     result = push_user_profile_to_site(site, user_id, users[user_id])
     duration = time.time() - start
-    # TODO: Auf neue Funktionen umbauen
-    update_replication_status(site["id"], {}, {ACTIVATION_TIME_PROFILE_SYNC: duration})
+    ActivateChanges().update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC, duration)
     return result
 
 
@@ -3749,9 +3750,10 @@ def ajax_profile_repl():
     else:
         site = config.site(site_id)
         try:
-            result = synchronize_profile(site, config.user.id)
+            result = synchronize_profile(site_id, site, config.user.id)
         except Exception, e:
-            result = str(e)
+            log_exception()
+            result = "%s" % e
 
     if result == True:
         answer = "0 %s" % _("Replication completed successfully.");
@@ -3906,6 +3908,29 @@ class ActivateChanges(object):
 
     def _affects_all_sites(self, change):
         return len(change["affected_sites"]) == len(config.sitenames())
+
+
+    def update_activation_time(self, site_id, ty, duration):
+        repstatus = load_replication_status(lock=True)
+        try:
+            repstatus.setdefault(site_id, {})
+            times = repstatus[site_id].setdefault("times", {})
+
+            if ty not in times:
+                times[ty] = duration
+            else:
+                times[ty] = 0.8 * times[ty] + 0.2 * duration
+        finally:
+            save_replication_status(repstatus)
+
+
+    def get_activation_times(self, site_id):
+        repstatus = load_replication_status()
+        return repstatus.get(site_id, {}).get("times", {})
+
+
+    def get_activation_time(self, site_id, ty, deflt=None):
+        return self.get_activation_times(site_id).get(ty, deflt)
 
 
 
@@ -4252,7 +4277,6 @@ class ActivateChangesManager(ActivateChanges):
 
 
 
-
 PHASE_INITIALIZED = "initialized" # Thread object has been initialized (not in thread yet)
 PHASE_STARTED     = "started"     # Thread just started, nothing happened yet
 PHASE_SYNC        = "sync"        # About to sync
@@ -4438,7 +4462,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         result = self._push_snapshot_to_site()
 
         duration = time.time() - start
-        self._update_activation_time(ACTIVATION_TIME_SYNC, duration)
+        self.update_activation_time(self._site_id, ACTIVATION_TIME_SYNC, duration)
 
         # Pre 1.2.7i3 and sites return True on success and a string on error.
         # 1.2.7i3 and later return a list of warning messages on success.
@@ -4492,7 +4516,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         configuration_warnings = self._call_activate_changes_automation()
 
         duration = time.time() - start
-        self._update_activation_time(ACTIVATION_TIME_RESTART, duration)
+        self.update_activation_time(self._site_id, ACTIVATION_TIME_RESTART, duration)
         return configuration_warnings
 
 
@@ -4549,25 +4573,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             if change["need_restart"]:
                 domains.update(change["domains"])
         return sorted(list(domains))
-
-
-    def _update_activation_time(self, ty, duration):
-        repstatus = load_replication_status(lock=True)
-        try:
-            repstatus.setdefault(self._site_id, {})
-            times = repstatus[self._site_id].setdefault("times", {})
-
-            if ty not in times:
-                times[ty] = duration
-            else:
-                times[ty] = 0.8 * times[ty] + 0.2 * duration
-        finally:
-            save_replication_status(repstatus)
-
-
-    def _get_activation_times(self):
-        repstatus = load_replication_status()
-        return repstatus.get(self._site_id, {}).get("times", {})
 
 
     def _confirm_activated_changes(self):
@@ -4643,7 +4648,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
     def _get_expected_duration(self):
-        times = self._get_activation_times()
+        times = self.get_activation_times(self._site_id)
         duration = 0.0
 
         if self.is_sync_needed(self._site_id):

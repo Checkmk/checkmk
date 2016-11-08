@@ -9645,6 +9645,8 @@ def automation_push_profile():
     if not profile:
         raise MKGeneralException(_('Invalid call: The profile is missing.'))
 
+    init_wato_datastructures()
+
     users = userdb.load_users(lock = True)
     profile = mk_eval(profile)
     users[user_id] = profile
@@ -13950,8 +13952,6 @@ def user_profile_async_replication_page():
 
 
 def user_profile_async_replication_dialog():
-    slave_sites = wato_slave_sites()
-    sort_sites(slave_sites)
     repstatus = load_replication_status()
 
     html.message(_('In order to activate your changes available on all remote sites, your user profile needs '
@@ -13962,13 +13962,9 @@ def user_profile_async_replication_dialog():
     html.h3(_('Replication States'))
     html.open_div(id_="profile_repl")
     num_replsites = 0
-    for site_id, site in slave_sites:
-        is_local = config.site_is_local(site_id)
-
-        if is_local or (not is_local and not site.get("replication")):
-            continue # Skip non replication slaves
-
-        srs = repstatus.get(site_id, {})
+    for site_id in get_login_sites():
+        site = config.sites[site_id]
+        srs  = repstatus.get(site_id, {})
 
         if not "secret" in site:
             status_txt = _('Not logged in.')
@@ -13983,7 +13979,7 @@ def user_profile_async_replication_dialog():
 
         html.icon(status_txt, icon)
         if start_sync:
-            estimated_duration = srs.get("times", {}).get(ACTIVATION_TIME_PROFILE_SYNC, 2.0)
+            estimated_duration = ActivateChanges().get_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC, 2.0)
             html.javascript('wato_do_profile_replication(\'%s\', %d, \'%s\');' %
                       (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
             num_replsites += 1
@@ -14092,9 +14088,10 @@ def page_user_profile(change_pw=False):
 
                     password_changed = True
 
-            # Now, if in distributed environment, set the trigger for pushing the new
-            # auth information to the slave sites asynchronous
-            if has_wato_slave_sites():
+            # Now, if in distributed environment where users can login to remote sites,
+            # set the trigger for pushing the new auth information to the slave sites
+            # asynchronous
+            if get_login_sites():
                 start_async_replication = True
 
             userdb.save_users(users)

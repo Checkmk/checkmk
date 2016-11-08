@@ -124,6 +124,9 @@ def load_data_from_file(path, default=None, lock=False):
                 raise
 
     except Exception, e:
+        if lock:
+            release_lock(path)
+
         # TODO: How to handle debug mode or logging?
         raise MKGeneralException(_("Cannot read file \"%s\": %s") % (path, e))
 
@@ -151,6 +154,10 @@ def save_data_to_file(path, data, pretty=True):
 # Then the new file is written to a temporary file and moved to the target path
 def save_file(path, content, mode=0660):
     try:
+        # Normally the file is already locked (when data has been loaded before with lock=True),
+        # but lock it just to be sure we have the lock on the file
+        aquire_lock(path)
+
         tmp_path = None
         with tempfile.NamedTemporaryFile("w", dir=os.path.dirname(path),
                                          prefix=".%s.new" % os.path.basename(path),

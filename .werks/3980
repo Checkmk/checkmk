@@ -1,0 +1,10 @@
+Title: Fixed possible flickering GUI when using Chrome and zooming the page
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p14
+Date: 1478686590
+
+

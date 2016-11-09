@@ -410,19 +410,6 @@ function set_sidebar_size() {
     var oFooter  = document.getElementById('side_footer');
     var height   = pageHeight();
 
-    // Resize sidebar frame on Chrome (and other webkit browsers).
-    if (isWebkit()) {
-        var oldcols = parent.document.body.cols.split(",");
-        var oldwidth = parseInt(oldcols[0]);
-        var width = parent.frames[0].pageWidth();
-        // Note: previously this was "var width = oHeader.clientWidth;" and worked
-        // fine. It stopped working - probably with new Chrome versions. We do not
-        // know yet if the new way also works on old Chrome versions.
-        var target_width = parseInt(oldwidth * sidebar_width() / width);
-        var newcols = target_width.toString() + ",*";
-        parent.document.body.cols = newcols;
-    }
-
     // Don't handle zero heights
     if (height == 0)
       return;

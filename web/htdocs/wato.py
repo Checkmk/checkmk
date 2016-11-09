@@ -111,9 +111,9 @@ except ImportError:
     import json
 
 g_html_head_open = False
+display_options  = None
 
 wato_styles = [ "pages", "wato", "status" ]
-
 
 def init_wato_datastructures():
     create_sample_config()        # if called for the very first time!
@@ -1970,8 +1970,8 @@ def rename_hosts_in_check_mk(renamings):
             [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs])
 
         # Restart is done by remote automation (below), so don't do it during rename/sync
+        # The sync is automatically done by the remote automation call
         add_change("renamed-hosts", message, sites=[site_id], need_restart=False)
-        synchronize_site(site, restart=False)
 
         new_counts = check_mk_automation(site_id, "rename-hosts", [], name_pairs)
 
@@ -4865,7 +4865,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
 
 
     def _change_table(self):
-        table.begin("changes", sortable=False, searchable=False, css="changes")
+        table.begin("changes", sortable=False, searchable=False, css="changes", limit=None)
         for change_id, change in reversed(self._changes):
             css = []
             if self._is_foreign(change):
@@ -5034,11 +5034,11 @@ class ModeAjaxStartActivation(WatoWebApiMode):
 
         manager = ActivateChangesManager()
 
-        sites = request.get("sites", "").strip()
-        if not sites:
-            sites = manager.dirty_and_active_activation_sites()
+        affected_sites = request.get("sites", "").strip()
+        if not affected_sites:
+            affected_sites = manager.dirty_and_active_activation_sites()
         else:
-            sites = sites.split(",")
+            affected_sites = affected_sites.split(",")
 
         comment = request.get("comment", "").strip()
         if comment == "":
@@ -5046,7 +5046,7 @@ class ModeAjaxStartActivation(WatoWebApiMode):
 
         activate_foreign = request.get("activate_foreign", "0") == "1"
 
-        activation_id = manager.start(sites, activate_until, comment, activate_foreign)
+        activation_id = manager.start(affected_sites, activate_until, comment, activate_foreign)
 
         return {
             "activation_id": activation_id,
@@ -5080,7 +5080,7 @@ def do_activate_changes_automation():
     try:
         domains = ast.literal_eval(html.var("domains"))
     except SyntaxError:
-        raise MKAutomationException(_("Garbled automation response: '%s'") % response_text)
+        raise MKAutomationException(_("Garbled automation response: '%s'") % html.var("domains"))
 
     return execute_activate_changes(domains)
 

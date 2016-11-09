@@ -50,6 +50,7 @@ import tarfile
 import cStringIO
 from lib import *
 from valuespec import *
+from hashlib import sha256
 
 import config, hooks, userdb, multitar
 import sites
@@ -323,7 +324,9 @@ class ConfigDomainEventConsole(ConfigDomain):
 
     def activate(self):
         if getattr(config, "mkeventd_enabled", False):
-            mkeventd_reload()
+            mkeventd.execute_command("RELOAD", site=config.omd_site())
+            log_audit(None, "mkeventd-activate",
+                      _("Activated changes of event console configuration"))
             call_hook_mkeventd_activate_changes()
 
 
@@ -1283,7 +1286,7 @@ class Folder(BaseFolder):
     def all_site_ids(self):
         site_ids = set()
         self._add_all_sites_to_set(site_ids)
-        return site_ids
+        return list(site_ids)
 
 
     def title_path(self, withlinks = False):
@@ -1554,7 +1557,7 @@ class Folder(BaseFolder):
             raise MKUserError(None, _("Cannot move folder: A folder with this name already exists in the target folder."))
 
         # 2. Actual modification
-        affected_sites = [subfolder.all_site_ids()]
+        affected_sites = subfolder.all_site_ids()
         old_filesystem_path = subfolder.filesystem_path()
         del self._subfolders[subfolder.name()]
         subfolder._parent = target_folder
@@ -1562,7 +1565,7 @@ class Folder(BaseFolder):
         shutil.move(old_filesystem_path, subfolder.filesystem_path())
         subfolder.rewrite_hosts_files() # fixes changed inheritance
         Folder.invalidate_caches()
-        affected_sites = list(set(affected_sites + [subfolder.all_site_ids()]))
+        affected_sites = list(set(affected_sites + subfolder.all_site_ids()))
         add_change("move-folder",
             _("Moved folder %s to %s") % (subfolder.alias_path(), target_folder.alias_path()),
             obj=subfolder,
@@ -1722,7 +1725,7 @@ class Folder(BaseFolder):
         changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
         add_change("rename-parent",
             _("Renamed parent (set in folder) from %s to %s") % (self.path(), oldname, newname),
-            obj=self, sites=[self.all_site_ids()])
+            obj=self, sites=self.all_site_ids())
         self.save_hosts()
         self.save()
         return changed
@@ -3726,11 +3729,6 @@ def verify_slave_site_config(site_id):
         raise MKGeneralException(message)
 
 
-def mkeventd_reload():
-    mkeventd.execute_command("RELOAD", site=config.omd_site())
-    log_audit(None, "mkeventd-activate", _("Activated changes of event console configuration"))
-
-
 # TODO: Recode to new sync?
 def push_user_profile_to_site(site, user_id, profile):
     url = site["multisiteurl"] + "automation.py?" + html.urlencode_vars([
@@ -4123,7 +4121,7 @@ class ActivateChangesManager(ActivateChanges):
             log_exception()
             if config.debug:
                 raise
-            raise MKUserError(None, _("Can not start activation: %s" % e))
+            raise MKUserError(None, _("Can not start activation: %s") % e)
 
 
     # Lock WATO modifications during snapshot creation
@@ -4230,7 +4228,6 @@ class ActivateChangesManager(ActivateChanges):
     def _do_start_site_activation(self, site_id):
         ActivateChangesSite(site_id, self._activation_id,
                             self._site_snapshot_file(site_id), self._prevent_activate).start()
-        p.start()
         os._exit(0)
 
 
@@ -4501,7 +4498,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             result = True
 
         if result != True:
-            raise MKGeneralException(_("Failed to synchronize with site: %s" % result))
+            raise MKGeneralException(_("Failed to synchronize with site: %s") % result)
 
 
     def _push_snapshot_to_site(self):

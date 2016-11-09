@@ -139,6 +139,8 @@ def ajax_set_rowselection():
 #   | An upper-case char means enabled, lower-case means disabled.         |
 #   '----------------------------------------------------------------------'
 
+display_options = None
+
 class DisplayOptions(object):
     H = "H" # The HTML header and body-tag (containing the tags <HTML> and <BODY>)
     T = "T" # The title line showing the header and the logged in user
@@ -236,5 +238,9 @@ class DisplayOptions(object):
 
 
 def prepare_display_options(context):
-    context["display_options"] = DisplayOptions()
-    context["display_options"].load_from_html()
+    global display_options
+
+    display_options = DisplayOptions()
+    display_options.load_from_html()
+
+    context["display_options"] = display_options

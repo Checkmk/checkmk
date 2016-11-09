@@ -35,6 +35,7 @@ import cmk.paths
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
+display_options      = None
 
 # Load all view plugins
 def load_plugins(force):

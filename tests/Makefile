@@ -35,8 +35,10 @@ test-bandit:
 		-lll \
 		$(OUTPUT_ARGS) \
 		"$$CMK_DIR" \
+		"$$CMK_DIR/bin/*" \
 		"$$CMK_DIR"/{checks,inventory}/* \
 		"$$CMC_DIR" \
+		"$$CMC_DIR/bin/*" \
 		"$$CMC_DIR"/agents/{plugins,bakery}/*
 
 

@@ -292,13 +292,12 @@ api_actions["discover_services"] = {
 
 ###############
 
-# TODO: Recode to new activation code
 def action_activate_changes(request):
     validate_request_keys(request, ["mode", "sites", "allow_foreign_changes", "comment"])
 
     mode = html.var("mode") and html.var("mode") or "dirty"
-    if html.var("allow_foreign_changes"):
-        allow_foreign_changes = bool(int(html.var("allow_foreign_changes")))
+    if request.get("allow_foreign_changes"):
+        allow_foreign_changes = bool(int(request.get("allow_foreign_changes")))
     else:
         allow_foreign_changes = False
 

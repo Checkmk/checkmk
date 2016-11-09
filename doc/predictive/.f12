@@ -7,4 +7,6 @@ sudo install -m 755 foo.agentplugin /usr/lib/check_mk_agent/plugins/foo
 sudo install -m 644 foo.check /omd/sites/$SITE/local/share/check_mk/checks/foo
 sudo install -m 644 foo.wato /omd/sites/$SITE/local/share/check_mk/web/plugins/wato/foo.py
 
-sudo omd restart $SITE apache
+if [ -z $ONLY_COPY ]; then
+    sudo omd restart $SITE apache
+fi

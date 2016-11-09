@@ -6,6 +6,9 @@ set -e
 make -C .. livestatus/config.h
 make -j8
 sudo install src/livestatus.o /omd/sites/$SITE/lib/mk-livestatus/livestatus.o
-(cd api/python ; .f12 )
-echo "Restarting site $SITE"
-sudo omd restart $SITE nagios
+(cd api/python ; bash .f12 )
+
+if [ -z $ONLY_COPY ]; then
+    echo "Restarting site $SITE"
+    sudo omd restart $SITE nagios
+fi

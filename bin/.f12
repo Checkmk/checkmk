@@ -8,4 +8,7 @@ sudo install -m 755 livedump mkeventd mkeventd_open514 mkevent mkbackup $OMD_ROO
 sudo chown root.omd $OMD_ROOT/bin/mkeventd_open514
 sudo chmod 4750 $OMD_ROOT/bin/mkeventd_open514
 echo "Installed to $OMD_ROOT/bin"
-sudo omd restart $SITE mkeventd
+
+if [ -z $ONLY_COPY ]; then
+    sudo omd restart $SITE mkeventd
+fi

@@ -398,6 +398,10 @@ table.dictionary td.dictleft {
     white-space: nowrap;
 }
 
+table.dictionary td.dictleft div.popup_menu {
+    white-space: normal;
+}
+
 table.dictionary td.dictleft div.help {
     white-space: normal;
 }

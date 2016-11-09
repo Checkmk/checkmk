@@ -29,6 +29,7 @@
 import os
 import time
 import math
+import ast
 
 import livestatus
 
@@ -238,7 +239,7 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
     # - the prediction from the last time is outdated
     # - the prediction from the last time has done with other parameters
     try:
-        last_info = eval(file(info_file).read())
+        last_info = ast.literal_eval(file(info_file).read())
         for k, v in params.items():
             if last_info.get(k) != v:
                 logger.verbose("Prediction parameters have changed")
@@ -253,8 +254,7 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
         last_info = None
 
     if last_info:
-        # TODO: faster file format. Binary encoded?
-        prediction = eval(file(pred_file).read())
+        prediction = ast.literal_eval(file(pred_file).read())
 
     else:
         # Remove all prediction files that result from other
@@ -263,7 +263,7 @@ def get_levels(hostname, service_description, dsname, params, cf, levels_factor=
         for f in os.listdir(dir):
             if f.endswith(".info"):
                 try:
-                    info = eval(file(dir + "/" + f).read())
+                    info = ast.literal_eval(file(dir + "/" + f).read())
                     if info["period"] != params["period"]:
                         logger.verbose("Removing obsolete prediction %s", f[:-5])
                         os.remove(dir + "/" + f)

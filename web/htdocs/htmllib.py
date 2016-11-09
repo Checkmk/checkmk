@@ -1102,7 +1102,7 @@ class HTMLCheck_MK(HTMLGenerator):
             weights = counts.items()
             weights.sort(cmp = lambda a,b: cmp(a[1],  b[1]))
             best = dict(weights[-bestof:])
-            if id not in best:
+            if id_ not in best:
                 display="none"
                 self.context_button_hidden = True
 

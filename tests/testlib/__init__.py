@@ -691,20 +691,26 @@ class CMKWebSession(WebSession):
         assert result.startswith("Service discovery successful")
 
 
-    def activate_changes(self, mode=None, foreign_changes=None):
+    def activate_changes(self, mode=None, allow_foreign_changes=None):
         request = {}
 
         if mode != None:
             request["mode"] = mode
 
-        if foreign_changes != None:
-            request["foreign_changes"] = foreign_changes
+        if allow_foreign_changes != None:
+            request["allow_foreign_changes"] = "1" if allow_foreign_changes else "0"
 
+        time_started = time.time()
         result = self._api_request("webapi.py?action=activate_changes", {
             "request": json.dumps(request),
         })
 
-        assert result == None
+        assert type(result) == dict
+        assert len(result["sites"]) > 0
+
+        for site_id, status in result["sites"].items():
+            assert status["_state"] == "success"
+            assert status["_time_ended"] > time_started
 
 
 class CMKEventConsole(CMKWebSession):
@@ -753,17 +759,11 @@ class CMKEventConsole(CMKWebSession):
         assert "%d, no commands, 127.0.0.1" % self.status_port in html
 
 
-    # TODO: Test via self.status whether or not the reload has happened
     def activate_changes(self, web):
         old_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
         assert old_t > time.time() - 86400
 
-        html = web.get("wato.py?mode=mkeventd_changes").text
-        assert "Reload Config!" in html
-        assert "wato.py?_activate=now" in html
-
-        html = web.get("wato.py?_activate=now&mode=mkeventd_changes", add_transid=True).text
-        assert "The new configuration has successfully been activated" in html
+        super(CMKEventConsole, self).activate_changes(allow_foreign_changes=True)
 
         new_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
         assert new_t > old_t

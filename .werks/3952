@@ -2,7 +2,7 @@ Title: diskstat: fixed bug if multipath devices having an alias
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i2
+Version: 1.4.0i3
 Date: 1478255992
 Class: fix
 

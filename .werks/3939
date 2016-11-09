@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.4.0i2
+Version: 1.4.0i3
 Date: 1478528863
 
 f5_bigip_conns check was missing perfdata and graphs since werk #3692. This has been fixed now.

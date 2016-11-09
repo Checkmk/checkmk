@@ -2,7 +2,7 @@ Title: Fix error in view about "No WATO folder ..." in case of host imported via
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.4.0i2
+Version: 1.4.0i3
 Date: 1478255430
 Class: fix
 

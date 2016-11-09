@@ -2,7 +2,7 @@ Title: Logwatch patterns: now able to change state of context lines
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i2
+Version: 1.4.0i3
 Date: 1478525175
 Class: feature
 

@@ -2,7 +2,7 @@ Title: Fix exception when editing global configuration settings
 Level: 2
 Component: wato
 Compatible: compat
-Version: 1.4.0i2
+Version: 1.4.0i3
 Date: 1478256770
 Class: fix
 

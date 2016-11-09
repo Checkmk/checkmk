@@ -2,7 +2,7 @@ Title: Fix missing From address in synchronous SMTP notifications
 Level: 1
 Component: notifications
 Compatible: compat
-Version: 1.4.0i2
+Version: 1.4.0i3
 Date: 1478523159
 Class: fix
 

@@ -2,7 +2,7 @@ Title: Windows agent: new global option disabled_sections
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i2
+Version: 1.4.0i3
 Date: 1478512041
 Class: feature
 

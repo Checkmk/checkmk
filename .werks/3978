@@ -2,7 +2,7 @@ Title: mkbackup: Fixed backup to some CIFS shares ([Errno 13] Permission denied)
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.4.0i2
+Version: 1.4.0i3
 Date: 1478522063
 Class: fix
 

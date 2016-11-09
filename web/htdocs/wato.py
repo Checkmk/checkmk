@@ -8863,7 +8863,7 @@ def mode_sites(phase):
             if c:
                 del configured_sites[delid]
                 save_sites(configured_sites)
-                clear_replication_status(delid)
+                clear_site_replication_status(delid)
                 add_change("edit-sites", _("Deleted site %s") % (delid),
                            domains=[ConfigDomainGUI], sites=[default_site()])
                 return None

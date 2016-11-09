@@ -128,7 +128,6 @@ sites_mk       = cmk.paths.default_config_dir + "/multisite.d/sites.mk"
 var_dir        = cmk.paths.var_dir + "/wato/"
 audit_log_path = var_dir + "log/audit.log"
 snapshot_dir   = var_dir + "snapshots/"
-repstatus_file = var_dir + "replication_status.mk"
 php_api_dir    = var_dir + "php-api/"
 
 
@@ -190,13 +189,13 @@ def confirm_all_local_changes():
     site_id = config.omd_site()
 
     try:
-        repl_status = load_replication_status(lock=True)
-        repl_status[site_id]["changes"] = []
+        repl_status = load_site_replication_status(site_id, lock=True)
+        repl_status["changes"] = []
     except KeyError:
         pass # No change for this site. Fine...
 
     finally:
-        save_replication_status(repl_status)
+        save_site_replication_status(site_id, repl_status)
 
     need_sidebar_reload()
 
@@ -3586,42 +3585,73 @@ class SiteAttribute(ValueSpecAttribute):
             return []
 
 
-def load_replication_status(lock=False):
-    return store.load_data_from_file(repstatus_file, {}, lock)
+def load_site_replication_status(site_id, lock=False):
+    return store.load_data_from_file(site_replication_status_path(site_id), {}, lock)
 
 
-def save_replication_status(repstatus):
-    store.save_data_to_file(repstatus_file, repstatus)
+def save_site_replication_status(site_id, repl_status):
+    store.save_data_to_file(site_replication_status_path(site_id), repl_status)
+    cleanup_legacy_replication_status()
 
 
-def clear_replication_status(site_id):
-    repstatus = load_replication_status(lock=True)
-
+# This can be removed one day. It is only meant for cleaning up the pre 1.4.0
+# global replication status file.
+def cleanup_legacy_replication_status():
     try:
-        del repstatus[site_id]
-    except KeyError:
-        pass
+        os.unlink(var_dir + "replication_status.mk")
+    except OSError, e:
+        if e.errno == 2:
+            pass # Not existant -> OK
+        else:
+            raise
 
-    save_replication_status(repstatus)
+
+def clear_site_replication_status(site_id):
+    try:
+        os.unlink(site_replication_status_path(site_id))
+    except OSError, e:
+        if e.errno == 2:
+            pass # Not existant -> OK
+        else:
+            raise
+
+
+def site_replication_status_path(site_id):
+    return "%s/replication_status_%s.mk" % (var_dir, site_id)
+
+
+def load_replication_status(lock=False):
+    status = {}
+
+    for site_id in config.sites.keys():
+        status[site_id] = load_site_replication_status(site_id, lock=lock)
+
+    return status
+
+
+def save_replication_status(status):
+    status = {}
+
+    for site_id, repl_status in config.sites.items():
+        save_site_replication_status(site_id, repl_status)
 
 
 # Updates one or more dict elements of a site in an atomic way.
 def update_replication_status(site_id, vars, changes=None):
     make_nagios_directory(var_dir)
 
-    repstatus = load_replication_status(lock=True)
+    repl_status = load_site_replication_status(site_id, lock=True)
     try:
-        repstatus.setdefault(site_id, {})
-        repstatus[site_id].setdefault("times", {})
-        repstatus[site_id].setdefault("changes", [])
+        repl_status.setdefault("times", {})
+        repl_status.setdefault("changes", [])
 
-        repstatus[site_id].update(vars)
+        repl_status.update(vars)
 
         # Optionally add new pending change entries
         if changes:
-            repstatus[site_id]["changes"] += changes
+            repl_status["changes"] += changes
     finally:
-        save_replication_status(repstatus)
+        save_site_replication_status(site_id, repl_status)
 
 
 def automation_push_snapshot():
@@ -3911,22 +3941,21 @@ class ActivateChanges(object):
 
 
     def update_activation_time(self, site_id, ty, duration):
-        repstatus = load_replication_status(lock=True)
+        repl_status = load_site_replication_status(site_id, lock=True)
         try:
-            repstatus.setdefault(site_id, {})
-            times = repstatus[site_id].setdefault("times", {})
+            times = repl_status.setdefault("times", {})
 
             if ty not in times:
                 times[ty] = duration
             else:
                 times[ty] = 0.8 * times[ty] + 0.2 * duration
         finally:
-            save_replication_status(repstatus)
+            save_site_replication_status(site_id, repl_status)
 
 
     def get_activation_times(self, site_id):
-        repstatus = load_replication_status()
-        return repstatus.get(site_id, {}).get("times", {})
+        repl_status = load_site_replication_status(site_id)
+        return repl_status.get("times", {})
 
 
     def get_activation_time(self, site_id, ty, deflt=None):
@@ -4404,9 +4433,9 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def _lock_activation(self):
         # This locks the global replication status file
-        repstatus = load_replication_status(lock=True)
+        repl_status = load_site_replication_status(self._site_id, lock=True)
         try:
-            if self._is_currently_activating(repstatus.get(self._site_id, {})):
+            if self._is_currently_activating(repl_status):
                 raise MKGeneralException(_("The site is currently locked by another activation process. Please try again later"))
 
             # This is needed to detect stale activation progress entries
@@ -4576,21 +4605,21 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
     def _confirm_activated_changes(self):
-        repstatus = load_replication_status(lock=True)
+        repl_status = load_site_replication_status(self._site_id, lock=True)
         try:
-            changes = repstatus[self._site_id].get("changes", [])
-            repstatus[self._site_id]["changes"] = changes[len(self._site_changes):]
+            changes = repl_status.get("changes", [])
+            repl_status["changes"] = changes[len(self._site_changes):]
         finally:
-            save_replication_status(repstatus)
+            save_site_replication_status(self._site_id, repl_status)
 
 
     def _confirm_synchronized_changes(self):
-        repstatus = load_replication_status(lock=True)
+        repl_status = load_site_replication_status(self._site_id, lock=True)
         try:
-            for change in repstatus[self._site_id].get("changes", []):
+            for change in repl_status.get("changes", []):
                 change["need_sync"] = False
         finally:
-            save_replication_status(repstatus)
+            save_site_replication_status(self._site_id, repl_status)
 
 
     def _set_result(self, phase, status_text, status_details=None, state=STATE_SUCCESS):

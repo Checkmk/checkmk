@@ -54,6 +54,7 @@ def omd(cmd):
 class CMKVersion(object):
     DEFAULT = "default"
     DAILY   = "daily"
+    GIT     = "git"
 
     CEE   = "cee"
     CRE   = "cre"
@@ -77,7 +78,7 @@ class CMKVersion(object):
 
 
     def set_version(self, version):
-        if version == CMKVersion.DAILY:
+        if version in [ CMKVersion.DAILY, CMKVersion.GIT ]:
             self.version = time.strftime("%Y.%m.%d")
 
         elif version == CMKVersion.DEFAULT:
@@ -147,6 +148,8 @@ class Site(object):
         self.id      = site_id
         self.root    = "/omd/sites/%s" % self.id
         self.version = CMKVersion(version, edition)
+
+        self.update_with_git = version == CMKVersion.GIT
 
         self.reuse   = reuse
 
@@ -219,6 +222,41 @@ class Site(object):
         if not self.exists():
             assert omd(["-V", self.version.version_directory(), "create", self.id]) == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
+
+        if self.update_with_git:
+            self._update_with_f12_files()
+
+
+    def _update_with_f12_files(self):
+        paths = [
+            cmc_path() + "/bin",
+            cmk_path() + "/modules",
+            cmc_path() + "/cmk_base",
+            cmc_path() + "/cmk",
+            cmk_path() + "/checks",
+            cmk_path() + "/checkman",
+            cmk_path() + "/web",
+            cmk_path() + "/inventory",
+            cmk_path() + "/notifications",
+            cmk_path() + "/livestatus",
+
+            cmc_path() + "/bin",
+            cmc_path() + "/modules",
+            cmc_path() + "/cmk_base",
+            cmc_path() + "/cmk",
+            cmc_path() + "/web",
+            cmc_path() + "/alert_handlers",
+            cmc_path() + "/misc",
+            cmc_path() + "/core",
+            cmc_path() + "/agents/bakery",
+            cmc_path() + "/agents/plugins",
+            cmc_path() + "/agents",
+        ]
+
+        for path in paths:
+            if os.path.exists("%s/.f12" % path):
+                print("Executing .f12 in %s" % path)
+                assert os.system("cd %s ; ONLY_COPY=1 bash .f12" % path) >> 8 == 0
 
 
     def rm_if_not_reusing(self):

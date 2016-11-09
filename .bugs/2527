@@ -1,0 +1,18 @@
+Title: Fix broken rule evaluation when using multiple negated hosts
+Component: checks
+State: open
+Date: 2016-11-09 14:46:05
+Targetversion: future
+Class: bug
+
+The functions wato.py:rule_matches_host_and_item and modules/check_mk.py:in_extraconf_hostlist
+can not handle these kind of hostlist ['!heute1', '!heute', '!heute2', '@all']
+If a ! is detected, the for loop exits immediately after the checked item.
+
+These conditions specified in WATO do not work: "Host name is not one of heute1, heute or heute2"
+
+Replay issue:
+1) Create a rule: Hosts using SNMP bulk walk (enforces SNMP v2c)
+2) Setup hosts as mentioned in the example above
+3) Navigate to "Parameters of {hostname}"
+   Host heute matches, Host heute1 does not match

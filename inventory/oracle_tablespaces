@@ -1,0 +1,159 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# AIMSTGD1|/u01/oradata/aimstgd1/temp0104.dbf|TEMP01|ONLINE|YES|90112|3276800|90048|8192|TEMP|32768|ONLINE|0|TEMPORARY
+# AIMSTGD1|/u01/oradata/aimstgd1/temp0105.dbf|TEMP01|ONLINE|YES|90112|3276800|90048|8192|TEMP|32768|ONLINE|0|TEMPORARY
+# AIMSTGD1|/u01/oradata/aimstgd1/temp0106.dbf|TEMP01|ONLINE|YES|90112|3276800|90048|8192|TEMP|32768|ONLINE|4544|TEMPORARY
+# AIMCONS1|/u01/oradata/aimcons1/temp01.dbf|TEMP|ONLINE|YES|262144|2621440|262016|32768|TEMP|8192|ONLINE|258560|TEMPORARY
+# AIMCONS1|/u01/oradata/aimcons1/temp02.dbf|TEMP|ONLINE|YES|262144|2621440|262016|32768|TEMP|8192|ONLINE|258688|TEMPORARY
+
+
+# Order of columns (it is a table of data files, so table spaces appear multiple times)
+# -1 Node info (added by Check_MK)
+# 0  database SID
+# 1  data file name
+# 2  table space name
+# 3  status of the data file
+# 4  whether the file is auto extensible
+# 5  current size of data file in blocks
+# 6  maximum size of data file in blocks (if auto extensible)
+# 7  currently number of blocks used by user data
+# 8  size of next increment in blocks (if auto extensible)
+# 9  wheter the file is in use (online)
+# 10 block size in bytes
+# 11 status of the table space
+# 12 free space in the datafile
+# 13 Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
+
+
+def inv_oracle_tablespaces(parsed):
+    node = inv_tree_list("software.applications.oracle.tablespaces:")
+    tablespaces_sizes_by_type = {}
+    tablespaces, error_sids = parsed
+    for tablespace, attrs in tablespaces.items():
+        db_version     = attrs["db_version"]
+        num_files      = 0
+        num_avail      = 0
+        num_extensible = 0
+        current_size   = 0
+        max_size       = 0
+        used_size      = 0
+        num_increments = 0
+        increment_size = 0
+        free_space     = 0
+
+        tablespaces_sizes_by_type.setdefault(tablespace, {})
+
+        for datafile in attrs.get("datafiles", []):
+            datafile_name      = datafile["name"]
+            datafile_status    = datafile["status"]
+            autoextensible     = datafile["autoextensible"]
+            ts_type            = datafile["ts_type"]
+            ts_status          = datafile["ts_status"]
+            file_online_status = datafile["file_online_status"]
+
+            tablespaces_sizes_by_type[tablespace].setdefault(ts_type, {})
+            this_ts_by_type = tablespaces_sizes_by_type[tablespace][ts_type]
+
+            # The following values may be None
+            try:
+                bs                  = datafile["block_size"]
+                filesize_blocks     = bs * int(datafile["size"])
+                max_filesize_blocks = bs * int(datafile["max_size"])
+                used_blocks         = bs * int(datafile["used_size"])
+                free_space          = bs * int(datafile["free_space"])
+                increment_size      = bs * int(datafile["increment_size"])
+            except:
+                continue
+
+            num_files += 1
+            if datafile["status"] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
+                df_size       = datafile["size"]
+                df_free_space = datafile["free_space"]
+                df_max_size   = datafile["max_size"]
+
+                num_avail    += 1
+                current_size += df_size
+                used_size    += df_size - df_free_space
+
+                # Autoextensible? Honor max size. Everything is computed in
+                # *Bytes* here!
+                if datafile["autoextensible"]:
+                    num_extensible += 1
+                    incsize         = datafile["increment_size"]
+
+                    if df_size > df_max_size:
+                        max_size       += df_size
+                        free_extension  = df_size - df_max_size # free extension space
+                    else:
+                        max_size       += df_max_size
+                        free_extension  = df_max_size - df_size # free extension space
+
+                    if incsize == datafile["block_size"]:
+                        uses_default_increment = True
+
+                    #incs, rest = divmod(free_extension, incsize)
+                    #if rest:
+                    #    # ??? Was ist, wenn es nicht genau aufgeht und ein weiteres
+                    #    # increment max_size überschreiten würde? Das geht ja wohl
+                    #    # nicht oder??
+                    #    # incs += 1 ### Dann würde max_size überschritten!
+                    incs = free_extension / incsize
+                    num_increments += incs
+                    increment_size += incsize * incs
+
+                    if db_version >= 11:
+                        # The size of next extent in datafile is ignored when remaining
+                        # free space is > then next extend. Oracle uses all space up to the maximum!
+                        free_space += df_max_size - df_size
+                    else:
+                        # The free space in this table is the current free space plus
+                        # the additional space that can be gathered by using all available
+                        # remaining increments
+                        free_space += increment_size + df_free_space
+
+                # not autoextensible: take current size as maximum
+                else:
+                    max_size   += df_size
+                    free_space += df_free_space
+
+        node.append({
+            "name"           : tablespace[0],
+            "type"           : ts_type,
+            "current_size"   : current_size,
+            "max_size"       : max_size,
+            "used_size"      : used_size,
+            "num_increments" : num_increments,
+            "increment_size" : increment_size,
+            "free_space"     : free_space,
+        })
+
+
+# If something changes adapt calculations in related check plugin
+inv_info['oracle_tablespaces'] = {
+    "inv_function" : inv_oracle_tablespaces,
+}

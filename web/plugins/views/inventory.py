@@ -757,6 +757,20 @@ inventory_displayhints.update({
     ".software.applications.oracle.performance:*.sga_info" : { "title" : _("SGA info"), },
     ".software.applications.oracle.performance:*.sga_size" : { "title" : _("SGA size"), "paint" : "size" },
 
+    ".software.applications.oracle.tablespaces:" : { "title"    : _("Tablespaces"),
+                                                     "render"   : render_inv_dicttable,
+                                                     "keyorder" : [ "name", "type", "current_size", "max_size", "used_size",
+                                                                    "num_increments", "increment_size", "free_space" ],
+                                                     "view" : "invora_tablespace_of_host" },
+    ".software.applications.oracle.tablespaces:*.name"           : { "title" : _("Name"), },
+    ".software.applications.oracle.tablespaces:*.type"           : { "title" : _("Type"), },
+    ".software.applications.oracle.tablespaces:*.current_size"   : { "title" : _("Current size"), "paint" : "size" },
+    ".software.applications.oracle.tablespaces:*.max_size"       : { "title" : _("Max. size"), "paint" : "size" },
+    ".software.applications.oracle.tablespaces:*.used_size"      : { "title" : _("Used size"), "paint" : "size" },
+    ".software.applications.oracle.tablespaces:*.num_increments" : { "title" : _("Number of increments"), },
+    ".software.applications.oracle.tablespaces:*.increment_size" : { "title" : _("Increment size"), "paint" : "size" },
+    ".software.applications.oracle.tablespaces:*.free_space"     : { "title" : _("Free space"), "paint" : "size" },
+
     ".software.applications.vmwareesx:*."              : { "title" : _("Datacenter %d") },
     ".software.applications.vmwareesx:*.clusters:*."   : { "title" : _("Cluster %d") },
 
@@ -1070,6 +1084,9 @@ declare_invtable_view("invfan",        ".hardware.components.fans:",       _("Fa
 declare_invtable_view("invpsu",        ".hardware.components.psus:",       _("Power Supply"), _("Power Supplies"))
 declare_invtable_view("invsensor",     ".hardware.components.sensors:",    _("Sensor"),     _("Sensors"))
 declare_invtable_view("invmodule",     ".hardware.components.modules:",    _("Module"),     _("Modules"))
+
+declare_invtable_view("invora_tablespace", ".software.applications.oracle.tablespaces:", _("Oracle Tablespace"),  _("Oracle Tablespaces"))
+
 
 # This would also be possible. But we muss a couple of display and filter hints.
 # declare_invtable_view("invdisks",       ".hardware.storage.disks:",  _("Hard Disk"),          _("Hard Disks"))

@@ -348,6 +348,7 @@ def check_oracle_tablespaces(item, params, parsed):
                   (num_files, num_avail, num_extensible)
 
 
+# If something changes adapt calculations in related inventory plugin
 check_info['oracle_tablespaces'] = {
     "parse_function"          : parse_oracle_tablespaces,
     "inventory_function"      : inventory_oracle_tablespaces,

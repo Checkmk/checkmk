@@ -2435,15 +2435,11 @@ def pack_config():
         except:
             return False
 
-    # TODO: Write using cmk.store.
-    filepath = cmk.paths.var_dir + "/core/helper_config.mk"
-    out = file(filepath + ".new", "w")
-    out.write("#!/usr/bin/python\n"
-              "# encoding: utf-8\n"
-              "# Created by Check_MK. Dump of the currently active configuration\n\n")
-
-
-
+    helper_config = (
+        "#!/usr/bin/python\n"
+        "# encoding: utf-8\n"
+        "# Created by Check_MK. Dump of the currently active configuration\n\n"
+    )
 
     # These functions purpose is to filter out hosts which are monitored on different sites
     active_hosts    = all_active_hosts()
@@ -2486,22 +2482,23 @@ def pack_config():
             if packable(varname, val):
                 if varname in filter_var_functions:
                     val = filter_var_functions[varname](val)
-                out.write("\n%s = %r\n" % (varname, val))
+                helper_config += "\n%s = %r\n" % (varname, val)
 
     for varname, _unused_factory_setting in factory_settings.items():
         if varname in globals():
-            out.write("\n%s = %r\n" % (varname, globals()[varname]))
+            helper_config += "\n%s = %r\n" % (varname, globals()[varname])
         else: # remove explicit setting from previous packed config!
-            out.write("\nif %r in globals():\n    del %s\n" % (varname, varname))
+            helper_config += "\nif %r in globals():\n    del %s\n" % (varname, varname)
 
-    out.close()
+
+    filepath = cmk.paths.var_dir + "/core/helper_config.mk"
 
     import marshal
-    code = compile(open(filepath + ".new").read(), '<string>', 'exec')
-    marshal.dump(code, open(filepath + ".compiled", "wb"))
+    code = compile(helper_config, '<string>', 'exec')
+    with open(filepath + ".compiled", "w") as compiled_file:
+        marshal.dump(code, compiled_file)
+
     os.rename(filepath + ".compiled", filepath)
-    # Remove the configs readable version
-    os.unlink(filepath + ".new")
 
 
 def read_packed_config():

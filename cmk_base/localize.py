@@ -130,7 +130,7 @@ def write_alias(alias):
 def check_binaries():
     # Are the xgettext utils available?
     for b in [ 'xgettext', 'msgmerge', 'msgfmt' ]:
-        if os.system('which %s >/dev/null 2>&1' % b):
+        if subprocess.call(['which', b], stdout=open(os.devnull , "wb")) != 0:
             raise LocalizeException('%s binary not found in PATH\n' % b)
 
 

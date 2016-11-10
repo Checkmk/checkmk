@@ -9,6 +9,7 @@
     * 3952 FIX: diskstat: fixed bug if multipath devices having an alias...
     * 3939 FIX: f5_bigip_conns: readded performance data and graphs...
     * 3979 FIX: vbox_guest: Only try to fetch VBox state in case the vboxguest module is loaded
+    * 3750 FIX: cmc_temp: Check now also works when using Nagios core
 
     Multisite:
     * 3974 FIX: Sorting comments in hover menu of comments icon by time now

@@ -26,8 +26,11 @@
 
 import sys, getopt
 
-# Use this block if you want to use TLS instead of SSL authentification
+# This suppress deprecated warning on older python versions
+import warnings
+warnings.filterwarnings("ignore")
 
+# Use this block if you want to use TLS instead of SSL authentification
 #import ssl
 #from functools import wraps
 #def sslwrap(func):
@@ -38,7 +41,6 @@ import sys, getopt
 #    return bar
 #
 #ssl.wrap_socket = sslwrap(ssl.wrap_socket)
-
 
 def usage():
     sys.stderr.write("""Check_MK NetApp Agent
@@ -98,14 +100,11 @@ Cluster-Mode specific:
  storage-disk-get-iter
  storage-shelf-environment-list-info
  system-get-node-info-iter
- system-get-node-info-iter
- system-get-node-info-iter
  system-node-get-iter
  volume-get-iter
  vserver-get-iter
  quota-report-iter
 """)
-
 
 # NetApp credentials
 user   = None
@@ -176,12 +175,17 @@ else:
     except:
         pass
 
-    from lxml import etree
-    from StringIO import StringIO
+    try:
+        # lxml was quite promising in our test environment: Uses 2 times less CPU resources
+        # Unfortunaly, it is not a builtin module and need to be installed manually with
+        # pip install lxml
+        import lxml.etree as ET
+    except:
+        import xml.etree.ElementTree as ET
 
     def prettify(elem):
         from xml.dom import minidom
-        rough_string = etree.tostring(elem)
+        rough_string = ET.tostring(elem)
         reparsed = minidom.parseString(rough_string)
         return reparsed.toprettyxml(indent="\t")
 
@@ -204,6 +208,7 @@ else:
 
             self.status   = None
             self.error_messages = ErrorMessages()
+            self.suppress_errors = False
 
             self.headers = {}
             self.headers["Content-type"]  = "text/xml; charset=\"UTF-8\""
@@ -211,13 +216,11 @@ else:
             self.debug   = False
 
         def get_xml_message_from_node(self, node):
-            return etree.tostring(node,
-                                  doctype = "<!DOCTYPE netapp SYSTEM 'file:/etc/netapp_filer.dtd'>",
-                                  xml_declaration = True, encoding = "UTF-8")
-
+            return ET.tostring(node, encoding = "UTF-8")
 
         def add_error_message(self, message):
-            self.error_messages.add_message(message)
+            if not self.suppress_errors:
+                self.error_messages.add_message(message)
 
         # Converts: ['perf-object-get-instances', [['objectname', 'nfsv3'], ['instance-uuids', [['instance-uuid', '5']]]]]
         # into a xml etree:
@@ -228,12 +231,13 @@ else:
         #        </instance-uuids>
         #    </perf-object-get-instances>
         def create_node_from_list(self, the_list, parent_node):
-            new_node = etree.Element(the_list[0])
-            for entry in the_list[1]:
-                if isinstance(entry[1], list):
-                    self.create_node_from_list(entry, new_node)
-                else: # simple (key, value) pair
-                    etree.SubElement(new_node, entry[0]).text = entry[1]
+            new_node = ET.Element(the_list[0])
+            if len(the_list) > 1:
+                for entry in the_list[1]:
+                    if isinstance(entry[1], list):
+                        self.create_node_from_list(entry, new_node)
+                    else: # simple (key, value) pair
+                        ET.SubElement(new_node, entry[0]).text = entry[1]
 
             if parent_node is None:
                 parent_node = new_node
@@ -241,11 +245,8 @@ else:
                 parent_node.append(new_node)
             return parent_node
 
-        def query(self, query_content):
-            if isinstance(query_content, list):
-                node = self.create_node_from_list(query_content, None)
-            else:
-                node = query_content
+        def get_response(self, query_content):
+            node = self.create_node_from_list(query_content, None)
 
             # Nodes are always enveloped in the root_node
             root_node = NetAppRootNode(vfiler = self.vfiler)
@@ -262,54 +263,43 @@ else:
                                             auth    = (self.user, self.password))
             prepped  = self.session.prepare_request(req)
             # No SSL certificate check..
+
             response = self.session.send(prepped, verify = False)
 
-            self.last_response = NetAppResponse(response)
+            netapp_response = NetAppResponse(response)
 
             if self.debug:
                 print "######## GOT RESPONSE #######"
-                if self.last_response.status != "passed":
-                    print "Error: Unable to parse content of response: %s" % self.last_response.raw_response_text
+                if netapp_response.results_status() != "passed":
+                    print "Error: Unable to parse content of response:\n%s" % netapp_response.results_reason()
                 else:
-                    print prettify(self.last_response.content.get_node())
+                    print prettify(netapp_response.get_results().get_node())
 
-            if self.last_response.results_status() == "failed":
-                self.error_messages.add_message("Querying class %s: %s" % (node.tag, self.last_response.results_reason()))
+            if netapp_response.results_status() != "passed":
+                if not netapp_response.results_reason().startswith("Unable to find API"):
+                    self.add_error_message("Querying class %s: %s" % (node.tag, netapp_response.results_reason()))
 
-            return self.last_response
+            return netapp_response
 
 
         def invoke(self, *args):
             what = args[0]
-            invoke_what = etree.Element(what)
+            invoke_what = ET.Element(what)
             invoke_list = [args[0], map(list, zip(args[1::2], args[2::2]))]
-            response = self.query(invoke_list)
+            response = self.get_response(invoke_list)
             if response:
-                return response.get_content().child_get("results")
+                return response.get_results()
 
         def set_vfiler(self, name):
             self.vfiler = name
 
 
     class NetAppNode(object):
-        def __init__(self, lxml_element):
-            if type(lxml_element) == str:
-                lxml_element = etree.Element(lxml_element)
-            self.node  = lxml_element
-            self.xmlns = "{%s}" % lxml_element.nsmap.get(None)
+        def __init__(self, xml_element):
+            if type(xml_element) == str:
+                xml_element = ET.Element(xml_element)
+            self.node  = xml_element
             self.element = self
-
-        def child_get_string(self, what):
-            for element in list(self.node):
-                if element.tag == "%s%s" % (self.xmlns, what):
-                    return element.text
-            return None
-
-        def child_get(self, what):
-            for element in list(self.node):
-                if element.tag.split("}")[-1] == what:
-                    return NetAppNode(element)
-            return None
 
         def __getitem__(self, what):
             if what == "name":
@@ -320,19 +310,43 @@ else:
         def __getattr__(self, what):
             return object.__getattribute__(self, what)
 
+        def child_get_string(self, what):
+            for element in list(self.node):
+                if element.tag.split("}")[-1] == what:
+                    return element.text
+            return None
+
+        def child_get(self, what):
+            for element in list(self.node):
+                if element.tag.split("}")[-1] == what:
+                    return NetAppNode(element)
+            return None
+
+
         def children_get(self):
             return map(NetAppNode, self.node)
 
         def append(self, what):
             self.node.append(what)
 
+        def extend_attributes_list(self, new_attrs):
+            for child in self.node:
+                if child.tag.endswith("attributes-list"):
+                    child.extend(new_attrs.get_node())
+
+        def extend_instances_list(self, new_attrs):
+            for child in self.node:
+                if child.tag.endswith("instances"):
+                    child.extend(new_attrs.get_node())
+
         def get_node(self):
             return self.node
 
 
+
     class NetAppRootNode(NetAppNode):
         def __init__(self, vfiler = False):
-            root_node = etree.Element("netapp",
+            root_node = ET.Element("netapp",
                 version = "1.8",
                 xmlns   = "http://www.netapp.com/filer/admin",
                 nmsdk_language = "Python",
@@ -358,21 +372,20 @@ else:
                 return
 
             # We except an XML answer (not HTML)
-            #self.node = etree.parse(StringIO(response.text.encode("utf-8")), parser = etree.HTMLParser())
-            self.content = NetAppNode(etree.fromstring(self.raw_response_text))
+            self.content = NetAppNode(ET.fromstring(self.raw_response_text))
 
             self.status = self.content.child_get("results").node.attrib["status"]
             if self.status != "passed":
                 self.reason = self.content.child_get("results").node.attrib["reason"]
-
-        def get_content(self):
-            return self.content
 
         def results_status(self):
             return self.status
 
         def results_reason(self):
             return self.reason
+
+        def get_results(self):
+            return self.content.child_get("results")
 
 
 
@@ -546,24 +559,24 @@ def query_nodes(what, node_attribute = "node-name"):
             results["%s.%s" % (what, node)] = response
     else:
         if not nodes:
-            response = server.query(["system-get-node-info-iter", []])
+            response = server.get_response(["system-get-node-info-iter", []])
             if response.results_status() == "failed":
                 return
 
             nodes = []
-            for instance in response.get_content().child_get("results").child_get("attributes-list").children_get():
+            for instance in response.get_results().child_get("attributes-list").children_get():
                 nodes.append(instance.child_get_string("system-name"))
 
         results = {}
         for node in nodes:
-            what_element = etree.Element(what)
-            etree.SubElement(what_element, node_attribute).text = node
-            response = server.query([what, [[node_attribute, node]]])
+            what_element = ET.Element(what)
+            ET.SubElement(what_element, node_attribute).text = node
+            response = server.get_response([what, [[node_attribute, node]]])
 
             if response.results_status() != "passed":
                 return
 
-            results["%s.%s" % (what, node)] = response.get_content().child_get("results")
+            results["%s.%s" % (what, node)] = response.get_results()
 
     return results
 
@@ -572,36 +585,48 @@ def query_nodes(what, node_attribute = "node-name"):
 def query(what, return_toplevel_node = False):
     if opt_legacy:
         # HACK: if "what" endswith "iter", add max_records = 5000
-        # This approach is way easier than reading the tag, invoke another
-        # command and merge all answers together
+        # This approach is way easier than reading the tag, invoke another command and merge all answers together
+        # This might lead to out of memory requests. The new mechanism handles this better
         if what.endswith("iter"):
-            response = server.invoke(what, "max-records", 5000)
+            results = server.invoke(what, "max-records", 5000)
         else:
-            response = server.invoke(what)
+            results = server.invoke(what)
 
-        if response.results_status() == "failed":
-            section_errors.append("In class %s: %s" % (what, response.results_reason()))
-        else:
-            if return_toplevel_node:
-                return response
-            else:
-                data = response.children_get()
-                if data:
-                    return data[0]
+        if results.results_status() == "failed":
+            section_errors.append("In class %s: %s" % (what, results.results_reason()))
+            return
     else:
-        if what.endswith("iter"):
-            response = server.query([what, [["max-records", "5000"]]])
+        record_size = "80"
+        if isinstance(what, str):
+            if what.endswith("iter"):
+                response = server.get_response([what, [["max-records", record_size]]])
+            else:
+                response = server.get_response([what])
         else:
-            response = server.query([what, []])
+            response = server.get_response(what)
 
         if response.results_status() != "passed":
             return
 
-        content = response.get_content()
-        if return_toplevel_node:
-            return content.child_get("results")
-        else:
-            return content.child_get("results").children_get()[0]
+        results    = response.get_results()
+        tag_string = results.child_get_string("next-tag")
+        while tag_string:
+            # We need to start additinal query until all data is fetched
+            tag_response = server.get_response([what, [["max-records", record_size],["tag", tag_string]]])
+
+            # Get attributes-list and add this content to the initial response
+            tag_string   = tag_response.get_results().child_get_string("next-tag")
+            attr_childs  = tag_response.get_results().child_get("attributes-list")
+            if tag_response.get_results().child_get_string("num-records") == "0":
+                break
+            results.extend_attributes_list(attr_childs)
+
+    if return_toplevel_node:
+        return results
+    else:
+        data = results.children_get()
+        if data:
+            return data[0]
 
 
 def query_counters(what):
@@ -640,39 +665,92 @@ def query_counters(what):
             return response.child_get("instances")
     else:
         if netapp_mode == "clustermode":
-            response = server.query(["perf-object-instance-list-info-iter", [["objectname", what]]])
+            record_size = "3000"
+            response = server.get_response(["perf-object-instance-list-info-iter",
+                                           [["objectname", what], ["max-records", record_size]]])
 
-            if response.results_status == "failed":
+            results    = response.get_results()
+            tag_string = results.child_get_string("next-tag")
+            while tag_string:
+                # We need to start additinal query until all data is fetched
+                tag_response = server.get_response(["perf-object-instance-list-info-iter",
+                                                   [["objectname", what], ["max-records", record_size], ["tag", tag_string]]])
+
+                # Get attributes-list and add this content to the initial response
+                tag_string   = tag_response.get_results().child_get_string("next-tag")
+                attr_childs  = tag_response.get_results().child_get("attributes-list")
+                if tag_response.get_results().child_get_string("num-records") == "0":
+                    break
+                results.extend_attributes_list(attr_childs)
+
+            if response.results_status() != "passed":
                 return
 
-            instance_list = response.get_content().child_get("results").child_get("attributes-list")
+            instance_list = results.child_get("attributes-list")
+            if not instance_list:
+                return
 
-            if instance_list:
-                for instance_data in instance_list.children_get():
-                    instance_uuids.append(instance_data.child_get_string("uuid"))
-                if not instance_uuids:
-                    # Nothing to query..
+            for instance_data in instance_list.children_get():
+                instance_uuids.append(instance_data.child_get_string("uuid"))
+
+            if not instance_uuids:
+                return # Nothing to query..
+
+            # I was unable to find an iterator API to query clustermode perfcounters...
+            # Maybe the perf-object-get-instances is already able to provide huge amounts
+            # of counter info in a single call
+            responses = []
+            while instance_uuids:
+                max_instances_per_request = 1000
+                instances_to_query = ["instance-uuids", []]
+                for idx, uuid in enumerate(instance_uuids):
+                    if idx >= max_instances_per_request:
+                        break
+                    instances_to_query[1].append(["instance-uuid", uuid])
+                    perfobject_node = ["perf-object-get-instances", [["objectname", what]]]
+                    perfobject_node[1].append(instances_to_query)
+                response = server.get_response(perfobject_node)
+
+                if response.results_status() != "passed":
                     return
 
-                instances_to_query = ["instance-uuids", []]
-                for uuid in instance_uuids:
-                    instances_to_query[1].append(["instance-uuid", uuid])
+                responses.append(response)
+                instance_uuids = instance_uuids[max_instances_per_request:]
 
-                perfobject_node = etree.Element("perf-object-get-instances")
-                perfobject_node = ["perf-object-get-instances", [["objectname", what]]]
-                perfobject_node[1].append(instances_to_query)
-            else:
+            initial_results = responses[0].get_results()
+            for response in responses[1:]:
+                the_instances = response.get_results().child_get("instances")
+                initial_results.extend_instances_list(the_instances)
+            return initial_results.child_get("instances")
+        else: # 7 Mode
+            perfobject_node = ["perf-object-get-instances-iter-start", [["objectname", what]]]
+            response = server.get_response(perfobject_node)
+            results  = response.get_results()
+            records  = results.child_get_string("records")
+            tag      = results.child_get_string("tag")
+
+            if not records or records == "0":
                 return
-        else:
-            perfobject_node = ["perf-object-get-instances", [["objectname", what]]]
 
-        response = server.query(perfobject_node)
+            responses = []
+            while records != "0":
+                perfobject_node = ["perf-object-get-instances-iter-next", [["tag", tag], ["maximum", "1000"]]]
+                response = server.get_response(perfobject_node)
+                results  = response.get_results()
+                records  = results.child_get_string("records")
+                responses.append(response)
+                if not records or records == "0":
+                    perfobject_node = ["perf-object-get-instances-iter-end", [["tag", tag]]]
+                    server.get_response(perfobject_node)
+                    break
 
-        if response.results_status() != "passed":
-            return
+            initial_results = responses[0].get_results()
+            for response in responses[1:]:
+                the_instances = response.get_results().child_get("instances")
+                if the_instances:
+                    initial_results.extend_instances_list(the_instances)
+            return initial_results.child_get("instances")
 
-        content = response.get_content()
-        return content.child_get("results").child_get("instances")
 
 #.
 #   .--Main----------------------------------------------------------------.
@@ -731,6 +809,26 @@ else:
         netapp_mode  = "7mode"
     else:
         netapp_mode  = "7-mode" in version_string and "7mode" or "clustermode"
+
+# DEBUG
+#version_info = query("system-api-list")
+
+# Some sections are not queried when a license is missing
+server.suppress_errors = True
+licenses = {"v1": {}, "v1_disabled": {}, "v2": {}, "v2_disabled": {}}
+license_info = query("license-list-info")
+if license_info:
+    licenses["v1"] = create_dict(license_info, custom_key = ["service"], is_counter = False)
+    for license, values in licenses["v1"].items():
+        if values.get("is-licensed", "") == "false":
+            licenses["v1_disabled"][license] = values
+
+# The v2 license info is not used, yet
+licensev2_info = query("license-v2-list-info")
+if licensev2_info:
+    licenses["v2"] = create_dict(licensev2_info, custom_key = ["package"], is_counter = False)
+server.suppress_errors = False
+
 
 #.
 #   .--Clustermode Settings------------------------------------------------.
@@ -843,23 +941,24 @@ try:
 
         # Cluster info
         # TODO: check is missing
-        cluster_status = query_nodes("cf-status", node_attribute = "node")
-        ha_partners = {} # Used later on by environmental sensors
-        if cluster_status:
-            print "<<<netapp_api_cm_cluster:sep(9)>>>"
-            for node, entry in cluster_status.items():
-                # Small trick improve formatting
-                if opt_legacy:
-                    container = NaElement("container")
-                    container.child_add(entry)
-                else:
-                    container = NetAppNode("container")
-                    container.append(entry.get_node())
+        if "cf" not in licenses["v1_disabled"]:
+            cluster_status = query_nodes("cf-status", node_attribute = "node")
+            ha_partners = {} # Used later on by environmental sensors
+            if cluster_status:
+                print "<<<netapp_api_cm_cluster:sep(9)>>>"
+                for node, entry in cluster_status.items():
+                    # Small trick to improve formatting
+                    if opt_legacy:
+                        container = NaElement("container")
+                        container.child_add(entry)
+                    else:
+                        container = NetAppNode("container")
+                        container.append(entry.get_node())
 
-                partner_name = entry.child_get_string("partner-name")
-                if partner_name:
-                    ha_partners[node] = partner_name
-                print format_config(container, "cluster", node.split(".",1)[1])
+                    partner_name = entry.child_get_string("partner-name")
+                    if partner_name:
+                        ha_partners[node] = partner_name
+                    print format_config(container, "cluster", node.split(".",1)[1])
 
         # Disk
         disks = query("storage-disk-get-iter")
@@ -883,6 +982,7 @@ try:
                                                           "disk-raid-info.used-blocks": "used-space",
                                                           "disk-raid-info.physical-blocks": "physical-space"}
             )
+
 
         # Volumes
         volumes = query("volume-get-iter")
@@ -1011,6 +1111,21 @@ try:
                                 config_rename = {"quota-users.quota-user.quota-user-name": "quota-users"})
 
 
+        # LUNs
+        luns = query("lun-get-iter")
+        if luns:
+            print "<<<netapp_api_luns:sep(9)>>>"
+            print format_config(luns, "lun", "path",
+                                config_report = [
+                                "size",
+                                "size-used",
+                                "path",
+                                "online",
+                                "read-only",
+                                "vserver",
+                                "volume"
+                                ])
+
 
 #.
 #   .--7Mode Settings------------------------------------------------------.
@@ -1103,10 +1218,11 @@ try:
             print format_config(diag_status, "status", "status")
 
         # 7Mode Cluster info
-        cluster_status = query("cf-status", return_toplevel_node = True)
-        if cluster_status:
-            print "<<<netapp_api_cluster:sep(9)>>>"
-            print format_as_key_value(cluster_status)
+        if "cf" not in licenses["v1_disabled"]:
+            cluster_status = query("cf-status", return_toplevel_node = True)
+            if cluster_status:
+                print "<<<netapp_api_cluster:sep(9)>>>"
+                print format_as_key_value(cluster_status)
 
 
         # Disks
@@ -1132,19 +1248,20 @@ try:
 
 
         # Snapvaults
-        print "<<<netapp_api_snapvault:sep(9)>>>"
-        for vfiler in vfiler_names:
-            server.set_vfiler(vfiler)
-            response = server.invoke("snapvault-secondary-relationship-status-list-iter-start")
-            records  = response.child_get_string("records")
-            if not records or records == "0":
-                continue
-            tag = response.child_get_string("tag")
-            response = server.invoke("snapvault-secondary-relationship-status-list-iter-next", "maximum", records, "tag", tag)
-            print format_config(response.child_get("status-list"), "snapvault", "source-path",
-                                    config_report = ["lag-time", "state", "status", "source-system", "destination-system"])
-            server.invoke("snapvault-secondary-relationship-status-list-iter-end","tag", tag)
-        server.set_vfiler("") # revert back to default (no) vfiler
+        if "sv_ontap_sec" not in licenses["v1_disabled"]:
+            print "<<<netapp_api_snapvault:sep(9)>>>"
+            for vfiler in vfiler_names:
+                server.set_vfiler(vfiler)
+                response = server.invoke("snapvault-secondary-relationship-status-list-iter-start")
+                records  = response.child_get_string("records")
+                if not records or records == "0":
+                    continue
+                tag = response.child_get_string("tag")
+                response = server.invoke("snapvault-secondary-relationship-status-list-iter-next", "maximum", records, "tag", tag)
+                print format_config(response.child_get("status-list"), "snapvault", "source-path",
+                                        config_report = ["lag-time", "state", "status", "source-system", "destination-system"])
+                server.invoke("snapvault-secondary-relationship-status-list-iter-end","tag", tag)
+            server.set_vfiler("") # revert back to default (no) vfiler
 
 
         # Snapmirror

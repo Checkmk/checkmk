@@ -1,0 +1,21 @@
+Title: now uses xml instead of lxml. now able to query counters smaller chunks. now only queries relevant sections
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i2
+Date: 1478774357
+Class: feature
+
+Now uses xml instead of lxml. Unfortunaly lxml is not available in all distributions, so
+we had to switch back to xml which is considerably slower in parsing xml messages.
+You can try to install the python module lxml with the command "pip install lxml".
+
+
+Now able to query counters smaller chunks. There were some bigger netapp clusters which
+raised an out of memory error while answering the call. The reason was that the answer grew
+too big. We now query smaller chunks and merge them together.
+
+
+Now only queries relevant sections. Right at the beginning, the agent queries the available
+licenses on the system and skips sections, which's licenses are specifically not enabled.
+This feature is currently only implemented for a few section and will possibly improved later on.

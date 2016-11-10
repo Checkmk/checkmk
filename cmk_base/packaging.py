@@ -31,6 +31,7 @@ import sys
 import tarfile
 import time
 import subprocess
+import json
 from cStringIO import StringIO
 
 import cmk.tty as tty

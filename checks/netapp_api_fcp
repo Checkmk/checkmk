@@ -139,7 +139,7 @@ def parse_netapp_api_fcp(info):
             "state": values.get("state"),
             "address": values.get("port_wwpn")
         }
-        speed = int(values.get("data-link-rate")) * 1000**3
+        speed = int(values.get("data-link-rate", 0)) * 1000**3
         if speed:
             fcp_data["speed"] = speed
 

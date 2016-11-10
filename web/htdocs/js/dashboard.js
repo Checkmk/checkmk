@@ -101,10 +101,6 @@ function size_dashlets() {
             set_control_size(oDashControls, d_width, d_height);
         }
     }
-    oDash = null;
-    oDashTitle = null;
-    oDashInner = null;
-    oDashControls = null;
 }
 
 function set_control_size(dash_controls, width, height)
@@ -360,7 +356,6 @@ function update_dashlet(id, code) {
   if (obj) {
     obj.innerHTML = code;
     executeJS(id);
-    obj = null;
   }
 }
 
@@ -1153,7 +1148,6 @@ function dashlet_resized(nr, dashlet_obj) {
         var iframe = document.getElementById("dashlet_iframe_" + nr);
         iframe.src = base_url + '&width=' + dashlet_obj.clientWidth
                               + '&height=' + dashlet_obj.clientHeight;
-        iframe = null;
     }
 
     if (typeof on_resize_dashlets[nr] != 'undefined') {

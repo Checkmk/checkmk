@@ -176,7 +176,6 @@ function mkSearchMoveElement(step) {
             a++;
         }
     }
-    oResults = null;
 }
 
 // Is the result list shown at the moment?
@@ -198,7 +197,6 @@ function mkSearchClose() {
     var oContainer = document.getElementById('mk_search_results');
     if(oContainer) {
         oContainer.parentNode.removeChild(oContainer);
-        oContainer = null;
     }
 
     iCurrent = null;
@@ -215,11 +213,9 @@ function handle_search_response(oField, code) {
         }
 
         oContainer.innerHTML = code;
-        oContainer = null;
     } else {
         mkSearchClose();
     }
-    oField = null
 }
 
 function mkTermSearch() {
@@ -243,6 +239,4 @@ function mkSearch(oField) {
     mkTermSearch();
     g_ajax_obj = get_url('ajax_search.py?q=' + encodeURIComponent(val),
             handle_search_response, oField);
-
-    oField = null;
 }

@@ -85,7 +85,6 @@ function registerEdgeListeners(obj) {
         else
             edges[i].onmousemove = on_mouse_leave;
     }
-    edges = null;
 }
 
 function on_mouse_leave(e) {
@@ -166,29 +165,24 @@ function snapinDrag(event) {
   var o = getSnapinTargetPos();
   if (o != null) {
     snapinAddBefore(o.parentNode, o, line);
-    o = null;
   } else {
     snapinAddBefore(snapinDragging.parentNode, null, line);
   }
-  line = null;
 	return true;
 }
 
 function snapinAddBefore(par, o, add) {
   if (o != null) {
     par.insertBefore(add, o);
-    o = null;
   } else {
     par.appendChild(add);
   }
-  add = null;
 }
 
 function removeSnapinDragIndicator() {
   var o = document.getElementById('snapinDragIndicator');
   if (o) {
     o.parentNode.removeChild(o);
-    o = null;
   }
 }
 
@@ -223,8 +217,6 @@ function snapinDrop(event, targetpos) {
   if (targetpos != null)
     before = '&before=' + targetpos.id.replace('snapin_container_', '');
   get_url('sidebar_move_snapin.py?name=' + thisId + before);
-  thisId = null;
-  targetpos = null;
 }
 
 function snapinTerminateDrag() {
@@ -253,7 +245,6 @@ function getDivChildNodes(node) {
   for(var i = 0; i < childNodes.length; i++)
     if(childNodes[i].tagName === 'DIV')
       children.push(childNodes[i]);
-  childNodes = null;
   return children;
 }
 
@@ -347,7 +338,6 @@ function getSnapinTargetPos() {
 function contentFrameAccessible() {
     try {
         var d = parent.frames[1].document;
-        d = null;
         return true;
     } catch (e) {
         return false;
@@ -414,10 +404,6 @@ function set_sidebar_size() {
       return;
 
     oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight + 4) + 'px';
-
-    oFooter = null;
-    oContent = null;
-    oHeader = null;
 }
 
 var scrolling = true;
@@ -429,8 +415,6 @@ function scrollwindow(speed){
     c.scrollTop += speed;
     setTimeout("scrollwindow("+speed+")", 10);
   }
-
-  c = null;
 }
 
 /************************************************
@@ -510,8 +494,6 @@ function dragScroll(event) {
   startY = event.clientY;
 
   dragging = event;
-  inhalt = null;
-
   return false;
 }
 
@@ -678,9 +660,6 @@ function toggle_sidebar_snapin(oH2, url) {
     }
     /* make this persistent -> save */
     get_url(url + (closed ? "open" : "closed"));
-    oContent = null;
-    oHead = null;
-    childs = null;
 }
 
 function reload_main_plus_sidebar(id, code) {

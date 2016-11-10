@@ -147,7 +147,6 @@ function reload_sidebar()
                                 if (field.setSelectionRange !== undefined)
                                     field.setSelectionRange(value.length, value.length);
                             }
-                            field = null;
                         }
 
                         clearInterval(g_sidebar_reload_timer);
@@ -576,7 +575,6 @@ function executeJSbyObject(obj)
             var oScr = document.createElement('script');
             oScr.src = aScripts[i].src;
             document.getElementsByTagName("HEAD")[0].appendChild(oScr);
-            oScr = null;
         }
         else {
             try {
@@ -588,8 +586,6 @@ function executeJSbyObject(obj)
             }
         }
     }
-    aScripts = null;
-    obj = null;
 }
 
 //#.
@@ -711,10 +707,7 @@ function toggle_other_filters(fname, disable_others) {
         if (oFloatFilter) {
             toggle_input_fields(oFloatFilter, 'input', disable_others);
             toggle_input_fields(oFloatFilter, 'select', disable_others);
-            oFloatFilter = null;
         }
-
-        oSelect = null;
     }
 }
 
@@ -748,12 +741,9 @@ function pnp_response_handler(data, code) {
             var view = data['view'] == '' ? '0' : data['view'];
             create_pnp_graph(data, '&' + response[i]['image_url'].replace('#', '%23').replace('&view='+view, ''));
         }
-        view = null;
-        i = null;
     } catch(e) {
         valid_response = false;
     }
-    response = null;
 
     if(!valid_response) {
         if (code.match(/_login/)) {
@@ -927,10 +917,6 @@ function reschedule_check_response_handler(img, code) {
         add_class(img, "reload_failed");
         img.title = 'Invalid response: ' + response;
     }
-
-    response = null;
-    validResponse = null;
-    img = null;
 }
 
 function reschedule_check(oLink, site, host, service, wait_svc) {
@@ -944,7 +930,6 @@ function reschedule_check(oLink, site, host, service, wait_svc) {
             '&service='  + service + // Already URL-encoded!
             '&wait_svc=' + wait_svc,
             reschedule_check_response_handler, img);
-    img = null;
 }
 
 //#.
@@ -1278,7 +1263,6 @@ function toggle_tree_state(tree, name, oContainer, fetch_url) {
     }
 
     persist_tree_state(tree, name, state);
-    oContainer = null;
 }
 
 function persist_tree_state(tree, name, state)
@@ -1302,8 +1286,6 @@ function toggle_foldable_container(treename, id, fetch_url) {
         var oBox = document.getElementById('tree.' + treename + '.' + id);
         toggle_tree_state(treename, id, oBox, fetch_url);
         toggle_folding(oImg, !has_class(oBox, "closed"));
-        oImg = null;
-        oBox = null;
     }
 }
 
@@ -1383,7 +1365,6 @@ function find_checkbox(oTd) {
                 break;
             }
         }
-        oTds = null;
     }
     return checkbox;
 }
@@ -1394,7 +1375,6 @@ function highlight_row(elem, on) {
         iter_cells(checkbox, function(elem) {
             highlight_elem(elem, on);
         });
-        checkbox = null;
     }
     return false;
 }
@@ -1452,7 +1432,6 @@ function remove_selected_rows(elems) {
         var row_pos = g_selected_rows.indexOf(elems[i].name);
         if(row_pos > -1)
             g_selected_rows.splice(row_pos, 1);
-        row_pos = null;
     }
 
     update_row_selection_information();
@@ -1564,7 +1543,6 @@ function toggle_group_rows(checkbox) {
         }
     }
     toggle_all_rows(group_rows);
-    group_rows = null;
 }
 
 // Is used to select/deselect all rows in the current view. This can optionally
@@ -1620,8 +1598,6 @@ function iter_cells(checkbox, func) {
             num_columns--;
         }
     }
-    cell = null;
-    row_childs = null;
 }
 
 // Container is an DOM element to search below or a list of DOM elements
@@ -1640,9 +1616,6 @@ function get_all_checkboxes(container) {
                     checkboxes.push(childs[a]);
                 }
             }
-
-
-            childs = null;
         }
     } else {
         // One DOM node given
@@ -1651,8 +1624,6 @@ function get_all_checkboxes(container) {
         for(var i = 0; i < childs.length; i++)
             if(childs[i].type == 'checkbox')
                 checkboxes.push(childs[i]);
-
-        childs = null;
     }
 
     return checkboxes;
@@ -1694,7 +1665,6 @@ function init_rowselect() {
     for(var i = 0; i < tables.length; i++)
         if(tables[i].tagName === 'TABLE')
             table_init_rowselect(tables[i]);
-    tables = null;
 }
 
 //#.
@@ -1726,7 +1696,6 @@ function unhide_context_buttons(oA)
             oNode.style.display = "";
     }
     oA.parentNode.style.display = "none";
-    oNode = null;
 }
 
 //#.
@@ -1747,7 +1716,6 @@ function valuespec_toggle_option(oCheckbox, divid, negate) {
         oDiv.style.display = "";
     else
         oDiv.style.display = "none";
-    oDiv = null;
 }
 
 function valuespec_toggle_dropdown(oDropdown, divid) {
@@ -1755,7 +1723,6 @@ function valuespec_toggle_dropdown(oDropdown, divid) {
     if (oDropdown.value == "other") oDiv.style.display = "";
     else
         oDiv.style.display = "none";
-    oDiv = null;
 }
 
 function valuespec_toggle_dropdownn(oDropdown, divid) {
@@ -1764,7 +1731,6 @@ function valuespec_toggle_dropdownn(oDropdown, divid) {
         oDiv.style.display = "none";
     else
         oDiv.style.display = "";
-    oDiv = null;
 }
 
 /* This function is called after the table with of input elements
@@ -2577,8 +2543,6 @@ function host_tag_update_value(prefix, grp) {
         opt.text  = g_hosttag_groups[grp][i][1];
         value_select.appendChild(opt);
     }
-    opt = null;
-    value_select = null;
 }
 
 //#.
@@ -2690,7 +2654,6 @@ function close_popup()
     if (menu) {
         // hide the open menu
         menu.parentNode.removeChild(menu);
-        menu = null;
     }
     popup_id = null;
 

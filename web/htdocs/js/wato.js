@@ -68,8 +68,6 @@ function wato_toggle_attribute(oCheckbox, attrname) {
         oEntry.style.display = "none";
         oDefault.style.display = "";
     }
-    oEntry = null;
-    oDefault = null;
 }
 
 /* Switch the visibility of all host attributes during the configuration
@@ -85,7 +83,6 @@ function wato_fix_visibility() {
         return;
 
     var oTable = oHostTags.childNodes[0]; /* tbody */
-    oHostTags = null;
 
     for (var i = 0; i < oTable.childNodes.length; i++) {
         var oTr = oTable.childNodes[i];
@@ -186,7 +183,6 @@ function wato_fix_visibility() {
             } else {
                 oAttrDisp.value = "1";
             }
-            oAttrDisp = null;
 
             // There is at least one item in this topic -> show it
             var topic = oTr.parentNode.childNodes[0].textContent;
@@ -410,7 +406,6 @@ function clear_progress_stats() {
         var o = document.getElementById('progress_stat' + (i - 1));
         if (o) {
             o.innerHTML = "0";
-            o = null;
         }
         else
             break;
@@ -426,7 +421,6 @@ function update_progress_stats(header) {
                     progress_found += parseInt(header[i]);
 
             o.innerHTML = parseInt(o.innerHTML) + parseInt(header[i]);
-            o = null;
         }
     }
 }
@@ -440,8 +434,6 @@ function update_progress_bar(header) {
     cell.style.width = perc_done + "%";
     cell = bar.firstChild.firstChild.childNodes[1];
     cell.style.width = (100 - perc_done) + "%";
-    cell = null;
-    bar  = null;
     return false;
 }
 
@@ -453,14 +445,12 @@ function progress_attach_log(t) {
     var log = document.getElementById('progress_log');
     log.innerHTML += t;
     log.scrollTop = log.scrollHeight;
-    log = null;
 }
 
 function progress_clean_log() {
     var log = document.getElementById('progress_log');
     log.innerHTML = '';
     log.scrollTop = 0;
-    log = null;
 }
 
 function progress_scheduler(mode, url_prefix, timeout, items, transids, end_url, success_stats, fail_stats, term_url, finished_txt) {
@@ -518,7 +508,6 @@ function update_bulk_moveto(val) {
         for(var a = 0; a < fields[i].options.length; a++)
             if(fields[i].options[a].value == val)
                 fields[i].options[a].selected = true;
-    fields = null;
 }
 
 //#.
@@ -962,11 +951,8 @@ function wato_toggle_folder(event, oDiv, on) {
         var move_dialog = document.getElementById('move_dialog_' + id);
         if(move_dialog) {
             move_dialog.style.display = 'none';
-            move_dialog = null;
         }
     }
-    elem = null;
-    obj = null;
 }
 
 // .--Host Diag-----------------------------------------------------------.

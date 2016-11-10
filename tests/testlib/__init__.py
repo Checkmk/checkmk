@@ -257,7 +257,8 @@ class Site(object):
             if os.path.exists("%s/.f12" % path):
                 print("Executing .f12 in \"%s\"" % path)
                 assert os.system("cd \"%s\" ; "
-                                 "sudo ONLY_COPY=1 SITE=%s bash .f12" % (path, self.id)) >> 8 == 0
+                                 "sudo PATH=$PATH ONLY_COPY=1 SITE=%s bash .f12" %
+                                      (path, self.id)) >> 8 == 0
 
 
     def rm_if_not_reusing(self):

@@ -26,6 +26,11 @@
 
 import pprint, tarfile
 
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 pac_ext = ".mkp"
 
 class PackageException(Exception):
@@ -304,7 +309,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
     package["version.packaged"] = check_mk_version
 
     def create_info(filename, size):
-        info = tarfile.TarInfo("info")
+        info = tarfile.TarInfo()
         info.mtime = time.time()
         info.uid = 0
         info.gid = 0
@@ -315,8 +320,13 @@ def create_mkp_file(package, file_name=None, file_object=None):
         return info
 
     tar = tarfile.open(name=file_name, fileobj=file_object, mode="w:gz")
+
     info_file = fake_file(pprint.pformat(package))
     info = create_info("info", info_file.size())
+    tar.addfile(info, info_file)
+
+    info_file = fake_file(json.dumps(package))
+    info = create_info("info.json", info_file.size())
     tar.addfile(info, info_file)
 
     # Now pack the actual files into sub tars

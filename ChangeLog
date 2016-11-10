@@ -29,6 +29,9 @@
     Notifications:
     * 4042 FIX: Fix missing From address in synchronous SMTP notifications...
 
+    Livestatus:
+    * 3651 FIX: Fixed potential segfault with Nagios core when accessing log/commands table via Livestatus....
+
 
 1.4.0i2:
     Core & Setup:

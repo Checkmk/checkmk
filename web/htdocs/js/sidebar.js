@@ -403,7 +403,6 @@ function debug(s) {
 // Set the size of the sidebar_content div to fit the whole screen
 // but without scrolling. The height of the header and footer divs need
 // to be treated here.
-var g_just_resizing = 0;
 function set_sidebar_size() {
     var oHeader  = document.getElementById('side_header');
     var oContent = document.getElementById('side_content');

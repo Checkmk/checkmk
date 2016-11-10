@@ -24,6 +24,7 @@
     * 3975 FIX: Improved error handling when trying to edit not existing global setting
     * 3976 FIX: Fixed broken link in LDAP automatic sync help text
     * 3977 FIX: Fixed poping up changes button in sidebar snapin after a change
+    * 3982 FIX: Some MKPs created with WATO could not be uploaded to the Check_MK Exchange
 
     Notifications:
     * 4042 FIX: Fix missing From address in synchronous SMTP notifications...

@@ -1,0 +1,10 @@
+Title: Some MKPs created with WATO could not be uploaded to the Check_MK Exchange
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1478764745
+
+

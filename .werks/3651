@@ -1,0 +1,13 @@
+Title: Fixed potential segfault with Nagios core when accessing log/commands table via Livestatus.
+Level: 2
+Component: livestatus
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2p4
+Date: 1478771002
+
+Under rare circumstances, the Nagios core could crash when the "log" or
+"commands" table was queried via Livestatus.  Sites using the Micro Core
+were not affected by this bug.
+

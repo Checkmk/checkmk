@@ -316,14 +316,6 @@ var browser         = navigator.userAgent.toLowerCase();
 var weAreOpera      = browser.indexOf("opera") != -1;
 var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
 
-function isFirefox() {
-    return navigator.userAgent.indexOf("Firefox") > -1;
-}
-
-function isWebkit() {
-    return navigator.userAgent.indexOf("WebKit") > -1;
-}
-
 function is_ie_below_9() {
     return document.all && !document.addEventListener;
 }
@@ -1573,9 +1565,6 @@ function toggle_group_rows(checkbox) {
     }
     toggle_all_rows(group_rows);
     group_rows = null;
-
-    tbody   = null;
-    this_tr = null;
 }
 
 // Is used to select/deselect all rows in the current view. This can optionally

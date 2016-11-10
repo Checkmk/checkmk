@@ -18,6 +18,9 @@
     * 4040 FIX: Fix error in view about "No WATO folder ..." in case of host imported via cmcdump...
     * 3980 FIX: Fixed possible flickering GUI when using Chrome and zooming the page
 
+    WATO:
+    * 3982 FIX: Some MKPs created with WATO could not be uploaded to the Check_MK Exchange
+
 
 1.2.8p13:
     Checks & Agents:

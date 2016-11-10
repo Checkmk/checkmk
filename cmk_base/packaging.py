@@ -30,6 +30,7 @@ import pprint
 import sys
 import tarfile
 import time
+import json
 from cStringIO import StringIO
 
 import cmk.tty as tty
@@ -319,8 +320,8 @@ def package_pack(args):
 def create_mkp_file(package, file_name=None, file_object=None):
     package["version.packaged"] = cmk.__version__
 
-    def create_info(filename, size):
-        info = tarfile.TarInfo("info")
+    def create_tar_info(filename, size):
+        info = tarfile.TarInfo()
         info.mtime = time.time()
         info.uid = 0
         info.gid = 0
@@ -331,8 +332,15 @@ def create_mkp_file(package, file_name=None, file_object=None):
         return info
 
     tar = tarfile.open(name=file_name, fileobj=file_object, mode="w:gz")
+
+    # add the regular info file (Python format)
     info_file = StringIO(pprint.pformat(package))
-    info = create_info("info", len(info_file.getvalue()))
+    info = create_tar_info("info", len(info_file.getvalue()))
+    tar.addfile(info, info_file)
+
+    # add the info file a second time (JSON format) for external tools
+    info_file = StringIO(json.dumps(package))
+    info = create_tar_info("info.json", len(info_file.getvalue()))
     tar.addfile(info, info_file)
 
     # Now pack the actual files into sub tars
@@ -344,7 +352,7 @@ def create_mkp_file(package, file_name=None, file_object=None):
                 logger.verbose("    %s", f)
             subtarname = part + ".tar"
             subdata = os.popen("tar cf - --dereference --force-local -C '%s' %s" % (dir, " ".join(filenames))).read()
-            info = create_info(subtarname, len(subdata))
+            info = create_tar_info(subtarname, len(subdata))
             tar.addfile(info, StringIO(subdata))
     tar.close()
 

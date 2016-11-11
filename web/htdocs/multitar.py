@@ -71,12 +71,6 @@ def extract_from_buffer(buffer, elements):
     elif type(elements) == dict:
         extract_domains(tarfile.open(None, "r", stream), elements)
 
-def extract_from_file(filename, elements):
-    if type(elements) == list:
-        extract(tarfile.open(filename, "r"), elements)
-    elif type(elements) == dict:
-        extract_domains(tarfile.open(filename, "r"), elements)
-
 def list_tar_content(the_tarfile):
     files = {}
     try:
@@ -100,7 +94,6 @@ def get_file_content(the_tarfile, filename):
 
 
 def extract_domains(tar, domains):
-    import subprocess
     tar_domains = {}
     for member in tar.getmembers():
         try:
@@ -193,15 +186,9 @@ def extract_domains(tar, domains):
             # The complete tar.gz file never fits in stringIO buffer..
             tar.extract(tar_member, restore_dir)
 
-            if domain.get("restore_command"):
-                path_subtar = "%s/%s" % (restore_dir, tar_member.name)
-                command = domain.get("restore_command") % { "prefix"      : target_dir,
-                                                            "restore_dir" : restore_dir,
-                                                            "path_subtar" : path_subtar }
-            else:
-                command = "tar xzf %s/%s -C %s" % (restore_dir, tar_member.name, target_dir)
-
-            p = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+            command = [ "tar", "xzf", "%s/%s" % (restore_dir, tar_member.name),
+                               "-C", target_dir ]
+            p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = p.communicate()
             exit_code = p.wait()
             if exit_code:

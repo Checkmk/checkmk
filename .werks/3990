@@ -1,4 +1,4 @@
-Title: now uses xml instead of lxml. now able to query counters smaller chunks. now only queries relevant sections
+Title: agent_netapp: now uses xml instead of lxml. now able to query counters smaller chunks. now only queries relevant sections
 Level: 1
 Component: checks
 Compatible: compat

@@ -619,7 +619,7 @@ def get_tactical_overview_data(extra_filter_headers):
         event_data = sites.live().query_summed_stats(event_query)
 
     except livestatus.MKLivestatusNotFoundError:
-        return None, None, None
+        return None, None, None, None
 
     return hstdata, svcdata, notdata, event_data
 

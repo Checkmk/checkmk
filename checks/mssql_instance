@@ -47,7 +47,11 @@ def parse_mssql_instance(info):
         else:
             instance_id = line[0]
 
-        instance = parsed.setdefault(instance_id, {})
+        instance = parsed.setdefault(instance_id, {
+            # it may happen that the state line is missing, add some fallback as default here
+            "state"     : "0",
+            "error_msg" : "Unable to connect to database (Agent reported no state)",
+        })
 
         if line[1] == "config":
             instance.update({
@@ -73,6 +77,8 @@ def check_mssql_instance(item, _unused, parsed):
     instance = parsed.get(item)
     if not instance:
         return
+
+    print instance
 
     if instance["state"] == "0":
         yield 2, "Failed to connect to database (%s)" % instance["error_msg"]

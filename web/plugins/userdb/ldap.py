@@ -1017,10 +1017,10 @@ class LDAPUserConnector(UserConnector):
                 # is increaed by sync plugin) on the local site, so no one needs to active this.
                 pw_changed = False
                 if 'ldap_pw_last_changed' in changed:
-                    changed.remove('ldap_pw_last_changed')
+                    del changed['ldap_pw_last_changed']
                     pw_changed = True
                 if 'serial' in changed:
-                    changed.remove('serial')
+                    del changed['serial']
                     pw_changed = True
 
                 # Synchronize new user profile to remote sites if needed

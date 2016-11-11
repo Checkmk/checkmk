@@ -22,20 +22,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 SHELL              := /bin/bash
 VERSION            := 1.4.0i3
 NAME               := check_mk

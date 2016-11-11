@@ -35,9 +35,6 @@
     Livestatus:
     * 3651 FIX: Fixed potential segfault with Nagios core when accessing log/commands table via Livestatus....
 
-Testcommit 123213 sd asd asd
-
-Da fehlt noch etwas
 
 1.4.0i2:
     Core & Setup:

@@ -668,9 +668,23 @@ elif [ -x /usr/sbin/ssmtp ] ; then
 fi
 
 # postfix would write to stderr but only if it's a tty
-if type postmulti >/dev/null ; then
+# Another quirk: output would be strayed if not stored
+# in extra variable
+if type postfix >/dev/null ; then
     echo "<<<postfix_mailq_status:sep(58)>>>"
-    script -qfc 'postmulti -p status' /dev/null
+    multi_instances_dirs=$(postconf -c /etc/postfix 2>/dev/null | grep ^multi_instance_directories | sed 's/.*=[[:space:]]*//g')
+    if [ ! -z "$multi_instances_dirs" ]; then
+        for queue_dir in $multi_instances_dirs
+        do
+            if [ -n "$queue_dir" ]; then
+                postfix_out=$(script -qfc "postfix -c $queue_dir status" /dev/null)
+            fi
+        done
+
+    else
+        postfix_out=$(script -qfc 'postfix status' /dev/null)
+    fi
+    echo $postfix_out
 fi
 
 

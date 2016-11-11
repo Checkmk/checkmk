@@ -508,6 +508,7 @@ def install_package(file_name=None, file_object=None):
                 tardest.stdin.write(data)
 
             tardest.stdin.close()
+            tardest.wait()
 
             # Fix permissions of extracted files
             for filename in filenames:

@@ -997,10 +997,10 @@ class LDAPUserConnector(UserConnector):
                 intersect = set_new.intersection(set_old)
                 added = set_new - intersect
                 removed = set_old - intersect
-                changed = self.find_changed_user_keys(intersect, users[user_id], user)
+
+                changed = self.find_changed_user_keys(intersect, users[user_id], user) # returns a dict
 
             users[user_id] = user # Update the user record
-
             if mode_create:
                 if config.wato_enabled:
                     wato.add_change("edit-users",
@@ -1028,7 +1028,8 @@ class LDAPUserConnector(UserConnector):
                     synchronize_profile_to_sites(self, user_id, user)
 
                 if changed:
-                    details.append(('Changed: %s') % ', '.join(changed))
+		    for key, (old_value, new_value) in sorted(changed.items()):
+                        details.append(('Changed %s from %s to %s' % (key, old_value, new_value)))
 
                 if details and config.wato_enabled:
                     wato.add_change("edit-users",
@@ -1048,7 +1049,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def find_changed_user_keys(self, keys, user, new_user):
-        changed = set([])
+        changed = {}
         for key in keys:
             value = user[key]
             new_value = new_user[key]
@@ -1057,7 +1058,7 @@ class LDAPUserConnector(UserConnector):
             else:
                 is_changed = value != new_value
             if is_changed:
-                changed.add(key)
+                changed[key] = (value, new_value)
         return changed
 
 

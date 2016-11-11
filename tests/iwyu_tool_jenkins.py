@@ -28,6 +28,11 @@ import subprocess
 import re
 
 
+def iwyu_formatter(output):
+    """ Process iwyu's output, basically a no-op. """
+    print('\n'.join(output))
+
+
 CORRECT_RE = re.compile(r'^\((.*?) has correct #includes/fwd-decls\)$')
 SHOULD_ADD_RE = re.compile(r'^(.*?) should add these lines:$')
 SHOULD_REMOVE_RE = re.compile(r'^(.*?) should remove these lines:$')
@@ -39,7 +44,7 @@ LINES_RE = re.compile(r'.*// lines ([0-9]+)-[0-9]+$')
 GENERAL, ADD, REMOVE, LIST = range(4)
 
 
-def process_output(output):
+def clang_formatter(output):
     """ Process iwyu's output into something clang-like. """
     state = (GENERAL, None)
     for line in output:
@@ -75,6 +80,12 @@ def process_output(output):
             print(line)
 
 
+DEFAULT_FORMAT = 'iwyu'
+FORMATTERS = {
+    'iwyu': iwyu_formatter,
+    'clang': clang_formatter
+}
+
 def get_output(cwd, command):
     """ Run the given command and return its output as a string. """
     process = subprocess.Popen(command,
@@ -85,7 +96,7 @@ def get_output(cwd, command):
     return process.communicate()[0].decode("utf-8").splitlines()
 
 
-def run_iwyu(cwd, compile_command, iwyu_args, verbose, clang_style):
+def run_iwyu(cwd, compile_command, iwyu_args, verbose, formatter):
     """ Rewrite compile_command to an IWYU command, and run it. """
     compiler, _, args = compile_command.partition(' ')
     if compiler.endswith('cl.exe'):
@@ -101,14 +112,10 @@ def run_iwyu(cwd, compile_command, iwyu_args, verbose, clang_style):
     if verbose:
         print('%s:' % command)
 
-    output = get_output(cwd, command)
-    if clang_style:
-        process_output(output)
-    else:
-        print('\n'.join(output))
+    formatter(get_output(cwd, command))
 
 
-def main(compilation_db_path, source_files, verbose, clang_style, iwyu_args):
+def main(compilation_db_path, source_files, verbose, formatter, iwyu_args):
     """ Entry point. """
     # Canonicalize compilation database path
     if os.path.isdir(compilation_db_path):
@@ -149,7 +156,7 @@ def main(compilation_db_path, source_files, verbose, clang_style, iwyu_args):
     try:
         for entry in entries:
             cwd, compile_command = entry['directory'], entry['command']
-            run_iwyu(cwd, compile_command, iwyu_args, verbose, clang_style)
+            run_iwyu(cwd, compile_command, iwyu_args, verbose, formatter)
     except OSError as why:
         print('ERROR: Failed to launch include-what-you-use: %s' % why)
         return 1
@@ -189,8 +196,9 @@ def _bootstrap():
 
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='Print IWYU commands')
-    parser.add_argument('-c', '--clang-style', action='store_true',
-                        help='Use clang-style output format')
+    parser.add_argument('-o', '--output-format', type=str,
+                        choices=FORMATTERS.keys(), default=DEFAULT_FORMAT,
+                        help='Output format (default: %s)' % DEFAULT_FORMAT)
     parser.add_argument('-p', metavar='<build-path>', required=True,
                         help='Compilation database path', dest='dbpath')
     parser.add_argument('source', nargs='*',
@@ -204,10 +212,11 @@ def _bootstrap():
             return argv[:double_dash], argv[double_dash+1:]
         except ValueError:
             return argv, []
-
     argv, iwyu_args = partition_args(sys.argv[1:])
     args = parser.parse_args(argv)
-    sys.exit(main(args.dbpath, args.source, args.verbose, args.clang_style, iwyu_args))
+
+    sys.exit(main(args.dbpath, args.source, args.verbose,
+                  FORMATTERS[args.output_format], iwyu_args))
 
 
 if __name__ == '__main__':

@@ -297,7 +297,7 @@ tidy: compile_commands.json
 
 # Not really perfect rules, but better than nothing
 iwyu: compile_commands.json
-	@$(IWYU_TOOL) --clang-style -p .
+	@$(IWYU_TOOL) --output-format=clang -p .
 
 # Not really perfect rules, but better than nothing
 analyze: livestatus/config.h

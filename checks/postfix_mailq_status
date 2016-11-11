@@ -58,7 +58,7 @@ def inventory_postfix_mailq_status(parsed):
 def check_postfix_mailq_status(item, params, parsed):
     if item in parsed:
         state_readable = parsed[item]["state"]
-        pid = parsed[item].get("pid", "")
+        pid = parsed[item].get("pid")
         if state_readable.endswith("is running"):
             state = 0
         else:

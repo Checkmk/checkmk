@@ -29,12 +29,12 @@
 #
 # There are two types of contexts:
 # 1. Raw contexts (purple)
-#    -> These come out from the monitoring core. They are not yet
+#    => These come right out of the monitoring core. They are not yet
 #       assinged to a certain plugin. In case of rule based notifictions
 #       they are not even assigned to a certain contact.
 #
 # 2. Plugin contexts (cyan)
-#    -> These already bear all information about the contact, the plugin
+#    => These already bear all information about the contact, the plugin
 #       to call and its parameters.
 
 from cmk.regex import regex
@@ -1246,7 +1246,7 @@ def create_spoolfile(data):
 # There are three types of spool files:
 # 1. Notifications to be forwarded. Contain key "forward"
 # 2. Notifications for async local delivery. Contain key "plugin"
-# 3. Notifications to *got* forwarded. Contain neither of both.
+# 3. Notifications that *were* forwarded (e.g. received from a slave). Contain neither of both.
 # Spool files of type 1 are not handled here!
 def handle_spoolfile(spoolfile):
     notif_uuid = spoolfile.rsplit("/", 1)[-1]

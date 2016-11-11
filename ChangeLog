@@ -1,6 +1,7 @@
 1.4.0i2p4:
     Checks & Agents:
     * 3750 FIX: cmc_temp: Check now also works when using Nagios core
+    * 3983 FIX: mssql_instance: Be more robust agains missing instance info in case of connection issues
 
     WATO:
     * 3982 FIX: Some MKPs created with WATO could not be uploaded to the Check_MK Exchange

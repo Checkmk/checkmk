@@ -29,22 +29,9 @@
 
 import cmk.paths
 import os, tarfile, time, shutil, cStringIO, grp
+import subprocess
 import traceback
 from lib import *
-
-class fake_file:
-    def __init__(self, content):
-        self.content = content
-        self.pointer = 0
-
-    def size(self):
-        return len(self.content)
-
-    def read(self, size):
-        new_end = self.pointer + size
-        data = self.content[self.pointer:new_end]
-        self.pointer = new_end
-        return data
 
 def create(filename, components):
     tar = tarfile.open(filename, "w:gz")
@@ -58,8 +45,11 @@ def create(filename, components):
                 basedir = os.path.dirname(abspath)
                 filename = os.path.basename(abspath)
             subtarname = name + ".tar"
-            subdata = os.popen("tar cf - --dereference --force-local -C '%s' '%s'" % \
-                               (basedir, filename)).read()
+
+            subdata = subprocess.check_output([
+                "tar", "cf", "-", "--dereference", "--force-local",
+                       "-C", basedir, filename
+            ])
 
             info = tarfile.TarInfo(subtarname)
             info.mtime = time.time()
@@ -69,7 +59,8 @@ def create(filename, components):
             info.mode = 0644
             info.type = tarfile.REGTYPE
             info.name = subtarname
-            tar.addfile(info, fake_file(subdata))
+
+            tar.addfile(info, cStringIO.StringIO(subdata))
 
 def extract_from_buffer(buffer, elements):
     stream = cStringIO.StringIO()

@@ -42,7 +42,7 @@ def process(output):
             if e == -1:
                 break
             simfunc = output[i+2 : e]
-            replacement = str(eval("agentsim_" + simfunc))
+            replacement = str(eval("agentsim_" + simfunc)) # nosec
             output = output[:i] + replacement + output[e+1:]
     except Exception, e:
         if cmk.debug.enabled():

@@ -24,171 +24,119 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-if config.mknotifyd_enabled:
-    smtp_sync_option = [(
-         'smtp',
-         Dictionary(
-             title = _("Enable synchronous delivery via SMTP"),
-             help = _("Configuring this to have the notification plugin connect directly to "
-                      "the smtp server. This has the advantage of providing better error "
-                      "messages in case of an error but it does require more configuration "
-                      "and is strictly synchronous so we advice use only on enterprise "
-                      "installations using the notification spooler."),
-             elements = [
-                 ("smarthosts",
-                  ListOfStrings(
-                      title = _("Smarthosts"),
-                      orientation = "horizontal",
-                      max_entries = 2,
-                      allow_empty = False,
-                  )),
-                 ("port",
-                  Integer(
-                      title = _("Port"),
-                      default_value = 25
-                  )),
-                 ("auth",
-                  Dictionary(
-                      title = _("Authentication"),
-                      elements = [
-                          ("method",
-                           DropdownChoice(
-                               title = _("Authmethod"),
-                               choices = [
-                                   ("plaintext", _("Plaintext"))
-                               ]
-                           )),
-                          ("user",
-                           TextAscii(
-                               title = _("User")
-                           )),
-                          ("password",
-                           Password(
-                               title = _("Password")
-                           ))
-                      ],
-                      optional_keys = []
-                  )),
-                 ("encryption",
-                  DropdownChoice(
-                      title = ("Encryption"),
-                      choices = [
-                          ("ssl_tls", _("SSL/TLS")),
-                          ("starttls", _("STARTTLS"))
-                      ]
-                  )),
-             ],
-             optional_keys = ["auth", "encryption"]
-         )
-    )]
+def html_email_parameter_elements():
+    elements = [
+        ( "from",
+            TextAscii(
+                title = _("From: Address"),
+                size = 40,
+                allow_empty = False,
+            )
+        ),
+        ( "reply_to",
+            TextAscii(
+                title = _("Reply-To: Address"),
+                size = 40,
+                allow_empty = False,
+            )
+        ),
+        ( "host_subject",
+            TextUnicode(
+                title = _("Subject for host notifications"),
+                help = _("Here you are allowed to use all macros that are defined in the "
+                         "notification context."),
+                default_value = "Check_MK: $HOSTNAME$ - $EVENT_TXT$",
+                size = 64,
+            )
+        ),
+        ( "service_subject",
+            TextUnicode(
+                title = _("Subject for service notifications"),
+                help = _("Here you are allowed to use all macros that are defined in the "
+                         "notification context."),
+                default_value = "Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+                size = 64,
+            )
+        ),
+        ( "elements",
+            ListChoice(
+                title = _("Information to be displayed in the email body"),
+                choices = [
+                  ( "address",      _("IP Address of Host") ),
+                  ( "abstime",      _("Absolute Time of Alert") ),
+                  ( "reltime",      _("Relative Time of Alert") ),
+                  ( "longoutput",   _("Additional Plugin Output") ),
+                  ( "ack_author",   _("Acknowledgement Author") ),
+                  ( "ack_comment",  _("Acknowledgement Comment") ),
+                  ( "perfdata",     _("Performance Data") ),
+                  ( "graph",        _("Performance Graphs") ),
+                  ( "notesurl",     _("Custom Host/Service Notes URL") ),
+                  ( "context",      _("Complete variable list (for testing)" ) ),
+                ],
+                default_value = [ "perfdata", "graph", "abstime", "address", "longoutput" ],
+            )
+        ),
+        ( "insert_html_section",
+            TextAreaUnicode(
+                title = _("Insert HTML section between body and table"),
+                default_value = "<HTMLTAG>CONTENT</HTMLTAG>",
+                cols = 40,
+                rows = "auto",
+            ),
+        ),
+        ( "url_prefix",
+            TextAscii(
+                title = _("URL prefix for links to Check_MK"),
+                help = _("If you specify an URL prefix here, then several parts of the "
+                         "email body are armed with hyperlinks to your Check_MK GUI, so "
+                         "that the recipient of the email can directly visit the host or "
+                         "service in question in Check_MK. Specify an absolute URL including "
+                         "the <tt>.../check_mk/</tt>"),
+                regex = "^(http|https)://.*/check_mk/$",
+                regex_error = _("The URL must begin with <tt>http</tt> or "
+                                "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                size = 64,
+                default_value = "http://" + socket.gethostname() + "/" + (
+                    config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
+            )
+        ),
+        ( "no_floating_graphs",
+            FixedValue(
+                True,
+                title = _("Display graphs among each other"),
+                totext = _("Graphs are shown among each other"),
+                help = _("By default all multiple graphs in emails are displayed floating "
+                         "nearby. You can enable this option to show the graphs among each "
+                         "other."),
+            )
+        ),
+        ('bulk_sort_order',
+            DropdownChoice(
+                choices = [
+                    ('oldest_first', _('Oldest first')),
+                    ('newest_first', _('Newest first')),
+                ],
+                help = _("With this option you can specify, whether the oldest (default) or "
+                         "the newest notification should get shown at the top of the notification mail."),
+                title = _("Notification sort order for bulk notifications"),
+                default = "oldest_first"
+            )
+        ),
+        ]
 
-else:
-    smtp_sync_option = []
+    try:
+        return elements + cee_html_mail_smtp_sync_option
+    except NameError:
+        return elements
 
 
 register_notification_parameters(
     "mail",
     Dictionary(
-        elements = [
-            ( "from",
-                TextAscii(
-                    title = _("From: Address"),
-                    size = 40,
-                    allow_empty = False,
-                )
-            ),
-            ( "reply_to",
-                TextAscii(
-                    title = _("Reply-To: Address"),
-                    size = 40,
-                    allow_empty = False,
-                )
-            ),
-            ( "host_subject",
-                TextUnicode(
-                    title = _("Subject for host notifications"),
-                    help = _("Here you are allowed to use all macros that are defined in the "
-                             "notification context."),
-                    default_value = "Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                    size = 64,
-                )
-            ),
-            ( "service_subject",
-                TextUnicode(
-                    title = _("Subject for service notifications"),
-                    help = _("Here you are allowed to use all macros that are defined in the "
-                             "notification context."),
-                    default_value = "Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                    size = 64,
-                )
-            ),
-            ( "elements",
-                ListChoice(
-                    title = _("Information to be displayed in the email body"),
-                    choices = [
-                      ( "address",      _("IP Address of Host") ),
-                      ( "abstime",      _("Absolute Time of Alert") ),
-                      ( "reltime",      _("Relative Time of Alert") ),
-                      ( "longoutput",   _("Additional Plugin Output") ),
-                      ( "ack_author",   _("Acknowledgement Author") ),
-                      ( "ack_comment",  _("Acknowledgement Comment") ),
-                      ( "perfdata",     _("Performance Data") ),
-                      ( "graph",        _("Performance Graphs") ),
-                      ( "notesurl",     _("Custom Host/Service Notes URL") ),
-                      ( "context",      _("Complete variable list (for testing)" ) ),
-                    ],
-                    default_value = [ "perfdata", "graph", "abstime", "address", "longoutput" ],
-                )
-            ),
-            ( "insert_html_section",
-                TextAreaUnicode(
-                    title = _("Insert HTML section between body and table"),
-                    default_value = "<HTMLTAG>CONTENT</HTMLTAG>",
-                    cols = 40,
-                    rows = "auto",
-                ),
-            ),
-            ( "url_prefix",
-                TextAscii(
-                    title = _("URL prefix for links to Check_MK"),
-                    help = _("If you specify an URL prefix here, then several parts of the "
-                             "email body are armed with hyperlinks to your Check_MK GUI, so "
-                             "that the recipient of the email can directly visit the host or "
-                             "service in question in Check_MK. Specify an absolute URL including "
-                             "the <tt>.../check_mk/</tt>"),
-                    regex = "^(http|https)://.*/check_mk/$",
-                    regex_error = _("The URL must begin with <tt>http</tt> or "
-                                    "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                    size = 64,
-                    default_value = "http://" + socket.gethostname() + "/" + (
-                        config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
-                )
-            ),
-            ( "no_floating_graphs",
-                FixedValue(
-                    True,
-                    title = _("Display graphs among each other"),
-                    totext = _("Graphs are shown among each other"),
-                    help = _("By default all multiple graphs in emails are displayed floating "
-                             "nearby. You can enable this option to show the graphs among each "
-                             "other."),
-                )
-            ),
-            ('bulk_sort_order',
-                DropdownChoice(
-                    choices = [
-                        ('oldest_first', _('Oldest first')),
-                        ('newest_first', _('Newest first')),
-                    ],
-                    help = _("With this option you can specify, whether the oldest (default) or "
-                             "the newest notification should get shown at the top of the notification mail."),
-                    title = _("Notification sort order for bulk notifications"),
-                    default = "oldest_first"
-                )
-            )
-        ] + smtp_sync_option
+        elements = html_email_parameter_elements, # must be called at run time!!
     )
 )
+
 
 register_notification_parameters(
     "asciimail",

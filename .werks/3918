@@ -1,0 +1,11 @@
+Title: Inventory history: Fixed possible exception when renedering history tables
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1479152226
+
+Different kind of exceptions could occur, all in the inv_*() functions. For example
+in inv_paint_timestamp_as_age() the error "TypeError: unsupported operand type(s) for -: 'float' and 'tuple'"

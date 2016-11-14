@@ -10808,7 +10808,12 @@ def mode_edit_role(phase):
     except KeyError:
         raise MKGeneralException(_("This role does not exist."))
 
+    search = get_search_expression()
+
     if phase == "action":
+        if html.form_submitted("search"):
+            return
+
         alias = html.get_unicode_input("alias")
 
         unique, info = is_alias_used("roles", role_id, alias)
@@ -10834,15 +10839,24 @@ def mode_edit_role(phase):
             role["basedon"] = basedon
 
         # Permissions
-        permissions = {}
-        for perm in config.permissions_by_order:
-            pname = perm["name"]
-            value = html.var("perm_" + pname)
+        permissions = role["permissions"]
+        for var_name in html.all_varnames_with_prefix("perm_"):
+            try:
+                perm = config.permissions_by_name[var_name[5:]]
+            except KeyError:
+                continue
+
+            perm_name = perm["name"]
+            value = html.var(var_name)
             if value == "yes":
-                permissions[pname] = True
+                permissions[perm_name] = True
             elif value == "no":
-                permissions[pname] = False
-        role["permissions"] = permissions
+                permissions[perm_name] = False
+            elif value == "default":
+                try:
+                    del permissions[perm_name]
+                except KeyError:
+                    pass # Already at defaults
 
         if role_id != new_id:
             roles[new_id] = role
@@ -10853,7 +10867,7 @@ def mode_edit_role(phase):
         add_change("edit-roles", _("Modified user role '%s'") % new_id, sites=get_login_sites())
         return "roles"
 
-    search_form(_("Search for permissions: "), "permissions")
+    search_form(_("Search for permissions: "), "edit_role")
 
     html.begin_form("role", method="POST")
 
@@ -10884,6 +10898,10 @@ def mode_edit_role(phase):
         html.sorted_select("basedon", choices, role.get("basedon", "user"))
 
 
+    forms.end()
+
+    html.h2(_("Permissions"))
+
     # Permissions
     base_role_id = role.get("basedon", role_id)
 
@@ -10897,18 +10915,30 @@ def mode_edit_role(phase):
     # Loop all permission sections, but sorted plz
     for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
                                                  key = lambda x: x[1][0], reverse = True):
-        forms.header(section_title, False)
-
         # Loop all permissions
         permlist = config.permissions_by_order[:]
         if do_sort:
             permlist.sort(cmp = lambda a,b: cmp(a["title"], b["title"]))
 
+        # Now filter by permission section and the optional search term
+        filtered_perms = []
         for perm in permlist:
             pname = perm["name"]
             this_section = pname.split(".")[0]
             if section != this_section:
                 continue # Skip permissions of other sections
+
+            if search and (search not in perm["title"].lower() and search not in pname.lower()):
+                continue
+
+            filtered_perms.append(perm)
+
+        if not filtered_perms:
+            continue
+
+        forms.header(section_title, isopen=search != None)
+        for perm in filtered_perms:
+            pname = perm["name"]
 
             forms.section(perm["title"])
 

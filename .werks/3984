@@ -1,0 +1,10 @@
+Title: Permissions can now be filtered by providing a search term on the "edit role" page
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i3
+Date: 1479118054
+Class: feature
+
+The search is, just like the other quick search functionalities in WATO, a case insensitive
+infix search.

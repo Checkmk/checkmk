@@ -11,6 +11,7 @@
     * 3939 FIX: f5_bigip_conns: readded performance data and graphs...
     * 3979 FIX: vbox_guest: Only try to fetch VBox state in case the vboxguest module is loaded
     * 3750 FIX: cmc_temp: Check now also works when using Nagios core
+    * 4086 FIX: websphere_mq_queues: fixed unknown variable
 
     Multisite:
     * 3970 SEC: Fixed possible URL injection on index page...

@@ -76,10 +76,10 @@ def check_websphere_mq_queues(item, params, info):
             if state:
                 levels_info.append("Levels at %s/%s" % params["message_count"])
 
+            perc_state = 0
             if queue_length:
                 warn_perc, crit_perc = params['message_count_perc']
                 used_perc = messages / float(queue_length) * 100
-                perc_state = 0
                 if used_perc >= crit_perc:
                     perc_state = 2
                 elif used_perc >= warn_perc:

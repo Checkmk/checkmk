@@ -4445,7 +4445,7 @@ class ModeAuditLog(WatoMode):
         for t, linkinfo, user, action, text in log:
             table.row()
             table.cell(_("Object"), self._render_logfile_linkinfo(linkinfo))
-            table.cell(_("Time"), render.date_and_time(float(t)))
+            table.cell(_("Time"), html.render_nobr(render.date_and_time(float(t))))
             user = user == '-' and ('<i>%s</i>' % _('internal')) or user
             table.cell(_("User"), html.attrencode(user), css="nobreak")
 

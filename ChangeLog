@@ -36,6 +36,9 @@
     * 4031 FIX: LVM Volume Groups: fixed broken WATO configuration...
             NOTE: Please refer to the migration notes!
 
+    HW/SW-Inventory:
+    * 3918 FIX: Inventory history: Fixed possible exception when renedering history tables...
+
 
 1.2.8p17:
     Checks & Agents:

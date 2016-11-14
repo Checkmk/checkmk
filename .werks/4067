@@ -1,0 +1,11 @@
+Title: Fixed broken inventory history view in current master
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2p4
+Date: 1479120067
+
+An exception "TypeError: 'NoneType' object is not callable" could happend while
+rendering a inventory history page.

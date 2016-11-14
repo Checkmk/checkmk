@@ -304,8 +304,8 @@ def render_inv_dicttable(hostname, tree_id, invpath, node):
             ("view_name", hint["view"] ),
             ("host", hostname)],
             filename="view.py")
-        html.open_div(class_="invtablelink")
-        html.a(_("Open this table for filtering / sorting"), href=url)
+        html.div(html.render_a(_("Open this table for filtering / sorting"), href=url),
+                 class_="invtablelink")
 
     # We cannot use table here, since html.plug() does not work recursively
     html.open_table(class_="data")

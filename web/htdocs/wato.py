@@ -6139,9 +6139,7 @@ def mode_edit_ldap_connection(phase):
 #   '----------------------------------------------------------------------'
 
 def mode_globalvars(phase):
-    search = html.get_unicode_input("search")
-    if search != None:
-        search = search.strip().lower()
+    search = get_search_expression()
 
     if phase == "title":
         if search:
@@ -9037,9 +9035,7 @@ def mode_edit_site_globals(phase):
     siteid = html.var("site")
     site = configured_sites[siteid]
 
-    search = html.get_unicode_input("search")
-    if search != None:
-        search = search.strip().lower()
+    search = get_search_expression()
 
     if phase == "title":
         return _("Edit site-specific global settings of %s") % siteid
@@ -10857,6 +10853,8 @@ def mode_edit_role(phase):
         add_change("edit-roles", _("Modified user role '%s'") % new_id, sites=get_login_sites())
         return "roles"
 
+    search_form(_("Search for permissions: "), "permissions")
+
     html.begin_form("role", method="POST")
 
     # ID
@@ -11943,6 +11941,13 @@ def search_form(title, mode=None):
     html.br()
 
 
+def get_search_expression():
+    search = html.get_unicode_input("search")
+    if search != None:
+        search = search.strip().lower()
+    return search
+
+
 def rule_is_ineffective(rule, rule_folder, rulespec, hosts):
     value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
     found_match = False
@@ -12060,9 +12065,7 @@ def mode_rulesets(phase, group=None):
 
     show_deprecated = html.var("deprecated") == "1"
 
-    search = html.get_unicode_input("search")
-    if search != None:
-        search = search.strip().lower()
+    search = get_search_expression()
 
     if group == "used":
         title = _("Used Rulesets")

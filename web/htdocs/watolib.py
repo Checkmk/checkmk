@@ -4732,8 +4732,6 @@ def create_snapshot(comment):
     do_create_snapshot(data)
 
     log_msg = _("Created snapshot %s") % snapshot_name
-    if comment:
-        log_msg += " (%s: %s)" % (_("Comment"), comment)
 
     log_audit(None, "snapshot-created", log_msg)
     do_snapshot_maintenance()

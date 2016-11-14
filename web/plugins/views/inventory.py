@@ -168,8 +168,8 @@ def render_inv_subtree_dict(hostname, tree_id, invpath, node):
         html.open_table()
         for title, invpath_sub, value in leaf_nodes:
             html.open_tr()
-            html.open_th(title=title)
-            html.write(invpath_sub)
+            html.open_th(title=invpath_sub)
+            html.write(title)
             html.close_th()
 
             html.open_td()

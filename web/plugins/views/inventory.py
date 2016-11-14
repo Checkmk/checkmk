@@ -263,7 +263,8 @@ def render_inv_subtree_leaf_value(hostname, tree_id, invpath, node):
 
 
 def render_inv_dicttable(hostname, tree_id, invpath, node):
-    # In delta mode node is a pair of (old_items, new_items)
+    # In delta mode where nodes have been added/removed, node is a pair of
+    # (old_items, new_items)
     if type(node) == tuple:
         if node[0]:
             html.write_text(_("Removed entries") + ":")
@@ -331,7 +332,10 @@ def render_inv_dicttable(hostname, tree_id, invpath, node):
                 invpath_sub += ":"
 
             hint = inv_display_hint(invpath_sub)
+
             if "paint_function" in hint:
+                # The value is not really needed, but we need to deal with the delta mode
+                value = value[1] if type(value) == tuple else value
                 td_class, text = hint["paint_function"](value)
             else:
                 td_class = None

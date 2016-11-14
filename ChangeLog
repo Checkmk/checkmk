@@ -16,6 +16,7 @@
     * 4066 FIX: Fixed broken titles of nodes in inventory views
     * 4067 FIX: Fixed broken inventory history view in current master...
     * 3917 FIX: Fixed broken dicttable rendering
+    * 3918 FIX: Inventory history: Fixed possible exception when renedering history tables...
 
 
 1.4.0i2p3:

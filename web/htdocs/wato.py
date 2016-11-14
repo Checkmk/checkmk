@@ -10793,7 +10793,6 @@ def mode_roles(phase):
 
 
 def mode_edit_role(phase):
-
     role_id = html.var("edit")
 
     if phase == "title":
@@ -10806,9 +10805,12 @@ def mode_edit_role(phase):
     # Make sure that all dynamic permissions are available (e.g. those for custom
     # views)
     config.load_dynamic_permissions()
-
     roles = userdb.load_roles()
-    role = roles[role_id]
+
+    try:
+        role = roles[role_id]
+    except KeyError:
+        raise MKGeneralException(_("This role does not exist."))
 
     if phase == "action":
         alias = html.get_unicode_input("alias")

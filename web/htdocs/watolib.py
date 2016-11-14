@@ -175,7 +175,7 @@ def log_entry(linkinfo, action, message, user_id=None):
     make_nagios_directory(os.path.dirname(audit_log_path))
     with create_user_file(audit_log_path, "ab") as f:
         f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id,
-                                      action, message))
+                                      action, message.replace("\n", "\\n")))
 
 
 def log_audit(linkinfo, action, message, user_id = None):

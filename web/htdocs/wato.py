@@ -4450,7 +4450,7 @@ class ModeAuditLog(WatoMode):
             table.cell(_("User"), html.attrencode(user), css="nobreak")
 
             # This must not be attrencoded: The entries are encoded when writing to the log.
-            table.cell(_("Change"), text, css="fill")
+            table.cell(_("Change"), text.replace("\\n", "<br>\n"), css="fill")
         table.end()
 
 

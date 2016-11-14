@@ -12,6 +12,7 @@
     * 3651 FIX: Fixed potential segfault with Nagios core when accessing log/commands table via Livestatus....
 
     HW/SW-Inventory:
+    * 3916 FIX: History view: Only showing removed/added entries tables when there are entries
     * 4066 FIX: Fixed broken titles of nodes in inventory views
     * 4067 FIX: Fixed broken inventory history view in current master...
     * 3917 FIX: Fixed broken dicttable rendering

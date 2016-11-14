@@ -134,11 +134,13 @@ def render_inv_subtree_foldable(hostname, tree_id, invpath, node):
 
 def render_inv_subtree_container(hostname, tree_id, invpath, node):
     hint = inv_display_hint(invpath)
+
     if "render" in hint:
         try:
             hint["render"](hostname, invpath, node)
         except:
             hint["render"](hostname, tree_id, invpath, node)
+
     elif type(node) == dict:
         render_inv_subtree_dict(hostname, tree_id, invpath, node)
     else:
@@ -194,15 +196,17 @@ def render_inv_subtree_list(hostname, tree_id, invpath, node):
         return
 
     elif type(node) == tuple:
-        html.write(_("Removed entries") + ":<br>")
-        html.open_span(class_="invold")
-        render_inv_subtree_list(hostname, tree_id, invpath, node[0])
-        html.close_span()
+        if node[0]:
+            html.write(_("Removed entries") + ":<br>")
+            html.open_span(class_="invold")
+            render_inv_subtree_list(hostname, tree_id, invpath, node[0])
+            html.close_span()
 
-        html.write(_("New entries") + ":<br>")
-        html.open_span(class_="invnew")
-        render_inv_subtree_list(hostname, tree_id, invpath, node[1])
-        html.close_span()
+        if node[1]:
+            html.write(_("New entries") + ":<br>")
+            html.open_span(class_="invnew")
+            render_inv_subtree_list(hostname, tree_id, invpath, node[1])
+            html.close_span()
 
     else:
         for nr, value in enumerate(node):
@@ -261,15 +265,17 @@ def render_inv_subtree_leaf_value(hostname, tree_id, invpath, node):
 def render_inv_dicttable(hostname, tree_id, invpath, node):
     # In delta mode node is a pair of (old_items, new_items)
     if type(node) == tuple:
-        html.write_text(_("Removed entries") + ":")
-        html.open_span(class_="invold")
-        render_inv_dicttable(hostname, tree_id, invpath, node[0])
-        html.close_span()
+        if node[0]:
+            html.write_text(_("Removed entries") + ":")
+            html.open_span(class_="invold")
+            render_inv_dicttable(hostname, tree_id, invpath, node[0])
+            html.close_span()
 
-        html.write(_("New entries") + ":")
-        html.open_span(class_="invnew")
-        render_inv_dicttable(hostname, tree_id, invpath, node[1])
-        html.close_span()
+        if node[1]:
+            html.write(_("New entries") + ":")
+            html.open_span(class_="invnew")
+            render_inv_dicttable(hostname, tree_id, invpath, node[1])
+            html.close_span()
         return
 
     hint = inv_display_hint(invpath)

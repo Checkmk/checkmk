@@ -1,0 +1,19 @@
+Title: aix_hacmp_services: fixed broken check in case of agent section showing extra information before the "Status(...)" line
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p14
+Date: 1479134445
+Class: fix
+
+In case of the agent section showing extra information before the "Status(...)" line like the following, the check crashed. This has been fixed now.
+
+Example agent section showing extra information in the first line:
+
+###
+<<<aix_hacmp_services>>>
+clshowsrv is a tracked alias for /usr/es/sbin/cluster/utilities/clshowsrv
+Status of the RSCT subsystems used by PowerHA SystemMirror:
+(...)
+###
+

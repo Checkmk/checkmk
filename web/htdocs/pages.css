@@ -73,6 +73,7 @@ body.main {
 /* Can be toggled with N/n display option */
 body.main.inline {
     padding: 0;
+    background: none;
 }
 
 /* Special mode for creating screenshots of single elements. Omit background.

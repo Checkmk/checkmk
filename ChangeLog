@@ -38,6 +38,7 @@
 
     HW/SW-Inventory:
     * 4066 FIX: Fixed broken titles of nodes in inventory views
+    * 4067 FIX: Fixed broken inventory history view in current master...
 
 
 1.4.0i2:

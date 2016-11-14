@@ -262,12 +262,12 @@ def render_inv_dicttable(hostname, tree_id, invpath, node):
     # In delta mode node is a pair of (old_items, new_items)
     if type(node) == tuple:
         html.write_text(_("Removed entries") + ":")
-        html.write_span(class_="invold")
+        html.open_span(class_="invold")
         render_inv_dicttable(hostname, tree_id, invpath, node[0])
         html.close_span()
 
         html.write(_("New entries") + ":")
-        html.write_span(class_="invnew")
+        html.open_span(class_="invnew")
         render_inv_dicttable(hostname, tree_id, invpath, node[1])
         html.close_span()
         return

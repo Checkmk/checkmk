@@ -375,9 +375,12 @@ class Site(object):
             port = int(self.get_config("LIVESTATUS_TCP_PORT"))
         else:
             port = 9123
+            print "Trying port %d" % port
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             while sock.connect_ex(('127.0.0.1', port)) == 0:
+                print "Port %d is already used, trying next" % port
                 port += 1
+            print "Using port %d" % port
 
         self._livestatus_port = port
 

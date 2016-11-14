@@ -10,6 +10,9 @@
     Livestatus:
     * 3651 FIX: Fixed potential segfault with Nagios core when accessing log/commands table via Livestatus....
 
+    HW/SW-Inventory:
+    * 4066 FIX: Fixed broken titles of nodes in inventory views
+
 
 1.4.0i2p3:
     Core & Setup:

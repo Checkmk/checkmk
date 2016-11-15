@@ -1,0 +1,16 @@
+title: Netgear Switches: Fans
+agents:
+catalog:
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors fans of Netgear switches
+ which support the FASTPATH-BOXSERVICES-PRIVATE MIB.
+
+ No default levels are set. The device sends the state itself.
+
+item:
+ The fan identifier.
+
+inventory:
+ One service per fan is created.

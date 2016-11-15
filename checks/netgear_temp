@@ -1,0 +1,104 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# .1.3.6.1.4.1.4526.10.43.1.8.1.2.1.0 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType.1.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.2.1.1 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType.1.1
+# .1.3.6.1.4.1.4526.10.43.1.8.1.2.1.2 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType.1.2
+# .1.3.6.1.4.1.4526.10.43.1.8.1.2.2.0 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType.2.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.2.2.1 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType.2.1
+# .1.3.6.1.4.1.4526.10.43.1.8.1.2.2.2 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType.2.2
+# .1.3.6.1.4.1.4526.10.43.1.8.1.3.1.0 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState.1.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.3.1.1 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState.1.1
+# .1.3.6.1.4.1.4526.10.43.1.8.1.3.1.2 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState.1.2
+# .1.3.6.1.4.1.4526.10.43.1.8.1.3.2.0 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState.2.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.3.2.1 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState.2.1
+# .1.3.6.1.4.1.4526.10.43.1.8.1.3.2.2 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState.2.2
+# .1.3.6.1.4.1.4526.10.43.1.8.1.4.1.0 58 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.1.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.4.1.1 37 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.1.1
+# .1.3.6.1.4.1.4526.10.43.1.8.1.4.1.2 30 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.1.2
+# .1.3.6.1.4.1.4526.10.43.1.8.1.4.2.0 58 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.2.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.4.2.1 37 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.2.1
+# .1.3.6.1.4.1.4526.10.43.1.8.1.4.2.2 30 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.2.2
+
+
+def parse_netgear_temp(info):
+    map_types = {
+        "1" : "fixed",
+        "2" : "removable",
+    }
+
+    parsed = {}
+    for oid_end, sensor_ty, sstate, reading_str in info:
+        group, idx = oid_end.split(".")
+        parsed.setdefault("Sensor %s/%s" % (group, idx), {
+            "type"    : map_types.get(sensor_ty),
+            "state"   : sstate,
+            "reading" : float(reading_str),
+        })
+    return parsed
+
+
+def inventory_netgear_temp(parsed):
+    return [ (sensorname, {}) for sensorname, info in parsed.items()
+             if info["state"] not in [ "4", "5", "6" ] ]
+
+
+def check_netgear_temp(item, params, parsed):
+    map_states = {
+        "1" : (0, "normal"),
+        "2" : (1, "warning"),
+        "3" : (2, "critical"),
+        "4" : (1, "shutdown"),
+        "5" : (1, "not present"),
+        "6" : (1, "not operational"),
+    }
+    if item in parsed:
+        data = parsed[item]
+        if data["type"]:
+            yield 0, "Type: %s" % data["type"]
+
+        dev_status, dev_status_name = map_states[data["state"]]
+        yield check_temperature(data["reading"], params, "netgear_temp.%s" % item,
+                                dev_status=dev_status, dev_status_name=dev_status_name)
+
+
+check_info['netgear_temp'] = {
+    'parse_function'        : parse_netgear_temp,
+    'inventory_function'    : inventory_netgear_temp,
+    'check_function'        : check_netgear_temp,
+    'service_description'   : 'Temperature %s',
+    'has_perfdata'          : True,
+    'snmp_info'             : ('.1.3.6.1.4.1.4526.10.43.1.8.1', [
+                                    OID_END,
+                                    "2",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType
+                                    "3",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState
+                                    "4",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature
+                              ]),
+    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4526.100"),
+    'includes'              : [ 'temperature.include' ],
+    'group'                 : 'temperature',
+}

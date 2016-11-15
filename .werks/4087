@@ -1,0 +1,9 @@
+Title: netgear_fans, netgear_powersupplies, netgear_temp: new checks for Netgear Switches which support the FASTPATH-BOXSERVICES-PRIVATE MIB
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1479216025
+Class: feature
+
+

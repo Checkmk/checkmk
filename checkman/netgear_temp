@@ -1,0 +1,16 @@
+title: Netgear Switches: Temperature Sensors
+agents:
+catalog:
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors temperature sensors of Netgear switches
+ which support the FASTPATH-BOXSERVICES-PRIVATE MIB.
+
+ No default levels are set. The device sends the state itself.
+
+item:
+ The sensor identifier.
+
+inventory:
+ One service per sensor is created.

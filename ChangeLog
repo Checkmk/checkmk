@@ -4,6 +4,7 @@
     * 3983 FIX: mssql_instance: Be more robust agains missing instance info in case of connection issues
     * 3963 FIX: check_mk_agent.linux: fixed strayed output of postfix status command
     * 3940 FIX: aix_hacmp_services: fixed broken check in case of agent section showing extra information before the "Status(...)" line...
+    * 3941 FIX: zypper: fixed broken check for sections since agent OS SLES12...
 
     WATO:
     * 3982 FIX: Some MKPs created with WATO could not be uploaded to the Check_MK Exchange

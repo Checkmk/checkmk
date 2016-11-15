@@ -6356,6 +6356,9 @@ def mode_edit_configvar(phase, what = 'globalvars'):
             msg = HTML(_("Changed global configuration variable %s to %s.") \
                   % (varname, valuespec.value_to_text(new_value)))
 
+        if what == 'mkeventd':
+            need_restart = None
+
         if siteid:
             save_sites(configured_sites, activate=False)
             add_change("edit-configvar", msg, sites=[siteid], domains=[domain], need_restart=need_restart)
@@ -6363,7 +6366,13 @@ def mode_edit_configvar(phase, what = 'globalvars'):
             return "edit_site_globals"
         else:
             save_configuration_settings(current_settings)
-            add_change("edit-configvar", msg, domains=[domain], need_restart=need_restart)
+
+
+            sites = None
+            if what == 'mkeventd':
+                sites = get_event_console_sync_sites()
+
+            add_change("edit-configvar", msg, domains=[domain], need_restart=need_restart, sites=sites)
 
             if what == 'mkeventd':
                 return 'mkeventd_config'

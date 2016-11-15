@@ -1777,7 +1777,7 @@ def mode_mkeventd_config(phase):
 
             save_configuration_settings(current_settings)
 
-            add_change("edit-configvar", msg, domains=[domain], need_restart=need_restart)
+            add_ec_change("edit-configvar", msg)
 
             if action == "_reset":
                 return "mkeventd_config", msg

@@ -812,7 +812,7 @@ class CMKEventConsole(CMKWebSession):
         time.sleep(1)
 
         new_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
-        print "Old config load time: %s" % old_t
+        print "New config load time: %s" % new_t
         assert new_t > old_t
 
 

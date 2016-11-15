@@ -23,6 +23,7 @@ def test_command_reload(site, ec, core):
     live = ensure_core_and_get_connection(site, ec, core)
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
+    print "Old config load time: %s" % old_t
     assert old_t > time.time() - 86400
 
     time.sleep(1) # needed to have at least one second after EC start
@@ -30,6 +31,7 @@ def test_command_reload(site, ec, core):
     time.sleep(1) # needed to have at least one second after EC reload
 
     new_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
+    print "New config load time: %s" % old_t
     assert new_t > old_t
 
 

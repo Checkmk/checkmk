@@ -380,6 +380,7 @@ class Site(object):
             while sock.connect_ex(('127.0.0.1', port)) == 0:
                 print "Port %d is already used, trying next" % port
                 port += 1
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             print "Using port %d" % port
 
         self._livestatus_port = port
@@ -804,11 +805,14 @@ class CMKEventConsole(CMKWebSession):
 
     def activate_changes(self, web):
         old_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
+        print "Old config load time: %s" % old_t
         assert old_t > time.time() - 86400
 
         super(CMKEventConsole, self).activate_changes(allow_foreign_changes=True)
+        time.sleep(1)
 
         new_t = web.site.live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
+        print "Old config load time: %s" % old_t
         assert new_t > old_t
 
 

@@ -26,5 +26,5 @@ RemoteSystemsTempFiles
 .DS_Store
 .cache
 tags
-mkeventd
+mkeventd/
 tests/web/data/*

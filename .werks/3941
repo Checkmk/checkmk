@@ -1,0 +1,10 @@
+Title: zypper: fixed broken check for sections since agent OS SLES12
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1479193781
+
+eck was broken for agent sections generated at agent OS since SLES12. This has been fixed now.

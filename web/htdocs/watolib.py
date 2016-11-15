@@ -330,6 +330,18 @@ class ConfigDomainEventConsole(ConfigDomain):
             call_hook_mkeventd_activate_changes()
 
 
+
+class ConfigDomainMKNotifyd(ConfigDomain):
+    needs_sync       = True
+    needs_activation = False
+    ident            = "mknotifyd"
+
+    def activate(self):
+        pass
+
+
+
+
 #.
 #   .--Hosts & Folders-----------------------------------------------------.
 #   | _   _           _          ___     _____     _     _                 |

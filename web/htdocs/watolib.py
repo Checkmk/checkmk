@@ -91,6 +91,7 @@ def initialize_before_loading_plugins():
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if config.mkeventd_enabled:
+	global mkeventd_config_dir
         mkeventd_config_dir = cmk.paths.default_config_dir + "/mkeventd.d/wato/"
         replication_paths.append(("dir", "mkeventd", mkeventd_config_dir))
         backup_paths.append(("dir", "mkeventd", mkeventd_config_dir))
@@ -265,9 +266,10 @@ def get_number_of_pending_changes():
 
 
 class ConfigDomain(object):
-    needs_sync       = True
-    needs_activation = True
-    ident            = None
+    needs_sync         = True
+    needs_activation   = True
+    ident              = None
+    in_global_settings = True
 
     @classmethod
     def all_classes(cls):
@@ -282,8 +284,43 @@ class ConfigDomain(object):
         raise NotImplementedError(_("The domain \"%s\" does not exist") % ident)
 
 
+    def config_dir(self):
+        raise NotImplementedError()
+
+
     def activate(self):
         raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
+
+
+    def load(self):
+        filename = "%s/global.mk" % self.config_dir()
+        settings = {}
+
+        if not os.path.exists(filename):
+            return {}
+
+        try:
+            execfile(filename, settings, settings)
+
+            for varname in settings.keys():
+                if varname not in g_configvars:
+                    del settings[varname]
+
+            return settings
+        except Exception, e:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                                    (filename, e))
+
+
+    def save(self, settings):
+        filename = "%s/global.mk" % self.config_dir()
+
+        make_nagios_directory(os.path.dirname(filename))
+
+        with create_user_file(filename, 'w') as out:
+            out.write(wato_fileheader())
+            for varname, value in settings.items():
+                out.write("%s = %s\n" % (varname, pprint.pformat(value)))
 
 
 
@@ -291,6 +328,10 @@ class ConfigDomainCore(ConfigDomain):
     needs_sync       = True
     needs_activation = True
     ident            = "check_mk"
+
+    def config_dir(self):
+        return wato_root_dir
+
 
     def activate(self):
         return check_mk_local_automation(config.wato_activation_method)
@@ -302,15 +343,9 @@ class ConfigDomainGUI(ConfigDomain):
     needs_activation = False
     ident            = "multisite"
 
-    def activate(self):
-        pass
+    def config_dir(self):
+        return multisite_dir
 
-
-
-class ConfigDomainDiskspace(ConfigDomain):
-    needs_sync       = True
-    needs_activation = False
-    ident            = "diskspace"
 
     def activate(self):
         pass
@@ -318,9 +353,14 @@ class ConfigDomainDiskspace(ConfigDomain):
 
 
 class ConfigDomainEventConsole(ConfigDomain):
-    needs_sync       = True
-    needs_activation = True
-    ident            = "ec"
+    needs_sync         = True
+    needs_activation   = True
+    ident              = "ec"
+    in_global_settings = False
+
+    def config_dir(self):
+        return mkeventd_config_dir
+
 
     def activate(self):
         if getattr(config, "mkeventd_enabled", False):
@@ -328,18 +368,6 @@ class ConfigDomainEventConsole(ConfigDomain):
             log_audit(None, "mkeventd-activate",
                       _("Activated changes of event console configuration"))
             call_hook_mkeventd_activate_changes()
-
-
-
-class ConfigDomainMKNotifyd(ConfigDomain):
-    needs_sync       = True
-    needs_activation = False
-    ident            = "mknotifyd"
-
-    def activate(self):
-        pass
-
-
 
 
 #.
@@ -3026,16 +3054,6 @@ def initialize_global_configvars():
     g_configvar_order = {}
 
 
-g_configvar_domains = {
-    "check_mk" : {
-        "configdir" : wato_root_dir,
-    },
-    "multisite" : {
-        "configdir" : multisite_dir,
-    },
-}
-
-
 def configvars():
     return g_configvars
 
@@ -3047,14 +3065,16 @@ def configvar_groups():
 def configvar_order():
     return g_configvar_order
 
-def configvar_domains():
-    return g_configvar_domains
-
-
 
 # domain is one of "check_mk", "multisite" or "nagios"
 def register_configvar(group, varname, valuespec, domain="check_mk",
                        need_restart=False, allow_reset=True, in_global_settings=True):
+
+    # New API is to hand over the class via domain argument. But not all calls have been
+    # migrated. Perform the translation here.
+    if type(domain) in [ str, unicode ]:
+        domain = ConfigDomain.get_class(domain)
+
     g_configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
     g_configvars[varname] = domain, valuespec, need_restart, allow_reset, in_global_settings
 
@@ -3064,20 +3084,6 @@ def register_configvar_group(title, order=None):
     if order != None:
         configvar_order()[title] = 18
 
-
-# The following keys are available:
-# configdir: Directory to store the global.mk in (applies to check_mk, multisite, mkeventd)
-# pending:   Handler function to create the pending log entry
-# load:      Optional handler to load/parse the file
-# save:      Optional handler to save the filea
-# in_global_settings: Set to False to hide whole section from global settings dialog
-def register_configvar_domain(domain, configdir = None, pending = None, save = None, load = None, in_global_settings = True):
-    g_configvar_domains[domain] = {
-        'in_global_settings': in_global_settings,
-    }
-    for k in [ 'configdir', 'pending', 'save', 'load' ]:
-        if locals()[k] is not None:
-            g_configvar_domains[domain][k] = locals()[k]
 
 # Persistenz: Speicherung der Werte
 # - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk
@@ -3093,32 +3099,13 @@ def register_configvar_domain(domain, configdir = None, pending = None, save = N
 # - WATO kann main.mk nicht selbst einlesen, weil dann der Kontext fehlt
 #   (Default-Werte der Variablen aus Check_MK und aus den Checks)
 # - --> Wir machen eine automation, die alle Konfigurationsvariablen
-#   ausgibt.
+#   ausgibt
 
 def load_configuration_settings():
     settings = {}
-    for domain, domain_info in g_configvar_domains.items():
-        if 'load' in domain_info:
-            domain_info['load'](settings)
-        else:
-            load_configuration_vars(domain_info["configdir"] + "global.mk", settings)
+    for domain in ConfigDomain.all_classes():
+	settings.update(domain().load())
     return settings
-
-
-def load_configuration_vars(filename, settings):
-    if not os.path.exists(filename):
-        return {}
-    try:
-        execfile(filename, settings, settings)
-        for varname in settings.keys():
-            if varname not in g_configvars:
-                del settings[varname]
-        return settings
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
-        return {}
 
 
 def save_configuration_settings(vars):
@@ -3135,19 +3122,8 @@ def save_configuration_settings(vars):
     if "userdb_automatic_sync" in vars:
         per_domain.setdefault("multisite", {})["userdb_automatic_sync"] = vars["userdb_automatic_sync"]
 
-    for domain, domain_info in g_configvar_domains.items():
-        if 'save' in domain_info:
-            domain_info['save'](per_domain.get(domain, {}))
-        else:
-            dir = domain_info["configdir"]
-            make_nagios_directory(dir)
-            save_configuration_vars(per_domain.get(domain, {}), dir + "global.mk")
-
-def save_configuration_vars(vars, filename):
-    out = create_user_file(filename, 'w')
-    out.write(wato_fileheader())
-    for varname, value in vars.items():
-        out.write("%s = %s\n" % (varname, pprint.pformat(value)))
+    for domain in ConfigDomain.all_classes():
+        domain().save(per_domain.get(domain, {}))
 
 
 #.

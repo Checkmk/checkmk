@@ -1747,7 +1747,6 @@ def mode_mkeventd_config(phase):
 
     config_variables = ec_config_variables()
     current_settings = load_configuration_settings()
-    pending_func = configvar_domains()['mkeventd']['pending']
 
     if phase == "action":
         varname = html.var("_varname")
@@ -1775,8 +1774,11 @@ def mode_mkeventd_config(phase):
                 current_settings[varname] = not def_value
             msg = _("Changed Configuration variable %s to %s.") % (varname,
                 current_settings[varname] and _("on") or _("off"))
+
             save_configuration_settings(current_settings)
-            pending_func(msg)
+
+            add_change("edit-configvar", msg, domains=[domain], need_restart=need_restart)
+
             if action == "_reset":
                 return "mkeventd_config", msg
             else:
@@ -2212,9 +2214,6 @@ if mkeventd_enabled:
 
 
 if mkeventd_enabled:
-    register_configvar_domain("mkeventd", mkeventd_config_dir,
-            pending = lambda msg: add_ec_change('config-change', msg), in_global_settings = False)
-
     start_order = 18
     groups = {}
     for index, (group_id, group_name) in enumerate(ec_config_variable_groups()):
@@ -2266,7 +2265,7 @@ if mkeventd_enabled:
                                                        "wato.py?mode=edit_ruleset&varname=active_checks%3Amkevents",
             none_label = _("no access via TCP"),
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2365,7 +2364,7 @@ if mkeventd_enabled:
             ),
             title = _("Enable replication from a master"),
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2376,7 +2375,7 @@ if mkeventd_enabled:
                      "state in case of a crash."),
             default_value = 60,
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2388,7 +2387,7 @@ if mkeventd_enabled:
                      "for that job."),
             default_value = 60,
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2400,7 +2399,7 @@ if mkeventd_enabled:
                      "Performance</i>"),
             default_value = 5,
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2413,7 +2412,7 @@ if mkeventd_enabled:
                           "Please note that if you have lots of incoming messages then these "
                           "files can get very large."),
                 default_value = False),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2422,14 +2421,14 @@ if mkeventd_enabled:
                  label = _("enable optimized rule execution"),
                  help = _("This option turns on a faster algorithm for matching events to rules. "),
                 default_value = True),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
         "actions",
         vs_mkeventd_actions,
         allow_reset = False,
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2441,7 +2440,7 @@ if mkeventd_enabled:
                           "that do match a rule will be archived always, as long as they are not "
                           "explicitely dropped are being aggregated by counting.)"),
                  default_value = False),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2454,7 +2453,7 @@ if mkeventd_enabled:
                      "from message with those of actively monitored hosts. Note: this translation "
                      "is happening before any rule is being applied.")
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     def vs_ec_event_limit_actions(notify_txt):
@@ -2546,7 +2545,7 @@ if mkeventd_enabled:
             ],
             optional_keys = [],
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2560,7 +2559,7 @@ if mkeventd_enabled:
             ],
             default_value = "daily",
             ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2573,7 +2572,7 @@ if mkeventd_enabled:
             unit = _("days"),
             minvalue = 1,
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2590,7 +2589,7 @@ if mkeventd_enabled:
             label = "max.",
             unit = _("pending connections"),
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec"],
@@ -2607,7 +2606,7 @@ if mkeventd_enabled:
             label = "max.",
             unit = _("pending connections"),
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec_snmp"],
@@ -2636,7 +2635,7 @@ if mkeventd_enabled:
                      "the event message."),
             forth = lambda v: v == True and (v, {}) or v,
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec_snmp"],
@@ -2675,7 +2674,7 @@ if mkeventd_enabled:
                      "necessary to configure the credentials to decrypt the incoming traps."),
             text_if_empty = _("SNMP traps not configured"),
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
 
@@ -2687,7 +2686,7 @@ if mkeventd_enabled:
                           "the execution details of each rule are logged. This creates an immense "
                           "volume of logging and should never be used in productive operation."),
                 default_value = False),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec_log"],
@@ -2703,7 +2702,7 @@ if mkeventd_enabled:
             ],
             default_value = 0,
         ),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(groups["ec_log"],
@@ -2715,7 +2714,7 @@ if mkeventd_enabled:
                           "into the log file of the Event Console. Please be aware that this might lead to "
                           "a large number of log entries. "),
                 default_value = False),
-        domain = "mkeventd",
+        domain = ConfigDomainEventConsole,
     )
 
 
@@ -2732,7 +2731,7 @@ if mkeventd_enabled:
             default_value = 10,
             unit = "sec",
         ),
-        domain = "multisite",
+        domain = ConfigDomainEventConsole,
     )
 
     register_configvar(_("Administration Tool (WATO)"),
@@ -2746,7 +2745,7 @@ if mkeventd_enabled:
                           "which nicely indents everything. While this is a bit slower for large "
                           "rulesets it makes debugging and manual editing simpler."),
                 default_value = False),
-        domain = "multisite",
+        domain = ConfigDomainEventConsole,
     )
 
 
@@ -2770,7 +2769,7 @@ register_configvar(group,
         default_value = '',
 
     ),
-    domain = "multisite",
+    domain = ConfigDomainGUI,
     need_restart = True)
 
 register_configvar(group,
@@ -2790,7 +2789,7 @@ register_configvar(group,
         label = _("Send to remote Event Console via syslog"),
         none_label = _("Do not send to remote host"),
     ),
-    domain = "multisite",
+    domain = ConfigDomainGUI,
     need_restart = True)
 
 register_configvar(group,
@@ -2803,7 +2802,7 @@ register_configvar(group,
         choices = mkeventd.syslog_facilities,
         default_value = 16, # local0
     ),
-    domain = "multisite",
+    domain = ConfigDomainGUI,
     need_restart = True)
 
 

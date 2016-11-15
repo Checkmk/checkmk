@@ -6153,8 +6153,7 @@ def mode_globalvars(phase):
 
     # Get default settings of all configuration variables of interest in the domain
     # "check_mk". (this also reflects the settings done in main.mk)
-    check_mk_vars = [ varname for (varname, var) in configvars().items() if var[0] == "check_mk" ]
-    default_values = check_mk_local_automation("get-configuration", [], check_mk_vars)
+    default_values = check_mk_local_automation("get-configuration", [], get_check_mk_config_var_names())
     current_settings = load_configuration_settings()
 
     if phase == "action":
@@ -6184,12 +6183,8 @@ def mode_globalvars(phase):
                     current_settings[varname] and "on" or "off")
                 save_configuration_settings(current_settings)
 
-                pending_func  = configvar_domains()[domain].get("pending")
-                if pending_func:
-                    pending_func(msg)
-                else:
-                    add_change("edit-configvar", msg, domains=[ConfigDomain.get_class(domain)],
-                        need_restart=need_restart)
+                add_change("edit-configvar", msg, domains=[domain],
+                    need_restart=need_restart)
 
                 if action == "_reset":
                     return "globalvars", msg
@@ -6213,7 +6208,7 @@ def global_config_variable_groups(show_all=False):
         add = False
         for domain, varname, valuespec in group_vars:
             if not show_all and (not configvars()[varname][4]
-                                 or not configvar_domains()[domain].get('in_global_settings', True)):
+                                 or not domain.in_global_settings):
                 continue # do not edit via global settings
 
             add = True
@@ -6239,7 +6234,7 @@ def render_global_configuration_variables(group_names, default_values, current_s
         header_is_painted = False # needed for omitting empty groups
 
         for domain, varname, valuespec in configvar_groups()[group_name]:
-            if domain == "check_mk" and varname not in default_values:
+            if domain == ConfigDomainCore and varname not in default_values:
                 if config.debug:
                     raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
                                           "your local Check_MK installation" % varname)
@@ -6250,7 +6245,7 @@ def render_global_configuration_variables(group_names, default_values, current_s
             title_text = valuespec.title()
 
             if search and search not in group_name.lower() \
-                      and search not in domain.lower() \
+                    and search not in domain.ident.lower() \
                       and search not in varname \
                       and search not in help_text.lower() \
                       and search not in title_text.lower():
@@ -6363,22 +6358,12 @@ def mode_edit_configvar(phase, what = 'globalvars'):
 
         if siteid:
             save_sites(configured_sites, activate=False)
-
-            add_change("edit-configvar", msg, sites=[siteid],
-                domains=[ConfigDomain.get_class(domain)],
-                need_restart=need_restart)
+            add_change("edit-configvar", msg, sites=[siteid], domains=[domain], need_restart=need_restart)
 
             return "edit_site_globals"
         else:
             save_configuration_settings(current_settings)
-
-            pending_func  = configvar_domains()[domain].get("pending")
-            if pending_func:
-                pending_func(msg)
-            else:
-                add_change("edit-configvar", msg,
-                    domains=[ConfigDomain.get_class(domain)],
-                    need_restart=need_restart)
+            add_change("edit-configvar", msg, domains=[domain], need_restart=need_restart)
 
             if what == 'mkeventd':
                 return 'mkeventd_config'
@@ -6404,8 +6389,7 @@ def mode_edit_configvar(phase, what = 'globalvars'):
     html.begin_form("value_editor", method="POST")
     forms.header(valuespec.title())
     if not config.wato_hide_varnames:
-        forms.section(_("Variable for <tt>%s.mk</tt>") %
-            { "check_mk" : "main" }.get(domain, domain))
+        forms.section(_("Configuration variable:"))
         html.tt(varname)
 
     forms.section(_("Current setting"))
@@ -9047,8 +9031,7 @@ def mode_edit_site_globals(phase):
         return
 
     # The site's default values are the current global settings
-    check_mk_vars = [ varname for (varname, var) in configvars().items() if var[0] == "check_mk" ]
-    default_values = check_mk_local_automation("get-configuration", [], check_mk_vars)
+    default_values = check_mk_local_automation("get-configuration", [], get_check_mk_config_var_names())
     default_values.update(load_configuration_settings())
     current_settings = site.get("globals", {})
 
@@ -9106,6 +9089,11 @@ def mode_edit_site_globals(phase):
     group_names = global_config_variable_groups(show_all=True)
     render_global_configuration_variables(group_names, default_values,
                                           current_settings, search=search)
+
+
+def get_check_mk_config_var_names():
+    return [ varname for (varname, var) in configvars().items() if var[0] == ConfigDomainCore ]
+
 
 def mode_edit_site(phase):
     configured_sites = load_sites()

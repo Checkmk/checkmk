@@ -4885,7 +4885,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             html.write_text(change["user_id"] if change["user_id"] else "")
             if self._is_foreign(change):
                 html.icon(_("This change has been made by another user"), "foreign_changes")
-            table.cell(_("Change"), html.permissive_attrencode(change["text"]))
+            table.cell(_("Change"), change["text"])
 
             table.cell(_("Affected sites"))
             if self._affects_all_sites(change):

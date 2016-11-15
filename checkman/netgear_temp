@@ -1,6 +1,6 @@
 title: Netgear Switches: Temperature Sensors
-agents:
-catalog:
+agents: snmp
+catalog: hw/network/netgear
 license: GPL
 distribution: check_mk
 description:

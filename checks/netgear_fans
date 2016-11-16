@@ -69,8 +69,10 @@ def parse_netgear_fans(info):
 
 
 def inventory_netgear_fans(parsed):
-    return [ (sensorname, {}) for sensorname, sensorinfo in parsed.items()
-             if sensorinfo["state"] not in [ "1" ] ]
+    for sensorname, sensorinfo in parsed.items():
+        state = sensorinfo["state"]
+        if state != "1" and not ( state == "2" and sensorinfo["reading"] == 0 ):
+            yield sensorname, {}
 
 
 def check_netgear_fans(item, params, parsed):

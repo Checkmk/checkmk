@@ -1,0 +1,10 @@
+Title: Add missing metric definition for 15 minute CPU load prediction'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1479292658
+
+

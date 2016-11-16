@@ -52,4 +52,4 @@ def test_03_pip_interpreter_version(site):
     p = site.execute(["pip", "-V"],
                      stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("pip 8.")
+    assert version.startswith("pip 9.")

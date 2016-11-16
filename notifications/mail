@@ -308,7 +308,7 @@ body_elements = [
     "$SERVICEACKCOMMENT$",
     "$SERVICEACKCOMMENT$",),
 
-  ( "perfdata", "service", False, "Performance Data",
+  ( "perfdata", "service", False, "Host Performance Data",
     "$HOSTPERFDATA$",
     "$HOSTPERFDATA$",),
 

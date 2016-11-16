@@ -1,5 +1,5 @@
 Title: Make notifications mechanics synchronous (improve reliability)
-Component: notifcation
+Component: notification
 State: open
 Date: 2015-06-29 11:09:35
 Targetversion: 1.2.7

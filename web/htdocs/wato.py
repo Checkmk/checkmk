@@ -1904,7 +1904,7 @@ def rename_host_in_event_rules(oldname, newname):
             actions += [ "alert_rules" ] * num_changed
             save_alert_handler_rules(rules)
 
-    # Notification channels of flexible notifcations also can have host conditions
+    # Notification channels of flexible notifications also can have host conditions
     for userid, user in users.items():
         method = user.get("notification_method")
         if method and type(method) == tuple and method[0] == "flexible":
@@ -7412,7 +7412,7 @@ def notification_rule_match_conditions():
              orientation = "float",
              elements = [
                 Integer(
-                    label = _("beginning from notifcation number"),
+                    label = _("beginning from notification number"),
                     default_value = 10,
                     minvalue = 1,
                 ),

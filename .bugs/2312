@@ -1,5 +1,5 @@
 Title: Notifications: on exception send a notification mail to fallback address
-Component: notifcation
+Component: notification
 State: open
 Date: 2015-04-09 10:09:22
 Targetversion: future

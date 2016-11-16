@@ -1,5 +1,5 @@
 Title: Better handling of situation where /sbin/sendmail is missing
-Component: notifcation
+Component: notification
 State: open
 Date: 2015-06-02 15:16:00
 Targetversion: future

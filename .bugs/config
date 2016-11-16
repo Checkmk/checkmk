@@ -10,7 +10,7 @@ states = {
 components = [
   ( "core",        "Core Modules, Setup, etc." ),
   ( "checks",      "Checks and Agent plugins" ),
-  ( "notifcation", "Notification system" ),
+  ( "notification", "Notification system" ),
   ( "multisite",   "Multisite GUI" ),
   ( "livestatus",  "Livestatus" ),
   ( "ec",          "Event Console" ),

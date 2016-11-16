@@ -13,5 +13,5 @@ by the monitoring - and <i>user notification</i> - those being sent out
 to users.
 
 Note: in the rule based notifications one raw notification can create several
-user notifications. Other raw notifcations might create no user notification
+user notifications. Other raw notifications might create no user notification
 at all.

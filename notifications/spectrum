@@ -52,7 +52,7 @@ def main():
         for (var, value)
         in os.environ.items()])
 
-    # check if configured via flexible notifcations
+    # check if configured via flexible notifications
     if "PARAMETER_1" in context:
         context["PARAMETER_COMMUNITY"]   = context["PARAMETER_1"]
         context["PARAMETER_DESTINATION"] = context["PARAMETER_2"]

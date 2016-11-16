@@ -1,5 +1,5 @@
 Title: notify.py: subprocess p.communicate() calls may block when plugins output a lot
-Component: notifcation
+Component: notification
 Class: bug
 State: works4me
 Date: 2015-11-19 13:38:58

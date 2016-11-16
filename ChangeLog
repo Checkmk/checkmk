@@ -5004,7 +5004,7 @@
     * Add: plesk_domains - List domains configured in plesk installations
     * Add: plesk_backups - Monitor backup spaces configured for domains in plesk
     * Add: mysql_connections - Monitor number of parallel connections to mysql daemon
-    * Add: flexible notifcations: filter by hostname
+    * Add: flexible notifications: filter by hostname
     * New script multisite_to_mrpe for exporting services from a remote system
     * FIX: postgres_sessions: handle case of no active/no idle sessions
     * FIX: correct backslash representation of windows logwatch files

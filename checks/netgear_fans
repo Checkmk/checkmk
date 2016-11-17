@@ -57,9 +57,50 @@ factory_settings["netgear_fans_default_levels"] = {
 }
 
 
+def netgear_map_state_txt_to_int(state_nr, version):
+    map_state_txt_to_int = {
+        "operational"  : 0,
+        "failed"       : 2,
+        "powering"     : 0,
+        "not powering" : 1,
+        "not present"  : 1,
+        "no power"     : 2,
+        "incompatible" : 2,
+    }
+
+    if version.startswith("8."):
+        map_states = {
+            "1" : "operational",
+            "2" : "failed",
+            "3" : "powering",
+            "4" : "not powering",
+            "5" : "not present",
+        }
+    elif version.startswith("10."):
+        map_states = {
+            "1" : "notpresent",
+            "2" : "operational",
+            "3" : "failed",
+            "4" : "powering",
+            "5" : "no power",
+            "6" : "not powering",
+            "7" : "incompatible",
+        }
+    else:
+        map_states = {
+            "1" : "not present",
+            "2" : "operational",
+            "3" : "failed",
+        }
+
+    state_txt = map_states.get(state_nr, "unknown(%s)" % state_nr)
+    return map_state_txt_to_int.get(state_txt, 3), state_txt
+
+
 def parse_netgear_fans(info):
-    parsed = {}
-    for oid_end, sstate, reading_str in info:
+    versioninfo, sensorinfo = info
+    parsed = { "__version__" : versioninfo[0][0] }
+    for oid_end, sstate, reading_str in sensorinfo:
         parsed.setdefault("%s" % oid_end.replace(".", "/"), {
             "state"       : sstate,
             "reading_str" : reading_str,
@@ -76,17 +117,12 @@ def inventory_netgear_fans(parsed):
 
 
 def check_netgear_fans(item, params, parsed):
-    map_states = {
-        "1" : (1, "not present"),
-        "2" : (0, "operational"),
-        "3" : (2, "failed"),
-    }
     if item in parsed:
         data = parsed[item]
         reading_str = data["reading_str"]
         if reading_str != "Not Supported":
             yield check_fan(int(data["reading_str"]), params)
-        yield map_states[data["state"]]
+        yield netgear_map_state_txt_to_int(data["state"], parsed["__version__"])
 
 
 check_info['netgear_fans'] = {
@@ -94,11 +130,12 @@ check_info['netgear_fans'] = {
     'inventory_function'      : inventory_netgear_fans,
     'check_function'          : check_netgear_fans,
     'service_description'     : 'Fan %s',
-    'snmp_info'               : ('.1.3.6.1.4.1.4526.10.43.1.6.1', [
-                                      OID_END,
-                                      "3",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState
-                                      "4",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanSpeed
-                                ]),
+    'snmp_info'               : [('.1.3.6.1.4.1.4526.10.1.1.1.13', ['']),
+                                 ('.1.3.6.1.4.1.4526.10.43.1.6.1', [
+                                       OID_END,
+                                       "3",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanItemState
+                                       "4",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesFanSpeed
+                                ])],
     'snmp_scan_function'      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4526.100"),
     'default_levels_variable' : 'netgear_fans_default_levels',
     'includes'                : [ 'fan.include' ],

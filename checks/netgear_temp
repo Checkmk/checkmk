@@ -43,6 +43,22 @@
 # .1.3.6.1.4.1.4526.10.43.1.8.1.4.2.0 58 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.2.0
 # .1.3.6.1.4.1.4526.10.43.1.8.1.4.2.1 37 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.2.1
 # .1.3.6.1.4.1.4526.10.43.1.8.1.4.2.2 30 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.2.2
+# .1.3.6.1.4.1.4526.10.43.1.8.1.5.1.0 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorsEntry.5.1.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.5.1.1 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorsEntry.5.1.1
+# .1.3.6.1.4.1.4526.10.43.1.8.1.5.1.2 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorsEntry.5.1.2
+# .1.3.6.1.4.1.4526.10.43.1.8.1.5.2.0 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorsEntry.5.2.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.5.2.1 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorsEntry.5.2.1
+# .1.3.6.1.4.1.4526.10.43.1.8.1.5.2.2 2 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorsEntry.5.2.2
+
+# BUT (!!)
+# .1.3.6.1.4.1.4526.10.43.1.8.1.2.1.0 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType.1.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.2.2.0 0 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType.2.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.3.1.0 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState.1.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.3.2.0 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState.2.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.4.1.0 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.1.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.4.2.0 1 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature.2.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.5.1.0 35 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorsEntry.5.1.0
+# .1.3.6.1.4.1.4526.10.43.1.8.1.5.2.0 37 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorsEntry.5.2.0
 
 
 def parse_netgear_temp(info):
@@ -51,12 +67,18 @@ def parse_netgear_temp(info):
         "2" : "removable",
     }
 
+    versioninfo, sensorinfo = info
     parsed = {}
-    for oid_end, sensor_ty, sstate, reading_str in info:
+    for oid_end, sensor_ty, sstate, reading_str, reading_str_10 in sensorinfo:
+        if versioninfo[0][0].startswith("10."):
+            reading = float(reading_str_10)
+        else:
+            reading = float(reading_str)
+
         parsed.setdefault("Sensor %s" % oid_end.replace(".", "/"), {
             "type"    : map_types.get(sensor_ty),
             "state"   : sstate,
-            "reading" : float(reading_str),
+            "reading" : reading,
         })
     return parsed
 
@@ -91,12 +113,14 @@ check_info['netgear_temp'] = {
     'check_function'        : check_netgear_temp,
     'service_description'   : 'Temperature %s',
     'has_perfdata'          : True,
-    'snmp_info'             : ('.1.3.6.1.4.1.4526.10.43.1.8.1', [
-                                    OID_END,
-                                    "2",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType
-                                    "3",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState
-                                    "4",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature
-                              ]),
+    'snmp_info'             : [('.1.3.6.1.4.1.4526.10.1.1.1.13', ['']),
+                               ('.1.3.6.1.4.1.4526.10.43.1.8.1', [
+                                     OID_END,
+                                     "2",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorType
+                                     "3",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorState
+                                     "4",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature
+                                     "5",    # FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorTemperature
+                              ])],
     'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4526.100"),
     'includes'              : [ 'temperature.include' ],
     'group'                 : 'temperature',

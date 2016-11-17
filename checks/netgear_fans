@@ -71,7 +71,7 @@ def inventory_netgear_fans(parsed):
     for sensorname, sensorinfo in parsed.items():
         state = sensorinfo["state"]
         if state != "1" and not ( state == "2" and \
-           sensorinfo["reading_str"] in [ "0", "Not Supported" ] ):
+           sensorinfo["reading_str"] in [ "0" ] ):
             yield sensorname, {}
 
 
@@ -83,7 +83,9 @@ def check_netgear_fans(item, params, parsed):
     }
     if item in parsed:
         data = parsed[item]
-        yield check_fan(int(data["reading_str"]), params)
+        reading_str = data["reading_str"]
+        if reading_str != "Not Supported":
+            yield check_fan(int(data["reading_str"]), params)
         yield map_states[data["state"]]
 
 

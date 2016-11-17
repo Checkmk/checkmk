@@ -4852,7 +4852,8 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             elements = [
                 ("comment", TextAreaUnicode(
                     title = _("Comment (optional)"),
-                    cols = 93,
+                    cols = 40,
+                    try_max_width = True,
                     rows = 3,
                     help = _("You can provide an optional comment for the current activation. "
                              "This can be useful to document the reason why the changes you "

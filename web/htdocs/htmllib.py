@@ -1828,15 +1828,18 @@ class html(DeprecationWrapper):
         self.text_input(varname, default_value, type="password", size = size, **args)
 
 
-    def text_area(self, varname, deflt="", rows=4, cols=30, attrs = {}):
+    def text_area(self, varname, deflt="", rows=4, cols=30, attrs = {}, try_max_width=False):
         value = self.var(varname, deflt)
         error = self.user_errors.get(varname)
         if error:
             self.write("<x class=inputerror>")
 
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
-        self.write("<textarea style=\"width: %d.8ex\" rows=%d cols=%d name=\"%s\"%s>%s</textarea>\n" % (
-            cols, rows, cols, varname, attributes, self.attrencode(value)))
+        style = "width: %d.8ex;" % cols
+        if try_max_width:
+            style += "width: calc(100%% - 10px); min-width: %d.8ex;" % cols
+        self.write("<textarea style=\"%s\" rows=%d cols=%d name=\"%s\"%s>%s</textarea>\n" % (
+            style, rows, cols, varname, attributes, self.attrencode(value)))
         if error:
             self.write("</x>")
             self.set_focus(varname)

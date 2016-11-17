@@ -956,6 +956,7 @@ class TextAreaUnicode(TextUnicode):
     def __init__(self, **kwargs):
         TextUnicode.__init__(self, **kwargs)
         self._cols = kwargs.get("cols", 60)
+        self._try_max_width = kwargs.get("try_max_width", False) # If set, uses calc(100%-10px)
         self._rows = kwargs.get("rows", 20)  # Allowed: "auto" -> Auto resizing
         self._minrows = kwargs.get("minrows", 0) # Minimum number of initial rows when "auto"
         self._monospaced = kwargs.get("monospaced", False) # select TT font
@@ -986,7 +987,9 @@ class TextAreaUnicode(TextUnicode):
 
         if self._prefix_buttons:
             html.write('<div style="white-space: nowrap;">')
-        html.text_area(varprefix, value, rows=rows, cols=self._cols, attrs = attrs)
+
+        html.text_area(varprefix, value, rows=rows, cols=self._cols,
+                       attrs = attrs, try_max_width=self._try_max_width)
         if self._prefix_buttons:
             self.render_buttons()
             html.write('</div>')

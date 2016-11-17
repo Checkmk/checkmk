@@ -53,8 +53,7 @@ def parse_netgear_temp(info):
 
     parsed = {}
     for oid_end, sensor_ty, sstate, reading_str in info:
-        group, idx = oid_end.split(".")
-        parsed.setdefault("Sensor %s/%s" % (group, idx), {
+        parsed.setdefault("Sensor %s" % oid_end.replace(".", "/"), {
             "type"    : map_types.get(sensor_ty),
             "state"   : sstate,
             "reading" : float(reading_str),

@@ -60,10 +60,9 @@ factory_settings["netgear_fans_default_levels"] = {
 def parse_netgear_fans(info):
     parsed = {}
     for oid_end, sstate, reading_str in info:
-        group, idx = oid_end.split(".")
-        parsed.setdefault("%s/%s" % (group, idx), {
-            "state"   : sstate,
-            "reading" : int(reading_str),
+        parsed.setdefault("%s" % oid_end.replace(".", "/"), {
+            "state"       : sstate,
+            "reading_str" : reading_str,
         })
     return parsed
 
@@ -71,7 +70,8 @@ def parse_netgear_fans(info):
 def inventory_netgear_fans(parsed):
     for sensorname, sensorinfo in parsed.items():
         state = sensorinfo["state"]
-        if state != "1" and not ( state == "2" and sensorinfo["reading"] == 0 ):
+        if state != "1" and not ( state == "2" and \
+           sensorinfo["reading_str"] in [ "0", "Not Supported" ] ):
             yield sensorname, {}
 
 
@@ -83,7 +83,7 @@ def check_netgear_fans(item, params, parsed):
     }
     if item in parsed:
         data = parsed[item]
-        yield check_fan(data["reading"], params)
+        yield check_fan(int(data["reading_str"]), params)
         yield map_states[data["state"]]
 
 

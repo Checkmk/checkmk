@@ -34,8 +34,7 @@
 def parse_netgear_powersupplies(info):
     parsed = {}
     for oid_end, sstate in info:
-        group, idx = oid_end.split(".")
-        parsed.setdefault("%s/%s" % (group, idx), sstate )
+        parsed.setdefault("%s" % oid_end.replace(".", "/"), sstate )
     return parsed
 
 

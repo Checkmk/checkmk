@@ -38,7 +38,7 @@ SHOULD_ADD_RE = re.compile(r'^(.*?) should add these lines:$')
 SHOULD_REMOVE_RE = re.compile(r'^(.*?) should remove these lines:$')
 FULL_LIST_RE = re.compile(r'The full include-list for (.*?):$')
 END_RE = re.compile(r'^---$')
-LINES_RE = re.compile(r'.*// lines ([0-9]+)-[0-9]+$')
+LINES_RE = re.compile(r'^- (.*?)  // lines ([0-9]+)-[0-9]+$')
 
 
 GENERAL, ADD, REMOVE, LIST = range(4)
@@ -50,7 +50,7 @@ def clang_formatter(output):
     for line in output:
         match = CORRECT_RE.match(line)
         if match:
-            print('%s has correct #includes/fwd-decls' % match.groups(1))
+            print('%s:1:1: note: #includes/fwd-decls are correct' % match.groups(1))
             continue
         match = SHOULD_ADD_RE.match(line)
         if match:
@@ -63,21 +63,20 @@ def clang_formatter(output):
         match = FULL_LIST_RE.match(line)
         if match:
             state = (LIST, match.group(1))
-            print('%s:1:1: error: full include list follows' % state[1])
         elif END_RE.match(line):
             state = (GENERAL, None)
-        elif state[0] != GENERAL and not line.strip():
+        elif not line.strip():
             continue
+        elif state[0] == GENERAL:
+            print(line)
         elif state[0] == ADD:
             print('%s:1:1: error: add the following line' % state[1])
             print(line)
         elif state[0] == REMOVE:
             match = LINES_RE.match(line)
-            line_no = match.group(1) if match else '1'
+            line_no = match.group(2) if match else '1'
             print('%s:%s:1: error: remove the following line' % (state[1], line_no))
-            print(line[2:])
-        else:
-            print(line)
+            print(match.group(1))
 
 
 DEFAULT_FORMAT = 'iwyu'

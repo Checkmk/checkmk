@@ -46,8 +46,8 @@ check_icmp_params = [
                   "is 100%. That means that the check is only critical if <b>all</b> packets "
                   "are lost."),
          elements = [
-             Percentage(title = _("Warning if above"), default_value = 80.0),
-             Percentage(title = _("Critical if above"), default_value = 100.0),
+             Percentage(title = _("Warning at"), default_value = 80.0),
+             Percentage(title = _("Critical at"), default_value = 100.0),
          ])),
 
     ( "packets",

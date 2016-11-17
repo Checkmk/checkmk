@@ -1601,20 +1601,26 @@ register_rule(group,
     itemtype = "service")
 
 
+def transform_float_minutes_to_age(float_minutes):
+    return int(float_minutes * 60)
+
+def transform_age_to_float_minutes(age):
+    return float(age) / 60.0
+
 register_rule(group,
     "extra_host_conf:first_notification_delay",
     Transform(
-        Float(
-            minvalue = 0.0,
-            default_value = 60.0,
+        Age(
+            minvalue = 0,
+            default_value = 300,
             label = _("Delay:"),
-            unit = _("minutes"),
             title = _("Delay host notifications"),
             help = _("This setting delays notifications about host problems by the "
                      "specified amount of time. If the host is up again within that "
                      "time, no notification will be sent out."),
         ),
-        forth = lambda x: float(x),
+        forth = transform_float_minutes_to_age,
+        back = transform_age_to_float_minutes,
     ),
     factory_default = 0.0,
 )
@@ -1622,9 +1628,9 @@ register_rule(group,
 register_rule(group,
     "extra_service_conf:first_notification_delay",
     Transform(
-        Float(
-            minvalue = 0.0,
-            default_value = 60.0,
+        Age(
+            minvalue = 0,
+            default_value = 300,
             label = _("Delay:"),
             unit = _("minutes"),
             title = _("Delay service notifications"),
@@ -1632,10 +1638,12 @@ register_rule(group,
                      "specified amount of time. If the service is OK again within that "
                      "time, no notification will be sent out."),
         ),
-        forth = lambda x: float(x),
+        forth = transform_float_minutes_to_age,
+        back = transform_age_to_float_minutes,
     ),
     factory_default = 0.0,
     itemtype = "service")
+
 
 register_rule(group,
     "extra_host_conf:notification_interval",

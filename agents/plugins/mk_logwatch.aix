@@ -7,8 +7,7 @@ echo "<<<logwatch>>>"
 echo "[[[errorlog]]]"
 OUT=$(errpt | awk 'NR>1 { printf "C %s\n", $0 }')
 if [[ $OUT != '' ]];then
-        echo $OUT
+        echo "$OUT"
         errpt -a > /var/log/errpt_$(date +%s).log
         errclear 0
 fi
-

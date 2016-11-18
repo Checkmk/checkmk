@@ -1,0 +1,10 @@
+Title: BI Aggregations: no longer show duplicate aggregations when an aggregation has mulitple groups
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1479474003
+
+

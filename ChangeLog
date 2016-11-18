@@ -39,6 +39,9 @@
     Notifications:
     * 4042 FIX: Fix missing From address in synchronous SMTP notifications...
 
+    BI:
+    * 3991 FIX: BI Aggregations: no longer show duplicate aggregations when an aggregation has mulitple groups
+
     Livestatus:
     * 3651 FIX: Fixed potential segfault with Nagios core when accessing log/commands table via Livestatus....
 

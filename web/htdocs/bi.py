@@ -360,7 +360,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                     continue # the group has already been compiled completely
 
                 if group not in cache['forest']:
-                    cache['forest'][group] = new_entries
+                    cache['forest'][group] = new_entries[:]
                 else:
                     cache['forest'][group] += new_entries
 

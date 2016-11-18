@@ -171,7 +171,9 @@ string TableLog::namePrefix() const { return "log_"; }
 
 void TableLog::answerQuery(Query *query) {
     lock_guard<mutex> lg(_log_cache->_lock);
-    _log_cache->logCachePreChecks(_core);
+    if (!_log_cache->logCachePreChecks(_core)) {
+        return;
+    }
 
     int since = 0;
     int until = time(nullptr) + 1;

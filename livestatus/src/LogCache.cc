@@ -67,25 +67,19 @@ void LogCache::setMaxCachedMessages(unsigned long m) {
 LogCache::~LogCache() { forgetLogfiles(); }
 
 bool LogCache::logCachePreChecks(MonitoringCore *core) {
-    // Do we have any logfiles (should always be the case, but we don't want to
-    // crash...
-    if (_logfiles.empty()) {
-        Informational(_logger) << "no log file found, not even " << log_file;
-        return false;
-    }
-    // Has Nagios rotated logfiles? => Update our file index. And delete all
-    // memorized log messages.
-    if (core->last_logfile_rotation() > _last_index_update) {
-        Informational(_logger)
-            << "core has rotated log files, rebuilding log file index";
+    if (_logfiles.empty() ||
+        core->last_logfile_rotation() > _last_index_update) {
         forgetLogfiles();
         updateLogfileIndex();
     }
-    return true;
+    if (_logfiles.empty()) {
+        Notice(_logger) << "no log file found, not even " << log_file;
+    }
+    return !_logfiles.empty();
 }
 
 void LogCache::forgetLogfiles() {
-    Informational(_logger) << "flushing complete log file cache.";
+        Notice(_logger) << "flushing log file index";
     for (auto &logfile : _logfiles) {
         delete logfile.second;
     }
@@ -94,6 +88,7 @@ void LogCache::forgetLogfiles() {
 }
 
 void LogCache::updateLogfileIndex() {
+    Notice(_logger) << "updating log file index";
     _last_index_update = system_clock::now();
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.

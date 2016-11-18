@@ -355,7 +355,9 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     lock_guard<mutex> lg(_log_cache->_lock);
-    _log_cache->logCachePreChecks(_core);
+    if (!_log_cache->logCachePreChecks(_core)) {
+        return;
+    }
 
     // This flag might be set to true by the return value of processDataset(...)
     _abort_query = false;

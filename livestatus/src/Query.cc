@@ -198,7 +198,7 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding)
     for (const auto &sc : _stats_columns) {
         // TODO(sp) We should really move column() from StatsColumn, it doesn't
         // belong there... :-P
-        if (sc->column()) {
+        if (sc->column() != nullptr) {
             _all_columns.insert(sc->column());
         }
     }

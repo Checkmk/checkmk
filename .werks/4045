@@ -1,0 +1,9 @@
+Title: Tactical Overview: do not count OK events as problems
+Level: 2
+Component: wato
+Compatible: multisite
+Version: 1.4.0i3
+Date: 1479461630
+Class: fix
+
+

@@ -22,26 +22,32 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableContactgroups_h
-#define TableContactgroups_h
+#ifndef ServiceGroupsColumn_h
+#define ServiceGroupsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
-#include "Table.h"
-class MonitoringCore;
-class Query;
+#include "Column.h"
+#include "ListColumn.h"
+#include "nagios.h"
+class RowRenderer;
 
-class TableContactgroups : public Table {
+class ServicegroupsColumn : public ListColumn {
+    int _offset;
+
 public:
-    explicit TableContactgroups(MonitoringCore *core);
-
-    std::string name() const override;
-    std::string namePrefix() const override;
-    void answerQuery(Query *query) override;
-    void *findObject(const std::string &objectspec) override;
+    ServicegroupsColumn(const std::string &name, const std::string &description,
+                        int offset, int indirect_offset, int extra_offset = -1)
+        : ListColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset) {}
+    ColumnType type() override { return ColumnType::list; }
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    std::unique_ptr<Contains> makeContains(const std::string &name) override;
+    bool isEmpty(void *data) override;
 
 private:
-    MonitoringCore *_core;
+    objectlist *getData(void *);
 };
 
-#endif  // TableContactgroups_h
+#endif  // ServiceGroupsColumn_h

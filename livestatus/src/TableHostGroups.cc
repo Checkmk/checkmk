@@ -22,9 +22,9 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "TableHostgroups.h"
-#include "HostlistColumn.h"
-#include "HostlistStateColumn.h"
+#include "TableHostGroups.h"
+#include "HostListColumn.h"
+#include "HostListStateColumn.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "auth.h"

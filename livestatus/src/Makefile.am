@@ -32,15 +32,15 @@ pkglib_LIBRARIES = livestatus.so
 
 livestatus_so_SOURCES = \
         AndingFilter.cc \
-        AttributelistColumn.cc \
-        AttributelistFilter.cc \
+        AttributeListColumn.cc \
+        AttributeListFilter.cc \
         BlobColumn.cc \
         ClientQueue.cc \
         Column.cc \
         ColumnsColumn.cc \
         CommandsHolderNagios.cc \
-        ContactgroupsColumn.cc \
-        ContactgroupsMemberColumn.cc \
+        ContactGroupsColumn.cc \
+        ContactGroupsMemberColumn.cc \
         ContactsColumn.cc \
         CountAggregator.cc \
         CustomTimeperiodColumn.cc \
@@ -65,13 +65,13 @@ livestatus_so_SOURCES = \
         GlobalCountersColumn.cc \
         HostContactsColumn.cc \
         HostFileColumn.cc \
+        HostGroupsColumn.cc \
+        HostListColumn.cc \
+        HostListFilter.cc \
+        HostListStateColumn.cc \
         HostServiceState.cc \
         HostSpecialDoubleColumn.cc \
         HostSpecialIntColumn.cc \
-        HostgroupsColumn.cc \
-        HostlistColumn.cc \
-        HostlistFilter.cc \
-        HostlistStateColumn.cc \
         InputBuffer.cc \
         IntAggregator.cc \
         IntColumn.cc \
@@ -105,12 +105,12 @@ livestatus_so_SOURCES = \
         RendererPython.cc \
         RendererPython3.cc \
         ServiceContactsColumn.cc \
+        ServiceGroupsColumn.cc \
+        ServiceListColumn.cc \
+        ServiceListFilter.cc \
+        ServiceListStateColumn.cc \
         ServiceSpecialDoubleColumn.cc \
         ServiceSpecialIntColumn.cc \
-        ServicegroupsColumn.cc \
-        ServicelistColumn.cc \
-        ServicelistFilter.cc \
-        ServicelistStateColumn.cc \
         StatsColumn.cc \
         StatusSpecialIntColumn.cc \
         Store.cc \
@@ -121,7 +121,7 @@ livestatus_so_SOURCES = \
         TableColumns.cc \
         TableCommands.cc \
         TableComments.cc \
-        TableContactgroups.cc \
+        TableContactGroups.cc \
         TableContacts.cc \
         TableDowntimes.cc \
         TableEventConsole.cc \
@@ -129,11 +129,11 @@ livestatus_so_SOURCES = \
         TableEventConsoleHistory.cc \
         TableEventConsoleReplication.cc \
         TableEventConsoleStatus.cc \
-        TableHostgroups.cc \
+        TableHostGroups.cc \
         TableHosts.cc \
         TableHostsByGroup.cc \
         TableLog.cc \
-        TableServicegroups.cc \
+        TableServiceGroups.cc \
         TableServices.cc \
         TableServicesByGroup.cc \
         TableServicesByHostGroup.cc \

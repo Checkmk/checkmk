@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "AttributelistFilter.h"
+#include "AttributeListFilter.h"
 #include <ostream>
 #include "Logger.h"
 

@@ -22,28 +22,25 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableHostgroups_h
-#define TableHostgroups_h
+#ifndef ContactGroupsMemberColumn_h
+#define ContactGroupsMemberColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
-#include "Table.h"
-#include "nagios.h"  // IWYU pragma: keep
-class Logger;
-class Query;
+#include "Column.h"
+#include "ContactsColumn.h"
+#include "nagios.h"
 
-class TableHostgroups : public Table {
+class ContactgroupsMemberColumn : public ContactsColumn {
 public:
-    explicit TableHostgroups(Logger *logger);
-
-    std::string name() const override;
-    std::string namePrefix() const override;
-    void answerQuery(Query *query) override;
-    void *findObject(const std::string &objectspec) override;
-    bool isAuthorized(contact *, void *) override;
-
-    static void addColumns(Table *, const std::string &prefix,
-                           int indirect_offset);
+    ContactgroupsMemberColumn(const std::string& name,
+                              const std::string& description,
+                              int indirect_offset, int extra_offset = -1)
+        : ContactsColumn(name, description, indirect_offset, extra_offset) {}
+    ColumnType type() override { return ColumnType::list; }
+    std::unique_ptr<Contains> makeContains(const std::string& name) override;
+    std::unique_ptr<Contains> containsContact(contact* ctc) override;
 };
 
-#endif  // TableHostgroups_h
+#endif  // ContactGroupsMemberColumn_h

@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableServices.h"
-#include "AttributelistColumn.h"
-#include "ContactgroupsColumn.h"
+#include "AttributeListColumn.h"
+#include "ContactGroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsExplicitColumn.h"
@@ -42,9 +42,9 @@
 #include "OffsetTimeperiodColumn.h"
 #include "Query.h"
 #include "ServiceContactsColumn.h"
+#include "ServiceGroupsColumn.h"
 #include "ServiceSpecialDoubleColumn.h"
 #include "ServiceSpecialIntColumn.h"
-#include "ServicegroupsColumn.h"
 #include "TableHosts.h"
 #include "WorldNagios.h"
 #include "auth.h"

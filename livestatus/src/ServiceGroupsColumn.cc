@@ -22,47 +22,46 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "ContactgroupsColumn.h"
-#include "MonitoringCore.h"
+#include "ServiceGroupsColumn.h"
 #include "Renderer.h"
 
 using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void ContactgroupsColumn::output(void *row, RowRenderer &r,
+objectlist *ServicegroupsColumn::getData(void *data) {
+    if (data != nullptr) {
+        data = shiftPointer(data);
+        if (data != nullptr) {
+            return *reinterpret_cast<objectlist **>(
+                reinterpret_cast<char *>(data) + _offset);
+        }
+    }
+    return nullptr;
+}
+
+void ServicegroupsColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
-    if (auto data = static_cast<char *>(shiftPointer(row))) {
-        for (contactgroupsmember *cgm =
-                 *reinterpret_cast<contactgroupsmember **>(data + _offset);
-             cgm != nullptr; cgm = cgm->next) {
-            l.output(string(cgm->group_ptr->group_name));
-        }
+    for (objectlist *list = getData(row); list != nullptr; list = list->next) {
+        servicegroup *sg = reinterpret_cast<servicegroup *>(list->object_ptr);
+        l.output(string(sg->group_name));
     }
 }
 
-unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
+unique_ptr<ListColumn::Contains> ServicegroupsColumn::makeContains(
     const string &name) {
-    class ContainsContactGroup : public Contains {
+    class ContainsServiceGroup : public Contains {
     public:
-        ContainsContactGroup(MonitoringCore::ContactGroup *element, int offset)
+        ContainsServiceGroup(servicegroup *element, int offset)
             : _element(element), _offset(offset) {}
 
         bool operator()(void *row) override {
-            if (_element == nullptr || row == nullptr) {
-                return false;
-            }
-
-            // row is already shifted (_indirect_offset is taken into account),
-            // but _offset needs still to be accounted for
-            for (contactgroupsmember *cgm =
-                     *reinterpret_cast<contactgroupsmember **>(
-                         reinterpret_cast<char *>(row) + _offset);
-                 cgm != nullptr; cgm = cgm->next) {
-                // TODO(sp) Remove evil cast below.
-                if (cgm->group_ptr ==
-                    reinterpret_cast<contactgroup *>(_element)) {
+            // row is already shifted
+            for (objectlist *list = *reinterpret_cast<objectlist **>(
+                     reinterpret_cast<char *>(row) + _offset);
+                 list != nullptr; list = list->next) {
+                if (list->object_ptr == _element) {
                     return true;
                 }
             }
@@ -70,16 +69,16 @@ unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
         }
 
     private:
-        MonitoringCore::ContactGroup *const _element;
+        servicegroup *const _element;
         int _offset;
     };
 
-    return make_unique<ContainsContactGroup>(_core->find_contactgroup(name),
-                                             _offset);
+    return make_unique<ContainsServiceGroup>(
+        find_servicegroup(const_cast<char *>(name.c_str())), _offset);
 }
 
-bool ContactgroupsColumn::isEmpty(void *data) {
-    contactgroupsmember *cgm = *reinterpret_cast<contactgroupsmember **>(
+bool ServicegroupsColumn::isEmpty(void *data) {
+    objectlist *list = *reinterpret_cast<objectlist **>(
         reinterpret_cast<char *>(data) + _offset);
-    return cgm == nullptr;
+    return list == nullptr;
 }

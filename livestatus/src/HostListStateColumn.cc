@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "HostlistStateColumn.h"
+#include "HostListStateColumn.h"
 #include "auth.h"
 
 static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {

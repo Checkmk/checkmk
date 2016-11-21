@@ -22,42 +22,32 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "HostlistColumn.h"
-#include "HostlistFilter.h"
-#include "Renderer.h"
-#include "auth.h"
+#ifndef HostGroupsColumn_h
+#define HostGroupsColumn_h
 
-using std::string;
+#include "config.h"  // IWYU pragma: keep
+#include <memory>
+#include <string>
+#include "Column.h"
+#include "ListColumn.h"
+#include "nagios.h"
+class RowRenderer;
 
-hostsmember *HostlistColumn::getMembers(void *data) {
-    data = shiftPointer(data);
-    if (data == nullptr) {
-        return nullptr;
-    }
+class HostgroupsColumn : public ListColumn {
+    int _offset;
 
-    return *reinterpret_cast<hostsmember **>(reinterpret_cast<char *>(data) +
-                                             _offset);
-}
+public:
+    HostgroupsColumn(const std::string &name, const std::string &description,
+                     int offset, int indirect_offset, int extra_offset = -1)
+        : ListColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset) {}
+    ColumnType type() override { return ColumnType::list; }
+    std::unique_ptr<Contains> makeContains(const std::string &name) override;
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    bool isEmpty(void *data) override;
 
-void HostlistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
-    ListRenderer l(r);
-    for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
-        host *hst = mem->host_ptr;
-        if (auth_user == nullptr ||
-            is_authorized_for(auth_user, hst, nullptr)) {
-            if (!_show_state) {
-                l.output(string(hst->name));
-            } else {
-                SublistRenderer s(l);
-                s.output(string(hst->name));
-                s.output(hst->current_state);
-                s.output(hst->has_been_checked);
-            }
-        }
-    }
-}
+private:
+    objectlist *getData(void *);
+};
 
-Filter *HostlistColumn::createFilter(RelationalOperator relOp,
-                                     const string &value) {
-    return new HostlistFilter(this, relOp, value);
-}
+#endif  // HostGroupsColumn_h

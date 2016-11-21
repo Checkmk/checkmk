@@ -22,32 +22,28 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostgroupsColumn_h
-#define HostgroupsColumn_h
+#ifndef TableHostGroups_h
+#define TableHostGroups_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <memory>
 #include <string>
-#include "Column.h"
-#include "ListColumn.h"
-#include "nagios.h"
-class RowRenderer;
+#include "Table.h"
+#include "nagios.h"  // IWYU pragma: keep
+class Logger;
+class Query;
 
-class HostgroupsColumn : public ListColumn {
-    int _offset;
-
+class TableHostgroups : public Table {
 public:
-    HostgroupsColumn(const std::string &name, const std::string &description,
-                     int offset, int indirect_offset, int extra_offset = -1)
-        : ListColumn(name, description, indirect_offset, extra_offset)
-        , _offset(offset) {}
-    ColumnType type() override { return ColumnType::list; }
-    std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
-    bool isEmpty(void *data) override;
+    explicit TableHostgroups(Logger *logger);
 
-private:
-    objectlist *getData(void *);
+    std::string name() const override;
+    std::string namePrefix() const override;
+    void answerQuery(Query *query) override;
+    void *findObject(const std::string &objectspec) override;
+    bool isAuthorized(contact *, void *) override;
+
+    static void addColumns(Table *, const std::string &prefix,
+                           int indirect_offset);
 };
 
-#endif  // HostgroupsColumn_h
+#endif  // TableHostGroups_h

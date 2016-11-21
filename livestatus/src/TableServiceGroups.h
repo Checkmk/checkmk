@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef TableServicegroups_h
-#define TableServicegroups_h
+#ifndef TableServiceGroups_h
+#define TableServiceGroups_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
@@ -46,4 +46,4 @@ public:
                            int indirect_offset);
 };
 
-#endif  // TableServicegroups_h
+#endif  // TableServiceGroups_h

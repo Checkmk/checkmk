@@ -22,33 +22,43 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ServicelistFilter_h
-#define ServicelistFilter_h
-
-#include "config.h"  // IWYU pragma: keep
-#include <string>
-#include "ColumnFilter.h"
-#include "ServicelistColumn.h"
-#include "opids.h"
-
-#ifdef CMC
-#include "cmc.h"
-#else
+#include "TableContactGroups.h"
+#include "ContactGroupsMemberColumn.h"
+#include "MonitoringCore.h"
+#include "OffsetStringColumn.h"
+#include "Query.h"
 #include "nagios.h"
-#endif
 
-class ServicelistFilter : public ColumnFilter {
-public:
-    ServicelistFilter(ServicelistColumn *column, RelationalOperator relOp,
-                      const std::string &value);
-    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
-    ServicelistColumn *column() const override;
+using std::string;
 
-private:
-    ServicelistColumn *_column;
-    RelationalOperator _relOp;
-    std::string _ref_host;
-    std::string _ref_service;
-};
+extern contactgroup *contactgroup_list;
 
-#endif  // ServicelistFilter_h
+TableContactgroups::TableContactgroups(MonitoringCore *core)
+    : Table(core->loggerLivestatus()), _core(core) {
+    contactgroup cg;
+    char *ref = reinterpret_cast<char *>(&cg);
+    addColumn(
+        new OffsetStringColumn("name", "The name of the contactgroup",
+                               reinterpret_cast<char *>(&cg.group_name) - ref));
+    addColumn(
+        new OffsetStringColumn("alias", "The alias of the contactgroup",
+                               reinterpret_cast<char *>(&cg.alias) - ref));
+    addColumn(new ContactgroupsMemberColumn(
+        "members", "A list of all members of this contactgroup", -1));
+}
+
+string TableContactgroups::name() const { return "contactgroups"; }
+
+string TableContactgroups::namePrefix() const { return "contactgroup_"; }
+
+void TableContactgroups::answerQuery(Query *query) {
+    for (contactgroup *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
+        if (!query->processDataset(cg)) {
+            break;
+        }
+    }
+}
+
+void *TableContactgroups::findObject(const string &objectspec) {
+    return _core->find_contactgroup(objectspec);
+}

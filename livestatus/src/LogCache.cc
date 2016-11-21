@@ -79,7 +79,7 @@ bool LogCache::logCachePreChecks(MonitoringCore *core) {
 }
 
 void LogCache::forgetLogfiles() {
-        Notice(_logger) << "flushing log file index";
+    Notice(_logger) << "flushing log file index";
     for (auto &logfile : _logfiles) {
         delete logfile.second;
     }

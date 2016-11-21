@@ -22,25 +22,32 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ContactgroupsMemberColumn_h
-#define ContactgroupsMemberColumn_h
+#ifndef ContactGroupsColumn_h
+#define ContactGroupsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
-#include "Column.h"
-#include "ContactsColumn.h"
+#include "ListColumn.h"
 #include "nagios.h"
+class MonitoringCore;
+class RowRenderer;
 
-class ContactgroupsMemberColumn : public ContactsColumn {
+class ContactgroupsColumn : public ListColumn {
 public:
-    ContactgroupsMemberColumn(const std::string& name,
-                              const std::string& description,
-                              int indirect_offset, int extra_offset = -1)
-        : ContactsColumn(name, description, indirect_offset, extra_offset) {}
-    ColumnType type() override { return ColumnType::list; }
-    std::unique_ptr<Contains> makeContains(const std::string& name) override;
-    std::unique_ptr<Contains> containsContact(contact* ctc) override;
+    ContactgroupsColumn(const std::string &name, const std::string &description,
+                        int offset, int indirect_offset, int extra_offset,
+                        MonitoringCore *core)
+        : ListColumn(name, description, indirect_offset, extra_offset)
+        , _core(core)
+        , _offset(offset) {}
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    std::unique_ptr<Contains> makeContains(const std::string &name) override;
+    bool isEmpty(void *data) override;
+
+private:
+    MonitoringCore *_core;
+    int _offset;
 };
 
-#endif  // ContactgroupsMemberColumn_h
+#endif  // ContactGroupsColumn_h

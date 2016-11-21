@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableHosts.h"
-#include "AttributelistColumn.h"
-#include "ContactgroupsColumn.h"
+#include "AttributeListColumn.h"
+#include "ContactGroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsExplicitColumn.h"
@@ -34,10 +34,10 @@
 #include "DynamicLogwatchFileColumn.h"
 #include "HostContactsColumn.h"
 #include "HostFileColumn.h"
+#include "HostGroupsColumn.h"
+#include "HostListColumn.h"
 #include "HostSpecialDoubleColumn.h"
 #include "HostSpecialIntColumn.h"
-#include "HostgroupsColumn.h"
-#include "HostlistColumn.h"
 #include "LogwatchListColumn.h"
 #include "MetricsColumn.h"
 #include "MonitoringCore.h"
@@ -48,8 +48,8 @@
 #include "OffsetTimeColumn.h"
 #include "OffsetTimeperiodColumn.h"
 #include "Query.h"
-#include "ServicelistColumn.h"
-#include "ServicelistStateColumn.h"
+#include "ServiceListColumn.h"
+#include "ServiceListStateColumn.h"
 #include "auth.h"
 
 extern host *host_list;

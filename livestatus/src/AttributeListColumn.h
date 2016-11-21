@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef AttributelistColumn_h
-#define AttributelistColumn_h
+#ifndef AttributeListColumn_h
+#define AttributeListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
@@ -72,4 +72,4 @@ private:
     bool _show_list;
 };
 
-#endif  // AttributelistColumn_h
+#endif  // AttributeListColumn_h

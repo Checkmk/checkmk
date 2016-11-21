@@ -22,26 +22,50 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "HostlistFilter.h"
+// IWYU pragma: no_include <ext/alloc_traits.h>
+#include "ServiceListFilter.h"
+#include <cstring>
 #include <ostream>
-#include <utility>
 #include "Logger.h"
 
-using std::move;
 using std::string;
 
-HostlistFilter::HostlistFilter(HostlistColumn *column, RelationalOperator relOp,
-                               string value)
-    : _column(column), _relOp(relOp), _ref_value(move(value)) {}
+#define HOSTSERVICE_SEPARATOR '|'
 
-bool HostlistFilter::accepts(void *row, contact * /* auth_user */,
-                             int /* timezone_offset */) {
-    // data points to a primary data object. We need to extract a pointer to a
-    // host list
-    hostsmember *mem = _column->getMembers(row);
+ServicelistFilter::ServicelistFilter(ServicelistColumn *column,
+                                     RelationalOperator relOp,
+                                     const string &value)
+    : _column(column), _relOp(relOp) {
+    if ((_relOp == RelationalOperator::equal ||
+         _relOp == RelationalOperator::not_equal) &&
+        value.empty()) {
+        return;  // test for emptiness is allowed
+    }
+
+    // ref_value must be of from hostname HOSTSERVICE_SEPARATOR
+    // service_description
+    const char *sep = index(value.c_str(), HOSTSERVICE_SEPARATOR);
+    if (sep == nullptr) {
+        Informational(logger()) << "Invalid reference value for service list "
+                                   "membership. Must be 'hostname"
+                                << string(1, HOSTSERVICE_SEPARATOR)
+                                << "servicename'";
+        _ref_host = "";
+        _ref_service = "";
+    } else {
+        _ref_host = string(&value[0], sep - &value[0]);
+        _ref_service = sep + 1;
+    }
+}
+
+bool ServicelistFilter::accepts(void *row, contact * /* auth_user */,
+                                int /* timezone_offset */) {
+    // data points to a primary data object. We need to extract
+    // a pointer to a service list
+    servicesmember *mem = _column->getMembers(row);
 
     // test for empty list
-    if (_ref_value.empty()) {
+    if (_ref_host.empty()) {
         if (_relOp == RelationalOperator::equal) {
             return mem == nullptr;
         }
@@ -52,12 +76,8 @@ bool HostlistFilter::accepts(void *row, contact * /* auth_user */,
 
     bool is_member = false;
     for (; mem != nullptr; mem = mem->next) {
-        char *host_name = mem->host_name;
-        if (host_name == nullptr) {
-            host_name = mem->host_ptr->name;
-        }
-
-        if (host_name == _ref_value) {
+        service *svc = mem->service_ptr;
+        if (svc->host_name == _ref_host && svc->description == _ref_service) {
             is_member = true;
             break;
         }
@@ -79,10 +99,10 @@ bool HostlistFilter::accepts(void *row, contact * /* auth_user */,
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
             Informational(logger()) << "Sorry. Operator " << _relOp
-                                    << " for host lists not implemented.";
+                                    << " for service lists not implemented.";
             return false;
     }
     return false;  // unreachable
 }
 
-HostlistColumn *HostlistFilter::column() const { return _column; }
+ServicelistColumn *ServicelistFilter::column() const { return _column; }

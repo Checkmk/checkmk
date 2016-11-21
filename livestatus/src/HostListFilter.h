@@ -22,41 +22,32 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "ContactgroupsMemberColumn.h"
-#include "ListColumn.h"
+#ifndef HostListFilter_h
+#define HostListFilter_h
 
-using std::make_unique;
-using std::string;
-using std::unique_ptr;
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "ColumnFilter.h"
+#include "HostListColumn.h"
+#include "opids.h"
 
-namespace {
-class ContainsContact : public ListColumn::Contains {
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
+class HostlistFilter : public ColumnFilter {
 public:
-    explicit ContainsContact(contact *element) : _element(element) {}
-
-    bool operator()(void *row) override {
-        contactgroup *cg = static_cast<contactgroup *>(row);
-        for (contactsmember *mem = cg->members; mem != nullptr;
-             mem = mem->next) {
-            if (mem->contact_ptr == _element) {
-                return true;
-            }
-        }
-        return false;
-    }
+    HostlistFilter(HostlistColumn *column, RelationalOperator relOp,
+                   std::string value);
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    HostlistColumn *column() const override;
 
 private:
-    contact *const _element;
+    HostlistColumn *_column;
+    RelationalOperator _relOp;
+    std::string _ref_value;
 };
-}  // namespace
 
-unique_ptr<ListColumn::Contains> ContactgroupsMemberColumn::makeContains(
-    const string &name) {
-    return make_unique<ContainsContact>(
-        find_contact(const_cast<char *>(name.c_str())));
-}
-
-unique_ptr<ListColumn::Contains> ContactgroupsMemberColumn::containsContact(
-    contact *ctc) {
-    return make_unique<ContainsContact>(ctc);
-}
+#endif  // HostListFilter_h

@@ -22,10 +22,10 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "ServicelistColumn.h"
+#include "ServiceListColumn.h"
 #include <cstring>
 #include "Renderer.h"
-#include "ServicelistFilter.h"
+#include "ServiceListFilter.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
 

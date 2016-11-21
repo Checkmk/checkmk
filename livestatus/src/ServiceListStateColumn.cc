@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "ServicelistStateColumn.h"
+#include "ServiceListStateColumn.h"
 #include "auth.h"
 
 // return true if state1 is worse than state2

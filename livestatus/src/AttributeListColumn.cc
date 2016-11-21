@@ -22,14 +22,14 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "AttributelistColumn.h"
+#include "AttributeListColumn.h"
 #include <cctype>
 #include <cstdlib>
 #include <map>
 #include <ostream>
 #include <utility>
 #include <vector>
-#include "AttributelistFilter.h"
+#include "AttributeListFilter.h"
 #include "Logger.h"
 #include "Renderer.h"
 #include "strutil.h"

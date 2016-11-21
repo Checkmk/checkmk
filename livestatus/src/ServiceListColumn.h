@@ -22,49 +22,38 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostlistStateColumn_h
-#define HostlistStateColumn_h
+#ifndef ServiceListColumn_h
+#define ServiceListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <cstdint>
 #include <string>
-#include "IntColumn.h"
-#include "ServicelistStateColumn.h"
+#include "Column.h"
 #include "nagios.h"
+#include "opids.h"
+class Filter;
+class RowRenderer;
 
-#define HLSC_NUM_SVC SLSC_NUM
-#define HLSC_NUM_SVC_PENDING SLSC_NUM_PENDING
-#define HLSC_NUM_SVC_OK SLSC_NUM_OK
-#define HLSC_NUM_SVC_WARN SLSC_NUM_WARN
-#define HLSC_NUM_SVC_CRIT SLSC_NUM_CRIT
-#define HLSC_NUM_SVC_UNKNOWN SLSC_NUM_UNKNOWN
-#define HLSC_WORST_SVC_STATE SLSC_WORST_STATE
-#define HLSC_NUM_SVC_HARD_OK SLSC_NUM_HARD_OK
-#define HLSC_NUM_SVC_HARD_WARN SLSC_NUM_HARD_WARN
-#define HLSC_NUM_SVC_HARD_CRIT SLSC_NUM_HARD_CRIT
-#define HLSC_NUM_SVC_HARD_UNKNOWN SLSC_NUM_HARD_UNKNOWN
-#define HLSC_WORST_SVC_HARD_STATE SLSC_WORST_HARD_STATE
-
-#define HLSC_NUM_HST_UP 10
-#define HLSC_NUM_HST_DOWN 11
-#define HLSC_NUM_HST_UNREACH 12
-#define HLSC_NUM_HST_PENDING 13
-#define HLSC_NUM_HST -11
-#define HLSC_WORST_HST_STATE -12
-
-class HostlistStateColumn : public IntColumn {
+class ServicelistColumn : public Column {
     int _offset;
-    int _logictype;
+    bool _show_host;
+    int _info_depth;
 
 public:
-    HostlistStateColumn(const std::string &name, const std::string &description,
-                        int logictype, int offset, int indirect_offset,
-                        int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset)
+    ServicelistColumn(const std::string &name, const std::string &description,
+                      int offset, int indirect_offset, bool show_host,
+                      int info_depth, int extra_offset = -1)
+        : Column(name, description, indirect_offset, extra_offset)
         , _offset(offset)
-        , _logictype(logictype) {}
-    int32_t getValue(void *row, contact *auth_user) override;
-    hostsmember *getMembers(void *data);
+        , _show_host(show_host)
+        , _info_depth(info_depth) {}
+    ColumnType type() override { return ColumnType::list; };
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
+    servicesmember *getMembers(void *data);
+
+private:
+    int inCustomTimeperiod(service *svc, const char *varname);
 };
 
-#endif  // HostlistStateColumn_h
+#endif  // ServiceListColumn_h

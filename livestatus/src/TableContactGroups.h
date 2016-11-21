@@ -22,38 +22,26 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ServicelistColumn_h
-#define ServicelistColumn_h
+#ifndef TableContactGroups_h
+#define TableContactGroups_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
-#include "Column.h"
-#include "nagios.h"
-#include "opids.h"
-class Filter;
-class RowRenderer;
+#include "Table.h"
+class MonitoringCore;
+class Query;
 
-class ServicelistColumn : public Column {
-    int _offset;
-    bool _show_host;
-    int _info_depth;
-
+class TableContactgroups : public Table {
 public:
-    ServicelistColumn(const std::string &name, const std::string &description,
-                      int offset, int indirect_offset, bool show_host,
-                      int info_depth, int extra_offset = -1)
-        : Column(name, description, indirect_offset, extra_offset)
-        , _offset(offset)
-        , _show_host(show_host)
-        , _info_depth(info_depth) {}
-    ColumnType type() override { return ColumnType::list; };
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
-    servicesmember *getMembers(void *data);
+    explicit TableContactgroups(MonitoringCore *core);
+
+    std::string name() const override;
+    std::string namePrefix() const override;
+    void answerQuery(Query *query) override;
+    void *findObject(const std::string &objectspec) override;
 
 private:
-    int inCustomTimeperiod(service *svc, const char *varname);
+    MonitoringCore *_core;
 };
 
-#endif  // ServicelistColumn_h
+#endif  // TableContactGroups_h

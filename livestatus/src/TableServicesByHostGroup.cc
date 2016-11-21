@@ -25,7 +25,7 @@
 #include "TableServicesByHostGroup.h"
 #include "MonitoringCore.h"
 #include "Query.h"
-#include "TableHostgroups.h"
+#include "TableHostGroups.h"
 #include "TableServices.h"
 #include "WorldNagios.h"
 #include "auth.h"

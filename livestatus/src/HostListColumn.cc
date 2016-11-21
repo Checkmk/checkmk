@@ -22,32 +22,42 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef ServicegroupsColumn_h
-#define ServicegroupsColumn_h
+#include "HostListColumn.h"
+#include "HostListFilter.h"
+#include "Renderer.h"
+#include "auth.h"
 
-#include "config.h"  // IWYU pragma: keep
-#include <memory>
-#include <string>
-#include "Column.h"
-#include "ListColumn.h"
-#include "nagios.h"
-class RowRenderer;
+using std::string;
 
-class ServicegroupsColumn : public ListColumn {
-    int _offset;
+hostsmember *HostlistColumn::getMembers(void *data) {
+    data = shiftPointer(data);
+    if (data == nullptr) {
+        return nullptr;
+    }
 
-public:
-    ServicegroupsColumn(const std::string &name, const std::string &description,
-                        int offset, int indirect_offset, int extra_offset = -1)
-        : ListColumn(name, description, indirect_offset, extra_offset)
-        , _offset(offset) {}
-    ColumnType type() override { return ColumnType::list; }
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
-    std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(void *data) override;
+    return *reinterpret_cast<hostsmember **>(reinterpret_cast<char *>(data) +
+                                             _offset);
+}
 
-private:
-    objectlist *getData(void *);
-};
+void HostlistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
+    ListRenderer l(r);
+    for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
+        host *hst = mem->host_ptr;
+        if (auth_user == nullptr ||
+            is_authorized_for(auth_user, hst, nullptr)) {
+            if (!_show_state) {
+                l.output(string(hst->name));
+            } else {
+                SublistRenderer s(l);
+                s.output(string(hst->name));
+                s.output(hst->current_state);
+                s.output(hst->has_been_checked);
+            }
+        }
+    }
+}
 
-#endif  // ServicegroupsColumn_h
+Filter *HostlistColumn::createFilter(RelationalOperator relOp,
+                                     const string &value) {
+    return new HostlistFilter(this, relOp, value);
+}

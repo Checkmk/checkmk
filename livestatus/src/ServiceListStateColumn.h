@@ -22,43 +22,47 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "TableContactgroups.h"
-#include "ContactgroupsMemberColumn.h"
-#include "MonitoringCore.h"
-#include "OffsetStringColumn.h"
-#include "Query.h"
+#ifndef ServiceListStateColumn_h
+#define ServiceListStateColumn_h
+
+#include "config.h"  // IWYU pragma: keep
+#include <cstdint>
+#include <string>
+#include "IntColumn.h"
 #include "nagios.h"
 
-using std::string;
+#define SLSC_NUM_OK 0
+#define SLSC_NUM_WARN 1
+#define SLSC_NUM_CRIT 2
+#define SLSC_NUM_UNKNOWN 3
+#define SLSC_NUM_PENDING 4
+#define SLSC_WORST_STATE -2
 
-extern contactgroup *contactgroup_list;
+#define SLSC_NUM_HARD_OK (0 + 64)
+#define SLSC_NUM_HARD_WARN (1 + 64)
+#define SLSC_NUM_HARD_CRIT (2 + 64)
+#define SLSC_NUM_HARD_UNKNOWN (3 + 64)
+#define SLSC_WORST_HARD_STATE (-2 + 64)
 
-TableContactgroups::TableContactgroups(MonitoringCore *core)
-    : Table(core->loggerLivestatus()), _core(core) {
-    contactgroup cg;
-    char *ref = reinterpret_cast<char *>(&cg);
-    addColumn(
-        new OffsetStringColumn("name", "The name of the contactgroup",
-                               reinterpret_cast<char *>(&cg.group_name) - ref));
-    addColumn(
-        new OffsetStringColumn("alias", "The alias of the contactgroup",
-                               reinterpret_cast<char *>(&cg.alias) - ref));
-    addColumn(new ContactgroupsMemberColumn(
-        "members", "A list of all members of this contactgroup", -1));
-}
+#define SLSC_NUM -1
 
-string TableContactgroups::name() const { return "contactgroups"; }
+class ServicelistStateColumn : public IntColumn {
+    int _offset;
+    int _logictype;
 
-string TableContactgroups::namePrefix() const { return "contactgroup_"; }
+public:
+    ServicelistStateColumn(const std::string &name,
+                           const std::string &description, int logictype,
+                           int offset, int indirect_offset,
+                           int extra_offset = -1)
+        : IntColumn(name, description, indirect_offset, extra_offset)
+        , _offset(offset)
+        , _logictype(logictype) {}
+    int32_t getValue(void *row, contact *auth_user) override;
+    servicesmember *getMembers(void *data);
+    static int32_t getValue(int logictype, servicesmember *mem,
+                            contact *auth_user);
+    static bool svcStateIsWorse(int32_t state1, int32_t state2);
+};
 
-void TableContactgroups::answerQuery(Query *query) {
-    for (contactgroup *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
-        if (!query->processDataset(cg)) {
-            break;
-        }
-    }
-}
-
-void *TableContactgroups::findObject(const string &objectspec) {
-    return _core->find_contactgroup(objectspec);
-}
+#endif  // ServiceListStateColumn_h

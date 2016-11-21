@@ -22,33 +22,33 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostlistColumn_h
-#define HostlistColumn_h
+#ifndef ServiceListFilter_h
+#define ServiceListFilter_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
-#include "Column.h"
-#include "nagios.h"
+#include "ColumnFilter.h"
+#include "ServiceListColumn.h"
 #include "opids.h"
-class Filter;
-class RowRenderer;
 
-class HostlistColumn : public Column {
-    int _offset;
-    bool _show_state;
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
+class ServicelistFilter : public ColumnFilter {
 public:
-    HostlistColumn(const std::string &name, const std::string &description,
-                   int offset, int indirect_offset, bool show_state,
-                   int extra_offset = -1)
-        : Column(name, description, indirect_offset, extra_offset)
-        , _offset(offset)
-        , _show_state(show_state) {}
-    ColumnType type() override { return ColumnType::list; }
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
-    hostsmember *getMembers(void *data);
+    ServicelistFilter(ServicelistColumn *column, RelationalOperator relOp,
+                      const std::string &value);
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    ServicelistColumn *column() const override;
+
+private:
+    ServicelistColumn *_column;
+    RelationalOperator _relOp;
+    std::string _ref_host;
+    std::string _ref_service;
 };
 
-#endif  // HostlistColumn_h
+#endif  // ServiceListFilter_h

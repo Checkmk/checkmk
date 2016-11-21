@@ -22,11 +22,11 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "TableServicegroups.h"
+#include "TableServiceGroups.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
-#include "ServicelistColumn.h"
-#include "ServicelistStateColumn.h"
+#include "ServiceListColumn.h"
+#include "ServiceListStateColumn.h"
 #include "auth.h"
 
 using std::string;

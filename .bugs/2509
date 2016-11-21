@@ -1,0 +1,8 @@
+Title: Notifications: Pending Changes after editing or creating rule
+Component: notification
+State: open
+Date: 2016-11-21 09:41:13
+Targetversion: future
+Class: bug
+
+If editing or creating a rule in notifications a pending changes will appear. But there are no pending changes and in consequence none can be activated. Still the pending changes are displayed.

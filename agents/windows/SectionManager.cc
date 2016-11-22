@@ -42,10 +42,12 @@ void SectionManager::addSection(Section *section) {
 
 bool SectionManager::sectionEnabled(const std::string &name) const {
     // if no sections were set, assume they are all enabled
-    bool is_disabled = _disabled_sections->find(name) != _disabled_sections->end();
+    bool is_disabled =
+        _disabled_sections->find(name) != _disabled_sections->end();
 
-    bool is_enabled = !_enabled_sections.wasAssigned() ||
-                      (_enabled_sections->find(name) != _enabled_sections->end());
+    bool is_enabled =
+        !_enabled_sections.wasAssigned() ||
+        (_enabled_sections->find(name) != _enabled_sections->end());
     return !is_disabled && is_enabled;
 }
 

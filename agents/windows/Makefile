@@ -32,7 +32,7 @@ GIT_REV       = $(shell git describe --abbrev=4 --dirty --always --tags)
 DEPDIR = depend
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 
-COMMON_OPTS   = -Wall -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO -DVCS_REV=\"$(GIT_REV)\"
+COMMON_OPTS   = -Wall -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++14 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO -DVCS_REV=\"$(GIT_REV)\"
 COPTIONS      = -O2 -Wformat=2 -Werror $(COMMON_OPTS) $(DEPFLAGS)
 # for debug builds
 #COPTIONS      = -O0 $(COMMON_OPTS) $(DEPFLAGS)

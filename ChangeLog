@@ -17,6 +17,7 @@
     * 3941 FIX: zypper: fixed broken check for sections since agent OS SLES12...
     * 4043 FIX: Add missing metric definition for 15 minute CPU load prediction'
     * 3751 FIX: jolokia_metrics: Discovery no longer crashes in case of error querying instance
+    * 4088 FIX: ntp: fixed incomplete data handling
 
     Multisite:
     * 3974 FIX: Sorting comments in hover menu of comments icon by time now

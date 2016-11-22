@@ -32,7 +32,6 @@ def ordered_module_files():
         "../cmc/modules/cmc.py",
         "../cmc/modules/inline_snmp.py",
         "../cmc/modules/agent_bakery.py",
-        "../cmc/modules/cap.py",
         "../cmc/modules/rrd.py",
     ]
 

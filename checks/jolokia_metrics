@@ -863,7 +863,7 @@ jolokia_metrics_cache_hits_default_levels = {}
 def inventory_jolokia_metrics_cache(key, metrics, info):
     parsed = jolokia_metrics_parse(info)
     metrics_set = set(metrics)
-    for inst, vals in parsed.iteritems():
+    for inst, vals in [ x for x in parsed.iteritems() if x[1] != None ]:
         for cache, cache_vars in vals.get("CacheStatistics", {}).iteritems():
             if metrics_set.intersection(cache_vars) == metrics_set:
                 if key is None:

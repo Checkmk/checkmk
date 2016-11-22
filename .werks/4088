@@ -1,0 +1,9 @@
+Title: ntp: fixed incomplete data handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p14
+Date: 1479821543
+Class: fix
+
+

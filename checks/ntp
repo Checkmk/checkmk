@@ -131,7 +131,7 @@ def check_ntp_server_state(line, params):
 
 def check_ntp(item, params, info):
     for line in info:
-        if line[1] == item:
+        if line[1] == item and len(line) == 11:
             state = check_ntp_server_state(line, params)
             if len(state) == 4:
                 state, text, offset, jitter = state
@@ -143,7 +143,7 @@ def check_ntp(item, params, info):
                 perfdata = []
             return (state, text, perfdata)
 
-    return (3, "peer not found")
+    return 3, "peer not found", []
 
 
 def check_ntp_summary(_no_item, params, info):

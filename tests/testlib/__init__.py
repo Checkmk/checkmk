@@ -381,12 +381,20 @@ class Site(object):
 
 
     def get_free_port_from(self, port):
-        print "Trying port %d" % port
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        while sock.connect_ex(('127.0.0.1', port)) == 0:
-            print "Port %d is already used, trying next" % port
-            port += 1
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while True:
+            try:
+                print "Trying port %d" % port
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                sock.bind(("127.0.0.1", port))
+                sock.listen(1)
+                sock.close()
+
+                break # found a bindable port
+            except socket.error, e:
+                print "Failed to bind 127.0.0.1:%d: %s" % (port, e)
+                port += 1
+
         print "Using port %d" % port
         return port
 

@@ -46,12 +46,12 @@
 
 #define SLSC_NUM -1
 
-class ServicelistStateColumn : public IntColumn {
+class ServiceListStateColumn : public IntColumn {
     int _offset;
     int _logictype;
 
 public:
-    ServicelistStateColumn(const std::string &name,
+    ServiceListStateColumn(const std::string &name,
                            const std::string &description, int logictype,
                            int offset, int indirect_offset,
                            int extra_offset = -1)

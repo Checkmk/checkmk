@@ -410,12 +410,12 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         "The current obsess_over_host setting... (0/1)",
         (char *)(&hst.obsess) - ref, indirect_offset, extra_offset));
 #endif  // NAGIOS4
-    table->addColumn(new AttributelistColumn(
+    table->addColumn(new AttributeListColumn(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
         reinterpret_cast<char *>(&hst.modified_attributes) - ref,
         indirect_offset, false, extra_offset));
-    table->addColumn(new AttributelistColumn(
+    table->addColumn(new AttributeListColumn(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
         reinterpret_cast<char *>(&hst.modified_attributes) - ref,
@@ -550,73 +550,73 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
         "FILENAME", extra_offset));
 
-    table->addColumn(new HostlistColumn(
+    table->addColumn(new HostListColumn(
         prefix + "parents", "A list of all direct parents of the host",
         reinterpret_cast<char *>(&hst.parent_hosts) - ref, indirect_offset,
         false, extra_offset));
-    table->addColumn(new HostlistColumn(
+    table->addColumn(new HostListColumn(
         prefix + "childs", "A list of all direct childs of the host",
         reinterpret_cast<char *>(&hst.child_hosts) - ref, indirect_offset,
         false, extra_offset));
 
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services", "The total number of services of the host",
         SLSC_NUM, reinterpret_cast<char *>(&hst.services) - ref,
         indirect_offset, extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "worst_service_state",
         "The worst soft state of all of the host's services (OK <= WARN <= "
         "UNKNOWN <= CRIT)",
         SLSC_WORST_STATE, reinterpret_cast<char *>(&hst.services) - ref,
         indirect_offset, extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_ok",
         "The number of the host's services with the soft state OK", SLSC_NUM_OK,
         reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
         extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_warn",
         "The number of the host's services with the soft state WARN",
         SLSC_NUM_WARN, reinterpret_cast<char *>(&hst.services) - ref,
         indirect_offset, extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_crit",
         "The number of the host's services with the soft state CRIT",
         SLSC_NUM_CRIT, reinterpret_cast<char *>(&hst.services) - ref,
         indirect_offset, extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_unknown",
         "The number of the host's services with the soft state UNKNOWN",
         SLSC_NUM_UNKNOWN, reinterpret_cast<char *>(&hst.services) - ref,
         indirect_offset, extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_pending",
         "The number of the host's services which have not been checked yet "
         "(pending)",
         SLSC_NUM_PENDING, reinterpret_cast<char *>(&hst.services) - ref,
         indirect_offset, extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "worst_service_hard_state",
         "The worst hard state of all of the host's services (OK <= WARN <= "
         "UNKNOWN <= CRIT)",
         SLSC_WORST_HARD_STATE, reinterpret_cast<char *>(&hst.services) - ref,
         indirect_offset, extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_hard_ok",
         "The number of the host's services with the hard state OK",
         SLSC_NUM_HARD_OK, reinterpret_cast<char *>(&hst.services) - ref,
         indirect_offset, extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_hard_warn",
         "The number of the host's services with the hard state WARN",
         SLSC_NUM_HARD_WARN, reinterpret_cast<char *>(&hst.services) - ref,
         indirect_offset, extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_hard_crit",
         "The number of the host's services with the hard state CRIT",
         SLSC_NUM_HARD_CRIT, reinterpret_cast<char *>(&hst.services) - ref,
         indirect_offset, extra_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_hard_unknown",
         "The number of the host's services with the hard state UNKNOWN",
         SLSC_NUM_HARD_UNKNOWN, reinterpret_cast<char *>(&hst.services) - ref,
@@ -660,33 +660,33 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         prefix + "staleness", "Staleness indicator for this host",
         HSDC_STALENESS, indirect_offset, extra_offset));
 
-    table->addColumn(new HostgroupsColumn(
+    table->addColumn(new HostGroupsColumn(
         prefix + "groups", "A list of all host groups this host is in",
         reinterpret_cast<char *>(&hst.hostgroups_ptr) - ref, indirect_offset,
         extra_offset));
-    table->addColumn(new ContactgroupsColumn(
+    table->addColumn(new ContactGroupsColumn(
         prefix + "contact_groups",
         "A list of all contact groups this host is in",
         reinterpret_cast<char *>(&hst.contact_groups) - ref, indirect_offset,
         extra_offset, core));
 
-    table->addColumn(new ServicelistColumn(
+    table->addColumn(new ServiceListColumn(
         prefix + "services", "A list of all services of the host",
         reinterpret_cast<char *>(&hst.services) - ref, indirect_offset, false,
         0, extra_offset));
     table->addColumn(
-        new ServicelistColumn(prefix + "services_with_state",
+        new ServiceListColumn(prefix + "services_with_state",
                               "A list of all services of the host together "
                               "with state and has_been_checked",
                               reinterpret_cast<char *>(&hst.services) - ref,
                               indirect_offset, false, 1, extra_offset));
     table->addColumn(
-        new ServicelistColumn(prefix + "services_with_info",
+        new ServiceListColumn(prefix + "services_with_info",
                               "A list of all services including detailed "
                               "information about each service",
                               reinterpret_cast<char *>(&hst.services) - ref,
                               indirect_offset, false, 2, extra_offset));
-    table->addColumn(new ServicelistColumn(
+    table->addColumn(new ServiceListColumn(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of "
         "entries can grow in future versions.",

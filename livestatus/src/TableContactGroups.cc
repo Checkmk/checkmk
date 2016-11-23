@@ -33,7 +33,7 @@ using std::string;
 
 extern contactgroup *contactgroup_list;
 
-TableContactgroups::TableContactgroups(MonitoringCore *core)
+TableContactGroups::TableContactGroups(MonitoringCore *core)
     : Table(core->loggerLivestatus()), _core(core) {
     contactgroup cg;
     char *ref = reinterpret_cast<char *>(&cg);
@@ -43,15 +43,15 @@ TableContactgroups::TableContactgroups(MonitoringCore *core)
     addColumn(
         new OffsetStringColumn("alias", "The alias of the contactgroup",
                                reinterpret_cast<char *>(&cg.alias) - ref));
-    addColumn(new ContactgroupsMemberColumn(
+    addColumn(new ContactGroupsMemberColumn(
         "members", "A list of all members of this contactgroup", -1));
 }
 
-string TableContactgroups::name() const { return "contactgroups"; }
+string TableContactGroups::name() const { return "contactgroups"; }
 
-string TableContactgroups::namePrefix() const { return "contactgroup_"; }
+string TableContactGroups::namePrefix() const { return "contactgroup_"; }
 
-void TableContactgroups::answerQuery(Query *query) {
+void TableContactGroups::answerQuery(Query *query) {
     for (contactgroup *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
         if (!query->processDataset(cg)) {
             break;
@@ -59,6 +59,6 @@ void TableContactgroups::answerQuery(Query *query) {
     }
 }
 
-void *TableContactgroups::findObject(const string &objectspec) {
+void *TableContactGroups::findObject(const string &objectspec) {
     return _core->find_contactgroup(objectspec);
 }

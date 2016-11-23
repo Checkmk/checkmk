@@ -346,12 +346,12 @@ void TableServices::addColumns(Table *table, const string &prefix,
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
         (char *)(&svc.obsess) - ref, indirect_offset));
 #endif  // NAGIOS4
-    table->addColumn(new AttributelistColumn(
+    table->addColumn(new AttributeListColumn(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
         reinterpret_cast<char *>(&svc.modified_attributes) - ref,
         indirect_offset, false));
-    table->addColumn(new AttributelistColumn(
+    table->addColumn(new AttributeListColumn(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
         reinterpret_cast<char *>(&svc.modified_attributes) - ref,
@@ -468,11 +468,11 @@ void TableServices::addColumns(Table *table, const string &prefix,
         reinterpret_cast<char *>(&svc.custom_variables) - ref,
         indirect_offset));
 
-    table->addColumn(new ServicegroupsColumn(
+    table->addColumn(new ServiceGroupsColumn(
         prefix + "groups", "A list of all service groups the service is in",
         reinterpret_cast<char *>(&svc.servicegroups_ptr) - ref,
         indirect_offset));
-    table->addColumn(new ContactgroupsColumn(
+    table->addColumn(new ContactGroupsColumn(
         prefix + "contact_groups",
         "A list of all contact groups this service is in",
         reinterpret_cast<char *>(&svc.contact_groups) - ref, indirect_offset,

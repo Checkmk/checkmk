@@ -29,7 +29,7 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-objectlist *HostgroupsColumn::getData(void *data) {
+objectlist *HostGroupsColumn::getData(void *data) {
     if (data != nullptr) {
         data = shiftPointer(data);
         if (data != nullptr) {
@@ -40,7 +40,7 @@ objectlist *HostgroupsColumn::getData(void *data) {
     return nullptr;
 }
 
-void HostgroupsColumn::output(void *row, RowRenderer &r,
+void HostGroupsColumn::output(void *row, RowRenderer &r,
                               contact * /* auth_user */) {
     ListRenderer l(r);
     for (objectlist *list = getData(row); list != nullptr; list = list->next) {
@@ -49,7 +49,7 @@ void HostgroupsColumn::output(void *row, RowRenderer &r,
     }
 }
 
-unique_ptr<ListColumn::Contains> HostgroupsColumn::makeContains(
+unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
     const string &name) {
     class ContainsHostGroup : public Contains {
     public:
@@ -82,7 +82,7 @@ unique_ptr<ListColumn::Contains> HostgroupsColumn::makeContains(
         find_hostgroup(const_cast<char *>(name.c_str())), _offset);
 }
 
-bool HostgroupsColumn::isEmpty(void *data) {
+bool HostGroupsColumn::isEmpty(void *data) {
     objectlist *list = *reinterpret_cast<objectlist **>(
         reinterpret_cast<char *>(data) + _offset);
     return list == nullptr;

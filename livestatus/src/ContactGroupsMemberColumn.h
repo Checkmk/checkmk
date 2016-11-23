@@ -32,9 +32,9 @@
 #include "ContactsColumn.h"
 #include "nagios.h"
 
-class ContactgroupsMemberColumn : public ContactsColumn {
+class ContactGroupsMemberColumn : public ContactsColumn {
 public:
-    ContactgroupsMemberColumn(const std::string& name,
+    ContactGroupsMemberColumn(const std::string& name,
                               const std::string& description,
                               int indirect_offset, int extra_offset = -1)
         : ContactsColumn(name, description, indirect_offset, extra_offset) {}

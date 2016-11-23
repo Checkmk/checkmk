@@ -33,13 +33,13 @@
 class Filter;
 class RowRenderer;
 
-class ServicelistColumn : public Column {
+class ServiceListColumn : public Column {
     int _offset;
     bool _show_host;
     int _info_depth;
 
 public:
-    ServicelistColumn(const std::string &name, const std::string &description,
+    ServiceListColumn(const std::string &name, const std::string &description,
                       int offset, int indirect_offset, bool show_host,
                       int info_depth, int extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset)

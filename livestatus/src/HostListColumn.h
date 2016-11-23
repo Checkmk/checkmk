@@ -33,12 +33,12 @@
 class Filter;
 class RowRenderer;
 
-class HostlistColumn : public Column {
+class HostListColumn : public Column {
     int _offset;
     bool _show_state;
 
 public:
-    HostlistColumn(const std::string &name, const std::string &description,
+    HostListColumn(const std::string &name, const std::string &description,
                    int offset, int indirect_offset, bool show_state,
                    int extra_offset = -1)
         : Column(name, description, indirect_offset, extra_offset)

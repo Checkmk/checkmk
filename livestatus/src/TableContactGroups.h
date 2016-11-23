@@ -31,9 +31,9 @@
 class MonitoringCore;
 class Query;
 
-class TableContactgroups : public Table {
+class TableContactGroups : public Table {
 public:
-    explicit TableContactgroups(MonitoringCore *core);
+    explicit TableContactGroups(MonitoringCore *core);
 
     std::string name() const override;
     std::string namePrefix() const override;

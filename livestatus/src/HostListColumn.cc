@@ -29,7 +29,7 @@
 
 using std::string;
 
-hostsmember *HostlistColumn::getMembers(void *data) {
+hostsmember *HostListColumn::getMembers(void *data) {
     data = shiftPointer(data);
     if (data == nullptr) {
         return nullptr;
@@ -39,7 +39,7 @@ hostsmember *HostlistColumn::getMembers(void *data) {
                                              _offset);
 }
 
-void HostlistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
+void HostListColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     ListRenderer l(r);
     for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
@@ -57,7 +57,7 @@ void HostlistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     }
 }
 
-Filter *HostlistColumn::createFilter(RelationalOperator relOp,
+Filter *HostListColumn::createFilter(RelationalOperator relOp,
                                      const string &value) {
-    return new HostlistFilter(this, relOp, value);
+    return new HostListFilter(this, relOp, value);
 }

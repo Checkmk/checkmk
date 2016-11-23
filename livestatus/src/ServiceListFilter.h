@@ -37,15 +37,15 @@
 #include "nagios.h"
 #endif
 
-class ServicelistFilter : public ColumnFilter {
+class ServiceListFilter : public ColumnFilter {
 public:
-    ServicelistFilter(ServicelistColumn *column, RelationalOperator relOp,
+    ServiceListFilter(ServiceListColumn *column, RelationalOperator relOp,
                       const std::string &value);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
-    ServicelistColumn *column() const override;
+    ServiceListColumn *column() const override;
 
 private:
-    ServicelistColumn *_column;
+    ServiceListColumn *_column;
     RelationalOperator _relOp;
     std::string _ref_host;
     std::string _ref_service;

@@ -49,7 +49,7 @@ TableHostsByGroup::TableHostsByGroup(
     struct hostbygroup ref;
     TableHosts::addColumns(this, "", -1, -1, _downtimes_holder,
                            _comments_holder, core);
-    TableHostgroups::addColumns(this, "hostgroup_",
+    TableHostGroups::addColumns(this, "hostgroup_",
                                 reinterpret_cast<char *>(&(ref._hostgroup)) -
                                     reinterpret_cast<char *>(&ref));
 }

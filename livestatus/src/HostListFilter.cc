@@ -30,11 +30,11 @@
 using std::move;
 using std::string;
 
-HostlistFilter::HostlistFilter(HostlistColumn *column, RelationalOperator relOp,
+HostListFilter::HostListFilter(HostListColumn *column, RelationalOperator relOp,
                                string value)
     : _column(column), _relOp(relOp), _ref_value(move(value)) {}
 
-bool HostlistFilter::accepts(void *row, contact * /* auth_user */,
+bool HostListFilter::accepts(void *row, contact * /* auth_user */,
                              int /* timezone_offset */) {
     // data points to a primary data object. We need to extract a pointer to a
     // host list
@@ -85,4 +85,4 @@ bool HostlistFilter::accepts(void *row, contact * /* auth_user */,
     return false;  // unreachable
 }
 
-HostlistColumn *HostlistFilter::column() const { return _column; }
+HostListColumn *HostListFilter::column() const { return _column; }

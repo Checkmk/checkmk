@@ -50,13 +50,13 @@ private:
 };
 }  // namespace
 
-unique_ptr<ListColumn::Contains> ContactgroupsMemberColumn::makeContains(
+unique_ptr<ListColumn::Contains> ContactGroupsMemberColumn::makeContains(
     const string &name) {
     return make_unique<ContainsContact>(
         find_contact(const_cast<char *>(name.c_str())));
 }
 
-unique_ptr<ListColumn::Contains> ContactgroupsMemberColumn::containsContact(
+unique_ptr<ListColumn::Contains> ContactGroupsMemberColumn::containsContact(
     contact *ctc) {
     return make_unique<ContainsContact>(ctc);
 }

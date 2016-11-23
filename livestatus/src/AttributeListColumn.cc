@@ -61,7 +61,7 @@ map<string, unsigned long> known_attributes = {
     {"notification_timeperiod", MODATTR_NOTIFICATION_TIMEPERIOD}};
 }  // namespace
 
-int32_t AttributelistColumn::getValue(void *row, contact * /*unused*/) {
+int32_t AttributeListColumn::getValue(void *row, contact * /*unused*/) {
     char *p = reinterpret_cast<char *>(shiftPointer(row));
     if (p == nullptr) {
         return 0;
@@ -70,7 +70,7 @@ int32_t AttributelistColumn::getValue(void *row, contact * /*unused*/) {
     return *reinterpret_cast<int32_t *>(ptr);
 }
 
-void AttributelistColumn::output(void *row, RowRenderer &r,
+void AttributeListColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     unsigned long mask = static_cast<unsigned long>(getValue(row, nullptr));
     if (_show_list) {
@@ -85,12 +85,12 @@ void AttributelistColumn::output(void *row, RowRenderer &r,
     }
 }
 
-string AttributelistColumn::valueAsString(void *row,
+string AttributeListColumn::valueAsString(void *row,
                                           contact * /* auth_user */) {
     return to_string(static_cast<unsigned long>(getValue(row, nullptr)));
 }
 
-Filter *AttributelistColumn::createFilter(RelationalOperator relOp,
+Filter *AttributeListColumn::createFilter(RelationalOperator relOp,
                                           const string &value) {
     unsigned long ref = 0;
     if (isdigit(value[0]) != 0) {
@@ -109,5 +109,5 @@ Filter *AttributelistColumn::createFilter(RelationalOperator relOp,
             ref |= it->second;
         }
     }
-    return new AttributelistFilter(this, relOp, ref);
+    return new AttributeListFilter(this, relOp, ref);
 }

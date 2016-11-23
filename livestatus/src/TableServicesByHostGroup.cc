@@ -49,7 +49,7 @@ TableServicesByHostGroup::TableServicesByHostGroup(
     struct servicebyhostgroup hgref;
     TableServices::addColumns(this, "", -1, true, downtimes_holder,
                               comments_holder, core);
-    TableHostgroups::addColumns(this, "hostgroup_",
+    TableHostGroups::addColumns(this, "hostgroup_",
                                 reinterpret_cast<char *>(&(hgref._hostgroup)) -
                                     reinterpret_cast<char *>(&hgref));
 }

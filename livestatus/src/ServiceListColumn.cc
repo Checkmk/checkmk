@@ -33,7 +33,7 @@ extern TimeperiodsCache *g_timeperiods_cache;
 
 using std::string;
 
-servicesmember *ServicelistColumn::getMembers(void *data) {
+servicesmember *ServiceListColumn::getMembers(void *data) {
     data = shiftPointer(data);
     if (data == nullptr) {
         return nullptr;
@@ -43,7 +43,7 @@ servicesmember *ServicelistColumn::getMembers(void *data) {
                                                 _offset);
 }
 
-void ServicelistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
+void ServiceListColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     ListRenderer l(r);
     for (servicesmember *mem = getMembers(row); mem != nullptr;
          mem = mem->next) {
@@ -81,12 +81,12 @@ void ServicelistColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     }
 }
 
-Filter *ServicelistColumn::createFilter(RelationalOperator relOp,
+Filter *ServiceListColumn::createFilter(RelationalOperator relOp,
                                         const string &value) {
-    return new ServicelistFilter(this, relOp, value);
+    return new ServiceListFilter(this, relOp, value);
 }
 
-int ServicelistColumn::inCustomTimeperiod(service *svc, const char *varname) {
+int ServiceListColumn::inCustomTimeperiod(service *svc, const char *varname) {
     for (customvariablesmember *cvm = svc->custom_variables; cvm != nullptr;
          cvm = cvm->next) {
         if (strcmp(cvm->variable_name, varname) == 0) {

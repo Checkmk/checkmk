@@ -48,7 +48,7 @@ TableServicesByGroup::TableServicesByGroup(
     struct servicebygroup sgref;
     TableServices::addColumns(this, "", -1, true, downtimes_holder,
                               comments_holder, core);
-    TableServicegroups::addColumns(
+    TableServiceGroups::addColumns(
         this, "servicegroup_",
         reinterpret_cast<char *>(&(sgref._servicegroup)) -
             reinterpret_cast<char *>(&sgref));

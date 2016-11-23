@@ -32,7 +32,7 @@ using std::string;
 
 #define HOSTSERVICE_SEPARATOR '|'
 
-ServicelistFilter::ServicelistFilter(ServicelistColumn *column,
+ServiceListFilter::ServiceListFilter(ServiceListColumn *column,
                                      RelationalOperator relOp,
                                      const string &value)
     : _column(column), _relOp(relOp) {
@@ -58,7 +58,7 @@ ServicelistFilter::ServicelistFilter(ServicelistColumn *column,
     }
 }
 
-bool ServicelistFilter::accepts(void *row, contact * /* auth_user */,
+bool ServiceListFilter::accepts(void *row, contact * /* auth_user */,
                                 int /* timezone_offset */) {
     // data points to a primary data object. We need to extract
     // a pointer to a service list
@@ -105,4 +105,4 @@ bool ServicelistFilter::accepts(void *row, contact * /* auth_user */,
     return false;  // unreachable
 }
 
-ServicelistColumn *ServicelistFilter::column() const { return _column; }
+ServiceListColumn *ServiceListFilter::column() const { return _column; }

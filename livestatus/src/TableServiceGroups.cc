@@ -36,16 +36,16 @@ Ethan: please help me here: how should this be code to be
 portable? */
 extern servicegroup *servicegroup_list;
 
-TableServicegroups::TableServicegroups(Logger *logger) : Table(logger) {
+TableServiceGroups::TableServiceGroups(Logger *logger) : Table(logger) {
     addColumns(this, "", -1);
 }
 
-string TableServicegroups::name() const { return "servicegroups"; }
+string TableServiceGroups::name() const { return "servicegroups"; }
 
-string TableServicegroups::namePrefix() const { return "servicegroup_"; }
+string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 
 // static
-void TableServicegroups::addColumns(Table *table, const string &prefix,
+void TableServiceGroups::addColumns(Table *table, const string &prefix,
                                     int indirect_offset) {
     servicegroup sgr;
     char *ref = reinterpret_cast<char *>(&sgr);
@@ -66,70 +66,70 @@ void TableServicegroups::addColumns(Table *table, const string &prefix,
         prefix + "action_url",
         "An optional URL to custom notes or actions on the service group",
         reinterpret_cast<char *>(&sgr.action_url) - ref, indirect_offset));
-    table->addColumn(new ServicelistColumn(
+    table->addColumn(new ServiceListColumn(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, true,
         0));
-    table->addColumn(new ServicelistColumn(
+    table->addColumn(new ServiceListColumn(
         prefix + "members_with_state",
         "A list of all members of the service group with state and "
         "has_been_checked",
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, true,
         1));
 
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "worst_service_state",
         "The worst soft state of all of the groups services (OK <= WARN <= "
         "UNKNOWN <= CRIT)",
         SLSC_WORST_STATE, reinterpret_cast<char *>(&sgr.members) - ref,
         indirect_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services", "The total number of services in the group",
         SLSC_NUM, reinterpret_cast<char *>(&sgr.members) - ref,
         indirect_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_ok",
         "The number of services in the group that are OK", SLSC_NUM_OK,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_warn",
         "The number of services in the group that are WARN", SLSC_NUM_WARN,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_crit",
         "The number of services in the group that are CRIT", SLSC_NUM_CRIT,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_unknown",
         "The number of services in the group that are UNKNOWN",
         SLSC_NUM_UNKNOWN, reinterpret_cast<char *>(&sgr.members) - ref,
         indirect_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_pending",
         "The number of services in the group that are PENDING",
         SLSC_NUM_PENDING, reinterpret_cast<char *>(&sgr.members) - ref,
         indirect_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_hard_ok",
         "The number of services in the group that are OK", SLSC_NUM_HARD_OK,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_hard_warn",
         "The number of services in the group that are WARN", SLSC_NUM_HARD_WARN,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_hard_crit",
         "The number of services in the group that are CRIT", SLSC_NUM_HARD_CRIT,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServicelistStateColumn(
+    table->addColumn(new ServiceListStateColumn(
         prefix + "num_services_hard_unknown",
         "The number of services in the group that are UNKNOWN",
         SLSC_NUM_HARD_UNKNOWN, reinterpret_cast<char *>(&sgr.members) - ref,
         indirect_offset));
 }
 
-void TableServicegroups::answerQuery(Query *query) {
+void TableServiceGroups::answerQuery(Query *query) {
     for (servicegroup *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
         if (!query->processDataset(sg)) {
             break;
@@ -137,11 +137,11 @@ void TableServicegroups::answerQuery(Query *query) {
     }
 }
 
-void *TableServicegroups::findObject(const string &objectspec) {
+void *TableServiceGroups::findObject(const string &objectspec) {
     return find_servicegroup(const_cast<char *>(objectspec.c_str()));
 }
 
-bool TableServicegroups::isAuthorized(contact *ctc, void *data) {
+bool TableServiceGroups::isAuthorized(contact *ctc, void *data) {
     if (ctc == UNKNOWN_AUTH_USER) {
         return false;
     }

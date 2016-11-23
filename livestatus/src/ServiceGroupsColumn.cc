@@ -29,7 +29,7 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-objectlist *ServicegroupsColumn::getData(void *data) {
+objectlist *ServiceGroupsColumn::getData(void *data) {
     if (data != nullptr) {
         data = shiftPointer(data);
         if (data != nullptr) {
@@ -40,7 +40,7 @@ objectlist *ServicegroupsColumn::getData(void *data) {
     return nullptr;
 }
 
-void ServicegroupsColumn::output(void *row, RowRenderer &r,
+void ServiceGroupsColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
     for (objectlist *list = getData(row); list != nullptr; list = list->next) {
@@ -49,7 +49,7 @@ void ServicegroupsColumn::output(void *row, RowRenderer &r,
     }
 }
 
-unique_ptr<ListColumn::Contains> ServicegroupsColumn::makeContains(
+unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
     const string &name) {
     class ContainsServiceGroup : public Contains {
     public:
@@ -77,7 +77,7 @@ unique_ptr<ListColumn::Contains> ServicegroupsColumn::makeContains(
         find_servicegroup(const_cast<char *>(name.c_str())), _offset);
 }
 
-bool ServicegroupsColumn::isEmpty(void *data) {
+bool ServiceGroupsColumn::isEmpty(void *data) {
     objectlist *list = *reinterpret_cast<objectlist **>(
         reinterpret_cast<char *>(data) + _offset);
     return list == nullptr;

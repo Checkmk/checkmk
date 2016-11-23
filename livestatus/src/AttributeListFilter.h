@@ -36,15 +36,15 @@
 #include "nagios.h"
 #endif
 
-class AttributelistFilter : public ColumnFilter {
+class AttributeListFilter : public ColumnFilter {
 public:
-    AttributelistFilter(AttributelistColumn *column, RelationalOperator relOp,
+    AttributeListFilter(AttributeListColumn *column, RelationalOperator relOp,
                         unsigned long ref);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
-    AttributelistColumn *column() const override;
+    AttributeListColumn *column() const override;
 
 private:
-    AttributelistColumn *_column;
+    AttributeListColumn *_column;
     RelationalOperator _relOp;
     unsigned long _ref;
 };

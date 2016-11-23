@@ -78,15 +78,15 @@ private:
     LogCache _log_cache;
     TableContacts _table_contacts;
     TableCommands _table_commands;
-    TableHostgroups _table_hostgroups;
+    TableHostGroups _table_hostgroups;
     TableHosts _table_hosts;
     TableHostsByGroup _table_hostsbygroup;
-    TableServicegroups _table_servicegroups;
+    TableServiceGroups _table_servicegroups;
     TableServices _table_services;
     TableServicesByGroup _table_servicesbygroup;
     TableServicesByHostGroup _table_servicesbyhostgroup;
     TableTimeperiods _table_timeperiods;
-    TableContactgroups _table_contactgroups;
+    TableContactGroups _table_contactgroups;
     TableDowntimes _table_downtimes;
     TableComments _table_comments;
     TableStatus _table_status;

@@ -32,9 +32,9 @@
 class Logger;
 class Query;
 
-class TableServicegroups : public Table {
+class TableServiceGroups : public Table {
 public:
-    explicit TableServicegroups(Logger *logger);
+    explicit TableServiceGroups(Logger *logger);
 
     std::string name() const override;
     std::string namePrefix() const override;

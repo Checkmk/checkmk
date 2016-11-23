@@ -45,9 +45,9 @@ class RowRenderer;
    that type.
  */
 
-class AttributelistColumn : public IntColumn {
+class AttributeListColumn : public IntColumn {
 public:
-    AttributelistColumn(const std::string &name, const std::string &description,
+    AttributeListColumn(const std::string &name, const std::string &description,
                         int offset, int indirect_offset, bool show_list,
                         int extra_offset = -1, int extra_extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset,

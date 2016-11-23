@@ -33,11 +33,11 @@
 #include "nagios.h"
 class RowRenderer;
 
-class HostgroupsColumn : public ListColumn {
+class HostGroupsColumn : public ListColumn {
     int _offset;
 
 public:
-    HostgroupsColumn(const std::string &name, const std::string &description,
+    HostGroupsColumn(const std::string &name, const std::string &description,
                      int offset, int indirect_offset, int extra_offset = -1)
         : ListColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}

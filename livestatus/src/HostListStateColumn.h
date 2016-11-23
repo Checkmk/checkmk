@@ -52,12 +52,12 @@
 #define HLSC_NUM_HST -11
 #define HLSC_WORST_HST_STATE -12
 
-class HostlistStateColumn : public IntColumn {
+class HostListStateColumn : public IntColumn {
     int _offset;
     int _logictype;
 
 public:
-    HostlistStateColumn(const std::string &name, const std::string &description,
+    HostListStateColumn(const std::string &name, const std::string &description,
                         int logictype, int offset, int indirect_offset,
                         int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)

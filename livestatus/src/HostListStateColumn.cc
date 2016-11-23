@@ -41,7 +41,7 @@ static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
     return false;  // both are UNREACHABLE
 }
 
-hostsmember *HostlistStateColumn::getMembers(void *data) {
+hostsmember *HostListStateColumn::getMembers(void *data) {
     data = shiftPointer(data);
     if (data == nullptr) {
         return nullptr;
@@ -51,7 +51,7 @@ hostsmember *HostlistStateColumn::getMembers(void *data) {
                                              _offset);
 }
 
-int32_t HostlistStateColumn::getValue(void *row, contact *auth_user) {
+int32_t HostListStateColumn::getValue(void *row, contact *auth_user) {
     int32_t result = 0;
     for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
@@ -64,14 +64,14 @@ int32_t HostlistStateColumn::getValue(void *row, contact *auth_user) {
                 case HLSC_NUM_SVC_CRIT:
                 case HLSC_NUM_SVC_UNKNOWN:
                 case HLSC_NUM_SVC:
-                    result += ServicelistStateColumn::getValue(
+                    result += ServiceListStateColumn::getValue(
                         _logictype, hst->services, auth_user);
                     break;
 
                 case HLSC_WORST_SVC_STATE: {
-                    int state = ServicelistStateColumn::getValue(
+                    int state = ServiceListStateColumn::getValue(
                         _logictype, hst->services, auth_user);
-                    if (ServicelistStateColumn::svcStateIsWorse(state,
+                    if (ServiceListStateColumn::svcStateIsWorse(state,
                                                                 result)) {
                         result = state;
                     }

@@ -48,7 +48,7 @@ public:
                  extra_extra_offset) {}
 
     // TODO(sp) Get rid of the contact* parameter, it doesn't really belong here
-    // and is only used in ServicelistStateColumn and HostlistStateColumn for
+    // and is only used in ServiceListStateColumn and HostListStateColumn for
     // questionable purposes...
     virtual int32_t getValue(void *row, contact *auth_user) = 0;
 

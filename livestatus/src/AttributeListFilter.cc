@@ -26,7 +26,7 @@
 #include <ostream>
 #include "Logger.h"
 
-AttributelistFilter::AttributelistFilter(AttributelistColumn *column,
+AttributeListFilter::AttributeListFilter(AttributeListColumn *column,
                                          RelationalOperator relOp,
                                          unsigned long ref)
     : _column(column), _relOp(relOp), _ref(ref) {}
@@ -51,9 +51,9 @@ AttributelistFilter::AttributelistFilter(AttributelistColumn *column,
    Also number comparisons
  */
 
-AttributelistColumn *AttributelistFilter::column() const { return _column; }
+AttributeListColumn *AttributeListFilter::column() const { return _column; }
 
-bool AttributelistFilter::accepts(void *row, contact * /* auth_user */,
+bool AttributeListFilter::accepts(void *row, contact * /* auth_user */,
                                   int /* timezone_offset */) {
     unsigned long act_value =
         static_cast<unsigned long>(_column->getValue(row, nullptr));

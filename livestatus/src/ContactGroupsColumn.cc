@@ -30,7 +30,7 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void ContactgroupsColumn::output(void *row, RowRenderer &r,
+void ContactGroupsColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
     if (auto data = static_cast<char *>(shiftPointer(row))) {
@@ -42,7 +42,7 @@ void ContactgroupsColumn::output(void *row, RowRenderer &r,
     }
 }
 
-unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
+unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
     const string &name) {
     class ContainsContactGroup : public Contains {
     public:
@@ -78,7 +78,7 @@ unique_ptr<ListColumn::Contains> ContactgroupsColumn::makeContains(
                                              _offset);
 }
 
-bool ContactgroupsColumn::isEmpty(void *data) {
+bool ContactGroupsColumn::isEmpty(void *data) {
     contactgroupsmember *cgm = *reinterpret_cast<contactgroupsmember **>(
         reinterpret_cast<char *>(data) + _offset);
     return cgm == nullptr;

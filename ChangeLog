@@ -16,6 +16,7 @@
     * 3941 FIX: zypper: fixed broken check for sections since agent OS SLES12...
     * 4043 FIX: Add missing metric definition for 15 minute CPU load prediction'
     * 4088 FIX: ntp: fixed incomplete data handling
+    * 4091 FIX: oracle_tablespace: Werk 3907 broke the detection of UNDO- and TEMP-Tablespaces
 
     Multisite:
     * 3970 SEC: Fixed possible URL injection on index page...

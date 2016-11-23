@@ -7602,6 +7602,20 @@ register_check_parameters(
                   ]
                 )
             ),
+            ( "map_file_online_states",
+                ListOf(
+                    Tuple(
+                        orientation = "horizontal",
+                        elements = [
+                            DropdownChoice(choices = [
+                                ("RECOVER", _("Recover")),
+                                ("OFFLINE", _("Offline")),
+                            ]),
+                            MonitoringState()
+                        ]),
+                    title = _('Map file online states'),
+                )
+            ),
         ],
     ),
     TextAscii(

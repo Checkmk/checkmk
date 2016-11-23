@@ -224,6 +224,7 @@ def check_oracle_tablespaces(item, params, parsed):
     num_increments = 0
     increment_size = 0
     free_space     = 0
+    file_online_states = {}
 
     # Conversion of old autochecks params
     if type(params) == tuple:
@@ -234,9 +235,22 @@ def check_oracle_tablespaces(item, params, parsed):
 
     for datafile in tablespace["datafiles"]:
 
-        if datafile["file_online_status"] in [ "OFFLINE", "RECOVER" ]:
-            yield 2, "One or more datafiles OFFLINE or RECOVER"
-            return
+        df_file_online_status = datafile["file_online_status"]
+        if df_file_online_status in [ "OFFLINE", "RECOVER" ]:
+
+            file_online_states_params = dict(params.get("map_file_online_states", []))
+            if datafile["block_size"] is not None and file_online_states_params and \
+               df_file_online_status in file_online_states_params:
+
+                file_online_states.setdefault(df_file_online_status, {
+                    "state" : file_online_states_params[df_file_online_status],
+                    "sids"  : [],
+                })
+                file_online_states[df_file_online_status]["sids"].append(sid)
+
+            else:
+                yield 2, "One or more datafiles OFFLINE or RECOVER"
+                return
 
         num_files += 1
         if datafile["status"] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
@@ -346,6 +360,10 @@ def check_oracle_tablespaces(item, params, parsed):
     if num_files != 1 or num_avail != 1 or num_extensible != 1:
         yield 0, "%d data files (%d avail, %d autoext)" % \
                   (num_files, num_avail, num_extensible)
+
+    for file_online_state, attrs in file_online_states.items():
+        this_state = attrs["state"]
+        yield this_state, "Datafiles %s: %s" % (file_online_state, ", ".join(attrs["sids"]))
 
 
 # If something changes adapt calculations in related inventory plugin

@@ -323,6 +323,7 @@ class Site(object):
     def init_wato(self):
         web = CMKWebSession(self)
         web.login()
+        web.set_language("en")
 
         # Call WATO once for creating the default WATO configuration
         response = web.get("wato.py").text

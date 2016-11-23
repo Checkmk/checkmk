@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef CustomVarsFilter_h
-#define CustomVarsFilter_h
+#ifndef CustomVarsDictFilter_h
+#define CustomVarsDictFilter_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <regex>
@@ -38,21 +38,19 @@
 #include "nagios.h"
 #endif
 
-class CustomVarsFilter : public ColumnFilter {
+class CustomVarsDictFilter : public ColumnFilter {
 public:
-    CustomVarsFilter(CustomVarsColumn *column, RelationalOperator relOp,
-                     std::string value);
+    CustomVarsDictFilter(CustomVarsColumn *column, RelationalOperator relOp,
+                         std::string value);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     CustomVarsColumn *column() const override;
 
 private:
     CustomVarsColumn *_column;
     RelationalOperator _relOp;
-    std::string _ref_text;
     std::regex _regex;
-    // needed in case of COLTYPE_DICT
     std::string _ref_string;
     std::string _ref_varname;
 };
 
-#endif  // CustomVarsFilter_h
+#endif  // CustomVarsDictFilter_h

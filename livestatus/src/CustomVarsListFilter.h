@@ -22,28 +22,32 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef CustomVarsValuesColumn_h
-#define CustomVarsValuesColumn_h
+#ifndef CustomVarsListFilter_h
+#define CustomVarsListFilter_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
-#include "Column.h"
+#include "ColumnFilter.h"
 #include "CustomVarsColumn.h"
-#include "nagios.h"
 #include "opids.h"
-class Filter;
-class RowRenderer;
 
-class CustomVarsValuesColumn : public CustomVarsColumn {
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
+class CustomVarsListFilter : public ColumnFilter {
 public:
-    CustomVarsValuesColumn(std::string name, std::string description,
-                           int offset, int indirect_offset,
-                           int extra_offset = -1);
-    ColumnType type() override;
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
-    bool contains(void *row, const std::string &value) override;
+    CustomVarsListFilter(CustomVarsColumn *column, RelationalOperator relOp,
+                         std::string value);
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    CustomVarsColumn *column() const override;
+
+private:
+    CustomVarsColumn *_column;
+    RelationalOperator _relOp;
+    std::string _ref_text;
 };
 
-#endif  // CustomVarsValuesColumn_h
+#endif  // CustomVarsListFilter_h

@@ -22,33 +22,27 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "CustomVarsFilter.h"
-#include <algorithm>
+#include "CustomVarsDictFilter.h"
 #include <cstring>
 #include <sstream>
 #include <tuple>
-#include "Column.h"
-#include "Logger.h"
 #include "StringUtils.h"
 
 using mk::lstrip;
 using mk::nextField;
-using std::move;
 using std::regex;
 using std::regex_search;
 using std::string;
 using std::tie;
 
-CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column,
-                                   RelationalOperator relOp, string value)
-    : _column(column), _relOp(relOp), _ref_text(move(value)) {
-    if (_column->type() != ColumnType::dict) {
-        return;
-    }
+CustomVarsDictFilter::CustomVarsDictFilter(CustomVarsColumn *column,
+                                           RelationalOperator relOp,
+                                           string value)
+    : _column(column), _relOp(relOp) {
     // Filter for custom_variables:
     //    Filter: custom_variables = PATH /hirni.mk
     // The variable name is part of the value and separated with spaces
-    tie(_ref_varname, _ref_string) = nextField(_ref_text);
+    tie(_ref_varname, _ref_string) = nextField(value);
     _ref_string = lstrip(_ref_string);
 
     // Prepare regular expression
@@ -75,57 +69,34 @@ CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column,
     }
 }
 
-bool CustomVarsFilter::accepts(void *row, contact * /* auth_user */,
-                               int /* timezone_offset */) {
-    if (_column->type() == ColumnType::dict) {
-        string act_string = _column->getVariable(row, _ref_varname);
-        switch (_relOp) {
-            case RelationalOperator::equal:
-                return act_string == _ref_string;
-            case RelationalOperator::not_equal:
-                return act_string != _ref_string;
-            case RelationalOperator::matches:
-            case RelationalOperator::matches_icase:
-                return regex_search(act_string, _regex);
-            case RelationalOperator::doesnt_match:
-            case RelationalOperator::doesnt_match_icase:
-                return !regex_search(act_string, _regex);
-            case RelationalOperator::equal_icase:
-                return strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0;
-            case RelationalOperator::not_equal_icase:
-                return strcasecmp(_ref_string.c_str(), act_string.c_str()) != 0;
-            case RelationalOperator::less:
-                return act_string < _ref_string;
-            case RelationalOperator::greater_or_equal:
-                return act_string >= _ref_string;
-            case RelationalOperator::greater:
-                return act_string > _ref_string;
-            case RelationalOperator::less_or_equal:
-                return act_string <= _ref_string;
-        }
-    }
-    bool is_member = _column->contains(row, _ref_text);
+bool CustomVarsDictFilter::accepts(void *row, contact * /* auth_user */,
+                                   int /* timezone_offset */) {
+    string act_string = _column->getVariable(row, _ref_varname);
     switch (_relOp) {
-        case RelationalOperator::less:
-            return !is_member;
-        case RelationalOperator::greater_or_equal:
-            return is_member;
         case RelationalOperator::equal:
+            return act_string == _ref_string;
         case RelationalOperator::not_equal:
+            return act_string != _ref_string;
         case RelationalOperator::matches:
-        case RelationalOperator::doesnt_match:
-        case RelationalOperator::equal_icase:
-        case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
+            return regex_search(act_string, _regex);
+        case RelationalOperator::doesnt_match:
         case RelationalOperator::doesnt_match_icase:
+            return !regex_search(act_string, _regex);
+        case RelationalOperator::equal_icase:
+            return strcasecmp(_ref_string.c_str(), act_string.c_str()) == 0;
+        case RelationalOperator::not_equal_icase:
+            return strcasecmp(_ref_string.c_str(), act_string.c_str()) != 0;
+        case RelationalOperator::less:
+            return act_string < _ref_string;
+        case RelationalOperator::greater_or_equal:
+            return act_string >= _ref_string;
         case RelationalOperator::greater:
+            return act_string > _ref_string;
         case RelationalOperator::less_or_equal:
-            Informational(logger())
-                << "Sorry. Operator " << _relOp
-                << " for custom variable list columns not implemented.";
-            return false;
+            return act_string <= _ref_string;
     }
     return false;  // unreachable
 }
 
-CustomVarsColumn *CustomVarsFilter::column() const { return _column; }
+CustomVarsColumn *CustomVarsDictFilter::column() const { return _column; }

@@ -22,41 +22,43 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "CustomVarsNamesColumn.h"
 #include "CustomVarsListFilter.h"
-#include "Renderer.h"
-class Filter;
+#include <algorithm>
+#include <sstream>
+#include "Logger.h"
 
+using std::move;
 using std::string;
 
-CustomVarsNamesColumn::CustomVarsNamesColumn(string name, string description,
-                                             int offset, int indirect_offset,
-                                             int extra_offset)
-    : CustomVarsColumn(name, description, offset, indirect_offset,
-                       extra_offset) {}
+CustomVarsListFilter::CustomVarsListFilter(CustomVarsColumn *column,
+                                           RelationalOperator relOp,
+                                           string value)
+    : _column(column), _relOp(relOp), _ref_text(move(value)) {}
 
-ColumnType CustomVarsNamesColumn::type() { return ColumnType::list; }
-
-void CustomVarsNamesColumn::output(void *row, RowRenderer &r,
-                                   contact * /* auth_user */) {
-    ListRenderer l(r);
-    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
-         cvm = cvm->next) {
-        l.output(string(cvm->variable_name));
+bool CustomVarsListFilter::accepts(void *row, contact * /* auth_user */,
+                                   int /* timezone_offset */) {
+    bool is_member = _column->contains(row, _ref_text);
+    switch (_relOp) {
+        case RelationalOperator::less:
+            return !is_member;
+        case RelationalOperator::greater_or_equal:
+            return is_member;
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            Informational(logger())
+                << "Sorry. Operator " << _relOp
+                << " for custom variable list columns not implemented.";
+            return false;
     }
+    return false;  // unreachable
 }
 
-Filter *CustomVarsNamesColumn::createFilter(RelationalOperator relOp,
-                                            const string &value) {
-    return new CustomVarsListFilter(this, relOp, value);
-}
-
-bool CustomVarsNamesColumn::contains(void *row, const string &value) {
-    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
-         cvm = cvm->next) {
-        if (value.compare(cvm->variable_name) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
+CustomVarsColumn *CustomVarsListFilter::column() const { return _column; }

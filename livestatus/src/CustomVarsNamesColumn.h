@@ -30,6 +30,8 @@
 #include "Column.h"
 #include "CustomVarsColumn.h"
 #include "nagios.h"
+#include "opids.h"
+class Filter;
 class RowRenderer;
 
 class CustomVarsNamesColumn : public CustomVarsColumn {
@@ -38,6 +40,8 @@ public:
                           int indirect_offset, int extra_offset = -1);
     ColumnType type() override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
     bool contains(void *row, const std::string &value) override;
 };
 

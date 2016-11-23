@@ -29,16 +29,12 @@
 #include <string>
 #include "Column.h"
 #include "nagios.h"
-#include "opids.h"
-class Filter;
 
 class CustomVarsColumn : public Column {
 public:
     CustomVarsColumn(std::string name, std::string description, int offset,
                      int indirect_offset, int extra_offset = -1);
     virtual ~CustomVarsColumn();
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
     virtual bool contains(void *row, const std::string &value) = 0;
     std::string getVariable(void *row, const std::string &varname);
 

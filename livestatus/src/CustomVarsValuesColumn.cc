@@ -23,7 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsValuesColumn.h"
+#include "CustomVarsListFilter.h"
 #include "Renderer.h"
+class Filter;
 
 using std::string;
 
@@ -42,6 +44,11 @@ void CustomVarsValuesColumn::output(void *row, RowRenderer &r,
          cvm = cvm->next) {
         l.output(string(cvm->variable_value));
     }
+}
+
+Filter *CustomVarsValuesColumn::createFilter(RelationalOperator relOp,
+                                             const string &value) {
+    return new CustomVarsListFilter(this, relOp, value);
 }
 
 bool CustomVarsValuesColumn::contains(void *row, const string &value) {

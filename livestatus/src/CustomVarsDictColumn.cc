@@ -23,7 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsDictColumn.h"
+#include "CustomVarsDictFilter.h"
 #include "Renderer.h"
+class Filter;
 
 using std::string;
 
@@ -42,6 +44,11 @@ void CustomVarsDictColumn::output(void *row, RowRenderer &r,
          cvm = cvm->next) {
         d.output(cvm->variable_name, cvm->variable_value);
     }
+}
+
+Filter *CustomVarsDictColumn::createFilter(RelationalOperator relOp,
+                                           const string &value) {
+    return new CustomVarsDictFilter(this, relOp, value);
 }
 
 bool CustomVarsDictColumn::contains(void *row, const string &value) {

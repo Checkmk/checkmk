@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsColumn.h"
-#include "CustomVarsFilter.h"
 
 using std::string;
 
@@ -33,11 +32,6 @@ CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
     , _offset(offset) {}
 
 CustomVarsColumn::~CustomVarsColumn() = default;
-
-Filter *CustomVarsColumn::createFilter(RelationalOperator relOp,
-                                       const string &value) {
-    return new CustomVarsFilter(this, relOp, value);
-}
 
 customvariablesmember *CustomVarsColumn::getCVM(void *row) {
     void *data = shiftPointer(row);

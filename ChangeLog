@@ -7,6 +7,7 @@
     * 3941 FIX: zypper: fixed broken check for sections since agent OS SLES12...
     * 4088 FIX: ntp: fixed incomplete data handling
     * 4090 FIX: apc_rackpdu_power, apc_symmetra, apc_symmetra_input, apc_symmetra_output: some fixes...
+    * 4091 FIX: oracle_tablespace: Werk 3907 broke the detection of UNDO- and TEMP-Tablespaces
 
     WATO:
     * 3982 FIX: Some MKPs created with WATO could not be uploaded to the Check_MK Exchange

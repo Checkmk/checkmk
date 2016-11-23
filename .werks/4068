@@ -1,0 +1,11 @@
+Title: Fixed possible exception in case of wrong automation secrets between multiple sites
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1479915339
+
+When having a distributed WATO setup and a site secret is changed, the error message
+could not be displayed correctly when using a localized GUI.

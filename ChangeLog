@@ -40,6 +40,7 @@
     * 3977 FIX: Fixed poping up changes button in sidebar snapin after a change
     * 3982 FIX: Some MKPs created with WATO could not be uploaded to the Check_MK Exchange
     * 4045 FIX: Tactical Overview: do not count OK events as problems
+    * 4068 FIX: Fixed possible exception in case of wrong automation secrets between multiple sites...
 
     Notifications:
     * 4042 FIX: Fix missing From address in synchronous SMTP notifications...

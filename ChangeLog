@@ -20,6 +20,7 @@
     * 3751 FIX: jolokia_metrics: Discovery no longer crashes in case of error querying instance
     * 4088 FIX: ntp: fixed incomplete data handling
     * 4090 FIX: apc_rackpdu_power, apc_symmetra, apc_symmetra_input, apc_symmetra_output: some fixes...
+    * 4091 FIX: oracle_tablespace: Werk 3907 broke the detection of UNDO- and TEMP-Tablespaces
 
     Multisite:
     * 3974 FIX: Sorting comments in hover menu of comments icon by time now

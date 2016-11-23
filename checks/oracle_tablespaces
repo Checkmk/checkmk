@@ -109,7 +109,7 @@ def parse_oracle_tablespaces(info):
 
         db_version = 0
 
-        if len(line) == 14:
+        if len(line) >= 14:
             ts_type = line[13]
         else:
             # old behaivor is all Tablespaces are treated as PERMANENT

@@ -375,17 +375,20 @@ class Site(object):
         if self.reuse and self.exists():
             port = int(self.get_config("LIVESTATUS_TCP_PORT"))
         else:
-            port = 9123
-            print "Trying port %d" % port
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            while sock.connect_ex(('127.0.0.1', port)) == 0:
-                print "Port %d is already used, trying next" % port
-                port += 1
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            print "Using port %d" % port
+            port = self.get_free_port_from(9123)
 
         self._livestatus_port = port
 
+
+    def get_free_port_from(self, port):
+        print "Trying port %d" % port
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        while sock.connect_ex(('127.0.0.1', port)) == 0:
+            print "Port %d is already used, trying next" % port
+            port += 1
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print "Using port %d" % port
+        return port
 
     # Problem: The group change only affects new sessions of the test_user
     #def add_test_user_to_site_group(self):
@@ -779,7 +782,7 @@ class CMKEventConsole(CMKWebSession):
         if self.site.reuse and self.site.exists() and "remote_status" in config:
             port = config["remote_status"][0]
         else:
-            port = self.site.livestatus_port + 1
+            port = self.site.get_free_port_from(self.site.livestatus_port + 1)
 
         self.status_port = port
 

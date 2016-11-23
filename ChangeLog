@@ -27,6 +27,7 @@
 
     WATO:
     * 3982 FIX: Some MKPs created with WATO could not be uploaded to the Check_MK Exchange
+    * 4068 FIX: Fixed possible exception in case of wrong automation secrets between multiple sites...
 
     BI:
     * 3991 FIX: BI Aggregations: no longer show duplicate aggregations when an aggregation has mulitple groups

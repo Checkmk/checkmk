@@ -9560,7 +9560,8 @@ def page_automation_login():
     # using the credentials of the administrator. The login is done be exchanging
     # a login secret. If such a secret is not yet present it is created on
     # the fly.
-    html.write_text(repr(get_login_secret(True)))
+    html.set_output_format("python")
+    html.write_html(repr(get_login_secret(True)))
 
 
 def page_automation():

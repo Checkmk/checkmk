@@ -1265,16 +1265,17 @@ def strip_tags(tagged_hostlist):
 
 
 def tags_of_host(hostname):
+    hosttags = cmk_base.config_cache.get_dict("hosttags")
     try:
         return hosttags[hostname]
     except KeyError:
         return []
 
 
-hosttags = {}
 def collect_hosttags():
-    for taggedhost in all_hosts + clusters.keys():
-        parts = taggedhost.split("|")
+    hosttags = cmk_base.config_cache.get_dict("hosttags")
+    for tagged_host in all_hosts + clusters.keys():
+        parts = tagged_host.split("|")
         hosttags[parts[0]] = sorted(parts[1:])
 
 
@@ -2406,7 +2407,7 @@ def get_piggyback_translation(hostname):
 # Make service levels available during check execution
 service_service_levels = None
 host_service_levels = None
-derived_config_variable_names = [ "hosttags", "service_service_levels", "host_service_levels" ]
+derived_config_variable_names = [ "service_service_levels", "host_service_levels" ]
 
 # These variables are part of the Check_MK configuration, but are not needed
 # by the Check_MK keepalive mode, so exclude them from the packed config
@@ -4299,7 +4300,7 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
     # Check for invalid configuration variables
     vars_after_config = all_nonfunction_vars()
     ignored_variables = set(['vars_before_config', 'parts',
-                             'hosttags' ,'seen_hostnames',
+                             'seen_hostnames',
                              'taggedhost' ,'hostname'])
     errors = 0
     for name in vars_after_config:

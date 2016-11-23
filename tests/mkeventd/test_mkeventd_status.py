@@ -16,10 +16,10 @@ def ensure_core_and_get_connection(site, ec, core):
     return live
 
 
-# TODO: Enable this once the livestatus columns have been added for status_event_limit_*
-# @pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
-@pytest.mark.parametrize(("core"), [ "cmc" ])
+@pytest.mark.parametrize(("core"), [ "nagios", "cmc" ])
 def test_command_reload(site, ec, core):
+    print "Checking core: %s" % core
+
     live = ensure_core_and_get_connection(site, ec, core)
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
@@ -36,13 +36,16 @@ def test_command_reload(site, ec, core):
 
 
 # core == None means direct query to status socket
-# TODO: Enable this once the livestatus columns have been added for status_event_limit_*
-# @pytest.mark.parametrize(("core"), [ None, "nagios", "cmc" ])
-@pytest.mark.parametrize(("core"), [ None ])
+@pytest.mark.parametrize(("core"), [ None, "nagios", "cmc" ])
 def test_status_table_via_core(site, ec, core):
-    live = ensure_core_and_get_connection(site, ec, core)
+    print "Checking core: %s" % core
 
-    result = live.query_table_assoc("GET status\n")
+    live = ensure_core_and_get_connection(site, ec, core)
+    if core == None:
+        result = live.query_table_assoc("GET status\n")
+    else:
+        result = live.query_table_assoc("GET eventconsolestatus\n")
+
     assert len(result) == 1
 
     status = result[0]

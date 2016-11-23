@@ -36,6 +36,8 @@ factory_settings["apc_symmetra_output_default_levels"] = {
 
 
 def parse_apc_symmetra_output(info):
+    if not info:
+        return {}
     voltage, current, load = map(float, info[0])
     return { "Output" : {
         "voltage"     : voltage,

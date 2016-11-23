@@ -63,6 +63,8 @@
 
 def parse_apc_symmetra(info):
     parsed = {}
+    if not info:
+        return parsed
 
     # some numeric fields may be empty
     battery_status,  output_status,           state_output_state,     battery_capacity, \

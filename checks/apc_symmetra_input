@@ -29,6 +29,8 @@
 
 
 def parse_apc_symmetra_input(info):
+    if not info:
+        return {}
     return { "Input" : { "voltage" : float(info[0][0]), }}
 
 

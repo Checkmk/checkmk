@@ -1,0 +1,11 @@
+Title: apc_rackpdu_power, apc_symmetra, apc_symmetra_input, apc_symmetra_output: some fixes
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1479895471
+
+apc_rackpdu_power: fixed empty levels handling
+apc_symmetra, apc_symmetra_input, apc_symmetra_output: fixed no data handling

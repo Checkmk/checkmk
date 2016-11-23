@@ -37,9 +37,9 @@ def parse_apc_rackpdu_power(info):
     for host, amperage_str, warn, crit in info:
         amperage = float(amperage_str) / 10
 
-        if amperage >= int(crit):
+        if crit != "" and amperage >= int(crit):
             status_info = (amperage, (2, "crit exceeded"))
-        elif amperage >= int(warn):
+        elif warn != "" and amperage >= int(warn):
             status_info = (amperage, (1, "warn exceeded"))
         else:
             status_info = amperage

@@ -25,42 +25,37 @@
 #include "global_counters.h"
 #include <ctime>
 
-uint64_t g_counters[NUM_COUNTERS];
-uint64_t g_last_counter[NUM_COUNTERS];
+double g_counters[NUM_COUNTERS];
 double g_counter_rate[NUM_COUNTERS];
 
+namespace {
+double last_counter[NUM_COUNTERS];
+
 time_t last_statistics_update = 0;
-#define STATISTICS_INTERVAL 5
-#define RATING_WEIGHT 0.25
+constexpr time_t statistics_interval = 5;
+constexpr double rating_weight = 0.25;
+
+double lerp(double a, double b, double t) { return (1 - t) * a + t * b; }
+}  // namespace
 
 void do_statistics() {
     if (last_statistics_update == 0) {
         last_statistics_update = time(nullptr);
         for (unsigned i = 0; i < NUM_COUNTERS; i++) {
-            g_counters[i] = 0;
-            g_last_counter[i] = 0;
-            g_counter_rate[i] = 0.0;
+            g_counters[i] = g_counter_rate[i] = last_counter[i] = 0;
         }
         return;
     }
     time_t now = time(nullptr);
     time_t delta_time = now - last_statistics_update;
-    if (delta_time >= STATISTICS_INTERVAL) {
+    if (delta_time >= statistics_interval) {
         last_statistics_update = now;
         for (unsigned i = 0; i < NUM_COUNTERS; i++) {
-            auto delta_value = g_counters[i] - g_last_counter[i];
-            double new_rate = static_cast<double>(delta_value) /
-                              static_cast<double>(delta_time);
             double old_rate = g_counter_rate[i];
-            double avg_rate;
-            if (old_rate == 0) {
-                avg_rate = new_rate;
-            } else {
-                avg_rate =
-                    old_rate * (1.0 - RATING_WEIGHT) + new_rate * RATING_WEIGHT;
-            }
-            g_counter_rate[i] = avg_rate;
-            g_last_counter[i] = g_counters[i];
+            double new_rate = (g_counters[i] - last_counter[i]) / delta_time;
+            g_counter_rate[i] =
+                lerp(old_rate, new_rate, old_rate == 0 ? 1 : rating_weight);
+            last_counter[i] = g_counters[i];
         }
     }
 }

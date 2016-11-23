@@ -46,6 +46,10 @@ public:
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
+
+private:
+    void addCounterColumns(const std::string &name,
+                           const std::string &description, int which);
 };
 
 #endif  // TableStatus_h

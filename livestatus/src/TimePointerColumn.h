@@ -42,10 +42,8 @@ class RowRenderer;
 class TimePointerColumn : public IntPointerColumn {
 public:
     TimePointerColumn(const std::string &name, const std::string &description,
-                      int *number, int indirect_offset = -1,
-                      int extra_offset = -1)
-        : IntPointerColumn(name, description, number, indirect_offset,
-                           extra_offset) {}
+                      int *number)
+        : IntPointerColumn(name, description, number) {}
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::time; }
     Filter *createFilter(RelationalOperator relOp,

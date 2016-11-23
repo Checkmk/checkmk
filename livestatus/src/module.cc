@@ -37,7 +37,6 @@
 #include <unistd.h>
 #include <chrono>
 #include <cstddef>
-#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>

@@ -63,7 +63,6 @@ livestatus_so_SOURCES = \
         EmptyColumn.cc \
         EventConsoleConnection.cc \
         Filter.cc \
-        GlobalCountersColumn.cc \
         HostContactsColumn.cc \
         HostFileColumn.cc \
         HostGroupsColumn.cc \

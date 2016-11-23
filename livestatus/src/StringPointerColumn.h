@@ -33,10 +33,8 @@ class StringPointerColumn : public StringColumn {
 
 public:
     StringPointerColumn(const std::string &name, const std::string &description,
-                        const char *string, int indirect_offset = -1,
-                        int extra_offset = -1)
-        : StringColumn(name, description, indirect_offset, extra_offset)
-        , _string(string) {}
+                        const char *string)
+        : StringColumn(name, description, -1, -1), _string(string) {}
     std::string getValue(void *) const override { return _string; }
 };
 

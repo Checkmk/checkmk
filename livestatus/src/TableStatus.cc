@@ -24,7 +24,7 @@
 
 #include "TableStatus.h"
 #include <ctime>
-#include "GlobalCountersColumn.h"
+#include "DoublePointerColumn.h"
 #include "IntPointerColumn.h"
 #include "Query.h"
 #include "StatusSpecialIntColumn.h"
@@ -77,88 +77,23 @@ extern int external_command_buffer_slots;
 #endif  // NAGIOS4
 
 TableStatus::TableStatus(Logger *logger) : Table(logger) {
-    addColumn(new GlobalCountersColumn(
-        "neb_callbacks", "The number of NEB call backs since program start",
-        COUNTER_NEB_CALLBACKS, false));
-    addColumn(new GlobalCountersColumn(
-        "neb_callbacks_rate",
-        "The averaged number of NEB call backs per second",
-        COUNTER_NEB_CALLBACKS, true));
-
-    addColumn(new GlobalCountersColumn(
-        "requests", "The number of requests to Livestatus since program start",
-        COUNTER_REQUESTS, false));
-    addColumn(new GlobalCountersColumn(
-        "requests_rate",
-        "The averaged number of request to Livestatus per second",
-        COUNTER_REQUESTS, true));
-
-    addColumn(new GlobalCountersColumn(
-        "connections",
-        "The number of client connections to Livestatus since program start",
-        COUNTER_CONNECTIONS, false));
-    addColumn(new GlobalCountersColumn("connections_rate",
-                                       "The averaged number of new client "
-                                       "connections to Livestatus per second",
-                                       COUNTER_CONNECTIONS, true));
-
-    addColumn(new GlobalCountersColumn(
-        "service_checks",
-        "The number of completed service checks since program start",
-        COUNTER_SERVICE_CHECKS, false));
-    addColumn(new GlobalCountersColumn(
-        "service_checks_rate",
-        "The averaged number of service checks per second",
-        COUNTER_SERVICE_CHECKS, true));
-
-    addColumn(new GlobalCountersColumn(
-        "host_checks", "The number of host checks since program start",
-        COUNTER_HOST_CHECKS, false));
-    addColumn(new GlobalCountersColumn(
-        "host_checks_rate", "the averaged number of host checks per second",
-        COUNTER_HOST_CHECKS, true));
-
-    addColumn(new GlobalCountersColumn(
-        "forks", "The number of process creations since program start",
-        COUNTER_FORKS, false));
-    addColumn(new GlobalCountersColumn(
-        "forks_rate", "the averaged number of forks checks per second",
-        COUNTER_FORKS, true));
-
-    addColumn(new GlobalCountersColumn(
-        "log_messages", "The number of new log messages since program start",
-        COUNTER_LOG_MESSAGES, false));
-    addColumn(new GlobalCountersColumn(
-        "log_messages_rate",
-        "the averaged number of new log messages per second",
-        COUNTER_LOG_MESSAGES, true));
-
-    addColumn(new GlobalCountersColumn(
-        "external_commands",
-        "The number of external commands since program start", COUNTER_COMMANDS,
-        false));
-    addColumn(new GlobalCountersColumn(
-        "external_commands_rate",
-        "the averaged number of external commands per second", COUNTER_COMMANDS,
-        true));
-
-    addColumn(new GlobalCountersColumn(
-        "livechecks", "The number of checks executed via livecheck",
-        COUNTER_LIVECHECKS, false));
-    addColumn(new GlobalCountersColumn(
-        "livechecks_rate",
-        "The averaged number of livechecks executes per second",
-        COUNTER_LIVECHECKS, true));
-
-    addColumn(new GlobalCountersColumn(
-        "livecheck_overflows",
-        "The number of times a check could not be executed "
-        "because now livecheck helper was free",
-        COUNTER_LIVECHECK_OVERFLOWS, false));
-    addColumn(
-        new GlobalCountersColumn("livecheck_overflows_rate",
-                                 "The number of livecheck overflows per second",
-                                 COUNTER_LIVECHECK_OVERFLOWS, true));
+    addCounterColumns("neb_callbacks", "NEB callbacks", COUNTER_NEB_CALLBACKS);
+    addCounterColumns("requests", "requests to Livestatus", COUNTER_REQUESTS);
+    addCounterColumns("connections", "client connections to Livestatus",
+                      COUNTER_CONNECTIONS);
+    addCounterColumns("service_checks", "completed service checks",
+                      COUNTER_SERVICE_CHECKS);
+    addCounterColumns("host_checks", "host checks", COUNTER_HOST_CHECKS);
+    addCounterColumns("forks", "process creations", COUNTER_FORKS);
+    addCounterColumns("log_messages", "new log messages", COUNTER_LOG_MESSAGES);
+    addCounterColumns("external_commands", "external commands",
+                      COUNTER_COMMANDS);
+    addCounterColumns("livechecks", "checks executed via livecheck",
+                      COUNTER_LIVECHECKS);
+    addCounterColumns("livecheck_overflows",
+                      "times a check could not be executed because no "
+                      "livecheck helper was free",
+                      COUNTER_LIVECHECK_OVERFLOWS);
 
     // Nagios program status data
     addColumn(new IntPointerColumn("nagios_pid",
@@ -305,6 +240,16 @@ TableStatus::TableStatus(Logger *logger) : Table(logger) {
         "The timestamp of the last time a host has been inventorized by "
         "Check_MK HW/SW-Inventory",
         g_mk_inventory_path, SPIC_MK_INVENTORY_LAST));
+}
+
+void TableStatus::addCounterColumns(const string &name,
+                                    const string &description, int which) {
+    addColumn(new DoublePointerColumn(
+        name, "The number of " + description + " since program start",
+        &g_counters[which]));
+    addColumn(new DoublePointerColumn(
+        name + "_rate", "The averaged number of " + description + " per second",
+        &g_counter_rate[which]));
 }
 
 string TableStatus::name() const { return "status"; }

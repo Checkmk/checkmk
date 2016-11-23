@@ -31,10 +31,8 @@
 class IntPointerColumn : public IntColumn {
 public:
     IntPointerColumn(const std::string& name, const std::string& description,
-                     int* number, int indirect_offset = -1,
-                     int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset)
-        , _number(number) {}
+                     int* number)
+        : IntColumn(name, description, -1, -1), _number(number) {}
     int32_t getValue(void* /* row */, contact* /* auth_user */) override {
         return *_number;
     }

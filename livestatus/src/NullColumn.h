@@ -38,9 +38,8 @@ class RowRenderer;
 
 class NullColumn : public Column {
 public:
-    NullColumn(const std::string &name, const std::string &description,
-               int indirect_offset = -1, int extra_offset = -1)
-        : Column(name, description, indirect_offset, extra_offset) {}
+    NullColumn(const std::string &name, const std::string &description)
+        : Column(name, description, -1, -1) {}
     ColumnType type() override { return ColumnType::null; }
     void output(void *row, RowRenderer &r, contact *auth_user) override;
 };

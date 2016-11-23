@@ -350,12 +350,12 @@ void TableServices::addColumns(Table *table, const string &prefix,
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
         reinterpret_cast<char *>(&svc.modified_attributes) - ref,
-        indirect_offset, false));
+        indirect_offset, false, -1, -1));
     table->addColumn(new AttributeListColumn(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
         reinterpret_cast<char *>(&svc.modified_attributes) - ref,
-        indirect_offset, true));
+        indirect_offset, true, -1, -1));
     table->addColumn(new ServiceSpecialIntColumn(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",

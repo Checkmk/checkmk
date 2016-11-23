@@ -414,12 +414,12 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
         reinterpret_cast<char *>(&hst.modified_attributes) - ref,
-        indirect_offset, false, extra_offset));
+        indirect_offset, false, extra_offset, -1));
     table->addColumn(new AttributeListColumn(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
         reinterpret_cast<char *>(&hst.modified_attributes) - ref,
-        indirect_offset, true, extra_offset));
+        indirect_offset, true, extra_offset, -1));
 
     // columns of type double
     table->addColumn(new OffsetDoubleColumn(

@@ -49,7 +49,7 @@ class AttributeListColumn : public IntColumn {
 public:
     AttributeListColumn(const std::string &name, const std::string &description,
                         int offset, int indirect_offset, bool show_list,
-                        int extra_offset = -1, int extra_extra_offset = -1)
+                        int extra_offset, int extra_extra_offset)
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset)
         , _offset(offset)

@@ -132,12 +132,12 @@ void TableContacts::addColumns(Table *table, const string &prefix,
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
         reinterpret_cast<char *>(&ctc.modified_attributes) - ref,
-        indirect_offset, false));
+        indirect_offset, false, -1, -1));
     table->addColumn(new AttributeListColumn(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
         reinterpret_cast<char *>(&ctc.modified_attributes) - ref,
-        indirect_offset, true));
+        indirect_offset, true, -1, -1));
 }
 
 void TableContacts::answerQuery(Query *query) {

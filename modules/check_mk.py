@@ -619,21 +619,25 @@ def duplicate_hosts():
 
 # Returns a set of all host names to be handled by this site
 # hosts of other sitest or disabled hosts are excluded
-all_hosts_untagged = None
 def all_active_realhosts():
-    global all_hosts_untagged
-    if all_hosts_untagged == None:
-        all_hosts_untagged = filter_active_hosts(all_configured_realhosts())
-    return all_hosts_untagged
+    active_realhosts = cmk_base.config_cache.get_set("active_realhosts")
+
+    if active_realhosts.is_empty():
+        active_realhosts.update(filter_active_hosts(all_configured_realhosts()))
+
+    return active_realhosts
+
 
 # Returns a set of all cluster host names to be handled by
 # this site hosts of other sitest or disabled hosts are excluded
-all_clusters_untagged = None
 def all_active_clusters():
-    global all_clusters_untagged
-    if all_clusters_untagged == None:
-        all_clusters_untagged = filter_active_hosts(all_configured_clusters())
-    return all_clusters_untagged
+    active_clusters = cmk_base.config_cache.get_set("active_clusters")
+
+    if active_clusters.is_empty():
+        active_clusters.update(filter_active_hosts(all_configured_clusters()))
+
+    return active_clusters
+
 
 # Returns a set of active hosts for this site
 def filter_active_hosts(hostlist, keep_offline_hosts=False):
@@ -653,12 +657,14 @@ def filter_active_hosts(hostlist, keep_offline_hosts=False):
                  if (keep_offline_hosts or in_binary_hostlist(hostname, only_hosts))
                  and host_is_member_of_site(hostname, distributed_wato_site) ])
 
+
 def host_is_member_of_site(hostname, site):
     for tag in tags_of_host(hostname):
         if tag.startswith("site:"):
             return site == tag[5:]
     # hosts without a site: tag belong to all sites
     return True
+
 
 def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
     if with_foreign_hosts:
@@ -2415,8 +2421,6 @@ skipped_config_variable_names = [
     "contacts",
     "host_paths",
     "timeperiods",
-    "all_hosts_untagged",
-    "all_clusters_untagged",
     "extra_service_conf",
     "extra_host_conf",
     "extra_nagios_conf",
@@ -4139,14 +4143,6 @@ def cleanup_globals():
 #   | Code for reading the configuration files.                            |
 #   '----------------------------------------------------------------------'
 
-# These variables shal be ignored when performing checks which global
-# variables have been changed during runtime of e.g. the Check_MK
-# keepalive mode
-ignore_changed_global_variables = [
-    'all_hosts_untagged',
-    'all_clusters_untagged',
-]
-
 vars_before_config = set([])
 
 # Now - at last - we can read in the user's configuration files
@@ -4304,7 +4300,7 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
     vars_after_config = all_nonfunction_vars()
     ignored_variables = set(['vars_before_config', 'parts',
                              'hosttags' ,'seen_hostnames',
-                             'taggedhost' ,'hostname'] + ignore_changed_global_variables)
+                             'taggedhost' ,'hostname'])
     errors = 0
     for name in vars_after_config:
         if name not in ignored_variables and name not in vars_before_config:

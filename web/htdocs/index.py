@@ -70,7 +70,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
                 try:
                     handler()
                 except Exception, e:
-                    html.write(str(e))
+                    html.write("%s" % e)
                     if config.debug:
                         html.write(html.attrencode(traceback.format_exc()))
                 raise FinalizeRequest()

@@ -1,4 +1,7 @@
 1.4.0i2p5:
+    WATO:
+    * 4068 FIX: Fixed possible exception in case of wrong automation secrets between multiple sites...
+
 
 1.4.0i2p4:
     Checks & Agents:

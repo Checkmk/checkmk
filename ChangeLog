@@ -22,6 +22,7 @@
     * 4090 FIX: apc_rackpdu_power, apc_symmetra, apc_symmetra_input, apc_symmetra_output: some fixes...
     * 4091 FIX: oracle_tablespace: Werk 3907 broke the detection of UNDO- and TEMP-Tablespaces
     * 4069 FIX: cmciii.phase: Fixed broken check with some devices...
+    * 4092 FIX: if.include: fixed wrong calculated number of interfaces which are up
 
     Multisite:
     * 3974 FIX: Sorting comments in hover menu of comments icon by time now

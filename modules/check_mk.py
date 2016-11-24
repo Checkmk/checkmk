@@ -4253,7 +4253,7 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
             else:
                 interactive_abort("Cannot read in configuration file %s: %s" % (_f, e))
 
-    collect_hosttags()
+    initialize_config_caches()
 
     global service_service_levels, host_service_levels
     service_service_levels = extra_service_conf.get("_ec_sl", [])
@@ -4331,6 +4331,10 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
         sys.stderr.write("--> Found %d invalid variables\n" % errors)
         sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
         sys.exit(1)
+
+
+def initialize_config_caches():
+    collect_hosttags()
 
 
 def initialize_check_caches():

@@ -220,7 +220,8 @@ class Site(object):
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
-            assert omd(["-V", self.version.version_directory(), "create", self.id]) == 0
+            assert omd(["-V", self.version.version_directory(), "create",
+                        "--apache-reload", self.id]) == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
 
         if self.update_with_git:

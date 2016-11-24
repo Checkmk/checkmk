@@ -5,6 +5,7 @@ exclude_dirs:
  - '/tests/'
  - '/doc/treasures/localchecks'
  - '/doc/treasures/notifications'
+ - '/scripts'
 
 ### Bandit config file generated from:
 # '/usr/local/bin/bandit-config-generator -o ../bandit.yaml'

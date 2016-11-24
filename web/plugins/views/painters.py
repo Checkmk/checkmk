@@ -918,6 +918,13 @@ multisite_painters["svc_notifper"] = {
     "paint"   : lambda row: (None, row["service_notification_period"]),
 }
 
+multisite_painters["svc_check_period"] = {
+    "title"   : _("Service check period"),
+    "short"   : _("check."),
+    "columns" : [ "service_check_period" ],
+    "paint"   : lambda row: (None, row["service_check_period"]),
+}
+
 multisite_painters["svc_flapping"] = {
     "title"   : _("Service is flapping"),
     "short"   : _("Flap"),

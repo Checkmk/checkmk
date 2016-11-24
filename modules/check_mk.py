@@ -2547,13 +2547,27 @@ def pack_autochecks():
 #   | implemented here.                                                    |
 #   '----------------------------------------------------------------------'
 
+
+def backup_paths():
+    return [
+        # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
+        ('check_mk_configfile', cmk.paths.main_config_file,    "main.mk",       "Main configuration file",           False, False, False ),
+        ('final_mk',            cmk.paths.final_config_file,   "final.mk",      "Final configuration file final.mk", False, False, False ),
+        ('check_mk_configdir',  cmk.paths.check_mk_config_dir, "",              "Configuration sub files",           True,  False, False ),
+        ('autochecksdir',       cmk.paths.autochecks_dir,      "",              "Automatically inventorized checks", True,  False, False ),
+        ('counters_directory',  cmk.paths.counters_dir,        "",              "Performance counters",              True,  True,  False ),
+        ('tcp_cache_dir',       cmk.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
+        ('logwatch_dir',        cmk.paths.logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
+    ]
+
+
 def do_backup(tarname):
     import tarfile
     console.verbose("Creating backup file '%s'...\n", tarname)
     tar = tarfile.open(tarname, "w:gz")
 
     for name, path, canonical_name, descr, is_dir, \
-        _unused_owned_by_nagios, _unused_group_www in backup_paths:
+        _unused_owned_by_nagios, _unused_group_www in backup_paths():
 
         absdir = os.path.abspath(path)
         if os.path.exists(path):
@@ -2593,7 +2607,7 @@ def do_restore(tarname):
         raise MKGeneralException("Unable to restore: File does not exist")
 
     # TODO: Cleanup owned_by_nagios and group_www handling - not needed in pure OMD env anymore
-    for name, path, canonical_name, descr, is_dir, owned_by_nagios, group_www in backup_paths:
+    for name, path, canonical_name, descr, is_dir, owned_by_nagios, group_www in backup_paths():
         absdir = os.path.abspath(path)
         if is_dir:
             basedir = absdir
@@ -4317,19 +4331,6 @@ def read_config_files(with_conf_d=True, validate_hosts=True):
         sys.stderr.write("--> Found %d invalid variables\n" % errors)
         sys.stderr.write("If you use own helper variables, please prefix them with _.\n")
         sys.exit(1)
-
-    # Prepare information for --backup and --restore
-    global backup_paths
-    backup_paths = [
-        # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
-        ('check_mk_configfile', cmk.paths.main_config_file,    "main.mk",       "Main configuration file",           False, False, False ),
-        ('final_mk',            cmk.paths.final_config_file,   "final.mk",      "Final configuration file final.mk", False, False, False ),
-        ('check_mk_configdir',  cmk.paths.check_mk_config_dir, "",              "Configuration sub files",           True,  False, False ),
-        ('autochecksdir',       cmk.paths.autochecks_dir,      "",              "Automatically inventorized checks", True,  False, False ),
-        ('counters_directory',  cmk.paths.counters_dir,        "",              "Performance counters",              True,  True,  False ),
-        ('tcp_cache_dir',       cmk.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
-        ('logwatch_dir',        cmk.paths.logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
-        ]
 
 
 def initialize_check_caches():

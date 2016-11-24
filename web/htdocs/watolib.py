@@ -43,6 +43,7 @@
 #   '----------------------------------------------------------------------'
 
 import os, shutil, subprocess, base64, pickle, pwd
+import glob
 import traceback
 import ast
 import multiprocessing
@@ -5830,18 +5831,13 @@ def unlock_exclusive():
 
 
 def git_command(args):
-    encoded_args = " ".join([ a.encode("utf-8") for a in args ])
-    command = "cd '%s' && git %s 2>&1" % (cmk.paths.default_config_dir, encoded_args)
-    p = os.popen(command)
-    output = p.read()
-    status = p.close()
-    if status != None:
+    command = [ "git" ] + [ a.encode("utf-8") for a in args ]
+    p = subprocess.Popen(command, cwd=cmk.paths.default_config_dir,
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    status = p.wait()
+    if status != 0:
         raise MKGeneralException(_("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
-                (command.decode('utf-8'), output.replace("\n", "<br>\n")))
-
-
-def shell_quote(s):
-    return "'" + s.replace("'", "'\"'\"'") + "'"
+                (subprocess.list2cmdline(command), p.stdout.read().replace("\n", "<br>\n")))
 
 
 def prepare_git_commit():
@@ -5850,7 +5846,7 @@ def prepare_git_commit():
 
 
 def do_git_commit():
-    author = shell_quote("%s <%s>" % (config.user.id, config.user.email))
+    author = "%s <%s>" % (config.user.id, config.user.email)
     git_dir = cmk.paths.default_config_dir + "/.git"
     if not os.path.exists(git_dir):
         git_command(["init"])
@@ -5864,7 +5860,7 @@ def do_git_commit():
         write_gitignore_files()
         git_add_files()
         git_command(["commit", "--untracked-files=no", "--author", author, "-m",
-                                    shell_quote(_("Initialized GIT for Check_MK"))])
+                                    _("Initialized GIT for Check_MK")])
 
     if git_has_pending_changes():
         write_gitignore_files()
@@ -5877,16 +5873,18 @@ def do_git_commit():
         if not message:
             message = _("Unknown configuration change")
 
-        git_command(["commit", "--author", author, "-m", shell_quote(message)])
+        git_command(["commit", "--author", author, "-m", message])
 
 
 def git_add_files():
-    git_command(["add", "--all", ".gitignore", "*.d/wato"])
+    git_command(["add", "--all", ".gitignore"]
+                 + glob.glob("%s/*.d/wato" % cmk.paths.default_config_dir))
 
 
 def git_has_pending_changes():
-    return os.popen("cd '%s' && git status --porcelain" %
-                        cmk.paths.default_config_dir).read().strip()
+    return subprocess.Popen(["git", "status", "--porcelain"],
+                            cwd=cmk.paths.default_config_dir,
+                            stdout=subprocess.PIPE).stdout.read() != ""
 
 
 # Make sure that .gitignore-files are present and uptodate. Only files below the "wato" directories

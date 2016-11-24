@@ -1,4 +1,4 @@
-Title: if.include: fixed wrong calculated number of interfaces which are up
+Title: if.include: fixed wrong calculated number of interfaces which are up in case of interface groups
 Level: 1
 Component: checks
 Class: fix

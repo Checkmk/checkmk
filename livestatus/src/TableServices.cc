@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableServices.h"
+#include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
 #include "ContactGroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
@@ -346,16 +347,16 @@ void TableServices::addColumns(Table *table, const string &prefix,
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
         (char *)(&svc.obsess) - ref, indirect_offset));
 #endif  // NAGIOS4
-    table->addColumn(new AttributeListColumn(
+    table->addColumn(new AttributeListAsIntColumn(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
         reinterpret_cast<char *>(&svc.modified_attributes) - ref,
-        indirect_offset, false, -1, -1));
+        indirect_offset, -1, -1));
     table->addColumn(new AttributeListColumn(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
         reinterpret_cast<char *>(&svc.modified_attributes) - ref,
-        indirect_offset, true, -1, -1));
+        indirect_offset, -1, -1));
     table->addColumn(new ServiceSpecialIntColumn(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",

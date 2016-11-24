@@ -22,31 +22,23 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef AttributeListFilter_h
-#define AttributeListFilter_h
-
-#include "config.h"  // IWYU pragma: keep
+#include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
-#include "ColumnFilter.h"
-#include "opids.h"
+#include "IntFilter.h"
 
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
+using std::string;
 
-class AttributeListFilter : public ColumnFilter {
-public:
-    AttributeListFilter(AttributeListColumn *column, RelationalOperator relOp,
-                        unsigned long ref);
-    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
-    AttributeListColumn *column() const override;
+Filter *AttributeListAsIntColumn::createFilter(RelationalOperator relOp,
+                                               const string &value) {
+    return new IntFilter(this, relOp,
+                         AttributeListColumn::refValueFor(value, logger()));
+}
 
-private:
-    AttributeListColumn *_column;
-    RelationalOperator _relOp;
-    unsigned long _ref;
-};
-
-#endif  // AttributeListFilter_h
+int32_t AttributeListAsIntColumn::getValue(void *row, contact * /*unused*/) {
+    char *p = reinterpret_cast<char *>(shiftPointer(row));
+    if (p == nullptr) {
+        return 0;
+    }
+    auto ptr = reinterpret_cast<int *>(p + _offset);
+    return *reinterpret_cast<int32_t *>(ptr);
+}

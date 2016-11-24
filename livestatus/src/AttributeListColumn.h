@@ -32,6 +32,7 @@
 #include "IntColumn.h"
 #include "opids.h"
 class Filter;
+class Logger;
 class RowRenderer;
 
 #ifdef CMC
@@ -48,17 +49,14 @@ class RowRenderer;
 class AttributeListColumn : public IntColumn {
 public:
     AttributeListColumn(const std::string &name, const std::string &description,
-                        int offset, int indirect_offset, bool show_list,
-                        int extra_offset, int extra_extra_offset)
+                        int offset, int indirect_offset, int extra_offset,
+                        int extra_extra_offset)
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset)
-        , _offset(offset)
-        , _show_list(show_list) {}
+        , _offset(offset) {}
 
     // API of Column
-    ColumnType type() override {
-        return _show_list ? ColumnType::list : ColumnType::int_;
-    }
+    ColumnType type() override { return ColumnType::list; }
     std::string valueAsString(void *row, contact * /* auth_user */) override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     Filter *createFilter(RelationalOperator relOp,
@@ -67,9 +65,10 @@ public:
     // API of IntColumn
     int32_t getValue(void *row, contact *auth_user) override;
 
+    static std::string refValueFor(const std::string &value, Logger *logger);
+
 private:
     int _offset;
-    bool _show_list;
 };
 
 #endif  // AttributeListColumn_h

@@ -53,6 +53,14 @@ bool IntFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
             return act_value == ref_value;
         case RelationalOperator::not_equal:
             return act_value != ref_value;
+        case RelationalOperator::matches:  // superset
+            return (act_value & ref_value) == ref_value;
+        case RelationalOperator::doesnt_match:  // not superset
+            return (act_value & ref_value) != ref_value;
+        case RelationalOperator::matches_icase:  // contains any
+            return (act_value & ref_value) != 0;
+        case RelationalOperator::doesnt_match_icase:  // contains none of
+            return (act_value & ref_value) == 0;
         case RelationalOperator::less:
             return act_value < ref_value;
         case RelationalOperator::greater_or_equal:
@@ -61,12 +69,8 @@ bool IntFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
             return act_value > ref_value;
         case RelationalOperator::less_or_equal:
             return act_value <= ref_value;
-        case RelationalOperator::matches:
-        case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:
         case RelationalOperator::not_equal_icase:
-        case RelationalOperator::matches_icase:
-        case RelationalOperator::doesnt_match_icase:
             Informational(logger()) << "Sorry. Operator " << _relOp
                                     << " for integer columns not implemented.";
             return false;

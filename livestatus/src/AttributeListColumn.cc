@@ -24,12 +24,11 @@
 
 #include "AttributeListColumn.h"
 #include <cctype>
-#include <cstdlib>
 #include <map>
 #include <ostream>
 #include <utility>
 #include <vector>
-#include "AttributeListFilter.h"
+#include "IntFilter.h"
 #include "Logger.h"
 #include "Renderer.h"
 #include "strutil.h"
@@ -73,15 +72,11 @@ int32_t AttributeListColumn::getValue(void *row, contact * /*unused*/) {
 void AttributeListColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     unsigned long mask = static_cast<unsigned long>(getValue(row, nullptr));
-    if (_show_list) {
-        ListRenderer l(r);
-        for (const auto &entry : known_attributes) {
-            if ((mask & entry.second) != 0u) {
-                l.output(entry.first);
-            }
+    ListRenderer l(r);
+    for (const auto &entry : known_attributes) {
+        if ((mask & entry.second) != 0u) {
+            l.output(entry.first);
         }
-    } else {
-        r.output(mask);
     }
 }
 
@@ -92,22 +87,28 @@ string AttributeListColumn::valueAsString(void *row,
 
 Filter *AttributeListColumn::createFilter(RelationalOperator relOp,
                                           const string &value) {
-    unsigned long ref = 0;
+    return new IntFilter(this, relOp, refValueFor(value, logger()));
+}
+
+// static
+string AttributeListColumn::refValueFor(const string &value, Logger *logger) {
     if (isdigit(value[0]) != 0) {
-        ref = strtoul(value.c_str(), nullptr, 10);
-    } else {
-        vector<char> value_vec(value.begin(), value.end());
-        value_vec.push_back('\0');
-        char *scan = &value_vec[0];
-        for (const char *t; (t = next_token(&scan, ',')) != nullptr;) {
-            auto it = known_attributes.find(t);
-            if (it == known_attributes.end()) {
-                Informational(logger()) << "Ignoring invalid value '" << t
-                                        << "' for attribute list";
-                continue;
-            }
-            ref |= it->second;
-        }
+        return value;
     }
-    return new AttributeListFilter(this, relOp, ref);
+
+    vector<char> value_vec(value.begin(), value.end());
+    value_vec.push_back('\0');
+    char *scan = &value_vec[0];
+
+    unsigned long ref_value = 0;
+    for (const char *t; (t = next_token(&scan, ',')) != nullptr;) {
+        auto it = known_attributes.find(t);
+        if (it == known_attributes.end()) {
+            Informational(logger) << "Ignoring invalid value '" << t
+                                  << "' for attribute list";
+            continue;
+        }
+        ref_value |= it->second;
+    }
+    return to_string(ref_value);
 }

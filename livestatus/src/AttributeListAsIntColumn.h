@@ -22,13 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef EmptyColumn_h
-#define EmptyColumn_h
+#ifndef AttributeListAsIntColumn_h
+#define AttributeListAsIntColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <cstdint>
 #include <string>
-#include "Column.h"
-class RowRenderer;
+#include "IntColumn.h"
+#include "opids.h"
+class Filter;
 
 #ifdef CMC
 #include "cmc.h"
@@ -36,13 +38,24 @@ class RowRenderer;
 #include "nagios.h"
 #endif
 
-class EmptyColumn : public Column {
+class AttributeListAsIntColumn : public IntColumn {
 public:
-    EmptyColumn(const std::string &name, const std::string &description,
-                int indirect_offset = -1, int extra_offset = -1)
-        : Column(name, description, indirect_offset, extra_offset) {}
-    ColumnType type() override { return ColumnType::string; }
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    AttributeListAsIntColumn(const std::string &name,
+                             const std::string &description, int offset,
+                             int indirect_offset, int extra_offset,
+                             int extra_extra_offset)
+        : IntColumn(name, description, indirect_offset, extra_offset,
+                    extra_extra_offset)
+        , _offset(offset) {}
+
+    /// API of Column
+    Filter *createFilter(RelationalOperator, const std::string &) override;
+
+    // API of IntColumn
+    int32_t getValue(void *row, contact *auth_user) override;
+
+private:
+    const int _offset;
 };
 
-#endif  // EmptyColumn_h
+#endif  // AttributeListAsIntColumn_h

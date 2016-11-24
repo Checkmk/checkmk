@@ -23,11 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "IntColumn.h"
-#include <cstdio>
 #include "IntFilter.h"
 #include "Renderer.h"
 
 using std::string;
+using std::to_string;
 
 void IntColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     r.output(getValue(row, auth_user));
@@ -38,7 +38,5 @@ Filter *IntColumn::createFilter(RelationalOperator relOp, const string &value) {
 }
 
 string IntColumn::valueAsString(void *row, contact *auth_user) {
-    char i[16];
-    snprintf(i, sizeof(i), "%d", getValue(row, auth_user));
-    return i;
+    return to_string(getValue(row, auth_user));
 }

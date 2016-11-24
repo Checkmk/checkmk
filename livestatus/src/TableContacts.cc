@@ -24,6 +24,7 @@
 
 #include "TableContacts.h"
 #include <cstdio>
+#include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsNamesColumn.h"
@@ -128,16 +129,16 @@ void TableContacts::addColumns(Table *table, const string &prefix,
         prefix + "custom_variables", "A dictionary of the custom variables",
         reinterpret_cast<char *>(&ctc.custom_variables) - ref,
         indirect_offset));
-    table->addColumn(new AttributeListColumn(
+    table->addColumn(new AttributeListAsIntColumn(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
         reinterpret_cast<char *>(&ctc.modified_attributes) - ref,
-        indirect_offset, false, -1, -1));
+        indirect_offset, -1, -1));
     table->addColumn(new AttributeListColumn(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
         reinterpret_cast<char *>(&ctc.modified_attributes) - ref,
-        indirect_offset, true, -1, -1));
+        indirect_offset, -1, -1));
 }
 
 void TableContacts::answerQuery(Query *query) {

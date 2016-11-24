@@ -32,8 +32,8 @@ pkglib_LIBRARIES = livestatus.so
 
 livestatus_so_SOURCES = \
         AndingFilter.cc \
+        AttributeListAsIntColumn.cc \
         AttributeListColumn.cc \
-        AttributeListFilter.cc \
         BlobColumn.cc \
         ClientQueue.cc \
         Column.cc \
@@ -60,7 +60,6 @@ livestatus_so_SOURCES = \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \
         DynamicLogwatchFileColumn.cc \
-        EmptyColumn.cc \
         EventConsoleConnection.cc \
         Filter.cc \
         HostContactsColumn.cc \

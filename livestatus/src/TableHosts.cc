@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableHosts.h"
+#include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
 #include "ContactGroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
@@ -410,16 +411,16 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         "The current obsess_over_host setting... (0/1)",
         (char *)(&hst.obsess) - ref, indirect_offset, extra_offset));
 #endif  // NAGIOS4
-    table->addColumn(new AttributeListColumn(
+    table->addColumn(new AttributeListAsIntColumn(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
         reinterpret_cast<char *>(&hst.modified_attributes) - ref,
-        indirect_offset, false, extra_offset, -1));
+        indirect_offset, extra_offset, -1));
     table->addColumn(new AttributeListColumn(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
         reinterpret_cast<char *>(&hst.modified_attributes) - ref,
-        indirect_offset, true, extra_offset, -1));
+        indirect_offset, extra_offset, -1));
 
     // columns of type double
     table->addColumn(new OffsetDoubleColumn(

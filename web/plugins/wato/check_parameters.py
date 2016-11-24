@@ -10977,7 +10977,7 @@ register_check_parameters(
         add_label = _("Add warning")
     ),
     None,
-    "dict"
+    "first"
 )
 
 register_check_parameters(

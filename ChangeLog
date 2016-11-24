@@ -1,4 +1,7 @@
 1.2.8p15:
+    Checks & Agents:
+    * 4069 FIX: cmciii.phase: Fixed broken check with some devices...
+
 
 1.2.8p14:
     Checks & Agents:

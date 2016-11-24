@@ -856,8 +856,15 @@ def reparse_cmciii_phase(parsed):
     for name, value in inputs.items():
         if name[1].find("Phase") != -1:
             parts = name[1].split('.')
+
+            # Prepend an empty device name to handle the special case where
+            # no device name is given in the alias
+            if name[1].startswith("Phase "):
+                parts = [""] + parts
+
             if len(parts) == 3:
                 device, phase, value_name = parts
+
             else:
                 device, phase, value_name, value_name_add = parts
                 value_name = (value_name, value_name_add)
@@ -866,23 +873,35 @@ def reparse_cmciii_phase(parsed):
             unit    = units[unit_id-1][1]
             phase   = phase[-1]
 
+            # Device may contain spaces. Replace them because spaces will break
+            # item matching in the check.
+            device  = device.replace(" ", "_")
+
             output.setdefault((unit, device, phase), {})
             output[(unit, device, phase)][value_name] = value
-
-
 
     return output
 
 
 def inventory_cmciii_phase(parsed):
     parsed = reparse_cmciii_phase(parsed)
-    for device, unit, phase in parsed.keys():
-        yield "%s %s Phase %s" % (device, unit, phase), {}
+    for unit, device, phase in parsed.keys():
+        if device:
+            item = "%s %s Phase %s" % (unit, device, phase)
+        else:
+            item = "%s Phase %s" % (unit, phase)
+
+        yield item, {}
 
 
 def check_cmciii_phase(item, params, parsed):
-    device, unit, word, phase = item.split()
-    data = reparse_cmciii_phase(parsed)[(device, unit, phase)]
+    item_parts = item.split()
+    if len(item_parts) == 3:
+        unit, device, phase = item_parts[0], "", item_parts[-1]
+    else:
+        unit, device, _unused, phase = item_parts
+
+    data = reparse_cmciii_phase(parsed)[(unit, device, phase)]
 
     parsed = {}
     parsed[item] = {}

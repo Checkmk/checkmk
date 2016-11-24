@@ -1,0 +1,12 @@
+Title: cmciii.phase: Fixed broken check with some devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1479976504
+Class: fix
+
+The check failed to discover services on devices not reporting a
+"device" info in the phase name.
+
+The check also failed for devices having spaces in the unit names.

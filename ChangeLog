@@ -1,6 +1,7 @@
 1.2.8p15:
     Checks & Agents:
     * 4069 FIX: cmciii.phase: Fixed broken check with some devices...
+    * 4092 FIX: if.include: fixed wrong calculated number of interfaces which are up
 
 
 1.2.8p14:

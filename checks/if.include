@@ -499,7 +499,7 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
                 ifOutQLen, ifAlias, ifPhysAddress = line
 
             if ifOperStatus == '1' or (
-                type(ifOperStatus) == tuple and ifOperStatus == '1'):
+                type(ifOperStatus) == tuple and ifOperStatus[0] == '1'):
                 num_up += 1
 
         if num_up == len(matching_interfaces):

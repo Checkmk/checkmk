@@ -1,4 +1,7 @@
 1.4.0i2p5:
+    Checks & Agents:
+    * 4069 FIX: cmciii.phase: Fixed broken check with some devices...
+
     WATO:
     * 4068 FIX: Fixed possible exception in case of wrong automation secrets between multiple sites...
 

@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+#include "Aggregator.h"
 #include "Column.h"
 #include "opids.h"
 class Filter;
@@ -49,6 +50,7 @@ public:
     std::string valueAsString(void *row, contact * /* auth_user */) override;
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
+    Aggregator *createAggregator(StatsOperation operation) override;
 };
 
 #endif  // DoubleColumn_h

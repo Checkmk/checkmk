@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+#include "Aggregator.h"
 #include "opids.h"
 class Filter;
 class Logger;
@@ -66,6 +67,7 @@ public:
         return false;  // true for dynamic Columns to be deleted after Query
     }
     virtual Filter *createFilter(RelationalOperator, const std::string &);
+    virtual Aggregator *createAggregator(StatsOperation operation);
 
     Logger *logger() const { return _logger; }
 

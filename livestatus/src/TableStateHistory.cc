@@ -101,7 +101,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
     addColumn(new OffsetTimeColumn(
         "time", "Time of the log event (seconds since 1/1/1970)",
         reinterpret_cast<char *>(&(ref->_time)) - reinterpret_cast<char *>(ref),
-        -1));
+        -1, -1));
     addColumn(new OffsetIntColumn("lineno",
                                   "The number of the line in the log file",
                                   reinterpret_cast<char *>(&(ref->_lineno)) -
@@ -110,12 +110,12 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
     addColumn(new OffsetTimeColumn(
         "from", "Start time of state (seconds since 1/1/1970)",
         reinterpret_cast<char *>(&(ref->_from)) - reinterpret_cast<char *>(ref),
-        -1));
+        -1, -1));
     addColumn(new OffsetTimeColumn("until",
                                    "End time of state (seconds since 1/1/1970)",
                                    reinterpret_cast<char *>(&(ref->_until)) -
                                        reinterpret_cast<char *>(ref),
-                                   -1));
+                                   -1, -1));
     addColumn(new OffsetIntColumn("duration",
                                   "Duration of state (until - from)",
                                   reinterpret_cast<char *>(&(ref->_duration)) -

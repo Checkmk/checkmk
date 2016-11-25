@@ -44,6 +44,7 @@
 #include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
+#include "OffsetPerfdataColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetStringHostMacroColumn.h"
 #include "OffsetTimeColumn.h"
@@ -169,7 +170,7 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         prefix + "plugin_output", "Output of the last host check",
         reinterpret_cast<char *>(&hst.plugin_output) - ref, indirect_offset,
         extra_offset));
-    table->addColumn(new OffsetStringColumn(
+    table->addColumn(new OffsetPerfdataColumn(
         prefix + "perf_data",
         "Optional performance data of the last host check",
         reinterpret_cast<char *>(&hst.perf_data) - ref, indirect_offset,

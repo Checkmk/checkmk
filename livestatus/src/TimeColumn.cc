@@ -22,13 +22,24 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "OffsetTimeColumn.h"
+#include "TimeColumn.h"
+#include <chrono>
+#include "IntAggregator.h"
+#include "Renderer.h"
+#include "TimeFilter.h"
 
-int32_t OffsetTimeColumn::getValue(void *row, contact * /* auth_user */) {
-    char *p = reinterpret_cast<char *>(shiftPointer(row));
-    if (p == nullptr) {
-        return 0;
-    }
-    auto ptr = reinterpret_cast<int *>(p + _offset);
-    return static_cast<int32_t>(*ptr);
+using std::chrono::system_clock;
+using std::string;
+
+void TimeColumn::output(void *row, RowRenderer &r, contact *auth_user) {
+    r.output(system_clock::from_time_t(getValue(row, auth_user)));
+}
+
+Filter *TimeColumn::createFilter(RelationalOperator relOp,
+                                 const string &value) {
+    return new TimeFilter(this, relOp, value);
+}
+
+Aggregator *TimeColumn::createAggregator(StatsOperation operation) {
+    return new IntAggregator(operation, this);
 }

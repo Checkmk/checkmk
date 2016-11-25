@@ -24,6 +24,7 @@
 
 #include "DoubleColumn.h"
 #include <cstdio>
+#include "DoubleAggregator.h"
 #include "DoubleFilter.h"
 #include "Renderer.h"
 
@@ -34,13 +35,17 @@ void DoubleColumn::output(void *row, RowRenderer &r,
     r.output(getValue(row));
 }
 
+string DoubleColumn::valueAsString(void *row, contact * /* auth_user */) {
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%.10e", getValue(row));
+    return buf;
+}
+
 Filter *DoubleColumn::createFilter(RelationalOperator relOp,
                                    const string &value) {
     return new DoubleFilter(this, relOp, value);
 }
 
-string DoubleColumn::valueAsString(void *row, contact * /* auth_user */) {
-    char buf[64];
-    snprintf(buf, sizeof(buf), "%.10e", getValue(row));
-    return buf;
+Aggregator *DoubleColumn::createAggregator(StatsOperation operation) {
+    return new DoubleAggregator(operation, this);
 }

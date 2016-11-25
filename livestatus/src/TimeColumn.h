@@ -22,13 +22,38 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "OffsetTimeColumn.h"
+#ifndef TimeColumn_h
+#define TimeColumn_h
 
-int32_t OffsetTimeColumn::getValue(void *row, contact * /* auth_user */) {
-    char *p = reinterpret_cast<char *>(shiftPointer(row));
-    if (p == nullptr) {
-        return 0;
-    }
-    auto ptr = reinterpret_cast<int *>(p + _offset);
-    return static_cast<int32_t>(*ptr);
-}
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Aggregator.h"
+#include "Column.h"
+#include "IntColumn.h"
+#include "opids.h"
+class Filter;
+class RowRenderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
+class TimeColumn : public IntColumn {
+public:
+    TimeColumn(const std::string &name, const std::string &description,
+               int indirect_offset, int extra_offset, int extra_extra_offset)
+        : IntColumn(name, description, indirect_offset, extra_offset,
+                    extra_extra_offset) {}
+
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
+
+    ColumnType type() override { return ColumnType::time; }
+
+    Filter *createFilter(RelationalOperator relOp,
+                         const std::string &value) override;
+    Aggregator *createAggregator(StatsOperation operation) override;
+};
+
+#endif  // TimeColumn_h

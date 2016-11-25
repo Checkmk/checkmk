@@ -39,11 +39,11 @@
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "MonitoringCore.h"
-#include "OffsetTimeColumn.h"
 #include "Renderer.h"
 #include "StringColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
+#include "TimeColumn.h"
 class Query;
 
 #ifdef CMC
@@ -128,13 +128,13 @@ protected:
         double getValue(void *row) override { return _ecc.getValue(row); }
     };
 
-    class TimeEventConsoleColumn : public OffsetTimeColumn {
+    class TimeEventConsoleColumn : public TimeColumn {
         EventConsoleColumn<int32_t> _ecc;
 
     public:
         TimeEventConsoleColumn(const std::string &name,
                                const std::string &description)
-            : OffsetTimeColumn(name, description, -1, -1)
+            : TimeColumn(name, description, -1, -1, -1)
             , _ecc(name, 0, [](std::string x) {
                 return static_cast<int32_t>(atof(x.c_str()));
             }) {}

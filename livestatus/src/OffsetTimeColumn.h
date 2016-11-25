@@ -26,12 +26,9 @@
 #define OffsetTimeColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <cstdint>
 #include <string>
-#include "Column.h"
-#include "OffsetIntColumn.h"
-#include "opids.h"
-class Filter;
-class RowRenderer;
+#include "TimeColumn.h"
 
 #ifdef CMC
 #include "cmc.h"
@@ -39,21 +36,19 @@ class RowRenderer;
 #include "nagios.h"
 #endif
 
-/* We are using IntColumn in order to implement a column of type time. This does
-   almost the same as the time column, but applies a timezone offset stored in
-   the Query. */
-
-class OffsetTimeColumn : public OffsetIntColumn {
+class OffsetTimeColumn : public TimeColumn {
 public:
-    OffsetTimeColumn(const std::string &name, const std::string &description,
-                     int offset, int indirect_offset = -1,
-                     int extra_offset = -1)
-        : OffsetIntColumn(name, description, offset, indirect_offset,
-                          extra_offset) {}
-    ColumnType type() override { return ColumnType::time; }
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
+    OffsetTimeColumn(const std::string& name, const std::string& description,
+                     int offset, int indirect_offset, int extra_offset)
+        : TimeColumn(name, description, indirect_offset, extra_offset, -1)
+        , _offset(offset) {}
+
+    int32_t getValue(void* row, contact* auth_user) override;
+
+    int offset() const { return _offset; }
+
+private:
+    const int _offset;
 };
 
 #endif  // OffsetTimeColumn_h

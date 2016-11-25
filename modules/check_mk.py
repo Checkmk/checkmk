@@ -893,16 +893,26 @@ def all_matching_hosts(tags, hostlist, with_foreign_hosts):
     else:
         valid_hosts = all_active_hosts()
 
-    # Speed up matching process by filter out single matches
+    # Contains matched hosts
     matching = set([])
-    if not tags and not [x for x in hostlist if x[0] in ["@", "!", "~"]]:
-        for hostname in hostlist:
-            if hostname in valid_hosts:
-                matching.add(hostname)
-    elif not tags and len(hostlist) == 1 and "@all" in hostlist:
-        matching.update(set(valid_hosts))
+
+    # Check if the rule has only specific hosts set
+    only_specific_hosts = not bool([x for x in hostlist if x[0] in ["@", "!", "~"]])
+
+    # If no tags are specified and there are only specific hosts we already have the matches
+    if not tags and only_specific_hosts:
+        matching = valid_hosts.intersection(hostlist)
+    # If no tags are specified and the hostlist only include @all (all hosts)
+    elif not tags and hostlist == [ "@all" ]:
+        matching = valid_hosts
     else:
-        for hostname in valid_hosts:
+        # If the rule has only exact host restrictions, we can thin out the list of hosts to check
+        if only_specific_hosts:
+            hosts_to_check = valid_hosts.intersection(set(hostlist))
+        else:
+            hosts_to_check = valid_hosts
+
+        for hostname in hosts_to_check:
             # When no tag matching is requested, do not filter by tags. Accept all hosts
             # and filter only by hostlist
             if in_extraconf_hostlist(hostlist, hostname) and \

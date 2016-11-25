@@ -1,0 +1,10 @@
+Title: Some minor performance improvements during config generation
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480088343
+Class: feature
+
+Rules with host tags as well as explicit set host names now being processed faster.
+However, those kinds of rules are quite rare...

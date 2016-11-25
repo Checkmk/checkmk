@@ -1,0 +1,9 @@
+Title: Fixed multiple issues in BI availability when groups or names contain umlauts
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p15
+Date: 1480083735
+Class: fix
+
+

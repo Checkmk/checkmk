@@ -923,6 +923,18 @@ class Filter:
         for varname in self.htmlvars:
             html.set_var(varname, value.get(varname))
 
+
+
+# TODO: We should merge this with Filter() and make all vars unicode ...
+class FilterUnicodeFilter(Filter):
+    def value(self):
+        val = {}
+        for varname in self.htmlvars:
+            val[varname] = html.get_unicode_input(varname, '')
+        return val
+
+
+
 def get_filter(name):
     return multisite_filters[name]
 

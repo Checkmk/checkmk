@@ -116,7 +116,7 @@ infos['aggr'] = {
     'title'       : _('BI Aggregation'),
     'title_plural': _('BI Aggregations'),
     'single_spec' : [
-        ('aggr_name', TextAscii(
+        ('aggr_name', TextUnicode(
             title = _('Aggregation Name'),
         )),
     ],
@@ -126,7 +126,7 @@ infos['aggr_group'] = {
     'title'       : _('BI Aggregation Group'),
     'title_plural': _('BI Aggregation Groups'),
     'single_spec' : [
-        ('aggr_group', TextAscii(
+        ('aggr_group', TextUnicode(
             title = _('Aggregation group'),
         )),
     ],

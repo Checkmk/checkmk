@@ -304,6 +304,9 @@ def diskstat_convert_info(parsed):
     # with multipath names like "SDataCoreSANsymphony_DAT07-fscl"
     if multipath_info:
         for uuid, multipath in multipath_info.items():
+            if "alias" not in multipath:
+                multipath["alias"] = ""
+
             if multipath["device"] in converted_disks or \
                "DM %s" % multipath["alias"] in converted_disks:
                 for path in multipath["paths"]:

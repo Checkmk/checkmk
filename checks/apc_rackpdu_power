@@ -24,27 +24,59 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Originally written / contributed by Dave Cundiff
 
 # .1.3.6.1.4.1.318.1.1.12.1.1.0  "sf9pdu1" --> PowerNet-MIB::rPDUIdentName.0
-# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1  160 --> PowerNet-MIB::rPDULoadStatusLoad.1 (measured in tenths of Amps)
-# .1.3.6.1.4.1.318.1.1.12.2.2.1.1.3.1  12 --> PowerNet-MIB::rPDULoadPhaseConfigNearOverloadThreshold.phase1
-# .1.3.6.1.4.1.318.1.1.12.2.2.1.1.4.1  16 --> PowerNet-MIB::rPDULoadPhaseConfigOverloadThreshold.phase1
+# .1.3.6.1.4.1.318.1.1.12.1.9.0 1 --> PowerNet-MIB::rPDUIdentDeviceNumPhases.0
+# .1.3.6.1.4.1.318.1.1.12.1.16.0 0 --> PowerNet-MIB::rPDUIdentDevicePowerWatts.0
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1 160 --> PowerNet-MIB::rPDULoadStatusLoad.1 (measured in tenths of Amps)
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.3.1 1 --> PowerNet-MIB::rPDULoadStatusLoadState.1
+
+# .1.3.6.1.4.1.318.1.1.12.1.1.0 FOOBAR --> PowerNet-MIB::rPDUIdentName.0
+# .1.3.6.1.4.1.318.1.1.12.1.9.0 1 --> PowerNet-MIB::rPDUIdentDeviceNumPhases.0$
+# .1.3.6.1.4.1.318.1.1.12.1.16.0 1587 --> PowerNet-MIB::rPDUIdentDevicePowerWatts.0
+# .1.3.6.1.4.1.318.1.1.12.2.1.4.0 2 --> PowerNet-MIB::rPDULoadDevNumBanks.0
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.1 0 --> PowerNet-MIB::rPDULoadStatusLoad.1
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.2 0 --> PowerNet-MIB::rPDULoadStatusLoad.2
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.2.3 0 --> PowerNet-MIB::rPDULoadStatusLoad.3
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.3.1 1 --> PowerNet-MIB::rPDULoadStatusLoadStates.1
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.3.2 1 --> PowerNet-MIB::rPDULoadStatusLoadStates.2
+# .1.3.6.1.4.1.318.1.1.12.2.3.1.1.3.3 1 --> PowerNet-MIB::rPDULoadStatusLoadStates.3
+
+
+# examples num phase/banks: 1/0,    => parsed = device phase
+#                           1/2,    => parsed = device phase + 2 banks
+#                           3/0     => parsed = device phase + 3 phases
 
 
 def parse_apc_rackpdu_power(info):
+    def get_status_info(amperage_str, device_state):
+        return float(amperage_str) / 10, {
+               "1" : (0, "load normal"),
+               "2" : (2, "load low"),
+               "3" : (1, "load near over load"),
+               "4" : (2, "load over load"), }[device_state]
+
     parsed = {}
-    for host, amperage_str, warn, crit in info:
-        amperage = float(amperage_str) / 10
+    device_info, bank_info, phase_info = info
+    pdu_ident_name, power_str = device_info[0]
+    device_name = "Device %s" % pdu_ident_name
 
-        if crit != "" and amperage >= int(crit):
-            status_info = (amperage, (2, "crit exceeded"))
-        elif warn != "" and amperage >= int(warn):
-            status_info = (amperage, (1, "warn exceeded"))
-        else:
-            status_info = amperage
+    parsed.setdefault( device_name, { "power" : float(power_str) } )
 
-        parsed.setdefault(host, {"current" : status_info})
+    if len(device_info) == len(phase_info):
+        parsed[device_name]["current"] = get_status_info(*phase_info[0][1:])
+        return parsed
+
+    if int(bank_info[0][0]):
+        parsed[device_name]["current"] = get_status_info(*phase_info[0][1:])
+        phase_info = phase_info[1:]
+        name_part  = "Bank"
+    else:
+        name_part = "Phase"
+
+    for oid_end, amperage_str, device_state in phase_info:
+        parsed.setdefault( "%s %s" % (name_part, oid_end),
+                           { "current" : get_status_info( amperage_str, device_state ) } )
 
     return parsed
 
@@ -55,12 +87,18 @@ check_info["apc_rackpdu_power"] = {
     'check_function'        : check_elphase,
     'service_description'   : 'PDU %s',
     'has_perfdata'          : True,
-    'snmp_info'             : ('.1.3.6.1.4.1.318.1.1.12', [
-                                    '1.1.0',        # PowerNet-MIB::rPDUIdentName
-                                    '2.3.1.1.2.1',  # PowerNet-MIB::rPDULoadStatusLoad
-                                    '2.2.1.1.3.1',  # PowerNet-MIB::rPDULoadPhaseConfigNearOverloadThreshold
-                                    '2.2.1.1.4.1',  # PowerNet-MIB::rPDULoadPhaseConfigOverloadThreshold
-                              ]),
+    'snmp_info'             : [('.1.3.6.1.4.1.318.1.1.12.1', [
+                                    '1',    # PowerNet-MIB::rPDUIdentName
+                                    '16',   # PowerNet-MIB::rPDUIdentDevicePowerWatts
+                               ]),
+                               ('.1.3.6.1.4.1.318.1.1.12.2.1', [
+                                    '4',    # PowerNet-MIB::rPDULoadDevNumBanks
+                               ]),
+                               ('.1.3.6.1.4.1.318.1.1.12.2.3.1.1', [
+                                    OID_END,
+                                    '2',    # PowerNet-MIB::rPDULoadStatusLoad
+                                    '3',    # PowerNet-MIB::rPDULoadStatusLoadState
+                              ])],
     'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("apc web/snmp") and \
                                           oid(".1.3.6.1.4.1.318.1.1.12.1.1.0"),
     'group'                 : 'el_inphase',

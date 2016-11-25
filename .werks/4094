@@ -1,0 +1,9 @@
+Title: apc_rackpdu_power: now detects all phases or banks connected to this pdu
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i3
+Date: 1480070189
+Class: feature
+
+

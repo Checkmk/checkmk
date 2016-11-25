@@ -270,7 +270,17 @@ void Query::parseAndOrLine(char *line, LogicalOperator andor,
         return;
     }
 
-    filter.combineFilters(_logger, number, andor);
+    if (number > static_cast<int>(filter.size())) {
+        invalidHeader("error combining filters for table " + _table->name() +
+                      " with '" +
+                      (andor == LogicalOperator::and_ ? "AND" : "OR") +
+                      "': expected " + to_string(number) +
+                      " filters, but only " + to_string(filter.size()) + " " +
+                      (filter.size() == 1 ? "is" : "are") + " on stack");
+        return;
+    }
+
+    filter.combineFilters(number, andor);
 }
 
 void Query::parseNegateLine(char *line, VariadicFilter &filter,
@@ -878,13 +888,13 @@ void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec,
 void Query::doWait() {
     // If no wait condition and no trigger is set,
     // we do not wait at all.
-    if (!_wait_condition.hasSubFilters() && _wait_trigger == nullptr) {
+    if (_wait_condition.size() == 0 && _wait_trigger == nullptr) {
         return;
     }
 
     // If a condition is set, we check the condition. If it
     // is already true, we do not need to way
-    if (_wait_condition.hasSubFilters() &&
+    if (_wait_condition.size() > 0 &&
         _wait_condition.accepts(_wait_object, _auth_user, _timezone_offset)) {
         Debug(_logger) << "Wait condition true, no waiting neccessary";
         return;

@@ -1,0 +1,11 @@
+Title: rstcli: fixed previously failing check, changed check output to provide more information
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480115995
+Class: fix
+
+The check failed with "unsupported item name". This has been fixed now.
+
+Additionally, check output has been changed to provide more information.

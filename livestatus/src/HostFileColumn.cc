@@ -45,10 +45,12 @@ using std::vector;
 
 HostFileColumn::HostFileColumn(string name, string description,
                                std::string base_dir, std::string suffix,
-                               int indirect_offset, int extra_offset)
+                               bool is_dynamic, int indirect_offset,
+                               int extra_offset)
     : BlobColumn(name, description, indirect_offset, extra_offset)
     , _base_dir(move(base_dir))
-    , _suffix(move(suffix)) {}
+    , _suffix(move(suffix))
+    , _is_dynamic(is_dynamic) {}
 
 unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
     if (_base_dir.empty()) {

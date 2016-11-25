@@ -26,7 +26,6 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
-#include <memory>
 #include <ostream>
 #include <stdexcept>
 #include <utility>
@@ -48,9 +47,11 @@
 extern unsigned long g_max_response_size;
 
 using std::list;
+using std::make_unique;
 using std::runtime_error;
 using std::string;
 using std::to_string;
+using std::unique_ptr;
 using std::unordered_set;
 using std::vector;
 
@@ -215,19 +216,12 @@ Query::~Query() {
             delete column;
         }
     }
-
-    for (auto &dummy_column : _dummy_columns) {
-        delete dummy_column;
-    }
-    for (auto &stats_column : _stats_columns) {
-        delete stats_column;
-    }
 }
 
 Column *Query::createDummyColumn(const char *name) {
-    Column *col = new NullColumn(name, "Non existing column");
-    _dummy_columns.push_back(col);
-    return col;
+    _dummy_columns.push_back(
+        make_unique<NullColumn>(name, "non-existing column"));
+    return _dummy_columns.back().get();
 }
 
 void Query::addColumn(Column *column) { _columns.push_back(column); }
@@ -320,19 +314,17 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
             return;
         }
 
-        StatsColumn *col = _stats_columns.back();
+        auto &col = _stats_columns.back();
         if (col->operation() != StatsOperation::count) {
             invalidHeader("Can use " + kind +
                           " only on Stats: headers of filter type");
             return;
         }
-        variadic->addSubfilter(col->stealFilter());
-        delete col;
+        variadic->addSubfilter(col->stealFilter().release());
         _stats_columns.pop_back();
     }
-    // TODO(sp) Use unique_ptr in StatsColumn.
-    _stats_columns.push_back(
-        new StatsColumn(nullptr, variadic.release(), StatsOperation::count));
+    _stats_columns.push_back(make_unique<StatsColumn>(nullptr, move(variadic),
+                                                      StatsOperation::count));
 }
 
 void Query::parseStatsNegateLine(char *line) {
@@ -344,17 +336,16 @@ void Query::parseStatsNegateLine(char *line) {
         invalidHeader("StatsNegate: no Stats: headers available");
         return;
     }
-    StatsColumn *col = _stats_columns.back();
+    auto &col = _stats_columns.back();
     if (col->operation() != StatsOperation::count) {
         invalidHeader(
             "Can use StatsNegate only on Stats: headers of filter type");
         return;
     }
-    auto negated = new NegatingFilter(col->stealFilter());
-    delete col;
+    auto negated = make_unique<NegatingFilter>(col->stealFilter().release());
     _stats_columns.pop_back();
-    _stats_columns.push_back(
-        new StatsColumn(nullptr, negated, StatsOperation::count));
+    _stats_columns.push_back(make_unique<StatsColumn>(nullptr, move(negated),
+                                                      StatsOperation::count));
 }
 
 void Query::parseStatsLine(char *line) {
@@ -401,7 +392,7 @@ void Query::parseStatsLine(char *line) {
         return;
     }
 
-    StatsColumn *stats_col;
+    unique_ptr<Filter> filter;
     if (operation == StatsOperation::count) {
         char *operator_name = next_field(&line);
         if (operator_name == nullptr) {
@@ -423,15 +414,13 @@ void Query::parseStatsLine(char *line) {
             return;
         }
 
-        Filter *filter = createFilter(column, relOp, value);
-        if (filter == nullptr) {
+        filter.reset(createFilter(column, relOp, value));
+        if (!filter) {
             return;
         }
-        stats_col = new StatsColumn(column, filter, operation);
-    } else {
-        stats_col = new StatsColumn(column, nullptr, operation);
     }
-    _stats_columns.push_back(stats_col);
+    _stats_columns.push_back(
+        make_unique<StatsColumn>(column, move(filter), operation));
 
     /* Default to old behaviour: do not output column headers if we
        do Stats queries */

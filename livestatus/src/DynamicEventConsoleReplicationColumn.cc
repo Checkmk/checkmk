@@ -65,6 +65,8 @@ public:
         return make_unique<vector<char>>(_blob.begin(), _blob.end());
     };
 
+    bool mustDelete() const override { return true; }
+
 private:
     const string _blob;
 };

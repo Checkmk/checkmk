@@ -30,6 +30,7 @@
 #include <ctime>
 #include <list>
 #include <map>
+#include <memory>
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -92,13 +93,9 @@ private:
     int _timezone_offset;
     Logger *const _logger;
 
-    // normal queries
     std::vector<Column *> _columns;
-    // dynamically allocated. Must delete them.
-    std::vector<Column *> _dummy_columns;
-
-    // stats queries
-    std::vector<StatsColumn *> _stats_columns;  // must also delete
+    std::vector<std::unique_ptr<Column>> _dummy_columns;
+    std::vector<std::unique_ptr<StatsColumn>> _stats_columns;
     Aggregator **_stats_aggregators;
 
     typedef std::vector<std::string> _stats_group_spec_t;

@@ -30,8 +30,6 @@ import cmk.defines as defines
 
 def paint_host_inventory(row, invpath):
     invdata = inventory.get(row.get("host_inventory"), invpath)
-    if not invdata:
-        return "", "" # _("No inventory data available")
 
     hint = inv_display_hint(invpath)
     if "paint_function" in hint:
@@ -89,6 +87,9 @@ def declare_inv_column(invpath, datatype, title, short = None):
         # Declare filter. Sync this with declare_invtable_columns()
         if datatype == "str":
             visuals.declare_filter(800, visuals.FilterInvText(name, invpath, title))
+        # TODO:
+        #elif datatype == "bool":
+        #    visuals.declare_filter(800, visuals.FilterInvBool(name, invpath, title))
         else:
             filter_info = inv_filter_info.get(datatype, {})
             visuals.declare_filter(800, visuals.FilterInvFloat(name, invpath, title,
@@ -392,7 +393,7 @@ multisite_painters["inventory_tree"] = {
 
 def inv_paint_hz(hz):
     if hz == None:
-        return "", _("unknown")
+        return "", ""
 
     if hz < 10:
         return "number", "%.2f" % hz
@@ -409,7 +410,7 @@ def inv_paint_hz(hz):
 
 def inv_paint_bytes(b):
     if b == None:
-        return "", _("unknown")
+        return "", ""
     elif b == 0:
         return "number", "0"
 
@@ -546,6 +547,13 @@ def inv_paint_age(age):
         return "", age_human_readable(age)
     else:
         return "", ""
+
+
+def inv_paint_bool(value):
+    if value == None:
+        return "", ""
+    return "", (_("Yes") if value else _("No"))
+
 
 def inv_paint_timestamp_as_age(timestamp):
     age = time.time() - timestamp
@@ -717,6 +725,12 @@ inventory_displayhints.update({
     ".software.applications."                          : { "title" : _("Applications"), },
 
     ".software.applications.check_mk."                         : { "title" : _("Check_MK"), },
+    ".software.applications.check_mk.cluster.is_cluster"       : { "title"    : _("Cluster host"),
+                                                                   "short"    : _("Cluster"),
+                                                                   "paint"    : "bool",
+                                                                 },
+    ".software.applications.check_mk.cluster.nodes:"           : { "title"    : _("Nodes"),
+                                                                  "render"   : render_inv_dicttable, },
     ".software.applications.check_mk.inventory."               : { "title" : _("Hardware/Software Inventory"), },
     ".software.applications.check_mk.inventory.oldest_section" : { "title" : _("Oldest agent section"), "paint" : "timestamp_as_age" },
     ".software.applications.check_mk.inventory.sections:"      : { "title"    : _("Agent sections"),
@@ -951,6 +965,8 @@ def declare_invtable_columns(infoname, invpath, topic):
         if not filter_class:
             if paint_name == "str":
                 filter_class = visuals.FilterInvtableText
+            elif paint_name == "bool":
+                filter_class = visuals.FilterInvtableBool
             else:
                 filter_class = visuals.FilterInvtableIDRange
 

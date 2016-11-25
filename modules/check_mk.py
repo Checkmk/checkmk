@@ -4697,7 +4697,7 @@ try:
         elif o in [ '-i', '--inventory' ]:
             load_module("inventory")
             if args:
-                hostnames = parse_hostname_list(args, with_clusters = False)
+                hostnames = parse_hostname_list(args, with_clusters=True)
             else:
                 hostnames = None
             do_inv(hostnames)

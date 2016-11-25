@@ -1158,6 +1158,63 @@ class FilterHostTags(Filter):
 declare_filter(302, FilterHostTags())
 
 
+
+class FilterHostAuxTags(Filter):
+    def __init__(self):
+        self.count  = 3
+        self.prefix = 'host_auxtags'
+        htmlvars    = [ "%s_%d" % (self.prefix, num)
+                        for num in range(self.count) ]
+
+        Filter.__init__(self,
+            name     = 'host_auxtags',
+            title    = _('Host Auxiliary Tags'),
+            info     = 'host',
+            htmlvars = htmlvars,
+            link_columns = []
+        )
+
+        self.auxtags = config.wato_aux_tags
+
+
+    def display(self):
+        selection = []
+        for num in range(self.count):
+            html.sorted_select( '%s_%d' % (self.prefix, num),
+                                [("", "")] + self.auxtags )
+
+
+    def host_auxtags_filter(self, tag):
+        return "Filter: custom_variables ~ TAGS (^|[ ])%s($|[ ])" % lqencode(tag)
+
+
+    def filter(self, infoname):
+        headers = []
+
+        # Do not restrict to a certain number, because we'd like to link to this
+        # via an URL, e.g. from the virtual host tree snapin
+        num = 0
+        while html.has_var( '%s_%d' % (self.prefix, num) ):
+            this_tag = html.var( '%s_%d' % (self.prefix, num) )
+            if this_tag:
+                headers.append( self.host_auxtags_filter( this_tag ) )
+            num += 1
+
+        if headers:
+            return '\n'.join(headers) + '\n'
+        else:
+            return ''
+
+
+    def double_height(self):
+        return True
+
+
+
+declare_filter(302, FilterHostAuxTags())
+
+
+
 class FilterStarred(FilterTristate):
     def __init__(self, what):
         self.what = what

@@ -296,12 +296,6 @@ define servicedependency {
         else:
             template = passive_service_template
 
-        # Hardcoded for logwatch check: Link to logwatch.php
-        if checkname == "logwatch":
-            logwatch = "  notes_url\t\t\t" + (logwatch_notes_url(hostname, item)) + "\n"
-        else:
-            logwatch = "";
-
         # Services Dependencies
         for dep in deps:
             outfile.write("define servicedependency {\n"
@@ -345,10 +339,10 @@ define servicedependency {
   host_name\t\t\t%s
   service_description\t\t%s
   check_interval\t\t%d
-%s%s%s  check_command\t\t\tcheck_mk-%s
+%s%s  check_command\t\t\tcheck_mk-%s
 }
 
-""" % ( template, hostname, description.encode("utf-8"), check_interval, logwatch,
+""" % ( template, hostname, description.encode("utf-8"), check_interval,
         extra_service_conf_of(hostname, description), action_cfg, checkname ))
 
         checknames_to_define.add(checkname)

@@ -1,0 +1,14 @@
+Title: Removed notes_url from "LOG *" logwatch services
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480078379
+Class: fix
+
+In previous versions of Check_MK we created hard coded "notes URLs" for all services.
+This was done to make the logwatch pages automatically linked from 3rd party GUIs
+like the good old Nagios CGIs. These days we do not recommend nor support such GUIs,
+so we decided to drop this pre-created notes url definition.
+
+The "advantage" is now that you can now create a custom notes URL for these services.

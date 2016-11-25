@@ -87,9 +87,8 @@ def declare_inv_column(invpath, datatype, title, short = None):
         # Declare filter. Sync this with declare_invtable_columns()
         if datatype == "str":
             visuals.declare_filter(800, visuals.FilterInvText(name, invpath, title))
-        # TODO:
-        #elif datatype == "bool":
-        #    visuals.declare_filter(800, visuals.FilterInvBool(name, invpath, title))
+        elif datatype == "bool":
+            visuals.declare_filter(800, visuals.FilterInvBool(name, invpath, title))
         else:
             filter_info = inv_filter_info.get(datatype, {})
             visuals.declare_filter(800, visuals.FilterInvFloat(name, invpath, title,
@@ -965,8 +964,9 @@ def declare_invtable_columns(infoname, invpath, topic):
         if not filter_class:
             if paint_name == "str":
                 filter_class = visuals.FilterInvtableText
-            elif paint_name == "bool":
-                filter_class = visuals.FilterInvtableBool
+            # TODO:
+            #elif paint_name == "bool":
+            #    filter_class = visuals.FilterInvtableBool
             else:
                 filter_class = visuals.FilterInvtableIDRange
 

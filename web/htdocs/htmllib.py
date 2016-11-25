@@ -1661,10 +1661,10 @@ class html(DeprecationWrapper):
                 value = self.vars.get(var, "")
                 self.hidden_field(var, value)
         else: # add *all* get variables, that are not set by any input!
-            for var, value in self.vars.items():
+            for var in self.vars:
                 if var not in self.form_vars and \
                     (var[0] != "_" or add_action_vars): # and var != "filled_in":
-                    self.hidden_field(var, value)
+                    self.hidden_field(var, self.get_unicode_input(var))
 
 
     def hidden_field(self, *args, **kwargs):

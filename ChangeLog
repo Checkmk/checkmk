@@ -23,7 +23,7 @@
     * 3751 FIX: jolokia_metrics: Discovery no longer crashes in case of error querying instance
     * 4088 FIX: ntp: fixed incomplete data handling
     * 4090 FIX: apc_rackpdu_power, apc_symmetra, apc_symmetra_input, apc_symmetra_output: some fixes...
-    * 4091 FIX: oracle_tablespace: Werk 3907 broke the detection of UNDO- and TEMP-Tablespaces
+    * 4091 FIX: oracle_tablespaces: Werk 3907 broke the detection of UNDO- and TEMP-Tablespaces
     * 4069 FIX: cmciii.phase: Fixed broken check with some devices...
     * 4092 FIX: if.include: fixed wrong calculated number of interfaces which are up in case of interface groups
     * 4093 FIX: oracle_tablespaces: Werk 3907 broke the space calculation...
@@ -37,6 +37,7 @@
     * 3980 FIX: Fixed possible flickering GUI when using Chrome and zooming the page
     * 3981 FIX: Views: Fixed context button displaying depending on usage
     * 4071 FIX: Removed notes_url from "LOG *" logwatch services...
+    * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts
 
     WATO:
     * 3984 Permissions can now be filtered by providing a search term on the "edit role" page...

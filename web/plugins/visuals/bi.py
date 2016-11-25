@@ -26,10 +26,10 @@
 
 import bi
 
-class BIGroupFilter(Filter):
+class BIGroupFilter(FilterUnicodeFilter):
     def __init__(self):
         self.column = "aggr_group"
-        Filter.__init__(self, self.column, _("Aggregation group"), "aggr", [self.column], [self.column])
+        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group"), "aggr", [self.column], [self.column])
 
     def variable_settings(self, row):
         return [ (self.htmlvars[0], row[self.column]) ]
@@ -54,7 +54,7 @@ class BIGroupFilter(Filter):
 declare_filter( 90,  BIGroupFilter())
 
 # how is either "regex" or "exact"
-class BITextFilter(Filter):
+class BITextFilter(FilterUnicodeFilter):
     def __init__(self, what, how="regex", suffix=""):
         self.how = how
         self.column = "aggr_" + what
@@ -65,7 +65,7 @@ class BITextFilter(Filter):
             label = _('Aggregation output')
         if how == "exact":
             label += _(" (exact match)")
-        Filter.__init__(self, self.column + suffix,
+        FilterUnicodeFilter.__init__(self, self.column + suffix,
                         label, "aggr", [self.column + suffix], [self.column])
 
     def variable_settings(self, row):

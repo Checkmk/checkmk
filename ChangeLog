@@ -4,6 +4,9 @@
     * 4092 FIX: if.include: fixed wrong calculated number of interfaces which are up in case of interface groups
     * 4093 FIX: oracle_tablespaces: Werk 3907 broke the space calculation...
 
+    Multisite:
+    * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts
+
     WATO:
     * 4068 FIX: Fixed possible exception in case of wrong automation secrets between multiple sites...
 

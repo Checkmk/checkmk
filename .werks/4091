@@ -1,4 +1,4 @@
-Title: oracle_tablespace: Werk 3907 broke the detection of UNDO- and TEMP-Tablespaces
+Title: oracle_tablespaces: Werk 3907 broke the detection of UNDO- and TEMP-Tablespaces
 Level: 1
 Component: checks
 Compatible: compat

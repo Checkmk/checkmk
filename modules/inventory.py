@@ -172,7 +172,7 @@ def do_inv(hostnames):
 
     # No hosts specified: do all hosts and force caching
     if hostnames == None:
-        hostnames = all_active_realhosts()
+        hostnames = all_active_hosts()
         set_use_cachefile()
 
     errors = []
@@ -246,14 +246,43 @@ def count_nodes(tree):
     else:
         return 1
 
+
 def do_inv_for(hostname):
+    global g_inv_tree
+    g_inv_tree = {}
+
+    node = inv_tree("software.applications.check_mk.cluster.")
+
+    if is_cluster(hostname):
+        node["is_cluster"] = True
+        do_inv_for_cluster(hostname)
+    else:
+        node["is_cluster"] = False
+        do_inv_for_realhost(hostname)
+
+    # Remove empty paths
+    inv_cleanup_tree(g_inv_tree)
+    old_timestamp = save_inv_tree(hostname)
+
+    console.verbose("..%s%s%d%s entries" % (tty.bold, tty.yellow, count_nodes(g_inv_tree), tty.normal))
+
+    run_inv_export_hooks(hostname, g_inv_tree)
+    return g_inv_tree, old_timestamp
+
+
+def do_inv_for_cluster(hostname):
+    inv_node = inv_tree_list("software.applications.check_mk.cluster.nodes:")
+    for node_name in nodes_of(hostname):
+        inv_node.append({
+            "name" : node_name,
+        })
+
+
+def do_inv_for_realhost(hostname):
     try:
         ipaddress = lookup_ip_address(hostname)
     except:
         raise MKGeneralException("Cannot resolve hostname '%s'." % hostname)
-
-    global g_inv_tree
-    g_inv_tree = {}
 
     # If this is an SNMP host then determine the SNMP sections
     # that this device supports.
@@ -294,15 +323,6 @@ def do_inv_for(hostname):
 
     extend_tree_with_check_mk_inventory_info(hostname)
 
-    # Remove empty paths
-    inv_cleanup_tree(g_inv_tree)
-    old_timestamp = save_inv_tree(hostname)
-
-    console.verbose("..%s%s%d%s entries" % (tty.bold, tty.yellow, count_nodes(g_inv_tree), tty.normal))
-
-    run_inv_export_hooks(hostname, g_inv_tree)
-    return g_inv_tree, old_timestamp
-
 
 def extend_tree_with_check_mk_inventory_info(hostname):
     persisted_file = cmk.paths.omd_root + "/var/check_mk/persisted/%s" % hostname
@@ -318,11 +338,11 @@ def extend_tree_with_check_mk_inventory_info(hostname):
     except Exception, e:
         raise MKGeneralException(_("Cannot parse persisted file of %s: %s") % (hostname, e))
 
-    add_check_mk_inventory_info_to_tree(persisted_data)
+    add_check_mk_inventory_info_to_tree(hostname, persisted_data)
     console.verbose(tty.green + tty.bold + "check_mk_sections" + " " + tty.normal)
 
 
-def add_check_mk_inventory_info_to_tree(persisted_data):
+def add_check_mk_inventory_info_to_tree(hostname, persisted_data):
     node = inv_tree_list("software.applications.check_mk.inventory.sections:")
     section_ages = []
     for section, sectiondata in persisted_data:

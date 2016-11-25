@@ -312,6 +312,7 @@ class FilterInvtableVersion(Filter):
 
         return new_rows
 
+
 class FilterInvText(Filter):
     def __init__(self, name, invpath, title):
         self._invpath = invpath
@@ -399,6 +400,33 @@ class FilterInvFloat(Filter):
                 continue
             newrows.append(row)
         return newrows
+
+
+class FilterInvBool(FilterTristate):
+    def __init__(self, name, invpath, title):
+        self._invpath = invpath
+        FilterTristate.__init__(self, name, title, "host", name)
+
+    def need_inventory(self):
+        return True
+
+    def filter(self, infoname):
+        return "" # No Livestatus filtering right now
+
+    def filter_table(self, rows):
+        tri = self.tristate_value()
+        if tri == -1:
+            return rows
+        else:
+            wanted_value = tri == 1
+
+            newrows = []
+            for row in rows:
+                invdata = inventory.get(row["host_inventory"], self._invpath)
+                if wanted_value == invdata:
+                    newrows.append(row)
+            return newrows
+
 
 class FilterHasInventory(FilterTristate):
     def __init__(self):

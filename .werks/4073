@@ -1,0 +1,28 @@
+Title: Cleaned up cluster host handling in HW/SW inventory
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480088542
+Class: fix
+
+Previously the manual inventory calls on the command line were
+not possible on the command line, but when adding a "Check_MK inventory"
+service to a cluster host, the inventory was tried and did work in case
+the cluster has a host address configured.
+
+These differences have now been cleaned up and changed a bit.
+
+You can perform the inventory now on command line and add a "Check_MK inventory"
+service to the hosts, but the regular inventory with all the plugins is not
+performed against cluster hosts. Instead the clusters only get the following
+inventory nodes added:
+
+<ul>
+<li>Software > Applications > Check_MK > Cluster > Cluster host: Yes</li>
+<li>Software > Applications > Check_MK > Cluster > Nodes: List of nodes</li>
+</ul>
+
+The first node is also added to all other hosts but set to <i>No</i>. You
+can then use a filter to include or exclude the hosts of your choice from
+your inventory list views.

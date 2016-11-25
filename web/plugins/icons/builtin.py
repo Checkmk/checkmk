@@ -492,9 +492,6 @@ def paint_notes(what, row, tags, host_custom_vars):
     if display_options.enabled(display_options.X):
         notes_url = row[what + "_notes_url_expanded"]
         check_command = row[what + "_check_command"]
-        if check_command == 'check_mk-logwatch' and \
-            "check_mk/logwatch.py?host" in notes_url:
-            return # Ancient logwatch URL via notes_url. Ignore in order to avoid duplicate icon
         if notes_url:
             return 'notes', _('Custom Notes'), notes_url
 

@@ -2994,11 +2994,6 @@ def replace_macros(s, macros):
     return s
 
 
-def logwatch_notes_url(hostname, filename):
-    return "/%s/nagios/logwatch.php?host=%s&file=%s" % \
-        (omd_site(), urllib.quote(hostname), urllib.quote(make_utf8(filename)))
-
-
 #.
 #   .--Main Functions------------------------------------------------------.
 #   | __  __       _         _____                 _   _                   |

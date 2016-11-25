@@ -641,11 +641,11 @@ void TableHosts::addColumns(Table *table, const string &prefix,
     table->addColumn(new HostFileColumn(
         prefix + "mk_inventory",
         "The file content content of the Check_MK HW/SW-Inventory",
-        g_mk_inventory_path, "", indirect_offset, extra_offset));
+        g_mk_inventory_path, "", false, indirect_offset, extra_offset));
     table->addColumn(new HostFileColumn(
         prefix + "mk_inventory_gz",
         "The gzipped file content content of the Check_MK HW/SW-Inventory",
-        g_mk_inventory_path, ".gz", indirect_offset, extra_offset));
+        g_mk_inventory_path, ".gz", false, indirect_offset, extra_offset));
 
     extern char g_mk_logwatch_path[];
     table->addColumn(new LogwatchListColumn(

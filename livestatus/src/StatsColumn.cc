@@ -23,23 +23,25 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StatsColumn.h"
+#include <algorithm>
 #include "Column.h"
 #include "CountAggregator.h"
 #include "Filter.h"
 
-StatsColumn::~StatsColumn() {
-    if (_filter != nullptr) {
-        delete _filter;
-    }
-}
+using std::unique_ptr;
+
+StatsColumn::StatsColumn(Column *c, unique_ptr<Filter> f, StatsOperation o)
+    : _column(c), _filter(move(f)), _operation(o) {}
+
+unique_ptr<Filter> StatsColumn::stealFilter() { return move(_filter); }
 
 Aggregator *StatsColumn::createAggregator() {
     if (_operation == StatsOperation::count) {
-        return new CountAggregator(_filter);
+        return new CountAggregator(_filter.get());
     }
     if (Aggregator *aggregator = _column->createAggregator(_operation)) {
         return aggregator;
     }
     // unaggregateble column
-    return new CountAggregator(_filter);
+    return new CountAggregator(_filter.get());
 }

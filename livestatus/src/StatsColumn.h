@@ -26,27 +26,23 @@
 #define StatsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include "Aggregator.h"
+#include "Filter.h"
 class Column;
-class Filter;
 
 class StatsColumn {
-    Column *_column;
-    Filter *_filter;
-    StatsOperation _operation;
-
 public:
-    StatsColumn(Column *c, Filter *f, StatsOperation o)
-        : _column(c), _filter(f), _operation(o) {}
-    ~StatsColumn();
+    StatsColumn(Column *c, std::unique_ptr<Filter> f, StatsOperation o);
     Column *column() const { return _column; }
-    StatsOperation operation() { return _operation; }
-    Filter *stealFilter() {
-        Filter *f = _filter;
-        _filter = 0;
-        return f;
-    }
+    StatsOperation operation() const { return _operation; }
+    std::unique_ptr<Filter> stealFilter();
     Aggregator *createAggregator();
+
+private:
+    Column *_column;
+    std::unique_ptr<Filter> _filter;
+    StatsOperation _operation;
 };
 
 #endif  // StatsColumn_h

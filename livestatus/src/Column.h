@@ -63,9 +63,9 @@ public:
     // fixed, it is just an artifact.
     virtual void output(void *row, RowRenderer &r, contact *auth_user) = 0;
 
-    virtual bool mustDelete() {
-        return false;  // true for dynamic Columns to be deleted after Query
-    }
+    // TODO(sp) Get rid of this! true means "delete after Query"
+    virtual bool mustDelete() const { return false; }
+
     virtual Filter *createFilter(RelationalOperator, const std::string &);
     virtual Aggregator *createAggregator(StatsOperation operation);
 

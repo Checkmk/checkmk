@@ -66,6 +66,6 @@ Column *DynamicLogwatchFileColumn::createColumn(const std::string &name,
     }
 
     return new HostFileColumn(name, "Contents of logwatch file", _logwatch_path,
-                              "/" + unescape_filename(arguments),
+                              "/" + unescape_filename(arguments), true,
                               _indirect_offset, _extra_offset);
 }

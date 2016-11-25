@@ -41,11 +41,6 @@ class RowRenderer;
 #include "nagios.h"
 #endif
 
-/* Since this column can be of type COLTYPE_INT, it must be a subclass of
-   IntColumn, since StatsColumn assumes Columns of the type COLTYPE_INT to be of
-   that type.
- */
-
 class AttributeListColumn : public IntColumn {
 public:
     AttributeListColumn(const std::string &name, const std::string &description,

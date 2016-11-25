@@ -23,6 +23,7 @@
     * 4091 FIX: oracle_tablespace: Werk 3907 broke the detection of UNDO- and TEMP-Tablespaces
     * 4069 FIX: cmciii.phase: Fixed broken check with some devices...
     * 4092 FIX: if.include: fixed wrong calculated number of interfaces which are up in case of interface groups
+    * 4093 FIX: oracle_tablespaces: Werk 3907 broke the space calculation...
 
     Multisite:
     * 4070 Added a painter for the service check period

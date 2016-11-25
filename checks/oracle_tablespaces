@@ -270,7 +270,8 @@ def check_oracle_tablespaces(item, params, parsed):
 
                 if df_size > df_max_size:
                     max_size       += df_size
-                    free_extension  = df_size - df_max_size # free extension space
+                    # current file size > df_max_size => no more extents available
+                    free_extension  = 0
                 else:
                     max_size       += df_max_size
                     free_extension  = df_max_size - df_size # free extension space
@@ -278,20 +279,15 @@ def check_oracle_tablespaces(item, params, parsed):
                 if incsize == datafile["block_size"]:
                     uses_default_increment = True
 
-                #incs, rest = divmod(free_extension, incsize)
-                #if rest:
-                #    # ??? Was ist, wenn es nicht genau aufgeht und ein weiteres
-                #    # increment max_size überschreiten würde? Das geht ja wohl
-                #    # nicht oder??
-                #    # incs += 1 ### Dann würde max_size überschritten!
                 incs = free_extension / incsize
                 num_increments += incs
                 increment_size += incsize * incs
 
                 if db_version >= 11:
-                    # The size of next extent in datafile is ignored when remaining
-                    # free space is > then next extend. Oracle uses all space up to the maximum!
-                    free_space += df_max_size - df_size
+                    # Newer versions of Oracle uses every time the remaining space of the
+                    # datafile. There is no need for calculation of remaing space with
+                    # next extend anymore!
+                    free_space += free_extension + df_free_space
                 else:
                     # The free space in this table is the current free space plus
                     # the additional space that can be gathered by using all available

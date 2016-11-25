@@ -1,0 +1,10 @@
+Title: oracle_tablespaces: Werk 3907 broke the space calculation
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1480067305
+Class: fix
+
+The calculation of free and used space in Oracle is very complicated
+when autoextend is used due to some special situations.

@@ -1,0 +1,14 @@
+title: Avaya Chassis Temperature
+agents: snmp
+catalog: hw/network/avaya
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the chassis temperature of Avaya
+ devices.
+
+item:
+ Chassis
+
+inventory:
+ Creates one service per device.

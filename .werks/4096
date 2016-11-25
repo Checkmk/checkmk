@@ -1,0 +1,10 @@
+Title: avaya_chassis_card, avaya_chassis_ps, avaya_chassis_temp: New checks for Avaya devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480069639
+Class: feature
+
+These checks monitor the operational state of passport modules and power supplies for Avaya
+devices as well as the chassis temperature.

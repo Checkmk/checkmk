@@ -23,11 +23,16 @@
 // Boston, MA 02110-1301 USA.
 
 #include "IntColumn.h"
+#include "IntAggregator.h"
 #include "IntFilter.h"
 #include "Renderer.h"
 
 using std::string;
 using std::to_string;
+
+string IntColumn::valueAsString(void *row, contact *auth_user) {
+    return to_string(getValue(row, auth_user));
+}
 
 void IntColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     r.output(getValue(row, auth_user));
@@ -37,6 +42,6 @@ Filter *IntColumn::createFilter(RelationalOperator relOp, const string &value) {
     return new IntFilter(this, relOp, value);
 }
 
-string IntColumn::valueAsString(void *row, contact *auth_user) {
-    return to_string(getValue(row, auth_user));
+Aggregator *IntColumn::createAggregator(StatsOperation operation) {
+    return new IntAggregator(operation, this);
 }

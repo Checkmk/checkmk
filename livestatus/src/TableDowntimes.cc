@@ -59,7 +59,8 @@ TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
     addColumn(new OffsetTimeColumn(
         "entry_time", "The time the entry was made as UNIX timestamp",
         reinterpret_cast<char *>(&(ref->_entry_time)) -
-            reinterpret_cast<char *>(ref)));
+            reinterpret_cast<char *>(ref),
+        -1, -1));
     addColumn(new OffsetIntColumn(
         "type",
         "The type of the downtime: 0 if it is active, 1 if it is pending",
@@ -74,11 +75,13 @@ TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
     addColumn(new OffsetTimeColumn(
         "start_time", "The start time of the downtime as UNIX timestamp",
         reinterpret_cast<char *>(&(ref->_start_time)) -
-            reinterpret_cast<char *>(ref)));
+            reinterpret_cast<char *>(ref),
+        -1, -1));
     addColumn(new OffsetTimeColumn(
         "end_time", "The end time of the downtime as UNIX timestamp",
         reinterpret_cast<char *>(&(ref->_end_time)) -
-            reinterpret_cast<char *>(ref)));
+            reinterpret_cast<char *>(ref),
+        -1, -1));
     addColumn(new OffsetIntColumn(
         "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible",
         reinterpret_cast<char *>(&(ref->_fixed)) -

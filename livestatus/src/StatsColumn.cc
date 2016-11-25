@@ -23,17 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StatsColumn.h"
-#include <string>
 #include "Column.h"
 #include "CountAggregator.h"
-#include "DoubleAggregator.h"
-#include "DoubleColumn.h"
 #include "Filter.h"
-#include "IntAggregator.h"
-#include "IntColumn.h"
-#include "PerfdataAggregator.h"
-#include "StringColumn.h"
-#include "strutil.h"
 
 StatsColumn::~StatsColumn() {
     if (_filter != nullptr) {
@@ -45,18 +37,9 @@ Aggregator *StatsColumn::createAggregator() {
     if (_operation == StatsOperation::count) {
         return new CountAggregator(_filter);
     }
-    if (_column->type() == ColumnType::int_ ||
-        _column->type() == ColumnType::time) {
-        return new IntAggregator(_operation, static_cast<IntColumn *>(_column));
+    if (Aggregator *aggregator = _column->createAggregator(_operation)) {
+        return aggregator;
     }
-    if (_column->type() == ColumnType::double_) {
-        return new DoubleAggregator(_operation,
-                                    static_cast<DoubleColumn *>(_column));
-    }
-    if (_column->type() == ColumnType::string and
-        (ends_with(_column->name().c_str(), "perf_data") != 0)) {
-        return new PerfdataAggregator(_operation,
-                                      static_cast<StringColumn *>(_column));
-    }  // unaggregateble column
+    // unaggregateble column
     return new CountAggregator(_filter);
 }

@@ -71,3 +71,7 @@ Filter *Column::createFilter(RelationalOperator /*unused*/,
                              const std::string & /*unused*/) {
     throw runtime_error("filtering on column " + _name + " not supported");
 }
+
+Aggregator *Column::createAggregator(StatsOperation /*unused*/) {
+    return nullptr;
+}

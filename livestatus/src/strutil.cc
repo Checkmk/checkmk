@@ -96,10 +96,3 @@ const char *safe_next_token(char **c, char delim) {
     char *result = next_token(c, delim);
     return result != nullptr ? result : "";
 }
-
-int ends_with(const char *a, const char *b) {
-    size_t len_a = strlen(a);
-    size_t len_b = strlen(b);
-    return static_cast<int>(len_a >= len_b &&
-                            strcmp(a + len_a - len_b, b) == 0);
-}

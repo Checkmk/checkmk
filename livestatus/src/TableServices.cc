@@ -37,6 +37,7 @@
 #include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
+#include "OffsetPerfdataColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
 #include "OffsetTimeColumn.h"
@@ -113,7 +114,7 @@ void TableServices::addColumns(Table *table, const string &prefix,
         "Unabbreviated output of the last check plugin",
         reinterpret_cast<char *>(&svc.long_plugin_output) - ref,
         indirect_offset));
-    table->addColumn(new OffsetStringColumn(
+    table->addColumn(new OffsetPerfdataColumn(
         prefix + "perf_data", "Performance data of the last check plugin",
         reinterpret_cast<char *>(&svc.perf_data) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(
@@ -220,45 +221,46 @@ void TableServices::addColumns(Table *table, const string &prefix,
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_state_change",
         "The time of the last state change (Unix timestamp)",
-        reinterpret_cast<char *>(&svc.last_state_change) - ref,
-        indirect_offset));
+        reinterpret_cast<char *>(&svc.last_state_change) - ref, indirect_offset,
+        -1));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_time_ok",
         "The last time the service was OK (Unix timestamp)",
-        reinterpret_cast<char *>(&svc.last_time_ok) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_time_ok) - ref, indirect_offset,
+        -1));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_time_warning",
         "The last time the service was in WARNING state (Unix timestamp)",
-        reinterpret_cast<char *>(&svc.last_time_warning) - ref,
-        indirect_offset));
+        reinterpret_cast<char *>(&svc.last_time_warning) - ref, indirect_offset,
+        -1));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_time_critical",
         "The last time the service was CRITICAL (Unix timestamp)",
         reinterpret_cast<char *>(&svc.last_time_critical) - ref,
-        indirect_offset));
+        indirect_offset, -1));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_time_unknown",
         "The last time the service was UNKNOWN (Unix timestamp)",
-        reinterpret_cast<char *>(&svc.last_time_unknown) - ref,
-        indirect_offset));
+        reinterpret_cast<char *>(&svc.last_time_unknown) - ref, indirect_offset,
+        -1));
 
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_check", "The time of the last check (Unix timestamp)",
-        reinterpret_cast<char *>(&svc.last_check) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.last_check) - ref, indirect_offset, -1));
     table->addColumn(new OffsetTimeColumn(
         prefix + "next_check",
         "The scheduled time of the next check (Unix timestamp)",
-        reinterpret_cast<char *>(&svc.next_check) - ref, indirect_offset));
+        reinterpret_cast<char *>(&svc.next_check) - ref, indirect_offset, -1));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_notification",
         "The time of the last notification (Unix timestamp)",
-        reinterpret_cast<char *>(&svc.last_notification) - ref,
-        indirect_offset));
+        reinterpret_cast<char *>(&svc.last_notification) - ref, indirect_offset,
+        -1));
     table->addColumn(new OffsetTimeColumn(
         prefix + "next_notification",
         "The time of the next notification (Unix timestamp)",
-        reinterpret_cast<char *>(&svc.next_notification) - ref,
-        indirect_offset));
+        reinterpret_cast<char *>(&svc.next_notification) - ref, indirect_offset,
+        -1));
     table->addColumn(new OffsetIntColumn(
         prefix + "current_notification_number",
         "The number of the current notification",
@@ -267,13 +269,13 @@ void TableServices::addColumns(Table *table, const string &prefix,
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_state_change",
         "The time of the last state change - soft or hard (Unix timestamp)",
-        reinterpret_cast<char *>(&svc.last_state_change) - ref,
-        indirect_offset));
+        reinterpret_cast<char *>(&svc.last_state_change) - ref, indirect_offset,
+        -1));
     table->addColumn(new OffsetTimeColumn(
         prefix + "last_hard_state_change",
         "The time of the last hard state change (Unix timestamp)",
         reinterpret_cast<char *>(&svc.last_hard_state_change) - ref,
-        indirect_offset));
+        indirect_offset, -1));
     table->addColumn(new OffsetIntColumn(
         prefix + "scheduled_downtime_depth",
         "The number of scheduled downtimes the service is currently in",

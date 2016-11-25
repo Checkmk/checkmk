@@ -59,7 +59,8 @@ TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
     addColumn(new OffsetTimeColumn(
         "entry_time", "The time the entry was made as UNIX timestamp",
         reinterpret_cast<char *>(&(ref->_entry_time)) -
-            reinterpret_cast<char *>(ref)));
+            reinterpret_cast<char *>(ref),
+        -1, -1));
     addColumn(new OffsetIntColumn(
         "type", "The type of the comment: 1 is host, 2 is service",
         reinterpret_cast<char *>(&(ref->_type)) -
@@ -90,7 +91,8 @@ TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
     addColumn(new OffsetTimeColumn(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
         reinterpret_cast<char *>(&(ref->_expire_time)) -
-            reinterpret_cast<char *>(ref)));
+            reinterpret_cast<char *>(ref),
+        -1, -1));
 
     TableHosts::addColumns(
         this, "host_",

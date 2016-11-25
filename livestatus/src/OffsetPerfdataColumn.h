@@ -22,20 +22,23 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "TimePointerColumn.h"
-#include <chrono>
-#include "Renderer.h"
-#include "TimeFilter.h"
+#ifndef OffsetPerfdataColumn_h
+#define OffsetPerfdataColumn_h
 
-using std::chrono::system_clock;
-using std::string;
+#include "config.h"  // IWYU pragma: keep
+#include <string>
+#include "Aggregator.h"
+#include "OffsetStringColumn.h"
 
-void TimePointerColumn::output(void *row, RowRenderer &r, contact *auth_user) {
-    r.output(system_clock::from_time_t(getValue(row, auth_user)));
-}
+class OffsetPerfdataColumn : public OffsetStringColumn {
+public:
+    OffsetPerfdataColumn(const std::string& name,
+                         const std::string& description, int offset,
+                         int indirect_offset = -1, int extra_offset = -1)
+        : OffsetStringColumn(name, description, offset, indirect_offset,
+                             extra_offset) {}
 
-Filter *TimePointerColumn::createFilter(RelationalOperator relOp,
-                                        const string &value) {
-    // The TimeFilter applies the timezone offset from the Localtime: header
-    return new TimeFilter(this, relOp, value);
-}
+    Aggregator* createAggregator(StatsOperation operation) override;
+};
+
+#endif  // OffsetPerfdataColumn_h

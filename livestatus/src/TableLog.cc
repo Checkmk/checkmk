@@ -63,10 +63,10 @@ TableLog::TableLog(LogCache *log_cache,
                    MonitoringCore *mc)
     : Table(mc->loggerLivestatus()), _core(mc), _log_cache(log_cache) {
     LogEntry *ref = nullptr;
-    addColumn(new OffsetTimeColumn("time",
-                                   "Time of the log event (UNIX timestamp)",
-                                   reinterpret_cast<char *>(&(ref->_time)) -
-                                       reinterpret_cast<char *>(ref)));
+    addColumn(new OffsetTimeColumn(
+        "time", "Time of the log event (UNIX timestamp)",
+        reinterpret_cast<char *>(&(ref->_time)) - reinterpret_cast<char *>(ref),
+        -1, -1));
     addColumn(new OffsetIntColumn("lineno",
                                   "The number of the line in the log file",
                                   reinterpret_cast<char *>(&(ref->_lineno)) -

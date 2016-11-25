@@ -29,7 +29,6 @@
 
 char *rstrip(char *);
 char *lstrip(char *);
-int ends_with(const char *a, const char *b);
 char *next_token(char **c, char delim);
 const char *safe_next_token(char **c, char delim);
 char *next_field(char **c);

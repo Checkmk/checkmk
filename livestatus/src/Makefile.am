@@ -86,6 +86,7 @@ livestatus_so_SOURCES = \
         NullColumn.cc \
         OffsetDoubleColumn.cc \
         OffsetIntColumn.cc \
+        OffsetPerfdataColumn.cc \
         OffsetSStringColumn.cc \
         OffsetStringColumn.cc \
         OffsetStringHostMacroColumn.cc \
@@ -139,8 +140,8 @@ livestatus_so_SOURCES = \
         TableStateHistory.cc \
         TableStatus.cc \
         TableTimeperiods.cc \
+        TimeColumn.cc \
         TimeFilter.cc \
-        TimePointerColumn.cc \
         TimeperiodsCache.cc \
         VariadicFilter.cc \
         WorldNagios.cc \

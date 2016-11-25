@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
-#include "IntPointerColumn.h"
+#include "TimeColumn.h"
 #include "opids.h"
 class Filter;
 class RowRenderer;
@@ -39,15 +39,18 @@ class RowRenderer;
 #include "nagios.h"
 #endif
 
-class TimePointerColumn : public IntPointerColumn {
+class TimePointerColumn : public TimeColumn {
 public:
     TimePointerColumn(const std::string &name, const std::string &description,
                       int *number)
-        : IntPointerColumn(name, description, number) {}
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
-    ColumnType type() override { return ColumnType::time; }
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
+        : TimeColumn(name, description, -1, -1, -1), _number(number) {}
+
+    int32_t getValue(void * /* row */, contact * /* auth_user */) override {
+        return *_number;
+    }
+
+private:
+    int *_number;
 };
 
 #endif  // TimePointerColumn_h

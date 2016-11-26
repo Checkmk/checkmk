@@ -565,7 +565,7 @@ def automation_get_configuration():
 def automation_get_check_information():
     manuals = man_pages.all_man_pages()
 
-    checks = {}
+    check_infos = {}
     for check_type, check in checks.check_info.items():
         try:
             manfile = manuals.get(check_type)
@@ -574,22 +574,22 @@ def automation_get_check_information():
                 title = file(manfile).readline().strip().split(":", 1)[1].strip()
             else:
                 title = check_type
-            checks[check_type] = { "title" : title.decode("utf-8") }
+            check_infos[check_type] = { "title" : title.decode("utf-8") }
             if check["group"]:
-                checks[check_type]["group"] = check["group"]
-            checks[check_type]["service_description"] = check.get("service_description","%s")
-            checks[check_type]["snmp"] = check_uses_snmp(check_type)
+                check_infos[check_type]["group"] = check["group"]
+            check_infos[check_type]["service_description"] = check.get("service_description","%s")
+            check_infos[check_type]["snmp"] = check_uses_snmp(check_type)
         except Exception, e:
             if cmk.debug.enabled():
                 raise
             raise MKAutomationError("Failed to parse man page '%s': %s" % (check_type, e))
-    return checks
+    return check_infos
 
 
 def automation_get_real_time_checks():
     manuals = man_pages.all_man_pages()
 
-    checks = []
+    rt_checks = []
     for check_type, check in checks.check_info.items():
         if check["handle_real_time_checks"]:
             title = check_type
@@ -601,9 +601,9 @@ def automation_get_real_time_checks():
                 if cmk.debug.enabled():
                     raise
 
-            checks.append((check_type, "%s - %s" % (check_type, title)))
+            rt_checks.append((check_type, "%s - %s" % (check_type, title)))
 
-    return checks
+    return rt_checks
 
 
 def automation_get_check_manpage(args):

@@ -850,7 +850,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
     try:
         discovery_function = checks.check_info[check_type]["inventory_function"]
         if discovery_function == None:
-            discovery_function = no_discovery_possible
+            discovery_function = checks.no_discovery_possible
     except KeyError:
         raise MKGeneralException("No such check type '%s'" % check_type)
 

@@ -504,12 +504,12 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
 # retrive the service level that applies to the calling check.
 def get_effective_service_level():
     service_levels = rulesets.service_extra_conf(g_hostname, g_service_description,
-                                        service_service_levels)
+                                        config.service_service_levels)
 
     if service_levels:
         return service_levels[0]
     else:
-        service_levels = rulesets.host_extra_conf(g_hostname, host_service_levels)
+        service_levels = rulesets.host_extra_conf(g_hostname, config.host_service_levels)
         if service_levels:
             return service_levels[0]
     return 0

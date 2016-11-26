@@ -95,8 +95,6 @@ g_profile_path = 'profile.out'
 if '--debug' in sys.argv[1:]:
     cmk.debug.enable()
 
-opt_interactive  = '--interactive' in sys.argv[1:]
-
 cmk.log.setup_console_logging()
 logger = cmk.log.get_logger("base")
 
@@ -637,7 +635,7 @@ def extra_service_conf_of(hostname, description):
     sergr = rulesets.service_extra_conf(hostname, description, config.service_groups)
     if len(sergr) > 0:
         conf += "  service_groups\t\t" + ",".join(sergr) + "\n"
-        if define_servicegroups:
+        if config.define_servicegroups:
             servicegroups_to_define.update(sergr)
     conf += extra_conf_of(config.extra_service_conf, hostname, description)
     return conf.encode("utf-8")
@@ -1016,7 +1014,7 @@ def is_snmp_host(hostname):
     return rulesets.in_binary_hostlist(hostname, config.snmp_hosts)
 
 def is_bulkwalk_host(hostname):
-    if bulkwalk_hosts:
+    if config.bulkwalk_hosts:
         return rulesets.in_binary_hostlist(hostname, config.bulkwalk_hosts)
     else:
         return False
@@ -1913,9 +1911,6 @@ def get_piggyback_translation(hostname):
 # the running system.
 
 # Make service levels available during check execution
-# TODO: Move these variables to the config cache logic
-service_service_levels = None
-host_service_levels = None
 derived_config_variable_names = [ "service_service_levels", "host_service_levels" ]
 
 # These variables are part of the Check_MK configuration, but are not needed
@@ -2997,9 +2992,6 @@ OPTIONS:
                  prevents DNS lookups.
   --usewalk      use snmpwalk stored with --snmpwalk
   --debug        never catch Python exceptions
-  --interactive  Some errors are only reported in interactive mode, i.e. if stdout
-                 is a TTY. This option forces interactive mode even if the output
-                 is directed into a pipe or file.
   --procs N      start up to N processes in parallel during --scan-parents
   --checks A,..  restrict checks/discovery to specified checks (tcp/snmp/check type)
   --keepalive    used by Check_MK Mirco Core: run check and --notify
@@ -3776,7 +3768,7 @@ opt_log_to_stdout = False
 
 # Do option parsing and execute main function -
 short_options = 'ASHVLCURODMmd:Ic:nhvpXPNBilf'
-long_options = [ "help", "version", "verbose", "compile", "debug", "interactive",
+long_options = [ "help", "version", "verbose", "compile", "debug",
                  "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                  "flush", "package", "localize", "donate", "snmpwalk", "oid=", "extraoid=",
                  "snmptranslate", "bake-agents", "force", "show-snmp-stats",
@@ -3856,8 +3848,6 @@ for o,a in opts:
         config.max_num_processes = int(a)
     elif o == '--debug':
         cmk.debug.enable()
-    elif o == '--interactive':
-        opt_interactive = True
     elif o == '-I':
         seen_I += 1
     elif o == "--checks":

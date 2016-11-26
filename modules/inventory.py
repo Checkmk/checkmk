@@ -30,6 +30,7 @@ import cmk.tty as tty
 import cmk.paths
 
 import cmk_base.console as console
+import cmk_base.checks as checks
 
 inventory_output_dir = cmk.paths.var_dir + "/inventory"
 inventory_archive_dir = cmk.paths.var_dir + "/inventory_archive"
@@ -52,8 +53,8 @@ inv_info = {}   # Inventory plugins
 inv_export = {} # Inventory export hooks
 
 # Read all inventory plugins right now
-filelist = plugin_pathnames_in_directory(cmk.paths.inventory_dir) \
-         + plugin_pathnames_in_directory(cmk.paths.local_inventory_dir)
+filelist = checks.plugin_pathnames_in_directory(cmk.paths.inventory_dir) \
+         + checks.plugin_pathnames_in_directory(cmk.paths.local_inventory_dir)
 
 
 # read include files always first, but still in the sorted
@@ -170,7 +171,7 @@ def do_inv(hostnames):
 
     # No hosts specified: do all hosts and force caching
     if hostnames == None:
-        hostnames = all_active_hosts()
+        hostnames = config.all_active_hosts()
         set_use_cachefile()
 
     errors = []
@@ -321,7 +322,7 @@ def do_inv_for_realhost(hostname):
 
 
 def get_inv_params(hostname, info_type):
-    return host_extra_conf_merged(hostname, inv_parameters.get(info_type, []))
+    return host_extra_conf_merged(hostname, config.inv_parameters.get(info_type, []))
 
 
 # Returns the time stamp of the previous inventory with different
@@ -374,7 +375,7 @@ def save_inv_tree(hostname):
 
 
 def run_inv_export_hooks(hostname, tree):
-    for hookname, ruleset in inv_exports.items():
+    for hookname, ruleset in config.inv_exports.items():
         entries = host_extra_conf(hostname, ruleset)
         if entries:
             console.verbose(", running %s%s%s%s..." % (tty.blue, tty.bold, hookname, tty.normal))

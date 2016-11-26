@@ -32,21 +32,17 @@ import cmk.tty as tty
 
 import cmk_base.agent_simulator
 import cmk_base.console as console
+import cmk_base.snmp as snmp
 
-OID_END              =  0  # Suffix-part of OID that was not specified
-OID_STRING           = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
-OID_BIN              = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
-OID_END_BIN          = -3  # Same, but just the end part
-OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
+# TODO: Clean this up
+has_inline_snmp = False
 
-
-# Wrapper to mark OIDs as being cached for regular checks, but not for discovery
-def CACHED_OID(oid):
-    return "cached", oid
-
-
-def BINARY(oid):
-    return "binary", oid
+# TODO: Cleanup all refering code to use snmp.* directly
+OID_END              = snmp.OID_END
+OID_STRING           = snmp.OID_STRING
+OID_BIN              = snmp.OID_BIN
+OID_END_BIN          = snmp.OID_END_BIN
+OID_END_OCTET_STRING = snmp.OID_END_OCTET_STRING
 
 
 def strip_snmp_value(value, hex_plain = False):
@@ -110,7 +106,7 @@ def cmp_oid_pairs(pair1, pair2):
                oid_to_intlist(pair2[0].lstrip('.')))
 
 def snmpv3_contexts_of_host(hostname):
-    return host_extra_conf(hostname, snmpv3_contexts)
+    return host_extra_conf(hostname, config.snmpv3_contexts)
 
 def snmpv3_contexts_of(hostname, check_type):
     for ty, rules in snmpv3_contexts_of_host(hostname):
@@ -368,10 +364,11 @@ def construct_snmp_table_of_rows(columns):
 
 # SNMP-Helper functions used in various checks
 
+# TODO: Still needed?
 def check_snmp_misc(item, params, info):
     for line in info:
         if item == line[0]:
-            value = savefloat(line[1])
+            value = float(line[1])
             text = line[2]
             crit_low, warn_low, warn_high, crit_high = params
             # if value is negative, we have to swap >= and <=!
@@ -386,10 +383,11 @@ def check_snmp_misc(item, params, info):
                 return (0, "OK = %s (OK within %.2f .. %.2f)" % (text, warn_low, warn_high), perfdata)
     return (3, "Missing item %s in SNMP data" % item)
 
+# TODO: Still needed?
 def inventory_snmp_misc(checkname, info):
     inventory = []
     for line in info:
-        value = savefloat(line[1])
+        value = float(line[1])
         params = "(%.1f, %.1f, %.1f, %.1f)" % (value*.8, value*.9, value*1.1, value*1.2)
         inventory.append( (line[0], line[2], params ) )
     return inventory

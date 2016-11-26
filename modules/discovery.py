@@ -28,6 +28,7 @@ from cmk.regex import regex
 import cmk.tty as tty
 import cmk.paths
 
+import cmk_base.config as config
 import cmk_base.console as console
 
 #   .--cmk -I--------------------------------------------------------------.
@@ -49,7 +50,7 @@ def do_discovery(hostnames, check_types, only_new):
     use_caches = opt_use_cachefile
     if not hostnames:
         console.verbose("Discovering services on all hosts:\n")
-        hostnames = all_active_realhosts()
+        hostnames = config.all_active_realhosts()
         use_caches = True
     else:
         console.verbose("Discovering services on %s:\n" % ", ".join(hostnames))
@@ -159,7 +160,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
         "kept"    : 0
     }
 
-    if hostname not in all_active_realhosts():
+    if hostname not in config.all_active_realhosts():
         return [0, 0, 0, 0], ""
 
     if service_filter is None:
@@ -239,11 +240,11 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
 # if the discovery check is disabled for that host, default parameters
 # will be returned.
 def discovery_check_parameters(hostname):
-    entries = host_extra_conf(hostname, periodic_discovery)
+    entries = host_extra_conf(hostname, config.periodic_discovery)
     if entries:
         return entries[0]
     # Support legacy global configurations
-    elif inventory_check_interval:
+    elif config.inventory_check_interval:
         return default_discovery_check_parameters()
     else:
         return None
@@ -251,10 +252,10 @@ def discovery_check_parameters(hostname):
 
 def default_discovery_check_parameters():
     return {
-        "check_interval"          : inventory_check_interval,
-        "severity_unmonitored"    : inventory_check_severity,
+        "check_interval"          : config.inventory_check_interval,
+        "severity_unmonitored"    : config.inventory_check_severity,
         "severity_vanished"       : 0,
-        "inventory_check_do_scan" : inventory_check_do_scan,
+        "inventory_check_do_scan" : config.inventory_check_do_scan,
     }
 
 
@@ -301,7 +302,7 @@ def check_discovery(hostname, ipaddress=None):
             item_filters = None
 
         for check_state, title, params_key, default_state in [
-               ( "new",      "unmonitored", "severity_unmonitored", inventory_check_severity ),
+               ( "new",      "unmonitored", "severity_unmonitored", config.inventory_check_severity ),
                ( "vanished", "vanished",    "severity_vanished",   0 ),
             ]:
 
@@ -474,7 +475,7 @@ def discover_marked_hosts():
         console.verbose("%s%s%s:\n" % (tty.bold, hostname, tty.normal))
         host_flag_path = autodiscovery_dir + "/" + hostname
 
-        if hostname not in all_configured_hosts():
+        if hostname not in config.all_configured_hosts():
             os.remove(host_flag_path)
             console.verbose("  Skipped. Host does not exist in configuration. Removing mark.\n")
             continue
@@ -530,7 +531,7 @@ def discover_marked_hosts():
 
     if activation_required:
         console.verbose("\nRestarting monitoring core with updated configuration...\n")
-        if monitoring_core == "cmc":
+        if config.monitoring_core == "cmc":
             do_reload()
         else:
             do_restart()
@@ -549,9 +550,9 @@ def discover_marked_hosts():
 #   '----------------------------------------------------------------------'
 
 def checktype_ignored_for_host(host, checktype):
-    if checktype in ignored_checktypes:
+    if checktype in config.ignored_checktypes:
         return True
-    ignored = host_extra_conf(host, ignored_checks)
+    ignored = host_extra_conf(host, config.ignored_checks)
     for e in ignored:
         if checktype == e or (type(e) == list and checktype in e):
             return True
@@ -559,9 +560,9 @@ def checktype_ignored_for_host(host, checktype):
 
 
 def service_ignored(hostname, check_type, service_description):
-    if check_type and check_type in ignored_checktypes:
+    if check_type and check_type in config.ignored_checktypes:
         return True
-    if service_description != None and in_boolean_serviceconf_list(hostname, service_description, ignored_services):
+    if service_description != None and in_boolean_serviceconf_list(hostname, service_description, config.ignored_services):
         return True
     if check_type and checktype_ignored_for_host(hostname, check_type):
         return True
@@ -570,12 +571,12 @@ def service_ignored(hostname, check_type, service_description):
 
 def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
     def add_nodeinfo_during_discovery(info, s):
-        if s in check_info and check_info[s]["node_info"]:
+        if s in check_info and checks.check_info[s]["node_info"]:
             return add_nodeinfo(info, None)
         else:
             return info
 
-    max_cachefile_age = use_caches and inventory_max_cachefile_age or 0
+    max_cachefile_age = use_caches and config.inventory_max_cachefile_age or 0
     rh_info = get_realhost_info(hostname, ipaddress, section_name, max_cachefile_age,
                                 ignore_check_interval=True, use_snmpwalk_cache=False)
 
@@ -585,9 +586,9 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
     else:
         info = None
 
-    if info != None and section_name in check_info and check_info[section_name]["extra_sections"]:
+    if info != None and section_name in checks.check_info and checks.check_info[section_name]["extra_sections"]:
         info = [ info ]
-        for es in check_info[section_name]["extra_sections"]:
+        for es in checks.check_info[section_name]["extra_sections"]:
             try:
                 bare_info = get_realhost_info(hostname, ipaddress, es, max_cachefile_age,
                                               ignore_check_interval=True, use_snmpwalk_cache=False)
@@ -751,7 +752,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     g_hostname = hostname
 
     console.vverbose("  SNMP scan:\n")
-    if not in_binary_hostlist(hostname, snmp_without_sys_descr):
+    if not rulesets.in_binary_hostlist(hostname, config.snmp_without_sys_descr):
         for oid, name in [ (".1.3.6.1.2.1.1.1.0", "system description"),
                            (".1.3.6.1.2.1.1.2.0", "system object") ]:
             value = get_single_oid(hostname, ipaddress, oid)
@@ -773,13 +774,13 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     if for_inv:
         items = inv_info.items()
     else:
-        items = check_info.items()
+        items = checks.check_info.items()
 
     positive_found = []
     default_found = []
 
     for check_type, _unused_check in items:
-        if check_type in ignored_checktypes:
+        if check_type in config.ignored_checktypes:
             continue
         elif not check_uses_snmp(check_type):
             continue
@@ -788,10 +789,10 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
         # subchecks sharing the same SNMP info of course should have
         # an identical scan function. But some checks do not do this
         # correctly
-        if check_type in snmp_scan_functions:
-            scan_function = snmp_scan_functions[check_type]
-        elif basename in snmp_scan_functions:
-            scan_function = snmp_scan_functions[basename]
+        if check_type in checks.snmp_scan_functions:
+            scan_function = checks.snmp_scan_functions[check_type]
+        elif basename in checks.snmp_scan_functions:
+            scan_function = checks.snmp_scan_functions[basename]
         elif basename in inv_info:
             scan_function = inv_info[basename].get("snmp_scan_function")
         else:
@@ -849,7 +850,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
         return []
 
     try:
-        discovery_function = check_info[check_type]["inventory_function"]
+        discovery_function = checks.check_info[check_type]["inventory_function"]
         if discovery_function == None:
             discovery_function = no_discovery_possible
     except KeyError:
@@ -877,7 +878,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
     # Special checks which still need to be called even with empty data
     # may declare this.
     if not info and check_uses_snmp(check_type) \
-       and not check_info[check_type]["handle_empty_info"]:
+       and not checks.check_info[check_type]["handle_empty_info"]:
         return []
 
     # Now do the actual inventory
@@ -940,8 +941,8 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
     return result
 
 def discoverable_check_types(what): # snmp, tcp, all
-    check_types = [ k for k in check_info.keys()
-                   if check_info[k]["inventory_function"] != None
+    check_types = [ k for k in checks.check_info.keys()
+                   if checks.check_info[k]["inventory_function"] != None
                    and (what == "all"
                         or check_uses_snmp(k) == (what == "snmp"))
                  ]
@@ -1025,18 +1026,18 @@ def merge_manual_services(services, hostname, on_error):
         services[(check_type, item)] = ('manual', repr(params) )
 
     # Add legacy checks -> "legacy"
-    legchecks = host_extra_conf(hostname, legacy_checks)
+    legchecks = host_extra_conf(hostname, config.legacy_checks)
     for _unused_cmd, descr, _unused_perf in legchecks:
         services[('legacy', descr)] = ('legacy', 'None')
 
     # Add custom checks -> "custom"
-    custchecks = host_extra_conf(hostname, custom_checks)
+    custchecks = host_extra_conf(hostname, config.custom_checks)
     for entry in custchecks:
         services[('custom', entry['service_description'])] = ('custom', 'None')
 
     # Similar for 'active_checks', but here we have parameters
-    for acttype, rules in active_checks.items():
-        act_info = active_check_info[acttype]
+    for acttype, rules in config.active_checks.items():
+        act_info = checks.active_check_info[acttype]
         entries = host_extra_conf(hostname, rules)
         for params in entries:
             descr = act_info["service_description"](params)
@@ -1132,7 +1133,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             # day is getting nearer...
             set_use_cachefile()
 
-            if check_type not in check_info:
+            if check_type not in checks.check_info:
                 continue # Skip not existing check silently
 
             try:
@@ -1158,22 +1159,20 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
             restore_use_cachefile()
 
-            global g_check_type, g_checked_item
-            g_check_type = check_type
-            g_checked_item = item
+            item_state.set_item_state_prefix(check_type, item)
 
             if exitcode == None:
-                check_function = check_info[check_type]["check_function"]
+                check_function = checks.check_info[check_type]["check_function"]
                 if check_source != 'manual':
                     params = get_precompiled_check_parameters(hostname, item, compute_check_parameters(hostname, check_type, item, params), check_type)
                 else:
                     params = get_precompiled_check_parameters(hostname, item, params, check_type)
 
                 try:
-                    reset_wrapped_counters()
+                    item_state.reset_wrapped_counters()
                     result = sanitize_check_result(check_function(item, params, info), check_uses_snmp(check_type))
-                    raise_counter_wrap()
-                except MKCounterWrapped, e:
+                    item_state.raise_counter_wrap()
+                except item_state.MKCounterWrapped, e:
                     result = (None, "WAITING - Counter based check, cannot be done offline")
                 except Exception, e:
                     if cmk.debug.enabled():
@@ -1196,7 +1195,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             if service_ignored(hostname, None, descr):
                 check_source = "ignored"
         else:
-            checkgroup = check_info[check_type]["group"]
+            checkgroup = checks.check_info[check_type]["group"]
 
         table.append((check_source, check_type, checkgroup, item, paramstring, params, descr, exitcode, output, perfdata))
 
@@ -1233,7 +1232,8 @@ def read_autochecks_of(hostname, world="config"):
     if not os.path.exists(filepath):
         return []
     try:
-        autochecks_raw = eval(file(filepath).read())
+        autochecks_raw = eval(file(filepath).read(),
+                              config.__dict__, config.__dict__)
     except SyntaxError,e:
         console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)
         if cmk.debug.enabled():

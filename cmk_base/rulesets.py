@@ -24,10 +24,246 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk.debug
 from cmk.regex import regex, is_regex
 from cmk.exceptions import MKGeneralException
 
 import cmk_base
+
+#.
+#   .--Service rules-------------------------------------------------------.
+#   |      ____                  _                       _                 |
+#   |     / ___|  ___ _ ____   _(_) ___ ___   _ __ _   _| | ___  ___       |
+#   |     \___ \ / _ \ '__\ \ / / |/ __/ _ \ | '__| | | | |/ _ \/ __|      |
+#   |      ___) |  __/ |   \ V /| | (_|  __/ | |  | |_| | |  __/\__ \      |
+#   |     |____/ \___|_|    \_/ |_|\___\___| |_|   \__,_|_|\___||___/      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Service rule set matching                                            |
+#   '----------------------------------------------------------------------'
+
+# Compute outcome of a service rule set that has an item
+def service_extra_conf(hostname, service, ruleset):
+    # When the requested host is part of the local sites configuration,
+    # then use only the sites hosts for processing the rules
+    with_foreign_hosts = hostname not in cmk_base.config.all_active_hosts()
+    cache_id = id(ruleset), with_foreign_hosts
+    ruleset_cache = cmk_base.config_cache.get_dict("converted_service_rulesets")
+    try:
+        ruleset = ruleset_cache[cache_id]
+    except KeyError:
+        ruleset = convert_service_ruleset(ruleset, with_foreign_hosts)
+        ruleset_cache[cache_id] = ruleset
+
+    entries = []
+    cache = cmk_base.config_cache.get_dict("extraconf_servicelist")
+    for item, hosts, service_matchers in ruleset:
+        if hostname in hosts:
+            cache_id = service_matchers, service
+            try:
+                match = cache[cache_id]
+            except KeyError:
+                match = in_servicematcher_list(service_matchers, service)
+                cache[cache_id] = match
+
+            if match:
+                entries.append(item)
+    return entries
+
+
+def convert_service_ruleset(ruleset, with_foreign_hosts):
+    new_rules = []
+    for rule in ruleset:
+        rule, rule_options = get_rule_options(rule)
+        if rule_options.get("disabled"):
+            continue
+
+        num_elements = len(rule)
+        if num_elements == 3:
+            item, hostlist, servlist = rule
+            tags = []
+        elif num_elements == 4:
+            item, tags, hostlist, servlist = rule
+        else:
+            raise MKGeneralException("Invalid rule '%r' in service configuration "
+                                     "list: must have 3 or 4 elements" % (rule,))
+
+        # Directly compute set of all matching hosts here, this
+        # will avoid recomputation later
+        hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts)
+
+        # And now preprocess the configured patterns in the servlist
+        new_rules.append((item, hosts, convert_pattern_list(servlist)))
+
+    return new_rules
+
+#.
+#   .--Host matching-------------------------------------------------------.
+#   |  _   _           _                     _       _     _               |
+#   | | | | | ___  ___| |_   _ __ ___   __ _| |_ ___| |__ (_)_ __   __ _   |
+#   | | |_| |/ _ \/ __| __| | '_ ` _ \ / _` | __/ __| '_ \| | '_ \ / _` |  |
+#   | |  _  | (_) \__ \ |_  | | | | | | (_| | || (__| | | | | | | | (_| |  |
+#   | |_| |_|\___/|___/\__| |_| |_| |_|\__,_|\__\___|_| |_|_|_| |_|\__, |  |
+#   |                                                              |___/   |
+#   +----------------------------------------------------------------------+
+#   | Code for calculating the host condition matching of rules            |
+#   '----------------------------------------------------------------------'
+
+
+def all_matching_hosts(tags, hostlist, with_foreign_hosts):
+    cache_id = tuple(tags), tuple(hostlist), with_foreign_hosts
+    cache = cmk_base.config_cache.get_dict("hostlist_match")
+
+    try:
+        return cache[cache_id]
+    except KeyError:
+        pass
+
+    if with_foreign_hosts:
+        valid_hosts = cmk_base.config.all_configured_hosts()
+    else:
+        valid_hosts = cmk_base.config.all_active_hosts()
+
+    # Contains matched hosts
+    matching = set([])
+
+    # Check if the rule has only specific hosts set
+    only_specific_hosts = not bool([x for x in hostlist if x[0] in ["@", "!", "~"]])
+
+    # If no tags are specified and there are only specific hosts we already have the matches
+    if not tags and only_specific_hosts:
+        matching = valid_hosts.intersection(hostlist)
+    # If no tags are specified and the hostlist only include @all (all hosts)
+    elif not tags and hostlist == [ "@all" ]:
+        matching = valid_hosts
+    else:
+        # If the rule has only exact host restrictions, we can thin out the list of hosts to check
+        if only_specific_hosts:
+            hosts_to_check = valid_hosts.intersection(set(hostlist))
+        else:
+            hosts_to_check = valid_hosts
+
+        for hostname in hosts_to_check:
+            # When no tag matching is requested, do not filter by tags. Accept all hosts
+            # and filter only by hostlist
+            if in_extraconf_hostlist(hostlist, hostname) and \
+               (not tags or hosttags_match_taglist(cmk_base.config.tags_of_host(hostname), tags)):
+               matching.add(hostname)
+
+    cache[cache_id] = matching
+    return matching
+
+
+# Entries in list are hostnames that must equal the hostname.
+# Expressions beginning with ! are negated: if they match,
+# the item is excluded from the list. Expressions beginning
+# withy ~ are treated as Regular Expression. Also the three
+# special tags '@all', '@clusters', '@physical' are allowed.
+def in_extraconf_hostlist(hostlist, hostname):
+
+    # Migration help: print error if old format appears in config file
+    # FIXME: When can this be removed?
+    try:
+        if hostlist[0] == "":
+            raise MKGeneralException('Invalid empty entry [ "" ] in configuration')
+    except IndexError:
+        pass # Empty list, no problem.
+
+    for hostentry in hostlist:
+        if hostentry == '':
+            raise MKGeneralException('Empty hostname in host list %r' % hostlist)
+        negate = False
+        use_regex = False
+        if hostentry[0] == '@':
+            if hostentry == '@all':
+                return True
+            ic = cmk_base.config.is_cluster(hostname)
+            if hostentry == '@cluster' and ic:
+                return True
+            elif hostentry == '@physical' and not ic:
+                return True
+
+        # Allow negation of hostentry with prefix '!'
+        else:
+            if hostentry[0] == '!':
+                hostentry = hostentry[1:]
+                negate = True
+            # Allow regex with prefix '~'
+            if hostentry[0] == '~':
+                hostentry = hostentry[1:]
+                use_regex = True
+
+        try:
+            if not use_regex and hostname == hostentry:
+                return not negate
+            # Handle Regex. Note: hostname == True -> generic unknown host
+            elif use_regex and hostname != True:
+                if regex(hostentry).match(hostname) != None:
+                    return not negate
+        except MKGeneralException:
+            if cmk.debug.enabled():
+                raise
+
+    return False
+
+
+
+def in_binary_hostlist(hostname, conf):
+    cache = cmk_base.config_cache.get_dict("in_binary_hostlist")
+    cache_id = id(conf), hostname
+
+    try:
+        return cache[cache_id]
+    except KeyError:
+        pass
+
+    # if we have just a list of strings just take it as list of hostnames
+    if conf and type(conf[0]) == str:
+        result = hostname in conf
+        cache[cache_id] = result
+    else:
+        for entry in conf:
+            entry, rule_options = get_rule_options(entry)
+            if rule_options.get("disabled"):
+                continue
+
+            try:
+                # Negation via 'NEGATE'
+                if entry[0] == NEGATE:
+                    entry = entry[1:]
+                    negate = True
+                else:
+                    negate = False
+                # entry should be one-tuple or two-tuple. Tuple's elements are
+                # lists of strings. User might forget comma in one tuple. Then the
+                # entry is the list itself.
+                if type(entry) == list:
+                    hostlist = entry
+                    tags = []
+                else:
+                    if len(entry) == 1: # 1-Tuple with list of hosts
+                        hostlist = entry[0]
+                        tags = []
+                    else:
+                        tags, hostlist = entry
+
+                if hosttags_match_taglist(cmk_base.config.tags_of_host(hostname), tags) and \
+                       in_extraconf_hostlist(hostlist, hostname):
+                    cache[cache_id] = not negate
+                    break
+            except:
+                # TODO: Fix this too generic catching (+ bad error message)
+                raise MKGeneralException("Invalid entry '%r' in host configuration list: "
+                                   "must be tuple with 1 or 2 entries" % (entry,))
+        else:
+            cache[cache_id] = False
+
+    return cache[cache_id]
+
+
+
+
+
 
 def parse_host_rule(rule):
     rule, rule_options = get_rule_options(rule)
@@ -154,3 +390,23 @@ def in_servicematcher_list(service_matchers, item):
 
     # no match in list -> negative answer
     return False
+
+
+#.
+#   .--Constants-----------------------------------------------------------.
+#   |              ____                _              _                    |
+#   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |
+#   |            | |   / _ \| '_ \/ __| __/ _` | '_ \| __/ __|             |
+#   |            | |__| (_) | | | \__ \ || (_| | | | | |_\__ \             |
+#   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Some constants to be used in the configuration and at other places   |
+#   '----------------------------------------------------------------------'
+
+# Conveniance macros for host and service rules
+PHYSICAL_HOSTS = [ '@physical' ] # all hosts but not clusters
+CLUSTER_HOSTS  = [ '@cluster' ]  # all cluster hosts
+ALL_HOSTS      = [ '@all' ]      # physical and cluster hosts
+ALL_SERVICES   = [ "" ]          # optical replacement"
+NEGATE         = '@negate'       # negation in boolean lists

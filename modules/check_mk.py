@@ -418,7 +418,7 @@ def is_ipv6_host(hostname):
 def is_ipv6_primary(hostname):
     dual_stack_host = is_ipv4v6_host(hostname)
     return (not dual_stack_host and is_ipv6_host(hostname)) \
-            or (dual_stack_host and host_extra_conf(hostname, config.primary_address_family) == "ipv6")
+            or (dual_stack_host and rulesets.host_extra_conf(hostname, config.primary_address_family) == "ipv6")
 
 def is_ipv4v6_host(hostname):
     tags = tags_of_host(hostname)
@@ -496,7 +496,7 @@ def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
     return hostlist
 
 def alias_of(hostname, fallback):
-    aliases = host_extra_conf(hostname, config.extra_host_conf.get("alias", []))
+    aliases = rulesets.host_extra_conf(hostname, config.extra_host_conf.get("alias", []))
     if len(aliases) == 0:
         if fallback:
             return fallback
@@ -508,10 +508,10 @@ def alias_of(hostname, fallback):
 
 
 def hostgroups_of(hostname):
-    return host_extra_conf(hostname, config.host_groups)
+    return rulesets.host_extra_conf(hostname, config.host_groups)
 
 def summary_hostgroups_of(hostname):
-    return host_extra_conf(hostname, config.summary_host_groups)
+    return rulesets.host_extra_conf(hostname, config.summary_host_groups)
 
 def host_contactgroups_of(hostlist):
     cgrs = []
@@ -521,7 +521,7 @@ def host_contactgroups_of(hostlist):
         # one is used. The single-contact-groups entries are all
         # recognized.
         first_list = True
-        for entry in host_extra_conf(host, config.host_contactgroups):
+        for entry in rulesets.host_extra_conf(host, config.host_contactgroups):
             if type(entry) == list and first_list:
                 cgrs += entry
                 first_list = False
@@ -533,7 +533,7 @@ def host_contactgroups_of(hostlist):
 
 
 def parents_of(hostname):
-    par = host_extra_conf(hostname, config.parents)
+    par = rulesets.host_extra_conf(hostname, config.parents)
     # Use only those parents which are defined and active in
     # all_hosts.
     used_parents = []
@@ -545,82 +545,13 @@ def parents_of(hostname):
     return used_parents
 
 
-def convert_host_ruleset(ruleset, with_foreign_hosts):
-    new_rules = []
-    if len(ruleset) == 1 and ruleset[0] == "":
-        sys.stderr.write('WARNING: deprecated entry [ "" ] in host configuration list\n')
-
-    for rule in ruleset:
-        item, tags, hostlist, rule_options = rulesets.parse_host_rule(rule)
-        if rule_options.get("disabled"):
-            continue
-
-        # Directly compute set of all matching hosts here, this
-        # will avoid recomputation later
-        new_rules.append((item, rulesets.all_matching_hosts(tags, hostlist, with_foreign_hosts)))
-
-    return new_rules
-
-
 # TODO: Remove this when checks have been moved to cmk_base.checks
 hosttags_match_taglist = rulesets.hosttags_match_taglist
 get_rule_options = rulesets.get_rule_options
 
-
-def host_extra_conf(hostname, ruleset):
-    # When the requested host is part of the local sites configuration,
-    # then use only the sites hosts for processing the rules
-    with_foreign_hosts = hostname not in config.all_active_hosts()
-
-    ruleset_cache = cmk_base.config_cache.get_dict("converted_host_rulesets")
-    cache_id = id(ruleset), with_foreign_hosts
-
-    conf_cache = cmk_base.config_cache.get_dict("host_extra_conf")
-
-    try:
-        ruleset = ruleset_cache[cache_id]
-    except KeyError:
-        ruleset = convert_host_ruleset(ruleset, with_foreign_hosts)
-        ruleset_cache[cache_id] = ruleset
-
-        # TODO: LM: Why is this not on one indent level upper?
-        #           The regular case of the above exception handler
-        #           assigns "ruleset", but it is never used. Is this OK?
-        #           And if it is OK, why is it different to service_extra_conf()?
-
-        # Generate single match cache
-        conf_cache[cache_id] = {}
-        for item, hostname_list in ruleset:
-            for name in hostname_list:
-                conf_cache[cache_id].setdefault(name, []).append(item)
-
-    if hostname not in conf_cache[cache_id]:
-        return []
-
-    return conf_cache[cache_id][hostname]
-
-
-# Needed for agent bakery: Compute ruleset for "generic" host. This
-# fictious host has no name and no tags. It matches all rules that
-# do not require specific hosts or tags. But it matches rules that
-# e.g. except specific hosts or tags (is not, has not set)
-def generic_host_extra_conf(ruleset):
-    entries = []
-
-    for rule in ruleset:
-        item, tags, hostlist = rulesets.parse_host_rule(rule)[:-1]
-        if tags and not rulesets.hosttags_match_taglist([], tags):
-            continue
-        if not rulesets.in_extraconf_hostlist(hostlist, ""):
-            continue
-
-        entries.append(item)
-    return entries
-
-
 def host_extra_conf_merged(hostname, conf):
     rule_dict = {}
-    for rule in host_extra_conf(hostname, conf):
+    for rule in rulesets.host_extra_conf(hostname, conf):
         for key, value in rule.items():
             rule_dict.setdefault(key, value)
     return rule_dict
@@ -723,7 +654,7 @@ def extra_conf_of(confdict, hostname, service, exclude=None):
         if service != None:
             values = rulesets.service_extra_conf(hostname, service, conflist)
         else:
-            values = host_extra_conf(hostname, conflist)
+            values = rulesets.host_extra_conf(hostname, conflist)
 
         if exclude and key in exclude:
             continue
@@ -749,7 +680,7 @@ def autodetect_plugin(command_line):
 
 def host_check_command(hostname, ip, is_clust):
     # Check dedicated host check command
-    values = host_extra_conf(hostname, config.host_check_commands)
+    values = rulesets.host_extra_conf(hostname, config.host_check_commands)
     if values:
         value = values[0]
     elif config.monitoring_core == "cmc":
@@ -804,7 +735,7 @@ def host_check_command(hostname, ip, is_clust):
 
 def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, params = None):
     if what == 'host':
-        return list(set(host_extra_conf(hostname, config.host_icons_and_actions)))
+        return list(set(rulesets.host_extra_conf(hostname, config.host_icons_and_actions)))
     else:
         actions = set(rulesets.service_extra_conf(hostname, svcdesc, config.service_icons_and_actions))
 
@@ -820,7 +751,7 @@ def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, param
 
 
 def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
-    values = host_extra_conf(hostname, config.ping_levels)
+    values = rulesets.host_extra_conf(hostname, config.ping_levels)
     levels = {}
     for value in values[::-1]: # make first rules have precedence
         levels.update(value)
@@ -874,9 +805,9 @@ def host_is_aggregated(hostname):
     if rulesets.in_binary_hostlist(hostname, config.non_aggregated_hosts):
         return False
 
-    # convert into host_conf_list suitable for host_extra_conf()
+    # convert into host_conf_list suitable for rulesets.host_extra_conf()
     host_conf_list = [ entry[:-1] for entry in config.service_aggregations ]
-    is_aggr = len(host_extra_conf(hostname, host_conf_list)) > 0
+    is_aggr = len(rulesets.host_extra_conf(hostname, host_conf_list)) > 0
     return is_aggr
 
 # Determines the aggregated service name for a given
@@ -947,12 +878,12 @@ def check_period_of(hostname, service):
 def check_interval_of(hostname, checkname):
     if not check_uses_snmp(checkname):
         return # no values at all for non snmp checks
-    for match, minutes in host_extra_conf(hostname, config.snmp_check_interval):
+    for match, minutes in rulesets.host_extra_conf(hostname, config.snmp_check_interval):
         if match is None or match == checkname:
             return minutes # use first match
 
 def agent_target_version(hostname):
-    agent_target_versions = host_extra_conf(hostname, config.check_mk_agent_target_versions)
+    agent_target_versions = rulesets.host_extra_conf(hostname, config.check_mk_agent_target_versions)
     if len(agent_target_versions) > 0:
         spec = agent_target_versions[0]
         if spec == "ignore":
@@ -1066,7 +997,7 @@ def snmp_credentials_of(hostname):
     except KeyError:
         pass
 
-    communities = host_extra_conf(hostname, config.snmp_communities)
+    communities = rulesets.host_extra_conf(hostname, config.snmp_communities)
     if len(communities) > 0:
         return communities[0]
 
@@ -1074,7 +1005,7 @@ def snmp_credentials_of(hostname):
     return config.snmp_default_community
 
 def get_snmp_character_encoding(hostname):
-    entries = host_extra_conf(hostname, config.snmp_character_encodings)
+    entries = rulesets.host_extra_conf(hostname, config.snmp_character_encodings)
     if len(entries) > 0:
         return entries[0]
 
@@ -1104,7 +1035,7 @@ def is_inline_snmp_host(hostname):
 
 
 def snmp_timing_of(hostname):
-    timing = host_extra_conf(hostname, config.snmp_timing)
+    timing = rulesets.host_extra_conf(hostname, config.snmp_timing)
     if len(timing) > 0:
         return timing[0]
     else:
@@ -1644,7 +1575,7 @@ def get_datasource_program(hostname, ipaddress):
 
     # First check WATO-style special_agent rules
     for agentname, ruleset in config.special_agents.items():
-        params = host_extra_conf(hostname, ruleset)
+        params = rulesets.host_extra_conf(hostname, ruleset)
         if params: # rule match!
             # Create command line using the special_agent_info
             cmd_arguments = checks.special_agent_info[agentname](params[0], hostname, ipaddress)
@@ -1656,7 +1587,7 @@ def get_datasource_program(hostname, ipaddress):
                                                      path + " " + cmd_arguments)
 
 
-    programs = host_extra_conf(hostname, config.datasource_programs)
+    programs = rulesets.host_extra_conf(hostname, config.datasource_programs)
     if not programs:
         return None
     else:
@@ -1859,14 +1790,14 @@ def do_update_dns_cache():
 
 
 def agent_port_of(hostname):
-    ports = host_extra_conf(hostname, config.agent_ports)
+    ports = rulesets.host_extra_conf(hostname, config.agent_ports)
     if len(ports) == 0:
         return config.agent_port
     else:
         return ports[0]
 
 def agent_encryption_settings(hostname):
-    settings = host_extra_conf(hostname, config.agent_encryption)
+    settings = rulesets.host_extra_conf(hostname, config.agent_encryption)
     if settings:
         return settings[0]
     else:
@@ -1874,7 +1805,7 @@ def agent_encryption_settings(hostname):
                 'use_realtime': 'enforce'}
 
 def snmp_port_of(hostname):
-    ports = host_extra_conf(hostname, config.snmp_ports)
+    ports = rulesets.host_extra_conf(hostname, config.snmp_ports)
     if len(ports) == 0:
         return None # do not specify a port, use default
     else:
@@ -1882,7 +1813,7 @@ def snmp_port_of(hostname):
 
 def exit_code_spec(hostname):
     spec = {}
-    specs = host_extra_conf(hostname, config.check_mk_exit_status)
+    specs = rulesets.host_extra_conf(hostname, config.check_mk_exit_status)
     for entry in specs[::-1]:
         spec.update(entry)
     return spec
@@ -1957,7 +1888,7 @@ def service_description(hostname, check_type, item):
 
 # Get a dict that specifies the actions to be done during the hostname translation
 def get_piggyback_translation(hostname):
-    rules = host_extra_conf(hostname, config.piggyback_translation)
+    rules = rulesets.host_extra_conf(hostname, config.piggyback_translation)
     translations = {}
     for rule in rules[::-1]:
         translations.update(rule)
@@ -2485,7 +2416,7 @@ def get_host_attributes(hostname, tags):
 def extra_host_attributes(hostname):
     attrs = {}
     for key, conflist in config.extra_host_conf.items():
-        values = host_extra_conf(hostname, conflist)
+        values = rulesets.host_extra_conf(hostname, conflist)
         if values:
             if key[0] == "_":
                 key = key.upper()
@@ -2952,7 +2883,7 @@ def dump_host(hostname):
         sys.stdout.write(tty.yellow + "Summary host:           " + tty.normal + shn + "\n")
         sys.stdout.write(tty.yellow + "Summary host groups:    " + tty.normal + ", ".join(summary_hostgroups_of(hostname)) + "\n")
         sys.stdout.write(tty.yellow + "Summary contact groups: " + tty.normal + ", ".join(host_contactgroups_of([shn])) + "\n")
-        notperiod = (host_extra_conf(hostname, config.summary_host_notification_periods) + [""])[0]
+        notperiod = (rulesets.host_extra_conf(hostname, config.summary_host_notification_periods) + [""])[0]
         sys.stdout.write(tty.yellow + "Summary notification:   " + tty.normal + notperiod + "\n")
     else:
         sys.stdout.write(tty.yellow + "Is aggregated:          " + tty.normal + "no\n")
@@ -3805,7 +3736,7 @@ def get_checkgroup_parameters(host, checktype, item):
     try:
         # checks without an item
         if item == None and checkgroup not in service_rule_groups:
-            return host_extra_conf(host, rules)
+            return rulesets.host_extra_conf(host, rules)
         else: # checks with an item need service-specific rules
             return rulesets.service_extra_conf(host, item, rules)
     except MKGeneralException, e:

@@ -98,6 +98,68 @@ def convert_service_ruleset(ruleset, with_foreign_hosts):
     return new_rules
 
 #.
+#   .--Host rulesets-------------------------------------------------------.
+#   |      _   _           _                _                _             |
+#   |     | | | | ___  ___| |_   _ __ _   _| | ___  ___  ___| |_ ___       |
+#   |     | |_| |/ _ \/ __| __| | '__| | | | |/ _ \/ __|/ _ \ __/ __|      |
+#   |     |  _  | (_) \__ \ |_  | |  | |_| | |  __/\__ \  __/ |_\__ \      |
+#   |     |_| |_|\___/|___/\__| |_|   \__,_|_|\___||___/\___|\__|___/      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Host ruleset matching                                                |
+#   '----------------------------------------------------------------------'
+
+def host_extra_conf(hostname, ruleset):
+    # When the requested host is part of the local sites configuration,
+    # then use only the sites hosts for processing the rules
+    with_foreign_hosts = hostname not in cmk_base.config.all_active_hosts()
+
+    ruleset_cache = cmk_base.config_cache.get_dict("converted_host_rulesets")
+    cache_id = id(ruleset), with_foreign_hosts
+
+    conf_cache = cmk_base.config_cache.get_dict("host_extra_conf")
+
+    try:
+        ruleset = ruleset_cache[cache_id]
+    except KeyError:
+        ruleset = _convert_host_ruleset(ruleset, with_foreign_hosts)
+        ruleset_cache[cache_id] = ruleset
+
+        # TODO: LM: Why is this not on one indent level upper?
+        #           The regular case of the above exception handler
+        #           assigns "ruleset", but it is never used. Is this OK?
+        #           And if it is OK, why is it different to service_extra_conf()?
+
+        # Generate single match cache
+        conf_cache[cache_id] = {}
+        for item, hostname_list in ruleset:
+            for name in hostname_list:
+                conf_cache[cache_id].setdefault(name, []).append(item)
+
+    if hostname not in conf_cache[cache_id]:
+        return []
+
+    return conf_cache[cache_id][hostname]
+
+
+def _convert_host_ruleset(ruleset, with_foreign_hosts):
+    new_rules = []
+    if len(ruleset) == 1 and ruleset[0] == "":
+        console.warning('deprecated entry [ "" ] in host configuration list')
+
+    for rule in ruleset:
+        item, tags, hostlist, rule_options = parse_host_rule(rule)
+        if rule_options.get("disabled"):
+            continue
+
+        # Directly compute set of all matching hosts here, this
+        # will avoid recomputation later
+        new_rules.append((item, all_matching_hosts(tags, hostlist, with_foreign_hosts)))
+
+    return new_rules
+
+
+#.
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |
 #   | | | | | ___  ___| |_   _ __ ___   __ _| |_ ___| |__ (_)_ __   __ _   |

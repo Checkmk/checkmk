@@ -62,12 +62,14 @@ import cmk.crash_reporting as crash_reporting
 import cmk.cpu_tracking as cpu_tracking
 import cmk.paths
 
+import cmk_base
 import cmk_base.agent_simulator
 import cmk_base.utils
 import cmk_base.prediction
 import cmk_base.console as console
 import cmk_base.item_state as item_state
-import cmk_base
+import cmk_base.checks as checks
+import cmk_base.config as config
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing

@@ -236,7 +236,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
 
         if is_clust:
             outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(attrs.get("_NODEIPS")))
-        outfile.write(config.extra_summary_host_conf_of(hostname))
+        outfile.write(extra_summary_host_conf_of(hostname))
         outfile.write("}\n")
     outfile.write("\n")
 
@@ -351,7 +351,7 @@ define servicedependency {
 
 
     # Now create definitions of the aggregated services for this host
-    if do_aggregation and service_aggregations:
+    if do_aggregation and config.service_aggregations:
         outfile.write("\n# Aggregated services\n\n")
 
     aggr_descripts = aggregated_services_conf
@@ -1070,7 +1070,7 @@ if '-d' in sys.argv:
     for check_type in needed_check_types:
         basename = check_type.split(".")[0]
         # Add library files needed by check (also look in local)
-        for lib in set(check_includes.get(basename, [])):
+        for lib in set(checks.check_includes.get(basename, [])):
             if os.path.exists(cmk.paths.local_checks_dir + "/" + lib):
                 to_add = cmk.paths.local_checks_dir + "/" + lib
             else:

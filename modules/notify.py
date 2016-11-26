@@ -309,7 +309,7 @@ def locally_deliver_raw_context(raw_context, analyse=False):
         # Now fetch all configuration about that contact (it needs to be configure via
         # Check_MK for that purpose). If we do not know that contact then we cannot use
         # flexible notifications even if they are enabled.
-        contact = contacts.get(contactname)
+        contact = config.contacts.get(contactname)
 
         disable_notifications_opts = _transform_user_disable_notifications_opts(contact)
         if disable_notifications_opts.get("disable", False):
@@ -519,8 +519,8 @@ def rbn_fallback_contacts():
     if config.notification_fallback_email:
         fallback_contacts.append(rbn_fake_email_contact(config.notification_fallback_email))
 
-    for contact_name, contact in contacts.items():
-        if contact.get("fallback_contact", False) and contact.get("email"):
+    for contact_name, contact in config.contacts.items():
+n       if contact.get("fallback_contact", False) and contact.get("email"):
             fallback_contact = {
                 "name" : contact_name,
             }
@@ -545,10 +545,10 @@ def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
 # rule indices
 def user_notification_rules():
     user_rules = []
-    contactnames = contacts.keys()
+    contactnames = config.contacts.keys()
     contactnames.sort()
     for contactname in contactnames:
-        contact = contacts[contactname]
+        contact = config.contacts[contactname]
         for rule in contact.get("notification_rules", []):
             # User notification rules always use allow_disable
             # This line here is for legacy reasons. Newer versions
@@ -591,7 +591,7 @@ def rbn_add_contact_information(plugin_context, contact):
                 "email" : contact[7:],
                 "pager" : "" }
         else:
-            contact_dict = contacts.get(contact, { "alias" : contact })
+            contact_dict = config.contacts.get(contact, { "alias" : contact })
             contact_dict["name"] = contact
 
         rbn_add_contact_information(plugin_context, contact_dict)
@@ -715,7 +715,7 @@ def rbn_rule_contacts(rule, context):
         if contactname == notification_fallback_email:
             contact = rbn_fake_email_contact(notification_fallback_email)
         else:
-            contact = contacts.get(contactname)
+            contact = config.contacts.get(contactname)
 
         if contact:
             disable_notifications_opts = _transform_user_disable_notifications_opts(contact)
@@ -833,12 +833,12 @@ def rbn_object_contact_names(context):
 
 def rbn_all_contacts(with_email=None):
     if not with_email:
-        return contacts.keys() # We have that via our main.mk contact definitions!
+        return config.contacts.keys() # We have that via our main.mk contact definitions!
     else:
         return [
           contact_id
           for (contact_id, contact)
-          in contacts.items()
+          in config.contacts.items()
           if contact.get("email")]
 
 

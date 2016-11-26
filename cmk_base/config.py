@@ -140,8 +140,10 @@ def load(with_conf_d=True, validate_hosts=True):
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            else:
-                interactive_abort("Cannot read in configuration file %s: %s" % (_f, e))
+            elif sys.stdout.isatty():
+                console.error("Cannot read in configuration file %s: %s", _f, e)
+                sys.exit(1)
+
 
     # Cleanup global helper vars
     # TODO: Get list from above
@@ -280,15 +282,6 @@ def cmp_config_paths(a, b):
     return cmp(pa[:-1], pb[:-1]) or \
            cmp(len(pa), len(pb)) or \
            cmp(pa, pb)
-
-
-# Abort after an error, but only in interactive mode.
-# TODO: Clean this up. An exception should be raised.
-def interactive_abort(error):
-    if sys.stdout.isatty() or opt_interactive:
-        console.error(error + "\n")
-        sys.exit(1)
-
 
 
 def load_packed_config():

@@ -78,6 +78,16 @@ def cleanup_if_strings(s):
         return s
 
 
+# This variant of int() lets the string if its not
+# convertable. Useful for parsing dict-like things, where
+# some of the values are int.
+def tryint(x):
+    try:
+        return int(x)
+    except:
+        return x
+
+
 # make sure, that configuration variable is present in precompiled host checks
 check_config_variables.append("nagios_illegal_chars")
 

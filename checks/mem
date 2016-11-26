@@ -360,6 +360,29 @@ def check_mem_linux(_no_item, params, info):
     yield 0, "", perfdata
 
 
+# ThisIsACamel -> this_is_a_camel
+def camelcase_to_underscored(name):
+    previous_lower = False
+    previous_underscore = True
+    result = ""
+    for c in name:
+        if c.isupper():
+            if previous_lower and not previous_underscore:
+                result += "_"
+            previous_lower = False
+            previous_underscore = False
+            result += c.lower()
+        elif c == "_":
+            previous_lower = False
+            previous_underscore = True
+            result += c
+        else:
+            previous_lower = True
+            previous_underscore = False
+            result += c
+    return result
+
+
 check_info["mem.linux"] = {
     'inventory_function'        : inventory_mem_linux,
     'check_function'            : check_mem_linux,

@@ -85,8 +85,10 @@ def convert_from_hex(value):
         r += chr(int(hx, 16))
     return r
 
+
 def oid_to_bin(oid):
     return u"".join([ unichr(int(p)) for p in oid.strip(".").split(".") ])
+
 
 def extract_end_oid(prefix, complete):
     return complete[len(prefix):].lstrip('.')
@@ -382,6 +384,17 @@ def check_snmp_misc(item, params, info):
             else:
                 return (0, "OK = %s (OK within %.2f .. %.2f)" % (text, warn_low, warn_high), perfdata)
     return (3, "Missing item %s in SNMP data" % item)
+
+
+# check range, values might be negative!
+# returns True, if value is inside the interval
+# TODO: Still needed?
+def within_range(value, minv, maxv):
+    if value >= 0:
+        return value >= minv and value <= maxv
+    else:
+        return value <= minv and value >= maxv
+
 
 # TODO: Still needed?
 def inventory_snmp_misc(checkname, info):

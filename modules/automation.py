@@ -30,6 +30,7 @@ import cmk.paths
 import cmk.man_pages as man_pages
 
 import cmk_base.rulesets as rulesets
+import cmk_base.config as config
 
 # TODO: Inherit from MKGeneralException
 class MKAutomationError(Exception):
@@ -59,7 +60,7 @@ def do_automation(cmd, args):
 
     try:
         if cmd == "get-configuration":
-            read_config_files(with_conf_d=False)
+            config.load(with_conf_d=False)
             result = automation_get_configuration()
         elif cmd == "get-check-information":
             result = automation_get_check_information()
@@ -86,7 +87,7 @@ def do_automation(cmd, args):
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
         else:
-            read_config_files(validate_hosts=False)
+            config.load(validate_hosts=False)
             if cmd == "try-inventory":
                 result = automation_try_discovery(args)
             elif cmd == "inventory":
@@ -221,9 +222,8 @@ def automation_try_discovery(args):
     # handle this option so deep in the code. It should only be handled
     # by top-level functions.
     set_use_cachefile(use_caches)
-    global check_max_cachefile_age
     if use_caches:
-        check_max_cachefile_age = inventory_max_cachefile_age
+        config.check_max_cachefile_age = config.inventory_max_cachefile_age
     hostname = args[0]
     table = get_check_preview(hostname, use_caches=use_caches,
                               do_snmp_scan=do_snmp_scan, on_error=on_error)
@@ -245,7 +245,7 @@ def automation_set_autochecks(args):
 
 # if required, schedule an inventory check
 def trigger_discovery_check(hostname):
-    if (inventory_check_autotrigger and inventory_check_interval) and\
+    if (config.inventory_check_autotrigger and config.inventory_check_interval) and\
             (not is_cluster(hostname) or nodes_of(hostname)):
         schedule_inventory_check(hostname)
 
@@ -277,7 +277,7 @@ def automation_analyse_service(args):
     check_table = get_check_table(hostname, remove_duplicates = True)
 
     # 1. Manual checks
-    for nr, (checkgroup, entries) in enumerate(static_checks.items()):
+    for nr, (checkgroup, entries) in enumerate(config.static_checks.items()):
         for entry in entries:
             entry, rule_options = rulesets.get_rule_options(entry)
             if rule_options.get("disabled"):
@@ -296,7 +296,7 @@ def automation_analyse_service(args):
                 taglist = []
 
             if rulesets.hosttags_match_taglist(tags_of_host(hostname), taglist) and \
-               in_extraconf_hostlist(hostlist, hostname):
+               rulesets.in_extraconf_hostlist(hostlist, hostname):
                descr = service_description(hostname, checktype, item)
                if descr == servicedesc:
                    return {
@@ -325,16 +325,16 @@ def automation_analyse_service(args):
                     continue # this is a removed duplicate or clustered service
                 descr = service_description(hn, ct, item)
                 if hn == hostname and descr == servicedesc:
-                    dlv = check_info[ct].get("default_levels_variable")
+                    dlv = checks.check_info[ct].get("default_levels_variable")
                     if dlv:
-                        fs = factory_settings.get(dlv, None)
+                        fs = checks.factory_settings.get(dlv, None)
                     else:
                         fs = None
 
                     return {
                         "origin"           : "auto",
                         "checktype"        : ct,
-                        "checkgroup"       : check_info[ct].get("group"),
+                        "checkgroup"       : checks.check_info[ct].get("group"),
                         "item"             : item,
                         "inv_parameters"   : params,
                         "factory_settings" : fs,
@@ -345,7 +345,7 @@ def automation_analyse_service(args):
             raise
 
     # 3. Classical checks
-    for nr, entry in enumerate(custom_checks):
+    for nr, entry in enumerate(config.custom_checks):
         if len(entry) == 4:
             rule, tags, hosts, options = entry
             if options.get("disabled"):
@@ -353,7 +353,7 @@ def automation_analyse_service(args):
         else:
             rule, tags, hosts = entry
 
-        matching_hosts = all_matching_hosts(tags, hosts, with_foreign_hosts = True)
+        matching_hosts = rulesets.all_matching_hosts(tags, hosts, with_foreign_hosts = True)
         if hostname in matching_hosts:
             desc = rule["service_description"]
             if desc == servicedesc:
@@ -366,10 +366,10 @@ def automation_analyse_service(args):
                 return result
 
     # 4. Active checks
-    for acttype, rules in active_checks.items():
+    for acttype, rules in config.active_checks.items():
         entries = host_extra_conf(hostname, rules)
         if entries:
-            act_info = active_check_info[acttype]
+            act_info = checks.active_check_info[acttype]
             for params in entries:
                 description = act_info["service_description"](params)
                 if description == servicedesc:
@@ -447,7 +447,7 @@ def automation_restart(job = "restart"):
     # check_mk is called by WATO via Apache. Nagios inherits
     # the open file where Apache is listening for incoming
     # HTTP connections. Really.
-    if monitoring_core == "nagios":
+    if config.monitoring_core == "nagios":
         objects_file = cmk.paths.nagios_objects_file
         for fd in range(3, 256):
             try:
@@ -486,7 +486,7 @@ def automation_restart(job = "restart"):
         try:
             configuration_warnings = create_core_config()
 
-            if "do_bake_agents" in globals() and bake_agents_on_restart:
+            if "do_bake_agents" in globals() and config.bake_agents_on_restart:
                 do_bake_agents()
 
         except Exception, e:
@@ -499,7 +499,7 @@ def automation_restart(job = "restart"):
         if do_check_nagiosconfig():
             if backup_path:
                 os.remove(backup_path)
-            if monitoring_core == "cmc":
+            if config.monitoring_core == "cmc":
                 do_pack_config()
             else:
                 do_precompile_hostchecks()
@@ -541,7 +541,7 @@ def last_modification_in_dir(dir_path):
 
 
 def time_of_last_core_restart():
-    if monitoring_core == "cmc":
+    if config.monitoring_core == "cmc":
         pidfile_path = cmk.paths.omd_root + "/tmp/run/cmc.pid"
     else:
         pidfile_path = cmk.paths.omd_root + "/tmp/lock/nagios.lock"
@@ -567,7 +567,7 @@ def automation_get_check_information():
     manuals = man_pages.all_man_pages()
 
     checks = {}
-    for check_type, check in check_info.items():
+    for check_type, check in checks.check_info.items():
         try:
             manfile = manuals.get(check_type)
             # TODO: Use cmk.man_pages module standard functions to read the title
@@ -591,7 +591,7 @@ def automation_get_real_time_checks():
     manuals = man_pages.all_man_pages()
 
     checks = []
-    for check_type, check in check_info.items():
+    for check_type, check in checks.check_info.items():
         if check["handle_real_time_checks"]:
             title = check_type
             try:
@@ -616,16 +616,16 @@ def automation_get_check_manpage(args):
 
     # Add a few informations from check_info. Note: active checks do not
     # have an entry in check_info
-    if check_type in check_info:
+    if check_type in checks.check_info:
         manpage["type"] = "check_mk"
-        info = check_info[check_type]
+        info = checks.check_info[check_type]
         for key in [ "snmp_info", "has_perfdata", "service_description" ]:
             if key in info:
                 manpage[key] = info[key]
         if "." in check_type:
             section = check_type.split(".")[0]
-            if section in check_info and "snmp_info" in check_info[section]:
-                manpage["snmp_info"] = check_info[section]["snmp_info"]
+            if section in checks.check_info and "snmp_info" in checks.check_info[section]:
+                manpage["snmp_info"] = checks.check_info[section]["snmp_info"]
 
         if "group" in info:
             manpage["group"] = info["group"]
@@ -734,16 +734,16 @@ def automation_diag_host(args):
                         snmpv3_credentials.extend([snmpv3_security_name])
                     if snmpv3_use == "authPriv":
                         snmpv3_credentials.extend([snmpv3_privacy_proto, snmpv3_privacy_password])
-                    explicit_snmp_communities[hostname] = tuple(snmpv3_credentials)
+                    config.explicit_snmp_communities[hostname] = tuple(snmpv3_credentials)
             elif snmp_community:
-                explicit_snmp_communities[hostname] = snmp_community
+                config.explicit_snmp_communities[hostname] = snmp_community
 
             # Determine SNMPv2/v3 community
-            if hostname not in explicit_snmp_communities:
-                communities = host_extra_conf(hostname, snmp_communities)
+            if hostname not in config.explicit_snmp_communities:
+                communities = host_extra_conf(hostname, config.snmp_communities)
                 for entry in communities:
                     if (type(entry) == tuple) == (test == "snmpv3"):
-                        explicit_snmp_communities[hostname] = entry
+                        config.explicit_snmp_communities[hostname] = entry
                         break
 
             # Override timing settings if provided
@@ -753,18 +753,17 @@ def automation_diag_host(args):
                     timing['timeout'] = snmp_timeout
                 if snmp_retries:
                     timing['retries'] = snmp_retries
-                snmp_timing.insert(0, (timing, [], [hostname]))
+                config.snmp_timing.insert(0, (timing, [], [hostname]))
 
             # SNMP versions
-            global bulkwalk_hosts, snmpv2c_hosts
             if test in ['snmpv2', 'snmpv3']:
-                bulkwalk_hosts = [hostname]
+                config.bulkwalk_hosts = [hostname]
             elif test == 'snmpv2_nobulk':
-                bulkwalk_hosts = []
-                snmpv2c_hosts  = [hostname]
+                config.bulkwalk_hosts = []
+                config.snmpv2c_hosts  = [hostname]
             elif test == 'snmpv1':
-                bulkwalk_hosts = []
-                snmpv2c_hosts  = []
+                config.bulkwalk_hosts = []
+                config.snmpv2c_hosts  = []
 
             else:
                 return 1, "SNMP command not implemented"
@@ -984,7 +983,7 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         actions.append("history")
 
     # State retention (important for Downtimes, Acknowledgements, etc.)
-    if monitoring_core == "nagios":
+    if config.monitoring_core == "nagios":
         if not os.system("sed -ri 's/^host_name=%s$/host_name=%s/' %s/var/nagios/retention.dat" % (
                     oldregex, newregex, cmk.paths.omd_root)):
             actions.append("retention")
@@ -1025,7 +1024,7 @@ def automation_active_check(args):
     item = item.decode("utf-8")
 
     if plugin == "custom":
-        custchecks = host_extra_conf(hostname, custom_checks)
+        custchecks = host_extra_conf(hostname, config.custom_checks)
         for entry in custchecks:
             if entry["service_description"] == item:
                 command_line = replace_core_macros(hostname, entry.get("command_line", ""))
@@ -1035,11 +1034,11 @@ def automation_active_check(args):
                 else:
                     return -1, "Passive check - cannot be executed"
     else:
-        rules = active_checks.get(plugin)
+        rules = config.active_checks.get(plugin)
         if rules:
             entries = host_extra_conf(hostname, rules)
             if entries:
-                act_info = active_check_info[plugin]
+                act_info = checks.active_check_info[plugin]
                 for params in entries:
                     description = act_info["service_description"](params).replace('$HOSTNAME$', hostname)
                     if description == item:

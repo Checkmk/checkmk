@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -24,60 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-"""Utiliy module for holding generic methods that implement handling
-of console input / output"""
 
-import sys
-
-import cmk.tty as tty
-import cmk.log
-logger = cmk.log.get_logger("base")
-
-#
-# Generic / low level functions
-#
-
-# would rather use "def output(text, *args, stream=sys.stdout)", but this is not possible
-# with python 2.7
-def output(text, *args, **kwargs):
-    if args:
-        text = text % args
-
-    stream = kwargs.get("stream", sys.stdout)
-
-    try:
-        stream.write(text)
-        stream.flush()
-    except:
-        # TODO: Way to generic!
-        pass # avoid exception on broken pipe (e.g. due to | head)
+OID_END              =  0  # Suffix-part of OID that was not specified
+OID_STRING           = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
+OID_BIN              = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
+OID_END_BIN          = -3  # Same, but just the end part
+OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
 
 
-# Output text if opt_verbose is set (-v). Adds no linefeed
-def verbose(text, *args, **kwargs):
-    if logger.is_verbose():
-        output(text, *args, **kwargs)
+def BINARY(oid):
+    return "binary", oid
 
 
-# Output text if, opt_verbose >= 2 (-vv).
-def vverbose(text, *args, **kwargs):
-    if logger.is_very_verbose():
-        verbose(text, *args, **kwargs)
-
-
-#
-# More top level wrappers
-#
-
-# TODO: Inconsistent -> Adds newline and other functions don't
-def warning(text, *args):
-    stripped = text.lstrip()
-    indent = text[:len(text) - len(stripped)]
-
-    text = "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
-
-    output(text, *args, stream=sys.stderr)
-
-
-def error(text, *args):
-    output(text, *args, stream=sys.stderr)
+# Wrapper to mark OIDs as being cached for regular checks, but not for discovery
+def CACHED_OID(oid):
+    return "cached", oid

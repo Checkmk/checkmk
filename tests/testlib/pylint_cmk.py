@@ -18,7 +18,6 @@ def ordered_module_files():
     ordered_modules = [
         cmk_path() + "/modules/check_mk_base.py",
         cmk_path() + "/modules/check_mk.py",
-        cmk_path() + "/modules/config.py",
         cmk_path() + "/modules/discovery.py",
         cmk_path() + "/modules/snmp.py",
         cmk_path() + "/modules/notify.py",

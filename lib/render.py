@@ -63,6 +63,30 @@ def timespan(seconds):
 def time_since(timestamp):
     return timespan(time.time() - timestamp)
 
+
+def approx_age(secs):
+    """Format time difference seconds into approximated human readable text"""
+
+    if secs < 240:
+        return "%d sec" % secs
+
+    mins = secs / 60
+    if mins < 120:
+        return "%d min" % mins
+
+    hours, mins = divmod(mins, 60)
+    if hours < 12 and mins > 0:
+        return "%d hours %d min" % (hours, mins)
+    elif hours < 48:
+        return "%d hours" % hours
+
+    days, hours = divmod(hours, 24)
+    if days < 7 and hours > 0:
+        return "%d days %d hours" % (days, hours)
+
+    return "%d days" % days
+
+
 # Takes bytes as integer and returns a string which represents the bytes in a
 # more human readable form scaled to TB/GB/MB/KB
 # The unit parameter simply changes the returned string, but does not interfere

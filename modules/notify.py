@@ -40,6 +40,8 @@
 from cmk.regex import regex
 import cmk.paths
 
+import cmk_base.config as config
+
 #   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
 #   |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
@@ -61,11 +63,12 @@ notification_logging    = 1
 notification_backlog    = 10 # keep the last 10 notification contexts for reference
 
 # Settings for new rule based notifications
-enable_rulebased_notifications = False
-notification_fallback_email    = ""
-notification_rules             = []
-notification_bulk_interval     = 10 # Check every 10 seconds for ripe bulks
-notification_plugin_timeout    = 60
+config.register("enable_rulebased_notifications", False)
+config.register("notification_fallback_email",    "")
+config.register("notification_rules",             [])
+# Check every 10 seconds for ripe bulks
+config.register("notification_bulk_interval",     10)
+config.register("notification_plugin_timeout",    60)
 
 # Notification Spooling.
 
@@ -77,14 +80,14 @@ notification_plugin_timeout    = 60
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
 if cmk.is_raw_edition():
-    notification_spooling = "off"
+    config.register("notification_spooling", "off")
 else:
-    notification_spooling = "local"
+    config.register("notification_spooling", "local")
 
 # Legacy setting. The spool target is now specified in the
 # configuration of the spooler. notification_spool_to has
 # the tuple format (remote_host, tcp_port, also_local)
-notification_spool_to = None
+config.register("notification_spool_to", None)
 
 
 notification_log_template = \
@@ -235,19 +238,18 @@ def do_notify(args):
 
 
 def convert_legacy_configuration():
-    global notification_spooling
     # Convert legacy spooling configuration to new one (see above)
-    if notification_spooling in (True, False):
-        if notification_spool_to:
-            also_local = notification_spool_to[2]
+    if config.notification_spooling in (True, False):
+        if config.notification_spool_to:
+            also_local = config.notification_spool_to[2]
             if also_local:
-                notification_spooling = "both"
+                config.notification_spooling = "both"
             else:
-                notification_spooling = "remote"
-        elif notification_spooling:
-            notification_spooling = "local"
+                config.notification_spooling = "remote"
+        elif config.notification_spooling:
+            config.notification_spooling = "local"
         else:
-            notification_spooling = "remote"
+            config.notification_spooling = "remote"
 
 # This function processes one raw notification and decides wether it
 # should be spooled or not. In the latter cased a local delivery
@@ -272,10 +274,10 @@ def notify_notify(raw_context, analyse=False):
     complete_raw_context(raw_context, with_dump = notification_logging >= 2, event_log = notify_log)
 
     # Spool notification to remote host, if this is enabled
-    if notification_spooling in ("remote", "both"):
+    if config.notification_spooling in ("remote", "both"):
         create_spoolfile({"context": raw_context, "forward": True})
 
-    if notification_spooling != "remote":
+    if config.notification_spooling != "remote":
         return locally_deliver_raw_context(raw_context, analyse=analyse)
 
 
@@ -376,7 +378,7 @@ def notify_keepalive():
         event_function  = notify_notify,
         log_function    = notify_log,
         call_every_loop = send_ripe_bulks,
-        loop_interval   = notification_bulk_interval,
+        loop_interval   = config.notification_bulk_interval,
     )
 
 
@@ -407,7 +409,7 @@ def notify_rulebased(raw_context, analyse=False):
     num_rule_matches = 0
     rule_info = []
 
-    for rule in notification_rules + user_notification_rules():
+    for rule in config.notification_rules + user_notification_rules():
         if "contact" in rule:
             notify_log("User %s's rule '%s'..." % (rule["contact"], rule["description"]))
         else:
@@ -496,7 +498,7 @@ def notify_rulebased(raw_context, analyse=False):
                 if not analyse:
                     if bulk:
                         do_bulk_notify(contact, plugin, params, plugin_context, bulk)
-                    elif notification_spooling in ("local", "both"):
+                    elif config.notification_spooling in ("local", "both"):
                         create_spoolfile({"context": plugin_context, "plugin": plugin})
                     else:
                         call_notification_script(plugin, plugin_context)
@@ -514,8 +516,8 @@ def notify_rulebased(raw_context, analyse=False):
 
 def rbn_fallback_contacts():
     fallback_contacts = []
-    if notification_fallback_email:
-        fallback_contacts.append(rbn_fake_email_contact(notification_fallback_email))
+    if config.notification_fallback_email:
+        fallback_contacts.append(rbn_fake_email_contact(config.notification_fallback_email))
 
     for contact_name, contact in contacts.items():
         if contact.get("fallback_contact", False) and contact.get("email"):
@@ -531,7 +533,7 @@ def rbn_fallback_contacts():
 def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
     # Right now we are only able to finalize notification plugins with dict parameters..
     if type(rule_parameters) == dict:
-        parameters = host_extra_conf_merged(hostname, notification_parameters.get(plugin, []))
+        parameters = host_extra_conf_merged(hostname, config.notification_parameters.get(plugin, []))
         parameters.update(rule_parameters)
         return parameters
     else:
@@ -891,7 +893,7 @@ def notify_flexible(raw_context, notification_table):
 
         plugin_context = create_plugin_context(raw_context, entry.get("parameters", []))
 
-        if notification_spooling in ("local", "both"):
+        if config.notification_spooling in ("local", "both"):
             create_spoolfile({"context": plugin_context, "plugin": plugin})
         else:
             call_notification_script(plugin, plugin_context)
@@ -1050,7 +1052,7 @@ def check_notification_type(context, host_events, service_events):
 def notify_plain_email(raw_context):
     plugin_context = create_plugin_context(raw_context, [])
 
-    if notification_spooling in ("local", "both"):
+    if config.notification_spooling in ("local", "both"):
         create_spoolfile({"context": plugin_context, "plugin" : None})
     else:
         notify_log("Sending plain email to %s" % plugin_context["CONTACTNAME"])
@@ -1210,7 +1212,7 @@ def call_notification_script(plugin, plugin_context):
         clear_notification_timeout()
     except NotificationTimeout:
         plugin_log("Notification plugin did not finish within %d seconds. Terminating." %
-                                                                    notification_plugin_timeout)
+                                                                    config.notification_plugin_timeout)
         # p.kill() requires python 2.6!
         os.kill(p.pid, signal.SIGTERM)
         exitcode = 1
@@ -1236,7 +1238,7 @@ def handle_notification_timeout(signum, frame):
 
 def set_notification_timeout():
     signal.signal(signal.SIGALRM, handle_notification_timeout)
-    signal.alarm(notification_plugin_timeout)
+    signal.alarm(config.notification_plugin_timeout)
 
 
 def clear_notification_timeout():
@@ -1576,7 +1578,7 @@ def call_bulk_notification_script(plugin, context_text):
         clear_notification_timeout()
     except NotificationTimeout:
         notify_log("Notification plugin did not finish within %d seconds. Terminating." %
-                   notification_plugin_timeout)
+                   config.notification_plugin_timeout)
         # p.kill() requires python 2.6!
         os.kill(p.pid, signal.SIGTERM)
         exitcode = 1
@@ -1750,7 +1752,7 @@ def core_notification_log(plugin, plugin_context):
 
     log_message = "%s NOTIFICATION: %s;%s;%s;%s;%s" % (
             what, contact, spec, state, plugin or "plain email", output)
-    if monitoring_core == "cmc":
+    if config.monitoring_core == "cmc":
         livestatus_send_command("LOG;" + log_message.encode("utf-8"))
     else:
         # Nagios and friends do not support logging via an

@@ -240,7 +240,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
 # if the discovery check is disabled for that host, default parameters
 # will be returned.
 def discovery_check_parameters(hostname):
-    entries = host_extra_conf(hostname, config.periodic_discovery)
+    entries = rulesets.host_extra_conf(hostname, config.periodic_discovery)
     if entries:
         return entries[0]
     # Support legacy global configurations
@@ -552,7 +552,7 @@ def discover_marked_hosts():
 def checktype_ignored_for_host(host, checktype):
     if checktype in config.ignored_checktypes:
         return True
-    ignored = host_extra_conf(host, config.ignored_checks)
+    ignored = rulesets.host_extra_conf(host, config.ignored_checks)
     for e in ignored:
         if checktype == e or (type(e) == list and checktype in e):
             return True
@@ -1026,19 +1026,19 @@ def merge_manual_services(services, hostname, on_error):
         services[(check_type, item)] = ('manual', repr(params) )
 
     # Add legacy checks -> "legacy"
-    legchecks = host_extra_conf(hostname, config.legacy_checks)
+    legchecks = rulesets.host_extra_conf(hostname, config.legacy_checks)
     for _unused_cmd, descr, _unused_perf in legchecks:
         services[('legacy', descr)] = ('legacy', 'None')
 
     # Add custom checks -> "custom"
-    custchecks = host_extra_conf(hostname, config.custom_checks)
+    custchecks = rulesets.host_extra_conf(hostname, config.custom_checks)
     for entry in custchecks:
         services[('custom', entry['service_description'])] = ('custom', 'None')
 
     # Similar for 'active_checks', but here we have parameters
     for acttype, rules in config.active_checks.items():
         act_info = checks.active_check_info[acttype]
-        entries = host_extra_conf(hostname, rules)
+        entries = rulesets.host_extra_conf(hostname, rules)
         for params in entries:
             descr = act_info["service_description"](params)
             services[(acttype, descr)] = ('active', repr(params))

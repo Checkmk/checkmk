@@ -108,7 +108,7 @@ def cmp_oid_pairs(pair1, pair2):
                oid_to_intlist(pair2[0].lstrip('.')))
 
 def snmpv3_contexts_of_host(hostname):
-    return host_extra_conf(hostname, config.snmpv3_contexts)
+    return rulesets.host_extra_conf(hostname, config.snmpv3_contexts)
 
 def snmpv3_contexts_of(hostname, check_type):
     for ty, rules in snmpv3_contexts_of_host(hostname):

@@ -367,7 +367,7 @@ def automation_analyse_service(args):
 
     # 4. Active checks
     for acttype, rules in config.active_checks.items():
-        entries = host_extra_conf(hostname, rules)
+        entries = rulesets.host_extra_conf(hostname, rules)
         if entries:
             act_info = checks.active_check_info[acttype]
             for params in entries:
@@ -740,7 +740,7 @@ def automation_diag_host(args):
 
             # Determine SNMPv2/v3 community
             if hostname not in config.explicit_snmp_communities:
-                communities = host_extra_conf(hostname, config.snmp_communities)
+                communities = rulesets.host_extra_conf(hostname, config.snmp_communities)
                 for entry in communities:
                     if (type(entry) == tuple) == (test == "snmpv3"):
                         config.explicit_snmp_communities[hostname] = entry
@@ -1024,7 +1024,7 @@ def automation_active_check(args):
     item = item.decode("utf-8")
 
     if plugin == "custom":
-        custchecks = host_extra_conf(hostname, config.custom_checks)
+        custchecks = rulesets.host_extra_conf(hostname, config.custom_checks)
         for entry in custchecks:
             if entry["service_description"] == item:
                 command_line = replace_core_macros(hostname, entry.get("command_line", ""))
@@ -1036,7 +1036,7 @@ def automation_active_check(args):
     else:
         rules = config.active_checks.get(plugin)
         if rules:
-            entries = host_extra_conf(hostname, rules)
+            entries = rulesets.host_extra_conf(hostname, rules)
             if entries:
                 act_info = checks.active_check_info[plugin]
                 for params in entries:

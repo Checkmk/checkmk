@@ -177,7 +177,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
 
         # Get parents manually defined via extra_host_conf["parents"]. Only honor
         # variable "parents" and implicit parents if this setting is empty
-        extra_conf_parents = host_extra_conf(hostname, config.extra_host_conf.get("parents", []))
+        extra_conf_parents = rulesets.host_extra_conf(hostname, config.extra_host_conf.get("parents", []))
 
         if not extra_conf_parents:
             parents_list = parents_of(hostname)
@@ -409,7 +409,7 @@ define service {
 """ % (config.active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK")))
 
     # legacy checks via legacy_checks
-    legchecks = host_extra_conf(hostname, config.legacy_checks)
+    legchecks = rulesets.host_extra_conf(hostname, config.legacy_checks)
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
     for command, description, has_perfdata in legchecks:
@@ -450,7 +450,7 @@ define service {
     # legacy checks via active_checks
     actchecks = []
     for acttype, rules in config.active_checks.items():
-        entries = host_extra_conf(hostname, rules)
+        entries = rulesets.host_extra_conf(hostname, rules)
         if entries:
             # Skip Check_MK HW/SW Inventory for all ping hosts, even when the user has enabled
             # the inventory for ping only hosts
@@ -521,7 +521,7 @@ define service {
             outfile.write(get_dependencies(hostname,description))
 
     # Legacy checks via custom_checks
-    custchecks = host_extra_conf(hostname, config.custom_checks)
+    custchecks = rulesets.host_extra_conf(hostname, config.custom_checks)
     if custchecks:
         outfile.write("\n\n# Custom checks\n")
         for entry in custchecks:

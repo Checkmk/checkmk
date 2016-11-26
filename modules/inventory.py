@@ -376,7 +376,7 @@ def save_inv_tree(hostname):
 
 def run_inv_export_hooks(hostname, tree):
     for hookname, ruleset in config.inv_exports.items():
-        entries = host_extra_conf(hostname, ruleset)
+        entries = rulesets.host_extra_conf(hostname, ruleset)
         if entries:
             console.verbose(", running %s%s%s%s..." % (tty.blue, tty.bold, hookname, tty.normal))
             params = entries[0]

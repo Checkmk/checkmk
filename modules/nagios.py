@@ -466,8 +466,7 @@ define service {
         outfile.write("\n\n# Active checks\n")
         for acttype, act_info, params in actchecks:
             # Make hostname available as global variable in argument functions
-            global g_hostname
-            g_hostname = hostname
+            checks.set_hostname(hostname)
 
             has_perfdata = act_info.get('has_perfdata', False)
             description = active_check_service_description(act_info, params)

@@ -29,6 +29,7 @@ from cmk.regex import regex, is_regex
 from cmk.exceptions import MKGeneralException
 
 import cmk_base
+import cmk_base.console as console
 
 #.
 #   .--Service rules-------------------------------------------------------.

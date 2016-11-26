@@ -723,8 +723,7 @@ def discover_services_impl(hostname, check_types, use_caches, on_error,
                            ipaddress, use_snmp=None):
     # Make hostname available as global variable in discovery functions
     # (used e.g. by ps-discovery)
-    global g_hostname
-    g_hostname = hostname
+    checks.set_hostname(hostname)
 
     discovered_services = []
     try:
@@ -748,8 +747,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     # Make hostname globally available for scan functions.
     # This is rarely used, but e.g. the scan for if/if64 needs
     # this to evaluate if_disabled_if64_checks.
-    global g_hostname
-    g_hostname = hostname
+    checks.set_hostname(hostname)
 
     console.vverbose("  SNMP scan:\n")
     if not rulesets.in_binary_hostlist(hostname, config.snmp_without_sys_descr):
@@ -1124,8 +1122,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 else:
                     continue # ignore
 
-            global g_service_description
-            g_service_description = descr
+            checks.set_service_description(descr)
             infotype = check_type.split('.')[0]
 
             # Sorry. The whole caching stuff is the most horrible hack in

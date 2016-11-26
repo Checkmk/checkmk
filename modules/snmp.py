@@ -206,7 +206,7 @@ def get_snmp_table(hostname, ip, check_type, oid_info, use_snmpwalk_cache):
         # From all SNMP data sources (stored walk, classic SNMP, inline SNMP) we
         # get normal python strings. But for Check_MK we need unicode strings now.
         # Convert them by using the standard Check_MK approach for incoming data
-        sanitized_columns = sanitize_snmp_encoding(new_columns)
+        sanitized_columns = sanitize_snmp_encoding(hostname, new_columns)
 
         info += construct_snmp_table_of_rows(sanitized_columns)
 
@@ -286,10 +286,12 @@ def compute_fetch_oid(oid, suboid, column):
     return fetchoid, value_encoding
 
 
-def sanitize_snmp_encoding(columns):
+def sanitize_snmp_encoding(hostname, columns):
+    decode_string_func = lambda s: snmp_decode_string(hostname, s)
+
     for index, (column, value_encoding) in enumerate(columns):
         if value_encoding == "string":
-            columns[index] = map(snmp_decode_string, column)
+            columns[index] = map(decode_string_func, column)
         else:
             columns[index] = map(snmp_decode_binary, column)
     return columns
@@ -556,8 +558,8 @@ def get_stored_snmpwalk(hostname, oid):
     else:
         return rowinfo
 
-def snmp_decode_string(text):
-    encoding = get_snmp_character_encoding(g_hostname)
+def snmp_decode_string(hostname, text):
+    encoding = get_snmp_character_encoding(hostname)
     if encoding:
         return text.decode(encoding)
     else:

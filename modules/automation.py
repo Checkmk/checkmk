@@ -261,10 +261,9 @@ def automation_get_autochecks(args):
 # Determine the type of the check, and how the parameters are being
 # constructed
 def automation_analyse_service(args):
-    global g_hostname
     hostname = args[0]
     servicedesc = args[1].decode("utf-8")
-    g_hostname = hostname # To be sure for all subfunctions
+    checks.set_hostname(hostname)
 
     # We just consider types of checks that are managed via WATO.
     # We have the following possible types of services:

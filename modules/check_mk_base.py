@@ -97,7 +97,6 @@ import cmk_base
 g_infocache                  = {} # In-memory cache of host info.
 g_agent_cache_info           = {} # Information about agent caching
 g_agent_already_contacted    = {} # do we have agent data from this host?
-g_hostname                   = "unknown" # Host currently being checked
 g_aggregated_service_results = {}   # store results for later submission
 g_inactive_timerperiods      = None # Cache for current state of timeperiods
 nagios_command_pipe          = None # Filedescriptor to open nagios command pipe.
@@ -1177,8 +1176,7 @@ def is_expected_agent_version(agent_version, expected_version):
 def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_agent_version = True):
     global g_aggregated_service_results
     g_aggregated_service_results = {}
-    global g_hostname
-    g_hostname = hostname
+    checks.set_hostname(hostname)
     error_sections = set([])
     check_table = get_precompiled_check_table(hostname, remove_duplicates=True,
                                     world=opt_keepalive and "active" or "config")
@@ -1192,8 +1190,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
 
         # Make a bit of context information globally available, so that functions
         # called by checks now this context
-        global g_service_description
-        g_service_description = description
+        checks.set_service_description(description)
         item_state.set_item_state_prefix(checkname, item)
 
         # Skip checks that are not in their check period

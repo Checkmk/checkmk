@@ -242,6 +242,16 @@ def initialize_check_type_caches():
     tcp_cache.update(check_info.keys())
 
 
+def set_hostname(hostname):
+    global g_hostname
+    g_hostname = hostname
+
+
+def set_service_description(descr):
+    global g_service_description
+    g_service_description = descr
+
+
 #.
 #   .--Check API-----------------------------------------------------------.
 #   |             ____ _               _         _    ____ ___             |
@@ -270,6 +280,9 @@ OID_END_BIN          = snmp.OID_END_BIN
 OID_END_OCTET_STRING = snmp.OID_END_OCTET_STRING
 binstring_to_int     = snmp.binstring_to_int
 
+# Is set before check execution
+g_hostname            = "unknown" # Host currently being checked
+g_service_description = None
 
 def saveint(i):
     try:

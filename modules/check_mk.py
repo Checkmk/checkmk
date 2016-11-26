@@ -338,7 +338,7 @@ def output_check_info():
 
 
 def active_check_service_description(act_info, params):
-    return sanitize_service_description(act_info["service_description"](params).replace('$HOSTNAME$', g_hostname))
+    return sanitize_service_description(act_info["service_description"](params).replace('$HOSTNAME$', checks.g_hostname))
 
 
 def active_check_arguments(hostname, description, args):
@@ -1453,8 +1453,7 @@ def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"
     precomp_table = []
     for check_type, item, params, description, _unused_deps in host_checks:
         # make these globals available to the precompile function
-        global g_service_description
-        g_service_description = description
+        checks.set_service_description(description)
         item_state.set_item_state_prefix(check_type, item)
 
         aggr_name = aggregated_service_name(hostname, description)
@@ -3630,8 +3629,7 @@ def config_timestamp():
 def cleanup_globals():
     global g_agent_already_contacted
     g_agent_already_contacted = {}
-    global g_hostname
-    g_hostname = "unknown"
+    checks.set_hostname("unknown")
     global g_item_state
     g_item_state = {}
     global g_infocache

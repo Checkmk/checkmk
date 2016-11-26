@@ -33,6 +33,11 @@ import sys
 import itertools
 
 
+# Quote string for use as arguments on the shell
+def quote_shell_string(s):
+    return "'" + s.replace("'", "'\"'\"'") + "'"
+
+
 # Works with Check_MK version (without tailing .cee and/or .demo)
 def is_daily_build_version(v):
     return len(v) == 10 or '-' in v

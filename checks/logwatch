@@ -831,8 +831,7 @@ def check_logwatch_ec(item, params, info):
 
     # Get the logwatch patterns if they are not already precompiled
     # The precompile feature is not required when using the cmc as core
-    # HACK: opt_keepalive is used to detect cmc
-    if not opt_keepalive and "logwatch_settings" not in params:
+    if not is_cmc() and "logwatch_settings" not in params:
         params = logwatch_ec_precompile(g_hostname, item, params)
 
     # Keep track of reclassifed lines
@@ -852,8 +851,7 @@ def check_logwatch_ec(item, params, info):
         logfile_reclassify_settings["reclassify_patterns"] = []
         logfile_reclassify_settings["reclassify_states"]   = {}
         # Determine logwatch patterns specifically for this logfile
-        # HACK: opt_keepalive is used to detect cmc
-        if opt_keepalive:
+        if is_cmc():
             logfile_settings = service_extra_conf(g_hostname, logfile, logwatch_rules)
             for settings in logfile_settings:
                 add_reclassify_settings(settings)
@@ -1172,8 +1170,7 @@ def logwatch_ec_precompile(hostname, item, params):
 
     params["service_level"] = get_effective_service_level()
 
-    # HACK: opt_keepalive is used to detect cmc
-    if (opt_keepalive or not params.get("logwatch_reclassify")):
+    if (is_cmc() or not params.get("logwatch_reclassify")):
         params.update({"logwatch_settings": []})
         return params
 

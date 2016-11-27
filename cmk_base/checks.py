@@ -324,9 +324,11 @@ host_extra_conf_merged   = rulesets.host_extra_conf_merged
 get_rule_options         = rulesets.get_rule_options
 all_matching_hosts       = rulesets.all_matching_hosts
 
+checkgroup_parameters    = config.checkgroup_parameters
 tags_of_host             = config.tags_of_host
 nagios_illegal_chars     = config.nagios_illegal_chars
 is_ipv6_primary          = config.is_ipv6_primary
+is_cmc                   = config.is_cmc
 
 get_age_human_readable   = render.approx_age
 get_bytes_human_readable = render.bytes
@@ -404,13 +406,15 @@ def get_percent_human_readable(perc, precision=2):
 # Counter handling
 #
 
-set_item_state     = item_state.set_item_state
-get_item_state     = item_state.get_item_state
-clear_item_state   = item_state.clear_item_state
-get_rate           = item_state.get_rate
-get_average        = item_state.get_average
+set_item_state                 = item_state.set_item_state
+get_item_state                 = item_state.get_item_state
+get_all_item_states            = item_state.get_all_item_states
+clear_item_state               = item_state.clear_item_state
+clear_item_states_by_full_keys = item_state.clear_item_states_by_full_keys
+get_rate                       = item_state.get_rate
+get_average                    = item_state.get_average
 # TODO: Cleanup checks and deprecate this
-last_counter_wrap  = item_state.last_counter_wrap
+last_counter_wrap              = item_state.last_counter_wrap
 
 SKIP  = item_state.SKIP
 RAISE = item_state.RAISE

@@ -28,11 +28,8 @@
 # variables that can be overridden in main.mk. Some configuration
 # variables are preset in checks/* as well.
 
-import cmk
-import cmk_base.rulesets as rulesets
-
-# This must be set after all imports and before the first config var
-_vars_before = set(globals().keys() + ["_vars_before"])
+import cmk as _cmk
+import cmk_base.rulesets as _rulesets
 
 monitoring_core                    = "nagios" # other option: "cmc"
 mkeventd_enabled                   = False # Set by OMD hook
@@ -126,10 +123,10 @@ all_hosts                            = []
 # TODO: This is a derived variable. Should be handled like others
 # (hosttags, service_service_levels, ...)
 host_paths                           = {}
-snmp_hosts                           = [ (['snmp'], rulesets.ALL_HOSTS) ]
-tcp_hosts                            = [ (['tcp'], rulesets.ALL_HOSTS),
-                                         (rulesets.NEGATE, ['snmp'], rulesets.ALL_HOSTS),
-                                         (['!ping'], rulesets.ALL_HOSTS) ]
+snmp_hosts                           = [ (['snmp'], _rulesets.ALL_HOSTS) ]
+tcp_hosts                            = [ (['tcp'], _rulesets.ALL_HOSTS),
+                                         (_rulesets.NEGATE, ['snmp'], _rulesets.ALL_HOSTS),
+                                         (['!ping'], _rulesets.ALL_HOSTS) ]
 bulkwalk_hosts                       = []
 snmpv2c_hosts                        = []
 snmp_without_sys_descr               = []
@@ -180,8 +177,8 @@ extra_summary_service_conf           = {}
 extra_nagios_conf                    = ""
 service_descriptions                 = {}
 donation_hosts                       = []
-donation_command                     = 'mail -r checkmk@yoursite.de  -s "Host donation %s" donatehosts@mathias-kettner.de' % cmk.__version__
-scanparent_hosts                     = [ ( rulesets.ALL_HOSTS ) ]
+donation_command                     = 'mail -r checkmk@yoursite.de  -s "Host donation %s" donatehosts@mathias-kettner.de' % _cmk.__version__
+scanparent_hosts                     = [ ( _rulesets.ALL_HOSTS ) ]
 host_attributes                      = {} # needed by WATO, ignored by Check_MK
 ping_levels                          = [] # special parameters for host/PING check_command
 host_check_commands                  = [] # alternative host check instead of check_icmp

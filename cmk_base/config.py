@@ -509,4 +509,4 @@ def is_cluster(hostname):
 #   '----------------------------------------------------------------------'
 
 def is_cmc():
-    return config.monitoring_core == "cmc"
+    return monitoring_core == "cmc"

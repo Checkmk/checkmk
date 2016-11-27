@@ -450,6 +450,31 @@ def host_is_member_of_site(hostname, site):
     return True
 
 
+#
+# IPv4/IPv6
+#
+
+
+def is_ipv6_primary(hostname):
+    dual_stack_host = is_ipv4v6_host(hostname)
+    return (not dual_stack_host and is_ipv6_host(hostname)) \
+            or (dual_stack_host and rulesets.host_extra_conf(hostname, primary_address_family) == "ipv6")
+
+
+def is_ipv4v6_host(hostname):
+    tags = tags_of_host(hostname)
+    return "ip-v6" in tags and "ip-v4" in tags
+
+
+def is_ipv6_host(hostname):
+    return "ip-v6" in tags_of_host(hostname)
+
+
+def is_ipv4_host(hostname):
+    # Either explicit IPv4 or implicit (when host is not an IPv6 host)
+    return "ip-v4" in tags_of_host(hostname) or "ip-v6" not in tags_of_host(hostname)
+
+
 #.
 #   .--Cluster-------------------------------------------------------------.
 #   |                    ____ _           _                                |

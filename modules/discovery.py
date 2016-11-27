@@ -27,6 +27,7 @@
 from cmk.regex import regex
 import cmk.tty as tty
 import cmk.paths
+import cmk.defines as defines
 
 import cmk_base.config as config
 import cmk_base.console as console
@@ -326,7 +327,7 @@ def check_discovery(hostname, ipaddress=None):
                 info = ", ".join([ "%s:%d" % e for e in affected_check_types.items() ])
                 st = params.get(params_key, default_state)
                 status = worst_monitoring_state(status, st)
-                infotexts.append("%d %s services (%s)%s" % (count, title, info, state_markers[st]))
+                infotexts.append("%d %s services (%s)%s" % (count, title, info, checks.state_markers[st]))
 
                 if params.get("inventory_rediscovery", False):
                     mode = params["inventory_rediscovery"]["mode"]
@@ -390,7 +391,7 @@ def check_discovery(hostname, ipaddress=None):
         add_keepalive_active_check_result(hostname, output)
         return status
     else:
-        sys.stdout.write(core_state_names[status] + " - " + output)
+        sys.stdout.write(defines.short_service_state_name(status) + " - " + output)
         sys.exit(status)
 
 

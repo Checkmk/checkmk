@@ -58,6 +58,7 @@ from cmk.regex import regex
 import cmk.store as store
 import cmk.tty as tty
 import cmk.render as render
+import cmk.defines as defines
 import cmk.crash_reporting as crash_reporting
 import cmk.cpu_tracking as cpu_tracking
 import cmk.paths
@@ -129,12 +130,6 @@ opt_oids                     = []
 opt_extra_oids               = []
 opt_force                    = False
 fake_dns                     = False
-
-# Names of texts usually output by checks
-core_state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]
-
-# Symbolic representations of states in plugin output
-state_markers = ["", "(!)", "(!!)", "(?)"]
 
 
 class MKAgentError(Exception):
@@ -1132,7 +1127,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
         add_keepalive_active_check_result(hostname, output)
         console.verbose(output)
     else:
-        console.output(core_state_names[status] + " - " + output.encode('utf-8'))
+        console.output(defines.short_service_state_name(status) + " - " + output.encode('utf-8'))
 
     return status
 
@@ -1612,7 +1607,7 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
         infotext.startswith("WARN -") or
         infotext.startswith("CRIT -") or
         infotext.startswith("UNKNOWN -")):
-        infotext = core_state_names[state] + " - " + infotext
+        infotext = defines.short_service_state_name(state) + " - " + infotext
 
     # make sure that plugin output does not contain a vertical bar. If that is the
     # case then replace it with a Uniocode "Light vertical bar

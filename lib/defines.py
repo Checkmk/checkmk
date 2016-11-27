@@ -55,15 +55,18 @@ def service_state_name(state_num, deflt=""):
     return core_state_names().get(state_num, deflt)
 
 
-def short_service_state_name(state_num, deflt=""):
-    states = {
+def short_service_state_names():
+    return {
         -1: _("PEND"),
          0: _("OK"),
          1: _("WARN"),
          2: _("CRIT"),
          3: _("UNKN"),
     }
-    return states.get(state_num, deflt)
+
+
+def short_service_state_name(state_num, deflt=""):
+    return short_service_state_names().get(state_num, deflt)
 
 
 def host_state_name(state_num, deflt=""):

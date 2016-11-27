@@ -67,8 +67,9 @@ import cmk_base.default_config as default_config
 import cmk_base.item_state as item_state
 
 # TODO: Clean up all calls and remove these aliases
-tags_of_host = config.tags_of_host
-is_cluster   = config.is_cluster
+tags_of_host    = config.tags_of_host
+is_cluster      = config.is_cluster
+is_ipv6_primary = config.is_ipv6_primary
 
 # This is needed to make the inv_info var which is normally registered in
 # inventory.py available when the file is not loaded.
@@ -406,22 +407,6 @@ def is_ping_host(hostname):
 def is_dual_host(hostname):
     return is_tcp_host(hostname) and is_snmp_host(hostname)
 
-def is_ipv4_host(hostname):
-    # Either explicit IPv4 or implicit (when host is not an IPv6 host)
-    return "ip-v4" in tags_of_host(hostname) or "ip-v6" not in tags_of_host(hostname)
-
-def is_ipv6_host(hostname):
-    return "ip-v6" in tags_of_host(hostname)
-
-def is_ipv6_primary(hostname):
-    dual_stack_host = is_ipv4v6_host(hostname)
-    return (not dual_stack_host and is_ipv6_host(hostname)) \
-            or (dual_stack_host and rulesets.host_extra_conf(hostname, config.primary_address_family) == "ipv6")
-
-def is_ipv4v6_host(hostname):
-    tags = tags_of_host(hostname)
-    return "ip-v6" in tags and "ip-v4" in tags
-
 def has_management_board(hostname):
     return "management_protocol" in config.host_attributes.get(hostname, {})
 
@@ -545,15 +530,6 @@ def parents_of(hostname):
 
 # TODO: Remove this when checks have been moved to cmk_base.checks
 hosttags_match_taglist = rulesets.hosttags_match_taglist
-get_rule_options = rulesets.get_rule_options
-
-def host_extra_conf_merged(hostname, conf):
-    rule_dict = {}
-    for rule in rulesets.host_extra_conf(hostname, conf):
-        for key, value in rule.items():
-            rule_dict.setdefault(key, value)
-    return rule_dict
-
 
 def convert_boolean_service_ruleset(ruleset, with_foreign_hosts):
     new_rules = []
@@ -1318,7 +1294,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
     # speed up multiple lookup of same host
     check_table_cache = cmk_base.config_cache.get_dict("check_tables")
     if not skip_autochecks and use_cache and hostname in check_table_cache:
-        if remove_duplicates and is_dual_host(hostname):
+        if remove_duplicates and config.is_dual_host(hostname):
             return remove_duplicate_checks(check_table_cache[hostname])
         else:
             return check_table_cache[hostname]
@@ -1765,8 +1741,8 @@ def do_update_dns_cache():
         # Use intelligent logic. This prevents DNS lookups for hosts
         # with statically configured addresses, etc.
         for family in [ 4, 6]:
-            if (family == 4 and is_ipv4_host(hostname)) \
-               or (family == 6 and is_ipv6_host(hostname)):
+            if (family == 4 and config.is_ipv4_host(hostname)) \
+               or (family == 6 and config.is_ipv6_host(hostname)):
                 console.verbose("%s (IPv%d)..." % (hostname, family))
                 try:
                     if family == 4:
@@ -2369,14 +2345,14 @@ def get_host_attributes(hostname, tags):
         attrs["alias"] = alias_of(hostname, hostname)
 
     # Now lookup configured IP addresses
-    if is_ipv4_host(hostname):
+    if config.is_ipv4_host(hostname):
         attrs["_ADDRESS_4"] = ip_address_of(hostname, 4)
         if attrs["_ADDRESS_4"] == None:
             attrs["_ADDRESS_4"] = ""
     else:
         attrs["_ADDRESS_4"] = ""
 
-    if is_ipv6_host(hostname):
+    if config.is_ipv6_host(hostname):
         attrs["_ADDRESS_6"] = ip_address_of(hostname, 6)
         if attrs["_ADDRESS_6"] == None:
             attrs["_ADDRESS_6"] = ""
@@ -2423,7 +2399,7 @@ def extra_host_attributes(hostname):
 def get_cluster_attributes(hostname, nodes):
     attrs = {}
     node_ips_4 = []
-    if is_ipv4_host(hostname):
+    if config.is_ipv4_host(hostname):
         for h in nodes:
             addr = ip_address_of(h, 4)
             if addr != None:
@@ -2432,7 +2408,7 @@ def get_cluster_attributes(hostname, nodes):
                 node_ips_4.append(fallback_ip_for(hostname, 4))
 
     node_ips_6 = []
-    if is_ipv6_host(hostname):
+    if config.is_ipv6_host(hostname):
         for h in nodes:
             addr = ip_address_of(h, 6)
             if addr != None:
@@ -2800,7 +2776,7 @@ def dump_host(hostname):
     ipaddress = ip_address_for_dump_host(hostname)
 
     addresses = ""
-    if not is_ipv4v6_host(hostname):
+    if not config.is_ipv4v6_host(hostname):
         addresses = ipaddress
     else:
         ipv6_primary = is_ipv6_primary(hostname)

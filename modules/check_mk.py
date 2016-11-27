@@ -1294,7 +1294,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
     # speed up multiple lookup of same host
     check_table_cache = cmk_base.config_cache.get_dict("check_tables")
     if not skip_autochecks and use_cache and hostname in check_table_cache:
-        if remove_duplicates and config.is_dual_host(hostname):
+        if remove_duplicates and is_dual_host(hostname):
             return remove_duplicate_checks(check_table_cache[hostname])
         else:
             return check_table_cache[hostname]

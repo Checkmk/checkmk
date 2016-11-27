@@ -62,34 +62,6 @@ notification_log        = cmk.paths.log_dir + "/notify.log"
 notification_logging    = 1
 notification_backlog    = 10 # keep the last 10 notification contexts for reference
 
-# Settings for new rule based notifications
-config.register("enable_rulebased_notifications", False)
-config.register("notification_fallback_email",    "")
-config.register("notification_rules",             [])
-# Check every 10 seconds for ripe bulks
-config.register("notification_bulk_interval",     10)
-config.register("notification_plugin_timeout",    60)
-
-# Notification Spooling.
-
-# Possible values for notification_spooling
-# "off"    - Direct local delivery without spooling
-# "local"  - Asynchronous local delivery by notification spooler
-# "remote" - Forward to remote site by notification spooler
-# "both"   - Asynchronous local delivery plus remote forwarding
-# False    - legacy: sync delivery  (and notification_spool_to)
-# True     - legacy: async delivery (and notification_spool_to)
-if cmk.is_raw_edition():
-    config.register("notification_spooling", "off")
-else:
-    config.register("notification_spooling", "local")
-
-# Legacy setting. The spool target is now specified in the
-# configuration of the spooler. notification_spool_to has
-# the tuple format (remote_host, tcp_port, also_local)
-config.register("notification_spool_to", None)
-
-
 notification_log_template = \
     u"$CONTACTNAME$ - $NOTIFICATIONTYPE$ - " \
     u"$HOSTNAME$ $HOSTSTATE$ - " \

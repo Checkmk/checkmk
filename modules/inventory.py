@@ -28,6 +28,7 @@ import gzip
 
 import cmk.tty as tty
 import cmk.paths
+import cmk.defines as defines
 
 import cmk_base.console as console
 import cmk_base.checks as checks
@@ -204,7 +205,7 @@ def do_inv_check(hostname):
         if not inv_tree.get("software") and opt_inv_sw_missing:
             infotext += ", software information is missing"
             state = opt_inv_sw_missing
-            infotext += state_markers[opt_inv_sw_missing]
+            infotext += checks.state_markers[opt_inv_sw_missing]
 
         if old_timestamp:
             path = inventory_archive_dir + "/" + hostname + "/%d" % old_timestamp
@@ -214,7 +215,7 @@ def do_inv_check(hostname):
                 infotext += ", software changes"
                 if opt_inv_sw_changes:
                     state = opt_inv_sw_changes
-                    infotext += state_markers[opt_inv_sw_changes]
+                    infotext += checks.state_markers[opt_inv_sw_changes]
 
             if inv_tree.get("hardware") != old_tree.get("hardware"):
                 infotext += ", hardware changes"
@@ -223,9 +224,9 @@ def do_inv_check(hostname):
                 else:
                     state = max(state, opt_inv_sw_changes)
                 if opt_inv_hw_changes:
-                    infotext += state_markers[opt_inv_hw_changes]
+                    infotext += checks.state_markers[opt_inv_hw_changes]
 
-        console.output(core_state_names[state] + " - " + infotext + "\n")
+        console.output(defines.short_service_state_name(state) + " - " + infotext + "\n")
         sys.exit(state)
 
     except Exception, e:
@@ -322,7 +323,7 @@ def do_inv_for_realhost(hostname):
 
 
 def get_inv_params(hostname, info_type):
-    return host_extra_conf_merged(hostname, config.inv_parameters.get(info_type, []))
+    return rulesets.host_extra_conf_merged(hostname, config.inv_parameters.get(info_type, []))
 
 
 # Returns the time stamp of the previous inventory with different

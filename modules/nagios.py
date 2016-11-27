@@ -626,7 +626,7 @@ define servicedependency {
         add_ping_service(outfile, hostname, host_attrs["address"], is_ipv6_primary(hostname) and 6 or 4,
                          "PING", host_attrs.get("_NODEIPS"))
 
-    if is_ipv4v6_host(hostname):
+    if config.is_ipv4v6_host(hostname):
         if is_ipv6_primary(hostname):
             add_ping_service(outfile, hostname, host_attrs["_ADDRESS_4"], 4,
                              "PING IPv4", host_attrs.get("_NODEIPS_4"))

@@ -533,7 +533,7 @@ n       if contact.get("fallback_contact", False) and contact.get("email"):
 def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
     # Right now we are only able to finalize notification plugins with dict parameters..
     if type(rule_parameters) == dict:
-        parameters = host_extra_conf_merged(hostname, config.notification_parameters.get(plugin, []))
+        parameters = rulesets.host_extra_conf_merged(hostname, config.notification_parameters.get(plugin, []))
         parameters.update(rule_parameters)
         return parameters
     else:

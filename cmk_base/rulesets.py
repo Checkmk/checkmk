@@ -160,6 +160,13 @@ def _convert_host_ruleset(ruleset, with_foreign_hosts):
     return new_rules
 
 
+def host_extra_conf_merged(hostname, conf):
+    rule_dict = {}
+    for rule in host_extra_conf(hostname, conf):
+        for key, value in rule.items():
+            rule_dict.setdefault(key, value)
+    return rule_dict
+
 #.
 #   .--Host matching-------------------------------------------------------.
 #   |  _   _           _                     _       _     _               |

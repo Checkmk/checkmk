@@ -29,6 +29,7 @@ import math
 
 import cmk.paths
 import cmk.render as render
+import cmk.defines as defines
 from cmk.exceptions import MKGeneralException
 
 import cmk_base
@@ -268,7 +269,16 @@ def set_service_description(descr):
 # TODO: Move imports directly to checks?
 import re
 import time
+import fnmatch
+import socket
+import sys
 from cmk.regex import regex
+
+# Names of texts usually output by checks
+core_state_names = defines.short_service_state_names()
+
+# Symbolic representations of states in plugin output
+state_markers = ["", "(!)", "(!!)", "(?)"]
 
 BINARY     = snmp.BINARY
 CACHED_OID = snmp.CACHED_OID
@@ -306,6 +316,18 @@ def no_discovery_possible(check_type, info):
     return []
 
 service_extra_conf       = rulesets.service_extra_conf
+host_extra_conf          = rulesets.host_extra_conf
+in_binary_hostlist       = rulesets.in_binary_hostlist
+in_extraconf_hostlist    = rulesets.in_extraconf_hostlist
+hosttags_match_taglist   = rulesets.hosttags_match_taglist
+host_extra_conf_merged   = rulesets.host_extra_conf_merged
+get_rule_options         = rulesets.get_rule_options
+all_matching_hosts       = rulesets.all_matching_hosts
+
+tags_of_host             = config.tags_of_host
+nagios_illegal_chars     = config.nagios_illegal_chars
+is_ipv6_primary          = config.is_ipv6_primary
+
 get_age_human_readable   = render.approx_age
 get_bytes_human_readable = render.bytes
 quote_shell_string       = cmk_base.utils.quote_shell_string

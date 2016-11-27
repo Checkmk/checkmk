@@ -1107,10 +1107,10 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             # apply check_parameters
             try:
                 if type(paramstring) == str:
-                    params = eval(paramstring)
+                    params = eval(paramstring, config.__dict__, config.__dict__)
                 else:
                     params = paramstring
-            except:
+            except Exception:
                 raise MKGeneralException("Invalid check parameter string '%s'" % paramstring)
 
             try:
@@ -1186,7 +1186,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             perfdata = []
 
         if check_source == "active":
-            params = eval(paramstring)
+            params = eval(paramstring, config.__dict__, config.__dict__)
 
         if check_source in [ "legacy", "active", "custom" ]:
             checkgroup = None

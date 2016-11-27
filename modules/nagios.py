@@ -1089,34 +1089,24 @@ if '-d' in sys.argv:
             if path not in filenames:
                 filenames.append(path)
 
-    output.write("check_info = {}\n" +
-                 "inv_info = {}\n" +
-                 "check_includes = {}\n" +
-                 "precompile_params = {}\n" +
-                 "factory_settings = {}\n" +
-                 "checkgroup_of = {}\n" +
-                 "check_config_variables = []\n" +
-                 "check_default_levels = {}\n" +
-                 "snmp_info = {}\n" +
-                 "snmp_scan_functions = {}\n")
-
+    output.write("checks.load_checks(%r)\n" % filenames)
     for filename in filenames:
-        output.write("# %s\n" % filename)
-        output.write(stripped_python_file(filename))
-        output.write("\n\n")
         console.verbose(" %s%s%s", tty.green, filename.split('/')[-1], tty.normal, stream=sys.stderr)
-
-    # Make sure all checks are converted to the new API
-    output.write("convert_check_info()\n")
-    output.write("initialize_check_type_caches()\n")
 
     # handling of clusters
     if is_cluster(hostname):
+        cluster_nodes = nodes_of(hostname)
         output.write("clusters = { %r : %r }\n" %
-                     (hostname, nodes_of(hostname)))
+                     (hostname, cluster_nodes))
         output.write("def is_cluster(hostname):\n    return True\n\n")
+
+        nodes_of_map = {hostname: cluster_nodes}
+        for node in nodes_of(hostname):
+            nodes_of_map[node] = None
+        output.write("def nodes_of(hostname):\n    return %r[hostname]\n\n" % nodes_of_map)
     else:
         output.write("clusters = {}\ndef is_cluster(hostname):\n    return False\n\n")
+        output.write("def nodes_of(hostname):\n    return None\n")
 
     output.write("def clusters_of(hostname):\n    return %r\n\n" % clusters_of(hostname))
 
@@ -1212,7 +1202,7 @@ if '-d' in sys.argv:
     # settings would get lost. But we only need to set those variables that
     # influence the check itself - not those needed during inventory.
     for var in checks.check_config_variables:
-        output.write("%s = %r\n" % (var, eval(var)))
+        output.write("%s = %r\n" % (var, getattr(config, var)))
 
     # The same for those checks that use the new API
     for check_type in needed_check_types:
@@ -1222,7 +1212,7 @@ if '-d' in sys.argv:
         # mem.* exist
         if check_type in checks.check_info:
             for var in checks.check_info[check_type].get("check_config_variables", []):
-                output.write("%s = %r\n" % (var, eval(var)))
+                output.write("%s = %r\n" % (var, getattr(config, var)))
 
 
     # perform actual check with a general exception handler

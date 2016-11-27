@@ -55,11 +55,8 @@ snmp_scan_functions                = {} # SNMP autodetection
 active_check_info                  = {} # definitions of active "legacy" checks
 special_agent_info                 = {}
 
-# Now read in all checks. Note: this is done *before* reading the
-# configuration, because checks define variables with default
-# values user can override those variables in his configuration.
-# If a check or check.include is both found in local/ and in the
-# normal structure, then only the file in local/ must be read!
+
+# Load all checks and includes
 def load():
     filelist = plugin_pathnames_in_directory(cmk.paths.local_checks_dir) \
              + plugin_pathnames_in_directory(cmk.paths.checks_dir)
@@ -69,6 +66,15 @@ def load():
     filelist = [ f for f in filelist if f.endswith(".include") ] + \
                [ f for f in filelist if not f.endswith(".include") ]
 
+    load_checks(filelist)
+
+
+# Now read in all checks. Note: this is done *before* reading the
+# configuration, because checks define variables with default
+# values user can override those variables in his configuration.
+# If a check or check.include is both found in local/ and in the
+# normal structure, then only the file in local/ must be read!
+def load_checks(filelist):
     varname = None
     value = None
     ignored_variable_types = [ type(lambda: None), type(os) ]

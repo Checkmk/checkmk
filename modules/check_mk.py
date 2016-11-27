@@ -71,11 +71,6 @@ tags_of_host    = config.tags_of_host
 is_cluster      = config.is_cluster
 is_ipv6_primary = config.is_ipv6_primary
 
-# This is needed to make the inv_info var which is normally registered in
-# inventory.py available when the file is not loaded.
-# TODO: Clean this up once
-inv_info = {}
-
 #   .--Prelude-------------------------------------------------------------.
 #   |                  ____           _           _                        |
 #   |                 |  _ \ _ __ ___| |_   _  __| | ___                   |
@@ -1226,6 +1221,22 @@ def get_single_oid(hostname, ipaddress, oid):
 #   | Code dealing with clusters (virtual hosts that are used to deal with |
 #   | services that can move between physical nodes.                       |
 #   '----------------------------------------------------------------------'
+
+# Returns the nodes of a cluster, or None if hostname is
+# not a cluster
+def nodes_of(hostname):
+    nodes_of_cache = cmk_base.config_cache.get_dict("nodes_of")
+    nodes = nodes_of_cache.get(hostname, False)
+    if nodes != False:
+        return nodes
+
+    for tagged_hostname, nodes in config.clusters.items():
+        if hostname == tagged_hostname.split("|")[0]:
+            nodes_of_cache[hostname] = nodes
+            return nodes
+
+    nodes_of_cache[hostname] = None
+    return None
 
 
 # If host is node of one or more clusters, return a list of the cluster host names.
@@ -3658,10 +3669,10 @@ def compute_check_parameters(host, checktype, item, params):
             new_params = {}
 
         # Merge user's default settings onto it
-        if def_levels_varname and (def_levels_varname in globals()):
-            def_levels = eval(def_levels_varname)
+        if def_levels_varname and hasattr(config, def_levels_varname):
+            def_levels = getattr(config, def_levels_varname)
             if type(def_levels) == dict:
-                new_params.update(eval(def_levels_varname))
+                new_params.update(def_levels)
 
         # Merge params from inventory onto it
         new_params.update(params)

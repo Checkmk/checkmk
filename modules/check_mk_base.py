@@ -336,7 +336,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
     info_type = check_type.split(".")[0]
     if info_type in checks.snmp_info:
         oid_info = checks.snmp_info[info_type]
-    elif info_type in inv_info:
+    elif info_type in globals().get("inv_info", {}):
         oid_info = inv_info[info_type].get("snmp_info")
     else:
         oid_info = None
@@ -1739,26 +1739,10 @@ def make_utf8(x):
 def i_am_root():
     return os.getuid() == 0
 
-# Returns the nodes of a cluster, or None if hostname is
-# not a cluster
-def nodes_of(hostname):
-    nodes_of_cache = cmk_base.config_cache.get_dict("nodes_of")
-    nodes = nodes_of_cache.get(hostname, False)
-    if nodes != False:
-        return nodes
-
-    for tagged_hostname, nodes in config.clusters.items():
-        if hostname == tagged_hostname.split("|")[0]:
-            nodes_of_cache[hostname] = nodes
-            return nodes
-
-    nodes_of_cache[hostname] = None
-    return None
-
 def check_uses_snmp(check_type):
     info_type = check_type.split(".")[0]
     return checks.snmp_info.get(info_type) != None or \
-       (info_type in inv_info and "snmp_info" in inv_info[info_type])
+       (info_type in globals().get("inv_info", {}) and "snmp_info" in inv_info[info_type])
 
 
 def worst_monitoring_state(status_a, status_b):

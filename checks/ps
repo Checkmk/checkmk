@@ -78,19 +78,14 @@ ANY_USER = None
 GRAB_USER = False
 
 
-# FIXME: Direct access to g_item_state is not allowed in checks normally,
-# but there is no such API to access and modify it like it is needed here.
 def ps_cleanup_counters(parsed):
     # remove legacy key used for some kind of caching
-    try:
-        del g_item_state["last.cleared.ps_"]
-    except KeyError:
-        pass
+    cleanup_idents = ["last.cleared.ps_"]
 
     pids = ps_get_current_pids(parsed)
+    cleanup_idents += ps_get_counters_to_delete(pids)
 
-    for ident in ps_get_counters_to_delete(pids):
-        del g_item_state[ident]
+    clear_item_states_by_full_keys(cleanup_idents)
 
 
 # Get the idents of the counters which can be deleted because the process id of
@@ -101,7 +96,7 @@ def ps_cleanup_counters(parsed):
 # New magic keys:        ('ps', None, 'ps_wmic.kernel.692'): (1448633487.573496, 1092007),
 def ps_get_counters_to_delete(pids):
     counters_to_delete = []
-    for ident, state in g_item_state.iteritems():
+    for ident, state in get_all_item_states().items():
         ident_type = type(ident)
         if ident_type == tuple and ident[0] == "ps":
             check_ident = ident[2]

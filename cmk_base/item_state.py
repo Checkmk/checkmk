@@ -93,10 +93,22 @@ def get_item_state(user_key, default=None):
     return g_item_state.get(_unique_item_state_key(user_key), default)
 
 
+def get_all_item_states():
+    return g_item_state
+
+
 def clear_item_state(user_key):
     key = _unique_item_state_key(user_key)
     if key in g_item_state:
         del g_item_state[key]
+
+
+def clear_item_states_by_full_keys(full_keys):
+    for key in full_keys:
+        try:
+            del g_item_state[key]
+        except KeyError:
+            pass
 
 
 def set_item_state_prefix(*args):

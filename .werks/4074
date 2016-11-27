@@ -1,0 +1,9 @@
+Title: check_ftp: Fixed possible wrong service description caused by unintended use of global variable
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1480249368
+Class: fix
+
+

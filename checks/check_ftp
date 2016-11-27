@@ -73,7 +73,7 @@ def check_ftp_arguments(params):
 
 def check_ftp_get_item(params):
     if type(params) == tuple:
-        return "FTP " + args[0]
+        return "FTP " + params[0]
     else:
         if "port" in params and params["port"] != 21:
             return "FTP Port " + str(params["port"])

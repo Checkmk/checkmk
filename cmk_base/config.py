@@ -39,8 +39,7 @@ from cmk_base.default_config import *
 
 def get_variable_names():
     """Provides the list of all known configuration variables."""
-    return list(set(default_config.__dict__.keys())\
-                    .difference(default_config._vars_before))
+    return [ k for k in default_config.__dict__.keys() if k[0] != "_" ]
 
 
 def get_default_config():

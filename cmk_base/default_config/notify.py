@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import cmk
+import cmk as _cmk
 
 # Settings for new rule based notifications
 enable_rulebased_notifications = False
@@ -43,7 +43,7 @@ notification_plugin_timeout    = 60
 # "both"   - Asynchronous local delivery plus remote forwarding
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
-if cmk.is_raw_edition():
+if _cmk.is_raw_edition():
     notification_spooling = "off"
 else:
     notification_spooling = "local"

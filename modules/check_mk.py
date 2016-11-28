@@ -3747,6 +3747,7 @@ def output_profile():
 #   '----------------------------------------------------------------------'
 
 register_sigint_handler()
+# TODO: Why are we loading the checks in all modes? This is useless in some modes!
 checks.load()
 
 opt_split_rrds = False

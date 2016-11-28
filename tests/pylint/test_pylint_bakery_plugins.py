@@ -6,17 +6,13 @@ import sys
 from testlib import repo_path
 import testlib.pylint_cmk as pylint_cmk
 
-def test_pylint_inv():
+def test_pylint_bakery_plugins():
     base_path = pylint_cmk.get_test_dir()
 
-    f = file(base_path + "/cmk-inv.py", "w")
+    f = file(base_path + "/cmk-bakery-plugins.py", "w")
 
     # add the modules
     for path in pylint_cmk.ordered_module_files():
-        pylint_cmk.add_file(f, path)
-
-    # Also add inventory plugins
-    for path in pylint_cmk.check_files(repo_path() + "/inventory"):
         pylint_cmk.add_file(f, path)
 
     # Also add bakery plugins
@@ -27,5 +23,4 @@ def test_pylint_inv():
     f.close()
 
     exit_code = pylint_cmk.run_pylint(base_path, cleanup_test_dir=True)
-    assert exit_code == 0, "PyLint found an error in inventory " \
-                           "or agent bakery plugins"
+    assert exit_code == 0, "PyLint found an error in agent bakery plugins"

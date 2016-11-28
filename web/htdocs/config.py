@@ -297,10 +297,10 @@ class LoggedInUser(object):
     def __init__(self, user_id):
         self.id = user_id
 
+        self._load_confdir()
         self._load_roles()
         self._load_attributes()
         self._load_permissions()
-        self._load_confdir()
         self._load_site_config()
 
 
@@ -342,12 +342,14 @@ class LoggedInUser(object):
 
 
     def _load_attributes(self):
-        if self.id in multisite_users:
-            self.attributes = multisite_users[self.id]
-        else:
-            self.attributes = {
-                "roles" : self.role_ids,
-            }
+        self.attributes = self.load_file("cached_profile", None)
+        if self.attributes == None:
+            if self.id in multisite_users:
+                self.attributes = multisite_users[self.id]
+            else:
+                self.attributes = {
+                    "roles" : self.role_ids,
+                }
 
         self.alias = self.attributes.get("alias", self.id)
         self.email = self.attributes.get("email", self.id)

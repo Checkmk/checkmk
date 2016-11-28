@@ -4367,8 +4367,8 @@ class ModeAuditLog(WatoMode):
 
 
     def buttons(self):
-        home_button()
         changelog_button()
+        home_button()
         if self._log_exists() and config.user.may("wato.auditlog") and config.user.may("wato.edit"):
             html.context_button(_("Download"),
                 html.makeactionuri([("_action", "csv")]), "download")

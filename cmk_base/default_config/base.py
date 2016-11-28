@@ -53,6 +53,7 @@ cluster_max_cachefile_age          = 90   # secs.
 piggyback_max_cachefile_age        = 3600  # secs
 piggyback_translation              = [] # Ruleset for translating piggyback host names
 simulation_mode                    = False
+fake_dns                           = False
 agent_simulator                    = False
 perfdata_format                    = "pnp" # also possible: "standard"
 check_mk_perfdata_with_times       = True

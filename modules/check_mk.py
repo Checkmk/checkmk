@@ -1656,8 +1656,10 @@ def lookup_ip_address(hostname, family=None):
         family = is_ipv6_primary(hostname) and 6 or 4
 
     # Quick hack, where all IP addresses are faked (--fake-dns)
-    if fake_dns:
-        return fake_dns
+    if opt_fake_dns:
+        return opt_fake_dns
+    if config.fake_dns:
+        return config.fake_dns
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
     elif config.simulation_mode or opt_use_snmp_walk or \
@@ -3734,6 +3736,11 @@ def output_profile():
         sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
 
 
+def enforce_fake_dns(ip):
+    global opt_fake_dns
+    opt_fake_dns = ip
+
+
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -3796,6 +3803,7 @@ opt_inv_sw_changes = 0
 opt_inv_sw_missing = 0
 opt_inv_fail_status = 1 # State in case of an error (default: WARN)
 _verbosity = 0
+opt_fake_dns = None
 
 # Scan modifying options first (makes use independent of option order)
 for o,a in opts:
@@ -3821,7 +3829,7 @@ for o,a in opts:
         opt_dont_submit = True
         item_state.continue_on_counter_wrap()
     elif o == '--fake-dns':
-        fake_dns = a
+        enforce_fake_dns(a)
     elif o == '--keepalive':
         opt_keepalive = True
     elif o == '--keepalive-fd':

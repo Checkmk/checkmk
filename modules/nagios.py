@@ -167,7 +167,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     outfile.write("  hostgroups\t\t\t%s\n" % make_utf8(hostgroups))
 
     # Contact groups
-    cgrs = config.host_contactgroups_of([hostname])
+    cgrs = config.contactgroups_of(hostname)
     if len(cgrs) > 0:
         outfile.write("  contact_groups\t\t%s\n" % make_utf8(",".join(cgrs)))
         contactgroups_to_define.update(cgrs)
@@ -1111,7 +1111,6 @@ if '-d' in sys.argv:
     output.write("def clusters_of(hostname):\n    return %r\n\n" % clusters_of(hostname))
 
     # snmp hosts
-    output.write("def is_snmp_host(hostname):\n   return    % r\n\n" % is_snmp_host(hostname))
     output.write("def is_snmpv3_host(hostname):\n   return  % r\n\n" % is_snmpv3_host(hostname))
     output.write("def is_usewalk_host(hostname):\n   return % r\n\n" % is_usewalk_host(hostname))
     output.write("def snmpv3_contexts_of_host(hostname):\n    return % r\n\n" % snmpv3_contexts_of_host(hostname))

@@ -71,6 +71,7 @@ import cmk_base.console as console
 import cmk_base.item_state as item_state
 import cmk_base.checks as checks
 import cmk_base.config as config
+import cmk_base.piggyback as piggyback
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -350,7 +351,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
         if not ignore_check_interval \
            and not opt_dont_submit \
            and check_interval is not None and os.path.exists(cache_path) \
-           and cachefile_age(cache_path) < check_interval * 60:
+           and cmk_base.utils.cachefile_age(cache_path) < check_interval * 60:
             # cache file is newer than check_interval, skip this check
             raise MKSkipCheck()
 
@@ -420,7 +421,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
             # role of the pig here). Why? We definitely haven't
             # reached that host so its data from the last time is
             # not valid any more.
-            remove_piggyback_info_from(hostname)
+            piggyback.remove_piggyback_info_from(hostname)
 
             if not piggy_output:
                 raise
@@ -438,7 +439,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
 
     info, piggybacked, persisted, agent_cache_info = parse_info(output.split("\n"), hostname)
     g_agent_cache_info.setdefault(hostname, {}).update(agent_cache_info)
-    store_piggyback_info(hostname, piggybacked)
+    piggyback.store_piggyback_info(hostname, piggybacked)
     store_persisted_info(hostname, persisted)
     store_cached_hostinfo(hostname, info)
 
@@ -505,169 +506,13 @@ def add_persisted_info(hostname, info):
         store_persisted_info(hostname, persisted)
 
 
-def get_piggyback_files(hostname):
-    files = []
-    dir = cmk.paths.tmp_dir + "/piggyback/" + hostname
-
-    # remove_piggyback_info_from() may remove stale piggyback files of one source
-    # host and also the directory "hostname" when the last piggyback file for the
-    # current host was removed. This may cause the os.listdir() to fail. We treat
-    # this as regular case: No piggyback files for the current host.
-    try:
-        source_hosts = os.listdir(dir)
-    except OSError, e:
-        if e.errno == 2: # No such file or directory
-            return files
-        else:
-            raise
-
-    for sourcehost in source_hosts:
-        if sourcehost in ['.', '..'] or sourcehost.startswith(".new."):
-            continue
-
-        file_path = dir + "/" + sourcehost
-
-        try:
-            file_age = cachefile_age(file_path)
-        except MKGeneralException, e:
-            continue # File might've been deleted. That's ok.
-
-        # Cleanup outdated files
-        if file_age > config.piggyback_max_cachefile_age:
-            console.verbose("Piggyback file %s is outdated by %d seconds. Deleting it.\n" %
-                (file_path, file_age - config.piggyback_max_cachefile_age))
-
-            try:
-                os.remove(file_path)
-            except OSError, e:
-                if e.errno == 2: # No such file or directory
-                    pass # Deleted in the meantime. That's ok.
-                else:
-                    raise
-
-            continue
-
-        files.append((sourcehost, file_path))
-
-    return files
-
-
-def has_piggyback_info(hostname):
-    return get_piggyback_files(hostname) != []
-
-
-def get_piggyback_info(hostname):
-    output = ""
-    if not hostname:
-        return output
-    for sourcehost, file_path in get_piggyback_files(hostname):
-        console.verbose("Using piggyback information from host %s.\n" % sourcehost)
-        output += file(file_path).read()
-    return output
-
-
-def store_piggyback_info(sourcehost, piggybacked):
-    piggyback_path = cmk.paths.tmp_dir + "/piggyback/"
-    for backedhost, lines in piggybacked.items():
-        console.verbose("Storing piggyback data for %s.\n" % backedhost)
-        dir = piggyback_path + backedhost
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-        out = file(dir + "/.new." + sourcehost, "w")
-        for line in lines:
-            out.write("%s\n" % line)
-        os.rename(dir + "/.new." + sourcehost, dir + "/" + sourcehost)
-
-    # Remove piggybacked information that is not
-    # being sent this turn
-    remove_piggyback_info_from(sourcehost, keep=piggybacked.keys())
-
-
-def remove_piggyback_info_from(sourcehost, keep=None):
-    if keep is None:
-        keep = []
-
-    removed = 0
-    piggyback_path = cmk.paths.tmp_dir + "/piggyback/"
-    if not os.path.exists(piggyback_path):
-        return # Nothing to do
-
-    for backedhost in os.listdir(piggyback_path):
-        if backedhost not in ['.', '..'] and backedhost not in keep:
-            path = piggyback_path + backedhost + "/" + sourcehost
-            if os.path.exists(path):
-                console.verbose("Removing stale piggyback file %s\n" % path)
-                os.remove(path)
-                removed += 1
-
-            # Remove directory if empty
-            try:
-                os.rmdir(piggyback_path + backedhost)
-            except:
-                pass
-    return removed
-
-
-def translate_piggyback_host(sourcehost, backedhost):
-    translation = get_piggyback_translation(sourcehost)
-    return do_hostname_translation(translation, backedhost)
-
-
-# When changing this keep it in sync with
-# a) check_mk_base.py: do_hostname_translation()
-# b) wato.py:          do_hostname_translation()
-# FIXME TODO: Move the common do_hostname_translation() in a central Check_MK module
-def do_hostname_translation(translation, hostname):
-    # 1. Case conversion
-    caseconf = translation.get("case")
-    if caseconf == "upper":
-        hostname = hostname.upper()
-    elif caseconf == "lower":
-        hostname = hostname.lower()
-
-    # 2. Drop domain part (not applied to IP addresses!)
-    if translation.get("drop_domain") and not hostname[0].isdigit():
-        hostname = hostname.split(".", 1)[0]
-
-    # To make it possible to match umlauts we need to change the hostname
-    # to a unicode string which can then be matched with regexes etc.
-    # We assume the incoming name is correctly encoded in UTF-8
-    hostname = decode_incoming_string(hostname)
-
-    # 3. Multiple regular expression conversion
-    if type(translation.get("regex")) == tuple:
-        translations = [translation.get("regex")]
-    else:
-        translations = translation.get("regex", [])
-
-    for expr, subst in translations:
-        if not expr.endswith('$'):
-            expr += '$'
-        rcomp = regex(expr)
-        # re.RegexObject.sub() by hand to handle non-existing references
-        mo = rcomp.match(hostname)
-        if mo:
-            hostname = subst
-            for nr, text in enumerate(mo.groups("")):
-                hostname = hostname.replace("\\%d" % (nr+1), text)
-            break
-
-    # 4. Explicity mapping
-    for from_host, to_host in translation.get("mapping", []):
-        if from_host == hostname:
-            hostname = to_host
-            break
-
-    return hostname.encode('utf-8') # change back to UTF-8 encoded string
-
-
 def read_cache_file(relpath, max_cache_age):
     # Cache file present, caching allowed? -> read from cache
     cachefile = cmk.paths.tcp_cache_dir + "/" + relpath
     if os.path.exists(cachefile) and (
         (opt_use_cachefile and ( not opt_no_cache ) )
         or (config.simulation_mode and not opt_no_cache) ):
-        if cachefile_age(cachefile) <= max_cache_age or config.simulation_mode:
+        if cmk_base.utils.cachefile_age(cachefile) <= max_cache_age or config.simulation_mode:
             f = open(cachefile, "r")
             result = f.read(10000000)
             f.close()
@@ -677,7 +522,7 @@ def read_cache_file(relpath, max_cache_age):
         else:
             console.vverbose("Skipping cache file %s: Too old "
                              "(age is %d sec, allowed is %s sec)\n" %
-                   (cachefile, cachefile_age(cachefile), max_cache_age))
+                             (cachefile, cmk_base.utils.cachefile_age(cachefile), max_cache_age))
 
     if config.simulation_mode and not opt_no_cache:
         raise MKAgentError("Simulation mode and no cachefile present.")
@@ -921,7 +766,7 @@ def parse_info(lines, hostname):
             if not host:
                 host = None
             else:
-                host = translate_piggyback_host(hostname, host)
+                host = piggyback.translate_piggyback_host(hostname, host)
                 if host == hostname:
                     host = None # unpiggybacked "normal" host
 
@@ -994,13 +839,6 @@ def decode_incoming_string(s, encoding="utf-8"):
     except:
         return s.decode(config.fallback_agent_output_encoding)
 
-
-def cachefile_age(filename):
-    try:
-        return time.time() - os.stat(filename)[8]
-    except Exception, e:
-        raise MKGeneralException("Cannot determine age of cache file %s: %s" \
-                                 % (filename, e))
 
 #.
 #   .--Checking------------------------------------------------------------.
@@ -1310,7 +1148,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
         is_management_snmp = False
 
     for checkname, item, params, description, aggrname in check_table:
-        if is_snmp_check(checkname) and is_management_snmp:
+        if checks.is_snmp_check(checkname) and is_management_snmp:
             address = management_addr
         else:
             address = ipaddress
@@ -1386,34 +1224,6 @@ def is_manual_check(hostname, check_type, item):
                                     world=opt_keepalive and "active" or "config",
                                     skip_autochecks=True)
     return (check_type, item) in manual_checks
-
-
-def is_snmp_check(check_name):
-    cache = cmk_base.config_cache.get_dict("is_snmp_check")
-
-    try:
-        return cache[check_name]
-    except KeyError:
-        snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
-
-        result = check_name.split(".")[0] in snmp_checks
-        cache[check_name] = result
-        return result
-
-
-def is_tcp_check(check_name):
-    cache = cmk_base.config_cache.get_dict("is_tcp_check")
-
-    try:
-        return cache[check_name]
-    except KeyError:
-        tcp_checks = cmk_base.runtime_cache.get_set("check_type_tcp")
-        snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
-
-        result = check_name in tcp_checks \
-                  and check_name.split(".")[0] not in snmp_checks # snmp check basename
-        cache[check_name] = result
-        return result
 
 
 def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):
@@ -1739,6 +1549,7 @@ def make_utf8(x):
 def i_am_root():
     return os.getuid() == 0
 
+# TODO: What about config.is_snmp_check?
 def check_uses_snmp(check_type):
     info_type = check_type.split(".")[0]
     return checks.snmp_info.get(info_type) != None or \

@@ -156,7 +156,7 @@ def do_inv_for_realhost(hostname):
 
     # If this is an SNMP host then determine the SNMP sections
     # that this device supports.
-    if is_snmp_host(hostname):
+    if config.is_snmp_host(hostname):
         snmp_check_types = snmp_scan(hostname, ipaddress, for_inv=True)
     else:
         snmp_check_types = []

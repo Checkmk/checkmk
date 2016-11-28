@@ -65,6 +65,7 @@ import cmk_base.checks as checks
 import cmk_base.config as config
 import cmk_base.default_config as default_config
 import cmk_base.item_state as item_state
+import cmk_base.piggyback as piggyback
 
 # TODO: Clean up all calls and remove these aliases
 tags_of_host    = config.tags_of_host
@@ -885,9 +886,6 @@ def get_snmp_character_encoding(hostname):
 def is_snmpv3_host(hostname):
     return type(snmp_credentials_of(hostname)) == tuple
 
-def is_snmp_host(hostname):
-    return rulesets.in_binary_hostlist(hostname, config.snmp_hosts)
-
 def is_bulkwalk_host(hostname):
     if config.bulkwalk_hosts:
         return rulesets.in_binary_hostlist(hostname, config.bulkwalk_hosts)
@@ -1231,11 +1229,11 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
         passed = True
         # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
         # agent setting. Remove them without rediscovery). Same for agent based checks.
-        if not is_snmp_host(hostname) and is_snmp_check(checkname) and \
+        if not config.is_snmp_host(hostname) and checks.is_snmp_check(checkname) and \
            (not config.has_management_board(hostname) or config.management_protocol(hostname) != "snmp"):
                 passed = False
-        if not config.is_tcp_host(hostname) and not has_piggyback_info(hostname) \
-           and is_tcp_check(checkname):
+        if not config.is_tcp_host(hostname) and not piggyback.has_piggyback_info(hostname) \
+           and checks.is_tcp_check(checkname):
             passed = False
         is_checkname_valid_cache[the_id] = passed
         return passed
@@ -1567,7 +1565,7 @@ def lookup_ip_address(hostname, family=None):
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
     elif config.simulation_mode or opt_use_snmp_walk or \
-         (is_usewalk_host(hostname) and is_snmp_host(hostname)):
+         (is_usewalk_host(hostname) and config.is_snmp_host(hostname)):
         if family == 4:
             return "127.0.0.1"
         else:
@@ -2086,7 +2084,7 @@ def do_flush(hosts):
             sys.stdout.flush()
 
         # piggy files from this as source host
-        d = remove_piggyback_info_from(host)
+        d = piggyback.remove_piggyback_info_from(host)
         if d:
             sys.stdout.write(tty.bold + tty.magenta  + " piggyback(%d)" % d)
 
@@ -2558,7 +2556,7 @@ def do_snmpwalk_on(hostname, filename):
 def do_snmpget(oid, hostnames):
     if len(hostnames) == 0:
         for host in config.all_active_realhosts():
-            if is_snmp_host(host):
+            if config.is_snmp_host(host):
                 hostnames.append(host)
 
     for host in hostnames:
@@ -2710,7 +2708,7 @@ def dump_host(hostname):
     if len(parents_list) > 0:
         sys.stdout.write(tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n")
     sys.stdout.write(tty.yellow + "Host groups:            " + tty.normal + make_utf8(", ".join(config.hostgroups_of(hostname))) + "\n")
-    sys.stdout.write(tty.yellow + "Contact groups:         " + tty.normal + make_utf8(", ".join(config.host_contactgroups_of([hostname]))) + "\n")
+    sys.stdout.write(tty.yellow + "Contact groups:         " + tty.normal + make_utf8(", ".join(config.contactgroups_of(hostname))) + "\n")
 
     agenttypes = []
     if config.is_tcp_host(hostname):
@@ -2720,7 +2718,7 @@ def dump_host(hostname):
         else:
             agenttypes.append("TCP (port: %d)" % agent_port_of(hostname))
 
-    if is_snmp_host(hostname):
+    if config.is_snmp_host(hostname):
         if is_usewalk_host(hostname):
             agenttypes.append("SNMP (use stored walk)")
         else:
@@ -2757,7 +2755,7 @@ def dump_host(hostname):
         shn = summary_hostname(hostname)
         sys.stdout.write(tty.yellow + "Summary host:           " + tty.normal + shn + "\n")
         sys.stdout.write(tty.yellow + "Summary host groups:    " + tty.normal + ", ".join(config.summary_hostgroups_of(hostname)) + "\n")
-        sys.stdout.write(tty.yellow + "Summary contact groups: " + tty.normal + ", ".join(config.host_contactgroups_of([shn])) + "\n")
+        sys.stdout.write(tty.yellow + "Summary contact groups: " + tty.normal + ", ".join(config.contactgroups_of(shn)) + "\n")
         notperiod = (rulesets.host_extra_conf(hostname, config.summary_host_notification_periods) + [""])[0]
         sys.stdout.write(tty.yellow + "Summary notification:   " + tty.normal + notperiod + "\n")
     else:

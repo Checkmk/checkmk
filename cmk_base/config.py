@@ -470,10 +470,14 @@ def is_tcp_host(hostname):
     return rulesets.in_binary_hostlist(hostname, tcp_hosts)
 
 
+def is_snmp_host(hostname):
+    return rulesets.in_binary_hostlist(hostname, snmp_hosts)
+
+
 def is_ping_host(hostname):
     return not is_snmp_host(hostname) \
        and not is_tcp_host(hostname) \
-       and not has_piggyback_info(hostname) \
+       and not piggyback.has_piggyback_info(hostname) \
        and not has_management_board(hostname)
 
 
@@ -536,24 +540,25 @@ def summary_hostgroups_of(hostname):
     return rulesets.host_extra_conf(hostname, summary_host_groups)
 
 
-def host_contactgroups_of(hostlist):
+def contactgroups_of(hostname):
     cgrs = []
-    for host in hostlist:
-        # host_contactgroups may take single values as well as
-        # lists as item value. Of all list entries only the first
-        # one is used. The single-contact-groups entries are all
-        # recognized.
-        first_list = True
-        for entry in rulesets.host_extra_conf(host, host_contactgroups):
-            if type(entry) == list and first_list:
-                cgrs += entry
-                first_list = False
-            else:
-                cgrs.append(entry)
+
+    # host_contactgroups may take single values as well as
+    # lists as item value. Of all list entries only the first
+    # one is used. The single-contact-groups entries are all
+    # recognized.
+    first_list = True
+    for entry in rulesets.host_extra_conf(hostname, host_contactgroups):
+        if type(entry) == list and first_list:
+            cgrs += entry
+            first_list = False
+        else:
+            cgrs.append(entry)
+
     if monitoring_core == "nagios" and enable_rulebased_notifications:
         cgrs.append("check-mk-notify")
-    return list(set(cgrs))
 
+    return list(set(cgrs))
 
 
 #.

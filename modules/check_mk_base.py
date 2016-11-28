@@ -336,8 +336,8 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
     info_type = check_type.split(".")[0]
     if info_type in checks.snmp_info:
         oid_info = checks.snmp_info[info_type]
-    elif info_type in globals().get("inv_info", {}):
-        oid_info = inv_info[info_type].get("snmp_info")
+    elif info_type in "inventory_plugins" in sys.modules:
+        oid_info = inventory_plugins.inv_info[info_type].get("snmp_info")
     else:
         oid_info = None
 
@@ -1742,7 +1742,8 @@ def i_am_root():
 def check_uses_snmp(check_type):
     info_type = check_type.split(".")[0]
     return checks.snmp_info.get(info_type) != None or \
-       (info_type in globals().get("inv_info", {}) and "snmp_info" in inv_info[info_type])
+       ("inventory_plugins" in sys.modules
+        and "snmp_info" in inventory_plugins.inv_info.get(info_type, {}))
 
 
 def worst_monitoring_state(status_a, status_b):

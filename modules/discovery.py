@@ -771,7 +771,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
 
     found = []
     if for_inv:
-        items = inv_info.items()
+        items = inventory_plugins.inv_info.items()
     else:
         items = checks.check_info.items()
 
@@ -792,8 +792,8 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
             scan_function = checks.snmp_scan_functions[check_type]
         elif basename in checks.snmp_scan_functions:
             scan_function = checks.snmp_scan_functions[basename]
-        elif basename in inv_info:
-            scan_function = inv_info[basename].get("snmp_scan_function")
+        elif "inventory_plugins" in sys.modules and basename in inventory_plugins.inv_info:
+            scan_function = inventory_plugins.inv_info[basename].get("snmp_scan_function")
         else:
             scan_function = None
 

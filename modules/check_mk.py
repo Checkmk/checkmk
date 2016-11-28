@@ -299,7 +299,7 @@ except Exception, e:
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def output_check_info():
+def do_output_check_info():
     all_check_manuals = man_pages.all_man_pages()
 
     checks_sorted = checks.check_info.items() + \
@@ -329,52 +329,6 @@ def output_check_info():
                   (check_type, what, title))
         except Exception, e:
             sys.stderr.write("ERROR in check_type %s: %s\n" % (check_type, e))
-
-
-def active_check_service_description(act_info, params):
-    return sanitize_service_description(act_info["service_description"](params).replace('$HOSTNAME$', checks.g_hostname))
-
-
-def active_check_arguments(hostname, description, args):
-    if type(args) in [ str, unicode ]:
-        return args
-
-    elif type(args) == list:
-        passwords, formated = [], []
-        for arg in args:
-            arg_type = type(arg)
-
-            if arg_type in [ int, float ]:
-                formated.append("%s" % arg)
-
-            elif arg_type in [ str, unicode ]:
-                formated.append(cmk_base.utils.quote_shell_string(arg))
-
-            elif arg_type == tuple and len(arg) == 3:
-                pw_ident, preformated_arg = arg[1:]
-                try:
-                    password = config.stored_passwords[pw_ident]["password"]
-                except KeyError:
-                    configuration_warning("The stored password \"%s\" used by service \"%s\" on host "
-                                          "\"%s\" does not exist (anymore)." %
-                                            (pw_ident, description, hostname))
-                    password = "%%%"
-
-                pw_start_index = str(preformated_arg.index("%s"))
-                formated.append(cmk_base.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
-                passwords.append((str(len(formated)), pw_start_index, pw_ident))
-
-            else:
-                raise MKGeneralException("Invalid argument for command line: %s" % arg)
-
-        if passwords:
-            formated = [ "--pwstore=%s" % ",".join([ "@".join(p) for p in passwords ]) ] + formated
-
-        return " ".join(formated)
-
-    else:
-        raise MKGeneralException("The check argument function needs to return either a list of arguments or a "
-                                 "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname, description))
 
 
 #.
@@ -1805,18 +1759,6 @@ def exit_code_spec(hostname):
     return spec
 
 
-# Remove illegal characters from a service description
-def sanitize_service_description(descr):
-    cache = cmk_base.config_cache.get_dict("sanitize_service_description")
-
-    try:
-        return cache[descr]
-    except KeyError:
-        new_descr = "".join([ c for c in descr if c not in config.nagios_illegal_chars ]).rstrip("\\")
-        cache[descr] = new_descr
-        return new_descr
-
-
 def service_description(hostname, check_type, item):
     if check_type not in checks.check_info:
         if item:
@@ -1854,7 +1796,7 @@ def service_description(hostname, check_type, item):
     if add_item and item_type in [ str, unicode, int, long ]:
         # Remove characters from item name that are banned by Nagios
         if item_type in [ str, unicode ]:
-            item_safe = sanitize_service_description(item)
+            item_safe = checks.sanitize_service_description(item)
         else:
             item_safe = str(item)
 
@@ -3953,7 +3895,7 @@ try:
                 sys.stdout.write("\n")
             done = True
         elif o in [ '-L', '--list-checks' ]:
-            output_check_info()
+            do_output_check_info()
             done = True
         elif o == '-d':
             output_plain_hostinfo(a)

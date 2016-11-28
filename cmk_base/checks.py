@@ -61,6 +61,18 @@ special_agent_info                 = {}
 # reading in the configuration of the user.
 g_check_variables = []
 
+#.
+#   .--Loading-------------------------------------------------------------.
+#   |                _                    _ _                              |
+#   |               | |    ___   __ _  __| (_)_ __   __ _                  |
+#   |               | |   / _ \ / _` |/ _` | | '_ \ / _` |                 |
+#   |               | |__| (_) | (_| | (_| | | | | | (_| |                 |
+#   |               |_____\___/ \__,_|\__,_|_|_| |_|\__, |                 |
+#   |                                               |___/                  |
+#   +----------------------------------------------------------------------+
+#   | Loading of check plugins                                             |
+#   '----------------------------------------------------------------------'
+
 # Load all checks and includes
 def load():
     filelist = plugin_pathnames_in_directory(cmk.paths.local_checks_dir) \
@@ -129,6 +141,7 @@ def add_check_variables_to_config():
     for varname in g_check_variables:
         value = globals()[varname]
         config.register(varname, value)
+
 
 # Load user configured values of check related configuration variables
 # into this module to make it available during checking.
@@ -271,6 +284,74 @@ def initialize_check_type_caches():
     tcp_cache = cmk_base.runtime_cache.get_set("check_type_tcp")
     tcp_cache.update(check_info.keys())
 
+#.
+#   .--Active Checks-------------------------------------------------------.
+#   |       _        _   _              ____ _               _             |
+#   |      / \   ___| |_(_)_   _____   / ___| |__   ___  ___| | _____      |
+#   |     / _ \ / __| __| \ \ / / _ \ | |   | '_ \ / _ \/ __| |/ / __|     |
+#   |    / ___ \ (__| |_| |\ V /  __/ | |___| | | |  __/ (__|   <\__ \     |
+#   |   /_/   \_\___|\__|_| \_/ \___|  \____|_| |_|\___|\___|_|\_\___/     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Active check specific functions                                      |
+#   '----------------------------------------------------------------------'
+
+def active_check_service_description(act_info, params):
+    return sanitize_service_description(act_info["service_description"](params).replace('$HOSTNAME$', g_hostname))
+
+
+def active_check_arguments(hostname, description, args):
+    if type(args) in [ str, unicode ]:
+        return args
+
+    elif type(args) == list:
+        passwords, formated = [], []
+        for arg in args:
+            arg_type = type(arg)
+
+            if arg_type in [ int, float ]:
+                formated.append("%s" % arg)
+
+            elif arg_type in [ str, unicode ]:
+                formated.append(cmk_base.utils.quote_shell_string(arg))
+
+            elif arg_type == tuple and len(arg) == 3:
+                pw_ident, preformated_arg = arg[1:]
+                try:
+                    password = config.stored_passwords[pw_ident]["password"]
+                except KeyError:
+                    configuration_warning("The stored password \"%s\" used by service \"%s\" on host "
+                                          "\"%s\" does not exist (anymore)." %
+                                            (pw_ident, description, hostname))
+                    password = "%%%"
+
+                pw_start_index = str(preformated_arg.index("%s"))
+                formated.append(cmk_base.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
+                passwords.append((str(len(formated)), pw_start_index, pw_ident))
+
+            else:
+                raise MKGeneralException("Invalid argument for command line: %s" % arg)
+
+        if passwords:
+            formated = [ "--pwstore=%s" % ",".join([ "@".join(p) for p in passwords ]) ] + formated
+
+        return " ".join(formated)
+
+    else:
+        raise MKGeneralException("The check argument function needs to return either a list of arguments or a "
+                                 "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname, description))
+
+#.
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Misc check related helper functions                                  |
+#   '----------------------------------------------------------------------'
 
 def set_hostname(hostname):
     global g_hostname
@@ -280,6 +361,19 @@ def set_hostname(hostname):
 def set_service_description(descr):
     global g_service_description
     g_service_description = descr
+
+
+# Remove illegal characters from a service description
+def sanitize_service_description(descr):
+    cache = cmk_base.config_cache.get_dict("sanitize_service_description")
+
+    try:
+        return cache[descr]
+    except KeyError:
+        new_descr = "".join([ c for c in descr
+                             if c not in config.nagios_illegal_chars ]).rstrip("\\")
+        cache[descr] = new_descr
+        return new_descr
 
 
 #.

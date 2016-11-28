@@ -10609,8 +10609,8 @@ def mode_roles(phase):
         # Actions
         table.cell(_("Actions"), css="buttons")
         edit_url = folder_preserving_link([("mode", "edit_role"), ("edit", id)])
-        clone_url = html.makeactionuri([("_clone", id)])
-        delete_url = html.makeactionuri([("_delete", id)])
+        clone_url = make_action_link([("mode", "roles"), ("_clone", id)])
+        delete_url = make_action_link([("mode", "roles"), ("_delete", id)])
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Clone"), "clone")
         if not role.get("builtin"):

@@ -9,6 +9,9 @@
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts
 
+    WATO:
+    * 4077 FIX: Fixed "Request URI too long" when cloning role after editing another one
+
 
 1.2.8p14:
     Checks & Agents:

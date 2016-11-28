@@ -1,0 +1,10 @@
+Title: Fixed "Request URI too long" when cloning role after editing another one
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p15
+Date: 1480340280
+
+

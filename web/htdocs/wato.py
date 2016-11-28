@@ -4828,7 +4828,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
 
         forms.end()
         html.jsbutton("activate_affected", _("Activate affected"),
-                      "activate_changes(\"affected\")")
+                      "activate_changes(\"affected\")", cssclass="hot")
         html.jsbutton("activate_selected", _("Activate selected"),
                       "activate_changes(\"selected\")")
 

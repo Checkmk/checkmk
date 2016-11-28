@@ -129,7 +129,7 @@ opt_keepalive_fd             = None
 opt_oids                     = []
 opt_extra_oids               = []
 opt_force                    = False
-fake_dns                     = False
+opt_fake_dns                 = False
 
 
 class MKAgentError(Exception):

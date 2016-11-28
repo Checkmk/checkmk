@@ -84,16 +84,20 @@ def load_checks(filelist):
 
     loaded_files = set()
     for f in filelist:
-        if not f.endswith("~"): # ignore emacs-like backup files
-            file_name = f.rsplit("/", 1)[-1]
-            if file_name not in loaded_files:
-                try:
-                    loaded_files.add(file_name)
-                    execfile(f, globals())
-                except Exception, e:
-                    console.error("Error in plugin file %s: %s\n", f, e)
-                    if cmk.debug.enabled():
-                        raise
+        if f == "." or f[-1] == "~":
+            continue # ignore editor backup / temp files
+
+        file_name = os.path.basename(f)
+        if file_name in loaded_files:
+            continue # skip already loaded files (e.g. from local)
+
+        try:
+            loaded_files.add(file_name)
+            execfile(f, globals())
+        except Exception, e:
+            console.error("Error in plugin file %s: %s\n", f, e)
+            if cmk.debug.enabled():
+                raise
 
     ignored_variable_types = [ type(lambda: None), type(os) ]
     for varname in set(globals().keys()).difference(known_vars):

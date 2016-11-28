@@ -72,7 +72,7 @@ def inventory_ntp_summary(info):
     if ntp_inventory_mode not in [ "summary", "both" ]:
         return []
     if len(info) > 0:
-        return [(None, "ntp_default_levels")]
+        return [(None, {})]
 
 def ntp_fmt_time(t):
     if t == '-':

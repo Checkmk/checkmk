@@ -53,7 +53,7 @@ def load(): # pylint: disable=function-redefined
             continue
 
         try:
-            execfile(f)
+            execfile(f, globals(), globals())
         except Exception, e:
             console.error("Error in inventory plugin file %s: %s\n", f, e)
             if cmk.debug.enabled():

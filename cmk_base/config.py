@@ -210,6 +210,7 @@ def load(with_conf_d=True, validate_hosts=True):
     checks = static + checks
 
     initialize_check_caches()
+    cmk_base.checks.set_check_variables_from_config()
 
     # Check for invalid configuration variables
     vars_after_config = all_nonfunction_vars()

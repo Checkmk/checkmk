@@ -58,6 +58,7 @@
     * 4045 FIX: Tactical Overview: do not count OK events as problems
     * 4068 FIX: Fixed possible exception in case of wrong automation secrets between multiple sites...
     * 3992 FIX: netapp_api_connection: fixed GUI display bug when editing rules
+    * 4076 FIX: Git integration: Using mail address of user in author info
 
     Notifications:
     * 4042 FIX: Fix missing From address in synchronous SMTP notifications...

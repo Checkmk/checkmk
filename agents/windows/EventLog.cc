@@ -62,7 +62,7 @@ HMODULE load_library_ext(LPCWSTR dllpath) {
 
 class MessageResolver {
     std::wstring _name;
-    std::map<std::wstring, HMODULE> _cache;
+    std::map<std::wstring, HModuleWrapper> _cache;
 
     std::vector<std::wstring> getMessageFiles(LPCWSTR source) const {
         static const std::wstring base =
@@ -114,10 +114,9 @@ class MessageResolver {
             auto iter = _cache.find(dllpath);
             if (iter == _cache.end()) {
                 dll = load_library_ext(dllpath);
-                iter = _cache.insert(std::make_pair(std::wstring(dllpath), dll))
-                           .first;
+                _cache.emplace(std::wstring(dllpath), std::move(HModuleWrapper(dll)));
             } else {
-                dll = iter->second;
+                dll = iter->second.getHModule();
             }
 
             if (!dll) {
@@ -251,16 +250,15 @@ public:
 };
 
 EventLog::EventLog(LPCWSTR name)
-    : _name(name), _resolver(new MessageResolver(name)) {
-    open();
+    : _name(name), _log(name), _resolver(new MessageResolver(name)) {
     _buffer.resize(INIT_BUFFER_SIZE);
 }
 
-EventLog::~EventLog() { close(); }
+EventLog::~EventLog() {}
 
 void EventLog::reset() {
-    close();
-    open();
+    _log.reopen();
+    _buffer_offset = _buffer_used;  // enforce that a new chunk is fetched
 }
 
 std::wstring EventLog::getName() const { return _name; }
@@ -268,11 +266,11 @@ std::wstring EventLog::getName() const { return _name; }
 uint64_t EventLog::seek(uint64_t record_number) {
     DWORD oldest_record, record_count;
 
-    if (::GetOldestEventLogRecord(_log, &oldest_record) &&
+    if (_log.GetOldestEventLogRecord(&oldest_record) &&
         (record_number < oldest_record)) {
         // can't seek to older record
         _record_offset = oldest_record;
-    } else if (::GetNumberOfEventLogRecords(_log, &record_count) &&
+    } else if (_log.GetNumberOfEventLogRecords(&record_count) &&
                (record_number > oldest_record + record_count)) {
         _record_offset = oldest_record + record_count;
     } else {
@@ -320,25 +318,14 @@ std::shared_ptr<IEventLogRecord> EventLog::read() {
     }
 }
 
-void EventLog::open() {
-    if ((_log = OpenEventLogW(nullptr, _name.c_str())) == nullptr) {
-        throw win_exception(std::string("failed to open eventlog: ") +
-                            to_utf8(_name.c_str()));
-    }
-
-    _buffer_offset = _buffer_used;  // enforce that a new chunk is fetched
-}
-
-void EventLog::close() { CloseEventLog(_log); }
-
 bool EventLog::fillBuffer() {
     _buffer_offset = 0;
 
     // test if we're at the end of the log, as we don't get
     // a proper error message when reading beyond the last log record
     DWORD oldest_record, record_count;
-    if (::GetOldestEventLogRecord(_log, &oldest_record) &&
-        ::GetNumberOfEventLogRecords(_log, &record_count)) {
+    if (_log.GetOldestEventLogRecord(&oldest_record) &&
+        _log.GetNumberOfEventLogRecords(&record_count)) {
         if (_record_offset >= oldest_record + record_count) {
             return false;
         }
@@ -355,10 +342,9 @@ bool EventLog::fillBuffer() {
 
     DWORD bytes_required;
 
-    if (ReadEventLogW(_log, flags, _record_offset,
-                      static_cast<void *>(&_buffer[0]), _buffer.size(),
-                      &_buffer_used, &bytes_required)) {
-        return true;
+    if (_log.ReadEventLogW(flags, _record_offset, _buffer,
+                           &_buffer_used, &bytes_required)) {
+      return true;
     } else {
         DWORD error = GetLastError();
         if (error == ERROR_HANDLE_EOF) {

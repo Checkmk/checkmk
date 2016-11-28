@@ -1,0 +1,25 @@
+Title: Activate Changes has been reworked
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480321696
+Class: feature
+
+The activate changes dialog of WATO has been reworked to improve several things:
+
+<ul>
+    <li>It is now possible to add a comment during an activation. This optional comment
+        is written to the audit log and can be used to document the logical reason for
+        the changes you have made.</li>
+    <li>Several activations can now run in parallel while they not affect the same site.
+        This means that on each site one activation can be executed at the same time.</li>
+    <li>Pending changes are now correctly acknowledged. In previous version when you started
+        an activating, made a change during the run, the run acknowledged this just created
+        change even if it has not been activated by the just finished activation run.</li>
+    <li>Pending changes are now tracked for each site individually. Previous version only
+        knew whether or not a change has been activated on <i>all</i> sites.</li>
+    <li>Fixed locking problems during activation leading to possible issues when multiple
+        users execute activations in parallel.</li>
+    <li>You can now select a custom collection of sites and activate them in a bulk.</li>
+</ul>

@@ -11,9 +11,8 @@ def test_pylint_bakery_plugins():
 
     f = file(base_path + "/cmk-bakery-plugins.py", "w")
 
-    # add the modules
-    for path in pylint_cmk.ordered_module_files():
-        pylint_cmk.add_file(f, path)
+    pylint_cmk.add_file(f, os.path.realpath(repo_path()
+                                            + "/../cmc/cmk_base/cee/agent_bakery_plugins.py"))
 
     # Also add bakery plugins
     for path in pylint_cmk.check_files(os.path.realpath(repo_path()

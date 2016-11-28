@@ -408,7 +408,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
 
     output = ""
     agent_failed_exc = None
-    if is_tcp_host(hostname):
+    if config.is_tcp_host(hostname):
         try:
             output = get_agent_info(hostname, ipaddress, max_cache_age)
         except MKTimeout:
@@ -429,7 +429,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
 
     output += piggy_output
 
-    if len(output) == 0 and is_tcp_host(hostname):
+    if len(output) == 0 and config.is_tcp_host(hostname):
         raise MKAgentError("Empty output from agent")
     elif len(output) == 0:
         return
@@ -1299,13 +1299,13 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
 
     num_success = 0
 
-    if has_management_board(hostname):
+    if config.has_management_board(hostname):
         # this assumes all snmp checks belong to the management board if there is one with snmp
         # protocol. If at some point we support having both host and management board queried
         # through snmp we have to decide which check belongs where at discovery time and change
         # all data structures, including in the nagios interface...
-        is_management_snmp = management_protocol(hostname) == "snmp"
-        management_addr = management_address(hostname)
+        is_management_snmp = config.management_protocol(hostname) == "snmp"
+        management_addr = config.management_address(hostname)
     else:
         is_management_snmp = False
 
@@ -1324,7 +1324,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
     if fetch_agent_version:
         cmk_info = { "version" : "(unknown)" }
         try:
-            if is_tcp_host(hostname):
+            if config.is_tcp_host(hostname):
                 for line in get_info_for_check(hostname, ipaddress, 'check_mk'):
                     value = " ".join(line[1:]) if len(line) > 1 else None
                     cmk_info[str(line[0][:-1].lower())] = value

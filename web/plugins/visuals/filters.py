@@ -1215,6 +1215,40 @@ declare_filter(302, FilterHostAuxTags())
 
 
 
+# choices = [ (value, "readable"), .. ]
+class FilterCustomVarChoice(Filter):
+    def __init__(self, name, title, info, custom_var, choices):
+        Filter.__init__(self, name, title, info, [ name ], [])
+        self.custom_var = custom_var
+        self.choices    = choices
+
+
+    def display(self):
+        selection = [ ("", "") ] + self.choices
+        html.sorted_select(self.name, selection)
+
+
+    def filter(self, infoname):
+        this_custom_value = html.var(self.name)
+        if this_custom_value:
+            return "Filter: %s_custom_variables = %s %s\n" % \
+                   ( self.info, self.custom_var, lqencode(this_custom_value) )
+        else:
+            return ""
+
+
+
+declare_filter(310, FilterCustomVarChoice(
+        "svc_service_level", _("Service service level"),
+        "service", "EC_SL", config.mkeventd_service_levels ))
+
+
+declare_filter(310, FilterCustomVarChoice(
+        "hst_service_level", _("Host service level"),
+        "host", "EC_SL", config.mkeventd_service_levels ))
+
+
+
 class FilterStarred(FilterTristate):
     def __init__(self, what):
         self.what = what

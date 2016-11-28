@@ -413,7 +413,7 @@ define service {
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
     for command, description, has_perfdata in legchecks:
-        description = sanitize_service_description(description)
+        description = checks.sanitize_service_description(description)
         if do_omit_service(hostname, description):
             continue
 
@@ -469,13 +469,13 @@ define service {
             checks.set_hostname(hostname)
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = active_check_service_description(act_info, params)
+            description = checks.active_check_service_description(act_info, params)
 
             if do_omit_service(hostname, description):
                 continue
 
             # compute argument, and quote ! and \ for Nagios
-            args = active_check_arguments(hostname, description,
+            args = checks.active_check_arguments(hostname, description,
                                           act_info["argument_function"](params)).replace("\\", "\\\\").replace("!", "\\!")
 
             if description in used_descriptions:
@@ -531,7 +531,7 @@ define service {
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
             #                              we use "check-mk-custom"
             # "has_perfdata"  (optional)   If present and True, we activate perf_data
-            description = sanitize_service_description(entry["service_description"])
+            description = checks.sanitize_service_description(entry["service_description"])
             has_perfdata = entry.get("has_perfdata", False)
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")

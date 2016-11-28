@@ -31,6 +31,89 @@
 #include "stringutil.h"
 #include "types.h"
 
+class HModuleWrapper {
+public:
+    HModuleWrapper(HMODULE &hmodule) : _hmodule(hmodule) {}
+
+    ~HModuleWrapper() { close(); }
+
+    HModuleWrapper(const HModuleWrapper &) = delete;                  // Delete copy constructor
+
+    HModuleWrapper &operator=(const HModuleWrapper &) = delete;       // Delete assignment operator
+
+    HModuleWrapper(HModuleWrapper &&from) : _hmodule(from._hmodule) { // Move constructor
+        from._hmodule = nullptr;
+    }
+
+    HModuleWrapper &operator=(HModuleWrapper &&from) = delete;        // Move assignment operator
+
+//    HModuleWrapper &operator=(HModuleWrapper &&from) {              // Move assignment operator
+//        close();
+//        _hmodule = from._hmodule;
+//        from._hmodule = nullptr;
+//        return *this;
+//    }
+
+    HMODULE getHModule() { return _hmodule; };
+
+private:
+    HMODULE _hmodule;
+
+    void close() {
+        if (_hmodule != nullptr) {
+            FreeLibrary(_hmodule);
+            _hmodule = nullptr;
+        }
+    }
+};
+
+
+class EventlogHandle {
+public:
+    explicit EventlogHandle(const std::wstring &name) : _name(name) { open(); }
+
+    ~EventlogHandle() { close(); }
+
+    EventlogHandle(const EventlogHandle& logHandle) = delete;
+
+    void reopen() {
+        close();
+        open();
+    }
+
+    bool ReadEventLogW(DWORD dwReadFlags,
+                       DWORD dwRecordOffset, std::vector<BYTE> &buffer, DWORD *pnBytesRead,
+                       DWORD *pnMinNumberOfBytesNeeded) {
+      return ::ReadEventLogW(_handle, dwReadFlags, dwRecordOffset,
+                             &buffer[0], buffer.size(), pnBytesRead,
+                             pnMinNumberOfBytesNeeded);
+    }
+
+    DWORD GetOldestEventLogRecord(PDWORD record) {
+      return ::GetOldestEventLogRecord(_handle, record);
+    }
+
+    DWORD GetNumberOfEventLogRecords(PDWORD record) {
+        return ::GetNumberOfEventLogRecords(_handle, record);
+    }
+
+    void open() {
+        _handle = OpenEventLogW(nullptr, _name.c_str());
+        if (_handle == nullptr) {
+            throw win_exception(std::string("failed to open eventlog: ") +
+                                to_utf8(_name.c_str()));
+        }
+    }
+
+    void close() {
+        CloseEventLog(_handle);
+    }
+
+private:
+    std::wstring _name;
+    HANDLE _handle;
+};
+
 // forward declaration
 class MessageResolver;
 
@@ -75,17 +158,13 @@ public:
     std::vector<std::string> getMessageFiles(const char *source) const;
 
 private:
-    void open();
-
-    void close();
-
     bool fillBuffer();
 
 private:
     static const size_t INIT_BUFFER_SIZE = 64 * 1024;
 
     std::wstring _name;
-    HANDLE _log;
+    EventlogHandle _log;
     DWORD _record_offset{0};
     bool _seek_possible{true};
     std::vector<BYTE> _buffer;

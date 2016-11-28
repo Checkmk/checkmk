@@ -1,0 +1,10 @@
+Title: windows agent: fixed memory and file handle leak when using windows eventlog
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480325577
+Class: fix
+
+The windows agent did never close any dll files it opened...
+

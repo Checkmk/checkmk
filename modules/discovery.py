@@ -658,7 +658,7 @@ def gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
                 if check_type not in check_types and check_uses_snmp(check_type):
                     check_types.append(check_type)
 
-    if is_tcp_host(hostname) or has_piggyback_info(hostname):
+    if config.is_tcp_host(hostname) or has_piggyback_info(hostname):
         check_types += discoverable_check_types('tcp')
 
     return check_types
@@ -690,9 +690,9 @@ def gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
 # "raise"  -> let the exception come through
 def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error, ipaddress=None):
     services = []
-    if has_management_board(hostname):
-        protocol = management_protocol(hostname)
-        address = management_address(hostname)
+    if config.has_management_board(hostname):
+        protocol = config.management_protocol(hostname)
+        address = config.management_address(hostname)
         if not is_ipaddress(address):
             family = is_ipv6_primary(hostname) and 6 or 4
             address = cached_dns_lookup(address, family)

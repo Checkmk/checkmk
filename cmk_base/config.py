@@ -330,15 +330,15 @@ def collect_hosttags():
 
 
 #.
-#   .--Hosts---------------------------------------------------------------.
-#   |                       _   _           _                              |
-#   |                      | | | | ___  ___| |_ ___                        |
-#   |                      | |_| |/ _ \/ __| __/ __|                       |
-#   |                      |  _  | (_) \__ \ |_\__ \                       |
-#   |                      |_| |_|\___/|___/\__|___/                       |
+#   .--HostCollections-----------------------------------------------------.
+#   | _   _           _    ____      _ _           _   _                   |
+#   || | | | ___  ___| |_ / ___|___ | | | ___  ___| |_(_) ___  _ __  ___   |
+#   || |_| |/ _ \/ __| __| |   / _ \| | |/ _ \/ __| __| |/ _ \| '_ \/ __|  |
+#   ||  _  | (_) \__ \ |_| |__| (_) | | |  __/ (__| |_| | (_) | | | \__ \  |
+#   ||_| |_|\___/|___/\__|\____\___/|_|_|\___|\___|\__|_|\___/|_| |_|___/  |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  Helper functions for dealing with hosts.                            |
+#   |                                                                      |
 #   '----------------------------------------------------------------------'
 
 
@@ -442,6 +442,18 @@ def filter_active_hosts(hostlist, keep_offline_hosts=False, keep_duplicates=Fals
         return set(active_hosts)
 
 
+#.
+#   .--Hosts---------------------------------------------------------------.
+#   |                       _   _           _                              |
+#   |                      | | | | ___  ___| |_ ___                        |
+#   |                      | |_| |/ _ \/ __| __/ __|                       |
+#   |                      |  _  | (_) \__ \ |_\__ \                       |
+#   |                      |_| |_|\___/|___/\__|___/                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Helper functions for dealing with hosts.                            |
+#   '----------------------------------------------------------------------'
+
 def host_is_member_of_site(hostname, site):
     for tag in tags_of_host(hostname):
         if tag.startswith("site:"):
@@ -449,6 +461,24 @@ def host_is_member_of_site(hostname, site):
     # hosts without a site: tag belong to all sites
     return True
 
+
+#
+# Agent type
+#
+
+def is_tcp_host(hostname):
+    return rulesets.in_binary_hostlist(hostname, tcp_hosts)
+
+
+def is_ping_host(hostname):
+    return not is_snmp_host(hostname) \
+       and not is_tcp_host(hostname) \
+       and not has_piggyback_info(hostname) \
+       and not has_management_board(hostname)
+
+
+def is_dual_host(hostname):
+    return is_tcp_host(hostname) and is_snmp_host(hostname)
 
 #
 # IPv4/IPv6
@@ -473,6 +503,57 @@ def is_ipv6_host(hostname):
 def is_ipv4_host(hostname):
     # Either explicit IPv4 or implicit (when host is not an IPv6 host)
     return "ip-v4" in tags_of_host(hostname) or "ip-v6" not in tags_of_host(hostname)
+
+
+#
+# Management board
+#
+
+def has_management_board(hostname):
+    return "management_protocol" in host_attributes.get(hostname, {})
+
+
+def management_address(hostname):
+    if 'management_address' in host_attributes.get(hostname, {}):
+        return host_attributes[hostname]['management_address']
+    else:
+        return ipaddresses.get(hostname)
+
+
+def management_protocol(hostname):
+    return host_attributes[hostname]['management_protocol']
+
+
+#
+# Groups
+#
+
+def hostgroups_of(hostname):
+    return rulesets.host_extra_conf(hostname, host_groups)
+
+
+def summary_hostgroups_of(hostname):
+    return rulesets.host_extra_conf(hostname, summary_host_groups)
+
+
+def host_contactgroups_of(hostlist):
+    cgrs = []
+    for host in hostlist:
+        # host_contactgroups may take single values as well as
+        # lists as item value. Of all list entries only the first
+        # one is used. The single-contact-groups entries are all
+        # recognized.
+        first_list = True
+        for entry in rulesets.host_extra_conf(host, host_contactgroups):
+            if type(entry) == list and first_list:
+                cgrs += entry
+                first_list = False
+            else:
+                cgrs.append(entry)
+    if monitoring_core == "nagios" and enable_rulebased_notifications:
+        cgrs.append("check-mk-notify")
+    return list(set(cgrs))
+
 
 
 #.

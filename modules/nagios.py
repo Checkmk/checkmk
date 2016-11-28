@@ -157,7 +157,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     # Host groups: If the host has no hostgroups it gets the default
     # hostgroup (Nagios requires each host to be member of at least on
     # group.
-    hgs = hostgroups_of(hostname)
+    hgs = config.hostgroups_of(hostname)
     hostgroups = ",".join(hgs)
     if len(hgs) == 0:
         hostgroups = config.default_host_group
@@ -167,7 +167,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     outfile.write("  hostgroups\t\t\t%s\n" % make_utf8(hostgroups))
 
     # Contact groups
-    cgrs = host_contactgroups_of([hostname])
+    cgrs = config.host_contactgroups_of([hostname])
     if len(cgrs) > 0:
         outfile.write("  contact_groups\t\t%s\n" % make_utf8(",".join(cgrs)))
         contactgroups_to_define.update(cgrs)
@@ -221,7 +221,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
             if key[0] == '_':
                 outfile.write("  %s\t\t\t%s\n" % (key, value))
 
-        hgs = summary_hostgroups_of(hostname)
+        hgs = config.summary_hostgroups_of(hostname)
         hostgroups = ",".join(hgs)
         if len(hgs) == 0:
             hostgroups = config.default_host_group
@@ -454,7 +454,7 @@ define service {
         if entries:
             # Skip Check_MK HW/SW Inventory for all ping hosts, even when the user has enabled
             # the inventory for ping only hosts
-            if acttype == "cmk_inv" and is_ping_host(hostname):
+            if acttype == "cmk_inv" and config.is_ping_host(hostname):
                 continue
 
             active_checks_to_define.add(acttype)
@@ -1110,16 +1110,9 @@ if '-d' in sys.argv:
 
     output.write("def clusters_of(hostname):\n    return %r\n\n" % clusters_of(hostname))
 
-    has_board = has_management_board(hostname)
-    output.write("def has_management_board(hostname):\n    return %r\n\n" % has_board)
-    if has_board:
-        output.write("def management_address(hostname):\n    return %r\n\n" % management_address(hostname))
-        output.write("def management_protocol(hostname):\n    return %r\n\n" % management_protocol(hostname))
-
     # snmp hosts
     output.write("def is_snmp_host(hostname):\n   return    % r\n\n" % is_snmp_host(hostname))
     output.write("def is_snmpv3_host(hostname):\n   return  % r\n\n" % is_snmpv3_host(hostname))
-    output.write("def is_tcp_host(hostname):\n   return     % r\n\n" % is_tcp_host(hostname))
     output.write("def is_usewalk_host(hostname):\n   return % r\n\n" % is_usewalk_host(hostname))
     output.write("def snmpv3_contexts_of_host(hostname):\n    return % r\n\n" % snmpv3_contexts_of_host(hostname))
     output.write("def is_inline_snmp_host(hostname):\n   return        % r\n\n" % is_inline_snmp_host(hostname))

@@ -344,31 +344,6 @@ def do_output_check_info():
 #   '----------------------------------------------------------------------'
 # TODO: Move to config.
 
-def is_tcp_host(hostname):
-    return rulesets.in_binary_hostlist(hostname, config.tcp_hosts)
-
-def is_ping_host(hostname):
-    return not is_snmp_host(hostname) \
-       and not is_tcp_host(hostname) \
-       and not has_piggyback_info(hostname) \
-       and not has_management_board(hostname)
-
-def is_dual_host(hostname):
-    return is_tcp_host(hostname) and is_snmp_host(hostname)
-
-def has_management_board(hostname):
-    return "management_protocol" in config.host_attributes.get(hostname, {})
-
-def management_address(hostname):
-    if 'management_address' in config.host_attributes.get(hostname, {}):
-        return config.host_attributes[hostname]['management_address']
-    else:
-        return config.ipaddresses.get(hostname)
-
-def management_protocol(hostname):
-    return config.host_attributes[hostname]['management_protocol']
-
-
 # Returns a list of all hosts which are associated with this site,
 # but have been removed by the "only_hosts" rule. Normally these
 # are the hosts which have the tag "offline".
@@ -437,31 +412,6 @@ def alias_of(hostname, fallback):
     else:
         return aliases[0]
 
-
-
-def hostgroups_of(hostname):
-    return rulesets.host_extra_conf(hostname, config.host_groups)
-
-def summary_hostgroups_of(hostname):
-    return rulesets.host_extra_conf(hostname, config.summary_host_groups)
-
-def host_contactgroups_of(hostlist):
-    cgrs = []
-    for host in hostlist:
-        # host_contactgroups may take single values as well as
-        # lists as item value. Of all list entries only the first
-        # one is used. The single-contact-groups entries are all
-        # recognized.
-        first_list = True
-        for entry in rulesets.host_extra_conf(host, config.host_contactgroups):
-            if type(entry) == list and first_list:
-                cgrs += entry
-                first_list = False
-            else:
-                cgrs.append(entry)
-    if config.monitoring_core == "nagios" and config.enable_rulebased_notifications:
-        cgrs.append("check-mk-notify")
-    return list(set(cgrs))
 
 
 def parents_of(hostname):
@@ -911,8 +861,8 @@ def snmp_credentials_of(hostname):
     #  board and the host itself queried through snmp.
     #  The alternative is a lengthy and errorprone refactoring of the whole check-
     #  call hierarchy to get the credentials passed around.
-    if has_management_board(hostname)\
-            and management_protocol(hostname) == "snmp":
+    if config.has_management_board(hostname)\
+            and config.management_protocol(hostname) == "snmp":
         return config.host_attributes.get(hostname, {}).get("management_snmp_community", "public")
 
     try:
@@ -1253,13 +1203,13 @@ def host_of_clustered_service(hostname, servicedesc):
 
 def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='config', skip_autochecks=False):
 
-    if is_ping_host(hostname):
+    if config.is_ping_host(hostname):
         skip_autochecks = True
 
     # speed up multiple lookup of same host
     check_table_cache = cmk_base.config_cache.get_dict("check_tables")
     if not skip_autochecks and use_cache and hostname in check_table_cache:
-        if remove_duplicates and is_dual_host(hostname):
+        if remove_duplicates and config.is_dual_host(hostname):
             return remove_duplicate_checks(check_table_cache[hostname])
         else:
             return check_table_cache[hostname]
@@ -1282,9 +1232,9 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
         # Skip SNMP checks for non SNMP hosts (might have been discovered before with other
         # agent setting. Remove them without rediscovery). Same for agent based checks.
         if not is_snmp_host(hostname) and is_snmp_check(checkname) and \
-           (not has_management_board(hostname) or management_protocol(hostname) != "snmp"):
+           (not config.has_management_board(hostname) or config.management_protocol(hostname) != "snmp"):
                 passed = False
-        if not is_tcp_host(hostname) and not has_piggyback_info(hostname) \
+        if not config.is_tcp_host(hostname) and not has_piggyback_info(hostname) \
            and is_tcp_check(checkname):
             passed = False
         is_checkname_valid_cache[the_id] = passed
@@ -2447,7 +2397,7 @@ def list_all_hosts(hostgroups):
         if len(hostgroups) == 0:
             hostlist.append(hn)
         else:
-            for hg in hostgroups_of(hn):
+            for hg in config.hostgroups_of(hn):
                 if hg in hostgroups:
                     hostlist.append(hn)
                     break
@@ -2475,7 +2425,7 @@ def get_plain_hostinfo(hostname):
         return info
     else:
         info = ""
-        if is_tcp_host(hostname):
+        if config.is_tcp_host(hostname):
             ipaddress = lookup_ip_address(hostname)
             info += get_agent_info(hostname, ipaddress, 0)
         info += get_piggyback_info(hostname)
@@ -2759,11 +2709,11 @@ def dump_host(hostname):
         parents_list = parents_of(hostname)
     if len(parents_list) > 0:
         sys.stdout.write(tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n")
-    sys.stdout.write(tty.yellow + "Host groups:            " + tty.normal + make_utf8(", ".join(hostgroups_of(hostname))) + "\n")
-    sys.stdout.write(tty.yellow + "Contact groups:         " + tty.normal + make_utf8(", ".join(host_contactgroups_of([hostname]))) + "\n")
+    sys.stdout.write(tty.yellow + "Host groups:            " + tty.normal + make_utf8(", ".join(config.hostgroups_of(hostname))) + "\n")
+    sys.stdout.write(tty.yellow + "Contact groups:         " + tty.normal + make_utf8(", ".join(config.host_contactgroups_of([hostname]))) + "\n")
 
     agenttypes = []
-    if is_tcp_host(hostname):
+    if config.is_tcp_host(hostname):
         dapg = get_datasource_program(hostname, ipaddress)
         if dapg:
             agenttypes.append("Datasource program: %s" % dapg)
@@ -2797,7 +2747,7 @@ def dump_host(hostname):
             agenttypes.append("SNMP (%s, bulk walk: %s, port: %s, inline: %s)" %
                 (cred, bulk, portinfo, inline))
 
-    if is_ping_host(hostname):
+    if config.is_ping_host(hostname):
         agenttypes.append('PING only')
 
     sys.stdout.write(tty.yellow + "Type of agent:          " + tty.normal + '\n                        '.join(agenttypes) + "\n")
@@ -2806,8 +2756,8 @@ def dump_host(hostname):
         sys.stdout.write(tty.yellow + "Is aggregated:          " + tty.normal + "yes\n")
         shn = summary_hostname(hostname)
         sys.stdout.write(tty.yellow + "Summary host:           " + tty.normal + shn + "\n")
-        sys.stdout.write(tty.yellow + "Summary host groups:    " + tty.normal + ", ".join(summary_hostgroups_of(hostname)) + "\n")
-        sys.stdout.write(tty.yellow + "Summary contact groups: " + tty.normal + ", ".join(host_contactgroups_of([shn])) + "\n")
+        sys.stdout.write(tty.yellow + "Summary host groups:    " + tty.normal + ", ".join(config.summary_hostgroups_of(hostname)) + "\n")
+        sys.stdout.write(tty.yellow + "Summary contact groups: " + tty.normal + ", ".join(config.host_contactgroups_of([shn])) + "\n")
         notperiod = (rulesets.host_extra_conf(hostname, config.summary_host_notification_periods) + [""])[0]
         sys.stdout.write(tty.yellow + "Summary notification:   " + tty.normal + notperiod + "\n")
     else:

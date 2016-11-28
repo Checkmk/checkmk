@@ -3588,21 +3588,6 @@ def ip_to_dnsname(ip):
     except:
         return None
 
-def config_timestamp():
-    mtime = 0
-    for dirpath, _unused_dirnames, filenames in os.walk(cmk.paths.check_mk_config_dir):
-        for f in filenames:
-            mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
-
-    for path in [ cmk.paths.main_config_file, cmk.paths.final_config_file, cmk.paths.local_config_file ]:
-        try:
-            mtime = max(mtime, os.stat(path).st_mtime)
-        except:
-            pass
-    return mtime
-
-
-
 # Reset some global variable to their original value. This
 # is needed in keepalive mode.
 # We could in fact do some positive caching in keepalive

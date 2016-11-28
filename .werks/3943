@@ -1,0 +1,9 @@
+Title: ntp.time: fixed parameters in discovered checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1480321449
+Class: fix
+
+The services could crash with "KeyError ('alert_delay')" because of wrong parameters after discovery. This has been fixed now.

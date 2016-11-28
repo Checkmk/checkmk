@@ -55,6 +55,11 @@ snmp_scan_functions                = {} # SNMP autodetection
 active_check_info                  = {} # definitions of active "legacy" checks
 special_agent_info                 = {}
 
+# Names of variables registered in the check files. This is used to
+# keep track of the variables needed by each file. Those variables are then
+# (if available) read from the config and applied to the checks module after
+# reading in the configuration of the user.
+g_check_variables = []
 
 # Load all checks and includes
 def load():
@@ -75,10 +80,6 @@ def load():
 # If a check or check.include is both found in local/ and in the
 # normal structure, then only the file in local/ must be read!
 def load_checks(filelist):
-    varname = None
-    value = None
-    ignored_variable_types = [ type(lambda: None), type(os) ]
-
     known_vars = set(globals().keys()) # track new configuration variables
 
     loaded_files = set()
@@ -94,11 +95,13 @@ def load_checks(filelist):
                     if cmk.debug.enabled():
                         raise
 
-    for varname, value in globals().iteritems():
+    ignored_variable_types = [ type(lambda: None), type(os) ]
+    for varname in set(globals().keys()).difference(known_vars):
         if varname[0] != '_' \
-           and varname not in known_vars \
-           and type(value) not in ignored_variable_types:
-            config.register(varname, value)
+           and type(globals()[varname]) not in ignored_variable_types:
+            g_check_variables.append(varname)
+
+    add_check_variables_to_config()
 
     # Now convert check_info to new format.
     convert_check_info()
@@ -115,6 +118,22 @@ def plugin_pathnames_in_directory(path):
         ])
     else:
         return []
+
+
+# Add configuration variables registered by checks to config module
+def add_check_variables_to_config():
+    for varname in g_check_variables:
+        value = globals()[varname]
+        config.register(varname, value)
+
+# Load user configured values of check related configuration variables
+# into this module to make it available during checking.
+# TODO: At the moment these vars are kept twice: in checks and config module.
+#       we could rebuild this to make them only be stored in the checks module
+#       where they are needed. This can be done while reading the config.
+def set_check_variables_from_config():
+    for varname in g_check_variables:
+        globals()[varname] = getattr(config, varname)
 
 
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to

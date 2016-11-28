@@ -118,6 +118,22 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
                 log_function("ERROR %s\n%s" % (e, format_exception()))
 
 
+def config_timestamp():
+    mtime = 0
+    for dirpath, _unused_dirnames, filenames in os.walk(cmk.paths.check_mk_config_dir):
+        for f in filenames:
+            mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
+
+    for path in [ cmk.paths.main_config_file,
+                  cmk.paths.final_config_file,
+                  cmk.paths.local_config_file ]:
+        try:
+            mtime = max(mtime, os.stat(path).st_mtime)
+        except:
+            pass
+    return mtime
+
+
 def event_data_available(loop_interval):
     readable = select.select([0], [], [], loop_interval)[0]
     return not not readable

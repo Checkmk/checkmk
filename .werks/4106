@@ -1,0 +1,11 @@
+Title: new filter host/service-service-level
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480337391
+Class: feature
+
+Now you are able to filter by host- resp. service-service-level
+defined in global settings/notifications.
+

@@ -138,15 +138,24 @@ multisite_painter_options["matrix_omit_uniform"] = {
 
 
 # This helper function returns the value of the given custom var
-def paint_custom_var(what, key, row):
+def paint_custom_var(what, key, row, choices=None):
+    if choices is None:
+        choices = []
+
     if what:
         what += '_'
+
     custom_vars = dict(zip(row[what + "custom_variable_names"],
                            row[what + "custom_variable_values"]))
 
     if key in custom_vars:
-        return key, custom_vars[key]
-    return key,  ""
+        custom_val = custom_vars[key]
+        if choices:
+            custom_val = dict(choices).get(int(custom_val), custom_val)
+        return key, custom_val
+
+    return key, ""
+
 
 
 def paint_nagios_link(row):
@@ -1187,7 +1196,8 @@ multisite_painters["svc_servicelevel"] = {
     "title"   : _("Service service level"),
     "short"   : _("Service Level"),
     "columns" : [ "service_custom_variable_names", "service_custom_variable_values" ],
-    "paint"   : lambda row: paint_custom_var('service', 'EC_SL', row),
+    "paint"   : lambda row: paint_custom_var('service', 'EC_SL', row,
+                            config.mkeventd_service_levels),
     "sorter"  : 'servicelevel',
 }
 
@@ -1745,7 +1755,8 @@ multisite_painters["host_servicelevel"] = {
     "title"   : _("Host service level"),
     "short"   : _("Service Level"),
     "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
-    "paint"   : lambda row: paint_custom_var('host', 'EC_SL', row),
+    "paint"   : lambda row: paint_custom_var('host', 'EC_SL', row,
+                            config.mkeventd_service_levels),
     "sorter"  : 'servicelevel',
 }
 

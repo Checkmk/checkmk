@@ -2106,7 +2106,8 @@ def show_context_links(thisview, show_filters,
 
         # Button for creating an instant report (if reporting is available)
         if config.reporting_available() and config.user.may("general.reporting"):
-            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
+            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"),
+                                "report", id="context_pdf_export")
 
         # Buttons to other views, dashboards, etc.
         links = visuals.collect_context_links(thisview)

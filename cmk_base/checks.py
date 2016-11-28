@@ -376,6 +376,34 @@ def sanitize_service_description(descr):
         return new_descr
 
 
+def is_snmp_check(check_name):
+    cache = cmk_base.config_cache.get_dict("is_snmp_check")
+
+    try:
+        return cache[check_name]
+    except KeyError:
+        snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
+
+        result = check_name.split(".")[0] in snmp_checks
+        cache[check_name] = result
+        return result
+
+
+def is_tcp_check(check_name):
+    cache = cmk_base.config_cache.get_dict("is_tcp_check")
+
+    try:
+        return cache[check_name]
+    except KeyError:
+        tcp_checks = cmk_base.runtime_cache.get_set("check_type_tcp")
+        snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
+
+        result = check_name in tcp_checks \
+                  and check_name.split(".")[0] not in snmp_checks # snmp check basename
+        cache[check_name] = result
+        return result
+
+
 #.
 #   .--Check API-----------------------------------------------------------.
 #   |             ____ _               _         _    ____ ___             |

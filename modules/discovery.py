@@ -31,6 +31,7 @@ import cmk.defines as defines
 
 import cmk_base.config as config
 import cmk_base.console as console
+import cmk_base.piggyback as piggyback
 
 #   .--cmk -I--------------------------------------------------------------.
 #   |                                  _           ___                     |
@@ -639,7 +640,7 @@ def is_ipaddress(address):
 # gather auto_discovered check_types for this host
 def gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
     check_types = []
-    if is_snmp_host(hostname):
+    if config.is_snmp_host(hostname):
 
         # May we do an SNMP scan?
         if do_snmp_scan:
@@ -658,7 +659,7 @@ def gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
                 if check_type not in check_types and check_uses_snmp(check_type):
                     check_types.append(check_type)
 
-    if config.is_tcp_host(hostname) or has_piggyback_info(hostname):
+    if config.is_tcp_host(hostname) or piggyback.has_piggyback_info(hostname):
         check_types += discoverable_check_types('tcp')
 
     return check_types
@@ -842,7 +843,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
         return []
 
     if use_snmp is None:
-        use_snmp = is_snmp_host(hostname)
+        use_snmp = config.is_snmp_host(hostname)
 
     # Skip SNMP checks on non-SNMP hosts
     if check_uses_snmp(check_type) and not use_snmp:

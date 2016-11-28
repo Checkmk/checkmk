@@ -13895,10 +13895,7 @@ def Levels(**kwargs):
           default_value = default_value,
     )
 
-# When changing this keep it in sync with
-# a) check_mk_base.py: do_hostname_translation()
-# b) wato.py:          do_hostname_translation()
-# FIXME TODO: Move the common do_hostname_translation() in a central Check_MK module
+# NOTE: When changing this keep it in sync with cmk.hostname_translation.translate()
 def HostnameTranslation(**kwargs):
     help = kwargs.get("help")
     title = kwargs.get("title")
@@ -13986,50 +13983,6 @@ def HostnameTranslation(**kwargs):
                   movable = False,
             )),
         ])
-
-
-# When changing this keep it in sync with
-# a) check_mk_base.py: do_hostname_translation()
-# b) wato.py:          do_hostname_translation()
-# FIXME TODO: Move the common do_hostname_translation() in a central Check_MK module
-def do_hostname_translation(translation, hostname):
-    # 1. Case conversion
-    caseconf = translation.get("case")
-    if caseconf == "upper":
-        hostname = hostname.upper()
-    elif caseconf == "lower":
-        hostname = hostname.lower()
-
-    # 2. Drop domain part (not applied to IP addresses!)
-    if translation.get("drop_domain") and not hostname[0].isdigit():
-        hostname = hostname.split(".", 1)[0]
-
-    # 3. Multiple regular expression conversion
-    if type(translation.get("regex")) == tuple:
-        translations = [translation.get("regex")]
-    else:
-        translations = translation.get("regex", [])
-
-    for expr, subst in translations:
-        if not expr.endswith('$'):
-            expr += '$'
-        rcomp = regex(expr)
-        # re.RegexObject.sub() by hand to handle non-existing references
-        mo = rcomp.match(hostname)
-        if mo:
-            hostname = subst
-            for nr, text in enumerate(mo.groups("")):
-                hostname = hostname.replace("\\%d" % (nr+1), text)
-            break
-
-    # 4. Explicit mapping
-    for from_host, to_host in translation.get("mapping", []):
-        if from_host == hostname:
-            hostname = to_host
-            break
-
-    return hostname
-
 
 #.
 #   .--User Profile--------------------------------------------------------.
@@ -16123,7 +16076,7 @@ def add_scanned_hosts_to_folder(folder, found):
 
     entries = []
     for host_name, ipaddress in found:
-        host_name = do_hostname_translation(translation, host_name)
+        host_name = cmk.hostname_translation.translate(translation, host_name)
 
         attrs = {
             "ipaddress"       : ipaddress,

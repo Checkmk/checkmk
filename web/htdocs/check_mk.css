@@ -150,6 +150,21 @@ input.button:disabled:active {
     box-shadow: 0 0 1.5px #000000;
 }
 
+input.button.hot {
+    border-color: #d4a466 #633e0d #633e0d #d4a466;
+    background-color: #c37d19;
+}
+
+input.button.hot:hover {
+    background-color: #deb548;
+}
+
+input.button.hot:active {
+    background-color: #c37d19;
+    border-color: #6d5723 #d9bf81 #d9bf81 #6d5723;
+}
+
+
 /* pattern / regex input styling */
 
 input.regexp {

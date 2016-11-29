@@ -24,97 +24,98 @@
 
 #include "TableEventConsoleStatus.h"
 
+using std::make_unique;
 using std::string;
 
 TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    addColumn(new IntEventConsoleColumn(
+    addColumn(make_unique<IntEventConsoleColumn>(
         "status_config_load_time",
         "The time when the Event Console config was loaded"));
-    addColumn(new IntEventConsoleColumn("status_num_open_events",
-                                        "The number of currently open events"));
-    addColumn(
-        new IntEventConsoleColumn("status_virtual_memory_size",
-                                  "The current virtual memory size in bytes"));
+    addColumn(make_unique<IntEventConsoleColumn>(
+        "status_num_open_events", "The number of currently open events"));
+    addColumn(make_unique<IntEventConsoleColumn>(
+        "status_virtual_memory_size",
+        "The current virtual memory size in bytes"));
 
-    addColumn(new IntEventConsoleColumn(
+    addColumn(make_unique<IntEventConsoleColumn>(
         "status_messages",
         "The number of messages received since startup of the Event Console"));
-    addColumn(new DoubleEventConsoleColumn("status_message_rate",
-                                           "The incoming message rate"));
-    addColumn(new DoubleEventConsoleColumn(
+    addColumn(make_unique<DoubleEventConsoleColumn>(
+        "status_message_rate", "The incoming message rate"));
+    addColumn(make_unique<DoubleEventConsoleColumn>(
         "status_average_message_rate", "The average incoming message rate"));
-    addColumn(
-        new IntEventConsoleColumn("status_connects", "The number of connects"));
-    addColumn(new DoubleEventConsoleColumn("status_connect_rate",
-                                           "The connect rate"));
-    addColumn(new DoubleEventConsoleColumn("status_average_connect_rate",
-                                           "The average connect rate"));
-    addColumn(new IntEventConsoleColumn("status_rule_tries",
-                                        "The number of rule tries"));
-    addColumn(new DoubleEventConsoleColumn("status_rule_trie_rate",
-                                           "The rule trie rate"));
-    addColumn(new DoubleEventConsoleColumn("status_average_rule_trie_rate",
-                                           "The average rule trie rate"));
-    addColumn(new IntEventConsoleColumn(
+    addColumn(make_unique<IntEventConsoleColumn>("status_connects",
+                                                 "The number of connects"));
+    addColumn(make_unique<DoubleEventConsoleColumn>("status_connect_rate",
+                                                    "The connect rate"));
+    addColumn(make_unique<DoubleEventConsoleColumn>(
+        "status_average_connect_rate", "The average connect rate"));
+    addColumn(make_unique<IntEventConsoleColumn>("status_rule_tries",
+                                                 "The number of rule tries"));
+    addColumn(make_unique<DoubleEventConsoleColumn>("status_rule_trie_rate",
+                                                    "The rule trie rate"));
+    addColumn(make_unique<DoubleEventConsoleColumn>(
+        "status_average_rule_trie_rate", "The average rule trie rate"));
+    addColumn(make_unique<IntEventConsoleColumn>(
         "status_drops",
         "The number of message drops (decided by a rule) since startup "
         "of the Event Console"));
-    addColumn(
-        new DoubleEventConsoleColumn("status_drop_rate", "The drop rate"));
-    addColumn(new DoubleEventConsoleColumn("status_average_drop_rate",
-                                           "The average drop rate"));
-    addColumn(new IntEventConsoleColumn(
+    addColumn(make_unique<DoubleEventConsoleColumn>("status_drop_rate",
+                                                    "The drop rate"));
+    addColumn(make_unique<DoubleEventConsoleColumn>("status_average_drop_rate",
+                                                    "The average drop rate"));
+    addColumn(make_unique<IntEventConsoleColumn>(
         "status_events",
         "The number of events received since startup of the Event Console"));
-    addColumn(
-        new DoubleEventConsoleColumn("status_event_rate", "The event rate"));
-    addColumn(new DoubleEventConsoleColumn("status_average_event_rate",
-                                           "The average event rate"));
+    addColumn(make_unique<DoubleEventConsoleColumn>("status_event_rate",
+                                                    "The event rate"));
+    addColumn(make_unique<DoubleEventConsoleColumn>("status_average_event_rate",
+                                                    "The average event rate"));
 
-    addColumn(new IntEventConsoleColumn(
+    addColumn(make_unique<IntEventConsoleColumn>(
         "status_rule_hits",
         "The number of rule hits since startup of the Event Console"));
-    addColumn(new DoubleEventConsoleColumn("status_rule_hit_rate",
-                                           "The rule hit rate"));
-    addColumn(new DoubleEventConsoleColumn("status_average_rule_hit_rate",
-                                           "The average rule hit rate"));
+    addColumn(make_unique<DoubleEventConsoleColumn>("status_rule_hit_rate",
+                                                    "The rule hit rate"));
+    addColumn(make_unique<DoubleEventConsoleColumn>(
+        "status_average_rule_hit_rate", "The average rule hit rate"));
 
-    addColumn(new DoubleEventConsoleColumn(
+    addColumn(make_unique<DoubleEventConsoleColumn>(
         "status_average_processing_time",
         "The average incoming message processing time"));
-    addColumn(
-        new DoubleEventConsoleColumn("status_average_request_time",
-                                     "The average status client request time"));
-    addColumn(new DoubleEventConsoleColumn("status_average_sync_time",
-                                           "The average sync time"));
-    addColumn(new StringEventConsoleColumn(
+    addColumn(make_unique<DoubleEventConsoleColumn>(
+        "status_average_request_time",
+        "The average status client request time"));
+    addColumn(make_unique<DoubleEventConsoleColumn>("status_average_sync_time",
+                                                    "The average sync time"));
+    addColumn(make_unique<StringEventConsoleColumn>(
         "status_replication_slavemode",
         "The replication slavemode (empty or one of sync/takeover)"));
-    addColumn(new TimeEventConsoleColumn(
+    addColumn(make_unique<TimeEventConsoleColumn>(
         "status_replication_last_sync",
         "Time of the last replication (Unix timestamp)"));
-    addColumn(
-        new IntEventConsoleColumn("status_replication_success",
-                                  "Whether the replication succeeded (0/1)"));
+    addColumn(make_unique<IntEventConsoleColumn>(
+        "status_replication_success",
+        "Whether the replication succeeded (0/1)"));
 
-    addColumn(new IntEventConsoleColumn(
+    addColumn(make_unique<IntEventConsoleColumn>(
         "status_event_limit_host",
         "The currently active event limit for hosts"));
-    addColumn(new IntEventConsoleColumn(
+    addColumn(make_unique<IntEventConsoleColumn>(
         "status_event_limit_rule",
         "The currently active event limit for rules"));
-    addColumn(new IntEventConsoleColumn(
+    addColumn(make_unique<IntEventConsoleColumn>(
         "status_event_limit_overall",
         "The currently active event limit for all events"));
 
-    addColumn(new ListEventConsoleColumn(
+    addColumn(make_unique<ListEventConsoleColumn>(
         "status_event_limit_active_hosts",
         "List of host names with active event limit"));
-    addColumn(new ListEventConsoleColumn(
+    addColumn(make_unique<ListEventConsoleColumn>(
         "status_event_limit_active_rules",
         "List of rule IDs which rules event limit is active"));
-    addColumn(new IntEventConsoleColumn(
+    addColumn(make_unique<IntEventConsoleColumn>(
         "status_event_limit_active_overall",
         "Whether or not the overall event limit is in effect (0/1)"));
 }

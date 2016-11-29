@@ -65,6 +65,7 @@ class VariadicFilter;
 using mk::starts_with;
 using std::deque;
 using std::lock_guard;
+using std::make_unique;
 using std::map;
 using std::mutex;
 using std::set;
@@ -98,157 +99,157 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
                                      MonitoringCore *mc)
     : Table(mc->loggerLivestatus()), _core(mc), _log_cache(log_cache) {
     HostServiceState *ref = nullptr;
-    addColumn(new OffsetTimeColumn(
+    addColumn(make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (seconds since 1/1/1970)",
         reinterpret_cast<char *>(&(ref->_time)) - reinterpret_cast<char *>(ref),
         -1, -1));
-    addColumn(new OffsetIntColumn("lineno",
-                                  "The number of the line in the log file",
-                                  reinterpret_cast<char *>(&(ref->_lineno)) -
-                                      reinterpret_cast<char *>(ref),
-                                  -1));
-    addColumn(new OffsetTimeColumn(
+    addColumn(make_unique<OffsetIntColumn>(
+        "lineno", "The number of the line in the log file",
+        reinterpret_cast<char *>(&(ref->_lineno)) -
+            reinterpret_cast<char *>(ref),
+        -1));
+    addColumn(make_unique<OffsetTimeColumn>(
         "from", "Start time of state (seconds since 1/1/1970)",
         reinterpret_cast<char *>(&(ref->_from)) - reinterpret_cast<char *>(ref),
         -1, -1));
-    addColumn(new OffsetTimeColumn("until",
-                                   "End time of state (seconds since 1/1/1970)",
-                                   reinterpret_cast<char *>(&(ref->_until)) -
-                                       reinterpret_cast<char *>(ref),
-                                   -1, -1));
-    addColumn(new OffsetIntColumn("duration",
-                                  "Duration of state (until - from)",
-                                  reinterpret_cast<char *>(&(ref->_duration)) -
-                                      reinterpret_cast<char *>(ref),
-                                  -1));
-    addColumn(new OffsetDoubleColumn(
+    addColumn(make_unique<OffsetTimeColumn>(
+        "until", "End time of state (seconds since 1/1/1970)",
+        reinterpret_cast<char *>(&(ref->_until)) -
+            reinterpret_cast<char *>(ref),
+        -1, -1));
+    addColumn(make_unique<OffsetIntColumn>(
+        "duration", "Duration of state (until - from)",
+        reinterpret_cast<char *>(&(ref->_duration)) -
+            reinterpret_cast<char *>(ref),
+        -1));
+    addColumn(make_unique<OffsetDoubleColumn>(
         "duration_part", "Duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
         "state",
         "The state of the host or service in question - OK(0) / WARNING(1) / "
         "CRITICAL(2) / UNKNOWN(3) / UNMONITORED(-1)",
         reinterpret_cast<char *>(&(ref->_state)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetIntColumn("host_down",
-                                  "Shows if the host of this service is down",
-                                  reinterpret_cast<char *>(&(ref->_host_down)) -
-                                      reinterpret_cast<char *>(ref),
-                                  -1));
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
+        "host_down", "Shows if the host of this service is down",
+        reinterpret_cast<char *>(&(ref->_host_down)) -
+            reinterpret_cast<char *>(ref),
+        -1));
+    addColumn(make_unique<OffsetIntColumn>(
         "in_downtime", "Shows if the host or service is in downtime",
         reinterpret_cast<char *>(&(ref->_in_downtime)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
         "in_host_downtime", "Shows if the host of this service is in downtime",
         reinterpret_cast<char *>(&(ref->_in_host_downtime)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
         "is_flapping", "Shows if the host or service is flapping",
         reinterpret_cast<char *>(&(ref->_is_flapping)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
         "in_notification_period",
         "Shows if the host or service is within its notification period",
         reinterpret_cast<char *>(&(ref->_in_notification_period)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetStringColumn(
+    addColumn(make_unique<OffsetStringColumn>(
         "notification_period",
         "The notification period of the host or service in question",
         reinterpret_cast<char *>(&(ref->_notification_period)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
         "in_service_period",
         "Shows if the host or service is within its service period",
         reinterpret_cast<char *>(&(ref->_in_service_period)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetStringColumn(
+    addColumn(make_unique<OffsetStringColumn>(
         "service_period",
         "The service period of the host or service in question",
         reinterpret_cast<char *>(&(ref->_service_period)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(
-        new OffsetStringColumn("debug_info", "Debug information",
-                               reinterpret_cast<char *>(&(ref->_debug_info)) -
-                                   reinterpret_cast<char *>(ref),
-                               -1));
-    addColumn(new OffsetStringColumn(
+    addColumn(make_unique<OffsetStringColumn>(
+        "debug_info", "Debug information",
+        reinterpret_cast<char *>(&(ref->_debug_info)) -
+            reinterpret_cast<char *>(ref),
+        -1));
+    addColumn(make_unique<OffsetStringColumn>(
         "host_name", "Host name", reinterpret_cast<char *>(&(ref->_host_name)) -
                                       reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetStringColumn(
+    addColumn(make_unique<OffsetStringColumn>(
         "service_description", "Description of the service",
         reinterpret_cast<char *>(&(ref->_service_description)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetStringColumn(
+    addColumn(make_unique<OffsetStringColumn>(
         "log_output", "Logfile output relevant for this state",
         reinterpret_cast<char *>(&(ref->_log_output)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
         "duration_ok", "OK duration of state ( until - from )",
         reinterpret_cast<char *>(&(ref->_duration_state_OK)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetDoubleColumn(
+    addColumn(make_unique<OffsetDoubleColumn>(
         "duration_part_ok", "OK duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part_OK) -
             reinterpret_cast<char *>(ref),
         -1));
 
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
         "duration_warning", "WARNING duration of state (until - from)",
         reinterpret_cast<char *>(&(ref->_duration_state_WARNING)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetDoubleColumn(
+    addColumn(make_unique<OffsetDoubleColumn>(
         "duration_part_warning",
         "WARNING duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part_WARNING) -
             reinterpret_cast<char *>(ref),
         -1));
 
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
         "duration_critical", "CRITICAL duration of state (until - from)",
         reinterpret_cast<char *>(&(ref->_duration_state_CRITICAL)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetDoubleColumn(
+    addColumn(make_unique<OffsetDoubleColumn>(
         "duration_part_critical",
         "CRITICAL duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part_CRITICAL) -
             reinterpret_cast<char *>(ref),
         -1));
 
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
         "duration_unknown", "UNKNOWN duration of state (until - from)",
         reinterpret_cast<char *>(&(ref->_duration_state_UNKNOWN)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetDoubleColumn(
+    addColumn(make_unique<OffsetDoubleColumn>(
         "duration_part_unknown",
         "UNKNOWN duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part_UNKNOWN) -
             reinterpret_cast<char *>(ref),
         -1));
 
-    addColumn(new OffsetIntColumn(
+    addColumn(make_unique<OffsetIntColumn>(
         "duration_unmonitored", "UNMONITORED duration of state (until - from)",
         reinterpret_cast<char *>(&(ref->_duration_state_UNMONITORED)) -
             reinterpret_cast<char *>(ref),
         -1));
-    addColumn(new OffsetDoubleColumn(
+    addColumn(make_unique<OffsetDoubleColumn>(
         "duration_part_unmonitored",
         "UNMONITORED duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part_UNMONITORED) -

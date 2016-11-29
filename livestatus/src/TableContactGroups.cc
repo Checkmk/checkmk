@@ -29,6 +29,7 @@
 #include "Query.h"
 #include "nagios.h"
 
+using std::make_unique;
 using std::string;
 
 extern contactgroup *contactgroup_list;
@@ -37,13 +38,13 @@ TableContactGroups::TableContactGroups(MonitoringCore *core)
     : Table(core->loggerLivestatus()), _core(core) {
     contactgroup cg;
     char *ref = reinterpret_cast<char *>(&cg);
-    addColumn(
-        new OffsetStringColumn("name", "The name of the contactgroup",
-                               reinterpret_cast<char *>(&cg.group_name) - ref));
-    addColumn(
-        new OffsetStringColumn("alias", "The alias of the contactgroup",
-                               reinterpret_cast<char *>(&cg.alias) - ref));
-    addColumn(new ContactGroupsMemberColumn(
+    addColumn(make_unique<OffsetStringColumn>(
+        "name", "The name of the contactgroup",
+        reinterpret_cast<char *>(&cg.group_name) - ref));
+    addColumn(make_unique<OffsetStringColumn>(
+        "alias", "The alias of the contactgroup",
+        reinterpret_cast<char *>(&cg.alias) - ref));
+    addColumn(make_unique<ContactGroupsMemberColumn>(
         "members", "A list of all members of this contactgroup", -1));
 }
 

@@ -37,19 +37,17 @@ using std::unique_ptr;
 
 Table::Table(Logger *logger) : _logger(logger) {}
 
-Table::~Table() {
-    for (auto &column : _columns) {
-        delete column.second;
-    }
-}
+Table::~Table() = default;
 
-void Table::addColumn(Column *col) {
-    assert(column(col->name()) == nullptr);
-    _columns.emplace(col->name(), col);
+void Table::addColumn(unique_ptr<Column> col) {
+    string name = col->name();
+    assert(column(name) == nullptr);
+    _columns.emplace(name, move(col));
 }
 
 void Table::addDynamicColumn(unique_ptr<DynamicColumn> dyncol) {
-    _dynamic_columns.emplace(dyncol->name(), move(dyncol));
+    string name = dyncol->name();
+    _dynamic_columns.emplace(name, move(dyncol));
 }
 
 Column *Table::column(string colname) {
@@ -66,13 +64,13 @@ Column *Table::column(string colname) {
     // First try exact match...
     auto it = _columns.find(colname);
     if (it != _columns.end()) {
-        return it->second;
+        return it->second.get();
     }
 
     // ... then try to match with the prefix.
     it = _columns.find(namePrefix() + colname);
     if (it != _columns.end()) {
-        return it->second;
+        return it->second.get();
     }
 
     // No luck.

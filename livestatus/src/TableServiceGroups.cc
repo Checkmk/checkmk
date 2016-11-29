@@ -29,6 +29,7 @@
 #include "ServiceListStateColumn.h"
 #include "auth.h"
 
+using std::make_unique;
 using std::string;
 
 /* this might be a hack (accessing Nagios' internal structures.
@@ -49,80 +50,80 @@ void TableServiceGroups::addColumns(Table *table, const string &prefix,
                                     int indirect_offset) {
     servicegroup sgr;
     char *ref = reinterpret_cast<char *>(&sgr);
-    table->addColumn(new OffsetStringColumn(
+    table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "The name of the service group",
         reinterpret_cast<char *>(&sgr.group_name) - ref, indirect_offset));
-    table->addColumn(new OffsetStringColumn(
+    table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "alias", "An alias of the service group",
         reinterpret_cast<char *>(&sgr.alias) - ref, indirect_offset));
-    table->addColumn(new OffsetStringColumn(
+    table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional additional notes about the service group",
         reinterpret_cast<char *>(&sgr.notes) - ref, indirect_offset));
-    table->addColumn(new OffsetStringColumn(
+    table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL to further notes on the service group",
         reinterpret_cast<char *>(&sgr.notes_url) - ref, indirect_offset));
-    table->addColumn(new OffsetStringColumn(
+    table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL to custom notes or actions on the service group",
         reinterpret_cast<char *>(&sgr.action_url) - ref, indirect_offset));
-    table->addColumn(new ServiceListColumn(
+    table->addColumn(make_unique<ServiceListColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, true,
         0));
-    table->addColumn(new ServiceListColumn(
+    table->addColumn(make_unique<ServiceListColumn>(
         prefix + "members_with_state",
         "A list of all members of the service group with state and "
         "has_been_checked",
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, true,
         1));
 
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "worst_service_state",
         "The worst soft state of all of the groups services (OK <= WARN <= "
         "UNKNOWN <= CRIT)",
         SLSC_WORST_STATE, reinterpret_cast<char *>(&sgr.members) - ref,
         indirect_offset));
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services in the group",
         SLSC_NUM, reinterpret_cast<char *>(&sgr.members) - ref,
         indirect_offset));
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_ok",
         "The number of services in the group that are OK", SLSC_NUM_OK,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_warn",
         "The number of services in the group that are WARN", SLSC_NUM_WARN,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_crit",
         "The number of services in the group that are CRIT", SLSC_NUM_CRIT,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_unknown",
         "The number of services in the group that are UNKNOWN",
         SLSC_NUM_UNKNOWN, reinterpret_cast<char *>(&sgr.members) - ref,
         indirect_offset));
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_pending",
         "The number of services in the group that are PENDING",
         SLSC_NUM_PENDING, reinterpret_cast<char *>(&sgr.members) - ref,
         indirect_offset));
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
         "The number of services in the group that are OK", SLSC_NUM_HARD_OK,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_warn",
         "The number of services in the group that are WARN", SLSC_NUM_HARD_WARN,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_crit",
         "The number of services in the group that are CRIT", SLSC_NUM_HARD_CRIT,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
-    table->addColumn(new ServiceListStateColumn(
+    table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_unknown",
         "The number of services in the group that are UNKNOWN",
         SLSC_NUM_HARD_UNKNOWN, reinterpret_cast<char *>(&sgr.members) - ref,

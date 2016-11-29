@@ -42,13 +42,13 @@ public:
     explicit Table(Logger *logger);
     virtual ~Table();
 
-    void addColumn(Column *);
-    void addDynamicColumn(std::unique_ptr<DynamicColumn> col);
+    void addColumn(std::unique_ptr<Column> col);
+    void addDynamicColumn(std::unique_ptr<DynamicColumn> dyncol);
 
     template <typename Predicate>
     bool any_column(Predicate pred) {
         for (auto &c : _columns) {
-            if (pred(c.second)) {
+            if (pred(c.second.get())) {
                 return true;
             }
         }
@@ -91,7 +91,7 @@ public:
 private:
     Column *dynamicColumn(const std::string &name, const std::string &rest);
 
-    std::map<std::string, Column *> _columns;
+    std::map<std::string, std::unique_ptr<Column>> _columns;
     std::map<std::string, std::unique_ptr<DynamicColumn>> _dynamic_columns;
 };
 

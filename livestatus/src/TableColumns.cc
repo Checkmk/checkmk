@@ -27,16 +27,17 @@
 #include "ColumnsColumn.h"
 #include "Query.h"
 
+using std::make_unique;
 using std::string;
 
 TableColumns::TableColumns(Logger *logger) : Table(logger) {
-    addColumn(new ColumnsColumn("table", "The name of the table", COLCOL_TABLE,
-                                this));
-    addColumn(new ColumnsColumn(
+    addColumn(make_unique<ColumnsColumn>("table", "The name of the table",
+                                         COLCOL_TABLE, this));
+    addColumn(make_unique<ColumnsColumn>(
         "name", "The name of the column within the table", COLCOL_NAME, this));
-    addColumn(new ColumnsColumn("description", "A description of the column",
-                                COLCOL_DESCR, this));
-    addColumn(new ColumnsColumn(
+    addColumn(make_unique<ColumnsColumn>(
+        "description", "A description of the column", COLCOL_DESCR, this));
+    addColumn(make_unique<ColumnsColumn>(
         "type", "The data type of the column (int, float, string, list)",
         COLCOL_TYPE, this));
 }

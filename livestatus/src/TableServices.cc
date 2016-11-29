@@ -219,11 +219,6 @@ void TableServices::addColumns(Table *table, const string &prefix,
         reinterpret_cast<char *>(&svc.no_more_notifications) - ref,
         indirect_offset));
     table->addColumn(new OffsetTimeColumn(
-        prefix + "last_state_change",
-        "The time of the last state change (Unix timestamp)",
-        reinterpret_cast<char *>(&svc.last_state_change) - ref, indirect_offset,
-        -1));
-    table->addColumn(new OffsetTimeColumn(
         prefix + "last_time_ok",
         "The last time the service was OK (Unix timestamp)",
         reinterpret_cast<char *>(&svc.last_time_ok) - ref, indirect_offset,

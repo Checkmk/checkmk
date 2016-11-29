@@ -30,12 +30,6 @@
 
 using std::string;
 
-string mk_logwatch_path_of_host(const string &logwatch_path,
-                                const string &host_name) {
-    return logwatch_path.empty() ? ""
-                                 : (logwatch_path + pnp_cleanup(host_name));
-}
-
 void mk_logwatch_acknowledge(Logger *logger, const std::string &logwatch_path,
                              const string &host_name, const string &file_name) {
     if (file_name.find('/') != string::npos) {
@@ -43,14 +37,11 @@ void mk_logwatch_acknowledge(Logger *logger, const std::string &logwatch_path,
                         << file_name << "' of host '" << host_name << "'";
         return;
     }
-
-    string path = mk_logwatch_path_of_host(logwatch_path, host_name);
-    if (path.empty()) {
+    if (logwatch_path.empty()) {
         return;
     }
-
-    int r = remove((path + "/" + file_name).c_str());
-    if (r != 0) {
+    string path = logwatch_path + pnp_cleanup(host_name) + "/" + file_name;
+    if (remove(path.c_str()) != 0) {
         generic_error ge("Cannot acknowledge mk_logfile file '" + file_name +
                          "' of host '" + host_name + "'");
         Warning(logger) << ge;

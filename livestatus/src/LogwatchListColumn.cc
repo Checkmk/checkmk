@@ -25,7 +25,7 @@
 #include "LogwatchListColumn.h"
 #include <dirent.h>
 #include "Renderer.h"
-#include "mk_logwatch.h"
+#include "pnp4nagios.h"
 
 #ifdef CMC
 #include "Host.h"
@@ -49,21 +49,22 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
 #endif
 
     ListRenderer l(r);
-    string path = mk_logwatch_path_of_host(_logwatch_path, host_name);
-    if (path != "") {
-        if (DIR *dir = opendir(path.c_str())) {
-            while (true) {
-                struct dirent de;
-                struct dirent *dep;
-                readdir_r(dir, &de, &dep);
-                if (dep == nullptr) {
-                    closedir(dir);
-                    break;
-                }
-                string name = dep->d_name;
-                if (name != "." && name != "..") {
-                    l.output(name);
-                }
+    if (_logwatch_path.empty()) {
+        return;
+    }
+    string path = _logwatch_path + pnp_cleanup(host_name);
+    if (DIR *dir = opendir(path.c_str())) {
+        while (true) {
+            struct dirent de;
+            struct dirent *dep;
+            readdir_r(dir, &de, &dep);
+            if (dep == nullptr) {
+                closedir(dir);
+                break;
+            }
+            string name = dep->d_name;
+            if (name != "." && name != "..") {
+                l.output(name);
             }
         }
     }

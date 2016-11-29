@@ -3408,20 +3408,20 @@ metric_info["page_lookups_sec"] = {
     "color" : "42/a"
 }
 
-metric_info["failed_search"] = {
-    "title" : _("Failed search requests"),
+metric_info["failed_search_requests"] = {
+    "title" : _("WEB - Failed search requests"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["failed_location"] = {
-    "title" : _("Failed Get Locations Requests"),
+metric_info["failed_location_requests"] = {
+    "title" : _("WEB - Failed Get Locations Requests"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["failed_ad"] = {
-    "title" : _("Timed out Active Directory Requests"),
+metric_info["failed_ad_requests"] = {
+    "title" : _("WEB - Timed out Active Directory Requests"),
     "unit": "1/s",
     "color": "42/a"
 }
@@ -3432,8 +3432,8 @@ metric_info["http_5xx"] = {
     "color": "42/a"
 }
 
-metric_info["message_processing_time"] = {
-    "title" : _("Average Incoming Message Processing Time"),
+metric_info["sip_message_processing_time"] = {
+    "title" : _("SIP - Average Incoming Message Processing Time"),
     "unit": "s",
     "color": "42/a"
 }
@@ -3456,182 +3456,182 @@ metric_info["join_failures"] = {
     "color": "42/a"
 }
 
-metric_info["failed_validate_cert"] = {
-    "title" : _("Failed validate cert calls"),
+metric_info["failed_validate_cert_calls"] = {
+    "title" : _("WEB - Failed validate cert calls"),
     "unit": "count",
     "color": "42/a"
 }
 
-metric_info["incoming_responses_dropped"] = {
-    "title" : _("Incoming Responses Dropped"),
+metric_info["sip_incoming_responses_dropped"] = {
+    "title" : _("SIP - Incoming Responses Dropped"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["incoming_requests_dropped"] = {
-    "title" : _("Incoming Requests Dropped"),
+metric_info["sip_incoming_requests_dropped"] = {
+    "title" : _("SIP - Incoming Requests Dropped"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["queue_latency"] = {
-    "title" : _("Queue Latency"),
+metric_info["usrv_queue_latency"] = {
+    "title" : _("USrv - Queue Latency"),
     "unit": "s",
     "color": "42/a"
 }
 
-metric_info["sproc_latency"] = {
-    "title" : _("Sproc Latency"),
+metric_info["srv_sproc_latency"] = {
+    "title" : _("USrv - Sproc Latency"),
     "unit": "s",
     "color": "42/a"
 }
 
-metric_info["throttled_requests"] = {
-    "title" : _("Throttled requests"),
+metric_info["usrv_throttled_requests"] = {
+    "title" : _("USrv - Throttled requests"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["503_responses"] = {
-    "title" : _("Local 503 Responses"),
+metric_info["sip_503_responses"] = {
+    "title" : _("SIP - Local 503 Responses"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["incoming_messages_timed_out"] = {
-    "title" : _("Incoming Messages Timed out"),
+metric_info["sip_incoming_messages_timed_out"] = {
+    "title" : _("SIP - Incoming Messages Timed out"),
     "unit": "count",
     "color": "42/a"
 }
 
-metric_info["incomplete_calls"] = {
-    "title" : _("Incomplete Calls"),
+metric_info["caa_incomplete_calls"] = {
+    "title" : _("CAA - Incomplete Calls"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["create_conference_latency"] = {
-    "title" : _("Create Conference Latency"),
+metric_info["usrv_create_conference_latency"] = {
+    "title" : _("USrv - Create Conference Latency"),
     "unit": "s",
     "color": "42/a"
 }
 
-metric_info["allocation_latency"] = {
-    "title" : _("Allocation Latency"),
+metric_info["usrv_allocation_latency"] = {
+    "title" : _("USrv - Allocation Latency"),
     "unit": "s",
     "color": "42/a"
 }
 
-metric_info["avg_holding_time_incoming_messages"] = {
-    "title" : _("Average Holding Time For Incoming Messages"),
+metric_info["sip_avg_holding_time_incoming_messages"] = {
+    "title" : _("SIP - Average Holding Time For Incoming Messages"),
     "unit": "s",
     "color": "42/a"
 }
 
-metric_info["flow_controlled_connections"] = {
-    "title" : _("Flow-controlled Connections"),
+metric_info["sip_flow_controlled_connections"] = {
+    "title" : _("SIP - Flow-controlled Connections"),
     "unit": "count",
     "color": "42/a"
 }
 
-metric_info["avg_outgoing_queue_delay"] = {
-    "title" : _("Average Outgoing Queue Delay"),
+metric_info["sip_avg_outgoing_queue_delay"] = {
+    "title" : _("SIP - Average Outgoing Queue Delay"),
     "unit": "s",
     "color": "42/a"
 }
 
-metric_info["sends_timed_out"] = {
-    "title" : _("Sends Timed-Out"),
+metric_info["sip_sends_timed_out"] = {
+    "title" : _("SIP - Sends Timed-Out"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["authentication_errors"] = {
-    "title" : _("Authentication Errors"),
+metric_info["sip_authentication_errors"] = {
+    "title" : _("SIP - Authentication Errors"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["load_call_failure_index"] = {
-    "title" : _("Load Call Failure Index"),
+metric_info["mediation_load_call_failure_index"] = {
+    "title" : _("MediationServer - Load Call Failure Index"),
     "unit": "count",
     "color": "42/a"
 }
 
-metric_info["failed_calls_because_of_proxy"] = {
-    "title" : _("Failed calls caused by unexpected interaction from proxy"),
+metric_info["mediation_failed_calls_because_of_proxy"] = {
+    "title" : _("MediationServer - Failed calls caused by unexpected interaction from proxy"),
     "unit": "count",
     "color": "42/a"
 }
 
-metric_info["failed_calls_because_of_gateway"] = {
-    "title" : _("Failed calls caused by unexpected interaction from gateway"),
+metric_info["mediation_failed_calls_because_of_gateway"] = {
+    "title" : _("MediationServer - Failed calls caused by unexpected interaction from gateway"),
     "unit": "count",
     "color": "42/a"
 }
 
-metric_info["media_connectivity_failure"] = {
-    "title" : _("Media Connectivity Check Failure"),
+metric_info["mediation_media_connectivity_failure"] = {
+    "title" : _("Mediation Server - Media Connectivity Check Failure"),
     "unit": "count",
     "color": "42/a"
 }
 
-metric_info["failed_requests"] = {
-    "title" : _("Bad Requests Received"),
+metric_info["avauth_failed_requests"] = {
+    "title" : _("A/V Auth - Bad Requests Received"),
     "unit": "count",
     "color": "42/a"
 }
 
-metric_info["udp_failed_auth"] = {
+metric_info["edge_udp_failed_auth"] = {
     "title" : _("UDP Authentication Failures"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["tcp_failed_auth"] = {
-    "title" : _("TCP Authentication Failures"),
+metric_info["edge_tcp_failed_auth"] = {
+    "title" : _("A/V Edge - TCP Authentication Failures"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["udp_allocate_requests_exceeding_port_limit"] = {
-    "title" : _("UDP Allocate Requests Exceeding Port Limit"),
+metric_info["edge_udp_allocate_requests_exceeding_port_limit"] = {
+    "title" : _("A/V Edge - UDP Allocate Requests Exceeding Port Limit"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["tcp_allocate_requests_exceeding_port_limit"] = {
-    "title" : _("TCP Allocate Requests Exceeding Port Limit"),
+metric_info["edge_tcp_allocate_requests_exceeding_port_limit"] = {
+    "title" : _("A/V Edge - TCP Allocate Requests Exceeding Port Limit"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["udp_packets_dropped"] = {
-    "title" : _("UDP Packets Dropped"),
+metric_info["edge_udp_packets_dropped"] = {
+    "title" : _("A/V Edge - UDP Packets Dropped"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["tcp_packets_dropped"] = {
-    "title" : _("TCP Packets Dropped"),
+metric_info["edge_tcp_packets_dropped"] = {
+    "title" : _("A/V Edge - TCP Packets Dropped"),
     "unit": "1/s",
     "color": "42/a"
 }
 
-metric_info["connections_throttled"] = {
-    "title": _("Throttled Server Connections"),
+metric_info["dataproxy_connections_throttled"] = {
+    "title": _("DATAPROXY - Throttled Server Connections"),
     "unit": "count",
     "color": "42/a"
 }
 
-metric_info["failed_outbound_streams"] = {
-    "title": _("Failed outbound stream establishes"),
+metric_info["xmpp_failed_outbound_streams"] = {
+    "title": _("XmppFederationProxy - Failed outbound stream establishes"),
     "unit": "1/s",
     "color" : "26/a",
 }
 
-metric_info["failed_inbound_streams"] = {
-    "title": _("Failed inbound stream establishes"),
+metric_info["xmpp_failed_inbound_streams"] = {
+    "title": _("XmppFederationProxy - Failed inbound stream establishes"),
     "unit": "1/s",
     "color" : "31/a",
 }
@@ -3642,14 +3642,14 @@ skype_mobile_devices = [("android", "Android", "33/a"),
                         ("mac", "Mac", "23/a")]
 
 for device, name, color in skype_mobile_devices:
-    metric_info["active_sessions_%s" % device] = {
-        "title" : _("Active Sessions (%s)") % name,
+    metric_info["ucwa_active_sessions_%s" % device] = {
+        "title" : _("UCWA - Active Sessions (%s)") % name,
         "unit": "count",
         "color": color
     }
 
-metric_info["requests_processing"] = {
-    "title" : _("Requests in Processing"),
+metric_info["web_requests_processing"] = {
+    "title" : _("WEB - Requests in Processing"),
     "unit": "count",
     "color": "12/a"
 }

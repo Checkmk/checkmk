@@ -1221,20 +1221,49 @@ class FilterCustomVarChoice(Filter):
         Filter.__init__(self, name, title, info, [ name ], [])
         self.custom_var = custom_var
         self.choices    = choices
+        self.lower_bound_varname = "%s_lower" % self.name
+        self.upper_bound_varname = "%s_upper" % self.name
+
+
+    def _prepare_choices(self):
+        return map( lambda x: ( x[0], "%s - %s" % (x[0], x[1]) ), self.choices )
 
 
     def display(self):
-        selection = [ ("", "") ] + self.choices
-        html.sorted_select(self.name, selection)
+        selection = [ ("", "") ] + self._prepare_choices()
+        html.write("From")
+        html.sorted_select(self.lower_bound_varname, selection)
+        html.write("To")
+        html.sorted_select(self.upper_bound_varname, selection)
 
 
     def filter(self, infoname):
-        this_custom_value = html.var(self.name)
-        if this_custom_value:
-            return "Filter: %s_custom_variables = %s %s\n" % \
-                   ( self.info, self.custom_var, lqencode(this_custom_value) )
+        lower_bound = html.var(self.lower_bound_varname)
+        upper_bound = html.var(self.upper_bound_varname)
+
+        if lower_bound and upper_bound:
+            filterline = "Filter: %s_custom_variable_names = %s\n" % \
+                         ( self.info, self.custom_var )
+
+            filterline_values = []
+            for value, readable in self.choices:
+                if value >= int(lower_bound) and value <= int(upper_bound):
+                    filterline_values.append( "Filter: custom_variable_values >= %s" % \
+                                              lqencode(str(value)) )
+            filterline += "%s\n" % "\n".join( filterline_values )
+
+            len_filterline_values = len(filterline_values)
+            if len_filterline_values > 1:
+                filterline += "Or: %d\n" % len_filterline_values
+
+            return filterline
+
         else:
             return ""
+
+
+    def double_height(self):
+        return True
 
 
 

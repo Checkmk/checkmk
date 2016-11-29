@@ -26,6 +26,7 @@
 #include "MonitoringCore.h"
 #include "TableEventConsoleEvents.h"
 
+using std::make_unique;
 using std::string;
 
 #ifdef CMC
@@ -41,19 +42,20 @@ TableEventConsoleHistory::TableEventConsoleHistory(
     : TableEventConsole(core)
 #endif
 {
-    addColumn(new IntEventConsoleColumn(
+    addColumn(make_unique<IntEventConsoleColumn>(
         "history_line", "The line number of the event in the history file"));
-    addColumn(new TimeEventConsoleColumn("history_time",
-                                         "Time when the event was written into "
-                                         "the history file (Unix timestamp)"));
-    addColumn(new StringEventConsoleColumn(
+    addColumn(make_unique<TimeEventConsoleColumn>("history_time",
+                                                  "Time when the event was "
+                                                  "written into the history "
+                                                  "file (Unix timestamp)"));
+    addColumn(make_unique<StringEventConsoleColumn>(
         "history_what",
         "What happened (one of "
         "ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/"
         "DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)"));
-    addColumn(new StringEventConsoleColumn(
+    addColumn(make_unique<StringEventConsoleColumn>(
         "history_who", "The user who triggered the command"));
-    addColumn(new StringEventConsoleColumn(
+    addColumn(make_unique<StringEventConsoleColumn>(
         "history_addinfo",
         "Additional information, like email recipient/subject or action ID"));
     TableEventConsoleEvents::addColumns(this, downtimes_holder, comments_holder

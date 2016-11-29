@@ -28,6 +28,7 @@
 #include "Query.h"
 #include "nagios.h"
 
+using std::make_unique;
 using std::string;
 
 extern timeperiod *timeperiod_list;
@@ -35,12 +36,13 @@ extern timeperiod *timeperiod_list;
 TableTimeperiods::TableTimeperiods(Logger *logger) : Table(logger) {
     timeperiod tp;
     char *ref = reinterpret_cast<char *>(&tp);
-    addColumn(new OffsetStringColumn("name", "The name of the timeperiod",
-                                     reinterpret_cast<char *>(&tp.name) - ref));
-    addColumn(
-        new OffsetStringColumn("alias", "The alias of the timeperiod",
-                               reinterpret_cast<char *>(&tp.alias) - ref));
-    addColumn(new OffsetTimeperiodColumn(
+    addColumn(make_unique<OffsetStringColumn>(
+        "name", "The name of the timeperiod",
+        reinterpret_cast<char *>(&tp.name) - ref));
+    addColumn(make_unique<OffsetStringColumn>(
+        "alias", "The alias of the timeperiod",
+        reinterpret_cast<char *>(&tp.alias) - ref));
+    addColumn(make_unique<OffsetTimeperiodColumn>(
         "in", "Wether we are currently in this period (0/1)", -1));
     // TODO(mk): add days and exceptions
 }

@@ -27,6 +27,7 @@
 #include "Table.h"
 #include "TableHosts.h"
 
+using std::make_unique;
 using std::string;
 
 #ifdef CMC
@@ -59,50 +60,50 @@ void TableEventConsoleEvents::addColumns(
     const DowntimesOrComments &comments_holder, MonitoringCore *core)
 #endif
 {
-    table->addColumn(
-        new IntEventConsoleColumn("event_id", "The unique ID for this event"));
-    table->addColumn(new IntEventConsoleColumn(
+    table->addColumn(make_unique<IntEventConsoleColumn>(
+        "event_id", "The unique ID for this event"));
+    table->addColumn(make_unique<IntEventConsoleColumn>(
         "event_count",
         "The number of occurrences of this event within period"));
-    table->addColumn(new StringEventConsoleColumn(
+    table->addColumn(make_unique<StringEventConsoleColumn>(
         "event_text", "The textual description of the event"));
-    table->addColumn(new TimeEventConsoleColumn(
+    table->addColumn(make_unique<TimeEventConsoleColumn>(
         "event_first",
         "Time of the first occurrence of the event (Unix timestamp)"));
-    table->addColumn(new TimeEventConsoleColumn(
+    table->addColumn(make_unique<TimeEventConsoleColumn>(
         "event_last",
         "Time of the last occurrence of this event (Unix timestamp)"));
-    table->addColumn(
-        new StringEventConsoleColumn("event_comment", "Event comment"));
-    table->addColumn(new IntEventConsoleColumn(
+    table->addColumn(make_unique<StringEventConsoleColumn>("event_comment",
+                                                           "Event comment"));
+    table->addColumn(make_unique<IntEventConsoleColumn>(
         "event_sl", "The service level for this event"));
-    table->addColumn(
-        new StringEventConsoleColumn("event_host", "Host name for this event"));
-    table->addColumn(
-        new StringEventConsoleColumn("event_contact", "Contact information"));
-    table->addColumn(new StringEventConsoleColumn("event_application",
-                                                  "Syslog tag/application"));
-    table->addColumn(new IntEventConsoleColumn(
+    table->addColumn(make_unique<StringEventConsoleColumn>(
+        "event_host", "Host name for this event"));
+    table->addColumn(make_unique<StringEventConsoleColumn>(
+        "event_contact", "Contact information"));
+    table->addColumn(make_unique<StringEventConsoleColumn>(
+        "event_application", "Syslog tag/application"));
+    table->addColumn(make_unique<IntEventConsoleColumn>(
         "event_pid", "The process ID of the originating process"));
-    table->addColumn(
-        new IntEventConsoleColumn("event_priority", "Syslog priority"));
-    table->addColumn(
-        new IntEventConsoleColumn("event_facility", "Syslog facility"));
-    table->addColumn(
-        new StringEventConsoleColumn("event_rule_id", "The ID of the rule"));
-    table->addColumn(new IntEventConsoleColumn(
+    table->addColumn(make_unique<IntEventConsoleColumn>("event_priority",
+                                                        "Syslog priority"));
+    table->addColumn(make_unique<IntEventConsoleColumn>("event_facility",
+                                                        "Syslog facility"));
+    table->addColumn(make_unique<StringEventConsoleColumn>(
+        "event_rule_id", "The ID of the rule"));
+    table->addColumn(make_unique<IntEventConsoleColumn>(
         "event_state", "The state of the event (0/1/2/3)"));
-    table->addColumn(
-        new StringEventConsoleColumn("event_phase",
-                                     "The phase the event is currently in (one "
-                                     "of open/closed/delayed/counting/ack)"));
-    table->addColumn(
-        new StringEventConsoleColumn("event_owner", "The owner of the event"));
-    table->addColumn(new ListEventConsoleColumn(
+    table->addColumn(make_unique<StringEventConsoleColumn>(
+        "event_phase",
+        "The phase the event is currently in (one of "
+        "open/closed/delayed/counting/ack)"));
+    table->addColumn(make_unique<StringEventConsoleColumn>(
+        "event_owner", "The owner of the event"));
+    table->addColumn(make_unique<ListEventConsoleColumn>(
         "event_match_groups", "Text groups from regular expression match"));
-    table->addColumn(
-        new ListEventConsoleColumn("event_contact_groups", "Contact groups"));
-    table->addColumn(new StringEventConsoleColumn(
+    table->addColumn(make_unique<ListEventConsoleColumn>("event_contact_groups",
+                                                         "Contact groups"));
+    table->addColumn(make_unique<StringEventConsoleColumn>(
         "event_ipaddress", "The IP address where the event originated"));
 
     Row row;

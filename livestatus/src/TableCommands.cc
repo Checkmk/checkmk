@@ -28,6 +28,7 @@
 #include "OffsetSStringColumn.h"
 #include "Query.h"
 
+using std::make_unique;
 using std::string;
 
 TableCommands::TableCommands(const CommandsHolder &commands_holder,
@@ -42,10 +43,10 @@ string TableCommands::namePrefix() const { return "command_"; }
 
 // static
 void TableCommands::addColumns(Table *table, const string &prefix, int offset) {
-    table->addColumn(new OffsetSStringColumn(
+    table->addColumn(make_unique<OffsetSStringColumn>(
         prefix + "name", "The name of the command",
         offset + offsetof(CommandsHolder::Command, _name)));
-    table->addColumn(new OffsetSStringColumn(
+    table->addColumn(make_unique<OffsetSStringColumn>(
         prefix + "line", "The shell command line",
         offset + offsetof(CommandsHolder::Command, _command_line)));
 }

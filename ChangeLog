@@ -72,6 +72,9 @@
     BI:
     * 3991 FIX: BI Aggregations: no longer show duplicate aggregations when an aggregation has mulitple groups
 
+    Event Console:
+    * 4097 FIX: Event console: Make writing of status file more robust...
+
     Livestatus:
     * 3651 FIX: Fixed potential segfault with Nagios core when accessing log/commands table via Livestatus....
 

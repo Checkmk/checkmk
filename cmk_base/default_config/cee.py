@@ -1,0 +1,1 @@
+../../../cmc/cmk_base/default_config/cee.py

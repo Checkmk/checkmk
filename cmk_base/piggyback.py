@@ -29,6 +29,7 @@ import os
 import cmk.paths
 import cmk.hostname_translation
 
+import cmk_base.utils
 import cmk_base.console as console
 import cmk_base.config as config
 
@@ -70,7 +71,7 @@ def get_piggyback_files(hostname):
         file_path = dir + "/" + sourcehost
 
         try:
-            file_age = cachefile_age(file_path)
+            file_age = cmk_base.utils.cachefile_age(file_path)
         except MKGeneralException, e:
             continue # File might've been deleted. That's ok.
 
@@ -134,7 +135,7 @@ def remove_piggyback_info_from(sourcehost, keep=[]):
 
 
 def translate_piggyback_host(sourcehost, backedhost):
-    translation = get_piggyback_translation(sourcehost)
+    translation = config.get_piggyback_translation(sourcehost)
 
     # To make it possible to match umlauts we need to change the hostname
     # to a unicode string which can then be matched with regexes etc.

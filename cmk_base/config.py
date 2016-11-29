@@ -155,15 +155,13 @@ def load(with_conf_d=True, validate_hosts=True):
     service_service_levels = extra_service_conf.get("_ec_sl", [])
     host_service_levels = extra_host_conf.get("_ec_sl", [])
 
-    # TODO: duplicate_hosts() is currently broken because all_active_hosts()
-    # now already returns sets and reduces the duplicates. Fix this?!
-    #if validate_hosts:
-    #    duplicates = duplicate_hosts()
-    #    if duplicates:
-    #        # TODO: Raise an exception
-    #        console.error("Error in configuration: duplicate hosts: %s\n",
-    #                                                ", ".join(duplicates))
-    #        sys.exit(3)
+    if validate_hosts:
+        duplicates = duplicate_hosts()
+        if duplicates:
+            # TODO: Raise an exception
+            console.error("Error in configuration: duplicate hosts: %s\n",
+                                                    ", ".join(duplicates))
+            sys.exit(3)
 
     # Add WATO-configured explicit checks to (possibly empty) checks
     # statically defined in checks.
@@ -442,6 +440,18 @@ def filter_active_hosts(hostlist, keep_offline_hosts=False, keep_duplicates=Fals
         return set(active_hosts)
 
 
+def duplicate_hosts():
+    seen_hostnames = set([])
+    duplicates = set([])
+
+    for hostname in config.all_active_hosts_with_duplicates():
+        if hostname in seen_hostnames:
+            duplicates.add(hostname)
+        else:
+            seen_hostnames.add(hostname)
+
+    return sorted(list(duplicates))
+
 #.
 #   .--Hosts---------------------------------------------------------------.
 #   |                       _   _           _                              |
@@ -475,6 +485,7 @@ def is_snmp_host(hostname):
 
 
 def is_ping_host(hostname):
+    import cmk_base.piggyback as piggyback
     return not is_snmp_host(hostname) \
        and not is_tcp_host(hostname) \
        and not piggyback.has_piggyback_info(hostname) \
@@ -559,6 +570,18 @@ def contactgroups_of(hostname):
         cgrs.append("check-mk-notify")
 
     return list(set(cgrs))
+
+#
+# Misc
+#
+
+def get_piggyback_translation(hostname):
+    """Get a dict that specifies the actions to be done during the hostname translation"""
+    rules = rulesets.host_extra_conf(hostname, piggyback_translation)
+    translations = {}
+    for rule in rules[::-1]:
+        translations.update(rule)
+    return translations
 
 
 #.

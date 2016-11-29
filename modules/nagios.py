@@ -30,6 +30,7 @@ import cmk.tty as tty
 import cmk.paths
 
 import cmk_base.console as console
+import cmk_base.core_config as core_config
 
 #   .--Create config-------------------------------------------------------.
 #   |      ____                _                          __ _             |
@@ -73,16 +74,16 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     hostcheck_commands_to_define = []
 
     if config.host_notification_periods != []:
-        configuration_warning("host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead.")
+        core_config.warning("host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead.")
 
     if config.summary_host_notification_periods != []:
-        configuration_warning("summary_host_notification_periods is not longer supported. Please use extra_summary_host_conf['notification_period'] instead.")
+        core_config.warning("summary_host_notification_periods is not longer supported. Please use extra_summary_host_conf['notification_period'] instead.")
 
     if config.service_notification_periods != []:
-        configuration_warning("service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead.")
+        core_config.warning("service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead.")
 
     if config.summary_service_notification_periods != []:
-        configuration_warning("summary_service_notification_periods is not longer supported. Please use extra_summary_service_conf['notification_period'] instead.")
+        core_config.warning("summary_service_notification_periods is not longer supported. Please use extra_summary_service_conf['notification_period'] instead.")
 
     # Map service_period to _SERVICE_PERIOD. This field das not exist in Nagios/Icinga.
     # The CMC has this field natively.
@@ -283,7 +284,7 @@ define servicedependency {
         # Make sure, the service description is unique on this host
         if description in used_descriptions:
             cn, it = used_descriptions[description]
-            configuration_warning(
+            core_config.warning(
                     "ERROR: Duplicate service description '%s' for host '%s'!\n"
                     " - 1st occurrance: checktype = %s, item = %r\n"
                     " - 2nd occurrance: checktype = %s, item = %r\n" %
@@ -419,7 +420,7 @@ define service {
 
         if description in used_descriptions:
             cn, it = used_descriptions[description]
-            configuration_warning(
+            core_config.warning(
                     "ERROR: Duplicate service description (legacy check) '%s' for host '%s'!\n"
                     " - 1st occurrance: checktype = %s, item = %r\n"
                     " - 2nd occurrance: checktype = legacy(%s), item = None\n" %
@@ -486,7 +487,7 @@ define service {
                 if cn == "active(%s)" % acttype:
                     continue
 
-                configuration_warning(
+                core_config.warning(
                         "ERROR: Duplicate service description (active check) '%s' for host '%s'!\n"
                         " - 1st occurrance: checktype = %s, item = %r\n"
                         " - 2nd occurrance: checktype = active(%s), item = None\n" %
@@ -559,7 +560,7 @@ define service {
                 # second one.
                 if cn == "custom(%s)" % command_name:
                     continue
-                configuration_warning(
+                core_config.warning(
                         "ERROR: Duplicate service description (custom check) '%s' for host '%s'!\n"
                         " - 1st occurrance: checktype = %s, item = %r\n"
                         " - 2nd occurrance: checktype = custom(%s), item = %r\n" %

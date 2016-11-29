@@ -1,0 +1,29 @@
+Title: mk_oracle.ps1: added Oracle wallet support to Windows plugin
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480406962
+Class: feature
+
+The plugin for windows could be used with the Oracle wallet. The support is
+limitted to all Instances except ASM. This function is only for
+administrators who really knows how to use the wallet.
+
+You have to add an entry with the name of the instance. Please check the
+connection with SQLPlus before trying to use the plugin.
+The plugin use the following connection:
+sqlplus /@<ORACLE_SID>
+
+You have to add a credential to the wallet with the ORACLE_SID as name for
+the entry:
+Example:
+mkstore -wrl <Wallet Directory> createCredential „<ORACLE_SID>" <Username> <Password>
+
+The wallet is only used, when username is set to '/'. Password,
+hostname and listener-port is ignored, because the tnsnames.ora is used.
+
+Please read the doumentation from Oracle for using the wallet. The
+sqlnet.ora must be configured for your environment and the wallet must be
+created before adding some entries. You could use TNS_ADMIN in
+mk_oracle_cfg.ps1 for pointing to the sqlnet configuration for the plugin.

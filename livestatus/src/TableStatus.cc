@@ -24,6 +24,8 @@
 
 #include "TableStatus.h"
 #include <ctime>
+#include <memory>
+#include "Column.h"
 #include "DoublePointerColumn.h"
 #include "IntPointerColumn.h"
 #include "Query.h"

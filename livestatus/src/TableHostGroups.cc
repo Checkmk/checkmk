@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableHostGroups.h"
+#include <memory>
+#include "Column.h"
 #include "HostListColumn.h"
 #include "HostListStateColumn.h"
 #include "OffsetStringColumn.h"

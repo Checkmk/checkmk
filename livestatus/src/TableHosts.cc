@@ -23,8 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableHosts.h"
+#include <memory>
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
+#include "Column.h"
 #include "ContactGroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
 #include "CustomVarsDictColumn.h"
@@ -32,6 +34,7 @@
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
 #include "DownCommColumn.h"
+#include "DynamicColumn.h"
 #include "DynamicLogwatchFileColumn.h"
 #include "HostContactsColumn.h"
 #include "HostFileColumn.h"

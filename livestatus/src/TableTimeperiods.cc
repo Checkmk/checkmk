@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableTimeperiods.h"
+#include <memory>
+#include "Column.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeperiodColumn.h"
 #include "Query.h"

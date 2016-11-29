@@ -24,6 +24,8 @@
 
 #include "TableCommands.h"
 #include <cstddef>
+#include <memory>
+#include "Column.h"
 #include "CommandsHolder.h"
 #include "OffsetSStringColumn.h"
 #include "Query.h"

@@ -504,7 +504,14 @@ define service {
 
             template = has_perfdata and "check_mk_perf," or ""
             extraconf = extra_service_conf_of(hostname, description)
-            command = "check_mk_active-%s!%s" % (acttype, args)
+
+            if host_attrs["address"] in [ "0.0.0.0", "::" ]:
+                command_name = "check-mk-custom"
+                command = command_name + "!echo \"Failed to lookup IP address and no explicit IP address configured\" && exit 3"
+                custom_commands_to_define.add(command_name)
+            else:
+                command = "check_mk_active-%s!%s" % (acttype, args)
+
             outfile.write("""
 define service {
   use\t\t\t\t%scheck_mk_default

@@ -4200,12 +4200,13 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _start_activation(self):
+        self._log_activation()
         for site_id in self._sites:
             self._start_site_activation(site_id)
 
 
     def _start_site_activation(self, site_id):
-        self._log_activation(site_id)
+        self._log_site_activation(site_id)
 
         # This is doing the first fork and the ActivateChangesSite() is doing the second
         # (to avoid zombie processes when sync processes exit)
@@ -4220,12 +4221,16 @@ class ActivateChangesManager(ActivateChanges):
         os._exit(0)
 
 
-    def _log_activation(self, site_id):
-        log_msg = _("Started activation of site %s") % site_id
-        if self._comment:
-            log_msg += " (%s: %s)" % (_("Comment"), self._comment)
-
+    def _log_activation(self):
+        log_msg = _("Starting activation (Sites: %s)") % ",".join(self._sites)
         log_audit(None, "activate-changes", log_msg)
+
+        if self._comment:
+            log_audit(None, "activate-changes", "%s: %s" % (_("Comment"), self._comment))
+
+
+    def _log_site_activation(self, site_id):
+        log_audit(None, "activate-changes", _("Started activation of site %s") % site_id)
 
 
     def get_state(self):

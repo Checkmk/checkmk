@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableContactGroups.h"
+#include <memory>
+#include "Column.h"
 #include "ContactGroupsMemberColumn.h"
 #include "MonitoringCore.h"
 #include "OffsetStringColumn.h"

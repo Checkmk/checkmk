@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsoleEvents.h"
+#include <memory>
+#include "Column.h"
 #include "MonitoringCore.h"
 #include "Table.h"
 #include "TableHosts.h"

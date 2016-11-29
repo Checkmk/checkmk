@@ -23,8 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableServices.h"
+#include <memory>
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
+#include "Column.h"
 #include "ContactGroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
 #include "CustomVarsDictColumn.h"

@@ -24,8 +24,10 @@
 
 #include "TableContacts.h"
 #include <cstdio>
+#include <memory>
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
+#include "Column.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"

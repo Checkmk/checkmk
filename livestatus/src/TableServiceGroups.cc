@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableServiceGroups.h"
+#include <memory>
+#include "Column.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "ServiceListColumn.h"

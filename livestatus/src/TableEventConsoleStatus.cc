@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsoleStatus.h"
+#include <memory>
+#include "Column.h"
 
 using std::make_unique;
 using std::string;

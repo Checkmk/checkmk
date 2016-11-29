@@ -25,7 +25,9 @@
 #include "TableLog.h"
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <utility>
+#include "Column.h"
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logfile.h"

@@ -920,7 +920,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
             # strings here seamless. TODO remove this conversion one day and replace it
             # with a validation that item needs to be of type unicode
             if type(item) == str:
-                item = decode_incoming_string(item)
+                item = config.decode_incoming_string(item)
 
             description = service_description(hostname, check_type, item)
             # make sanity check
@@ -1255,7 +1255,7 @@ def read_autochecks_of(hostname, world="config"):
         # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
         # items from existing autocheck files for compatibility. TODO remove this one day
         if type(item) == str:
-            item = decode_incoming_string(item)
+            item = config.decode_incoming_string(item)
 
         if type(check_type) not in (str, unicode):
             raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
@@ -1344,7 +1344,7 @@ def parse_autochecks_file(hostname):
             # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
             # items from existing autocheck files for compatibility. TODO remove this one day
             if type(item) == str:
-                item = decode_incoming_string(item)
+                item = config.decode_incoming_string(item)
 
             table.append((eval(checktypestring), item, paramstring))
         except:

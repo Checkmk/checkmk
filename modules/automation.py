@@ -1041,7 +1041,7 @@ def automation_active_check(args):
                 for params in entries:
                     description = act_info["service_description"](params).replace('$HOSTNAME$', hostname)
                     if description == item:
-                        args = active_check_arguments(hostname, description, act_info["argument_function"](params))
+                        args = checks.active_check_arguments(hostname, description, act_info["argument_function"](params))
                         command_line = replace_core_macros(hostname, act_info["command_line"].replace("$ARG1$", args))
                         return execute_check_plugin(command_line)
 

@@ -1179,9 +1179,6 @@ if '-d' in sys.argv:
     # Exit code of Check_MK in case of various errors
     output.write("def exit_code_spec(hostname):\n    return %r\n\n" % exit_code_spec(hostname))
 
-    # Piggyback translations
-    output.write("def get_piggyback_translation(hostname):\n    return %r\n\n" % get_piggyback_translation(hostname))
-
     # Expected agent version
     output.write("def agent_target_version(hostname):\n    return %r\n\n" % (agent_target_version(hostname),))
 

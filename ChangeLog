@@ -1,4 +1,7 @@
 1.4.0i2p5:
+    Core & Setup:
+    * 4078 FIX: Fixed handling of hosts with non resolvable IP addresses during runtime...
+
     Checks & Agents:
     * 4069 FIX: cmciii.phase: Fixed broken check with some devices...
     * 4092 FIX: if.include: fixed wrong calculated number of interfaces which are up in case of interface groups

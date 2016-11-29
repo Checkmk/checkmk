@@ -140,7 +140,7 @@ def translate_piggyback_host(sourcehost, backedhost):
     # To make it possible to match umlauts we need to change the hostname
     # to a unicode string which can then be matched with regexes etc.
     # We assume the incoming name is correctly encoded in UTF-8
-    backedhost = decode_incoming_string(backedhost)
+    backedhost = config.decode_incoming_string(backedhost)
 
     translated = cmk.hostname_translation.translate(translation, backedhost)
 

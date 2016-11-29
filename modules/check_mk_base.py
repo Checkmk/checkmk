@@ -824,20 +824,13 @@ def parse_info(lines, hostname):
                 line = stripped_line
 
             if encoding:
-                line = decode_incoming_string(line, encoding)
+                line = config.decode_incoming_string(line, encoding)
             else:
-                line = decode_incoming_string(line)
+                line = config.decode_incoming_string(line)
 
             section.append(line.split(separator))
 
     return info, piggybacked, persist, agent_cache_info
-
-
-def decode_incoming_string(s, encoding="utf-8"):
-    try:
-        return s.decode(encoding)
-    except:
-        return s.decode(config.fallback_agent_output_encoding)
 
 
 #.

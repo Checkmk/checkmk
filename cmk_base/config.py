@@ -619,3 +619,10 @@ def is_cluster(hostname):
 
 def is_cmc():
     return monitoring_core == "cmc"
+
+
+def decode_incoming_string(s, encoding="utf-8"):
+    try:
+        return s.decode(encoding)
+    except:
+        return s.decode(fallback_agent_output_encoding)

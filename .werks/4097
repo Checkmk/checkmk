@@ -1,0 +1,11 @@
+Title: Event console: Make writing of status file more robust
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.8p15
+Date: 1480427713
+Class: fix
+
+Previously, a system crash at an inopportune moment could cause
+the status file to be corrupt, requiring manual deletion to start
+the mkeventd.

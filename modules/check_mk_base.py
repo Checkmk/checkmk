@@ -296,7 +296,7 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
                       max_cachefile_age == None and config.check_max_cachefile_age or max_cachefile_age,
                       ignore_check_interval)
         if info != None and has_nodeinfo:
-            if clusters_of(hostname):
+            if config.clusters_of(hostname):
                 add_host = hostname
             else:
                 add_host = None
@@ -654,9 +654,9 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
         raise MKGeneralException("Cannot contact agent: host '%s' has no IP address." % hostname)
 
     if port is None:
-        port = agent_port_of(hostname)
+        port = config.agent_port_of(hostname)
 
-    encryption_settings = agent_encryption_settings(hostname)
+    encryption_settings = config.agent_encryption_of(hostname)
 
     try:
         s = socket.socket(is_ipv6_primary(hostname) and socket.AF_INET6 or socket.AF_INET,
@@ -852,10 +852,10 @@ def do_check(hostname, ipaddress, only_check_types = None):
     console.verbose("Check_MK version %s\n" % cmk.__version__)
 
 
-    expected_version = agent_target_version(hostname)
+    expected_version = config.agent_target_version(hostname)
 
     # Exit state in various situations is configurable since 1.2.3i1
-    exit_spec = exit_code_spec(hostname)
+    exit_spec = config.exit_code_spec(hostname)
 
     try:
         item_state.load(hostname)
@@ -951,7 +951,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
     else:
         output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
 
-    if config.record_inline_snmp_stats and is_inline_snmp_host(hostname):
+    if config.record_inline_snmp_stats and config.is_inline_snmp_host(hostname):
         save_snmp_stats()
 
     if opt_keepalive:
@@ -1229,7 +1229,7 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
         "item"          : item,
         "params"        : params,
         "uses_snmp"     : check_uses_snmp(check_type),
-        "inline_snmp"   : is_inline_snmp_host(hostname),
+        "inline_snmp"   : config.is_inline_snmp_host(hostname),
         "manual_check"  : is_manual_check(hostname, check_type, item),
     })
     file(crash_dir+"/crash.info", "w").write(crash_reporting.crash_info_to_string(crash_info)+"\n")

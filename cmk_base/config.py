@@ -472,6 +472,43 @@ def host_is_member_of_site(hostname, site):
     return True
 
 
+def alias_of(hostname, fallback):
+    aliases = rulesets.host_extra_conf(hostname, extra_host_conf.get("alias", []))
+    if len(aliases) == 0:
+        if fallback:
+            return fallback
+        else:
+            return hostname
+    else:
+        return aliases[0]
+
+
+def parents_of(hostname):
+    par = rulesets.host_extra_conf(hostname, parents)
+    # Use only those parents which are defined and active in
+    # all_hosts.
+    used_parents = []
+    for p in par:
+        ps = p.split(",")
+        for pss in ps:
+            if pss in all_active_realhosts():
+                used_parents.append(pss)
+    return used_parents
+
+
+# If host is node of one or more clusters, return a list of the cluster host names.
+# If not, return an empty list.
+def clusters_of(hostname):
+    cache = cmk_base.config_cache.get_dict("clusters_of")
+    if cache.is_empty():
+        for cluster, hosts in clusters.items():
+            clustername = cluster.split('|', 1)[0]
+            for name in hosts:
+                cache.setdefault(name, []).append(clustername)
+
+    return cache.get(hostname, [])
+
+
 #
 # Agent type
 #
@@ -495,10 +532,10 @@ def is_ping_host(hostname):
 def is_dual_host(hostname):
     return is_tcp_host(hostname) and is_snmp_host(hostname)
 
+
 #
 # IPv4/IPv6
 #
-
 
 def is_ipv6_primary(hostname):
     dual_stack_host = is_ipv4v6_host(hostname)
@@ -537,6 +574,131 @@ def management_address(hostname):
 
 def management_protocol(hostname):
     return host_attributes[hostname]['management_protocol']
+
+
+#
+# Agent communication
+#
+
+def agent_port_of(hostname):
+    ports = rulesets.host_extra_conf(hostname, agent_ports)
+    if len(ports) == 0:
+        return agent_port
+    else:
+        return ports[0]
+
+
+def agent_encryption_of(hostname):
+    settings = rulesets.host_extra_conf(hostname, agent_encryption)
+    if settings:
+        return settings[0]
+    else:
+        return {'use_regular': 'disabled',
+                'use_realtime': 'enforce'}
+
+
+def agent_target_version(hostname):
+    agent_target_versions = rulesets.host_extra_conf(hostname, check_mk_agent_target_versions)
+    if agent_target_versions:
+        spec = agent_target_versions[0]
+        if spec == "ignore":
+            return None
+        elif spec == "site":
+            return cmk.__version__
+        elif type(spec) == str:
+            # Compatibility to old value specification format (a single version string)
+            return spec
+        elif spec[0] == 'specific':
+            return spec[1]
+        else:
+            return spec # return the whole spec in case of an "at least version" config
+
+
+#
+# SNMP
+#
+
+# Determine SNMP community for a specific host.  It the host is found
+# int the map snmp_communities, that community is returned. Otherwise
+# the snmp_default_community is returned (wich is preset with
+# "public", but can be overridden in main.mk
+def snmp_credentials_of(hostname):
+    # TODO: this works under the assumption that we can't have the management
+    #  board and the host itself queried through snmp.
+    #  The alternative is a lengthy and errorprone refactoring of the whole check-
+    #  call hierarchy to get the credentials passed around.
+    if has_management_board(hostname)\
+            and management_protocol(hostname) == "snmp":
+        return host_attributes.get(hostname, {}).get("management_snmp_community", "public")
+
+    try:
+        return explicit_snmp_communities[hostname]
+    except KeyError:
+        pass
+
+    communities = rulesets.host_extra_conf(hostname, snmp_communities)
+    if len(communities) > 0:
+        return communities[0]
+
+    # nothing configured for this host -> use default
+    return snmp_default_community
+
+
+def snmp_character_encoding_of(hostname):
+    entries = rulesets.host_extra_conf(hostname, snmp_character_encodings)
+    if len(entries) > 0:
+        return entries[0]
+
+
+def snmp_timing_of(hostname):
+    timing = rulesets.host_extra_conf(hostname, snmp_timing)
+    if len(timing) > 0:
+        return timing[0]
+    else:
+        return {}
+
+
+def snmpv3_contexts_of(hostname):
+    return rulesets.host_extra_conf(hostname, snmpv3_contexts)
+
+
+def oid_range_limits_of(hostname):
+    return rulesets.host_extra_conf(hostname, snmp_limit_oid_range)
+
+
+def snmp_port_of(hostname):
+    ports = rulesets.host_extra_conf(hostname, snmp_ports)
+    if len(ports) == 0:
+        return None # do not specify a port, use default
+    else:
+        return ports[0]
+
+
+def is_snmpv3_host(hostname):
+    return type(snmp_credentials_of(hostname)) == tuple
+
+
+def is_bulkwalk_host(hostname):
+    if bulkwalk_hosts:
+        return rulesets.in_binary_hostlist(hostname, bulkwalk_hosts)
+    else:
+        return False
+
+
+def is_snmpv2c_host(hostname):
+    return is_bulkwalk_host(hostname) or \
+        rulesets.in_binary_hostlist(hostname, snmpv2c_hosts)
+
+
+def is_usewalk_host(hostname):
+    return rulesets.in_binary_hostlist(hostname, usewalk_hosts)
+
+
+def is_inline_snmp_host(hostname):
+    # TODO: Better use "inline_snmp" once we have moved the code to an own module
+    has_inline_snmp = "netsnmp" in sys.modules
+    return has_inline_snmp and use_inline_snmp \
+           and not rulesets.in_binary_hostlist(hostname, non_inline_snmp_hosts)
 
 
 #
@@ -582,6 +744,14 @@ def get_piggyback_translation(hostname):
     for rule in rules[::-1]:
         translations.update(rule)
     return translations
+
+
+def exit_code_spec(hostname):
+    spec = {}
+    specs = rulesets.host_extra_conf(hostname, check_mk_exit_status)
+    for entry in specs[::-1]:
+        spec.update(entry)
+    return spec
 
 
 #.

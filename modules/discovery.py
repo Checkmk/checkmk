@@ -356,7 +356,7 @@ def check_discovery(hostname, ipaddress=None):
         output = "Discovery failed: %s\n" % e
         # Honor rule settings for "Status of the Check_MK service". In case of
         # a problem we assume a connection error here.
-        spec = exit_code_spec(hostname)
+        spec = config.exit_code_spec(hostname)
         if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
             what = "connection"
         else:
@@ -368,7 +368,7 @@ def check_discovery(hostname, ipaddress=None):
             raise
         else:
             output = "Discovery failed: Timed out\n"
-            spec = exit_code_spec(hostname)
+            spec = config.exit_code_spec(hostname)
             status = spec.get("timeout", 2)
 
     except SystemExit:
@@ -381,7 +381,7 @@ def check_discovery(hostname, ipaddress=None):
             .replace("Crash dump:\n", "Crash dump:\\n")
         # Honor rule settings for "Status of the Check_MK service". In case of
         # a problem we assume a connection error here.
-        spec = exit_code_spec(hostname)
+        spec = config.exit_code_spec(hostname)
         if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
             what = "connection"
         else:

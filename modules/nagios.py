@@ -181,7 +181,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
         extra_conf_parents = rulesets.host_extra_conf(hostname, config.extra_host_conf.get("parents", []))
 
         if not extra_conf_parents:
-            parents_list = parents_of(hostname)
+            parents_list = config.parents_of(hostname)
             if parents_list:
                 outfile.write("  parents\t\t\t%s\n" % (",".join(parents_list)))
 
@@ -191,7 +191,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
         outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))
 
     # Output alias, but only if it's not defined in extra_host_conf
-    alias = alias_of(hostname, None)
+    alias = config.alias_of(hostname, None)
     if alias == None:
         outfile.write("  alias\t\t\t\t%s\n" % alias)
     else:
@@ -240,6 +240,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
         outfile.write(extra_summary_host_conf_of(hostname))
         outfile.write("}\n")
     outfile.write("\n")
+
 
 def create_nagios_servicedefs(outfile, hostname, host_attrs):
     #   _____
@@ -1056,9 +1057,8 @@ if '-d' in sys.argv:
     if need_snmp_module:
         output.write(stripped_python_file(cmk.paths.modules_dir + "/snmp.py"))
 
-        if is_inline_snmp_host(hostname):
+        if config.is_inline_snmp_host(hostname):
             output.write(stripped_python_file(cmk.paths.modules_dir + "/inline_snmp.py"))
-            output.write("\ndef oid_range_limits_of(hostname):\n    return %r\n" % oid_range_limits_of(hostname))
         else:
             output.write("has_inline_snmp = False\n")
     else:
@@ -1109,20 +1109,8 @@ if '-d' in sys.argv:
         output.write("clusters = {}\ndef is_cluster(hostname):\n    return False\n\n")
         output.write("def nodes_of(hostname):\n    return None\n")
 
-    output.write("def clusters_of(hostname):\n    return %r\n\n" % clusters_of(hostname))
-
     # snmp hosts
-    output.write("def is_snmpv3_host(hostname):\n   return  % r\n\n" % is_snmpv3_host(hostname))
-    output.write("def is_usewalk_host(hostname):\n   return % r\n\n" % is_usewalk_host(hostname))
-    output.write("def snmpv3_contexts_of_host(hostname):\n    return % r\n\n" % snmpv3_contexts_of_host(hostname))
-    output.write("def is_inline_snmp_host(hostname):\n   return        % r\n\n" % is_inline_snmp_host(hostname))
-    if is_inline_snmp_host(hostname):
-        output.write("def is_snmpv2c_host(hostname):\n   return     % r\n\n" % is_snmpv2c_host(hostname))
-        output.write("def is_bulkwalk_host(hostname):\n   return    % r\n\n" % is_bulkwalk_host(hostname))
-        output.write("def snmp_timing_of(hostname):\n   return      % r\n\n" % snmp_timing_of(hostname))
-        output.write("def snmp_credentials_of(hostname):\n   return % s\n\n" % pprint.pformat(snmp_credentials_of(hostname)))
-        output.write("def snmp_port_of(hostname):\n   return        % r\n\n" % snmp_port_of(hostname))
-    else:
+    if not config.is_inline_snmp_host(hostname):
         output.write("def snmp_proto_spec(hostname):\n    return   % r\n\n" % snmp_proto_spec(hostname))
         output.write("def snmp_port_spec(hostname):\n    return   % r\n\n" % snmp_port_spec(hostname))
         output.write("def snmp_walk_command(hostname):\n   return % r\n\n" % snmp_walk_command(hostname))
@@ -1169,22 +1157,6 @@ if '-d' in sys.argv:
 
     # aggregation
     output.write("def host_is_aggregated(hostname):\n    return %r\n\n" % host_is_aggregated(hostname))
-
-    # TCP and SNMP port of agent
-    output.write("def agent_port_of(hostname):\n    return %d\n\n" % agent_port_of(hostname))
-
-    # agent encryption
-    output.write("def agent_encryption_settings(hostname):\n    return %r\n\n" % agent_encryption_settings(hostname))
-
-    # Exit code of Check_MK in case of various errors
-    output.write("def exit_code_spec(hostname):\n    return %r\n\n" % exit_code_spec(hostname))
-
-    # Expected agent version
-    output.write("def agent_target_version(hostname):\n    return %r\n\n" % (agent_target_version(hostname),))
-
-    # SNMP character encoding
-    output.write("def get_snmp_character_encoding(hostname):\n    return %r\n\n"
-      % get_snmp_character_encoding(hostname))
 
     # Parameters for checks: Default values are defined in checks/*. The
     # variables might be overridden by the user in main.mk. We need

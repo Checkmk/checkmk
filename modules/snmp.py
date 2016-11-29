@@ -107,11 +107,8 @@ def cmp_oid_pairs(pair1, pair2):
     return cmp(oid_to_intlist(pair1[0].lstrip('.')),
                oid_to_intlist(pair2[0].lstrip('.')))
 
-def snmpv3_contexts_of_host(hostname):
-    return rulesets.host_extra_conf(hostname, config.snmpv3_contexts)
-
 def snmpv3_contexts_of(hostname, check_type):
-    for ty, rules in snmpv3_contexts_of_host(hostname):
+    for ty, rules in config.snmpv3_contexts_of(hostname):
         if ty == None or ty == check_type:
             return rules
     return [None]
@@ -221,7 +218,7 @@ def get_snmpwalk(hostname, ip, check_type, oid, fetchoid, column, use_snmpwalk_c
         rowinfo = get_cached_snmpwalk(hostname, fetchoid)
 
     if rowinfo == None:
-        if opt_use_snmp_walk or is_usewalk_host(hostname):
+        if opt_use_snmp_walk or config.is_usewalk_host(hostname):
             rowinfo = get_stored_snmpwalk(hostname, fetchoid)
         else:
             rowinfo = perform_snmpwalk(hostname, ip, check_type, oid, fetchoid)
@@ -235,14 +232,14 @@ def get_snmpwalk(hostname, ip, check_type, oid, fetchoid, column, use_snmpwalk_c
 def perform_snmpwalk(hostname, ip, check_type, base_oid, fetchoid):
     added_oids = set([])
     rowinfo = []
-    if is_snmpv3_host(hostname):
+    if config.is_snmpv3_host(hostname):
         snmp_contexts = snmpv3_contexts_of(hostname, check_type)
     else:
         snmp_contexts = [None]
 
     for context_name in snmp_contexts:
         cpu_tracking.push_phase("snmp")
-        if is_inline_snmp_host(hostname):
+        if config.is_inline_snmp_host(hostname):
             rows = inline_snmpwalk_on_suboid(hostname, check_type, fetchoid, base_oid,
                                                                   context_name=context_name,
                                                                   ipaddress=ip)
@@ -559,7 +556,7 @@ def get_stored_snmpwalk(hostname, oid):
         return rowinfo
 
 def snmp_decode_string(hostname, text):
-    encoding = get_snmp_character_encoding(hostname)
+    encoding = config.snmp_character_encoding_of(hostname)
     if encoding:
         return text.decode(encoding)
     else:

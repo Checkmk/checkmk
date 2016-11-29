@@ -388,31 +388,6 @@ def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
                 sys.exit(1)
     return hostlist
 
-def alias_of(hostname, fallback):
-    aliases = rulesets.host_extra_conf(hostname, config.extra_host_conf.get("alias", []))
-    if len(aliases) == 0:
-        if fallback:
-            return fallback
-        else:
-            return hostname
-    else:
-        return aliases[0]
-
-
-
-def parents_of(hostname):
-    par = rulesets.host_extra_conf(hostname, config.parents)
-    # Use only those parents which are defined and active in
-    # all_hosts.
-    used_parents = []
-    for p in par:
-        ps = p.split(",")
-        for pss in ps:
-            if pss in config.all_active_realhosts():
-                used_parents.append(pss)
-    return used_parents
-
-
 # TODO: Remove this when checks have been moved to cmk_base.checks
 hosttags_match_taglist = rulesets.hosttags_match_taglist
 
@@ -654,6 +629,7 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
 #   |  This code will dropped soon. Do not use service_aggregations any    |
 #   |  more...                                                             |
 #   '----------------------------------------------------------------------'
+# TODO: Remove all this aggregation stuff
 
 # Checks if a host has service aggregations
 def host_is_aggregated(hostname):
@@ -741,23 +717,6 @@ def check_interval_of(hostname, checkname):
         if match is None or match == checkname:
             return minutes # use first match
 
-def agent_target_version(hostname):
-    agent_target_versions = rulesets.host_extra_conf(hostname, config.check_mk_agent_target_versions)
-    if len(agent_target_versions) > 0:
-        spec = agent_target_versions[0]
-        if spec == "ignore":
-            return None
-        elif spec == "site":
-            return cmk.__version__
-        elif type(spec) == str:
-            # Compatibility to old value specification format (a single version string)
-            return spec
-        elif spec[0] == 'specific':
-            return spec[1]
-        else:
-            return spec # return the whole spec in case of an "at least version" config
-
-
 # FIXME TODO: Cleanup the whole caching crap
 orig_opt_use_cachefile           = None
 orig_check_max_cachefile_age     = None
@@ -838,67 +797,8 @@ def schedule_inventory_check(hostname):
 #   |  the separate module snmp.py.                                        |
 #   '----------------------------------------------------------------------'
 
-# Determine SNMP community for a specific host.  It the host is found
-# int the map snmp_communities, that community is returned. Otherwise
-# the snmp_default_community is returned (wich is preset with
-# "public", but can be overridden in main.mk
-def snmp_credentials_of(hostname):
-    # TODO: this works under the assumption that we can't have the management
-    #  board and the host itself queried through snmp.
-    #  The alternative is a lengthy and errorprone refactoring of the whole check-
-    #  call hierarchy to get the credentials passed around.
-    if config.has_management_board(hostname)\
-            and config.management_protocol(hostname) == "snmp":
-        return config.host_attributes.get(hostname, {}).get("management_snmp_community", "public")
-
-    try:
-        return config.explicit_snmp_communities[hostname]
-    except KeyError:
-        pass
-
-    communities = rulesets.host_extra_conf(hostname, config.snmp_communities)
-    if len(communities) > 0:
-        return communities[0]
-
-    # nothing configured for this host -> use default
-    return config.snmp_default_community
-
-def get_snmp_character_encoding(hostname):
-    entries = rulesets.host_extra_conf(hostname, config.snmp_character_encodings)
-    if len(entries) > 0:
-        return entries[0]
-
-def is_snmpv3_host(hostname):
-    return type(snmp_credentials_of(hostname)) == tuple
-
-def is_bulkwalk_host(hostname):
-    if config.bulkwalk_hosts:
-        return rulesets.in_binary_hostlist(hostname, config.bulkwalk_hosts)
-    else:
-        return False
-
-def is_snmpv2c_host(hostname):
-    return is_bulkwalk_host(hostname) or \
-        rulesets.in_binary_hostlist(hostname, config.snmpv2c_hosts)
-
-def is_usewalk_host(hostname):
-    return rulesets.in_binary_hostlist(hostname, config.usewalk_hosts)
-
-
-def is_inline_snmp_host(hostname):
-    return has_inline_snmp and config.use_inline_snmp \
-           and not rulesets.in_binary_hostlist(hostname, config.non_inline_snmp_hosts)
-
-
-def snmp_timing_of(hostname):
-    timing = rulesets.host_extra_conf(hostname, config.snmp_timing)
-    if len(timing) > 0:
-        return timing[0]
-    else:
-        return {}
-
 def snmp_port_spec(hostname):
-    port = snmp_port_of(hostname)
+    port = config.snmp_port_of(hostname)
     if port == None:
         return ""
     else:
@@ -932,22 +832,22 @@ def snmp_base_command(what, hostname):
         command = [ 'snmpget' ]
     elif what == 'getnext':
         command = [ 'snmpgetnext', '-Cf' ]
-    elif is_bulkwalk_host(hostname):
+    elif config.is_bulkwalk_host(hostname):
         command = [ 'snmpbulkwalk' ]
     else:
         command = [ 'snmpwalk' ]
 
     options = []
-    credentials = snmp_credentials_of(hostname)
+    credentials = config.snmp_credentials_of(hostname)
 
     if type(credentials) in [ str, unicode ]:
         # Handle V1 and V2C
-        if is_bulkwalk_host(hostname):
+        if config.is_bulkwalk_host(hostname):
             options.append('-v2c')
         else:
             if what == 'walk':
                 command = [ 'snmpwalk' ]
-            if is_snmpv2c_host(hostname):
+            if config.is_snmpv2c_host(hostname):
                 options.append('-v2c')
             else:
                 options.append('-v1')
@@ -979,7 +879,7 @@ def snmp_base_command(what, hostname):
     options += [ "-m", "", "-M", "" ]
 
     # Configuration of timing and retries
-    settings = snmp_timing_of(hostname)
+    settings = config.snmp_timing_of(hostname)
     if "timeout" in settings:
         options += [ "-t", "%0.2f" % settings["timeout"] ]
     if "retries" in settings:
@@ -1066,7 +966,7 @@ def get_single_oid(hostname, ipaddress, oid):
         return g_single_oid_cache[oid]
 
     console.vverbose("       Getting OID %s: " % oid)
-    if opt_use_snmp_walk or is_usewalk_host(hostname):
+    if opt_use_snmp_walk or config.is_usewalk_host(hostname):
         walk = get_stored_snmpwalk(hostname, oid)
         # get_stored_snmpwalk returns all oids that start with oid but here
         # we need an exact match
@@ -1079,7 +979,7 @@ def get_single_oid(hostname, ipaddress, oid):
 
     else:
         try:
-            if is_inline_snmp_host(hostname):
+            if config.is_inline_snmp_host(hostname):
                 value = inline_snmp_get_oid(hostname, oid, ipaddress=ipaddress)
             else:
                 value = snmp_get_oid(hostname, ipaddress, oid)
@@ -1126,23 +1026,11 @@ def nodes_of(hostname):
     return None
 
 
-# If host is node of one or more clusters, return a list of the cluster host names.
-# If not, return an empty list.
-def clusters_of(hostname):
-    cache = cmk_base.config_cache.get_dict("clusters_of")
-    if cache.is_empty():
-        for cluster, hosts in config.clusters.items():
-            clustername = cluster.split('|', 1)[0]
-            for name in hosts:
-                cache.setdefault(name, []).append(clustername)
-
-    return cache.get(hostname, [])
-
 # Determine weather a service (found on a physical host) is a clustered
 # service and - if yes - return the cluster host of the service. If
 # no, returns the hostname of the physical host.
 def host_of_clustered_service(hostname, servicedesc):
-    the_clusters = clusters_of(hostname)
+    the_clusters = config.clusters_of(hostname)
     if not the_clusters:
         return hostname
 
@@ -1550,7 +1438,7 @@ def lookup_ip_address(hostname, family=None):
 
     # Honor simulation mode und usewalk hosts. Never contact the network.
     elif config.simulation_mode or opt_use_snmp_walk or \
-         (is_usewalk_host(hostname) and config.is_snmp_host(hostname)):
+         (config.is_usewalk_host(hostname) and config.is_snmp_host(hostname)):
         if family == 4:
             return "127.0.0.1"
         else:
@@ -1660,36 +1548,6 @@ def do_update_dns_cache():
                     continue
 
     return updated, failed
-
-
-def agent_port_of(hostname):
-    ports = rulesets.host_extra_conf(hostname, config.agent_ports)
-    if len(ports) == 0:
-        return config.agent_port
-    else:
-        return ports[0]
-
-def agent_encryption_settings(hostname):
-    settings = rulesets.host_extra_conf(hostname, config.agent_encryption)
-    if settings:
-        return settings[0]
-    else:
-        return {'use_regular': 'disabled',
-                'use_realtime': 'enforce'}
-
-def snmp_port_of(hostname):
-    ports = rulesets.host_extra_conf(hostname, config.snmp_ports)
-    if len(ports) == 0:
-        return None # do not specify a port, use default
-    else:
-        return ports[0]
-
-def exit_code_spec(hostname):
-    spec = {}
-    specs = rulesets.host_extra_conf(hostname, config.check_mk_exit_status)
-    for entry in specs[::-1]:
-        spec.update(entry)
-    return spec
 
 
 def service_description(hostname, check_type, item):
@@ -2209,7 +2067,7 @@ def get_host_attributes(hostname, tags):
     attrs["_TAGS"] = " ".join(tags)
 
     if "alias" not in attrs:
-        attrs["alias"] = alias_of(hostname, hostname)
+        attrs["alias"] = config.alias_of(hostname, hostname)
 
     # Now lookup configured IP addresses
     if config.is_ipv4_host(hostname):
@@ -2500,7 +2358,7 @@ def do_snmpwalk_on(hostname, filename):
         try:
             console.verbose("Walk on \"%s\"..." % oid)
 
-            if is_inline_snmp_host(hostname):
+            if config.is_inline_snmp_host(hostname):
                 rows = inline_snmpwalk_on_suboid(hostname, None, oid)
                 rows = inline_convert_rows_for_stored_walk(rows)
             else:
@@ -2668,7 +2526,7 @@ def dump_host(hostname):
     if is_cluster(hostname):
         parents_list = nodes_of(hostname)
     else:
-        parents_list = parents_of(hostname)
+        parents_list = config.parents_of(hostname)
     if len(parents_list) > 0:
         sys.stdout.write(tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n")
     sys.stdout.write(tty.yellow + "Host groups:            " + tty.normal + make_utf8(", ".join(config.hostgroups_of(hostname))) + "\n")
@@ -2680,29 +2538,29 @@ def dump_host(hostname):
         if dapg:
             agenttypes.append("Datasource program: %s" % dapg)
         else:
-            agenttypes.append("TCP (port: %d)" % agent_port_of(hostname))
+            agenttypes.append("TCP (port: %d)" % config.agent_port_of(hostname))
 
     if config.is_snmp_host(hostname):
-        if is_usewalk_host(hostname):
+        if config.is_usewalk_host(hostname):
             agenttypes.append("SNMP (use stored walk)")
         else:
-            if is_inline_snmp_host(hostname):
+            if config.is_inline_snmp_host(hostname):
                 inline = "yes"
             else:
                 inline = "no"
 
-            credentials = snmp_credentials_of(hostname)
+            credentials = config.snmp_credentials_of(hostname)
             if type(credentials) in [ str, unicode ]:
                 cred = "community: \'%s\'" % credentials
             else:
                 cred = "credentials: '%s'" % ", ".join(credentials)
 
-            if is_snmpv3_host(hostname) or is_bulkwalk_host(hostname):
+            if config.is_snmpv3_host(hostname) or config.is_bulkwalk_host(hostname):
                 bulk = "yes"
             else:
                 bulk = "no"
 
-            portinfo = snmp_port_of(hostname)
+            portinfo = config.snmp_port_of(hostname)
             if portinfo == None:
                 portinfo = 'default'
 
@@ -3218,7 +3076,7 @@ def do_scan_parents(hosts):
             host = hosts[0]
             del hosts[0]
             # skip hosts that already have a parent
-            if len(parents_of(host)) > 0:
+            if config.parents_of(host):
                 console.verbose("(manual parent) ")
                 continue
             chunk.append(host)

@@ -1,0 +1,10 @@
+Title: skype check: updated perfvariable and metric names, making their purpose more clear
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i3
+Date: 1480420812
+Class: feature
+
+Due to the renaming, already existing performance data is lost.
+This check was introduced recently, so this won't have much impact.

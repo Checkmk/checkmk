@@ -1,0 +1,14 @@
+Title: Fixed handling of hosts with non resolvable IP addresses during runtime
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p15
+Date: 1480413611
+
+Hosts which only have a hostname configured that IP address is resolved during
+configuration creation. When a host could not be resolved it is added to the
+monitoring with the 0.0.0.0 or :: address.
+
+That lead to some checks monitoring the local host accidentally.

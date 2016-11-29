@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Table.h"
+#include <cassert>
 #include <ostream>
 #include "Column.h"
 #include "DynamicColumn.h"
@@ -30,7 +31,9 @@
 #include "StringUtils.h"
 
 using mk::starts_with;
+using std::move;
 using std::string;
+using std::unique_ptr;
 
 Table::Table(Logger *logger) : _logger(logger) {}
 
@@ -38,25 +41,15 @@ Table::~Table() {
     for (auto &column : _columns) {
         delete column.second;
     }
-
-    for (auto &dynamic_column : _dynamic_columns) {
-        delete dynamic_column.second;
-    }
 }
 
 void Table::addColumn(Column *col) {
-    // Do not insert column if one with that name already exists. Delete that
-    // column in that case. (Needed e.g. for TableLog->TableHosts, which both
-    // define host_name.)
-    if (column(col->name()) != nullptr) {
-        delete col;
-    } else {
-        _columns.emplace(col->name(), col);
-    }
+    assert(column(col->name()) == nullptr);
+    _columns.emplace(col->name(), col);
 }
 
-void Table::addDynamicColumn(DynamicColumn *dyncol) {
-    _dynamic_columns.emplace(dyncol->name(), dyncol);
+void Table::addDynamicColumn(unique_ptr<DynamicColumn> dyncol) {
+    _dynamic_columns.emplace(dyncol->name(), move(dyncol));
 }
 
 Column *Table::column(string colname) {

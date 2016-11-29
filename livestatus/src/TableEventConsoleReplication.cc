@@ -23,15 +23,18 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableEventConsoleReplication.h"
+#include <memory>
+#include "DynamicColumn.h"
 #include "DynamicEventConsoleReplicationColumn.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 
+using std::make_unique;
 using std::string;
 
 TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *core)
     : Table(core->loggerLivestatus()) {
-    addDynamicColumn(new DynamicEventConsoleReplicationColumn(
+    addDynamicColumn(make_unique<DynamicEventConsoleReplicationColumn>(
         "value", "The replication value", -1, -1, core));
 }
 

@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <map>
+#include <memory>
 #include <string>
 #include <utility>
 #include "nagios.h"  // IWYU pragma: keep
@@ -42,7 +43,7 @@ public:
     virtual ~Table();
 
     void addColumn(Column *);
-    void addDynamicColumn(DynamicColumn *);
+    void addDynamicColumn(std::unique_ptr<DynamicColumn> col);
 
     template <typename Predicate>
     bool any_column(Predicate pred) {
@@ -91,7 +92,7 @@ private:
     Column *dynamicColumn(const std::string &name, const std::string &rest);
 
     std::map<std::string, Column *> _columns;
-    std::map<std::string, DynamicColumn *> _dynamic_columns;
+    std::map<std::string, std::unique_ptr<DynamicColumn>> _dynamic_columns;
 };
 
 #endif  // Table_h

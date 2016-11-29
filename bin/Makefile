@@ -24,7 +24,8 @@
 
 # TODO(sp) We should really use autotools here...
 CXX         := g++-5
-CXXFLAGS    := -std=c++11 -g -O3 -Wall -Wextra
+CXXFLAGS    := -std=c++14 -g -O3 -Wall -Wextra
+LDFLAGS     := -static-libstdc++
 EXECUTABLES := mkevent mkeventd_open514
 
 .PHONY: all clean

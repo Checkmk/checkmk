@@ -180,7 +180,10 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	    --transform 's|^|cmk/|g' $$(cd lib ; ls) ; \
 	  rm lib/*.pyc
 	pycompile cmk_base ; \
-	  tar czf $(DISTNAME)/base.tar.gz $(TAROPTS) cmk_base/*.py* ; \
+	  tar czf $(DISTNAME)/base.tar.gz $(TAROPTS) cmk_base/* \
+	    --exclude ".f12" \
+	    --exclude "cee" \
+	    --exclude "cee.py*" ; \
 	  rm cmk_base/*.pyc
 	tar czf $(DISTNAME)/share.tar.gz $(TAROPTS) check_mk_templates.cfg
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks

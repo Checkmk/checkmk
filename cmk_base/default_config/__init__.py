@@ -26,3 +26,8 @@
 
 from .base import *
 from .notify import *
+
+try:
+    from .cee import *
+except ImportError:
+    pass # It's OK in non CEE editions

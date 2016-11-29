@@ -39,6 +39,7 @@ import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.snmp as snmp
 import cmk_base.item_state as item_state
+import cmk_base.core_config as core_config
 
 # TODO: Cleanup access to check_info[] -> replace it by different function calls
 # like for example check_exists(...)
@@ -320,8 +321,8 @@ def active_check_arguments(hostname, description, args):
                 try:
                     password = config.stored_passwords[pw_ident]["password"]
                 except KeyError:
-                    configuration_warning("The stored password \"%s\" used by service \"%s\" on host "
-                                          "\"%s\" does not exist (anymore)." %
+                    core_config.warning("The stored password \"%s\" used by service \"%s\" on host "
+                                        "\"%s\" does not exist (anymore)." %
                                             (pw_ident, description, hostname))
                     password = "%%%"
 

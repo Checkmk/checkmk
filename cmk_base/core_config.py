@@ -24,42 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.regex import regex
+import cmk_base.console as console
 
-def translate(translation, hostname):
-    # 1. Case conversion
-    caseconf = translation.get("case")
-    if caseconf == "upper":
-        hostname = hostname.upper()
-    elif caseconf == "lower":
-        hostname = hostname.lower()
+g_configuration_warnings = []
 
-    # 2. Drop domain part (not applied to IP addresses!)
-    if translation.get("drop_domain") and not hostname[0].isdigit():
-        hostname = hostname.split(".", 1)[0]
 
-    # 3. Multiple regular expression conversion
-    if type(translation.get("regex")) == tuple:
-        translations = [translation.get("regex")]
+def initialize_warnings():
+    global g_configuration_warnings
+    g_configuration_warnings = []
+
+
+def warning(text):
+    g_configuration_warnings.append(text)
+    console.warning("\n%s", text)
+
+
+def get_configuration_warnings():
+    num_warnings = len(g_configuration_warnings)
+
+    if num_warnings > 10:
+        warnings = g_configuration_warnings[:10] + \
+                                  [ "%d further warnings have been omitted" % (num_warnings - 10) ]
     else:
-        translations = translation.get("regex", [])
+        warnings = g_configuration_warnings
 
-    for expr, subst in translations:
-        if not expr.endswith('$'):
-            expr += '$'
-        rcomp = regex(expr)
-        # re.RegexObject.sub() by hand to handle non-existing references
-        mo = rcomp.match(hostname)
-        if mo:
-            hostname = subst
-            for nr, text in enumerate(mo.groups("")):
-                hostname = hostname.replace("\\%d" % (nr+1), text)
-            break
-
-    # 4. Explicity mapping
-    for from_host, to_host in translation.get("mapping", []):
-        if from_host == hostname:
-            hostname = to_host
-            break
-
-    return hostname
+    return warnings

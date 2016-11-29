@@ -66,6 +66,7 @@ import cmk_base.config as config
 import cmk_base.default_config as default_config
 import cmk_base.item_state as item_state
 import cmk_base.piggyback as piggyback
+import cmk_base.core_config as core_config
 
 # TODO: Clean up all calls and remove these aliases
 tags_of_host    = config.tags_of_host
@@ -356,22 +357,6 @@ def all_offline_hosts():
 
     return [ hostname for hostname in hostlist
              if not rulesets.in_binary_hostlist(hostname, config.only_hosts) ]
-
-
-# TODO: duplicate_hosts() is currently broken because all_active_hosts()
-# now already returns sets and reduces the duplicates. Fix this?!
-def duplicate_hosts():
-    # Sanity check for duplicate hostnames
-    seen_hostnames = set([])
-    duplicates = set([])
-
-    for hostname in config.all_active_hosts_with_duplicates():
-        if hostname in seen_hostnames:
-            duplicates.add(hostname)
-        else:
-            seen_hostnames.add(hostname)
-
-    return sorted(list(duplicates))
 
 
 def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
@@ -1762,15 +1747,6 @@ def service_description(hostname, check_type, item):
     return descr.strip()
 
 
-# Get a dict that specifies the actions to be done during the hostname translation
-def get_piggyback_translation(hostname):
-    rules = rulesets.host_extra_conf(hostname, config.piggyback_translation)
-    translations = {}
-    for rule in rules[::-1]:
-        translations.update(rule)
-    return translations
-
-
 #.
 #   .--Pack config---------------------------------------------------------.
 #   |         ____            _                       __ _                 |
@@ -2133,17 +2109,10 @@ def do_flush(hosts):
 #   +----------------------------------------------------------------------+
 #   | Code for managing the core configuration creation.                   |
 #   '----------------------------------------------------------------------'
-
-g_configuration_warnings = []
-
-def configuration_warning(text):
-    g_configuration_warnings.append(text)
-    sys.stdout.write("\n%sWARNING:%s %s\n" % (tty.bold + tty.yellow, tty.normal, text))
-
+# TODO: Move to cmk_base.core_config
 
 def create_core_config():
-    global g_configuration_warnings
-    g_configuration_warnings = []
+    core_config.initialize_warnings()
 
     verify_non_duplicate_hosts()
     verify_non_deprecated_checkgroups()
@@ -2157,12 +2126,7 @@ def create_core_config():
 
     cmk.password_store.save(stored_passwords)
 
-    num_warnings = len(g_configuration_warnings)
-    if num_warnings > 10:
-        g_configuration_warnings = g_configuration_warnings[:10] + \
-                                  [ "%d further warnings have been omitted" % (num_warnings - 10) ]
-
-    return g_configuration_warnings
+    return core_config.get_configuration_warnings()
 
 
 # Verify that the user has no deprecated check groups configured.
@@ -2171,7 +2135,7 @@ def verify_non_deprecated_checkgroups():
 
     for checkgroup in config.checkgroup_parameters.keys():
         if checkgroup not in groups:
-            configuration_warning(
+            core_config.warning(
                 "Found configured rules of deprecated check group \"%s\". These rules are not used "
                 "by any check. Maybe this check group has been renamed during an update, "
                 "in this case you will have to migrate your configuration to the new ruleset manually. "
@@ -2181,9 +2145,9 @@ def verify_non_deprecated_checkgroups():
 
 
 def verify_non_duplicate_hosts():
-    duplicates = duplicate_hosts()
+    duplicates = config.duplicate_hosts()
     if duplicates:
-        configuration_warning(
+        core_config.warning(
               "The following host names have duplicates: %s. "
               "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
 
@@ -2206,7 +2170,7 @@ def verify_cluster_address_family(hostname):
             mixed = True
 
     if mixed:
-        configuration_warning("Cluster '%s' has different primary address families: %s" %
+        core_config.warning("Cluster '%s' has different primary address families: %s" %
                                                          (hostname, ", ".join(address_families)))
 
 
@@ -2216,7 +2180,7 @@ def get_cluster_nodes_for_config(hostname):
     nodes = nodes_of(hostname)[:]
     for node in nodes:
         if node not in config.all_active_realhosts():
-            configuration_warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
+            core_config.warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
                                                                                       (node, hostname))
             nodes.remove(node)
     return nodes
@@ -2342,7 +2306,7 @@ def ip_address_of(hostname, family=None):
         else:
             g_failed_ip_lookups.append(hostname)
             if not ignore_ip_lookup_failures:
-                configuration_warning("Cannot lookup IP address of '%s' (%s). "
+                core_config.warning("Cannot lookup IP address of '%s' (%s). "
                                       "The host will not be monitored correctly." % (hostname, e))
             return fallback_ip_for(hostname, family)
 
@@ -2426,7 +2390,7 @@ def get_plain_hostinfo(hostname):
         if config.is_tcp_host(hostname):
             ipaddress = lookup_ip_address(hostname)
             info += get_agent_info(hostname, ipaddress, 0)
-        info += get_piggyback_info(hostname)
+        info += piggyback.get_piggyback_info(hostname)
         return info
 
 

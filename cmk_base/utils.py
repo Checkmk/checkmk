@@ -27,6 +27,11 @@
 """This is an unsorted collection of functions which are needed in
 Check_MK modules and/or cmk_base modules code."""
 
+import os
+import time
+
+from cmk.exceptions import MKGeneralException
+
 # TODO: Try to find a better place for them.
 
 import sys

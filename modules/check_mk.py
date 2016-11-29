@@ -2943,11 +2943,10 @@ def ip_address_of(hostname, family=None):
             return ""
         else:
             g_failed_ip_lookups.append(hostname)
-            addr = fallback_ip_for(hostname, family)
             if not ignore_ip_lookup_failures:
-                configuration_warning("Cannot lookup IP address of '%s' (%s). Using "
-                                      "address %s instead." % (hostname, e, addr))
-            return addr
+                configuration_warning("Cannot lookup IP address of '%s' (%s). "
+                                      "The host will note be monitored correctly." % (hostname, e))
+            return fallback_ip_for(hostname, family)
 
 
 def fallback_ip_for(hostname, family=None):

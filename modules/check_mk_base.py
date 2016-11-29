@@ -679,6 +679,9 @@ def write_cache_file(relpath, output):
 # In that case it will be looked up if needed. Also caching will
 # be handled here
 def get_agent_info(hostname, ipaddress, max_cache_age):
+    if ipaddress in [ "0.0.0.0", "::" ]:
+        raise MKAgentError("Failed to lookup IP address and no explicit IP address configured")
+
     output = read_cache_file(hostname, max_cache_age)
     if not output:
         # Try to contact every host only once

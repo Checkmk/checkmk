@@ -559,13 +559,26 @@ def query_nodes(what, node_attribute = "node-name"):
             results["%s.%s" % (what, node)] = response
     else:
         if not nodes:
+            # This query may fail for unknown reasons. Some clustermode systems report 0 results
             response = server.get_response(["system-get-node-info-iter", []])
             if response.results_status() == "failed":
                 return
 
+            nodename_field = "system-name"
+            attr_list      = response.get_results().child_get("attributes-list")
+
+            # Fallback query to determine the available node names
+            if not attr_list:
+                response = server.get_response(["system-node-get-iter", []])
+                if response.results_status() == "failed":
+                    return
+
+                attr_list  = response.get_results().child_get("attributes-list")
+                nodename_field = "node"
+
             nodes = []
-            for instance in response.get_results().child_get("attributes-list").children_get():
-                nodes.append(instance.child_get_string("system-name"))
+            for instance in attr_list.children_get():
+                nodes.append(instance.child_get_string(nodename_field))
 
         results = {}
         for node in nodes:

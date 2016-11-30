@@ -1,0 +1,9 @@
+Title: agent_netapp clustermode: now uses a fallback query to determine the node name if the intial query fails
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480516853
+Class: feature
+
+

@@ -59,6 +59,24 @@ def register(name, default_value):
     setattr(default_config, name, default_value)
 
 
+# Add configuration variables registered by checks to config module
+def add_check_variables(check_variables):
+    default_config.__dict__.update(check_variables)
+
+
+# Load user configured values of check related configuration variables
+# into the check module to make it available during checking.
+#
+# In the same step we remove the check related configuration settings from the
+# config module because they are not needed there anymore.
+def set_check_variables_for_checks():
+    import cmk_base.checks
+    global_dict = globals()
+    for varname in cmk_base.checks.check_variable_names():
+        setattr(cmk_base.checks, varname, global_dict.pop(varname))
+        delattr(default_config, varname)
+
+
 #.
 #   .--Read Config---------------------------------------------------------.
 #   |        ____                _    ____             __ _                |
@@ -208,7 +226,7 @@ def load(with_conf_d=True, validate_hosts=True):
     checks = static + checks
 
     initialize_check_caches()
-    cmk_base.checks.set_check_variables_from_config()
+    set_check_variables_for_checks()
 
     # Check for invalid configuration variables
     vars_after_config = all_nonfunction_vars()

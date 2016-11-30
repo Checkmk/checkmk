@@ -6,6 +6,7 @@ from testlib import web
 
 @pytest.fixture(scope="module")
 def default_cfg(web):
+    print "Applying default config"
     web.add_host("livestatus-test-host", attributes={
         "ipaddress": "127.0.0.1",
     })
@@ -18,6 +19,7 @@ def default_cfg(web):
     #
     # Cleanup code
     #
+    print "Cleaning up default config"
 
     web.delete_host("livestatus-test-host")
 

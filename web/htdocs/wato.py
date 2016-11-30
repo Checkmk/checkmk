@@ -15009,8 +15009,9 @@ def man_page_catalog_topics():
 
 
 def mode_check_plugins(phase):
-    topic = html.var("topic")
-    if topic:
+    search = get_search_expression()
+    topic  = html.var("topic")
+    if topic and not search:
         path = tuple(topic.split("/")) # e.g. [ "hw", "network" ]
         if not re.match("^[a-zA-Z0-9_./]+$", topic):
             raise Exception("Invalid topic")
@@ -15024,7 +15025,7 @@ def mode_check_plugins(phase):
     titles = man_pages.man_page_catalog_titles()
 
     has_second_level = None
-    if topic:
+    if topic and not search:
         for t, has_second_level, title, helptext in man_page_catalog_topics():
             if t == path[0]:
                 topic_title = title
@@ -15033,9 +15034,12 @@ def mode_check_plugins(phase):
             topic_title = titles.get(path[1], path[1])
 
     if phase == "title":
-        heading = _("Catalog of Check Plugins")
-        if topic:
-            heading += " - " + topic_title
+        if topic and not search:
+            heading = "%s - %s" % ( _("Catalog of Check Plugins"), topic_title )
+        elif search:
+            heading = "%s: %s" % ( _("Check plugins matching"), html.attrencode(search) )
+        else:
+            heading = _("Catalog of Check Plugins")
         return heading
 
     elif phase == "buttons":
@@ -15057,18 +15061,64 @@ def mode_check_plugins(phase):
                 "manually create services in case you cannot or do not want to rely on the "
                 "automatic service discovery."))
 
+    search_form( "%s: " % _("Search for check plugins"), "check_plugins" )
+
     # The maxium depth of the catalog paths is 3. The top level is being rendered
     # like the WATO main menu. The second and third level are being rendered like
     # the global settings.
 
-    if topic:
+    if topic and not search:
         render_manpage_topic(manpages, titles, has_second_level, path, topic_title)
+
+    elif search:
+        for path, manpages in get_manpages_after_search(manpages, search):
+            render_manpage_list(manpages, titles, path, titles.get(path, path))
+
     else:
         menu_items = []
         for topic, has_second_level, title, helptext in man_page_catalog_topics():
             menu_items.append((
                 html.makeuri([("topic", topic)]), title, "plugins_" + topic, None, helptext))
         render_main_menu(menu_items)
+
+
+def get_manpages_after_search(manpages, search):
+    this_search = search
+    collection  = {}
+
+    # searches in {"name" : "asd", "title" : "das", ...}
+    def get_matched_entry( entry ):
+        if type(entry) == dict:
+            name = entry.get("name", "")
+            if type(name) == str:
+                name = name.decode("utf8")
+            title = entry.get("title", "")
+            if type(title) == str:
+                title = title.decode("utf8")
+            if this_search in name.lower() or this_search in title.lower():
+                return entry
+        return None
+
+    def check_entries( key, entries ):
+        if type(entries) == list:
+            these_matches = []
+            for entry in entries:
+                match = get_matched_entry(entry)
+                if match:
+                    these_matches.append(match)
+
+            if these_matches:
+                collection.setdefault( key, [] )
+                collection[key] += these_matches
+
+        elif type(entries) == dict:
+            for key, subentries in entries.items():
+                check_entries( key, subentries )
+
+    for key, entries in manpages.items():
+        check_entries( key, entries )
+
+    return collection.items()
 
 
 def get_check_catalog(args):
@@ -15128,6 +15178,7 @@ def render_manpage_topic(manpages, titles, has_second_level, path, topic_title):
             entries.sort(cmp = lambda a,b: cmp(a[0].lower(), b[0].lower()))
             for title, subnode, path_comp in entries:
                 render_manpage_list(subnode, titles, path_comp, title)
+
 
 def get_check_plugin_stats(subnode):
     if type(subnode) == list:

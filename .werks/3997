@@ -1,0 +1,9 @@
+Title: New metric for check_icmp
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480521650
+Class: feature
+
+This metric may be required by an check_icmp plugin configured as mrpe check.

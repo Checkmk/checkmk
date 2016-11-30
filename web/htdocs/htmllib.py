@@ -1846,7 +1846,9 @@ class html(DeprecationWrapper):
         self.form_vars.append(varname)
 
 
-    def sorted_select(self, varname, choices, deflt="", onchange=None, attrs = {}):
+    def sorted_select(self, varname, choices, deflt="", onchange=None, attrs = None):
+        if attrs is None:
+            attrs = {}
         # Sort according to display texts, not keys
         sorted = choices[:]
         sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))

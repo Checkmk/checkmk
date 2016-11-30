@@ -15068,11 +15068,11 @@ def mode_check_plugins(phase):
     # the global settings.
 
     if topic and not search:
-        render_manpage_topic(manpages, titles, has_second_level, path, topic_title)
+        render_manpage_topic( manpages, titles, has_second_level, path, topic_title )
 
     elif search:
-        for path, manpages in get_manpages_after_search(manpages, search):
-            render_manpage_list(manpages, titles, path, titles.get(path, path))
+        for path, manpages in get_manpages_after_search( manpages, search ):
+            render_manpage_list( manpages, titles, path, titles.get( path, path ) )
 
     else:
         menu_items = []
@@ -15082,30 +15082,32 @@ def mode_check_plugins(phase):
         render_main_menu(menu_items)
 
 
-def get_manpages_after_search(manpages, search):
+def get_manpages_after_search( manpages, search ):
     this_search = search
     collection  = {}
 
     # searches in {"name" : "asd", "title" : "das", ...}
     def get_matched_entry( entry ):
-        if type(entry) == dict:
-            name = entry.get("name", "")
-            if type(name) == str:
-                name = name.decode("utf8")
-            title = entry.get("title", "")
-            if type(title) == str:
-                title = title.decode("utf8")
+        if type( entry ) == dict:
+            name = entry.get( "name", "" )
+            if type( name ) == str:
+                name = name.decode( "utf8" )
+
+            title = entry.get( "title", "" )
+            if type( title ) == str:
+                title = title.decode( "utf8" )
             if this_search in name.lower() or this_search in title.lower():
                 return entry
+
         return None
 
     def check_entries( key, entries ):
-        if type(entries) == list:
+        if type( entries ) == list:
             these_matches = []
             for entry in entries:
-                match = get_matched_entry(entry)
+                match = get_matched_entry( entry )
                 if match:
-                    these_matches.append(match)
+                    these_matches.append( match )
 
             if these_matches:
                 collection.setdefault( key, [] )

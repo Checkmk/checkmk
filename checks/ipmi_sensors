@@ -162,7 +162,7 @@ def parse_freeipmi(info):
                 lower_nc, upper_nc, upper_c, upper_nr = stripped_line[:-1]
             add_valid_values( [ ("value", reading_str, float), ("unit", unit, str),
                 ("crit_low", lower_c, float), ("warn_low", lower_nc, float),
-                ("warn_high", upper_nw, float), ("crit_high", upper_c, float) ] )
+                ("warn_high", upper_nc, float), ("crit_high", upper_c, float) ] )
 
     return parsed
 

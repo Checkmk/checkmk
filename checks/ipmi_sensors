@@ -92,10 +92,30 @@
 # 71   | System Temp     | Temperature       | 28.00      | C     | 'OK'
 # 607  | P1-DIMMC2 TEMP  | Temperature       | N/A        | C     | N/A
 
+# unr: Upper Non-Recoverable
+# ucr: Upper Critical
+# unc: Upper Non-Critical
+# lnc: Lower Non-Critical
+# lcr: Lower Critical
+# lnr: Lower Non-Recoverable
+# <<<ipmi_sensors:sep(124)>>>
+# ID | Name            | Type         | State    | Reading    | Units | Lower NR   | Lower C    | Lower NC   | Upper NC   | Upper C    | Upper NR   | Event
+# 0  | UID Light       | OEM Reserved | N/A      | N/A        | N/A   | N/A        | N/A        | N/A        | N/A        | N/A        | N/A        | 'OK'
+# 1  | Sys. Health LED | OEM Reserved | N/A      | N/A        | N/A   | N/A        | N/A        | N/A        | N/A        | N/A        | N/A        | 'OK'
+# 2  | Power Supply 1  | Power Supply | Nominal  | N/A        | N/A   | N/A        | N/A        | N/A        | N/A        | N/A        | N/A        | 'Presence detected'
+# 3  | Power Supply 2  | Power Supply | Nominal  | N/A        | N/A   | N/A        | N/A        | N/A        | N/A        | N/A        | N/A        | 'Presence detected'
+# 4  | Power Supplies  | Power Supply | Nominal  | N/A        | N/A   | N/A        | N/A        | N/A        | N/A        | N/A        | N/A        | 'Fully Redundant'
+
+
 #.
 
 
 def parse_freeipmi(info):
+    def add_valid_values(values):
+        for key, value, ty in values:
+            if value not in [ "NA", "N/A" ]:
+                parsed[sensorname][key] = ty(value)
+
     parsed = {}
     for line in info:
         stripped_line = map(lambda x: x.strip(), line)
@@ -124,24 +144,25 @@ def parse_freeipmi(info):
 
         if len(stripped_line) == 4:
             current, levels = stripped_line[2].split("(")
-
             cparts = current.split("_")
-            if cparts[0] not in [ "NA", "N/A" ]:
-                parsed[sensorname]["value"] = float(cparts[0])
-                if len(cparts) > 1:
-                    parsed[sensorname]["unit"] = cparts[1]
+            unit = "NA"
+            if len(cparts) > 1:
+                unit = cparts[1]
 
             lower, upper = levels[:-1].split("/")
-            for key, what in [ ("crit_low", lower), ( "crit_high", upper) ]:
-                if what not in [ "NA", "N/A" ]:
-                    parsed[sensorname][key] = float(what)
+            add_valid_values([ ("value", cparts[0], float), ("unit", unit, str),
+                ("crit_low", lower, float), ( "crit_high", upper, float) ] )
 
         elif len(stripped_line) == 6:
             sid, name, sensortype, reading_str, unit = stripped_line[:-1]
-            if reading_str not in [ "NA", "N/A" ]:
-                parsed[sensorname]["value"] = float(reading_str)
-            if unit not in [ "NA", "N/A" ]:
-                parsed[sensorname]["unit"] = unit
+            add_valid_values( [ ("value", reading_str, float), ("unit", unit, str) ] )
+
+        elif len(stripped_line) == 13:
+            sid, name, stype, sstate, reading_str, unit, lower_nr, lower_c, \
+                lower_nc, upper_nc, upper_c, upper_nr = stripped_line[:-1]
+            add_valid_values( [ ("value", reading_str, float), ("unit", unit, str),
+                ("crit_low", lower_c, float), ("warn_low", lower_nc, float),
+                ("warn_high", upper_nw, float), ("crit_high", upper_c, float) ] )
 
     return parsed
 

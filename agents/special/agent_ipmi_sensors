@@ -25,89 +25,40 @@
 # Boston, MA 02110-1301 USA.
 
 
-import os, sys, getopt, subprocess
+import os
+import sys
+import getopt
+import subprocess
 
 
-def usage():
-    sys.stderr.write("""Check_MK IPMI Sensors
+def agent_ipmi_sensors_usage():
+    sys.stderr.write( """Check_MK IPMI Sensors
 
 USAGE: agent_ipmi_sensors [OPTIONS] HOST
        agent_ipmi_sensors --help
 
 ARGUMENTS:
-  HOST                        Host name or IP address
+  HOST                              Host name or IP address
 
 OPTIONS:
-  --help                      Show this help message and exit
-  -u                          Username
-  -p                          Password
-  -l                          Privilege level
-                              Possible are 'user', 'operator', 'admin'
-  --debug                     Debug output
-""")
+  --help                            Show this help message and exit.
+  -u USER                           Username
+  -p PASSWD                         Password
+  -l LVL                            Privilege level
+                                    Possible are 'user', 'operator', 'admin'
+  --debug                           Debug output
 
-
-short_options = 'u:p:l:'
-long_options  = [ 'help', 'debug' ]
-
-
-opt_debug      = False
-hostname       = None
-username       = None
-password       = None
-privilege_lvl  = None
-
-
-try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-except getopt.GetoptError, err:
-    sys.stderr.write("%s\n" % err)
-    sys.exit(1)
-
-
-for o, a in opts:
-    if o in [ '--help' ]:
-        usage()
-        sys.exit(0)
-    elif o in [ '--debug' ]:
-        opt_debug = True
-    elif o in [ '-u' ]:
-        username = a
-    elif o in [ '-p' ]:
-        password = a
-    elif o in [ '-l' ]:
-        privilege_lvl = a
-
-
-if len(args) == 1:
-    hostname = args[0]
-elif not args:
-    sys.stderr.write("ERROR: No host given.\n")
-    sys.exit(1)
-else:
-    sys.stderr.write("ERROR: Please specify exactly one host.\n")
-    sys.exit(1)
-
-
-if not (username and password and privilege_lvl):
-    sys.stderr.write("ERROR: Credentials are missing.\n")
-    sys.exit(1)
-
-
-for sub_path in [ "sbin", "bin", "local/sbin", "local/bin" ]:
-    base_cmd = "/usr/%s/ipmi-sensors" % sub_path
-    ipmi_cmd = [base_cmd, "-h", hostname, "-u", username, "-p", password, "-l", privilege_lvl ]
-    try:
-        if opt_debug:
-            sys.stdout.write("DEBUG: try executing '%s'\n" % base_cmd)
-        p = subprocess.Popen(ipmi_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        sensor_data, err = p.communicate()
-        break
-    except Exception, e:
-        err = e
-        if opt_debug:
-            sys.stdout.write("ERROR: '%s': %s\n" % (base_cmd, e))
-        continue
+  -D DRIVER                         Specify IPMI driver.
+  --quiet-cache                     Do not output information about cache creation/deletion.
+  --sdr-cache-recreate              Automatically recreate the sensor data repository (SDR) cache.
+  --interpret-oem-data              Attempt to interpret OEM data.
+  --output-sensor-state             Output sensor state in output.
+  --ignore-not-available-sensors    Ignore not-available (i.e. N/A) sensors in output.
+  --driver-type TYPE                Specify the driver type to use instead of doing an auto selection.
+  --output-sensor-thresholds        Output sensor thresholds in output.
+  -k KEY                            Specify the K_g BMC key to use when authenticating
+                                    with the remote host for IPMI 2.0.
+""" )
 
 
 # output
@@ -117,18 +68,106 @@ for sub_path in [ "sbin", "bin", "local/sbin", "local/bin" ]:
 # 607  | P1-DIMMC2 TEMP  | Temperature       | N/A        | C     | N/A
 
 
-def parse_ipmi_sensor_data(ipmi_sensor_data):
+def agent_ipmi_sensors_parse_data( ipmi_sensor_data ):
     for line in ipmi_sensor_data:
-        if line.startswith("ID"):
+        if line.startswith( "ID" ):
             continue
         else:
-            sys.stdout.write("%s\n" % line)
+            sys.stdout.write( "%s\n" % line )
 
 
-if err:
-    sys.stderr.write("ERROR: '%s'\n" % err[:-1])
-    sys.exit(1)
-else:
-    sys.stdout.write("<<<ipmi_sensors:sep(124)>>>\n")
-    parse_ipmi_sensor_data(sensor_data.splitlines())
-    sys.exit(0)
+def agent_ipmi_sensors_main( cmdline_args ):
+    short_options = 'u:p:l:' + 'D:k:'
+    long_options  = [ 'help', 'debug' ] + \
+                    [ 'quiet-cache', 'sdr-cache-recreate', 'interpret-oem-data',
+                      'output-sensor-state', 'ignore-not-available-sensors',
+                      'driver-type=', 'output-sensor-thresholds' ]
+
+    opt_debug     = False
+    hostname      = None
+    username      = None
+    password      = None
+    privilege_lvl = None
+
+    try:
+        opts, args = getopt.getopt( cmdline_args, short_options, long_options )
+    except getopt.GetoptError, err:
+        sys.stderr.write( "%s\n" % err )
+        sys.exit(1)
+
+    additional_opts = []
+    for o, a in opts:
+        if o in [ '--help' ]:
+            agent_ipmi_sensors_usage()
+            sys.exit(0)
+        elif o in [ '--debug' ]:
+            opt_debug = True
+        elif o in [ '-u' ]:
+            username = a
+        elif o in [ '-p' ]:
+            password = a
+        elif o in [ '-l' ]:
+            privilege_lvl = a
+        elif o in [ '-D' ]:
+            additional_opts += [ "%s %s" % (o, a) ]
+        elif o in [ '--driver-type' ]:
+            additional_opts += [ "%s=%s" % (o, a) ]
+        elif o in [ '-k' ]:
+            additional_opts += [ "%s %s" % (o, a) ]
+        elif o in [ '--quiet-cache' ]:
+            additional_opts.append( o )
+        elif o in [ '--sdr-cache-recreate' ]:
+            additional_opts.append( o )
+        elif o in [ '--interpret-oem-data' ]:
+            additional_opts.append( o )
+        elif o in [ '--output-sensor-state' ]:
+            additional_opts.append( o )
+        elif o in [ '--ignore-not-available-sensors' ]:
+            additional_opts.append( o )
+        elif o in [ '--output-sensor-thresholds' ]:
+            additional_opts.append( o )
+
+    if opt_debug:
+        sys.stderr.write( "DEBUG: opts are '%s'.\n" % opts + \
+                          "DEBUG: args are '%s'.\n" % args )
+
+    if len(args) == 1:
+        hostname = args[0]
+    else:
+        sys.stderr.write( "ERROR: Please specify exactly one host.\n" )
+        sys.exit(1)
+
+    if not (username and password and privilege_lvl):
+        sys.stderr.write( "ERROR: Credentials are missing.\n" )
+        sys.exit(1)
+
+    for sub_path in [ "sbin", "bin", "local/sbin", "local/bin" ]:
+        ipmi_cmd = [ "/usr/%s/ipmi-sensors" % sub_path,
+                     "-h", hostname, "-u", username,
+                     "-p", password, "-l", privilege_lvl ] + \
+                     additional_opts
+
+        if opt_debug:
+            sys.stderr.write( "DEBUG: try executing '%s'.\n" % " ".join( ipmi_cmd ) )
+
+        try:
+            p = subprocess.Popen( ipmi_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+            sensor_data, err = p.communicate()
+            break
+        except Exception, e:
+            err = e
+            if opt_debug:
+                sys.stderr.write( "ERROR: '%s': %s.\n" % (ipmi_cmd_str, e) )
+            continue
+
+    if err:
+        sys.stderr.write( "ERROR: '%s'.\n" % err )
+        sys.exit(1)
+    else:
+        sys.stdout.write( "<<<ipmi_sensors:sep(124)>>>\n" )
+        agent_ipmi_sensors_parse_data( sensor_data.splitlines() )
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    agent_ipmi_sensors_main( sys.argv[1:] )

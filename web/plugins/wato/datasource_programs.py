@@ -245,9 +245,32 @@ register_rule(group,
                   help = _("Possible are 'user', 'operator', 'admin'"),
                   allow_empty = False,
               )
-            )
+            ),
+            ( "ipmi_driver", TextAscii( title = _("IPMI driver") )),
+            ( "driver_type", TextAscii( title = _("IPMI driver type") )),
+            ( "BMC_key",     TextAscii( title = _("BMC key") )),
+            ( "quiet_cache", Checkbox(
+                title = _("Quiet cache"),
+                label = _("Enable") )),
+            ( "sdr_cache_recreate", Checkbox(
+                title = _("SDR cache recreate"),
+                label = _("Enable") )),
+            ( "interpret_oem_data", Checkbox(
+                title = _("OEM data interpretation"),
+                label = _("Enable") )),
+            ( "output_sensor_state", Checkbox(
+                title = _("Sensor state"),
+                label = _("Enable") )),
+            ( "output_sensor_thresholds", Checkbox(
+                title = _("Sensor threshold"),
+                label = _("Enable") )),
+            ( "ignore_not_available_sensors", Checkbox(
+                title = _("Suppress not available sensors"),
+                label = _("Enable") )),
         ],
-        optional_keys = False
+        optional_keys = [ "ipmi_driver", "driver_type", "quiet_cache", "sdr_cache_recreate",
+                          "interpret_oem_data", "output_sensor_state", "output_sensor_thresholds",
+                          "ignore_not_available_sensors", "BMC_key" ]
     ),
     title = _("Check IPMI Sensors via Freeipmi"),
     help = _("This rule selects the Agent IPMI Sensors instead of the normal Check_MK Agent "

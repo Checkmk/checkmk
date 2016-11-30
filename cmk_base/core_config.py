@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import sys
+
 import cmk_base.console as console
 
 g_configuration_warnings = []
@@ -36,7 +38,7 @@ def initialize_warnings():
 
 def warning(text):
     g_configuration_warnings.append(text)
-    console.warning("\n%s", text)
+    console.warning("\n%s", text, stream=sys.stdout)
 
 
 def get_configuration_warnings():

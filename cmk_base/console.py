@@ -70,13 +70,15 @@ def vverbose(text, *args, **kwargs):
 #
 
 # TODO: Inconsistent -> Adds newline and other functions don't
-def warning(text, *args):
+def warning(text, *args, **kwargs):
+    kwargs.setdefault("stream", sys.stderr)
+
     stripped = text.lstrip()
     indent = text[:len(text) - len(stripped)]
 
     text = "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
 
-    output(text, *args, stream=sys.stderr)
+    output(text, *args, **kwargs)
 
 
 def error(text, *args):

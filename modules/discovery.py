@@ -1108,7 +1108,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             # apply check_parameters
             try:
                 if type(paramstring) == str:
-                    params = eval(paramstring, config.__dict__, config.__dict__)
+                    params = eval(paramstring, checks.__dict__, checks.__dict__)
                 else:
                     params = paramstring
             except Exception:
@@ -1187,7 +1187,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             perfdata = []
 
         if check_source == "active":
-            params = eval(paramstring, config.__dict__, config.__dict__)
+            params = eval(paramstring, checks.__dict__, checks.__dict__)
 
         if check_source in [ "legacy", "active", "custom" ]:
             checkgroup = None
@@ -1232,7 +1232,7 @@ def read_autochecks_of(hostname, world="config"):
         return []
     try:
         autochecks_raw = eval(file(filepath).read(),
-                              config.__dict__, config.__dict__)
+                              checks.__dict__, checks.__dict__)
     except SyntaxError,e:
         console.verbose("Syntax error in file %s: %s\n", filepath, e, stream=sys.stderr)
         if cmk.debug.enabled():

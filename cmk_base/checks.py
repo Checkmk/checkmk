@@ -60,7 +60,7 @@ special_agent_info                 = {}
 # keep track of the variables needed by each file. Those variables are then
 # (if available) read from the config and applied to the checks module after
 # reading in the configuration of the user.
-g_check_variables = []
+g_check_variables = {}
 
 #.
 #   .--Loading-------------------------------------------------------------.
@@ -114,11 +114,12 @@ def load_checks(filelist):
 
     ignored_variable_types = [ type(lambda: None), type(os) ]
     for varname in set(globals().keys()).difference(known_vars):
-        if varname[0] != '_' \
-           and type(globals()[varname]) not in ignored_variable_types:
-            g_check_variables.append(varname)
+        value = globals()[varname]
 
-    add_check_variables_to_config()
+        if varname[0] != '_' and type(value) not in ignored_variable_types:
+            g_check_variables[varname] = value
+
+    config.add_check_variables(g_check_variables)
 
     # Now convert check_info to new format.
     convert_check_info()
@@ -137,21 +138,8 @@ def plugin_pathnames_in_directory(path):
         return []
 
 
-# Add configuration variables registered by checks to config module
-def add_check_variables_to_config():
-    for varname in g_check_variables:
-        value = globals()[varname]
-        config.register(varname, value)
-
-
-# Load user configured values of check related configuration variables
-# into this module to make it available during checking.
-# TODO: At the moment these vars are kept twice: in checks and config module.
-#       we could rebuild this to make them only be stored in the checks module
-#       where they are needed. This can be done while reading the config.
-def set_check_variables_from_config():
-    for varname in g_check_variables:
-        globals()[varname] = getattr(config, varname)
+def check_variable_names():
+    return g_check_variables.keys()
 
 
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to

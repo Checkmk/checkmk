@@ -47,7 +47,9 @@ def var_dir():
 
 
 def omd(cmd):
-    return os.system(" ".join(["sudo", "/usr/bin/omd"] + cmd + [">/dev/null"])) >> 8
+    cmdline = " ".join(["sudo", "/usr/bin/omd"] + cmd)
+    print "Executing: %s" % cmdline
+    return os.system(cmdline) >> 8
 
 
 # It's ok to make it currently only work on debian based distros

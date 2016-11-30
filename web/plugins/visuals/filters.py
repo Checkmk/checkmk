@@ -1218,15 +1218,18 @@ declare_filter(302, FilterHostAuxTags())
 # choices = [ (value, "readable"), .. ]
 class FilterCustomVarChoice(Filter):
     def __init__(self, name, title, info, custom_var, choices):
-        Filter.__init__(self, name, title, info, [ name ], [])
         self.custom_var = custom_var
         self.choices    = choices
-        self.lower_bound_varname = "%s_lower" % self.name
-        self.upper_bound_varname = "%s_upper" % self.name
+        self.lower_bound_varname = "%s_lower" % name
+        self.upper_bound_varname = "%s_upper" % name
+
+        Filter.__init__( self, name, title, info,
+                         [ self.lower_bound_varname,
+                           self.upper_bound_varname, ], [] )
 
 
     def _prepare_choices(self):
-        return map( lambda x: ( x[0], "%s - %s" % (x[0], x[1]) ), self.choices )
+        return map( lambda x: ( str(x[0]), "%s - %s" % (x[0], x[1]) ), self.choices )
 
 
     def display(self):
@@ -1242,14 +1245,14 @@ class FilterCustomVarChoice(Filter):
         upper_bound = html.var(self.upper_bound_varname)
 
         if lower_bound and upper_bound:
-            filterline = "Filter: %s_custom_variable_names = %s\n" % \
+            filterline = "Filter: %s_custom_variable_names >= %s\n" % \
                          ( self.info, self.custom_var )
 
             filterline_values = []
             for value, readable in self.choices:
                 if value >= int(lower_bound) and value <= int(upper_bound):
-                    filterline_values.append( "Filter: custom_variable_values >= %s" % \
-                                              lqencode(str(value)) )
+                    filterline_values.append( "Filter: %s_custom_variable_values >= %s" % \
+                                              (self.info, lqencode(str(value))) )
             filterline += "%s\n" % "\n".join( filterline_values )
 
             len_filterline_values = len(filterline_values)

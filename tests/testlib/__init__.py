@@ -304,12 +304,14 @@ class Site(object):
 
     def set_config(self, key, val, with_restart=False):
         if with_restart:
+            print "Stopping site"
             self.stop()
 
         assert omd(["config", self.id, "set", key, val]) == 0
 
         if with_restart:
             self.start()
+            print "Started site"
 
 
     def get_config(self, key):

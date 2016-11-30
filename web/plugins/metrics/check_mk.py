@@ -3789,6 +3789,13 @@ check_metrics["check_mk_active-icmp"] = {
     "rtmin" : { "scale" : m },
 }
 
+# This metric is not for an official Check_MK check
+# It may be provided by an check_icmp check configured as mrpe
+check_metrics["check_icmp"] = {
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
+}
 
 check_metrics["check-mk-host-ping"] = {
     "rta"   : { "scale" : m },

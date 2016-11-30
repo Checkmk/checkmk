@@ -3477,7 +3477,8 @@ long_options = [ "help", "version", "verbose", "compile", "debug",
 non_config_options = ['-L', '--list-checks', '-P', '--package', '-M',
                       '--handle-alerts', '--notify', '--real-time-checks',
                       '--man', '-V', '--version' ,'-h', '--help', '--automation',
-                      '--create-rrd', '--convert-rrds', '--compress-history', '--keepalive', '--cap' ]
+                      '--create-rrd', '--convert-rrds', '--compress-history', '--keepalive',
+                      '--cap', '--scan-parents' ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -3677,6 +3678,7 @@ try:
             discover_marked_hosts()
             done = True
         elif o == '--scan-parents':
+            config.load(exclude_parents_mk=True)
             do_scan_parents(args)
             done = True
         elif o == '--automation':

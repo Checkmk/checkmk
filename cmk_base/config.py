@@ -35,6 +35,9 @@ import cmk_base.console as console
 import cmk_base.default_config as default_config
 import cmk_base.rulesets as rulesets
 
+# This is mainly needed for pylint to detect all available
+# configuration options during static analysis. The defaults
+# are loaded later with load_default_config() again.
 from cmk_base.default_config import *
 
 def get_variable_names():
@@ -89,54 +92,62 @@ def set_check_variables_for_checks():
 #   | Code for reading the configuration files.                            |
 #   '----------------------------------------------------------------------'
 
-# TODO: Use get_variable_names()
-vars_before_config = set([])
-
-
-def load(with_conf_d=True, validate_hosts=True):
-    import cmk_base.checks
-    global vars_before_config, checks
-
+def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
     load_default_config()
+    _initialize_default_levels_variables()
 
-    # Initialize dictionary-type default levels variables
+    vars_before_config = all_nonfunction_vars()
+
+    _load_config(with_conf_d, exclude_parents_mk)
+
+    initialize_config_caches()
+    initialize_service_levels()
+
+    if validate_hosts:
+        duplicates = duplicate_hosts()
+        if duplicates:
+            # TODO: Raise an exception
+            console.error("Error in configuration: duplicate hosts: %s\n",
+                                                    ", ".join(duplicates))
+            sys.exit(3)
+
+    add_wato_static_checks_to_checks()
+    initialize_check_caches()
+    set_check_variables_for_checks()
+
+    verify_non_invalid_variables(vars_before_config)
+    verify_snmp_communities_type()
+
+
+# Initialize dictionary-type default levels variables registered by checks
+def _initialize_default_levels_variables():
     for check in cmk_base.checks.check_info.values():
         def_var = check.get("default_levels_variable")
         if def_var:
             globals()[def_var] = {}
 
-    # Create list of all files to be included
-    if with_conf_d:
-        list_of_files = reduce(lambda a,b: a+b,
-           [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
-             for d, _unused_sb, fs in os.walk(cmk.paths.check_mk_config_dir) ], [])
-        # list_of_files.sort()
-        list_of_files.sort(cmp = cmp_config_paths)
-        list_of_files = [ cmk.paths.main_config_file ] + list_of_files
-    else:
-        list_of_files = [ cmk.paths.main_config_file ]
 
-    for path in [ cmk.paths.final_config_file, cmk.paths.local_config_file ]:
-        if os.path.exists(path):
-            list_of_files.append(path)
-
-    global_dict = globals()
-    global_dict.update({
+def _load_config(with_conf_d, exclude_parents_mk):
+    import cmk_base.checks
+    helper_vars = {
         "FILE_PATH"    : None,
         "FOLDER_PATH"  : None,
         "ALL_HOSTS"    : rulesets.ALL_HOSTS,
         "ALL_SERVICES" : rulesets.ALL_SERVICES,
-    })
+    }
 
-    vars_before_config = all_nonfunction_vars()
-    for _f in list_of_files:
-        # Hack: during parent scan mode we must not read in old version of parents.mk!
-        # TODO: Hand this over via parameter or simmilar
-        if '--scan-parents' in sys.argv and _f.endswith("/parents.mk"):
+    global_dict = globals()
+    global_dict.update(helper_vars)
+
+    for _f in _get_config_file_paths(with_conf_d):
+        # During parent scan mode we must not read in old version of parents.mk!
+        if exclude_parents_mk and _f.endswith("/parents.mk"):
             continue
+
         try:
-            _old_all_hosts = all_hosts[:]
-            _old_clusters = clusters.keys()
+            _hosts_before    = set(all_hosts)
+            _clusters_before = set(clusters.keys())
+
             # Make the config path available as a global variable to
             # be used within the configuration file
             if _f.startswith(cmk.paths.check_mk_config_dir + "/"):
@@ -152,37 +163,56 @@ def load(with_conf_d=True, validate_hosts=True):
                 })
 
             execfile(_f, global_dict, global_dict)
-            marks_hosts_with_path(_old_all_hosts, all_hosts, _f)
-            marks_hosts_with_path(_old_clusters, clusters.keys(), _f)
+
+            _new_hosts    = set(all_hosts).difference(_hosts_before)
+            _new_clusters = set(clusters.keys()).difference(_clusters_before)
+
+            set_folder_paths(_new_hosts.union(_new_clusters), _f)
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            elif sys.stdout.isatty():
+            elif sys.stderr.isatty():
                 console.error("Cannot read in configuration file %s: %s", _f, e)
                 sys.exit(1)
 
-
     # Cleanup global helper vars
-    # TODO: Get list from above
-    for helper_var in [ "FILE_PATH", "FOLDER_PATH", "ALL_HOSTS" ]:
+    for helper_var in helper_vars.keys():
         del global_dict[helper_var]
 
-    initialize_config_caches()
 
+# Create list of all files to be included during configuration loading
+def _get_config_file_paths(with_conf_d):
+    if with_conf_d:
+        list_of_files = sorted(
+            reduce(lambda a,b: a+b, [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
+                   for d, _unused_sb, fs in os.walk(cmk.paths.check_mk_config_dir) ], []),
+           cmp=_cmp_config_paths
+        )
+        list_of_files = [ cmk.paths.main_config_file ] + list_of_files
+    else:
+        list_of_files = [ cmk.paths.main_config_file ]
+
+    for path in [ cmk.paths.final_config_file, cmk.paths.local_config_file ]:
+        if os.path.exists(path):
+            list_of_files.append(path)
+
+    return list_of_files
+
+
+def initialize_config_caches():
+    collect_hosttags()
+
+
+def initialize_service_levels():
     global service_service_levels, host_service_levels
     service_service_levels = extra_service_conf.get("_ec_sl", [])
     host_service_levels = extra_host_conf.get("_ec_sl", [])
 
-    if validate_hosts:
-        duplicates = duplicate_hosts()
-        if duplicates:
-            # TODO: Raise an exception
-            console.error("Error in configuration: duplicate hosts: %s\n",
-                                                    ", ".join(duplicates))
-            sys.exit(3)
 
-    # Add WATO-configured explicit checks to (possibly empty) checks
-    # statically defined in checks.
+# Add WATO-configured explicit checks to (possibly empty) checks
+# statically defined in checks.
+def add_wato_static_checks_to_checks():
+    global checks
     static = []
     for entries in static_checks.values():
         for entry in entries:
@@ -225,37 +255,6 @@ def load(with_conf_d=True, validate_hosts=True):
     # over WATO.
     checks = static + checks
 
-    initialize_check_caches()
-    set_check_variables_for_checks()
-
-    # Check for invalid configuration variables
-    vars_after_config = all_nonfunction_vars()
-    ignored_variables = set(['vars_before_config', 'parts',
-                             'seen_hostnames',
-                             'taggedhost' ,'hostname',
-                             'service_service_levels',
-                             'host_service_levels'])
-    errors = 0
-    for name in vars_after_config:
-        if name not in ignored_variables and name not in vars_before_config:
-            console.error("Invalid configuration variable '%s'\n", name)
-            errors += 1
-
-    # Special handling for certain deprecated variables
-    if type(snmp_communities) == dict:
-        console.error("ERROR: snmp_communities cannot be a dict any more.\n")
-        errors += 1
-
-    if errors > 0:
-        console.error("--> Found %d invalid variables\n" % errors)
-        console.error("If you use own helper variables, please prefix them with _.\n")
-        # TODO: Raise an exception
-        sys.exit(1)
-
-
-def initialize_config_caches():
-    collect_hosttags()
-
 
 def initialize_check_caches():
     single_host_checks = cmk_base.config_cache.get_dict("single_host_checks")
@@ -268,15 +267,42 @@ def initialize_check_caches():
             multi_host_checks.append(entry)
 
 
-def marks_hosts_with_path(old, all, filename):
+def set_folder_paths(new_hosts, filename):
     if not filename.startswith(cmk.paths.check_mk_config_dir):
         return
+
     path = filename[len(cmk.paths.check_mk_config_dir):]
-    old = set([ o.split("|", 1)[0] for o in old ])
-    all = set([ a.split("|", 1)[0] for a in all ])
-    for host in all:
-        if host not in old:
-            host_paths[host] = path
+
+    for hostname in strip_tags(new_hosts):
+        host_paths[hostname] = path
+
+
+def verify_non_invalid_variables(vars_before_config):
+    # Check for invalid configuration variables
+    vars_after_config = all_nonfunction_vars()
+    ignored_variables = set(['vars_before_config', 'parts',
+                             'seen_hostnames',
+                             'taggedhost' ,'hostname',
+                             'service_service_levels',
+                             'host_service_levels'])
+
+    found_invalid = 0
+    for name in vars_after_config:
+        if name not in ignored_variables and name not in vars_before_config:
+            console.error("Invalid configuration variable '%s'\n", name)
+            found_invalid += 1
+
+    if found_invalid:
+        console.error("--> Found %d invalid variables\n" % found_invalid)
+        console.error("If you use own helper variables, please prefix them with _.\n")
+        sys.exit(1)
+
+
+def verify_snmp_communities_type():
+    # Special handling for certain deprecated variables
+    if type(snmp_communities) == dict:
+        console.error("ERROR: snmp_communities cannot be a dict any more.\n")
+        sys.exit(1)
 
 
 def all_nonfunction_vars():
@@ -292,7 +318,7 @@ def all_nonfunction_vars():
 #    scanned according to their lexical order.
 # 3. subdirectories of a directory will always be read *after*
 #    the *.mk files in that directory.
-def cmp_config_paths(a, b):
+def _cmp_config_paths(a, b):
     pa = a.split('/')
     pb = b.split('/')
     return cmp(pa[:-1], pb[:-1]) or \

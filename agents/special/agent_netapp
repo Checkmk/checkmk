@@ -596,10 +596,10 @@ def query(what, return_toplevel_node = False):
             section_errors.append("In class %s: %s" % (what, results.results_reason()))
             return
     else:
-        record_size = "80"
+        max_records = "2000"
         if isinstance(what, str):
             if what.endswith("iter"):
-                response = server.get_response([what, [["max-records", record_size]]])
+                response = server.get_response([what, [["max-records", max_records]]])
             else:
                 response = server.get_response([what])
         else:
@@ -612,7 +612,7 @@ def query(what, return_toplevel_node = False):
         tag_string = results.child_get_string("next-tag")
         while tag_string:
             # We need to start additinal query until all data is fetched
-            tag_response = server.get_response([what, [["max-records", record_size],["tag", tag_string]]])
+            tag_response = server.get_response([what, [["max-records", max_records],["tag", tag_string]]])
 
             # Get attributes-list and add this content to the initial response
             tag_string   = tag_response.get_results().child_get_string("next-tag")
@@ -665,16 +665,16 @@ def query_counters(what):
             return response.child_get("instances")
     else:
         if netapp_mode == "clustermode":
-            record_size = "3000"
+            max_records = "3000"
             response = server.get_response(["perf-object-instance-list-info-iter",
-                                           [["objectname", what], ["max-records", record_size]]])
+                                           [["objectname", what], ["max-records", max_records]]])
 
             results    = response.get_results()
             tag_string = results.child_get_string("next-tag")
             while tag_string:
                 # We need to start additinal query until all data is fetched
                 tag_response = server.get_response(["perf-object-instance-list-info-iter",
-                                                   [["objectname", what], ["max-records", record_size], ["tag", tag_string]]])
+                                                   [["objectname", what], ["max-records", max_records], ["tag", tag_string]]])
 
                 # Get attributes-list and add this content to the initial response
                 tag_string   = tag_response.get_results().child_get_string("next-tag")

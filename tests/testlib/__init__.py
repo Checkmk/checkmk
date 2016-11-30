@@ -232,10 +232,10 @@ class Site(object):
 
     def _update_with_f12_files(self):
         paths = [
-            cmc_path() + "/bin",
+            cmk_path() + "/bin",
             cmk_path() + "/modules",
-            cmc_path() + "/cmk_base",
-            cmc_path() + "/cmk",
+            cmk_path() + "/cmk_base",
+            cmk_path() + "/cmk",
             cmk_path() + "/checks",
             cmk_path() + "/checkman",
             cmk_path() + "/web",

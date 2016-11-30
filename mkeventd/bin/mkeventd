@@ -3038,12 +3038,11 @@ class EventStatus():
         status = self.pack_status()
         path = g_state_dir + "/status"
         # Belive it or not: cPickle is more than two times slower than repr()
-        f=file(path + ".new", "w")
-        f.write(repr(status) + "\n")
-        fd = f.fileno()
-        f.flush()
-        f.close()
-        os.fsync(fd)
+        with file(path + ".new", "w") as f:
+            f.write(repr(status) + "\n")
+            fd = f.fileno()
+            f.flush()
+            os.fsync(fd)
         os.rename(path + ".new", path)
         elapsed = time.time() - now
         if opt_debug:

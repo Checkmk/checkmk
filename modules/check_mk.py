@@ -2971,7 +2971,7 @@ def ip_address_of(hostname, family=None):
             g_failed_ip_lookups.append(hostname)
             if not ignore_ip_lookup_failures:
                 configuration_warning("Cannot lookup IP address of '%s' (%s). "
-                                      "The host will note be monitored correctly." % (hostname, e))
+                                      "The host will not be monitored correctly." % (hostname, e))
             return fallback_ip_for(hostname, family)
 
 

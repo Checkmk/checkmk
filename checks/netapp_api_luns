@@ -27,6 +27,12 @@
 # <<<netapp_api_luns:sep(9)>>>
 # lun /vol/iscsi_crm_dblogs/crm_dblogs_lu01   read-only false size 644286182400   vserver ISCSI_CRM   size-used 538924421120  online true volume iscsi_crm_dblogs
 
+factory_settings["netapp_api_luns_default_levels"] = {
+    "levels"          : (80.0, 90.0), # warn/crit in percent
+    "trend_range"     : 24,
+    "trend_perfdata"  : True,    # do send performance data for trends
+}
+
 def inventory_netapp_api_luns(parsed):
     for lun in parsed.keys():
         yield lun, {}
@@ -65,5 +71,5 @@ check_info["netapp_api_luns"] = {
     'has_perfdata'            : True,
     'group'                   : "netapp_luns",
     'includes'                : [ "df.include", "netapp_api.include" ],
-    "default_levels_variable" : "filesystem_default_levels",
+    "default_levels_variable" : "netapp_api_luns_default_levels",
 }

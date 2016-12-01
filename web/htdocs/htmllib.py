@@ -85,6 +85,57 @@ class RequestTimeout(MKException):
     pass
 
 
+
+#
+# Encoding and escaping
+#
+class Escaper(object):
+
+
+    _unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
+    _unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
+
+
+    # Encode HTML attributes. Replace HTML syntax with HTML text.
+    # For example: replace '"' with '&quot;', '<' with '&lt;'.
+    # This code is slow. Works on str and unicode without changing
+    # the type. Also works on things that can be converted with '%s'.
+    def _escape_attribute(self, value):
+        attr_type = type(value)
+        if value is None:
+            return ''
+        elif attr_type == int:
+            return str(value)
+        elif isinstance(value, HTML):
+            return "%s" % value # This is HTML code which must not be escaped
+        elif attr_type not in [str, unicode]: # also possible: type Exception!
+            value = "%s" % value # Note: this allows Unicode. value might not have type str now
+        return value.replace("&", "&amp;")\
+                    .replace('"', "&quot;")\
+                    .replace("<", "&lt;")\
+                    .replace(">", "&gt;")
+
+
+    # render HTML text.
+    # We only strip od some tags and allow some simple tags
+    # such as <h1>, <b> or <i> to be part of the string.
+    # This is useful for messages where we want to keep formatting
+    # options. (Formerly known as 'permissive_attrencode') """
+    # for the escaping functions
+    def _escape_text(self, text):
+
+        if isinstance(text, HTML):
+            return "%s" % text # This is HTML code which must not be escaped
+
+        text = self._escape_attribute(text)
+        text = self._unescaper_text.sub(r'<\1\2>', text)
+        # Also repair link definitions
+        text = self._unescaper_href.sub(r'<a href="\1">', text)
+        text = re.sub(r'&amp;nbsp;', '&nbsp;', text)
+        return text
+
+
+
 #.
 #   .--HTML----------------------------------------------------------------.
 #   |                      _   _ _____ __  __ _                            |
@@ -105,28 +156,20 @@ class RequestTimeout(MKException):
 #   | The class now implements all relevant string comparison methods.     |
 #   | The HTMLGenerator render_tag() function returns a HTML object.       |
 #   '----------------------------------------------------------------------'
-class HTML(object):
+class HTML(unicode, Escaper):
 
 
-    def __init__(self, value = ''):
-        super(HTML, self).__init__()
-        self.value = "%s" % value
-
-
-    def __str__(self):
-        return self.value
-
-
-    def __unicode__(self):
-        return self.value
+    def __new__(self, value = ''):
+        return unicode.__new__(self, value)
 
 
     def __repr__(self):
-        return "HTML(%s)" % repr(self.value)
+        return "HTML(%s)" % repr("%s" % self)
 
 
     def __add__(self, other):
-        return HTML("%s%s" % (self.value, other))
+        return HTML(unicode.__add__(self, other))
+        #TODO: return HTML(unicode.__add__(self, self._escape_text(other)))
 
 
     def __iadd__(self, other):
@@ -134,71 +177,13 @@ class HTML(object):
 
 
     def __radd__(self, other):
-        return HTML("%s%s" % (other, self.value))
+        return HTML("%s%s" % (other, self))
+        #TODO: return HTML("%s%s" % (self._escape_text(other), self))
 
 
     def join(self, iterable):
-        return HTML(''.join(map(lambda x: "%s" % x, iterable)))
-
-
-    def __lt__(self, other):
-        return self.value < "%s" % other
-
-
-    def __le__(self, other):
-        return self.value <= "%s" % other
-
-
-    def __eq__(self, other):
-        return self.value == "%s" % other
-
-
-    def __ne__(self, other):
-        return self.value != "%s" % other
-
-
-    def __gt__(self, other):
-        return self.value > "%s" % other
-
-
-    def __ge__(self, other):
-        return self.value >= "%s" % other
-
-
-    def __len__(self):
-        return len(self.value)
-
-
-    def __getitem__(self, index):
-        return self.value[index]
-
-
-    def __contains__(self, item):
-        return item in self.value
-
-
-    def count(self, item):
-        return self.value.count(item)
-
-
-    def index(self, item):
-        return self.value.index(item)
-
-
-    def lstrip(self, stripstr):
-        self.value = self.value.lstrip(stripstr)
-        return self
-
-
-    def rstrip(self, stripstr):
-        self.value = self.value.rstrip(stripstr)
-        return self
-
-
-    def strip(self, stripstr):
-        self.value = self.value.strip(stripstr)
-        return self
-
+        return HTML(''.join(iterable))
+        #TODO: return HTML(''.join(map(lambda x: self._escape_text(x), iterable)))
 
 
 __builtin__.HTML = HTML
@@ -246,6 +231,7 @@ class OutputFunnel(object):
             if type(text) == unicode:
                 text = text.encode("utf-8")
             self.lowlevel_write(text)
+    #TODO:    return self
 
 
     def lowlevel_write(self, text):
@@ -311,7 +297,7 @@ class OutputFunnel(object):
 #   '----------------------------------------------------------------------'
 
 
-class HTMLGenerator(OutputFunnel):
+class HTMLGenerator(Escaper, OutputFunnel):
 
     """ Usage Notes:
 
@@ -374,49 +360,332 @@ class HTMLGenerator(OutputFunnel):
 
 
     #
-    # Encoding and escaping
+    # Rendering
     #
 
 
-    # Encode HTML attributes. Replace HTML syntax with HTML text.
-    # For example: replace '"' with '&quot;', '<' with '&lt;'.
-    # This code is slow. Works on str and unicode without changing
-    # the type. Also works on things that can be converted with '%s'.
-    def _escape_attribute(self, value):
-        attr_type = type(value)
-        if value is None:
-            return ''
-        elif attr_type == int:
-            return str(value)
-        elif isinstance(value, HTML):
-            return value.value # This is HTML code which must not be escaped
-        elif attr_type not in [str, unicode]: # also possible: type Exception!
-            value = "%s" % value # Note: this allows Unicode. value might not have type str now
-        return value.replace("&", "&amp;")\
-                    .replace('"', "&quot;")\
-                    .replace("<", "&lt;")\
-                    .replace(">", "&gt;")
+    def _render_attributes(self, **attrs):
+        # TODO: REMOVE AFTER REFACTORING IS DONE!!
+        if self.testing_mode:
+            for key in attrs:
+                assert key.rstrip('_') in ['class', 'id', 'src', 'type', 'name',\
+                    'onclick', 'ondblclick', 'onsubmit', 'onmouseover', 'onmouseout', 'onfocus', 'onkeydown', 'onchange',\
+                    'size', 'autocomplete', 'readonly', 'value', 'checked','rows', 'cols',\
+                    'content',  'href', 'http-equiv', 'rel', 'for', 'title', 'target','multiple',\
+                    'align', 'valign', 'style', 'width', 'height', 'colspan', 'data-type', 'data-role','selected',\
+                    'cellspacing', 'cellpadding', 'border', 'allowTransparency', 'frameborder'], key
+
+        for k, v in attrs.iteritems():
+            if v is None: continue
+
+            if not isinstance(v, list):
+                yield ' %s=\"%s\"' % (k.rstrip('_'), self._escape_attribute(v))
+            elif k in ["class", "class_"]:
+                yield ' %s=\"%s\"' % (k.rstrip('_'),  ' '.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
+            elif k == "style" or k.startswith('on'):
+                yield ' %s=\"%s;\"' % (k.rstrip('_'), re.sub(';+', ';', '; '.join(a for a in (self._escape_attribute(vi) for vi in v) if a)))
+            else:
+                yield ' %s=\"%s\"' % (k.rstrip('_'),   '_'.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
 
 
-    # render HTML text.
-    # We only strip od some tags and allow some simple tags
-    # such as <h1>, <b> or <i> to be part of the string.
-    # This is useful for messages where we want to keep formatting
-    # options. (Formerly known as 'permissive_attrencode') """
-    # for the escaping functions
-    _unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
-    _unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
-    def _escape_text(self, text):
+    # applies attribute encoding to prevent code injections.
+    def _render_opening_tag(self, tag_name, close_tag=False, **attrs):
+        """ You have to replace attributes which are also python elements such as
+            'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_'). """
+        #self.indent_level += self.indent
+        if not attrs:
+            return HTML("%s<%s%s>" % (' ' * (self.indent_level - self.indent),\
+                                      tag_name, ' /' if close_tag else ''))
+        else:
+            return HTML("%s<%s%s%s>" % (' ' * (self.indent_level - self.indent),\
+                                     tag_name, ''.join(self._render_attributes(**attrs)),\
+                                     ' /' if close_tag else ''))
 
-        if isinstance(text, HTML):
-            return text.value # This is HTML code which must not be escaped
 
-        text = self._escape_attribute(text)
-        text = self._unescaper_text.sub(r'<\1\2>', text)
-        # Also repair link definitions
-        text = self._unescaper_href.sub(r'<a href="\1">', text)
-        text = re.sub(r'&amp;nbsp;', '&nbsp;', text)
-        return text
+    def _render_closing_tag(self, tag_name):
+        #self.indent_level -= self.indent if self.indent_level < 0 else 0
+        return  HTML("%s</%s>" % (' ' * self.indent_level, tag_name))
+
+
+    def _render_content_tag(self, tag_name, tag_content, **attrs):
+        tag = ''
+        if tag_content in ['', None]:
+            tag = "%s</%s>" % (self._render_opening_tag(tag_name, **attrs), tag_name)
+        elif isinstance(tag_content, HTML):
+            tag = "%s%s</%s>" % (self._render_opening_tag(tag_name, **attrs).rstrip('\n'),
+                                  tag_content.lstrip(' ').rstrip('\n'), tag_name)
+        else:
+            tag = "%s%s</%s>" % (self._render_opening_tag(tag_name, **attrs).rstrip('\n'),\
+                                   self._escape_text(tag_content),\
+                                   tag_name)
+        #self.indent_level -= 1
+        return HTML(tag)
+
+
+    # Write functionlity
+#    def write(self, text):
+#        raise NotImplementedError()
+
+
+    # This is used to create all the render_tag() and close_tag() functions
+    def __getattr__(self, name):
+        """ All closing tags can be called like this:
+            self.close_html(), self.close_tr(), etc. """
+
+        parts = name.split('_')
+
+        # generating the shortcut tag calls
+        if len(parts) == 1 and name in self._shortcut_tags:
+            return lambda content, **attrs: self.write(self._render_content_tag(name, content, **attrs))
+
+        # generating the open, close and render calls
+        elif len(parts) == 2:
+            what, tag_name = parts[0], parts[1]
+
+            if what == "open" and tag_name in self._tag_names:
+                return lambda **attrs: self.write(self._render_opening_tag(tag_name, **attrs))
+
+            elif what == "close" and tag_name in self._tag_names:
+                return lambda : self.write(self._render_closing_tag(tag_name))
+
+            elif what == "idle" and tag_name in self._tag_names:
+                return lambda **attrs: self.write(self._render_content_tag(tag_name, '', **attrs))
+
+            elif what == "render" and tag_name in self._tag_names:
+                return lambda content, **attrs: HTML(self._render_content_tag(tag_name, content, **attrs))
+
+        else:
+            # FIXME: This returns None, which is not a very informative error message
+            return object.__getattribute__(self, name)
+
+    #
+    # HTML element methods
+    # If an argument is mandatory, it is used as default and it will overwrite an
+    # implicit argument (e.g. id_ will overwrite attrs["id"]).
+    #
+
+
+    #
+    # basic elements
+    #
+
+    def write_text(self, text):
+        """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
+        return self.write(self._escape_text(text))
+
+
+    def write_html(self, content):
+        """ Write HTML code directly, without escaping. """
+        return self.write(content + "\n")
+
+
+    def comment(self, comment_text):
+        return self.write("<!--%s-->" % self.encode_attribute(comment_text))
+
+
+    def meta(self, httpequiv=None, **attrs):
+        if httpequiv:
+            attrs['http-equiv'] = httpequiv
+        return self.write(self._render_opening_tag('meta', close_tag=True, **attrs))
+
+
+    def base(self, target):
+        return self.write(self._render_opening_tag('base', close_tag=True, target=target))
+
+
+    def open_a(self, href, **attrs):
+        attrs['href'] = href
+        return self.write(self._render_opening_tag('a', **attrs))
+
+
+    def render_a(self, content, href, **attrs):
+        attrs['href'] = href
+        return self._render_content_tag('a', content, **attrs)
+
+
+    def a(self, content, href, **attrs):
+        return self.write(self.render_a(content, href, **attrs))
+
+
+    def stylesheet(self, href):
+        return self.write(self._render_opening_tag('link', rel="stylesheet", type_="text/css", href=href, close_tag=True))
+
+
+    #
+    # Scriptingi
+    #
+
+
+    # does not escape the script content
+    def render_javascript(self, code):
+        return HTML("<script language=\"javascript\">\n%s\n</script>\n" % code)
+
+
+    def javascript(self, code):
+        return self.write(self.render_javascript(code))
+
+
+    def javascript_file(self, filename):
+        """ <script type="text/javascript" src="js/%(name)s.js"/>\n """
+        return self.write(self._render_content_tag('script', '', type_="text/javascript", src='js/%s.js' % filename))
+
+
+    def render_img(self, src, **attrs):
+        attrs['src'] = src
+        return self._render_opening_tag('img', close_tag=True, **attrs)
+
+
+    def img(self, src, **attrs):
+        return self.write(self.render_img(src, **attrs))
+
+
+    def open_button(self, type_, **attrs):
+        attrs['type'] = type_
+        return self.write(self._render_opening_tag('button', close_tag=True, **attrs))
+
+
+    def play_sound(self, url):
+        return self.write(self._render_opening_tag('audio autoplay', src_=url))
+
+
+    #
+    # form elements
+    #
+
+
+    def render_label(self, content, for_, **attrs):
+        attrs['for'] = for_
+        return self._render_content_tag('label', content, **attrs)
+
+
+    def label(self, content, for_, **attrs):
+        return self.write(self.render_label(content, for_, **attrs))
+
+
+    def render_input(self, name, type_, **attrs):
+        attrs['type_'] = type_
+        attrs['name'] = name
+        return self._render_opening_tag('input', close_tag=True, **attrs)
+
+
+    def input(self, name, type_, **attrs):
+        return self.write(self.render_input(name, type_, **attrs))
+
+
+    #
+    # table and list elements
+    #
+
+
+    def td(self, content, **attrs):
+        """ Only for text content. You can't put HTML structure here. """
+        return self.write(self._render_content_tag('td', content, **attrs))
+
+
+    def li(self, content, **attrs):
+        """ Only for text content. You can't put HTML structure here. """
+        return self.write(self._render_content_tag('li', content, **attrs))
+
+
+    #
+    # structural text elements
+    #
+
+
+    def render_heading(self, content):
+        """ <h2>%(content)</h2> """
+        return self._render_content_tag('h2', content)
+
+
+    def heading(self, content):
+        return self.write(self.render_heading(content))
+
+
+    def render_br(self):
+        return HTML("<br/>")
+
+
+    def br(self):
+        return self.write(self.render_br())
+
+
+    def render_hr(self, **attrs):
+        return self._render_opening_tag('hr', close_tag=True, **attrs)
+
+
+    def hr(self, **attrs):
+        return self.write(self.render_hr(**attrs))
+
+
+    def rule(self):
+        return self.hr()
+
+
+    def render_nbsp(self):
+        return HTML("&nbsp;")
+
+
+    def nbsp(self):
+        return self.write(self.render_nbsp())
+
+
+
+#.
+#   .--HTML Check_MK-------------------------------------------------------.
+#   |                      _   _ _____ __  __ _                            |
+#   |                     | | | |_   _|  \/  | |                           |
+#   |                     | |_| | | | | |\/| | |                           |
+#   |                     |  _  | | | | |  | | |___                        |
+#   |                     |_| |_| |_| |_|  |_|_____|                       |
+#   |                                                                      |
+#   |              ____ _               _        __  __ _  __              |
+#   |             / ___| |__   ___  ___| | __   |  \/  | |/ /              |
+#   |            | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /               |
+#   |            | |___| | | |  __/ (__|   <    | |  | | . \               |
+#   |             \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\              |
+#   |                                      |_____|                         |
+#   +----------------------------------------------------------------------+
+#   | A HTML generating class which introduces some logic of the Check_MK  |
+#   | web application.                                                     |
+#   | It also contains various settings for how the page should be built.  |
+#   '----------------------------------------------------------------------'
+
+
+class HTMLCheck_MK(HTMLGenerator):
+
+
+    def __init__(self):
+        super(HTMLCheck_MK, self).__init__()
+
+        # rendering state
+        self.html_is_open = False
+        self.header_sent = False
+        self.context_buttons_open = False
+        self.context_buttons_hidden = False
+
+        # style options
+        self.body_classes = ['main']
+        self._default_stylesheets = [ "check_mk", "graphs" ]
+        self._default_javascripts = [ "checkmk", "graphs" ]
+
+        # behaviour options
+        self.render_headfoot = True
+        self.enable_debug = False
+        self.screenshotmode = False
+        self.have_help = False
+        self.help_visible = False
+
+        # browser options
+        self.output_format = "html"
+        self.browser_reload = 0
+        self.browser_redirect = ''
+        self.link_target = None
+        self.keybindings_enabled = True
+
+
+    #
+    # HTML encoding
+    #
 
 
     # This function returns a str object, never unicode!
@@ -518,329 +787,6 @@ class HTMLGenerator(OutputFunnel):
         return ht
 
 
-
-    #
-    # Rendering
-    #
-
-
-    def _render_attributes(self, **attrs):
-        # TODO: REMOVE AFTER REFACTORING IS DONE!!
-        if self.testing_mode:
-            for key in attrs:
-                assert key.rstrip('_') in ['class', 'id', 'src', 'type', 'name',\
-                    'onclick', 'ondblclick', 'onsubmit', 'onmouseover', 'onmouseout', 'onfocus', 'onkeydown', 'onchange',\
-                    'size', 'autocomplete', 'readonly', 'value', 'checked','rows', 'cols',\
-                    'content',  'href', 'http-equiv', 'rel', 'for', 'title', 'target','multiple',\
-                    'align', 'valign', 'style', 'width', 'height', 'colspan', 'data-type', 'data-role','selected',\
-                    'cellspacing', 'cellpadding', 'border', 'allowTransparency', 'frameborder'], key
-
-        for k, v in attrs.iteritems():
-            if v is None: continue
-
-            if not isinstance(v, list):
-                yield ' %s=\"%s\"' % (k.rstrip('_'), self._escape_attribute(v))
-            elif k in ["class", "class_"]:
-                yield ' %s=\"%s\"' % (k.rstrip('_'),  ' '.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
-            elif k == "style" or k.startswith('on'):
-                yield ' %s=\"%s;\"' % (k.rstrip('_'), re.sub(';+', ';', '; '.join(a for a in (self._escape_attribute(vi) for vi in v) if a)))
-            else:
-                yield ' %s=\"%s\"' % (k.rstrip('_'),   '_'.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
-
-
-    # applies attribute encoding to prevent code injections.
-    def _render_opening_tag(self, tag_name, close_tag=False, **attrs):
-        """ You have to replace attributes which are also python elements such as
-            'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_'). """
-        #self.indent_level += self.indent
-        if not attrs:
-            return HTML("%s<%s%s>" % (' ' * (self.indent_level - self.indent),\
-                                      tag_name, ' /' if close_tag else ''))
-        else:
-            return HTML("%s<%s%s%s>" % (' ' * (self.indent_level - self.indent),\
-                                     tag_name, ''.join(self._render_attributes(**attrs)),\
-                                     ' /' if close_tag else ''))
-
-
-    def _render_closing_tag(self, tag_name):
-        #self.indent_level -= self.indent if self.indent_level < 0 else 0
-        return  HTML("%s</%s>" % (' ' * self.indent_level, tag_name))
-
-
-    def _render_content_tag(self, tag_name, tag_content, **attrs):
-        tag = ''
-        if tag_content in ['', None]:
-            tag = "%s</%s>" % (self._render_opening_tag(tag_name, **attrs), tag_name)
-        elif isinstance(tag_content, HTML):
-            tag = "%s%s</%s>" % (self._render_opening_tag(tag_name, **attrs).rstrip('\n'),
-                                  tag_content.value.lstrip(' ').rstrip('\n'), tag_name)
-        else:
-            tag = "%s%s</%s>" % (self._render_opening_tag(tag_name, **attrs).rstrip('\n'),\
-                                   self._escape_text(tag_content),\
-                                   tag_name)
-        #self.indent_level -= 1
-        return HTML(tag)
-
-
-    # Write functionlity
-#    def write(self, text):
-#        raise NotImplementedError()
-
-
-    # This is used to create all the render_tag() and close_tag() functions
-    def __getattr__(self, name):
-        """ All closing tags can be called like this:
-            self.close_html(), self.close_tr(), etc. """
-
-        parts = name.split('_')
-
-        # generating the shortcut tag calls
-        if len(parts) == 1 and name in self._shortcut_tags:
-            return lambda content, **attrs: self.write(self._render_content_tag(name, content, **attrs))
-
-        # generating the open, close and render calls
-        elif len(parts) == 2:
-            what, tag_name = parts[0], parts[1]
-
-            if what == "open" and tag_name in self._tag_names:
-                return lambda **attrs: self.write(self._render_opening_tag(tag_name, **attrs))
-
-            elif what == "close" and tag_name in self._tag_names:
-                return lambda : self.write(self._render_closing_tag(tag_name))
-
-            elif what == "idle" and tag_name in self._tag_names:
-                return lambda **attrs: self.write(self._render_content_tag(tag_name, '', **attrs))
-
-            elif what == "render" and tag_name in self._tag_names:
-                return lambda content, **attrs: HTML(self._render_content_tag(tag_name, content, **attrs))
-
-        else:
-            # FIXME: This returns None, which is not a very informative error message
-            return object.__getattribute__(self, name)
-
-    #
-    # HTML element methods
-    # If an argument is mandatory, it is used as default and it will overwrite an
-    # implicit argument (e.g. id_ will overwrite attrs["id"]).
-    #
-
-
-    #
-    # basic elements
-    #
-
-    def write_text(self, text):
-        """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
-        self.write(self._escape_text(text))
-
-
-    def write_html(self, content):
-        """ Write HTML code directly, without escaping. """
-        self.write(content + "\n")
-
-
-    def comment(self, comment_text):
-        self.write("<!--%s-->" % self.encode_attribute(comment_text))
-
-
-    def meta(self, httpequiv=None, **attrs):
-        if httpequiv:
-            attrs['http-equiv'] = httpequiv
-        self.write(self._render_opening_tag('meta', close_tag=True, **attrs))
-
-
-    def base(self, target):
-        self.write(self._render_opening_tag('base', close_tag=True, target=target))
-
-
-    def open_a(self, href, **attrs):
-        attrs['href'] = href
-        self.write(self._render_opening_tag('a', **attrs))
-
-
-    def render_a(self, content, href, **attrs):
-        attrs['href'] = href
-        return self._render_content_tag('a', content, **attrs)
-
-
-    def a(self, content, href, **attrs):
-        self.write(self.render_a(content, href, **attrs))
-
-
-    def stylesheet(self, href):
-        self.write(self._render_opening_tag('link', rel="stylesheet", type_="text/css", href=href, close_tag=True))
-
-
-    #
-    # Scriptingi
-    #
-
-
-    # does not escape the script content
-    def render_javascript(self, code):
-        return HTML("<script language=\"javascript\">\n%s\n</script>\n" % code)
-
-
-    def javascript(self, code):
-        self.write(self.render_javascript(code))
-
-
-    def javascript_file(self, filename):
-        """ <script type="text/javascript" src="js/%(name)s.js"/>\n """
-        self.write(self._render_content_tag('script', '', type_="text/javascript", src='js/%s.js' % filename))
-
-
-    def render_img(self, src, **attrs):
-        attrs['src'] = src
-        return self._render_opening_tag('img', close_tag=True, **attrs)
-
-
-    def img(self, src, **attrs):
-        self.write(self.render_img(src, **attrs))
-
-
-    def open_button(self, type_, **attrs):
-        attrs['type'] = type_
-        self.write(self._render_opening_tag('button', close_tag=True, **attrs))
-
-
-    def play_sound(self, url):
-        self.write(self._render_opening_tag('audio autoplay', src_=url))
-
-
-    #
-    # form elements
-    #
-
-
-    def render_label(self, content, for_, **attrs):
-        attrs['for'] = for_
-        return self._render_content_tag('label', content, **attrs)
-
-
-    def label(self, content, for_, **attrs):
-        self.write(self.render_label(content, for_, **attrs))
-
-
-    def render_input(self, name, type_, **attrs):
-        attrs['type_'] = type_
-        attrs['name'] = name
-        return self._render_opening_tag('input', close_tag=True, **attrs)
-
-
-    def input(self, name, type_, **attrs):
-        self.write(self.render_input(name, type_, **attrs))
-
-
-    #
-    # table and list elements
-    #
-
-
-    def td(self, content, **attrs):
-        """ Only for text content. You can't put HTML structure here. """
-        self.write(self._render_content_tag('td', content, **attrs))
-
-
-    def li(self, content, **attrs):
-        """ Only for text content. You can't put HTML structure here. """
-        self.write(self._render_content_tag('li', content, **attrs))
-
-
-    #
-    # structural text elements
-    #
-
-
-    def render_heading(self, content):
-        """ <h2>%(content)</h2> """
-        return self._render_content_tag('h2', content)
-
-
-    def heading(self, content):
-        self.write(self.render_heading(content))
-
-
-    def render_br(self):
-        return HTML("<br/>")
-
-
-    def br(self):
-        self.write(self.render_br())
-
-
-    def render_hr(self, **attrs):
-        return self._render_opening_tag('hr', close_tag=True, **attrs)
-
-
-    def hr(self, **attrs):
-        self.write(self.render_hr(**attrs))
-
-
-    def rule(self):
-        self.hr()
-
-
-    def render_nbsp(self):
-        return HTML("&nbsp;")
-
-
-    def nbsp(self):
-        self.write(self.render_nbsp())
-
-
-
-#.
-#   .--HTML Check_MK-------------------------------------------------------.
-#   |                      _   _ _____ __  __ _                            |
-#   |                     | | | |_   _|  \/  | |                           |
-#   |                     | |_| | | | | |\/| | |                           |
-#   |                     |  _  | | | | |  | | |___                        |
-#   |                     |_| |_| |_| |_|  |_|_____|                       |
-#   |                                                                      |
-#   |              ____ _               _        __  __ _  __              |
-#   |             / ___| |__   ___  ___| | __   |  \/  | |/ /              |
-#   |            | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /               |
-#   |            | |___| | | |  __/ (__|   <    | |  | | . \               |
-#   |             \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\              |
-#   |                                      |_____|                         |
-#   +----------------------------------------------------------------------+
-#   | A HTML generating class which introduces some logic of the Check_MK  |
-#   | web application.                                                     |
-#   | It also contains various settings for how the page should be built.  |
-#   '----------------------------------------------------------------------'
-
-
-class HTMLCheck_MK(HTMLGenerator):
-
-
-    def __init__(self):
-        super(HTMLCheck_MK, self).__init__()
-
-        # rendering state
-        self.html_is_open = False
-        self.header_sent = False
-        self.context_buttons_open = False
-        self.context_buttons_hidden = False
-
-        # style options
-        self.body_classes = ['main']
-        self._default_stylesheets = [ "check_mk", "graphs" ]
-        self._default_javascripts = [ "checkmk", "graphs" ]
-
-        # behaviour options
-        self.render_headfoot = True
-        self.enable_debug = False
-        self.screenshotmode = False
-        self.have_help = False
-        self.help_visible = False
-
-        # browser options
-        self.output_format = "html"
-        self.browser_reload = 0
-        self.browser_redirect = ''
-        self.link_target = None
-        self.keybindings_enabled = True
 
     def default_html_headers(self):
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")

@@ -2123,6 +2123,10 @@ def prepare_paint(p, row):
 
     row = join_row(row, p)
     tdclass, content = paint_painter(painter, row)
+
+    if tdclass == None:
+        tdclass = ""
+
     if tdclass == "" and content == "":
         return tdclass, content
 

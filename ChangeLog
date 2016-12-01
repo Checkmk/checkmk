@@ -16,6 +16,7 @@
     * 4068 FIX: Fixed possible exception in case of wrong automation secrets between multiple sites...
     * 4076 FIX: Git integration: Using mail address of user in author info
     * 4077 FIX: Fixed "Request URI too long" when cloning role after editing another one
+    * 4079 FIX: Improved error handling in case a WATO folder can not be written
 
 
 1.4.0i2p4:

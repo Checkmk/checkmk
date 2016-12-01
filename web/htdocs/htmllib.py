@@ -1885,27 +1885,22 @@ class html(DeprecationWrapper):
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
     def select(self, varname, choices, deflt="", onchange=None, attrs = {}):
+        # Model
         current = self.get_unicode_input(varname, deflt)
-        onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""
-        attrs.setdefault('size', 1)
-        attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
-
         error = self.user_errors.get(varname)
-        if error:
-            self.write("<x class=\"inputerror\">")
-        self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" %
-                             (onchange_code, varname, varname, attributes))
-        for value, text in choices:
-            if value == None:
-                value = ""
-            sel = value == current and " selected" or ""
-            self.write("<option value=\"%s\"%s>%s</option>\n" %
-                (self.attrencode(value), sel, self.attrencode(text)))
-        self.write("</select>\n")
-        if error:
-            self.write("<x class=\"inputerror\">")
         if varname:
             self.form_vars.append(varname)
+
+        # View
+        attrs.setdefault('size', 1)
+        html_code = HTML()
+        for value, text in choices:
+            html_code += self.render_option(text, value=value if value else "",
+                                                  selected="" if value == current else None)
+        html_code = self.render_select(html_code, name=varname, id_=varname, onchange=onchange, **attrs)
+        if error:
+            html_code = self.render_x(html_code, class_="inputerror")
+        self.write(html_code)
 
 
     def icon_select(self, varname, options, deflt=""):

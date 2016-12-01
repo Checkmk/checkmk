@@ -1920,33 +1920,30 @@ class html(DeprecationWrapper):
 
     def begin_radio_group(self, horizontal=False):
         if self.mobile:
-            if horizontal:
-                add = 'data-type="horizontal" '
-            else:
-                add = ''
-            self.write('<fieldset %s data-role="controlgroup">' % add)
+            attrs = {'data-type' : "horizontal" if horizontal else None,
+                     'data-role' : "controlgroup"}
+            self.write(self._render_opening_tag("fieldset", **attrs))
 
 
     def end_radio_group(self):
         if self.mobile:
-            self.write('</fieldset>')
+            self.write(self._render_closing_tag("fieldset"))
 
 
     def radiobutton(self, varname, value, checked, label):
-        if self.has_var(varname):
-            checked = self.var(varname) == value
-        checked_text = checked and " checked" or ""
-        if label:
-            id = "rb_%s_%s" % (varname, self.attrencode(value))
-            idtxt = ' id="%s"' % id
-        else:
-            idtxt = ""
-        self.write("<input type=radio name=%s value=\"%s\"%s%s>\n" %
-                      (varname, self.attrencode(value), checked_text, idtxt))
-        if label:
-            self.write('<label for="%s">%s</label>\n' % (id, label))
+        # Model
         self.form_vars.append(varname)
 
+        # Controller
+        if self.has_var(varname):
+            checked = self.var(varname) == value
+
+        # View
+        id_="rb_%s_%s" % (varname, value) if label else None
+        self.input(name=varname, type_="radio", value = value,
+                   checked="" if checked else None, id_=id_)
+        if label:
+            self.label(label, for_=id_)
 
     def begin_checkbox_group(self, horizonal=False):
         self.begin_radio_group(horizonal)

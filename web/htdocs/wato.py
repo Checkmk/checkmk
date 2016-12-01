@@ -2983,6 +2983,7 @@ def show_service_table(host, firsttime):
                         rulespec["valuespec"].validate_datatype(params, "")
                         rulespec["valuespec"].validate_value(params, "")
                         paramtext = rulespec["valuespec"].value_to_text(params)
+                        html.write_html(paramtext)
                     except Exception, e:
                         if config.debug:
                             err = traceback.format_exc()
@@ -2991,8 +2992,7 @@ def show_service_table(host, firsttime):
                         paramtext = _("Invalid check parameter: %s!") % err
                         paramtext += _(" The parameter is: %r") % (params,)
                         paramtext += _(" The variable name is: %s") % varname
-
-                    html.write_text(paramtext)
+                        html.write_text(paramtext)
 
             # Icon for Service parameters. Not for missing services!
             table.cell(css='buttons')

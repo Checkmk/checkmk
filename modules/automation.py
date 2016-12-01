@@ -556,9 +556,10 @@ def automation_get_configuration():
     variable_names = eval(sys.stdin.read())
     result = {}
     for varname in variable_names:
-        if varname in globals():
-            if not hasattr(globals()[varname], '__call__'):
-                result[varname] = globals()[varname]
+        if hasattr(config, varname):
+            value = getattr(config, varname)
+            if not hasattr(value, '__call__'):
+                result[varname] = value
     return result
 
 

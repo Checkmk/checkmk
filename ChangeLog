@@ -19,6 +19,7 @@
     * 4076 FIX: Git integration: Using mail address of user in author info
     * 4077 FIX: Fixed "Request URI too long" when cloning role after editing another one
     * 4079 FIX: Improved error handling in case a WATO folder can not be written
+    * 4082 FIX: Icon selector: Fixed exception in case non images are saved in icon folder
 
 
 1.4.0i2p4:

@@ -19,65 +19,152 @@ from tools import compare_html , gentest, compare_and_empty
 from classes import HTMLOrigTester, GeneratorTester, HTMLCheck_MKTester, DeprecatedRenderer
 
 
-class _OutputFunnel(object):
-    def __init__(self):
-        print "OutputFunnel"
-    def write(self, text):
-        print text
 
 
-class _HTMLGenerator(_OutputFunnel):
-#class HTMLGenerator(OutputFunnel):
-    def __init__(self):
-        print "HTMLGenerator"
-        super(_HTMLGenerator, self).__init__()
-#    def write(self, text):
-#        raise NotImplementedError()
-    def generate(self, text):
-        self.write(text)
 
 
-class _HTMLCheck_MK(_HTMLGenerator):
-    def __init__(self):
-        print "HTMLCheck_MK"
-        super(_HTMLCheck_MK, self).__init__()
-        self.header_sent = False
 
+def test_select():
 
-class _DeprecatedRenderer(object):
-    def __init__(self):
-        print "DeprecatedRenderer"
-        super(_DeprecatedRenderer, self).__init__()
-        self.header_sent = False
-
-
-class _DeprecationWrapper(_HTMLCheck_MK):
-    def __init__(self):
-        print "DeprecationWrapper"
-        super(_DeprecationWrapper, self).__init__()
-
-
-#class _html(_DeprecationWrapper, _OutputFunnel):
-class _html(_DeprecationWrapper):
-    def __init__(self):
-        print "html"
-        super(_html, self).__init__()
-#        OutputFunnel.__init__(self)
-#        DeprecationWrapper.__init__(self)
-        self.generate("HALLO WELT!")
-
-
-def test_class_hierarchy():
-
-    print "\n\n"
-    old = html()
+    old = HTMLOrigTester()
+    new = HTMLCheck_MKTester()
     old.plug()
-    try:
-        print old.header_sent
-    finally:
-        old.write("hallo Welt!")
+    new.plug()
 
 
+    label = ["label", "None"]
+    value = ["value", "val"]
+    varnames = ["name1", "varname"]
+    choices = [[(1,"ch11"), (2,"ch12")], [(1,"ch21"), (2,"ch22")]]
+    dfaults = ["", None,  "default"]
+    onchange = [None, "javascript:void()"]
+    attrs = {"title": "LOL", "style": "one love"}
+
+    for n in varnames:
+        for c in choices:
+            for d in dfaults:
+                for o in onchange:
+                    old.add_var(n, n)
+                    new.add_var(n, n)
+                    old.user_errors = {n: "(not) a test error"}
+                    new.user_errors = {n: "(not) a test error"}
+
+                    old.select(n,c,d,o,attrs)
+                    new.select(n,c,d,o,attrs)
+                    compare_and_empty(old, new)
+
+def test_icon_select():
+
+    old = HTMLOrigTester()
+    new = HTMLCheck_MKTester()
+    old.plug()
+    new.plug()
+
+
+    label = ["label", "None"]
+    value = ["value", "val"]
+    varnames = ["name1", "varname"]
+    choices = [[(1,"ch11", "ico1"), (2,"ch12", "ico2")], [(1,"ch21", "ico1"), (2,"ch22", "ico2")]]
+    dfaults = ["", None,  "default"]
+    onchange = [None, "javascript:void()"]
+    attrs = {"title": "LOL", "style": "one love"}
+
+    for n in varnames:
+        for c in choices:
+            for d in dfaults:
+                old.add_var(n, n)
+                new.add_var(n, n)
+
+                old.icon_select(n,c,d)
+                new.icon_select(n,c,d)
+                compare_and_empty(old, new)
+
+
+def test_radiobuttons():
+
+    old = HTMLOrigTester()
+    new = HTMLCheck_MKTester()
+    old.plug()
+    new.plug()
+
+
+    mobile = [True, False]
+    horizontal = [True, False]
+
+    checked = [True, False]
+    label = ["label", "None"]
+    value = ["value", "val"]
+    varnames = ["name1", "varname"]
+
+    for m in mobile:
+        for l in label:
+            for c in checked:
+                for h in horizontal:
+                    old.mobile = m
+                    new.mobile = m
+                    old.begin_radio_group(horizontal=h)
+                    new.begin_radio_group(horizontal=h)
+                    for v, n in zip(value, varnames):
+                        old.radiobutton( n, v, c, l)
+                        new.radiobutton( n, v, c, l)
+                    old.end_radio_group()
+                    new.end_radio_group()
+                    compare_and_empty(old, new)
+
+
+def test_text_area():
+
+    old = HTMLOrigTester()
+    new = HTMLCheck_MKTester()
+    old.plug()
+    new.plug()
+
+    varname = ["varname", "var"]
+    dflt_val = [None, "test"]
+    rows = 4
+    cols = 30
+    attrs = [ {"style": "height:40px;", "name": "test"}, {"style": "height:40px;", "class": "test"} ]
+    try_max_width = [True, False]
+
+    for v in varname:
+        for d in dflt_val:
+             for a in attrs:
+                for t in try_max_width:
+                     print v,d,a,t
+                     gentest(old, new, lambda x: x.text_area(v,d,rows, cols, a,t))
+
+
+
+def test_text_input():
+
+    old = HTMLOrigTester()
+    new = HTMLCheck_MKTester()
+    old.plug()
+    new.plug()
+
+    varname = ["varname", "var"]
+    dflt_val = [None, "test"]
+    cssclass = ["text"]
+    label = [None, "label", 2]
+    id_ = [None, "id1"]
+    attrs = [ {"style": "height:40px;", "name": "test"}, {"style": "height:40px;", "class": "test"} ]
+    submit = [None, "submit"]
+    args = [{"size": "max"}, {"size": 4, "autocomplete" : "oh yeah!"}]
+
+    for v in varname:
+        for d in dflt_val:
+            for c in cssclass:
+                for l in label:
+                    for i in id_:
+                        for s in submit:
+                            for a in attrs:
+                                for arg in args:
+                                    print v,d,c,l,i,s,a,arg
+                                    old.add_var(v, v)
+                                    new.add_var(v, v)
+                                    old.user_errors = {v: "(not) a test error"}
+                                    new.user_errors = {v: "(not) a test error"}
+                                    gentest(old, new, lambda x: x.text_input(v,d,c,l,i,s,a,**arg))
 
 def test_generator():
 
@@ -140,6 +227,14 @@ def test_context_buttons():
     gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112))
     gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112, bestof = True))
     gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112, bestof = True, id_in_best=True))
+
+
+
+
+
+
+
+
 
 
 def test_check_mk():
@@ -237,4 +332,63 @@ def test_check_mk():
     gentest(old, new, lambda x: x.html_foot())
 
 
+
+
+class _OutputFunnel(object):
+    def __init__(self):
+        print "OutputFunnel"
+    def write(self, text):
+        print text
+
+
+class _HTMLGenerator(_OutputFunnel):
+#class HTMLGenerator(OutputFunnel):
+    def __init__(self):
+        print "HTMLGenerator"
+        super(_HTMLGenerator, self).__init__()
+#    def write(self, text):
+#        raise NotImplementedError()
+    def generate(self, text):
+        self.write(text)
+
+
+class _HTMLCheck_MK(_HTMLGenerator):
+    def __init__(self):
+        print "HTMLCheck_MK"
+        super(_HTMLCheck_MK, self).__init__()
+        self.header_sent = False
+
+
+class _DeprecatedRenderer(object):
+    def __init__(self):
+        print "DeprecatedRenderer"
+        super(_DeprecatedRenderer, self).__init__()
+        self.header_sent = False
+
+
+class _DeprecationWrapper(_HTMLCheck_MK):
+    def __init__(self):
+        print "DeprecationWrapper"
+        super(_DeprecationWrapper, self).__init__()
+
+
+#class _html(_DeprecationWrapper, _OutputFunnel):
+class _html(_DeprecationWrapper):
+    def __init__(self):
+        print "html"
+        super(_html, self).__init__()
+#        OutputFunnel.__init__(self)
+#        DeprecationWrapper.__init__(self)
+        self.generate("HALLO WELT!")
+
+
+def test_class_hierarchy():
+
+    print "\n\n"
+    old = html()
+    old.plug()
+    try:
+        print old.header_sent
+    finally:
+        old.write("hallo Welt!")
 

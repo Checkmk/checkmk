@@ -28,8 +28,24 @@ def test_class_HTML():
     C = HTML(c)
     D = HTML(d)
 
+
+
     assert (A + B) == (a + b)
     print A
+
+    assert HTML() == HTML('')
+    assert HTML().join([A, B]) == A + B
+    assert HTML().join([a, b]) == a + b
+    assert ''.join(map(str, [A, B])) == A + B
+
+    assert isinstance(A + B, HTML), type(A + B)
+    assert isinstance(HTML('').join([A, B]), HTML)
+    assert isinstance(HTML().join([A, B]), HTML)
+    assert isinstance(HTML('').join([a, b]), HTML)
+    assert isinstance("TEST" + HTML(), HTML)
+    assert isinstance(HTML() + "TEST", HTML)
+    assert isinstance("TEST" + HTML() + "TEST" , HTML)
+
 
     A += B
     assert isinstance(A, HTML), A
@@ -59,7 +75,7 @@ def test_class_HTML():
     A += (" JO PICASSO! ")
     assert isinstance(A, HTML)
 
-    assert isinstance(A + "TEST" , str)
+    assert isinstance(A + "TEST" , HTML)
 
     assert isinstance("TEST%s" % A, str)
 
@@ -70,3 +86,4 @@ def test_class_HTML():
     assert isinstance(D.value, unicode)
 
     assert repr(D) == "HTML(%s)" % repr(d)
+

@@ -137,6 +137,154 @@ class DeprecatedRenderer(object):
             self.write('</div>')
 
 
+    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None,
+                   submit = None, attrs = {}, **args):
+        if default_value == None:
+            default_value = ""
+        addprops = ""
+        add_style = ""
+        if "size" in args and args["size"]:
+            if args["size"] == "max":
+                add_style = "width: 100%; "
+            else:
+                addprops += " size=\"%d\"" % (args["size"] + 1)
+                if not args.get('omit_css_width', False) and "width:" not in args.get("style", "") and not self.mobile:
+                    add_style = "width: %d.8ex; " % args["size"]
+
+        if "type" in args:
+            mytype = args["type"]
+        else:
+            mytype = "text"
+        if "autocomplete" in args:
+            addprops += " autocomplete=\"%s\"" % args["autocomplete"]
+        if args.get("style"):
+            addprops += " style=\"%s%s\"" % (add_style, args["style"])
+        elif add_style:
+            addprops += " style=\"%s\"" % add_style
+        if args.get("read_only"):
+            addprops += " readonly"
+
+        if submit != None:
+            if not id:
+                id = "ti_%s" % varname
+            addprops += ' onkeydown="function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };"' % submit
+            #self.final_javascript('document.getElementById("%s").onkeydown = '
+            #                 'function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };'
+            #                 % (id, submit))
+        value = self.vars.get(varname, default_value)
+        error = self.user_errors.get(varname)
+        html = ""
+        if error:
+            html = "<x class=\"inputerror\">"
+        if label:
+            if not id:
+                id = "ti_%s" % varname
+            html += '<label for="%s">%s</label>' % (id, label)
+
+        if id:
+            addprops += ' id="%s"' % id
+
+        attributes = ' ' + ' '.join([ '%s="%s"' % (k, self.attrencode(v)) for k, v in attrs.iteritems() ])
+        html += "<input type=\"%s\" class=\"%s\" value=\"%s\" name=\"%s\"%s%s />\n" % \
+                     (mytype, cssclass, self.attrencode(value), varname, addprops, attributes)
+        if error:
+            html += "</x>"
+            self.set_focus(varname)
+        self.write(html)
+        self.form_vars.append(varname)
+
+
+    def text_area(self, varname, deflt="", rows=4, cols=30, attrs = {}, try_max_width=False):
+        value = self.var(varname, deflt)
+        value = "" if not value else value
+        error = self.user_errors.get(varname)
+        if error:
+            self.write("<x class=inputerror>")
+
+        attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
+        style = "width: %d.8ex;" % cols
+        if try_max_width:
+            style += "width: calc(100%% - 10px); min-width: %d.8ex;" % cols
+        self.write("<textarea style=\"%s\" rows=%d cols=%d name=\"%s\"%s>%s</textarea>\n" % (
+            style, rows, cols, varname, attributes, self.attrencode(value)))
+        if error:
+            self.write("</x>")
+            self.set_focus(varname)
+        self.form_vars.append(varname)
+
+
+    # Choices is a list pairs of (key, title). They keys of the choices
+    # and the default value must be of type None, str or unicode.
+    def select(self, varname, choices, deflt="", onchange=None, attrs = {}):
+        current = self.get_unicode_input(varname, deflt)
+        onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""
+        attrs.setdefault('size', 1)
+        attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
+
+        error = self.user_errors.get(varname)
+        if error:
+            self.write("<x class=\"inputerror\">")
+        self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" %
+                             (onchange_code, varname, varname, attributes))
+        for value, text in choices:
+            if value == None:
+                value = ""
+            sel = value == current and " selected" or ""
+            self.write("<option value=\"%s\"%s>%s</option>\n" %
+                (self.attrencode(value), sel, self.attrencode(text)))
+        self.write("</select>\n")
+        if error:
+            self.write("</x>")
+        if varname:
+            self.form_vars.append(varname)
+
+
+    def icon_select(self, varname, options, deflt=""):
+        current = self.var(varname, deflt)
+        self.write("<select class=icon name=\"%s\" id=\"%s\" size=\"1\">\n" %
+                    (varname, varname))
+        for value, text, icon in options:
+            if value == None: value = ""
+            sel = value == current and " selected" or ""
+            self.write('<option style="background-image:url(images/icon_%s.png);" '
+                       'value=\"%s\"%s>%s</option>\n' %
+                        (icon, self.attrencode(value), sel, self.attrencode(text)))
+        self.write("</select>\n")
+        if varname:
+            self.form_vars.append(varname)
+
+
+    def begin_radio_group(self, horizontal=False):
+        if self.mobile:
+            if horizontal:
+                add = 'data-type="horizontal" '
+            else:
+                add = ''
+            self.write('<fieldset %s data-role="controlgroup">' % add)
+
+
+    def end_radio_group(self):
+        if self.mobile:
+            self.write('</fieldset>')
+
+
+    def radiobutton(self, varname, value, checked, label):
+        if self.has_var(varname):
+            checked = self.var(varname) == value
+        checked_text = checked and " checked" or ""
+        if label:
+            id = "rb_%s_%s" % (varname, self.attrencode(value))
+            idtxt = ' id="%s"' % id
+        else:
+            idtxt = ""
+        self.write("<input type=radio name=%s value=\"%s\"%s%s>\n" %
+                      (varname, self.attrencode(value), checked_text, idtxt))
+        if label:
+            self.write('<label for="%s">%s</label>\n' % (id, label))
+        self.form_vars.append(varname)
+
+
+
     #
     # HTML form rendering
     #
@@ -577,10 +725,37 @@ class HTMLTester(object):
     def __init__(self):
         super(HTMLTester, self).__init__()
         self.plugged_text = ''
+        self.vars = {"var": "varname"}
+        self.form_vars = []
+        self.user_errors = {"error1": "error_message <a href = www.beispiel.de></a>"}
+        self.mobile = False
+        self.final_javascript_code = ""
+        self.focus_object = None
+        self.form_name = "form"
+
+
+    def set_focus(self, varname):
+        self.focus_object = (self.form_name, varname)
+
+    def add_var(self, varname, value):
+        self.vars[varname] = value
+
+    def var(self, varname, deflt = None):
+        return self.vars.get(varname, deflt)
+
+    def get_unicode_input(self, varname, deflt):
+        return self.var(varname, deflt)
+
+    def has_var(self, varname):
+        return varname in self.vars
 
 
     def write(self, text):
         self.plugged_text += "%s" % text
+
+
+    def final_javascript(self, code):
+        self.final_javascript_code += code + "\n"
 
 
     def plug(self):

@@ -1,0 +1,10 @@
+Title: Improved error handling in case a WATO folder can not be written
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1480583719
+
+

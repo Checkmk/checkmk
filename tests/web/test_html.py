@@ -46,6 +46,7 @@ def test_class_HTML():
     assert isinstance(HTML() + "TEST", HTML)
     assert isinstance("TEST" + HTML() + "TEST" , HTML)
 
+    assert "<div>" + HTML("content") + "</div>" == "&lt;div&gt;content&lt;/div&gt;"
 
     A += B
     assert isinstance(A, HTML), A

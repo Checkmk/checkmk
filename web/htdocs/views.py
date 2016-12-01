@@ -845,6 +845,10 @@ class Cell(object):
     def render(self, row):
         row = join_row(row, self)
         tdclass, content = self.render_content(row)
+
+        if tdclass == None:
+            tdclass = ""
+
         if tdclass == "" and content == "":
             return "", ""
 

@@ -53,6 +53,7 @@
     * 3981 FIX: Views: Fixed context button displaying depending on usage
     * 4071 FIX: Removed notes_url from "LOG *" logwatch services...
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts
+    * 4080 FIX: Fixed possible exception "unsupported operand type" in matrix views
 
     WATO:
     * 3984 Permissions can now be filtered by providing a search term on the "edit role" page...

@@ -108,12 +108,9 @@ class RequestTimeout(MKException):
 class HTML(object):
 
 
-    def __init__(self, value):
+    def __init__(self, value = ''):
         super(HTML, self).__init__()
-        if isinstance(value, HTML):
-            self.value = value.value
-        else:
-            self.value = value
+        self.value = "%s" % value
 
 
     def __str__(self):
@@ -129,64 +126,43 @@ class HTML(object):
 
 
     def __add__(self, other):
-        if isinstance(other, HTML):
-            return self.value + other.value
-        else:
-            return self.value + other
-
-
-    def __radd__(self, other):
-        if isinstance(other, HTML):
-            return other.value + self.value
-        else:
-            return other + self.value
+        return HTML("%s%s" % (self.value, other))
 
 
     def __iadd__(self, other):
-        self.value = self.__add__(other)
-        return self
+        return self.__add__(other)
+
+
+    def __radd__(self, other):
+        return HTML("%s%s" % (other, self.value))
+
+
+    def join(self, iterable):
+        return HTML(''.join(map(lambda x: "%s" % x, iterable)))
 
 
     def __lt__(self, other):
-        if isinstance(other, HTML):
-            return self.value < other.value
-        else:
-            return self.value < other
+        return self.value < "%s" % other
 
 
     def __le__(self, other):
-        if isinstance(other, HTML):
-            return self.value <= other.value
-        else:
-            return self.value <= other
+        return self.value <= "%s" % other
 
 
     def __eq__(self, other):
-        if isinstance(other, HTML):
-            return self.value == other.value
-        else:
-            return self.value == other
+        return self.value == "%s" % other
 
 
     def __ne__(self, other):
-        if isinstance(other, HTML):
-            return self.value != other.value
-        else:
-            return self.value != other
+        return self.value != "%s" % other
 
 
     def __gt__(self, other):
-        if isinstance(other, HTML):
-            return self.value > other.value
-        else:
-            return self.value > other
+        return self.value > "%s" % other
 
 
     def __ge__(self, other):
-        if isinstance(other, HTML):
-            return self.value >= other.value
-        else:
-            return self.value >= other
+        return self.value >= "%s" % other
 
 
     def __len__(self):
@@ -207,6 +183,21 @@ class HTML(object):
 
     def index(self, item):
         return self.value.index(item)
+
+
+    def lstrip(self, stripstr):
+        self.value = self.value.lstrip(stripstr)
+        return self
+
+
+    def rstrip(self, stripstr):
+        self.value = self.value.rstrip(stripstr)
+        return self
+
+
+    def strip(self, stripstr):
+        self.value = self.value.strip(stripstr)
+        return self
 
 
 

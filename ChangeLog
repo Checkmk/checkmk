@@ -14,6 +14,7 @@
 
     WATO:
     * 4077 FIX: Fixed "Request URI too long" when cloning role after editing another one
+    * 4079 FIX: Improved error handling in case a WATO folder can not be written
 
     Event Console:
     * 4097 FIX: Event console: Make writing of status file more robust...

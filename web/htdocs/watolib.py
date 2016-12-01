@@ -998,7 +998,15 @@ class Folder(BaseFolder):
             "lock"            : self._locked,
             "lock_subfolders" : self._locked_subfolders,
         }
-        file(self.wato_info_path(), "w").write("%r\n" % wato_info)
+        try:
+            file(self.wato_info_path(), "w").write("%r\n" % wato_info)
+        except IOError, e:
+            if e.errno == 13: # Permission denied
+                raise MKGeneralException(_("Failed to write to the WATO folder '%s': %s. "
+                                           "Please check the filesystems permissions of this "
+                                           "folder.") % (self.title(), e))
+            else:
+                raise
 
 
     def _ensure_folder_directory(self):

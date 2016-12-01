@@ -890,28 +890,44 @@ try:
 
         if interfaces:
             print "<<<netapp_api_if:sep(9)>>>"
-            port_dict = create_dict(ports, custom_key = ["node", "port"], is_counter = False)
-            if_dict   = create_dict(if_counters, custom_key = "instance_name")
-            map_if_nodeport_to_name = {}
-            for key, values in if_dict.items():
-                map_if_nodeport_to_name[(values["node_name"], values["current_port"])] = key
+            extra_info = {}
+            interface_dict   = create_dict(interfaces, custom_key = "interface-name", is_counter = False)
+            port_dict        = create_dict(ports, custom_key = ["node", "port"], is_counter = False)
+            if_counters_dict = create_dict(if_counters, custom_key = "instance_name")
 
-            mod_port_dict = {}
-            for key, values in port_dict.items():
-                port_key = map_if_nodeport_to_name.get((values["node"], values["port"]))
-                if port_key:
-                    mod_port_dict[port_key] = values
-
+            # Process counters
             # NetApp clustermode reports sent_data instead of send_data..
-            for key, values in if_dict.items():
+            for key, values in if_counters_dict.items():
                 for old, new in [ ("sent_data",    "send_data"),
                                   ("sent_packet",  "send_packet"),
                                   ("sent_errors",  "send_errors") ]:
                     values[new] = values[old]
                     del values[old]
 
-            extra_info = if_dict
-            for key, values in mod_port_dict.items():
+            extra_counter_info = {}
+            for key, values in if_counters_dict.items():
+                if ":" in key:
+                    vserver, name = key.split(":", 1)
+                else:
+                    name = key
+                extra_counter_info[name] = values
+
+            # Process ports
+            extra_port_info = {}
+            for the_port, port_values in port_dict.items():
+                port_name = port_values.get("port")
+                port_node = port_values.get("node")
+
+                node, port = the_port.split("|")
+                for if_key, if_values in interface_dict.items():
+                    port = if_values.get("current-port")
+                    node = if_values.get("current-node")
+                    if port_name == port and port_node == node:
+                        extra_port_info[if_key] = port_values
+
+            extra_info = extra_counter_info
+            for key, values in extra_port_info.items():
+                extra_info.setdefault(key, {})
                 extra_info[key].update(values)
 
             print format_config(interfaces, "interface", "interface-name",

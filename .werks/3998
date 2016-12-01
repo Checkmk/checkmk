@@ -1,0 +1,12 @@
+Title: agent_netapp / netapp_api_if: improved mechanism to collect interface infos. fixes invalid if-speed
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i3
+Date: 1480592904
+Class: fix
+
+The speed of most interface was not correctly determined.
+This has been fixed by the new agent. You need to do a new service
+discovery of the netapp systems. Otherwise the existing netapp_api_if
+checks will raise a warning, stating that the speed differs.

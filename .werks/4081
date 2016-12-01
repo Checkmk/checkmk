@@ -1,0 +1,10 @@
+Title: dell_powerconnect_cpu: Fixed broken metrics
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1480585157
+
+

@@ -4328,7 +4328,7 @@ check_metrics["check_mk-brocade_mlx.module_cpu"] = {
     "cpu_util200" : { "name" : "util5" },
 }
 
-check_metrics["check_mk-dell_powerconnect"] = {
+check_metrics["check_mk-dell_powerconnect_cpu"] = {
     "load"        : { "name" : "util" },
     "loadavg 60s" : { "name" : "util1" },
     "loadavg 5m"  : { "name" : "util5" },

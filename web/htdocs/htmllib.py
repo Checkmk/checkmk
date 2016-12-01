@@ -1903,19 +1903,19 @@ class html(DeprecationWrapper):
         self.write(html_code)
 
 
-    def icon_select(self, varname, options, deflt=""):
+    def icon_select(self, varname, choices, deflt=""):
+        # Model
         current = self.var(varname, deflt)
-        self.write("<select class=icon name=\"%s\" id=\"%s\" size=\"1\">\n" %
-                    (varname, varname))
-        for value, text, icon in options:
-            if value == None: value = ""
-            sel = value == current and " selected" or ""
-            self.write('<option style="background-image:url(images/icon_%s.png);" '
-                       'value=\"%s\"%s>%s</option>\n' %
-                        (icon, self.attrencode(value), sel, self.attrencode(text)))
-        self.write("</select>\n")
         if varname:
             self.form_vars.append(varname)
+
+        # View
+        self.open_select(class_="icon", name=varname, id_=varname, size="1")
+        for value, text, icon in choices:
+            self.option(text, value=value if value else "",
+                              selected="" if value == current else None,
+                              style="background-image:url(images/icon_%s.png);" % icon)
+        self.close_select()
 
 
     def begin_radio_group(self, horizontal=False):

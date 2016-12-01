@@ -13175,7 +13175,7 @@ def mode_edit_rule(phase, new = False):
                       (rulespec["title"], new_rule_folder.alias_path()))
 
     if rulespec.get("help"):
-        html.div(rulespec["help"], class_="info")
+        html.div(HTML(rulespec["help"]), class_="info")
 
     html.begin_form("rule_editor", method="POST")
 

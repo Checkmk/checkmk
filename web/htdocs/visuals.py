@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os, copy
+import os, copy, sys
 
 try:
     import simplejson as json
@@ -832,19 +832,23 @@ def declare_filter(sort_index, f, comment = None):
 
 
 def show_filter(f):
-    html.write('<div class="floatfilter %s">' % (f.double_height() and "double" or "single"))
-    html.write('<div class=legend>%s</div>' % html.attrencode(f.title))
-    html.write('<div class=content>')
+    html.open_div(class_=["floatfilter", "double" if f.double_height() else "single"])
+    html.div(f.title, class_="legend")
+    html.open_div(class_="content")
     try:
+        #TODO: Plug context html.plug()
         f.display()
+        # TODO: html.unplug()
     except Exception, e:
-        if config.debug:
-            raise
-        html.icon(_("This filter cannot be displayed"), "alert")
-        html.write("%s" % e)
-
-    html.write("</div>")
-    html.write("</div>")
+        #TODO: html.plugged_text = ''
+        #TODO: html.unplug()
+        tb = sys.exc_info()[2]
+        tbs = ['Traceback (most recent call last):\n']
+        tbs += traceback.format_tb(tb)
+        html.icon(_("This filter cannot be displayed") + " (%s)\n%s" % (e, "".join(tbs)), "alert")
+        html.write(_("This filter cannot be displayed"))
+    html.close_div()
+    html.close_div()
 
 
 # Base class for all filters

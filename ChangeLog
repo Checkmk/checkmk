@@ -69,6 +69,7 @@
     * 3992 FIX: netapp_api_connection: fixed GUI display bug when editing rules
     * 4076 FIX: Git integration: Using mail address of user in author info
     * 4077 FIX: Fixed "Request URI too long" when cloning role after editing another one
+    * 4079 FIX: Improved error handling in case a WATO folder can not be written
 
     Notifications:
     * 4042 FIX: Fix missing From address in synchronous SMTP notifications...

@@ -1777,67 +1777,70 @@ class html(DeprecationWrapper):
                    "class=\"button%s\"%s value=\"%s\" />" % (varname, varname, self.attrencode(onclick), cssclass, style, text))
 
 
+    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id_ = None,
+                   submit = None, attrs = {}, **args):
+
+        # Model
+        error = self.user_errors.get(varname)
+        value = self.vars.get(varname, default_value)
+        if not value:
+            value = ""
+        if error:
+            self.set_focus(varname)
+        self.form_vars.append(varname)
+
+        # View
+        style, size = None, None
+        if "size" in args and args["size"]:
+            if args["size"] == "max":
+                style = "width: 100%;"
+            else:
+                size = "%d" % (args["size"] + 1)
+                if not args.get('omit_css_width', False) and "width:" not in args.get("style", "") and not self.mobile:
+                    style = "width: %d.8ex;" % args["size"]
+
+        if args.get("style"):
+            style = [style, args["style"]]
+
+        if (submit or label) and not id_:
+            id_ = "ti_%s" % varname
+
+        onkeydown = None if not submit else\
+                    HTML('function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };' % submit)
+        # TODO: REPLACE?
+#        if submit is not None:
+#            self.final_javascript('document.getElementById("%s").onkeydown = '
+#                             'function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };'
+#                             % (id_, submit))
+
+        attributes = {"class"        : cssclass,
+                      "id"           : id_,
+                      "style"        : style,
+                      "size"         : size,
+                      "autocomplete" : args.get("autocomplete"),
+                      "readonly"     : "true" if args.get("read_only") else None,
+                      "value"        : value,
+                      "onkeydown"    : onkeydown, }
+
+        for key, val in attrs.iteritems():
+            if key not in attributes and key not in ["name", "type", "type_"]:
+                attributes[key] = val
+
+        if error:
+            self.open_x(class_="inputerror")
+
+        if label:
+            self.label(label, for_=id_)
+        self.write(self.render_input(varname, type_=args.get("type", "text"), **attributes))
+
+        if error:
+            self.close_x()
+
+
     def number_input(self, varname, deflt = "", size=8, style="", submit=None):
         if deflt != None:
             deflt = str(deflt)
         self.text_input(varname, deflt, "number", size=size, style=style, submit=submit)
-
-
-    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None,
-                   submit = None, attrs = {}, **args):
-        if default_value == None:
-            default_value = ""
-        addprops = ""
-        add_style = ""
-        if "size" in args and args["size"]:
-            if args["size"] == "max":
-                add_style = "width: 100%; "
-            else:
-                addprops += " size=\"%d\"" % (args["size"] + 1)
-                if not args.get('omit_css_width', False) and "width:" not in args.get("style", "") and not self.mobile:
-                    add_style = "width: %d.8ex; " % args["size"]
-
-        if "type" in args:
-            mytype = args["type"]
-        else:
-            mytype = "text"
-        if "autocomplete" in args:
-            addprops += " autocomplete=\"%s\"" % args["autocomplete"]
-        if args.get("style"):
-            addprops += " style=\"%s%s\"" % (add_style, args["style"])
-        elif add_style:
-            addprops += " style=\"%s\"" % add_style
-        if args.get("read_only"):
-            addprops += " readonly"
-
-        if submit != None:
-            if not id:
-                id = "ti_%s" % varname
-            self.final_javascript('document.getElementById("%s").onkeydown = '
-                             'function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };'
-                             % (id, submit))
-
-        value = self.vars.get(varname, default_value)
-        error = self.user_errors.get(varname)
-        html = ""
-        if error:
-            html = "<x class=\"inputerror\">"
-        if label:
-            if not id:
-                id = "ti_%s" % varname
-            html += '<label for="%s">%s</label>' % (id, label)
-
-        if id:
-            addprops += ' id="%s"' % id
-
-        attributes = ' ' + ' '.join([ '%s="%s"' % (k, self.attrencode(v)) for k, v in attrs.iteritems() ])
-        html += "<input type=\"%s\" class=\"%s\" value=\"%s\" name=\"%s\"%s%s />\n" % \
-                     (mytype, cssclass, self.attrencode(value), varname, addprops, attributes)
-        if error:
-            html += "</x>"
-            self.set_focus(varname)
-        self.write(html)
-        self.form_vars.append(varname)
 
 
     def password_input(self, varname, default_value = "", size=12, **args):

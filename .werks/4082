@@ -1,0 +1,10 @@
+Title: Icon selector: Fixed exception in case non images are saved in icon folder
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1480586351
+
+

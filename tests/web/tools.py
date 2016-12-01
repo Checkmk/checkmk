@@ -121,7 +121,7 @@ def compare_soup(html1, html2):
             assert set1 == set2, "\n%s\n%s\n" % (set1, set2)
 
         else:
-            assert len(list(d1.children)) == len(list(d2.children)), '%s\n%s' % (s1.prettify(), s2.prettify())
+            assert len(list(d1.children)) == len(list(d2.children)), '%s\n%s' % (html1, html2)
             attrs1 = {k: filter(lambda x: x != '', (v)) for k, v in d1.attrs.iteritems() if len(v) > 0}
             attrs2 = {k: filter(lambda x: x != '', (v)) for k, v in d2.attrs.iteritems() if len(v) > 0}
 
@@ -132,7 +132,7 @@ def compare_soup(html1, html2):
                     val2 = filter(lambda x: x, map(lambda x: unify_attrs(x).strip(' '), attrs2.pop(key, '').split(';')))
                     assert val1 == val2, '\n%s\n%s' % (val1, val2)
 
-            assert attrs1 == attrs2, '\n%s\n%s' % (d1, d2)
+            assert attrs1 == attrs2, '\n%s\n%s' % (html1, html2)
 
 
 def compare_html(html1, html2):

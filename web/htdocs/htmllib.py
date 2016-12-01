@@ -370,6 +370,7 @@ class HTMLGenerator(OutputFunnel):
         self.indent_level = 0
         self.indent = 2
 
+        self.testing_mode = False
 
 
     #
@@ -581,11 +582,6 @@ class HTMLGenerator(OutputFunnel):
         return HTML(tag)
 
 
-    # does not escape the script content
-    def _render_javascript(self, code):
-        return "<script language=\"javascript\">\n%s\n</script>\n" % code
-
-
     # Write functionlity
 #    def write(self, text):
 #        raise NotImplementedError()
@@ -664,11 +660,11 @@ class HTMLGenerator(OutputFunnel):
 
     def render_a(self, content, href, **attrs):
         attrs['href'] = href
-        return HTML(self._render_content_tag('a', content, **attrs))
+        return self._render_content_tag('a', content, **attrs)
+
 
     def a(self, content, href, **attrs):
-        attrs['href'] = href
-        self.write(self._render_content_tag('a', content, **attrs))
+        self.write(self.render_a(content, href, **attrs))
 
 
     def stylesheet(self, href):
@@ -680,23 +676,27 @@ class HTMLGenerator(OutputFunnel):
     #
 
 
+    # does not escape the script content
+    def render_javascript(self, code):
+        return HTML("<script language=\"javascript\">\n%s\n</script>\n" % code)
+
+
     def javascript(self, code):
-        self.write(self._render_javascript(code))
+        self.write(self.render_javascript(code))
 
 
-    def javascript_file(self, name):
+    def javascript_file(self, filename):
         """ <script type="text/javascript" src="js/%(name)s.js"/>\n """
-        self.write(self._render_content_tag('script', '', type_="text/javascript", src='js/%s.js' % name))
+        self.write(self._render_content_tag('script', '', type_="text/javascript", src='js/%s.js' % filename))
 
 
     def render_img(self, src, **attrs):
         attrs['src'] = src
-        return HTML(self._render_opening_tag('img', close_tag=True, **attrs))
+        return self._render_opening_tag('img', close_tag=True, **attrs)
 
 
     def img(self, src, **attrs):
-        attrs['src'] = src
-        self.write(self._render_opening_tag('img', close_tag=True, **attrs))
+        self.write(self.render_img(src, **attrs))
 
 
     def open_button(self, type_, **attrs):
@@ -713,30 +713,33 @@ class HTMLGenerator(OutputFunnel):
     #
 
 
-    def label(self, content, for_, **attrs):
+    def render_label(self, content, for_, **attrs):
         attrs['for'] = for_
-        self.write(self._render_content_tag('label', content, **attrs))
+        return self._render_content_tag('label', content, **attrs)
+
+
+    def label(self, content, for_, **attrs):
+        self.write(self.render_label(content, for_, **attrs))
+
+
+    def render_input(self, name, type_, **attrs):
+        attrs['type_'] = type_
+        attrs['name'] = name
+        return self._render_opening_tag('input', close_tag=True, **attrs)
 
 
     def input(self, name, type_, **attrs):
-        attrs['type_'] = type_
-        attrs['name'] = name
-        self.write(self._render_opening_tag('input', close_tag=True, **attrs))
+        self.write(self.render_input(name, type_, **attrs))
 
 
     #
-    # table elements
+    # table and list elements
     #
 
 
     def td(self, content, **attrs):
         """ Only for text content. You can't put HTML structure here. """
         self.write(self._render_content_tag('td', content, **attrs))
-
-
-    #
-    # list elements
-    #
 
 
     def li(self, content, **attrs):
@@ -749,21 +752,42 @@ class HTMLGenerator(OutputFunnel):
     #
 
 
-    def heading(self, content):
+    def render_heading(self, content):
         """ <h2>%(content)</h2> """
-        self.write(self._render_content_tag('h2', content))
+        return self._render_content_tag('h2', content)
+
+
+    def heading(self, content):
+        self.write(self.render_heading(content))
+
+
+    def render_br(self):
+        return HTML("<br/>")
 
 
     def br(self):
-        self.write('<br/>')
+        self.write(self.render_br())
+
+
+    def render_hr(self, **attrs):
+        return self._render_opening_tag('hr', close_tag=True, **attrs)
 
 
     def hr(self, **attrs):
-        self.write(self._render_opening_tag('hr', close_tag=True, **attrs))
+        self.write(self.render_hr(**attrs))
 
 
     def rule(self):
         self.hr()
+
+
+    def render_nbsp(self):
+        return HTML("&nbsp;")
+
+
+    def nbsp(self):
+        self.write(self.render_nbsp())
+
 
 
 #.
@@ -1007,7 +1031,7 @@ class HTMLCheck_MK(HTMLGenerator):
                       'align'   : 'absmiddle' if middle else None,
                       'src'     : icon_name if "/" in icon_name else self.detect_icon_path(icon_name)}
 
-        return HTML(self._render_opening_tag('img', close_tag=True, **attributes))
+        return self._render_opening_tag('img', close_tag=True, **attributes)
 
 
     def render_icon_button(self, url, help, icon, id=None, onclick=None,

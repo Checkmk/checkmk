@@ -3484,7 +3484,14 @@ class IconSelector(ValueSpec):
                 if file_name[-4:] == '.png' and os.path.isfile(file_path):
 
                     # extract the category from the meta data
-                    im = Image.open(file_path)
+                    try:
+                        im = Image.open(file_path)
+                    except IOError, e:
+                        if "%s" % e == "cannot identify image file":
+                            continue # Silently skip invalid files
+                        else:
+                            raise
+
                     category = im.info.get('Comment')
                     if category not in valid_categories:
                         category = 'misc'

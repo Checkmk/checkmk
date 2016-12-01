@@ -1848,21 +1848,29 @@ class html(DeprecationWrapper):
 
 
     def text_area(self, varname, deflt="", rows=4, cols=30, attrs = {}, try_max_width=False):
+
+        # Model
         value = self.var(varname, deflt)
         error = self.user_errors.get(varname)
-        if error:
-            self.write("<x class=inputerror>")
 
-        attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
+        self.form_vars.append(varname)
+        if error:
+            self.set_focus(varname)
+
+        # View
         style = "width: %d.8ex;" % cols
         if try_max_width:
             style += "width: calc(100%% - 10px); min-width: %d.8ex;" % cols
-        self.write("<textarea style=\"%s\" rows=%d cols=%d name=\"%s\"%s>%s</textarea>\n" % (
-            style, rows, cols, varname, attributes, self.attrencode(value)))
+        attrs["style"] = style
+        attrs["rows"] = rows
+        attrs["cols"] = cols
+        attrs["name"] = varname
+
         if error:
-            self.write("</x>")
-            self.set_focus(varname)
-        self.form_vars.append(varname)
+            self.open_x(class_="inputerror")
+        self.write(self._render_content_tag("textarea", value, **attrs))
+        if error:
+            self.close_x()
 
 
     def sorted_select(self, varname, choices, deflt="", onchange=None, attrs = None):

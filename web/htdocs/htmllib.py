@@ -353,11 +353,11 @@ class HTMLGenerator(OutputFunnel):
 
     # these tags can be called by their tag names, e.g. 'self.title(content)'
     _shortcut_tags = set(['title', 'h1', 'h2', 'h3', 'th', 'tr', 'td', 'center', 'pre', 'style', 'iframe',\
-                          'div', 'p', 'span', 'canvas', 'strong', 'sub', 'tt', 'u', 'i', 'b'])
+                          'div', 'p', 'span', 'canvas', 'strong', 'sub', 'tt', 'u', 'i', 'b', 'x', 'option'])
 
     # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
     _tag_names = set(['html', 'head', 'body', 'header', 'footer', 'a', 'b',\
-                              'script', 'form', 'button', 'p', 'select',\
+                              'script', 'form', 'button', 'p', 'select', 'fieldset',\
                               'table', 'tbody', 'row', 'ul', 'li', 'br', 'nobr', 'input', 'span'])
 
     # Of course all shortcut tags can be used as well.
@@ -525,12 +525,14 @@ class HTMLGenerator(OutputFunnel):
 
     def _render_attributes(self, **attrs):
         # TODO: REMOVE AFTER REFACTORING IS DONE!!
-        for key in attrs:
-            assert key.rstrip('_') in ['class', 'id', 'src', 'type', 'name',\
-                'onclick', 'onsubmit', 'onmouseover', 'onmouseout', 'onfocus', 'value', \
-                'content',  'href', 'http-equiv', 'rel', 'for', 'title', 'target',\
-                'align', 'valign', 'style', 'width', 'height', 'colspan', 'data-role',\
-                'cellspacing', 'cellpadding', 'border', 'allowTransparency', 'frameborder'], key
+        if self.testing_mode:
+            for key in attrs:
+                assert key.rstrip('_') in ['class', 'id', 'src', 'type', 'name',\
+                    'onclick', 'ondblclick', 'onsubmit', 'onmouseover', 'onmouseout', 'onfocus', 'onkeydown', 'onchange',\
+                    'size', 'autocomplete', 'readonly', 'value', 'checked','rows', 'cols',\
+                    'content',  'href', 'http-equiv', 'rel', 'for', 'title', 'target','multiple',\
+                    'align', 'valign', 'style', 'width', 'height', 'colspan', 'data-type', 'data-role','selected',\
+                    'cellspacing', 'cellpadding', 'border', 'allowTransparency', 'frameborder'], key
 
         for k, v in attrs.iteritems():
             if v is None: continue
@@ -551,18 +553,17 @@ class HTMLGenerator(OutputFunnel):
             'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_'). """
         #self.indent_level += self.indent
         if not attrs:
-            return "%s<%s%s>" % (' ' * (self.indent_level - self.indent),\
-                                   tag_name,\
-                                   ' /' if close_tag else '')
+            return HTML("%s<%s%s>" % (' ' * (self.indent_level - self.indent),\
+                                      tag_name, ' /' if close_tag else ''))
         else:
-            return "%s<%s%s%s>" % (' ' * (self.indent_level - self.indent),\
+            return HTML("%s<%s%s%s>" % (' ' * (self.indent_level - self.indent),\
                                      tag_name, ''.join(self._render_attributes(**attrs)),\
-                                     ' /' if close_tag else '')
+                                     ' /' if close_tag else ''))
 
 
     def _render_closing_tag(self, tag_name):
         #self.indent_level -= self.indent if self.indent_level < 0 else 0
-        return  "%s</%s>" % (' ' * self.indent_level, tag_name)
+        return  HTML("%s</%s>" % (' ' * self.indent_level, tag_name))
 
 
     def _render_content_tag(self, tag_name, tag_content, **attrs):
@@ -577,7 +578,7 @@ class HTMLGenerator(OutputFunnel):
                                    self._escape_text(tag_content),\
                                    tag_name)
         #self.indent_level -= 1
-        return tag
+        return HTML(tag)
 
 
     # does not escape the script content

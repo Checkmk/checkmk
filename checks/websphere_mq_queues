@@ -176,6 +176,9 @@ def check_websphere_mq_queues(item, params, parsed):
                 yield 0, "Messages processed"
 
 
+    else:
+        raise MKCounterWrapped("Login into database failed")
+
 
 check_info["websphere_mq_queues"] = {
     "parse_function"        : parse_websphere_mq_queues,

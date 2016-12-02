@@ -55,8 +55,10 @@ def check_websphere_mq_channels(item, params, info):
             'status'        : websphere_mq_channels_default_levels['status'],
         }
 
+    item_found = False
     for messages, channel, max_messages, status in info:
         if channel == item:
+            item_found   = True
             messages     = saveint(messages)
             max_messages = saveint(max_messages)
             infotext     = "%d/%d messages" % (messages, max_messages)
@@ -77,6 +79,9 @@ def check_websphere_mq_channels(item, params, info):
 
             state = params['status'].get(status, params['status'].get('other', 2))
             yield state, "Channel status: %s" % status, []
+
+    if not item_found:
+        raise MKCounterWrapped("Login into database failed")
 
 
 check_info["websphere_mq_channels"] = {

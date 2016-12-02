@@ -110,3 +110,11 @@ else
         done # for t
     done # for QM
 fi
+
+
+if type dspmq > /dev/null; then
+    echo "<<<websphere_mq_instance:sep(41)>>>"
+    dspmq -x
+    echo "MQv"$(dspmqver|grep -e Version -e ^Level -e Mode|awk -v FS=":" '{print $2","}'|tr -d ' '|tr -d '\n'|sed 's/,$/;/g')
+    dspmq -o all
+fi

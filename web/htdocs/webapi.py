@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import traceback
+
 from lib import *
 import config
 
@@ -102,7 +104,10 @@ def page_api():
         if config.debug:
             raise
         log_exception()
-        response = { "result_code": 1, "result": "%s" % e }
+        response = {
+            "result_code" : 1,
+            "result"      : "Unhandled exception: %s" % traceback.format_exc(),
+        }
 
     if html.output_format == "json":
         html.write(json.dumps(response))

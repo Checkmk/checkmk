@@ -429,7 +429,7 @@ def normal_login_page(called_directly = True):
     html.write('<label id="label_user" class="legend" for="_username">%s:</label><br />\n' % _('Username'))
     html.text_input("_username", id_="input_user")
     html.write('<label id="label_pass" class="legend" for="_password">%s:</label><br />\n' % _('Password'))
-    html.password_input("_password", id="input_pass", size=None)
+    html.password_input("_password", id_="input_pass", size=None)
 
     if html.has_user_errors():
         html.write('<div id="login_error">')

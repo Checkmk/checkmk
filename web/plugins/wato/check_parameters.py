@@ -1628,6 +1628,77 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    'websphere_mq_manager',
+    _("Websphere MQ Manager"),
+    Dictionary(
+        elements = [
+            ("map_manager_states", ListOf(Tuple(
+                orientation = "horizontal",
+                elements = [
+                    DropdownChoice(
+                        choices = [
+                            ('starting',             _('Starting')),
+                            ('running',              _('Running')),
+                            ('running_as_stanby',    _('Running as standby')),
+                            ('running_elsewhere',    _('Running elsewhere')),
+                            ('quiescing',            _('Quiescing')),
+                            ('ending_immediately',   _('Ending immedtiately')),
+                            ('ending_pre_emptively', _('Ending pre-emptivley')),
+                            ('ended_normally',       _('Ended normally')),
+                            ('ended_immediately',    _('Ended immediately')),
+                            ('ended_unexpectedly',   _('Ended unexpectedly')),
+                            ('ended_pre_emptively',  _('Ended pre-emptively')),
+                            ('status_not_available', _('Status not available')),
+                        ]
+                    ), MonitoringState(),
+                ]),
+                title = _('Map manager state'),
+            )),
+            ("map_standby_states", ListOf(Tuple(
+                orientation = "horizontal",
+                elements = [
+                    DropdownChoice(
+                        choices = [
+                            ('permitted',      _('Permitted')),
+                            ('not_permitted',  _('Not permitted')),
+                            ('not_applicable', _('Not applicable')),
+                        ]
+                    ), MonitoringState(),
+                ]),
+                title = _('Map standby state'),
+            )),
+        ]
+    ),
+    TextAscii(title = _("Name of manager")),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    'websphere_mq_instance',
+    _("Websphere MQ Instance"),
+    Dictionary(
+        elements = [
+            ("map_instance_states", ListOf(Tuple(
+                orientation = "horizontal",
+                elements = [
+                    DropdownChoice(
+                        choices = [
+                            ('active',  _('Active')),
+                            ('standby', _('Standby')),
+                        ]
+                    ), MonitoringState(),
+                ]),
+                title = _('Map instance state'),
+            )),
+        ]
+    ),
+    TextAscii(title = _("Name of manager or instance")),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "plesk_backups",
     _("Plesk Backups"),
     Dictionary(

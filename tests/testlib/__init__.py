@@ -674,7 +674,7 @@ class CMKWebSession(WebSession):
         response = json.loads(req.text)
 
         assert response["result_code"] == 0, \
-               "An error occured: %s" % response["result"]
+               "An error occured: %r" % response
 
         return response["result"]
 

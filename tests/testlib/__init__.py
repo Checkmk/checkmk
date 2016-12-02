@@ -749,7 +749,7 @@ class CMKWebSession(WebSession):
         })
 
         assert type(result) == unicode
-        assert result.startswith("Service discovery successful")
+        assert result.startswith("Service discovery successful"), "Failed to discover: %r" % result
 
 
     def activate_changes(self, mode=None, allow_foreign_changes=None):
@@ -772,6 +772,41 @@ class CMKWebSession(WebSession):
         for site_id, status in result["sites"].items():
             assert status["_state"] == "success"
             assert status["_time_ended"] > time_started
+
+
+    def get_regular_graph(self, hostname, service_description, graph_index):
+        result = self._api_request("webapi.py?action=get_graph", {
+            "request": json.dumps({
+                "specification": ["template", {
+                    "service_description" : service_description,
+                    "site"                : self.site.id,
+                    "graph_index"         : graph_index,
+                    "host_name"           : hostname,
+                }],
+                "data_range": {
+                    "time_range": [time.time()-3600, time.time()]
+                }
+            }),
+        })
+
+        assert type(result) == dict
+        assert "start_time" in result
+        assert type(result["start_time"]) == int
+        assert "end_time" in result
+        assert type(result["end_time"]) == int
+        assert "step" in result
+        assert type(result["step"]) == int
+        assert "curves" in result
+        assert type(result["curves"]) == list
+        assert len(result["curves"]) > 0
+
+        for curve in result["curves"]:
+            assert "color" in curve
+            assert "rrddata" in curve
+            assert "line_type" in curve
+            assert "title" in curve
+
+        return result
 
 
 class CMKEventConsole(CMKWebSession):

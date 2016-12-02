@@ -858,6 +858,7 @@ def create_cmk_automation_user():
         'email'                 : '',
         'pager'                 : '',
         'notifications_enabled' : False,
+        'language'              : 'en',
     }
     save_users(users)
 

@@ -42,6 +42,7 @@
     * 4081 FIX: dell_powerconnect_cpu: Fixed broken metrics
     * 3998 FIX: agent_netapp / netapp_api_if: improved mechanism to collect interface infos. fixes invalid if-speed...
             NOTE: Please refer to the migration notes!
+    * 4126 FIX: apache_status: Handle https requests lo localhost in case of certificate mismatch...
 
     Multisite:
     * 4070 Added a painter for the service check period

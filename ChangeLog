@@ -9,6 +9,7 @@
     * 4074 FIX: check_ftp: Fixed possible wrong service description caused by unintended use of global variable
     * 3943 FIX: ntp.time: fixed parameters in discovered checks...
     * 4081 FIX: dell_powerconnect_cpu: Fixed broken metrics
+    * 4126 FIX: apache_status: Handle https requests lo localhost in case of certificate mismatch...
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

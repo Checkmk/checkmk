@@ -1,0 +1,11 @@
+Title: apache_status: Handle https requests lo localhost in case of certificate mismatch
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1480861671
+Class: fix
+
+If the webserver is serving the status site from apache over https and the certificate
+does not match the server name, the request was ignored. This is fixed now. The request
+is rewritten to localhost without encryption.

@@ -144,6 +144,15 @@ for server in servers:
                 fd = urllib2.urlopen(url)
             else:
                 raise
+        except Exception, e:
+            if 'doesn\'t match' in str(e):
+                # HACK: workaround if SSL port is found and localhost is using
+                # SSL connections but certifiacte is mismatched
+                portspec = ':80'
+                url = 'http://%s%s/server-status?auto' % (address, portspec)
+                fd = urllib2.urlopen(url)
+            else:
+                raise
 
         for line in fd.read().split('\n'):
             if not line.strip():

@@ -1,0 +1,10 @@
+Title: Virtual host trees should have ids
+Component: multisite
+State: open
+Date: 2016-12-05 13:37:42
+Targetversion: 1.2.9
+Class: bug
+
+The virtual host trees are currently being referenced by their index. In case a tree is deleted, the
+tree that a user references may change because the elements in the list virtual_host_trees have
+different indexes now.

@@ -682,10 +682,6 @@ class CMKWebSession(WebSession):
             assert response["result_code"] == 0, \
                    "An error occured: %r" % response
         else:
-            assert response["result_code"] == 1, \
-                   "No error occured, but was expected: %r" % response
-
-            print repr(response["result"])
             raise APIError(response["result"])
 
         return response["result"]

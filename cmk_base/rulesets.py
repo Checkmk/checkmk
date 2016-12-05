@@ -101,6 +101,65 @@ def convert_service_ruleset(ruleset, with_foreign_hosts):
 
     return new_rules
 
+
+# Compute outcome of a service rule set that just say yes/no
+def in_boolean_serviceconf_list(hostname, service_description, ruleset):
+    # When the requested host is part of the local sites configuration,
+    # then use only the sites hosts for processing the rules
+    with_foreign_hosts = hostname not in config.all_active_hosts()
+    cache_id = id(ruleset), with_foreign_hosts
+    ruleset_cache = cmk_base.config_cache.get_dict("converted_service_rulesets")
+    try:
+        ruleset = ruleset_cache[cache_id]
+    except KeyError:
+        ruleset = convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
+        ruleset_cache[cache_id] = ruleset
+
+    cache = cmk_base.config_cache.get_dict("extraconf_servicelist")
+    for negate, hosts, service_matchers in ruleset:
+        if hostname in hosts:
+            cache_id = service_matchers, service_description
+            try:
+                match = cache[cache_id]
+            except KeyError:
+                match = rulesets.in_servicematcher_list(service_matchers, service_description)
+                cache[cache_id] = match
+
+            if match:
+                return not negate
+    return False # no match. Do not ignore
+
+
+def convert_boolean_service_ruleset(ruleset, with_foreign_hosts):
+    new_rules = []
+    for rule in ruleset:
+        entry, rule_options = rulesets.get_rule_options(rule)
+        if rule_options.get("disabled"):
+            continue
+
+        if entry[0] == NEGATE: # this entry is logically negated
+            negate = True
+            entry = entry[1:]
+        else:
+            negate = False
+
+        if len(entry) == 2:
+            hostlist, servlist = entry
+            tags = []
+        elif len(entry) == 3:
+            tags, hostlist, servlist = entry
+        else:
+            raise MKGeneralException("Invalid entry '%r' in configuration: "
+                                     "must have 2 or 3 elements" % (entry,))
+
+        # Directly compute set of all matching hosts here, this
+        # will avoid recomputation later
+        hosts = rulesets.all_matching_hosts(tags, hostlist, with_foreign_hosts)
+        new_rules.append((negate, hosts, rulesets.convert_pattern_list(servlist)))
+
+    return new_rules
+
+
 #.
 #   .--Host rulesets-------------------------------------------------------.
 #   |      _   _           _                _                _             |

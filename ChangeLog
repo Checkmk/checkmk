@@ -82,6 +82,7 @@
     * 4079 FIX: Improved error handling in case a WATO folder can not be written
     * 4082 FIX: Icon selector: Fixed exception in case non images are saved in icon folder
     * 4084 FIX: Improved error handling in case of broken hosts.mk files
+    * 4130 FIX: Improved error handling when trying to edit not existant rules
 
     Notifications:
     * 4042 FIX: Fix missing From address in synchronous SMTP notifications...

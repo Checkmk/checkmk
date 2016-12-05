@@ -13,6 +13,7 @@
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts
     * 4080 FIX: Fixed possible exception "unsupported operand type" in matrix views
+    * 4127 FIX: Fixed possible "maximum recursion depth exceeded" error when sorting tables with a lot of text in cells
 
     WATO:
     * 4068 FIX: Fixed possible exception in case of wrong automation secrets between multiple sites...

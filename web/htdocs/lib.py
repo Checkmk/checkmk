@@ -363,21 +363,15 @@ release_all_locks = store.release_all_locks
 # into int datatype. That way a naturual sort can be
 # implemented.
 def num_split(s):
-    if not s:
-        return ()
-    elif s[0].isdigit():
-        first_num = regex("[^0-9]").split(s)[0]
-        return ( int(first_num), ) + num_split(s[len(first_num):])
-    else:
-        first_word = regex("[0-9]").split(s)[0]
-        return ( first_word.lower(), ) + num_split(s[len(first_word):])
+    parts = []
+    for part in re.split('(\d+)', s):
+        try:
+            parts.append(int(part))
+        except ValueError:
+            parts.append(part)
 
-    # exp = int(math.log10(x))
-    # mantissa = x / 10**exp
-    # if mantissa < 1:
-    #     mantissa *= 10
-    #     exp -= 1
-    # return mantissa, exp
+    return tuple(parts)
+
 
 def cmp_service_name_equiv(r):
     if r == "Check_MK":

@@ -30,6 +30,7 @@ import cmk.paths
 import cmk.defines as defines
 
 import cmk_base.config as config
+import cmk_base.rulesets as rulesets
 import cmk_base.console as console
 import cmk_base.piggyback as piggyback
 
@@ -564,7 +565,7 @@ def checktype_ignored_for_host(host, checktype):
 def service_ignored(hostname, check_type, service_description):
     if check_type and check_type in config.ignored_checktypes:
         return True
-    if service_description != None and in_boolean_serviceconf_list(hostname, service_description, config.ignored_services):
+    if service_description != None and rulesets.in_boolean_serviceconf_list(hostname, service_description, config.ignored_services):
         return True
     if check_type and checktype_ignored_for_host(hostname, check_type):
         return True

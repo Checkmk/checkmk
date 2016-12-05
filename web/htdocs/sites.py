@@ -111,10 +111,13 @@ def _connect_multiple_sites():
     # Fetch status of sites by querying the version of Nagios and livestatus
     # This may be cached by a proxy for up to the next configuration reload.
     _live.set_prepend_site(True)
-    for site_id, v1, v2, ps, num_hosts, num_services in _live.query(
+    for response in _live.query(
           "GET status\n"
           "Cache: reload\n"
           "Columns: livestatus_version program_version program_start num_hosts num_services"):
+
+        site_id, v1, v2, ps, num_hosts, num_services = response
+
         _update_site_status(site_id, {
             "state"              : "online",
             "livestatus_version" : v1,

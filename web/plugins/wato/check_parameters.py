@@ -6688,6 +6688,20 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "netscaler_vserver",
+    _("Netscaler VServer States"),
+    Dictionary(
+        elements = [
+            ("map_health_status", MonitoringState(title=_("Health Status")))
+        ]
+    ),
+    TextAscii( title = _("Name of VServer") ),
+    "dict"
+)
+
+
+register_check_parameters(
+    subgroup_os,
     "general_flash_usage",
     _("Flash Space Usage"),
     Alternative(

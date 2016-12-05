@@ -12441,7 +12441,13 @@ def mode_edit_ruleset(phase):
         rulesets = load_rulesets(rule_folder)
         rules = rulesets.get(varname, [])
 
-        rulenr = int(html.var("_rulenr")) # rule number relativ to folder
+        try:
+            rulenr = int(html.var("_rulenr")) # rule number relativ to folder
+            rule = rules[rulenr]
+        except (IndexError, TypeError, ValueError):
+            raise MKUserError("rulenr", _("You are trying to edit a rule which does not exist "
+                                              "anymore."))
+
         action = html.var("_action")
 
         if action == "delete":
@@ -12473,7 +12479,7 @@ def mode_edit_ruleset(phase):
         else:
             if not html.check_transaction():
                 return None # browser reload
-            rule = rules[rulenr]
+
             del rules[rulenr]
             if action == "up":
                 rules[rulenr-1:rulenr-1] = [ rule ]
@@ -13133,10 +13139,10 @@ def mode_edit_rule(phase, new = False):
             return
         rulenr = len(rules)
     else:
-        rulenr = int(html.var("rulenr"))
         try:
+            rulenr = int(html.var("rulenr"))
             rule = rules[rulenr]
-        except IndexError:
+        except (TypeError, ValueError, IndexError):
             if phase == "action":
                 raise MKUserError("rulenr", _("You are trying to edit a rule which does not exist "
                                               "anymore."))

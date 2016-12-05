@@ -1,0 +1,9 @@
+Title: Fixed possible "maximum recursion depth exceeded" error when sorting tables with a lot of text in cells
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p15
+Date: 1480940237
+Class: fix
+
+

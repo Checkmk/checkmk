@@ -52,6 +52,10 @@ def omd(cmd):
     return os.system(cmdline) >> 8
 
 
+class APIError(Exception):
+    pass
+
+
 # It's ok to make it currently only work on debian based distros
 class CMKVersion(object):
     DEFAULT = "default"
@@ -333,7 +337,8 @@ class Site(object):
         # Call WATO once for creating the default WATO configuration
         response = web.get("wato.py").text
         assert "<title>WATO" in response
-        assert "<div class=\"title\">Manual Checks</div>" in response
+        assert "<div class=\"title\">Manual Checks</div>" in response, \
+                "WATO does not seem to be initialized: %r" % response
 
         missing_files = [
             "etc/check_mk/conf.d/wato/rules.mk",
@@ -667,14 +672,21 @@ class CMKWebSession(WebSession):
         }
 
 
-    def _api_request(self, url, data):
+    def _api_request(self, url, data, expect_error=False):
         data.update(self._automation_credentials())
 
         req = self.post(url, data=data)
         response = json.loads(req.text)
 
-        assert response["result_code"] == 0, \
-               "An error occured: %r" % response
+        if not expect_error:
+            assert response["result_code"] == 0, \
+                   "An error occured: %r" % response
+        else:
+            assert response["result_code"] == 1, \
+                   "No error occured, but was expected: %r" % response
+
+            print repr(response["result"])
+            raise APIError(response["result"])
 
         return response["result"]
 
@@ -774,7 +786,7 @@ class CMKWebSession(WebSession):
             assert status["_time_ended"] > time_started
 
 
-    def get_regular_graph(self, hostname, service_description, graph_index):
+    def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
         result = self._api_request("webapi.py?action=get_graph", {
             "request": json.dumps({
                 "specification": ["template", {
@@ -787,7 +799,7 @@ class CMKWebSession(WebSession):
                     "time_range": [time.time()-3600, time.time()]
                 }
             }),
-        })
+        }, expect_error=expect_error)
 
         assert type(result) == dict
         assert "start_time" in result

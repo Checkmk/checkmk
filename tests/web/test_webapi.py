@@ -2,7 +2,9 @@
 # encoding: utf-8
 
 import pytest
-from testlib import web
+import time
+
+from testlib import web, APIError
 
 def test_global_settings(site, web):
     r = web.get("wato.py")
@@ -66,15 +68,27 @@ def test_activate_changes(web, site):
         web.activate_changes()
 
 
-def test_get_graph(web):
+def test_get_graph(web, site):
     try:
+        # No graph yet...
+        with pytest.raises(APIError) as e:
+            data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
+            assert "Cannot calculate graph definitions" in "%s" % e
+
+        # Now add the host
         web.add_host("test-host-get-graph", attributes={
             "ipaddress": "127.0.0.1",
         })
         web.discover_services("test-host-get-graph")
         web.activate_changes()
 
+        # Issue a reschedule
+        site.live.command("SCHEDULE_FORCED_SERVICE_CHECK;test-host-get-graph;Check_MK;%d" % int(time.time()))
+        time.sleep(1)
+
+        # Now we get a graph
         data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)
+
         assert len(data["curves"]) == 4
         assert data["curves"][0]["title"] == "CPU time in user space"
         assert data["curves"][1]["title"] == "CPU time in operating system"

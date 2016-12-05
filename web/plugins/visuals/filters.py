@@ -1216,7 +1216,7 @@ declare_filter(302, FilterHostAuxTags())
 
 
 # choices = [ (value, "readable"), .. ]
-class FilterMKEventDServiceLevelRange(Filter):
+class FilterECServiceLevelRange(Filter):
     def __init__(self, name, title, info):
         self.lower_bound_varname = "%s_lower" % name
         self.upper_bound_varname = "%s_upper" % name
@@ -1268,11 +1268,11 @@ class FilterMKEventDServiceLevelRange(Filter):
 
 
 
-declare_filter(310, FilterMKEventDServiceLevelRange(
+declare_filter(310, FilterECServiceLevelRange(
         "svc_service_level", _("Service service level"), "service"))
 
 
-declare_filter(310, FilterMKEventDServiceLevelRange(
+declare_filter(310, FilterECServiceLevelRange(
         "hst_service_level", _("Host service level"), "host"))
 
 

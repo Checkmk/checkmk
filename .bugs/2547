@@ -1,0 +1,12 @@
+Title: Event Console delete icon does not work if checkboxes are enabled
+Component: ec
+State: open
+Date: 2016-12-05 13:04:28
+Targetversion: 1.2.8
+Class: bug
+
+If you activate checkboxes and the use the delete icon for
+deleting one event you will run into an error message that
+no items are selected. I fear that I some *would* be selected,
+then all those would be deleted instead of just that one
+where the icon was clicked.

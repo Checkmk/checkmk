@@ -56,7 +56,7 @@ def service_extra_conf(hostname, service, ruleset):
     try:
         ruleset = ruleset_cache[cache_id]
     except KeyError:
-        ruleset = convert_service_ruleset(ruleset, with_foreign_hosts)
+        ruleset = _convert_service_ruleset(ruleset, with_foreign_hosts)
         ruleset_cache[cache_id] = ruleset
 
     entries = []
@@ -67,7 +67,7 @@ def service_extra_conf(hostname, service, ruleset):
             try:
                 match = cache[cache_id]
             except KeyError:
-                match = in_servicematcher_list(service_matchers, service)
+                match = _in_servicematcher_list(service_matchers, service)
                 cache[cache_id] = match
 
             if match:
@@ -75,7 +75,7 @@ def service_extra_conf(hostname, service, ruleset):
     return entries
 
 
-def convert_service_ruleset(ruleset, with_foreign_hosts):
+def _convert_service_ruleset(ruleset, with_foreign_hosts):
     new_rules = []
     for rule in ruleset:
         rule, rule_options = get_rule_options(rule)
@@ -97,7 +97,7 @@ def convert_service_ruleset(ruleset, with_foreign_hosts):
         hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts)
 
         # And now preprocess the configured patterns in the servlist
-        new_rules.append((item, hosts, convert_pattern_list(servlist)))
+        new_rules.append((item, hosts, _convert_pattern_list(servlist)))
 
     return new_rules
 
@@ -106,13 +106,13 @@ def convert_service_ruleset(ruleset, with_foreign_hosts):
 def in_boolean_serviceconf_list(hostname, service_description, ruleset):
     # When the requested host is part of the local sites configuration,
     # then use only the sites hosts for processing the rules
-    with_foreign_hosts = hostname not in config.all_active_hosts()
+    with_foreign_hosts = hostname not in cmk_base.config.all_active_hosts()
     cache_id = id(ruleset), with_foreign_hosts
     ruleset_cache = cmk_base.config_cache.get_dict("converted_service_rulesets")
     try:
         ruleset = ruleset_cache[cache_id]
     except KeyError:
-        ruleset = convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
+        ruleset = _convert_boolean_service_ruleset(ruleset, with_foreign_hosts)
         ruleset_cache[cache_id] = ruleset
 
     cache = cmk_base.config_cache.get_dict("extraconf_servicelist")
@@ -122,7 +122,7 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
             try:
                 match = cache[cache_id]
             except KeyError:
-                match = rulesets.in_servicematcher_list(service_matchers, service_description)
+                match = _in_servicematcher_list(service_matchers, service_description)
                 cache[cache_id] = match
 
             if match:
@@ -130,10 +130,10 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
     return False # no match. Do not ignore
 
 
-def convert_boolean_service_ruleset(ruleset, with_foreign_hosts):
+def _convert_boolean_service_ruleset(ruleset, with_foreign_hosts):
     new_rules = []
     for rule in ruleset:
-        entry, rule_options = rulesets.get_rule_options(rule)
+        entry, rule_options = get_rule_options(rule)
         if rule_options.get("disabled"):
             continue
 
@@ -154,8 +154,8 @@ def convert_boolean_service_ruleset(ruleset, with_foreign_hosts):
 
         # Directly compute set of all matching hosts here, this
         # will avoid recomputation later
-        hosts = rulesets.all_matching_hosts(tags, hostlist, with_foreign_hosts)
-        new_rules.append((negate, hosts, rulesets.convert_pattern_list(servlist)))
+        hosts = all_matching_hosts(tags, hostlist, with_foreign_hosts)
+        new_rules.append((negate, hosts, _convert_pattern_list(servlist)))
 
     return new_rules
 
@@ -242,6 +242,7 @@ def host_extra_conf_merged(hostname, conf):
 #   '----------------------------------------------------------------------'
 
 
+# TODO: Can we make this private?
 def all_matching_hosts(tags, hostlist, with_foreign_hosts):
     cache_id = tuple(tags), tuple(hostlist), with_foreign_hosts
     cache = cmk_base.config_cache.get_dict("hostlist_match")
@@ -431,7 +432,7 @@ def get_rule_options(entry):
 # New in 1.1.13: a trailing + means a prefix match
 def hosttags_match_taglist(hosttags, required_tags):
     for tag in required_tags:
-        negate, tag = parse_negated(tag)
+        negate, tag = _parse_negated(tag)
         if tag and tag[-1] == '+':
             tag = tag[:-1]
             matches = False
@@ -449,7 +450,7 @@ def hosttags_match_taglist(hosttags, required_tags):
     return True
 
 
-def parse_negated(pattern):
+def _parse_negated(pattern):
     # Allow negation of pattern with prefix '!'
     try:
         negate = pattern[0] == '!'
@@ -468,7 +469,7 @@ def parse_negated(pattern):
 # of the match.
 # This function tries to parse the pattern and return different kind of matching
 # functions which can then be performed faster than just using the regex match.
-def convert_pattern(pattern):
+def _convert_pattern(pattern):
     def is_infix_string_search(pattern):
         return pattern.startswith('.*') and not is_regex(pattern[2:])
 
@@ -481,7 +482,7 @@ def convert_pattern(pattern):
     if pattern == '':
         return False, lambda txt: True # empty patterns match always
 
-    negate, pattern = parse_negated(pattern)
+    negate, pattern = _parse_negated(pattern)
 
     if is_exact_match(pattern):
         # Exact string match
@@ -505,17 +506,17 @@ def convert_pattern(pattern):
         return negate, lambda txt: txt[:len(pattern)] == pattern
 
 
-def convert_pattern_list(patterns):
-    return tuple([ convert_pattern(p) for p in patterns ])
+def _convert_pattern_list(patterns):
+    return tuple([ _convert_pattern(p) for p in patterns ])
 
 
 # Slow variant of checking wether a service is matched by a list
 # of regexes - used e.g. by cmk --notify
 def in_extraconf_servicelist(servicelist, service):
-    return in_servicematcher_list(convert_pattern_list(servicelist), service)
+    return _in_servicematcher_list(_convert_pattern_list(servicelist), service)
 
 
-def in_servicematcher_list(service_matchers, item):
+def _in_servicematcher_list(service_matchers, item):
     for negate, func in service_matchers:
         result = func(item)
         if result:

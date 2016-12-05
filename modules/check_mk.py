@@ -1174,6 +1174,7 @@ def get_precompiled_check_parameters(hostname, item, params, check_type):
 
 
 # Return a list of services this services depends upon
+# TODO: Make this use the generic "rulesets" functions
 def service_deps(hostname, servicedesc):
     deps = []
     for entry in config.service_dependencies:

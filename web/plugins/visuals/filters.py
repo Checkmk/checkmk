@@ -1216,10 +1216,8 @@ declare_filter(302, FilterHostAuxTags())
 
 
 # choices = [ (value, "readable"), .. ]
-class FilterCustomVarChoice(Filter):
-    def __init__(self, name, title, info, custom_var, choices):
-        self.custom_var = custom_var
-        self.choices    = choices
+class FilterMKEventDServiceLevelRange(Filter):
+    def __init__(self, name, title, info):
         self.lower_bound_varname = "%s_lower" % name
         self.upper_bound_varname = "%s_upper" % name
 
@@ -1229,7 +1227,8 @@ class FilterCustomVarChoice(Filter):
 
 
     def _prepare_choices(self):
-        return map( lambda x: ( str(x[0]), "%s - %s" % (x[0], x[1]) ), self.choices )
+        return map( lambda x: ( str(x[0]), "%s - %s" % (x[0], x[1]) ),
+               config.mkeventd_service_levels )
 
 
     def display(self):
@@ -1245,11 +1244,10 @@ class FilterCustomVarChoice(Filter):
         upper_bound = html.var(self.upper_bound_varname)
 
         if lower_bound and upper_bound:
-            filterline = "Filter: %s_custom_variable_names >= %s\n" % \
-                         ( self.info, self.custom_var )
+            filterline = "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
 
             filterline_values = []
-            for value, readable in self.choices:
+            for value, readable in config.mkeventd_service_levels:
                 if value >= int(lower_bound) and value <= int(upper_bound):
                     filterline_values.append( "Filter: %s_custom_variable_values >= %s" % \
                                               (self.info, lqencode(str(value))) )
@@ -1270,14 +1268,12 @@ class FilterCustomVarChoice(Filter):
 
 
 
-declare_filter(310, FilterCustomVarChoice(
-        "svc_service_level", _("Service service level"),
-        "service", "EC_SL", config.mkeventd_service_levels ))
+declare_filter(310, FilterMKEventDServiceLevelRange(
+        "svc_service_level", _("Service service level"), "service"))
 
 
-declare_filter(310, FilterCustomVarChoice(
-        "hst_service_level", _("Host service level"),
-        "host", "EC_SL", config.mkeventd_service_levels ))
+declare_filter(310, FilterMKEventDServiceLevelRange(
+        "hst_service_level", _("Host service level"), "host"))
 
 
 

@@ -838,8 +838,7 @@ class Folder(BaseFolder):
             "service_contactgroups"     : [],
             "_lock"                     : False,
         }
-        execfile(self.hosts_file_path(), variables, variables)
-        return variables
+        return store.load_mk_file(self.hosts_file_path(), variables)
 
 
     def save_hosts(self):
@@ -850,6 +849,7 @@ class Folder(BaseFolder):
         call_hook_hosts_changed(self)
 
 
+    # TODO: Use the store functions here!
     def _save_hosts_file(self):
         self._ensure_folder_directory()
         if not self.has_hosts():

@@ -1860,7 +1860,6 @@ def render_tag_tree():
     if type(tree_conf) == int:
         tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
 
-
     choices = [ (str(i), v[0]) for i, v in enumerate(config.virtual_host_trees)]
     html.begin_form("vtree")
 
@@ -1875,7 +1874,11 @@ def render_tag_tree():
     html.end_form()
     html.final_javascript(virtual_host_tree_js)
 
-    title, taggroups = config.virtual_host_trees[tree_conf["tree"]]
+    try:
+        title, taggroups = config.virtual_host_trees[tree_conf["tree"]]
+    except IndexError:
+        # Fallback to first host tree in case the wanted does not exist (anymore)
+        title, taggroups = config.virtual_host_trees[0]
 
     tree = compute_tag_tree(taggroups)
     render_tag_tree_level(taggroups, [], cwd, _("Virtual Host Tree"), tree)

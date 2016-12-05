@@ -556,9 +556,10 @@ class Cell(object):
 
             if self._has_link():
                 link_view = self._link_view()
-                # TODO: Clean this up here
-                for filt in [ visuals.get_filter(fn) for fn in visuals.get_single_info_keys(link_view) ]:
-                    columns.update(filt.link_columns)
+                if link_view:
+                    # TODO: Clean this up here
+                    for filt in [ visuals.get_filter(fn) for fn in visuals.get_single_info_keys(link_view) ]:
+                        columns.update(filt.link_columns)
 
         if self.has_tooltip():
             columns.update(get_painter_columns(self.tooltip_painter()))
@@ -579,7 +580,10 @@ class Cell(object):
 
 
     def _link_view(self):
-        return get_view_by_name(self._link_view_name)
+        try:
+            return get_view_by_name(self._link_view_name)
+        except KeyError:
+            return None
 
 
     def painter(self):

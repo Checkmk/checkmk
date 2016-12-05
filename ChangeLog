@@ -62,6 +62,7 @@
     * 4080 FIX: Fixed possible exception "unsupported operand type" in matrix views
     * 4127 FIX: Fixed possible "maximum recursion depth exceeded" error when sorting tables with a lot of text in cells
     * 4128 FIX: Fixed exception in "Virtual host tree" snapin in case a user tries to access a not existing tree
+    * 4129 FIX: Fixed possible exception when a view is linking to a not permitted other view
 
     WATO:
     * 3984 Permissions can now be filtered by providing a search term on the "edit role" page...

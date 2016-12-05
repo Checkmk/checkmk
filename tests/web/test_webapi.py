@@ -84,7 +84,21 @@ def test_get_graph(web, site):
 
         # Issue a reschedule
         site.live.command("SCHEDULE_FORCED_SERVICE_CHECK;test-host-get-graph;Check_MK;%d" % int(time.time()))
-        time.sleep(1)
+
+        # Wait for RRD file creation
+        # Isn't this a bug that the graph is not instantly available?
+        timeout = 10
+        print "Checking for graph..."
+        while timeout and not site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"):
+            try:
+                data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
+            except Exception:
+                pass
+            timeout -= 1
+            time.sleep(1)
+            print "Checking for graph..."
+        assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
+                        "RRD %s is still missing" % "var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"
 
         # Now we get a graph
         data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)

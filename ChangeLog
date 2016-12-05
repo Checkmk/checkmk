@@ -14,6 +14,7 @@
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts
     * 4080 FIX: Fixed possible exception "unsupported operand type" in matrix views
+    * 4085 FIX: Fixed bug when rendering table views that have joined columns
 
     WATO:
     * 4077 FIX: Fixed "Request URI too long" when cloning role after editing another one

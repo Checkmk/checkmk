@@ -39,8 +39,11 @@ def test_service_extra_conf():
             [ "1", "2", "3", "11" ]
 
 
-# TODO: convert_service_ruleset
+# TODO: _convert_service_ruleset
+# TODO: in_boolean_serviceconf_list
+# TODO: _convert_boolean_service_ruleset
 # TODO: host_extra_conf
+# TODO: _convert_host_ruleset
 # TODO: host_extra_conf_merged
 # TODO: all_matching_hosts
 # TODO: in_extraconf_hostlist
@@ -109,9 +112,9 @@ def test_hosttags_match_taglist_prefix():
 
 
 def test_parse_negated():
-    assert rulesets.parse_negated("") == (False, "")
-    assert rulesets.parse_negated("!aaa") == (True, "aaa")
-    assert rulesets.parse_negated("aaa") == (False, "aaa")
+    assert rulesets._parse_negated("") == (False, "")
+    assert rulesets._parse_negated("!aaa") == (True, "aaa")
+    assert rulesets._parse_negated("aaa") == (False, "aaa")
 
 
 # TODO: convert_pattern

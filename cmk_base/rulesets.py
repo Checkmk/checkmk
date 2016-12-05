@@ -31,6 +31,8 @@ from cmk.exceptions import MKGeneralException
 import cmk_base
 import cmk_base.console as console
 
+# TODO: Prefix helper functions with "_".
+
 #.
 #   .--Service rules-------------------------------------------------------.
 #   |      ____                  _                       _                 |
@@ -45,6 +47,7 @@ import cmk_base.console as console
 
 # Compute outcome of a service rule set that has an item
 def service_extra_conf(hostname, service, ruleset):
+    import cmk_base.config
     # When the requested host is part of the local sites configuration,
     # then use only the sites hosts for processing the rules
     with_foreign_hosts = hostname not in cmk_base.config.all_active_hosts()
@@ -258,6 +261,7 @@ def in_extraconf_hostlist(hostlist, hostname):
             if hostentry[0] == '!':
                 hostentry = hostentry[1:]
                 negate = True
+
             # Allow regex with prefix '~'
             if hostentry[0] == '~':
                 hostentry = hostentry[1:]

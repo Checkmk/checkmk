@@ -247,7 +247,7 @@ def print_man_page_table():
 def _get_title_from_man_page(path):
     for line in file(path):
         if line.startswith("title:"):
-            return line.split(":", 1)[1].strip()
+            return line.split(":", 1)[1].strip().decode("utf-8")
     raise MKGeneralException(_("Invalid man page: Failed to get the title"))
 
 
@@ -391,7 +391,7 @@ def _create_fallback_man_page(name, path, error_message):
     return {
         "name"         : name,
         "path"         : path,
-        "description"  : file(path).read().strip(),
+        "description"  : file(path).read().strip().decode("utf-8"),
         "title"        : _("%s: Cannot parse man page: %s") % (name, error_message),
         "agents"       : "",
         "license"      : "unknown",
@@ -408,7 +408,7 @@ def _parse_man_page_header(name, path):
     key = None
     lineno = 0
     for line in file(path):
-        line = line.rstrip()
+        line = line.rstrip().decode("utf-8")
         lineno += 1
         try:
             if not line:
@@ -454,6 +454,7 @@ def load_man_page(name):
 
     for lineno, line in enumerate(file(path)):
         try:
+            line = line.decode("utf-8")
             if line.startswith(' ') and line.strip() != "": # continuation line
                 empty_line_count = 0
                 if current_variable:

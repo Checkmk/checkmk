@@ -3359,7 +3359,7 @@ def do_site_login(site_id, name, password):
 def get_url(url, insecure, user=None, password=None, params = '', post_data = None):
     cred = ''
     if user:
-        cred = ' -u "%s:%s"' % (user, password)
+        cred = ' -u %s' % quote_shell_string("%s:%s" % (user, password))
 
     insecure = insecure and ' --insecure' or ''
 

@@ -1,0 +1,14 @@
+title: CPS UPS Device: Output phase
+agents: snmp
+catalog: hw/power/cps
+license: GPL
+distribution: check_mk
+description:
+ The check monitors the voltage, frequency, current and load
+ of the output phase.
+
+inventory:
+ One check per device is created.
+
+item:
+ "1"

@@ -1244,13 +1244,23 @@ class FilterECServiceLevelRange(Filter):
         upper_bound = html.var(self.upper_bound_varname)
 
         if lower_bound and upper_bound:
+            match_func = lambda val: int(lower_bound) <= val <= int(upper_bound)
+        elif lower_bound and not upper_bound:
+            match_func = lambda val: int(lower_bound) <= val
+        elif not lower_bound and upper_bound:
+            match_func = lambda val: val <= int(upper_bound)
+        else:
+            match_func = None
+
+        if match_func is not None:
             filterline = "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
 
             filterline_values = []
             for value, readable in config.mkeventd_service_levels:
-                if value >= int(lower_bound) and value <= int(upper_bound):
+                if match_func(value):
                     filterline_values.append( "Filter: %s_custom_variable_values >= %s" % \
                                               (self.info, lqencode(str(value))) )
+
             filterline += "%s\n" % "\n".join( filterline_values )
 
             len_filterline_values = len(filterline_values)

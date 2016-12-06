@@ -272,11 +272,14 @@ def available(what, all_visuals):
 # TODO: This code has been copied to a new live into htdocs/pagetypes.py
 # We need to convert all existing page types (views, dashboards, reports)
 # to pagetypes.py and then remove this function!
-def page_list(what, title, visuals, custom_columns = [],
+def page_list(what, title, visuals, custom_columns = None,
     render_custom_buttons = None,
     render_custom_columns = None,
     render_custom_context_buttons = None,
     check_deletable_handler = None):
+
+    if custom_columns is None:
+        custom_columns = []
 
     what_s = what[:-1]
     if not config.user.may("general.edit_" + what):
@@ -977,7 +980,10 @@ def get_link_filter_names(visual, info_keys, link_filters):
     return names
 
 # Collects all filters to be used for the given visual
-def filters_of_visual(visual, info_keys, show_all=False, link_filters=[]):
+def filters_of_visual(visual, info_keys, show_all=False, link_filters=None):
+    if link_filters is None:
+        link_filters = []
+
     filters = []
 
     # Collect all available filters for these infos
@@ -1057,7 +1063,10 @@ def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
 
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.
-def get_context_from_uri_vars(only_infos=None, single_infos=[]):
+def get_context_from_uri_vars(only_infos=None, single_infos=None):
+    if single_infos is None:
+        single_infos = []
+
     context = {}
     for filter_name, filter_object in multisite_filters.items():
         if only_infos == None or filter_object.info in only_infos:
@@ -1325,7 +1334,10 @@ def get_singlecontext_html_vars(visual):
 
 # Collect all visuals that share a context with visual. For example
 # if a visual has a host context, get all relevant visuals.
-def collect_context_links(this_visual, mobile = False, only_types = []):
+def collect_context_links(this_visual, mobile = False, only_types = None):
+    if only_types is None:
+        only_types = []
+
     # compute list of html variables needed for this visual
     active_filter_vars = set([])
     for var, val in get_singlecontext_html_vars(this_visual).items():

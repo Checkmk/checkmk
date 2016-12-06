@@ -34,7 +34,10 @@ def parse_exception(e):
         e = "%d - %s" % eval(e).values()[0]
     return str(e)
 
-def bail_out(rc, s, perfdata=[]):
+def bail_out(rc, s, perfdata=None):
+    if perfdata is None:
+        perfdata = []
+
     stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
     sys.stdout.write('%s - %s' % (stxt, parse_exception(s)))
     if perfdata:

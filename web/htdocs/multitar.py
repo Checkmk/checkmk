@@ -284,7 +284,10 @@ def extract(tar, components):
 
 # Try to cleanup everything starting from the root_path
 # except the specific exclude files
-def cleanup_dir(root_path, exclude_files = []):
+def cleanup_dir(root_path, exclude_files=None):
+    if exclude_files is None:
+        exclude_files = []
+
     paths_to_remove = []
     files_to_remove = []
     for path, dirnames, filenames in os.walk(root_path):

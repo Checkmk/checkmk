@@ -1201,7 +1201,10 @@ multisite_painters["svc_servicelevel"] = {
     "sorter"  : 'servicelevel',
 }
 
-def paint_custom_vars(what, row, blacklist=[]):
+def paint_custom_vars(what, row, blacklist=None):
+    if blacklist is None:
+        blacklist = []
+
     items = row[what + "_custom_variables"].items()
     items.sort()
     code = '<table class=customvars>'

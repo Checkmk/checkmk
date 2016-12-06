@@ -1045,7 +1045,10 @@ def delete_server_cookie():
     if host_cookie_path and os.path.exists(host_cookie_path):
         os.unlink(host_cookie_path)
 
-def query_server(payload, payload_params = {}):
+def query_server(payload, payload_params=None):
+    if payload_params is None:
+        payload_params = {}
+
     # Finalize payload
     payload_params.update(systeminfo)
     soapdata = put_in_envelope(payload)

@@ -2165,7 +2165,11 @@ def ajax_count_button():
 # add_headers: additional livestatus headers to add
 # only_sites: list of sites the query is limited to
 # limit: maximum number of data rows to query
-def query_data(datasource, columns, add_columns, add_headers, only_sites = [], limit = None, tablename=None):
+def query_data(datasource, columns, add_columns, add_headers,
+               only_sites = None, limit = None, tablename=None):
+    if only_sites is None:
+        only_sites = []
+
     if tablename == None:
         tablename = datasource["table"]
 

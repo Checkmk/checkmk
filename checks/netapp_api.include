@@ -27,7 +27,10 @@
 
 # Transforms all lines into a dictionary.
 # The first key is the dictionary key, unless modified by the custom_keys
-def netapp_api_parse_lines(info, custom_keys = [], as_dict_list = False, item_func = None):
+def netapp_api_parse_lines(info, custom_keys = None, as_dict_list = False, item_func = None):
+    if custom_keys is None:
+        custom_keys = []
+
     instances = {}
     for line in info:
         instance = {}

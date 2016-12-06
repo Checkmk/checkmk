@@ -382,7 +382,10 @@ def encode_entities(text):
     return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
-def multipart_mail(target, subject, from_address, reply_to, content_txt, content_html, attach = []):
+def multipart_mail(target, subject, from_address, reply_to, content_txt, content_html, attach=None):
+    if attach is None:
+        attach = []
+
     m = MIMEMultipart('related', _charset='utf-8')
 
     alt = MIMEMultipart('alternative')

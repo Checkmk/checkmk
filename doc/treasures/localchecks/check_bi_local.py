@@ -24,9 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# NOTE: This file is deprecated and superseeded by check_bi_aggr,
-# which can be configured via WATO now.
-
 # Example for creating real Nagios checks from BI aggregations.
 
 # Installation:
@@ -102,10 +99,10 @@ except:
     sys.exit(1)
 
 states = {
-  "OK"      : 0,
-  "WARN"    : 1,
-  "CRIT"    : 2,
-  "UNKNOWN" : 3,
+  "OK"   : 0,
+  "WARN" : 1,
+  "CRIT" : 2,
+  "UNKN" : 3,
 }
 
 for name, state, output in data[1:]:

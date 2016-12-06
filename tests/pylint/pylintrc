@@ -21,6 +21,8 @@ disable=C0111,bad-whitespace,unsubscriptable-object,unsupported-membership-test,
 # W0612: Unused variable
 # TODO: enable this and prepare code for it!
 #enable=W0612
+# Check /usr/local/lib/python2.7/dist-packages/pylint/checkers/base.py:624
+enable=unreachable,dangerous-default-value
 
 [TYPECHECK]
 # rrdtool

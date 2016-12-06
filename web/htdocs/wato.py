@@ -15311,7 +15311,7 @@ def mode_check_manpage(phase):
     if manpage["type"] == "check_mk":
         html.open_tr()
         html.th(_("Service name"))
-        html.td(manpage["service_description"].replace("%s", "&#9744;"))
+        html.td(HTML(manpage["service_description"].replace("%s", "&#9744;")))
         html.close_tr()
 
         if manpage.get("group"):

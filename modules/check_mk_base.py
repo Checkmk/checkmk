@@ -964,7 +964,6 @@ def cachefile_age(filename):
     except Exception, e:
         raise MKGeneralException("Cannot determine age of cache file %s: %s" \
                                  % (filename, e))
-        return -1
 
 #.
 #   .--Item state and counters---------------------------------------------.

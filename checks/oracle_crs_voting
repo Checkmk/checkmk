@@ -32,13 +32,6 @@
 def inventory_oracle_crs_voting(info):
     inventory = []
     return [ ('', None) for line in info ]
-    for line in info:
-        if line[1] == 'ONLINE':
-            return (0, None)
-        elif len(line) == 3:
-            # CRS 10.2 + 11.1 has 3 entries
-            return (0, None)
-    return None
 
 def check_oracle_crs_voting(item, params, info):
     # state = -1 => no data for Service

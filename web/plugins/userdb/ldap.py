@@ -443,7 +443,10 @@ class LDAPUserConnector(UserConnector):
         return results
 
 
-    def ldap_search(self, base, filt='(objectclass=*)', columns=[], scope='sub'):
+    def ldap_search(self, base, filt='(objectclass=*)', columns=None, scope='sub'):
+        if columns == None:
+            columns = []
+
         self.log('LDAP_SEARCH "%s" "%s" "%s" "%r"' % (base, scope, filt, columns))
         start_time = time.time()
 

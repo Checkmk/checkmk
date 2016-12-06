@@ -569,11 +569,12 @@ def automation_get_check_information():
     for check_type, check in check_info.items():
         try:
             manfile = manuals.get(check_type)
+            # TODO: Use cmk.man_pages module standard functions to read the title
             if manfile:
                 title = file(manfile).readline().strip().split(":", 1)[1].strip()
             else:
                 title = check_type
-            checks[check_type] = { "title" : title }
+            checks[check_type] = { "title" : title.decode("utf-8") }
             if check["group"]:
                 checks[check_type]["group"] = check["group"]
             checks[check_type]["service_description"] = check.get("service_description","%s")

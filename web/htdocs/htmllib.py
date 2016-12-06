@@ -419,7 +419,6 @@ class HTMLGenerator(Escaper, OutputFunnel):
             if isinstance(tag_content, HTML):
                 tag += tag_content.lstrip(' ').rstrip('\n')
             else:
-                self.debug((tag_content, self._escape_text(tag_content)))
                 tag += self._escape_text(tag_content)
 
         tag += "</%s>" % (tag_name)

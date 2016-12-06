@@ -1227,16 +1227,17 @@ class FilterECServiceLevelRange(Filter):
 
 
     def _prepare_choices(self):
-        return map( lambda x: ( str(x[0]), "%s - %s" % (x[0], x[1]) ),
-               config.mkeventd_service_levels )
+        choices = config.mkeventd_service_levels[:]
+        choices.sort()
+        return map( lambda x: ( str(x[0]), "%s - %s" % (x[0], x[1]) ), choices )
 
 
     def display(self):
         selection = [ ("", "") ] + self._prepare_choices()
         html.write("From")
-        html.sorted_select(self.lower_bound_varname, selection)
+        html.select(self.lower_bound_varname, selection)
         html.write("To")
-        html.sorted_select(self.upper_bound_varname, selection)
+        html.select(self.upper_bound_varname, selection)
 
 
     def filter(self, infoname):

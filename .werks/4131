@@ -1,0 +1,10 @@
+Title: Fixed broken WATO site login when using password containing special characters
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p15
+Date: 1481015489
+Class: fix
+
+Some special characters could confuse the WATO site login and lead to an error
+message like "HTTP error - None:".

@@ -48,10 +48,7 @@ def timeit(method):
 
 
 def prettify(html_text):
-    if isinstance(html_text, HTML):
-        txt = bs(html_text.value, 'html5lib').prettify()
-    else:
-        txt = bs(html_text, 'html5lib').prettify()
+    txt = bs(html_text, 'html5lib').prettify()
     return re.sub('\n{2,}', '\n', re.sub('>', '>\n', txt))
 
 
@@ -96,13 +93,6 @@ def subber(value):
            re.sub('\n', '', value))))))
 
 def compare_soup(html1, html2):
-
-    if isinstance(html1, HTML):
-       html1 = html1.value
-
-    if isinstance(html2, HTML):
-       html2 = html2.value
-
     s1 = bs(prettify(html1), 'html5lib')
     s2 = bs(prettify(html2), 'html5lib')
 
@@ -136,14 +126,6 @@ def compare_soup(html1, html2):
 
 
 def compare_html(html1, html2):
-
-    if isinstance(html1, HTML):
-       html1 = html1.value
-
-    if isinstance(html2, HTML):
-       html2 = html2.value
-
-
     # compare tags
     opening_1 = re.findall(r'<[^<]*>', html1)
     opening_2 = re.findall(r'<[^<]*>', html2)

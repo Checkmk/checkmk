@@ -1,0 +1,9 @@
+Title: Do not suppress site specific global issues during WATO activation
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481033046
+Class: fix
+
+

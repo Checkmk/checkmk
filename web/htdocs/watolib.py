@@ -3658,11 +3658,6 @@ def automation_push_snapshot():
 
     multitar.extract_from_buffer(tarcontent, replication_paths)
 
-    # We expect one file containing sitespecific global settings.
-    # That is contained in the sub-tarball "sitespecific.tar" and
-    # just contains one file: "sitespecific.mk". The contains a repr()
-    # of all global settings, that should override the ones in global.mk
-    # in various directories.
     try:
         tmp_dir = cmk.paths.tmp_dir + "/sitespecific-%s" % id(html)
         if not os.path.exists(tmp_dir):
@@ -3676,15 +3671,18 @@ def automation_push_snapshot():
         save_configuration_settings(current_settings)
 
         shutil.rmtree(tmp_dir)
+
+        confirm_all_local_changes() # pending changes are lost
+
+        call_hook_snapshot_pushed()
+
+        # Create rule making this site only monitor our hosts
+        create_distributed_wato_file(site_id)
     except Exception, e:
-        logger(LOG_WARNING, "Warning: cannot extract site-specific global settings: %s" % e)
+        raise MKGeneralException(_("Failed to deploy configuration: \"%s\". "
+                                   "Please note that the site configuration has been synchronized "
+                                   "partially.") % traceback.format_exc())
 
-    confirm_all_local_changes() # pending changes are lost
-
-    call_hook_snapshot_pushed()
-
-    # Create rule making this site only monitor our hosts
-    create_distributed_wato_file(site_id)
     log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
 
     return True

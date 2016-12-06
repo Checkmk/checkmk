@@ -101,7 +101,10 @@ class Server:
             sys.stderr.write("Connecting to %s...\n" % self.netloc)
             sys.stderr.flush()
 
-    def communicate(self, payload, params = {}):
+    def communicate(self, payload, params=None):
+        if params is None:
+            params = {}
+
         params.update({"cookie": self.cookie})
         payload = payload % params
         if opt_debug:

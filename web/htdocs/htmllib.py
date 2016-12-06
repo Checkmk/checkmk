@@ -1798,7 +1798,9 @@ class html(DeprecationWrapper):
         self.text_input(varname, default_value, type="password", size = size, **args)
 
 
-    def text_area(self, varname, deflt="", rows=4, cols=30, attrs = {}, try_max_width=False):
+    def text_area(self, varname, deflt="", rows=4, cols=30, attrs=None, try_max_width=False):
+        if attrs is None:
+            attrs = {}
 
         # Model
         value = self.var(varname, deflt)
@@ -1824,9 +1826,10 @@ class html(DeprecationWrapper):
             self.close_x()
 
 
-    def sorted_select(self, varname, choices, deflt="", onchange=None, attrs = None):
+    def sorted_select(self, varname, choices, deflt="", onchange=None, attrs=None):
         if attrs is None:
             attrs = {}
+
         # Sort according to display texts, not keys
         sorted = choices[:]
         sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
@@ -1835,7 +1838,10 @@ class html(DeprecationWrapper):
 
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
-    def select(self, varname, choices, deflt="", onchange=None, attrs = {}):
+    def select(self, varname, choices, deflt="", onchange=None, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         # Model
         current = self.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)

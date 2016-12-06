@@ -1470,7 +1470,10 @@ class Folder(BaseFolder):
             raise MKAuthException(_("Sorry, the sub folders in the folder %s are locked.") % self.title())
 
 
-    def url(self, add_vars = []):
+    def url(self, add_vars=None):
+        if add_vars is None:
+            add_vars = []
+
         url_vars = [ ("folder", self.path()) ]
         have_mode = False
         for varname, value in add_vars:
@@ -1955,7 +1958,10 @@ class SearchFolder(BaseFolder):
             return self._base_folder.path() + "//search"
 
 
-    def url(self, add_vars = []):
+    def url(self, add_vars=None):
+        if add_vars is None:
+            add_vars = []
+
         url_vars = [("host_search", "1")] + add_vars
 
         for varname, value in html.all_vars().items():
@@ -5425,14 +5431,20 @@ class MKAutomationException(Exception):
         Exception.__init__(self, msg)
 
 
-def check_mk_automation(siteid, command, args=[], indata="", stdin_data=None, timeout=None, sync=True):
+def check_mk_automation(siteid, command, args=None, indata="", stdin_data=None, timeout=None, sync=True):
+    if args is None:
+        args = []
+
     if not siteid or config.site_is_local(siteid):
         return check_mk_local_automation(command, args, indata, stdin_data, timeout)
     else:
         return check_mk_remote_automation(siteid, command, args, indata, stdin_data, timeout, sync)
 
 
-def check_mk_local_automation(command, args=[], indata="", stdin_data=None, timeout=None):
+def check_mk_local_automation(command, args=None, indata="", stdin_data=None, timeout=None):
+    if args is None:
+        args = []
+
     if timeout:
         args = [ "--timeout", "%d" % timeout ] + args
 

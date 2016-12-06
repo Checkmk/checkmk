@@ -5104,7 +5104,17 @@ automation_commands["activate-changes"] = do_activate_changes_automation
 
 # success_stats: Fields from the stats list to use for checking if something has been found
 # fail_stats:    Fields from the stats list to used to count failed elements
-def interactive_progress(items, title, stats, finishvars, timewait, success_stats = [], termvars = [], fail_stats = []):
+def interactive_progress(items, title, stats, finishvars, timewait,
+                         success_stats=None, termvars=None, fail_stats=None):
+    if success_stats is None:
+        success_stats = []
+
+    if termvars is None:
+        termvars = []
+
+    if fail_stats is None:
+        fail_stats = []
+
     if not termvars:
         termvars = finishvars;
 
@@ -16461,7 +16471,10 @@ class UserIconOrAction(DropdownChoice):
 # parent: The parent folder of the objects to configure
 # myself: For mode "folder" the folder itself or None, if we edit a new folder
 #         This is needed for handling mandatory attributes.
-def configure_attributes(new, hosts, for_what, parent, myself=None, without_attributes = [], varprefix=""):
+def configure_attributes(new, hosts, for_what, parent, myself=None, without_attributes=None, varprefix=""):
+    if without_attributes is None:
+        without_attributes = []
+
     # show attributes grouped by topics, in order of their
     # appearance. If only one topic exists, do not show topics
     # Make sure, that the topics "Basic settings" and host tags

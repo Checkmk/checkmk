@@ -399,7 +399,10 @@ else:
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def create_dict(instances, custom_key = [], is_counter = True):
+def create_dict(instances, custom_key = None, is_counter = True):
+    if custom_key is None:
+        custom_key = []
+
     if not instances:
         return {}
 

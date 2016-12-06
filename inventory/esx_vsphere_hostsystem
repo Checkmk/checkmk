@@ -40,7 +40,10 @@
 # hardware.cpuPkg.vendor.0 intel
 # hardware.cpuPkg.vendor.1 intel
 
-def inv_esx_vsphere_hostsystem_parse(info, inv_items = {}):
+def inv_esx_vsphere_hostsystem_parse(info, inv_items=None):
+    if inv_items is None:
+        inv_items = {}
+
     result = {}
     for line in info:
         key = line[0]

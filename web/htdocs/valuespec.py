@@ -2017,7 +2017,9 @@ class MultiSelect(ListChoice):
     def __init__(self, **kwargs):
         ListChoice.__init__(self, **kwargs)
 
-    def _render_field(self, name, choices, selected = []):
+    def _render_field(self, name, choices, selected=None):
+        if selected is None:
+            selected = []
         html.write("<select multiple name=\"%s\">\n" % name)
         for key, title in choices:
             if key in selected:

@@ -3928,7 +3928,10 @@ def gateway_reachable_via_ping(ip, probes):
     return 0 == os.system("ping -q -i 0.2 -l 3 -c %d -W 5 %s >/dev/null 2>&1" %
       (probes, quote_shell_string(ip))) >> 8
 
-def scan_parents_of(hosts, silent=False, settings={}):
+def scan_parents_of(hosts, silent=False, settings=None):
+    if settings is None:
+        settings = {}
+
     if monitoring_host:
         nagios_ip = lookup_ipv4_address(monitoring_host)
     else:

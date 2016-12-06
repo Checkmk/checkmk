@@ -408,16 +408,22 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def _render_content_tag(self, tag_name, tag_content, **attrs):
-        tag = ''
+        tag = self._render_opening_tag(tag_name, **attrs)
+
         if tag_content in ['', None]:
-            tag = "%s</%s>" % (self._render_opening_tag(tag_name, **attrs), tag_name)
-        elif isinstance(tag_content, HTML):
-            tag = "%s%s</%s>" % (self._render_opening_tag(tag_name, **attrs).rstrip('\n'),
-                                  tag_content.lstrip(' ').rstrip('\n'), tag_name)
+            pass
+
         else:
-            tag = "%s%s</%s>" % (self._render_opening_tag(tag_name, **attrs).rstrip('\n'),\
-                                   self._escape_text(tag_content),\
-                                   tag_name)
+            tag = tag.rstrip("\n")
+
+            if isinstance(tag_content, HTML):
+                tag += tag_content.lstrip(' ').rstrip('\n')
+            else:
+                self.debug((tag_content, self._escape_text(tag_content)))
+                tag += self._escape_text(tag_content)
+
+        tag += "</%s>" % (tag_name)
+
         #self.indent_level -= 1
         return HTML(tag)
 

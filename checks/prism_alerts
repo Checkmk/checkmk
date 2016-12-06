@@ -57,7 +57,6 @@ def check_prism_alerts(__no_item, __no_params, parsed):
         time_str = time.strftime("%c", time.localtime(int(sever['timestamp']) / 1000000))
         return severity(sever['severity'])[1], "%d alerts, Last worst on %s: \"%s\"" %\
             (len(row_sorted), time_str, sever['message'])
-        row_sorted[0]
 
 
 check_info['prism_alerts'] = {

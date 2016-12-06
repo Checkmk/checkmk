@@ -23,7 +23,12 @@
 # Boston, MA 02110-1301 USA.
 
 # TODO(sp) We should really use autotools here...
-CXX         := g++-5
+ifneq ($(shell which g++-6 2>/dev/null),)
+        CXX := g++-6
+else
+        CXX := g++-5
+endif
+
 CXXFLAGS    := -std=c++14 -g -O3 -Wall -Wextra
 LDFLAGS     := -static-libstdc++
 EXECUTABLES := mkevent mkeventd_open514

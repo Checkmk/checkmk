@@ -379,11 +379,15 @@ if mkeventd_enabled:
         "paint"   : lambda row: paint_age(row["history_time"], True, True),
     }
 
+    def paint_ec_history_what(row):
+        what = row["history_what"]
+        return "", '<span title="%s">%s</span>' % (mkeventd.action_whats[what], what)
+
     multisite_painters["history_what"] = {
         "title"   : _("Type of event action"),
         "short"   : _("Action"),
         "columns" : ["history_what" ],
-        "paint"   : lambda row: ("", row["history_what"]),
+        "paint"   : paint_ec_history_what,
     }
 
     multisite_painters["history_what_explained"] = {

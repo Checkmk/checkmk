@@ -1,0 +1,12 @@
+Title: Reporting: Support for standard time ranges
+Component: multisite
+State: open
+Date: 2016-12-06 15:31:26
+Targetversion: future
+Class: todo
+
+For our reporting scheduler we should support standard time ranges like week, month, quarter and year.
+Related to those time rages we should also support last week, last month, last quarter and last year.
+
+Additional we should be able to schedule the creation of those reports on this time ranges.
+That will help the customers to create the needed reports for their customers.

@@ -2371,6 +2371,7 @@ class EventServer:
         if "set_text" in rule:
             event["text"] = replace_groups(rule["set_text"], event["text"], groups)
         if "set_host" in rule:
+            event["orig_host"] = event["host"]
             event["host"] = replace_groups(rule["set_host"], event["host"], groups)
         if "set_application" in rule:
             event["application"] = replace_groups(rule["set_application"], event["application"], groups)
@@ -3938,6 +3939,8 @@ def do_notify(event, username=None, is_cancelling=False):
         "EC_PID":                      str(event.get("pid", 0)),
         "EC_MATCH_GROUPS":             "\t".join(event["match_groups"]),
         "EC_CONTACT_GROUPS":           contact_groups and " ".join(contact_groups) or "",
+        "EC_ORIG_HOST":                event.get("orig_host", event["host"]),
+
     }
 
     # Add rule based notification specific macros and add the

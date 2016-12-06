@@ -1,0 +1,11 @@
+Title: Monitoring notifications: Add EC_ORIG_HOST to notifiation context
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481030875
+Class: feature
+
+All notifications produced by the Event Console now add the variable EC_ORIG_HOST
+to the notification context. The variable contains the original host information
+of the event. Even when host rewriting is done, this contains the original name.

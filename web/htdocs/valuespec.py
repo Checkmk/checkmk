@@ -388,8 +388,8 @@ class TextAscii(ValueSpec):
     def render_input(self, varprefix, value, hidden=False):
         if value == None:
             value = ""
-        elif type(value) != unicode:
-            value = str(value)
+        else:
+            value = "%s" % value
 
         if self._label:
             html.write(self._label)

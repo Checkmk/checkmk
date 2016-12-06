@@ -94,6 +94,7 @@
     * 3991 FIX: BI Aggregations: no longer show duplicate aggregations when an aggregation has mulitple groups
 
     Event Console:
+    * 4132 Monitoring notifications: Add EC_ORIG_HOST to notifiation context...
     * 4097 FIX: Event console: Make writing of status file more robust...
 
     Livestatus:

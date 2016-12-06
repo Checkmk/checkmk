@@ -24,6 +24,11 @@
 
 # TODO(sp) We should really use autotools here...
 CXX         := g++-5
+ifneq ($(shell which g++-6 2>/dev/null),)
+        CXX := g++-6
+else
+        CXX := g++-5
+endif
 CXXFLAGS    := -std=c++11 -g -O3 -Wall -Wextra
 EXECUTABLES := mkevent mkeventd_open514
 

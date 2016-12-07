@@ -72,9 +72,19 @@ sidebar_snapins["about"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def visuals_by_topic(permitted_visuals,
-        default_order = [ _("Overview"), _("Hosts"), _("Host Groups"), _("Services"), _("Service Groups"),
-                         _("Metrics"), _("Business Intelligence"), _("Problems"), ]):
+def visuals_by_topic(permitted_visuals, default_order=None):
+    if default_order is None:
+        default_order = [
+            _("Overview"),
+            _("Hosts"),
+            _("Host Groups"),
+            _("Services"),
+            _("Service Groups"),
+            _("Metrics"),
+            _("Business Intelligence"),
+            _("Problems"),
+        ]
+
     s = [ (_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name, 'painters' in visual)
           for name, visual
           in permitted_visuals
@@ -1796,12 +1806,6 @@ def compute_tag_tree(taglist):
         # No empty entry found -> get default (i.e. first entry)
         return groupentries[0][:2]
 
-    def need_wato_folder(taglist):
-        for tag in taglist:
-            if tag.startswith("folder:"):
-                return True
-        return False
-
     # Prepare list of host tag groups and topics
     taggroups = {}
     topics = {}
@@ -1817,14 +1821,13 @@ def compute_tag_tree(taglist):
 
     tree = {}
     for site, host_name, wato_folder, state, num_ok, num_warn, num_crit, num_unknown, custom_variables in hosts:
-        if need_wato_folder:
-            if wato_folder.startswith("/wato/"):
-                folder_path = wato_folder[6:-9]
-                folder_path_components = folder_path.split("/")
-                if wato.Folder.folder_exists(folder_path):
-                    folder_titles = wato.get_folder_title_path(folder_path)[1:] # omit main folder
-            else:
-                folder_titles = []
+        if wato_folder.startswith("/wato/"):
+            folder_path = wato_folder[6:-9]
+            folder_path_components = folder_path.split("/")
+            if wato.Folder.folder_exists(folder_path):
+                folder_titles = wato.get_folder_title_path(folder_path)[1:] # omit main folder
+        else:
+            folder_titles = []
 
         # make state reflect the state of the services + host
         have_svc_problems = False

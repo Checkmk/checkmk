@@ -4021,8 +4021,6 @@ check_metrics["check_mk-mem.linux"] = {
     "active_file"      : { "name" : "mem_lnx_active_file", },
     "inactive_anon"    : { "name" : "mem_lnx_inactive_anon", },
     "inactive_file"    : { "name" : "mem_lnx_inactive_file", },
-    "active"           : { "name" : "mem_lnx_active", },
-    "inactive"         : { "name" : "mem_lnx_inactive", },
     "dirty"            : { "name" : "mem_lnx_dirty", },
     "writeback"        : { "name" : "mem_lnx_writeback", },
     "nfs_unstable"     : { "name" : "mem_lnx_nfs_unstable", },
@@ -4619,9 +4617,9 @@ check_metrics["check_mk-ibm_svc_license"] = {
 }
 
 check_metrics["check_mk-tsm_stagingpools"] = {
-    "free" : { "name" : "tapes_free" },
-    "free" : { "name" : "tapes_total" },
-    "util" : { "name" : "tapes_util" }
+    "free"  : { "name" : "tapes_free" },
+    "tapes" : { "name" : "tapes_total" },
+    "util"  : { "name" : "tapes_util" }
 }
 
 check_metrics["check_mk-hpux_tunables.shmseg"] = {

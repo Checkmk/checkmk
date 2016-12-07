@@ -327,9 +327,9 @@ def check_timeperiod(tpname):
         elif int(answer) == 0:
             return _("The timeperiod %s is currently not active") % tpname
     except Exception, e:
-        return _("Cannot update timeperiod information for %s: %s") % (tpname, e)
         if config.debug:
             raise
+        return _("Cannot update timeperiod information for %s: %s") % (tpname, e)
 
 def match(pattern, text, complete = True):
     if pattern == None:

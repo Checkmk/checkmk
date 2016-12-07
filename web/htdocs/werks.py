@@ -79,12 +79,9 @@ def werk_components():
         "cmc" :           _("The Check_MK Micro Core"),
         "setup" :         _("Setup, Site Management"),
         "config" :        _("Configuration generation"),
-        "livestatus" :    _("Livestatus"),
         "inline-snmp" :   _("Inline-SNMP"),
         "agents" :        _("Agent Bakery"),
-        "reporting" :     _("Reporting"),
         "metrics" :       _("Metrics System"),
-        "notifications" : _("Notifications"),
     }
 
 

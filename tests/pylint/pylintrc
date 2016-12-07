@@ -15,14 +15,12 @@ errors-only=yes
 #   Disable this because we often use multiple types for a single variable. Maybe we
 #   can change this in future to make such linter checks work, but for the moment these
 #   checks are useless with Check_MK.
-# unpacking-non-sequence
-#   Not a problem for us
 disable=C0111,bad-whitespace,unsubscriptable-object,unsupported-membership-test,unpacking-non-sequence,assignment-from-none
 # W0612: Unused variable
 # TODO: enable this and prepare code for it!
 #enable=W0612
-# Check /usr/local/lib/python2.7/dist-packages/pylint/checkers/base.py:624
-enable=unreachable,dangerous-default-value
+# https://pylint.readthedocs.io/en/latest/reference_guide/features.html
+enable=unreachable,dangerous-default-value,duplicate-key,using-constant-test,duplicate-except,binary-op-exception,overlapping-except
 
 [TYPECHECK]
 # rrdtool

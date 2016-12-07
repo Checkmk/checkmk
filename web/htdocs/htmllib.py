@@ -1729,7 +1729,9 @@ class html(DeprecationWrapper):
 
 
     def text_input(self, varname, default_value = "", cssclass = "text", label = None, id_ = None,
-                   submit = None, attrs = {}, **args):
+                   submit = None, attrs = None, **args):
+        if attrs is None:
+            attrs = {}
 
         # Model
         error = self.user_errors.get(varname)

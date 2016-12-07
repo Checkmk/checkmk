@@ -1242,7 +1242,6 @@ def mode_mkeventd_rules(phase):
                         save_mkeventd_rules(legacy_rules, rule_packs)
                         add_ec_change("move-rule-to-pack", _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
                         return None, _("Moved rule %s to pack %s") % (rule["id"], html.attrencode(other_pack["title"]))
-                        break
 
         action_outcome = event_simulation_action()
         if action_outcome:

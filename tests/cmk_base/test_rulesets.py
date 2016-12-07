@@ -3,14 +3,16 @@ import pytest
 import cmk_base.rulesets as rulesets
 from cmk.exceptions import MKGeneralException
 
-# TODO: Hacky. Change this to monkeypatching
 import cmk
-cmk.omd_version = lambda: "1.4.0i1.cee"
 
-import cmk_base.config as config
+@pytest.fixture(autouse=True)
+def fake_version(monkeypatch):
+    monkeypatch.setattr(cmk, "omd_version", lambda: "1.4.0i1.cee")
 
 # TODO: Test the negations
 def test_service_extra_conf():
+    import cmk_base.config as config
+
     config.all_hosts = ["host1|tag1|tag2", "host2|tag1"]
     config.collect_hosttags()
     ruleset = [

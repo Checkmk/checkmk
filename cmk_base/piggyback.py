@@ -112,7 +112,10 @@ def store_piggyback_info(sourcehost, piggybacked):
     remove_piggyback_info_from(sourcehost, keep=piggybacked.keys())
 
 
-def remove_piggyback_info_from(sourcehost, keep=[]):
+def remove_piggyback_info_from(sourcehost, keep=None):
+    if keep is None:
+        keep = []
+
     removed = 0
     piggyback_path = cmk.paths.tmp_dir + "/piggyback/"
     if not os.path.exists(piggyback_path):

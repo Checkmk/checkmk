@@ -160,7 +160,10 @@ class HTML(unicode, Escaper):
 
 
     def __new__(self, value = ''):
-        return unicode.__new__(self, value)
+        try:
+            return unicode.__new__(self, value)
+        except UnicodeDecodeError as e:
+            return unicode.__new__(self, value.decode('utf-8'))
 
 
     def __repr__(self):

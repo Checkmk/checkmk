@@ -1,0 +1,11 @@
+Title: diskstat: extended fix for multipath devices with or without alias
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1481104406
+Class: fix
+
+In werk #3952 a bugfix for multipath devices with an alias has been released.
+This fix did not consider cases in which the data does not provide an alias
+at all. This is now handeled.

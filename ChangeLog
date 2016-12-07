@@ -64,6 +64,9 @@
     BI:
     * 3991 FIX: BI Aggregations: no longer show duplicate aggregations when an aggregation has mulitple groups
 
+    Event Console:
+    * 4147 FIX: Always show rule analyser result on Generate, not only after previous Try out...
+
 
 1.2.8p13:
     Checks & Agents:

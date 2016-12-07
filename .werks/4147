@@ -1,0 +1,14 @@
+Title: Always show rule analyser result on Generate, not only after previous Try out
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.8p14
+Date: 1481114369
+Class: fix
+
+In the Event Console configuration there is the event simulator. If you first did
+{{Try out}} with a message and after that {{Generate}}, then still the event
+would be analysed and the rules marked according to the matches.
+
+Previously this did not work when you did not {{Try out}} before. This has been
+fixed.

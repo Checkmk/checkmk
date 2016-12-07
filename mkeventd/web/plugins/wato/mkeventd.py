@@ -1109,7 +1109,7 @@ def show_event_simulator():
     html.end_form()
     html.write("<br>")
 
-    if html.var("simulate"):
+    if html.var("simulate") or html.var("_generate"):
         return vs_mkeventd_event.from_html_vars("event")
     else:
         return None

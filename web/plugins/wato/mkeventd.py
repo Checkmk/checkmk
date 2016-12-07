@@ -196,6 +196,7 @@ vs_mkeventd_actions = \
     help = _("Configure that possible actions that can be performed when a "
              "rule triggers and also manually by a user."),
     totext = _("%d actions"),
+    add_label = _("Add new action"),
     )
 
 

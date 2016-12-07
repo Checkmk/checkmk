@@ -592,7 +592,14 @@ def duplicate_hosts():
     # Sanity check for duplicate hostnames
     seen_hostnames = set([])
     duplicates = set([])
-    for hostname in all_active_hosts():
+
+    # Only available with CEE
+    if "shadow_hosts" in globals():
+        shadow_host_entries = shadow_hosts.keys()
+    else:
+        shadow_host_entries = []
+
+    for hostname in all_active_hosts() + shadow_host_entries:
         if hostname in seen_hostnames:
             duplicates.add(hostname)
         else:

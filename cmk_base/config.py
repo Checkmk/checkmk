@@ -104,12 +104,7 @@ def load(with_conf_d=True, validate_hosts=True, exclude_parents_mk=False):
     initialize_service_levels()
 
     if validate_hosts:
-        duplicates = duplicate_hosts()
-        if duplicates:
-            # TODO: Raise an exception
-            console.error("Error in configuration: duplicate hosts: %s\n",
-                                                    ", ".join(duplicates))
-            sys.exit(3)
+        _verify_non_duplicate_hosts()
 
     add_wato_static_checks_to_checks()
     initialize_check_caches()
@@ -207,6 +202,15 @@ def initialize_service_levels():
     global service_service_levels, host_service_levels
     service_service_levels = extra_service_conf.get("_ec_sl", [])
     host_service_levels = extra_host_conf.get("_ec_sl", [])
+
+
+def _verify_non_duplicate_hosts():
+    duplicates = duplicate_hosts()
+    if duplicates:
+        # TODO: Raise an exception
+        console.error("Error in configuration: duplicate hosts: %s\n",
+                                                ", ".join(duplicates))
+        sys.exit(3)
 
 
 # Add WATO-configured explicit checks to (possibly empty) checks

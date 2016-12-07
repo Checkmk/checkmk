@@ -475,11 +475,11 @@ def filter_active_hosts(hostlist, keep_offline_hosts=False, keep_duplicates=Fals
             active_hosts = hostlist
         else:
             active_hosts = [ hostname for hostname in hostlist
-                     if in_binary_hostlist(hostname, only_hosts) ]
+                     if rulesets.in_binary_hostlist(hostname, only_hosts) ]
 
     else:
         active_hosts = [ hostname for hostname in hostlist
-                 if (keep_offline_hosts or in_binary_hostlist(hostname, only_hosts))
+                 if (keep_offline_hosts or rulesets.in_binary_hostlist(hostname, only_hosts))
                  and host_is_member_of_site(hostname, distributed_wato_site) ]
 
     if keep_duplicates:
@@ -492,7 +492,7 @@ def duplicate_hosts():
     seen_hostnames = set([])
     duplicates = set([])
 
-    for hostname in config.all_active_hosts_with_duplicates():
+    for hostname in all_active_hosts_with_duplicates():
         if hostname in seen_hostnames:
             duplicates.add(hostname)
         else:

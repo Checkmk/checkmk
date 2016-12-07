@@ -44,7 +44,6 @@ def mobile_view(d):
         'hidden'          : False,
         'hidebutton'      : False,
         'icon'            : None,
-        'mobile'          : True,
         'public'          : True,
         'topic'           : _('Mobile'),
         'user_sortable'   : False,

@@ -61,7 +61,6 @@ builtin_dashboards["main"] = {
             "position"   : (-1, 1),
             "size"       : (GROW, 18),
             "show_title" : True,
-            "context"    : {},
 
             'browser_reload': 30,
             'column_headers': 'pergroup',
@@ -103,7 +102,6 @@ builtin_dashboards["main"] = {
             "position"   : (1, 19),
             "size"       : (GROW, MAX),
             "show_title" : True,
-            "context"    : {},
 
             'browser_reload': 30,
             'column_headers': 'pergroup',
@@ -152,7 +150,6 @@ builtin_dashboards["main"] = {
             "position"   : (-1, -1),
             "size"       : (GROW, GROW),
             "show_title" : True,
-            "context"    : {},
 
             'browser_reload': 90,
             'column_headers': 'pergroup',
@@ -234,7 +231,6 @@ builtin_dashboards["simple_problems"] = {
             "show_title" : True,
             "position"   : (1, 1),
             "size"       : (GROW, 18),
-            "context"    : {},
 
             'browser_reload': 30,
             'column_headers': 'pergroup',
@@ -274,7 +270,6 @@ builtin_dashboards["simple_problems"] = {
             "show_title" : True,
             "position"   : (1, 19),
             "size"       : (GROW, MAX),
-            "context"    : {},
 
             'browser_reload': 30,
             'column_headers': 'pergroup',

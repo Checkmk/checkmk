@@ -562,7 +562,10 @@ def render_context_specs(visual, context_specs):
 def page_edit_visual(what, all_visuals, custom_field_handler = None,
                      create_handler = None,
                      load_handler = None, info_handler = None,
-                     sub_pages = []):
+                     sub_pages = None):
+    if sub_pages is None:
+        sub_pages = []
+
     visual_type = visual_types[what]
 
     visual_type = visual_types[what]
@@ -899,7 +902,6 @@ class Filter:
     def display(self):
         raise MKInternalError(_("Incomplete implementation of filter %s '%s': missing display()") % \
                 (self.name, self.title))
-        html.write(_("FILTER NOT IMPLEMENTED"))
 
     def filter(self, infoname):
         return ""

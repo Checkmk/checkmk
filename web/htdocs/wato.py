@@ -2308,7 +2308,10 @@ def mode_object_parameters(phase):
 
 PARAMETERS_UNKNOWN = []
 PARAMETERS_OMIT = []
-def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_settings=PARAMETERS_UNKNOWN):
+def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_settings=None):
+    if known_settings is None:
+        known_settings = PARAMETERS_UNKNOWN
+
     def rule_url(rule):
         rule_folder, rule_nr = rule
         return folder_preserving_link([
@@ -12681,7 +12684,7 @@ def save_changed_ruleset(varname, rule_folder, rulesets):
     save_rulesets(rule_folder, rulesets)
 
 
-def create_rule(rulespec, hostname=None, item=NO_ITEM):
+def create_rule(rulespec, hostname, item):
     new_rule = []
     valuespec = rulespec["valuespec"]
     if valuespec:
@@ -13482,8 +13485,10 @@ FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is enter
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemspec = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
-                  match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT,
-                  deprecated = False):
+                  match = "first", optional = False,
+                  deprecated = False, **kwargs):
+    factory_default = kwargs.get("factory_default", NO_FACTORY_DEFAULT)
+
     if not itemname and itemtype == "service":
         itemname = _("Service")
 

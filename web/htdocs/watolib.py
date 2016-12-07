@@ -565,7 +565,10 @@ class BaseFolder(WithPermissionsAndAttributes):
         return folders[::-1]
 
 
-    def show_breadcrump(self, link_to_folder=False, keepvarnames=["mode"]):
+    def show_breadcrump(self, link_to_folder=False, keepvarnames=None):
+        if keepvarnames is None:
+            keepvarnames = ["mode"]
+
         keepvars = [ (name, html.var(name)) for name in keepvarnames ]
         if link_to_folder:
             keepvars.append(("mode", "folder"))
@@ -2929,8 +2932,13 @@ g_host_attribute = {}
 
 # Declare attributes with this method
 def declare_host_attribute(a, show_in_table = True, show_in_folder = True, show_in_host_search = True,
-       topic = None, show_in_form = True, depends_on_tags = [], depends_on_roles = [], editable = True,
+       topic = None, show_in_form = True, depends_on_tags = None, depends_on_roles = None, editable = True,
        show_inherited_value = True, may_edit = None):
+    if depends_on_tags is None:
+        depends_on_tags = []
+
+    if depends_on_roles is None:
+        depends_on_roles = []
 
     g_host_attributes.append((a, topic))
     g_host_attribute[a.name()] = a
@@ -3485,13 +3493,6 @@ def do_remote_automation(site, command, vars):
 def is_distributed(sites = None):
     # TODO: Remove all calls of this function
     return True
-
-    if sites == None:
-        sites = config.sites
-    for site in sites.values():
-        if site.get("replication"):
-            return True
-    return False
 
 
 # Returns the ID of the default site. This is the site the main folder has

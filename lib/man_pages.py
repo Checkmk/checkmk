@@ -118,7 +118,6 @@ catalog_titles = {
             "gude"       : "Gude",
         "printer"     : "Printers",
         "server"      : "Server hardware, blade enclosures",
-            "ibm"        : "IBM",
         "storagehw"   : "Storage (filers, SAN, tape libs)",
             "brocade"    : "Brocade",
             "fastlta"    : "FAST LTA",

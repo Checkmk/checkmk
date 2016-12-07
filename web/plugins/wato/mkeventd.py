@@ -54,7 +54,7 @@ The following macros will be substituted by value from the actual event:
 <tr><td class=tt>$TEXT$</td><td>Message text</td></tr>
 <tr><td class=tt>$FIRST$</td><td>Time of the first occurrance (time stamp)</td></tr>
 <tr><td class=tt>$LAST$</td><td>Time of the most recent occurrance</td></tr>
-<tr><td class=tt>$COMMENT$</td><td>Event comment/td></tr>
+<tr><td class=tt>$COMMENT$</td><td>Event comment</td></tr>
 <tr><td class=tt>$SL$</td><td>Service Level</td></tr>
 <tr><td class=tt>$HOST$</td><td>Host name (as sent by syslog)</td></tr>
 <tr><td class=tt>$CONTACT$</td><td>Contact information</td></tr>

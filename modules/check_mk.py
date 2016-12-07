@@ -592,6 +592,21 @@ def all_active_hosts():
         cache.update(all_active_realhosts(), all_active_clusters())
     return cache
 
+
+# This function should only be used during duplicate host check! It has to work like 
+# all_active_hosts() but with the difference that duplicates are not removed.
+def all_active_hosts_with_duplicates():
+    # Only available with CEE
+    if "shadow_hosts" in globals():
+        shadow_host_entries = shadow_hosts.keys()
+    else:
+        shadow_host_entries = []
+
+    return filter_active_hosts(strip_tags(all_hosts)  \
+                               + strip_tags(clusters.keys()) \
+                               + strip_tags(shadow_host_entries), keep_duplicates=True)
+
+
 # Returns a list of all hosts which are associated with this site,
 # but have been removed by the "only_hosts" rule. Normally these
 # are the hosts which have the tag "offline".
@@ -609,11 +624,13 @@ def duplicate_hosts():
     # Sanity check for duplicate hostnames
     seen_hostnames = set([])
     duplicates = set([])
-    for hostname in all_active_hosts():
+
+    for hostname in all_active_hosts_with_duplicates():
         if hostname in seen_hostnames:
             duplicates.add(hostname)
         else:
             seen_hostnames.add(hostname)
+
     return sorted(list(duplicates))
 
 
@@ -636,22 +653,30 @@ def all_active_clusters():
     return all_clusters_untagged
 
 # Returns a set of active hosts for this site
-def filter_active_hosts(hostlist, keep_offline_hosts=False):
+def filter_active_hosts(hostlist, keep_offline_hosts=False, keep_duplicates=False):
     if only_hosts == None and distributed_wato_site == None:
-        return hostlist
+        active_hosts = hostlist
+
     elif only_hosts == None:
-        return set([ hostname for hostname in hostlist
-                 if host_is_member_of_site(hostname, distributed_wato_site) ])
+        active_hosts = [ hostname for hostname in hostlist
+                 if host_is_member_of_site(hostname, distributed_wato_site) ]
+
     elif distributed_wato_site == None:
         if keep_offline_hosts:
-            return set(hostlist)
+            active_hosts = hostlist
         else:
-            return set([ hostname for hostname in hostlist
-                     if in_binary_hostlist(hostname, only_hosts) ])
+            active_hosts = [ hostname for hostname in hostlist
+                     if in_binary_hostlist(hostname, only_hosts) ]
+
     else:
-        return set([ hostname for hostname in hostlist
+        active_hosts = [ hostname for hostname in hostlist
                  if (keep_offline_hosts or in_binary_hostlist(hostname, only_hosts))
-                 and host_is_member_of_site(hostname, distributed_wato_site) ])
+                 and host_is_member_of_site(hostname, distributed_wato_site) ]
+
+    if keep_duplicates:
+        return active_hosts
+    else:
+        return set(active_hosts)
 
 def host_is_member_of_site(hostname, site):
     for tag in tags_of_host(hostname):

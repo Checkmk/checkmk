@@ -6692,7 +6692,10 @@ register_check_parameters(
     _("Netscaler VServer States"),
     Dictionary(
         elements = [
-            ("map_health_status", MonitoringState(title=_("Health Status")))
+            ("health_status", Tuple(title = _("Health status"), elements = [
+                Percentage(title = _("Warning below"),  default_value = 100.0),
+                Percentage(title = _("Critical below"), default_value = 0.1),
+            ])),
         ]
     ),
     TextAscii( title = _("Name of VServer") ),

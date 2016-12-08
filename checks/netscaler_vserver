@@ -78,10 +78,15 @@ netscaler_vserver_entitytypes = {
 }
 
 
+factory_settings["netscaler_vserver_default_levels"] = {
+    "health_levels" : (100.0, 0.1),
+}
+
+
 def inventory_netscaler_vserver(info):
     for line in info:
         if line[0]:
-            yield line[0], None
+            yield line[0], {}
 
 
 def check_netscaler_vserver(item, params, info):
@@ -91,28 +96,33 @@ def check_netscaler_vserver(item, params, info):
     for name, ip, port, svr_type, svr_state,\
         svr_health, svr_entitytype in info:
         if name == item:
-            svr_state, svr_state_readable = netscaler_vserver_states.get(svr_state, ("unknown", 1))
+            svr_state, svr_state_readable = \
+                netscaler_vserver_states.get(svr_state, ("unknown", 1))
             yield svr_state, "Status: %s" % svr_state_readable
 
             if svr_entitytype in [ "1", "2" ]:
-                health_perc  = int(svr_health)
+                health_perc  = float(svr_health)
                 health_state = 0
+                infotext     = "Health: %s" % get_percent_human_readable(health_perc)
+                warn, crit   = params["health_levels"]
 
-                if health_perc == 0:
+                if health_perc < crit:
                     health_state = 2
-                elif health_perc < 100:
+                elif health_perc < warn:
                     health_state = 1
 
-                if "map_health_status" in params:
-                    health_state = params["map_health_status"]
+                if health_state > 0:
+                    infotext += " (warn/crit at %s/%s)" % \
+                                (get_percent_human_readable(warn),
+                                 get_percent_human_readable(crit))
 
-                yield health_state, "Health: %s" % get_percent_human_readable(health_perc),\
+                yield health_state, infotext, \
                       [("health_perc", health_perc, None, None, 0, 100)]
 
             yield 0, "Type: %s, Protocol: %s, Socket: %s:%s" % (
-                netscaler_vserver_entitytypes.get(svr_entitytype , "unknown (%s)" % svr_entitytype),
-                netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type),
-                ip, port)
+                  netscaler_vserver_entitytypes.get(svr_entitytype , "unknown (%s)" % svr_entitytype),
+                  netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type),
+                  ip, port)
 
 
 check_info["netscaler_vserver"] = {
@@ -131,4 +141,5 @@ check_info["netscaler_vserver"] = {
     "has_perfdata"            : True,
     "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),
     "group"                   : "netscaler_vserver",
+    "default_levels_variable" : "netscaler_vserver_default_levels",
 }

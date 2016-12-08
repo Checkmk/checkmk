@@ -218,12 +218,6 @@ Query::~Query() {
     }
 }
 
-Column *Query::createDummyColumn(const char *name) {
-    _dummy_columns.push_back(
-        make_unique<NullColumn>(name, "non-existing column"));
-    return _dummy_columns.back().get();
-}
-
 void Query::addColumn(Column *column) { _columns.push_back(column); }
 
 void Query::setResponseHeader(OutputBuffer::ResponseHeader r) {
@@ -497,18 +491,13 @@ void Query::parseColumnsLine(char *line) {
             _columns.push_back(column);
         } else {
             Informational(_logger) << "Replacing non-existing column '"
-                                   << string(column_name)
-                                   << "' with null column";
+                                   << column_name << "' with null column";
             // Do not fail any longer. We might want to make this configurable.
             // But not failing has the advantage that an updated GUI, that
-            // expects new columns,
-            // will be able to keep compatibility with older Livestatus
-            // versions.
-            // invalidHeader(
-            //       "Table '%s' has no column '%s'", _table->name(),
-            //       column_name);
-            Column *col = createDummyColumn(column_name);
-            _columns.push_back(col);
+            // expects new columns, will be able to keep compatibility with
+            // older Livestatus versions.
+            _columns.push_back(
+                new NullColumn(column_name, "non-existing column"));
         }
     }
     _show_column_headers = false;
@@ -731,17 +720,11 @@ void Query::process(OutputBuffer *output) {
 }
 
 void Query::start(QueryRenderer &q) {
-    if (doStats()) {
-        // if we have no StatsGroupBy: column, we allocate one only row of
-        // Aggregators,
-        // directly in _stats_aggregators. When grouping the rows of aggregators
-        // will be created each time a new group is found.
-        if (_columns.empty()) {
-            _stats_aggregators = new Aggregator *[_stats_columns.size()];
-            for (unsigned i = 0; i < _stats_columns.size(); i++) {
-                _stats_aggregators[i] = _stats_columns[i]->createAggregator();
-            }
-        }
+    // if we have no StatsGroupBy: column, we allocate one only row of
+    // Aggregators, directly in _stats_aggregators. When grouping the rows of
+    // aggregators will be created each time a new group is found.
+    if (doStats() && _columns.empty()) {
+        _stats_aggregators = createAggregators();
     }
 
     if (_show_column_headers) {
@@ -793,16 +776,10 @@ bool Query::processDataset(void *data) {
         }
 
         if (doStats()) {
-            Aggregator **aggr;
             // When doing grouped stats, we need to fetch/create a row of
             // aggregators for the current group
-            if (!_columns.empty()) {
-                _stats_group_spec_t groupspec;
-                computeStatsGroupSpec(groupspec, data);
-                aggr = getStatsGroup(groupspec);
-            } else {
-                aggr = _stats_aggregators;
-            }
+            Aggregator **aggr =
+                _columns.empty() ? _stats_aggregators : getStatsGroup(data);
 
             for (unsigned i = 0; i < _stats_columns.size(); i++) {
                 aggr[i]->consume(data, _auth_user, _timezone_offset);
@@ -865,24 +842,25 @@ void Query::optimizeBitmask(const string &column_name, uint32_t *bitmask) {
     _filter.optimizeBitmask(column_name, bitmask, _timezone_offset);
 }
 
-Aggregator **Query::getStatsGroup(Query::_stats_group_spec_t &groupspec) {
+Aggregator **Query::getStatsGroup(void *data) {
+    _stats_group_spec_t groupspec;
+    for (auto column : _columns) {
+        groupspec.push_back(column->valueAsString(data, _auth_user));
+    }
+
     auto it = _stats_groups.find(groupspec);
     if (it == _stats_groups.end()) {
-        auto aggr = new Aggregator *[_stats_columns.size()];
-        for (unsigned i = 0; i < _stats_columns.size(); i++) {
-            aggr[i] = _stats_columns[i]->createAggregator();
-        }
-        _stats_groups.emplace(groupspec, aggr);
-        return aggr;
+        it = _stats_groups.emplace(groupspec, createAggregators()).first;
     }
     return it->second;
 }
 
-void Query::computeStatsGroupSpec(Query::_stats_group_spec_t &groupspec,
-                                  void *data) {
-    for (auto column : _columns) {
-        groupspec.push_back(column->valueAsString(data, _auth_user));
+Aggregator **Query::createAggregators() {
+    auto aggr = new Aggregator *[_stats_columns.size()];
+    for (size_t i = 0; i < _stats_columns.size(); i++) {
+        aggr[i] = _stats_columns[i]->createAggregator();
     }
+    return aggr;
 }
 
 void Query::doWait() {

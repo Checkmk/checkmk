@@ -11,6 +11,7 @@
     * 4081 FIX: dell_powerconnect_cpu: Fixed broken metrics
     * 4126 FIX: apache_status: Handle https requests lo localhost in case of certificate mismatch...
     * 3953 FIX: diskstat: extended fix for multipath devices with or without alias...
+    * 4111 FIX: hp_proliant: fixed empty data handling
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

@@ -8269,7 +8269,7 @@ class ExceptionName(TextAscii):
         kwargs["regex"] = "^[-a-z0-9A-Z /]*$"
         kwargs["regex_error"] = _("This is not a valid Nagios timeperiod day specification.")
         kwargs["allow_empty"] = False
-        TextAscii.__init__(self, **kwargs)
+        super(ExceptionName, self).__init__(**kwargs)
 
     def validate_value(self, value, varprefix):
         if value in [ "monday", "tuesday", "wednesday", "thursday",

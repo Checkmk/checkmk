@@ -35,6 +35,7 @@ import cmk.paths
 class FinalizeRequest(Exception):
     def __init__(self, code = None):
         self.status = code or apache.OK
+        super(FinalizeRequest, self).__init__(code)
 
 
 class html_mod_python(htmllib.html):

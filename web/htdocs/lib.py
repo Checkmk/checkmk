@@ -44,6 +44,7 @@ LOG_DEBUG   = 7 # debug-level messages
 class MKAuthException(MKException):
     def __init__(self, reason):
         self.reason = reason
+        super(MKAuthException, self).__init__(reason)
 
     def __str__(self):
         return self.reason
@@ -74,7 +75,11 @@ class MKConfigError(MKException):
 class MKUserError(MKException):
     def __init__(self, varname, message):
         self.varname = varname
-        super(MKUserError, self).__init__(message)
+        self.message = message
+        super(MKUserError, self).__init__(varname, message)
+
+    def __str__(self):
+        return self.message
 
     def title(self):
         return _("Invalid User Input")

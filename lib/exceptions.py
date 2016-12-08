@@ -37,6 +37,13 @@ except NameError:
 # never used directly in the code. Just some wrapper to make all of our
 # exceptions handleable with one call
 class MKException(Exception):
+    # TODO: The comment and the method below are nonsense: If we want unicode,
+    # it is __unicode__'s task. This just seems to be a workaround for incorrect
+    # call sites confusing both kinds of strings. Sometimes returning a unicode
+    # string below just asks for trouble when e.g. this is spliced into a byte
+    # string, and it *is* a byte string when __str__ is called: Splicing into a
+    # unicode string would call __unicode__.
+    #
     # Do not use the Exception() __str__, because it uses str()
     # to convert the message. We want to keep unicode strings untouched
     # And don't use self.message, because older python versions don't
@@ -49,6 +56,7 @@ class MKException(Exception):
 class MKGeneralException(MKException):
     def __init__(self, reason):
         self.reason = reason
+        super(MKGeneralException, self).__init__(reason)
 
     def __str__(self):
         return self.reason
@@ -77,6 +85,7 @@ class MKTerminate(Exception):
 class MKBailOut(Exception):
     def __init__(self, reason):
         self.reason = reason
+        super(MKBailOut, self).__init__(reason)
 
     def __str__(self):
         return self.reason

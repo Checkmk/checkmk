@@ -48,6 +48,7 @@ pac_ext = ".mkp"
 class PackageException(Exception):
     def __init__(self, reason):
         self.reason = reason
+        super(PackageException, self).__init__(reason)
     def __str__(self):
         return self.reason
 

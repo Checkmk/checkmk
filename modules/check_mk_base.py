@@ -144,12 +144,14 @@ ZERO  = 0.0
 class MKCounterWrapped(Exception):
     def __init__(self, reason):
         self.reason = reason
+        super(MKCounterWrapped, self).__init__(reason)
     def __str__(self):
         return self.reason
 
 class MKAgentError(Exception):
     def __init__(self, reason):
         self.reason = reason
+        super(MKAgentError, self).__init__(reason)
     def __str__(self):
         return self.reason
 
@@ -158,6 +160,7 @@ class MKParseFunctionError(Exception):
         self.exception_type = exception_type
         self.exception = exception
         self.backtrace = backtrace
+        super(MKParseFunctionError, self).__init__(self, exception_type, exception, backtrace)
 
     def exc_info(self):
         return self.exception_type, self.exception, self.backtrace
@@ -168,6 +171,7 @@ class MKParseFunctionError(Exception):
 class MKSNMPError(Exception):
     def __init__(self, reason):
         self.reason = reason
+        super(MKSNMPError, self).__init__(reason)
     def __str__(self):
         return self.reason
 

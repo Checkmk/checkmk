@@ -37,7 +37,9 @@ import cmk.store as store
 class MKGuitestFailed(MKException):
     def __init__(self, errors):
         self.errors = errors
-        MKException.__init__(self, _("GUI Test failed"))
+        super(MKGuitestFailed, self).__init__(errors)
+    def __str__(self):
+        return _("GUI Test failed")
 
 
 class GUITester:

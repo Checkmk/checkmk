@@ -37,6 +37,7 @@ logger = cmk.log.get_logger(__name__)
 class LocalizeException(Exception):
     def __init__(self, reason):
         self.reason = reason
+        super(LocalizeException, self).__init__(reason)
     def __str__(self):
         return self.reason
 

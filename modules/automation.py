@@ -35,6 +35,7 @@ import cmk_base.rulesets as rulesets
 class MKAutomationError(Exception):
     def __init__(self, reason):
         self.reason = reason
+        super(MKAutomationError, self).__init__(reason)
     def __str__(self):
         return self.reason
 

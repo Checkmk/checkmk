@@ -79,7 +79,7 @@ class InvalidUserInput(Exception):
     def __init__(self, varname, text):
         self.varname = varname
         self.text = text
-
+        super(InvalidUserInput, self).__init__(varname, text)
 
 class RequestTimeout(MKException):
     pass

@@ -5429,7 +5429,7 @@ def collect_hosts(folder):
 
 class MKAutomationException(Exception):
     def __init__(self, msg):
-        Exception.__init__(self, msg)
+        super(MKAutomationException, self).__init__(msg)
 
 
 def check_mk_automation(siteid, command, args=None, indata="", stdin_data=None, timeout=None, sync=True):

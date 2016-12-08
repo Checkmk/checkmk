@@ -59,30 +59,24 @@ remove_cache_regex = re.compile("\nCache:[^\n]*")
 class MKLivestatusException(Exception):
     def __init__(self, value):
         self.parameter = value
+        super(MKLivestatusException, self).__init__(value)
     def __str__(self):
         return str(self.parameter)
 
 class MKLivestatusSocketError(MKLivestatusException):
-    def __init__(self, reason):
-        MKLivestatusException.__init__(self, reason)
+    pass
 
 class MKLivestatusSocketClosed(MKLivestatusSocketError):
-    def __init__(self, reason):
-        MKLivestatusSocketError.__init__(self, reason)
+    pass
 
 class MKLivestatusConfigError(MKLivestatusException):
-    def __init__(self, reason):
-        MKLivestatusException.__init__(self, reason)
+    pass
 
 class MKLivestatusQueryError(MKLivestatusException):
-    def __init__(self, code, reason):
-        MKLivestatusException.__init__(self, "%s: %s" % (code, reason))
-        self.code = code
+    pass
 
 class MKLivestatusNotFoundError(MKLivestatusException):
-    def __init__(self, query):
-        MKLivestatusException.__init__(self, query)
-        self.query = query
+    pass
 
 # We need some unique value here
 NO_DEFAULT = lambda: None
@@ -320,7 +314,7 @@ class BaseConnection:
                 except:
                     raise MKLivestatusSocketError("Malformed output")
             else:
-                raise MKLivestatusQueryError(code, data.strip())
+                raise MKLivestatusQueryError("%s: %s" % (code, data.strip()))
 
         # In case of an IO error or the other side having
         # closed the socket do a reconnect and try again, but

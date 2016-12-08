@@ -87,6 +87,7 @@
     * 4130 FIX: Improved error handling when trying to edit not existant rules
     * 4131 FIX: Fixed broken WATO site login when using password containing special characters...
     * 4133 FIX: Do not suppress site specific global issues during WATO activation
+    * 4134 FIX: Unified ineffective rulesets view with other ruleset list views
 
     Notifications:
     * 4042 FIX: Fix missing From address in synchronous SMTP notifications...

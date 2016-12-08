@@ -11934,7 +11934,7 @@ def mode_ruleeditor(phase):
                 folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
 
         html.context_button(_("Used Rulesets"), folder_preserving_link([("mode", "rulesets"), ("group", "used")]), "usedrulesets")
-        html.context_button(_("Ineffective rules"), folder_preserving_link([("mode", "ineffective_rules")]), "rulesets_ineffective")
+        html.context_button(_("Ineffective rules"), folder_preserving_link([("mode", "rulesets"), ("group", "ineffective")]), "rulesets_ineffective")
         html.context_button(_("Deprecated Rulesets"),
                  folder_preserving_link([("mode", "rulesets"), ("group", "deprecated")]), "rulesets_deprecated")
         return
@@ -12001,102 +12001,6 @@ def rule_is_ineffective(rule, rule_folder, rulespec, hosts):
     return not found_match
 
 
-def mode_ineffective_rules(phase):
-    if phase == "title":
-        return _("Ineffective rules")
-
-    elif phase == "buttons":
-        global_buttons()
-        html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
-        if config.user.may("wato.hosts") or config.user.may("wato.seeall"):
-            html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
-        return
-
-    elif phase == "action":
-        return
-
-    # Select matching rule groups while keeping their configured order
-    all_rulesets = load_all_rulesets()
-    groupnames = [ gn for gn, rulesets in g_rulespec_groups ]
-
-    html.open_div(class_="rulesets")
-
-    all_hosts = Host.all()
-    html.div(_("The following rules do not match to any of the existing hosts."), class_="info")
-    have_ineffective = False
-
-    for groupname in groupnames:
-        # Show information about a ruleset
-        # Sort rulesets according to their title
-        g_rulespec_group[groupname].sort(cmp = lambda a, b: cmp(a["title"], b["title"]))
-        for rulespec in g_rulespec_group[groupname]:
-            varname = rulespec["varname"]
-            valuespec = rulespec["valuespec"]
-
-            # handle only_used
-            rules = all_rulesets.get(varname, [])
-            num_rules = len(rules)
-            if num_rules == 0:
-                continue
-
-            ineffective_rules = []
-            current_rule_folder = None
-            for folder, rule in rules:
-                if current_rule_folder == None or not current_rule_folder.is_same_as(folder):
-                    current_rule_folder = folder
-                    rulenr = 0
-                else:
-                    rulenr = rulenr + 1
-                if rule_is_ineffective(rule, folder, rulespec, all_hosts):
-                    ineffective_rules.append( (rulenr, (folder, rule)) )
-            if len(ineffective_rules) == 0:
-                continue
-
-            have_ineffective = True
-            titlename = g_rulegroups[groupname.split("/")[0]][0]
-            rulegroup, test = g_rulegroups.get(groupname, (groupname, ""))
-            html.open_div()
-            ruleset_url = folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])
-            table.begin("ineffective_rules", title = _("<a href='%s'>%s</a> (%s)") % (ruleset_url, rulespec["title"], titlename), css="ruleset")
-            for rel_rulenr, (folder, rule) in ineffective_rules:
-                value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
-                table.row()
-
-                # Actions
-                table.cell("Actions", css="buttons")
-                edit_url = folder_preserving_link([
-                    ("mode", "edit_rule"),
-                    ("varname", varname),
-                    ("rulenr", rel_rulenr),
-                    ("rule_folder", folder.path())
-                ])
-                html.icon_button(edit_url, _("Edit this rule"), "edit")
-
-                delete_url = make_action_link([
-                    ("mode", "edit_ruleset"),
-                    ("varname", varname),
-                    ("_action", "delete"),
-                    ("_folder", folder.path()),
-                    ("_rulenr", rel_rulenr),
-                    ("rule_folder", folder.path())
-                ])
-                html.icon_button(delete_url, _("Delete this rule"), "delete")
-
-                # Rule folder
-                table.cell(_("Rule folder"))
-                html.write_text(folder.alias_path(show_main = False))
-
-                # Conditions
-                show_rule_in_table(rulespec, tag_specs, host_list, item_list, varname, value, folder, rule_options)
-
-            table.end()
-            html.close_div()
-
-    if not have_ineffective:
-            html.div(_("There are no ineffective rules."), class_="info")
-    html.close_div()
-    return
-
 def mode_static_checks(phase):
     return mode_rulesets(phase, "static")
 
@@ -12109,28 +12013,36 @@ def mode_rulesets(phase, group=None):
 
     search = get_search_expression()
 
+    only_used = False
+    only_ineffective = False
+
     if group == "used":
         title = _("Used Rulesets")
         help = _("Non-empty rulesets")
         only_used = True
+
     elif group == "static":
         title = _("Manual Checks")
         help = _("Here you can create explicit checks that are not being created by the automatic service discovery.")
-        only_used = False
+
     elif group == "deprecated":
         title = _("Deprecated Rulesets")
         help = _("Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
                  "you have defined some rules here, you might have to migrate the rules to their successors. Please "
                  "refer to the release notes or context help of the rulesets for details.")
-        only_used = False
         show_deprecated = True
+
+    elif group == "ineffective":
+        title = _("Ineffective rules")
+        help = _("The following rules do not match to any of the existing hosts.")
+        only_ineffective = True
+
     elif search != None:
         title = _("Rules matching") + ": " + html.attrencode(search)
         help = _("All rules that contain '%s' in their name") % html.attrencode(search)
-        only_used = False
+
     else:
         title, help = g_rulegroups.get(group, (group, None))
-        only_used = False
 
     only_host = html.var("host", "")
     only_local = "" # html.var("local")
@@ -12193,10 +12105,26 @@ def mode_rulesets(phase, group=None):
         if only_used:
             all_rulesets = dict([ r for r in all_rulesets.items() if len(r[1]) > 0 ])
 
+        if only_ineffective:
+            all_hosts = Host.all()
+
+            has_ineffective_rules = False
+            rulesets_with_ineffective_rules = {}
+            for varname, rules in all_rulesets.items():
+                rulespec = g_rulespecs[varname]
+
+                for folder, rule in rules:
+                    if rule_is_ineffective(rule, folder, rulespec, all_hosts):
+                        rule_list = rulesets_with_ineffective_rules.setdefault(varname, [])
+                        rule_list.append((folder, rule))
+
+            all_rulesets = rulesets_with_ineffective_rules
+
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
                    if only_used \
+                        or only_ineffective \
                         or group == "deprecated" \
                         or search != None\
                         or gn == group or (group and gn.startswith(group + "/")) ]
@@ -12212,11 +12140,8 @@ def mode_rulesets(phase, group=None):
     something_shown = False
     title_shown = False
     for groupname in groupnames:
-        # Show information about a ruleset
-        # Sort rulesets according to their title
-        g_rulespec_group[groupname].sort(
-            cmp = lambda a, b: cmp(a["title"], b["title"]))
-        for rulespec in g_rulespec_group[groupname]:
+        for rulespec in sorted(g_rulespec_group[groupname],
+                               cmp=lambda a, b: cmp(a["title"], b["title"])):
 
             varname = rulespec["varname"]
             valuespec = rulespec["valuespec"]
@@ -12224,7 +12149,7 @@ def mode_rulesets(phase, group=None):
             # handle only_used
             rules = all_rulesets.get(varname, [])
             num_rules = len(rules)
-            if num_rules == 0 and (only_used or only_local):
+            if num_rules == 0 and (only_used or only_local or only_ineffective):
                 continue
 
             # handle search
@@ -12281,6 +12206,8 @@ def mode_rulesets(phase, group=None):
             url_vars = [("mode", "edit_ruleset"), ("varname", varname)]
             if only_host:
                 url_vars.append(("host", only_host))
+            if only_ineffective:
+                url_vars.append(("highlight_ineffective", "1"))
             view_url = folder_preserving_link(url_vars)
 
             html.a(rulespec["title"], href=view_url, class_="nonzero" if num_rules else "zero")
@@ -12298,6 +12225,8 @@ def mode_rulesets(phase, group=None):
     else:
         if only_host:
             html.div(_("There are no rules with an exception for the host <b>%s</b>.") % only_host, class_="info")
+        elif only_ineffective:
+            html.div(_("There are no ineffective rules."), class_="info")
         else:
             html.div(_("There are no rules defined in this folder."), class_="info")
 
@@ -12534,9 +12463,17 @@ def mode_edit_ruleset(phase):
                 ruleset[rulenr+1][0] != folder)
 
             value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
-            disabled = rule_options.get("disabled")
-            table.row(disabled and "disabled" or None)
 
+            disabled = rule_options.get("disabled")
+            css = []
+            if disabled:
+                css.append("disabled")
+            if html.var("highlight_ineffective"):
+                all_hosts = Host.all()
+                if rule_is_ineffective(rule, folder, rulespec, all_hosts):
+                    css.append("ineffective")
+
+            table.row(css=" ".join(css) if css else None)
 
             # Rule matching
             if hostname:
@@ -16821,7 +16758,6 @@ modes = {
    "check_plugins"      : ([], mode_check_plugins),
    "check_manpage"      : ([], mode_check_manpage),
    "rulesets"           : (["rulesets"], mode_rulesets),
-   "ineffective_rules"  : (["rulesets"], mode_ineffective_rules),
    "edit_ruleset"       : ([], mode_edit_ruleset),
    "new_rule"           : ([], lambda phase: mode_edit_rule(phase, True)),
    "edit_rule"          : ([], lambda phase: mode_edit_rule(phase, False)),

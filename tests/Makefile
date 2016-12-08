@@ -51,8 +51,8 @@ setup:
 	sudo apt-get install \
 	    python-pip \
 	    python-lxml
-	pip install --upgrade pip
-	pip install --upgrade \
+	sudo pip install --upgrade pip
+	sudo pip install --upgrade \
 	    pytest \
 	    requests \
 	    beautifulsoup4 \

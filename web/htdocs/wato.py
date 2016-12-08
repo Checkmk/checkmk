@@ -11918,8 +11918,6 @@ def change_host_tags_in_rules(folder, operations, mode):
 
 def mode_ruleeditor(phase):
     only_host = html.var("host", "")
-    # CLEANUP: remove only_local and its control paths
-    only_local = "" # html.var("local")
 
     if phase == "title":
         if only_host:
@@ -11959,7 +11957,7 @@ def mode_ruleeditor(phase):
     menu = []
     for groupname in groupnames:
         url = folder_preserving_link([("mode", "rulesets"), ("group", groupname),
-                         ("host", only_host), ("local", only_local)])
+                         ("host", only_host)])
         if groupname == "static": # these have moved into their own WATO module
             continue
         else:
@@ -12045,7 +12043,6 @@ def mode_rulesets(phase, group=None):
         title, help = g_rulegroups.get(group, (group, None))
 
     only_host = html.var("host", "")
-    only_local = "" # html.var("local")
 
     if phase == "title":
         if only_host:
@@ -12094,7 +12091,7 @@ def mode_rulesets(phase, group=None):
         if help:
             html.help(help)
 
-    if only_local and not only_host:
+    if not only_host:
         all_rulesets = {}
         rs = load_rulesets(Folder.current())
         for varname, rules in rs.items():
@@ -12149,7 +12146,7 @@ def mode_rulesets(phase, group=None):
             # handle only_used
             rules = all_rulesets.get(varname, [])
             num_rules = len(rules)
-            if num_rules == 0 and (only_used or only_local or only_ineffective):
+            if num_rules == 0 and (only_used or only_ineffective):
                 continue
 
             # handle search
@@ -12170,17 +12167,6 @@ def mode_rulesets(phase, group=None):
             # Handle case where a host is specified
             rulespec = g_rulespecs[varname]
             this_host = False
-            if only_host:
-                num_local_rules = 0
-                for f, rule in rules:
-                    value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
-                    if only_host and only_host in host_list:
-                        num_local_rules += 1
-            else:
-                num_local_rules = len([ f for (f,r) in rules if f.is_current_folder() ])
-
-            if only_local and num_local_rules == 0:
-                continue
 
             if group != 'static' and (only_used or search != None):
                 titlename = g_rulegroups[groupname.split("/")[0]][0]

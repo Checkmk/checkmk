@@ -831,9 +831,13 @@ def handle_edit_annotations():
 #   '----------------------------------------------------------------------'
 
 def output_availability_csv(what, av_data, avoptions):
-    def cells_from_row(object_titles, cell_titles, row_object, row_cells):
+    def cells_from_row(group_titles, group_cells, object_titles, cell_titles, row_object, row_cells):
+        for column_title, group_title in zip(group_titles, group_cells):
+            table.cell(column_title, group_title)
+
         for title, (name, url) in zip(object_titles, row_object):
             table.cell(title, name)
+
         for (title, help), (text, css) in zip(cell_titles, row_cells):
             table.cell(title, text)
 
@@ -843,14 +847,22 @@ def output_availability_csv(what, av_data, avoptions):
     for group_title, availability_table in availability_tables:
         av_table = availability.layout_availability_table(what, group_title, availability_table, avoptions)
         pad = 0
+
+        if group_title:
+            group_titles, group_cells = [_("Group")], [group_title]
+        else:
+            group_titles, group_cells = [], []
+
         for row in av_table["rows"]:
             table.row()
-            cells_from_row(av_table["object_titles"], av_table["cell_titles"],
+            cells_from_row(group_titles, group_cells,
+                           av_table["object_titles"], av_table["cell_titles"],
                            row["object"], row["cells"])
             # presumably all rows have the same width
             pad = len(row["object"]) - 1
         table.row()
-        cells_from_row(av_table["object_titles"], av_table["cell_titles"],
+        cells_from_row(group_titles, group_cells,
+                       av_table["object_titles"], av_table["cell_titles"],
                        [(_("Summary"), "")] + [("", "")] * pad, av_table["summary"])
     table.end()
 

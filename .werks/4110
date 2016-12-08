@@ -1,4 +1,4 @@
-Title: netscaler_vserver: health status is now configurable
+Title: netscaler_vserver: now lower levels for health are configurable
 Level: 1
 Component: checks
 Compatible: compat

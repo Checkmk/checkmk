@@ -130,7 +130,7 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
 
     csv_separator = html.var("csv_separator", ";")
     first = True
-    for cell in cells:
+    for cell in group_cells + cells:
         if first:
             first = False
         else:
@@ -143,7 +143,7 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
     for row in rows:
         html.write("\n")
         first = True
-        for cell in cells:
+        for cell in group_cells + cells:
             if first:
                 first = False
             else:

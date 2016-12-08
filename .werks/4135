@@ -1,0 +1,10 @@
+Title: View CSV export: Group cells are added in front of the regular cells for each row
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481187505
+Class: feature
+
+The group cells were missing in the export. So it was not possible to reproduce the grouping
+with the exported data.

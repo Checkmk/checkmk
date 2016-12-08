@@ -94,7 +94,6 @@ private:
     Logger *const _logger;
 
     std::vector<Column *> _columns;
-    std::vector<std::unique_ptr<Column>> _dummy_columns;
     std::vector<std::unique_ptr<StatsColumn>> _stats_columns;
     Aggregator **_stats_aggregators;
 
@@ -113,8 +112,8 @@ private:
 
     bool doStats();
     void doWait();
-    Aggregator **getStatsGroup(_stats_group_spec_t &groupspec);
-    void computeStatsGroupSpec(_stats_group_spec_t &groupspec, void *data);
+    Aggregator **getStatsGroup(void *data);
+    Aggregator **createAggregators();
     Filter *createFilter(Column *column, RelationalOperator relOp,
                          const std::string &value);
     void parseFilterLine(char *line, VariadicFilter &filter);
@@ -141,7 +140,6 @@ private:
     void parseLocaltimeLine(char *line);
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
-    Column *createDummyColumn(const char *name);
 };
 
 #endif  // Query_h

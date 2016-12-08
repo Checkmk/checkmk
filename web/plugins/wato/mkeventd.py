@@ -556,7 +556,7 @@ vs_mkeventd_rule = Dictionary(
                ),
                ( "count",
                  Integer(
-                     title = _("Number of expected messages in each interval"),
+                     title = _("Number of expected messages"),
                      minvalue = 1,
                  )
               ),

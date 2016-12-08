@@ -2961,7 +2961,7 @@ def output_csv_headers(view):
     filename = '%s-%s.csv' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
     if type(filename) == unicode:
         filename = filename.encode("utf-8")
-    html.req.headers_out['Content-Disposition'] = 'Attachment; filename=%s' % filename
+    html.req.headers_out['Content-Disposition'] = 'Attachment; filename="%s"' % filename
 
 #.
 #   .--Icon Selector-------------------------------------------------------.

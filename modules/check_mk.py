@@ -67,6 +67,7 @@ import cmk_base.default_config as default_config
 import cmk_base.item_state as item_state
 import cmk_base.piggyback as piggyback
 import cmk_base.core_config as core_config
+from cmk_base.exceptions import MKAgentError
 
 # TODO: Clean up all calls and remove these aliases
 tags_of_host    = config.tags_of_host

@@ -28,12 +28,8 @@
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
 factory_settings['msexch_rpcclientaccess_defaultlevels'] = {
-    'latency': {
-        'upper': (200.0, 250.0)
-    },
-    'requests': {
-        'upper': (30, 40)
-    }
+    'latency': (200.0, 250.0),
+    'requests': (30, 40),
 }
 
 

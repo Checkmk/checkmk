@@ -5415,7 +5415,7 @@ register_check_parameters(
         ],
         optional_keys=[]
     ),
-    None,
+    FixedValue("", title=""),
     match_type = 'dict'
 )
 

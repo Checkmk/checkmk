@@ -11,8 +11,8 @@ def fake_version(monkeypatch):
 
 # TODO: Test the negations
 def test_service_extra_conf():
+    # TODO: monkeypatch this!
     import cmk_base.config as config
-
     config.all_hosts = ["host1|tag1|tag2", "host2|tag1"]
     config.collect_hosttags()
     ruleset = [
@@ -47,8 +47,70 @@ def test_service_extra_conf():
 # TODO: host_extra_conf
 # TODO: _convert_host_ruleset
 # TODO: host_extra_conf_merged
-# TODO: all_matching_hosts
-# TODO: in_extraconf_hostlist
+
+
+def test_all_matching_hosts():
+    # TODO: monkeypatch this!
+    import cmk_base.config as config
+    config.distributed_wato_site = "site1"
+    config.all_hosts = ["host1|tag1|tag2", "host2|tag1", "host3|tag1|site:site2"]
+    config.collect_hosttags()
+
+    assert rulesets.all_matching_hosts(["tag1"], rulesets.ALL_HOSTS, with_foreign_hosts=False) == \
+            set(["host1", "host2"])
+
+    assert rulesets.all_matching_hosts(["tag2"], rulesets.ALL_HOSTS, with_foreign_hosts=False) == \
+            set(["host1"])
+
+    assert rulesets.all_matching_hosts(["!tag2"], rulesets.ALL_HOSTS, with_foreign_hosts=False) == \
+            set(["host2"])
+
+    assert rulesets.all_matching_hosts(["!tag2"], rulesets.ALL_HOSTS, with_foreign_hosts=True) == \
+            set(["host2", "host3"])
+
+    assert rulesets.all_matching_hosts(["tag1"], [], with_foreign_hosts=True) == \
+            set([])
+
+    assert rulesets.all_matching_hosts(["tag1"], ["host1"], with_foreign_hosts=True) == \
+            set(["host1"])
+
+    assert rulesets.all_matching_hosts(["!tag1"], ["host1"], with_foreign_hosts=False) == \
+            set([])
+
+    assert rulesets.all_matching_hosts(["tag1"], ["~h"], with_foreign_hosts=False) == \
+            set(["host1", "host2"])
+
+    assert rulesets.all_matching_hosts(["tag1"], ["~.*2"], with_foreign_hosts=False) == \
+            set(["host2"])
+
+    assert rulesets.all_matching_hosts(["tag1"], ["~.*2$"], with_foreign_hosts=False) == \
+            set(["host2"])
+
+    assert rulesets.all_matching_hosts(["tag1"], ["~2"], with_foreign_hosts=False) == \
+            set([])
+
+
+def test_in_extraconf_hostlist():
+    assert rulesets.in_extraconf_hostlist(rulesets.ALL_HOSTS, "host1") == True
+    assert rulesets.in_extraconf_hostlist([], "host1") == False
+
+    assert rulesets.in_extraconf_hostlist(["host2", "host1"], "host1") == True
+    assert rulesets.in_extraconf_hostlist(["host1", "host2"], "host1") == True
+
+    assert rulesets.in_extraconf_hostlist(["host1"], "host1") == True
+    assert rulesets.in_extraconf_hostlist(["!host1", "host1", "!host1"], "host1") == False
+    assert rulesets.in_extraconf_hostlist(["!host1"], "host1") == False
+    assert rulesets.in_extraconf_hostlist(["!host2"], "host1") == False
+    assert rulesets.in_extraconf_hostlist(["host1", "!host2"], "host1") == True
+    assert rulesets.in_extraconf_hostlist(["!host2", "host1"], "host1") == True
+    assert rulesets.in_extraconf_hostlist(["~h"], "host1") == True
+    assert rulesets.in_extraconf_hostlist(["~h"], "host1") == True
+    assert rulesets.in_extraconf_hostlist(["~h$"], "host1") == False
+    assert rulesets.in_extraconf_hostlist(["~1"], "host1") == False
+    assert rulesets.in_extraconf_hostlist(["~.*1"], "host1") == True
+    assert rulesets.in_extraconf_hostlist(["~.*1$"], "host1") == True
+
+
 # TODO: in_binary_hostlist
 
 

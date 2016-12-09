@@ -267,7 +267,7 @@ def all_matching_hosts(tags, hostlist, with_foreign_hosts):
     if not tags and only_specific_hosts:
         matching = valid_hosts.intersection(hostlist)
     # If no tags are specified and the hostlist only include @all (all hosts)
-    elif not tags and hostlist == [ "@all" ]:
+    elif not tags and hostlist == ALL_HOSTS:
         matching = valid_hosts
     else:
         # If the rule has only exact host restrictions, we can thin out the list of hosts to check

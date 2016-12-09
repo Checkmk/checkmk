@@ -71,6 +71,8 @@ import cmk_base.item_state as item_state
 import cmk_base.checks as checks
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
+from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
+    MKSNMPError, MKSkipCheck, MKTimeout
 
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
@@ -130,43 +132,6 @@ opt_oids                     = []
 opt_extra_oids               = []
 opt_force                    = False
 opt_fake_dns                 = False
-
-
-class MKAgentError(Exception):
-    def __init__(self, reason):
-        self.reason = reason
-        super(MKAgentError, self).__init__(reason)
-    def __str__(self):
-        return self.reason
-
-class MKParseFunctionError(Exception):
-    def __init__(self, exception_type, exception, backtrace):
-        self.exception_type = exception_type
-        self.exception = exception
-        self.backtrace = backtrace
-        super(MKParseFunctionError, self).__init__(self, exception_type, exception, backtrace)
-
-    def exc_info(self):
-        return self.exception_type, self.exception, self.backtrace
-
-    def __str__(self):
-        return "%s\n%s" % (self.exception, self.backtrace)
-
-class MKSNMPError(Exception):
-    def __init__(self, reason):
-        self.reason = reason
-        super(MKSNMPError, self).__init__(reason)
-    def __str__(self):
-        return self.reason
-
-class MKSkipCheck(Exception):
-    pass
-
-# This exception is raised when a previously configured timeout is reached.
-# It is used during keepalive mode. It is also used by the automations
-# which have a timeout set.
-class MKTimeout(Exception):
-    pass
 
 
 #.

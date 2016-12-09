@@ -33,6 +33,8 @@ import cmk_base.config as config
 import cmk_base.rulesets as rulesets
 import cmk_base.console as console
 import cmk_base.piggyback as piggyback
+from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
+    MKSNMPError, MKTimeout
 
 #   .--cmk -I--------------------------------------------------------------.
 #   |                                  _           ___                     |

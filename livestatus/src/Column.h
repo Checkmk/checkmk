@@ -26,6 +26,7 @@
 #define Column_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Aggregator.h"
 #include "opids.h"
@@ -67,7 +68,8 @@ public:
     virtual bool mustDelete() const { return false; }
 
     virtual Filter *createFilter(RelationalOperator, const std::string &);
-    virtual Aggregator *createAggregator(StatsOperation operation);
+    virtual std::unique_ptr<Aggregator> createAggregator(
+        StatsOperation operation);
 
     Logger *logger() const { return _logger; }
 

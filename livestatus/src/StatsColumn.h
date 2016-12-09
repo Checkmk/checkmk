@@ -37,7 +37,7 @@ public:
     Column *column() const { return _column; }
     StatsOperation operation() const { return _operation; }
     std::unique_ptr<Filter> stealFilter();
-    Aggregator *createAggregator();
+    std::unique_ptr<Aggregator> createAggregator();
 
 private:
     Column *_column;

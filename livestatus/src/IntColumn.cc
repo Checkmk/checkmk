@@ -27,8 +27,10 @@
 #include "IntFilter.h"
 #include "Renderer.h"
 
+using std::make_unique;
 using std::string;
 using std::to_string;
+using std::unique_ptr;
 
 string IntColumn::valueAsString(void *row, contact *auth_user) {
     return to_string(getValue(row, auth_user));
@@ -42,6 +44,6 @@ Filter *IntColumn::createFilter(RelationalOperator relOp, const string &value) {
     return new IntFilter(this, relOp, value);
 }
 
-Aggregator *IntColumn::createAggregator(StatsOperation operation) {
-    return new IntAggregator(operation, this);
+unique_ptr<Aggregator> IntColumn::createAggregator(StatsOperation operation) {
+    return make_unique<IntAggregator>(operation, this);
 }

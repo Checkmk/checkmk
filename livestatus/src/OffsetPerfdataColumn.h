@@ -38,7 +38,8 @@ public:
         : OffsetStringColumn(name, description, offset, indirect_offset,
                              extra_offset) {}
 
-    Aggregator* createAggregator(StatsOperation operation) override;
+    std::unique_ptr<Aggregator> createAggregator(
+        StatsOperation operation) override;
 };
 
 #endif  // OffsetPerfdataColumn_h

@@ -92,28 +92,21 @@ private:
     unsigned _current_line;
     int _timezone_offset;
     Logger *const _logger;
-
     std::vector<Column *> _columns;
     std::vector<std::unique_ptr<StatsColumn>> _stats_columns;
-    Aggregator **_stats_aggregators;
-
-    typedef std::vector<std::string> _stats_group_spec_t;
-    std::map<_stats_group_spec_t, Aggregator **> _stats_groups;
-
+    std::map<std::vector<std::string>, std::vector<std::unique_ptr<Aggregator>>>
+        _stats_groups;
     std::unordered_set<Column *> _all_columns;
 
     // invalidHeader can be called during header parsing
     void invalidHeader(const std::string &message);
 
-    void addColumn(Column *column);
     void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
     void setResponseHeader(OutputBuffer::ResponseHeader r);
     void setDoKeepalive(bool d);
 
     bool doStats();
     void doWait();
-    Aggregator **getStatsGroup(void *data);
-    Aggregator **createAggregators();
     Filter *createFilter(Column *column, RelationalOperator relOp,
                          const std::string &value);
     void parseFilterLine(char *line, VariadicFilter &filter);
@@ -140,6 +133,8 @@ private:
     void parseLocaltimeLine(char *line);
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
+    const std::vector<std::unique_ptr<Aggregator>> &getAggregatorsFor(
+        const std::vector<std::string> &groupspec);
 };
 
 #endif  // Query_h

@@ -608,18 +608,22 @@ def get_tactical_overview_data(extra_filter_headers):
         extra_filter_headers
 
     event_query = (
+        # "Events" column
         "GET eventconsoleevents\n"
-        "Stats: event_phase != \n"
-    )
-
-    event_problems_query = (
-        "GET eventconsoleevents\n"
-        "Stats: event_phase = ack\n"
         "Stats: event_phase = open\n"
-        "Filter: event_state != 0\n"
+        "Stats: event_phase = ack\n"
+        "StatsOr: 2\n"
+        # "Problems" column
+        "Stats: event_phase = open\n"
+        "Stats: event_phase = ack\n"
+        "StatsOr: 2\n"
+        "Stats: event_state != 0\n"
+        "StatsAnd: 2\n"
+        # "Unhandled" column
+        "Stats: event_phase = open\n"
+        "Stats: event_state != 0\n"
+        "StatsAnd: 2\n"
     )
-    # TODO: We should rather use Stats: event_state != 0\nStatsAnd: 2 here. But that
-    # segfaults the CMC currently ;-)
 
     try:
         hstdata = sites.live().query_summed_stats(host_query)
@@ -633,17 +637,12 @@ def get_tactical_overview_data(extra_filter_headers):
         if notdata is None:
             notdata = [0]
 
-        event_data = tactical_overview_get_event_data(event_query, event_problems_query)
+        event_data = sites.live().query_summed_stats(event_query)
 
     except livestatus.MKLivestatusNotFoundError:
         return None, None, None, None
 
     return hstdata, svcdata, notdata, event_data
-
-
-def tactical_overview_get_event_data(event_query, event_problems_query):
-    return sites.live().query_summed_stats(event_query) + \
-           sites.live().query_summed_stats(event_problems_query)
 
 
 def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):

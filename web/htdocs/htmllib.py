@@ -69,9 +69,15 @@ try:
 except ImportError:
     import json
 
+# Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
+def _default(self, obj):
+    return getattr(obj.__class__, "to_json", _default.default)(obj)
+_default.default = json.JSONEncoder().default # Save unmodified default.
+json.JSONEncoder.default = _default # replacement
+
+
 from cmk.exceptions import MKGeneralException, MKException
 from lib import MKUserError
-
 
 
 # Information about uri
@@ -145,34 +151,57 @@ class Escaper(object):
 #   |                     |_| |_| |_| |_|  |_|_____|                       |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | This is a simple class which wraps a string provided by the caller   |
-#   | to make html.attrencode() know that this string should not be        |
-#   | encoded, html.attrencode() will then return the unmodified value.    |
+#   | This is a simple class which wraps a unicode string provided by      |
+#   | the caller to make html.attrencode() know that this string should    |
+#   | not be escaped.                                                      |
 #   |                                                                      |
-#   | This way we can implement encodings while still allowing HTML code   |
-#   | processing for some special cases. This is useful when one needs     |
-#   | to print out HTML tables in messages or help texts.                  |
+#   | This way we can implement encodings while still allowing HTML code.  |
+#   | This is useful when one needs to print out HTML tables in messages   |
+#   | or help texts.                                                       |
 #   |                                                                      |
-#   | The class now implements all relevant string comparison methods.     |
-#   | The HTMLGenerator render_tag() function returns a HTML object.       |
+#   | The HTML class is implemented as an immutable type.                  |
+#   | Every instance of the class is a unicode string.                     |
+#   | Only utf-8 compatible encodings are supported.                       |
 #   '----------------------------------------------------------------------'
-class HTML(unicode, Escaper):
 
 
-    def __new__(self, value = ''):
+class HTML(object):
+
+
+    def __init__(self, value = u''):
+        super(HTML, self).__init__()
+        self.value = self._ensure_unicode(value)
+
+
+    def __unicode__(self):
+        return self.value
+
+
+    def _ensure_unicode(self, thing, encoding_index=0):
         try:
-            return unicode.__new__(self, value)
-        except UnicodeDecodeError as e:
-            return unicode.__new__(self, value.decode('utf-8'))
+            return unicode(thing)
+        except UnicodeDecodeError:
+            return thing.decode("utf-8")
+
+
+    def __bytebatzen__(self):
+        return self.value.encode("utf-8")
+
+
+    def __str__(self):
+        return self.__bytebatzen__()
 
 
     def __repr__(self):
-        return "HTML(%s)" % repr("%s" % self)
+        return ("HTML(\"%s\")" % self.value).encode("utf-8")
+
+
+    def to_json(self):
+        return self.value
 
 
     def __add__(self, other):
-        return HTML(unicode.__add__(self, other))
-        #TODO: return HTML(unicode.__add__(self, self._escape_text(other)))
+        return HTML(self.value + self._ensure_unicode(other))
 
 
     def __iadd__(self, other):
@@ -180,13 +209,52 @@ class HTML(unicode, Escaper):
 
 
     def __radd__(self, other):
-        return HTML("%s%s" % (other, self))
-        #TODO: return HTML("%s%s" % (self._escape_text(other), self))
+        return HTML(self._ensure_unicode(other) + self.value)
 
 
     def join(self, iterable):
-        return HTML(''.join(iterable))
-        #TODO: return HTML(''.join(map(lambda x: self._escape_text(x), iterable)))
+        return HTML(self.value.join(map(self._ensure_unicode, iterable)))
+
+
+    def __eq__(self, other):
+        return self.value == self._ensure_unicode(other)
+
+
+    def __ne__(self, other):
+        return self.value != self._ensure_unicode(other)
+
+
+    def __len__(self):
+        return len(self.value)
+
+
+    def __getitem__(self, index):
+        return HTML(self.value[index])
+
+
+    def __contains__(self, item):
+        return self._ensure_unicode(item) in self.value
+
+
+    def count(self, item):
+        return self.value.count(self._ensure_unicode(item))
+
+
+    def index(self, item):
+        return self.value.index(self._ensure_unicode(item))
+
+
+    def lstrip(self, stripstr):
+        return HTML(self.value.lstrip(self._ensure_unicode(stripstr)))
+
+
+    def rstrip(self, stripstr):
+        return HTML(self.value.rstrip(self._ensure_unicode(stripstr)))
+
+
+    def strip(self, stripstr):
+        return HTML(self.value.strip(self._ensure_unicode(stripstr)))
+
 
 
 __builtin__.HTML = HTML

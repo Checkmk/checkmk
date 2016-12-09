@@ -48,7 +48,7 @@ def timeit(method):
 
 
 def prettify(html_text):
-    txt = bs(html_text, 'html5lib').prettify()
+    txt = bs("%s" % html_text, 'html5lib').prettify()
     return re.sub('\n{2,}', '\n', re.sub('>', '>\n', txt))
 
 
@@ -126,6 +126,9 @@ def compare_soup(html1, html2):
 
 
 def compare_html(html1, html2):
+    html1 = "%s" % html1
+    html2 = "%s" % html2
+
     # compare tags
     opening_1 = re.findall(r'<[^<]*>', html1)
     opening_2 = re.findall(r'<[^<]*>', html2)

@@ -112,7 +112,7 @@ def check_netscaler_vserver(item, params, info):
                     health_state = 1
 
                 if health_state > 0:
-                    infotext += " (warn/crit at %s/%s)" % \
+                    infotext += " (warn/crit below %s/%s)" % \
                                 (get_percent_human_readable(warn),
                                  get_percent_human_readable(crit))
 

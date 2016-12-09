@@ -1,0 +1,10 @@
+Title: msexch_rpcclientaccess: Previously nonfunctional WATO rule and default parameters now work
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.8p15
+Date: 1481273934
+Class: fix
+
+Should you previously have configured rules, these parameters were not passed to the check.
+All previously configured rules will still not work, you will have to create new rules.

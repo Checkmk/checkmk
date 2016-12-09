@@ -29,7 +29,9 @@
 #include "TimeFilter.h"
 
 using std::chrono::system_clock;
+using std::make_unique;
 using std::string;
+using std::unique_ptr;
 
 void TimeColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     r.output(system_clock::from_time_t(getValue(row, auth_user)));
@@ -40,6 +42,6 @@ Filter *TimeColumn::createFilter(RelationalOperator relOp,
     return new TimeFilter(this, relOp, value);
 }
 
-Aggregator *TimeColumn::createAggregator(StatsOperation operation) {
-    return new IntAggregator(operation, this);
+unique_ptr<Aggregator> TimeColumn::createAggregator(StatsOperation operation) {
+    return make_unique<IntAggregator>(operation, this);
 }

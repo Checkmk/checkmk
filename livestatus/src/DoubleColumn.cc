@@ -28,7 +28,9 @@
 #include "DoubleFilter.h"
 #include "Renderer.h"
 
+using std::make_unique;
 using std::string;
+using std::unique_ptr;
 
 void DoubleColumn::output(void *row, RowRenderer &r,
                           contact * /* auth_user */) {
@@ -46,6 +48,7 @@ Filter *DoubleColumn::createFilter(RelationalOperator relOp,
     return new DoubleFilter(this, relOp, value);
 }
 
-Aggregator *DoubleColumn::createAggregator(StatsOperation operation) {
-    return new DoubleAggregator(operation, this);
+unique_ptr<Aggregator> DoubleColumn::createAggregator(
+    StatsOperation operation) {
+    return make_unique<DoubleAggregator>(operation, this);
 }

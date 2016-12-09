@@ -26,6 +26,7 @@
 #define TimeColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Aggregator.h"
 #include "Column.h"
@@ -53,7 +54,8 @@ public:
 
     Filter *createFilter(RelationalOperator relOp,
                          const std::string &value) override;
-    Aggregator *createAggregator(StatsOperation operation) override;
+    std::unique_ptr<Aggregator> createAggregator(
+        StatsOperation operation) override;
 };
 
 #endif  // TimeColumn_h

@@ -28,6 +28,7 @@
 #include "CountAggregator.h"
 #include "Filter.h"
 
+using std::make_unique;
 using std::unique_ptr;
 
 StatsColumn::StatsColumn(Column *c, unique_ptr<Filter> f, StatsOperation o)
@@ -35,13 +36,13 @@ StatsColumn::StatsColumn(Column *c, unique_ptr<Filter> f, StatsOperation o)
 
 unique_ptr<Filter> StatsColumn::stealFilter() { return move(_filter); }
 
-Aggregator *StatsColumn::createAggregator() {
+unique_ptr<Aggregator> StatsColumn::createAggregator() {
     if (_operation == StatsOperation::count) {
-        return new CountAggregator(_filter.get());
+        return make_unique<CountAggregator>(_filter.get());
     }
-    if (Aggregator *aggregator = _column->createAggregator(_operation)) {
-        return aggregator;
+    if (unique_ptr<Aggregator> aggr = _column->createAggregator(_operation)) {
+        return aggr;
     }
     // unaggregateble column
-    return new CountAggregator(_filter.get());
+    return make_unique<CountAggregator>(_filter.get());
 }

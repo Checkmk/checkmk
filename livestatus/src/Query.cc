@@ -48,6 +48,7 @@ extern unsigned long g_max_response_size;
 
 using std::list;
 using std::make_unique;
+using std::map;
 using std::runtime_error;
 using std::string;
 using std::to_string;
@@ -189,7 +190,8 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding)
     }
 
     if (_columns.empty() && !doStats()) {
-        table->any_column([this](Column *c) { return addColumn(c), false; });
+        table->any_column(
+            [this](Column *c) { return _columns.push_back(c), false; });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
         // here, is that really what we want?
         _show_column_headers = true;
@@ -217,8 +219,6 @@ Query::~Query() {
         }
     }
 }
-
-void Query::addColumn(Column *column) { _columns.push_back(column); }
 
 void Query::setResponseHeader(OutputBuffer::ResponseHeader r) {
     _response_header = r;
@@ -523,11 +523,11 @@ void Query::parseSeparatorsLine(char *line) {
 }
 
 namespace {
-std::map<string, OutputFormat> formats{{"CSV", OutputFormat::csv},
-                                       {"csv", OutputFormat::broken_csv},
-                                       {"json", OutputFormat::json},
-                                       {"python", OutputFormat::python},
-                                       {"python3", OutputFormat::python3}};
+map<string, OutputFormat> formats{{"CSV", OutputFormat::csv},
+                                  {"csv", OutputFormat::broken_csv},
+                                  {"json", OutputFormat::json},
+                                  {"python", OutputFormat::python},
+                                  {"python3", OutputFormat::python3}};
 }  // namespace
 
 void Query::parseOutputFormatLine(char *line) {
@@ -720,13 +720,9 @@ void Query::process(OutputBuffer *output) {
 }
 
 void Query::start(QueryRenderer &q) {
-    // if we have no StatsGroupBy: column, we allocate one only row of
-    // Aggregators, directly in _stats_aggregators. When grouping the rows of
-    // aggregators will be created each time a new group is found.
-    if (doStats() && _columns.empty()) {
-        _stats_aggregators = createAggregators();
+    if (_columns.empty()) {
+        getAggregatorsFor({});
     }
-
     if (_show_column_headers) {
         RowRenderer r(q);
         for (const auto &column : _columns) {
@@ -776,17 +772,13 @@ bool Query::processDataset(void *data) {
         }
 
         if (doStats()) {
-            // When doing grouped stats, we need to fetch/create a row of
-            // aggregators for the current group
-            Aggregator **aggr =
-                _columns.empty() ? _stats_aggregators : getStatsGroup(data);
-
-            for (unsigned i = 0; i < _stats_columns.size(); i++) {
-                aggr[i]->consume(data, _auth_user, _timezone_offset);
+            vector<string> groupspec;
+            for (auto column : _columns) {
+                groupspec.push_back(column->valueAsString(data, _auth_user));
             }
-
-            // No output is done while processing the data, we only collect
-            // stats.
+            for (const auto &aggr : getAggregatorsFor(groupspec)) {
+                aggr->consume(data, _auth_user, _timezone_offset);
+            }
         } else {
             RowRenderer r(*_renderer_query);
             for (auto column : _columns) {
@@ -798,35 +790,16 @@ bool Query::processDataset(void *data) {
 }
 
 void Query::finish(QueryRenderer &q) {
-    // grouped stats
-    if (doStats() && !_columns.empty()) {
-        // output values of all stats groups (output has been post poned until
-        // now)
-        for (auto &stats_group : _stats_groups) {
+    if (doStats()) {
+        for (const auto &group : _stats_groups) {
             RowRenderer r(q);
-            // output group columns first
-            _stats_group_spec_t groupspec = stats_group.first;
-            for (auto &iit : groupspec) {
-                r.output(iit);
+            for (const auto &value : group.first) {
+                r.output(value);
             }
-
-            Aggregator **aggr = stats_group.second;
-            for (unsigned i = 0; i < _stats_columns.size(); i++) {
-                aggr[i]->output(r);
-                delete aggr[i];  // not needed any more
+            for (const auto &aggr : group.second) {
+                aggr->output(r);
             }
-            delete[] aggr;
         }
-    }
-
-    // stats without group column
-    else if (doStats()) {
-        RowRenderer r(q);
-        for (unsigned i = 0; i < _stats_columns.size(); i++) {
-            _stats_aggregators[i]->output(r);
-            delete _stats_aggregators[i];
-        }
-        delete[] _stats_aggregators;
     }
 }
 
@@ -842,25 +815,17 @@ void Query::optimizeBitmask(const string &column_name, uint32_t *bitmask) {
     _filter.optimizeBitmask(column_name, bitmask, _timezone_offset);
 }
 
-Aggregator **Query::getStatsGroup(void *data) {
-    _stats_group_spec_t groupspec;
-    for (auto column : _columns) {
-        groupspec.push_back(column->valueAsString(data, _auth_user));
-    }
-
+const vector<unique_ptr<Aggregator>> &Query::getAggregatorsFor(
+    const vector<string> &groupspec) {
     auto it = _stats_groups.find(groupspec);
     if (it == _stats_groups.end()) {
-        it = _stats_groups.emplace(groupspec, createAggregators()).first;
+        vector<unique_ptr<Aggregator>> aggrs;
+        for (const auto &sc : _stats_columns) {
+            aggrs.push_back(sc->createAggregator());
+        }
+        it = _stats_groups.emplace(groupspec, move(aggrs)).first;
     }
     return it->second;
-}
-
-Aggregator **Query::createAggregators() {
-    auto aggr = new Aggregator *[_stats_columns.size()];
-    for (size_t i = 0; i < _stats_columns.size(); i++) {
-        aggr[i] = _stats_columns[i]->createAggregator();
-    }
-    return aggr;
 }
 
 void Query::doWait() {

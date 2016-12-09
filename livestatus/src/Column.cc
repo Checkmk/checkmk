@@ -29,6 +29,7 @@
 
 using std::runtime_error;
 using std::string;
+using std::unique_ptr;
 
 Column::Column(string name, string description, int indirect_offset,
                int extra_offset, int extra_extra_offset)
@@ -72,6 +73,6 @@ Filter *Column::createFilter(RelationalOperator /*unused*/,
     throw runtime_error("filtering on column " + _name + " not supported");
 }
 
-Aggregator *Column::createAggregator(StatsOperation /*unused*/) {
+unique_ptr<Aggregator> Column::createAggregator(StatsOperation /*unused*/) {
     return nullptr;
 }

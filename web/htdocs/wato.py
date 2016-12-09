@@ -1511,7 +1511,7 @@ def mode_bulk_rename_host(phase):
             return None, warning
 
 
-        message = _("<b>Do you really want to rename to following hosts?</b>")
+        message = _("<b>Do you really want to rename to following hosts? This involves a restart of the monitoring core!</b>")
         message += "<table>"
         for folder, host_name, target_name in renamings:
             message += u"<tr><td>%s</td><td> → %s</td></tr>" % (host_name, target_name)

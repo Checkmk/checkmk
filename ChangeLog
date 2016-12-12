@@ -51,6 +51,7 @@
     * 4112 FIX: db2_logsizes: fixed invalid data handling
     * 4100 FIX: mk_mysql: Only perform queries if mysqladmin ping is successful#...
     * 4113 FIX: postgres_locks: fixed missing include file
+    * 4114 FIX: innovaphone_licenses: fixed wrong percentage calculation
 
     Multisite:
     * 4070 Added a painter for the service check period

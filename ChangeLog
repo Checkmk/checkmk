@@ -27,6 +27,7 @@
     * 4102 FIX: logwatch: Fixed crash due to non-existant logfile...
     * 4160 FIX: emcvnx_info: fixed data handling, now detects errors
     * 4161 FIX: emcvnx_sp_util: fixed empty data handling
+    * 4162 FIX: esx_vsphere_vm.heartbeat: fixed KeyError
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

@@ -38,6 +38,10 @@ def inventory_citrix_sessions(info):
     return [ ( None, "citrix_sessions_default_levels" )]
 
 def check_citrix_sessions(_no_item, params, info):
+
+    if map(len, info) == [1, 1, 1]:
+        return 3, "Could not collect session information. Please check the agent configuration."
+
     session = {}
     session['total'], session['active'], session['inactive'] = \
     map(int, (info[0][1], info[1][1], info[2][1]))

@@ -48,6 +48,7 @@
     * 4099 FIX: msexch_rpcclientaccess: Previously nonfunctional WATO rule and default parameters now work...
             NOTE: Please refer to the migration notes!
     * 4000 FIX: Windows Agent: fixed broken mrpe section...
+    * 4112 FIX: db2_logsizes: fixed invalid data handling
 
     Multisite:
     * 4070 Added a painter for the service check period

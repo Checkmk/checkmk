@@ -42,22 +42,25 @@ function do_query() {
   echo $INSTANCE_NAME
   mysqladmin --defaults-extra-file=$MK_CONFDIR/mysql.cfg $1 ping 2>&1
 
+  if [ $? -eq 0 ]; then
 
-  echo "<<<mysql>>>"
-  echo $INSTANCE_NAME
-  mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg $1 -sN \
+    echo "<<<mysql>>>"
+    echo $INSTANCE_NAME
+    mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg $1 -sN \
      -e "show global status ; show global variables ;"
 
-  echo "<<<mysql_capacity>>>"
-  echo $INSTANCE_NAME
-  mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg $1 -sN \
+    echo "<<<mysql_capacity>>>"
+    echo $INSTANCE_NAME
+    mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg $1 -sN \
       -e "SELECT table_schema, sum(data_length + index_length), sum(data_free)
          FROM information_schema.TABLES GROUP BY table_schema"
 
-  echo "<<<mysql_slave>>>"
-  echo $INSTANCE_NAME
-  mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg $1 -s \
+    echo "<<<mysql_slave>>>"
+    echo $INSTANCE_NAME
+    mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg $1 -s \
      -e "show slave status\G"
+
+  fi
 
 }
 

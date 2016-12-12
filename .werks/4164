@@ -1,0 +1,10 @@
+Title: livestatus_status: fixed ValueError for values in scientific notation
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1481555731
+
+

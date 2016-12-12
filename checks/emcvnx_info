@@ -66,17 +66,17 @@
 
 
 def inventory_emcvnx_info(info):
-    return [ (None, None) ]
+    if info:
+        return [ (None, None) ]
 
 
 def check_emcvnx_info(item, _no_params, info):
-    message = ""
     for line in info:
-        if len(line) > 1 and line[0] in ("Revision:", "Model:", "Serial"):
-            if message != "":
-                message += ", "
-            message += " ".join(line)
-    return 0, message
+        if len(line) > 1:
+            state = 0
+            if line[0] == "Error":
+                state = 2
+            yield state, " ".join(line)
 
 
 check_info['emcvnx_info'] = {

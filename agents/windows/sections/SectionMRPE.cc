@@ -121,7 +121,7 @@ bool SectionMRPE::produceOutputInner(std::ostream &out,
                        _included_entries.end());
 
     for (mrpe_entry *entry : all_entries) {
-        out << "(" << entry->plugin_name << ") " << entry->service_description;
+        out << "(" << entry->plugin_name << ") " << entry->service_description << " ";
         crash_log("%s (%s) %s ", entry->run_as_user, entry->plugin_name,
                   entry->service_description);
 

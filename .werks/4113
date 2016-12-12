@@ -1,0 +1,9 @@
+Title: postgres_locks: fixed missing include file
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1481537587
+Class: fix
+
+

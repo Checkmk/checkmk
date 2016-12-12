@@ -16,6 +16,7 @@
             NOTE: Please refer to the migration notes!
     * 4112 FIX: db2_logsizes: fixed invalid data handling
     * 4100 FIX: mk_mysql: Only perform queries if mysqladmin ping is successful#...
+    * 4113 FIX: postgres_locks: fixed missing include file
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

@@ -288,6 +288,9 @@ def inventory_esx_vsphere_vm_hb_status(info):
 def check_esx_vsphere_vm_hb_status(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)
 
+    if data.get('guestHeartbeatStatus') is None:
+        return
+
     vm_status = data['guestHeartbeatStatus'][0]
     state = 3
 

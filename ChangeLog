@@ -11,6 +11,7 @@
     * 4081 FIX: dell_powerconnect_cpu: Fixed broken metrics
     * 4099 FIX: msexch_rpcclientaccess: Previously nonfunctional WATO rule and default parameters now work...
             NOTE: Please refer to the migration notes!
+    * 4112 FIX: db2_logsizes: fixed invalid data handling
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

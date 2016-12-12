@@ -60,6 +60,7 @@
     * 4101 FIX: citrix_sessions: Output error message in case of missing session information....
     * 4159 FIX: mem.win: fixed KeyError
     * 4102 FIX: logwatch: Fixed crash due to non-existant logfile...
+    * 4160 FIX: emcvnx_info: fixed data handling, now detects errors
 
     Multisite:
     * 4070 Added a painter for the service check period

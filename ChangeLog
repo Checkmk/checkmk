@@ -15,6 +15,7 @@
     * 4100 FIX: mk_mysql: Only perform queries if mysqladmin ping is successful#...
     * 4113 FIX: postgres_locks: fixed missing include file
     * 4114 FIX: innovaphone_licenses: fixed wrong percentage calculation
+    * 4115 FIX: mem.linux: fixed missing stack bug in PNP template
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

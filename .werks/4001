@@ -1,4 +1,4 @@
-Title: Windows Agent: windows agent couldn't handle surrounding quotes at command specification
+Title: Windows Agent: windows agent couldn't handle surrounding quotes and spaces at command specification
 Level: 1
 Component: checks
 Compatible: compat

@@ -21,6 +21,7 @@
     * 4158 FIX: fileinfo: fixed file handling containing spaces
     * 4101 FIX: citrix_sessions: Output error message in case of missing session information....
     * 4159 FIX: mem.win: fixed KeyError
+    * 4102 FIX: logwatch: Fixed crash due to non-existant logfile...
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

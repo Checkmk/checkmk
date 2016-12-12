@@ -2315,21 +2315,29 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         known_settings = PARAMETERS_UNKNOWN
 
     def rule_url(rule):
-        rule_folder, rule_nr = rule
         return folder_preserving_link([
-            ('mode', 'edit_rule'),
-            ('varname', varname),
-            ('rule_folder', rule_folder.path()),
-            ('rulenr', rule_nr),
-            ('host', hostname),
-            ('item', service and mk_repr(service) or '')])
-
+            ('mode',        'edit_rule'),
+            ('varname',     varname),
+            ('rule_folder', rule.folder().path()),
+            ('rulenr',      rule.index()),
+            ('host',        hostname),
+            ('item',        service and mk_repr(service) or ''),
+        ])
 
     varname = rulespec["varname"]
     valuespec = rulespec["valuespec"]
-    url = folder_preserving_link([('mode', 'edit_ruleset'), ('varname', varname), ('host', hostname), ('item', mk_repr(service))])
+
+    url = folder_preserving_link([
+        ('mode', 'edit_ruleset'),
+        ('varname', varname),
+        ('host', hostname),
+        ('item', mk_repr(service))
+    ])
+
     forms.section('<a href="%s">%s</a>' % (url, rulespec["title"]))
-    setting, rules = analyse_ruleset(rulespec, all_rulesets[varname], hostname, service)
+
+    setting, rules = all_rulesets[varname].analyse_ruleset(hostname, service)
+
     html.open_table(class_="setting")
     html.open_tr()
     html.open_td(class_="reason")
@@ -2339,8 +2347,10 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         rule_folder, rule_nr = rules[0]
         url = rule_url(rules[0])
         html.a(_("Rule %d in %s") % (rule_nr + 1, rule_folder.title()), href=rule_url(rules[0]))
+
     elif len(rules) > 1:
         html.a("%d %s" % (len(rules), _("Rules")), href=url)
+
     else:
         html.i(_("Default Value"))
     html.close_td()
@@ -2371,7 +2381,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         # For match type "dict" it can be the case the rule define some of the keys
         # while other keys are taken from the factory defaults. We need to show the
         # complete outcoming value here.
-        if rules and rulespec["match"] == "dict":
+        if rules and rules.match_type() == "dict":
             if rulespec["factory_default"] is not NO_FACTORY_DEFAULT \
                 and rulespec["factory_default"] is not FACTORY_DEFAULT_UNUSED:
                 fd = rulespec["factory_default"].copy()
@@ -2389,7 +2399,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
                 html.write(valuespec.value_to_text(setting))
 
             # Rulesets that build lists are empty if no rule matches
-            elif rulespec["match"] in ("all", "list"):
+            elif rules.match_type() in ("all", "list"):
                 html.write_text(_("(no entry)"))
 
             # Else we use the default value of the valuespec
@@ -2398,7 +2408,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
 
         # We have a setting
         elif valuespec:
-            if rulespec["match"] in ( "all", "list" ):
+            if rules.match_type() in ( "all", "list" ):
                 html.write(", ".join([valuespec.value_to_text(e) for e in setting]))
             else:
                 html.write(valuespec.value_to_text(setting))
@@ -12788,20 +12798,27 @@ def mode_edit_rule(phase, new = False):
     ruleset  = rulesets.get(varname)
 
     if new:
-        host = None
-        item = NO_ITEM
+        host_list = ALL_HOSTS
+        item_list = [ "" ]
+
         if html.has_var("_new_host_rule"):
-            host = html.var("host")
+            hostname = html.var("host")
+            if hostname:
+                host_list = [hostname]
+
             item = html.has_var("item") and mk_eval(html.var("item")) or NO_ITEM
-        try:
             if item != NO_ITEM:
-                item = escape_regex_chars(item)
-            # TODO: Refactor this!
-            rule = create_rule(rulespec, host, item)
+                item_list = [ "%s$" % escape_regex_chars(item) ]
+            else:
+                item_list = [ "" ]
+
+        try:
+            rule = Rule.create(folder, ruleset, host_list, item_list)
         except Exception, e:
             if phase != "action":
                 html.message(_("Cannot create rule: %s") % e)
             return
+
         rulenr = rules.num_rules()
     else:
         try:
@@ -13973,7 +13990,7 @@ def create_sample_config():
     save_hosttags(wato_host_tags, wato_aux_tags)
 
     # Rules that match the upper host tag definition
-    rulesets = {
+    ruleset_config = {
         # Make the tag 'offline' remove hosts from the monitoring
         'only_hosts': [
             (['!offline'], ['@all'],
@@ -14002,7 +14019,9 @@ def create_sample_config():
         ],
     }
 
-    save_rulesets(Folder.root_folder(), rulesets)
+    rulesets = FolderRulesets(Folder.root_folder())
+    rulesets.from_config(rulesets)
+    rulesets.save()
 
     notification_rules = [{
         'allow_disable'          : True,

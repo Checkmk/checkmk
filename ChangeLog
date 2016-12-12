@@ -49,6 +49,7 @@
             NOTE: Please refer to the migration notes!
     * 4000 FIX: Windows Agent: fixed broken mrpe section...
     * 4112 FIX: db2_logsizes: fixed invalid data handling
+    * 4100 FIX: mk_mysql: Only perform queries if mysqladmin ping is successful#...
 
     Multisite:
     * 4070 Added a painter for the service check period

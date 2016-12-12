@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 # <<<netapp_api_cluster:sep(9)>>>
 # current-time    1443882397
 # current-mode    non_ha
@@ -34,10 +35,14 @@
 # local-in-headswap       false
 # new-partner-sysid       0
 
+
 def inventory_netapp_api_cluster(info):
     data = dict([line for line in info if len(line) == 2])
-    if data.get("current-mode", "").lower() != "non_ha": # non_ha is standalone
+    # non_ha is standalone
+    if data.get("current-mode", "").lower() != "non_ha" and \
+       data.get("partner") is not None:
         return [ (data.get("partner"), {"state": data.get("state", "").lower()}) ]
+
 
 # Cluster states according to docu:
 # connected - Partner is available for takeover
@@ -57,6 +62,7 @@ def inventory_netapp_api_cluster(info):
 # pending_shutdown - starting a takeover/sendhome is inhibited due to a pending system shutdown. i
 # error - There is an error with the system
 # User have to compare the return values case-insensitively.
+
 
 def check_netapp_api_cluster(item, params, info):
     data = dict([line for line in info if len(line) == 2])
@@ -91,9 +97,9 @@ def check_netapp_api_cluster(item, params, info):
     if not had_errors:
         yield 0, "Cluster Status OK"
 
+
 check_info["netapp_api_cluster"] = {
     'check_function'      : check_netapp_api_cluster,
     'inventory_function'  : inventory_netapp_api_cluster,
     'service_description' : 'Cluster with %s',
 }
-

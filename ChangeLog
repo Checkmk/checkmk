@@ -19,6 +19,7 @@
     * 4113 FIX: postgres_locks: fixed missing include file
     * 4114 FIX: innovaphone_licenses: fixed wrong percentage calculation
     * 4115 FIX: mem.linux: fixed missing stack bug in PNP template
+    * 4157 FIX: netapp_api_cluster: fixed None item
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

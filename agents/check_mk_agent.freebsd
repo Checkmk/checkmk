@@ -350,7 +350,7 @@ fi
 
 # Statgrab
 # To install: pkg install libstatgrab
-if type statgrab 2>&1 >/dev/null ; then
+if type statgrab >/dev/null 2>&1 ; then
 
     statgrab_vars="const. disk. general. page. proc. user."
     statgrab_vars_mem="mem. swap."

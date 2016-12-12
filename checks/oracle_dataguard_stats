@@ -35,7 +35,9 @@
 def inventory_oracle_dataguard_stats(info):
     inventory = []
     for line in info:
-            inventory.append(("%s.%s" % (line[0], line[1]), {}))
+        if len(line) == 1:
+            continue
+        inventory.append(("%s.%s" % (line[0], line[1]), {}))
     return inventory
 
 def check_oracle_dataguard_stats(item, params, info):

@@ -938,7 +938,6 @@ class Filter:
     # Is used to populate a value, for example loaded from persistance, into
     # the HTML context where it can be used by e.g. the display() method.
     def set_value(self, value):
-        val = {}
         for varname in self.htmlvars:
             html.set_var(varname, value.get(varname))
 

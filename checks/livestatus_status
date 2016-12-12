@@ -84,30 +84,30 @@ def check_livestatus_status(item, params, parsed):
     # Check Performance counters
     this_time = time.time()
     status_counters = [
-        # conv_func, factor, calc_rate, column, format, title
-        (int, 1, True, "%.1f/s", "host_checks",    "Host Checks",         ),
-        (int, 1, True, "%.1f/s", "service_checks", "Service Checks",      ),
-        (int, 1, True, "%.1f/s", "forks",          "Process Creations",   ),
-        (int, 1, True, "%.1f/s", "connections",    "Livestatus Connects", ),
-        (int, 1, True, "%.1f/s", "requests",       "Livestatus Requests", ),
-        (int, 1, True, "%.1f/s", "log_messages",   "Log Messages",        ),
+        # factor, calc_rate, column, format, title
+        (1, True, "%.1f/s", "host_checks",    "Host Checks",         ),
+        (1, True, "%.1f/s", "service_checks", "Service Checks",      ),
+        (1, True, "%.1f/s", "forks",          "Process Creations",   ),
+        (1, True, "%.1f/s", "connections",    "Livestatus Connects", ),
+        (1, True, "%.1f/s", "requests",       "Livestatus Requests", ),
+        (1, True, "%.1f/s", "log_messages",   "Log Messages",        ),
     ]
 
     if status["program_version"].startswith("Check_MK"):
         # We have a CMC here.
 
         status_counters += [
-            # conv_func, factor, calc_rate, format, column, title
-            (float, 1,   False, "%.3fs",  "average_latency_generic",   "Average check latency"),
-            (float, 1,   False, "%.3fs",  "average_latency_cmk",       "Average Check_MK latency"),
-            (float, 100, False, "%.1f%%", "helper_usage_generic",      "Check helper usage"),
-            (float, 100, False, "%.1f%%", "helper_usage_cmk",          "Check_MK helper usage"),
-            (float, 100, False, "%.1f%%", "livestatus_usage",          "Livestatus usage"),
-            (float, 1,   False, "%.1f/s", "livestatus_overflows_rate", "Livestatus overflow rate"),
+            # factor, calc_rate, format, column, title
+            (1,   False, "%.3fs",  "average_latency_generic",   "Average check latency"),
+            (1,   False, "%.3fs",  "average_latency_cmk",       "Average Check_MK latency"),
+            (100, False, "%.1f%%", "helper_usage_generic",      "Check helper usage"),
+            (100, False, "%.1f%%", "helper_usage_cmk",          "Check_MK helper usage"),
+            (100, False, "%.1f%%", "livestatus_usage",          "Livestatus usage"),
+            (1,   False, "%.1f/s", "livestatus_overflows_rate", "Livestatus overflow rate"),
         ]
 
-    for conv_func, factor, calc_rate, fmt, counter, title in status_counters:
-        value = factor * conv_func(status[counter])
+    for factor, calc_rate, fmt, counter, title in status_counters:
+        value = factor * float(status[counter])
 
         if calc_rate:
             value = get_rate("livestatus_status.%s.%s" % (item, counter), this_time, value)

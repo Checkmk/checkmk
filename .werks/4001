@@ -1,0 +1,10 @@
+Title: Windows Agent: windows agent couldn't handle surrounding quotes at command specification
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481541522
+Class: fix
+
+Usually the mrpe command should be specified without quotes.
+

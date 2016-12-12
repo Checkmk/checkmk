@@ -1,0 +1,10 @@
+Title: apt: Fixed crash on unexpected output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481573187
+Class: fix
+
+Fixed crash if line does not start with "Inst".
+

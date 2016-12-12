@@ -1,0 +1,10 @@
+Title: kaspersky_av_client: No longer crash when date of last full scan is unknown
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1481560244
+
+If no last full scan date is provided by the agent, this is treated as unknown.

@@ -1,0 +1,13 @@
+Title: mk_mysql: Only perform queries if mysqladmin ping is successful#
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1481536079
+Class: fix
+
+Previously, a dead MySQL daemon would lead to the mk_mysql plugin causing
+high server load. This has been fixed by performing the more detailed queries
+only if the mysqladmin ping is successful.
+
+Thanks to Evy Bongers for this patch.

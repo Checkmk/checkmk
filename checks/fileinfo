@@ -62,7 +62,7 @@ def inventory_fileinfo(info, case):
 
 def fileinfo_process_date(pattern, reftime):
     for what, the_time in [ ("DATE", reftime), ("YESTERDAY", reftime - 86400) ]:
-        the_regex = '(/.*)\$%s:((?:%%\w.?){1,})\$(.*)' % what
+        the_regex = '((?:/|[A-Za-z]).*)\$%s:((?:%%\w.?){1,})\$(.*)' % what
         disect = re.match(the_regex, pattern)
         if disect:
             prefix = disect.group(1)

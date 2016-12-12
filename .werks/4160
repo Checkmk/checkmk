@@ -1,0 +1,9 @@
+Title: emcvnx_info: fixed data handling, now detects errors
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1481550183
+Class: fix
+
+

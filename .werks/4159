@@ -1,10 +1,10 @@
-Title: mem.win: fixed KeyError
+Title: smart: added compatibility for Intel SSDs
 Level: 1
 Component: checks
-Class: fix
 Compatible: compat
-State: unknown
 Version: 1.4.0i3
-Date: 1481548894
+Date: 1481573068
+Class: feature
 
+The check is now able to use temperature information from Intel SSDs.
 

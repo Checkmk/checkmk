@@ -77,12 +77,11 @@ mrpe_entry *from_string<mrpe_entry *>(const std::string &value) {
         getline(str, command_line);
     }
 
-
     // Strip any " from start and end
     if (!command_line.empty() && command_line.front() == '"') {
         command_line = command_line.substr(1);
     }
-    if (!command_line.empty() && command_line.back()  == '"') {
+    if (!command_line.empty() && command_line.back() == '"') {
         command_line = command_line.substr(0, command_line.length() - 1);
     }
 

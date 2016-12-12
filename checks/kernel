@@ -57,8 +57,10 @@ def inventory_kernel(info):
 
 # item is one of the keys in /proc/stat or /proc/vmstat
 def check_kernel(item, params, info):
-    this_time = int(info[0][0])
+    if not info:
+        return
 
+    this_time = int(info[0][0])
     hits = [ (line[0], line[1])
              for line in info[1:]
              if line[0] == item or kernel_counter_names.get(line[0], line[0]) == item ]

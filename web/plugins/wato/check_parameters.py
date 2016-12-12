@@ -4337,22 +4337,6 @@ register_check_parameters(
     "dict",
 )
 
-
-#.
-#   .--Unsorted--(Don't create new stuff here!)----------------------------.
-#   |              _   _                      _           _                |
-#   |             | | | |_ __  ___  ___  _ __| |_ ___  __| |               |
-#   |             | | | | '_ \/ __|/ _ \| '__| __/ _ \/ _` |               |
-#   |             | |_| | | | \__ \ (_) | |  | ||  __/ (_| |               |
-#   |              \___/|_| |_|___/\___/|_|   \__\___|\__,_|               |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  All these rules have not been moved into their according sections.  |
-#   |  Please move them as you come along - but beware of dependecies!     |
-#   |  Remove this section as soon as it's empty.                          |
-#   '----------------------------------------------------------------------'
-
-
 register_check_parameters(
     subgroup_os,
     "uptime",
@@ -4395,6 +4379,22 @@ register_check_parameters(
     None,
     "first"
 )
+
+
+#.
+#   .--Unsorted--(Don't create new stuff here!)----------------------------.
+#   |              _   _                      _           _                |
+#   |             | | | |_ __  ___  ___  _ __| |_ ___  __| |               |
+#   |             | | | | '_ \/ __|/ _ \| '__| __/ _ \/ _` |               |
+#   |             | |_| | | | \__ \ (_) | |  | ||  __/ (_| |               |
+#   |              \___/|_| |_|___/\___/|_|   \__\___|\__,_|               |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  All these rules have not been moved into their according sections.  |
+#   |  Please move them as you come along - but beware of dependecies!     |
+#   |  Remove this section as soon as it's empty.                          |
+#   '----------------------------------------------------------------------'
+
 
 register_check_parameters(
    subgroup_environment,

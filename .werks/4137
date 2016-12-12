@@ -1,0 +1,10 @@
+Title: List of strings: New fields are now added when last field is not empty
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481540934
+Class: fix
+
+This is a usability fix for users which are tabbing through the GUI. You can
+now escape the list of strings extension by simply leaving the last field empty.

@@ -1747,8 +1747,16 @@ function list_of_strings_init(divid) {
 function list_of_strings_add_focus(oLastChild) {
     /* look for <input> in last child node and attach focus handler to it. */
     var input = oLastChild.getElementsByTagName("input");
-    if (input.length == 1)
-        input[0].onfocus = function(e) { return list_of_strings_extend(this); };
+    if (input.length == 1) {
+        var handler_func = function(e) {
+            if (this.value != "") {
+                return list_of_strings_extend(this);
+            }
+        };
+
+        input[0].onfocus = handler_func;
+        input[0].oninput = handler_func;
+    }
 }
 
 /* Is called when the last input field in a ListOfString gets focus.
@@ -1783,6 +1791,8 @@ function list_of_strings_extend(oInput, j) {
 
     /* Move focus function from old last to new last input field */
     list_of_strings_add_focus(oNewDiv);
+
+    oInput.oninput = null;
     oInput.onfocus = null;
 }
 

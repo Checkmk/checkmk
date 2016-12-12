@@ -74,7 +74,16 @@ mrpe_entry *from_string<mrpe_entry *>(const std::string &value) {
     {
         std::stringstream str(value);
         getline(str, service_description, ' ');
-        getline(str, command_line, ' ');
+        getline(str, command_line);
+    }
+
+
+    // Strip any " from start and end
+    if (!command_line.empty() && command_line.front() == '"') {
+        command_line = command_line.substr(1);
+    }
+    if (!command_line.empty() && command_line.back()  == '"') {
+        command_line = command_line.substr(0, command_line.length() - 1);
     }
 
     if (command_line.empty()) {

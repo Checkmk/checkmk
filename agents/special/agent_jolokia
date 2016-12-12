@@ -144,13 +144,13 @@ class HTTPSAuthHandler(urllib2.HTTPSHandler):
 def fetch_var(protocol, server, port, path, suburi, cert_path, itemspec):
     url = "%s://%s:%d/%s/%s" % (protocol, server, port, suburi, path)
     if opt_verbose:
-        sys.stderr.write("DEBUG: Fetching: %s\n" % url)
+        sys.stderr.write("Fetching: %s\n" % url)
     try:
         conn = urllib2.urlopen(url)
         data = conn.read()
 
         if opt_verbose:
-            sys.stderr.write("DEBUG: Result: %s\n\n" % data)
+            sys.stderr.write("Result: %s\n\n" % data)
     except Exception, e:
         if opt_debug:
             raise
@@ -324,33 +324,22 @@ USAGE: mk_jolokia [OPTIONS]
 
 OPTIONS:
   --help                        Show this help message and exit
-  --server                      Host name or IP address of the Jolokia server. Default: localhost
-  --port                        TCP Port of the Jolokia server. Default: 8080
-  --user                        Username to use for the connection. Default: monitoring
-  --password                    Password to use for connecting. Default: none
-  --mode                        Authentication mode. Can be "basic" or "digest". Default: digest
-  --suburi                      Path-component of the uri to query. Default: jolokia
-  --instance                    Name of the instance in the monitoring
+  --server=SERVER               Host name or IP address of the Jolokia server. Default: localhost
+  --port=PORT                   TCP Port of the Jolokia server. Default: 8080
+  --user=USER                   Username to use for the connection. Default: monitoring
+  --password=PASSWORD           Password to use for connecting. Default: none
+  --mode=MODE                   Authentication mode. Can be "basic" or "digest". Default: digest
+  --suburi=SUBURI               Path-component of the URI to query. Default: jolokia
+  --instance=INSTANCE           Name of the instance in the monitoring
   --debug                       Debug mode: let Python exceptions come through
+  --verbose                     Output some more detailed information
 """)
-
-
-
-"""
-    for param in ['server', 'port', 'suburi', 'instance', 'protocol', 'cert_path', 'client_cert', 'client_key']:
-        if param in params:
-            arglist.append('--%s %s' % (param, params[param]))
-
-    if 'login' in params:
-        arglist.append('--user %s' % params['login'][0])
-        arglist.append('--password %s' % params['login'][1])
-"""
 
 
 def parse_arguments():
     short_options = ''
     long_options  = [
-        'help', 'server=', 'port=', 'user=', 'password=', 'mode=', 'suburi=', 'instance=',
+        'help', 'verbose', 'server=', 'port=', 'user=', 'password=', 'mode=', 'suburi=', 'instance=',
         'protocol=', 'cert_path=', 'client_cert=', 'client_key='
     ]
 
@@ -367,6 +356,9 @@ def parse_arguments():
 
     global opt_debug
     opt_debug = 'debug' in opts
+
+    global opt_verbose
+    opt_verbose = 'verbose' in opts
 
     for optional, default in [('server',      "localhost"),
                               ('user',        "monitoring"),

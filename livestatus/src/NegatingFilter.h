@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "Filter.h"
+#include "FilterVisitor.h"
 
 class NegatingFilter : public Filter {
     Filter *_filter;

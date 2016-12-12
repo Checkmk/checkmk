@@ -31,9 +31,7 @@
 #include <utility>
 #include "Aggregator.h"
 #include "Column.h"
-#include "ColumnFilter.h"
 #include "Filter.h"
-#include "FilterVisitor.h"
 #include "Logger.h"
 #include "NegatingFilter.h"
 #include "NullColumn.h"
@@ -53,26 +51,7 @@ using std::runtime_error;
 using std::string;
 using std::to_string;
 using std::unique_ptr;
-using std::unordered_set;
 using std::vector;
-
-namespace {
-class ColumnCollector : public FilterVisitor {
-public:
-    explicit ColumnCollector(unordered_set<Column *> &columns)
-        : _columns(columns) {}
-    void visit(ColumnFilter &f) override { _columns.insert(f.column()); }
-    void visit(NegatingFilter &f) override { f.subfilter()->accept(*this); }
-    void visit(VariadicFilter &f) override {
-        for (const auto &sub_filter : f) {
-            sub_filter->accept(*this);
-        }
-    }
-
-private:
-    unordered_set<Column *> &_columns;
-};
-}  // namespace
 
 Query::Query(const list<string> &lines, Table *table, Encoding data_encoding)
     : _data_encoding(data_encoding)
@@ -190,25 +169,13 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding)
     }
 
     if (_columns.empty() && !doStats()) {
-        table->any_column(
-            [this](Column *c) { return _columns.push_back(c), false; });
+        table->any_column([this](Column *c) {
+            return _columns.push_back(c), _all_columns.insert(c), false;
+        });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
         // here, is that really what we want?
         _show_column_headers = true;
     }
-
-    _all_columns.insert(_columns.begin(), _columns.end());
-    for (const auto &sc : _stats_columns) {
-        // TODO(sp) We should really move column() from StatsColumn, it doesn't
-        // belong there... :-P
-        if (sc->column() != nullptr) {
-            _all_columns.insert(sc->column());
-        }
-    }
-
-    ColumnCollector cc(_all_columns);
-    _filter.accept(cc);
-    _wait_condition.accept(cc);
 }
 
 Query::~Query() {
@@ -425,6 +392,7 @@ void Query::parseStatsLine(char *line) {
     }
     _stats_columns.push_back(
         make_unique<StatsColumn>(column, move(filter), operation));
+    _all_columns.insert(column);
 
     /* Default to old behaviour: do not output column headers if we
        do Stats queries */
@@ -466,6 +434,7 @@ void Query::parseFilterLine(char *line, VariadicFilter &filter) {
 
     if (Filter *sub_filter = createFilter(column, relOp, value)) {
         filter.addSubfilter(sub_filter);
+        _all_columns.insert(column);
     }
 }
 
@@ -487,18 +456,17 @@ void Query::parseStatsGroupLine(char *line) {
 void Query::parseColumnsLine(char *line) {
     while (char *column_name = next_field(&line)) {
         Column *column = _table->column(column_name);
-        if (column != nullptr) {
-            _columns.push_back(column);
-        } else {
-            Informational(_logger) << "Replacing non-existing column '"
-                                   << column_name << "' with null column";
+        if (column == nullptr) {
             // Do not fail any longer. We might want to make this configurable.
             // But not failing has the advantage that an updated GUI, that
             // expects new columns, will be able to keep compatibility with
             // older Livestatus versions.
-            _columns.push_back(
-                new NullColumn(column_name, "non-existing column"));
+            Informational(_logger) << "Replacing non-existing column '"
+                                   << column_name << "' with null column";
+            column = new NullColumn(column_name, "non-existing column");
         }
+        _columns.push_back(column);
+        _all_columns.insert(column);
     }
     _show_column_headers = false;
 }

@@ -1,10 +1,9 @@
-Title: emcvnx_sp_util: fixed empty data handling
+Title: oracle_dataguard_stats, oracle_longactivesessions, oracle_rman: fixed crashes
 Level: 1
 Component: checks
-Class: fix
 Compatible: compat
-State: unknown
 Version: 1.4.0i3
-Date: 1481550595
+Date: 1481573325
+Class: fix
 
-
+Fixed crashes on Checks if there are timestamps in the output.

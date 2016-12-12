@@ -46,6 +46,9 @@ def check_oracle_longactivesessions(item, params, info):
 
     for line in info:
 
+        if len(line) <= 1:
+            continue
+
         warn, crit = params["levels"]
 
         if line[0] == item:

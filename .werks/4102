@@ -1,0 +1,10 @@
+Title: logwatch: Fixed crash due to non-existant logfile
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1481549732
+Class: fix
+
+In some cases, the logwatch check would crash trying to remove a logfile
+that didn't exist anymore. This has been fixed.

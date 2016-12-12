@@ -1050,10 +1050,11 @@ def paint_check_manpage(row):
                 description = ""
             elif line.strip() == "" and description != None:
                 description += "<p>"
-            elif not line.startswith(' ') and line[-1] == ':':
+            elif line and not line.startswith(' ') and line[-1] == ':':
                 break
             elif description != None:
                 description += " " + line.replace("<", "&lt;").replace(">", "&gt;")
+
         if not description:
             return "", ""
         else:

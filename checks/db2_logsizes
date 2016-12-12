@@ -37,6 +37,7 @@ factory_settings["db2_logsizes_default_levels"] = {
 }
 
 def parse_db2_logsizes(info):
+    pprint.pprint(info)
     pre_parsed = parse_db2_dbs(info)
     global_timestamp = pre_parsed[0]
     parsed = {}
@@ -46,8 +47,8 @@ def parse_db2_logsizes(info):
             instance_info.setdefault(value[0], []).append(" ".join(map(str, (value[1:]))))
         # Some databases run in DPF mode. Means that the database is split over several nodes
         # Each node has its own logfile for the same database. We create one service for each logfile
-	if "TIMESTAMP" not in instance_info:
-	    instance_info["TIMESTAMP"] = [ global_timestamp ]
+        if "TIMESTAMP" not in instance_info:
+            instance_info["TIMESTAMP"] = [ global_timestamp ]
 
         if "node" in instance_info:
             for node in instance_info["node"]:
@@ -57,9 +58,12 @@ def parse_db2_logsizes(info):
 
     return parsed
 
+
 def inventory_db2_logsizes(parsed):
-    for key in parsed:
-        yield key, {}
+    for db, db_info in parsed.items():
+        if "logfilsiz" not in db_info:
+            yield db, {}
+
 
 def check_db2_logsizes(item, params, parsed):
     db = parsed.get(item)
@@ -88,8 +92,12 @@ def check_db2_logsizes(item, params, parsed):
         data_offset = 0
 
     timestamp = int(db["TIMESTAMP"][0])
-    total = int(db["logfilsiz"][data_offset]) * (int(db["logprimary"][data_offset])\
-            + int(db["logsecond"][data_offset])) * 4096
+
+    if "logfilsiz" not in db:
+        return 3, "Invalid database info"
+
+    total = int(db["logfilsiz"][data_offset]) * (int(db["logprimary"][data_offset]) + \
+            int(db["logsecond"][data_offset])) * 4096
     free  = total - int(db["usedspace"][data_offset])
 
     return df_check_filesystem_single(g_hostname, item, total / 1024**2, free / 1024**2, 0,

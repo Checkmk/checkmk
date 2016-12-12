@@ -98,7 +98,7 @@ if (isset($mem_defines["active_anon"])) {
     $def[] = ""
             . mem_area("active_anon",      "ff4040", "Active   (anonymous)",   FALSE)
             . mem_area("active_file",      "ff8080", "Active   (files)",       TRUE)
-            . mem_area("inactive_anon",    "377cab", "Inactive (anonymous)",   FALSE)
+            . mem_area("inactive_anon",    "377cab", "Inactive (anonymous)",   TRUE)
             . mem_area("inactive_file",    "4eb0f2", "Inactive (files)",       TRUE)
             ;
 }

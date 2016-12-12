@@ -26,6 +26,7 @@
     * 4161 FIX: emcvnx_sp_util: fixed empty data handling
     * 4162 FIX: esx_vsphere_vm.heartbeat: fixed KeyError
     * 4163 FIX: kernel: fixed empty data handling
+    * 4164 FIX: livestatus_status: fixed ValueError for values in scientific notation
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

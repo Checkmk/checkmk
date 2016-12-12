@@ -20,6 +20,7 @@
     * 4138 FIX: statgrab: Fixed issue in FreeBSD agent when statgrab is not installed
     * 4158 FIX: fileinfo: fixed file handling containing spaces
     * 4101 FIX: citrix_sessions: Output error message in case of missing session information....
+    * 4159 FIX: mem.win: fixed KeyError
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

@@ -6840,30 +6840,24 @@ class CheckTypeGroupSelection(ElementSelection):
 
 def load_notification_rules():
     filename = wato_root_dir + "notifications.mk"
-    if not os.path.exists(filename):
-        return []
+    notification_rules = store.load_from_mk_file(filename,
+                                                 "notification_rules", [])
 
-    try:
-        vars = { "notification_rules" : [] }
-        execfile(filename, vars, vars)
-        notification_rules = vars["notification_rules"]
-        # Convert to new plugin configuration format
-        for rule in notification_rules:
-            if "notify_method" in rule:
-                method = rule["notify_method"]
-                plugin = rule["notify_plugin"]
-                del rule["notify_method"]
-                rule["notify_plugin"] = ( plugin, method )
-        return notification_rules
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
-        return []
+    # Convert to new plugin configuration format
+    for rule in notification_rules:
+        if "notify_method" in rule:
+            method = rule["notify_method"]
+            plugin = rule["notify_plugin"]
+            del rule["notify_method"]
+            rule["notify_plugin"] = ( plugin, method )
+
+    return notification_rules
+
 
 def save_notification_rules(rules):
     make_nagios_directory(wato_root_dir)
-    file(wato_root_dir + "notifications.mk", "w").write("notification_rules += %s\n" % pprint.pformat(rules))
+    store.save_to_mk_file(wato_root_dir + "notifications.mk",
+                          "notification_rules", rules)
 
 
 def FolderChoice(**kwargs):

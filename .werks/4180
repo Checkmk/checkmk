@@ -1,0 +1,10 @@
+Title: fileinfo: Made paths for file grouping compatible for windows
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481575441
+Class: fix
+
+The check is now able to handle windows pathnames.
+

@@ -1,0 +1,10 @@
+Title: netapp_api_cluster: fixed None item
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1481540140
+
+

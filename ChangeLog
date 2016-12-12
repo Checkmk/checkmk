@@ -55,6 +55,7 @@
     * 4115 FIX: mem.linux: fixed missing stack bug in PNP template
     * 4157 FIX: netapp_api_cluster: fixed None item
     * 4001 FIX: Windows Agent: windows agent couldn't handle surrounding quotes and spaces at command specification...
+    * 4138 FIX: statgrab: Fixed issue in FreeBSD agent when statgrab is not installed
 
     Multisite:
     * 4070 Added a painter for the service check period

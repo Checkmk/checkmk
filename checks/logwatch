@@ -571,7 +571,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
         logwatch_file.writelines(collect_block.output_lines)
     # correct output size
     logwatch_file.close()
-    if net_lines == 0:
+    if net_lines == 0 and log_exists:
         os.unlink(logfile)
 
     # if logfile has reached maximum size, abort with critical state

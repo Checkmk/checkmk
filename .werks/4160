@@ -1,10 +1,9 @@
-Title: apt: Fixed crash on unexpected output
+Title: emcvnx_info: fixed data handling, now detects errors
 Level: 1
 Component: checks
+Class: fix
 Compatible: compat
 Version: 1.4.0i3
-Date: 1481573187
-Class: fix
+Date: 1481550183
 
-Fixed crash if line does not start with "Inst".
 

@@ -114,7 +114,8 @@ class MessageResolver {
             auto iter = _cache.find(dllpath);
             if (iter == _cache.end()) {
                 dll = load_library_ext(dllpath);
-                _cache.emplace(std::wstring(dllpath), std::move(HModuleWrapper(dll)));
+                _cache.emplace(std::wstring(dllpath),
+                               std::move(HModuleWrapper(dll)));
             } else {
                 dll = iter->second.getHModule();
             }
@@ -342,9 +343,9 @@ bool EventLog::fillBuffer() {
 
     DWORD bytes_required;
 
-    if (_log.ReadEventLogW(flags, _record_offset, _buffer,
-                           &_buffer_used, &bytes_required)) {
-      return true;
+    if (_log.ReadEventLogW(flags, _record_offset, _buffer, &_buffer_used,
+                           &bytes_required)) {
+        return true;
     } else {
         DWORD error = GetLastError();
         if (error == ERROR_HANDLE_EOF) {

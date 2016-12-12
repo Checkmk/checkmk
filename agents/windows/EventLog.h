@@ -37,22 +37,26 @@ public:
 
     ~HModuleWrapper() { close(); }
 
-    HModuleWrapper(const HModuleWrapper &) = delete;                  // Delete copy constructor
+    HModuleWrapper(const HModuleWrapper &) = delete;  // Delete copy constructor
 
-    HModuleWrapper &operator=(const HModuleWrapper &) = delete;       // Delete assignment operator
+    HModuleWrapper &operator=(const HModuleWrapper &) =
+        delete;  // Delete assignment operator
 
-    HModuleWrapper(HModuleWrapper &&from) : _hmodule(from._hmodule) { // Move constructor
+    HModuleWrapper(HModuleWrapper &&from)
+        : _hmodule(from._hmodule) {  // Move constructor
         from._hmodule = nullptr;
     }
 
-    HModuleWrapper &operator=(HModuleWrapper &&from) = delete;        // Move assignment operator
+    HModuleWrapper &operator=(HModuleWrapper &&from) =
+        delete;  // Move assignment operator
 
-//    HModuleWrapper &operator=(HModuleWrapper &&from) {              // Move assignment operator
-//        close();
-//        _hmodule = from._hmodule;
-//        from._hmodule = nullptr;
-//        return *this;
-//    }
+    //    HModuleWrapper &operator=(HModuleWrapper &&from) {              //
+    //    Move assignment operator
+    //        close();
+    //        _hmodule = from._hmodule;
+    //        from._hmodule = nullptr;
+    //        return *this;
+    //    }
 
     HMODULE getHModule() { return _hmodule; };
 
@@ -67,30 +71,29 @@ private:
     }
 };
 
-
 class EventlogHandle {
 public:
     explicit EventlogHandle(const std::wstring &name) : _name(name) { open(); }
 
     ~EventlogHandle() { close(); }
 
-    EventlogHandle(const EventlogHandle& logHandle) = delete;
+    EventlogHandle(const EventlogHandle &logHandle) = delete;
 
     void reopen() {
         close();
         open();
     }
 
-    bool ReadEventLogW(DWORD dwReadFlags,
-                       DWORD dwRecordOffset, std::vector<BYTE> &buffer, DWORD *pnBytesRead,
+    bool ReadEventLogW(DWORD dwReadFlags, DWORD dwRecordOffset,
+                       std::vector<BYTE> &buffer, DWORD *pnBytesRead,
                        DWORD *pnMinNumberOfBytesNeeded) {
-      return ::ReadEventLogW(_handle, dwReadFlags, dwRecordOffset,
-                             &buffer[0], buffer.size(), pnBytesRead,
-                             pnMinNumberOfBytesNeeded);
+        return ::ReadEventLogW(_handle, dwReadFlags, dwRecordOffset, &buffer[0],
+                               buffer.size(), pnBytesRead,
+                               pnMinNumberOfBytesNeeded);
     }
 
     DWORD GetOldestEventLogRecord(PDWORD record) {
-      return ::GetOldestEventLogRecord(_handle, record);
+        return ::GetOldestEventLogRecord(_handle, record);
     }
 
     DWORD GetNumberOfEventLogRecords(PDWORD record) {
@@ -105,9 +108,7 @@ public:
         }
     }
 
-    void close() {
-        CloseEventLog(_handle);
-    }
+    void close() { CloseEventLog(_handle); }
 
 private:
     std::wstring _name;

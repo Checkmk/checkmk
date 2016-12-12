@@ -422,10 +422,12 @@ factory_settings["memory_win_default_levels"] = {
     "pagefile" : ( 80.0, 90.0 ),
 }
 
+
 def inventory_mem_win(info):
     meminfo = parse_proc_meminfo(info)
     if "MemTotal" in meminfo and "PageTotal" in meminfo:
         return [(None, {})]
+
 
 def check_mem_windows(item, params, info):
     meminfo = parse_proc_meminfo(info)
@@ -435,8 +437,14 @@ def check_mem_windows(item, params, info):
     for title,             what,   paramname in [
         ("Memory usage",  "Mem",  "memory"),
         ("Commit Charge", "Page", "pagefile")]:
-        total_kb = meminfo[what + "Total"]
-        free_kb  = meminfo[what + "Free"]
+
+        key_total = what + "Total"
+        key_free  = what + "Free"
+        if not ( key_total in meminfo and key_free in meminfo ):
+            continue
+
+        total_kb = meminfo[key_total]
+        free_kb  = meminfo[key_free]
         used_kb  = total_kb - free_kb
         used_mb  = used_kb / 1024.0
         free_mb  = free_kb / 1024.0

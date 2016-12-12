@@ -1,0 +1,9 @@
+Title: mem.win: fixed KeyError
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1481548894
+Class: fix
+
+

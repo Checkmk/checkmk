@@ -5770,6 +5770,134 @@ def user_script_choices(what):
 def user_script_title(what, name):
     return dict(user_script_choices(what)).get(name, name)
 
+
+#.
+#   .--Rulespecs-----------------------------------------------------------.
+#   |             ____        _                                            |
+#   |            |  _ \ _   _| | ___  ___ _ __   ___  ___ ___              |
+#   |            | |_) | | | | |/ _ \/ __| '_ \ / _ \/ __/ __|             |
+#   |            |  _ <| |_| | |  __/\__ \ |_) |  __/ (__\__ \             |
+#   |            |_| \_\\__,_|_|\___||___/ .__/ \___|\___|___/             |
+#   |                                    |_|                               |
+#   +----------------------------------------------------------------------+
+#   | The rulespecs are the ruleset specifications registered to WATO.     |
+#   '----------------------------------------------------------------------
+
+NO_FACTORY_DEFAULT     = [] # needed for unique ID
+FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is entered
+
+class Rulespecs(object):
+    def __init__(self):
+        self._rulespecs       = {}
+        # TODO: Do we need both? Better calculate one ad-hoc
+        self._by_group        = {} # for conveniant lookup
+        self._by_group_sorted = [] # for keeping original order
+
+
+    def register(self, rulespec):
+        group = rulespec["group"]
+        name  = rulespec["varname"]
+
+        if group not in self._rulespecs:
+            rulespecs = [ rulespec ]
+            self._by_group_sorted.append((group, rulespecs))
+            self._by_group[group] = rulespecs
+
+        else:
+            # TODO: Found an old bug: self._by_group_sorted is not cleaned upa
+
+            for nr, rs in enumerate(self._by_group[group]):
+                if rs["varname"] == name:
+                    del self._by_group[group][nr]
+                    break # There cannot be two duplicates!
+
+            self._by_group[group].append(rulespec)
+
+        self._rulespecs[name] = rulespec
+
+
+    def get(self, name):
+        return self._rulespecs[name]
+
+
+    def exists(self, name):
+        return name in self._rulespecs
+
+
+    def get_rulespecs(self):
+        return self._rulespecs
+
+
+    # TODO: Cleanup
+    def get_grouped_and_sorted(self):
+        return self._by_group_sorted
+
+
+    def get_by_group(self, group_name):
+        return self._by_group[group_name]
+
+
+    # Group names are separated with "/" into main group and optional subgroup.
+    # Do not lose carefully manually crafted order of groups!
+    def get_main_groups(self):
+        group_names = []
+
+        for group_name, rulesets in self._by_group_sorted:
+            main_group = group_name.split('/')[0]
+            if main_group not in group_names:
+                group_names.append(main_group)
+
+        return group_names
+
+
+    # Now we collect all rulesets that apply to hosts, except those specifying
+    # new active or static checks
+    def get_host_groups(self):
+        return [ gn for gn, rulesets in self._by_group_sorted
+                 if not gn.startswith("static/") and
+                    not gn.startswith("checkparams/") and
+                    gn != "activechecks" ]
+
+
+    # Get the exactly matching main groups and all matching sub group names
+    # TODO: Make group names unique!
+    def get_matching_groups(self, group_name):
+        return [ gn for gn, rulesets in self._by_group_sorted
+                 if gn == group_name or (group_name and gn.startswith(group_name + "/")) ]
+
+
+
+
+def register_rule(group, varname, valuespec = None, title = None,
+                  help = None, itemspec = None, itemtype = None, itemname = None,
+                  itemhelp = None, itemenum = None,
+                  match = "first", optional = False,
+                  deprecated = False, **kwargs):
+    factory_default = kwargs.get("factory_default", NO_FACTORY_DEFAULT)
+
+    if not itemname and itemtype == "service":
+        itemname = _("Service")
+
+    rulespec = {
+        "group"           : group,
+        "varname"         : varname,
+        "valuespec"       : valuespec,
+        "itemspec"        : itemspec, # original item spec, e.g. if validation is needed
+        "itemtype"        : itemtype, # None, "service", "checktype" or "checkitem"
+        "itemname"        : itemname, # e.g. "mount point"
+        "itemhelp"        : itemhelp, # a description of the item, only rarely used
+        "itemenum"        : itemenum, # possible fixed values for items
+        "match"           : match,    # used by WATO rule analyzer (green and grey balls)
+        "title"           : title or valuespec.title(),
+        "help"            : help or valuespec.help(),
+        "optional"        : optional, # rule may be None (like only_hosts)
+        "factory_default" : factory_default,
+        "deprecated"      : deprecated,
+    }
+
+    g_rulespecs.register(rulespec)
+
+
 #.
 #   .--Ruleset-------------------------------------------------------------.
 #   |                  ____        _                _                      |
@@ -5798,7 +5926,7 @@ class RulesetCollection(object):
         raise NotImplementedError()
 
 
-    def _load_folder_rulesets(self, folder):
+    def _load_folder_rulesets(self, folder, only_varname=None):
         path = folder.rules_file_path()
 
         config = {
@@ -5811,20 +5939,26 @@ class RulesetCollection(object):
 
         # Prepare empty rulesets so that rules.mk has something to
         # append to
-        for varname, ruleset in g_rulespecs.items():
+        for varname, ruleset in g_rulespecs.get_rulespecs().items():
+            if only_varname and varname != only_varname:
+                continue # skip unwanted options
+
             if ':' in varname:
                 dictname, subkey = varname.split(":")
                 config[dictname] = {}
             else:
                 config[varname] = []
 
-        self.from_config(folder, store.load_mk_file(path, config))
+        self.from_config(folder, store.load_mk_file(path, config), only_varname)
 
 
-    def from_config(self, folder, rulesets_config):
+    def from_config(self, folder, rulesets_config, only_varname):
         for varname, rules_config in rulesets_config:
-            if varname not in g_rulespecs:
+            if not g_rulespecs.exists(varname):
                 continue # skip unknown options
+
+            if only_varname and varname != only_varname:
+                continue # skip unwanted options
 
             ruleset = self._rulesets.setdefault(varname, Ruleset(varname))
 
@@ -5859,14 +5993,12 @@ class AllRulesets(RulesetCollection):
         for subfolder in folder.subfolders().values():
             self._load_rulesets_recursively(subfolder, only_varname)
 
-        # TODO: Handle only_varname again!
-        self._load_folder_rulesets(folder)
+        self._load_folder_rulesets(folder, only_varname)
 
 
     # Load all rules of all folders
-    # TODO: Cleanup only_varname to some object attribute or something
     def load(self):
-        self._load_rulesets_recursively(Folder.root_folder(), only_varname)
+        self._load_rulesets_recursively(Folder.root_folder())
 
 
 
@@ -5894,7 +6026,7 @@ class FolderRulesets(RulesetCollection):
 
         content = ""
         for varname, ruleset in self._rulesets.items():
-            if varname not in g_rulespecs:
+            if not g_rulespecs.exists(varname):
                 continue # don't save unknown rulesets
 
             if ruleset.is_empty():
@@ -5949,7 +6081,7 @@ class UsedRulesets(FilteredAllRulesets):
 class Ruleset(object):
     def __init__(self, name):
         self._name     = name
-        self._rulespec = g_rulespecs[name]
+        self._rulespec = g_rulespecs.get(name)
         # Holds the rules. Using the folders as keys.
         self._rules    = {}
 

@@ -1837,8 +1837,6 @@ def rename_host_in_rulesets(folder, oldname, newname):
 
         changed = False
         for varname, ruleset in rulesets.get_rulesets().items():
-            rulespec = g_rulespecs[varname]
-
             for rule_folder, rulenr, rule in ruleset.get_rules():
                 # TODO: Move to rule?
                 if rename_host_in_list(rule.host_list(), oldname, newname):
@@ -2131,17 +2129,8 @@ def mode_object_parameters(phase):
     elif phase == "action":
         return
 
-
-    # Now we collect all rulesets that apply to hosts, except those specifying
-    # new active or static checks
     all_rulesets = AllRulesets()
     all_rulesets.load()
-    groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if not gn.startswith("static/") and
-                      not gn.startswith("checkparams/") and
-                      gn != "activechecks" ]
-    groupnames.sort()
-
 
     def render_rule_reason(title, title_url, reason, reason_url, is_default, setting):
         if title_url:
@@ -2166,6 +2155,7 @@ def mode_object_parameters(phase):
 
     # For services we make a special handling the for origin and parameters
     # of that service!
+    # TODO: Cleanup accesses to g_rulespecs / rulespec
     if service:
         serviceinfo = check_mk_automation(host.site_id(), "analyse-service", [hostname, service])
         if serviceinfo:
@@ -2190,7 +2180,7 @@ def mode_object_parameters(phase):
                 # via checkgroup_parameters but via "logwatch_rules" in a special
                 # WATO module.
                 elif checkgroup == "logwatch":
-                    rulespec = g_rulespecs["logwatch_rules"]
+                    rulespec = g_rulespecs.get("logwatch_rules")
                     output_analysed_ruleset(all_rulesets, rulespec, hostname,
                                             serviceinfo["item"], serviceinfo["parameters"])
 
@@ -2202,8 +2192,12 @@ def mode_object_parameters(phase):
                     # by the inventory. This will be changed in a later version,
                     # but we need to address it anyway.
                     grouprule = "checkgroup_parameters:" + checkgroup
-                    if grouprule not in g_rulespecs:
-                        rulespec = g_rulespecs.get("static_checks:" + checkgroup)
+                    if not g_rulespecs.exists(grouprule):
+                        try:
+                            rulespec = g_rulespecs.get("static_checks:" + checkgroup)
+                        except KeyError:
+                            rulespec = None
+
                         if rulespec:
                             url = folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
                             render_rule_reason(_("Parameters"), url, _("Determined by discovery"), None, False,
@@ -2212,7 +2206,7 @@ def mode_object_parameters(phase):
                             render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
 
                     else:
-                        rulespec = g_rulespecs[grouprule]
+                        rulespec = g_rulespecs.get(grouprule)
                         output_analysed_ruleset(all_rulesets, rulespec, hostname,
                                                 serviceinfo["item"], serviceinfo["parameters"])
 
@@ -2222,7 +2216,7 @@ def mode_object_parameters(phase):
                 if not group:
                     html.write_text(_("This check is not configurable via WATO"))
                 else:
-                    rulespec = g_rulespecs["static_checks:" + checkgroup]
+                    rulespec = g_rulespecs.get("static_checks:" + checkgroup)
                     itemspec = rulespec["itemspec"]
                     if itemspec:
                         item_text = itemspec.value_to_text(serviceinfo["item"])
@@ -2241,7 +2235,7 @@ def mode_object_parameters(phase):
 
             elif origin == "active":
                 checktype = serviceinfo["checktype"]
-                rulespec = g_rulespecs["active_checks:" + checktype]
+                rulespec = g_rulespecs.get("active_checks:" + checktype)
                 output_analysed_ruleset(all_rulesets, rulespec, hostname, None, serviceinfo["parameters"])
 
             elif origin == "classic":
@@ -2284,15 +2278,11 @@ def mode_object_parameters(phase):
                 html.close_tr()
                 html.close_table()
 
-    last_maingroup = None
-    for groupname in groupnames:
-        maingroup = groupname.split("/")[0]
-        # Show information about a ruleset
-        # Sort rulesets according to their title
-        g_rulespec_group[groupname].sort(
-            cmp = lambda a, b: cmp(a["title"], b["title"]))
 
-        for rulespec in g_rulespec_group[groupname]:
+    last_maingroup = None
+    for groupname in sorted(g_rulespecs.get_host_groups()):
+        maingroup = groupname.split("/")[0]
+        for rulespec in sorted(g_rulespecs.get_by_group(groupname), key = lambda x: x["title"]):
             if (rulespec["itemtype"] == 'service') == (not service):
                 continue # This rule is not for hosts/services
 
@@ -2943,8 +2933,8 @@ def show_service_table(host, firsttime):
 
             if parameter_column:
                 table.cell(_("Check Parameters"))
-                if varname and varname in g_rulespecs:
-                    rulespec = g_rulespecs[varname]
+                if varname and g_rulespecs.exists(varname):
+                    rulespec = g_rulespecs.get(varname)
                     try:
                         rulespec["valuespec"].validate_datatype(params, "")
                         rulespec["valuespec"].validate_value(params, "")
@@ -11910,15 +11900,8 @@ def mode_ruleeditor(phase):
 
     search_form(_("Search for rule sets: "), "rulesets")
 
-    # Group names are separated with "/" into main group and optional subgroup.
-    # Do not lose carefully manually crafted order of groups!
-    groupnames = []
-    for gn, rulesets in g_rulespec_groups:
-        main_group = gn.split('/')[0]
-        if main_group not in groupnames:
-            groupnames.append(main_group)
     menu = []
-    for groupname in groupnames:
+    for groupname in g_rulespecs.get_main_groups():
         url = folder_preserving_link([("mode", "rulesets"), ("group", groupname),
                          ("host", only_host)])
         if groupname == "static": # these have moved into their own WATO module
@@ -12053,17 +12036,10 @@ def mode_rulesets(phase, group=None):
     rulesets.load()
 
     # Select matching rule groups while keeping their configured order
-    groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if only_used \
-                        or only_ineffective \
-                        or group == "deprecated" \
-                        or search != None\
-                        or gn == group or (group and gn.startswith(group + "/")) ]
-
-    # In case of search we need to sort the groups since main chapters would
-    # appear more than once otherwise.
-    if search != None:
-        groupnames.sort()
+    if only_used or only_ineffective or group == "deprecated" or search != None:
+        groupnames = g_rulespecs.get_all_groups()
+    else:
+        groupnames = g_rulespecs.get_matching_groups(group)
 
     html.open_div(class_="rulesets")
 
@@ -12071,9 +12047,7 @@ def mode_rulesets(phase, group=None):
     something_shown = False
     title_shown = False
     for groupname in groupnames:
-        for rulespec in sorted(g_rulespec_group[groupname],
-                               cmp=lambda a, b: cmp(a["title"], b["title"])):
-
+        for rulespec in sorted(g_rulespecs.get_by_group(groupname), key=lambda a: a["title"]):
             varname = rulespec["varname"]
 
             # handle only_used
@@ -12214,9 +12188,11 @@ def mode_edit_ruleset(phase):
             check_command = check_command[16:].split(" ")[0][:-1]
             varname = "active_checks:" + check_command
 
-    # TODO: verify that this ruleset exists and print a good error message
+    try:
+        rulespec = g_rulespecs.get(varname)
+    except KeyError:
+        raise MKUserError("varname", _("The ruleset \"%s\" does not exist." % varname))
 
-    rulespec = g_rulespecs.get(varname)
     hostname = html.var("host", "")
     if not item:
         if html.has_var("item"):
@@ -12774,8 +12750,11 @@ def mode_edit_rule(phase, new = False):
     if not may_edit_ruleset(varname):
         raise MKAuthException(_("You are not permitted to access this ruleset."))
 
-    # TODO: verify that this ruleset exists and print a good error message
-    rulespec = g_rulespecs[varname]
+    try:
+        rulespec = g_rulespecs.get(varname)
+    except KeyError:
+        raise MKUserError("varname", _("The ruleset \"%s\" does not exist." % varname))
+
     back_mode = html.var('back_mode', 'edit_ruleset')
 
     if phase == "title":
@@ -13043,56 +13022,6 @@ def mode_edit_rule(phase, new = False):
 g_rulegroups = {}
 def register_rulegroup(group, title, help):
     g_rulegroups[group] = (title, help)
-
-g_rulespecs            = {}
-g_rulespec_group       = {} # for conveniant lookup
-g_rulespec_groups      = [] # for keeping original order
-NO_FACTORY_DEFAULT     = [] # needed for unique ID
-FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is entered
-def register_rule(group, varname, valuespec = None, title = None,
-                  help = None, itemspec = None, itemtype = None, itemname = None,
-                  itemhelp = None, itemenum = None,
-                  match = "first", optional = False,
-                  deprecated = False, **kwargs):
-    factory_default = kwargs.get("factory_default", NO_FACTORY_DEFAULT)
-
-    if not itemname and itemtype == "service":
-        itemname = _("Service")
-
-
-    ruleset = {
-        "group"           : group,
-        "varname"         : varname,
-        "valuespec"       : valuespec,
-        "itemspec"        : itemspec, # original item spec, e.g. if validation is needed
-        "itemtype"        : itemtype, # None, "service", "checktype" or "checkitem"
-        "itemname"        : itemname, # e.g. "mount point"
-        "itemhelp"        : itemhelp, # a description of the item, only rarely used
-        "itemenum"        : itemenum, # possible fixed values for items
-        "match"           : match,    # used by WATO rule analyzer (green and grey balls)
-        "title"           : title or valuespec.title(),
-        "help"            : help or valuespec.help(),
-        "optional"        : optional, # rule may be None (like only_hosts)
-        "factory_default" : factory_default,
-        "deprecated"      : deprecated,
-    }
-
-    # Register group
-    if group not in g_rulespec_group:
-        rulesets = [ ruleset ]
-        g_rulespec_groups.append((group, rulesets))
-        g_rulespec_group[group] = rulesets
-    else:
-        # If a ruleset for this variable already exist, then we need to replace
-        # it. How can this happen? If a user puts his own copy of the definition
-        # into some file below local/.
-        for nr, rs in enumerate(g_rulespec_group[group]):
-            if rs["varname"] == varname:
-                del g_rulespec_group[group][nr]
-                break # There cannot be two duplicates!
-        g_rulespec_group[group].append(ruleset)
-
-    g_rulespecs[varname] = ruleset
 
 # Special version of register_rule, dedicated to checks. This is not really
 # modular here, but we cannot put this function into the plugins file because
@@ -14145,11 +14074,9 @@ def mode_pattern_editor(phase):
         html.show_user_errors()
         return
 
-    varname = 'logwatch_rules'
-    rulespec = g_rulespecs[varname]
-    all_rulesets = AllRulesets()
-    all_rulesets.load()
-    ruleset = all_rulesets.get(varname)
+    collection = SingleRulesetRecursively("logwatch_rules")
+    collection.load()
+    ruleset = collection.get("logwatch_rules")
 
     html.h3(_('Logfile Patterns'))
     if ruleset.is_empty():
@@ -14254,7 +14181,7 @@ def mode_pattern_editor(phase):
         table.cell(colspan=5)
         edit_url = folder_preserving_link([
             ("mode", "edit_rule"),
-            ("varname", varname),
+            ("varname", "logwatch_rules"),
             ("rulenr", rel_rulenr),
             ("host", hostname),
             ("item", mk_repr(item)),
@@ -14871,8 +14798,8 @@ def mode_check_manpage(phase):
     html.close_tr()
 
     def show_ruleset(varname):
-        if varname in g_rulespecs:
-            rulespec = g_rulespecs[varname]
+        if g_rulespecs.exists(varname):
+            rulespec = g_rulespecs.get(varname)
             url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
             param_ruleset = '<a href="%s">%s</a>' % (url, rulespec["title"])
             html.open_tr()
@@ -16460,11 +16387,11 @@ def load_plugins(force):
     load_notification_table()
     initialize_global_configvars()
 
-    global g_rulegroups, g_rulespecs, g_rulespec_group, g_rulespec_groups
+    global g_rulespecs
+    g_rulespecs = Rulespecs()
+
+    global g_rulegroups
     g_rulegroups = {}
-    g_rulespecs = {}
-    g_rulespec_group = {}
-    g_rulespec_groups = []
 
     initialize_before_loading_plugins()
     register_builtin_host_tags()

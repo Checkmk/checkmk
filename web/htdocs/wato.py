@@ -12085,31 +12085,24 @@ def mode_rulesets(phase, group=None):
         if help:
             html.help(help)
 
-    if not only_host:
-        all_rulesets = {}
-        rs = load_rulesets(Folder.current())
-        for varname, rules in rs.items():
-            all_rulesets.setdefault(varname, [])
-            all_rulesets[varname] += [ (Folder.current(), rule) for rule in rules ]
-    else:
-        all_rulesets = load_all_rulesets()
-        if only_used:
-            all_rulesets = dict([ r for r in all_rulesets.items() if len(r[1]) > 0 ])
+    all_rulesets = load_all_rulesets()
+    if only_used:
+        all_rulesets = dict([ r for r in all_rulesets.items() if len(r[1]) > 0 ])
 
-        if only_ineffective:
-            all_hosts = Host.all()
+    if only_ineffective:
+        all_hosts = Host.all()
 
-            has_ineffective_rules = False
-            rulesets_with_ineffective_rules = {}
-            for varname, rules in all_rulesets.items():
-                rulespec = g_rulespecs[varname]
+        has_ineffective_rules = False
+        rulesets_with_ineffective_rules = {}
+        for varname, rules in all_rulesets.items():
+            rulespec = g_rulespecs[varname]
 
-                for folder, rule in rules:
-                    if rule_is_ineffective(rule, folder, rulespec, all_hosts):
-                        rule_list = rulesets_with_ineffective_rules.setdefault(varname, [])
-                        rule_list.append((folder, rule))
+            for folder, rule in rules:
+                if rule_is_ineffective(rule, folder, rulespec, all_hosts):
+                    rule_list = rulesets_with_ineffective_rules.setdefault(varname, [])
+                    rule_list.append((folder, rule))
 
-            all_rulesets = rulesets_with_ineffective_rules
+        all_rulesets = rulesets_with_ineffective_rules
 
 
     # Select matching rule groups while keeping their configured order

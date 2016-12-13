@@ -110,7 +110,7 @@ void OutputBuffer::flush(int fd, int *termination_flag) {
 
         ostringstream os;
         os << setw(3) << setfill('0') << static_cast<unsigned>(_response_code)
-           << " " << setw(11) << setfill(' ') << s;
+           << " " << setw(11) << setfill(' ') << s << "\n";
         string header = os.str();
         writeData(fd, termination_flag, header.c_str(), header.size());
         writeData(fd, termination_flag, buffer, s);

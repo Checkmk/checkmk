@@ -2326,7 +2326,8 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
 
     forms.section('<a href="%s">%s</a>' % (url, rulespec["title"]))
 
-    setting, rules = all_rulesets[varname].analyse_ruleset(hostname, service)
+    ruleset = all_rulesets.get(varname)
+    setting, rules = ruleset.analyse_ruleset(hostname, service)
 
     html.open_table(class_="setting")
     html.open_tr()
@@ -2334,9 +2335,9 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
 
     # Show reason for the determined value
     if len(rules) == 1:
-        rule_folder, rule_nr = rules[0]
-        url = rule_url(rules[0])
-        html.a(_("Rule %d in %s") % (rule_nr + 1, rule_folder.title()), href=rule_url(rules[0]))
+        rule_folder, rule_index, rule = rules[0]
+        url = rule_url(rule)
+        html.a(_("Rule %d in %s") % (rule_index + 1, rule_folder.title()), href=rule_url(rule))
 
     elif len(rules) > 1:
         html.a("%d %s" % (len(rules), _("Rules")), href=url)
@@ -2371,7 +2372,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         # For match type "dict" it can be the case the rule define some of the keys
         # while other keys are taken from the factory defaults. We need to show the
         # complete outcoming value here.
-        if rules and rules.match_type() == "dict":
+        if rules and ruleset.match_type() == "dict":
             if rulespec["factory_default"] is not NO_FACTORY_DEFAULT \
                 and rulespec["factory_default"] is not FACTORY_DEFAULT_UNUSED:
                 fd = rulespec["factory_default"].copy()
@@ -2379,26 +2380,26 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
                 setting = fd
 
         if valuespec and not rules: # show the default value
-            # Some rulesets are ineffective if they are empty
             if rulespec["factory_default"] is FACTORY_DEFAULT_UNUSED:
+                # Some rulesets are ineffective if they are empty
                 html.write_text(_("(unused)"))
 
-            # If there is a factory default then show that one
             elif rulespec["factory_default"] is not NO_FACTORY_DEFAULT:
+                # If there is a factory default then show that one
                 setting = rulespec["factory_default"]
                 html.write(valuespec.value_to_text(setting))
 
-            # Rulesets that build lists are empty if no rule matches
-            elif rules.match_type() in ("all", "list"):
+            elif ruleset.match_type() in ("all", "list"):
+                # Rulesets that build lists are empty if no rule matches
                 html.write_text(_("(no entry)"))
 
-            # Else we use the default value of the valuespec
             else:
+                # Else we use the default value of the valuespec
                 html.write(valuespec.value_to_text(valuespec.default_value()))
 
         # We have a setting
         elif valuespec:
-            if rules.match_type() in ( "all", "list" ):
+            if ruleset.match_type() in ( "all", "list" ):
                 html.write(", ".join([valuespec.value_to_text(e) for e in setting]))
             else:
                 html.write(valuespec.value_to_text(setting))
@@ -11612,13 +11613,13 @@ def rename_host_tags_after_confirmation(tag_id, operations):
     elif mode:
         if tag_id and type(operations) == list: # make attribute unknown to system, important for save() operations
             undeclare_host_tag_attribute(tag_id)
-        affected_folders, affected_hosts, affected_rulespecs = \
+        affected_folders, affected_hosts, affected_rulesets = \
         change_host_tags_in_folders(tag_id, operations, mode, Folder.root_folder())
         return _("Modified folders: %d, modified hosts: %d, modified rulesets: %d") % \
-            (len(affected_folders), len(affected_hosts), len(affected_rulespecs))
+            (len(affected_folders), len(affected_hosts), len(affected_rulesets))
 
     message = ""
-    affected_folders, affected_hosts, affected_rulespecs = \
+    affected_folders, affected_hosts, affected_rulesets = \
         change_host_tags_in_folders(tag_id, operations, "check", Folder.root_folder())
 
     if affected_folders:
@@ -11641,12 +11642,12 @@ def rename_host_tags_after_confirmation(tag_id, operations):
             message += '<a href="%s">%s</a>' % (host.edit_url(), host.name())
         message += "</li></ul>"
 
-    if affected_rulespecs:
+    if affected_rulesets:
         message += _("Rulesets that contain rules with references to the changed tags") + ":<ul>"
-        for rulespec in affected_rulespecs:
+        for ruleset in affected_rulesets:
             message += '<li><a href="%s">%s</a></li>' % (
-                folder_preserving_link([("mode", "edit_ruleset"), ("varname", rulespec["varname"])]),
-                rulespec["title"])
+                folder_preserving_link([("mode", "edit_ruleset"), ("varname", ruleset.name())]),
+                ruleset.title())
         message += "</ul>"
 
     if not message and type(operations) == tuple: # deletion of unused tag group
@@ -11684,7 +11685,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
                     have_removal = True
                     break
 
-        if len(affected_rulespecs) > 0 and have_removal:
+        if affected_rulesets and have_removal:
             html.br()
             html.b(_("Some tags that are used in rules have been removed by you. What "
                      "shall we do with that rules?"))
@@ -11715,7 +11716,7 @@ def change_host_tags_in_folders(tag_id, operations, mode, folder):
     need_save = False
     affected_folders = []
     affected_hosts = []
-    affected_rulespecs = []
+    affected_rulesets = []
     if tag_id:
         attrname = "tag_" + tag_id
         attributes = folder.attributes()
@@ -11748,12 +11749,12 @@ def change_host_tags_in_folders(tag_id, operations, mode, folder):
             aff_folders, aff_hosts, aff_rulespecs = change_host_tags_in_folders(tag_id, operations, mode, subfolder)
             affected_folders += aff_folders
             affected_hosts += aff_hosts
-            affected_rulespecs += aff_rulespecs
+            affected_rulesets += aff_rulespecs
 
         affected_hosts += change_host_tags_in_hosts(folder, tag_id, operations, mode, folder.hosts())
 
-    affected_rulespecs += change_host_tags_in_rules(folder, operations, mode)
-    return affected_folders, affected_hosts, affected_rulespecs
+    affected_rulesets += change_host_tags_in_rules(folder, operations, mode)
+    return affected_folders, affected_hosts, affected_rulesets
 
 
 def change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
@@ -11794,20 +11795,19 @@ def change_host_tags_in_hosts(folder, tag_id, operations, mode, hostlist):
 # removed from the rule ("remove").
 def change_host_tags_in_rules(folder, operations, mode):
     need_save = False
-    affected_rulespecs = []
+    affected_rulesets = set([])
 
     rulesets = FolderRulesets(folder)
     rulesets.load()
 
-    for varname, ruleset in rulesets.get().items():
+    for varname, ruleset in rulesets.get_rulesets().items():
         rules_to_delete = set([])
         for folder, rulenr, rule in ruleset.get_rules():
             # Handle deletion of complete tag group
             if type(operations) == list: # this list of tags to remove
                 for tag in operations:
                     if tag != None and (tag in rule._tag_specs or "!"+tag in rule._tag_specs):
-                        if rulespec not in affected_rulespecs:
-                            affected_rulespecs.append(rulespec)
+                        affected_rulesets.add(ruleset)
 
                         if mode != "check":
                             need_save = True
@@ -11828,8 +11828,7 @@ def change_host_tags_in_rules(folder, operations, mode):
                         continue
 
                     if old_tag in rule._tag_specs or ("!" + old_tag) in rule._tag_specs:
-                        if rulespec not in affected_rulespecs:
-                            affected_rulespecs.append(rulespec)
+                        affected_rulesets.add(ruleset)
 
                         if mode != "check":
                             need_save = True
@@ -11852,8 +11851,7 @@ def change_host_tags_in_rules(folder, operations, mode):
     if need_save:
         rulesets.save()
 
-    affected_rulespecs.sort(cmp = lambda a, b: cmp(a["title"], b["title"]))
-    return affected_rulespecs
+    return sorted(affected_rulesets, key=lambda x: x.title())
 
 
 #.
@@ -12050,6 +12048,9 @@ def mode_rulesets(phase, group=None):
         for rulespec in sorted(g_rulespecs.get_by_group(groupname), key=lambda a: a["title"]):
             varname = rulespec["varname"]
 
+            if not rulesets.exists(varname):
+                continue
+
             # handle only_used
             ruleset = rulesets.get(varname)
             num_rules = ruleset.num_rules()
@@ -12191,7 +12192,7 @@ def mode_edit_ruleset(phase):
     try:
         rulespec = g_rulespecs.get(varname)
     except KeyError:
-        raise MKUserError("varname", _("The ruleset \"%s\" does not exist." % varname))
+        raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % varname)
 
     hostname = html.var("host", "")
     if not item:
@@ -12242,15 +12243,10 @@ def mode_edit_ruleset(phase):
         return
 
     elif phase == "action":
-        if not rulespec:
-            return
-        # Folder for the rule actions is defined by _folder
         rule_folder = Folder.folder(html.var("_folder", html.var("folder")))
         rule_folder.need_permission("write")
-
         rulesets = FolderRulesets(rule_folder)
         rulesets.load()
-
         ruleset = rulesets.get(varname)
 
         try:
@@ -12277,7 +12273,7 @@ def mode_edit_ruleset(phase):
         elif action == "insert": # Clone a rule
             if not html.check_transaction():
                 return None # browser reload
-            rules.clone_rule(rule)
+            ruleset.clone_rule(rule)
             rulesets.save()
             return
 
@@ -12290,9 +12286,9 @@ def mode_edit_ruleset(phase):
             elif action == "down":
                 ruleset.move_rule_down(rule)
             elif action == "top":
-                ruleset.move_rule_top(rule)
+                ruleset.move_rule_to_top(rule)
             else:
-                ruleset.move_rule_bottom(rule)
+                ruleset.move_rule_to_bottom(rule)
 
             rulesets.save()
             return
@@ -12305,11 +12301,13 @@ def mode_edit_ruleset(phase):
     if not hostname:
         Folder.current().show_breadcrump(keepvarnames = ["mode", "varname"])
 
-    # Titel ist schon Seitentitel
-    # html.write("<h3>" + rulespec["title"] + "</h3>")
     if not config.wato_hide_varnames:
         display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
         html.div(display_varname, class_="varname")
+
+    rulesets = AllRulesets()
+    rulesets.load()
+    ruleset = rulesets.get(varname)
 
     html.help(ruleset.help())
 
@@ -12325,7 +12323,8 @@ def mode_edit_ruleset(phase):
         last_folder = None
 
         skip_this_folder = False
-        for folder, rulenr, rule in rules.get_rules():
+        all_hosts = Host.all()
+        for folder, rulenr, rule in ruleset.get_rules():
             if folder != last_folder:
                 skip_this_folder = False
                 if last_folder != None:
@@ -12341,23 +12340,19 @@ def mode_edit_ruleset(phase):
 
                 table.begin("rules", title="%s %s" % (_("Rules in folder"), alias_path),
                     css="ruleset", searchable=False, sortable=False)
-                rel_rulenr = 0
             else:
                 if skip_this_folder:
                     continue
 
                 first_in_group = False
-                rel_rulenr += 1
 
-            # TODO: Zweiter Teil funktioniert noch nicht
-            last_in_group = (rulenr == rules.num_rules() - 1 or ruleset[rulenr+1][0] != folder)
+            last_in_group = rulenr == ruleset.num_rules_in_folder(folder) - 1
 
             css = []
             if rule.is_disabled():
                 css.append("disabled")
             if html.var("highlight_ineffective"):
-                all_hosts = Host.all()
-                if rule_is_ineffective(rule, folder, rulespec, all_hosts):
+                if rule.is_ineffective(all_hosts):
                     css.append("ineffective")
 
             table.row(css=" ".join(css) if css else None)
@@ -12371,7 +12366,7 @@ def mode_edit_ruleset(phase):
                     reason = rule.matches_host_and_item(Folder.current(), hostname, item)
 
                 # Handle case where dict is constructed from rules
-                if reason == True and rulespec["match"] == "dict":
+                if reason == True and ruleset.match_type() == "dict":
                     if len(rule.value()) == 0:
                         title = _("This rule matches, but does not define any parameters.")
                         img = 'imatch'
@@ -12388,10 +12383,10 @@ def mode_edit_ruleset(phase):
                             img = 'pmatch'
                         match_keys.update(new_keys)
 
-                elif reason == True and (not alread_matched or rulespec["match"] == "all"):
+                elif reason == True and (not alread_matched or ruleset.match_type() == "all"):
                     title = _("This rule matches for the host '%s'") % hostname
-                    if rulespec["itemtype"]:
-                        title += _(" and the %s '%s'.") % (rulespec["itemname"], item)
+                    if ruleset.item_type():
+                        title += _(" and the %s '%s'.") % (ruleset.item_name(), item)
                     else:
                         title += "."
                     img = 'match'
@@ -12415,14 +12410,14 @@ def mode_edit_ruleset(phase):
             # Actions
             table.cell(_("Order"), css="buttons rulebuttons")
             if not first_in_group:
-                rule_button("top", _("Move this rule to the top of the list"), folder, rel_rulenr)
-                rule_button("up",  _("Move this rule one position up"), folder, rel_rulenr)
+                rule_button("top", _("Move this rule to the top of the list"), folder, rulenr)
+                rule_button("up",  _("Move this rule one position up"), folder, rulenr)
             else:
                 rule_button(None)
                 rule_button(None)
             if not last_in_group:
-                rule_button("down",   _("Move this rule one position down"), folder, rel_rulenr)
-                rule_button("bottom", _("Move this rule to the bottom of the list"), folder, rel_rulenr)
+                rule_button("down",   _("Move this rule one position down"), folder, rulenr)
+                rule_button("bottom", _("Move this rule to the bottom of the list"), folder, rulenr)
             else:
                 rule_button(None)
                 rule_button(None)
@@ -12431,15 +12426,15 @@ def mode_edit_ruleset(phase):
             edit_url = folder_preserving_link([
                 ("mode", "edit_rule"),
                 ("varname", varname),
-                ("rulenr", rel_rulenr),
+                ("rulenr", rulenr),
                 ("host", hostname),
                 ("item", mk_repr(item)),
                 ("rule_folder", folder.path()),
             ])
             html.icon_button(edit_url, _("Edit this rule"), "edit")
             rule_button("insert", _("Insert a copy of this rule in current folder"),
-                        folder, rel_rulenr)
-            rule_button("delete", _("Delete this rule"), folder, rel_rulenr)
+                        folder, rulenr)
+            rule_button("delete", _("Delete this rule"), folder, rulenr)
 
             show_rule_in_table(rule)
 
@@ -12463,10 +12458,10 @@ def explain_ruleset_match_type(match_type):
 def show_rule_in_table(rule):
     # TODO: refactor params
     rulespec  = rule._ruleset._rulespec
+    varname   = rule._ruleset._name
     tag_specs = rule._tag_specs
     host_list = rule._host_list
     item_list = rule._item_list
-    varname   = rule._name
     value     = rule._value
     folder    = rule._folder
     rule_options = rule._rule_options
@@ -12675,7 +12670,7 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
     html.close_ul()
 
 
-def get_rule_conditions(ruleset):
+def get_rule_conditions(rulespec):
     tag_list = get_tag_conditions()
 
     # Host list
@@ -12696,13 +12691,13 @@ def get_rule_conditions(ruleset):
             host_list = ALL_HOSTS # equivalent
 
     # Item list
-    itemtype = ruleset["itemtype"]
+    itemtype = rulespec["itemtype"]
     if itemtype:
         explicit = html.get_checkbox("explicit_services")
         if not explicit:
             item_list = ALL_SERVICES
         else:
-            itemenum = ruleset["itemenum"]
+            itemenum = rulespec["itemenum"]
             negate = html.get_checkbox("negate_entries")
 
             if itemenum:
@@ -12723,7 +12718,7 @@ def get_rule_conditions(ruleset):
 
             if len(item_list) == 0:
                 raise MKUserError("item_0", _("Please specify at least one %s or "
-                    "this rule will never match.") % ruleset["itemname"])
+                    "this rule will never match.") % rulespec["itemname"])
     else:
         item_list = None
 
@@ -12753,7 +12748,7 @@ def mode_edit_rule(phase, new = False):
     try:
         rulespec = g_rulespecs.get(varname)
     except KeyError:
-        raise MKUserError("varname", _("The ruleset \"%s\" does not exist." % varname))
+        raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % varname)
 
     back_mode = html.var('back_mode', 'edit_ruleset')
 
@@ -12774,6 +12769,7 @@ def mode_edit_rule(phase, new = False):
     folder   = html.has_var("_new_host_rule") and Folder.current() or Folder.folder(html.var("rule_folder"))
 
     rulesets = FolderRulesets(folder)
+    rulesets.load()
     ruleset  = rulesets.get(varname)
 
     if new:
@@ -12791,14 +12787,8 @@ def mode_edit_rule(phase, new = False):
             else:
                 item_list = [ "" ]
 
-        try:
-            rule = Rule.create(folder, ruleset, host_list, item_list)
-        except Exception, e:
-            if phase != "action":
-                html.message(_("Cannot create rule: %s") % e)
-            return
-
-        rulenr = rules.num_rules()
+        rule = Rule.create(folder, ruleset, host_list, item_list)
+        rulenr = ruleset.num_rules()
     else:
         try:
             rulenr = int(html.var("rulenr"))
@@ -12843,21 +12833,21 @@ def mode_edit_rule(phase, new = False):
 
             if new_rule_folder == folder:
                 if new:
-                    rules.add_rule(rule)
+                    ruleset.add_rule(folder, rule)
                 rulesets.save()
 
                 if new:
-                    add_change("edit-rule", _("Created new rule in ruleset %s in folder %s") %
-                               (rulespec["title"], new_rule_folder.alias_path()),
+                    add_change("edit-rule", _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
+                               (ruleset.title(), new_rule_folder.alias_path()),
                                sites=folder.all_site_ids())
                 else:
-                    add_change("edit-rule", _("Changed properties of rule %s in folder %s") %
-                               (rulespec["title"], new_rule_folder.alias_path()),
+                    add_change("edit-rule", _("Changed properties of rule \"%s\" in folder \"%s\"") %
+                               (ruleset.title(), new_rule_folder.alias_path()),
                                sites=folder.all_site_ids())
 
             else:
                 # Move rule to new folder
-                rulesets.delete_rule(rule)
+                ruleset.delete_rule(rule)
                 rulesets.save()
 
                 rulesets = FolderRulesets(new_rule_folder)
@@ -12866,19 +12856,19 @@ def mode_edit_rule(phase, new = False):
                 rulesets.save()
 
                 affected_sites = list(set(folder.all_site_ids() + new_rule_folder.all_site_ids()))
-                add_change("edit-rule", _("Changed properties of rule %s, moved rule from "
-                            "folder %s to %s") % (rulespec["title"], folder.alias_path(),
+                add_change("edit-rule", _("Changed properties of rule \"%s\", moved rule from "
+                            "folder \"%s\" to \"%s\"") % (ruleset.title(), folder.alias_path(),
                             new_rule_folder.alias_path()), sites=affected_sites)
         else:
             return back_mode
 
         return (back_mode,
-           (new and _("Created new rule in ruleset '%s' in folder %s")
-                or _("Edited rule in ruleset '%s' in folder %s")) %
-                      (rulespec["title"], new_rule_folder.alias_path()))
+           (new and _("Created new rule in ruleset \"%s\" in folder \"%s\"")
+                or _("Edited rule in ruleset \"%s\" in folder \"%s\"")) %
+                      (ruleset.title(), new_rule_folder.alias_path()))
 
-    if rulespec.get("help"):
-        html.div(HTML(rulespec["help"]), class_="info")
+    if ruleset.help():
+        html.div(HTML(ruleset.help()), class_="info")
 
     html.begin_form("rule_editor", method="POST")
 
@@ -12892,8 +12882,8 @@ def mode_edit_rule(phase, new = False):
         forms.header(valuespec.title() or _("Value"))
         forms.section()
         try:
-            valuespec.validate_datatype(value.value(), "ve")
-            valuespec.render_input("ve", value.value())
+            valuespec.validate_datatype(rule.value(), "ve")
+            valuespec.render_input("ve", rule.value())
         except Exception, e:
             if config.debug:
                 raise
@@ -12970,9 +12960,9 @@ def mode_edit_rule(phase, new = False):
         elif itemtype == "checktype":
             forms.section(_("Check types"))
         elif itemtype == "item":
-            forms.section(rulespec["itemname"].title())
-            if rulespec["itemhelp"]:
-                html.help(rulespec["itemhelp"])
+            forms.section(ruleset.item_name().title())
+            if ruleset.item_help():
+                html.help(ruleset.item_help())
             else:
                 html.help(_("You can make the rule apply only to certain services of the "
                              "specified hosts. Do this by specifying explicit <b>items</b> to "
@@ -12992,7 +12982,6 @@ def mode_edit_rule(phase, new = False):
             html.checkbox("explicit_services", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
                          label = _("Specify explicit values"))
             html.open_div(id_=div_id, style=["display: none;" if not checked else "", "padding: 0px;"])
-            itemenum = rulespec["itemenum"]
 
             negate_entries = len(rule._item_list) > 0 and rule._item_list[0].startswith(ENTRY_NEGATE_CHAR)
             if negate_entries:
@@ -13000,6 +12989,7 @@ def mode_edit_rule(phase, new = False):
             else:
                 cleaned_item_list = rule._item_list
 
+            itemenum = ruleset.item_enum()
             if itemenum:
                 value = [ x.rstrip("$") for x in cleaned_item_list ]
                 itemspec = ListChoice(choices = itemenum, columns = 3)
@@ -13949,7 +13939,7 @@ def create_sample_config():
     }
 
     rulesets = FolderRulesets(Folder.root_folder())
-    rulesets.from_config(rulesets)
+    rulesets.from_config(Folder.root_folder(), ruleset_config)
     rulesets.save()
 
     notification_rules = [{
@@ -13986,9 +13976,6 @@ def create_sample_config():
 
     userdb.create_cmk_automation_user()
 
-
-def has_agent_bakery():
-    return 'bake_agents' in globals()
 
 #.
 #   .--Pattern Editor------------------------------------------------------.
@@ -14092,15 +14079,9 @@ def mode_pattern_editor(phase):
     # Loop all rules for this ruleset
     already_matched = False
     last_folder = None
+    abs_rulenr = 0
     for folder, rulenr, rule in ruleset.get_rules():
-        if folder != last_folder:
-            rel_rulenr = 0
-            last_folder = folder
-        else:
-            rel_rulenr += 1
-
-        # TODO: Move to Ruleset()?
-        last_in_group = rulenr == ruleset.num_rules() - 1 or ruleset[rulenr+1][0] != folder
+        last_in_group = rulenr == ruleset.num_rules_in_folder(folder) - 1
 
         # Check if this rule applies to the given host/service
         if hostname:
@@ -14124,9 +14105,10 @@ def mode_pattern_editor(phase):
             match_img   = 'nmatch'
             match_title = reason
 
-        html.begin_foldable_container("rule", "%s" % rulenr, True,
-                    HTML("<b>Rule #%d</b>" % (rulenr + 1)), indent = False)
-        table.begin("pattern_editor_rule_%d" % rulenr, sortable=False)
+        html.begin_foldable_container("rule", "%s" % abs_rulenr, True,
+                    HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)), indent = False)
+        table.begin("pattern_editor_rule_%d" % abs_rulenr, sortable=False)
+        abs_rulenr += 1
 
         # TODO: What's this?
         pattern_list = rule.value()
@@ -14182,7 +14164,7 @@ def mode_pattern_editor(phase):
         edit_url = folder_preserving_link([
             ("mode", "edit_rule"),
             ("varname", "logwatch_rules"),
-            ("rulenr", rel_rulenr),
+            ("rulenr", rulenr),
             ("host", hostname),
             ("item", mk_repr(item)),
             ("rule_folder", folder.path())])
@@ -16386,9 +16368,6 @@ def load_plugins(force):
     undeclare_all_host_attributes()
     load_notification_table()
     initialize_global_configvars()
-
-    global g_rulespecs
-    g_rulespecs = Rulespecs()
 
     global g_rulegroups
     g_rulegroups = {}

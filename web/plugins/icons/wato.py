@@ -99,7 +99,7 @@ def paint_download_host_info(what, row, tags, host_custom_vars, ty):
         # be piggyback data available which should be downloadable.
         if ty == "walk" and "snmp" not in tags:
             return
-        elif ty == "agent" and "snmp" in tags and "agent" not in tags:
+        elif ty == "agent" and "snmp" in tags and "tcp" not in tags:
             return
 
         params = [("host",   row["host_name"]),

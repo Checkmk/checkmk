@@ -40,6 +40,9 @@ def render_mkeventd_performance():
 
     html.write("<table class=\"content_center mkeventd_performance\">\n")
 
+    # TODO: Reorder these values and create a useful order.
+    # e.g. Client connects and Time per client request after
+    # each other.
     columns = [
           (_("Received messages"),   "message",   "%.2f/s"),
           (_("Rule hits"),           "rule_hit",  "%.2f/s"),

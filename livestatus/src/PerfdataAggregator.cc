@@ -25,7 +25,6 @@
 #include "PerfdataAggregator.h"
 #include <cctype>
 #include <cmath>
-#include <cstdio>
 #include <cstdlib>
 #include <utility>
 #include <vector>
@@ -34,6 +33,7 @@
 #include "strutil.h"
 
 using std::string;
+using std::to_string;
 using std::vector;
 
 void PerfdataAggregator::consume(void *row, contact * /* auth_user */,
@@ -148,14 +148,12 @@ void PerfdataAggregator::output(RowRenderer &r) {
                 // _operation should beetter be a scoped enumeration.
                 break;
         }
-        char format[64];
-        snprintf(format, sizeof(format), "%s=%.8f", entry.first.c_str(), value);
         if (first) {
             first = false;
         } else {
             perf_data += " ";
         }
-        perf_data += format;
+        perf_data += entry.first + "=" + to_string(value);
     }
     r.output(perf_data);
 }

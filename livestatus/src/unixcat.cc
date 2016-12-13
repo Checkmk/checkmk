@@ -30,12 +30,16 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <cerrno>
-#include <cinttypes>
 #include <csignal>
-#include <cstdint>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <string>
+
+using std::cerr;
+using std::endl;
+using std::string;
+using std::to_string;
 
 int copy_data(int from, int to);
 void *voidp;
@@ -46,6 +50,10 @@ struct thread_info {
     int should_shutdown;
     int terminate_on_read_eof;
 };
+
+void printErrno(const string &msg) {
+    cerr << msg + ": " + strerror(errno) << endl;
+}
 
 ssize_t read_with_timeout(int from, char *buffer, int size, int us) {
     fd_set fds;
@@ -74,8 +82,7 @@ void *copy_thread(void *info) {
         ssize_t r =
             read_with_timeout(from, read_buffer, sizeof(read_buffer), 1000000);
         if (r == -1) {
-            fprintf(stderr, "Error reading from %d: %s\n", from,
-                    strerror(errno));
+            printErrno("Error reading from " + to_string(from));
             break;
         } else if (r == 0) {
             if (ti->should_shutdown != 0) {
@@ -95,10 +102,8 @@ void *copy_thread(void *info) {
         while (bytes_to_write > 0) {
             ssize_t bytes_written = write(to, buffer, bytes_to_write);
             if (bytes_written == -1) {
-                uintmax_t b = bytes_to_write;
-                fprintf(stderr,
-                        "Error: Cannot write %" PRIuMAX " bytes to %d: %s\n", b,
-                        to, strerror(errno));
+                printErrno("Error: Cannot write " + to_string(bytes_to_write) +
+                           " bytes to " + to_string(to));
                 break;
             }
             buffer += bytes_written;
@@ -110,35 +115,34 @@ void *copy_thread(void *info) {
 
 int main(int argc, char **argv) {
     if (argc != 2) {
-        fprintf(stderr, "Usage: %s UNIX-socket\n", argv[0]);
+        cerr << "Usage: " << argv[0] << " UNIX-socket" << endl;
         exit(1);
     }
 
     // https://llvm.org/bugs/show_bug.cgi?id=29089
     signal(SIGWINCH, SIG_IGN);  // NOLINT
 
-    const char *unixpath = argv[1];
+    string unixpath = argv[1];
     struct stat st;
 
-    if (0 != stat(unixpath, &st)) {
-        fprintf(stderr, "No UNIX socket %s existing\n", unixpath);
+    if (0 != stat(unixpath.c_str(), &st)) {
+        cerr << "No UNIX socket " << unixpath << " existing" << endl;
         exit(2);
     }
 
     int sock = socket(PF_UNIX, SOCK_STREAM, 0);
     if (sock < 0) {
-        fprintf(stderr, "Cannot create client socket: %s\n", strerror(errno));
+        printErrno("Cannot create client socket");
         exit(3);
     }
 
     /* Connect */
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
-    strncpy(sockaddr.sun_path, unixpath, sizeof(sockaddr.sun_path));
+    strncpy(sockaddr.sun_path, unixpath.c_str(), sizeof(sockaddr.sun_path));
     if (connect(sock, reinterpret_cast<struct sockaddr *>(&sockaddr),
                 sizeof(sockaddr)) != 0) {
-        fprintf(stderr, "Couldn't connect to UNIX-socket at %s: %s.\n",
-                unixpath, strerror(errno));
+        printErrno("Couldn't connect to UNIX-socket at " + unixpath);
         close(sock);
         exit(4);
     }
@@ -150,13 +154,13 @@ int main(int argc, char **argv) {
             0 ||
         pthread_create(&toleft_thread, nullptr, copy_thread, &toleft_info) !=
             0) {
-        fprintf(stderr, "Couldn't create threads: %s.\n", strerror(errno));
+        printErrno("Couldn't create threads");
         close(sock);
         exit(5);
     }
     if (pthread_join(toleft_thread, nullptr) != 0 ||
         pthread_join(toright_thread, nullptr) != 0) {
-        fprintf(stderr, "Couldn't join threads: %s.\n", strerror(errno));
+        printErrno("Couldn't join threads");
         close(sock);
         exit(6);
     }

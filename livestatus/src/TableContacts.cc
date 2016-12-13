@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableContacts.h"
-#include <cstdio>
 #include <memory>
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
@@ -39,6 +38,7 @@
 
 using std::make_unique;
 using std::string;
+using std::to_string;
 
 extern contact *contact_list;
 
@@ -79,11 +79,10 @@ void TableContacts::addColumns(Table *table, const string &prefix,
         "problems",
         reinterpret_cast<char *>(&ctc.service_notification_period) - ref,
         indirect_offset));
-    for (int i = 0; i < MAX_CONTACT_ADDRESSES; i++) {
-        char b[32];
-        snprintf(b, sizeof(b), "address%d", i + 1);
+    for (int i = 1; i <= MAX_CONTACT_ADDRESSES; ++i) {
+        string b = "address" + to_string(i);
         table->addColumn(make_unique<OffsetStringColumn>(
-            prefix + b, (string("The additional field ") + b),
+            prefix + b, "The additional field " + b,
             reinterpret_cast<char *>(&ctc.address[i]) - ref, indirect_offset));
     }
 

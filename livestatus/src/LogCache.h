@@ -30,6 +30,7 @@
 #include <ctime>
 #include <map>
 #include <mutex>
+#include <string>
 #include "nagios.h"  // IWYU pragma: keep
 class Column;
 class CommandsHolder;
@@ -70,7 +71,7 @@ public:
     bool logCachePreChecks(MonitoringCore *core);
 
 private:
-    void scanLogfile(char *path, bool watch);
+    void scanLogfile(const std::string &path, bool watch);
     _logfiles_t::iterator findLogfileStartingBefore(time_t);
 };
 

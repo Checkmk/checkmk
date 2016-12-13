@@ -26,15 +26,18 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <chrono>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iomanip>
 #include <ostream>
 #include <ratio>
 #include "ChronoUtils.h"
 #include "Logger.h"
 
 using std::chrono::milliseconds;
+using std::ostringstream;
+using std::setfill;
+using std::setw;
 using std::string;
 using std::to_string;
 using std::vector;
@@ -105,10 +108,11 @@ void OutputBuffer::flush(int fd, int *termination_flag) {
             s = _error_message.size();
         }
 
-        char header[17];
-        snprintf(header, sizeof(header), "%03u %11d\n",
-                 static_cast<unsigned>(_response_code), s);
-        writeData(fd, termination_flag, header, 16);
+        ostringstream os;
+        os << setw(3) << setfill('0') << static_cast<unsigned>(_response_code)
+           << " " << setw(11) << setfill(' ') << s;
+        string header = os.str();
+        writeData(fd, termination_flag, header.c_str(), header.size());
         writeData(fd, termination_flag, buffer, s);
     } else {
         writeData(fd, termination_flag, _buffer, size());

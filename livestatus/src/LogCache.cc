@@ -26,7 +26,6 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <cstddef>
-#include <cstdio>
 #include <cstdlib>
 #include <ostream>
 #include <string>
@@ -34,6 +33,8 @@
 #include "Logfile.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
+
+using std::string;
 using std::chrono::system_clock;
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
@@ -97,7 +98,6 @@ void LogCache::updateLogfileIndex() {
     DIR *dir = opendir(log_archive_path);
 
     if (dir != nullptr) {
-        char abspath[4096];
         struct dirent *ent, *result;
         int len = offsetof(struct dirent, d_name) +
                   pathconf(log_archive_path, _PC_NAME_MAX) + 1;
@@ -105,9 +105,8 @@ void LogCache::updateLogfileIndex() {
 
         while (0 == readdir_r(dir, ent, &result) && result != nullptr) {
             if (ent->d_name[0] != '.') {
-                snprintf(abspath, sizeof(abspath), "%s/%s", log_archive_path,
-                         ent->d_name);
-                scanLogfile(abspath, false);
+                scanLogfile(string(log_archive_path) + "/" + ent->d_name,
+                            false);
             }
             // ent = result;
         }
@@ -119,7 +118,7 @@ void LogCache::updateLogfileIndex() {
     }
 }
 
-void LogCache::scanLogfile(char *path, bool watch) {
+void LogCache::scanLogfile(const string &path, bool watch) {
     auto logfile = new Logfile(_logger, _commands_holder, path, watch);
     time_t since = logfile->since();
     if (since != 0) {

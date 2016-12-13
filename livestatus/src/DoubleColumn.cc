@@ -23,13 +23,13 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DoubleColumn.h"
-#include <cstdio>
 #include "DoubleAggregator.h"
 #include "DoubleFilter.h"
 #include "Renderer.h"
 
 using std::make_unique;
 using std::string;
+using std::to_string;
 using std::unique_ptr;
 
 void DoubleColumn::output(void *row, RowRenderer &r,
@@ -38,9 +38,7 @@ void DoubleColumn::output(void *row, RowRenderer &r,
 }
 
 string DoubleColumn::valueAsString(void *row, contact * /* auth_user */) {
-    char buf[64];
-    snprintf(buf, sizeof(buf), "%.10e", getValue(row));
-    return buf;
+    return to_string(getValue(row));
 }
 
 Filter *DoubleColumn::createFilter(RelationalOperator relOp,

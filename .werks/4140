@@ -1,0 +1,9 @@
+Title: Views: Download agent output action was not displayed correctly on SNMP+Agent hosts
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481623042
+Class: fix
+
+

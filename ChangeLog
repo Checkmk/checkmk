@@ -93,6 +93,7 @@
     * 4128 FIX: Fixed exception in "Virtual host tree" snapin in case a user tries to access a not existing tree
     * 4129 FIX: Fixed possible exception when a view is linking to a not permitted other view
     * 4137 FIX: List of strings: New fields are now added when last field is not empty...
+    * 4140 FIX: Views: Download agent output action was not displayed correctly on SNMP+Agent hosts
 
     WATO:
     * 3984 Permissions can now be filtered by providing a search term on the "edit role" page...

@@ -811,6 +811,7 @@ def rbn_object_contacts(context):
     if commasepped:
         return commasepped.split(",")
     else:
+        # TODO: Hier die Fallback-Contacts eintragen!
         return []
 
 
@@ -1687,6 +1688,7 @@ def dead_nagios_variable(value):
 def notify_log(message):
     if notification_logging >= 1:
         event_log(notification_log, message)
+
 
 def notify_log_debug(message):
     if notification_logging >= 2:

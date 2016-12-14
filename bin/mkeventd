@@ -4029,7 +4029,7 @@ def add_rbn_contact_information(context, host, contact_groups, contact_groups_no
     verbose("  Using these groups: %r" % groups)
 
     context.update({
-        "CONTACTS"                 : " ".join(contacts),
+        "CONTACTS"                 : ",".join(contacts),
         "CONTACTNAME"              : "check-mk-notify",
         "SERVICECONTACTGROUPNAMES" : ",".join(groups),
     })

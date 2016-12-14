@@ -31,77 +31,95 @@ try:
 except:
     mkeventd_enabled = False
 
-def render_mkeventd_performance():
-    def write_line(left, right):
-        html.write("<tr><td class=left>%s:</td>"
-                   "<td class=right><strong>%s</strong></td></tr>" % (left, right))
 
+def mkeventd_performance_entries():
     status = mkeventd.get_status()
-
-    html.write("<table class=\"content_center mkeventd_performance\">\n")
+    entries = []
 
     # TODO: Reorder these values and create a useful order.
     # e.g. Client connects and Time per client request after
     # each other.
     columns = [
-          (_("Received messages"),   "message",   "%.2f/s"),
-          (_("Rule hits"),           "rule_hit",  "%.2f/s"),
-          (_("Rule tries"),          "rule_trie", "%.2f/s"),
-          (_("Created events"),      "event",     "%.2f/s"),
-          (_("Client connects"),     "connect",   "%.2f/s"),
+          (1, _("Received messages"),   "message",   "%.2f/s"),
+          (2, _("Rule tries"),          "rule_trie", "%.2f/s"),
+          (3, _("Rule hits"),           "rule_hit",  "%.2f/s"),
+          (4, _("Created events"),      "event",     "%.2f/s"),
+          (10, _("Client connects"),    "connect",   "%.2f/s"),
+          (9, _("Overflows"),           "overflow", "%.2f/s"),
     ]
-    for what, col, fmt in columns:
-        write_line(what, fmt % status["status_average_%s_rate" % col])
+    for index, what, col, fmt in columns:
+        col_name = "status_average_%s_rate" % col
+        if col_name in status:
+            entries.append((index, what, fmt % status[col_name]))
 
     # Hit rate
     if status["status_average_rule_trie_rate"] == 0.0:
-        write_line(_("Rule hit ratio"), _("-.-- %"))
+        entries.append((3.5, _("Rule hit ratio"), _("-.-- %")))
     else:
-        write_line(_("Rule hit ratio"), "%.2f %%" % (
+        entries.append((3.5, _("Rule hit ratio"), "%.2f%%" % (
            status["status_average_rule_hit_rate"] /
-           status["status_average_rule_trie_rate"] * 100))
+           status["status_average_rule_trie_rate"] * 100)))
 
     # Time columns
     time_columns = [
-        (_("Processing time per message"), "processing"),
-        (_("Time per client request"), "request"),
-        (_("Replication synchronization"), "sync"),
+        (5, _("Processing time per message"), "processing"),
+        (11, _("Time per client request"), "request"),
+        (20, _("Replication synchronization"), "sync"),
     ]
-    for title, name in time_columns:
+    for index, title, name in time_columns:
         value = status.get("status_average_%s_time" % name)
         if value:
-            write_line(title, "%.2f ms" % (value * 1000))
+            entries.append((index, title, "%.3f ms" % (value * 1000)))
         elif name != "sync":
-            write_line(title, _("-.-- ms"))
+            entries.append((index, title, _("-.-- ms")))
+
+    # Load
+    entries.append((6, "Processing load", "%.0f%%" % (
+        min(100.0, status["status_average_processing_time"] * status["status_average_message_rate"] * 100.0))))
+
+
+
+    entries.sort()
+    return entries
+
+
+def render_mkeventd_performance():
+    html.open_table(class_=["mkeventd_performance"])
+    for index, left, right in mkeventd_performance_entries():
+        html.tr(
+            html.render_td("%s:" % left) +
+            html.render_td(right))
     html.close_table()
 
 if mkeventd_enabled:
     sidebar_snapins["mkeventd_performance"] = {
-        "title" : _("Event Console Performance"),
+        "title"       : _("Event Console Performance"),
         "description" : _("Monitor the performance of the Event Console"),
-        "refresh" : 15,
-        "render" : render_mkeventd_performance,
-        "allowed" : [ "admin", ],
-        "styles" : """
+        "refresh"     : 15,
+        "render"      : render_mkeventd_performance,
+        "allowed"     : [ "admin", ],
+        "styles"      : """
+
     table.mkeventd_performance {
         width: %dpx;
-        -moz-border-radius: 5px;
-        background-color: #589;
-        /* background-color: #6da1b8;*/
+        border-radius: 2px;
+        background-color: rgba(0, 0, 0, 0.1);
         border-style: solid;
-        border-color: #444 #bbb #eee #666;
-        /* The border needs to be substracted from the width */
-        border-width: 1px;
+        border-color: rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
+        border-width: 1.5px; */
     }
+
     table.mkeventd_performance td {
         padding: 0px 2px;
         font-size: 8pt;
     }
-    table.mkeventd_performance td.right {
+
+    table.mkeventd_performance td:nth-of-type(2) {
         text-align: right;
         padding: 0px;
         padding-right: 1px;
         white-space: nowrap;
+        font-weight: bold;
     }
 
     """ % (snapin_width - 2)

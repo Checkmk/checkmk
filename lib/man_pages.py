@@ -65,6 +65,7 @@ catalog_titles = {
             "climaveneta"  : "Climaveneta",
             "eaton"        : "Eaton",
             "emerson"      : "EMERSON",
+            "epson"        : "Epson",
             "hwg"          : "HW group",
             "kentix"       : "Kentix",
             "knuerr"       : "Knuerr",
@@ -74,6 +75,7 @@ catalog_titles = {
             "stulz"        : "STULZ",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
+            "didactum"     : "Didactum",
         "other"       : "Other devices",
         "time"        : "Clock Devices",
             "meinberg"   : "Meinberg",
@@ -161,6 +163,7 @@ catalog_titles = {
         "sansymphony"   : "Datacore SANsymphony",
         "kaspersky"     : "Kaspersky Lab",
         "mcafee"        : "McAfee",
+        "barracuda"     : "Barracuda",
 
     "os"       : "Operating Systems",
         "aix"           : "AIX",

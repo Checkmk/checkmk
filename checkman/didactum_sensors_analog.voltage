@@ -1,6 +1,6 @@
 title: Didactum devices: Voltage
 agents: snmp
-catalog: hw/other
+catalog: hw/environment/didactum
 license: GPL
 distribution: check_mk
 description:

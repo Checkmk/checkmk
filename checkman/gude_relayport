@@ -1,6 +1,6 @@
 title: GUDE Power Control: Relay port status and electricity
 agents: snmp
-catalog: hw/other
+catalog: hw/power/gude
 license: GPL
 distribution: check_mk
 description:

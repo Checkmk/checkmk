@@ -1,6 +1,6 @@
 title: Barracuda SPAM Firewall: System CPU Utilization
 agents: snmp
-catalog: hw/other
+catalog: app/barracuda
 license: GPL
 distribution: check_mk
 description:

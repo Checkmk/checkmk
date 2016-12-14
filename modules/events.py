@@ -28,6 +28,7 @@
 # only) by the alert handling
 
 import pprint, urllib, select, subprocess, socket
+import livestatus, os
 
 from cmk.regex import regex
 
@@ -187,36 +188,31 @@ def find_host_service_in_context(context):
         return host
 
 
-def livestatus_fetch_query(query):
-    # TODO: use livestatus.py instead!
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.connect(cmk.paths.livestatus_unix_socket)
-    sock.send(query)
-    sock.shutdown(socket.SHUT_WR)
-    response = sock.recv(10000000)
-    sock.close()
-    return response
-
 
 def livestatus_fetch_contacts(host, service):
     try:
         if service:
-            query = "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts\n" % (
+            query = "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts" % (
                 host, service)
         else:
-            query = "GET hosts\nFilter: host_name = %s\nColumns: contacts\n" % host
+            query = "GET hosts\nFilter: host_name = %s\nColumns: contacts" % host
 
-        commasepped = livestatus_fetch_query(query).strip()
-        aslist = commasepped.split(",")
-        if "check-mk-notify" in aslist: # Remove artifical contact used for rule based notifications
-            aslist.remove("check-mk-notify")
-        return ",".join(aslist)
+        contact_list = livestatus.LocalConnection().query_value(query)
+        if "check-mk-notify" in contact_list: # Remove artifical contact used for rule based notifications
+            contact_list.remove("check-mk-notify")
+        return contact_list
+
+    except livestatus.MKLivestatusNotFoundError:
+        if not service:
+            return None
+        else:
+            # Service not found: try again with contacts of host!
+            return livestatus_fetch_contacts(host, None)
 
     except Exception, e:
-        if cmk.debug.enabled():
+        if True or cmk.debug.enabled():
             raise
-        return "" # We must allow notifications without Livestatus access
-
+        return None # We must allow notifications without Livestatus access
 
 
 
@@ -224,7 +220,11 @@ def add_rulebased_macros(raw_context):
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
     if "CONTACTS" not in raw_context:
-        raw_context["CONTACTS"] = livestatus_fetch_contacts(raw_context["HOSTNAME"], raw_context.get("SERVICEDESC"))
+        contact_list = livestatus_fetch_contacts(
+                raw_context["HOSTNAME"],
+                raw_context.get("SERVICEDESC"))
+        if contact_list != None:
+            raw_context["CONTACTS"] = ",".join(contact_list)
 
 
     # Add a pseudo contact name. This is needed for the correct creation

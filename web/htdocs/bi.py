@@ -26,8 +26,13 @@
 
 import config, re, pprint, time
 import sites
+import marshal
+import md5
+import copy
 from lib import *
 from cmk.regex import regex
+import cmk
+import multiprocessing
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -110,16 +115,21 @@ NT_REMAINING = 3
 NT_PLACEHOLDER = 4 # temporary dummy entry needed for REMAINING
 
 
-# global variables
+# Global variables
 g_cache = {}                  # per-user cache
-g_services_items = None
+g_bi_cache_manager    = None
+g_bi_sitedata_manager = None
+g_bi_job_manager      = None
+g_services_items      = None
 
+g_tree_cache = {}
 g_config_information = None   # for invalidating cache after config change
 did_compilation = False       # Is set to true if anything has been compiled
 
+
 # Load the static configuration of all services and hosts (including tags)
 # without state.
-def load_services(cache, only_hosts):
+def load_services(only_hosts):
     global g_services, g_services_by_hostname
     g_services = {}
     g_services_by_hostname = {}
@@ -136,6 +146,7 @@ def load_services(cache, only_hosts):
 
     sites.live().set_prepend_site(True)
     sites.live().set_auth_domain('bi')
+
     data = sites.live().query(
         "GET hosts\n"
         +filter_txt+
@@ -172,6 +183,37 @@ def reset_cache_status():
     global used_cache
     used_cache = False
 
+# The sitestats are used to define the integrity of the currently used cache
+# If file timestamps change -> Cache is invalid
+# If there are more sites online than before -> Cache is invalid
+# If there are less sites online than before -> No problem at all
+def get_current_sitestats():
+    # Filter relevant files which can affect the BI trees
+    # Anything in ~/etc/check_mk/multisite.d/wato/, except bi.mk is irrelevant
+    relevant_configuration_timestamps = []
+    for entry in config.modification_timestamps:
+        # ('/omd/sites/heute/etc/check_mk/multisite.d/wato/bi.mk', 1474548846.9708173)
+        filename = os.path.basename(entry[0])
+        if "multisite.d/wato/" in entry[0] and not filename == "bi.mk":
+            continue
+        else:
+            relevant_configuration_timestamps.append(entry)
+
+    current_world = {"timestamps":   relevant_configuration_timestamps,
+                     "online_sites": set(),
+                     "known_sites":  set()}
+
+    # This request here is mandatory, since the sites.states() info might be outdated
+    sites.live().query("GET status")
+
+    for site, values in sites.states().items():
+        current_world["known_sites"].add((site, values.get("program_start", 0)))
+        if values.get("state") == "online":
+            current_world["online_sites"].add((site, values["program_start"]))
+
+    return current_world
+
+# TODO: do we need this?
 def reused_compilation():
     return used_cache and not did_compilation
 
@@ -195,13 +237,1211 @@ def aggregation_groups():
     else:
         # classic mode: precompile all and display only groups with members
         compile_forest(config.user.id)
-        group_names = list(set([ group for group, trees in g_user_cache["forest"].items() if trees ]))
+        group_names = list(set([ group for group, trees in g_tree_cache["forest"].items() if trees ]))
 
     return sorted(group_names, cmp = lambda a,b: cmp(a.lower(), b.lower()))
 
-def log(s):
-    if compile_logging():
-        logger(LOG_DEBUG, 'BI: %s' % s)
+def log(*args):
+    if not compile_logging():
+        return
+    for idx, arg in enumerate(args):
+        if type(arg) not in [ unicode, str ]:
+            arg = pprint.pformat(arg)
+        logger(LOG_DEBUG, 'BI: %s%s' % (idx > 5 and "\n" or "", arg))
+
+def get_cache_dir():
+    bi_cache_dir = cmk.paths.tmp_dir + "/bi_cache"
+    try:
+        os.makedirs(bi_cache_dir)
+    except OSError, e:
+        pass
+    return bi_cache_dir
+
+
+class JobWorker(object):
+    # TODO: It looks like we dont need this
+    def __init__(self):
+        super(JobWorker, self).__init__()
+
+
+    @staticmethod
+    def run(job, mp_queue):
+        new_data = {}
+        start_time = time.time()
+        try:
+            new_data = JobWorker.compile_job(job["id"], job["info"])
+            if job["id"][0] == AGGR_HOST:
+                new_data["compiled_hosts"] = job["info"]["queued_hosts"]
+        except Exception, e:
+            log("MP-Worker Exception %s" % e)
+            log_exception()
+        mp_queue.put((job, new_data))
+        log("Compilation finished - took %.3f sec" % (time.time() - start_time))
+
+
+    # Does the compilation of one aggregation
+    @staticmethod
+    def compile_job(job, data):
+        # This variable holds all newly found entries and is returned later on
+        new_data = BICacheManager.empty_compiled_tree()
+        aggr_type, aggr_idx, groups = job
+
+        global g_services
+        global g_services_items
+        global g_services_by_hostname
+
+        site_data = g_bi_sitedata_manager.get_data()
+        # Prepare service globals for this job
+        if aggr_type == AGGR_MULTI:
+            g_services             = site_data["services"]
+            g_services_by_hostname = site_data["services_by_hostname"]
+        else:
+            # Single host aggregation. The data parameter contains the requested hosts
+            g_services             = {}
+            g_services_by_hostname = {}
+
+            required_hosts = data["queued_hosts"]
+            for key, values in site_data["services"].items():
+                if key in required_hosts:
+                    g_services[key] = values
+
+            hostnames = map(lambda x: x[1], required_hosts)
+            for key, values in site_data["services_by_hostname"].items():
+                if key in hostnames:
+                    g_services_by_hostname[key] = values
+
+        g_services_items = g_services.items()
+
+        log("Compiling aggregation %d/%d: %r with %d hosts" % (aggr_type, aggr_idx, groups, len(g_services_by_hostname)))
+        enabled_aggregations = get_enabled_aggregations()
+
+        # Check if the aggregation is still correct
+        if aggr_idx >= len(enabled_aggregations):
+            # aggregation mismatch... config might have changed
+            log("Aggregation mismatch: Index error")
+            return
+
+        aggr = enabled_aggregations[aggr_idx]
+        if aggr[0] != aggr_type:
+            log("Aggregation type mismatch")
+            return
+
+        aggr = aggr[1]
+        aggr_groups = type(aggr[1]) == list and tuple(aggr[1]) or tuple([aggr[1]])
+        if groups != aggr_groups:
+            log("Aggregation groups mismatch")
+            return
+
+        aggr_options, aggr = aggr[0], aggr[1:]
+        use_hard_states = aggr_options.get("hard_states")
+        downtime_aggr_warn = aggr_options.get("downtime_aggr_warn")
+
+        if len(aggr) < 3:
+            raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt></h1>"
+                                  "Must have at least 3 entries (has %d)") % (aggr, len(aggr)))
+
+        new_entries = compile_rule_node(aggr_type, aggr[1:], 0)
+
+        for this_entry in new_entries:
+            remove_empty_nodes(this_entry)
+            this_entry["use_hard_states"] = use_hard_states
+            this_entry["downtime_aggr_warn"] = downtime_aggr_warn
+
+        new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
+
+        # Generates a unique id for the given entry
+        def get_hash(entry):
+            return md5.md5(repr(entry) + repr(job)).hexdigest()
+
+        for group in groups:
+            new_entries_hash = map(get_hash, new_entries)
+            if group not in new_data['forest']:
+                new_data['forest'][group]     = new_entries
+                new_data['forest_ref'][group] = new_entries_hash
+            else:
+                new_data['forest'][group]     += new_entries
+                new_data['forest_ref'][group] += new_entries_hash
+
+            # Update several global speed-up indices
+            for aggr in new_entries:
+                aggr_hash = get_hash(aggr)
+                # There are better was to create the hash (frozenset(aggr.items()))
+                new_data["aggr_ref"][aggr_hash] = aggr
+                req_hosts = aggr["reqhosts"]
+
+                # Aggregations by last part of title (assumed to be host name)
+                name = aggr["title"].split()[-1]
+                new_data["aggregations_by_hostname"].setdefault(name, []).append((group, aggr))
+                new_data["aggregations_by_hostname_ref"].setdefault(name, []).append((group, aggr_hash))
+
+
+                # All single-host aggregations looked up per host
+                # Only process the aggregations of hosts which are mentioned in only_hosts
+                if aggr_type == AGGR_HOST:
+                    # In normal cases a host aggregation has only one req_hosts item, we could use
+                    # index 0 here. But clusters (which are also allowed now) have all their nodes
+                    # in the list of required nodes.
+                    # Before the latest change this used the last item of the req_hosts. I think it
+                    # would be better to register this for all hosts mentioned in req_hosts. Give it a try...
+                    # ASSERT: len(req_hosts) == 1!
+                    for host in req_hosts:
+                        new_data["host_aggregations"].setdefault(host, []).append((group, aggr))
+                        new_data["host_aggregations_ref"].setdefault(host, []).append((group, aggr_hash))
+
+                # Also all other aggregations that contain exactly one hosts are considered to
+                # be "single host aggregations"
+                elif len(req_hosts) == 1:
+                    new_data["host_aggregations"].setdefault(req_hosts[0], []).append((group, aggr))
+                    new_data["host_aggregations_ref"].setdefault(req_hosts[0],[]).append((group, aggr_hash))
+
+                # All aggregations containing a specific host
+                for h in req_hosts:
+                    new_data["affected_hosts"].setdefault(h, []).append((group, aggr))
+                    new_data["affected_hosts_ref"].setdefault(h, []).append((group, aggr_hash))
+
+                # All aggregations containing a specific service
+                services = find_all_leaves(aggr)
+                for s in services: # triples of site, host, service
+                    new_data["affected_services"].setdefault(s, []).append((group, aggr))
+                    new_data["affected_services_ref"].setdefault(s, []).append((group, aggr_hash))
+
+        return new_data
+
+
+
+# This class handles the fcntl-locking of one file
+# There are multiple locking options:
+# - shared access
+# - exclusive access
+# - blocking mode, waits for lock
+# - nonblocking mode, tries to get lock
+#   The has_lock(..) indicates if the locking attempt was successful
+# Since this class has __enter__ and __exit__ functions its best use
+# is in conjunction with a with-statement
+class BILock(object):
+    def __init__(self, filepath, shared = False, blocking = True):
+        self._filepath = filepath
+        self._blocking = blocking
+        self._shared   = shared
+        self._fd       = None
+
+        super(BILock, self).__init__()
+
+
+    def has_lock(self):
+        return self._fd != None
+
+
+    def __enter__(self):
+        if not os.path.exists(self._filepath):
+            file(self._filepath, "a+")
+
+        lock_options = self._shared   and fcntl.LOCK_SH or fcntl.LOCK_EX
+        lock_options = self._blocking and lock_options or (lock_options| fcntl.LOCK_NB)
+
+        self._fd = os.open(self._filepath, os.O_RDONLY | os.O_CREAT, 0660)
+        lock_info = []
+        lock_info.append(self._shared and "SHARED" or "EXCLUSIVE")
+        lock_info.append(self._blocking and "BLOCKING" or "NON-BLOCKING")
+        log('BI: BILock %-2s %30s <<<%s>>>' % (self._fd, " ".join(lock_info), os.path.basename(self._filepath)))
+
+        try:
+            fcntl.flock(self._fd, lock_options)
+        except IOError:
+            # This should only happen with LOCK_NB
+            log("Unable to get LOCK")
+            os.close(self._fd)
+            self._fd = None
+
+        return self
+
+
+    def __exit__(self, type, value, traceback):
+        if self._fd:
+            log('BI: BILock %-2s %30s <<<%s>>>' % ( self._fd, "RELEASE", os.path.basename(self._filepath)))
+            fcntl.flock(self._fd, fcntl.LOCK_UN)
+            os.close(self._fd)
+            self._fd = None
+
+
+
+def marshal_save_data(filepath, data):
+    with file(filepath, "w") as the_file:
+        marshal.dump(data, the_file)
+        os.fsync(the_file.fileno())
+
+def marshal_load_data(filepath):
+    return marshal.load(file(filepath))
+
+
+
+# This class allows you to load and save python data
+# The data is always stored as marshaled data on disk
+# This class also helps reducing diskio by keeping track
+# if there is actually new data available on disk.
+# When the disk data is unchanged it simply returns cached data
+# Note  : Since the data is kept in cache it is not a good idea
+#         to open huge files with it
+# Note 2: Generally these files are never deleted, just overwritten
+#         or truncated. This helps preserving any locked filedescriptor
+class BICacheFile(object):
+    def __init__(self, **kwargs):
+        self._filepath            = kwargs.get("filepath")
+        self._cached_data         = None
+        self._filetime            = None
+
+        try:
+            file(self._filepath, "a")
+        except IOError:
+            pass
+
+        super(BICacheFile, self).__init__()
+
+
+    def clear_cache(self):
+        log("Clearing caches %s" % self._filepath)
+        self._cached_data = None
+        self._filetime    = None
+
+    def get_filepath(self):
+        return self._filepath
+
+
+    def has_new_data(self):
+        try:
+            filestats = os.stat(self._filepath)
+            if filestats.st_size == 0:
+                return False
+
+            if not self._filetime:
+                return True
+
+            if self._filetime != filestats.st_mtime:
+                return True
+
+            return False
+
+        except OSError:
+            return False
+
+
+    def load(self):
+        try:
+            filestats = os.stat(self._filepath)
+            if filestats.st_size == 0:
+                self._cached_data = None
+                return None
+
+            if (not self._filetime or self._filetime != filestats.st_mtime):
+                with BILock(self._filepath, shared = True):
+                    log("Loaded data from %s" % self._filepath)
+                    self._cached_data = marshal_load_data(self._filepath)
+                    self._filetime = filestats.st_mtime
+            return self._cached_data
+        except OSError:
+            return None
+
+
+    def save(self, data):
+        with BILock(self._filepath):
+            marshal_save_data(self._filepath, data)
+            self._cached_data = data
+            self._filetime = os.stat(self._filepath).st_mtime
+
+
+    def truncate(self):
+        log("Truncate %s" % self._filepath)
+        with BILock(self._filepath):
+            file(self._filepath, "w")
+            self._cached_data = None
+            self._filetime = os.stat(self._filepath).st_mtime
+
+
+
+# This class contains all host and service data used for the compilation
+# of an aggregation. It takes care of querying the data and tries to
+# prevent reduntant livestatus calls by caching the data.
+class BISitedataManager(object):
+    def __init__(self):
+        self._data_filepath_lock = "%s/bi_cache_data_LOCK" % get_cache_dir()
+
+        self._reset_cached_data()
+
+        # Housekeeping parameters
+        self._clear_orphaned_caches_after  = 120 # Remove data files older than x seconds
+        self._cache_update_interval        = 30  # Touch data files every x seconds when used
+
+        super(BISitedataManager, self).__init__()
+
+
+    def _reset_cached_data(self):
+        # The actual processed data this class provides
+        self._data             = {"services": {}, "services_by_hostname": {}}
+        # Sites from which we have data
+        self._have_sites       = set()
+        # Cached all hosts info
+        self._all_hosts_cached = None
+
+
+    def discard_cached_data(self):
+        self._reset_cached_data()
+
+
+    def get_data(self):
+        self._aquire_data()
+        return self._data
+
+
+    def get_all_hosts(self):
+        self._aquire_data() # Updates the following value
+        return self._all_hosts_cached
+
+
+    def _get_sitedata_filepath(self, siteinfo):
+        return "%s/bi_cache_data.%s.%s" % (get_cache_dir(), siteinfo[0], siteinfo[1])
+
+
+    def _datafile_exists(self, siteinfo):
+        filepath = self._get_sitedata_filepath(siteinfo)
+        return os.path.exists(filepath) and os.stat(filepath).st_size > 0
+
+
+    def _cleanup_orphaned_files(self):
+        current_sitestats = get_current_sitestats()
+        known_sites       = dict(current_sitestats.get("known_sites"))
+
+        # Cleanup obsolete files
+        for filename in os.listdir(get_cache_dir()):
+            filepath = "%s/%s" % (get_cache_dir(), filename)
+            if not filename.startswith("bi_cache_data."):
+                continue
+
+            try:
+                rest, site, timestamp = filename.split(".", 2)
+                timestamp = int(timestamp)
+
+                if known_sites.get(site) == timestamp:
+                    # Data still valid
+                    continue
+
+                # Delete obsolete data files older than 2 minutes
+                if time.time() - os.stat(filepath).st_mtime > self._clear_orphaned_caches_after:
+                    log("Cleanup orphaned file", filename)
+                    os.unlink(filepath)
+            except IndexError, IOError:
+                try:
+                    os.unlink(filepath)
+                except:
+                    pass
+
+
+    def _query_data(self, only_sites):
+        filter_txt = 'Filter: custom_variable_names < _REALNAME\n' # drop summary hosts
+        try:
+            sites.live().set_only_sites(only_sites)
+            sites.live().set_prepend_site(True)
+            sites.live().set_auth_domain('bi_all')
+
+            data = sites.live().query(
+                "GET hosts\n"
+                +filter_txt+
+                "Columns: name custom_variable_names custom_variable_values "
+                "services childs parents alias\n"
+                "Cache: reload\n"
+            )
+        finally:
+            sites.live().set_auth_domain('read')
+            sites.live().set_prepend_site(False)
+            sites.live().set_only_sites(None)
+
+        site_dict = {}
+        for site, host, varnames, values, svcs, childs, parents, alias in data:
+            vars = dict(zip(varnames, values))
+            tags = vars.get("TAGS", "").split(" ")
+            entry = (tags, svcs, childs, parents, alias)
+
+            site_dict.setdefault(site, {"services": {}, "services_by_hostname": {}})
+            site_dict[site]["services"][(site, host)] = entry
+            site_dict[site]["services_by_hostname"].setdefault(host, []).append((site, entry))
+
+        return site_dict
+
+
+    def _get_missing_sites(self, online_sites):
+        site_data_on_disk = set([])
+        for siteinfo in online_sites:
+            if self._datafile_exists(siteinfo):
+                site_data_on_disk.add(siteinfo)
+        return online_sites - site_data_on_disk
+
+
+    def _absorb_sitedata(self, siteinfo, new_data):
+        for key, values in new_data.items():
+            self._data.setdefault(key, {})
+            self._data[key].update(values)
+        self._have_sites.add(siteinfo)
+        log("Absorbed data %s/%s" % siteinfo)
+
+
+    # Returns True if data was actuall queried
+    def _query_missing_sitedata(self, online_sites):
+        if not self._get_missing_sites(online_sites):
+            return False
+
+        with BILock(self._data_filepath_lock):
+            # Only get the data if it is still not available..
+            # An other lock might have taken care of
+            missing_sites = self._get_missing_sites(online_sites)
+            if missing_sites:
+                cleanup_orphaned_files = True
+                only_sites = [x[0] for x in missing_sites]
+                new_data   = self._query_data(only_sites)
+                for site, sitedata in new_data.items():
+                    # Write data to disk
+                    siteinfo          = (site, dict(missing_sites).get(site))
+                    sitedata_filepath = self._get_sitedata_filepath(siteinfo)
+                    log("Saving datafile: %s" % os.path.basename(sitedata_filepath))
+                    marshal_save_data(sitedata_filepath, sitedata)
+
+                    # Add this data into the local cache, so there is no need
+                    # to read it again from file in the following code block
+                    if siteinfo not in self._have_sites:
+                        self._absorb_sitedata(siteinfo, sitedata)
+            return True
+
+
+    def _read_missing_sitedata(self, online_sites):
+        with BILock(self._data_filepath_lock, shared = True):
+            for siteinfo in online_sites:
+                if siteinfo in self._have_sites:
+                    continue
+                sitedata_filepath = self._get_sitedata_filepath(siteinfo)
+                log("Loading datafile: %s" % os.path.basename(sitedata_filepath))
+                site_data = marshal_load_data(sitedata_filepath)
+                self._absorb_sitedata(siteinfo, site_data)
+
+                # Touch this file to indicate it is still useful
+                # Untouched data files older than 5 minutes will be removed by the cleanup function
+                if time.time() - os.stat(sitedata_filepath).st_mtime > self._cache_update_interval:
+                    try:
+                        os.utime(sitedata_filepath, None)
+                    except OSError:
+                        pass
+
+
+    # Returns True if new data was aquired
+    def _aquire_data(self):
+        online_sites = get_current_sitestats().get("online_sites")
+
+        if online_sites == self._have_sites:
+            return False
+
+# TODO: check this, currently once read data is never discarded
+#        if self._have_sites - online_sites:
+#            # There is too much cached site data.
+#            # Discard and reread cache. Can be optimized easily
+#            self._reset_caches()
+
+        # Query missing files returns True if it queried any data
+        cleanup_orphaned_files = self._query_missing_sitedata(online_sites)
+
+        self._read_missing_sitedata(online_sites)
+
+        # The apache process which was responsible for the
+        # data update also cleans up obsolete files
+        if cleanup_orphaned_files:
+            self._cleanup_orphaned_files()
+
+        self._all_hosts_cached = set(self._data.get("services", {}).keys())
+
+        return True
+
+
+
+class BIJobManager(object):
+    def __init__(self):
+        self._jobs_file = BICacheFile(filepath = "%s/bi_cache_jobs" % get_cache_dir())
+
+        super(BIJobManager, self).__init__()
+
+
+    def clear_jobfile(self):
+        self._jobs_file.truncate()
+
+
+    def save_jobs(self, jobfile_data):
+        self._jobs_file.save(jobfile_data)
+
+
+    def get_jobs(self):
+        jobs = self._jobs_file.load()
+        if not jobs:
+            jobs = {"jobs" : {}}
+        return jobs
+
+
+    def _get_jobs_filepath(self):
+        return self._jobs_file.get_filepath()
+
+
+    def _get_only_hosts_and_only_groups(self, aggr_ids, only_hosts, only_groups, all_hosts):
+        all_groups = set([])
+        for (aggr_type, idx, aggr_groups) in aggr_ids:
+            all_groups.update(aggr_groups)
+
+        if not only_hosts and not only_groups:
+            # All aggregations
+            required_hosts  = all_hosts
+            required_groups = all_groups
+        elif only_hosts and not only_groups:
+            # All aggregations, Host aggregations not fully compiled
+            required_hosts  = set(only_hosts)
+            required_groups = all_groups
+        elif not only_hosts and only_groups:
+            # Aggregations filtered by group, all hosts
+            required_hosts  = all_hosts
+            required_groups = set(only_groups)
+        else:
+            # Explicit hosts and groups
+            required_hosts  = set(only_hosts)
+            required_groups = set(only_groups)
+
+        return required_hosts, required_groups
+
+
+    def get_missing_jobs(self, only_hosts, only_groups, all_hosts):
+        jobs = {}
+        aggr_ids = get_aggr_ids([AGGR_HOST, AGGR_MULTI])
+        required_hosts, required_groups = self._get_only_hosts_and_only_groups(aggr_ids,
+                                                                               only_hosts,
+                                                                               only_groups,
+                                                                               all_hosts)
+
+        # Get involved aggregations and filter out already compiled aggregations
+        compiled_trees = g_bi_cache_manager.get_compiled_trees()
+        for aggr_id in aggr_ids:
+            aggr_type, idx, aggr_groups = aggr_id
+
+            # Filter out aggregations
+            for group in required_groups:
+                if group in aggr_groups:
+                    break
+            else:
+                continue
+
+            if aggr_type == AGGR_HOST:
+                compiled_hosts = compiled_trees["compiled_host_aggr"].get(aggr_id, {}).get("compiled_hosts", set([]))
+                missing_hosts  = required_hosts - compiled_hosts
+                if missing_hosts:
+                    jobs[aggr_id] = {"queued_hosts": missing_hosts}
+
+            else:
+                for group in required_groups:
+                    if group in aggr_groups and aggr_id not in compiled_trees["compiled_multi_aggr"]:
+                        jobs[aggr_id] = {"compiled": False}
+
+        return jobs
+
+
+    def update_queued_jobs(self, jobs):
+        def update(apply_changes):
+            with BILock("%s_UPDATE_LOCK" % self._get_jobs_filepath(), shared = not apply_changes):
+                jobfile_data = self.get_jobs()
+                # This copy is important since we are going to modify it
+                # We do not want to alter the cached original
+                jobfile_data = copy.deepcopy(jobfile_data)
+
+                # jobfile_data example
+                # { "jobs":
+                #        # Single host aggregations
+                #        { (aggr_type, aggr_index, aggr_groups): { "queued_hosts": [], "compiled_hosts": [] },
+                #        # Multihost aggregation
+                #          (aggr_type, aggr_index, aggr_groups): { "compiled": True } }
+                changed_config = False
+                for job_id, values in jobs.items():
+                    aggr_type, idx, aggr_groups = job_id
+                    if aggr_type == AGGR_HOST:
+                        # Reduce number of required hosts, since some of them may already be compiled
+                        jobfile_data["jobs"].setdefault(job_id, {"queued_hosts": set([]),
+                                                                 "compiled_hosts": set([])})
+                        # Always set all hosts to queued. Already compiled hosts are filtered out later on
+                        new_hosts_to_compile = values["queued_hosts"] - jobfile_data["jobs"][job_id]["queued_hosts"]
+                        if new_hosts_to_compile:
+                            jobfile_data["jobs"][job_id]["queued_hosts"].update(values["queued_hosts"])
+                            changed_config = True
+                    elif aggr_type == AGGR_MULTI:
+                        jobfile_data["jobs"].setdefault(job_id, {})
+                        # Check if already compiled
+                        if not jobfile_data["jobs"][job_id].get("compiled"):
+                            jobfile_data["jobs"][job_id]["compiled"] = False
+                            changed_config = True
+
+            if changed_config and apply_changes:
+                log("Updating jobfile for real")
+                g_bi_job_manager.save_jobs(jobfile_data)
+            return changed_config
+
+
+        # This prevents that hundreds of apaches are trying to apply the same changes..
+        if update(False): # Dry run with shared lock
+            update(True)  # Apply changes with exclusive lock
+
+
+    def _get_queued_jobs(self, discard_old_cache=False):
+        queued_jobs  = []
+
+        jobfile_data = self.get_jobs()
+        # This copy is important since we are going to modify it
+        # We do not want to alter the cached original
+        jobfile_data = copy.deepcopy(jobfile_data)
+
+        # jobfile_data example
+        # { "jobs":
+        #        # Single host aggregations
+        #        { (aggr_type, aggr_index, aggr_groups): { "queued_hosts": [], "compiled_hosts": [] },
+        #        # Multihost aggregation
+        #          (aggr_type, aggr_index, aggr_groups): { "included_hosts": [], "compiled": True } }
+        for job, info in jobfile_data.get("jobs", {}).items():
+            if job[0] == AGGR_HOST:
+                # Reduce queued hosts by already compiled hosts
+                if not discard_old_cache:
+                    info["queued_hosts"] -= info["compiled_hosts"]
+                if not info.get("queued_hosts"):
+                    # Single host aggregation, no hosts in queue - GOOD!
+                    continue
+            else:
+                if info.get("compiled") == True:
+                    # Fully compiled multi aggregation - GOOD!
+                    continue
+
+            queued_jobs.append( { "id": job, "info": info } )
+        return queued_jobs
+
+
+    def _prepare_compilation(self, discard_old_cache=False):
+        # Check if the currently known cache is worth keeping
+        # The cache may have more, but not less than the required sites
+
+        if discard_old_cache:
+            log("#### CLEARING CACHEFILES ####")
+            g_bi_job_manager.clear_jobfile()       # Note: The jobs to do are already determined
+            g_bi_cache_manager.truncate_cachefiles()  # Clears files
+            g_bi_cache_manager.reset_cached_data() # Reset internal caches
+
+        # Determine number of workers
+        self.maximum_workers = multiprocessing.cpu_count()
+        # Just in case the multiprocessing call is not working as intended
+        if self.maximum_workers == 0:
+            self.maximum_workers = 2
+
+        # Multiprocessing queue for IPC
+        self._mp_queue = multiprocessing.Queue()
+
+        # Contains running worker jobs
+        self._currently_compiling = []
+
+
+    def _is_compilation_finished(self):
+        return not self._queued_jobs and not self._currently_compiling
+
+
+    def _manage_workers(self):
+        # Remove finished jobs
+        self._currently_compiling = [ t for t in self._currently_compiling if t.is_alive() ]
+
+        while True:
+            if self._queued_jobs and len(self._currently_compiling) < self.maximum_workers:
+                job = self._queued_jobs.pop()
+                new_worker = multiprocessing.Process(target = JobWorker.run, args = [job, self._mp_queue])
+                new_worker.daemon = True
+                self._currently_compiling.append(new_worker)
+                self._currently_compiling[-1].start()
+            else:
+                break
+
+
+    def _reap_worker_results(self):
+        results = []
+        while not self._mp_queue.empty():
+            result = self._mp_queue.get()
+            results.append(result)
+        return results
+
+
+    def _merge_worker_results(self, results):
+        if not results:
+            return
+
+        g_bi_cache_manager.load_cachefile()
+        for job, new_data in results:
+            g_bi_cache_manager._merge_compiled_data(job, new_data)
+
+        jobfile_data = self.get_jobs()
+        for job, new_data in results:
+            job_id   = job["id"]
+            job_info = job["info"]
+
+            jobfile_data["jobs"].setdefault(job_id, {"queued_hosts": set([]),
+                                                     "compiled_hosts": set([])})
+            if job_id[0] == AGGR_HOST:
+                jobfile_data["jobs"][job_id]["queued_hosts"] -= job_info["queued_hosts"]
+                jobfile_data["jobs"][job_id]["compiled_hosts"].update(job_info["queued_hosts"])
+            else:
+                jobfile_data["jobs"][job_id]["compiled"] = True
+        self.save_jobs(jobfile_data)
+        g_bi_cache_manager.generate_cachefiles()
+
+
+    def _compile_jobs_parallel(self):
+        with BILock("%s_COMPILATION_LOCK" % self._get_jobs_filepath(), blocking = False) as compilation_lock:
+            if not compilation_lock.has_lock():
+                log("Did not get compilation lock")
+                return False # Someone else is compiling
+
+            current_sitestats = get_current_sitestats()
+            discard_old_cache = not g_bi_cache_manager.can_handle_sitestats(current_sitestats)
+
+            self._queued_jobs = self._get_queued_jobs(discard_old_cache = discard_old_cache) # Jobs to do
+            if not self._queued_jobs:
+                log("No queued jobs")
+                return False # No compilation
+
+            log("Compilation discards old cache: %s" % discard_old_cache)
+
+            self._prepare_compilation(discard_old_cache = discard_old_cache)
+            self._set_compilation_info(current_sitestats)
+
+            while True:
+                if self._is_compilation_finished():
+                    break
+
+                # Start/Stop workers (also updates currently compiling)
+                self._manage_workers()
+
+                # Collect results
+                results = self._reap_worker_results()
+
+                # Update cache with new results
+                self._merge_worker_results(results)
+
+                # Sleep a little bit
+                time.sleep(0.1)
+
+
+            # At the end of the compilation check the title uniquness and for fully compiled
+            fully_compiled = self._is_fully_compiled()
+            titles_broken_info = ""
+            try:
+                check_title_uniqueness(g_bi_cache_manager.get_compiled_trees()["forest"])
+            except MKConfigError, e:
+                titles_broken_info = str(e)
+
+            if fully_compiled or titles_broken_info:
+                g_bi_cache_manager.generate_cachefiles(is_fully_compiled  = fully_compiled,
+                                                       titles_broken_info  = titles_broken_info)
+
+        return True # Did compilation
+
+
+    # Returns True if compilation was done
+    def compile_jobs(self):
+        return self._compile_jobs_parallel()
+
+
+    # Sets the information which is used during the compilation
+    def _set_compilation_info(self, info):
+        self._compilation_info = info
+
+
+    # Returns the information which was using during the compilation
+    def get_compilation_info(self):
+        return self._compilation_info
+
+
+    def _is_fully_compiled(self):
+        # Used later on to determine if the cache is fully compiled
+        enabled_aggr     = get_enabled_aggregations()
+        multi_aggr_count = len([x for x in enabled_aggr if x[0] == AGGR_MULTI])
+        host_aggr_count  = len([x for x in enabled_aggr if x[0] == AGGR_HOST])
+        total_hosts      = len(g_bi_sitedata_manager.get_data()["services"])
+
+        # Check if cache is fully compiled
+        compiled_all              = True
+        compiled_multi_aggr_count = 0
+        compiled_host_aggr_count  = 0
+
+        jobfile_data = self.get_jobs()
+        for job_id, values in jobfile_data["jobs"].items():
+            if job_id[0] == AGGR_HOST:
+                if len(values.get("compiled_hosts")) != total_hosts:
+                    compiled_all = False
+                    break
+                else:
+                    compiled_host_aggr_count += 1
+            elif job_id[0] == AGGR_MULTI:
+                compiled_multi_aggr_count += values.get("compiled") and 1 or 0
+        else:
+            if multi_aggr_count != compiled_multi_aggr_count:
+                compiled_all = False
+            if host_aggr_count  != compiled_host_aggr_count:
+                compiled_all = False
+
+        log("Fully compiled check result: %s" % compiled_all)
+        return compiled_all
+
+
+
+class BICacheManager(object):
+    def __init__(self):
+        # Contains compiled trees
+        self._bicache_file     = BICacheFile(filepath = "%s/bi_cache" % get_cache_dir())
+        # Contains info about compiled trees (small file)
+        self._bicacheinfo_file = BICacheFile(filepath = "%s_info" % self._bicache_file.get_filepath())
+        self.reset_cached_data()
+
+        super(BICacheManager, self).__init__()
+
+
+    @staticmethod
+    def empty_compiled_tree():
+        return {
+            "forest":                   {},
+            "aggregations_by_hostname": {},
+            "host_aggregations":        {},
+            "affected_hosts":           {},
+            "affected_services":        {},
+            "compiled_host_aggr":       {},
+            "compiled_multi_aggr":      {},
+
+            # Parameters to slim the cache file
+            "aggr_ref":                      {},
+            "forest_ref":                    {},
+            "aggregations_by_hostname_ref":  {},
+            "host_aggregations_ref":         {},
+            "affected_hosts_ref":            {},
+            "affected_services_ref":         {},
+        }
+
+
+    # Resets everything the class knows of
+    def reset_cached_data(self):
+        # The actual compiled data
+        self._compiled_trees = BICacheManager.empty_compiled_tree()
+        self._bicache_file.clear_cache()
+        self._bicacheinfo_file.clear_cache()
+
+
+    # Clears just the cachefile cached data if it is no longer required (e.g. fully compiled)
+    def clear_cachefile_cache(self):
+        self._bicache_file.clear_cache()
+
+
+    def get_titles_broken_info(self):
+        cacheinfo_content = self.get_bicacheinfo()
+        return (cacheinfo_content and cacheinfo_content.get("titles_broken_info", None)) or None
+
+
+    def truncate_cachefiles(self):
+        self._bicache_file.truncate()
+        self._bicacheinfo_file.truncate()
+
+
+    def get_online_sites(self):
+        cacheinfo_content = self.get_bicacheinfo()
+        return (cacheinfo_content and cacheinfo_content.get("compiled_sites", [])) or []
+
+
+    def get_bicacheinfo(self):
+        return self._bicacheinfo_file.load()
+
+
+    def get_compiled_trees(self):
+        return self._compiled_trees
+
+
+    def can_handle_sitestats(self, new_sitestats):
+        old_sitestats = self.get_bicacheinfo()
+
+        if not old_sitestats:
+            log("Old cache invalid: Old sitestats not available")
+            return False
+
+        # Check if the current online sites are at least a subset of the previously known
+        # online sites. It doesn't matter if the world contains more information than we need
+        if new_sitestats["online_sites"] - old_sitestats["compiled_sites"]:
+            log("Old cache invalid: Cached aggregations were compiled for fewer sites, missing %r" % (
+                new_sitestats["online_sites"] - old_sitestats["compiled_sites"]))
+            return False
+
+        if old_sitestats["compiled_sites"] - new_sitestats["online_sites"]:
+            log("WORLD SHRINKS") # No problem at all
+
+        if old_sitestats["timestamps"] != new_sitestats["timestamps"]:
+            log("Old cache invalid: File timestamps differ")
+            return False
+
+        return True
+
+
+    def load_cachefile(self, force_validation=False):
+        log("--- Loading cachefile ---")
+        if not self._bicache_file.has_new_data() and not force_validation:
+            log("Not reading cachefile - does not have any new data")
+            return True
+
+        # Check if the file is worth loading
+        # Invalidate known cache if the sitestats do not cope
+        if not self.can_handle_sitestats(get_current_sitestats()):
+            log("Load cachefile can not handle current sitestats - resetting known caches")
+            self.reset_cached_data()
+            return False
+
+        def reinstiate_references(cachefile_content):
+            self._compiled_trees = cachefile_content
+            self._compiled_trees["forest"] = {}
+
+            for what in [ "aggregations_by_hostname", "host_aggregations", "affected_hosts", "affected_services" ]:
+                self._compiled_trees[what] = {}
+                for key, values in self._compiled_trees["%s_ref" % what].items():
+                    self._compiled_trees[what].setdefault(key, [])
+                    for value in values:
+                        new_value = value
+                        if type(value[1]) == str: # a reference
+                            new_value = self._compiled_trees["aggr_ref"][value[1]]
+                        self._compiled_trees[what][key].append((value[0], new_value))
+
+            for key, values in self._compiled_trees["forest_ref"].items():
+                self._compiled_trees["forest"][key] = []
+                for aggr in values:
+                    new_value = aggr
+                    if type(aggr) == str:
+                        new_value = self._compiled_trees["aggr_ref"][aggr]
+                    self._compiled_trees["forest"][key].append(new_value)
+
+        cachefile_content      = self._bicache_file.load()
+        if cachefile_content:
+            reinstiate_references(cachefile_content)
+
+        return True
+
+
+    def generate_cachefiles(self, is_fully_compiled=False, titles_broken_info=""):
+        self._save_cacheinfofile(titles_broken_info = titles_broken_info)
+        self._save_cachefile(is_fully_compiled = is_fully_compiled)
+
+
+    def _save_cacheinfofile(self, titles_broken_info=""):
+        old_compilation_info    = self.get_bicacheinfo()
+        if not old_compilation_info:
+            old_compiled_sites      = None
+            old_compiled_timestamps = None
+        else:
+            old_compiled_sites      = old_compilation_info.get("compiled_sites")
+            old_compiled_timestamps = old_compilation_info.get("timestamps")
+
+        new_compilation_info    = g_bi_job_manager.get_compilation_info()
+        new_compiled_timestamps = new_compilation_info.get("timestamps")
+        # online_sites gets renamed to compiled_sites for the sake of clarity in the bicacheinfo file
+        new_compiled_sites      = new_compilation_info.get("online_sites")
+
+        # If timestamps differ the cache needs to be rewritten on the next update
+        if old_compiled_timestamps and old_compiled_timestamps != new_compiled_timestamps:
+            compiled_timestamps = []
+        else:
+            compiled_timestamps = new_compiled_timestamps
+
+        # Make an intersection of the available sites
+        if old_compiled_sites:
+            compiled_sites = old_compiled_sites.intersection(new_compiled_sites)
+        else:
+            compiled_sites = new_compiled_sites
+
+        content  = { "timestamps":          compiled_timestamps,
+                     "compiled_sites":      compiled_sites,
+                     "titles_broken_info":  titles_broken_info
+                }
+        self._bicacheinfo_file.save(content)
+
+
+    def _save_cachefile(self, is_fully_compiled):
+        keys_for_cachefile = [
+                              "aggr_ref",
+                              "forest_ref",
+                              "aggregations_by_hostname_ref",
+                              "host_aggregations_ref",
+                              "affected_hosts_ref",
+                              "affected_services_ref",
+                              "compiled_host_aggr",
+                              "compiled_multi_aggr",
+                              ]
+        cache_to_dump = {}
+        for what in keys_for_cachefile:
+            cache_to_dump[what] = self._compiled_trees.get(what)
+
+        cache_to_dump["compiled_all"] = is_fully_compiled
+
+        start_time = time.time()
+        self._bicache_file.save(cache_to_dump)
+        log("SAVED CACHEFILE, took %.4f sec" % (time.time() - start_time))
+
+    def get_compiled_all(self):
+        info = self.get_compiled_trees()
+        return (info and info.get("compiled_all", False)) or False
+
+
+    def _merge_compiled_data(self, job, new_data):
+        # Rendering related parameters
+        for what in  [ "affected_hosts",
+                       "affected_hosts_ref",
+                       "aggregations_by_hostname",
+                       "aggregations_by_hostname_ref",
+                       "host_aggregations",
+                       "host_aggregations_ref",
+                       "affected_services",
+                       "affected_services_ref",
+                       "forest",
+                       "forest_ref" ]:
+            for key, values in new_data.get(what).items():
+                self._compiled_trees[what].setdefault(key, [])
+                self._compiled_trees[what][key].extend(values)
+
+        # Rendering related parameters
+        for what in [ "aggr_ref" ]:
+            self._compiled_trees[what].update(new_data.get(what))
+
+        # Cache related parameters
+        job_id = job["id"]
+        aggr_type, idx, aggr_groups = job_id
+
+        if aggr_type == AGGR_HOST:
+            self._compiled_trees["compiled_host_aggr"].setdefault(job_id, {"compiled_hosts": set([])})
+            self._compiled_trees["compiled_host_aggr"][job_id]["compiled_hosts"].update(new_data["compiled_hosts"])
+        else:
+            self._compiled_trees["compiled_multi_aggr"].setdefault(job_id, {})
+            self._compiled_trees["compiled_multi_aggr"][job_id]["compiled"] = True
+
+
+
+def get_enabled_aggregations():
+    result = []
+    for aggr_type, what in [ (AGGR_MULTI, config.aggregations),
+                             (AGGR_HOST, config.host_aggregations) ]:
+        for aggr_def in what:
+            if aggr_def[0].get("disabled"): # options field
+                continue
+            result.append((aggr_type, aggr_def))
+
+    return result
+
+def get_aggr_groups(aggr_def):
+    if type(aggr_def[1]) != list:
+        aggr_groups = [ aggr_def[1] ]
+    else:
+        aggr_groups = aggr_def[1]
+    return aggr_groups
+
+def get_aggr_ids(what = []): # AGGR_HOST / AGGR_MULTI
+    result = []
+    enabled_aggregations = get_enabled_aggregations()
+    for idx, (aggr_type, aggr_def) in enumerate(enabled_aggregations):
+        if aggr_type in what:
+            aggr_groups = get_aggr_groups(aggr_def)
+            result.append((aggr_type, idx, tuple(aggr_groups)))
+    return result
+
+def num_filelocks():
+    return len(os.listdir("/proc/%s/fd" % os.getpid()))
+
+def setup_bi_instances():
+    # The Sitedata Manager holds all data queried from the sites
+    ############################################################
+    global g_bi_sitedata_manager
+    if not g_bi_sitedata_manager:
+        g_bi_sitedata_manager = BISitedataManager()
+
+    # The Job Manager keeps track of the jobs
+    #########################################
+    global g_bi_job_manager
+    if not g_bi_job_manager:
+        g_bi_job_manager = BIJobManager()
+
+    # The Cache Manager manages the compilation and validiation of trees
+    ####################################################################
+    global g_bi_cache_manager
+    if not g_bi_cache_manager:
+        g_bi_cache_manager = BICacheManager()
+
+    # Throw away existing cache if it is no longer valid
+    # Reasons
+    # - BI configuration changes
+    # - Core restarts
+    # - More sites are online than the current cache knows of
+
+    cache_is_valid = g_bi_cache_manager.load_cachefile(force_validation = True)
+
+    if cache_is_valid and g_bi_cache_manager.get_titles_broken_info():
+        raise MKConfigError(g_bi_cache_manager.get_titles_broken_info())
+
+def compile_forest_improved(only_hosts=None, only_groups=None):
+    log("###########################################################")
+    log("Query only hosts: %d, only_groups: %d (%r)" % (len(only_hosts or []), len(only_groups or []), only_groups))
+    log("Open filelocks :%d" % num_filelocks())
+
+    setup_bi_instances()
+
+    # TODO: can be removed soon
+    global used_cache      # Boolean
+    global did_compilation # Boolean
+    did_compilation = False
+    used_cache      = True
+
+    try:
+        if not get_enabled_aggregations():
+            log("No aggregations activated")
+            return
+
+        while True:
+            # Keep this compiled_all block here. If it is done later on, site data will be read..
+            if g_bi_cache_manager.get_compiled_all():
+                # Bonus! We do no longer need the host/service data if everthing is compiled. These frees lots of memory
+                g_bi_sitedata_manager.discard_cached_data()
+                g_bi_cache_manager.clear_cachefile_cache()
+                log("Is fully compiled with %s" % \
+                    ", ".join(map(lambda x: "%s/%s" % x, g_bi_cache_manager.get_online_sites())))
+                return
+
+            all_hosts = g_bi_sitedata_manager.get_all_hosts()
+            jobs      = g_bi_job_manager.get_missing_jobs(only_hosts, only_groups, all_hosts)
+            if not jobs:
+                log("No jobs required")
+                return
+
+            g_bi_job_manager.update_queued_jobs(jobs)
+            did_compile = g_bi_job_manager.compile_jobs()
+
+            # Hard working apache processes are allowed to continue
+            if did_compile:
+                did_compilation = True
+                continue
+
+            # Passive apache processes simply reload the cachefile (if applicable) and wait
+            g_bi_cache_manager.load_cachefile()
+
+            log("Wait for jobs to finish", jobs.keys())
+            time.sleep(1)
+
+    except Exception, e:
+        log("Exception in BI compilation main loop:")
+        log_exception()
+    finally:
+        if g_bi_cache_manager.get_titles_broken_info():
+            raise MKConfigError(g_bi_cache_manager.get_titles_broken_info())
+
+        global g_tree_cache
+        g_tree_cache = g_bi_cache_manager.get_compiled_trees()
+        log("-- Finished --")
+
+
 
 # Precompile the forest of BI rules. Forest? A collection of trees.
 # The compiled forest does not contain any regular expressions anymore.
@@ -211,7 +1451,11 @@ def log(s):
 def compile_forest(user, only_hosts = None, only_groups = None):
     migrate_bi_configuration()
 
-    global g_cache, g_user_cache
+    if not config.bi_use_legacy_compilation:
+        compile_forest_improved(only_hosts, only_groups)
+        return
+
+    global g_cache, g_tree_cache
     global used_cache, did_compilation
 
     new_config_information = cache_needs_update()
@@ -240,17 +1484,17 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     # Try to get data from per-user cache:
     # make sure, BI permissions have not changed since last time.
-    # g_user_cache is a global variable for all succeeding functions, so
+    # g_tree_cache is a global variable for all succeeding functions, so
     # that they do not need to check the user again
     cache = g_cache.get(user)
     if cache:
-        g_user_cache = cache
+        g_tree_cache = cache
     else:
         # Initialize empty caching structure
         cache = empty_user_cache()
-        g_user_cache = cache
+        g_tree_cache = cache
 
-    if g_user_cache["compiled_all"]:
+    if g_tree_cache["compiled_all"]:
         log('PID: %d - Already compiled everything' % os.getpid())
         used_cache = True
         return # In this case simply skip further compilations
@@ -265,7 +1509,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
        or (config.bi_precompile_on_demand and not only_groups and not only_hosts)):
         log("Invalidating incomplete cache, since we compile all now.")
         cache = empty_user_cache()
-        g_user_cache = cache
+        g_tree_cache = cache
 
     # Reduces a list of hosts by the already compiled hosts
     def to_compile(objects, what):
@@ -299,7 +1543,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     # the needed hosts/services if possible. It is used in the load_services() function
     # to reduce the amount of hosts/services. Reducing the host/services leads to faster
     # compilation.
-    load_services(cache, only_hosts)
+    load_services(only_hosts)
 
     log("This request: User: %s, Only-Groups: %r, Only-Hosts: %s PID: %d"
         % (user, only_groups, only_hosts, os.getpid()))
@@ -481,7 +1725,7 @@ def check_title_uniqueness(forest):
                 known_titles.add(title)
 
 def compile_logging():
-    return config.bi_compile_log is not None
+    return config.bi_compile_log not in [None, False]
 
 # Execute an aggregation rule, but prepare arguments
 # and iterate FOREACH first
@@ -550,11 +1794,10 @@ def find_matching_services(aggr_type, what, calllist):
     else:
         host_spec, honor_site, entries = get_services_filtered_by_host_name(host_spec)
 
-    # TODO: Hier könnte man - wenn der Host bekannt ist, effektiver arbeiten, als
-    # komplett alles durchzugehen.
+    # TODO: Hier könnte man - wenn der Host bekannt ist, effektiver arbeiten, als komplett alles durchzugehen.
     for (site, hostname), (tags, services, childs, parents, alias) in entries:
         # Skip already compiled hosts
-        if aggr_type == AGGR_HOST and (site, hostname) in g_user_cache['compiled_hosts']:
+        if aggr_type == AGGR_HOST and (site, hostname) in g_tree_cache.get('compiled_hosts', []):
             continue
 
         host_matches = match_host(hostname, alias, host_spec,
@@ -586,21 +1829,31 @@ def find_matching_services(aggr_type, what, calllist):
 
             for service in services:
                 mo = (service_re, service)
-                if mo in service_nomatch_cache:
+                if mo in regex_svc_miss_cache:
                     continue
-                m = regex(service_re).match(service)
-                if m:
-                    svc_matches = tuple(m.groups())
-                    matches.add(((hostname, alias), host_matches + svc_matches))
+
+                if mo not in regex_svc_hit_cache:
+                    m = regex(service_re).match(service)
+                    if m:
+                        regex_svc_hit_cache.add(mo)
+                    else:
+                        regex_svc_miss_cache.add(mo)
+                        continue
                 else:
-                    service_nomatch_cache.add(mo)
+                    m = regex(service_re).match(service)
+
+                svc_matches = tuple(m.groups())
+                matches.add(((hostname, alias), host_matches + svc_matches))
 
     return sorted(list(matches))
 
 
 def get_services_filtered_by_host_alias(host_spec):
     honor_site = SITE_SEP in host_spec[1]
-    return host_spec, honor_site, g_services.items()
+    if g_services_items:
+        return host_spec, honor_site, g_services_items
+    else:
+        return host_spec, honor_site, g_services.items()
 
 
 def get_services_filtered_by_host_name(host_re):
@@ -620,7 +1873,10 @@ def get_services_filtered_by_host_name(host_re):
 
     else:
         # All services
-        entries = g_services.items()
+        if g_services_items:
+            entries = g_services_items
+        else:
+            entries = g_services.items()
 
     return host_re, honor_site, entries
 
@@ -636,7 +1892,7 @@ def do_match(reg, text):
 
 # Debugging function
 def render_forest():
-    for group, trees in g_user_cache["forest"].items():
+    for group, trees in g_tree_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
         for tree in trees:
             ascii = render_tree(tree)
@@ -725,6 +1981,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
     # complete top-level aggregations. In that case we
     # need to deal with REMAINING-entries
     if lvl == 0:
+        # A global variable used for recursive function calls..
         global g_remaining_refs
         g_remaining_refs = []
 
@@ -791,6 +2048,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                     # create unique pointer which we find later
                     placeholder = {"type" : NT_PLACEHOLDER, "id" : str(len(g_remaining_refs)) }
                     g_remaining_refs.append((entry["host"], elements, placeholder))
+
                     new_new_elements.append(placeholder)
                 else:
                     new_new_elements.append(entry)
@@ -944,7 +2202,7 @@ def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_
         # For regex to have '$' anchor for end. Users might be surprised
         # to get a prefix match on host names. This is almost never what
         # they want. For services this is useful, however.
-        if pattern.endswith("$"):
+        if pattern[-1] == "$":
             anchored = pattern
         else:
             anchored = pattern + "$"
@@ -1053,9 +2311,6 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
             g_compiled_services_leafes.setdefault(entry["host"], set([])).add(entry["service"])
 
     return found
-
-
-service_nomatch_cache = set([])
 
 
 #     _____                     _   _
@@ -1408,7 +2663,7 @@ config.aggregation_functions["worst"] = aggr_worst
 config.aggregation_functions["best"]  = aggr_best
 
 def aggr_countok_convert(num, count):
-    if str(num).endswith('%'):
+    if str(num)[-1] == "%":
         return int(num[:-1]) / 100.0 * count
     else:
         return int(num)
@@ -1492,7 +2747,7 @@ def page_all():
     html.header("All")
     compile_forest(config.user.id)
     load_assumptions()
-    for group, trees in g_user_cache["forest"].items():
+    for group, trees in g_tree_cache["forest"].items():
         html.write("<h2>%s</h2>" % group)
         for inst_args, tree in trees:
             state = execute_tree(tree)
@@ -1548,11 +2803,11 @@ def ajax_render_tree():
     load_assumptions()
 
     # Now look for our aggregation
-    if aggr_group not in g_user_cache["forest"]:
+    if aggr_group not in g_tree_cache["forest"]:
         raise MKGeneralException(_("Unknown BI Aggregation group %s. Available are: %s") % (
-            aggr_group, ", ".join(g_user_cache["forest"].keys())))
+            aggr_group, ", ".join(g_tree_cache["forest"].keys())))
 
-    trees = g_user_cache["forest"][aggr_group]
+    trees = g_tree_cache["forest"][aggr_group]
     for tree in trees:
         if tree["title"] == aggr_title:
             row = create_aggregation_row(tree)
@@ -1924,9 +3179,8 @@ def table(columns, add_headers, only_sites, limit, filters):
         compile_forest(config.user.id)
 
     # TODO: Optimation of affected_hosts filter!
-
     if only_service:
-        affected = g_user_cache["affected_services"].get(only_service)
+        affected = g_tree_cache["affected_services"].get(only_service)
         if affected == None:
             items = []
         else:
@@ -1937,7 +3191,10 @@ def table(columns, add_headers, only_sites, limit, filters):
                 by_groups[group] = entries
             items = by_groups.items()
     else:
-        items = g_user_cache["forest"].items()
+        items = g_tree_cache["forest"].items()
+
+
+    online_sites = set(map(lambda x: x[0], get_current_sitestats()["online_sites"]))
 
     for group, trees in items:
         if only_group not in [ None, group ]:
@@ -1947,11 +3204,16 @@ def table(columns, add_headers, only_sites, limit, filters):
             if only_aggr_name and only_aggr_name != tree.get("title"):
                 continue
 
+            aggr_sites = set(x[0] for x in tree.get("reqhosts"))
+            if not aggr_sites.intersection(online_sites):
+                continue
+
             row = create_aggregation_row(tree)
             row["aggr_group"] = group
             rows.append(row)
             if not html.check_limit(rows, limit):
                 return rows
+
     return rows
 
 
@@ -2030,7 +3292,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
         # in some of the other hostrows.
         if joinbyname:
             status_info = {}
-            aggrs = g_user_cache["aggregations_by_hostname"].get(host, [])
+            aggrs = g_tree_cache["aggregations_by_hostname"].get(host, [])
             # collect all the required host of all matching aggregations
             for a in aggrs:
                 reqhosts = a[1]["reqhosts"]
@@ -2052,7 +3314,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                 if status_info == None:
                     break
         else:
-            aggrs = g_user_cache["host_aggregations"].get((site, host), [])
+            aggrs = g_tree_cache["host_aggregations"].get((site, host), [])
             status_info = { (site, host) : [
                 hostrow["state"],
                 hostrow["hard_state"],
@@ -2132,9 +3394,9 @@ def status_tree_depth(tree):
 def is_part_of_aggregation(what, site, host, service):
     compile_forest(config.user.id)
     if what == "host":
-        return (site, host) in g_user_cache["affected_hosts"]
+        return (site, host) in g_tree_cache["affected_hosts"]
     else:
-        return (site, host, service) in g_user_cache["affected_services"]
+        return (site, host, service) in g_tree_cache["affected_services"]
 
 def get_state_name(node):
     if node[1]['type'] == NT_LEAF:

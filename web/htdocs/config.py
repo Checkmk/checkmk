@@ -109,7 +109,7 @@ def include(filename):
     try:
         lm = os.stat(filename).st_mtime
         execfile(filename, globals(), globals())
-        modification_timestamps.append(lm)
+        modification_timestamps.append((filename, lm))
     except Exception, e:
         raise MKConfigError(_("Cannot read configuration file %s: %s:") % (filename, e))
 

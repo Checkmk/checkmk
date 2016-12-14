@@ -388,6 +388,13 @@ register_configvar(group,
 )
 
 register_configvar(group,
+    "bi_use_legacy_compilation",
+    Checkbox(title = _("Use legacy compilation for BI aggregations (slower)"),
+             label = _("Use legacy BI compilation"),
+             default_value = False),
+    domain = "multisite")
+
+register_configvar(group,
     "bi_precompile_on_demand",
     Checkbox(title = _("Precompile aggregations on demand"),
              label = _("Only precompile on demand"),

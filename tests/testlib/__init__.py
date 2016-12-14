@@ -167,6 +167,15 @@ class Site(object):
 
 
     @property
+    def apache_port(self):
+        return int(self.get_config("APACHE_TCP_PORT"))
+
+
+    @property
+    def internal_url(self):
+        return "%s://%s:%s/%s/check_mk/" % (self.http_proto, self.http_address, self.apache_port, self.id)
+
+    @property
     def livestatus_port(self):
         if self._livestatus_port == None:
             raise Exception("Livestatus TCP not opened yet")

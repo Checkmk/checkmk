@@ -190,7 +190,7 @@ class Worker(threading.Thread):
 
         for element in elements:
             orig_url = element.get(attr)
-            url = self.normalize_url(self.crawler.site.url, orig_url)
+            url = self.normalize_url(self.crawler.site.internal_url, orig_url)
 
             if url is not None and self.is_valid_url(url) \
                and url not in self.crawler.visited:
@@ -214,7 +214,7 @@ class Worker(threading.Thread):
             return False
 
         # skip external urls
-        if url.startswith("http://") and not url.startswith(self.crawler.site.url):
+        if url.startswith("http://") and not url.startswith(self.crawler.site.internal_url):
             #print("Skipping external URL: %s" % url)
             return False
 
@@ -283,7 +283,7 @@ class TestCrawler(object):
 
         self.load_stats()
 
-        self.todo.put(Url("/%s/check_mk/" % site.id))
+        self.todo.put(Url(site.internal_url))
 
         self.crawl()
 

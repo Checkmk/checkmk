@@ -1,0 +1,16 @@
+Title: Validate deletion of host if that is used as a parent somewhere
+Component: wato
+State: open
+Date: 2016-12-14 09:29:22
+Targetversion: future
+Class: nastiness
+
+If you delete a host that is a parent of some other host then
+you should not be able to delete that host.
+
+The question is, if deleting of hole folders or even folder trees
+should also be validated (complicated). Same holds for bulk delets.
+Here we would need to validate the situation after *all*
+deletes have been done.
+
+Suggestion: we validate just when deleting one single host.

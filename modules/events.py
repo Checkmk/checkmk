@@ -186,6 +186,55 @@ def find_host_service_in_context(context):
     else:
         return host
 
+
+def livestatus_fetch_query(query):
+    # TODO: use livestatus.py instead!
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.connect(cmk.paths.livestatus_unix_socket)
+    sock.send(query)
+    sock.shutdown(socket.SHUT_WR)
+    response = sock.recv(10000000)
+    sock.close()
+    return response
+
+
+def livestatus_fetch_contacts(host, service):
+    try:
+        if service:
+            query = "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts\n" % (
+                host, service)
+        else:
+            query = "GET hosts\nFilter: host_name = %s\nColumns: contacts\n" % host
+
+        commasepped = livestatus_fetch_query(query).strip()
+        aslist = commasepped.split(",")
+        if "check-mk-notify" in aslist: # Remove artifical contact used for rule based notifications
+            aslist.remove("check-mk-notify")
+        return ",".join(aslist)
+
+    except Exception, e:
+        if cmk.debug.enabled():
+            raise
+        return "" # We must allow notifications without Livestatus access
+
+
+
+
+def add_rulebased_macros(raw_context):
+    # For the rule based notifications we need the list of contacts
+    # an object has. The CMC does send this in the macro "CONTACTS"
+    if "CONTACTS" not in raw_context:
+        raw_context["CONTACTS"] = livestatus_fetch_contacts(raw_context["HOSTNAME"], raw_context.get("SERVICEDESC"))
+
+
+    # Add a pseudo contact name. This is needed for the correct creation
+    # of spool files. Spool files are created on a per-contact-base, as in classical
+    # notifications the core sends out one individual notification per contact.
+    # In the case of rule based notifications we do not make distinctions between
+    # the various contacts.
+    raw_context["CONTACTNAME"] = "check-mk-notify"
+
+
 # Add a few further helper variables that are useful in notification and alert plugins
 def complete_raw_context(raw_context, with_dump, event_log):
     raw_keys = list(raw_context.keys())

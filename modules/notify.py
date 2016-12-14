@@ -508,19 +508,6 @@ def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
     else:
         return rule_parameters
 
-def add_rulebased_macros(raw_context):
-    # For the rule based notifications we need the list of contacts
-    # an object has. The CMC does send this in the macro "CONTACTS"
-    if "CONTACTS" not in raw_context:
-        raw_context["CONTACTS"] = livestatus_fetch_contacts(raw_context["HOSTNAME"], raw_context.get("SERVICEDESC"))
-
-    # Add a pseudo contact name. This is needed for the correct creation
-    # of spool files. Spool files are created on a per-contact-base, as in classical
-    # notifications the core sends out one individual notification per contact.
-    # In the case of rule based notifications we do not make distinctions between
-    # the various contacts.
-    raw_context["CONTACTNAME"] = "check-mk-notify"
-
 
 # Create a table of all user specific notification rules. Important:
 # create deterministic order, so that rule analyses can depend on
@@ -572,27 +559,6 @@ def rbn_add_contact_information(plugin_context, contact):
             contact_dict["name"] = contact
 
         rbn_add_contact_information(plugin_context, contact_dict)
-
-
-def livestatus_fetch_contacts(host, service):
-    try:
-        if service:
-            query = "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts\n" % (
-                host, service)
-        else:
-            query = "GET hosts\nFilter: host_name = %s\nColumns: contacts\n" % host
-
-        commasepped = livestatus_fetch_query(query).strip()
-        aslist = commasepped.split(",")
-        if "check-mk-notify" in aslist: # Remove artifical contact used for rule based notifications
-            aslist.remove("check-mk-notify")
-        return ",".join(aslist)
-
-    except:
-        if cmk.debug.enabled():
-            raise
-        return "" # We must allow notifications without Livestatus access
-
 
 
 def rbn_match_rule(rule, context):
@@ -1642,15 +1608,6 @@ def substitute_context(template, context):
 #   +----------------------------------------------------------------------+
 #   |  Some generic helper functions                                       |
 #   '----------------------------------------------------------------------'
-
-def livestatus_fetch_query(query):
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.connect(cmk.paths.livestatus_unix_socket)
-    sock.send(query)
-    sock.shutdown(socket.SHUT_WR)
-    response = sock.recv(10000000)
-    sock.close()
-    return response
 
 def livestatus_send_command(command):
     try:

@@ -24,9 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-aggregation_rules       = {}
-aggregations            = []
-host_aggregations       = []
-bi_packs                = {}
-bi_compile_log          = None
-bi_precompile_on_demand = True
+aggregation_rules         = {}
+aggregations              = []
+host_aggregations         = []
+bi_packs                  = {}
+bi_compile_log            = None
+bi_precompile_on_demand   = True
+bi_use_legacy_compilation = False

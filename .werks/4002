@@ -1,0 +1,16 @@
+Title: BI: Major Rework of Code. Apache processes now share computated data
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481707801
+Class: feature
+
+Previously, each apache process had to compile the all BI aggregation trees by itself.
+This generated lots of CPU load during core restart, especially on larger BI configurations.
+
+With this update, an apache process no longer computes the BI trees only for personal usage.
+The computation results are now shared between the different processes through cache files.
+
+If you encounter any bugs with this new mechanism you can switch back to the old
+implementation via the global settings option <i>Use legacy compilation for BI aggregations (slower)</i>.

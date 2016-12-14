@@ -76,7 +76,8 @@ def check_tsm_stagingpools(item, params, parsed):
 
     datasets, nodeinfos = [], []
     for node, data in parsed[item].items():
-        nodeinfos.append(node)
+        if node is not None:
+            nodeinfos.append(node)
         datasets.append( tuple(data) )
 
     num_tapes      = 0

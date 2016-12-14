@@ -259,6 +259,7 @@ class Site(object):
             cmk_path() + "/inventory",
             cmk_path() + "/notifications",
             cmk_path() + "/livestatus",
+            cmk_path() + "/livestatus/api/python",
 
             cmc_path() + "/bin",
             cmc_path() + "/modules",

@@ -958,6 +958,10 @@ def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_
 
 def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     found = []
+
+    if host_re == "$1$":
+        return found
+
     honor_site = SITE_SEP in host_re
     if not honor_site and not '*' in host_re and not '$' in host_re \
         and not '|' in host_re and '[' not in host_re:

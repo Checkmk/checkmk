@@ -112,6 +112,8 @@ NT_PLACEHOLDER = 4 # temporary dummy entry needed for REMAINING
 
 # global variables
 g_cache = {}                  # per-user cache
+g_services_items = None
+
 g_config_information = None   # for invalidating cache after config change
 did_compilation = False       # Is set to true if anything has been compiled
 
@@ -726,6 +728,9 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
         global g_remaining_refs
         g_remaining_refs = []
 
+        global g_compiled_services_leafes
+        g_compiled_services_leafes = {}
+
     # Convert new dictionary style rule into old tuple based
     # format
     if type(rule) == dict:
@@ -863,11 +868,9 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
 def find_remaining_services(hostspec, aggregation):
     tags, all_services, childs, parents, alias = g_services[hostspec]
     all_services = set(all_services)
-    for site, host, service in find_all_leaves(aggregation):
-        if (site, host) == hostspec:
-            all_services.discard(service)
-    remaining = list(all_services)
-    remaining.sort()
+
+    remaining = all_services - g_compiled_services_leafes.get(hostspec, set([]))
+    g_compiled_services_leafes.get(hostspec, set([])).update(remaining)
     return [ {
         "type"     : NT_LEAF,
         "host"     : hostspec,
@@ -956,6 +959,15 @@ def match_host(hostname, hostalias, host_spec, tags, required_tags, site, honor_
             return do_match(anchored, to_match)
 
 
+# dictionary with hosts and its compiled services
+g_compiled_services_leafes = {}
+
+regex_host_hit_cache   = set()
+regex_host_miss_cache  = set()
+
+regex_svc_hit_cache    = set()
+regex_svc_miss_cache   = set()
+
 def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     found = []
 
@@ -969,14 +981,17 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
         entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, []) ]
 
     else:
-        entries = g_services.items()
+        if g_services_items:
+            entries = g_services_items
+        else:
+            entries = g_services.items()
 
     # TODO: If we already know the host we deal with, we could avoid this loop
     for (site, hostname), (tags, services, childs, parents, alias) in entries:
         # For regex to have '$' anchor for end. Users might be surprised
         # to get a prefix match on host names. This is almost never what
         # they want. For services this is useful, however.
-        if host_re.endswith("$"):
+        if host_re[-1] == "$":
             anchored = host_re
         else:
             anchored = host_re + "$"
@@ -986,10 +1001,20 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
         # does not contain the site separator - though - we ignore the site
         # an match the rule for all sites.
         if honor_site:
-            if not regex(anchored).match("%s%s%s" % (site, SITE_SEP, hostname)):
-                continue
+            search_term = "%s%s%s" % (site, SITE_SEP, hostname)
         else:
-            if not regex(anchored).match(hostname):
+            search_term = hostname
+
+
+        cache_id = (anchored, search_term)
+        if cache_id in regex_host_miss_cache:
+            continue
+
+        if cache_id not in regex_host_hit_cache:
+            if regex(anchored).match(search_term):
+                regex_host_hit_cache.add(cache_id)
+            else:
+                regex_host_miss_cache.add(cache_id)
                 continue
 
         if service_re == config.HOST_STATE:
@@ -1002,23 +1027,31 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
             found.append({"type"     : NT_REMAINING,
                           "reqhosts" : [(site, hostname)],
                           "host"     : (site, hostname)})
-
         else:
             for service in services:
                 mo = (service_re, service)
-                if mo in service_nomatch_cache:
+                if mo in regex_svc_miss_cache:
                     continue
-                m = regex(service_re).match(service)
-                if m:
-                    found.append({"type"     : NT_LEAF,
-                                  "reqhosts" : [(site, hostname)],
-                                  "host"     : (site, hostname),
-                                  "service"  : service,
-                                  "title"    : "%s - %s" % (hostname, service)} )
-                else:
-                    service_nomatch_cache.add(mo)
+
+                if mo not in regex_svc_hit_cache:
+                    if regex(service_re).match(service):
+                        regex_svc_hit_cache.add(mo)
+                    else:
+                        regex_svc_miss_cache.add(mo)
+                        continue
+
+                found.append({"type"     : NT_LEAF,
+                              "reqhosts" : [(site, hostname)],
+                              "host"     : (site, hostname),
+                              "service"  : service,
+                              "title"    : "%s - %s" % (hostname, service)} )
 
     found.sort()
+
+    for entry in found:
+        if "service" in entry:
+            g_compiled_services_leafes.setdefault(entry["host"], set([])).add(entry["service"])
+
     return found
 
 

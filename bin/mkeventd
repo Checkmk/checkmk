@@ -1030,6 +1030,7 @@ def get_logfile_timespan(path):
 #   '----------------------------------------------------------------------'
 class Perfcounters:
     def __init__(self):
+        self._lock = thread.allocate_lock()
         # Event counters
         self._counters = {
             "messages"        : 0,
@@ -1054,68 +1055,77 @@ class Perfcounters:
         self._times = {}
         self._last_statistics = None
 
+
     def count(self, counter):
-        self._counters[counter] += 1
+        with self._lock:
+            self._counters[counter] += 1
+
 
     def count_time(self, counter, ptime):
-        if counter not in self._times:
-            self._times[counter] = ptime
-        else:
-            weight = self._weights[counter]
-            self._times[counter] *= weight
-            self._times[counter] += (1.00 - weight) * ptime
+        with self._lock:
+            if counter not in self._times:
+                self._times[counter] = ptime
+            else:
+                weight = self._weights[counter]
+                self._times[counter] *= weight
+                self._times[counter] += (1.00 - weight) * ptime
 
     def do_statistics(self):
-        now = time.time()
-        weight = 0.9 # We could make this configurable
-        if self._last_statistics:
-            duration = now - self._last_statistics
-        else:
-            duration = 0
-        for name, value in self._counters.items():
-            if duration:
-                delta = value - self._old_counters[name]
-                rate = delta / duration
-                self._rates[name] = rate
-                if name in self._average_rates:
-                    self._average_rates[name] = \
-                        self._average_rates[name] * weight + rate * (1.0 - weight)
-                else:
-                    self._average_rates[name] = rate
+        with self._lock:
+            now = time.time()
+            weight = 0.9 # We could make this configurable
+            if self._last_statistics:
+                duration = now - self._last_statistics
+            else:
+                duration = 0
+            for name, value in self._counters.items():
+                if duration:
+                    delta = value - self._old_counters[name]
+                    rate = delta / duration
+                    self._rates[name] = rate
+                    if name in self._average_rates:
+                        self._average_rates[name] = \
+                            self._average_rates[name] * weight + rate * (1.0 - weight)
+                    else:
+                        self._average_rates[name] = rate
 
-        self._last_statistics = now
-        self._old_counters = self._counters.copy()
+            self._last_statistics = now
+            self._old_counters = self._counters.copy()
+
 
     def status_columns(self):
-        columns = []
-        for name in self._counters:
-            columns.append(("status_" + name, 0.0))
-            columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
-            columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
+        with self._lock:
+            columns = []
+            for name in self._counters:
+                columns.append(("status_" + name, 0.0))
+                columns.append(("status_" + name.rstrip("s") + "_rate", 0.0))
+                columns.append(("status_average_" + name.rstrip("s") + "_rate", 0.0))
 
-        for name in self._weights:
-            columns.append(("status_average_%s_time" % name, 0.0))
+            for name in self._weights:
+                columns.append(("status_average_%s_time" % name, 0.0))
 
-        return columns
+            return columns
+
 
     def get_status(self):
-        headers = []
-        row = []
-        for name, value in self._counters.items():
-            rate_name = name.rstrip("s") + "_rate"
-            average_rate_name = "average_" + name.rstrip("s") + "_rate"
-            headers.append("status_" + name)
-            headers.append("status_" + rate_name)
-            headers.append("status_" + average_rate_name)
-            row.append(value)
-            row.append(self._rates.get(name, 0.0))
-            row.append(self._average_rates.get(name, 0.0))
+        with self._lock:
+            headers = []
+            row = []
+            for name, value in self._counters.items():
+                rate_name = name.rstrip("s") + "_rate"
+                average_rate_name = "average_" + name.rstrip("s") + "_rate"
+                headers.append("status_" + name)
+                headers.append("status_" + rate_name)
+                headers.append("status_" + average_rate_name)
+                row.append(value)
+                row.append(self._rates.get(name, 0.0))
+                row.append(self._average_rates.get(name, 0.0))
 
-        for name in self._weights.keys():
-            headers.append("status_average_%s_time" % name)
-            row.append(self._times.get(name, 0.0))
+            for name in self._weights.keys():
+                headers.append("status_average_%s_time" % name)
+                row.append(self._times.get(name, 0.0))
 
-        return headers, row
+            return headers, row
 
 
 #.
@@ -1682,6 +1692,7 @@ class EventServer:
         elapsed = time.time() - before
         g_perfcounters.count_time("processing", elapsed)
 
+
     # Takes several lines of messages, handles encoding and processes them separated
     def process_raw_lines(self, data, address = None):
         lines = data.splitlines()
@@ -1692,6 +1703,7 @@ class EventServer:
                     self.process_raw_data(self.process_line, (line, address))
                 except Exception:
                     log('Exception handling a log line (skipping this one): %s' % format_exception())
+
 
     def do_housekeeping(self):
         with lock_eventstatus:

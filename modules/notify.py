@@ -795,17 +795,24 @@ def rbn_all_contacts(with_email=None):
 def rbn_groups_contacts(groups):
     if not groups:
         return {}
-    contacts = set([])
     query = "GET contactgroups\nColumns: members\n"
     for group in groups:
         query += "Filter: name = %s\n" % group
     query += "Or: %d\n" % len(groups)
-    response = livestatus_fetch_query(query)
-    for line in response.splitlines():
-        line = line.strip()
-        if line:
-            contacts.update(line.split(","))
-    return contacts
+
+    try:
+        contacts = set([])
+        for contact_list in livestatus.LocalConnection().query_column(query):
+            contacts.update(contact_list)
+        return contacts
+
+    except livestatus.MKLivestatusNotFoundError:
+        return []
+
+    except Exception, e:
+        if cmk.config.debug:
+            raise
+        return []
 
 
 def rbn_emails_contacts(emails):

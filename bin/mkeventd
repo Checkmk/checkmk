@@ -1036,6 +1036,7 @@ class Perfcounters:
             "rule_tries"      : 0,
             "rule_hits"       : 0,
             "drops"           : 0,
+            "overflows"       : 0,
             "events"          : 0,
             "connects"        : 0,
         }
@@ -2758,7 +2759,9 @@ class EventServer:
             return False # Should have solved the issue. Hand over to next check.
 
         if above_limit:
-            log("  Skip processing because limit is in effect")
+            # Just log in verbose mode! Otherwise log file will be flooded
+            verbose("  Skip processing because limit is in effect")
+            g_perfcounters.count("overflows")
             return True # Prevent creation and prevent one time actions (below)
 
         log("  The limit has been reached")

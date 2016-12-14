@@ -1,0 +1,11 @@
+Title: Fix notifications from Event Console if host has more than one contact
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481725686
+Class: fix
+
+Notifications from the Event Console would never be sent if the
+contact information had to be fetched from the host (not coded in
+the rule itself) and the host had more than one contact.

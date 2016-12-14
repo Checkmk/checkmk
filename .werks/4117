@@ -1,0 +1,11 @@
+Title: HPUX agent: fixed determination of cpu/core information
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p15
+Date: 1481715069
+Class: fix
+
+Previously cpu information for just 1 socket was reported and thus wrong information about the number of cores where displayed.
+
+This has been fixed now.

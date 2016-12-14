@@ -31,6 +31,7 @@
     * 4163 FIX: kernel: fixed empty data handling
     * 4164 FIX: livestatus_status: fixed ValueError for values in scientific notation
     * 4103 FIX: kaspersky_av_client: No longer crash when date of last full scan is unknown...
+    * 4117 FIX: HPUX agent: fixed determination of cpu/core information...
 
     Multisite:
     * 4072 FIX: Fixed multiple issues in BI availability when groups or names contain umlauts

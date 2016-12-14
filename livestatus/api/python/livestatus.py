@@ -24,23 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket, time, re
+import socket, time, re, os
 
-"""MK Livestatus Python API
+"""MK Livestatus Python API"""
 
-This module allows easy access to Nagios via MK Livestatus.
-It supports persistent connections via the connection class.
-If you want single-shot connections, just initialize a
-connection object on-the-fly, e.g.:
-
-r = connection("/var/lib/nagios/rw/live").query_table_assoc("GET hosts")
-
-For persistent connections create and keep an object:
-
-conn = connection("/var/lib/nagios/rw/live")
-r1 = conn.query_table_assoc("GET hosts")
-r2 = conn.query_row("GET status")
-"""
+#   .--Globals-------------------------------------------------------------.
+#   |                    ____ _       _           _                        |
+#   |                   / ___| | ___ | |__   __ _| |___                    |
+#   |                  | |  _| |/ _ \| '_ \ / _` | / __|                   |
+#   |                  | |_| | | (_) | |_) | (_| | \__ \                   |
+#   |                   \____|_|\___/|_.__/ \__,_|_|___/                   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Global variables and Exception classes                              |
+#   '----------------------------------------------------------------------'
 
 # Keep a global array of persistant connections
 persistent_connections = {}
@@ -48,18 +45,12 @@ persistent_connections = {}
 # Regular expression for removing Cache: headers if caching is not allowed
 remove_cache_regex = re.compile("\nCache:[^\n]*")
 
-# DEBUGGING PERSISTENT CONNECTIONS
-# import os
-# hirn_debug = file("/tmp/live.log", "a")
-# def hirn(x):
-#     pid = os.getpid()
-#     hirn_debug.write("[\033[1;3%d;4%dm%d\033[0m] %s\n" % (pid%7+1, (pid/7)%7+1, pid, x))
-#     hirn_debug.flush()
-
 class MKLivestatusException(Exception):
+
     def __init__(self, value):
         self.parameter = value
         super(MKLivestatusException, self).__init__(value)
+
     def __str__(self):
         return str(self.parameter)
 
@@ -76,13 +67,31 @@ class MKLivestatusQueryError(MKLivestatusException):
     pass
 
 class MKLivestatusNotFoundError(MKLivestatusException):
-    pass
+    def __str__(self):
+        return "No matching entries found for query %s" % str(self.parameter)
 
 # We need some unique value here
 NO_DEFAULT = lambda: None
+
+
+
+#.
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   |  Helper class implementing some generic shortcut functions, e.g.     |
+#   |  for fetching just one row or one single value.                      |
+#   '----------------------------------------------------------------------'
+
 class Helpers:
     def query(self, query, add_headers = ""):
         raise NotImplementedError()
+
 
     def query_value(self, query, deflt = NO_DEFAULT):
         """Issues a query that returns exactly one line and one columns and returns
@@ -96,6 +105,7 @@ class Helpers:
             else:
                 return deflt
 
+
     def query_row(self, query):
         """Issues a query that returns one line of data and returns the elements
            of that line as list"""
@@ -105,16 +115,19 @@ class Helpers:
         except IndexError:
             raise MKLivestatusNotFoundError(query)
 
+
     def query_row_assoc(self, query):
         """Issues a query that returns one line of data and returns the elements
            of that line as a dictionary from column names to values"""
         r = self.query(query, "ColumnHeaders: on\n")[0:2]
         return dict(zip(r[0], r[1]))
 
+
     def query_column(self, query):
         """Issues a query that returns exactly one column and returns the values
            of all lines in that column as a single list"""
         return [ l[0] for l in self.query(query, "ColumnHeaders: off\n") ]
+
 
     def query_column_unique(self, query):
         """Issues a query that returns exactly one column and returns the values
@@ -125,10 +138,12 @@ class Helpers:
                 result.append(line[0])
         return result
 
+
     def query_table(self, query):
         """Issues a query that may return multiple lines and columns and returns
            a list of lists"""
         return self.query(query, "ColumnHeaders: off\n")
+
 
     def query_table_assoc(self, query):
         """Issues a query that may return multiple lines and columns and returns
@@ -140,6 +155,7 @@ class Helpers:
         for line in response[1:]:
             result.append(dict(zip(headers, line)))
         return result
+
 
     def query_summed_stats(self, query, add_headers = ""):
         """Conveniance function for adding up numbers from Stats queries
@@ -155,6 +171,18 @@ class Helpers:
             result.append(sum([row[x] for row in data]))
         return result
 
+
+#.
+#   .--BaseConnection----------------------------------------------------------.
+#   | ____                  ____                            _   _              |
+#   || __ )  __ _ ___  ___ / ___|___  _ __  _ __   ___  ___| |_(_) ___   _ __  |
+#   ||  _ \ / _` / __|/ _ \ |   / _ \| '_ \| '_ \ / _ \/ __| __| |/ _ \ | '_ \ |
+#   || |_) | (_| \__ \  __/ |__| (_) | | | | | | |  __/ (__| |_| | (_) || | | ||
+#   ||____/ \__,_|___/\___|\____\___/|_| |_|_| |_|\___|\___|\__|_|\___/ |_| |_||
+#   |                                                                          |
+#   +--------------------------------------------------------------------------+
+#   |  Abstract base class of SingleSiteConnection and MultiSiteConnection     |
+#   '--------------------------------------------------------------------------'
 
 class BaseConnection:
     def __init__(self, socketurl, persist = False, allow_cache = False):
@@ -350,6 +378,18 @@ class BaseConnection:
             raise MKLivestatusSocketError(str(e))
 
 
+#.
+#   .--SingleSiteConn------------------------------------------------------.
+#   |  ____  _             _      ____  _ _        ____                    |
+#   | / ___|(_)_ __   __ _| | ___/ ___|(_) |_ ___ / ___|___  _ __  _ __    |
+#   | \___ \| | '_ \ / _` | |/ _ \___ \| | __/ _ \ |   / _ \| '_ \| '_ \   |
+#   |  ___) | | | | | (_| | |  __/___) | | ||  __/ |__| (_) | | | | | | |  |
+#   | |____/|_|_| |_|\__, |_|\___|____/|_|\__\___|\____\___/|_| |_|_| |_|  |
+#   |                |___/                                                 |
+#   +----------------------------------------------------------------------+
+#   |  Connections to one local Unix or remote TCP socket.                 |
+#   '----------------------------------------------------------------------'
+
 class SingleSiteConnection(BaseConnection, Helpers):
     def __init__(self, socketurl, persist = False, allow_cache = False):
         BaseConnection.__init__(self, socketurl, persist, allow_cache)
@@ -394,6 +434,18 @@ class SingleSiteConnection(BaseConnection, Helpers):
         else:
             self.auth_header = ""
 
+
+#.
+#   .--MultiSiteConn-------------------------------------------------------.
+#   |     __  __       _ _   _ ____  _ _        ____                       |
+#   |    |  \/  |_   _| | |_(_) ___|(_) |_ ___ / ___|___  _ __  _ __       |
+#   |    | |\/| | | | | | __| \___ \| | __/ _ \ |   / _ \| '_ \| '_ \      |
+#   |    | |  | | |_| | | |_| |___) | | ||  __/ |__| (_) | | | | | | |     |
+#   |    |_|  |_|\__,_|_|\__|_|____/|_|\__\___|\____\___/|_| |_|_| |_|     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Connections to a list of local and remote sites.                    |
+#   '----------------------------------------------------------------------'
 
 # sites is a dictionary from site name to a dict.
 # Keys in the dictionary:
@@ -673,5 +725,26 @@ class MultiSiteConnection(Helpers):
                 return connection
         raise MKLivestatusConfigError("No livestatus connection to local host")
 
-# Examle for forcing local connection:
-# live.local_connection().query_value(...)
+
+
+#.
+#   .--LocalConn-----------------------------------------------------------.
+#   |            _                    _  ____                              |
+#   |           | |    ___   ___ __ _| |/ ___|___  _ __  _ __              |
+#   |           | |   / _ \ / __/ _` | | |   / _ \| '_ \| '_ \             |
+#   |           | |__| (_) | (_| (_| | | |__| (_) | | | | | | |            |
+#   |           |_____\___/ \___\__,_|_|\____\___/|_| |_|_| |_|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  LocalConnection is a convenciance class for connecting to the       |
+#   |  local Livestatus socket within an OMD site. It only works within    |
+#   |  OMD context. It immediately connects()                              |
+#   '----------------------------------------------------------------------'
+
+class LocalConnection(SingleSiteConnection):
+    def __init__(self, *args, **kwargs):
+        omd_root = os.getenv("OMD_ROOT")
+        if not omd_root:
+            raise MKLivestatusConfigError("OMD_ROOT is not set. You are not running in OMD context.")
+        SingleSiteConnection.__init__(self, "unix:" + omd_root + "/tmp/run/live", *args, **kwargs)
+        self.connect()

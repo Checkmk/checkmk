@@ -2496,12 +2496,12 @@ if mkeventd_enabled:
                             default_value = 1000,
                             unit = _("open events"),
                         )),
-                        ("action", vs_ec_event_limit_actions("notify all contacts")),
+                        ("action", vs_ec_event_limit_actions("notify contacts of the host")),
                     ],
                     optional_keys = [],
                 )),
                 ("by_rule", Dictionary(
-                    title = _("Host limit"),
+                    title = _("Rule limit"),
                     help = _("You can limit the number of open events created by a single "
                              "rule here. This is meant to "
                              "prevent you from too generous rules creating a lot of events.<br>"
@@ -2518,7 +2518,7 @@ if mkeventd_enabled:
                             default_value = 1000,
                             unit = _("open events"),
                         )),
-                        ("action", vs_ec_event_limit_actions("notify all rule contacts or without contact info")),
+                        ("action", vs_ec_event_limit_actions("notify contacts in rule or fallback contacts")),
                     ],
                     optional_keys = [],
                 )),
@@ -2538,7 +2538,7 @@ if mkeventd_enabled:
                             default_value = 10000,
                             unit = _("open events"),
                         )),
-                        ("action", vs_ec_event_limit_actions("notify without contact info")),
+                        ("action", vs_ec_event_limit_actions("notify all fallback contacts")),
                     ],
                     optional_keys = [],
                 )),

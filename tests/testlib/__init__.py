@@ -163,12 +163,16 @@ class Site(object):
         self.http_address = "127.0.0.1"
         self.url          = "%s://%s/%s/check_mk/" % (self.http_proto, self.http_address, self.id)
 
+        self._apache_port = None # internal cache for the port
+
         self._gather_livestatus_port()
 
 
     @property
     def apache_port(self):
-        return int(self.get_config("APACHE_TCP_PORT"))
+        if self._apache_port == None:
+            self._apache_port = int(self.get_config("APACHE_TCP_PORT"))
+        return self._apache_port
 
 
     @property

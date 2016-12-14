@@ -4066,7 +4066,10 @@ def fetch_contacts_of_group_from_livestatus(group_name):
     return None # No group match or other failure
 
 
+# None, None -> Host could not be found
+# [], [] -> Host found but has no contacts/contactgroups
 def fetch_contacts_and_groups_of_host_from_livestatus(host):
+    # TODO: Matching von Hostnamen muss identisch sein zu dem im CMC
     try:
         answer = livestatus_query("GET hosts\nFilter: host_name = %s\n"
                                   "Columns: contacts contact_groups\nOutputFormat: python\n" % host)

@@ -441,7 +441,7 @@ class PainterOptions(object):
         if not display_options.enabled(display_options.D) or not self.painter_option_form_enabled():
             return
 
-        html.write('<div class="view_form" id="painteroptions" style="display: none">')
+        html.open_div(id_="painteroptions", class_=["view_form"], style="display: none;")
         html.begin_form("painteroptions")
         forms.header(_("Display Options"))
         for name in self._used_option_names:
@@ -459,7 +459,7 @@ class PainterOptions(object):
 
         html.hidden_fields()
         html.end_form()
-        html.write('</div>')
+        html.close_div()
 
 
 
@@ -669,9 +669,9 @@ class Cell(object):
         if is_last_column_header:
             classes.append("last_col")
 
-        thclass = classes and (" class=\"%s\"" % " ".join(classes)) or ""
-
-        html.write("<th%s%s%s>%s</th>" % (thclass, onclick, title, self.title()))
+        html.open_th(class_=classes, onclick=onclick, title=title)
+        html.write(self.title())
+        html.close_th()
         #html.guitest_record_output("view", ("header", title))
 
 
@@ -834,9 +834,13 @@ class Cell(object):
                 tdclass += " last_col"
 
         if tdclass:
-            html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
+            html.write("<td %s class=\"%s\">" % (tdattrs, tdclass))
+            html.write(content)
+            html.close_td()
         else:
-            html.write("<td %s>%s</td>" % (tdattrs, content))
+            html.write("<td %s>" % (tdattrs))
+            html.write(content)
+            html.close_td()
         #html.guitest_record_output("view", ("cell", content))
 
         return has_content
@@ -974,7 +978,7 @@ def page_create_view(next_url = None):
             return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e)
+            html.div(e, class_=["error"])
             html.add_user_error(e.varname, e)
 
     html.begin_form('create_view')
@@ -1359,20 +1363,21 @@ def create_view_from_valuespec(old_view, view):
 
 def show_filter(f):
     if not f.visible():
-        html.write('<div style="display:none">')
+        html.open_div(style="display:none;")
         f.display()
-        html.write('</div>')
+        html.close_div()
     else:
         visuals.show_filter(f)
 
 
 def show_filter_form(is_open, filters):
     # Table muss einen anderen Namen, als das Formular
-    html.write('<div class="view_form" id="filters" %s>'
-            % (not is_open and 'style="display: none"' or '') )
+    html.open_div(id_="filters", class_=["view_form"], style="display: none;" if not is_open else None)
 
     html.begin_form("filter")
-    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
+    html.open_table(class_=["filterform"], cellpadding="0", cellspacing="0", border="0")
+    html.open_tr()
+    html.open_td()
 
     # sort filters according to title
     s = [(f.sort_index, f.title, f) for f in filters if f.available()]
@@ -1389,14 +1394,20 @@ def show_filter_form(is_open, filters):
         if not f.double_height():
             show_filter(f)
 
-    html.write("</td></tr><tr><td>")
+    html.close_td()
+    html.close_tr()
+
+    html.open_tr()
+    html.open_td()
     html.button("search", _("Search"), "submit")
-    html.write("</td></tr></table>")
+    html.close_td()
+    html.close_tr()
+
+    html.close_table()
 
     html.hidden_fields()
     html.end_form()
-
-    html.write("</div>")
+    html.close_div()
 
 
 def page_view():
@@ -1823,7 +1834,7 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     # The refreshing content container
     if display_options.enabled(display_options.R):
-        html.write("<div id=data_container>\n")
+        html.open_div(id_="data_container")
 
     if not has_done_actions:
         # Limit exceeded? Show warning
@@ -1864,9 +1875,9 @@ def render_view(view, rows, datasource, group_painters, painters,
         for sitename, info in sites.live().deadsites.items():
             html.show_error("<b>%s - %s</b><br>%s" % (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
-    # FIXME: Sauberer wäre noch die Status Icons hier mit aufzunehmen
+    # FIXME: Sauberer waere noch die Status Icons hier mit aufzunehmen
     if display_options.enabled(display_options.R):
-        html.write("</div>\n")
+        html.close_div()
 
     if show_footer:
         pid = os.getpid()
@@ -1986,13 +1997,17 @@ def view_optiondial(view, option, choices, help):
     html.begin_context_buttons() # just to be sure
     # Remove unicode strings
     choices = [ [c[0], str(c[1])] for c in choices ]
-    html.write('<div title="%s" id="optiondial_%s" class="optiondial %s val_%s" '
-       'onclick="view_dial_option(this, \'%s\', \'%s\', %r);"><div>%s</div></div>' % (
-        help, option, option, value, view["name"], option, choices, title))
+    html.open_div(id_="optiondial_%s" % option,
+                  class_=["optiondial", option, "val_%s" % value],
+                  title=help,
+                  onclick="view_dial_option(this, \'%s\', \'%s\', %r)"
+                                   % (view["name"], option, choices))
+    html.div(title)
+    html.close_div()
     html.final_javascript("init_optiondial('optiondial_%s');" % option)
 
 def view_optiondial_off(option):
-    html.write('<div class="optiondial off %s"></div>' % option)
+    html.div('', class_=["optiondial", "off", option])
 
 # FIXME: Consolidate with html.toggle_button() rendering functions
 def toggler(id, icon, help, onclick, value, hidden = False):
@@ -2192,8 +2207,10 @@ def do_query_data(query, columns, add_columns, merge_column,
         sites.live().set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
     if config.debug_livestatus_queries \
             and html.output_format == "html" and display_options.enabled(display_options.W):
-        html.write('<div class="livestatus message">'
-                   '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
+        html.open_div(class_=["livestatus", "message"])
+        html.tt(query.replace('\n', '<br>\n'))
+        html.close_div()
+
 
     if only_sites:
         sites.live().set_only_sites(only_sites)
@@ -2425,8 +2442,9 @@ def show_command_form(is_open, datasource):
     # will be one of "host", "service", "command" or "downtime".
     what = datasource["infos"][0]
 
-    html.write('<div class="view_form" id="commands" %s>' %
-                (not is_open and 'style="display: none"' or '') )
+    html.open_div(id_="commands",
+                  class_=["view_form"],
+                  style="display:none;" if not is_open else None)
     html.begin_form("actions")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
@@ -2453,7 +2471,7 @@ def show_command_form(is_open, datasource):
 
     forms.end()
     html.end_form()
-    html.write("</div>")
+    html.close_div()
 
 # Examine the current HTML variables in order determine, which
 # command the user has selected. The fetch ids from a data row
@@ -3005,40 +3023,37 @@ def ajax_popup_action_menu():
     row = query_action_data(what, host, site, svcdesc)
     icons = get_icons(what, row, toplevel=False)
 
-    html.write('<ul>\n')
+    html.open_ul()
     for icon in icons:
-        html.write('<li>\n')
-        if len(icon) == 4:
+        if len(icon) != 4:
+            html.open_li()
+            html.write(icon[1])
+            html.close_li()
+        else:
+            html.open_li()
             icon_name, title, url_spec = icon[1:]
+
             if url_spec:
                 url, target_frame = sanitize_action_url(url_spec)
-
                 url = replace_action_url_macros(url, what, row)
-
-                onclick = ''
+                onclick = None
                 if url.startswith('onclick:'):
-                    onclick = ' onclick="%s"' % url[8:]
-                    url = 'javascript:void(0)'
-
-                target = ""
+                    onclick = url[8:]
+                    url = 'javascript:void(0);'
+                target = None
                 if target_frame and target_frame != "_self":
-                    target = " target=\"%s\"" % target_frame
-
-                html.write('<a href="%s"%s%s>' % (url, target, onclick))
+                    target = target_frame
+                html.open_a(href=url, target=target, onclick=onclick)
 
             html.icon('', icon_name)
-
             if title:
                 html.write(title)
             else:
-                html.write(_("No title"))
-
+                html.write_text(_("No title"))
             if url_spec:
-                html.write('</a>')
-        else:
-            html.write(icon[1])
-        html.write('</li>\n')
-    html.write('</ul>\n')
+                html.close_a()
+            html.close_li()
+    html.close_ul()
 
 
 def sanitize_action_url(url_spec):

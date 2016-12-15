@@ -4066,28 +4066,23 @@ def fetch_contacts_of_group_from_livestatus(group_name):
 
 # None, None -> Host could not be found
 # [], [] -> Host found but has no contacts/contactgroups
-def fetch_contacts_and_groups_of_host_from_livestatus(host):
+def fetch_contacts_and_groups_of_host_from_livestatus(host_name):
     # TODO: Matching von Hostnamen muss identisch sein zu dem im CMC
     try:
-        answer = livestatus_query("GET hosts\nFilter: host_name = %s\n"
-                                  "Columns: contacts contact_groups\nOutputFormat: python\n" % host)
-        if not answer:
-            return None, None
-
-        data = eval(answer)
-        if not data:
-            return None, None
-
-        contacts, groups = data[0]
+        contacts, groups = livestatus.LocalConnection().query_row(
+            "GET hosts\nFilter: host_name = %s\nColumns: contacts contact_groups" % host_name)
         if "check-mk-notify" in contacts: # Remove artifical contact used for rule based notifications
             contacts.remove("check-mk-notify")
         return contacts, groups
 
-    except: # TODO: Make this more specific
+    except livestatus.MKLivestatusNotFoundError, e:
+        return None, None # Host not found
+
+    except Exception, e:
+        log("Cannot determine contacts and contact groups of host %s: %s" % (host_name, e))
         if opt_debug:
             raise
-
-    return None, None
+        return None, None
 
 
 def substitute_event_tags(text, event):

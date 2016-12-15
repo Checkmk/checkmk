@@ -1789,6 +1789,32 @@ class html(DeprecationWrapper):
             self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self._escape_attribute(url))
 
 
+    # TODO: Refactor the arguments. It is only used in views/wato
+    def toggle_button(self, id, isopen, icon, help, hidden=False, disabled=False):
+        self.begin_context_buttons() # TODO: Check all calls. If done before, remove this!
+
+        if disabled:
+            state    = "off" if disabled else "on"
+            cssclass = ""
+            help     = ""
+        else:
+            state = "on"
+            if isopen:
+                cssclass = "down"
+            else:
+                cssclass = "up"
+
+        self.open_div(
+            id_="%s_%s" % (id, state),
+            class_=["togglebutton", state, icon, cssclass],
+            title=help,
+            onclick="view_toggle_form(this, '%s');" % id,
+            style='display:none' if hidden else None,
+        )
+        self.img(src="images/icon_%s.png" % icon)
+        self.close_div()
+
+
     def get_button_counts(self):
         raise NotImplementedError()
 

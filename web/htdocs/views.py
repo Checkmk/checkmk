@@ -2023,27 +2023,6 @@ def ajax_set_viewoption():
     po.save_to_config()
 
 
-def togglebutton(id, isopen, icon, help, hidden=False, disabled=False):
-    html.begin_context_buttons() # TODO: Check all calls. If done before, remove this!
-
-    if disabled:
-        state    = "off" if disabled else "on"
-        cssclass = ""
-        help     = ""
-    else:
-        state = "on"
-        if isopen:
-            cssclass = "down"
-        else:
-            cssclass = "up"
-
-    hide = hidden and ' style="display:none"' or ''
-    html.write('<div id="%s_%s" class="togglebutton %s %s %s" title="%s" '
-               'onclick="view_toggle_form(this, \'%s\');"%s>'
-               '<img src="images/icon_%s.png"></div>' % \
-                (id, state, state, icon, cssclass, help, id, hide, icon))
-
-
 def show_context_links(thisview, show_filters,
                        enable_commands, enable_checkboxes, show_checkboxes,
                        show_availability):
@@ -2060,23 +2039,23 @@ def show_context_links(thisview, show_filters,
         else:
             icon = "filters"
             help = _("Set a filter for refining the shown data")
-        togglebutton("filters", filter_isopen, icon, help, disabled=not show_filters)
+        html.toggle_button("filters", filter_isopen, icon, help, disabled=not show_filters)
 
     if display_options.enabled(display_options.D):
-        togglebutton("painteroptions", False, "painteroptions", _("Modify display options"),
+        html.toggle_button("painteroptions", False, "painteroptions", _("Modify display options"),
                      disabled=not painter_options.painter_option_form_enabled())
 
     if display_options.enabled(display_options.C):
-        togglebutton("commands", False, "commands", _("Execute commands on hosts, services and other objects"),
+        html.toggle_button("commands", False, "commands", _("Execute commands on hosts, services and other objects"),
                      hidden = not enable_commands)
-        togglebutton("commands", False, "commands", "", hidden=enable_commands, disabled=True)
+        html.toggle_button("commands", False, "commands", "", hidden=enable_commands, disabled=True)
 
         selection_enabled = (enable_commands and enable_checkboxes) or thisview.get("force_checkboxes")
         if not thisview.get("force_checkboxes"):
             toggler("checkbox", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"),
                     "location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
                     show_checkboxes, hidden = True) # not selection_enabled)
-        togglebutton("checkbox", False, "checkbox", "", hidden=not thisview.get("force_checkboxes"), disabled=True)
+        html.toggle_button("checkbox", False, "checkbox", "", hidden=not thisview.get("force_checkboxes"), disabled=True)
         html.javascript('g_selection_enabled = %s;' % (selection_enabled and 'true' or 'false'))
 
     if display_options.enabled(display_options.O):

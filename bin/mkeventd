@@ -3931,7 +3931,7 @@ def do_notify(event, username=None, is_cancelling=False):
         "SERVICEACKCOMMENT":           "",
         "SERVICEATTEMPT":              "1",
         "SERVICECHECKCOMMAND":         event["rule_id"] == None and "ec-internal" or "ec-rule-" + event["rule_id"],
-        "SERVICEDESC":                 event["application"] or "Unset",
+        "SERVICEDESC":                 event["application"] or "Event Console",
         "SERVICENOTIFICATIONNUMBER":   "1",
         "SERVICEOUTPUT":               event["text"],
         "SERVICEPERFDATA":             "",

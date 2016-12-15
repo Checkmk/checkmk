@@ -564,6 +564,42 @@ if mkeventd_enabled:
         "executor"    : command_executor_mkeventd,
     })
 
+
+    config.declare_permission("mkeventd.archive_events_of_hosts",
+                              _("Archive events of hosts"),
+                              _("Archive all open events of all hosts shown in host views"),
+                              [ "user", "admin" ])
+
+
+    def command_archive_events_of_hosts(cmdtag, spec, row):
+        if html.var("_archive_events_of_hosts"):
+            if cmdtag == "HOST":
+                tag = "host"
+            elif cmdtag == "SVC":
+                tag = "service"
+            else:
+                tag = None
+
+            commands = []
+            if tag and row.get('%s_check_command' % tag, "").startswith('check_mk_active-mkevents'):
+                data = sites.live().query("GET eventconsoleevents\n" +\
+                                          "Columns: event_id\n" +\
+                                          "Filter: host_name = %s" % \
+                                          row['host_name'])
+                commands = [ "DELETE;%s;%s" % (entry[0], config.user.id) for entry in data ]
+            return commands, "<b>archive all events of all hosts</b> of"
+
+
+    multisite_commands.append({
+        "tables"     : [ "host", "service" ],
+        "permission" : "mkeventd.archive_events_of_hosts",
+        "title"      : _("Archive events of hosts"),
+        "render"     : lambda: html.button("_archive_events_of_hosts", _('Archive events')),
+        "action"     : command_archive_events_of_hosts,
+        "executor"   : command_executor_mkeventd,
+    })
+
+
     #.
     #   .--Sorters-------------------------------------------------------------.
     #   |                  ____             _                                  |

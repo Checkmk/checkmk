@@ -86,7 +86,7 @@ choices = ["c1", "c2"]
 hidden  = True
 id      = "id"
 e       = "error"
-query   = "Hallo \n Welt!"
+query   = "Hallo Welt!"
 '''
 
 function_start = lambda x: '''

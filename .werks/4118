@@ -1,0 +1,11 @@
+Title: check_bi_aggr: changed check and WATO rule to support Kerberos auth
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481804930
+Class: feature
+
+Changed active check "check_bi_aggr" and the related WATO rule to support Kerberos authentication.
+
+For this to work Python modules "requests" and "requests_kerberos" are needed. These should be shipped with prepackaged CRE and CEE versions since werk #7612.

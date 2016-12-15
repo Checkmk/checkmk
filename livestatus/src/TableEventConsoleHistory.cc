@@ -22,6 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// IWYU pragma: no_include <bits/shared_ptr.h>
+// IWYU pragma: no_include <algorithm>
 #include "TableEventConsoleHistory.h"
 #include <memory>
 #include "Column.h"

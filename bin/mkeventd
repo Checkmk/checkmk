@@ -39,6 +39,7 @@ import traceback
 from cmk.regex import regex, is_regex
 import cmk.defines as defines
 import cmk.daemon
+import livestatus
 
 try:
     import simplejson as json
@@ -4037,15 +4038,12 @@ def add_rbn_contact_information(context, host, contact_groups, contact_groups_no
 
 def core_has_notifications_disabled(event):
     try:
-        answer = livestatus_query("GET status\nColumns: enable_notifications\nOutputFormat: python\n")
-        if answer:
-            notifications_enabled = eval(answer)
-            if not notifications_enabled[0][0]:
-                log("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
-                return True
-    except:
-        # On any error, assume that notifications are enabled
-        pass
+        notifications_enabled = livestatus.LocalConnection().query_value("GET status\nColumns: enable_notifications")
+        if not notifications_enabled:
+            log("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
+            return True
+    except Exception, e:
+        log("Cannot determine wether notifcations are enabled in core: %s. Assuming YES." % e)
 
     return False
 

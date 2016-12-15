@@ -30,6 +30,64 @@ from bs4 import BeautifulSoup as bs
 # internal imports
 from classes import HTMLOrigTester, HTMLCheck_MKTester
 from tools import compare_html, gentest, compare_and_empty
+
+_ = lambda x: x
+
+title = "title"
+key = "key"
+name = "name"
+vp = "vp"
+varprefix = "varprefix"
+prefix = "prefix"
+css = "css"
+cls = "cls"
+disp = "disp"
+sel = "selected"
+div_id = "div1"
+
+_vertical = "vertical"
+_delete_style = "filter"
+_label = "label"
+_empty_text = "empty text"
+_no_elements_text = _empty_text
+_columns = 5
+_size = 10
+
+select_func = "selector"
+unselect_func = "unselector"
+active_category = "active_category"
+category_name = "active_category"
+category_alias = "active_alias"
+
+div_is_open = True
+visible = True
+oneline = True
+
+mod = 2
+nr = 1
+indent = 10
+display_off = "none"
+display_on = "row"
+
+classes = ["cls1", "cls2"]$
+#onclick = "onclick_code('<lol>');"$
+onclick = "onclick_code('lol');"$
+title   = "Title"$
+thclass = "th"$
+tdclass = "th"$
+content = "<tag> content </tag>"$
+tdattrs= "class='tdclass'"$
+is_open = True$
+option  = "option"$
+icon    = "icon"$
+value   = "Testvalue"$
+view    = {"name": "viewname"}$
+choices = ["c1", "c2"]$
+hidden  = True$
+id      = "id"$
+e       = "error"$
+query   = "Hallo \n Welt!"$
+
 '''
 
 function_start = lambda x: '''

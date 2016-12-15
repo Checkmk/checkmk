@@ -7734,7 +7734,11 @@ def mode_notifications(phase):
 
         return
 
-    rules = load_notification_rules()
+    rules = []
+    for rule in load_notification_rules():
+        if config.user.may("notification_plugin.%s" % rule['notify_plugin'][0]) and \
+           rule not in rules:
+            rules.append(rule)
 
     if phase == "action":
         if html.has_var("_show_user"):
@@ -8135,7 +8139,12 @@ def load_notification_scripts():
 
 
 def notification_script_choices():
-    return user_script_choices("notifications") + [(None, _("ASCII Email (legacy)")) ]
+    choices = []
+    for choice in user_script_choices("notifications") + [(None, _("ASCII Email (legacy)")) ]:
+        notificaton_plugin_name, notification_plugin_title = choice
+        if config.user.may("notification_plugin.%s" % notificaton_plugin_name):
+            choices.append( choice )
+    return choices
 
 
 def notification_script_choices_with_parameters():
@@ -8164,7 +8173,6 @@ def notification_script_choices_with_parameters():
 
 def notification_script_title(name):
     return user_script_title("notifications", name)
-
 
 
 #.

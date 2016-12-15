@@ -35,9 +35,26 @@ import wato
 
 
 g_acknowledgement_time = {}
-g_modified_time = 0
+g_modified_time        = 0
+g_columns              = ["time", "contact_name", "type", "host_name",
+                          "service_description", "comment"]
+loaded_with_language   = False
 
-g_columns = ["time", "contact_name", "type", "host_name", "service_description", "comment"]
+
+def load_plugins(force):
+    global loaded_with_language
+    if loaded_with_language == current_language and not force:
+        return
+
+    config.declare_permission_section("notification_plugin",
+                                      _("Notification plugins"),
+                                      do_sort = True)
+
+    for name, attrs in wato.load_notification_scripts().items():
+        config.declare_permission(
+            "notification_plugin.%s" % name,
+            _u(attrs["title"]), u"",
+            [ "admin", "user" ])
 
 
 def acknowledge_failed_notifications(timestamp):

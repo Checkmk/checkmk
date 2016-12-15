@@ -1572,6 +1572,7 @@ register_rule(group,
                             ('cookie', _('Form (Cookie) based')),
                             ('basic',  _('HTTP Basic')),
                             ('digest', _('HTTP Digest')),
+                            ('kerberos', _('Kerberos')),
                         ],
                     )),
                     ("timeout", Integer(

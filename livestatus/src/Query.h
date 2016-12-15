@@ -25,6 +25,7 @@
 #ifndef Query_h
 #define Query_h
 
+// IWYU pragma: no_include <bits/shared_ptr.h>
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
 #include <ctime>

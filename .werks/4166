@@ -1,0 +1,11 @@
+Title: New view command: archive events of hosts
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481808898
+Class: feature
+
+In hosts or services views you can now archive all events
+at once by using the view command archive events below
+various commands.

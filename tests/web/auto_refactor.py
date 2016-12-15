@@ -129,8 +129,13 @@ def replace_tags(html, indent = 0):
         if not skip_next and inbetween[counter].strip(' ') not in ['', '\n']:
             html = append_to_html(html, indent, "html.write(%s)" % inbetween[counter])
 
-    return html + "\n(/new)" + rest
-
+    try:
+        return html + "\n(/new)" + rest
+    except:
+        print "html:\n", html
+        print "__________________________________________"
+        print "rest:\n", rest
+        return html + "\n(/new)" + rest
 
 import re
 html = sys.argv[1]

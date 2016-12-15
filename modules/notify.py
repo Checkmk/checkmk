@@ -810,7 +810,7 @@ def rbn_groups_contacts(groups):
         return []
 
     except Exception, e:
-        if cmk.config.debug:
+        if cmk.debug.enabled():
             raise
         return []
 

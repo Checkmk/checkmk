@@ -134,10 +134,13 @@ def replace_tags(html, indent = 0):
     if no_comments.count('(') != no_comments.count(')'):
         return html
 
+    # this type of strings is rare and cannot be handeled
+    if " % " in html and len(html.split(" % ")) != 2:
+        return html
+
     html, rest = split_html(html)
     orig_html = html
 
-    # strip all comments
     inputs = []
     if " % " in html or ' %\n' in html:
         if " % " in html:
@@ -182,7 +185,7 @@ def replace_tags(html, indent = 0):
 
 
     try:
-        return orig_html + "\n(new)" + html + "\n" + rest
+        return orig_html + "\n(new)" + html + rest
     except:
         print "orig_html:\n", orig_html
         print "__________________________________________"

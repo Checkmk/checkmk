@@ -11984,6 +11984,16 @@ def mode_rulesets(phase, group=None):
             return title
 
     elif phase == "buttons":
+        if html.has_var("filtered"):
+            filter_isopen = True
+            icon = "filters_set"
+            help = _("The current data is being filtered")
+        else:
+            filter_isopen = False
+            icon = "filters"
+            help = _("Set a filter for refining the shown data")
+        togglebutton("filters", filter_isopen, icon, help)
+
         if only_host:
             home_button()
             if group != "static":

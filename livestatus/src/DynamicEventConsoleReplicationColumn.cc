@@ -28,6 +28,7 @@
 #include <utility>
 #include <vector>
 #include "BlobColumn.h"
+#include "Column.h"
 #include "EventConsoleConnection.h"
 #include "MonitoringCore.h"
 
@@ -65,8 +66,6 @@ public:
         return make_unique<vector<char>>(_blob.begin(), _blob.end());
     };
 
-    bool mustDelete() const override { return true; }
-
 private:
     const string _blob;
 };
@@ -79,7 +78,7 @@ DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
                     core->loggerLivestatus())
     , _core(core) {}
 
-Column *DynamicEventConsoleReplicationColumn::createColumn(
+unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
     const std::string &name, const std::string &arguments) {
     string result;
     if (_core->mkeventdEnabled()) {
@@ -87,5 +86,6 @@ Column *DynamicEventConsoleReplicationColumn::createColumn(
         ec.run();
         result = ec.getResult();
     }
-    return new ReplicationColumn(name, "replication value", -1, -1, result);
+    return make_unique<ReplicationColumn>(name, "replication value", -1, -1,
+                                          result);
 }

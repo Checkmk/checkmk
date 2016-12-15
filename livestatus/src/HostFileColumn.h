@@ -34,17 +34,14 @@
 class HostFileColumn : public BlobColumn {
 public:
     HostFileColumn(std::string name, std::string description,
-                   std::string base_dir, std::string suffix, bool is_dynamic,
+                   std::string base_dir, std::string suffix,
                    int indirect_offset, int extra_offset);
 
     std::unique_ptr<std::vector<char>> getBlob(void *data) override;
 
-    bool mustDelete() const override { return _is_dynamic; }
-
 private:
     std::string _base_dir;
     std::string _suffix;
-    bool _is_dynamic;
 };
 
 #endif  // HostFileColumn_h

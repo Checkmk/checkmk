@@ -24,10 +24,13 @@
 
 #include "DynamicLogwatchFileColumn.h"
 #include <ostream>
+#include "Column.h"
 #include "HostFileColumn.h"
 #include "Logger.h"
 
+using std::make_unique;
 using std::string;
+using std::unique_ptr;
 
 // Replace \\ with \ and \s with space
 string unescape_filename(string filename) {
@@ -50,8 +53,8 @@ string unescape_filename(string filename) {
     return filename_native;
 }
 
-Column *DynamicLogwatchFileColumn::createColumn(const std::string &name,
-                                                const std::string &arguments) {
+unique_ptr<Column> DynamicLogwatchFileColumn::createColumn(
+    const std::string &name, const std::string &arguments) {
     // arguments contains a file name
     if (arguments.empty()) {
         Warning(_logger) << "Invalid arguments for column '" << _name
@@ -65,7 +68,7 @@ Column *DynamicLogwatchFileColumn::createColumn(const std::string &name,
         return nullptr;
     }
 
-    return new HostFileColumn(name, "Contents of logwatch file", _logwatch_path,
-                              "/" + unescape_filename(arguments), true,
-                              _indirect_offset, _extra_offset);
+    return make_unique<HostFileColumn>(
+        name, "Contents of logwatch file", _logwatch_path,
+        "/" + unescape_filename(arguments), _indirect_offset, _extra_offset);
 }

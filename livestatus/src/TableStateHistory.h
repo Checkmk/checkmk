@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <map>
+#include <memory>
 #include <string>
 #include "LogCache.h"
 #include "Logfile.h"
@@ -66,7 +67,7 @@ public:
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     bool isAuthorized(contact *ctc, void *data) override;
-    Column *column(std::string colname) override;
+    std::shared_ptr<Column> column(std::string colname) override;
 
 protected:
     bool _abort_query;

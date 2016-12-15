@@ -64,9 +64,6 @@ public:
     // fixed, it is just an artifact.
     virtual void output(void *row, RowRenderer &r, contact *auth_user) = 0;
 
-    // TODO(sp) Get rid of this! true means "delete after Query"
-    virtual bool mustDelete() const { return false; }
-
     virtual std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                                  const std::string &value);
     virtual std::unique_ptr<Aggregator> createAggregator(

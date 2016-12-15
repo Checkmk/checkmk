@@ -49,6 +49,7 @@
 using std::lock_guard;
 using std::make_unique;
 using std::mutex;
+using std::shared_ptr;
 using std::string;
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
@@ -246,9 +247,9 @@ bool TableLog::isAuthorized(contact *ctc, void *data) {
              entry->_logclass == LOGCLASS_STATE);
 }
 
-Column *TableLog::column(string colname) {
+shared_ptr<Column> TableLog::column(string colname) {
     // First try to find column in the usual way
-    if (Column *col = Table::column(colname)) {
+    if (auto col = Table::column(colname)) {
         return col;
     }
 

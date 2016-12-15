@@ -45,9 +45,11 @@
 extern unsigned long g_max_response_size;
 
 using std::list;
+using std::make_shared;
 using std::make_unique;
 using std::map;
 using std::runtime_error;
+using std::shared_ptr;
 using std::string;
 using std::to_string;
 using std::unique_ptr;
@@ -169,21 +171,12 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding)
     }
 
     if (_columns.empty() && !doStats()) {
-        table->any_column([this](Column *c) {
+        table->any_column([this](shared_ptr<Column> c) {
             return _columns.push_back(c), _all_columns.insert(c), false;
         });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
         // here, is that really what we want?
         _show_column_headers = true;
-    }
-}
-
-Query::~Query() {
-    // delete dynamic columns
-    for (auto column : _columns) {
-        if (column->mustDelete()) {
-            delete column;
-        }
     }
 }
 
@@ -204,10 +197,10 @@ void Query::invalidRequest(const string &message) {
                               message);
 }
 
-unique_ptr<Filter> Query::createFilter(Column *column, RelationalOperator relOp,
+unique_ptr<Filter> Query::createFilter(Column &column, RelationalOperator relOp,
                                        const string &value) {
     try {
-        return column->createFilter(relOp, value);
+        return column.createFilter(relOp, value);
     } catch (const runtime_error &e) {
         invalidHeader("error creating filter on table" + _table->name() + ": " +
                       e.what());
@@ -356,8 +349,8 @@ void Query::parseStatsLine(char *line) {
         }
     }
 
-    Column *column = _table->column(column_name);
-    if (column == nullptr) {
+    auto column = _table->column(column_name);
+    if (!column) {
         invalidHeader("invalid stats header: table '" + _table->name() +
                       "' has no column '" + string(column_name) + "'");
         return;
@@ -385,13 +378,13 @@ void Query::parseStatsLine(char *line) {
             return;
         }
 
-        filter = createFilter(column, relOp, value);
+        filter = createFilter(*column, relOp, value);
         if (!filter) {
             return;
         }
     }
     _stats_columns.push_back(
-        make_unique<StatsColumn>(column, move(filter), operation));
+        make_unique<StatsColumn>(column.get(), move(filter), operation));
     _all_columns.insert(column);
 
     /* Default to old behaviour: do not output column headers if we
@@ -406,8 +399,8 @@ void Query::parseFilterLine(char *line, VariadicFilter &filter) {
         return;
     }
 
-    Column *column = _table->column(column_name);
-    if (column == nullptr) {
+    auto column = _table->column(column_name);
+    if (!column) {
         invalidHeader("invalid filter: table '" + _table->name() +
                       "' has no column '" + string(column_name) + "'");
         return;
@@ -432,7 +425,7 @@ void Query::parseFilterLine(char *line, VariadicFilter &filter) {
         return;
     }
 
-    if (auto sub_filter = createFilter(column, relOp, value)) {
+    if (auto sub_filter = createFilter(*column, relOp, value)) {
         filter.addSubfilter(move(sub_filter));
         _all_columns.insert(column);
     }
@@ -455,15 +448,16 @@ void Query::parseStatsGroupLine(char *line) {
 
 void Query::parseColumnsLine(char *line) {
     while (char *column_name = next_field(&line)) {
-        Column *column = _table->column(column_name);
-        if (column == nullptr) {
+        auto column = _table->column(column_name);
+        if (!column) {
             // Do not fail any longer. We might want to make this configurable.
             // But not failing has the advantage that an updated GUI, that
             // expects new columns, will be able to keep compatibility with
             // older Livestatus versions.
             Informational(_logger) << "Replacing non-existing column '"
                                    << column_name << "' with null column";
-            column = new NullColumn(column_name, "non-existing column");
+            column =
+                make_shared<NullColumn>(column_name, "non-existing column");
         }
         _columns.push_back(column);
         _all_columns.insert(column);
@@ -741,7 +735,7 @@ bool Query::processDataset(void *data) {
 
         if (doStats()) {
             vector<string> groupspec;
-            for (auto column : _columns) {
+            for (const auto &column : _columns) {
                 groupspec.push_back(column->valueAsString(data, _auth_user));
             }
             for (const auto &aggr : getAggregatorsFor(groupspec)) {
@@ -749,7 +743,7 @@ bool Query::processDataset(void *data) {
             }
         } else {
             RowRenderer r(*_renderer_query);
-            for (auto column : _columns) {
+            for (const auto &column : _columns) {
                 column->output(data, r, _auth_user);
             }
         }

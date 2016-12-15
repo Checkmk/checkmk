@@ -70,6 +70,7 @@ using std::make_unique;
 using std::map;
 using std::mutex;
 using std::set;
+using std::shared_ptr;
 using std::string;
 
 int g_disable_statehist_filtering = 0;
@@ -1026,9 +1027,9 @@ bool TableStateHistory::isAuthorized(contact *ctc, void *data) {
            is_authorized_for(ctc, hst, svc);
 }
 
-Column *TableStateHistory::column(string colname) {
+shared_ptr<Column> TableStateHistory::column(string colname) {
     // First try to find column in the usual way
-    if (Column *col = Table::column(colname)) {
+    if (auto col = Table::column(colname)) {
         return col;
     }
 

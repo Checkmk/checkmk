@@ -38,6 +38,7 @@
 #include "OutputBuffer.h"
 #include "Renderer.h"
 #include "RendererBrokenCSV.h"
+#include "StatsColumn.h"
 #include "VariadicFilter.h"
 #include "data_encoding.h"
 #include "nagios.h"  // IWYU pragma: keep
@@ -46,13 +47,11 @@ class Aggregator;
 class Column;
 class Filter;
 class Logger;
-class StatsColumn;
 class Table;
 
 class Query {
 public:
     Query(const std::list<std::string> &lines, Table *, Encoding data_encoding);
-    ~Query();
 
     void process(OutputBuffer *output);
 
@@ -68,7 +67,9 @@ public:
     void findIntLimits(const std::string &column_name, int *lower, int *upper);
     void optimizeBitmask(const std::string &column_name, uint32_t *bitmask);
     AndingFilter *filter() { return &_filter; }
-    std::unordered_set<Column *> *allColumns() { return &_all_columns; }
+    const std::unordered_set<std::shared_ptr<Column>> &allColumns() {
+        return _all_columns;
+    }
 
 private:
     const Encoding _data_encoding;
@@ -92,11 +93,11 @@ private:
     unsigned _current_line;
     int _timezone_offset;
     Logger *const _logger;
-    std::vector<Column *> _columns;
+    std::vector<std::shared_ptr<Column>> _columns;
     std::vector<std::unique_ptr<StatsColumn>> _stats_columns;
     std::map<std::vector<std::string>, std::vector<std::unique_ptr<Aggregator>>>
         _stats_groups;
-    std::unordered_set<Column *> _all_columns;
+    std::unordered_set<std::shared_ptr<Column>> _all_columns;
 
     // invalidHeader can be called during header parsing
     void invalidHeader(const std::string &message);
@@ -107,7 +108,9 @@ private:
 
     bool doStats();
     void doWait();
-    std::unique_ptr<Filter> createFilter(Column *column,
+    // TODO(sp) The column parameter should actually be a const reference, but
+    // Column::createFilter is not const-correct yet...
+    std::unique_ptr<Filter> createFilter(Column &column,
                                          RelationalOperator relOp,
                                          const std::string &value);
     void parseFilterLine(char *line, VariadicFilter &filter);

@@ -30,6 +30,7 @@
 #include "TableHosts.h"
 
 using std::make_unique;
+using std::static_pointer_cast;
 using std::string;
 
 #ifdef CMC
@@ -135,8 +136,8 @@ bool TableEventConsoleEvents::isAuthorized(contact *ctc, void *data) {
             hst, reinterpret_cast<MonitoringCore::Contact *>(ctc));
     }
 
-    ListEventConsoleColumn *col =
-        static_cast<ListEventConsoleColumn *>(column("event_contact_groups"));
+    auto col = static_pointer_cast<ListEventConsoleColumn>(
+        column("event_contact_groups"));
     if (col->isNone(data)) {
         return true;
     }

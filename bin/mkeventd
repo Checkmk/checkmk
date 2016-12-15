@@ -3994,7 +3994,7 @@ def add_rbn_contact_information(context, host, contact_groups, contact_groups_no
                 if group_contacts == None:
                     group_contacts = set([])
 
-                group_contacts.update(fetch_contacts_of_group_from_livestatus(group_name))
+                group_contacts.update(contacts)
 
         if group_contacts != None:
             group_contacts = list(group_contacts)
@@ -4050,14 +4050,14 @@ def core_has_notifications_disabled(event):
 
 def fetch_contacts_of_group_from_livestatus(group_name):
     try:
-        answer = livestatus_query("GET contactgroups\nFilter: name = %s\n"
-                                  "Columns: members\nOutputFormat: python\n" % group_name)
-        if answer:
-            contacts = eval(answer)[0][0]
-            if "check-mk-notify" in contacts: # Remove artifical contact used for rule based notifications
-                contacts.remove("check-mk-notify")
-            return contacts
-    except: # TODO: Make this more specific
+        contacts = livestatus.LocalConnection().query_value(
+            "GET contactgroups\nFilter: name = %s\nColumns: members" % group_name)
+        if "check-mk-notify" in contacts: # Remove artifical contact used for rule based notifications
+            contacts.remove("check-mk-notify")
+        return contacts
+
+    except Exception, e:
+        log("Cannot determine contacts of group %s: %s" % (group_name, e))
         if opt_debug:
             raise
 

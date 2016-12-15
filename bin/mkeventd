@@ -31,8 +31,6 @@
 # creating objects. Or at least update the documentation. It is not clear
 # which fields are mandatory for the events.
 
-# TODO: Refactor livestatus to use the livestatus module
-
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
        select, subprocess, stat, string
 import traceback
@@ -521,31 +519,6 @@ def initialize_snmp_credentials():
                 securityEngineId=snmp_v2c.OctetString(hexValue=engine_id)
             )
 
-#.
-#   .--Livestatus----------------------------------------------------------.
-#   |            _     _                _        _                         |
-#   |           | |   (_)_   _____  ___| |_ __ _| |_ _   _ ___             |
-#   |           | |   | \ \ / / _ \/ __| __/ _` | __| | | / __|            |
-#   |           | |___| |\ V /  __/\__ \ || (_| | |_| |_| \__ \            |
-#   |           |_____|_| \_/ \___||___/\__\__,_|\__|\__,_|___/            |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Livestatus connection                                                |
-#   '----------------------------------------------------------------------'
-
-def livestatus_query(query):
-    try:
-        livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        livesock.connect(g_livestatus_socket)
-        livesock.sendall(query)
-        livesock.shutdown(socket.SHUT_WR)
-        return livesock.recv(10000000)
-    except Exception:
-        # TODO: This exception handler is (maybe) to generic
-        log("Unable to contact monitoring core")
-        if opt_debug:
-            raise
-
 
 #.
 #   .--Timeperiods---------------------------------------------------------.
@@ -568,13 +541,11 @@ def update_timeperiods():
 
     if g_timeperiods != None and int(time.time()) / 60 == g_last_timeperiod_update:
         return # only update once a minute
-    log("Updating timeperiod information")
     try:
-        answer = livestatus_query("GET timeperiods\nColumns: name alias in\n")
-        table = [ line.split(';') for line in answer.split('\n')[:-1] ]
+        table = livestatus.LocalConnection().query("GET timeperiods\nColumns: name alias in")
         new_timeperiods = {}
         for tpname, alias, isin in table:
-            new_timeperiods[tpname] = (alias, isin == '1' and True or False)
+            new_timeperiods[tpname] = (alias, bool(isin))
         g_timeperiods = new_timeperiods
         g_last_timeperiod_update = int(time.time()) / 60
     except Exception, e:

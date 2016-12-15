@@ -69,25 +69,24 @@ indent = 10
 display_off = "none"
 display_on = "row"
 
-classes = ["cls1", "cls2"]$
-#onclick = "onclick_code('<lol>');"$
-onclick = "onclick_code('lol');"$
-title   = "Title"$
-thclass = "th"$
-tdclass = "th"$
-content = "<tag> content </tag>"$
-tdattrs= "class='tdclass'"$
-is_open = True$
-option  = "option"$
-icon    = "icon"$
-value   = "Testvalue"$
-view    = {"name": "viewname"}$
-choices = ["c1", "c2"]$
-hidden  = True$
-id      = "id"$
-e       = "error"$
-query   = "Hallo \n Welt!"$
-
+classes = ["cls1", "cls2"]
+#onclick = "onclick_code('<lol>');"
+onclick = "onclick_code('lol');"
+title   = "Title"
+thclass = "th"
+tdclass = "th"
+content = "<tag> content </tag>"
+tdattrs= "class='tdclass'"
+is_open = True
+option  = "option"
+icon    = "icon"
+value   = "Testvalue"
+view    = {"name": "viewname"}
+choices = ["c1", "c2"]
+hidden  = True
+id      = "id"
+e       = "error"
+query   = "Hallo \n Welt!"
 '''
 
 function_start = lambda x: '''

@@ -1,0 +1,11 @@
+Title: Notification plugins: now can be hidden by role
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481809695
+Class: feature
+
+In each role setting you can specify for the notification plugins
+whether they will be hidden for this role or not. Default setting
+is 'yes' for each plugin.

@@ -49,7 +49,7 @@ private:
         // NOTE: The EC ignores Columns: at the moment!
         os << std::nounitbuf << "GET " << _table_name
            << "\nOutputFormat: plain\nColumns:";
-        for (const auto &c : *_query->allColumns()) {
+        for (const auto &c : _query->allColumns()) {
             os << " " << c->name();
         }
         os << std::endl;

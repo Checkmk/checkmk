@@ -42,7 +42,6 @@ public:
         : Column(name, description, -1, -1) {}
     ColumnType type() override { return ColumnType::null; }
     void output(void *row, RowRenderer &r, contact *auth_user) override;
-    bool mustDelete() const override { return true; }
 };
 
 #endif  // NullColumn_h

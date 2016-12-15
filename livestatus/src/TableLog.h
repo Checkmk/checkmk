@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <ctime>
+#include <memory>
 #include <string>
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
@@ -57,7 +58,7 @@ public:
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     bool isAuthorized(contact *ctc, void *data) override;
-    Column *column(std::string colname) override;
+    std::shared_ptr<Column> column(std::string colname) override;
 
 private:
     MonitoringCore *_core;

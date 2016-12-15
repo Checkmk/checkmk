@@ -33,6 +33,7 @@
 using mk::starts_with;
 using std::move;
 using std::string;
+using std::shared_ptr;
 using std::unique_ptr;
 
 Table::Table(Logger *logger) : _logger(logger) {}
@@ -50,7 +51,7 @@ void Table::addDynamicColumn(unique_ptr<DynamicColumn> dyncol) {
     _dynamic_columns.emplace(name, move(dyncol));
 }
 
-Column *Table::column(string colname) {
+shared_ptr<Column> Table::column(string colname) {
     // Strip away a sequence of prefixes.
     while (starts_with(colname, namePrefix())) {
         colname = colname.substr(namePrefix().size());
@@ -58,26 +59,28 @@ Column *Table::column(string colname) {
 
     auto sep = colname.find(':');
     if (sep != string::npos) {
+        // TODO(sp) Use shared_ptr
         return dynamicColumn(colname.substr(0, sep), colname.substr(sep + 1));
     }
 
     // First try exact match...
     auto it = _columns.find(colname);
     if (it != _columns.end()) {
-        return it->second.get();
+        return it->second;
     }
 
     // ... then try to match with the prefix.
     it = _columns.find(namePrefix() + colname);
     if (it != _columns.end()) {
-        return it->second.get();
+        return it->second;
     }
 
     // No luck.
     return nullptr;
 }
 
-Column *Table::dynamicColumn(const string &name, const string &rest) {
+unique_ptr<Column> Table::dynamicColumn(const string &name,
+                                        const string &rest) {
     auto it = _dynamic_columns.find(name);
     if (it == _dynamic_columns.end()) {
         Warning(_logger) << "Unknown dynamic column '" << name << "'";

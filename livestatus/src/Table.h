@@ -48,7 +48,7 @@ public:
     template <typename Predicate>
     bool any_column(Predicate pred) {
         for (auto &c : _columns) {
-            if (pred(c.second.get())) {
+            if (pred(c.second)) {
                 return true;
             }
         }
@@ -80,7 +80,7 @@ public:
     /// TableLog override it for some dubious reason: They first try the normal
     /// lookup, and if that didn't find a column, the lookup is retried with a
     /// "current_" prefix. This logic should probably not live in cmc at all.
-    virtual Column *column(std::string colname);
+    virtual std::shared_ptr<Column> column(std::string colname);
 
     virtual void answerQuery(Query *query) = 0;
     virtual bool isAuthorized(contact *ctc, void *data);
@@ -89,9 +89,10 @@ public:
     Logger *const _logger;
 
 private:
-    Column *dynamicColumn(const std::string &name, const std::string &rest);
+    std::unique_ptr<Column> dynamicColumn(const std::string &name,
+                                          const std::string &rest);
 
-    std::map<std::string, std::unique_ptr<Column>> _columns;
+    std::map<std::string, std::shared_ptr<Column>> _columns;
     std::map<std::string, std::unique_ptr<DynamicColumn>> _dynamic_columns;
 };
 

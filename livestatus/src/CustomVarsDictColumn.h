@@ -26,8 +26,8 @@
 #define CustomVarsDictColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <string>
 #include <memory>
+#include <string>
 #include "Column.h"
 #include "CustomVarsColumn.h"
 #include "nagios.h"

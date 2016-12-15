@@ -29,6 +29,7 @@
 #include "Query.h"
 
 using std::make_unique;
+using std::shared_ptr;
 using std::string;
 
 TableColumns::TableColumns(Logger *logger) : Table(logger) {
@@ -51,7 +52,9 @@ void TableColumns::addTable(Table *table) { _tables.push_back(table); }
 
 void TableColumns::answerQuery(Query *query) {
     for (auto table : _tables) {
-        table->any_column([&](Column *c) { return !query->processDataset(c); });
+        table->any_column([&](shared_ptr<Column> c) {
+            return !query->processDataset(c.get());
+        });
     }
 }
 
@@ -74,7 +77,8 @@ string TableColumns::getValue(Column *column, int colcol) const {
 
 string TableColumns::tableNameOf(Column *column) const {
     for (auto table : _tables) {
-        if (table->any_column([&](Column *c) { return c == column; })) {
+        if (table->any_column(
+                [&](shared_ptr<Column> c) { return c.get() == column; })) {
             return table->name();
         }
     }

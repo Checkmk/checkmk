@@ -49,8 +49,8 @@ public:
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::double_; }
     std::string valueAsString(void *row, contact * /* auth_user */) override;
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
+                                         const std::string &value) override;
     std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation) override;
 };

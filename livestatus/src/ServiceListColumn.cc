@@ -24,6 +24,7 @@
 
 #include "ServiceListColumn.h"
 #include <cstring>
+#include "Filter.h"
 #include "Renderer.h"
 #include "ServiceListFilter.h"
 #include "TimeperiodsCache.h"
@@ -31,7 +32,9 @@
 
 extern TimeperiodsCache *g_timeperiods_cache;
 
+using std::make_unique;
 using std::string;
+using std::unique_ptr;
 
 servicesmember *ServiceListColumn::getMembers(void *data) {
     data = shiftPointer(data);
@@ -81,9 +84,9 @@ void ServiceListColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     }
 }
 
-Filter *ServiceListColumn::createFilter(RelationalOperator relOp,
-                                        const string &value) {
-    return new ServiceListFilter(this, relOp, value);
+unique_ptr<Filter> ServiceListColumn::createFilter(RelationalOperator relOp,
+                                                   const string &value) {
+    return make_unique<ServiceListFilter>(this, relOp, value);
 }
 
 int ServiceListColumn::inCustomTimeperiod(service *svc, const char *varname) {

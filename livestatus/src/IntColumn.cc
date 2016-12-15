@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "IntColumn.h"
+#include "Filter.h"
 #include "IntAggregator.h"
 #include "IntFilter.h"
 #include "Renderer.h"
@@ -40,8 +41,9 @@ void IntColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     r.output(getValue(row, auth_user));
 }
 
-Filter *IntColumn::createFilter(RelationalOperator relOp, const string &value) {
-    return new IntFilter(this, relOp, value);
+unique_ptr<Filter> IntColumn::createFilter(RelationalOperator relOp,
+                                           const string &value) {
+    return make_unique<IntFilter>(this, relOp, value);
 }
 
 unique_ptr<Aggregator> IntColumn::createAggregator(StatsOperation operation) {

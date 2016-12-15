@@ -67,7 +67,8 @@ public:
     // TODO(sp) Get rid of this! true means "delete after Query"
     virtual bool mustDelete() const { return false; }
 
-    virtual Filter *createFilter(RelationalOperator, const std::string &);
+    virtual std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
+                                                 const std::string &value);
     virtual std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation);
 

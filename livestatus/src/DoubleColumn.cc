@@ -25,6 +25,7 @@
 #include "DoubleColumn.h"
 #include "DoubleAggregator.h"
 #include "DoubleFilter.h"
+#include "Filter.h"
 #include "Renderer.h"
 
 using std::make_unique;
@@ -41,9 +42,9 @@ string DoubleColumn::valueAsString(void *row, contact * /* auth_user */) {
     return to_string(getValue(row));
 }
 
-Filter *DoubleColumn::createFilter(RelationalOperator relOp,
-                                   const string &value) {
-    return new DoubleFilter(this, relOp, value);
+unique_ptr<Filter> DoubleColumn::createFilter(RelationalOperator relOp,
+                                              const string &value) {
+    return make_unique<DoubleFilter>(this, relOp, value);
 }
 
 unique_ptr<Aggregator> DoubleColumn::createAggregator(

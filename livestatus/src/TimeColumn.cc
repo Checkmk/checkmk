@@ -24,6 +24,7 @@
 
 #include "TimeColumn.h"
 #include <chrono>
+#include "Filter.h"
 #include "IntAggregator.h"
 #include "Renderer.h"
 #include "TimeFilter.h"
@@ -37,9 +38,9 @@ void TimeColumn::output(void *row, RowRenderer &r, contact *auth_user) {
     r.output(system_clock::from_time_t(getValue(row, auth_user)));
 }
 
-Filter *TimeColumn::createFilter(RelationalOperator relOp,
-                                 const string &value) {
-    return new TimeFilter(this, relOp, value);
+unique_ptr<Filter> TimeColumn::createFilter(RelationalOperator relOp,
+                                            const string &value) {
+    return make_unique<TimeFilter>(this, relOp, value);
 }
 
 unique_ptr<Aggregator> TimeColumn::createAggregator(StatsOperation operation) {

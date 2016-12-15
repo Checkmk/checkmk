@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
+#include <memory>
 #include <string>
 #include "IntColumn.h"
 #include "opids.h"
@@ -49,7 +50,8 @@ public:
         , _offset(offset) {}
 
     /// API of Column
-    Filter *createFilter(RelationalOperator, const std::string &) override;
+    std::unique_ptr<Filter> createFilter(RelationalOperator,
+                                         const std::string &) override;
 
     // API of IntColumn
     int32_t getValue(void *row, contact *auth_user) override;

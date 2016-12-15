@@ -83,6 +83,7 @@ livestatus_so_SOURCES = \
         Logger.cc \
         LogwatchListColumn.cc \
         MetricsColumn.cc \
+        NegatingFilter.cc \
         NullColumn.cc \
         OffsetDoubleColumn.cc \
         OffsetIntColumn.cc \

@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <cstdint>
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "IntColumn.h"
@@ -54,8 +55,8 @@ public:
     ColumnType type() override { return ColumnType::list; }
     std::string valueAsString(void *row, contact * /* auth_user */) override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
+                                         const std::string &value) override;
 
     // API of IntColumn
     int32_t getValue(void *row, contact *auth_user) override;

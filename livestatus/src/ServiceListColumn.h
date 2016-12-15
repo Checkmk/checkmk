@@ -26,6 +26,7 @@
 #define ServiceListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "nagios.h"
@@ -48,8 +49,8 @@ public:
         , _info_depth(info_depth) {}
     ColumnType type() override { return ColumnType::list; };
     void output(void *row, RowRenderer &r, contact *auth_user) override;
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
+                                         const std::string &value) override;
     servicesmember *getMembers(void *data);
 
 private:

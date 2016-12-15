@@ -26,20 +26,25 @@
 #define NegatingFilter_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include "Filter.h"
-#include "FilterVisitor.h"
+class FilterVisitor;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class NegatingFilter : public Filter {
-    Filter *_filter;
-
 public:
-    explicit NegatingFilter(Filter *filter) : _filter(filter) {}
-    virtual ~NegatingFilter() { delete _filter; }
-    void accept(FilterVisitor &v) override { v.visit(*this); }
-    Filter *subfilter() { return _filter; }
-    bool accepts(void *row, contact *auth_user, int timezone_offset) override {
-        return !_filter->accepts(row, auth_user, timezone_offset);
-    }
+    explicit NegatingFilter(std::unique_ptr<Filter> filter);
+    void accept(FilterVisitor &v) override;
+    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    const std::unique_ptr<Filter> &subfilter();
+
+private:
+    std::unique_ptr<Filter> _filter;
 };
 
 #endif  // NegatingFilter_h

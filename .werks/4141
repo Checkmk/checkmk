@@ -1,0 +1,9 @@
+Title: Fixed possible exception in web cron: argument of type 'NoneType' is not iterable (g_host_attribute)
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481799024
+Class: fix
+
+

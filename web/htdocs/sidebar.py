@@ -180,35 +180,31 @@ def get_check_mk_edition_title():
 
 
 def sidebar_head():
-    html.open_div(id_="side_header")
-    html.div('', id_="side_fold")
-    html.open_a(href=config.user.get_attribute("start_url") or config.start_url,
-                target="main", title=_("Go to main overview"))
-    html.img(src="images/sidebar_top.png", id_="side_bg")
-    html.open_div(id_="side_version")
-    html.open_a(href="version.py", target="main", title=_("Open release notes"))
-    html.write(get_check_mk_edition_title())
-    html.br()
-    html.write(cmk.__version__)
-
+    html.write('<div id="side_header">')
+    html.write('<div id="side_fold"></div>')
+    html.write('<a title="%s" target="main" href="%s">' %
+          (_("Go to main overview"),
+           html.attrencode(config.user.get_attribute("start_url") or config.start_url)))
+    html.write('<img id="side_bg" src="images/sidebar_top.png">')
+    html.write('<div id="side_version">'
+               '<a href="version.py" target="main" title=\"%s\">%s<br>%s' %
+        (_("Open release notes"), get_check_mk_edition_title(), cmk.__version__))
     if werks.may_acknowledge():
         num_unacknowledged_werks = werks.num_unacknowledged_incompatible_werks()
         if num_unacknowledged_werks:
-            html.span(num_unacknowledged_werks, class_="unack_werks",
-                      title=_("%d unacknowledged incompatible werks") % num_unacknowledged_werks)
-    html.close_a()
-    html.close_div()
-    html.close_a()
-    html.close_div()
+            html.write("<span title=\"%s\" class=\"unack_werks\">%d</span>" %
+                (_("%d unacknowledged incompatible werks") % num_unacknowledged_werks, num_unacknowledged_werks))
+    html.write('</a></div>')
+    html.write('</a></div>\n')
 
 
 def render_messages():
     for msg in notify.get_gui_messages():
         if 'gui_hint' in msg['methods']:
-            html.open_div(id_="message-%s" % msg['id'], class_=["popup_msg"])
-            html.a("x", href="javascript:void(0)", class_=["close"], onclick="message_close(\'%s\')" % msg['id'])
-            html.write_text(msg['text'].replace('\n', '<br/>\n'))
-            html.close_div()
+            html.write('<div class="popup_msg" id="message-%s">' % msg['id'])
+            html.write('<a href="javascript:void(0)" class="close" onclick="message_close(\'%s\')">x</a>' % msg['id'])
+            html.write(html.attrencode(msg['text']).replace('\n', '<br />\n'))
+            html.write('</div>\n')
         if 'gui_popup' in msg['methods']:
             html.javascript('alert(\'%s\'); mark_message_read("%s")' %
                 (html.attrencode(msg['text']).replace('\n', '\\n'), msg['id']))
@@ -226,7 +222,7 @@ def ajax_message_read():
         html.write("ERROR")
 
 def sidebar_foot():
-    html.open_div(id_="side_footer")
+    html.write('<div id="side_footer">')
     if config.user.may("general.configure_sidebar"):
         html.icon_button("sidebar_add_snapin.py", _("Add snapin to the sidebar"), "sidebar_addsnapin",
                          target="main")
@@ -241,13 +237,13 @@ def sidebar_foot():
 
     html.icon_button("return void();", _("You have pending messages."),
                      "sidebar_messages", onclick = 'read_message()', id = 'msg_button', style = 'display:none')
-    html.open_div(style="display:none;", id_="messages")
+    html.write('<div id="messages" style="display:none;">')
     render_messages()
-    html.close_div()
+    html.write('</div>')
 
-    html.open_div(class_=["copyright"])
-    html.write(_("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
-    html.close_div()
+    html.write("<div class=copyright>%s</div>\n" %
+        _("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
+    html.write('</div>')
 
     if load_user_config()["fold"]:
         html.final_javascript("fold_sidebar();")
@@ -266,7 +262,7 @@ def page_side():
         html.write(" screenshotmode")
     html.write('" onload="initScrollPos(); set_sidebar_size(); init_messages(%s);" '
                'onunload="storeScrollPos()">\n' % interval)
-    html.open_div(id_="check_mk_sidebar")
+    html.write('<div id="check_mk_sidebar">\n')
 
     # FIXME: Move this to the code where views are needed (snapins?)
     views.load_views()
@@ -275,7 +271,11 @@ def page_side():
     refresh_snapins = []
     restart_snapins = []
 
-    html.open_div(class_="scroll" if config.sidebar_show_scrollbar else None, id_="side_content")
+    scrolling = ''
+    if config.sidebar_show_scrollbar:
+        scrolling = ' class=scroll'
+
+    html.write('<div id="side_content"%s>' % scrolling)
     for name, state in user_config["snapins"]:
         if not name in sidebar_snapins or not config.user.may("sidesnap." + name):
             continue
@@ -287,9 +287,9 @@ def page_side():
         elif sidebar_snapins.get(name).get("restart", False):
             refresh_snapins.append([name, refresh_url])
             restart_snapins.append(name)
-    html.close_div()
+    html.write('</div>')
     sidebar_foot()
-    html.close_div()
+    html.write('</div>')
 
     html.write("<script language=\"javascript\">\n")
     if restart_snapins:
@@ -309,82 +309,81 @@ def page_side():
 def render_snapin_styles(snapin):
     styles = snapin.get("styles")
     if styles:
-        html.open_style()
-        html.write(styles)
-        html.close_style()
+        html.write("<style>\n%s\n</style>\n" % styles)
 
 def render_snapin(name, state):
     snapin = sidebar_snapins.get(name)
     render_snapin_styles(snapin)
 
-    html.open_div(id_="snapin_container_%s" % name, class_="snapin")
+    html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % name)
     # When not permitted to open/close snapins, the snapins are always opened
     if state == "open" or not config.user.may("general.configure_sidebar"):
-        style = None
+        style = ""
         headclass = "open"
         minimaxi = "mini"
     else:
-        style = "display:none"
+        style = ' style="display:none"'
         headclass = "closed"
         minimaxi = "maxi"
 
     toggle_url = "sidebar_openclose.py?name=%s&state=" % name
 
-    # If the user may modify the sidebar then add code for dragging the snapin
-    head_actions = {}
-    if config.user.may("general.configure_sidebar"):
-        head_actions = { "onmouseover" : "document.body.style.cursor='move';",
-                         "onmouseout " : "document.body.style.cursor='';",
-                         "onmousedown" : "snapinStartDrag(event)",
-                         "onmouseup"   : "snapinStopDrag(event)"}
+    html.write('<div class="head %s" ' % headclass)
 
-    html.open_div(class_=["head", headclass], **head_actions)
+    # If the user may modify the sidebar then add code for dragging the snapin
+    if config.user.may("general.configure_sidebar"):
+        html.write("onmouseover=\"document.body.style.cursor='move';\" "
+                   "onmouseout=\"document.body.style.cursor='';\" "
+                   "onmousedown=\"snapinStartDrag(event)\" onmouseup=\"snapinStopDrag(event)\">")
+    else:
+        html.write(">")
+
 
     if config.user.may("general.configure_sidebar"):
         # Icon for mini/maximizing
-        html.open_div(class_="minisnapin")
+        html.write('<div class="minisnapin">')
         html.icon_button(url=None, help=_("Toggle this snapin"), icon="%ssnapin" % minimaxi,
                          onclick="toggle_sidebar_snapin(this, '%s')" % toggle_url)
-        html.close_div()
+        html.write('</div>')
 
         # Button for closing (removing) a snapin
-        html.open_div(class_="closesnapin")
+        html.write('<div class="closesnapin">')
         close_url = "sidebar_openclose.py?name=%s&state=off" % name
         html.icon_button(url=None, help=_("Remove this snapin"), icon="closesnapin",
                          onclick="remove_sidebar_snapin(this, '%s')" % close_url)
-        html.close_div()
+        html.write('</div>')
 
     # The heading. A click on the heading mini/maximizes the snapin
-    toggle_actions = {}
     if config.user.may("general.configure_sidebar"):
-        toggle_actions = {"onclick"    : "toggle_sidebar_snapin(this,'%s')" % toggle_url,
-                          "onmouseover": "this.style.cursor='pointer'",
-                          "onmouseout" : "this.style.cursor='auto'"}
-    html.b(snapin["title"], class_=["heading"], **toggle_actions)
+        toggle_actions = " onclick=\"toggle_sidebar_snapin(this,'%s')\"" \
+                         " onmouseover=\"this.style.cursor='pointer'\"" \
+                         " onmouseout=\"this.style.cursor='auto'\"" % toggle_url
+    else:
+        toggle_actions = ""
+    html.write("<b class=heading%s>%s</b>" % (toggle_actions, snapin["title"]))
 
     # End of header
-    html.close_div()
+    html.write("</div>")
 
     # Now comes the content
-    html.open_div(class_="content", id_="snapin_%s" % name, style=style)
+    html.write("<div id=\"snapin_%s\" class=content%s>\n" % (name, style))
     refresh_url = ''
     try:
         url = snapin["render"]()
         # Fetch the contents from an external URL. Don't render it on our own.
         if not url is None:
             refresh_url = url
-            html.javascript("get_url(\"%s\", updateContents, \"snapin_%s\")" % (refresh_url, name))
+            html.write('<script>get_url("%s", updateContents, "snapin_%s")</script>' % (refresh_url, name))
     except Exception, e:
         snapin_exception(e)
-    html.close_div()
-    html.close_div()
+    html.write('</div>\n')
+    html.write('</div>')
     return refresh_url
 
 def snapin_exception(e):
-    html.open_div(class_=["snapinexception"])
-    html.h2(_('Error'))
-    html.p(e)
-    html.close_div()
+    html.write("<div class=snapinexception>\n"
+            "<h2>%s</h2>\n"
+            "<p>%s</p></div>" % (_('Error'), e))
 
 def ajax_fold():
     config = load_user_config()
@@ -501,7 +500,7 @@ def page_add_snapin():
 
     names = sidebar_snapins.keys()
     names.sort()
-    html.open_div(class_=["add_snapin"])
+    html.write('<div class="add_snapin">\n')
     for name in names:
         if name in used_snapins:
             continue
@@ -513,18 +512,19 @@ def page_add_snapin():
         description = snapin.get("description", "")
         transid = html.get_transid()
         url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)
-        html.open_div(class_="snapinadder",
-                      onmouseover="this.style.cursor=\'pointer\';",
-                      onmousedown="window.location.href=\'%s\'; return false;" % url)
+        html.write('<div class=snapinadder '
+                   'onmouseover="this.style.cursor=\'pointer\';" '
+                   'onmousedown="window.location.href=\'%s\'; return false;">' % url)
 
-        html.open_div(class_=["snapin_preview"])
-        html.div('', class_=["clickshield"])
+        html.write("<div class=snapin_preview>")
+        html.write("<div class=clickshield></div>")
         render_snapin(name, "open")
-        html.close_div()
-        html.div(description, class_=["description"])
-        html.close_div()
+        html.write("</div>")
+        html.write("<div class=description>%s</div>" % (description))
 
-    html.close_div()
+        html.write("</div>")
+
+    html.write("</div>\n")
     html.footer()
 
 
@@ -914,13 +914,9 @@ def format_result(row, render_options):
         name = "%s %s" % (name, name_append)
 
     escaped_name = name.replace('\\', '\\\\')
-    html.open_a(class_=css,
-                href=url,
-                id_="result_%s" % escaped_name,
-                target="main",
-                onclick="mkSearchClose()")
-    html.write(name)
-    html.close_a()
+    html.write('<a id="result_%s" class="%s" href="%s" onClick="mkSearchClose()" target="main">%s' %
+                (escaped_name, css, url, name))
+    html.write('</a>\n')
 
 
 def get_row_name(row):

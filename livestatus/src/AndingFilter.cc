@@ -23,12 +23,13 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AndingFilter.h"
+#include <memory>
 #include "Filter.h"
 
 using std::string;
 
 bool AndingFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
-    for (auto filter : _subfilters) {
+    for (const auto &filter : _subfilters) {
         if (!filter->accepts(row, auth_user, timezone_offset)) {
             return false;
         }
@@ -39,7 +40,7 @@ bool AndingFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
 bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
                                    int timezone_offset) const {
     bool optimized = false;
-    for (auto filter : _subfilters) {
+    for (const auto &filter : _subfilters) {
         if (filter->optimizeBitmask(column_name, mask, timezone_offset)) {
             optimized = true;
         }
@@ -49,7 +50,7 @@ bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
 
 const string *AndingFilter::findValueForIndexing(
     const string &column_name) const {
-    for (auto filter : _subfilters) {
+    for (const auto &filter : _subfilters) {
         if (const string *value = filter->valueForIndexing(column_name)) {
             return value;
         }

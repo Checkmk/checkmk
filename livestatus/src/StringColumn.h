@@ -26,6 +26,7 @@
 #define StringColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "opids.h"
@@ -49,8 +50,8 @@ public:
     }
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::string; }
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
+                                         const std::string &value) override;
 };
 
 #endif  // StringColumn_h

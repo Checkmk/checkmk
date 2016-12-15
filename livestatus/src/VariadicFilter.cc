@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "VariadicFilter.h"
+#include <algorithm>
 #include "AndingFilter.h"
 #include "FilterVisitor.h"
 #include "OringFilter.h"
@@ -42,28 +43,24 @@ unique_ptr<VariadicFilter> VariadicFilter::make(LogicalOperator logicOp) {
     return nullptr;  // unreachable
 }
 
-VariadicFilter::~VariadicFilter() {
-    for (auto &subfilter : _subfilters) {
-        delete subfilter;
-    }
-}
-
 void VariadicFilter::accept(FilterVisitor &v) { v.visit(*this); }
 
-void VariadicFilter::addSubfilter(Filter *f) { _subfilters.push_back(f); }
+void VariadicFilter::addSubfilter(unique_ptr<Filter> f) {
+    _subfilters.push_back(move(f));
+}
 
-Filter *VariadicFilter::stealLastSubfiler() {
+unique_ptr<Filter> VariadicFilter::stealLastSubfiler() {
     if (_subfilters.empty()) {
         return nullptr;
     }
-    Filter *l = _subfilters.back();
+    unique_ptr<Filter> l = move(_subfilters.back());
     _subfilters.pop_back();
     return l;
 }
 
 void VariadicFilter::findIntLimits(const string &colum_nname, int *lower,
                                    int *upper, int timezone_offset) const {
-    for (auto filter : _subfilters) {
+    for (const auto &filter : _subfilters) {
         filter->findIntLimits(colum_nname, lower, upper, timezone_offset);
     }
 }
@@ -71,9 +68,8 @@ void VariadicFilter::findIntLimits(const string &colum_nname, int *lower,
 void VariadicFilter::combineFilters(int count, LogicalOperator andor) {
     auto variadic = VariadicFilter::make(andor);
     for (auto i = 0; i < count; ++i) {
-        variadic->addSubfilter(_subfilters.back());
+        variadic->addSubfilter(move(_subfilters.back()));
         _subfilters.pop_back();
     }
-    // TODO(sp) Use unique_ptr in addSubfilter.
-    addSubfilter(variadic.release());
+    addSubfilter(move(variadic));
 }

@@ -24,10 +24,12 @@
 
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsDictFilter.h"
+#include "Filter.h"
 #include "Renderer.h"
-class Filter;
 
+using std::make_unique;
 using std::string;
+using std::unique_ptr;
 
 CustomVarsDictColumn::CustomVarsDictColumn(string name, string description,
                                            int offset, int indirect_offset,
@@ -46,9 +48,9 @@ void CustomVarsDictColumn::output(void *row, RowRenderer &r,
     }
 }
 
-Filter *CustomVarsDictColumn::createFilter(RelationalOperator relOp,
-                                           const string &value) {
-    return new CustomVarsDictFilter(this, relOp, value);
+unique_ptr<Filter> CustomVarsDictColumn::createFilter(RelationalOperator relOp,
+                                                      const string &value) {
+    return make_unique<CustomVarsDictFilter>(this, relOp, value);
 }
 
 bool CustomVarsDictColumn::contains(void *row, const string &value) {

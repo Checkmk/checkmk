@@ -107,8 +107,9 @@ private:
 
     bool doStats();
     void doWait();
-    Filter *createFilter(Column *column, RelationalOperator relOp,
-                         const std::string &value);
+    std::unique_ptr<Filter> createFilter(Column *column,
+                                         RelationalOperator relOp,
+                                         const std::string &value);
     void parseFilterLine(char *line, VariadicFilter &filter);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);

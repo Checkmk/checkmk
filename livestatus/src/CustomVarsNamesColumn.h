@@ -26,6 +26,7 @@
 #define CustomVarsNamesColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "CustomVarsColumn.h"
@@ -40,8 +41,8 @@ public:
                           int indirect_offset, int extra_offset = -1);
     ColumnType type() override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
+                                         const std::string &value) override;
     bool contains(void *row, const std::string &value) override;
 };
 

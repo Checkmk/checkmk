@@ -24,10 +24,12 @@
 
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsListFilter.h"
+#include "Filter.h"
 #include "Renderer.h"
-class Filter;
 
+using std::make_unique;
 using std::string;
+using std::unique_ptr;
 
 CustomVarsNamesColumn::CustomVarsNamesColumn(string name, string description,
                                              int offset, int indirect_offset,
@@ -46,9 +48,9 @@ void CustomVarsNamesColumn::output(void *row, RowRenderer &r,
     }
 }
 
-Filter *CustomVarsNamesColumn::createFilter(RelationalOperator relOp,
-                                            const string &value) {
-    return new CustomVarsListFilter(this, relOp, value);
+unique_ptr<Filter> CustomVarsNamesColumn::createFilter(RelationalOperator relOp,
+                                                       const string &value) {
+    return make_unique<CustomVarsListFilter>(this, relOp, value);
 }
 
 bool CustomVarsNamesColumn::contains(void *row, const string &value) {

@@ -26,6 +26,7 @@
 #define OffsetStringMacroColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "OffsetStringColumn.h"
 #include "nagios.h"
@@ -44,8 +45,8 @@ public:
 
     std::string valueAsString(void *row, contact *auth_user) override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
+                                         const std::string &value) override;
 
     // overriden by host and service macro columns
     virtual host *getHost(void *) = 0;

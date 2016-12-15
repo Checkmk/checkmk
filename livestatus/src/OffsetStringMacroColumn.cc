@@ -26,12 +26,13 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include "Filter.h"
 #include "Logger.h"
 #include "Renderer.h"
 #include "VariadicFilter.h"
-class Filter;
 
 using std::string;
+using std::unique_ptr;
 
 extern char *macro_user[MAX_USER_MACROS];
 
@@ -76,13 +77,11 @@ void OffsetStringMacroColumn::output(void *row, RowRenderer &r,
     r.output(s);
 }
 
-Filter *OffsetStringMacroColumn::createFilter(RelationalOperator /*unused */,
-                                              const string & /*unused*/) {
+unique_ptr<Filter> OffsetStringMacroColumn::createFilter(
+    RelationalOperator /*unused */, const string & /*unused*/) {
     Informational(logger())
         << "Sorry. No filtering on macro columns implemented yet";
-    // TODO(sp) Use unique_ptr
-    return VariadicFilter::make(LogicalOperator::and_)
-        .release();  // always true
+    return VariadicFilter::make(LogicalOperator::and_);
 }
 
 const char *OffsetStringMacroColumn::expandMacro(const char *macroname,

@@ -23,12 +23,13 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OringFilter.h"
+#include <memory>
 #include "Filter.h"
 
 using std::string;
 
 bool OringFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
-    for (auto filter : _subfilters) {
+    for (const auto &filter : _subfilters) {
         if (filter->accepts(row, auth_user, timezone_offset)) {
             return true;
         }
@@ -42,7 +43,7 @@ bool OringFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
     // same column.
     uint32_t m = 0;
 
-    for (auto filter : _subfilters) {
+    for (const auto &filter : _subfilters) {
         uint32_t mm = 0xffffffff;
         if (!filter->optimizeBitmask(column_name, &mm, timezone_offset)) {
             return false;  // wrong column

@@ -204,8 +204,8 @@ void Query::invalidRequest(const string &message) {
                               message);
 }
 
-Filter *Query::createFilter(Column *column, RelationalOperator relOp,
-                            const string &value) {
+unique_ptr<Filter> Query::createFilter(Column *column, RelationalOperator relOp,
+                                       const string &value) {
     try {
         return column->createFilter(relOp, value);
     } catch (const runtime_error &e) {
@@ -251,13 +251,13 @@ void Query::parseNegateLine(char *line, VariadicFilter &filter,
         return;
     }
 
-    Filter *to_negate = filter.stealLastSubfiler();
-    if (to_negate == nullptr) {
+    auto to_negate = filter.stealLastSubfiler();
+    if (!to_negate) {
         invalidHeader(header + " nothing to negate");
         return;
     }
 
-    filter.addSubfilter(new NegatingFilter(to_negate));
+    filter.addSubfilter(make_unique<NegatingFilter>(move(to_negate)));
 }
 
 void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
@@ -291,7 +291,7 @@ void Query::parseStatsAndOrLine(char *line, LogicalOperator andor) {
                           " only on Stats: headers of filter type");
             return;
         }
-        variadic->addSubfilter(col->stealFilter().release());
+        variadic->addSubfilter(col->stealFilter());
         _stats_columns.pop_back();
     }
     _stats_columns.push_back(make_unique<StatsColumn>(nullptr, move(variadic),
@@ -313,7 +313,7 @@ void Query::parseStatsNegateLine(char *line) {
             "Can use StatsNegate only on Stats: headers of filter type");
         return;
     }
-    auto negated = make_unique<NegatingFilter>(col->stealFilter().release());
+    auto negated = make_unique<NegatingFilter>(col->stealFilter());
     _stats_columns.pop_back();
     _stats_columns.push_back(make_unique<StatsColumn>(nullptr, move(negated),
                                                       StatsOperation::count));
@@ -385,7 +385,7 @@ void Query::parseStatsLine(char *line) {
             return;
         }
 
-        filter.reset(createFilter(column, relOp, value));
+        filter = createFilter(column, relOp, value);
         if (!filter) {
             return;
         }
@@ -432,8 +432,8 @@ void Query::parseFilterLine(char *line, VariadicFilter &filter) {
         return;
     }
 
-    if (Filter *sub_filter = createFilter(column, relOp, value)) {
-        filter.addSubfilter(sub_filter);
+    if (auto sub_filter = createFilter(column, relOp, value)) {
+        filter.addSubfilter(move(sub_filter));
         _all_columns.insert(column);
     }
 }

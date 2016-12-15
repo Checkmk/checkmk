@@ -26,6 +26,7 @@
 #define HostListColumn_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Column.h"
 #include "nagios.h"
@@ -46,8 +47,8 @@ public:
         , _show_state(show_state) {}
     ColumnType type() override { return ColumnType::list; }
     void output(void *row, RowRenderer &r, contact *auth_user) override;
-    Filter *createFilter(RelationalOperator relOp,
-                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
+                                         const std::string &value) override;
     hostsmember *getMembers(void *data);
 };
 

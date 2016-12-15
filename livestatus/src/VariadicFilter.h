@@ -37,22 +37,19 @@ enum class LogicalOperator { and_, or_ };
 
 class VariadicFilter : public Filter {
 public:
-    typedef std::deque<Filter *> _subfilters_t;
-
     static std::unique_ptr<VariadicFilter> make(LogicalOperator logicOp);
-    virtual ~VariadicFilter();
     void accept(FilterVisitor &v) override;
-    void addSubfilter(Filter *);
-    Filter *stealLastSubfiler();
+    void addSubfilter(std::unique_ptr<Filter> f);
+    std::unique_ptr<Filter> stealLastSubfiler();
     void combineFilters(int count, LogicalOperator andor);
     size_t size() { return _subfilters.size(); }
-    _subfilters_t::iterator begin() { return _subfilters.begin(); }
-    _subfilters_t::iterator end() { return _subfilters.end(); }
+    auto begin() { return _subfilters.begin(); }
+    auto end() { return _subfilters.end(); }
     void findIntLimits(const std::string &colum_nname, int *lower, int *upper,
                        int timezone_offset) const override;
 
 protected:
-    _subfilters_t _subfilters;
+    std::deque<std::unique_ptr<Filter>> _subfilters;
 };
 
 #endif  // VariadicFilter_h

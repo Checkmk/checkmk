@@ -23,15 +23,19 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AttributeListAsIntColumn.h"
+#include <memory>
 #include "AttributeListColumn.h"
+#include "Filter.h"
 #include "IntFilter.h"
 
+using std::make_unique;
 using std::string;
+using std::unique_ptr;
 
-Filter *AttributeListAsIntColumn::createFilter(RelationalOperator relOp,
-                                               const string &value) {
-    return new IntFilter(this, relOp,
-                         AttributeListColumn::refValueFor(value, logger()));
+unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
+    RelationalOperator relOp, const string &value) {
+    return make_unique<IntFilter>(
+        this, relOp, AttributeListColumn::refValueFor(value, logger()));
 }
 
 int32_t AttributeListAsIntColumn::getValue(void *row, contact * /*unused*/) {

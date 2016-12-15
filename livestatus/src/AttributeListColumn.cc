@@ -25,18 +25,21 @@
 #include "AttributeListColumn.h"
 #include <cctype>
 #include <map>
+#include <memory>
 #include <ostream>
 #include <utility>
 #include <vector>
+#include "Filter.h"
 #include "IntFilter.h"
 #include "Logger.h"
 #include "Renderer.h"
 #include "strutil.h"
-class Filter;
 
+using std::make_unique;
 using std::map;
 using std::string;
 using std::to_string;
+using std::unique_ptr;
 using std::vector;
 
 namespace {
@@ -85,9 +88,9 @@ string AttributeListColumn::valueAsString(void *row,
     return to_string(static_cast<unsigned long>(getValue(row, nullptr)));
 }
 
-Filter *AttributeListColumn::createFilter(RelationalOperator relOp,
-                                          const string &value) {
-    return new IntFilter(this, relOp, refValueFor(value, logger()));
+unique_ptr<Filter> AttributeListColumn::createFilter(RelationalOperator relOp,
+                                                     const string &value) {
+    return make_unique<IntFilter>(this, relOp, refValueFor(value, logger()));
 }
 
 // static

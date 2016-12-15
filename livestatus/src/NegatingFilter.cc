@@ -22,18 +22,23 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "ListColumn.h"
-#include "Filter.h"
-#include "ListFilter.h"
+#include "NegatingFilter.h"
+#include <algorithm>
+#include "FilterVisitor.h"
 
-using std::make_unique;
-using std::string;
+using std::move;
 using std::unique_ptr;
 
-ListColumn::Contains::~Contains() = default;
+NegatingFilter::NegatingFilter(unique_ptr<Filter> filter)
+    : _filter(move(filter)) {}
 
-unique_ptr<Filter> ListColumn::createFilter(RelationalOperator relOp,
-                                            const string &value) {
-    return make_unique<ListFilter>(this, relOp, value, makeContains(value),
-                                   value.empty());
+void NegatingFilter::accept(FilterVisitor &v) { v.visit(*this); }
+
+#ifdef CMC
+const unique_ptr<Filter> &NegatingFilter::subfilter() { return _filter; }
+#endif
+
+bool NegatingFilter::accepts(void *row, contact *auth_user,
+                             int timezone_offset) {
+    return !_filter->accepts(row, auth_user, timezone_offset);
 }

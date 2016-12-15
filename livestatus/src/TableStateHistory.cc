@@ -347,11 +347,11 @@ void TableStateHistory::answerQuery(Query *query) {
     deque<Filter *> object_filter;
 
     if (g_disable_statehist_filtering == 0) {
-        for (auto filter : *query->filter()) {
+        for (const auto &filter : *query->filter()) {
             IsObjectFilter is_obj;
             filter->accept(is_obj);
             if (is_obj._value) {
-                object_filter.push_back(filter);
+                object_filter.push_back(filter.get());
             }
         }
     }

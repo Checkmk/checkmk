@@ -23,17 +23,20 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StringColumn.h"
+#include "Filter.h"
 #include "Renderer.h"
 #include "StringFilter.h"
 
+using std::make_unique;
 using std::string;
+using std::unique_ptr;
 
 void StringColumn::output(void *row, RowRenderer &r,
                           contact * /* auth_user */) {
     r.output(row == nullptr ? "" : getValue(row));
 }
 
-Filter *StringColumn::createFilter(RelationalOperator relOp,
-                                   const string &value) {
-    return new StringFilter(this, relOp, value);
+unique_ptr<Filter> StringColumn::createFilter(RelationalOperator relOp,
+                                              const string &value) {
+    return make_unique<StringFilter>(this, relOp, value);
 }

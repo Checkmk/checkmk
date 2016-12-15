@@ -14447,7 +14447,7 @@ def save_changed_custom_attrs(all_attrs, what):
 
 def declare_custom_host_attrs():
     # First remove all previously registered custom host attributes
-    for attr_name in g_host_attribute.keys():
+    for attr_name in all_host_attribute_names():
         if attr_name not in builtin_host_attribute_names and not\
            attr_name.startswith("tag_"):
             undeclare_host_attribute(attr_name)
@@ -16350,14 +16350,13 @@ loaded_with_language = False
 def load_plugins(force):
     global builtin_host_attribute_names
 
-    # Do not cache the custom attributes. They can be created by the user
-    # during runtime, means they need to be loaded during each page request.
-    # But delete the old definitions before to also apply removals of attributes
-    if builtin_host_attribute_names:
-        declare_custom_host_attrs()
-
     global loaded_with_language
     if loaded_with_language == current_language and not force:
+        # Do not cache the custom attributes. They can be created by the user
+        # during runtime, means they need to be loaded during each page request.
+        # But delete the old definitions before to also apply removals of attributes
+        if builtin_host_attribute_names:
+            declare_custom_host_attrs()
         return
 
     # Reset global vars
@@ -16365,6 +16364,7 @@ def load_plugins(force):
     extra_buttons = []
     modules = []
 
+    initialize_host_attribute_structures()
     undeclare_all_host_attributes()
     load_notification_table()
     initialize_global_configvars()
@@ -16620,7 +16620,7 @@ def load_plugins(force):
 
     declare_host_tag_attributes(force = True)
 
-    builtin_host_attribute_names = g_host_attribute.keys()
+    builtin_host_attribute_names = all_host_attribute_names()
     declare_custom_host_attrs()
 
     # This must be set after plugin loading to make broken plugins raise

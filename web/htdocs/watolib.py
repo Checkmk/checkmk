@@ -65,9 +65,11 @@ replication_paths = []
 backup_paths = []
 backup_domains = {}
 automation_commands = {}
+g_rulespecs = None
 
 def initialize_before_loading_plugins():
-    g_rulespecs.clear()
+    if g_rulespecs:
+        g_rulespecs.clear()
 
     # Directories and files to synchronize during replication
     global replication_paths
@@ -2918,16 +2920,20 @@ class ContactGroupsAttribute(Attribute):
         return True
 
 
-# Global datastructure holding all attributes (in a defined order)
-# as pairs of (attr, topic). Topic is the title under which the
-# attribute is being displayed. All builtin attributes use the
-# topic None. As long as only one topic is used, no topics will
-# be displayed. They are useful if you have a great number of
-# custom attributes.
-g_host_attributes = []
+def initialize_host_attribute_structures():
+    global g_host_attributes, g_host_attribute
 
-# Dictionary for quick access
-g_host_attribute = {}
+    # Global datastructure holding all attributes (in a defined order)
+    # as pairs of (attr, topic). Topic is the title under which the
+    # attribute is being displayed. All builtin attributes use the
+    # topic None. As long as only one topic is used, no topics will
+    # be displayed. They are useful if you have a great number of
+    # custom attributes.
+    g_host_attributes = []
+
+    # Dictionary for quick access
+    g_host_attribute = {}
+
 
 # Declare attributes with this method
 def declare_host_attribute(a, show_in_table = True, show_in_folder = True, show_in_host_search = True,
@@ -2969,6 +2975,10 @@ def undeclare_all_host_attributes():
 
 def all_host_attributes():
     return g_host_attributes
+
+
+def all_host_attribute_names():
+    return g_host_attribute.keys()
 
 
 def host_attribute(name):

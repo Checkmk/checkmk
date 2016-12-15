@@ -125,13 +125,13 @@ def test_replace_inputs():
 # this function does a big chunk of the refactoring for me
 def replace_tags(html, indent = 0):
 
+
     # I want to refactor only lines with html.write
     if not html.lstrip(' ').startswith('html.write('):
         return html
 
     # unbalanced paranthesis indicates sth that goes across line border
-    no_comments = '\n'.join(re.sub('#.*', '', line) for line in html.split('\n'))
-    if no_comments.count('(') != no_comments.count(')'):
+    if html.count('(') != html.count(')'):
         return html
 
     html, rest = split_html(html)
@@ -180,41 +180,30 @@ def replace_tags(html, indent = 0):
         if "[[[%s]]]" % index in html:
             html = re.sub("[[[%s]]]" % index, input, html)
 
-
-    try:
-        return orig_html + "\n(new)" + html + "\n" + rest
-    except:
-        print "orig_html:\n", orig_html
-        print "__________________________________________"
-        print "html:\n", html
-        print "__________________________________________"
-        print "rest:\n", rest
-        return orig_html + "\n(new)" + html + "\n" + rest
+    return orig_html + "\n(new)" + html + "\n" + rest
 
 
-
-if __name__ == "__main__":
-
-    html = sys.argv[1]
-    if html.endswith('.py'):
-        whole_text = ''
-        with open(html, 'r') as rfile:
-            whole_text = "".join(line for line in rfile)
-        parts = whole_text.split("html.write(")
-        with open("refactored_file.py", "w") as wfile:
-            part = parts.pop(0)
-            wfile.write(part)
+import re
+html = sys.argv[1]
+if html.endswith('.py'):
+    whole_text = ''
+    with open(html, 'r') as rfile:
+        whole_text = "".join(line for line in rfile)
+    parts = whole_text.split("html.write(")
+    with open("refactored_file.py", "w") as wfile:
+        part = parts.pop(0)
+        wfile.write(part)
+        indent = 0
+        while indent < len(part) and part[len(part) - 1 - indent] == ' ':
+            indent += 1
+        for part in parts:
+            part = "html.write(" + part
+            wfile.write(replace_tags(part, indent))
             indent = 0
             while indent < len(part) and part[len(part) - 1 - indent] == ' ':
                 indent += 1
-            for part in parts:
-                part = "html.write(" + part
-                wfile.write(replace_tags(part, indent))
-                indent = 0
-                while indent < len(part) and part[len(part) - 1 - indent] == ' ':
-                    indent += 1
-    elif html == "test":
-        test_replace_inputs()
-    else:
-        print replace_tags(html)
+elif html == "test":
+    test_replace_inputs()
+else:
+    print replace_tags(html)
 

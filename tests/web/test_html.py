@@ -52,7 +52,7 @@ def test_class_HTML():
     assert len(B) == len(b)
     assert unicode(B) == unicode(b)
 
-
+    assert "1" + B + "2" + C == "1" + b + "2" + c
 
     assert (A + B) == (a + b)
     assert HTML().join([A, B]) == A + B
@@ -101,9 +101,9 @@ def test_class_HTML():
     assert HTML(A) == A, "%s %s" % (HTML(A), A)
     assert HTML(a) == A, "%s %s" % (HTML(a), A)
 
-    assert  (A < B) == (a < b), "%s %s" % (A < B, a < b)
-
-    assert (A > B) == (a > b)
+    # Not supported any more!
+    # assert  (A < B) == (a < b), "%s %s" % (A < B, a < b)
+    # assert (A > B) == (a > b)
 
     assert A != B
 

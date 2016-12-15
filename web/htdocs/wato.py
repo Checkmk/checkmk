@@ -7789,7 +7789,7 @@ def mode_notifications(phase):
             "<a href=\"%s\">fallback email address</a> nor enabled receiving fallback emails for "
             "any user. If your monitoring produces a notification that is not matched by any of your "
             "notification rules, the notification will not be sent out. To prevent that, please "
-            "configure either the global setting or enable the fallback contact option for at least"
+            "configure either the global setting or enable the fallback contact option for at least "
             "one of your users.") % url)
 
     if show_bulks:

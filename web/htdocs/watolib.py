@@ -6074,41 +6074,6 @@ class FilteredRulesetCollection(AllRulesets):
 
 
 
-class RulesetsWithIneffectiveRules(FilteredRulesetCollection):
-    def load(self):
-        super(RulesetsWithIneffectiveRules, self).load()
-        all_hosts = Host.all()
-
-        has_ineffective_rules = False
-        filtered_rulesets = {}
-        for varname, ruleset in self._rulesets.items():
-            for folder, rulenr, rule in ruleset.get_rules():
-                if rule.is_ineffective(all_hosts):
-                    ruleset = filtered_rulesets.setdefault(varname, Ruleset(varname))
-                    ruleset.add_rule(folder, rule)
-
-        self._rulesets = filtered_rulesets
-
-
-
-class DeprecatedRulesets(FilteredRulesetCollection):
-    pass
-
-
-
-class UsedRulesets(FilteredRulesetCollection):
-    def load(self):
-        super(UsedRulesets, self).load()
-
-        # remove all empty rulesets
-        filtered_rulesets = {}
-        for varname, ruleset in self._rulesets.items():
-            if not ruleset.is_empty():
-                filtered_rulesets[varname] = ruleset
-        self._rulesets = filtered_rulesets
-
-
-
 class SearchedRulesets(FilteredRulesetCollection):
     def __init__(self, origin_rulesets, search_options):
         super(SearchedRulesets, self).__init__()
@@ -6220,6 +6185,12 @@ class Ruleset(object):
 
 
     def matches_search(self, search_options):
+        if "ruleset_deprecated" in search_options and not self.is_deprecated():
+            return False
+
+        if "ruleset_used" in search_options and self.is_empty():
+            return False
+
         if not match_search_expression(search_options, "ruleset_name", self.name()):
             return False
 
@@ -6228,6 +6199,12 @@ class Ruleset(object):
 
         if not match_search_expression(search_options, "ruleset_help", self.help()):
             return False
+
+        has_rules_search = bool([ s for s in search_options.keys() \
+                                if s == "fulltext" or s.startswith("rule_") ])
+
+        if not has_rules_search and "fulltext" not in search_options:
+            return True
 
         # Store the matching rules for later result rendering
         self.search_matching_rules = []
@@ -6565,7 +6542,8 @@ class Rule(object):
         return ro
 
 
-    def is_ineffective(self, hosts):
+    def is_ineffective(self):
+        hosts = Host.all()
         for host_name, host in hosts.items():
             reason = self.matches_host_and_item(host.folder(), host_name, NO_ITEM)
             if reason == True:
@@ -6646,7 +6624,10 @@ class Rule(object):
 
 
     def matches_search(self, search_options):
-        if "disabled" in search_options and not rule.is_disabled():
+        if "rule_disabled" in search_options and not rule.is_disabled():
+            return False
+
+        if "rule_ineffective" in search_options and not self.is_ineffective():
             return False
 
         if not match_search_expression(search_options, "rule_description", self.description()):

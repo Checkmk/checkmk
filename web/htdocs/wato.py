@@ -11878,14 +11878,26 @@ def mode_ruleeditor(phase):
 
     elif phase == "buttons":
         global_buttons()
+
         if only_host:
             html.context_button(only_host,
                 folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
 
-        html.context_button(_("Used Rulesets"), folder_preserving_link([("mode", "rulesets"), ("group", "used")]), "usedrulesets")
-        html.context_button(_("Ineffective rules"), folder_preserving_link([("mode", "rulesets"), ("group", "ineffective")]), "rulesets_ineffective")
-        html.context_button(_("Deprecated Rulesets"),
-                 folder_preserving_link([("mode", "rulesets"), ("group", "deprecated")]), "rulesets_deprecated")
+        html.context_button(_("Used Rulesets"), folder_preserving_link([
+            ("mode", "rulesets"),
+            ("search_p_ruleset_used_USE", "on")
+        ]), "usedrulesets")
+
+        html.context_button(_("Ineffective rules"), folder_preserving_link([
+            ("mode", "rulesets"),
+            ("search_p_rule_ineffective_USE", "on")]
+        ), "rulesets_ineffective")
+
+        html.context_button(_("Deprecated Rulesets"), folder_preserving_link([
+            ("mode", "rulesets"),
+            ("search_p_ruleset_deprecated_USE", "on")
+        ]), "rulesets_deprecated")
+
         rule_search_button()
         return
 
@@ -11935,14 +11947,11 @@ def get_search_expression():
 
 
 def mode_static_checks(phase):
-    return mode_rulesets(phase, "static")
+    return mode_rulesets(phase, mode="static_checks")
 
 
-def mode_rulesets(phase, group=None):
-    if not group:
-        group = html.var("group") # obligatory
-
-    show_deprecated = html.var("deprecated") == "1"
+def mode_rulesets(phase, mode="rulesets"):
+    group = html.var("group")
 
     # Transform the search argument to the "rule search" arguments
     if html.has_var("search"):
@@ -11952,29 +11961,19 @@ def mode_rulesets(phase, group=None):
 
     search_options = ModeRuleSearch().search_options
 
-    only_used = False
-    only_ineffective = False
-
-    if group == "used":
-        title = _("Used Rulesets")
-        help = _("Non-empty rulesets")
-        only_used = True
-
-    elif group == "static":
+    if mode == "static_checks":
         title = _("Manual Checks")
         help = _("Here you can create explicit checks that are not being created by the automatic service discovery.")
 
-    elif group == "deprecated":
+    elif search_options.keys() == ["ruleset_deprecated"]:
         title = _("Deprecated Rulesets")
         help = _("Here you can see a list of all deprecated rulesets (which are not used by Check_MK anymore). If "
                  "you have defined some rules here, you might have to migrate the rules to their successors. Please "
                  "refer to the release notes or context help of the rulesets for details.")
-        show_deprecated = True
 
-    elif group == "ineffective":
-        title = _("Ineffective rules")
-        help = _("The following rules do not match to any of the existing hosts.")
-        only_ineffective = True
+    elif search_options.keys() == ["rule_ineffective"]:
+        title = _("Rulesets with ineffective rules")
+        help = _("The following rulesets contain rules that do not match to any of the existing hosts.")
 
     elif group == None:
         title = _("Rulesets")
@@ -11995,30 +11994,22 @@ def mode_rulesets(phase, group=None):
             return title
 
     elif phase == "buttons":
+        global_buttons()
+
         if only_host:
-            home_button()
-            if group != "static":
-                html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
-            else:
-                html.context_button(_("Deprecated Rulesets"),
-                    folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("host", only_host), ("deprecated", "1")]), "rulesets_deprecated")
+            html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
             html.context_button(only_host,
                  folder_preserving_link([("mode", "edit_host"), ("host", only_host)]), "host")
         else:
-            global_buttons()
-            if group != "static":
+            if mode != "static_checks":
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
-            else:
-                if show_deprecated:
-                    html.context_button(_("Normal Rulesets"),
-                        folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "0")]), "rulesets")
-                else:
-                    html.context_button(_("Deprecated Rulesets"),
-                        folder_preserving_link([("mode", "rulesets"), ("group", "static"), ("deprecated", "1")]), "rulesets_deprecated")
+
             if config.user.may("wato.hosts") or config.user.may("wato.seeall"):
                 html.context_button(_("Folder"), folder_preserving_link([("mode", "folder")]), "folder")
+
             if group == "agents":
                 html.context_button(_("Agent Bakery"), folder_preserving_link([("mode", "agents")]), "agents")
+
         rule_search_button(search_options)
         return
 
@@ -12035,18 +12026,10 @@ def mode_rulesets(phase, group=None):
         if help:
             html.help(help)
 
-    if only_used:
-        rulesets = UsedRulesets()
-    elif only_ineffective:
-        rulesets = RulesetsWithIneffectiveRules()
-    else:
-        rulesets = AllRulesets()
-
+    rulesets = AllRulesets()
     rulesets.load()
 
-    # Select matching rule groups while keeping their configured order
-    # TODO: Isn't it easier to get the groupnames (sorted) from the rulesets object?
-    if only_used or only_ineffective or group == "deprecated" or not group:
+    if not group:
         groupnames = g_rulespecs.get_all_groups()
     else:
         groupnames = g_rulespecs.get_matching_groups(group)
@@ -12067,21 +12050,15 @@ def mode_rulesets(phase, group=None):
             if not rulesets.exists(varname):
                 continue
 
-            # handle only_used
             ruleset = rulesets.get(varname)
-            num_rules = ruleset.num_rules()
-            if num_rules == 0 and (only_used or only_ineffective):
-                continue
 
             # Show static checks rules only in on dedicated page and vice versa
-            if group != 'static' and groupname.startswith("static/"):
+            if mode != "static_checks" and groupname.startswith("static/"):
                 continue
-            elif group == 'static' and not groupname.startswith("static/"):
-                continue
-            elif show_deprecated != ruleset.is_deprecated():
+            elif mode == "static_checks" and not groupname.startswith("static/"):
                 continue
 
-            if group != 'static' and (only_used or search_options):
+            if mode != "static_checks" and search_options:
                 titlename = g_rulegroups[groupname.split("/")[0]][0]
             else:
                 if '/' in groupname:
@@ -12102,17 +12079,20 @@ def mode_rulesets(phase, group=None):
             html.open_div(class_=["ruleset", float_cls], title=html.strip_tags(ruleset.help() or ''))
             html.open_div(class_="text")
 
-            url_vars = [("mode", "edit_ruleset"), ("varname", varname)]
+            url_vars = [
+                ("mode", "edit_ruleset"),
+                ("varname", varname),
+                ("back_mode", mode),
+            ]
             if only_host:
                 url_vars.append(("host", only_host))
-            if only_ineffective:
-                url_vars.append(("highlight_ineffective", "1"))
             view_url = html.makeuri(url_vars)
 
             html.a(ruleset.title(), href=view_url, class_="nonzero" if ruleset.is_empty() else "zero")
             html.span("." * 100, class_="dots")
             html.close_div()
 
+            num_rules = ruleset.num_rules()
             if ruleset.search_matching_rules:
                 num_rules = "%d/%d" % (len(ruleset.search_matching_rules), num_rules)
 
@@ -12127,8 +12107,6 @@ def mode_rulesets(phase, group=None):
     else:
         if only_host:
             msg = _("There are no rules with an exception for the host <b>%s</b>.") % only_host
-        elif only_ineffective:
-            msg = _("There are no ineffective rules.")
         elif search_options:
             msg = _("There are no rulesets or rules matching your search.")
         else:
@@ -12252,12 +12230,18 @@ def mode_edit_ruleset(phase):
             if not rulespec:
                 html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
             else:
-                group = rulespec["group"].split("/")[0]
-                groupname = g_rulegroups[group][0]
-                html.context_button(groupname,
-                      folder_preserving_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
-            html.context_button(_("Used Rulesets"),
-                 folder_preserving_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
+                back_mode = html.var("back_mode", "rulesets")
+
+                if back_mode == "rulesets":
+                    main_group = rulespec["group"].split("/")[0]
+                    group_arg = [("group", main_group)]
+                else:
+                    group_arg = []
+
+                html.context_button(_("Back"), folder_preserving_link([
+                    ("mode", back_mode),
+                    ("host", hostname)
+                ] + group_arg), "back")
 
         if hostname:
             html.context_button(_("Services"),
@@ -12350,7 +12334,6 @@ def mode_edit_ruleset(phase):
         search_options = ModeRuleSearch().search_options
 
         skip_this_folder = False
-        all_hosts = Host.all()
         for folder, rulenr, rule in ruleset.get_rules():
             if folder != last_folder:
                 skip_this_folder = False
@@ -12378,10 +12361,6 @@ def mode_edit_ruleset(phase):
             css = []
             if rule.is_disabled():
                 css.append("disabled")
-
-            if html.var("highlight_ineffective"):
-                if rule.is_ineffective(all_hosts):
-                    css.append("ineffective")
 
             if search_options and rule.matches_search(search_options):
                 css.append("matches_search")
@@ -12822,11 +12801,26 @@ class ModeRuleSearch(WatoMode):
         return Dictionary(
             title = _("Search rulesets"),
             headers = [
-                (_("Fulltext search"), ["fulltext"]),
-                (_("Rulesets"), ["ruleset_name", "ruleset_title", "ruleset_help"]),
+                (_("Fulltext search"), [
+                    "fulltext",
+                ]),
+                (_("Rulesets"), [
+                    "ruleset_name",
+                    "ruleset_title",
+                    "ruleset_help",
+                    "ruleset_deprecated",
+                    "ruleset_used",
+                ]),
                 (_("Rules"), [
-                    "rule_description", "rule_comment", "rule_value", "rule_host_list",
-                    "rule_item_list", "rule_hosttags", "rule_disabled" ]),
+                    "rule_description",
+                    "rule_comment",
+                    "rule_value",
+                    "rule_host_list",
+                    "rule_item_list",
+                    "rule_hosttags",
+                    "rule_disabled",
+                    "rule_ineffective",
+                ]),
             ],
             elements = [
                 ("fulltext", RegExpUnicode(
@@ -12853,6 +12847,15 @@ class ModeRuleSearch(WatoMode):
                     size = 60,
                     mode = RegExpUnicode.infix,
                 )),
+                ("ruleset_deprecated", FixedValue(False,
+                    title = _("Deprecated"),
+                    totext = _("Search for deprecated rulesets"),
+                )),
+                ("ruleset_used", FixedValue(False,
+                    title = _("Used"),
+                    totext = _("Search for rulesets that have rules configured"),
+                )),
+
                 ("rule_description", RegExpUnicode(
                     title = _("Description"),
                     size = 60,
@@ -12884,6 +12887,10 @@ class ModeRuleSearch(WatoMode):
                 ("rule_disabled", FixedValue(False,
                     title = _("Disabled"),
                     totext = _("Search for disabled rules"),
+                )),
+                ("rule_ineffective", FixedValue(False,
+                    title = _("Ineffective"),
+                    totext = _("Search for ineffective rules (not matching any host or service)"),
                 )),
             ],
         )

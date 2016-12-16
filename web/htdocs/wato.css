@@ -638,25 +638,12 @@ table.validationerror img {
     text-shadow: 0px 1px 0px #fff;
 }
 
-.wato table.data.ruleset.oddeven > tbody > tr.ineffective:nth-child(odd) {
-    background-color: #faa;
-}
-
-.wato table.data.ruleset.oddeven > tbody > tr.ineffective:nth-child(even) {
-    background-color: #fcc;
-}
-
 .wato table.data.ruleset.oddeven > tbody > tr.matches_search:nth-child(odd) {
     background-color: #bfd;
 }
 
 .wato table.data.ruleset.oddeven > tbody > tr.matches_search:nth-child(even) {
     background-color: #afb;
-}
-
-.wato table.data.ruleset tr.ineffective td * {
-    color: #999;
-    text-shadow: 0px 1px 0px #fff;
 }
 
 /* Special styling for Timeperiods editor */

@@ -5795,9 +5795,6 @@ def user_script_title(what, name):
 #   | The rulespecs are the ruleset specifications registered to WATO.     |
 #   '----------------------------------------------------------------------
 
-NO_FACTORY_DEFAULT     = [] # needed for unique ID
-FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is entered
-
 class Rulespecs(object):
     def __init__(self):
         super(Rulespecs, self).__init__()
@@ -5813,16 +5810,16 @@ class Rulespecs(object):
 
 
     def register(self, rulespec):
-        group = rulespec["group"]
-        name  = rulespec["varname"]
+        group = rulespec.group_name
+        name  = rulespec.name
 
         if group not in self._by_group:
             self._sorted_groups.append(group)
             self._by_group[group] = [ rulespec ]
 
         else:
-            for nr, rs in enumerate(self._by_group[group]):
-                if rs["varname"] == name:
+            for nr, rulespec in enumerate(self._by_group[group]):
+                if rulespec.name == name:
                     del self._by_group[group][nr]
                     break # There cannot be two duplicates!
 
@@ -5890,34 +5887,60 @@ class Rulespecs(object):
 
 
 
+class Rulespec(object):
+    NO_FACTORY_DEFAULT     = [] # needed for unique ID
+    FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is entered
+
+    def __init__(self, name, group_name, valuespec, item_spec, item_type, item_name, item_help,
+                 item_enum, match, title, help, is_optional, factory_default, is_deprecated):
+        super(Rulespec, self).__init__()
+
+        self.name            = name
+        self.group_name      = group_name
+        self.main_group_name = group_name.split("/")[0]
+        self.valuespec       = valuespec
+        self.item_spec       = item_spec # original item spec, e.g. if validation is needed
+        self.item_type       = item_type # None, "service", "checktype" or "checkitem"
+
+        if not item_name and item_type == "service":
+            self.item_name = _("Service")
+        else:
+            self.item_name = item_name # e.g. "mount point"
+
+        self.item_help       = item_help # a description of the item, only rarely used
+        self.item_enum       = item_enum # possible fixed values for items
+        self.match_type      = match_type # used by WATO rule analyzer (green and grey balls)
+        self.title           = title or valuespec.title()
+        self.help            = help or valuespec.help()
+        self.factory_default = factory_default
+        self.is_optional     = is_optional # rule may be None (like only_hosts)
+        self.deprecated      = is_deprecated
+
+
+
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemspec = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
                   match = "first", optional = False,
                   deprecated = False, **kwargs):
-    factory_default = kwargs.get("factory_default", NO_FACTORY_DEFAULT)
+    factory_default = kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT)
 
-    if not itemname and itemtype == "service":
-        itemname = _("Service")
-
-    rulespec = {
-        "group"           : group,
-        "varname"         : varname,
-        "valuespec"       : valuespec,
-        "itemspec"        : itemspec, # original item spec, e.g. if validation is needed
-        "itemtype"        : itemtype, # None, "service", "checktype" or "checkitem"
-        "itemname"        : itemname, # e.g. "mount point"
-        "itemhelp"        : itemhelp, # a description of the item, only rarely used
-        "itemenum"        : itemenum, # possible fixed values for items
-        "match"           : match,    # used by WATO rule analyzer (green and grey balls)
-        "title"           : title or valuespec.title(),
-        "help"            : help or valuespec.help(),
-        "optional"        : optional, # rule may be None (like only_hosts)
-        "factory_default" : factory_default,
-        "deprecated"      : deprecated,
-    }
-
-    g_rulespecs.register(rulespec)
+    g_rulespecs.register(Rulespec(
+        name=varname,
+        group_name=group,
+        valuespec=valuespec,
+        item_spec=itemspec,
+        item_type=itemtype,
+        item_name=itemname,
+        item_help=itemhelp,
+        item_enum=itemenum,
+        match_type=match,
+        title=title,
+        help=help,
+        is_optional=optional,
+        factory_default=factory_default,
+        is_deprecated=deprecated,
+    ))
 
 
 g_rulespecs = Rulespecs()
@@ -5965,7 +5988,7 @@ class RulesetCollection(object):
         # Prepare empty rulesets so that rules.mk has something to
         # append to. We need to initialize all variables here, even
         # when only loading with only_varname.
-        for varname, ruleset in g_rulespecs.get_rulespecs().items():
+        for varname in g_rulespecs.get_rulespecs().keys():
             if ':' in varname:
                 dictname, subkey = varname.split(":")
                 config[dictname] = {}
@@ -6013,6 +6036,18 @@ class RulesetCollection(object):
 
     def set_rulesets(self, rulesets):
         self._rulesets = rulesets
+
+
+    def get_grouped(self):
+        grouped = {}
+        for name, ruleset in self._rulesets:
+            group_rulesets = grouped.setdefault(ruleset.rulespec.group_name, [])
+            group_rulesets.append(ruleset)
+
+        for rulesets in grouped.values():
+            rulesets.sort(key=lambda x: x["title"])
+
+        return grouped
 
 
 
@@ -6102,7 +6137,7 @@ class Ruleset(object):
     def __init__(self, name):
         super(Ruleset, self).__init__()
         self._name     = name
-        self._rulespec = g_rulespecs.get(name)
+        self.rulespec  = g_rulespecs.get(name)
         # Holds list of the rules. Using the folder paths as keys.
         self._rules    = {}
 
@@ -6269,44 +6304,45 @@ class Ruleset(object):
         return self._name
 
 
+    # TODO: Remove these getters
     def valuespec(self):
-        return self._rulespec["valuespec"]
+        return self.rulespec.valuespec
 
 
     def help(self):
-        return self._rulespec["help"]
+        return self.rulespec.help
 
 
     def title(self):
-        return self._rulespec["title"]
+        return self.rulespec.title
 
 
     def item_type(self):
-        return self._rulespec["itemtype"]
+        return self.rulespec.item_type
 
 
     def item_name(self):
-        return self._rulespec["itemname"]
+        return self.rulespec.item_name
 
 
     def item_help(self):
-        return self._rulespec["itemhelp"]
+        return self.rulespec.item_help
 
 
     def item_enum(self):
-        return self._rulespec["itemenum"]
+        return self.rulespec.item_enum
 
 
     def match_type(self):
-        return self._rulespec["match"]
+        return self.rulespec.match_type
 
 
     def is_deprecated(self):
-        return self._rulespec["deprecated"]
+        return self.rulespec.is_deprecated
 
 
     def is_optional(self):
-        return self._rulespec["optional"]
+        return self.rulespec.is_optional
 
 
     def _on_change(self):

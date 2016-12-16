@@ -2201,7 +2201,7 @@ def mode_object_parameters(phase):
                         if rulespec:
                             url = folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
                             render_rule_reason(_("Parameters"), url, _("Determined by discovery"), None, False,
-                                       rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
+                                       rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
                         else:
                             render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
 
@@ -2217,17 +2217,17 @@ def mode_object_parameters(phase):
                     html.write_text(_("This check is not configurable via WATO"))
                 else:
                     rulespec = g_rulespecs.get("static_checks:" + checkgroup)
-                    itemspec = rulespec["itemspec"]
+                    itemspec = rulespec.item_spec
                     if itemspec:
                         item_text = itemspec.value_to_text(serviceinfo["item"])
-                        title = rulespec["itemspec"].title()
+                        title = rulespec.item_spec.title()
                     else:
                         item_text = serviceinfo["item"]
                         title = _("Item")
                     render_rule_reason(title, None, "", "", False, item_text)
                     output_analysed_ruleset(all_rulesets, rulespec, hostname,
                                             serviceinfo["item"], PARAMETERS_OMIT)
-                    html.write(rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
+                    html.write(rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
                     html.close_td()
                     html.close_tr()
                     html.close_table()
@@ -2283,7 +2283,7 @@ def mode_object_parameters(phase):
     for groupname in sorted(g_rulespecs.get_host_groups()):
         maingroup = groupname.split("/")[0]
         for rulespec in sorted(g_rulespecs.get_by_group(groupname), key = lambda x: x["title"]):
-            if (rulespec["itemtype"] == 'service') == (not service):
+            if (rulespec.item_type == 'service') == (not service):
                 continue # This rule is not for hosts/services
 
             # Open form for that group here, if we know that we have at least one rule
@@ -2314,8 +2314,8 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
             ('item',        service and mk_repr(service) or ''),
         ])
 
-    varname = rulespec["varname"]
-    valuespec = rulespec["valuespec"]
+    varname = rulespec.name
+    valuespec = rulespec.valuespec
 
     url = folder_preserving_link([
         ('mode', 'edit_ruleset'),
@@ -2324,7 +2324,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         ('item', mk_repr(service))
     ])
 
-    forms.section('<a href="%s">%s</a>' % (url, rulespec["title"]))
+    forms.section('<a href="%s">%s</a>' % (url, rulespec.title))
 
     ruleset = all_rulesets.get(varname)
     setting, rules = ruleset.analyse_ruleset(hostname, service)
@@ -2373,20 +2373,20 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         # while other keys are taken from the factory defaults. We need to show the
         # complete outcoming value here.
         if rules and ruleset.match_type() == "dict":
-            if rulespec["factory_default"] is not NO_FACTORY_DEFAULT \
-                and rulespec["factory_default"] is not FACTORY_DEFAULT_UNUSED:
-                fd = rulespec["factory_default"].copy()
+            if rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT \
+                and rulespec.factory_default is not Rulespec.FACTORY_DEFAULT_UNUSED:
+                fd = rulespec.factory_default.copy()
                 fd.update(setting)
                 setting = fd
 
         if valuespec and not rules: # show the default value
-            if rulespec["factory_default"] is FACTORY_DEFAULT_UNUSED:
+            if rulespec.factory_default is Rulespec.FACTORY_DEFAULT_UNUSED:
                 # Some rulesets are ineffective if they are empty
                 html.write_text(_("(unused)"))
 
-            elif rulespec["factory_default"] is not NO_FACTORY_DEFAULT:
+            elif rulespec.factory_default is not Rulespec.NO_FACTORY_DEFAULT:
                 # If there is a factory default then show that one
-                setting = rulespec["factory_default"]
+                setting = rulespec.factory_default
                 html.write(valuespec.value_to_text(setting))
 
             elif ruleset.match_type() in ("all", "list"):
@@ -2937,9 +2937,9 @@ def show_service_table(host, firsttime):
                 if varname and g_rulespecs.exists(varname):
                     rulespec = g_rulespecs.get(varname)
                     try:
-                        rulespec["valuespec"].validate_datatype(params, "")
-                        rulespec["valuespec"].validate_value(params, "")
-                        paramtext = rulespec["valuespec"].value_to_text(params)
+                        rulespec.valuespec.validate_datatype(params, "")
+                        rulespec.valuespec.validate_value(params, "")
+                        paramtext = rulespec.valuespec.value_to_text(params)
                         html.write_html(paramtext)
                     except Exception, e:
                         if config.debug:
@@ -12045,7 +12045,7 @@ def mode_rulesets(phase, mode="rulesets"):
     title_shown = False
     for groupname in groupnames:
         for rulespec in sorted(g_rulespecs.get_by_group(groupname), key=lambda a: a["title"]):
-            varname = rulespec["varname"]
+            varname = rulespec.name
 
             if not rulesets.exists(varname):
                 continue
@@ -12136,9 +12136,9 @@ def create_new_rule_form(rulespec, hostname = None, item = None, varname = None)
     if hostname:
         label = _("Host %s") % hostname
         ty = _('Host')
-        if item != NO_ITEM and rulespec["itemtype"]:
-            label += _(" and %s '%s'") % (rulespec["itemname"], item)
-            ty = rulespec["itemname"]
+        if item != NO_ITEM and rulespec.item_type:
+            label += _(" and %s '%s'") % (rulespec.item_name, item)
+            ty = rulespec.item_name
 
         html.open_tr()
         html.open_td()
@@ -12216,11 +12216,11 @@ def mode_edit_ruleset(phase):
         if not rulespec:
             text = html.var("service_description") or varname
             return _("No available rule for service %s at host %s") % (text, hostname)
-        title = rulespec["title"]
+        title = rulespec.title
         if hostname:
             title += _(" for host %s") % hostname
-            if html.has_var("item") and rulespec["itemtype"]:
-                title += _(" and %s '%s'") % (rulespec["itemname"], item)
+            if html.has_var("item") and rulespec.item_type:
+                title += _(" and %s '%s'") % (rulespec.item_name, item)
         return title
 
     elif phase == "buttons":
@@ -12233,8 +12233,7 @@ def mode_edit_ruleset(phase):
                 back_mode = html.var("back_mode", "rulesets")
 
                 if back_mode == "rulesets":
-                    main_group = rulespec["group"].split("/")[0]
-                    group_arg = [("group", main_group)]
+                    group_arg = [("group", rulespec.main_group_name)]
                 else:
                     group_arg = []
 
@@ -12467,7 +12466,7 @@ def explain_ruleset_match_type(match_type):
 
 def show_rule_in_table(rule):
     # TODO: refactor params
-    rulespec  = rule._ruleset._rulespec
+    rulespec  = rule._ruleset.rulespec
     varname   = rule._ruleset._name
     tag_specs = rule._tag_specs
     host_list = rule._host_list
@@ -12482,15 +12481,15 @@ def show_rule_in_table(rule):
 
     # Value
     table.cell(_("Value"))
-    if rulespec["valuespec"]:
+    if rulespec.valuespec:
         try:
-            value_html = rulespec["valuespec"].value_to_text(value)
+            value_html = rulespec.valuespec.value_to_text(value)
         except Exception, e:
             try:
-                reason = str(e)
-                rulespec["valuespec"].validate_datatype(value, "")
+                reason = "%s" % e
+                rulespec.valuespec.validate_datatype(value, "")
             except Exception, e:
-                reason = str(e)
+                reason = "%s" % e
 
             value_html = '<img src="images/icon_alert.png" class=icon>' \
                        + _("The value of this rule is not valid. ") \
@@ -12535,7 +12534,7 @@ def rule_button(action, help=None, folder=None, rulenr=0):
         html.icon_button(url, help, action)
 
 
-def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
+def render_conditions(rulespec, tagspecs, host_list, item_list, varname, folder):
     html.open_ul(class_="conditions")
 
     # Host tags
@@ -12634,11 +12633,11 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
 
 
     # Item list
-    if ruleset["itemtype"] and item_list != ALL_SERVICES:
-        if ruleset["itemtype"] == "service":
+    if rulespec.item_type and item_list != ALL_SERVICES:
+        if rulespec.item_type == "service":
             condition = _("Service name ")
-        elif ruleset["itemtype"] == "item":
-            condition = ruleset["itemname"] + " "
+        elif rulespec.item_type == "item":
+            condition = rulespec.item_name + " "
 
         is_negate = item_list[-1] == ALL_SERVICES[0]
         if is_negate:
@@ -12701,13 +12700,13 @@ def get_rule_conditions(rulespec):
             host_list = ALL_HOSTS # equivalent
 
     # Item list
-    itemtype = rulespec["itemtype"]
+    itemtype = rulespec.item_type
     if itemtype:
         explicit = html.get_checkbox("explicit_services")
         if not explicit:
             item_list = ALL_SERVICES
         else:
-            itemenum = rulespec["itemenum"]
+            itemenum = rulespec.item_enum
             negate = html.get_checkbox("negate_entries")
 
             if itemenum:
@@ -12728,7 +12727,7 @@ def get_rule_conditions(rulespec):
 
             if len(item_list) == 0:
                 raise MKUserError("item_0", _("Please specify at least one %s or "
-                    "this rule will never match.") % rulespec["itemname"])
+                    "this rule will never match.") % rulespec.item_name)
     else:
         item_list = None
 
@@ -12911,7 +12910,7 @@ def mode_edit_rule(phase, new = False):
     back_mode = html.var('back_mode', 'edit_ruleset')
 
     if phase == "title":
-        return _("%s rule %s") % (new and _("New") or _("Edit"), rulespec["title"])
+        return _("%s rule %s") % (new and _("New") or _("Edit"), rulespec.title)
 
     elif phase == "buttons":
         if back_mode == 'edit_ruleset':
@@ -14941,7 +14940,7 @@ def mode_check_manpage(phase):
         if g_rulespecs.exists(varname):
             rulespec = g_rulespecs.get(varname)
             url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
-            param_ruleset = '<a href="%s">%s</a>' % (url, rulespec["title"])
+            param_ruleset = '<a href="%s">%s</a>' % (url, rulespec.title)
             html.open_tr()
             html.th(_("Parameter rule set"))
             html.open_td()
@@ -14952,7 +14951,7 @@ def mode_check_manpage(phase):
             html.open_tr()
             html.th(_("Example for Parameters"))
             html.open_td()
-            vs = rulespec["valuespec"]
+            vs = rulespec.valuespec
             vs.render_input("dummy", vs.default_value())
             html.close_td()
             html.close_tr()

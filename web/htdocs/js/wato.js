@@ -547,7 +547,7 @@ function activate_changes(mode, site_id)
             show_activation_error("You have to select a site.");
             return;
         }
-        
+
     } else if (mode == "site") {
         sites.push(site_id);
     }
@@ -730,7 +730,7 @@ function activation_progress_finished(response)
         // skip loop if the property is from prototype
         if (!response["sites"].hasOwnProperty(site_id))
             continue;
-    
+
         var site_state = response["sites"][site_id];
         if (site_state["_phase"] != "done")
             return false;

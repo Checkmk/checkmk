@@ -89,7 +89,7 @@ void LogCache::forgetLogfiles() {
 }
 
 void LogCache::updateLogfileIndex() {
-    Notice(_logger) << "updating log file index";
+    Informational(_logger) << "updating log file index";
     _last_index_update = system_clock::now();
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.

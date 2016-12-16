@@ -146,6 +146,7 @@ def debug(s):
 
 class HostResult(Exception):
     def __init__(self, result):
+        super(HostResult, self).__init__()
         self.result = result
 
 def new_state(rc, s):

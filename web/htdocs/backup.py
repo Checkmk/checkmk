@@ -1820,5 +1820,6 @@ class PageBackupRestore(object):
 
 class PageBackupRestoreState(PageBackupJobState):
     def __init__(self):
+        super(PageBackupRestoreState, self).__init__()
         self._job = RestoreJob(None, None) # TODO: target_ident and backup_ident needed?
         self._ident = "restore"

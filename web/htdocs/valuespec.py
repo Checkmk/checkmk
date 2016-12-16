@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # FIXME: Cleanups
+# - Change all class to be "new style" classes
 # - Consolidate ListChoice and DualListChoice to use the same class
 #   and rename to better name
 # - Consolidate RadioChoice and DropdownChoice to use same class
@@ -503,7 +504,7 @@ class ID(TextAscii):
 # Same as the ID class, but allowing unicode objects
 class UnicodeID(TextUnicode):
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
+        TextUnicode.__init__(self, **kwargs)
         self._regex = re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE)
         self._regex_error = _("An identifier must only consist of letters, digits, dash and "
                               "underscore and it must start with a letter or underscore.")
@@ -511,7 +512,7 @@ class UnicodeID(TextUnicode):
 
 class UserID(TextUnicode):
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
+        TextUnicode.__init__(self, **kwargs)
         self._regex = re.compile(r'^[\w][-\w0-9_\.@]*$', re.UNICODE)
         self._regex_error = _("An identifier must only consist of letters, digits, dash, dot, "
                               "at and underscore. But it must start with a letter or underscore.")
@@ -2608,7 +2609,7 @@ month_names = [
 ]
 
 
-class TimeHelper:
+class TimeHelper(object):
     @staticmethod
     def round(timestamp, unit):
         time_s = list(time.localtime(timestamp))
@@ -3554,7 +3555,7 @@ class ElementSelection(ValueSpec):
 
 class AutoTimestamp(FixedValue):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
+        FixedValue.__init__(self, **kwargs)
 
     def canonical_value(self):
         return time.time()
@@ -3685,7 +3686,7 @@ class Transform(ValueSpec):
 
 class LDAPDistinguishedName(TextUnicode):
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, **kwargs)
+        TextUnicode.__init__(self, **kwargs)
         self.enforce_suffix = kwargs.get('enforce_suffix')
 
     def validate_value(self, value, varprefix):

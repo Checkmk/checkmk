@@ -47,7 +47,7 @@ def check_elphase(item, params, parsed):
         else:
             return "%.1f" % value
 
-    class Bounds:
+    class Bounds(object):
         Lower, Upper, Both = range(3)
 
     if params is None:

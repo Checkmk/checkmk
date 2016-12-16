@@ -28,7 +28,10 @@ import sys, os, time, getopt
 
 class MKGeneralException(Exception):
     def __init__(self, reason):
+        super(MKGeneralException, self).__init__()
         self.reason = reason
+
+
     def __str__(self):
         return self.reason
 

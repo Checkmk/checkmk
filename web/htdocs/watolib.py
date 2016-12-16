@@ -397,7 +397,7 @@ class ConfigDomainEventConsole(ConfigDomain):
 
 class WithPermissions(object):
     def __init__(self):
-        object.__init__(self)
+        super(WithPermissions, self).__init__()
 
     def may(self, how): # how is "read" or "write"
         return self.user_may(config.user.id, how)
@@ -436,7 +436,7 @@ class WithPermissions(object):
 # for Host and Folder
 class WithPermissionsAndAttributes(WithPermissions):
     def __init__(self):
-        WithPermissions.__init__(self)
+        super(WithPermissionsAndAttributes, self).__init__()
         self._attributes = {}
 
     # .--------------------------------------------------------------------.
@@ -483,10 +483,6 @@ class WithPermissionsAndAttributes(WithPermissions):
 #   |  Base class of SearchFolder and Folder. Implements common methods.   |
 #   '----------------------------------------------------------------------'
 class BaseFolder(WithPermissionsAndAttributes):
-    def __init__(self):
-        WithPermissions.__init__(self)
-
-
     def hosts(self):
         raise NotImplementedError()
 
@@ -799,7 +795,7 @@ class Folder(BaseFolder):
 
 
     def __init__(self, name, folder_path=None, parent_folder=None, title=None, attributes=None):
-        WithPermissionsAndAttributes.__init__(self)
+        super(Folder, self).__init__()
         self._name = name
         self._parent = parent_folder
         self._subfolders = {}
@@ -1890,6 +1886,7 @@ class SearchFolder(BaseFolder):
     # '--------------------------------------------------------------------'
 
     def __init__(self, base_folder, criteria):
+        super(SearchFolder, self).__init__()
         self._criteria = criteria
         self._base_folder = base_folder
         self._found_hosts = None
@@ -2094,7 +2091,7 @@ class Host(WithPermissionsAndAttributes):
     # '--------------------------------------------------------------------'
 
     def __init__(self, folder, host_name, attributes, cluster_nodes):
-        WithPermissionsAndAttributes.__init__(self)
+        super(Host, self).__init__()
         self._folder = folder
         self._name = host_name
         self._attributes = attributes

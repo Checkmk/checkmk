@@ -6287,7 +6287,7 @@ register_check_parameters(
     # Transform old traffic related levels which used "traffic" and "traffic_minimum"
     # keys where each was configured with an Alternative valuespec
     Transform(Dictionary(
-        ignored_keys = [ "include_items", "iftype", "aggr_member_item", "aggregate" ], # Created by discovery when using interface grouping
+        ignored_keys = [ "aggregate" ], # Created by discovery when using interface grouping
         elements = [
              ( "errors",
                Alternative(
@@ -9663,6 +9663,60 @@ register_rule(
     match="first")
 
 
+def transform_if_groups_forth(params):
+    for param in params:
+        if param.get("name"):
+            param["group_name"] = param["name"]
+            del param["name"]
+        if param.get("include_items"):
+            param["node_items"] = param["include_items"]
+            del param["include_items"]
+        if param.get("single") is not None:
+            if param["single"]:
+                param["group_presence"] = "instead"
+            else:
+                param["group_presence"] = "separate"
+            del param["single"]
+    return params
+
+
+vs_elements_if_groups_matches = [
+    ("iftype", Transform(
+        DropdownChoice(
+            title = _("Select interface port type"),
+            choices = interface_port_type_choices,
+            help = _("Only interfaces with the given port type are put into this group. "
+                     "For example 53 (propVirtual)."),
+        ), forth = lambda x: str(x),
+           back  = lambda x: int(x),
+    )),
+    ("node_items", ListOfStrings(
+        title = _("Restrict interface items"),
+        help =  _("Only interface with these item names are put into this group."),
+    )),
+]
+
+
+vs_elements_if_groups_group = [
+    ("group_name", TextAscii(
+        title = _("Group name"),
+        help  = _("Name of group in service description"),
+        allow_empty = False,
+    )),
+    ("group_presence", DropdownChoice(
+        title   = _("Group interface presence"),
+        help    = _("Determine whether the group interface is created as an "
+                    "separate service or not. In second case the choosen interface "
+                    "services disapear."),
+        choices = [
+            ("separate", _("List grouped interfaces separately")),
+            ("instead",  _("List grouped interfaces instead")),
+        ],
+        default_value = "instead",
+    )),
+]
+
+
 register_rule(group + '/' + subgroup_networking,
     varname   = "if_groups",
     title     = _('Network interface groups'),
@@ -9672,36 +9726,41 @@ register_rule(group + '/' + subgroup_networking,
                   'of its members. You can configure if interfaces which are identified as group interfaces '
                   'should not show up as single service. You can restrict grouped interfaces by iftype and the '
                   'item name of the single interface.'),
-    valuespec = ListOf(
-                    Dictionary(
-                        elements = [
-                            ("name",
-                                   TextAscii(
-                                       title = _("Name of group"),
-                                       help  = _("Name of group in service description"),
-                                       allow_empty = False,
-                                   )),
-                            ("iftype", Transform(
-                                        DropdownChoice(
-                                            title = _("Select interface port type"),
-                                            choices = interface_port_type_choices,
-                                            help = _("Only interfaces with the given port type are put into this group. "
-                                                     "For example 53 (propVirtual)."),
-                                        ),
-                                    forth = lambda x: str(x),
-                                    back  = lambda x: int(x),
-                            )),
-                            ("include_items", ListOfStrings(
-                                title = _("Restrict interface items"),
-                                help = _("Only interface with these item names are put into this group."),
-                            )),
-                            ("single", Checkbox(
-                                title = _("Group separately"),
-                                label = _("Do not list grouped interfaces separately"),
-                            )),
-                        ],
-                        required_keys = ["name", "single"]),
-                    add_label = _("Add pattern")),
+    valuespec = Transform(Alternative(
+        style    = "dropdown",
+        elements = [
+            ListOf(
+                title     = _("Groups on single host"),
+                add_label = _("Add pattern"),
+                valuespec = Dictionary(
+                    elements = vs_elements_if_groups_group + \
+                               vs_elements_if_groups_matches,
+                    required_keys = [ "group_name", "group_presence" ]
+                ),
+            ),
+            ListOf(
+                magic     = "@!!",
+                title     = _("Groups on cluster"),
+                add_label = _("Add pattern"),
+                valuespec = Dictionary(
+                    elements = vs_elements_if_groups_group + [
+                        ("node_patterns", ListOf(
+                            title     = _("Patterns for each node"),
+                            add_label = _("Add pattern"),
+                            valuespec = Dictionary(
+                                elements = [
+                                    ( "node_name", TextAscii(
+                                        title = _("Node name") ) )
+                                ] + vs_elements_if_groups_matches,
+                                required_keys = [ "node_name" ]
+                            ),
+                            allow_empty = False,
+                        ))
+                    ],
+                    optional_keys = []
+            )),
+        ],
+    ), forth = transform_if_groups_forth ),
     match = 'all',
 )
 

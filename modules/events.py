@@ -189,6 +189,9 @@ def find_host_service_in_context(context):
 
 
 
+# Fetch information about an objects contacts via Livestatus. This is
+# neccessary for notifications from Nagios, which does not send this
+# information in macros.
 def livestatus_fetch_contacts(host, service):
     try:
         if service:
@@ -225,6 +228,8 @@ def add_rulebased_macros(raw_context):
                 raw_context.get("SERVICEDESC"))
         if contact_list != None:
             raw_context["CONTACTS"] = ",".join(contact_list)
+        else:
+            raw_context["CONTACTS"] = "?" # means: contacts could not be determined!
 
 
     # Add a pseudo contact name. This is needed for the correct creation
@@ -464,6 +469,7 @@ def event_match_exclude_servicegroups(rule, context, is_regex = False):
                              (match_value, match_value_inverse, group)
             elif group in servicegroups:
                     return "The service group %s is excluded" % group
+
 
 def event_match_contacts(rule, context):
     if "match_contacts" in rule:

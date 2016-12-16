@@ -1,0 +1,12 @@
+Title: Fix matching of hosts when forwarding notifications from Event Console
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481886877
+Class: fix
+
+Up to now the host name in the event was looked for in the monitoring
+data with an exact match. Now the same algorithm is being used as
+in the GUI: case insensitive comparison of the event host name with
+the monitoring host name, alias and IP address.

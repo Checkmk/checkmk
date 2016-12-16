@@ -2369,42 +2369,39 @@ function switch_help(how)
 }
 
 /* Switch filter, commands and painter options */
-function view_toggle_form(oButton, idForm) {
-    var oForm = document.getElementById(idForm);
-    if (oForm) {
-        if (oForm.style.display == "none") {
-            var display = "";
-            var down = "down";
-        }
-        else {
-            var display = "none";
-            var down = "up";
-        }
+function view_toggle_form(button, form_id) {
+    var display = "none";
+    var down    = "up";
+
+    var form = document.getElementById(form_id);
+    if (form && form.style.display == "none") {
+        display = "";
+        down    = "down";
     }
 
     // Close all other view forms
     var alldivs = document.getElementsByClassName('view_form');
     for (var i=0; i<alldivs.length; i++) {
-        if (alldivs[i] != oForm) {
+        if (alldivs[i] != form) {
             alldivs[i].style.display = "none";
         }
     }
 
-    if (oForm)
-        oForm.style.display = display;
+    if (form)
+        form.style.display = display;
 
     // Make other buttons inactive
     var allbuttons = document.getElementsByClassName('togglebutton');
     for (var i=0; i<allbuttons.length; i++) {
         var b = allbuttons[i];
-        if (b != oButton && !has_class(b, "empth") && !has_class(b, "checkbox")) {
+        if (b != button && !has_class(b, "empth") && !has_class(b, "checkbox")) {
             remove_class(b, "down")
             add_class(b, "up")
         }
     }
-    remove_class(oButton, "down");
-    remove_class(oButton, "up");
-    add_class(oButton, down);
+    remove_class(button, "down");
+    remove_class(button, "up");
+    add_class(button, down);
 }
 
 function wheel_event_name()

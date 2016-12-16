@@ -22,6 +22,19 @@ Add-PSSnapin VeeamPSSnapIn -ErrorAction SilentlyContinue
 
 try
 {
+$tapeJobs = Get-VBRTapeJob
+write-host "<<<veeam_tapejobs>>>"
+write-host "JobName JobID LastResult LastState"
+foreach ($tapeJob in $tapeJobs)
+    {
+        $jobName = $tapeJob.Name
+        $jobID = $tapeJob.Id
+        $lastResult = $tapeJob.LastResult
+        $lastState = $tapeJob.LastState
+        write-host "$jobName $jobID $lastResult $lastState"
+    }
+
+
 $myJobsText = "<<<veeam_jobs:sep(9)>>>`n"
 $myTaskText = ""
 

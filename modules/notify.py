@@ -492,9 +492,13 @@ def rbn_fallback_contacts():
     if notification_fallback_email:
         fallback_contacts.append(rbn_fake_email_contact(notification_fallback_email))
 
-    for contact in contacts.values():
+    for contact_name, contact in contacts.items():
         if contact.get("fallback_contact", False) and contact.get("email"):
-            fallback_contacts.append(contact)
+            fallback_contact = {
+                "name" : contact_name,
+            }
+            fallback_contact.update(contact)
+            fallback_contacts.append(fallback_contact)
 
     return fallback_contacts
 

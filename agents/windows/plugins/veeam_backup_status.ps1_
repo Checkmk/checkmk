@@ -20,24 +20,15 @@ $pswindow.buffersize = $newsize
 # Load Veeam Backup and Replication Powershell Snapin
 Add-PSSnapin VeeamPSSnapIn -ErrorAction SilentlyContinue
 
-
-# No real error handling in the whole script, just using this try ... catch   for totally unexpected errors.
-# If any error occurs during check, a field might just remain blank
-
 try
 {
-# Create new text string for backup job section. Initialize it with header
 $myJobsText = "<<<veeam_jobs:sep(9)>>>`n"
-# Create new text string for backup tasks section.
 $myTaskText = ""
 
-# List all planned backup AND replication jobs which are ENABLED
 $myBackupJobs = Get-VBRJob | where {$_.IsScheduleEnabled -eq $true }
-# to check only for Backups or Replicas: "$_.IsBackup -eq $true" "$_.IsReplica -eq $true"
 
-# Iterate through all backup jobs
 foreach ($myJob in $myBackupJobs)
-{
+    {
 	$myJobName = ""
 	$myJobName = $myJob.Name -replace "\'","_" -replace " ","_"
 
@@ -62,7 +53,7 @@ foreach ($myJob in $myBackupJobs)
 
 	# For Non Backup Jobs (Replicas) we bail out
 	# because we are interested in the status of the original backup but
-	# for replicas the overall job state is all we need. 
+	# for replicas the overall job state is all we need.
         if ($myJob.IsBackup -eq $false) { continue }
 
 	# Each backup job has a number of tasks which were executed (VMs which were processed)
@@ -77,7 +68,6 @@ foreach ($myJob in $myBackupJobs)
 
 	$myJobLastSessionTasks = $sessions | Get-VBRTaskSession  -ErrorAction SilentlyContinue
 
-	# Iterate through all tasks in the last backup job
 	$myTask = ""
 	foreach ($myTask in $myJobLastSessionTasks)
 	{
@@ -134,25 +124,16 @@ foreach ($myJob in $myBackupJobs)
 
 		$myTaskText = "$myTaskText" + "DisplayName" + "`t" + "$myTaskDisplayName" + "`n"
 
-		# End of section <<<veeam.client>>>
 		$myTaskText = "$myTaskText" + "<<<<" + ">>>>" +"`n"
 
-	# END OF LOOP foreach ($myTask in $myJobLastSessionTasks)
 	}
 
-# END OF LOOP foreach ($myJob in $myBackupJobs)
-}
+    }
 
-# Final output
 write-host $myJobsText
 write-host $myTaskText
-# "$myJobsText" + "$myTaskText"
-
-
-# END OF TRY
 }
 
-# CATCH only totally impossible catastrophic errors
 catch
 {
 $errMsg = $_.Exception.Message

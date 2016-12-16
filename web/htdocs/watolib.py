@@ -6003,6 +6003,10 @@ class RulesetCollection(object):
         return self._rulesets[name]
 
 
+    def set(self, name, ruleset):
+        self._rulesets[name] = ruleset
+
+
     def get_rulesets(self):
         return self._rulesets
 
@@ -6104,6 +6108,28 @@ class UsedRulesets(FilteredRulesetCollection):
         self._rulesets = filtered_rulesets
 
 
+
+class SearchedRulesets(FilteredRulesetCollection):
+    def __init__(self, origin_rulesets, search_options):
+        super(SearchedRulesets, self).__init__()
+        self._origin_rulesets = origin_rulesets
+        self._search_options = search_options
+        self._load_filtered()
+
+
+    def _load_filtered(self):
+        """Iterates the rulesets from the original collection,
+        applies the search option and takes over the rulesets
+        that have at least one matching rule or match itself,
+        e.g. by their name, title or help."""
+
+        for ruleset in self._origin_rulesets.get_rulesets().values():
+            if ruleset.matches_search(self._search_options):
+                self._rulesets[ruleset.name()] = ruleset
+
+
+
+
 # TODO: Cleanup the rule indexing by position in the rules list. The "rule_nr" is used
 # as index accross several HTTP requests where other users may have done something with
 # the ruleset. In worst cases the user modifies a rule which should not be modified.
@@ -6114,6 +6140,9 @@ class Ruleset(object):
         self._rulespec = g_rulespecs.get(name)
         # Holds list of the rules. Using the folder paths as keys.
         self._rules    = {}
+
+        # Temporary needed during search result processing
+        self.search_matching_rules = []
 
 
     def is_empty(self):
@@ -6188,6 +6217,29 @@ class Ruleset(object):
         content += "] + %s\n\n" % varname
 
         return content
+
+
+    def matches_search(self, search_options):
+        if not match_search_expression(search_options, "ruleset_name", self.name()):
+            return False
+
+        if not match_search_expression(search_options, "ruleset_title", self.title()):
+            return False
+
+        if not match_search_expression(search_options, "ruleset_help", self.help()):
+            return False
+
+        # Store the matching rules for later result rendering
+        self.search_matching_rules = []
+        for folder, rule_index, rule in self.get_rules():
+            if rule.matches_search(search_options):
+                self.search_matching_rules.append(rule)
+
+        if not match_one_of_search_expression(search_options, "fulltext",
+                [self.name(), self.title(), self.help()]):
+            return False
+
+        return True
 
 
     def get_rule(self, folder, rule_index):
@@ -6318,6 +6370,20 @@ class Ruleset(object):
         else:
             return None, [] # No match
 
+
+
+def match_search_expression(search_options, attr_name, search_in):
+    if attr_name not in search_options:
+        return True # not searched for this. Matching!
+
+    return search_in and re.search(search_options[attr_name], search_in, re.I)
+
+
+def match_one_of_search_expression(search_options, attr_name, search_in_list):
+    for search_in in search_in_list:
+        if match_search_expression(search_options, attr_name, search_in):
+            return True
+    return False
 
 
 class Rule(object):
@@ -6573,6 +6639,47 @@ class Rule(object):
         return False
 
 
+    def matches_search(self, search_options):
+        if "disabled" in search_options and not rule.is_disabled():
+            return False
+
+        if not match_search_expression(search_options, "rule_description", self.description()):
+            return False
+
+        if not match_search_expression(search_options, "rule_comment", self.comment()):
+            return False
+
+        if self._ruleset.valuespec() and \
+           not match_search_expression(search_options, "rule_value", self._ruleset.valuespec().value_to_text(self._value)):
+            return False
+
+        if not match_one_of_search_expression(search_options, "rule_host_list", self.host_list()):
+            return False
+
+        if not match_one_of_search_expression(search_options, "rule_item_list", self.item_list() or []):
+            return False
+
+        to_search = [
+            self.comment(),
+            self.description(),
+        ] + self.host_list() \
+          + (self.item_list() or [])
+
+        if self._ruleset.valuespec():
+            to_search.append(self._ruleset.valuespec().value_to_text(self._value))
+
+        if not match_one_of_search_expression(search_options, "fulltext", to_search):
+            return False
+
+        searching_host_tags = search_options.get("rule_hosttags")
+        if searching_host_tags:
+            for host_tag in searching_host_tags:
+                if host_tag not in self._tag_specs:
+                    return False
+
+        return True
+
+
     def folder(self):
         return self._folder
 
@@ -6589,8 +6696,20 @@ class Rule(object):
         return self._host_list
 
 
+    def item_list(self):
+        return self._item_list
+
+
     def is_disabled(self):
         return self._rule_options.get("disabled", False)
+
+
+    def description(self):
+        return self._rule_options.get("description", "")
+
+
+    def comment(self):
+        return self._rule_options.get("comment", "")
 
 
 #.

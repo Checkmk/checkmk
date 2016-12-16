@@ -1,4 +1,4 @@
-title: veeam backup server check
+title: Veeam Backup Jobs
 agents: windows
 catalog: os/storage
 license: GPL

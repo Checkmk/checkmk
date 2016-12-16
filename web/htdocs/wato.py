@@ -12107,7 +12107,7 @@ def mode_rulesets(phase, group=None):
                 url_vars.append(("host", only_host))
             if only_ineffective:
                 url_vars.append(("highlight_ineffective", "1"))
-            view_url = folder_preserving_link(url_vars)
+            view_url = html.makeuri(url_vars)
 
             html.a(ruleset.title(), href=view_url, class_="nonzero" if ruleset.is_empty() else "zero")
             html.span("." * 100, class_="dots")
@@ -12347,6 +12347,8 @@ def mode_edit_ruleset(phase):
         match_keys = set([]) # in case if match = "dict"
         last_folder = None
 
+        search_options = ModeRuleSearch().search_options
+
         skip_this_folder = False
         all_hosts = Host.all()
         for folder, rulenr, rule in ruleset.get_rules():
@@ -12376,9 +12378,13 @@ def mode_edit_ruleset(phase):
             css = []
             if rule.is_disabled():
                 css.append("disabled")
+
             if html.var("highlight_ineffective"):
                 if rule.is_ineffective(all_hosts):
                     css.append("ineffective")
+
+            if search_options and rule.matches_search(search_options):
+                css.append("matches_search")
 
             table.row(css=" ".join(css) if css else None)
 

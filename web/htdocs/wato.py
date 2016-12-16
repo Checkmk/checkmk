@@ -6626,7 +6626,7 @@ def mode_groups(phase, what):
 
         if what == "contact":
             table.cell(_("Members"))
-            html.write_html(", ".join(
+            html.write_html(HTML(", ").join(
                [ html.render_a(alias, href=folder_preserving_link([("mode", "edit_user"), ("edit", userid)]))
                  for userid, alias in members.get(name, [])]))
 

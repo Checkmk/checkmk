@@ -1,0 +1,12 @@
+Title: if.include: interface groups can now be set on clusters
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481892375
+Class: feature
+
+In order to create an interface group on a cluster use the {{Network interface groups}}
+rule where you can choose {{Groups on clusters}}. Within this rule you have to define
+some settings for each node. After that use the rule {{clustered services}} to assign
+this interface group to the related cluster.

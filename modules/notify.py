@@ -781,8 +781,7 @@ def rbn_object_contacts(context):
     if commasepped:
         return commasepped.split(",")
     else:
-        # TODO: Hier die Fallback-Contacts eintragen!
-        return []
+        return [ contact["name"] for contact in rbn_fallback_contacts() ]
 
 
 def rbn_all_contacts(with_email=None):

@@ -50,12 +50,14 @@ register_configvar(group,
 register_configvar(group,
     "notification_fallback_email",
     EmailAddress(
-        title = _("Fallback email address for rule based notifications"),
-        help = _("If you work with rule based notifications then you should configure an email "
-                 "address here. In case of a hole in your notification rules a notification "
-                 "will be sent to this address. This makes sure that in any case <i>someone</i> gets "
-                 "notified. You can also configure single users to receive those fallback notifications, "
-                 "by enabling the option in the user profile."),
+        title = _("Fallback email address for notifications"),
+        help = _("In case none of your notification rules handles a certain event a notification "
+                 "will be sent to this address. This makes sure that in that case at least <i>someone</i> "
+                 "gets notified. Furthermore this email address will be used in notifications as a "
+                 "contact for any host or service "
+                 "that is not known to the monitoring. This can happen when you forward notifications "
+                 "from the Event Console.<br><br>Notification fallback can also configured in single "
+                 "user profiles."),
         empty_text = _("<i>(No fallback email address configured!)</i>"),
         make_clickable = False,
    ),

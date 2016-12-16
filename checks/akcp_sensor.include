@@ -72,7 +72,7 @@ def inventory_akcp_sensor_no_params(info):
 akcp_humidity_defaultlevels = (30, 35, 60, 65)
 
 def inventory_akcp_humidity(info):
-    for description, percent, status, online in info:
+    for description, _percent, _status, online in info:
         if online == "1":
             yield description, "akcp_humidity_defaultlevels"
 
@@ -224,9 +224,9 @@ def check_akcp_sensor_drycontact(item, _no_params, info):
     for line in info:
         if item == line[0]:
             if len(line) == 5:
-                description, status, crit_desc, normal_desc, online = line
+                status, crit_desc, normal_desc, online = line[1:]
             else:
-                description, status, online = line
+                status, online = line[1:]
                 normal_desc = "Drycontact OK"
                 crit_desc = "Drycontact on Error"
 

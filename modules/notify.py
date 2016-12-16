@@ -816,7 +816,7 @@ def rbn_groups_contacts(groups):
     except livestatus.MKLivestatusNotFoundError:
         return []
 
-    except Exception, e:
+    except Exception:
         if cmk.debug.enabled():
             raise
         return []

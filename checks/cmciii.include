@@ -60,7 +60,7 @@ def inventory_cmciii_lcp_fanunit(zone, direction, info):
 def check_cmciii_lcp_fanunit(item, params, info):
     if params == None:
         params = {}
-    unit_desc, unit_status, desc, status = info[0][0:4]
+    _unit_desc, unit_status, _desc, status = info[0][1:4]
     temps = extract_cmciii_lcp_temps(info[0][4:])
 
     status, message, perfdata = check_temperature(

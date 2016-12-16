@@ -171,7 +171,7 @@ def localize_sniff():
 
     sniff_files = []
     for path in paths:
-        for root, dirs, files in os.walk(path):
+        for root, _dirs, files in os.walk(path):
             for f in files:
                 if f.endswith(".py") or f.endswith(".mk"):
                     sniff_files.append(os.path.join(root, f))

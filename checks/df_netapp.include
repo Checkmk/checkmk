@@ -26,7 +26,7 @@
 
 def inventory_df_netapp(info):
     mplist = []
-    for volume, size_kb, used_kb in info:
+    for volume, size_kb, _used_kb in info:
         if saveint(size_kb) > 0: # Exclude filesystems with zero size (some snapshots)
             mplist.append(volume)
     return df_inventory(mplist)

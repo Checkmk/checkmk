@@ -142,7 +142,7 @@ def init_auth():
         if auth_mode == 'kerberos':
             from requests_kerberos import HTTPKerberosAuth
 
-            from subprocess import Popen, PIPE, check_call
+            from subprocess import Popen, PIPE
             kinit = Popen(["kinit", username], stdin=PIPE, stdout=PIPE, stderr=PIPE)
             output, errors = kinit.communicate("%s\n" % password)
             kinit.wait()

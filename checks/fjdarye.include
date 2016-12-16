@@ -68,7 +68,7 @@ fjdarye_disks_status = { 1: 'available', 2: 'broken', 3: 'notavailable',
 def fjdarye_disks_summary(info):
     # compute the number of disks in each state.
     states = {}
-    for index, state in info:
+    for _index, state in info:
         state = int(state)
         statename = fjdarye_disks_status[state]
         if state != 3:

@@ -73,7 +73,7 @@ def inventory_printer_io(info):
         index, name, descr, status = line[:4]
         if descr == '':
             continue
-        snmp_status, capacity_unit, capacity_max, level = line[3:]
+        snmp_status, _capacity_unit, capacity_max, _level = line[3:]
         if capacity_max == '0': # useless
             continue
 

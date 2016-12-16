@@ -212,8 +212,8 @@ def livestatus_fetch_contacts(host, service):
             # Service not found: try again with contacts of host!
             return livestatus_fetch_contacts(host, None)
 
-    except Exception, e:
-        if True or cmk.debug.enabled():
+    except Exception:
+        if cmk.debug.enabled():
             raise
         return None # We must allow notifications without Livestatus access
 

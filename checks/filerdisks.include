@@ -43,8 +43,6 @@ def check_filer_disks(disks, params):
     state['spare']      = []
 
     total_capacity      = 0
-    prefaild_data_disk_count     = 0
-    prefaild_parity_disk_count   = 0
 
     for disk in disks:
         total_capacity += disk.get("capacity", 0)

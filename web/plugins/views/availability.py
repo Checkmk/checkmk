@@ -219,7 +219,7 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
 
     if display_options.enabled(display_options.B):
         html.begin_context_buttons()
-        togglebutton("avoptions", html.has_user_errors(), "painteroptions", _("Configure details of the report"))
+        html.toggle_button("avoptions", html.has_user_errors(), "painteroptions", _("Configure details of the report"))
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
         if config.reporting_available() and config.user.may("general.reporting"):
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
@@ -508,7 +508,7 @@ def render_bi_availability(title, aggr_rows):
         html.body_start(title, stylesheets=["pages","views","status", "bi"], javascripts=['bi'])
         html.top_heading(title)
         html.begin_context_buttons()
-        togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
+        html.toggle_button("avoptions", False, "painteroptions", _("Configure details of the report"))
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
         if config.reporting_available() and config.user.may("general.reporting"):
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")

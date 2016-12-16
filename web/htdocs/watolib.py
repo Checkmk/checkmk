@@ -6235,9 +6235,15 @@ class Ruleset(object):
             if rule.matches_search(search_options):
                 self.search_matching_rules.append(rule)
 
+        if "fulltext" not in search_options:
+            return bool(self.search_matching_rules)
+
         if not match_one_of_search_expression(search_options, "fulltext",
-                [self.name(), self.title(), self.help()]):
-            return False
+                   [self.name(), self.title(), self.help()]):
+            if self.search_matching_rules:
+                return True
+            else:
+                return False
 
         return True
 
@@ -6376,7 +6382,7 @@ def match_search_expression(search_options, attr_name, search_in):
     if attr_name not in search_options:
         return True # not searched for this. Matching!
 
-    return search_in and re.search(search_options[attr_name], search_in, re.I)
+    return search_in and re.search(search_options[attr_name], search_in, re.I) != None
 
 
 def match_one_of_search_expression(search_options, attr_name, search_in_list):
@@ -6656,7 +6662,7 @@ class Rule(object):
         if not match_one_of_search_expression(search_options, "rule_host_list", self.host_list()):
             return False
 
-        if not match_one_of_search_expression(search_options, "rule_item_list", self.item_list() or []):
+        if self.item_list() and not match_one_of_search_expression(search_options, "rule_item_list", self.item_list()):
             return False
 
         to_search = [

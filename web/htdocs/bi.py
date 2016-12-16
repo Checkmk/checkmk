@@ -1340,7 +1340,9 @@ def get_aggr_groups(aggr_def):
         aggr_groups = aggr_def[1]
     return aggr_groups
 
-def get_aggr_ids(what = []): # AGGR_HOST / AGGR_MULTI
+def get_aggr_ids(what = None): # AGGR_HOST / AGGR_MULTI
+    if what is None:
+        what = []
     result = []
     enabled_aggregations = get_enabled_aggregations()
     for idx, (aggr_type, aggr_def) in enumerate(enabled_aggregations):

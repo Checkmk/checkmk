@@ -29,6 +29,7 @@
 #include <utility>
 #include "Column.h"
 #include "EventConsoleConnection.h"
+#include "Logger.h"
 #include "Query.h"
 
 using std::ostream;

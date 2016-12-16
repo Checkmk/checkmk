@@ -2582,7 +2582,7 @@ class TextAttribute(Attribute):
 
 
 def host_attribute_matches(crit, value):
-    if crit[0] == "~":
+    if crit and crit[0] == "~":
         # insensitive infix regex match
         return re.search(crit[1:], value, re.IGNORECASE) != None
     else:

@@ -122,6 +122,7 @@
     * 4133 FIX: Do not suppress site specific global issues during WATO activation
     * 4134 FIX: Unified ineffective rulesets view with other ruleset list views
     * 3999 FIX: Added core restart note to bulk host rename page
+    * 4150 FIX: Avoid exception in host search when searching for empty texts
 
     Notifications:
     * 4042 FIX: Fix missing From address in synchronous SMTP notifications...

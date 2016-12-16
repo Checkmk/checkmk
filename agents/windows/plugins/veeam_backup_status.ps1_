@@ -29,24 +29,18 @@ $myBackupJobs = Get-VBRJob | where {$_.IsScheduleEnabled -eq $true }
 
 foreach ($myJob in $myBackupJobs)
     {
-	$myJobName = ""
 	$myJobName = $myJob.Name -replace "\'","_" -replace " ","_"
 
-	$myJobType = ""
 	$myJobType = $myjob.JobType
 
-	$myJobLastState = ""
 	$myJobLastState = $myJob.GetLastState()
 
-	$myJobLastResult = ""
 	$myJobLastResult = $myJob.GetLastResult()
 
 	$myJobLastSession = $myJob.FindLastSession()
 
-	$myJobCreationTime = ""
 	$myJobCreationTime = $myJobLastSession.CreationTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
 
-	$myJobEndTime = ""
 	$myJobEndTime = $myJobLastSession.EndTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
 
 	$myJobsText = "$myJobsText" + "$myJobName" + "`t" + "$myJobType" + "`t" + "$myJobLastState" + "`t" + "$myJobLastResult" + "`t" + "$myJobCreationTime" + "`t" + "$myJobEndTime" + "`n"
@@ -68,24 +62,20 @@ foreach ($myJob in $myBackupJobs)
 
 	$myJobLastSessionTasks = $sessions | Get-VBRTaskSession  -ErrorAction SilentlyContinue
 
-	$myTask = ""
 	foreach ($myTask in $myJobLastSessionTasks)
 	{
-		$myTaskName = ""
 		$myTaskName = $myTask.Name
 
 		$myTaskText = "$myTaskText" + "<<<<" + "$myTaskName" + ">>>>" + "`n"
 
 		$myTaskText = "$myTaskText" + "<<<"+ "veeam_client:sep(9)" +">>>" +"`n"
 
-		$myTaskStatus = ""
 		$myTaskStatus = $myTask.Status
 
 		$myTaskText = "$myTaskText" + "Status" + "`t" + "$myTaskStatus" + "`n"
 
 		$myTaskText = "$myTaskText" + "JobName" + "`t" + "$myJobName" + "`n"
 
-		$myTaskTotalSize = ""
 		$myTaskTotalSize = $myTask.Progress.TotalSize
 
 		$myTaskText = "$myTaskText" + "TotalSizeByte" + "`t" + "$myTaskTotalSize" + "`n"
@@ -98,28 +88,23 @@ foreach ($myJob in $myBackupJobs)
 
 		$myTaskText = "$myTaskText" + "TransferedSizeByte" + "`t" + "$myTaskTransferedSize" + "`n"
 
-		$myTaskStartTime = ""
 		$myTaskStartTime = $myTask.Progress.StartTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
 
 		$myTaskText = "$myTaskText" + "StartTime" + "`t" + "$myTaskStartTime" + "`n"
 
-		$myTaskStopTime = ""
 		$myTaskStopTime = $myTask.Progress.StopTime |  get-date -Format "dd.MM.yyyy HH\:mm\:ss"  -ErrorAction SilentlyContinue
 
 		$myTaskText = "$myTaskText" + "StopTime" + "`t" + "$myTaskStopTime" + "`n"
 
 		# Result is a value of type System.TimeStamp. I'm sure there is a more elegant way of formatting the output:
-		$myTaskDuration = ""
 		$myTaskDuration = "" + "{0:D2}" -f $myTask.Progress.duration.Days + ":" + "{0:D2}" -f $myTask.Progress.duration.Hours + ":" + "{0:D2}" -f $myTask.Progress.duration.Minutes + ":" + "{0:D2}" -f $myTask.Progress.duration.Seconds
 
 		$myTaskText = "$myTaskText" + "DurationDDHHMMSS" + "`t" + "$myTaskDuration" + "`n"
 
-		$myTaskAvgSpeed = ""
 		$myTaskAvgSpeed = $myTask.Progress.AvgSpeed
 
 		$myTaskText = "$myTaskText" + "AvgSpeedBps" + "`t" + "$myTaskAvgSpeed" + "`n"
 
-		$myTaskDisplayName = ""
 		$myTaskDisplayName = $myTask.Progress.DisplayName
 
 		$myTaskText = "$myTaskText" + "DisplayName" + "`t" + "$myTaskDisplayName" + "`n"

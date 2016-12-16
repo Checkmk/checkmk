@@ -2986,7 +2986,7 @@ class StatusServer:
 
     def handle_client(self, client_socket, allow_commands, client_ip):
         for query in Queries(client_socket):
-            verbose("Query: %s" % "\\n".join(query))
+            verbose("Client livestatus query: %s" % "\\n".join(query))
             parts = query[0].split(None, 1)
             if len(parts) != 2:
                 raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
@@ -3861,201 +3861,6 @@ def do_event_action(action, event, user=""):
         log("Error during execution of action %s: %s" % (action["id"], format_exception()))
 
 
-# This function creates a Check_MK Notification for a locally running Check_MK.
-# We simulate a *service* notification.
-def do_notify(event, username=None, is_cancelling=False):
-    if core_has_notifications_disabled(event):
-        return
-
-    # Create notification context based on event
-
-    # If the host name is the IP address, then use that. Otherwise let
-    # the variable empty.
-    if event["host"] and event["host"][0].isdigit():
-        ipaddress = event["host"]
-    else:
-        ipaddress = ""
-
-    contact_groups            = event.get("contact_groups")
-    contact_groups_notify     = event.get("contact_groups_notify", False)
-    contact_groups_precedence = event.get("contact_groups_precedence", "host")
-
-    context = {
-        "WHAT":                        "SERVICE",
-        "DATE":                        str(int(event["last"])), # -> Event: Time
-        "MICROTIME":                   str(int(event["last"] * 1000000)),
-        "HOSTADDRESS":                 ipaddress,
-        "HOSTALIAS":                   event["host"], # -> = HOSTNAME
-        "HOSTDOWNTIME":                "0",
-        "HOSTNAME":                    event["host"],
-        "HOSTTAGS":                    "", # alas, we have not host tags...
-        "LASTSERVICESTATE":            is_cancelling and "CRITICAL" or "OK", # better assume OK, we have no transition information
-        "LASTSERVICESTATEID":          is_cancelling and "2" or "0", # -> immer OK
-        "LASTSERVICEOK":               "0", # 1.1.1970
-        "LASTSERVICESTATECHANGE":      str(int(event["last"])),
-        "LONGSERVICEOUTPUT":           "",
-        "NOTIFICATIONAUTHOR":          username or "",
-        "NOTIFICATIONAUTHORALIAS":     username or "",
-        "NOTIFICATIONAUTHORNAME":      username or "",
-        "NOTIFICATIONCOMMENT":         "",
-        "NOTIFICATIONTYPE":            is_cancelling and "RECOVERY" or "PROBLEM",
-        "SERVICEACKAUTHOR":            "",
-        "SERVICEACKCOMMENT":           "",
-        "SERVICEATTEMPT":              "1",
-        "SERVICECHECKCOMMAND":         event["rule_id"] == None and "ec-internal" or "ec-rule-" + event["rule_id"],
-        "SERVICEDESC":                 event["application"] or "Event Console",
-        "SERVICENOTIFICATIONNUMBER":   "1",
-        "SERVICEOUTPUT":               event["text"],
-        "SERVICEPERFDATA":             "",
-        "SERVICEPROBLEMID":            "ec-id-" + str(event["id"]),
-        "SERVICESTATE":                defines.service_state_name(event["state"]),
-        "SERVICESTATEID":              str(event["state"]),
-        "SERVICE_EC_CONTACT":          event.get("owner", ""),
-        "SERVICE_SL":                  str(event["sl"]),
-        "SVC_SL":                      str(event["sl"]),
-
-        # Some fields only found in EC notifications
-        "EC_ID":                       str(event["id"]),
-        "EC_RULE_ID":                  event["rule_id"] or "",
-        "EC_PRIORITY":                 str(event["priority"]),
-        "EC_FACILITY":                 str(event["facility"]),
-        "EC_PHASE":                    event["phase"],
-        "EC_COMMENT":                  event.get("comment", ""),
-        "EC_OWNER":                    event.get("owner", ""),
-        "EC_CONTACT":                  event.get("contact", ""),
-        "EC_PID":                      str(event.get("pid", 0)),
-        "EC_MATCH_GROUPS":             "\t".join(event["match_groups"]),
-        "EC_CONTACT_GROUPS":           contact_groups and " ".join(contact_groups) or "",
-        "EC_ORIG_HOST":                event.get("orig_host", event["host"]),
-
-    }
-
-    # Add rule based notification specific macros and add the
-    # contacts according to the rule configuration.
-    add_rbn_contact_information(context, event["host"], contact_groups, contact_groups_notify, contact_groups_precedence)
-
-    # Send notification context via stdin.
-    context_string = "".join([ "%s=%s\n" % (varname, value.replace("\n", "\\n")) for (varname, value) in context.items() ])
-
-    context_string = to_utf8(context_string)
-    p = subprocess.Popen(["cmk", "--notify", "stdin"], stdin=subprocess.PIPE,
-                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                         close_fds=True)
-    response = p.communicate(input=context_string)[0]
-    status = p.returncode
-    if status:
-        log("Error notifying via Check_MK: %s" % response.strip())
-    else:
-        log("Successfully forwarded notification for event %d to Check_MK" % event["id"])
-
-
-def add_rbn_contact_information(context, host, contact_groups, contact_groups_notify, contact_groups_precedence):
-    verbose("Adding contact information to notification context")
-    host_has_precedence = contact_groups_precedence == "host"
-
-    group_contacts = None
-    # Only add the group contacts from the rule, when configured to do so
-    if contact_groups_notify and contact_groups != None:
-        if contact_groups == []:
-            group_contacts = set([])
-
-        for group_name in contact_groups:
-            contacts = fetch_contacts_of_group_from_livestatus(group_name)
-            if contacts != None:
-                if group_contacts == None:
-                    group_contacts = set([])
-
-                group_contacts.update(contacts)
-
-        if group_contacts != None:
-            group_contacts = list(group_contacts)
-
-        verbose("  Group contacts: %r" % group_contacts)
-        verbose("  Groups: %r" % contact_groups)
-    else:
-        verbose("  Contact groups not configured in rule")
-
-    host_contacts, host_contact_groups = fetch_contacts_and_groups_of_host_from_livestatus(host)
-    verbose("  Host contacts: %r" % host_contacts)
-    verbose("  Host contact groups: %r" % host_contact_groups)
-
-    # Only add those fields when either the host contacts could be fetched or the contact
-    # group contacts. When not, then let the notification system decide whether or not to
-    # fetch contact information or fallback to the fallback contacts.
-    if host_contacts is None and group_contacts is None:
-        verbose("  -> Not adding any contact information")
-        return
-
-    if host_has_precedence:
-        if host_contacts != None:
-            contacts, groups = host_contacts, host_contact_groups
-        else:
-            contacts, groups = group_contacts, contact_groups
-    else:
-        if group_contacts != None:
-            contacts, groups = group_contacts, contact_groups
-        else:
-            contacts, groups = host_contacts, host_contact_groups
-
-    verbose("  Using these contacts: %r" % contacts)
-    verbose("  Using these groups: %r" % groups)
-
-    context.update({
-        "CONTACTS"                 : ",".join(contacts),
-        "CONTACTNAME"              : "check-mk-notify",
-        "SERVICECONTACTGROUPNAMES" : ",".join(groups),
-    })
-
-
-def core_has_notifications_disabled(event):
-    try:
-        notifications_enabled = livestatus.LocalConnection().query_value("GET status\nColumns: enable_notifications")
-        if not notifications_enabled:
-            log("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
-            return True
-    except Exception, e:
-        log("Cannot determine wether notifcations are enabled in core: %s. Assuming YES." % e)
-
-    return False
-
-
-def fetch_contacts_of_group_from_livestatus(group_name):
-    try:
-        contacts = livestatus.LocalConnection().query_value(
-            "GET contactgroups\nFilter: name = %s\nColumns: members" % group_name)
-        if "check-mk-notify" in contacts: # Remove artifical contact used for rule based notifications
-            contacts.remove("check-mk-notify")
-        return contacts
-
-    except Exception, e:
-        log("Cannot determine contacts of group %s: %s" % (group_name, e))
-        if opt_debug:
-            raise
-
-    return None # No group match or other failure
-
-
-# None, None -> Host could not be found
-# [], [] -> Host found but has no contacts/contactgroups
-def fetch_contacts_and_groups_of_host_from_livestatus(host_name):
-    # TODO: Matching von Hostnamen muss identisch sein zu dem im CMC
-    try:
-        contacts, groups = livestatus.LocalConnection().query_row(
-            "GET hosts\nFilter: host_name = %s\nColumns: contacts contact_groups" % host_name)
-        if "check-mk-notify" in contacts: # Remove artifical contact used for rule based notifications
-            contacts.remove("check-mk-notify")
-        return contacts, groups
-
-    except livestatus.MKLivestatusNotFoundError, e:
-        return None, None # Host not found
-
-    except Exception, e:
-        log("Cannot determine contacts and contact groups of host %s: %s" % (host_name, e))
-        if opt_debug:
-            raise
-        return None, None
-
-
 def substitute_event_tags(text, event):
     substs = [("match_group_%d" % (nr+1), g)
                for (nr, g)
@@ -4127,6 +3932,274 @@ def execute_script(body):
     log('  Exitcode: %d' % exitcode)
     if output:
         log('  Output: %s' % output)
+
+
+#.
+#   .--Notification--------------------------------------------------------.
+#   |         _   _       _   _  __ _           _   _                      |
+#   |        | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __           |
+#   |        |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \          |
+#   |        | |\  | (_) | |_| |  _| | (_| (_| | |_| | (_) | | | |         |
+#   |        |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  EC create Check_MK native notifications via cmk --notify.           |
+#   '----------------------------------------------------------------------'
+
+
+# Es fehlt:
+# - Wenn CONTACTS fehlen, dann müssen in notify.py die Fallbackadressen
+#   genommen werden.
+# - Was ist mit Nagios als Core. Sendet der CONTACTS? Nein!!
+#
+# - Das muss sich in den Hilfetexten wiederspiegeln
+
+# This function creates a Check_MK Notification for a locally running Check_MK.
+# We simulate a *service* notification.
+def do_notify(event, username=None, is_cancelling=False):
+    if core_has_notifications_disabled(event):
+        return
+
+    context = create_notification_context(event, username, is_cancelling)
+
+    if is_verbose():
+        verbose("Sending notification via Check_MK with the following context:")
+        for varname, value in sorted(context.items()):
+            verbose("  %-25s: %s" % (varname, value))
+
+
+    # Send notification context via stdin.
+    context_string = to_utf8("".join([
+        "%s=%s\n" % (varname, value.replace("\n", "\\n"))
+        for (varname, value)
+        in context.items() ]))
+
+    p = subprocess.Popen(["cmk", "--notify", "stdin"], stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         close_fds=True)
+    response = p.communicate(input=context_string)[0]
+    status = p.returncode
+    if status:
+        log("Error notifying via Check_MK: %s" % response.strip())
+    else:
+        log("Successfully forwarded notification for event %d to Check_MK" % event["id"])
+
+
+def create_notification_context(event, username, is_cancelling):
+    context = base_notification_context(event, username, is_cancelling)
+    add_infos_from_monitoring_host(context, event) # involves Livestatus query
+    add_contacts_from_rule(context, event)
+    return context
+
+
+def add_contacts_from_rule(context, event):
+    # Add contact information from the rule, but only if the
+    # host is unknown or if contact groups in rule have precedence
+
+    if event.get("contact_groups") != None and \
+        event.get("contact_groups_notify") and (
+            "CONTACTS" not in context or
+            event.get("contact_groups_precedence", "host") != "host"):
+      add_contact_information_to_context(context, event["contact_groups"])
+
+    # "CONTACTS" is allowed to be missing in the context, cmk --notify will
+    # add the fallback contacts then.
+
+
+def add_infos_from_monitoring_host(context, event):
+    # Try to find the host_name in the active monitoring
+    # Note: we *could* also use event["ipaddress"] here. But the matching
+    # algorithm in the livestatus event console integration does not do
+    # this either. We want to make the mapping in exactly the same
+    # way here.
+    host_info = find_host_in_monitoring(event["host"])
+
+    if host_info:
+        context.update({
+            "HOSTNAME"                 : host_info["name"],
+            "HOSTALIAS"                : host_info["alias"],
+            "HOSTADDRESS"              : host_info["address"],
+            "HOSTTAGS"                 : host_info["tags"], # ????
+            "HOSTDOWNTIME"             : host_info["in_downtime"] and "1" or "0",
+            "CONTACTS"                 : ",".join(host_info["contacts"]),
+            "SERVICECONTACTGROUPNAMES" : ",".join(host_info["contact_groups"]),
+        })
+    else:
+        # Host not known in active monitoring. Create articial host context
+        # as good as possible.
+        context.update({
+            "HOSTNAME"                 : event["host"],
+            "HOSTALIAS"                : event["host"],
+            "HOSTADDRESS"              : event["ipaddress"],
+            "HOSTTAGS"                 : "",
+            "HOSTDOWNTIME"             : "0", # Non existing host cannot be in scheduled downtime ;-)
+            "CONTACTS"                 : "?", # Will trigger using fallback contacts
+            "SERVICECONTACTGROUPNAMES" : "",
+        })
+
+
+def find_host_in_monitoring(event_host_name):
+    # Note: It is important that we use exactly the same
+    # algorithm here as in the EventConsoleTable in Livestatus. The actual matchin
+    # algorithm is in the source code of the Check_MK Micro Core (and for Nagios
+    # in the Livestatus sources).
+
+    filters = "Filter: host_name =~ %s\n" \
+              "Filter: host_alias =~ %s\n" \
+              "Filter: host_address = %s\n" \
+              "Or: 3\n" % \
+              (event_host_name, event_host_name, event_host_name)
+
+    columns = [
+        "name",
+        "alias",
+        "address",
+        "custom_variables",
+        "scheduled_downtime_depth",
+        "contacts",
+        "contact_groups",
+    ]
+
+    query = "GET hosts\nColumns: %s\n%s" % (
+       " ".join(columns), filters)
+
+    response = livestatus.LocalConnection().query(query)
+
+    if len(response) > 1:
+        log("Warning: event host name '%s' not unique. Matches: %s" % (
+            event_host_name, ", ".join([row[0] for row in response])))
+        log("Warning: I choose '%s'" % response[0][0])
+
+    if len(response) > 0:
+        row = response[0]
+        contacts = row[5]
+
+        # With Nagios as core there is always the artificial contact "check-mk-notify".
+        if "check-mk-notify" in contacts:
+            contacts.remove("check-mk-notify")
+
+        return {
+            "name"           : row[0],
+            "alias"          : row[1],
+            "address"        : row[2],
+            "tags"           : row[3].get("TAGS", ""),
+            "in_downtime"    : bool(row[4]),
+            "contacts"       : contacts,
+            "contact_groups" : row[6],
+        }
+
+
+def base_notification_context(event, username, is_cancelling):
+    return {
+        "WHAT":                        "SERVICE",
+        "CONTACTNAME":                 "check-mk-notify",
+        "DATE":                        str(int(event["last"])), # -> Event: Time
+        "MICROTIME":                   str(int(event["last"] * 1000000)),
+        "LASTSERVICESTATE":            is_cancelling and "CRITICAL" or "OK", # better assume OK, we have no transition information
+        "LASTSERVICESTATEID":          is_cancelling and "2" or "0", # -> immer OK
+        "LASTSERVICEOK":               "0", # 1.1.1970
+        "LASTSERVICESTATECHANGE":      str(int(event["last"])),
+        "LONGSERVICEOUTPUT":           "",
+        "NOTIFICATIONAUTHOR":          username or "",
+        "NOTIFICATIONAUTHORALIAS":     username or "",
+        "NOTIFICATIONAUTHORNAME":      username or "",
+        "NOTIFICATIONCOMMENT":         "",
+        "NOTIFICATIONTYPE":            is_cancelling and "RECOVERY" or "PROBLEM",
+        "SERVICEACKAUTHOR":            "",
+        "SERVICEACKCOMMENT":           "",
+        "SERVICEATTEMPT":              "1",
+        "SERVICECHECKCOMMAND":         event["rule_id"] == None and "ec-internal" or "ec-rule-" + event["rule_id"],
+        "SERVICEDESC":                 event["application"] or "Event Console",
+        "SERVICENOTIFICATIONNUMBER":   "1",
+        "SERVICEOUTPUT":               event["text"],
+        "SERVICEPERFDATA":             "",
+        "SERVICEPROBLEMID":            "ec-id-" + str(event["id"]),
+        "SERVICESTATE":                defines.service_state_name(event["state"]),
+        "SERVICESTATEID":              str(event["state"]),
+        "SERVICE_EC_CONTACT":          event.get("owner", ""),
+        "SERVICE_SL":                  str(event["sl"]),
+        "SVC_SL":                      str(event["sl"]),
+
+        # Some fields only found in EC notifications
+        "EC_ID":                       str(event["id"]),
+        "EC_RULE_ID":                  event["rule_id"] or "",
+        "EC_PRIORITY":                 str(event["priority"]),
+        "EC_FACILITY":                 str(event["facility"]),
+        "EC_PHASE":                    event["phase"],
+        "EC_COMMENT":                  event.get("comment", ""),
+        "EC_OWNER":                    event.get("owner", ""),
+        "EC_CONTACT":                  event.get("contact", ""),
+        "EC_PID":                      str(event.get("pid", 0)),
+        "EC_MATCH_GROUPS":             "\t".join(event["match_groups"]),
+        "EC_CONTACT_GROUPS":           " ".join(event.get("contact_groups", [])),
+        "EC_ORIG_HOST":                event.get("orig_host", event["host"]),
+
+    }
+
+
+def add_contact_information_to_context(context, contact_groups):
+    contact_names = rbn_groups_contacts(contact_groups)
+    context["CONTACTS"] = ",".join(contact_names)
+    context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
+    verbose("Setting %d contacts %s resulting from rule contact groups %s" % (
+             len(contact_names), ",".join(contact_names), ",".join(contact_groups)))
+
+
+
+# NOTE: This function is an exact copy from modules/notify.py. We need
+# to move all this Check_MK-specific livestatus query stuff to a helper
+# module in lib some day.
+def rbn_groups_contacts(groups):
+    if not groups:
+        return {}
+    query = "GET contactgroups\nColumns: members\n"
+    for group in groups:
+        query += "Filter: name = %s\n" % group
+    query += "Or: %d\n" % len(groups)
+
+    try:
+        contacts = set([])
+        for contact_list in livestatus.LocalConnection().query_column(query):
+            contacts.update(contact_list)
+        return contacts
+
+    except livestatus.MKLivestatusNotFoundError:
+        return []
+
+    except Exception, e:
+        if cmk.debug.enabled():
+            raise
+        return []
+
+
+
+def core_has_notifications_disabled(event):
+    try:
+        notifications_enabled = livestatus.LocalConnection().query_value("GET status\nColumns: enable_notifications")
+        if not notifications_enabled:
+            log("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
+            return True
+    except Exception, e:
+        log("Cannot determine wether notifcations are enabled in core: %s. Assuming YES." % e)
+
+    return False
+
+
+def fetch_contacts_of_group_from_livestatus(group_name):
+    try:
+        contacts = livestatus.LocalConnection().query_value(
+            "GET contactgroups\nFilter: name = %s\nColumns: members" % group_name)
+        if "check-mk-notify" in contacts: # Remove artifical contact used for rule based notifications
+            contacts.remove("check-mk-notify")
+        return contacts
+
+    except Exception, e:
+        log("Cannot determine contacts of group %s: %s" % (group_name, e))
+        if opt_debug:
+            raise
+
+    return None # No group match or other failure
+
 
 
 #.

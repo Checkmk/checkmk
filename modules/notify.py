@@ -778,10 +778,14 @@ def rbn_match_event_console(rule, context):
 
 def rbn_object_contacts(context):
     commasepped = context.get("CONTACTS")
-    if commasepped:
+    if commasepped == "?":
+        notify_log("Warning: Contacts of %s cannot be determined. Using fallback contacts" %
+                   find_host_service_in_context(context))
+        return [ contact["name"] for contact in rbn_fallback_contacts() ]
+    elif commasepped:
         return commasepped.split(",")
     else:
-        return [ contact["name"] for contact in rbn_fallback_contacts() ]
+        return []
 
 
 def rbn_all_contacts(with_email=None):

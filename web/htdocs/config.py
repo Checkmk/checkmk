@@ -63,15 +63,15 @@ permission_declaration_functions = []
 ALL_HOSTS = '(.*)'
 HOST_STATE = ('__HOST_STATE__',)
 HIDDEN = ('__HIDDEN__',)
-class FOREACH_HOST: pass
-class FOREACH_CHILD: pass
-class FOREACH_CHILD_WITH: pass
-class FOREACH_PARENT: pass
-class FOREACH_SERVICE: pass
-class REMAINING: pass
-class DISABLED: pass
-class HARD_STATES: pass
-class DT_AGGR_WARN: pass
+class FOREACH_HOST(object): pass
+class FOREACH_CHILD(object): pass
+class FOREACH_CHILD_WITH(object): pass
+class FOREACH_PARENT(object): pass
+class FOREACH_SERVICE(object): pass
+class REMAINING(object): pass
+class DISABLED(object): pass
+class HARD_STATES(object): pass
+class DT_AGGR_WARN(object): pass
 
 # Has to be declared here once since the functions can be assigned in
 # bi.py and also in multisite.mk. "Double" declarations are no problem

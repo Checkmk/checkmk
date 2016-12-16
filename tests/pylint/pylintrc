@@ -18,9 +18,9 @@ errors-only=yes
 disable=C0111,bad-whitespace,unsubscriptable-object,unsupported-membership-test,unpacking-non-sequence,assignment-from-none
 # W0612: Unused variable
 # TODO: enable this and prepare code for it!
-#enable=W0612
+#enable=unused-variable
 # https://pylint.readthedocs.io/en/latest/reference_guide/features.html
-enable=unreachable,dangerous-default-value,duplicate-key,using-constant-test,duplicate-except,binary-op-exception,overlapping-except
+enable=unreachable,dangerous-default-value,duplicate-key,using-constant-test,duplicate-except,binary-op-exception,overlapping-except,non-parent-init-called,super-init-not-called,no-init
 
 [TYPECHECK]
 # rrdtool

@@ -118,7 +118,7 @@ def inventory_supermicro_sensors(info):
         yield name, None
 
 def check_supermicro_sensors(item, _no_params, info):
-    class Type:
+    class Type(object):
         Fan, Voltage, Temperature, Status = ('0', '1', '2', '3')
 
     def worst_status(*args):

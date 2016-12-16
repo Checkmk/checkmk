@@ -461,7 +461,7 @@ def automation_restart(job = "restart"):
 
     # os.closerange(3, 256) --> not available in older Python versions
 
-    class null_file:
+    class null_file(object):
         def write(self, stuff):
            pass
         def flush(self):

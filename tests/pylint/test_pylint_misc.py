@@ -15,7 +15,7 @@ def test_pylint_misc():
         "bin",
         "notifications",
         "agents/plugins",
-        "doc/treasures/active_checks",
+        "active_checks",
         "../cmc/agents/plugins",
         "../cmc/bin",
         "../cmc/misc",

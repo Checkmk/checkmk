@@ -58,7 +58,7 @@ HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* 
                       web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
                       doc/helpers/* scripts/setup.sh scripts/autodetect.py \
                       $$(find pnp-templates -type f -name "*.php") \
-                      bin/mkeventd bin/*.c doc/treasures/active_checks/* \
+                      bin/mkeventd bin/*.c active_checks/* \
                       check_mk_templates.cfg \
                       agents/check_mk_*agent* agents/*.c \
                       $$(find agents/cfg_examples -type f) \
@@ -113,6 +113,7 @@ dist: mk-livestatus
 	tar czf $(DISTNAME)/share.tar.gz $(TAROPTS) check_mk_templates.cfg
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks $$(cd .werks ; ls [0-9]*)
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
+	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)
 	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
 	tar czf $(DISTNAME)/inventory.tar.gz $(TAROPTS) -C inventory $$(cd inventory ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)

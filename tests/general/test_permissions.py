@@ -13,7 +13,7 @@ def is_not_executable(path):
 
 permissions = [
     # globbing pattern                check function,   excludes
-    ('doc/treasures/active_checks/*', is_executable, ['Makefile', 'check_mkevents.cc']),
+    ('active_checks/*',               is_executable, ['Makefile', 'check_mkevents.cc']),
     ('agents/special/*',              is_executable, []),
     ('agents/check_mk_agent.*',       is_executable, ['check_mk_agent.spec']),
     ('agents/plugins/*',              is_executable, ['README']),

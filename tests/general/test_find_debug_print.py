@@ -12,7 +12,7 @@ check_paths = [
     "checks",
     "inventory",
     "notifications",
-    "doc/treasures/active_checks",
+    "active_checks",
     # CMC specific
     "agents/bakery",
     # TODO: Update all agent plugins to use sys.stdout.write instead of print

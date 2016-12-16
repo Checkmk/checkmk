@@ -130,10 +130,6 @@ dist: mk-livestatus
 	gzip $(DISTNAME)/doc.tar
 	tar czf $(DISTNAME)/modules.tar.gz $(TAROPTS) -C modules $$(cd modules ; ls *.py)
 
-	cp main.mk main.mk-$(VERSION)
-	cp multisite.mk multisite.mk-$(VERSION)
-	tar  czf $(DISTNAME)/conf.tar.gz $(TAROPTS) main.mk-$(VERSION) multisite.mk-$(VERSION)
-	rm -f main.mk-$(VERSION) multisite.mk-$(VERSION)
 	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents \
 		--exclude "msibuild" \
 		--exclude "build_version" \

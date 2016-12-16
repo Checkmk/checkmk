@@ -2148,7 +2148,7 @@ def mode_object_parameters(phase):
 
         if reason:
             title = '<a href="%s">%s</a>' % (reason_url, reason)
-        #TODO FIXME: title is not used?? 
+        #TODO FIXME: title is not used??
 
         html.open_table(class_="setting")
         html.open_tr()

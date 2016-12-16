@@ -1,0 +1,65 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def parse_veeam_tapejobs(info):
+    parsed = {}
+    columns = map(lambda s: s.lower(), info[0])
+
+    for line in info[1:]:
+        name = " ".join( line[:-(len(columns)-1)] )
+        job_id, last_result, last_state = line[-(len(columns)-1):]
+        parsed[name] = {
+            "job_id"        : job_id,
+            "last_result"   : last_result,
+            "last_state"    : last_state,
+        }
+
+    return parsed
+
+
+def inventory_veeam_tapejobs(parsed):
+    for job in parsed:
+        yield job, None
+
+
+def check_veeam_tapejobs(item, _no_params, parsed):
+    last_result = parsed[item]["last_result"]
+    last_state = parsed[item]["last_state"]
+
+    if last_result == "Success":
+        yield 0, "Last backup successful"
+    else:
+        yield 2, "Last backup result: " + last_result
+
+    yield 0, "Last state: " + last_state
+
+
+check_info["veeam_tapejobs"] = {
+    'parse_function'        :   parse_veeam_tapejobs,
+    'inventory_function'    :   inventory_veeam_tapejobs,
+    'check_function'        :   check_veeam_tapejobs,
+    'service_description'   :   'VEEAM Tape Job %s',
+}

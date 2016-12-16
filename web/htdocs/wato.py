@@ -10334,7 +10334,7 @@ def mode_edit_user(phase):
             new_user["fallback_contact"] = html.get_checkbox("fallback_contact")
             if new_user["fallback_contact"] and not new_user["email"]:
                 raise MKUserError("email",
-                     _("You have enabled the fallback notifications but missed to configure a "
+                     _("You have enabled the fallback notifications but missed to configure an "
                        "email address. You need to configure your mail address in order "
                        "to be able to receive fallback notifications."))
 
@@ -10607,11 +10607,14 @@ def mode_edit_user(phase):
         forms.section(_("Fallback notifications"), simple=True)
 
         html.checkbox("fallback_contact", False, label = _("Receive fallback notifications"))
-        html.help(_("When using rule based notifications and a notification is created which is "
-                    "not handled by any rule, you can enable this user to receive those "
-                    "notifications. As alternative you could configure a single email address "
-                    "as the global setting <a href=\"wato.py?mode=edit_configvar&varname=notification_fallback_email\">"
-                    "Fallback email address for rule based notifications</a>."))
+
+        html.help(_("In case none of your notification rules handles a certain event a notification "
+                 "will be sent to this contact. This makes sure that in that case at least <i>someone</i> "
+                 "gets notified. Furthermore this contact will be used for notifications to any host or service "
+                 "that is not known to the monitoring. This can happen when you forward notifications "
+                 "from the Event Console.<br><br>Notification fallback can also configured in the global "
+                 "setting <a href=\"wato.py?mode=edit_configvar&varname=notification_fallback_email\">"
+                    "Fallback email address for notifications</a>."))
 
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user)

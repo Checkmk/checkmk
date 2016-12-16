@@ -1,0 +1,12 @@
+Title: Use notification fallback also for hosts not known to the monitoring
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481886244
+Class: feature
+
+This can happen if you forward notifications from the Event Console. All
+contacts that are configured for notifications fallback and also the
+global fallback email address will be regarded as contacts in that
+case.

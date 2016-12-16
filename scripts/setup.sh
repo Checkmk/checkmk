@@ -478,6 +478,7 @@ modulesdir=$sharedir/modules
 web_dir=$sharedir/web
 localedir=$sharedir/locale
 agentsdir=$sharedir/agents
+activechecksdir=${check_icmp_pathr%/*}
 
 if [ -z "$YES" ]
 then
@@ -749,6 +750,8 @@ do
            mkdir -p $DESTDIR$localedir &&
 	   mkdir -p $DESTDIR$checksdir &&
 	   tar xzf $SRCDIR/checks.tar.gz -C $DESTDIR$checksdir &&
+	   mkdir -p $DESTDIR$activechecksdir &&
+	   tar xzf $SRCDIR/active_checks.tar.gz -C $DESTDIR$activechecksdir &&
 	   mkdir -p $DESTDIR$notificationsdir &&
 	   tar xzf $SRCDIR/notifications.tar.gz -C $DESTDIR$notificationsdir &&
 	   mkdir -p $DESTDIR$inventorydir &&

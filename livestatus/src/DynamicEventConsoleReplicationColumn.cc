@@ -82,9 +82,13 @@ unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
     const std::string &name, const std::string &arguments) {
     string result;
     if (_core->mkeventdEnabled()) {
-        ECTableConnection ec(_core, "REPLICATE " + arguments);
-        ec.run();
-        result = ec.getResult();
+        try {
+            ECTableConnection ec(_core, "REPLICATE " + arguments);
+            ec.run();
+            result = ec.getResult();
+        } catch (const generic_error &ge) {
+            // Nothing to do here, returning an empty result is OK.
+        }
     }
     return make_unique<ReplicationColumn>(name, "replication value", -1, -1,
                                           result);

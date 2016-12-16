@@ -42,9 +42,13 @@ private:
     virtual void sendRequest(std::ostream &os) = 0;
     virtual bool receiveReply() = 0;
 
-    std::string _path;
-    int _socket;
+    void close();
+    void throwGenericError(const std::string &what_arg);
     bool writeRequest();
+
+    const std::string _path;
+    const std::string _name;
+    int _socket;
     ContextLogger _logger;
 };
 

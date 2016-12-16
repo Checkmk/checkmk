@@ -36,40 +36,31 @@ using std::ostringstream;
 using std::string;
 
 EventConsoleConnection::EventConsoleConnection(Logger *logger, string path)
-    : _path(move(path)), _socket(-1), _logger(logger, [this](ostream &os) {
-        os << "[mkeventd at " << _path << "] ";
-    }) {}
+    : _path(move(path))
+    , _name("[mkeventd at " + _path + "]")
+    , _socket(-1)
+    , _logger(logger, [this](ostream &os) { os << _name; }) {}
 
 void EventConsoleConnection::run() {
     _socket = socket(PF_UNIX, SOCK_STREAM, 0);
     if (_socket == -1) {
-        generic_error ge("cannot create socket");
-        Alert(&_logger) << ge;
-        return;
+        throwGenericError("cannot create socket");
     }
-
     struct sockaddr_un sa;
     sa.sun_family = AF_UNIX;
     strncpy(sa.sun_path, _path.c_str(), sizeof(sa.sun_path));
     if (connect(_socket, reinterpret_cast<const struct sockaddr *>(&sa),
                 sizeof(sockaddr_un)) == -1) {
-        generic_error ge("cannot connect");
-        Alert(&_logger) << ge;
-        close(_socket);
-        return;
+        throwGenericError("cannot connect");
     }
     Debug(&_logger) << "successfully connected";
-
     if (!writeRequest()) {
-        generic_error ge("cannot write");
-        Alert(&_logger) << ge;
-    } else if (!receiveReply()) {
-        generic_error ge("cannot read");
-        Alert(&_logger) << ge;
+        throwGenericError("cannot write");
     }
-
-    Debug(&_logger) << "closing connection";
-    close(_socket);
+    if (!receiveReply()) {
+        throwGenericError("cannot read");
+    }
+    close();
 }
 
 // TODO(sp) Horribly inefficient, must be replaced.
@@ -93,6 +84,20 @@ bool EventConsoleConnection::getline(string &line) {
         }
     } while (true);
     return false;  // unreachable
+}
+
+void EventConsoleConnection::close() {
+    if (_socket != -1) {
+        Debug(&_logger) << "closing connection";
+        ::close(_socket);
+    }
+}
+
+void EventConsoleConnection::throwGenericError(const string &what_arg) {
+    generic_error ge(_name + " " + what_arg);
+    Alert(&_logger) << ge;
+    close();
+    throw move(ge);
 }
 
 bool EventConsoleConnection::writeRequest() {

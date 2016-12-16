@@ -100,8 +100,11 @@ TableEventConsole::TableEventConsole(MonitoringCore *core)
 
 void TableEventConsole::answerQuery(Query *query) {
     if (_core->mkeventdEnabled()) {
-        string internal_name =
-            name().substr(12);  // skip "eventconsole" prefix :-P
-        ECTableConnection(_core, internal_name, query).run();
+        try {
+            // skip "eventconsole" prefix :-P
+            ECTableConnection(_core, name().substr(12), query).run();
+        } catch (const generic_error &ge) {
+            query->invalidRequest(ge.what());
+        }
     }
 }

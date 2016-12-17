@@ -593,7 +593,7 @@ def all_active_hosts():
     return cache
 
 
-# This function should only be used during duplicate host check! It has to work like 
+# This function should only be used during duplicate host check! It has to work like
 # all_active_hosts() but with the difference that duplicates are not removed.
 def all_active_hosts_with_duplicates():
     # Only available with CEE

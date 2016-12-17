@@ -1,3 +1,5 @@
+1.4.0i2p6:
+
 1.4.0i2p5:
     Core & Setup:
     * 4078 FIX: Fixed handling of hosts with non resolvable IP addresses during runtime...

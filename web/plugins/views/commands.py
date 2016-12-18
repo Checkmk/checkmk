@@ -404,6 +404,7 @@ def command_acknowledgement(cmdtag, spec, row):
             raise MKUserError("_ack_comment", _("You need to supply a comment."))
         if ";" in comment:
             raise MKUserError("_ack_comment", _("The comment must not contain semicolons."))
+
         sticky = html.var("_ack_sticky") and 2 or 0
         sendnot = html.var("_ack_notify") and 1 or 0
         perscomm = html.var("_ack_persistent") and 1 or 0
@@ -449,9 +450,15 @@ multisite_commands.append({
         html.button("_acknowledge", _("Acknowledge")) == \
         html.button("_remove_ack", _("Remove Acknowledgement")) == \
         html.hr() == \
-        html.checkbox("_ack_sticky", True, label=_("sticky")) == \
-        html.checkbox("_ack_notify", True, label=_("send notification")) == \
-        html.checkbox("_ack_persistent", False, label=_('persistent comment')) == \
+        html.checkbox("_ack_sticky",
+                      config.view_action_defaults["ack_sticky"],
+                      label=_("sticky")) == \
+        html.checkbox("_ack_notify",
+                      config.view_action_defaults["ack_notify"],
+                      label=_("send notification")) == \
+        html.checkbox("_ack_persistent",
+                      config.view_action_defaults["ack_persistent"],
+                      label=_('persistent comment')) == \
         html.hr() == \
         Age(display=["days", "hours", "minutes"], label=_("Expire acknowledgement after")).render_input("_ack_expire", 0) == \
         html.help(_("Note: Expiration of acknowledgements only works when using the Check_MK Micro Core.")) == \

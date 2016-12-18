@@ -116,6 +116,12 @@ view_option_columns   = [ 1, 2, 3, 4, 5, 6, 8, 10, 12 ]
 # MISC
 doculink_urlformat = "http://mathias-kettner.de/checkmk_%s.html";
 
+view_action_defaults = {
+    "ack_sticky"     : True,
+    "ack_notify"     : True,
+    "ack_persistent" : False,
+}
+
 
 #   ____          _                    _     _       _
 #  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____

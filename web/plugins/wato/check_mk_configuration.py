@@ -718,6 +718,27 @@ register_configvar(group,
     domain = "multisite"
 )
 
+register_configvar(group,
+    "view_action_defaults",
+    Dictionary(
+        title    = _("View action defaults"),
+        elements = [
+            ("ack_sticky", Checkbox(
+                title = _("Sticky"), label = _("Enable"), default_value = True,
+            )),
+            ("ack_notify", Checkbox(
+                title = _("Send notification"), label = _("Enable"), default_value = True,
+            )),
+            ("ack_persistent", Checkbox(
+                title = _("Persistent comment"), label = _("Enable"), default_value = False,
+            )),
+        ],
+        optional_keys = [],
+    ),
+    domain = "multisite"
+)
+
+
 #.
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |

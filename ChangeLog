@@ -11,6 +11,10 @@
     * 4142 New extended search dialog for rulesets and rules...
     * 4003 FIX: esx_vsphere_objects: fixed check parameters display bug during WATO service discovery
 
+    Event Console:
+    * 4154 Do not send notifications if host found and currently in downtime...
+            NOTE: Please refer to the migration notes!
+
 
 1.4.0i3:
     Core & Setup:

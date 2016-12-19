@@ -246,7 +246,7 @@ def sidebar_foot():
     html.close_div()
 
     html.open_div(class_=["copyright"])
-    html.write(_("&copy; " + html.render_a("Mathias Kettner", target="_blank", href="http://mathias-kettner.de")))
+    html.write("&copy; " + html.render_a("Mathias Kettner", target="_blank", href="http://mathias-kettner.de"))
     html.close_div()
     html.close_div()
 

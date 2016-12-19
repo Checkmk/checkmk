@@ -5959,7 +5959,7 @@ class Rulespec(object):
         self.help            = help or valuespec.help()
         self.factory_default = factory_default
         self.is_optional     = is_optional # rule may be None (like only_hosts)
-        self.deprecated      = is_deprecated
+        self.is_deprecated   = is_deprecated
 
 
 
@@ -6206,7 +6206,7 @@ class SearchedRulesets(FilteredRulesetCollection):
 
         for ruleset in self._origin_rulesets.get_rulesets().values():
             if ruleset.matches_search(self._search_options):
-                self._rulesets[ruleset.name()] = ruleset
+                self._rulesets[ruleset.name] = ruleset
 
 
 
@@ -6217,7 +6217,7 @@ class SearchedRulesets(FilteredRulesetCollection):
 class Ruleset(object):
     def __init__(self, name):
         super(Ruleset, self).__init__()
-        self._name     = name
+        self.name      = name
         self.rulespec  = g_rulespecs.get(name)
         # Holds list of the rules. Using the folder paths as keys.
         self._rules    = {}
@@ -6242,7 +6242,7 @@ class Ruleset(object):
         rules = []
         for _folder_path, folder_rules in self._rules.items():
             for rule_index, rule in enumerate(folder_rules):
-                rules.append((rule.folder(), rule_index, rule))
+                rules.append((rule.folder, rule_index, rule))
         return sorted(rules, key=lambda x: (x[0].path().split("/"), rule_index), reverse=True)
 
 
@@ -6257,11 +6257,11 @@ class Ruleset(object):
 
 
     def clone_rule(self, rule):
-        index = self._rules[rule.folder().path()].index(rule)
-        self._rules[rule.folder().path()].insert(index, rule.clone())
+        index = self._rules[rule.folder.path()].index(rule)
+        self._rules[rule.folder.path()].insert(index, rule.clone())
         add_change("edit-ruleset",
               _("Inserted new rule in ruleset '%s'") % self.title(),
-              sites=rule.folder().all_site_ids())
+              sites=rule.folder.all_site_ids())
         self._on_change()
 
 
@@ -6281,13 +6281,13 @@ class Ruleset(object):
     def to_config(self, folder):
         content = ""
 
-        if ":" in self._name:
-            dictname, subkey = self._name.split(':')
+        if ":" in self.name:
+            dictname, subkey = self.name.split(':')
             varname = "%s[%r]" % (dictname, subkey)
 
             content += "\n%s.setdefault(%r, [])\n" % (dictname, subkey)
         else:
-            varname = self._name
+            varname = self.name
 
             if self.is_optional():
                 content += "\nif %s == None:\n    %s = []\n" % (varname, varname)
@@ -6311,7 +6311,7 @@ class Ruleset(object):
            and self.rulespec.group_name not in g_rulespecs.get_matching_groups(search_options["ruleset_group"]):
             return False
 
-        if not match_search_expression(search_options, "ruleset_name", self.name()):
+        if not match_search_expression(search_options, "ruleset_name", self.name):
             return False
 
         if not match_search_expression(search_options, "ruleset_title", self.title()):
@@ -6336,7 +6336,7 @@ class Ruleset(object):
             return bool(self.search_matching_rules)
 
         if not match_one_of_search_expression(search_options, "fulltext",
-                   [self.name(), self.title(), self.help()]):
+                   [self.name, self.title(), self.help()]):
             if self.search_matching_rules:
                 return True
             else:
@@ -6350,43 +6350,39 @@ class Ruleset(object):
 
 
     def delete_rule(self, rule):
-        self._rules[rule.folder().path()].remove(rule)
+        self._rules[rule.folder.path()].remove(rule)
         add_change("edit-ruleset", _("Deleted rule in ruleset '%s'") % self.title(),
-                   sites=rule.folder().all_site_ids())
+                   sites=rule.folder.all_site_ids())
         self._on_change()
 
 
     def move_rule_up(self, rule):
-        rules = self._rules[rule.folder().path()]
+        rules = self._rules[rule.folder.path()]
         index = rules.index(rule)
         del rules[index]
         rules[index-1:index-1] = [ rule ]
         add_change("edit-ruleset",
                  _("Changed order of rules in ruleset %s") % self.title(),
-                 sites=rule.folder().all_site_ids())
+                 sites=rule.folder.all_site_ids())
 
 
     def move_rule_down(self, rule):
-        rules = self._rules[rule.folder().path()]
+        rules = self._rules[rule.folder.path()]
         index = rules.index(rule)
         del rules[index]
         rules[index+1:index+1] = [ rule ]
 
 
     def move_rule_to_top(self, rule):
-        rules = self._rules[rule.folder().path()]
+        rules = self._rules[rule.folder.path()]
         rules.remove(rule)
         rules.insert(0, rule)
 
 
     def move_rule_to_bottom(self, rule):
-        rules = self._rules[rule.folder().path()]
+        rules = self._rules[rule.folder.path()]
         rules.remove(rule)
         rules.append(rule)
-
-
-    def name(self):
-        return self._name
 
 
     # TODO: Remove these getters
@@ -6431,7 +6427,7 @@ class Ruleset(object):
 
 
     def _on_change(self):
-        if has_agent_bakery() and is_affecting_baked_agents(self._name): # pylint: disable=undefined-variable
+        if has_agent_bakery() and is_affecting_baked_agents(self.name): # pylint: disable=undefined-variable
             need_to_bake_agents() # pylint: disable=undefined-variable
 
 
@@ -6449,21 +6445,21 @@ class Ruleset(object):
                 continue
 
             if self.match_type() == "all":
-                resultlist.append(rule.value())
+                resultlist.append(rule.value)
                 effectiverules.append((folder, rule_index, rule))
 
             elif self.match_type() == "list":
-                resultlist += rule.value()
+                resultlist += rule.value
                 effectiverules.append((folder, rule_index, rule))
 
             elif self.match_type() == "dict":
-                new_result = rule.value().copy() # pylint: disable=no-member
+                new_result = rule.value.copy() # pylint: disable=no-member
                 new_result.update(resultdict)
                 resultdict = new_result
                 effectiverules.append((folder, rule_index, rule))
 
             else:
-                return rule.value(), [(folder, rule_index, rule)]
+                return rule.value, [(folder, rule_index, rule)]
 
         if self.match_type() in ("list", "all"):
             return resultlist, effectiverules
@@ -6476,59 +6472,43 @@ class Ruleset(object):
 
 
 
-def match_search_expression(search_options, attr_name, search_in):
-    if attr_name not in search_options:
-        return True # not searched for this. Matching!
-
-    return search_in and re.search(search_options[attr_name], search_in, re.I) != None
-
-
-def match_one_of_search_expression(search_options, attr_name, search_in_list):
-    for search_in in search_in_list:
-        if match_search_expression(search_options, attr_name, search_in):
-            return True
-    return False
-
-
 class Rule(object):
     @classmethod
     def create(cls, folder, ruleset, host_list, item_list):
         rule = Rule(folder, ruleset)
 
-        # TODO: refactor access
-        if rule._ruleset.valuespec():
-            rule._value = rule._ruleset.valuespec().default_value()
+        if rule.ruleset.valuespec():
+            rule.value = rule.ruleset.valuespec().default_value()
 
-        rule._host_list = host_list
+        rule.host_list = host_list
 
-        if rule._ruleset.item_type():
-            # TODO: refactor access
-            rule._item_list = item_list
+        if rule.ruleset.item_type():
+            rule.item_list = item_list
 
         return rule
 
 
     def __init__(self, folder, ruleset):
         super(Rule, self).__init__()
-        self._ruleset = ruleset
-        self._folder  = folder
+        self.ruleset = ruleset
+        self.folder  = folder
 
         # Content of the rule itself
         self._initialize()
 
 
     def clone(self):
-        cloned = Rule(self._folder, self._ruleset)
+        cloned = Rule(self.folder, self.ruleset)
         cloned.from_config(self._format_rule())
         return cloned
 
 
     def _initialize(self):
-        self._value        = None
-        self._tag_specs    = []
-        self._host_list    = []
-        self._item_list    = None
-        self._rule_options = {}
+        self.value        = None
+        self.tag_specs    = []
+        self.host_list    = []
+        self.item_list    = None
+        self.rule_options = {}
 
 
     def from_config(self, rule_config):
@@ -6541,76 +6521,76 @@ class Rule(object):
 
     def _parse_rule(self, rule_config):
         if type(rule_config[-1]) == dict:
-            self._rule_options = rule_config[-1]
+            self.rule_options = rule_config[-1]
             rule_config = rule_config[:-1]
 
         # Extract value from front, if rule has a value
-        if self._ruleset.valuespec():
-            self._value = rule_config[0]
+        if self.ruleset.valuespec():
+            self.value  = rule_config[0]
             rule_config = rule_config[1:]
         else:
             if rule_config[0] == NEGATE:
-                self._value = False
+                self.value = False
                 rule_config = rule_config[1:]
             else:
-                self._value = True
+                self.value = True
 
         # Extract liste of items from back, if rule has items
-        if self._ruleset.item_type():
-            self._item_list = rule_config[-1]
+        if self.ruleset.item_type():
+            self.item_list = rule_config[-1]
             rule_config = rule_config[:-1]
 
         # Rest is host list or tag list + host list
         if len(rule_config) == 1:
             tag_specs = []
-            self._host_list = rule_config[0]
+            self.host_list = rule_config[0]
         else:
             tag_specs = rule_config[0]
-            self._host_list = rule_config[1]
+            self.host_list = rule_config[1]
 
         # Remove folder tag from tag list
-        self._tag_specs = filter(lambda t: not t.startswith("/"), tag_specs)
+        self.tag_specs = filter(lambda t: not t.startswith("/"), tag_specs)
 
 
     def to_config(self):
         content = "  ( "
 
-        if self._ruleset.valuespec():
-            content += repr(self._value) + ", "
-        elif not self._value:
+        if self.ruleset.valuespec():
+            content += repr(self.value) + ", "
+        elif not self.value:
             content += "NEGATE, "
 
         content += "["
-        for tag in self._tag_specs:
+        for tag in self.tag_specs:
             content += repr(tag)
             content += ", "
 
-        if not self._folder.is_root():
+        if not self.folder.is_root():
             content += "'/' + FOLDER_PATH + '/+'"
 
         content += "], "
 
-        if self._host_list and self._host_list[-1] == ALL_HOSTS[0]:
-            if len(self._host_list) > 1:
-                content += repr(self._host_list[:-1])
+        if self.host_list and self.host_list[-1] == ALL_HOSTS[0]:
+            if len(self.host_list) > 1:
+                content += repr(self.host_list[:-1])
                 content += " + ALL_HOSTS"
             else:
                 content += "ALL_HOSTS"
         else:
-            content += repr(self._host_list)
+            content += repr(self.host_list)
 
-        if self._ruleset.item_type():
+        if self.ruleset.item_type():
             content += ", "
-            if self._item_list == ALL_SERVICES:
+            if self.item_list == ALL_SERVICES:
                 content += "ALL_SERVICES"
             else:
-                if self._item_list[-1] == ALL_SERVICES[0]:
-                    content += repr(self._item_list[:-1])
+                if self.item_list[-1] == ALL_SERVICES[0]:
+                    content += repr(self.item_list[:-1])
                     content += " + ALL_SERVICES"
                 else:
-                    content += repr(self._item_list)
+                    content += repr(self.item_list)
 
-        if self._rule_options:
+        if self.rule_options:
             content += ", %r" % self._rule_options_to_config()
 
         content += " ),\n"
@@ -6619,19 +6599,19 @@ class Rule(object):
 
 
     def _format_rule(self):
-        if self._ruleset.valuespec():
-            rule = [ self._value ]
-        elif not self._value:
+        if self.ruleset.valuespec():
+            rule = [ self.value ]
+        elif not self.value:
             rule = [ NEGATE ]
         else:
             rule = []
 
-        if self._tag_specs != []:
-            rule.append(self._tag_specs)
+        if self.tag_specs != []:
+            rule.append(self.tag_specs)
 
-        rule.append(self._host_list)
-        if self._item_list != None:
-            rule.append(self._item_list)
+        rule.append(self.host_list)
+        if self.item_list != None:
+            rule.append(self.item_list)
 
         ro = self._rule_options_to_config()
 
@@ -6646,17 +6626,17 @@ class Rule(object):
     # command line users will feel at home...
     def _rule_options_to_config(self):
         ro = {}
-        if self._rule_options.get("disabled"):
+        if self.rule_options.get("disabled"):
             ro["disabled"] = True
-        if self._rule_options.get("description"):
-            ro["description"] = self._rule_options["description"]
-        if self._rule_options.get("comment"):
-            ro["comment"] = self._rule_options["comment"]
-        if self._rule_options.get("docu_url"):
-            ro["docu_url"] = self._rule_options["docu_url"]
+        if self.rule_options.get("description"):
+            ro["description"] = self.rule_options["description"]
+        if self.rule_options.get("comment"):
+            ro["comment"] = self.rule_options["comment"]
+        if self.rule_options.get("docu_url"):
+            ro["docu_url"] = self.rule_options["docu_url"]
 
         # Preserve other keys that we do not know of
-        for k,v in self._rule_options.items():
+        for k,v in self.rule_options.items():
             if k not in [ "disabled", "description", "comment", "docu_url"]:
                 ro[k] = v
 
@@ -6672,64 +6652,26 @@ class Rule(object):
         return True
 
 
-    # TODO: Refactor
     def matches_host_and_item(self, host_folder, hostname, item):
         reasons = []
         host = host_folder.host(hostname)
-        hostname_match = False
-        negate = False
-        regex_match = False
 
-        for check_host in self._host_list:
-            if check_host == "@all" or hostname == check_host:
-                hostname_match = True
-                break
-            else:
-                if check_host[0] == '!':
-                    check_host = check_host[1:]
-                    negate = True
-                if check_host[0] == '~':
-                    check_host = check_host[1:]
-                    regex_match = True
-
-                if not regex_match and hostname == check_host:
-                    if negate:
-                        break
-                    hostname_match = True
-                    break
-                elif regex_match and regex(check_host).match(hostname):
-                    if negate:
-                        break
-                    hostname_match = True
-                    break
-
-                # No Match until now, but negate, so thats a match
-                if negate:
-                    hostname_match = True
-                    break
-
-        if not hostname_match:
+        if not self._matches_hostname(hostname):
             reasons.append(_("The host name does not match."))
 
-        for tag in self._tag_specs:
+        for tag in self.tag_specs:
             if tag[0] != '/' and tag[0] != '!' and tag not in host.tags():
                 reasons.append(_("The host is missing the tag %s") % tag)
             elif tag[0] == '!' and tag[1:] in host.tags():
                 reasons.append(_("The host has the tag %s") % tag)
 
-        if not self._folder.is_transitive_parent_of(host_folder):
+        if not self.folder.is_transitive_parent_of(host_folder):
             reasons.append(_("The rule does not apply to the folder of the host."))
 
-        # Check items
-        if item != NO_ITEM and self._ruleset.item_type():
-            item_matches = False
-            for i in self._item_list:
-                if re.match(i, str(item)):
-                    item_matches = True
-                    break
-            if not item_matches:
-                reasons.append(_("The %s %s does not match this rule.") %
-                       (self._ruleset.item_name(), item))
+        if item != NO_ITEM and self.ruleset.item_type():
+            if not self.matches_item(item):
+                reasons.append(_("The %s \"%s\" does not match this rule.") %
+                       (self.ruleset.item_name(), item))
 
         if not reasons:
             return True
@@ -6737,8 +6679,45 @@ class Rule(object):
             return " ".join(reasons)
 
 
+    def _matches_hostname(self, hostname):
+        negate         = False
+        regex_match    = False
+        hostname_match = False
+
+        for check_host in self.host_list:
+            if check_host == "@all" or hostname == check_host:
+                hostname_match = True
+                break
+
+            if check_host[0] == '!':
+                check_host = check_host[1:]
+                negate = True
+            if check_host[0] == '~':
+                check_host = check_host[1:]
+                regex_match = True
+
+            if not regex_match and hostname == check_host:
+                if negate:
+                    break
+                hostname_match = True
+                break
+
+            elif regex_match and regex(check_host).match(hostname):
+                if negate:
+                    break
+                hostname_match = True
+                break
+
+            # No Match until now, but negate, so thats a match
+            if negate:
+                hostname_match = True
+                break
+
+        return hostname_match
+
+
     def matches_item(self, item):
-        for item_spec in self._item_list:
+        for item_spec in self.item_list:
             if re.match(item_spec, "%s" % item):
                 return True
         return False
@@ -6757,24 +6736,24 @@ class Rule(object):
         if not match_search_expression(search_options, "rule_comment", self.comment()):
             return False
 
-        if self._ruleset.valuespec() and \
-           not match_search_expression(search_options, "rule_value", self._ruleset.valuespec().value_to_text(self._value)):
+        if self.ruleset.valuespec() and \
+           not match_search_expression(search_options, "rule_value", self.ruleset.valuespec().value_to_text(self.value)):
             return False
 
-        if not match_one_of_search_expression(search_options, "rule_host_list", self.host_list()):
+        if not match_one_of_search_expression(search_options, "rule_host_list", self.host_list):
             return False
 
-        if self.item_list() and not match_one_of_search_expression(search_options, "rule_item_list", self.item_list()):
+        if self.item_list and not match_one_of_search_expression(search_options, "rule_item_list", self.item_list):
             return False
 
         to_search = [
             self.comment(),
             self.description(),
-        ] + self.host_list() \
-          + (self.item_list() or [])
+        ] + self.host_list \
+          + (self.item_list or [])
 
-        if self._ruleset.valuespec():
-            to_search.append(self._ruleset.valuespec().value_to_text(self._value))
+        if self.ruleset.valuespec():
+            to_search.append(self.ruleset.valuespec().value_to_text(self.value))
 
         if not match_one_of_search_expression(search_options, "fulltext", to_search):
             return False
@@ -6782,43 +6761,41 @@ class Rule(object):
         searching_host_tags = search_options.get("rule_hosttags")
         if searching_host_tags:
             for host_tag in searching_host_tags:
-                if host_tag not in self._tag_specs:
+                if host_tag not in self.tag_specs:
                     return False
 
         return True
 
 
-    def folder(self):
-        return self._folder
-
-
     def index(self):
-        return self._ruleset.get_folder_rules(self._folder).index(self)
-
-
-    def value(self):
-        return self._value
-
-
-    def host_list(self):
-        return self._host_list
-
-
-    def item_list(self):
-        return self._item_list
+        return self.ruleset.get_folder_rules(self.folder).index(self)
 
 
     def is_disabled(self):
-        return self._rule_options.get("disabled", False)
+        return self.rule_options.get("disabled", False)
 
 
     def description(self):
-        return self._rule_options.get("description", "")
+        return self.rule_options.get("description", "")
 
 
     def comment(self):
-        return self._rule_options.get("comment", "")
+        return self.rule_options.get("comment", "")
 
+
+
+def match_search_expression(search_options, attr_name, search_in):
+    if attr_name not in search_options:
+        return True # not searched for this. Matching!
+
+    return search_in and re.search(search_options[attr_name], search_in, re.I) != None
+
+
+def match_one_of_search_expression(search_options, attr_name, search_in_list):
+    for search_in in search_in_list:
+        if match_search_expression(search_options, attr_name, search_in):
+            return True
+    return False
 
 #.
 #   .--MIXED STUFF---------------------------------------------------------.

@@ -3,6 +3,9 @@
     * 4104 veeam_tapejobs: New check to monitor Veeam tape jobs
     * 4171 FIX: perle_psmu: fixed value error...
 
+    WATO:
+    * 4142 New extended search dialog for rulesets and rules
+
 
 1.4.0i3:
     Core & Setup:

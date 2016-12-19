@@ -11,11 +11,20 @@ def print_url(title, entry):
     print "Duration: %0.2f sec (Avg. %0.2f sec of %d tries)" % \
           (entry["last_duration"], entry["avg_duration"],
            entry["num_visited"])
+    print "Size:     %0.2f KBytes (Avg. %0.2f KBytes of %d tries)" % \
+          (entry["last_content_size"]/1024.0,
+           entry["avg_content_size"]/1024.0,
+           entry["num_visited"])
 
 
 print "Total:", stats["_TOTAL_"]
 
-slowest = None
+print ""
+print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+print "+ SLOWEST PAGES                                                         +"
+print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+print ""
+
 for num, (key, val) in enumerate(sorted(stats.items(),
                             key=lambda x: "avg_duration" in x[1] \
                                           and x[1]["avg_duration"]
@@ -24,3 +33,18 @@ for num, (key, val) in enumerate(sorted(stats.items(),
         continue
 
     print_url("%02d Slowest" % num, val)
+
+print ""
+print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+print "+ LARGEST PAGES                                                         +"
+print "+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+print ""
+
+for num, (key, val) in enumerate(sorted(stats.items(),
+                            key=lambda x: "avg_content_size" in x[1] \
+                                          and x[1]["avg_content_size"]
+                                          or 0, reverse=True)[:10]):
+    if key == "_TOTAL_":
+        continue
+
+    print_url("%02d Largest" % num, val)

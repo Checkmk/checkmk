@@ -1186,7 +1186,7 @@ class EventServer:
 
         row += [
             g_last_config_reload,
-            g_event_status.num_open_events,
+            g_event_status.num_existing_events,
             self._virtual_memory_size(),
         ]
 

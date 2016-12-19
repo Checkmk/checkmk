@@ -13276,13 +13276,15 @@ class ModeNewRule(ModeEditRule):
         self._ruleset.add_rule(self._folder, self._rule)
         self._rulesets.save()
         add_change("edit-rule", _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
-                   (self._ruleset.title(), self._folder.alias_path()),
-                    sites=self._folder.all_site_ids())
+                (self._ruleset.title(),
+                 self._folder.alias_path()), # pylint: disable=no-member
+                 sites=self._folder.all_site_ids()) # pylint: disable=no-member
 
 
     def _success_message(self):
         return _("Created new rule in ruleset \"%s\" in folder \"%s\"") % \
-                 (self._ruleset.title(), self._folder.alias_path())
+                 (self._ruleset.title(),
+                  self._folder.alias_path()) # pylint: disable=no-member
 
 
 

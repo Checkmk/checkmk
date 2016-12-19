@@ -1,0 +1,9 @@
+Title: esx_vsphere_objects: fixed check parameters display bug during WATO service discovery
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i4
+Date: 1482140611
+Class: fix
+
+

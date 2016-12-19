@@ -76,16 +76,7 @@ def check_esx_vsphere_objects(item, params, info):
         if vsphere_object_names[line[0]] + " " + line[1] == item and len(line) > 3:
             running_on = line[2]
             power_state = line[3]
-            state = params.get("states",{}).get(power_state)
-            if state == None:
-                if power_state == "poweredOn":
-                    state = 0
-                elif power_state == "poweredOff":
-                    state = 1
-                elif power_state == "suspended":
-                    state = 1
-                else:
-                    state = 3
+            state = params["states"].get(power_state, 3)
             infotext = "power state: %s" % power_state
             if running_on:
                 if state == 0:
@@ -102,12 +93,21 @@ def check_esx_vsphere_objects(item, params, info):
     else:
         return 3, "No data about host system %s" % name
 
+factory_settings["esx_vsphere_objects_default_levels"] = {
+	"states": {
+		"poweredOn": 0,
+		"poweredOff": 1,
+		"suspended": 1,
+		"unknown": 3,
+	}
+}
 
 check_info['esx_vsphere_objects'] = {
-  "inventory_function"  : inventory_esx_vsphere_objects,
-  "check_function"      : check_esx_vsphere_objects,
-  "service_description" : "%s",
-  "group"               : "esx_vsphere_objects",
+  "inventory_function"      : inventory_esx_vsphere_objects,
+  "check_function"          : check_esx_vsphere_objects,
+  "service_description"     : "%s",
+  "group"                   : "esx_vsphere_objects",
+  "default_levels_variable" : "esx_vsphere_objects_default_levels",
 }
 
 def inventory_esx_vsphere_objects_count(info):

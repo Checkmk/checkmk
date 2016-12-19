@@ -196,7 +196,7 @@ register_rule(group,
                  "your connection settings here."),
         forth = lambda a: dict([("skip_placeholder_vms", True), ("ssl", False), ("use_pysphere" , False), ("spaces", "underscore")] + a.items())
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 register_rule(group,
@@ -336,7 +336,7 @@ register_rule(group,
            )
         ]
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = "first")
 
 register_rule(group,
@@ -393,7 +393,7 @@ register_rule(group,
         ],
         optional_keys = [ ],
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 register_rule(group,
@@ -459,7 +459,7 @@ register_rule(group,
         ],
         optional_keys = [ ],
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 
@@ -472,7 +472,7 @@ register_rule(group,
                  "Check_MK agent random monitoring data will be created."),
         totext = _("Create random monitoring data"),
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 register_rule(group,
@@ -485,7 +485,7 @@ register_rule(group,
                  "you have to exchange an SSH key to make a passwordless connect possible."),
         totext = _("Connect to ACME SBC"),
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 register_rule(group,
@@ -509,7 +509,7 @@ register_rule(group,
         ],
         optional_keys = [ "timeout" ],
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 
@@ -530,7 +530,7 @@ register_rule(group,
            Password( title = _("Password")),
         ]
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED,
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED,
     match = "first")
 
 register_rule(group,
@@ -543,7 +543,7 @@ register_rule(group,
            Password( title = _("Password")),
         ]
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED,
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED,
     match = "first")
 
 register_rule(group,
@@ -567,7 +567,7 @@ register_rule(group,
         ],
         optional_keys = [ "timeout" ],
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 
@@ -753,7 +753,7 @@ register_rule(group,
                  "and allows monitoring of Siemens PLC using the Snap7 API. You can configure "
                  "your connection settings and values to fetch here."),
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 register_rule(group,
@@ -852,7 +852,7 @@ register_rule(group,
     title = _('AppDynamics via REST API'),
     help = _('This rule allows querying an AppDynamics server for information about Java applications'
              'via the AppDynamics REST API. You can configure your connection settings here.'),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 mk_jolokia_elements = [
@@ -918,7 +918,7 @@ register_rule(group,
     ),
     title = _('Jolokia'),
     help = _('This rule allows querying the Jolokia web API.'),
-    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 register_rule(group,

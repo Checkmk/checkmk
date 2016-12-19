@@ -1,4 +1,7 @@
 1.4.0i3p1:
+    Checks & Agents:
+    * 4171 FIX: perle_psmu: fixed value error...
+
 
 1.4.0i3:
     Core & Setup:

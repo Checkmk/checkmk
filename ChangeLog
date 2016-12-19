@@ -15,6 +15,9 @@
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address
 
+    Reporting & Availability:
+    * 3652 FIX: Unbreak PDF exports...
+
     Event Console:
     * 4154 Do not send notifications if host found and currently in downtime...
             NOTE: Please refer to the migration notes!

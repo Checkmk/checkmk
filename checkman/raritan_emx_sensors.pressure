@@ -1,6 +1,6 @@
 title: Raritan EMX Devices External Sensors: Pressure
 agents: snmp
-catalog: hw/other
+catalog: hw/environment/raritan
 license: GPL
 distribution: check_mk
 description:

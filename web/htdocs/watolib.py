@@ -66,10 +66,14 @@ backup_paths = []
 backup_domains = {}
 automation_commands = {}
 g_rulespecs = None
+g_rulegroups = {}
 
 def initialize_before_loading_plugins():
     if g_rulespecs:
         g_rulespecs.clear()
+
+    if g_rulegroups:
+        g_rulegroups.clear()
 
     # Directories and files to synchronize during replication
     global replication_paths
@@ -5795,6 +5799,23 @@ def user_script_title(what, name):
 #   | The rulespecs are the ruleset specifications registered to WATO.     |
 #   '----------------------------------------------------------------------
 
+# TODO: Better rename this and also get_rulegroup() to rulespec group
+class Rulegroup(object):
+    def __init__(self, name, title=None, help_text=None):
+        self.name  = name
+        self.title = title or name
+        self.help  = help_text
+
+
+
+def register_rulegroup(group_name, title, help_text):
+    g_rulegroups[group_name] = Rulegroup(group_name, title, help_text)
+
+
+def get_rulegroup(group_name):
+    return g_rulegroups.get(group_name, Rulegroup(group_name))
+
+
 class Rulespecs(object):
     def __init__(self):
         super(Rulespecs, self).__init__()
@@ -5818,8 +5839,8 @@ class Rulespecs(object):
             self._by_group[group] = [ rulespec ]
 
         else:
-            for nr, rulespec in enumerate(self._by_group[group]):
-                if rulespec.name == name:
+            for nr, this_rulespec in enumerate(self._by_group[group]):
+                if this_rulespec.name == name:
                     del self._by_group[group][nr]
                     break # There cannot be two duplicates!
 
@@ -5842,6 +5863,29 @@ class Rulespecs(object):
 
     def get_by_group(self, group_name):
         return self._by_group[group_name]
+
+
+    # Returns all available ruleset groups to be used in dropdown choices
+    def get_group_choices(self, mode):
+        choices = []
+
+        for main_group_name in self.get_main_groups():
+            main_group_title = g_rulegroups.get(main_group_name).title
+
+            if mode == "static_checks" and main_group_name != "static":
+                continue
+            elif mode != "static_checks" and main_group_name == "static":
+                continue
+
+            choices.append((main_group_name, main_group_title))
+
+            for group_name in self._by_group.keys():
+                if group_name.startswith(main_group_name + "/"):
+                    # TODO: Move this subgroup title calculation to some generic place
+                    sub_group_title = group_name.split("/", 1)[1]
+                    choices.append((group_name, "&nbsp;&nbsp;⌙ %s" % sub_group_title))
+
+        return choices
 
 
     # Now we collect all rulesets that apply to hosts, except those specifying
@@ -5892,12 +5936,13 @@ class Rulespec(object):
     FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is entered
 
     def __init__(self, name, group_name, valuespec, item_spec, item_type, item_name, item_help,
-                 item_enum, match, title, help, is_optional, factory_default, is_deprecated):
+                 item_enum, match_type, title, help, is_optional, factory_default, is_deprecated):
         super(Rulespec, self).__init__()
 
         self.name            = name
         self.group_name      = group_name
         self.main_group_name = group_name.split("/")[0]
+        self.sub_group_name  = group_name.split("/")[1] if "/" in group_name else ""
         self.valuespec       = valuespec
         self.item_spec       = item_spec # original item spec, e.g. if validation is needed
         self.item_type       = item_type # None, "service", "checktype" or "checkitem"
@@ -5925,7 +5970,7 @@ def register_rule(group, varname, valuespec = None, title = None,
                   deprecated = False, **kwargs):
     factory_default = kwargs.get("factory_default", Rulespec.NO_FACTORY_DEFAULT)
 
-    g_rulespecs.register(Rulespec(
+    rulespec = Rulespec(
         name=varname,
         group_name=group,
         valuespec=valuespec,
@@ -5940,7 +5985,9 @@ def register_rule(group, varname, valuespec = None, title = None,
         is_optional=optional,
         factory_default=factory_default,
         is_deprecated=deprecated,
-    ))
+    )
+
+    g_rulespecs.register(rulespec)
 
 
 g_rulespecs = Rulespecs()
@@ -6038,14 +6085,22 @@ class RulesetCollection(object):
         self._rulesets = rulesets
 
 
+    # Groups the rulesets in 3 layers (main group, sub group, rulesets)
     def get_grouped(self):
-        grouped = {}
-        for name, ruleset in self._rulesets:
-            group_rulesets = grouped.setdefault(ruleset.rulespec.group_name, [])
+        grouped_dict = {}
+        for name, ruleset in self._rulesets.items():
+            main_group = grouped_dict.setdefault(ruleset.rulespec.main_group_name, {})
+            group_rulesets = main_group.setdefault(ruleset.rulespec.sub_group_name, [])
             group_rulesets.append(ruleset)
 
-        for rulesets in grouped.values():
-            rulesets.sort(key=lambda x: x["title"])
+        grouped = []
+        for main_group_name, sub_groups in grouped_dict.items():
+            sub_group_list = []
+
+            for sub_group_title, group_rulesets in sorted(sub_groups.items(), key=lambda x: x[0]):
+                sub_group_list.append((sub_group_title, sorted(group_rulesets, key=lambda x: x.title())))
+
+            grouped.append((main_group_name, sub_group_list))
 
         return grouped
 
@@ -6106,6 +6161,32 @@ class FolderRulesets(RulesetCollection):
 class FilteredRulesetCollection(AllRulesets):
     def save(self):
         raise NotImplementedError("Filtered ruleset collections can not be saved.")
+
+
+
+class StaticChecksRulesets(FilteredRulesetCollection):
+    def load(self):
+        super(StaticChecksRulesets, self).load()
+        self._remove_non_static_checks_rulesets()
+
+
+    def _remove_non_static_checks_rulesets(self):
+        for name, ruleset in self._rulesets.items():
+            if ruleset.rulespec.main_group_name != "static":
+                del self._rulesets[name]
+
+
+
+class NonStaticChecksRulesets(FilteredRulesetCollection):
+    def load(self):
+        super(NonStaticChecksRulesets, self).load()
+        self._remove_static_checks_rulesets()
+
+
+    def _remove_static_checks_rulesets(self):
+        for name, ruleset in self._rulesets.items():
+            if ruleset.rulespec.main_group_name == "static":
+                del self._rulesets[name]
 
 
 
@@ -6224,6 +6305,10 @@ class Ruleset(object):
             return False
 
         if "ruleset_used" in search_options and self.is_empty():
+            return False
+
+        if "ruleset_group" in search_options \
+           and self.rulespec.group_name not in g_rulespecs.get_matching_groups(search_options["ruleset_group"]):
             return False
 
         if not match_search_expression(search_options, "ruleset_name", self.name()):

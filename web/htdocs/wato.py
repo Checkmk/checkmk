@@ -2289,9 +2289,9 @@ def mode_object_parameters(phase):
             # Open form for that group here, if we know that we have at least one rule
             if last_maingroup != maingroup:
                 last_maingroup = maingroup
-                grouptitle, grouphelp = g_rulegroups.get(maingroup, (maingroup, ""))
-                forms.header(grouptitle, isopen = maingroup == "monconf", narrow=True, css="rulesettings")
-                html.help(grouphelp)
+                group_title, group_help = get_rulegroup(maingroup)
+                forms.header(group_title, isopen = maingroup == "monconf", narrow=True, css="rulesettings")
+                html.help(group_help)
 
             output_analysed_ruleset(all_rulesets, rulespec, hostname, service)
 
@@ -11915,11 +11915,16 @@ def mode_ruleeditor(phase):
                          ("host", only_host)])
         if groupname == "static": # these have moved into their own WATO module
             continue
+
+        rulegroup = get_rulegroup(groupname)
+        icon = "rulesets"
+
+        if rulegroup.help:
+            help = rulegroup.help.split('\n')[0] # Take only first line as button text
         else:
-            title, help = g_rulegroups.get(groupname, (groupname, ""))
-            icon = "rulesets"
-        help = help.split('\n')[0] # Take only first line as button text
-        menu.append((url, title, icon, "rulesets", help))
+            help = None
+
+        menu.append((url, rulegroup.title, icon, "rulesets", help))
     render_main_menu(menu)
 
 
@@ -11951,12 +11956,23 @@ def mode_static_checks(phase):
 
 
 def mode_rulesets(phase, mode="rulesets"):
+    # Transform group argument to the "rule search arguments"
+    # Keeping this for compatibility reasons for the moment
     group = html.var("group")
+    if group:
+        try:
+            group_names = [ g[0] for g in g_rulespecs.get_group_choices(mode) ]
+            rulegroup_index = group_names.index(html.get_unicode_input("group"))
+        except (ValueError, IndexError):
+            raise MKUserError(None, _("Unknown ruleset group"))
+        html.set_var("search_p_ruleset_group", "%d" % rulegroup_index)
+        html.set_var("search_p_ruleset_group_USE", "on")
+        html.del_var("group")
 
     # Transform the search argument to the "rule search" arguments
     if html.has_var("search"):
         html.set_var("search_p_fulltext", html.get_unicode_input("search"))
-        html.set_var("search_p_fulltext_USE", "yes")
+        html.set_var("search_p_fulltext_USE", "on")
         html.del_var("search")
 
     search_options = ModeRuleSearch().search_options
@@ -11980,10 +11996,8 @@ def mode_rulesets(phase, mode="rulesets"):
         help = None
 
     else:
-        title, help = g_rulegroups.get(group, (group, None))
-
-    if search_options:
-        title += " - %s" % _("Filtered by search")
+        rulegroup = get_rulegroup(group)
+        title, help = rulegroup.title, rulegroup.help
 
     only_host = html.var("host", "")
 
@@ -12010,7 +12024,7 @@ def mode_rulesets(phase, mode="rulesets"):
             if group == "agents":
                 html.context_button(_("Agent Bakery"), folder_preserving_link([("mode", "agents")]), "agents")
 
-        rule_search_button(search_options)
+        rule_search_button(search_options, mode=mode)
         return
 
     elif phase == "action":
@@ -12026,13 +12040,11 @@ def mode_rulesets(phase, mode="rulesets"):
         if help:
             html.help(help)
 
-    rulesets = AllRulesets()
-    rulesets.load()
-
-    if not group:
-        groupnames = g_rulespecs.get_all_groups()
+    if mode == "static_checks":
+        rulesets = StaticChecksRulesets()
     else:
-        groupnames = g_rulespecs.get_matching_groups(group)
+        rulesets = NonStaticChecksRulesets()
+    rulesets.load()
 
     # In case the user has filled in the search form, filter the rulesets by the given query
     if search_options:
@@ -12040,71 +12052,50 @@ def mode_rulesets(phase, mode="rulesets"):
 
     html.open_div(class_="rulesets")
 
-    # Loop over all ruleset groups
-    something_shown = False
-    title_shown = False
-    for groupname in groupnames:
-        for rulespec in sorted(g_rulespecs.get_by_group(groupname), key=lambda a: a["title"]):
-            varname = rulespec.name
+    grouped_rulesets = sorted(rulesets.get_grouped(), key=lambda (k, v): get_rulegroup(k).title)
 
-            if not rulesets.exists(varname):
-                continue
+    for main_group_name, sub_groups in grouped_rulesets:
+        # Display the main group header only when there are several main groups shown
+        if len(grouped_rulesets) > 1:
+            html.h3(get_rulegroup(main_group_name).title)
+            html.br()
 
-            ruleset = rulesets.get(varname)
+        for sub_group_title, group_rulesets in sub_groups:
+            forms.header(sub_group_title or get_rulegroup(main_group_name).title)
+            forms.container()
 
-            # Show static checks rules only in on dedicated page and vice versa
-            if mode != "static_checks" and groupname.startswith("static/"):
-                continue
-            elif mode == "static_checks" and not groupname.startswith("static/"):
-                continue
+            for ruleset in group_rulesets:
+                float_cls = None
+                if not config.wato_hide_help_in_lists:
+                    float_cls = "nofloat" if html.help_visible else "float"
+                html.open_div(class_=["ruleset", float_cls], title=html.strip_tags(ruleset.help() or ''))
+                html.open_div(class_="text")
 
-            if mode != "static_checks" and search_options:
-                titlename = g_rulegroups[groupname.split("/")[0]][0]
-            else:
-                if '/' in groupname:
-                    titlename = groupname.split("/", 1)[1]
-                else:
-                    titlename = title
+                url_vars = [
+                    ("mode", "edit_ruleset"),
+                    ("varname", ruleset.name()),
+                    ("back_mode", mode),
+                ]
+                if only_host:
+                    url_vars.append(("host", only_host))
+                view_url = html.makeuri(url_vars)
 
-            if title_shown != titlename:
-                forms.header(titlename)
-                forms.container()
-                title_shown = titlename
+                html.a(ruleset.title(), href=view_url, class_="nonzero" if ruleset.is_empty() else "zero")
+                html.span("." * 100, class_="dots")
+                html.close_div()
 
-            something_shown = True
+                num_rules = ruleset.num_rules()
+                if ruleset.search_matching_rules:
+                    num_rules = "%d/%d" % (len(ruleset.search_matching_rules), num_rules)
 
-            float_cls = None
-            if not config.wato_hide_help_in_lists:
-                float_cls = "nofloat" if html.help_visible else "float"
-            html.open_div(class_=["ruleset", float_cls], title=html.strip_tags(ruleset.help() or ''))
-            html.open_div(class_="text")
+                html.div(num_rules, class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"])
+                if not config.wato_hide_help_in_lists and ruleset.help():
+                    html.help(ruleset.help())
 
-            url_vars = [
-                ("mode", "edit_ruleset"),
-                ("varname", varname),
-                ("back_mode", mode),
-            ]
-            if only_host:
-                url_vars.append(("host", only_host))
-            view_url = html.makeuri(url_vars)
+                html.close_div()
+            forms.end()
 
-            html.a(ruleset.title(), href=view_url, class_="nonzero" if ruleset.is_empty() else "zero")
-            html.span("." * 100, class_="dots")
-            html.close_div()
-
-            num_rules = ruleset.num_rules()
-            if ruleset.search_matching_rules:
-                num_rules = "%d/%d" % (len(ruleset.search_matching_rules), num_rules)
-
-            html.div(num_rules, class_=["rulecount", "nonzero" if ruleset.is_empty() else "zero"])
-            if not config.wato_hide_help_in_lists and ruleset.help():
-                html.help(ruleset.help())
-
-            html.close_div()
-
-    if something_shown:
-        forms.end()
-    else:
+    if not grouped_rulesets:
         if only_host:
             msg = _("There are no rules with an exception for the host <b>%s</b>.") % only_host
         elif search_options:
@@ -12117,15 +12108,17 @@ def mode_rulesets(phase, mode="rulesets"):
     html.close_div()
 
 
-def rule_search_button(search_options=None):
+def rule_search_button(search_options=None, mode="rulesets"):
     if search_options:
         title = _("Refine search")
     else:
         title = _("Search")
 
-    html.context_button(title, html.makeuri([ ("mode", "rule_search") ],
-                                            delvars=["filled_in"]), "search",
-                        hot=bool(search_options))
+    html.context_button(title, html.makeuri([
+        ("mode", "rule_search"),
+        ("back_mode", mode),
+    ],
+    delvars=["filled_in"]), "search", hot=bool(search_options))
 
 
 
@@ -12752,6 +12745,7 @@ def date_and_user():
 class ModeRuleSearch(WatoMode):
     def __init__(self):
         super(ModeRuleSearch, self).__init__()
+        self.back_mode = html.var("back_mode", "rulesets")
         self.search_options = self._from_vars()
 
 
@@ -12764,12 +12758,12 @@ class ModeRuleSearch(WatoMode):
 
     def buttons(self):
         global_buttons()
-        html.context_button(_("Back"), html.makeuri([("mode", "rulesets")]), "back")
+        html.context_button(_("Back"), html.makeuri([("mode", self.back_mode)]), "back")
 
 
     def page(self):
         html.begin_form("search", method="GET")
-        html.hidden_field("mode", "rulesets", add_var=True)
+        html.hidden_field("mode", self.back_mode, add_var=True)
 
         valuespec = self._valuespec()
         valuespec.render_input("search", self.search_options, form=True)
@@ -12804,6 +12798,7 @@ class ModeRuleSearch(WatoMode):
                     "fulltext",
                 ]),
                 (_("Rulesets"), [
+                    "ruleset_group",
                     "ruleset_name",
                     "ruleset_title",
                     "ruleset_help",
@@ -12831,6 +12826,10 @@ class ModeRuleSearch(WatoMode):
                     mode = RegExpUnicode.infix,
                 )),
 
+                ("ruleset_group", DropdownChoice(
+                    title = _("Group"),
+                    choices = g_rulespecs.get_group_choices(self.back_mode),
+                )),
                 ("ruleset_name", RegExpUnicode(
                     title = _("Name"),
                     size = 60,
@@ -13165,10 +13164,6 @@ def mode_edit_rule(phase, new = False):
     vs_rule_options().set_focus("options")
     html.end_form()
 
-
-g_rulegroups = {}
-def register_rulegroup(group, title, help):
-    g_rulegroups[group] = (title, help)
 
 # Special version of register_rule, dedicated to checks. This is not really
 # modular here, but we cannot put this function into the plugins file because
@@ -16528,9 +16523,6 @@ def load_plugins(force):
     undeclare_all_host_attributes()
     load_notification_table()
     initialize_global_configvars()
-
-    global g_rulegroups
-    g_rulegroups = {}
 
     initialize_before_loading_plugins()
     register_builtin_host_tags()

@@ -1,0 +1,10 @@
+Title: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i4
+Date: 1482175956
+Class: fix
+
+When having multiple independent sites on one system, a log flood (one entry
+for each request) may happen when having cookies from both sites to var/log/web.log.

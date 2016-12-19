@@ -2746,11 +2746,11 @@ class EventServer:
 
         if above_limit:
             # Just log in verbose mode! Otherwise log file will be flooded
-            verbose("  Skip processing because limit is in effect")
+            verbose("  Skip processing because limit is already in effect")
             g_perfcounters.count("overflows")
             return True # Prevent creation and prevent one time actions (below)
 
-        log("  The limit has been reached")
+        log("  The %s limit has been reached" % ty)
 
         # This is the event which reached the limit, allow creation of it. Further
         # events will be stopped.

@@ -1,0 +1,16 @@
+Title: Do not perform actions on events if overflow limit is active
+Level: 2
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1482152679
+
+If the EC blocks a new event because of an active overflow limit
+then it now correctly also omit any configured actions (i.e.
+a notification) on that event.
+
+Previously actions would be executed anyway - that way undermining
+the overflow protection. Furthermore the action "Send notifiction"
+would run into an exception because of a missing event ID.

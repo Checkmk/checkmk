@@ -1839,7 +1839,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
         for varname, ruleset in rulesets.get_rulesets().items():
             for rule_folder, rulenr, rule in ruleset.get_rules():
                 # TODO: Move to rule?
-                if rename_host_in_list(rule.host_list(), oldname, newname):
+                if rename_host_in_list(rule.host_list, oldname, newname):
                     changed_rulesets.append(varname)
                     changed = True
 
@@ -2138,8 +2138,7 @@ def mode_object_parameters(phase):
         forms.section(title)
 
         if reason:
-            title = '<a href="%s">%s</a>' % (reason_url, reason)
-        #TODO FIXME: title is not used??
+            reason = '<a href="%s">%s</a>' % (reason_url, reason)
 
         html.open_table(class_="setting")
         html.open_tr()
@@ -2155,7 +2154,6 @@ def mode_object_parameters(phase):
 
     # For services we make a special handling the for origin and parameters
     # of that service!
-    # TODO: Cleanup accesses to g_rulespecs / rulespec
     if service:
         serviceinfo = check_mk_automation(host.site_id(), "analyse-service", [hostname, service])
         if serviceinfo:
@@ -2308,7 +2306,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         return folder_preserving_link([
             ('mode',        'edit_rule'),
             ('varname',     varname),
-            ('rule_folder', rule.folder().path()),
+            ('rule_folder', rule.folder.path()),
             ('rulenr',      rule.index()),
             ('host',        hostname),
             ('item',        service and mk_repr(service) or ''),
@@ -6411,7 +6409,7 @@ def find_usages_of_group_in_rules(name, varnames):
     for varname in varnames:
         ruleset = rulesets.get(varname)
         for folder, rulenr, rule in ruleset.get_rules():
-            if rule.value() == name:
+            if rule.value == name:
                 used_in.append(("%s: %s" % (_("Ruleset"), ruleset.title()),
                                folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
     return used_in
@@ -8743,7 +8741,7 @@ def find_usages_of_timeperiod(tpname):
             continue
 
         for folder, rulenr, rule in ruleset.get_rules():
-            if rule.value() == tpname:
+            if rule.value == tpname:
                 used_in.append(("%s: %s" % (_("Ruleset"), ruleset.title()),
                                folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
                 break
@@ -11646,7 +11644,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         message += _("Rulesets that contain rules with references to the changed tags") + ":<ul>"
         for ruleset in affected_rulesets:
             message += '<li><a href="%s">%s</a></li>' % (
-                folder_preserving_link([("mode", "edit_ruleset"), ("varname", ruleset.name())]),
+                folder_preserving_link([("mode", "edit_ruleset"), ("varname", ruleset.name)]),
                 ruleset.title())
         message += "</ul>"
 
@@ -11806,17 +11804,17 @@ def change_host_tags_in_rules(folder, operations, mode):
             # Handle deletion of complete tag group
             if type(operations) == list: # this list of tags to remove
                 for tag in operations:
-                    if tag != None and (tag in rule._tag_specs or "!"+tag in rule._tag_specs):
+                    if tag != None and (tag in rule.tag_specs or "!"+tag in rule.tag_specs):
                         affected_rulesets.add(ruleset)
 
                         if mode != "check":
                             need_save = True
-                            if tag in rule._tag_specs and mode == "delete":
+                            if tag in rule.tag_specs and mode == "delete":
                                 ruleset.delete_rule(rule)
-                            elif tag in rule._tag_specs:
-                                rule._tag_specs.remove(tag)
-                            elif "+"+tag in rule._tag_specs:
-                                rule._tag_specs.remove("!"+tag)
+                            elif tag in rule.tag_specs:
+                                rule.tag_specs.remove(tag)
+                            elif "+"+tag in rule.tag_specs:
+                                rule.tag_specs.remove("!"+tag)
 
             # Removal or renamal of single tag choices
             else:
@@ -11827,23 +11825,23 @@ def change_host_tags_in_rules(folder, operations, mode):
                     if not old_tag:
                         continue
 
-                    if old_tag in rule._tag_specs or ("!" + old_tag) in rule._tag_specs:
+                    if old_tag in rule.tag_specs or ("!" + old_tag) in rule.tag_specs:
                         affected_rulesets.add(ruleset)
 
                         if mode != "check":
                             need_save = True
-                            if old_tag in rule._tag_specs:
-                                rule._tag_specs.remove(old_tag)
+                            if old_tag in rule.tag_specs:
+                                rule.tag_specs.remove(old_tag)
                                 if new_tag:
-                                    rule._tag_specs.append(new_tag)
+                                    rule.tag_specs.append(new_tag)
                                 elif mode == "delete":
                                     ruleset.delete_rule(rule)
 
                             # negated tag has been renamed or removed
-                            if "!"+old_tag in rule._tag_specs:
-                                rule._tag_specs.remove("!"+old_tag)
+                            if "!"+old_tag in rule.tag_specs:
+                                rule.tag_specs.remove("!"+old_tag)
                                 if new_tag:
-                                    rule._tag_specs.append("!"+new_tag)
+                                    rule.tag_specs.append("!"+new_tag)
                                 # the case "delete" need not be handled here. Negated
                                 # tags can always be removed without changing the rule's
                                 # behaviour.
@@ -12004,6 +12002,10 @@ class ModeRulesets(WatoMode):
             self._title = _("Rulesets with ineffective rules")
             self._help = _("The following rulesets contain rules that do not match to any of the existing hosts.")
 
+        elif self._search_options.keys() == ["ruleset_used"]:
+            self._title = _("Used rulesets")
+            self._help = _("Non-empty rulesets")
+
         elif self._group_name == None:
             self._title = _("Rulesets")
             self._help = None
@@ -12055,9 +12057,7 @@ class ModeRulesets(WatoMode):
         search_form(default_value=self._search_options.get("fulltext", ""))
 
         if self._help:
-            help_text = "".join(self._help.split("\n", 1)[1:]).strip()
-            if help_text:
-                html.help(help_text)
+            html.help(self._help)
 
         rulesets = self._rulesets()
         rulesets.load()
@@ -12089,7 +12089,7 @@ class ModeRulesets(WatoMode):
 
                     url_vars = [
                         ("mode", "edit_ruleset"),
-                        ("varname", ruleset.name()),
+                        ("varname", ruleset.name),
                         ("back_mode", self._mode),
                     ]
                     if self._only_host:
@@ -12140,7 +12140,17 @@ class ModeStaticChecksRulesets(ModeRulesets):
 
 
 def rule_search_button(search_options=None, mode="rulesets"):
-    if search_options:
+    is_searching = bool(search_options)
+    # Don't highlight the button on "standard page" searches. Meaning the page calls
+    # that are no searches from the users point of view because he did not fill the
+    # search form, but clicked a link in the GUI
+    if search_options and (search_options.keys() == ["ruleset_group"]
+                           or search_options.keys() == ["ruleset_deprecated"]
+                           or search_options.keys() == ["rule_ineffective"]
+                           or search_options.keys() == ["ruleset_used"]):
+        is_searching = False
+
+    if is_searching:
         title = _("Refine search")
     else:
         title = _("Search")
@@ -12149,7 +12159,7 @@ def rule_search_button(search_options=None, mode="rulesets"):
         ("mode", "rule_search"),
         ("back_mode", mode),
     ],
-    delvars=["filled_in"]), "search", hot=bool(search_options))
+    delvars=["filled_in"]), "search", hot=is_searching)
 
 
 
@@ -12371,7 +12381,9 @@ class ModeEditRuleset(WatoMode):
             if rule.is_disabled():
                 css.append("disabled")
 
-            if search_options and rule.matches_search(search_options):
+            has_rule_search_options  = bool([ k for k in search_options.keys()
+                                            if k == "fulltext" or k.startswith("rule_") ])
+            if has_rule_search_options and rule.matches_search(search_options):
                 css.append("matches_search")
 
             table.row(css=" ".join(css) if css else None)
@@ -12386,11 +12398,11 @@ class ModeEditRuleset(WatoMode):
 
                 # Handle case where dict is constructed from rules
                 if reason == True and ruleset.match_type() == "dict":
-                    if len(rule.value()) == 0:
+                    if not rule.value:
                         title = _("This rule matches, but does not define any parameters.")
                         img = 'imatch'
                     else:
-                        new_keys = set(rule.value().keys()) # pylint: disable=no-member
+                        new_keys = set(rule.value.keys()) # pylint: disable=no-member
                         if match_keys.isdisjoint(new_keys):
                             title = _("This rule matches and defines new parameters.")
                             img = 'match'
@@ -12484,19 +12496,18 @@ class ModeEditRuleset(WatoMode):
 
     # TODO: Refactor this whole method
     def _rule_cells(self, rule):
-        # TODO: refactor params
-        rulespec  = rule._ruleset.rulespec
-        varname   = rule._ruleset._name
-        tag_specs = rule._tag_specs
-        host_list = rule._host_list
-        item_list = rule._item_list
-        value     = rule._value
-        folder    = rule._folder
-        rule_options = rule._rule_options
+        rulespec  = rule.ruleset.rulespec
+        varname   = rule.ruleset.name
+        tag_specs = rule.tag_specs
+        host_list = rule.host_list
+        item_list = rule.item_list
+        value     = rule.value
+        folder    = rule.folder
+        rule_options = rule.rule_options
 
         # Conditions
         table.cell(_("Conditions"), css="condition")
-        self._rule_conditions(rulespec, tag_specs, host_list, item_list, varname, folder)
+        self._rule_conditions(rule)
 
         # Value
         table.cell(_("Value"))
@@ -12532,12 +12543,17 @@ class ModeEditRuleset(WatoMode):
         html.write_text(desc)
 
 
-    # TODO: Refactor this whole method
-    def _rule_conditions(self, rulespec, tagspecs, host_list, item_list, varname, folder):
+    def _rule_conditions(self, rule):
         html.open_ul(class_="conditions")
+        self._tag_conditions(rule)
+        self._host_conditions(rule)
+        self._service_conditions(rule)
+        html.close_ul()
 
+
+    def _tag_conditions(self, rule):
         # Host tags
-        for tagspec in tagspecs:
+        for tagspec in rule.tag_specs:
             if tagspec[0] == '!':
                 negate = True
                 tag = tagspec[1:]
@@ -12568,100 +12584,56 @@ class ModeEditRuleset(WatoMode):
                     html.tt(tag)
             html.close_li()
 
-        # Explicit list of hosts
-        def boldify(what):
-            return "<b>%s</b>" % what
 
-        if host_list != ALL_HOSTS:
-            condition = None
-            if host_list == []:
-                condition = _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
-            else:
-                text_list = []
+    def _host_conditions(self, rule):
+        if rule.host_list == ALL_HOSTS:
+            return
 
-                if host_list[0][0] == ENTRY_NEGATE_CHAR:
-                    host_list = host_list[:-1]
-                    is_negate = True
-                else:
-                    is_negate = False
-
-                regex_count = len([x for x in host_list if "~" in x])
-
-                condition = _("Host name ")
-                # Entries are either complete regex or no regex at all
-                if regex_count == len(host_list) or regex_count == 0:
-                    is_regex = regex_count > 0
-                    if is_regex:
-                        condition += is_negate and _("is not one of regex ") or _("matches one of regex ")
-                    else:
-                        condition += is_negate and _("is not one of ") or _("is ")
-
-                    for host_spec in host_list:
-                        if not is_regex:
-                            host = Host.host(host_spec)
-                            if host:
-                                host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
-                        text_list.append(boldify(host_spec.strip("!").strip("~")))
-                # Mixed entries
-                else:
-                    for host_spec in host_list:
-                        is_regex = "~" in host_spec
-                        host_spec = host_spec.strip("!").strip("~")
-                        if not is_regex:
-                            host = Host.host(host_spec)
-                            if host:
-                                host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
-
-                        if is_negate:
-                            expression = "%s" % (is_regex and _("does not match regex ") or _("is not "))
-                        else:
-                            expression = "%s" % (is_regex and _("matches regex ") or _("is "))
-                        text_list.append("%s%s" % (expression, boldify(host_spec)))
-
-                if len(text_list) == 1:
-                    condition += text_list[0]
-                else:
-                    condition += ", ".join(text_list[:-1])
-                    condition += _(" or ") + text_list[-1]
-
-            # Other cases should not occur, e.g. list of explicit hosts
-            # plus ALL_HOSTS.
-            if condition:
-                html.li(condition, class_="condition")
-
-        # Item list
-        if rulespec.item_type and item_list != ALL_SERVICES:
-            if rulespec.item_type == "service":
-                condition = _("Service name ")
-            elif rulespec.item_type == "item":
-                condition = rulespec.item_name + " "
-
-            is_negate = item_list[-1] == ALL_SERVICES[0]
-            if is_negate:
-                item_list = item_list[:-1]
-                cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in is_negate and item_list ]
-            else:
-                cleaned_item_list = item_list
-
-            exact_match_count = len([x for x in item_list if x[-1] == "$"])
-
+        condition = None
+        if rule.host_list == []:
+            condition = _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
+        else:
             text_list = []
-            if exact_match_count == len(cleaned_item_list) or exact_match_count == 0:
-                if is_negate:
-                    condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")
-                else:
-                    condition += exact_match_count == 0 and _("begins with ") or ("is ")
 
-                for item in cleaned_item_list:
-                    text_list.append(boldify(item.rstrip("$")))
+            if rule.host_list[0][0] == ENTRY_NEGATE_CHAR:
+                host_list = rule.host_list[:-1]
+                is_negate = True
             else:
-                for item in cleaned_item_list:
-                    is_exact = item[-1] == "$"
+                is_negate = False
+                host_list = rule.host_list
+
+            regex_count = len([x for x in host_list if "~" in x])
+
+            condition = _("Host name ")
+            # Entries are either complete regex or no regex at all
+            if regex_count == len(host_list) or regex_count == 0:
+                is_regex = regex_count > 0
+                if is_regex:
+                    condition += is_negate and _("is not one of regex ") or _("matches one of regex ")
+                else:
+                    condition += is_negate and _("is not one of ") or _("is ")
+
+                for host_spec in host_list:
+                    if not is_regex:
+                        host = Host.host(host_spec)
+                        if host:
+                            host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
+                    text_list.append(html.render_b(host_spec.strip("!").strip("~")))
+            # Mixed entries
+            else:
+                for host_spec in host_list:
+                    is_regex = "~" in host_spec
+                    host_spec = host_spec.strip("!").strip("~")
+                    if not is_regex:
+                        host = Host.host(host_spec)
+                        if host:
+                            host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
+
                     if is_negate:
-                        expression = "%s" % (is_exact and _("is not ") or _("begins not with "))
+                        expression = "%s" % (is_regex and _("does not match regex ") or _("is not "))
                     else:
-                        expression = "%s" % (is_exact and _("is ") or _("begins with "))
-                    text_list.append("%s%s" % (expression, boldify(item.rstrip("$"))))
+                        expression = "%s" % (is_regex and _("matches regex ") or _("is "))
+                    text_list.append("%s%s" % (expression, html.render_b(host_spec)))
 
             if len(text_list) == 1:
                 condition += text_list[0]
@@ -12669,10 +12641,57 @@ class ModeEditRuleset(WatoMode):
                 condition += ", ".join(text_list[:-1])
                 condition += _(" or ") + text_list[-1]
 
-            if condition:
-                html.li(condition, class_="condition")
+        # Other cases should not occur, e.g. list of explicit hosts
+        # plus ALL_HOSTS.
+        if condition:
+            html.li(condition, class_="condition")
 
-        html.close_ul()
+
+    def _service_conditions(self, rule):
+        if not rule.ruleset.rulespec.item_type or rule.item_list == ALL_SERVICES:
+            return
+
+        if rule.ruleset.rulespec.item_type == "service":
+            condition = _("Service name ")
+        elif rule.ruleset.rulespec.item_type == "item":
+            condition = rule.ruleset.rulespec.item_name + " "
+
+        is_negate = rule.item_list[-1] == ALL_SERVICES[0]
+        if is_negate:
+            item_list = rule.item_list[:-1]
+            cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in is_negate and item_list ]
+        else:
+            item_list = rule.item_list
+            cleaned_item_list = rule.item_list
+
+        exact_match_count = len([x for x in item_list if x[-1] == "$"])
+
+        text_list = []
+        if exact_match_count == len(cleaned_item_list) or exact_match_count == 0:
+            if is_negate:
+                condition += exact_match_count == 0 and _("does not begin with ") or ("is not ")
+            else:
+                condition += exact_match_count == 0 and _("begins with ") or ("is ")
+
+            for item in cleaned_item_list:
+                text_list.append(html.render_b(item.rstrip("$")))
+        else:
+            for item in cleaned_item_list:
+                is_exact = item[-1] == "$"
+                if is_negate:
+                    expression = "%s" % (is_exact and _("is not ") or _("begins not with "))
+                else:
+                    expression = "%s" % (is_exact and _("is ") or _("begins with "))
+                text_list.append("%s%s" % (expression, html.render_b(item.rstrip("$"))))
+
+        if len(text_list) == 1:
+            condition += text_list[0]
+        else:
+            condition += ", ".join(text_list[:-1])
+            condition += _(" or ") + text_list[-1]
+
+        if condition:
+            html.li(condition, class_="condition")
 
 
     def _create_form(self):
@@ -12890,7 +12909,7 @@ class ModeEditRule(WatoMode):
 
         self._back_mode = html.var('back_mode', 'edit_ruleset')
 
-        self._folder   = Folder.current() if html.has_var("_new_host_rule") else Folder.folder(html.var("rule_folder"))
+        self._set_folder()
 
         self._rulesets = FolderRulesets(self._folder)
         self._rulesets.load()
@@ -12899,11 +12918,15 @@ class ModeEditRule(WatoMode):
         self._set_rule()
 
 
+    def _set_folder(self):
+        self._folder = Folder.folder(html.var("rule_folder"))
+
+
     def _set_rule(self):
         try:
             rulenr = int(html.var("rulenr"))
             self._rule = self._ruleset.get_rule(self._folder, rulenr)
-        except (TypeError, ValueError, IndexError):
+        except (KeyError, TypeError, ValueError, IndexError):
             raise MKUserError("rulenr", _("You are trying to edit a rule which does "
                                           "not exist anymore."))
 
@@ -12932,60 +12955,34 @@ class ModeEditRule(WatoMode):
         html.context_button(_("Abort"), backurl, "abort")
 
 
-    # TODO: Move "new" code to ModeNewRule()
     def action(self):
         if not html.check_transaction():
             return self._back_mode
 
-        # Additional options
-        rule_options = vs_rule_options().from_html_vars("options")
-        vs_rule_options().validate_value(rule_options, "options")
-        # TODO: Refactor
-        self._rule._rule_options = rule_options
-
-        # CONDITION
-        tag_specs, host_list, item_list = self._get_rule_conditions()
-        new_rule_folder = Folder.folder(html.var("new_rule_folder"))
-        # TODO: Refactor
-        self._rule._tag_specs = tag_specs
-        self._rule._host_list = host_list
-        self._rule._item_list = item_list
-        self._rule._folder    = new_rule_folder
+        self._update_rule_from_html_vars()
 
         # Check permissions on folders
+        new_rule_folder = Folder.folder(html.var("new_rule_folder"))
         if not self._new:
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
 
-        # VALUE
-        if self._ruleset.valuespec():
-            value = get_edited_value(self._ruleset.valuespec())
-        else:
-            value = html.var("value") == "yes"
-        # TODO: Refactor
-        self._rule._value = value
-
         if new_rule_folder == self._folder:
-            if self._new:
-                self._ruleset.add_rule(self._folder, self._rule)
-            self._rulesets.save()
+            self._rule.folder = new_rule_folder
 
-            if self._new:
-                add_change("edit-rule", _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
-                           (self._ruleset.title(), new_rule_folder.alias_path()),
-                           sites=self._folder.all_site_ids())
-            else:
-                add_change("edit-rule", _("Changed properties of rule \"%s\" in folder \"%s\"") %
-                           (self._ruleset.title(), new_rule_folder.alias_path()),
-                           sites=self._folder.all_site_ids())
+            self._save_rule()
 
         else:
-            # Move rule to new folder
+            # Move rule to new folder during editing
             self._ruleset.delete_rule(self._rule)
             self._rulesets.save()
 
+            # Set new folder
+            self._rule.folder = new_rule_folder
+
             self._rulesets = FolderRulesets(new_rule_folder)
-            self._ruleset = self._rulesets.get(varname)
+            self._rulesets.load()
+            self._ruleset = self._rulesets.get(self._name)
             self._ruleset.add_rule(new_rule_folder, self._rule)
             self._rulesets.save()
 
@@ -12994,10 +12991,40 @@ class ModeEditRule(WatoMode):
                         "folder \"%s\" to \"%s\"") % (self._ruleset.title(), self._folder.alias_path(),
                         new_rule_folder.alias_path()), sites=affected_sites)
 
-        return (self._back_mode,
-           (self._new and _("Created new rule in ruleset \"%s\" in folder \"%s\"")
-                or _("Edited rule in ruleset \"%s\" in folder \"%s\"")) %
-                      (self._ruleset.title(), new_rule_folder.alias_path()))
+        return (self._back_mode, self._success_message())
+
+
+    def _update_rule_from_html_vars(self):
+        # Additional options
+        rule_options = vs_rule_options().from_html_vars("options")
+        vs_rule_options().validate_value(rule_options, "options")
+        self._rule.rule_options = rule_options
+
+        # CONDITION
+        tag_specs, host_list, item_list = self._get_rule_conditions()
+        self._rule.tag_specs = tag_specs
+        self._rule.host_list = host_list
+        self._rule.item_list = item_list
+
+        # VALUE
+        if self._ruleset.valuespec():
+            value = get_edited_value(self._ruleset.valuespec())
+        else:
+            value = html.var("value") == "yes"
+        self._rule.value = value
+
+
+    def _save_rule(self):
+        # Just editing without moving to other folder
+        self._rulesets.save()
+        add_change("edit-rule", _("Changed properties of rule \"%s\" in folder \"%s\"") %
+                   (self._ruleset.title(), self._folder.alias_path()),
+                   sites=self._folder.all_site_ids())
+
+
+    def _success_message(self):
+        return _("Edited rule in ruleset \"%s\" in folder \"%s\"") % \
+                 (self._ruleset.title(), self._folder.alias_path())
 
 
     def _get_rule_conditions(self):
@@ -13062,7 +13089,7 @@ class ModeEditRule(WatoMode):
         html.begin_form("rule_editor", method="POST")
 
         # Additonal rule options
-        vs_rule_options().render_input("options", self._rule._rule_options)
+        vs_rule_options().render_input("options", self._rule.rule_options)
 
         # Value
         valuespec = self._ruleset.valuespec()
@@ -13070,8 +13097,8 @@ class ModeEditRule(WatoMode):
             forms.header(valuespec.title() or _("Value"))
             forms.section()
             try:
-                valuespec.validate_datatype(self._rule.value(), "ve")
-                valuespec.render_input("ve", self._rule.value())
+                valuespec.validate_datatype(self._rule.value, "ve")
+                valuespec.render_input("ve", self._rule.value)
             except Exception, e:
                 if config.debug:
                     raise
@@ -13091,7 +13118,7 @@ class ModeEditRule(WatoMode):
                 val = img == "yes"
                 html.img("images/rule_%s.png" % img, class_="ruleyesno", align="top")
 
-                html.radiobutton("value", img, self._rule.value() == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
+                html.radiobutton("value", img, self._rule.value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
         # Conditions
         forms.header(_("Conditions"))
 
@@ -13102,7 +13129,7 @@ class ModeEditRule(WatoMode):
 
         # Host tags
         forms.section(_("Host tags"))
-        render_condition_editor(self._rule._tag_specs)
+        render_condition_editor(self._rule.tag_specs)
         html.help(_("The rule will only be applied to hosts fulfilling all "
                      "of the host tag conditions listed here, even if they appear "
                      "in the list of explicit host names."))
@@ -13111,13 +13138,13 @@ class ModeEditRule(WatoMode):
         forms.section(_("Explicit hosts"))
         div_id = "div_all_hosts"
 
-        checked = self._rule._host_list != ALL_HOSTS
+        checked = self._rule.host_list != ALL_HOSTS
         html.checkbox("explicit_hosts", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
               label = _("Specify explicit host names"))
         html.open_div(style="display:none;" if not checked else None, id_=div_id)
-        negate_hosts = len(self._rule._host_list) > 0 and self._rule._host_list[0].startswith("!")
+        negate_hosts = len(self._rule.host_list) > 0 and self._rule.host_list[0].startswith("!")
 
-        explicit_hosts = [ h.strip("!") for h in self._rule._host_list if h != ALL_HOSTS[0] ]
+        explicit_hosts = [ h.strip("!") for h in self._rule.host_list if h != ALL_HOSTS[0] ]
         ListOfStrings(
             orientation = "horizontal",
             valuespec = TextAscii(size = 30)).render_input("hostlist", explicit_hosts)
@@ -13165,17 +13192,17 @@ class ModeEditRule(WatoMode):
             if itemtype:
                 checked = html.get_checkbox("explicit_services")
                 if checked == None: # read from rule itself
-                    checked = len(self._rule._item_list) == 0 or self._rule._item_list[0] != ""
+                    checked = len(self._rule.item_list) == 0 or self._rule.item_list[0] != ""
                 div_id = "item_list"
                 html.checkbox("explicit_services", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
                              label = _("Specify explicit values"))
                 html.open_div(id_=div_id, style=["display: none;" if not checked else "", "padding: 0px;"])
 
-                negate_entries = len(self._rule._item_list) > 0 and self._rule._item_list[0].startswith(ENTRY_NEGATE_CHAR)
+                negate_entries = len(self._rule.item_list) > 0 and self._rule.item_list[0].startswith(ENTRY_NEGATE_CHAR)
                 if negate_entries:
-                    cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in self._rule._item_list[:-1] ] # strip last entry (ALL_SERVICES)
+                    cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in self._rule.item_list[:-1] ] # strip last entry (ALL_SERVICES)
                 else:
-                    cleaned_item_list = self._rule._item_list
+                    cleaned_item_list = self._rule.item_list
 
                 itemenum = self._ruleset.item_enum()
                 if itemenum:
@@ -13215,6 +13242,20 @@ class ModeNewRule(ModeEditRule):
         return _("New rule: %s") % self._rulespec.title
 
 
+    def _set_folder(self):
+        if html.has_var("_new_rule"):
+            # Start creating new rule in the choosen folder
+            self._folder = Folder.folder(html.var("rule_folder"))
+
+        elif html.has_var("_new_host_rule"):
+            # Start creating new rule for a specific host
+            self._folder = Folder.current()
+
+        else:
+            # Submitting the creation dialog
+            self._folder = Folder.folder(html.var("new_rule_folder"))
+
+
     def _set_rule(self):
         host_list = ALL_HOSTS
         item_list = [ "" ]
@@ -13229,6 +13270,19 @@ class ModeNewRule(ModeEditRule):
                 item_list = [ "%s$" % escape_regex_chars(item) ]
 
         self._rule = Rule.create(self._folder, self._ruleset, host_list, item_list)
+
+
+    def _save_rule(self):
+        self._ruleset.add_rule(self._folder, self._rule)
+        self._rulesets.save()
+        add_change("edit-rule", _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
+                   (self._ruleset.title(), self._folder.alias_path()),
+                    sites=self._folder.all_site_ids())
+
+
+    def _success_message(self):
+        return _("Created new rule in ruleset \"%s\" in folder \"%s\"") % \
+                 (self._ruleset.title(), self._folder.alias_path())
 
 
 
@@ -14330,7 +14384,7 @@ def mode_pattern_editor(phase):
         abs_rulenr += 1
 
         # TODO: What's this?
-        pattern_list = rule.value()
+        pattern_list = rule.value
         if type(pattern_list) == dict:
             pattern_list = pattern_list["reclassify_patterns"]
 

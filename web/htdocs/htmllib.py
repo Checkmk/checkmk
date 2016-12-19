@@ -252,25 +252,39 @@ class HTML(object):
         return self._ensure_unicode(item) in self.value
 
 
-    def count(self, item):
-        return self.value.count(self._ensure_unicode(item))
+    def count(self, sub, *args):
+        return self.value.count(self._ensure_unicode(sub), *args)
 
 
-    def index(self, item):
-        return self.value.index(self._ensure_unicode(item))
+    def index(self, sub, *args):
+        return self.value.index(self._ensure_unicode(sub), *args)
 
 
-    def lstrip(self, stripstr):
-        return HTML(self.value.lstrip(self._ensure_unicode(stripstr)))
+    def lstrip(self, *args):
+        args = tuple(map(self._ensure_unicode, args[:1])) + args[1:]
+        return HTML(self.value.lstrip(*args))
 
 
-    def rstrip(self, stripstr):
-        return HTML(self.value.rstrip(self._ensure_unicode(stripstr)))
+    def rstrip(self, *args):
+        args = tuple(map(self._ensure_unicode, args[:1])) + args[1:]
+        return HTML(self.value.rstrip(*args))
 
 
-    def strip(self, stripstr):
-        return HTML(self.value.strip(self._ensure_unicode(stripstr)))
+    def strip(self, *args):
+        args = tuple(map(self._ensure_unicode, args[:1])) + args[1:]
+        return HTML(self.value.strip(*args))
 
+
+    def lower(self):
+        return HTML(self.value.lower())
+
+
+    def upper(self):
+        return HTML(self.value.upper())
+
+
+    def startswith(self, prefix, *args):
+        return self.value.startswith(self._ensure_unicode(prefix), *args)
 
 
 __builtin__.HTML = HTML

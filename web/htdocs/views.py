@@ -782,7 +782,7 @@ class Cell(object):
             # images, but all that we need for showing simple icons.
             # Current limitation: *one* image
             if txt.lower().startswith("<img"):
-                img_filename = re.sub('.*src=["\']([^\'"]*)["\'].*', "\\1", txt)
+                img_filename = re.sub('.*src=["\']([^\'"]*)["\'].*', "\\1", str(txt))
                 img_path = find_htdocs_image_path(img_filename)
                 if img_path:
                     txt = ("icon", img_path)

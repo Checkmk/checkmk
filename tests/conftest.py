@@ -30,7 +30,7 @@ def add_python_paths():
     sys.path.insert(0, cmc_path())
     sys.path.insert(0, cmk_path() + "/livestatus/api/python")
 
-    print("Import path: %s" % " ".join(sys.path))
+    #print("Import path: %s" % " ".join(sys.path))
 
 
 # Some pre-testing to ensure the developer uses the correct branches in all involved repos

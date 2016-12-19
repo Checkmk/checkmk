@@ -20,7 +20,7 @@ disable=C0111,bad-whitespace,unsubscriptable-object,unsupported-membership-test,
 # TODO: enable this and prepare code for it!
 #enable=unused-variable
 # https://pylint.readthedocs.io/en/latest/reference_guide/features.html
-enable=unreachable,dangerous-default-value,duplicate-key,using-constant-test,duplicate-except,binary-op-exception,overlapping-except,non-parent-init-called,super-init-not-called,no-init
+enable=unreachable,dangerous-default-value,duplicate-key,using-constant-test,duplicate-except,binary-op-exception,overlapping-except,non-parent-init-called,super-init-not-called,no-init,bad-open-mode,redundant-unittest-assert,boolean-datetime,deprecated-method,nonstandard-exception
 
 [TYPECHECK]
 # rrdtool

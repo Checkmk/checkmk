@@ -50,13 +50,17 @@ def parse_perle_psmu(info):
 
     parsed = {}
     for index, name, serial, psu_status, voltage_str, power_str, fan_status in info:
-        parsed.setdefault("%s %s" % (index, name), {
+        itemname = "%s %s" % (index, name)
+        parsed.setdefault(itemname, {
             "serial"   : serial,
             "fanstate" : map_states[fan_status],
             "psustate" : map_states[psu_status],
-            "power"    : float(power_str),
-            "voltage"  : float(voltage_str)
         })
+        for what, value_str in [ ("power", power_str), ("voltage", voltage_str) ]:
+            try:
+                parsed[itemname].setdefault(what, float(value_str))
+            except ValueError:
+                pass
 
     return parsed
 

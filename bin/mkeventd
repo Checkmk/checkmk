@@ -2177,16 +2177,14 @@ class EventServer:
                         else:
                             event["phase"] = "open"
 
-                        with lock_eventstatus:
-                            self.new_event_respecting_limits(event)
-
-                        if event["phase"] == "open":
-                            event_has_opened(rule, event)
-                            if rule.get("autodelete"):
-                                event["phase"] = "closed"
-                                log_event_history(event, "AUTODELETE")
-                                with lock_eventstatus:
-                                    g_event_status.remove_event(event)
+                        if self.new_event_respecting_limits(event):
+                            if event["phase"] == "open":
+                                event_has_opened(rule, event)
+                                if rule.get("autodelete"):
+                                    event["phase"] = "closed"
+                                    log_event_history(event, "AUTODELETE")
+                                    with lock_eventstatus:
+                                        g_event_status.remove_event(event)
                     return
 
         # End of loop over rules.
@@ -2704,18 +2702,21 @@ class EventServer:
 
     # protected by lock_eventstatus
     def new_event_respecting_limits(self, event):
-        verbose("Checking for event limits")
+        verbose("Checking limit for message from %s (rule '%s')" % (
+            event["host"], event["rule_id"]))
 
-        if self._handle_event_limit("overall", event):
-            return
+        with lock_eventstatus:
+            if self._handle_event_limit("overall", event):
+                return False
 
-        if self._handle_event_limit("by_host", event):
-            return
+            if self._handle_event_limit("by_host", event):
+                return False
 
-        if self._handle_event_limit("by_rule", event):
-            return
+            if self._handle_event_limit("by_rule", event):
+                return False
 
-        g_event_status.new_event(event)
+            g_event_status.new_event(event)
+            return True
 
 
     # The following actions can be configured:

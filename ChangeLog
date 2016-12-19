@@ -1,6 +1,7 @@
 1.4.0i4:
     Checks & Agents:
     * 4104 veeam_tapejobs: New check to monitor Veeam tape jobs
+    * 4171 FIX: perle_psmu: fixed value error...
 
 
 1.4.0i3:

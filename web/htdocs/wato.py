@@ -12150,6 +12150,7 @@ def rule_search_button(search_options=None, mode="rulesets"):
     delvars=["filled_in"]), "search", hot=bool(search_options))
 
 
+
 class ModeEditRuleset(WatoMode):
     def __init__(self):
         self._from_vars()
@@ -12162,6 +12163,7 @@ class ModeEditRuleset(WatoMode):
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
 
+        # TODO: Clean this up. In which case is it used?
         self._item = None
         if html.var("check_command"):
             check_command = html.var("check_command")
@@ -12186,19 +12188,16 @@ class ModeEditRuleset(WatoMode):
             raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
 
         if not self._item:
+            self._item = NO_ITEM
             if html.has_var("item"):
                 try:
                     self._item = mk_eval(html.var("item"))
                 except:
-                    self._item = NO_ITEM
-            else:
-                self._item = NO_ITEM
+                    pass
 
-        self._hostname = html.var("host")
-        if self._hostname:
-            host = Folder.current().host(self._hostname)
-            if not host:
-                self._hostname = None # host not found. Should not happen
+        hostname = html.var("host")
+        if hostname and Folder.current().has_host(self._hostname):
+            self._hostname = hostname
 
 
     def title(self):
@@ -12529,7 +12528,7 @@ class ModeEditRuleset(WatoMode):
 
 
     # TODO: Refactor this whole method
-    def _rule_conditions(rulespec, tagspecs, host_list, item_list, varname, folder):
+    def _rule_conditions(self, rulespec, tagspecs, host_list, item_list, varname, folder):
         html.open_ul(class_="conditions")
 
         # Host tags
@@ -12548,7 +12547,7 @@ class ModeEditRuleset(WatoMode):
                 if group_alias:
                     html.write_text(_("Host") + ": " + group_alias + " " + _("is") + " ")
                     if negate:
-                        html.b(_("not"))
+                        html.b(_("not") + " ")
                 else:
                     if negate:
                         html.write_text(_("Host does not have tag"))

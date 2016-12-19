@@ -434,6 +434,8 @@ class Site(object):
 class WebSession(requests.Session):
     def __init__(self):
         self.transids = []
+        # Resources are
+        self.verified_resources = set()
         super(WebSession, self).__init__()
 
 
@@ -541,50 +543,41 @@ class WebSession(requests.Session):
     def _check_html_page_resources(self, response):
         soup = BeautifulSoup(response.text, "lxml")
 
+        # There might be other resources like iframe, audio, ... but we don't care about them
+
+        self._check_resources(soup, response, "img",    "src",  [ "image/png"])
+        self._check_resources(soup, response, "script", "src",  [ "application/javascript"])
+        self._check_resources(soup, response, "link",   "href", [ "text/css"], filters=[("rel", "stylesheet")])
+        self._check_resources(soup, response, "link",   "href", [ "image/vnd.microsoft.icon"], filters=[("rel", "shortcut icon")])
+
+
+    def _check_resources(self, soup, response, tag, attr, allowed_mime_types, filters=None):
         parsed_url = urlparse(response.url)
 
         base_url = parsed_url.path
         if ".py" in base_url:
             base_url = os.path.dirname(base_url)
 
-        # There might be other resources like iframe, audio, ... but we don't care about them
+        for url in self._find_resource_urls(tag, attr, soup, filters):
+            # Only check resources once per session
+            if url in self.verified_resources:
+                continue
+            self.verified_resources.add(url)
 
-        for img_url in self._find_resource_urls("img", "src", soup):
-            assert not img_url.startswith("/"), "%s starts with /" % img_url
-            req = self.get(base_url + "/" + img_url, proto=parsed_url.scheme, verify=False)
-
-            mime_type = self._get_mime_type(req)
-            assert mime_type in [ "image/png" ]
-
-        for script_url in self._find_resource_urls("script", "src", soup):
-            assert not script_url.startswith("/")
-            req = self.get(base_url + "/" + script_url, proto=parsed_url.scheme, verify=False)
-
-            mime_type = self._get_mime_type(req)
-            assert mime_type in [ "application/javascript" ]
-
-        for css_url in self._find_resource_urls("link", "href", soup, filters=[("rel", "stylesheet")]):
-            assert not css_url.startswith("/")
-            req = self.get(base_url + "/" + css_url, proto=parsed_url.scheme, verify=False)
-
-            mime_type = self._get_mime_type(req)
-            assert mime_type in [ "text/css" ]
-
-        for url in self._find_resource_urls("link", "href", soup, filters=[("rel", "shortcut icon")]):
             assert not url.startswith("/")
             req = self.get(base_url + "/" + url, proto=parsed_url.scheme, verify=False)
 
             mime_type = self._get_mime_type(req)
-            assert mime_type in [ "image/vnd.microsoft.icon" ]
+            assert mime_type in allowed_mime_types
 
 
-    def _find_resource_urls(self, tag, attribute, soup, filters=[]):
+    def _find_resource_urls(self, tag, attribute, soup, filters=None):
         urls = []
 
         for element in soup.findAll(tag):
             try:
                 skip = False
-                for attr, val in filters:
+                for attr, val in filters or []:
                     if element[attr] != val:
                         skip = True
                         break

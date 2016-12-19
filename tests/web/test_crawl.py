@@ -61,9 +61,9 @@ class Worker(threading.Thread):
                     except Exception, e:
                         self.error(url, "Failed to visit: %s\n%s" %
                                      (e, traceback.format_exc()))
-                    self.idle = True
                     self.crawler.todo.task_done()
             except Queue.Empty:
+                self.idle = True
                 time.sleep(0.5)
 
 
@@ -82,7 +82,7 @@ class Worker(threading.Thread):
 
         started = time.time()
         try:
-            #print url.url_without_host()
+            #print "FETCH", url.url_without_host()
             response = self.crawler.client.get(url.url_without_host())
         except AssertionError, e:
             if "This view can only be used in mobile mode" in "%s" % e:
@@ -142,10 +142,9 @@ class Worker(threading.Thread):
     def check_response(self, url, response):
         soup = BeautifulSoup(response.text, "lxml")
 
+        # The referenced resources (images, stylesheets, javascript files) are checked by
+        # the generic web client handler. This only needs to reaslize the crawling.
         self.check_content(url, response, soup)
-        self.check_images(url, soup)
-        self.check_styles(url, soup)
-        self.check_scripts(url, soup)
         self.check_links(url, soup)
         self.check_frames(url, soup)
         self.check_iframes(url, soup)
@@ -181,10 +180,6 @@ class Worker(threading.Thread):
         self.check_referenced(url, soup, "a", "href")
 
 
-    def check_images(self, url, soup):
-        self.check_referenced(url, soup, "img", "src")
-
-
     def check_referenced(self, referer_url, soup, tag, attr):
         elements = soup.find_all(tag)
 
@@ -193,17 +188,10 @@ class Worker(threading.Thread):
             url = self.normalize_url(self.crawler.site.internal_url, orig_url)
 
             if url is not None and self.is_valid_url(url) \
-               and url not in self.crawler.visited:
+               and url not in self.crawler.handled:
                 #file("/tmp/todo", "a").write("%s (%s)\n" % (url, referer_url.url))
                 self.crawler.todo.put(Url(url, orig_url=orig_url, referer_url=referer_url.url))
-
-
-    def check_styles(self, url, soup):
-        pass # TODO
-
-
-    def check_scripts(self, url, soup):
-        pass # TODO
+                self.crawler.handled.add(url)
 
 
     def is_valid_url(self, url):
@@ -276,6 +264,9 @@ class TestCrawler(object):
         self.todo    = SetQueue()
         self.started = time.time()
         self.visited = []
+        # Contains all already seen and somehow handled URLs. Something like the
+        # summary of self.todo and self.handled but todo contains Url() objects.
+        self.handled = set()
         self.errors  = []
         self.site    = site
         self.client  = web
@@ -284,6 +275,7 @@ class TestCrawler(object):
         self.load_stats()
 
         self.todo.put(Url(site.internal_url))
+        self.handled.add(site.internal_url)
 
         self.crawl()
 

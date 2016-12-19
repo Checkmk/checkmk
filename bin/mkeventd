@@ -3967,6 +3967,12 @@ def do_notify(event, username=None, is_cancelling=False):
         for varname, value in sorted(context.items()):
             verbose("  %-25s: %s" % (varname, value))
 
+    if context["HOSTDOWNTIME"] != "0":
+        log("Host %s is currently in scheduled downtime. "
+            "Skipping notification of event %s." % (
+            context["HOSTNAME"], event["id"]))
+        return
+
 
     # Send notification context via stdin.
     context_string = to_utf8("".join([

@@ -1,0 +1,15 @@
+Title: Do not send notifications if host found and currently in downtime
+Level: 2
+Component: ec
+Compatible: incomp
+Version: 1.4.0i4
+Date: 1482144072
+Class: feature
+
+When you forward notifications from the Event Console to Check_MK then
+from now on these are being suppressed if the host can be found in the
+active monitoring and is currently in a scheduled downtime.
+
+This is very much what users except and want to happen. Please note that
+- however - this is an incompatible change sind now some notifications
+will not longer be sent that have been sent previously.

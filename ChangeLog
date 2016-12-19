@@ -3,6 +3,9 @@
     * 4171 FIX: perle_psmu: fixed value error...
     * 4172 FIX: smart.temp: fixed discovery and check function...
 
+    Multisite:
+    * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...
+
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address
 

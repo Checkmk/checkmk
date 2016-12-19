@@ -313,6 +313,11 @@ def check_auth_by_cookie():
             try:
                 set_auth_type("cookie")
                 return check_auth_cookie(cookie_name)
+            except MKAuthException:
+                # Suppress cookie validation errors from other sites cookies
+                if config.debug:
+                    logger(LOG_ERR, 'Exception while checking cookie %s: %s' %
+                                            (cookie_name, traceback.format_exc()))
             except Exception, e:
                 logger(LOG_ERR, 'Exception while checking cookie %s: %s' %
                                     (cookie_name, traceback.format_exc()))

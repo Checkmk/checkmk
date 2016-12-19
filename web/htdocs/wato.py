@@ -11869,6 +11869,7 @@ def change_host_tags_in_rules(folder, operations, mode):
 
 class ModeRuleEditor(WatoMode):
     def __init__(self):
+        super(ModeRuleEditor, self).__init__()
         self._only_host = html.var("host")
 
 
@@ -11957,6 +11958,7 @@ class ModeRulesets(WatoMode):
     _mode = "rulesets"
 
     def __init__(self):
+        super(ModeRulesets, self).__init__()
         self._from_vars()
         self._set_title_and_help()
 
@@ -12153,6 +12155,7 @@ def rule_search_button(search_options=None, mode="rulesets"):
 
 class ModeEditRuleset(WatoMode):
     def __init__(self):
+        super(ModeEditRuleset, self).__init__()
         self._from_vars()
 
 
@@ -12196,8 +12199,10 @@ class ModeEditRuleset(WatoMode):
                     pass
 
         hostname = html.var("host")
-        if hostname and Folder.current().has_host(self._hostname):
+        if hostname and Folder.current().has_host(hostname):
             self._hostname = hostname
+        else:
+            self._hostname = None
 
 
     def title(self):
@@ -12711,76 +12716,6 @@ class ModeEditRuleset(WatoMode):
 
 
 
-def get_rule_conditions(rulespec):
-    tag_list = get_tag_conditions()
-
-    # Host list
-    if not html.get_checkbox("explicit_hosts"):
-        host_list = ALL_HOSTS
-    else:
-        negate = html.get_checkbox("negate_hosts")
-        nr = 0
-        vs = ListOfStrings()
-        host_list = vs.from_html_vars("hostlist")
-        vs.validate_value(host_list, "hostlist")
-        if negate:
-            host_list = [ ENTRY_NEGATE_CHAR + h for h in host_list ]
-        # append ALL_HOSTS to negated host lists
-        if len(host_list) > 0 and host_list[0][0] == ENTRY_NEGATE_CHAR:
-            host_list += ALL_HOSTS
-        elif len(host_list) == 0 and negate:
-            host_list = ALL_HOSTS # equivalent
-
-    # Item list
-    itemtype = rulespec.item_type
-    if itemtype:
-        explicit = html.get_checkbox("explicit_services")
-        if not explicit:
-            item_list = ALL_SERVICES
-        else:
-            itemenum = rulespec.item_enum
-            negate = html.get_checkbox("negate_entries")
-
-            if itemenum:
-                itemspec = ListChoice(choices = itemenum, columns = 3)
-                item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
-            else:
-                vs = vs_rule_service_conditions()
-                item_list = vs.from_html_vars("itemlist")
-                vs.validate_value(item_list, "itemlist")
-
-            if negate:
-                item_list = [ ENTRY_NEGATE_CHAR + i for i in item_list]
-
-            if len(item_list) > 0 and item_list[0][0] == ENTRY_NEGATE_CHAR:
-                item_list += ALL_SERVICES
-            elif len(item_list) == 0 and negate:
-                item_list = ALL_SERVICES # equivalent
-
-            if len(item_list) == 0:
-                raise MKUserError("item_0", _("Please specify at least one %s or "
-                    "this rule will never match.") % rulespec.item_name)
-    else:
-        item_list = None
-
-    return tag_list, host_list, item_list
-
-
-def vs_rule_service_conditions():
-    return ListOfStrings(
-        orientation = "horizontal",
-        valuespec = RegExpUnicode(
-            size = 30,
-            mode = RegExpUnicode.prefix
-        ),
-    )
-
-
-def date_and_user():
-    return time.strftime("%F", time.localtime()) + " " + config.user.id + ": "
-
-
-
 class ModeRuleSearch(WatoMode):
     def __init__(self):
         super(ModeRuleSearch, self).__init__()
@@ -12934,40 +12869,353 @@ class ModeRuleSearch(WatoMode):
 
 
 
-def mode_edit_rule(phase, new = False):
-    varname = html.var("varname")
+class ModeEditRule(WatoMode):
+    _new = False
 
-    if not may_edit_ruleset(varname):
-        raise MKAuthException(_("You are not permitted to access this ruleset."))
+    def __init__(self):
+        super(ModeEditRule, self).__init__()
+        self._from_vars()
 
-    try:
-        rulespec = g_rulespecs.get(varname)
-    except KeyError:
-        raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % varname)
 
-    back_mode = html.var('back_mode', 'edit_ruleset')
+    def _from_vars(self):
+        self._name = html.var("varname")
 
-    if phase == "title":
-        return _("%s rule %s") % (new and _("New") or _("Edit"), rulespec.title)
+        if not may_edit_ruleset(self._name):
+            raise MKAuthException(_("You are not permitted to access this ruleset."))
 
-    elif phase == "buttons":
-        if back_mode == 'edit_ruleset':
-            var_list = [("mode", "edit_ruleset"), ("varname", varname), ("host", html.var("host",""))]
+        try:
+            self._rulespec = g_rulespecs.get(self._name)
+        except KeyError:
+            raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
+
+        self._back_mode = html.var('back_mode', 'edit_ruleset')
+
+        self._folder   = Folder.current() if html.has_var("_new_host_rule") else Folder.folder(html.var("rule_folder"))
+
+        self._rulesets = FolderRulesets(self._folder)
+        self._rulesets.load()
+        self._ruleset = self._rulesets.get(self._name)
+
+        self._set_rule()
+
+
+    def _set_rule(self):
+        try:
+            rulenr = int(html.var("rulenr"))
+            self._rule = self._ruleset.get_rule(self._folder, rulenr)
+        except (TypeError, ValueError, IndexError):
+            raise MKUserError("rulenr", _("You are trying to edit a rule which does "
+                                          "not exist anymore."))
+
+
+    def title(self):
+        return _("Edit rule: %s") % self._rulespec.title
+
+
+    def buttons(self):
+        if self._back_mode == 'edit_ruleset':
+            var_list = [
+                ("mode", "edit_ruleset"),
+                ("varname", self._name),
+                ("host", html.var("host", "")),
+            ]
             if html.var("item"):
-                var_list.append( ("item", html.var("item")) )
+                var_list.append(("item", html.var("item")))
             backurl = folder_preserving_link(var_list)
+
         else:
-            backurl = folder_preserving_link([('mode', back_mode), ("host", html.var("host",""))])
+            backurl = folder_preserving_link([
+                ('mode', self._back_mode),
+                ("host", html.var("host",""))
+            ])
+
         html.context_button(_("Abort"), backurl, "abort")
-        return
 
-    folder   = html.has_var("_new_host_rule") and Folder.current() or Folder.folder(html.var("rule_folder"))
 
-    rulesets = FolderRulesets(folder)
-    rulesets.load()
-    ruleset  = rulesets.get(varname)
+    # TODO: Move "new" code to ModeNewRule()
+    def action(self):
+        if not html.check_transaction():
+            return self._back_mode
 
-    if new:
+        # Additional options
+        rule_options = vs_rule_options().from_html_vars("options")
+        vs_rule_options().validate_value(rule_options, "options")
+        # TODO: Refactor
+        self._rule._rule_options = rule_options
+
+        # CONDITION
+        tag_specs, host_list, item_list = self._get_rule_conditions()
+        new_rule_folder = Folder.folder(html.var("new_rule_folder"))
+        # TODO: Refactor
+        self._rule._tag_specs = tag_specs
+        self._rule._host_list = host_list
+        self._rule._item_list = item_list
+        self._rule._folder    = new_rule_folder
+
+        # Check permissions on folders
+        if not self._new:
+            self._folder.need_permission("write")
+        new_rule_folder.need_permission("write")
+
+        # VALUE
+        if self._ruleset.valuespec():
+            value = get_edited_value(self._ruleset.valuespec())
+        else:
+            value = html.var("value") == "yes"
+        # TODO: Refactor
+        self._rule._value = value
+
+        if new_rule_folder == self._folder:
+            if self._new:
+                self._ruleset.add_rule(self._folder, self._rule)
+            self._rulesets.save()
+
+            if self._new:
+                add_change("edit-rule", _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
+                           (self._ruleset.title(), new_rule_folder.alias_path()),
+                           sites=self._folder.all_site_ids())
+            else:
+                add_change("edit-rule", _("Changed properties of rule \"%s\" in folder \"%s\"") %
+                           (self._ruleset.title(), new_rule_folder.alias_path()),
+                           sites=self._folder.all_site_ids())
+
+        else:
+            # Move rule to new folder
+            self._ruleset.delete_rule(self._rule)
+            self._rulesets.save()
+
+            self._rulesets = FolderRulesets(new_rule_folder)
+            self._ruleset = self._rulesets.get(varname)
+            self._ruleset.add_rule(new_rule_folder, self._rule)
+            self._rulesets.save()
+
+            affected_sites = list(set(self._folder.all_site_ids() + new_rule_folder.all_site_ids()))
+            add_change("edit-rule", _("Changed properties of rule \"%s\", moved rule from "
+                        "folder \"%s\" to \"%s\"") % (self._ruleset.title(), self._folder.alias_path(),
+                        new_rule_folder.alias_path()), sites=affected_sites)
+
+        return (self._back_mode,
+           (self._new and _("Created new rule in ruleset \"%s\" in folder \"%s\"")
+                or _("Edited rule in ruleset \"%s\" in folder \"%s\"")) %
+                      (self._ruleset.title(), new_rule_folder.alias_path()))
+
+
+    def _get_rule_conditions(self):
+        tag_list = get_tag_conditions()
+
+        # Host list
+        if not html.get_checkbox("explicit_hosts"):
+            host_list = ALL_HOSTS
+        else:
+            negate = html.get_checkbox("negate_hosts")
+            nr = 0
+            vs = ListOfStrings()
+            host_list = vs.from_html_vars("hostlist")
+            vs.validate_value(host_list, "hostlist")
+            if negate:
+                host_list = [ ENTRY_NEGATE_CHAR + h for h in host_list ]
+            # append ALL_HOSTS to negated host lists
+            if len(host_list) > 0 and host_list[0][0] == ENTRY_NEGATE_CHAR:
+                host_list += ALL_HOSTS
+            elif len(host_list) == 0 and negate:
+                host_list = ALL_HOSTS # equivalent
+
+        # Item list
+        itemtype = self._rulespec.item_type
+        if itemtype:
+            explicit = html.get_checkbox("explicit_services")
+            if not explicit:
+                item_list = ALL_SERVICES
+            else:
+                itemenum = self._rulespec.item_enum
+                negate = html.get_checkbox("negate_entries")
+
+                if itemenum:
+                    itemspec = ListChoice(choices = itemenum, columns = 3)
+                    item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
+                else:
+                    vs = self._vs_service_conditions()
+                    item_list = vs.from_html_vars("itemlist")
+                    vs.validate_value(item_list, "itemlist")
+
+                if negate:
+                    item_list = [ ENTRY_NEGATE_CHAR + i for i in item_list]
+
+                if len(item_list) > 0 and item_list[0][0] == ENTRY_NEGATE_CHAR:
+                    item_list += ALL_SERVICES
+                elif len(item_list) == 0 and negate:
+                    item_list = ALL_SERVICES # equivalent
+
+                if len(item_list) == 0:
+                    raise MKUserError("item_0", _("Please specify at least one %s or "
+                        "this rule will never match.") % self._rulespec.item_name)
+        else:
+            item_list = None
+
+        return tag_list, host_list, item_list
+
+
+    def page(self):
+        if self._ruleset.help():
+            html.div(HTML(self._ruleset.help()), class_="info")
+
+        html.begin_form("rule_editor", method="POST")
+
+        # Additonal rule options
+        vs_rule_options().render_input("options", self._rule._rule_options)
+
+        # Value
+        valuespec = self._ruleset.valuespec()
+        if valuespec:
+            forms.header(valuespec.title() or _("Value"))
+            forms.section()
+            try:
+                valuespec.validate_datatype(self._rule.value(), "ve")
+                valuespec.render_input("ve", self._rule.value())
+            except Exception, e:
+                if config.debug:
+                    raise
+                else:
+                    html.show_warning(_('Unable to read current options of this rule. Falling back to '
+                                        'default values. When saving this rule now, your previous settings '
+                                        'will be overwritten. Problem was: %s.') % e)
+
+                # In case of validation problems render the input with default values
+                valuespec.render_input("ve", valuespec.default_value())
+
+            valuespec.set_focus("ve")
+        else:
+            forms.header(_("Positive / Negative"))
+            forms.section("")
+            for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
+                val = img == "yes"
+                html.img("images/rule_%s.png" % img, class_="ruleyesno", align="top")
+
+                html.radiobutton("value", img, self._rule.value() == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
+        # Conditions
+        forms.header(_("Conditions"))
+
+        # Rule folder
+        forms.section(_("Folder"))
+        html.select("new_rule_folder", Folder.folder_choices(), self._folder.path())
+        html.help(_("The rule is only applied to hosts directly in or below this folder."))
+
+        # Host tags
+        forms.section(_("Host tags"))
+        render_condition_editor(self._rule._tag_specs)
+        html.help(_("The rule will only be applied to hosts fulfilling all "
+                     "of the host tag conditions listed here, even if they appear "
+                     "in the list of explicit host names."))
+
+        # Explicit hosts / ALL_HOSTS
+        forms.section(_("Explicit hosts"))
+        div_id = "div_all_hosts"
+
+        checked = self._rule._host_list != ALL_HOSTS
+        html.checkbox("explicit_hosts", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
+              label = _("Specify explicit host names"))
+        html.open_div(style="display:none;" if not checked else None, id_=div_id)
+        negate_hosts = len(self._rule._host_list) > 0 and self._rule._host_list[0].startswith("!")
+
+        explicit_hosts = [ h.strip("!") for h in self._rule._host_list if h != ALL_HOSTS[0] ]
+        ListOfStrings(
+            orientation = "horizontal",
+            valuespec = TextAscii(size = 30)).render_input("hostlist", explicit_hosts)
+
+        html.br()
+        html.br()
+        html.checkbox("negate_hosts", negate_hosts, label =
+                     _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
+        html.close_div()
+        html.help(_("Here you can enter a list of explicit host names that the rule should or should "
+                     "not apply to. Leave this option disabled if you want the rule to "
+                     "apply for all hosts specified by the given tags. The names that you "
+                     "enter here are compared with case sensitive exact matching. Alternatively "
+                     "you can use regular expressions if you enter a tilde (<tt>~</tt>) as the first "
+                     "character. That regular expression must match the <i>beginning</i> of "
+                     "the host names in question."))
+
+        # Itemlist
+        itemtype = self._ruleset.item_type()
+        if itemtype:
+            if itemtype == "service":
+                forms.section(_("Services"))
+                html.help(_("Specify a list of service patterns this rule shall apply to. "
+                             "The patterns must match the <b>beginning</b> of the service "
+                             "in question. Adding a <tt>$</tt> to the end forces an excact "
+                             "match. Pattern use <b>regular expressions</b>. A <tt>.*</tt> will "
+                             "match an arbitrary text."))
+            elif itemtype == "checktype":
+                forms.section(_("Check types"))
+            elif itemtype == "item":
+                forms.section(self._ruleset.item_name().title())
+                if self._ruleset.item_help():
+                    html.help(self._ruleset.item_help())
+                else:
+                    html.help(_("You can make the rule apply only to certain services of the "
+                                 "specified hosts. Do this by specifying explicit <b>items</b> to "
+                                 "match here. <b>Hint:</b> make sure to enter the item only, "
+                                 "not the full Service description. "
+                                 "<b>Note:</b> the match is done on the <u>beginning</u> "
+                                 "of the item in question. Regular expressions are interpreted, "
+                                 "so appending a <tt>$</tt> will force an exact match."))
+            else:
+                raise MKGeneralException("Invalid item type '%s'" % itemtype)
+
+            if itemtype:
+                checked = html.get_checkbox("explicit_services")
+                if checked == None: # read from rule itself
+                    checked = len(self._rule._item_list) == 0 or self._rule._item_list[0] != ""
+                div_id = "item_list"
+                html.checkbox("explicit_services", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
+                             label = _("Specify explicit values"))
+                html.open_div(id_=div_id, style=["display: none;" if not checked else "", "padding: 0px;"])
+
+                negate_entries = len(self._rule._item_list) > 0 and self._rule._item_list[0].startswith(ENTRY_NEGATE_CHAR)
+                if negate_entries:
+                    cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in self._rule._item_list[:-1] ] # strip last entry (ALL_SERVICES)
+                else:
+                    cleaned_item_list = self._rule._item_list
+
+                itemenum = self._ruleset.item_enum()
+                if itemenum:
+                    value = [ x.rstrip("$") for x in cleaned_item_list ]
+                    itemspec = ListChoice(choices = itemenum, columns = 3)
+                    itemspec.render_input("item", value)
+                else:
+                    self._vs_service_conditions().render_input("itemlist", cleaned_item_list)
+
+                html.checkbox("negate_entries", negate_entries, label =
+                             _("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"))
+
+                html.close_div()
+
+        forms.end()
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        vs_rule_options().set_focus("options")
+        html.end_form()
+
+
+    def _vs_service_conditions(self,):
+        return ListOfStrings(
+            orientation = "horizontal",
+            valuespec = RegExpUnicode(
+                size = 30,
+                mode = RegExpUnicode.prefix
+            ),
+        )
+
+
+
+class ModeNewRule(ModeEditRule):
+    _new = True
+
+    def title(self):
+        return _("New rule: %s") % self._rulespec.title
+
+
+    def _set_rule(self):
         host_list = ALL_HOSTS
         item_list = [ "" ]
 
@@ -12976,232 +13224,12 @@ def mode_edit_rule(phase, new = False):
             if hostname:
                 host_list = [hostname]
 
-            item = html.has_var("item") and mk_eval(html.var("item")) or NO_ITEM
+            item = mk_eval(html.var("item")) if html.has_var("item") else NO_ITEM
             if item != NO_ITEM:
                 item_list = [ "%s$" % escape_regex_chars(item) ]
-            else:
-                item_list = [ "" ]
 
-        rule = Rule.create(folder, ruleset, host_list, item_list)
-        rulenr = ruleset.num_rules()
-    else:
-        try:
-            rulenr = int(html.var("rulenr"))
-            rule = ruleset.get_rule(folder, rulenr)
-        except (TypeError, ValueError, IndexError):
-            if phase == "action":
-                raise MKUserError("rulenr", _("You are trying to edit a rule which does not exist "
-                                              "anymore."))
-            else:
-                html.show_error(_("You are trying to edit a rule which does not exist anymore."))
-                return
+        self._rule = Rule.create(self._folder, self._ruleset, host_list, item_list)
 
-    if phase == "action":
-        if html.check_transaction():
-            # Additional options
-            rule_options = vs_rule_options().from_html_vars("options")
-            vs_rule_options().validate_value(rule_options, "options")
-            # TODO: Refactor
-            rule._rule_options = rule_options
-
-            # CONDITION
-            tag_specs, host_list, item_list = get_rule_conditions(rulespec)
-            new_rule_folder = Folder.folder(html.var("new_rule_folder"))
-            # TODO: Refactor
-            rule._tag_specs = tag_specs
-            rule._host_list = host_list
-            rule._item_list = item_list
-            rule._folder    = new_rule_folder
-
-            # Check permissions on folders
-            if not new:
-                folder.need_permission("write")
-            new_rule_folder.need_permission("write")
-
-            # VALUE
-            if ruleset.valuespec():
-                value = get_edited_value(ruleset.valuespec())
-            else:
-                value = html.var("value") == "yes"
-            # TODO: Refactor
-            rule._value = value
-
-            if new_rule_folder == folder:
-                if new:
-                    ruleset.add_rule(folder, rule)
-                rulesets.save()
-
-                if new:
-                    add_change("edit-rule", _("Created new rule in ruleset \"%s\" in folder \"%s\"") %
-                               (ruleset.title(), new_rule_folder.alias_path()),
-                               sites=folder.all_site_ids())
-                else:
-                    add_change("edit-rule", _("Changed properties of rule \"%s\" in folder \"%s\"") %
-                               (ruleset.title(), new_rule_folder.alias_path()),
-                               sites=folder.all_site_ids())
-
-            else:
-                # Move rule to new folder
-                ruleset.delete_rule(rule)
-                rulesets.save()
-
-                rulesets = FolderRulesets(new_rule_folder)
-                ruleset = rulesets.get(varname)
-                ruleset.add_rule(new_rule_folder, rule)
-                rulesets.save()
-
-                affected_sites = list(set(folder.all_site_ids() + new_rule_folder.all_site_ids()))
-                add_change("edit-rule", _("Changed properties of rule \"%s\", moved rule from "
-                            "folder \"%s\" to \"%s\"") % (ruleset.title(), folder.alias_path(),
-                            new_rule_folder.alias_path()), sites=affected_sites)
-        else:
-            return back_mode
-
-        return (back_mode,
-           (new and _("Created new rule in ruleset \"%s\" in folder \"%s\"")
-                or _("Edited rule in ruleset \"%s\" in folder \"%s\"")) %
-                      (ruleset.title(), new_rule_folder.alias_path()))
-
-    if ruleset.help():
-        html.div(HTML(ruleset.help()), class_="info")
-
-    html.begin_form("rule_editor", method="POST")
-
-
-    # Additonal rule options
-    vs_rule_options().render_input("options", rule._rule_options)
-
-    # Value
-    valuespec = ruleset.valuespec()
-    if valuespec:
-        forms.header(valuespec.title() or _("Value"))
-        forms.section()
-        try:
-            valuespec.validate_datatype(rule.value(), "ve")
-            valuespec.render_input("ve", rule.value())
-        except Exception, e:
-            if config.debug:
-                raise
-            else:
-                html.show_warning(_('Unable to read current options of this rule. Falling back to '
-                                    'default values. When saving this rule now, your previous settings '
-                                    'will be overwritten. Problem was: %s.') % e)
-
-            # In case of validation problems render the input with default values
-            valuespec.render_input("ve", valuespec.default_value())
-
-        valuespec.set_focus("ve")
-    else:
-        forms.header(_("Positive / Negative"))
-        forms.section("")
-        for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
-            val = img == "yes"
-            html.img("images/rule_%s.png" % img, class_="ruleyesno", align="top")
-
-            html.radiobutton("value", img, rule.value() == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
-    # Conditions
-    forms.header(_("Conditions"))
-
-    # Rule folder
-    forms.section(_("Folder"))
-    html.select("new_rule_folder", Folder.folder_choices(), folder.path())
-    html.help(_("The rule is only applied to hosts directly in or below this folder."))
-
-    # Host tags
-    forms.section(_("Host tags"))
-    render_condition_editor(rule._tag_specs)
-    html.help(_("The rule will only be applied to hosts fulfilling all "
-                 "of the host tag conditions listed here, even if they appear "
-                 "in the list of explicit host names."))
-
-    # Explicit hosts / ALL_HOSTS
-    forms.section(_("Explicit hosts"))
-    div_id = "div_all_hosts"
-
-    checked = rule._host_list != ALL_HOSTS
-    html.checkbox("explicit_hosts", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
-          label = _("Specify explicit host names"))
-    html.open_div(style="display:none;" if not checked else None, id_=div_id)
-    negate_hosts = len(rule._host_list) > 0 and rule._host_list[0].startswith("!")
-
-    explicit_hosts = [ h.strip("!") for h in rule._host_list if h != ALL_HOSTS[0] ]
-    ListOfStrings(
-        orientation = "horizontal",
-        valuespec = TextAscii(size = 30)).render_input("hostlist", explicit_hosts)
-
-    html.br()
-    html.br()
-    html.checkbox("negate_hosts", negate_hosts, label =
-                 _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
-    html.close_div()
-    html.help(_("Here you can enter a list of explicit host names that the rule should or should "
-                 "not apply to. Leave this option disabled if you want the rule to "
-                 "apply for all hosts specified by the given tags. The names that you "
-                 "enter here are compared with case sensitive exact matching. Alternatively "
-                 "you can use regular expressions if you enter a tilde (<tt>~</tt>) as the first "
-                 "character. That regular expression must match the <i>beginning</i> of "
-                 "the host names in question."))
-
-    # Itemlist
-    itemtype = ruleset.item_type()
-    if itemtype:
-        if itemtype == "service":
-            forms.section(_("Services"))
-            html.help(_("Specify a list of service patterns this rule shall apply to. "
-                         "The patterns must match the <b>beginning</b> of the service "
-                         "in question. Adding a <tt>$</tt> to the end forces an excact "
-                         "match. Pattern use <b>regular expressions</b>. A <tt>.*</tt> will "
-                         "match an arbitrary text."))
-        elif itemtype == "checktype":
-            forms.section(_("Check types"))
-        elif itemtype == "item":
-            forms.section(ruleset.item_name().title())
-            if ruleset.item_help():
-                html.help(ruleset.item_help())
-            else:
-                html.help(_("You can make the rule apply only to certain services of the "
-                             "specified hosts. Do this by specifying explicit <b>items</b> to "
-                             "match here. <b>Hint:</b> make sure to enter the item only, "
-                             "not the full Service description. "
-                             "<b>Note:</b> the match is done on the <u>beginning</u> "
-                             "of the item in question. Regular expressions are interpreted, "
-                             "so appending a <tt>$</tt> will force an exact match."))
-        else:
-            raise MKGeneralException("Invalid item type '%s'" % itemtype)
-
-        if itemtype:
-            checked = html.get_checkbox("explicit_services")
-            if checked == None: # read from rule itself
-                checked = len(rule._item_list) == 0 or rule._item_list[0] != ""
-            div_id = "item_list"
-            html.checkbox("explicit_services", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
-                         label = _("Specify explicit values"))
-            html.open_div(id_=div_id, style=["display: none;" if not checked else "", "padding: 0px;"])
-
-            negate_entries = len(rule._item_list) > 0 and rule._item_list[0].startswith(ENTRY_NEGATE_CHAR)
-            if negate_entries:
-                cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in rule._item_list[:-1] ] # strip last entry (ALL_SERVICES)
-            else:
-                cleaned_item_list = rule._item_list
-
-            itemenum = ruleset.item_enum()
-            if itemenum:
-                value = [ x.rstrip("$") for x in cleaned_item_list ]
-                itemspec = ListChoice(choices = itemenum, columns = 3)
-                itemspec.render_input("item", value)
-            else:
-                vs_rule_service_conditions().render_input("itemlist", cleaned_item_list)
-
-            html.checkbox("negate_entries", negate_entries, label =
-                         _("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"))
-
-            html.close_div()
-
-    forms.end()
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    vs_rule_options().set_focus("options")
-    html.end_form()
 
 
 # Special version of register_rule, dedicated to checks. This is not really
@@ -16064,6 +16092,9 @@ def vs_rule_options(disabling=True):
 
 
 def rule_option_elements(disabling=True):
+    def date_and_user():
+        return time.strftime("%F", time.localtime()) + " " + config.user.id + ": "
+
     elements = [
         ( "description",
           TextUnicode(
@@ -16491,8 +16522,8 @@ modes = {
    "rule_search"        : (["rulesets"], ModeRuleSearch),
    "rulesets"           : (["rulesets"], ModeRulesets),
    "edit_ruleset"       : ([], ModeEditRuleset),
-   "new_rule"           : ([], lambda phase: mode_edit_rule(phase, True)),
-   "edit_rule"          : ([], lambda phase: mode_edit_rule(phase, False)),
+   "new_rule"           : ([], ModeNewRule),
+   "edit_rule"          : ([], ModeEditRule),
 
    "host_groups"        : (["groups"], lambda phase: mode_groups(phase, "host")),
    "service_groups"     : (["groups"], lambda phase: mode_groups(phase, "service")),

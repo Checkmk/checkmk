@@ -2725,26 +2725,35 @@ class EventServer:
     # stop_overflow_notify Stop creating new events, create overflow event, notfy
     # delete_oldest        Delete oldest event, create new event
     # protected by lock_eventstatus
+
+    # Returns False if the event has been created and actions should be
+    # performed on that event
     def _handle_event_limit(self, ty, event):
         assert ty in [ "overall", "by_rule", "by_host" ]
 
-        num    = g_event_status.get_num_open_events_by(ty, event)
+        num_already_open = g_event_status.get_num_open_events_by(ty, event)
         limit  = g_config["event_limit"][ty]["limit"]
         action = g_config["event_limit"][ty]["action"]
-        verbose("  Type: %s, Open events: %d, Limit: %d" % (ty, num, limit))
+        verbose("  Type: %s, already open events: %d, Limit: %d" % (ty, num_already_open, limit))
 
-        # Check limit under assumption that one more event would be opened
-        below_limit = num < (limit-1)
-        above_limit = num >= limit
+        # Limit not reached: add new event
+        if num_already_open < limit:
+            num_already_open += 1 # after adding this event
 
-        if below_limit:
-            return False # Fine. Hand over to next check.
+        # Limit even then still not reached: we are fine
+        if num_already_open < limit:
+            return False
 
+        # Delete oldest messages if that is the configure method of keeping the limit
         if action == "delete_oldest":
-            g_event_status.remove_oldest_event(ty, event)
-            return False # Should have solved the issue. Hand over to next check.
+            while num_already_open > limit:
+                g_perfcounters.count("overflows")
+                g_event_status.remove_oldest_event(ty, event)
+                num_already_open -= 1
+            return False
 
-        if above_limit:
+        # Limit reached already in the past: Simply drop silently
+        if num_already_open > limit:
             # Just log in verbose mode! Otherwise log file will be flooded
             verbose("  Skip processing because limit is already in effect")
             g_perfcounters.count("overflows")
@@ -2754,7 +2763,6 @@ class EventServer:
 
         # This is the event which reached the limit, allow creation of it. Further
         # events will be stopped.
-        g_event_status.new_event(event)
 
         # Perform one time actions
         overflow_event = self._create_overflow_event(ty, event)
@@ -2767,7 +2775,7 @@ class EventServer:
             log("  Creating overflow notification")
             do_notify(overflow_event)
 
-        return True # Just reached limit. Created this last event. Stop processing.
+        return False
 
 
     def _create_overflow_event(self, ty, event):

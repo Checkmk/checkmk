@@ -6,6 +6,9 @@
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address
 
+    Reporting & Availability:
+    * 3652 FIX: Unbreak PDF exports...
+
     Event Console:
     * 4153 FIX: Fix forwarding notifications to Check_MK when no contact groups are set
     * 4155 FIX: Do not perform actions on events if overflow limit is active...

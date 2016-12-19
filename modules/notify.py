@@ -537,7 +537,7 @@ def user_notification_rules():
 
 def rbn_fake_email_contact(email):
     return {
-        "name"  : email,
+        "name"  : "mailto:" + email,
         "alias" : "Explicit email adress " + email,
         "email" : email,
         "pager" : "",
@@ -666,7 +666,7 @@ def rbn_match_event(context, state, last_state, events, allowed_events):
 def rbn_rule_contacts(rule, context):
     the_contacts = set([])
     if rule.get("contact_object"):
-        the_contacts.update(rbn_object_contacts(context))
+        the_contacts.update(rbn_object_contact_names(context))
     if rule.get("contact_all"):
         the_contacts.update(rbn_all_contacts())
     if rule.get("contact_all_with_email"):
@@ -680,7 +680,11 @@ def rbn_rule_contacts(rule, context):
 
     all_enabled = []
     for contactname in the_contacts:
-        contact = contacts.get(contactname)
+        if contactname == notification_fallback_email:
+            contact = rbn_fake_email_contact(notification_fallback_email)
+        else:
+            contact = contacts.get(contactname)
+
         if contact:
             if contact.get("disable_notifications", False):
                 notify_log("   - skipping contact %s: he/she has disabled notifications" % contactname)
@@ -776,7 +780,7 @@ def rbn_match_event_console(rule, context):
                         context["EC_COMMENT"], match_ec["match_comment"])
 
 
-def rbn_object_contacts(context):
+def rbn_object_contact_names(context):
     commasepped = context.get("CONTACTS")
     if commasepped == "?":
         notify_log("Warning: Contacts of %s cannot be determined. Using fallback contacts" %

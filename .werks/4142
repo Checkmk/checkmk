@@ -6,4 +6,7 @@ Version: 1.4.0i4
 Date: 1482137553
 Class: feature
 
-
+In addition to the longer existing quick search field, we have now added a
+dedicated extended search dialog which you can access from the ruleset
+listing pages. You can use it to search for nearly all aspects of rulesets
+and rules.

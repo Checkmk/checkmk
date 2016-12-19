@@ -316,6 +316,7 @@ def query_instance(inst):
         else:
             mbean, path, title, itemspec, do_search = var
 
+        queries = []
         if do_search:
             if mbean in mbean_search_results:
                 paths = mbean_search_results[mbean]
@@ -325,21 +326,14 @@ def query_instance(inst):
                 mbean_search_results[mbean] = paths
 
             for mbean_exp in paths:
-                try:
-                    fetch_metric(inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path,
-                                    itemspec, inst_add=mbean_exp)
-                except IOError:
-                    return
-                except socket.timeout:
-                    return
-                except:
-                    if opt_debug:
-                        raise
-                    # Simply ignore exceptions. Need to be removed for debugging
-                    continue
+                queries.append( (inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path,
+                                    itemspec, inst_add=mbean_exp) )
         else:
+            queries.append( (inst, mbean + "/" + path, title, itemspec) )
+
+        for inst, mbean_path, title, itemspec in queries:
             try:
-                fetch_metric(inst, mbean + "/" + path, title, itemspec)
+                fetch_metric(inst, mbean_path, title, itemspec)
             except IOError:
                 return
             except socket.timeout:

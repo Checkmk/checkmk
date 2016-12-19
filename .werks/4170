@@ -1,0 +1,11 @@
+Title: local: local check is now clusteraware. Best or worst state in cluster mode can be configured
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1482131073
+Class: feature
+
+Now your're able to determine the state of local checks on clusters via {{Settings for local checks}}
+in {{Host & Service parameters}}. Within these settings you can choose between best or worst state.
+Default setting is worst state.

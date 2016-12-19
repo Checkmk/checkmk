@@ -1423,6 +1423,26 @@ register_rule(group + '/' + subgroup_applications,
 )
 
 
+register_check_parameters(
+    subgroup_applications,
+    "local",
+    _("Settings for local checks"),
+    Dictionary(
+        elements = [
+            ("outcome_on_cluster", DropdownChoice(choices = [
+                ("worst", _("Worst state")),
+                ("best",  _("Best state")),
+            ],
+            title = _("Clusters: Prefered check result of local checks"),
+            help  = _("If you're running local checks on clusters via clustered services rule "
+                      "you can influence the check result with this rule. You can choose between "
+                      "best or worst state. Default setting is worst state."),
+            default_value = "worst"))
+        ]
+    ),
+    TextAscii(title = _("Name of local item")),
+    "dict"
+)
 
 
 register_check_parameters(

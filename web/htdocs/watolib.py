@@ -6745,7 +6745,7 @@ class Rule(object):
 
 
     def matches_search(self, search_options):
-        if "rule_disabled" in search_options and not rule.is_disabled():
+        if "rule_disabled" in search_options and not self.is_disabled():
             return False
 
         if "rule_ineffective" in search_options and not self.is_ineffective():

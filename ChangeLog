@@ -14,6 +14,7 @@
     Event Console:
     * 4154 Do not send notifications if host found and currently in downtime...
             NOTE: Please refer to the migration notes!
+    * 4155 FIX: Do not perform actions on events if overflow limit is active...
 
 
 1.4.0i3:

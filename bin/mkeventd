@@ -2681,22 +2681,22 @@ class EventServer:
 
     def get_hosts_with_active_event_limit(self):
         hosts = []
-        for hostname, num_open_events in g_event_status.num_open_events_by_host.items():
-            if num_open_events >= g_config["event_limit"]["by_host"]["limit"]:
+        for hostname, num_existing_events in g_event_status.num_existing_events_by_host.items():
+            if num_existing_events >= g_config["event_limit"]["by_host"]["limit"]:
                 hosts.append(hostname)
         return hosts
 
 
     def get_rules_with_active_event_limit(self):
         rule_ids = []
-        for rule_id, num_open_events in g_event_status.num_open_events_by_rule.items():
-            if num_open_events >= g_config["event_limit"]["by_rule"]["limit"]:
+        for rule_id, num_existing_events in g_event_status.num_existing_events_by_rule.items():
+            if num_existing_events >= g_config["event_limit"]["by_rule"]["limit"]:
                 rule_ids.append(rule_id)
         return rule_ids
 
 
     def is_overall_event_limit_active(self):
-        return g_event_status.num_open_events \
+        return g_event_status.num_existing_events \
                 >= g_config["event_limit"]["overall"]["limit"]
 
 
@@ -2731,7 +2731,7 @@ class EventServer:
     def _handle_event_limit(self, ty, event):
         assert ty in [ "overall", "by_rule", "by_host" ]
 
-        num_already_open = g_event_status.get_num_open_events_by(ty, event)
+        num_already_open = g_event_status.get_num_existing_events_by(ty, event)
         limit  = g_config["event_limit"][ty]["limit"]
         action = g_config["event_limit"][ty]["action"]
         verbose("  Type: %s, already open events: %d, Limit: %d" % (ty, num_already_open, limit))
@@ -3498,30 +3498,30 @@ class EventStatus():
     # the current event limit state -> Sets internal counters which are
     # updated during runtime.
     def _initialize_event_limit_status(self):
-        self.num_open_events   = len(self._events)
+        self.num_existing_events   = len(self._events)
 
-        self.num_open_events_by_host = {}
-        self.num_open_events_by_rule = {}
+        self.num_existing_events_by_host = {}
+        self.num_existing_events_by_rule = {}
         for event in self._events:
             self._count_event_add(event)
 
 
     def _count_event_add(self, event):
-        if event["host"] not in self.num_open_events_by_host:
-            self.num_open_events_by_host[event["host"]] = 1
+        if event["host"] not in self.num_existing_events_by_host:
+            self.num_existing_events_by_host[event["host"]] = 1
         else:
-            self.num_open_events_by_host[event["host"]] += 1
+            self.num_existing_events_by_host[event["host"]] += 1
 
-        if event["rule_id"] not in self.num_open_events_by_rule:
-            self.num_open_events_by_rule[event["rule_id"]] = 1
+        if event["rule_id"] not in self.num_existing_events_by_rule:
+            self.num_existing_events_by_rule[event["rule_id"]] = 1
         else:
-            self.num_open_events_by_rule[event["rule_id"]] += 1
+            self.num_existing_events_by_rule[event["rule_id"]] += 1
 
 
     def _count_event_remove(self, event):
-        self.num_open_events -= 1
-        self.num_open_events_by_host[event["host"]] -= 1
-        self.num_open_events_by_rule[event["rule_id"]] -= 1
+        self.num_existing_events -= 1
+        self.num_existing_events_by_host[event["host"]] -= 1
+        self.num_existing_events_by_rule[event["rule_id"]] -= 1
 
 
     def new_event(self, event):
@@ -3529,7 +3529,7 @@ class EventStatus():
         event["id"] = self._next_event_id
         self._next_event_id += 1
         self._events.append(event)
-        self.num_open_events += 1
+        self.num_existing_events += 1
         self._count_event_add(event)
         log_event_history(event, "NEW")
 
@@ -3586,13 +3586,13 @@ class EventStatus():
 
 
     # protected by lock_eventstatus
-    def get_num_open_events_by(self, ty, event):
+    def get_num_existing_events_by(self, ty, event):
         if ty == "overall":
-            return self.num_open_events
+            return self.num_existing_events
         elif ty == "by_rule":
-            return self.num_open_events_by_rule.get(event["rule_id"], 0)
+            return self.num_existing_events_by_rule.get(event["rule_id"], 0)
         elif ty == "by_host":
-            return self.num_open_events_by_host.get(event["host"], 0)
+            return self.num_existing_events_by_host.get(event["host"], 0)
         else:
             raise NotImplementedError()
 

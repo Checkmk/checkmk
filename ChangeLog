@@ -3,6 +3,9 @@
     * 4171 FIX: perle_psmu: fixed value error...
     * 4172 FIX: smart.temp: fixed discovery and check function...
 
+    Notifications:
+    * 4197 FIX: Fix sending notification to global fallback email address
+
     Event Console:
     * 4153 FIX: Fix forwarding notifications to Check_MK when no contact groups are set
     * 4155 FIX: Do not perform actions on events if overflow limit is active...

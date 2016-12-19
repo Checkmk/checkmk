@@ -492,7 +492,7 @@ def rbn_fallback_contacts():
         fallback_contacts.append(rbn_fake_email_contact(config.notification_fallback_email))
 
     for contact_name, contact in config.contacts.items():
-n       if contact.get("fallback_contact", False) and contact.get("email"):
+        if contact.get("fallback_contact", False) and contact.get("email"):
             fallback_contact = {
                 "name" : contact_name,
             }
@@ -684,8 +684,8 @@ def rbn_rule_contacts(rule, context):
 
     all_enabled = []
     for contactname in the_contacts:
-        if contactname == notification_fallback_email:
-            contact = rbn_fake_email_contact(notification_fallback_email)
+        if contactname == config.notification_fallback_email:
+            contact = rbn_fake_email_contact(config.notification_fallback_email)
         else:
             contact = config.contacts.get(contactname)
 

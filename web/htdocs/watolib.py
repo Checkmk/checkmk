@@ -570,16 +570,22 @@ class BaseFolder(WithPermissionsAndAttributes):
 
 
     def show_breadcrump(self, link_to_folder=False, keepvarnames=None):
-        if keepvarnames is None:
-            keepvarnames = ["mode"]
+        if keepvarnames == True:
+            uri_func = html.makeuri
+            keepvars = []
+        else:
+            uri_func = html.makeuri_contextless
 
-        keepvars = [ (name, html.var(name)) for name in keepvarnames ]
-        if link_to_folder:
-            keepvars.append(("mode", "folder"))
+            if keepvarnames is None:
+                keepvarnames = ["mode"]
+
+            keepvars = [ (name, html.var(name)) for name in keepvarnames ]
+            if link_to_folder:
+                keepvars.append(("mode", "folder"))
 
         def render_component(folder):
             return '<a href="%s">%s</a>' % \
-                (html.makeuri_contextless([ ("folder", folder.path())] + keepvars),
+                (uri_func([ ("folder", folder.path())] + keepvars),
                  html.attrencode(folder.title()))
 
         def breadcrump_element_start(end = '', z_index = 0):
@@ -624,8 +630,11 @@ class BaseFolder(WithPermissionsAndAttributes):
                 onchange = "folderpath.submit();",
                 attrs = { "class": "folderpath", }
             )
-            for var in keepvarnames:
-                html.hidden_field(var, html.var(var))
+            if keepvarnames == True:
+                html.hidden_fields()
+            else:
+                for var in keepvarnames:
+                    html.hidden_field(var, html.var(var))
             html.write("</form></div>")
             breadcrump_element_end('end')
 
@@ -6230,6 +6239,10 @@ class Ruleset(object):
         return not self._rules
 
 
+    def is_empty_in_folder(self, folder):
+        return not bool(self.get_folder_rules(folder))
+
+
     def num_rules(self):
         return sum([ len(rules) for rules in self._rules.values() ])
 
@@ -6247,7 +6260,10 @@ class Ruleset(object):
 
 
     def get_folder_rules(self, folder):
-        return self._rules[folder.path()]
+        try:
+            return self._rules[folder.path()]
+        except KeyError:
+            return []
 
 
     def add_rule(self, folder, rule):
@@ -6304,7 +6320,7 @@ class Ruleset(object):
         if "ruleset_deprecated" in search_options and not self.is_deprecated():
             return False
 
-        if "ruleset_used" in search_options and self.is_empty():
+        if "ruleset_used" in search_options and self.is_empty_in_folder(Folder.current()):
             return False
 
         if "ruleset_group" in search_options \

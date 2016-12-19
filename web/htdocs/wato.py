@@ -12052,7 +12052,7 @@ class ModeRulesets(WatoMode):
 
     def page(self):
         if not self._only_host:
-            Folder.current().show_breadcrump(keepvarnames = ["mode", "local", "group"])
+            Folder.current().show_breadcrump(keepvarnames=True)
 
         search_form(default_value=self._search_options.get("fulltext", ""))
 

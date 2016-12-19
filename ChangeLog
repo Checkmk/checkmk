@@ -1,4 +1,7 @@
 1.2.8p16:
+    Checks & Agents:
+    * 4172 FIX: smart.temp: fixed discovery and check function...
+
 
 1.2.8p15:
     Core & Setup:

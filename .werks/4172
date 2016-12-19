@@ -1,0 +1,10 @@
+Title: smart.temp: fixed discovery and check function
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1482142004
+Class: fix
+
+Discovery function now detects Temperature_Celsius or Temperature_Internal keys in a right way.
+Now the check function handles these keys correctly.

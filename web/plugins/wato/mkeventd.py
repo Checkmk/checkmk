@@ -2473,19 +2473,19 @@ if mkeventd_enabled:
     register_configvar(groups["ec"],
         "event_limit",
         Dictionary(
-            title = _("Limit amount of open events"),
+            title = _("Limit amount of current events"),
             help = _("This option helps you to protect the Event Console from resoure "
-                     "problems which may occur in case of too many open events at the "
+                     "problems which may occur in case of too many current events at the "
                      "same time."),
             elements = [
                 ("by_host", Dictionary(
                     title = _("Host limit"),
-                    help = _("You can limit the number of open events created by a single "
+                    help = _("You can limit the number of current events created by a single "
                              "host here. This is meant to "
                              "prevent you from message storms created by one device.<br>"
                              "Once the limit is reached, the Event Console will block "
                              "all future incoming messages sent by this host until the "
-                             "number of open "
+                             "number of current "
                              "events has been reduced to be below this limit. In the "
                              "moment the limit is reached, the Event Console will notify "
                              "the configured contacts of the host."),
@@ -2494,7 +2494,7 @@ if mkeventd_enabled:
                             title = _("Limit"),
                             minvalue = 1,
                             default_value = 1000,
-                            unit = _("open events"),
+                            unit = _("current events"),
                         )),
                         ("action", vs_ec_event_limit_actions("notify contacts of the host")),
                     ],
@@ -2502,11 +2502,11 @@ if mkeventd_enabled:
                 )),
                 ("by_rule", Dictionary(
                     title = _("Rule limit"),
-                    help = _("You can limit the number of open events created by a single "
+                    help = _("You can limit the number of current events created by a single "
                              "rule here. This is meant to "
                              "prevent you from too generous rules creating a lot of events.<br>"
                              "Once the limit is reached, the Event Console will stop the rule "
-                             "creating new open events until the number of open "
+                             "creating new current events until the number of current "
                              "events has been reduced to be below this limit. In the "
                              "moment the limit is reached, the Event Console will notify "
                              "the configured contacts of the rule or create a notification "
@@ -2516,19 +2516,19 @@ if mkeventd_enabled:
                             title = _("Limit"),
                             minvalue = 1,
                             default_value = 1000,
-                            unit = _("open events"),
+                            unit = _("current events"),
                         )),
                         ("action", vs_ec_event_limit_actions("notify contacts in rule or fallback contacts")),
                     ],
                     optional_keys = [],
                 )),
                 ("overall", Dictionary(
-                    title = _("Overall open events"),
-                    help = _("To protect you against a continously growing list of open "
+                    title = _("Overall current events"),
+                    help = _("To protect you against a continously growing list of current "
                              "events created by different hosts or rules, you can configure "
-                             "this overall limit of open events. All currently open events "
+                             "this overall limit of current events. All currently current events "
                              "are counted and once the limit is reached, no further events "
-                             "will be opened which means that new incoming messages will be "
+                             "will be currented which means that new incoming messages will be "
                              "dropped. In the moment the limit is reached, the Event Console "
                              "will create a notification with empty contact information."),
                     elements = [
@@ -2536,7 +2536,7 @@ if mkeventd_enabled:
                             title = _("Limit"),
                             minvalue = 1,
                             default_value = 10000,
-                            unit = _("open events"),
+                            unit = _("current events"),
                         )),
                         ("action", vs_ec_event_limit_actions("notify all fallback contacts")),
                     ],

@@ -2282,16 +2282,16 @@ def mode_object_parameters(phase):
     last_maingroup = None
     for groupname in sorted(g_rulespecs.get_host_groups()):
         maingroup = groupname.split("/")[0]
-        for rulespec in sorted(g_rulespecs.get_by_group(groupname), key = lambda x: x["title"]):
+        for rulespec in sorted(g_rulespecs.get_by_group(groupname), key = lambda x: x.title):
             if (rulespec.item_type == 'service') == (not service):
                 continue # This rule is not for hosts/services
 
             # Open form for that group here, if we know that we have at least one rule
             if last_maingroup != maingroup:
                 last_maingroup = maingroup
-                group_title, group_help = get_rulegroup(maingroup)
-                forms.header(group_title, isopen = maingroup == "monconf", narrow=True, css="rulesettings")
-                html.help(group_help)
+                rulegroup = get_rulegroup(maingroup)
+                forms.header(rulegroup.title, isopen = maingroup == "monconf", narrow=True, css="rulesettings")
+                html.help(rulegroup.help)
 
             output_analysed_ruleset(all_rulesets, rulespec, hostname, service)
 
@@ -12112,7 +12112,7 @@ class ModeRulesets(WatoMode):
         if not grouped_rulesets:
             if self._only_host:
                 msg = _("There are no rules with an exception for the host <b>%s</b>.") % self._only_host
-            elif search_options:
+            elif self._search_options:
                 msg = _("There are no rulesets or rules matching your search.")
             else:
                 msg = _("There are no rules defined in this folder.")
@@ -12150,133 +12150,101 @@ def rule_search_button(search_options=None, mode="rulesets"):
     delvars=["filled_in"]), "search", hot=bool(search_options))
 
 
-def create_new_rule_form(rulespec, hostname = None, item = None, varname = None):
-    html.begin_form("new_rule", add_transid = False)
-
-    html.open_table()
-    if hostname:
-        label = _("Host %s") % hostname
-        ty = _('Host')
-        if item != NO_ITEM and rulespec.item_type:
-            label += _(" and %s '%s'") % (rulespec.item_name, item)
-            ty = rulespec.item_name
-
-        html.open_tr()
-        html.open_td()
-        html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
-        html.hidden_field("host", hostname)
-        html.hidden_field("item", mk_repr(item))
-        html.close_td()
-        html.open_td(style="vertical-align:middle")
-        html.write_text(label)
-        html.close_td()
-        html.close_tr()
-
-    html.open_tr()
-    html.open_td()
-    html.button("_new_rule", _("Create rule in folder: "))
-    html.close_td()
-    html.open_td()
-
-    html.select("rule_folder", Folder.folder_choices(), html.var('folder'))
-    html.close_td()
-    html.close_tr()
-    html.close_table()
-    html.write_text("\n")
-    html.hidden_field("varname", varname)
-    html.hidden_field("mode", "new_rule")
-    html.hidden_field('folder', html.var('folder'))
-    html.end_form()
+class ModeEditRuleset(WatoMode):
+    def __init__(self):
+        self._from_vars()
 
 
-def mode_edit_ruleset(phase):
-    varname = html.var("varname")
+    def _from_vars(self):
+        self._name = html.var("varname")
 
-    if not may_edit_ruleset(varname):
-        raise MKAuthException(_("You are not permitted to access this ruleset."))
+        if not may_edit_ruleset(self._name):
+            raise MKAuthException(_("You are not permitted to access this ruleset."))
 
-    item = None
-    if html.var("check_command"):
-        check_command = html.var("check_command")
-        checks = check_mk_local_automation("get-check-information")
-        if check_command.startswith("check_mk-"):
-            check_command = check_command[9:]
-            varname = "checkgroup_parameters:" + checks[check_command].get("group","")
-            descr_pattern  = checks[check_command]["service_description"].replace("%s", "(.*)")
-            matcher = re.search(descr_pattern, html.var("service_description"))
-            if matcher:
+        self._item = None
+        if html.var("check_command"):
+            check_command = html.var("check_command")
+            checks = check_mk_local_automation("get-check-information")
+            if check_command.startswith("check_mk-"):
+                check_command = check_command[9:]
+                self._name = "checkgroup_parameters:" + checks[check_command].get("group","")
+                descr_pattern  = checks[check_command]["service_description"].replace("%s", "(.*)")
+                matcher = re.search(descr_pattern, html.var("service_description"))
+                if matcher:
+                    try:
+                        self._item = matcher.group(1)
+                    except:
+                        self._item = None
+            elif check_command.startswith("check_mk_active-"):
+                check_command = check_command[16:].split(" ")[0][:-1]
+                self._name = "active_checks:" + check_command
+
+        try:
+            self._rulespec = g_rulespecs.get(self._name)
+        except KeyError:
+            raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % self._name)
+
+        if not self._item:
+            if html.has_var("item"):
                 try:
-                    item = matcher.group(1)
+                    self._item = mk_eval(html.var("item"))
                 except:
-                    item = None
-        elif check_command.startswith("check_mk_active-"):
-            check_command = check_command[16:].split(" ")[0][:-1]
-            varname = "active_checks:" + check_command
+                    self._item = NO_ITEM
+            else:
+                self._item = NO_ITEM
 
-    try:
-        rulespec = g_rulespecs.get(varname)
-    except KeyError:
-        raise MKUserError("varname", _("The ruleset \"%s\" does not exist.") % varname)
+        self._hostname = html.var("host")
+        if self._hostname:
+            host = Folder.current().host(self._hostname)
+            if not host:
+                self._hostname = None # host not found. Should not happen
 
-    hostname = html.var("host", "")
-    if not item:
-        if html.has_var("item"):
-            try:
-                item = mk_eval(html.var("item"))
-            except:
-                item = NO_ITEM
-        else:
-            item = NO_ITEM
 
-    if hostname:
-        host = Folder.current().host(hostname)
-        if not host:
-            hostname = None # host not found. Should not happen
+    def title(self):
+        title = self._rulespec.title
 
-    if phase == "title":
-        if not rulespec:
-            text = html.var("service_description") or varname
-            return _("No available rule for service %s at host %s") % (text, hostname)
-        title = rulespec.title
-        if hostname:
-            title += _(" for host %s") % hostname
-            if html.has_var("item") and rulespec.item_type:
-                title += _(" and %s '%s'") % (rulespec.item_name, item)
+        if self._hostname:
+            title += _(" for host %s") % self._hostname
+            if html.has_var("item") and self._rulespec.item_type:
+                title += _(" and %s '%s'") % (self._rulespec.item_name, self._item)
+
         return title
 
-    elif phase == "buttons":
+
+    def buttons(self):
         global_buttons()
 
         if config.user.may('wato.rulesets'):
-            if not rulespec:
-                html.context_button(_("All Rulesets"), folder_preserving_link([("mode", "ruleeditor")]), "back")
+            back_mode = html.var("back_mode", "rulesets")
+
+            if back_mode == "rulesets":
+                group_arg = [("group", self._rulespec.main_group_name)]
             else:
-                back_mode = html.var("back_mode", "rulesets")
+                group_arg = []
 
-                if back_mode == "rulesets":
-                    group_arg = [("group", rulespec.main_group_name)]
-                else:
-                    group_arg = []
+            html.context_button(_("Back"), folder_preserving_link([
+                ("mode", back_mode),
+                ("host", self._hostname)
+            ] + group_arg), "back")
 
-                html.context_button(_("Back"), folder_preserving_link([
-                    ("mode", back_mode),
-                    ("host", hostname)
-                ] + group_arg), "back")
-
-        if hostname:
+        if self._hostname:
             html.context_button(_("Services"),
-                 folder_preserving_link([("mode", "inventory"), ("host", hostname)]), "services")
+                 folder_preserving_link([("mode", "inventory"),
+                                         ("host", self._hostname)]), "services")
+
             if config.user.may('wato.rulesets'):
                 html.context_button(_("Parameters"),
-                      folder_preserving_link([("mode", "object_parameters"), ("host", hostname), ("service", item)]), "rulesets")
-        return
+                      folder_preserving_link([("mode", "object_parameters"),
+                                              ("host", self._hostname),
+                                              ("service", self._item)]), "rulesets")
 
-    elif phase == "action":
+
+    def action(self):
         rule_folder = Folder.folder(html.var("_folder", html.var("folder")))
         rule_folder.need_permission("write")
         rulesets = FolderRulesets(rule_folder)
         rulesets.load()
-        ruleset = rulesets.get(varname)
+        ruleset = rulesets.get(self._name)
 
         try:
             rulenr = int(html.var("_rulenr")) # rule number relativ to folder
@@ -12320,33 +12288,35 @@ def mode_edit_ruleset(phase):
                 ruleset.move_rule_to_bottom(rule)
 
             rulesets.save()
-            return
 
-    if not rulespec:
-        text = html.var("service_description") or varname
-        html.div(_("There are no rules availabe for %s.") % text, class_="info")
-        return
 
-    if not hostname:
-        Folder.current().show_breadcrump(keepvarnames = ["mode", "varname"])
+    def page(self):
+        if not self._hostname:
+            Folder.current().show_breadcrump(keepvarnames = ["mode", "varname"])
 
-    if not config.wato_hide_varnames:
-        display_varname = ':' in varname and '%s["%s"]' % tuple(varname.split(":")) or varname
-        html.div(display_varname, class_="varname")
+        if not config.wato_hide_varnames:
+            display_varname = '%s["%s"]' % tuple(self._name.split(":")) \
+                    if ':' in self._name else self._name
+            html.div(display_varname, class_="varname")
 
-    rulesets = AllRulesets()
-    rulesets.load()
-    ruleset = rulesets.get(varname)
+        rulesets = AllRulesets()
+        rulesets.load()
+        ruleset = rulesets.get(self._name)
 
-    html.help(ruleset.help())
+        html.help(ruleset.help())
 
-    explain_ruleset_match_type(ruleset.match_type())
+        self._explain_match_type(ruleset.match_type())
 
-    # Collect all rulesets
-    if ruleset.is_empty():
-        html.div(_("There are no rules defined in this set."), class_="info")
+        if ruleset.is_empty():
+            html.div(_("There are no rules defined in this set."), class_="info")
+        else:
+            self._rule_listing(ruleset)
 
-    else:
+        self._create_form()
+
+
+    # TODO: Clean this function up!
+    def _rule_listing(self, ruleset):
         alread_matched = False
         match_keys = set([]) # in case if match = "dict"
         last_folder = None
@@ -12388,12 +12358,12 @@ def mode_edit_ruleset(phase):
             table.row(css=" ".join(css) if css else None)
 
             # Rule matching
-            if hostname:
+            if self._hostname:
                 table.cell(_("Ma."))
                 if rule.is_disabled():
                     reason = _("This rule is disabled")
                 else:
-                    reason = rule.matches_host_and_item(Folder.current(), hostname, item)
+                    reason = rule.matches_host_and_item(Folder.current(), self._hostname, self._item)
 
                 # Handle case where dict is constructed from rules
                 if reason == True and ruleset.match_type() == "dict":
@@ -12414,9 +12384,9 @@ def mode_edit_ruleset(phase):
                         match_keys.update(new_keys)
 
                 elif reason == True and (not alread_matched or ruleset.match_type() == "all"):
-                    title = _("This rule matches for the host '%s'") % hostname
+                    title = _("This rule matches for the host '%s'") % self._hostname
                     if ruleset.item_type():
-                        title += _(" and the %s '%s'.") % (ruleset.item_name(), item)
+                        title += _(" and the %s '%s'.") % (ruleset.item_name(), self._item)
                     else:
                         title += "."
                     img = 'match'
@@ -12455,10 +12425,10 @@ def mode_edit_ruleset(phase):
             table.cell(_("Actions"), css="buttons rulebuttons")
             edit_url = folder_preserving_link([
                 ("mode", "edit_rule"),
-                ("varname", varname),
+                ("varname", self._name),
                 ("rulenr", rulenr),
-                ("host", hostname),
-                ("item", mk_repr(item)),
+                ("host", self._hostname),
+                ("item", mk_repr(self._item)),
                 ("rule_folder", folder.path()),
             ])
             html.icon_button(edit_url, _("Edit this rule"), "edit")
@@ -12470,19 +12440,61 @@ def mode_edit_ruleset(phase):
 
         table.end()
 
-    create_new_rule_form(rulespec, hostname, item, varname)
+
+    def _explain_match_type(self, match_type):
+        html.b("%s: " % _("Matching"))
+        if match_type == "first":
+            html.write_text(_("The first matching rule defines the parameter."))
+
+        elif match_type == "dict":
+            html.write_text(_("Each parameter is defined by the first matching rule where that "
+                              "parameter is set (checked)."))
+
+        elif match_type in ("all", "list"):
+            html.write_text(_("All matching rules will add to the resulting list."))
+
+        else:
+            html.write_text(_("Unknown match type: %s") % match_type)
 
 
-def explain_ruleset_match_type(match_type):
-    html.b("%s:" % _("Matching"))
-    if match_type == "first":
-        html.write_text(_("The first matching rule defines the parameter."))
-    elif match_type == "dict":
-        html.write_text(_("Each parameter is defined by the first matching rule where that parameter is set (checked)."))
-    elif match_type in ("all", "list"):
-        html.write_text(_("All matching rules will add to the resulting list."))
-    else:
-        html.write_text(_("Unknown match type: %s") % match_type)
+    def _create_form(self):
+        html.begin_form("new_rule", add_transid = False)
+
+        html.open_table()
+        if self._hostname:
+            label = _("Host %s") % self._hostname
+            ty = _('Host')
+            if self._item != NO_ITEM and self._rulespec.item_type:
+                label += _(" and %s '%s'") % (self._rulespec.item_name, self._item)
+                ty = self._rulespec.item_name
+
+            html.open_tr()
+            html.open_td()
+            html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
+            html.hidden_field("host", self._hostname)
+            html.hidden_field("item", mk_repr(self._item))
+            html.close_td()
+            html.open_td(style="vertical-align:middle")
+            html.write_text(label)
+            html.close_td()
+            html.close_tr()
+
+        html.open_tr()
+        html.open_td()
+        html.button("_new_rule", _("Create rule in folder: "))
+        html.close_td()
+        html.open_td()
+
+        html.select("rule_folder", Folder.folder_choices(), html.var('folder'))
+        html.close_td()
+        html.close_tr()
+        html.close_table()
+        html.write_text("\n")
+        html.hidden_field("varname", self._name)
+        html.hidden_field("mode", "new_rule")
+        html.hidden_field('folder', html.var('folder'))
+        html.end_form()
+
 
 
 def show_rule_in_table(rule):
@@ -16479,7 +16491,7 @@ modes = {
    "ruleeditor"         : (["rulesets"], ModeRuleEditor),
    "rule_search"        : (["rulesets"], ModeRuleSearch),
    "rulesets"           : (["rulesets"], ModeRulesets),
-   "edit_ruleset"       : ([], mode_edit_ruleset),
+   "edit_ruleset"       : ([], ModeEditRuleset),
    "new_rule"           : ([], lambda phase: mode_edit_rule(phase, True)),
    "edit_rule"          : ([], lambda phase: mode_edit_rule(phase, False)),
 

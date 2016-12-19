@@ -2733,8 +2733,9 @@ class EventServer:
         action = g_config["event_limit"][ty]["action"]
         verbose("  Type: %s, Open events: %d, Limit: %d" % (ty, num, limit))
 
-        below_limit = num < limit
-        above_limit = num > limit
+        # Check limit under assumption that one more event would be opened
+        below_limit = num < (limit-1)
+        above_limit = num >= limit
 
         if below_limit:
             return False # Fine. Hand over to next check.

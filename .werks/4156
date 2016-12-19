@@ -1,0 +1,11 @@
+Title: Fix off-by-one error in EC limit handling
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1482152918
+
+If the limit was e.g. 10 in fact 11 message would have been
+allowed (<b>plus</b> the overflow event). This has been fixed.

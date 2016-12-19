@@ -6,6 +6,7 @@
     Event Console:
     * 4153 FIX: Fix forwarding notifications to Check_MK when no contact groups are set
     * 4155 FIX: Do not perform actions on events if overflow limit is active...
+    * 4156 FIX: Fix off-by-one error in EC limit handling...
 
 
 1.4.0i3:

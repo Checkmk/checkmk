@@ -4131,7 +4131,7 @@ def base_notification_context(event, username, is_cancelling):
         "EC_CONTACT":                  event.get("contact", ""),
         "EC_PID":                      str(event.get("pid", 0)),
         "EC_MATCH_GROUPS":             "\t".join(event["match_groups"]),
-        "EC_CONTACT_GROUPS":           " ".join(event.get("contact_groups", [])),
+        "EC_CONTACT_GROUPS":           " ".join(event.get("contact_groups") or []),
         "EC_ORIG_HOST":                event.get("orig_host", event["host"]),
 
     }

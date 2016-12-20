@@ -15,6 +15,12 @@ from urllib import urlencode
 from bs4 import BeautifulSoup
 from testlib import web, var_dir
 
+from testlib import CMKWebSession
+
+class InvalidUrl(Exception):
+    pass
+
+
 
 class Url(object):
     def __init__(self, url, orig_url=None, referer_url=None):
@@ -50,6 +56,11 @@ class Worker(threading.Thread):
         self.terminate = False
         self.idle      = True
 
+        self.client = CMKWebSession(self.crawler.site)
+        self.client.login()
+        self.client.set_language("en")
+
+
     def run(self):
         while not self.terminate:
             try:
@@ -73,7 +84,7 @@ class Worker(threading.Thread):
 
     def visit_url(self, url):
         if url.url in self.crawler.visited:
-            #print("Already visited: %s" % url.url)
+            print("Already visited: %s" % url.url)
             return
         self.crawler.visited.append(url.url)
 
@@ -83,9 +94,10 @@ class Worker(threading.Thread):
         started = time.time()
         try:
             #print "FETCH", url.url_without_host()
-            response = self.crawler.client.get(url.url_without_host())
+            response = self.client.get(url.url_without_host())
         except AssertionError, e:
             if "This view can only be used in mobile mode" in "%s" % e:
+                print "Skipping mobile mode view checking"
                 return
             else:
                 raise
@@ -94,6 +106,8 @@ class Worker(threading.Thread):
         self.update_stats(url, duration, len(response.content))
 
         content_type = response.headers.get('content-type')
+        #print self.name, content_type, len(response.text)
+
         if content_type.startswith("text/html"):
             self.check_response(url, response)
         elif content_type.startswith("text/plain"):
@@ -187,58 +201,65 @@ class Worker(threading.Thread):
             orig_url = element.get(attr)
             url = self.normalize_url(self.crawler.site.internal_url, orig_url)
 
-            if url is not None and self.is_valid_url(url) \
-               and url not in self.crawler.handled:
+            if url is None:
+               continue
+
+            try:
+                self.verify_is_valid_url(url)
+            except InvalidUrl, e:
+                #print self.name, "skip invalid", url, e
+                self.crawler.skipped.add(url)
+                continue
+
+            # Ensure that this url has not been crawled yet
+            crawl_it = False
+            with self.crawler.handled_lock:
+                if url not in self.crawler.handled:
+                    crawl_it = True
+                    self.crawler.handled.add(url)
+
+            if crawl_it:
                 #file("/tmp/todo", "a").write("%s (%s)\n" % (url, referer_url.url))
                 self.crawler.todo.put(Url(url, orig_url=orig_url, referer_url=referer_url.url))
-                self.crawler.handled.add(url)
 
 
-    def is_valid_url(self, url):
+    def verify_is_valid_url(self, url):
         parsed = urlsplit(url)
 
         if parsed.scheme != "http":
-            #print("invalid scheme: %r" % (parsed,))
-            return False
+            raise InvalidUrl("invalid scheme: %r" % (parsed,))
 
         # skip external urls
         if url.startswith("http://") and not url.startswith(self.crawler.site.internal_url):
-            #print("Skipping external URL: %s" % url)
-            return False
+            raise InvalidUrl("Skipping external URL: %s" % url)
 
         # skip non check_mk urls
         if not parsed.path.startswith("/%s/check_mk" % self.crawler.site.id) \
            or "../pnp4nagios/" in parsed.path \
            or "../nagvis/" in parsed.path \
            or "../nagios/" in parsed.path:
-            #print("Skipping non Check_MK URL: %s %s" % (url, parsed))
-            return False
+            raise InvalidUrl("Skipping non Check_MK URL: %s %s" % (url, parsed))
 
 	# skip current url with link to index
         if "index.py?start_url=" in url:
-            #print("Skipping link to index with current URL: %s" % url)
-            return False
+            raise InvalidUrl("Skipping link to index with current URL: %s" % url)
+
+        if "logout.py" in url:
+            raise InvalidUrl("Skipping logout URL: %s" % url)
 
         if "_transid=" in url:
-            #print("Skipping action URL: %s" % url)
-            return False
+            raise InvalidUrl("Skipping action URL: %s" % url)
 
         if "selection=" in url:
-            #print("Skipping selection URL: %s" % url)
-            return False
+            raise InvalidUrl("Skipping selection URL: %s" % url)
 
         # Don't follow filled in filter form views
         if "view.py" in url and "filled_in=filter" in url:
-            #print("Skipping filled in filter URL: %s" % url)
-            return False
+            raise InvalidUrl("Skipping filled in filter URL: %s" % url)
 
         # Skip agent download files
         if parsed.path.startswith("/%s/check_mk/agents/" % self.crawler.site.id):
-            #print("Skipping agent download file: %s" % url)
-            return False
-
-        #print url
-        return True # TODO
+            raise InvalidUrl("Skipping agent download file: %s" % url)
 
 
     def normalize_url(self, base_url, url):
@@ -259,17 +280,20 @@ class SetQueue(Queue.Queue):
 
 class TestCrawler(object):
     @pytest.mark.env("ci-server")
-    def test_crawl(self, site, web):
+    def test_crawl(self, site):
         self.stats   = {}
         self.todo    = SetQueue()
         self.started = time.time()
         self.visited = []
+        self.skipped = set()
+
         # Contains all already seen and somehow handled URLs. Something like the
         # summary of self.todo and self.handled but todo contains Url() objects.
         self.handled = set()
+        self.handled_lock = threading.Lock()
+
         self.errors  = []
         self.site    = site
-        self.client  = web
         self.num_workers = 10
 
         self.load_stats()
@@ -284,6 +308,10 @@ class TestCrawler(object):
 
     def stats_file(self):
         return var_dir() + "/crawl.stats"
+
+
+    def report_file(self):
+        return var_dir() + "/crawl.report"
 
 
     def load_stats(self):
@@ -326,6 +354,21 @@ class TestCrawler(object):
 
 
     def report(self):
+        with file(self.report_file(), "w") as f:
+            f.write("Skipped URLs:\n")
+            for skipped_url in sorted(self.skipped):
+                f.write("  %s\n" % skipped_url)
+            f.write("\n")
+
+            f.write("Visited URLs:\n")
+            for visited_url in self.visited:
+                f.write("  %s\n" % visited_url)
+            f.write("\n")
+
+            if self.errors:
+                f.write("Crawled %d URLs in %d seconds. Failures:\n%s\n" %
+                        (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
+
         if self.errors:
             pytest.fail("Crawled %d URLs in %d seconds. Failures:\n%s" %
                         (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
@@ -346,13 +389,25 @@ class TestCrawler(object):
                 workers.append(t)
 
             start = time.time()
+            last_tick, last_num_visited = time.time(), 0
             while True:
-                duration = max(time.time() - start, 1)
-                num_visited = len(self.visited)
-                num_idle = len([ w for w in workers if w.idle ])
-                print("Workers: %d (Idle: %d), Rate: %0.2f/s, Duration: %d sec, "
+                now          = time.time()
+                duration     = max(now - start, 1)
+                num_visited  = len(self.visited)
+                num_idle     = len([ w for w in workers if w.idle ])
+                rate_runtime = num_visited / duration
+
+                if now > last_tick and num_visited > last_num_visited:
+                    rate_tick = (num_visited - last_num_visited) / (now - last_tick)
+                else:
+                    rate_tick = 0
+
+                last_tick        = now
+                last_num_visited = num_visited
+
+                print("Workers: %d (Idle: %d), Rate: %0.2f/s (1sec: %0.2f/s), Duration: %d sec, "
                       "Visited: %s, Todo: %d" %
-                    (self.num_workers, num_idle, num_visited / duration,
+                    (self.num_workers, num_idle, rate_runtime, rate_tick,
                      duration, num_visited, self.todo.qsize()))
 
                 if self.todo.qsize() == 0 and all([ w.idle for w in workers ]):

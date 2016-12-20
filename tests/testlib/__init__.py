@@ -456,12 +456,14 @@ class WebSession(requests.Session):
 
 
     def _request(self, method, path, proto="http", expected_code=200, expect_redirect=None,
-                 allow_errors=False, add_transid=False, **kwargs):
+                 allow_errors=False, add_transid=False, allow_redirect_to_login=False,
+                 **kwargs):
         url = self.url(proto, path)
 
 	if add_transid:
             url = self._add_transid(url)
 
+        # Enforce non redirect following in case of expecting one
         if expect_redirect:
             kwargs["allow_redirects"] = False
 
@@ -470,7 +472,8 @@ class WebSession(requests.Session):
         else:
             response = super(WebSession, self).get(url, **kwargs)
 
-        self._handle_http_response(response, expected_code, allow_errors, expect_redirect)
+        self._handle_http_response(response, expected_code, allow_errors,
+                                   expect_redirect, allow_redirect_to_login)
         return response
 
 
@@ -486,7 +489,8 @@ class WebSession(requests.Session):
         return url
 
 
-    def _handle_http_response(self, response, expected_code, allow_errors, expect_redirect):
+    def _handle_http_response(self, response, expected_code, allow_errors,
+                              expect_redirect, allow_redirect_to_login):
         assert "Content-Type" in response.headers
 
         # TODO: Copied from CMA tests. Needed?
@@ -508,6 +512,14 @@ class WebSession(requests.Session):
             "Got invalid status code (%d != %d) for URL %s (Location: %s)" % \
                   (response.status_code, expected_code,
                    response.url, response.headers.get('Location', "None"))
+
+        if response.history:
+            print "Followed redirect (%d) %s -> %s" % \
+                (response.history[0].status_code, response.history[0].url, response.url)
+            if not allow_redirect_to_login:
+                assert "check_mk/login.py" not in response.url, \
+                       "Followed redirect (%d) %s -> %s" % \
+                    (response.history[0].status_code, response.history[0].url, response.url)
 
         if mime_type == "text/html":
             self._check_html_page(response, allow_errors)
@@ -618,7 +630,7 @@ class CMKWebSession(WebSession):
 
 
     def login(self, username="omdadmin", password="omd"):
-        login_page = self.get("").text
+        login_page = self.get("", allow_redirect_to_login=True).text
         assert "_username" in login_page, "_username not found on login page - page broken?"
         assert "_password" in login_page
         assert "_login" in login_page
@@ -658,7 +670,7 @@ class CMKWebSession(WebSession):
 
 
     def logout(self):
-        r = self.get("logout.py")
+        r = self.get("logout.py", allow_redirect_to_login=True)
         assert "action=\"login.py\"" in r.text
 
 

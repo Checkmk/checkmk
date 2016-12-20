@@ -5,6 +5,7 @@
     * 4207 FIX: mk_jolokia: Use configured port as default instance name...
             NOTE: Please refer to the migration notes!
     * 4174 FIX: added missing perfometer for interface services
+    * 4119 FIX: check_mk_agent.solaris: fixed run_cached function...
 
 
 1.2.8p15:

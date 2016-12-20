@@ -1,0 +1,17 @@
+Title: mk_jolokia: Use configured port as default instance name
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.4.0i4
+Date: 1482225291
+
+Previously, the mk_jolokia plugin would default to the port as
+an instance name if no name was configured before reading the
+config file. This led to the default instance name always being
+8080, regardless of which port was actually configured.
+
+If you have configured a nonstandard port in jolokia.cfg,
+but not an instance name, rediscovery is required, as well as
+adjusting rules relying on the instance name.

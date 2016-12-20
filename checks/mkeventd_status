@@ -104,17 +104,21 @@ def check_mkeventd_status(item, params, parsed):
           ("Created events",      "event",     "%.2f/s"),
           ("Client connects",     "connect",   "%.2f/s"),
     ]
+    rates = {}
+    print status.keys()
+    this_time = time.time()
     for title, col, fmt in columns:
-        value = status["average_%s_rate" % col]
-        yield 0, ("%s: " + fmt) % (title, value), \
-            [("average_%s_rate" % col, value)]
+        counter_value = status[col + "s"]
+        rate = get_rate(col, this_time, counter_value)
+        rates[col] = rate
+        yield 0, ("%s: " + fmt) % (title, rate), \
+            [("average_%s_rate" % col, rate)]
 
     # Hit rate
-    if status["average_rule_trie_rate"] == 0.0:
+    if rates["rule_trie"] == 0.0:
         hit_rate_txt = "-"
     else:
-        value = status["average_rule_hit_rate"] \
-                    / status["average_rule_trie_rate"] * 100
+        value = rates["rule_hit"] / rates["rule_trie"] * 100
         hit_rate_txt = "%.2f%%" % value
         yield 0, None, [("average_rule_hit_ratio", value)]
     yield 0, "%s: %s" % ("Rule hit ratio", hit_rate_txt)

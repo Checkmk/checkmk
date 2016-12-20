@@ -33,7 +33,7 @@ except:
 
 
 def mkeventd_performance_entries():
-    status = mkeventd.get_status()
+    status = mkeventd.get_total_stats() # combination of several sites
     entries = []
 
     # TODO: Reorder these values and create a useful order.
@@ -84,8 +84,15 @@ def mkeventd_performance_entries():
 
 
 def render_mkeventd_performance():
+    try:
+        entries = mkeventd_performance_entries()
+    except Exception, e:
+        raise
+        html.show_error(e)
+        return
+
     html.open_table(class_=["mkeventd_performance"])
-    for index, left, right in mkeventd_performance_entries():
+    for index, left, right in entries:
         html.tr(
             html.render_td("%s:" % left) +
             html.render_td(right))

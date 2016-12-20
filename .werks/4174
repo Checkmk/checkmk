@@ -1,0 +1,9 @@
+Title: added missing perfometer for interface services
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1482239968
+Class: fix
+
+

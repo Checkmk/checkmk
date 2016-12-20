@@ -4341,6 +4341,21 @@ perfometer_info.append(("dual", [
 perfometer_info.append(("dual", [
     {
         "type"          : "logarithmic",
+        "metric"        : "if_in_octets",
+        "half_value"    : 5000000,
+        "exponent"      : 5,
+    },
+    {
+        "type"          : "logarithmic",
+        "metric"        : "if_out_octets",
+        "half_value"    : 5000000,
+        "exponent"      : 5,
+    }
+]))
+
+perfometer_info.append(("dual", [
+    {
+        "type"          : "logarithmic",
         "metric"        : "if_out_unicast_octets,if_out_non_unicast_octets,+",
         "half_value"    : 5000000,
         "exponent"      : 5,

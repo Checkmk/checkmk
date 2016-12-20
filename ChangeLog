@@ -4,6 +4,7 @@
     * 4173 FIX: if.include: ignore some more keys in 'Network interfaces and switch ports' rule which are only used for interface grouping
     * 4207 FIX: mk_jolokia: Use configured port as default instance name...
             NOTE: Please refer to the migration notes!
+    * 4174 FIX: added missing perfometer for interface services
 
 
 1.2.8p15:

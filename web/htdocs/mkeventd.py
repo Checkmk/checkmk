@@ -237,17 +237,63 @@ def execute_command(name, args=None, site=None):
     sites.live().command(query, site)
 
 
-def get_status():
-    response = sites.live().query("GET eventconsolestatus")
-    return dict(zip(response[0], response[1]))
 
 
-def replication_mode():
-    try:
-        status = get_status()
-        return status["status_replication_slavemode"]
-    except:
-        return None
+def get_total_stats():
+    stats_keys = [
+        "status_average_message_rate",
+        "status_average_rule_trie_rate",
+        "status_average_rule_hit_rate",
+        "status_average_event_rate",
+        "status_average_connect_rate",
+        "status_average_overflow_rate",
+        "status_average_rule_trie_rate",
+        "status_average_rule_hit_rate",
+        "status_average_processing_time",
+        "status_average_request_time",
+        "status_average_sync_time",
+    ]
+
+    stats_per_site = list(get_stats_per_site(stats_keys))
+
+    # First simply add rates. Times must then be averaged
+    # weighted by message rate or connect rate
+    total_stats = {}
+    for row in stats_per_site:
+        for key, value in row.items():
+            if key.endswith("rate"):
+                total_stats.setdefault(key, 0.0)
+                total_stats[key] += value
+    if not total_stats:
+        return None # No site answered
+
+    for row in stats_per_site:
+        for time_key, in_relation_to in [
+            ( "status_average_processing_time", "status_average_message_rate" ),
+            ( "status_average_request_time",    "status_average_connect_rate" ),
+        ]:
+            total_stats.setdefault(time_key, 0.0)
+            if total_stats[in_relation_to]: # avoid division by zero
+                my_weight = row[in_relation_to] / total_stats[in_relation_to]
+                total_stats[time_key] += my_weight * row[time_key]
+
+    total_sync_time = 0.0
+    count = 0
+    for row in stats_per_site:
+        if row["status_average_sync_time"] > 0.0:
+            count += 1
+            total_sync_time += row["status_average_sync_time"]
+
+    if count > 0:
+        total_stats["status_average_sync_time"] = total_sync_time / count
+
+    return total_stats
+
+
+def get_stats_per_site(stats_keys):
+    for list_row in sites.live().query("GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys)):
+        yield dict(zip(stats_keys, list_row))
+
 
 
 # Rule matching for simulation. Yes - there is some hateful code duplication

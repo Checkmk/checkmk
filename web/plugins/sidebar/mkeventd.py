@@ -77,8 +77,6 @@ def mkeventd_performance_entries():
     entries.append((6, "Processing load", "%.0f%%" % (
         min(100.0, status["status_average_processing_time"] * status["status_average_message_rate"] * 100.0))))
 
-
-
     entries.sort()
     return entries
 
@@ -87,7 +85,6 @@ def render_mkeventd_performance():
     try:
         entries = mkeventd_performance_entries()
     except Exception, e:
-        raise
         html.show_error(e)
         return
 

@@ -895,11 +895,16 @@ div.varname {
     text-decoration: italic;
 }
 
+/* activation */
+
 .wato table.changes tr.foreign.not_permitted td {
     color: #f00;
 }
 
-/* activation */
+.wato table.changes {
+    width: 100%;
+}
+
 .wato table.data div.act_success {
 }
 

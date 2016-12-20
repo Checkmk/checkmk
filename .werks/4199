@@ -1,0 +1,12 @@
+Title: Fix detection of replication mode if EC is distributed
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.4.0i4
+Date: 1482244177
+Class: fix
+
+If you use the new feature of having a distributed Event Console (consisting
+of more than one Check_MK site) then the WATO display of the EC status
+was broken. This has been fixed. WATO still shows only the status of
+the local EC. This will be fixed in future.

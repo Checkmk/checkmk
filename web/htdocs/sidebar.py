@@ -361,7 +361,7 @@ def render_snapin(name, state):
         toggle_actions = {"onclick"    : "toggle_sidebar_snapin(this,'%s')" % toggle_url,
                           "onmouseover": "this.style.cursor='pointer'",
                           "onmouseout" : "this.style.cursor='auto'"}
-    html.b(snapin["title"], class_=["heading"], **toggle_actions)
+    html.b(HTML(snapin["title"]), class_=["heading"], **toggle_actions)
 
     # End of header
     html.close_div()

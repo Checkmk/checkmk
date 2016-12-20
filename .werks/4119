@@ -1,0 +1,11 @@
+Title: check_mk_agent.solaris: fixed run_cached function
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1482250470
+
+Previously the run_cached function simply exited if cache file $CACHEFILE.new was too old.
+This has been fixed now, the function acts just like in the Linux agent - it removes the process of the file as well as the file itself.

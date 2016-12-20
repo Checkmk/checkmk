@@ -91,7 +91,8 @@ function run_cached () {
     if [ -e "$CACHEFILE.new" ] ; then
         AGE=$(file_age "$CACHEFILE.new")
         if [ $AGE -ge $((MAXAGE * 2)) ] ; then
-            return
+            fuser -k "$CACHEFILE.new" >/dev/null 2>&1
+            rm -f "$CACHEFILE.new"
         fi
     fi
 

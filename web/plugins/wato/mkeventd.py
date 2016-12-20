@@ -1061,6 +1061,7 @@ def mode_mkeventd_rule_packs(phase):
         return
 
     rep_mode = mkeventd.replication_mode()
+
     if rep_mode in [ "sync", "takeover" ]:
         copy_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")])
         html.show_warning(_("WARNING: This Event Console is currently running as a replication "
@@ -1069,6 +1070,9 @@ def mode_mkeventd_rule_packs(phase):
           "actions in the global settings.<br><br>If you want you can copy the ruleset of "
           "the master into your local slave configuration: ") + \
           '<a href="%s">' % copy_url + _("Copy Rules From Master") + '</a>')
+
+    elif rep_mode == "stopped":
+        html.show_error(_("The Event Console is currently not running."))
 
     # Simulator
     event = show_event_simulator()

@@ -95,7 +95,7 @@ def fetch_url_get(base_url, path, function):
     if path:
         url = "%s/%s/%s" % (base_url, function, path)
     else:
-        url = base_url
+        url = base_url + "/"
 
     if opt_verbose:
         sys.stderr.write("DEBUG: Fetching: %s\n" % url)

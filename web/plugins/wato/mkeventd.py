@@ -1665,7 +1665,7 @@ def mkeventd_mibs_button():
 
 def mode_mkeventd_status(phase):
     if phase == "title":
-        return _("Event Console - Server Status")
+        return _("Event Console - Local server status")
 
     elif phase == "buttons":
         home_button()
@@ -1701,9 +1701,9 @@ def mode_mkeventd_status(phase):
         html.show_warning(warning)
         return
 
-    status = mkeventd.get_status()
+    status = mkeventd.get_local_ec_status()
     repl_mode = status["status_replication_slavemode"]
-    html.write("<h3>%s</h3>" % _("Current Server Status"))
+    html.write("<h3>%s</h3>" % _("Current status of local Event Console"))
     html.open_ul()
     html.write("<li>%s</li>" % _("Event Daemon is running."))
     html.write("<li>%s: <b>%s</b></li>" % (_("Current replication mode"),

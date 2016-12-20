@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket, config, re, time
+import socket, config, re, time, livestatus
 import ast
 
 import sites
@@ -181,6 +181,19 @@ def send_event(event):
     pipe.close()
 
     return rfc
+
+
+def get_local_ec_status():
+    response = livestatus.LocalConnection().query("GET eventconsolestatus")
+    return dict(zip(response[0], response[1]))
+
+
+def replication_mode():
+    try:
+        status = get_local_ec_status()
+        return status["status_replication_slavemode"]
+    except livestatus.MKLivestatusSocketError:
+        return "stopped"
 
 
 # Only use this for master/slave replication. For status queries use livestatus

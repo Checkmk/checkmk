@@ -4831,23 +4831,24 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
 
             table.row(css=" ".join(css))
 
-            table.cell(_("Object"))
+            table.cell(_("Object"), css="narrow nobr")
             rendered = self._render_change_object(change["object"])
             if rendered:
                 html.write(rendered)
 
-            table.cell(_("Time"), render.date_and_time(change["time"]))
-            table.cell(_("User"))
+            table.cell(_("Time"), render.date_and_time(change["time"]), css="narrow nobr")
+            table.cell(_("User"), css="narrow nobr")
             html.write_text(change["user_id"] if change["user_id"] else "")
             if self._is_foreign(change):
                 html.icon(_("This change has been made by another user"), "foreign_changes")
-            table.cell(_("Change"), change["text"])
 
-            table.cell(_("Affected sites"))
+            table.cell(_("Affected sites"), css="narrow nobr")
             if self._affects_all_sites(change):
                 html.write_text("<i>%s</i>" % _("All sites"))
             else:
                 html.write_text(", ".join(sorted(change["affected_sites"])))
+
+            table.cell(_("Change"), change["text"])
         table.end()
 
 
@@ -4875,7 +4876,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
 
 
     def _activation_status(self):
-        table.begin("site-status", searchable=False, sortable=False)
+        table.begin("site-status", searchable=False, sortable=False, css="activation")
 
         for site_id, site in sort_sites(self._activation_sites()):
             table.row()
@@ -4900,12 +4901,6 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             if can_activate_all and need_action:
                 html.checkbox("site_%s" % site_id, cssclass="site_checkbox")
 
-            table.cell(_("Activate"))
-            if can_activate_all and need_action:
-                # TODO: Enable separate action for sync (if needed)?
-                html.jsbutton("activate_%s" % site_id, _("Activate"),
-                              "activate_changes(\"site\", \"%s\")" % site_id, cssclass="activate_site")
-
             # Iconbuttons
             table.cell(_("Actions"), css="buttons")
 
@@ -4913,40 +4908,36 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
                 edit_url = folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
                 html.icon_button(edit_url, _("Edit the properties of this site"), "edit")
 
+            # State
+            if can_activate_all and need_sync:
+                html.icon_button(url="javascript:void(0)",
+                    help=_("This site is not update and needs a replication. Start it now."),
+                    icon="need_replicate",
+                    onclick="activate_changes(\"site\", \"%s\")" % site_id, ty="icon")
+
+            if can_activate_all and need_restart:
+                html.icon_button(url="javascript:void(0)",
+                        help=_("This site needs a restart for activating the changes. Start it now."),
+                    icon="need_restart",
+                    onclick="activate_changes(\"site\", \"%s\")" % site_id, ty="icon")
+
+            if can_activate_all and not need_action:
+                html.icon(_("This site is up-to-date."), "siteuptodate")
+
             site_url = site.get("multisiteurl")
             if site_url:
                 html.icon_button(site_url, _("Open this site's local web user interface"), "url", target="_blank")
 
-            # ID & Alias
-            table.cell(_("ID"), site_id)
-            table.cell(_("Alias"), site.get("alias", ""))
+            table.cell(_("Site"), site.get("alias", site_id))
 
             # Livestatus
-            table.cell(_("Status"))
+            table.cell(_("Status"), css="narrow nobr")
             html.write('<img src="images/button_sitestatus_%s.png">' % (status))
 
-            # Livestatus-Version
-            table.cell(_("Version"), site_status.get("livestatus_version", ""))
+            # Livestatus-/Check_MK-Version
+            table.cell(_("Version"), site_status.get("livestatus_version", ""), css="narrow nobr")
 
-            # Core-Version
-            table.cell(_("Core"), site_status.get("program_version", ""))
-
-            # Hosts/services
-            table.cell(_("Hosts"), css="number")
-            html.a(site_status.get("num_hosts", ""), href='view.py?view_name=sitehosts&site=%s' % site_id)
-            table.cell(_("Services"), css="number")
-            html.a(site_status.get("num_services", ""), href="view.py?view_name=sitesvcs&site=%s" % site_id)
-
-            # State
-            table.cell("", css="buttons")
-            if need_sync:
-                html.icon(_("This site is not update and needs a replication."), "need_replicate")
-            if need_restart:
-                html.icon(_("This site needs a restart for activating the changes."), "need_restart")
-            if not need_action:
-                html.icon(_("This site is up-to-date."), "siteuptodate")
-
-            table.cell(_("Changes"), "%d" % len(self._changes_of_site(site_id)), css="number")
+            table.cell(_("Changes"), "%d" % len(self._changes_of_site(site_id)), css="number narrow nobr")
 
             table.cell(_("Progress"), css="repprogress")
             html.open_div(id_="site_%s_status" % site_id, class_=["msg"])

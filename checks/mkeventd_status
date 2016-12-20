@@ -105,7 +105,6 @@ def check_mkeventd_status(item, params, parsed):
           ("Client connects",     "connect",   "%.2f/s"),
     ]
     rates = {}
-    print status.keys()
     this_time = time.time()
     for title, col, fmt in columns:
         counter_value = status[col + "s"]

@@ -4959,13 +4959,17 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
             # State
             if can_activate_all and need_sync:
                 html.icon_button(url="javascript:void(0)",
+                    id="activate_%s" % site_id,
+                    cssclass=["activate_site"],
                     help=_("This site is not update and needs a replication. Start it now."),
                     icon="need_replicate",
                     onclick="activate_changes(\"site\", \"%s\")" % site_id, ty="icon")
 
             if can_activate_all and need_restart:
                 html.icon_button(url="javascript:void(0)",
-                        help=_("This site needs a restart for activating the changes. Start it now."),
+                    id="activate_%s" % site_id,
+                    cssclass=["activate_site"],
+                    help=_("This site needs a restart for activating the changes. Start it now."),
                     icon="need_restart",
                     onclick="activate_changes(\"site\", \"%s\")" % site_id, ty="icon")
 

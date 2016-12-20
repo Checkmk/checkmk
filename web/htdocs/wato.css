@@ -897,6 +897,10 @@ div.varname {
 
 /* activation */
 
+.wato table.data.activation a.disabled {
+    pointer-events: none;
+}
+
 .wato table.changes tr.foreign.not_permitted td {
     color: #f00;
 }

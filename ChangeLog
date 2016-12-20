@@ -1,8 +1,6 @@
 1.2.8p16:
     Checks & Agents:
     * 4172 FIX: smart.temp: fixed discovery and check function...
-
-    check:
     * 4173 FIX: if.include: ignore some more keys in 'Network interfaces and switch ports' rule which are only used for interface grouping
 
 

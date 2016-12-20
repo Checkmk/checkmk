@@ -37,7 +37,7 @@ debug                  = False
 screenshotmode         = False
 profile                = False
 users                  = []
-admin_users            = []
+admin_users            = ["omdadmin"]
 guest_users            = []
 default_user_role      = "user"
 save_user_access_times = False
@@ -114,7 +114,7 @@ view_option_refreshes = [ 30, 60, 90, 0 ]
 view_option_columns   = [ 1, 2, 3, 4, 5, 6, 8, 10, 12 ]
 
 # MISC
-doculink_urlformat = "http://mathias-kettner.de/checkmk_%s.html";
+doculink_urlformat = "http://mathias-kettner.com/checkmk_%s.html";
 
 view_action_defaults = {
     "ack_sticky"     : True,
@@ -131,6 +131,36 @@ view_action_defaults = {
 #
 
 custom_links = {}
+
+# Links for everyone
+custom_links['guest'] = [
+  ( "Classical Nagios GUI", "../nagios/", "icon_home.png" ),
+  ( "Addons", True, [
+        ( "NagVis",     "../nagvis/", "icon_nagvis.png" ),
+  ]),
+]
+
+# The members of the role 'user' get the same links as the guests
+# but some in addition
+custom_links['user'] = custom_links['guest'] + [
+  ( "Open Source Components", False, [
+        ( "Check_MK",      "http://mathias-kettner.com/check_mk.html", None, "_blank"),
+        ( "Nagios",        "http://www.nagios.org/", None, "_blank"), 
+        ( "PNP4Nagios",    "http://pnp4nagios.org/", None, "_blank"),
+        ( "NagVis",        "http://nagvis.org/", None, "_blank"),
+        ( "RRDTool",       "http://oss.oetiker.ch/rrdtool/", None, "_blank"),
+   ])
+]
+
+# The admins yet get further links
+custom_links['admin'] = custom_links['user'] + [
+  ( "Support", False, [
+      ( "Mathias Kettner",            "http://mathias-kettner.com/" ),
+      ( "Check_MK Mailinglists",      "http://mathias-kettner.com/check_mk_lists.html" ),
+      ( "Check_MK Exchange",          "http://exchange.check-mk.org/", None, "_blank" ),
+      ( "Monitoring Portal (German)", "http://monitoring-portal.org", None, "_blank"),
+  ])
+]
 
 #  __     __         _
 #  \ \   / /_ _ _ __(_) ___  _   _ ___

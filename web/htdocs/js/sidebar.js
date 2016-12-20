@@ -403,7 +403,8 @@ function set_sidebar_size() {
     if (height == 0)
       return;
 
-    oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight + 4) + 'px';
+    // -2 -> take outer border of oHeader and oFooter into account
+    oContent.style.height = (height - oHeader.clientHeight - oFooter.clientHeight - 2) + 'px';
 }
 
 var scrolling = true;

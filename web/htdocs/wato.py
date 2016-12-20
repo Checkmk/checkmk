@@ -12153,7 +12153,6 @@ def rule_search_button(search_options=None, mode="rulesets"):
     delvars=["filled_in"]), "search", hot=is_searching)
 
 
-
 class ModeEditRuleset(WatoMode):
     def __init__(self):
         super(ModeEditRuleset, self).__init__()
@@ -12288,6 +12287,8 @@ class ModeEditRuleset(WatoMode):
                 ruleset.move_rule_down(rule)
             elif action == "top":
                 ruleset.move_rule_to_top(rule)
+            elif action == "move_to":
+                ruleset.move_rule_to(rule, int(html.var("_index")))
             else:
                 ruleset.move_rule_to_bottom(rule)
 
@@ -12429,22 +12430,6 @@ class ModeEditRuleset(WatoMode):
             else:
                 html.empty_icon()
 
-            # Actions
-            table.cell(_("Order"), css="buttons rulebuttons")
-            if not first_in_group:
-                self._rule_button("top", _("Move this rule to the top of the list"), folder, rulenr)
-                self._rule_button("up",  _("Move this rule one position up"), folder, rulenr)
-            else:
-                html.empty_icon_button()
-                html.empty_icon_button()
-
-            if not last_in_group:
-                self._rule_button("down",   _("Move this rule one position down"), folder, rulenr)
-                self._rule_button("bottom", _("Move this rule to the bottom of the list"), folder, rulenr)
-            else:
-                html.empty_icon_button()
-                html.empty_icon_button()
-
             table.cell(_("Actions"), css="buttons rulebuttons")
             edit_url = folder_preserving_link([
                 ("mode", "edit_rule"),
@@ -12458,6 +12443,7 @@ class ModeEditRuleset(WatoMode):
             html.icon_button(edit_url, _("Edit this rule"), "edit")
             self._rule_button("insert", _("Insert a copy of this rule in current folder"),
                         folder, rulenr)
+            html.element_dragger("tr", base_url=self._action_url("move_to", folder, rulenr))
             self._rule_button("delete", _("Delete this rule"), folder, rulenr)
 
             self._rule_cells(rule)
@@ -12465,7 +12451,7 @@ class ModeEditRuleset(WatoMode):
         table.end()
 
 
-    def _rule_button(self, action, help=None, folder=None, rulenr=0):
+    def _action_url(self, action, folder, rulenr):
         vars = [
             ("mode",    html.var('mode', 'edit_ruleset')),
             ("ruleset_back_mode", self._back_mode),
@@ -12481,8 +12467,11 @@ class ModeEditRuleset(WatoMode):
         if html.var("item"):
             vars.append(("item", self._item))
 
-        url = make_action_link(vars)
-        html.icon_button(url, help, action)
+        return make_action_link(vars)
+
+
+    def _rule_button(self, action, help=None, folder=None, rulenr=0):
+        html.icon_button(self._action_url(action, folder, rulenr), help, action)
 
 
     # TODO: Refactor this whole method

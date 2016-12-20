@@ -6380,7 +6380,7 @@ class Ruleset(object):
         del rules[index]
         rules[index-1:index-1] = [ rule ]
         add_change("edit-ruleset",
-                 _("Changed order of rules in ruleset %s") % self.title(),
+                 _("Moved rule #%d up in ruleset \"%s\"") % (index, self.title()),
                  sites=rule.folder.all_site_ids())
 
 
@@ -6389,18 +6389,40 @@ class Ruleset(object):
         index = rules.index(rule)
         del rules[index]
         rules[index+1:index+1] = [ rule ]
+        add_change("edit-ruleset",
+                 _("Moved rule #%d down in ruleset \"%s\"") % (index, self.title()),
+                 sites=rule.folder.all_site_ids())
 
 
     def move_rule_to_top(self, rule):
         rules = self._rules[rule.folder.path()]
+        index = rules.index(rule)
         rules.remove(rule)
         rules.insert(0, rule)
+        add_change("edit-ruleset",
+                 _("Moved rule #%d to top in ruleset \"%s\"") % (index, self.title()),
+                 sites=rule.folder.all_site_ids())
 
 
     def move_rule_to_bottom(self, rule):
         rules = self._rules[rule.folder.path()]
+        index = rules.index(rule)
         rules.remove(rule)
         rules.append(rule)
+        add_change("edit-ruleset",
+                 _("Moved rule #%d to bottom in ruleset \"%s\"") % (index, self.title()),
+                 sites=rule.folder.all_site_ids())
+
+
+    def move_rule_to(self, rule, index):
+        rules = self._rules[rule.folder.path()]
+        old_index = rules.index(rule)
+        rules.remove(rule)
+        rules.insert(index, rule)
+        add_change("edit-ruleset",
+                 _("Moved rule #%d to #%d in ruleset \"%s\"") %
+                 (old_index, index, self.title()),
+                 sites=rule.folder.all_site_ids())
 
 
     # TODO: Remove these getters

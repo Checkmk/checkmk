@@ -1249,6 +1249,20 @@ div.log_output {
     /* below resize option is css3 */
 }
 
+a.element_dragger {
+    cursor: move;
+}
+
+a.element_dragger:hover {
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
+.dragging {
+    cursor: move;
+    box-shadow: 0px 2px 10px 0px rgba(0,0,0,0.6);
+}
+
 
 /*-------------------------------------------------------------------------.
 |         ____       _                                                     |

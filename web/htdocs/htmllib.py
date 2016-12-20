@@ -1138,6 +1138,21 @@ class HTMLCheck_MK(HTMLGenerator):
                                      style = style)
 
 
+    def element_dragger(self, dragging_tag, base_url):
+        self.write(self.render_element_dragger(dragging_tag, base_url))
+
+
+    # Currently only tested with tables. But with some small changes it may work with other
+    # structures too.
+    def render_element_dragger(self, dragging_tag, base_url):
+        return self.render_a(self.render_icon("drag", _("Move this entry")),
+            href="javascript:void(0)",
+            class_=["element_dragger"],
+            onmousedown="element_drag_start(event, this, %s, %s)" %
+                (json.dumps(dragging_tag.upper()), json.dumps(base_url)),
+        )
+
+
     #
     # Context Buttons
     #

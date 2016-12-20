@@ -25,6 +25,9 @@
     * 4155 FIX: Do not perform actions on events if overflow limit is active...
     * 4156 FIX: Fix off-by-one error in EC limit handling...
 
+    check:
+    * 4173 FIX: if.include: ignore some more keys in 'Network interfaces and switch ports' rule which are only used for interface grouping
+
 
 1.4.0i3:
     Core & Setup:

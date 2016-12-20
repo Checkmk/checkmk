@@ -1,0 +1,12 @@
+Title: Fix computation of Event Console performance snapin in distributed mode
+Level: 2
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1482244286
+
+This contents of the sidebar snapin {{Event Console Performance}} showed invalid
+data in case of a multi-sited distributed Event Console: It only show data from
+one random instance. This has been fixed.

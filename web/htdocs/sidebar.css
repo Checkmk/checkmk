@@ -139,7 +139,6 @@ body.side.screenshotmode {
     height: 500px;
     overflow: hidden;
     color: #000000;
-    padding-top: 5px;
     position: absolute;
     top: 50px;
 }

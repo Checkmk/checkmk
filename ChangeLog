@@ -11,6 +11,7 @@
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...
     * 4004 FIX: Fixed exception when viewing availability of BI aggregations...
+    * 4144 FIX: Sidebar: Bottom of last snapin was not 100% visible
 
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address

@@ -313,9 +313,10 @@ def render_snapin_styles(snapin):
 
 def render_snapin(name, state):
     snapin = sidebar_snapins.get(name)
-    render_snapin_styles(snapin)
 
     html.write("<div id=\"snapin_container_%s\" class=snapin>\n" % name)
+    render_snapin_styles(snapin)
+
     # When not permitted to open/close snapins, the snapins are always opened
     if state == "open" or not config.user.may("general.configure_sidebar"):
         style = ""

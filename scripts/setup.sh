@@ -804,9 +804,9 @@ do
              chgrp $wwwgroup $DESTDIR$confdir/conf.d/distributed_wato.mk &&
              chmod 664 $DESTDIR$confdir/conf.d/distributed_wato.mk
 	   fi &&
-           echo -e "# Main configuration file of Check_MK\nWe highly recommend to use WATO to configure Check_MK these days." \
+           echo -e "# Main configuration file of Check_MK\n#We highly recommend to use WATO to configure Check_MK these days." \
                > $DESTDIR$confdir/main.mk-$VERSION &&
-           echo -e "# Main configuration file of the Check_MK GUI\nWe highly recommend to use WATO to configure Check_MK these days." \
+           echo -e "# Main configuration file of the Check_MK GUI\n#We highly recommend to use WATO to configure Check_MK these days." \
                > $DESTDIR$confdir/multisite.mk-$VERSION &&
 	   if [ -e $DESTDIR$confdir/check_mk.cfg -a ! -e $DESTDIR$confdir/main.mk ] ; then
 	       mv -v $DESTDIR$confdir/check_mk.cfg $DESTDIR$confdir/main.mk

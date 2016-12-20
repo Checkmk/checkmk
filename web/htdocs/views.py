@@ -1666,7 +1666,7 @@ def get_needed_regular_columns(cells, sorters, datasource):
     # BI availability needs aggr_tree
     # TODO: wtf? a full reset of the list? Move this far away to a special place!
     if html.var("mode") == "availability" and "aggr" in datasource["infos"]:
-        return [ "aggr_tree", "aggr_name", "aggr_group" ], []
+        return [ "aggr_tree", "aggr_name", "aggr_group" ]
 
     columns = columns_of_cells(cells)
 

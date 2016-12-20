@@ -1,0 +1,12 @@
+Title: mkeventd_status: avoid duplicate averaging, make graphs more precise in time resolution
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1482247182
+Class: feature
+
+By not using pre-averaged values anymore but switching to precise performance counters
+the check now computes are precise average of the counted events (e.g. rule hits)
+since the last check. This makes the graphs much more precise. It also makes a
+reschedule of the check show more recent data.

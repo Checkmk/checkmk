@@ -24,12 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#( "Hostname", Port, PiggyMode)
+# Legacy style
+#( "Hostname", Port, [PiggyMode])
 
 def agent_activemq_arguments(params, hostname, ipaddress):
-    if len(params[2]) == 0:
-        return "%s %s" % (params[0], params[1])
-    else:
-        return "%s %s 1" % (params[0], params[1])
+    if isinstance(params, tuple):
+        new_params = {}
+        new_params["servername"] = params[0]
+        new_params["port"]       = params[1]
+        if params[2] and "piggybag" in params[2]: # yes, piggybag..
+            new_params["use_piggyback"] = params[1]
+        params = new_params
+
+    args =  "--servername %s"  % quote_shell_string(params["servername"])
+    args += " --port %s"       % quote_shell_string(str(params["port"]))
+    if params.get("use_piggyback"):
+        args += " --piggyback"
+
+    if "basicauth" in params:
+        args += " --username %s"  % quote_shell_string(params["basicauth"][0])
+        args += " --password %s"  % quote_shell_string(params["basicauth"][1])
+
+    return args
 
 special_agent_info['activemq'] = agent_activemq_arguments

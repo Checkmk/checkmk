@@ -1,0 +1,14 @@
+Title: agent_activemq: now able to provide BasicAuth credentials
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i4
+Date: 1482234481
+Class: feature
+
+You can now set the username and password if your ActiveMQ Server requires Basic-Authentication.
+
+Furthermore a typo has been fixed, which marks this werk as incompatible.
+The item name has changed from <i>Actice_MQ</i> to <i>Active_MQ</i>, so you need
+to start a new service discovery for these hosts.
+

@@ -320,24 +320,41 @@ register_rule(group,
               "<tt>~/share/check_mk/agents/special</tt>."),
     match = 'first')
 
+def transform_activemq(value):
+    if not isinstance(value, tuple):
+        return value
+
+    new_value = {}
+    new_value["servername"]    = value[0]
+    new_value["port"]          = value[1]
+    new_value["use_piggyback"] = "piggybag" in value[2] # piggybag...
+    return new_value
+
+
 register_rule(group,
     "special_agents:activemq",
-    Tuple(
+    Transform(
+        Dictionary(
+            elements = [
+                ("servername",    TextAscii(title=_("Server Name"))),
+                ("port",          Integer(title=_("Port Number"), default_value=8161)),
+                ("use_piggyback", Checkbox(title=_("Use Piggyback"), label=_("Enable"))),
+                ("basicauth", Tuple(title=_("BasicAuth settings (optional)"),
+                    elements = [
+                        TextAscii(title=_("Username")),
+                        Password(title=_("Password"))
+                    ]
+                    )
+                )
+            ],
+            optional_keys = ["basicauth"]
+        ),
         title = _("Apache ActiveMQ queues"),
-        help = _( "Configure the Server Address and the Portnumber of the target server"),
-        elements = [
-           TextAscii(title = _("Server Name")),
-           Integer( title = _("Port Number"), default_value=8161 ),
-           ListChoice(
-              choices = [
-                ("piggybag",  _("Run in piggyback mode")),
-              ],
-              allow_empty = True
-           )
-        ]
+        forth = transform_activemq
     ),
     factory_default = Rulespec.FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = "first")
+
 
 register_rule(group,
     "special_agents:emcvnx",

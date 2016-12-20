@@ -24,37 +24,100 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from lxml import etree
+import getopt
 import sys
+import requests
+from requests.auth import HTTPBasicAuth
+import xml.etree.ElementTree as ET
 
-if len(sys.argv) > 3:
-    piggyback_mode = True
-else:
-    piggyback_mode = False
-address = "http://%s:%s/admin/xml/queues.jsp" % (sys.argv[1], sys.argv[2])
+
+def usage():
+    print "Usage:"
+    print "agent_activemq --servername {servername} --port {port} [--piggyback] [--username {username} --password {password}]\n"
+
+short_options = ""
+long_options = [ "piggyback", "servername=", "port=", "username=", "password=" ]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    usage()
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+opt_servername     = None
+opt_port           = None
+opt_username       = None
+opt_password       = None
+opt_piggyback_mode = False
+
+
+for o,a in opts:
+    if o in [ '--piggyback' ]:
+        opt_piggyback_mode = True
+    elif o in [ '--servername' ]:
+        opt_servername = a
+    elif o in [ '--port' ]:
+        opt_port = a
+    elif o in [ '--username' ]:
+        opt_username = a
+    elif o in [ '--password' ]:
+        opt_password = a
+
+if not opt_servername or not opt_port:
+    usage()
+    sys.exit(1)
+
+url = "http://%s:%s/admin/xml/queues.jsp" % (opt_servername, opt_port)
+
+auth = None
+if opt_username:
+    auth = HTTPBasicAuth(opt_username, opt_password)
+
+data = []
+try:
+    response = requests.get(url, auth = auth)
+    if response.status_code == 401:
+        raise Exception("Unauthorized")
+
+    xml  = response.text
+    data = ET.fromstring(xml)
+except Exception, e:
+    sys.stderr.write("Unable to connect. Credentials might be incorrect: %s\n" % e)
+    sys.exit(1)
+
 
 attributes = [ 'size', 'consumerCount', 'enqueueCount', 'dequeueCount' ]
-data = etree.parse(address).getroot()
 count = 0
-if not piggyback_mode:
-    print "<<<mq_queues>>>"
-for line in data:
-    count += 1
-    if piggyback_mode:
-        print "<<<<%s>>>>" % line.get('name')
-        print "<<<mq_queues>>>"
-    print "[[%s]]" % line.get('name')
-    stats = line.findall('stats')
-    values = ""
-    for job in attributes:
-        values +="%s " % stats[0].get(job)
-    print values
-
-if piggyback_mode:
-    print "<<<<>>>>"
-    print "<<<local>>>"
-    print "0 Actice_MQ - Found %s Queues in total" % count
 
 
+output_lines = []
+def add_output(line):
+    output_lines.append(line)
 
+try:
+    if not opt_piggyback_mode:
+        add_output("<<<mq_queues>>>")
+
+    for line in data:
+        count += 1
+        if opt_piggyback_mode:
+            add_output("<<<<%s>>>>" % line.get('name'))
+            add_output("<<<mq_queues>>>")
+        add_output("[[%s]]" % line.get('name'))
+        stats = line.findall('stats')
+        values = ""
+        for job in attributes:
+            values +="%s " % stats[0].get(job)
+        add_output(values)
+
+    if opt_piggyback_mode:
+        add_output("<<<<>>>>")
+        add_output("<<<local>>>")
+        add_output("0 Active_MQ - Found %s Queues in total" % count)
+except Exception, e: # Probably an IndexError
+    sys.stderr.write("Unable to process data. Returned data might be incorrect: %r" % e)
+    sys.exit(1)
+
+print "\n".join(output_lines)
 

@@ -2323,34 +2323,43 @@ metric_info["cmk_time_ds"] = {
 }
 
 
+# Note: current can be any phase, not only open, but also
+# delayed, couting or ack.
 metric_info["num_open_events"] = {
-    "title" : _("Open events"),
+    "title" : _("Current events"),
     "unit"  : "count",
-    "color" : "12/a",
+    "color" : "26/b",
 }
 
 metric_info["average_message_rate"] = {
     "title" : _("Incoming messages"),
     "unit"  : "1/s",
-    "color" : "11/a",
+    "color" : "23/a",
 }
+
+metric_info["average_drop_rate"] = {
+    "title" : _("Dropped messages"),
+    "unit"  : "1/s",
+    "color" : "21/b",
+}
+
+metric_info["average_sync_time"] = {
+    "title" : _("Average slave sync time"),
+    "unit"  : "s",
+    "color" : "46/a",
+}
+
 
 metric_info["average_rule_trie_rate"] = {
     "title" : _("Rule tries"),
     "unit"  : "1/s",
-    "color" : "13/a",
+    "color" : "33/a",
 }
 
 metric_info["average_rule_hit_rate"] = {
     "title" : _("Rule hits"),
     "unit"  : "1/s",
-    "color" : "21/a",
-}
-
-metric_info["average_drop_rate"] = {
-    "title" : _("Message drops"),
-    "unit"  : "1/s",
-    "color" : "24/a",
+    "color" : "34/b",
 }
 
 metric_info["average_event_rate"] = {
@@ -2360,27 +2369,27 @@ metric_info["average_event_rate"] = {
 }
 
 metric_info["average_connect_rate"] = {
-    "title" : _("Status: Client connects"),
+    "title" : _("Client connects"),
     "unit"  : "1/s",
-    "color" : "34/a",
+    "color" : "15/a",
 }
 
 metric_info["average_request_time"] = {
-    "title" : _("Status: Request time"),
+    "title" : _("Average request response time"),
     "unit"  : "s",
-    "color" : "41/a",
+    "color" : "14/a",
 }
 
 metric_info["average_processing_time"] = {
     "title" : _("Event processing time"),
     "unit"  : "s",
-    "color" : "31/a",
+    "color" : "13/a",
 }
 
 metric_info["average_rule_hit_ratio"] = {
     "title" : _("Rule hit ratio"),
     "unit"  : "%",
-    "color" : "31/a",
+    "color" : "#cccccc",
 }
 
 metric_info["log_message_rate"] = {
@@ -6840,25 +6849,61 @@ graph_info.append({
     ],
 })
 
+
 graph_info.append({
-    "title" : _("Event Console performance"),
+    "metrics" : [
+       ( "num_open_events",  "area" ),
+    ]
+})
+
+
+graph_info.append({
+    "title" : _("Message processing"),
     "metrics" : [
         ( "average_message_rate",   "area" ),
+        ( "average_drop_rate",      "area" ),
+    ],
+})
+
+
+
+graph_info.append({
+    "title" : _("Rule efficiency"),
+    "metrics" : [
         ( "average_rule_trie_rate", "area" ),
         ( "average_rule_hit_rate",  "area" ),
-        ( "average_drop_rate",      "area" ),
-        ( "average_event_rate",     "area" ),
-        ( "average_connect_rate",   "area" ),
     ],
 })
 
 graph_info.append({
-    "title" : _("Event Console times"),
     "metrics" : [
-        ( "average_request_time",    "stack" ),
-        ( "average_processing_time", "stack" ),
-    ],
+       ( "average_rule_hit_ratio",  "area" ),
+    ]
 })
+
+graph_info.append({
+    "metrics" : [
+       ( "average_event_rate",     "area" ),
+    ]
+})
+
+graph_info.append({
+    "metrics" : [
+       ( "average_processing_time", "stack" ),
+    ]
+})
+
+#        ( "average_connect_rate",   "area" ),
+
+
+
+# graph_info.append({
+#     "title" : _("Event Console times"),
+#     "metrics" : [
+#         ( "average_request_time",    "stack" ),
+#         ( "average_processing_time", "stack" ),
+#     ],
+# })
 
 graph_info.append({
     "title" : _("Livestatus Requests per Connection"),

@@ -1,0 +1,9 @@
+Title: Fixed exception when viewing availability of BI aggregations
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i4
+Date: 1482228061
+Class: fix
+
+This fix simply makes an already existing hack less horribly broken...

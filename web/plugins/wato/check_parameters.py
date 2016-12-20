@@ -3246,6 +3246,53 @@ register_check_parameters(
 )
 
 
+register_check_parameters(
+    subgroup_applications,
+    "generic_number",
+    _("Generic numeric value"),
+    Dictionary(
+        elements = [
+            ( "levels",
+              Tuple(
+                    title = _("Upper levels"),
+                    elements = [
+                        Float(title = "Warning at"),
+                        Float(title = "Critical at"),
+                    ])),
+            ( "levels_lower",
+              Tuple(
+                    title = _("Lower levels"),
+                    elements = [
+                        Float(title = "Warning below"),
+                        Float(title = "Critical below"),
+                    ])),
+        ]),
+    TextAscii(
+        title = _("Item"),
+    ),
+    "dict"
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    "generic_string",
+    _("Generic string"),
+    ListOf(
+        Tuple(
+            elements = [
+                TextAscii(title=_("Search string")),
+                MonitoringState(),
+            ])
+    ),
+    TextAscii(
+        title = _("Item"),
+    ),
+    "list"
+)
+
+
+
 #.
 #   .--Environment---------------------------------------------------------.
 #   |     _____            _                                      _        |

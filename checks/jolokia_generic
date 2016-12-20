@@ -1,0 +1,149 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_jolokia_generic(info):
+    parsed = {}
+    for line in info:
+        instance, mbean, value, value_type = line
+
+        if value_type == "number":
+            value = float(value)
+
+        item = instance + " " + mbean
+
+        parsed[item] = {
+            "type"  : value_type,
+            "value" : value
+        }
+
+    return parsed
+
+#.
+#   .--String--------------------------------------------------------------.
+#   |                    ____  _        _                                  |
+#   |                   / ___|| |_ _ __(_)_ __   __ _                      |
+#   |                   \___ \| __| '__| | '_ \ / _` |                     |
+#   |                    ___) | |_| |  | | | | | (_| |                     |
+#   |                   |____/ \__|_|  |_|_| |_|\__, |                     |
+#   |                                           |___/                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_jolokia_generic_string(parsed):
+    for item in parsed:
+        if parsed[item]["type"] == "string":
+            yield item, None
+
+
+def check_jolokia_generic_string(item, params, parsed):
+    value = parsed[item]["value"]
+
+    yield 0, value
+
+    if not params:
+        params = []
+    for search_string, status in params:
+        if search_string in value:
+            yield status, "%s matches" % search_string
+
+
+check_info["jolokia_generic.string"] = {
+    "inventory_function"    : inventory_jolokia_generic_string,
+    "check_function"        : check_jolokia_generic_string,
+    "service_description"   : "MBean %s",
+    "group"                 : "generic_string",
+}
+
+
+#.
+#   .--Rate----------------------------------------------------------------.
+#   |                         ____       _                                 |
+#   |                        |  _ \ __ _| |_ ___                           |
+#   |                        | |_) / _` | __/ _ \                          |
+#   |                        |  _ < (_| | ||  __/                          |
+#   |                        |_| \_\__,_|\__\___|                          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+
+#.
+#   .--Number--------------------------------------------------------------.
+#   |                _   _                 _                               |
+#   |               | \ | |_   _ _ __ ___ | |__   ___ _ __                 |
+#   |               |  \| | | | | '_ ` _ \| '_ \ / _ \ '__|                |
+#   |               | |\  | |_| | | | | | | |_) |  __/ |                   |
+#   |               |_| \_|\__,_|_| |_| |_|_.__/ \___|_|                   |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_jolokia_generic(parsed):
+    for item in parsed:
+        if parsed[item]["type"] == "number":
+            yield item, {}
+
+
+def check_jolokia_generic(item, params, parsed):
+    value = parsed[item]["value"]
+    infotext = "%.1f" % value
+    if params:
+        if params.get("levels"):
+            status = 0
+            warn, crit = params["levels"]
+            levelstext = " (warn/crit at %.1f/%.1f)" % (warn, crit)
+
+            if value >= crit:
+                status = 2
+            elif value >= warn:
+                status = 1
+
+            if status:
+                infotext += levelstext
+            yield status, infotext
+
+        if params.get("levels_lower"):
+            status = 0
+            warn_lower, crit_lower = params["levels_lower"]
+            if value < crit_lower:
+                status = 2
+            elif value < warn_lower:
+                status = 1
+            if status:
+                levelstext_lower = " (warn/crit below %.1f/%.1f)" % (warn_lower, crit_lower)
+            else:
+                levelstext_lower = ""
+            yield status, levelstext_lower
+    else:
+        yield 0, "%.1f" % value
+
+
+check_info["jolokia_generic"] = {
+    "parse_function"        : parse_jolokia_generic,
+    "inventory_function"    : inventory_jolokia_generic,
+    "check_function"        : check_jolokia_generic,
+    "service_description"   : "MBean %s",
+    "group"                 : "generic_number",
+}

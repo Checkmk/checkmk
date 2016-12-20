@@ -74,10 +74,10 @@ def check_mkeventd_status(item, params, parsed):
         yield 0, "Currently not running"
         return
 
-    yield 0, "Open events: %d" % status["num_open_events"], \
+    yield 0, "Current events: %d" % status["num_open_events"], \
         [("num_open_events", status["num_open_events"])]
 
-    yield 0, "Virtual Memory: %s" % \
+    yield 0, "Virtual memory: %s" % \
         get_bytes_human_readable(status["virtual_memory_size"]), \
         [("process_virtual_size", status["virtual_memory_size"])]
 

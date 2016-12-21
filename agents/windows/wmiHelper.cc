@@ -188,7 +188,7 @@ bool Result::next() {
     IWbemClassObject *obj;
     ULONG numReturned;
     // always retrieve only one element
-    HRESULT res = _enumerator->Next(WBEM_INFINITE, 1, &obj, &numReturned);
+    HRESULT res = _enumerator->Next(10000, 1, &obj, &numReturned);
 
     if (FAILED(res)) {
         // in this case the "current" object isn't changed to guarantee that the

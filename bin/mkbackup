@@ -668,20 +668,26 @@ def do_site_backup(opts, site=None, try_stop=True):
 
 
 def stop_site(site):
-    omd_command("stop", site)
+    site_arg = [ site ] if is_root() else []
+
+    omd_command("stop", *site_arg)
 
     for c in range(5):
-        if os.system("omd status --bare %s >/dev/null" % site) >> 8 == 1:
+        if subprocess.call(["omd", "status", "--bare" ] + site_arg,
+                           stdout=open(os.devnull, "w")) == 1:
             break
         elif c == 4:
             raise MKGeneralException("Failed to stop site")
 
 
 def start_site(site):
-    omd_command("start", site)
+    site_arg = [ site ] if is_root() else []
+
+    omd_command("start", *site_arg)
 
     for c in range(5):
-        if os.system("omd status --bare %s >/dev/null" % site) >> 8 == 0:
+        if subprocess.call(["omd", "status", "--bare", ] + site_arg,
+                           stdout=open(os.devnull, "w")) == 0:
             break
         elif c == 4:
             raise MKGeneralException("Failed to start site")

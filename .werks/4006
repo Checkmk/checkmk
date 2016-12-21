@@ -1,0 +1,9 @@
+Title: Windows Agent: Fixed possible memory leak when using logwatch with vista api setting
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1482313070
+Class: fix
+
+

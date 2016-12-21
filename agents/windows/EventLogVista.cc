@@ -244,6 +244,7 @@ public:
         std::replace_if(result.begin(), result.end(),
                         [](wchar_t ch) { return ch == '\n' || ch == '\r'; },
                         ' ');
+        _evt->close(publisher_meta);
         return result;
     }
 };

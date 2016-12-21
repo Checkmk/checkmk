@@ -27,6 +27,7 @@
 
 SectionSkype::SectionSkype() : SectionGroup("skype") {
     withToggleIfMissing();
+    withFailIfMissing();
     withNestedSubtables();
     withSeparator(',');
 

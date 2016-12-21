@@ -1,0 +1,11 @@
+Title: Windows Agent: Reduced number of needless WMI Queries when Skype performance counters are missing
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1482313422
+Class: feature
+
+The windows agent now skips the processing of the skype section earlier, if the
+performancecounters are not available. This presumably fixes an error where the windows
+agents hangs in a followup WMI query.

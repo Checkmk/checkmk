@@ -2864,7 +2864,7 @@ register_rule(
             ),
             ( "item",
               TextAscii(
-                title = _("Item (Used in service description)"),
+                title = _("Item (used in service description)"),
                 help = _("If you enter an item name here, this will be used as "
                    "part of the service description after the prefix \"Events \". "
                    "The prefix plus the configured item must result in an unique "
@@ -2890,7 +2890,7 @@ register_rule(
             ( "ignore_acknowledged",
               FixedValue(
                   True,
-                  title = _("Ignore Acknowledged Events"),
+                  title = _("Ignore acknowledged events"),
                   help = _("If you check this box then only open events are honored when "
                            "determining the event state. Acknowledged events are displayed "
                            "(i.e. their count) but not taken into account."),
@@ -2900,7 +2900,7 @@ register_rule(
             ( "less_verbose",
               FixedValue(
                   True,
-                  title = _("Less Verbose Output"),
+                  title = _("Less verbose output"),
                   help = _("If enabled the check reports less information in its output. "
                            "You will see no information regarding the worst state or unacknowledged events. "
                            " For example a default output without this option is "
@@ -2908,6 +2908,7 @@ register_rule(
                            "Output with less verbosity: "
                            "<tt>WARN - 1 events (Worst line: Incomplete Content)</tt><br>"
                           ),
+                  totext = _("produce a more terse output"),
                  )
             ),
             ( "remote",
@@ -2948,7 +2949,7 @@ register_rule(
                       ),
 
                  ],
-                 default_value = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
+                 default_value = None,
             )
           ),
         ],

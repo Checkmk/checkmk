@@ -178,16 +178,19 @@ check_info["smart.stats"] = {
 def inventory_smart_temp(info):
     disks = parse_smart_raw_values(info)
     for disk_name, disk in disks.iteritems():
-        if disk in [ "Temperature_Celsius", "Temperature_Internal" ]:
-            yield (disk_name, {})
+        if "Temperature_Celsius" in disk or \
+           "Temperature_Internal" in disk:
+            yield disk_name, {}
 
 
 def check_smart_temp(item, params, info):
     disks = parse_smart_raw_values(info)
 
-    try:
+    if "Temperature_Celsius" in disks[item]:
         temperature = disks[item]["Temperature_Celsius"]
-    except KeyError:
+    elif "Temperature_Internal" in disks[item]:
+        temperature = disks[item]["Temperature_Internal"]
+    else:
         return
 
     return check_temperature(temperature, params, "smart_%s" % item)

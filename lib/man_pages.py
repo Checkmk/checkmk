@@ -68,6 +68,7 @@ catalog_titles = {
             "emerson"      : "EMERSON",
             "epson"        : "Epson",
             "hwg"          : "HW group",
+            "ispro"        : "Interseptor Pro",
             "kentix"       : "Kentix",
             "knuerr"       : "Knuerr",
             "raritan"      : "Raritan",

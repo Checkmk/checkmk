@@ -1,6 +1,6 @@
 title: Interseptor Pro devices: Temperature sensors
 agents: snmp
-catalog: hw/other
+catalog: hw/environment/ispro
 license: GPL
 distribution: check_mk
 description:

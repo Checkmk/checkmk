@@ -1825,7 +1825,20 @@ function finalize_dragging()
     var url = g_dragging.base_url + "&_index="+encodeURIComponent(index);
     call_ajax(url, {
         method           : "GET",
+        response_handler : handle_finalize_dragging,
+        error_handler    : handle_finalize_dragging_error,
+        plain_error      : true
     });
+}
+
+function handle_finalize_dragging(handler_data, response_text) {
+    if (response_text != "")
+        alert("Failed to persist drag result: " + response_text);
+}
+
+function handle_finalize_dragging_error(handler_data, status_code, error_msg) {
+    if (status_code != 0)
+        alert("Failed to persist drag result: (" + status_code + "): " + error_msg);
 }
 
 // TODO: Only register when needed?

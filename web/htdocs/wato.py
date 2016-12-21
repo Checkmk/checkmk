@@ -9321,7 +9321,7 @@ def mode_edit_site(phase):
 
         # Don't know exactly what have been changed, so better issue a change
         # affecting all domains
-        add_change("edit-sites", msg, sites=[id], domains=ConfigDomain.all_classes())
+        add_change("edit-sites", msg, sites=[id], domains=ConfigDomain.enabled_domains())
 
         if id != config.omd_site():
             # On central site issue a change only for the GUI

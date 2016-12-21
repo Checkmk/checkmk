@@ -12289,6 +12289,7 @@ class ModeEditRuleset(WatoMode):
                 ruleset.move_rule_to_top(rule)
             elif action == "move_to":
                 ruleset.move_rule_to(rule, int(html.var("_index")))
+                return ""
             else:
                 ruleset.move_rule_to_bottom(rule)
 

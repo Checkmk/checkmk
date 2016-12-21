@@ -42,6 +42,7 @@ class SectionGroup : public Section {
     std::vector<std::unique_ptr<Section>> _subsections;
     std::vector<std::unique_ptr<Section>> _dependent_subsections;
     bool _toggle_if_missing{false};
+    bool _fail_if_missing{false};
     bool _nested{false};
     time_t _disabled_until{0};
 
@@ -61,6 +62,7 @@ public:
      **/
     SectionGroup *withDependentSubSection(Section *section);
     SectionGroup *withToggleIfMissing();
+    SectionGroup *withFailIfMissing();
 
 protected:
     virtual bool produceOutputInner(std::ostream &out,

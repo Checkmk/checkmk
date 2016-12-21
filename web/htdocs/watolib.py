@@ -6739,7 +6739,8 @@ class Rule(object):
             return False
 
         if self.ruleset.valuespec() and \
-           not match_search_expression(search_options, "rule_value", self.ruleset.valuespec().value_to_text(self.value)):
+           not match_search_expression(search_options, "rule_value",
+                                       "%s" % self.ruleset.valuespec().value_to_text(self.value)):
             return False
 
         if not match_one_of_search_expression(search_options, "rule_host_list", self.host_list):

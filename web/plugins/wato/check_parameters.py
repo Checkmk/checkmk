@@ -3276,19 +3276,53 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "generic_rate",
+    _("Generic rate"),
+    Dictionary(
+        elements = [
+            ( "levels",
+              Tuple(
+                    title = _("Upper levels"),
+                    elements = [
+                        Float(title = "Warning at", unit = "/s"),
+                        Float(title = "Critical at", unit = "/s"),
+                    ])),
+            ( "levels_lower",
+              Tuple(
+                    title = _("Lower levels"),
+                    elements = [
+                        Float(title = "Warning below", unit = "/s"),
+                        Float(title = "Critical below", unit = "/s"),
+                    ])),
+        ]),
+    TextAscii(
+        title = _("Item"),
+    ),
+    "dict"
+)
+
+
+register_check_parameters(
+    subgroup_applications,
     "generic_string",
     _("Generic string"),
-    ListOf(
-        Tuple(
-            elements = [
-                TextAscii(title=_("Search string")),
-                MonitoringState(),
-            ])
+    Dictionary(
+        elements = [
+            ( "default_status", MonitoringState(title = _("Default Status"))),
+            ( "match_strings",
+            ListOf(
+                Tuple(
+                    elements = [
+                        TextAscii(title=_("Search string")),
+                        MonitoringState(),
+                    ])
+            )),
+         ]
     ),
     TextAscii(
         title = _("Item"),
     ),
-    "list"
+    "dict"
 )
 
 

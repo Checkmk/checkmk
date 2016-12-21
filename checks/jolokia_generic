@@ -30,7 +30,7 @@ def parse_jolokia_generic(info):
     for line in info:
         instance, mbean, value, value_type = line
 
-        if value_type == "number":
+        if value_type in ["number", "rate"]:
             value = float(value)
 
         item = instance + " " + mbean
@@ -55,19 +55,19 @@ def parse_jolokia_generic(info):
 def inventory_jolokia_generic_string(parsed):
     for item in parsed:
         if parsed[item]["type"] == "string":
-            yield item, None
+            yield item, {}
 
 
 def check_jolokia_generic_string(item, params, parsed):
     value = parsed[item]["value"]
+    default_status = params.get("default_status", 0)
 
-    yield 0, value
-
-    if not params:
-        params = []
-    for search_string, status in params:
+    search_strings = params.get("search_strings", [])
+    for search_string, status in search_strings:
         if search_string in value:
-            yield status, "%s matches" % search_string
+            return status, "%s: %s matches" % (value, search_string)
+
+    return default_status, value
 
 
 check_info["jolokia_generic.string"] = {
@@ -88,6 +88,58 @@ check_info["jolokia_generic.string"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+def inventory_jolokia_generic_rate(parsed):
+    for item in parsed:
+        if parsed[item]["type"] == "rate":
+            yield item, {}
+
+
+def check_jolokia_generic_rate(item, params, parsed):
+    now = time.time()
+    rate = get_rate(item, now, parsed[item]["value"])
+    infotext = "%.1f" % rate
+    perfdata = None
+
+    if params:
+        if params.get("levels"):
+            status = 0
+            warn, crit = params["levels"]
+            perfdata = [ ("generic_rate", rate, warn, crit) ]
+            levelstext = "(warn/crit at %.1f/%.1f)" % (warn, crit)
+
+            if rate >= crit:
+                status = 2
+            elif rate >= warn:
+                status = 1
+
+            if not status:
+                levelstext = ""
+            yield status, levelstext
+
+        if params.get("levels_lower"):
+            status = 0
+            warn_lower, crit_lower = params["levels_lower"]
+            levelstext_lower = "(warn/crit below %.1f/%.1f)" % (warn_lower, crit_lower)
+            if rate < crit_lower:
+                status = 2
+            elif rate < warn_lower:
+                status = 1
+            if not status:
+                levelstext_lower = ""
+            yield status, levelstext_lower
+
+    if not perfdata:
+        perfdata = [ ("generic_rate", rate) ]
+
+    yield 0, infotext, perfdata
+
+
+check_info["jolokia_generic.rate"] = {
+    "inventory_function"    : inventory_jolokia_generic_rate,
+    "check_function"        : check_jolokia_generic_rate,
+    "service_description"   : "MBean %s",
+    "group"                 : "generic_rate",
+}
 
 
 #.
@@ -109,35 +161,40 @@ def inventory_jolokia_generic(parsed):
 def check_jolokia_generic(item, params, parsed):
     value = parsed[item]["value"]
     infotext = "%.1f" % value
+    perfdata = None
+
     if params:
         if params.get("levels"):
             status = 0
             warn, crit = params["levels"]
-            levelstext = " (warn/crit at %.1f/%.1f)" % (warn, crit)
+            perfdata = [ ("generic_number", value, warn, crit) ]
+            levelstext = "(warn/crit at %.1f/%.1f)" % (warn, crit)
 
             if value >= crit:
                 status = 2
             elif value >= warn:
                 status = 1
 
-            if status:
-                infotext += levelstext
-            yield status, infotext
+            if not status:
+                levelstext = ""
+            yield status, levelstext
 
         if params.get("levels_lower"):
             status = 0
             warn_lower, crit_lower = params["levels_lower"]
+            levelstext_lower = "(warn/crit below %.1f/%.1f)" % (warn_lower, crit_lower)
             if value < crit_lower:
                 status = 2
             elif value < warn_lower:
                 status = 1
-            if status:
-                levelstext_lower = " (warn/crit below %.1f/%.1f)" % (warn_lower, crit_lower)
-            else:
+            if not status:
                 levelstext_lower = ""
             yield status, levelstext_lower
-    else:
-        yield 0, "%.1f" % value
+
+    if not perfdata:
+        perfdata = [ ("generic_number", value) ]
+
+    yield 0, infotext, perfdata
 
 
 check_info["jolokia_generic"] = {

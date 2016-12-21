@@ -86,7 +86,8 @@ void ServiceListColumn::output(void *row, RowRenderer &r, contact *auth_user) {
 
 unique_ptr<Filter> ServiceListColumn::createFilter(RelationalOperator relOp,
                                                    const string &value) {
-    return make_unique<ServiceListFilter>(this, relOp, value);
+    return make_unique<ServiceListFilter>(this, _hostname_required, relOp,
+                                          value);
 }
 
 int ServiceListColumn::inCustomTimeperiod(service *svc, const char *varname) {

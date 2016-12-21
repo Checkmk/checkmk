@@ -24,37 +24,41 @@
 
 // IWYU pragma: no_include <ext/alloc_traits.h>
 #include "ServiceListFilter.h"
-#include <cstring>
 #include <ostream>
 #include "Logger.h"
 
 using std::string;
 
-#define HOSTSERVICE_SEPARATOR '|'
+namespace {
+constexpr char hostservice_separator = '|';
+}  // namespace
 
 ServiceListFilter::ServiceListFilter(ServiceListColumn *column,
+                                     bool hostname_required,
                                      RelationalOperator relOp,
                                      const string &value)
-    : _column(column), _relOp(relOp) {
+    : _column(column), _hostname_required(hostname_required), _relOp(relOp) {
     if ((_relOp == RelationalOperator::equal ||
          _relOp == RelationalOperator::not_equal) &&
         value.empty()) {
         return;  // test for emptiness is allowed
     }
 
-    // ref_value must be of from hostname HOSTSERVICE_SEPARATOR
-    // service_description
-    const char *sep = index(value.c_str(), HOSTSERVICE_SEPARATOR);
-    if (sep == nullptr) {
-        Informational(logger()) << "Invalid reference value for service list "
-                                   "membership. Must be 'hostname"
-                                << string(1, HOSTSERVICE_SEPARATOR)
-                                << "servicename'";
-        _ref_host = "";
-        _ref_service = "";
+    // ref_value must be of the form
+    //    hostname hostservice_separator service_description
+    auto pos = value.find(hostservice_separator);
+    if (pos == string::npos) {
+        if (_hostname_required) {
+            Informational(logger()) << "Invalid reference value for service "
+                                       "list membership. Must be 'hostname"
+                                    << string(1, hostservice_separator)
+                                    << "servicename'";
+        } else {
+            _ref_service = value;
+        }
     } else {
-        _ref_host = string(&value[0], sep - &value[0]);
-        _ref_service = sep + 1;
+        _ref_host = value.substr(0, pos);
+        _ref_service = value.substr(pos + 1);
     }
 }
 
@@ -77,7 +81,8 @@ bool ServiceListFilter::accepts(void *row, contact * /* auth_user */,
     bool is_member = false;
     for (; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
-        if (svc->host_name == _ref_host && svc->description == _ref_service) {
+        if ((!_hostname_required || svc->host_name == _ref_host) &&
+            svc->description == _ref_service) {
             is_member = true;
             break;
         }

@@ -678,27 +678,27 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         extra_offset, core));
 
     table->addColumn(make_unique<ServiceListColumn>(
-        prefix + "services", "A list of all services of the host",
+        prefix + "services", "A list of all services of the host", false,
         reinterpret_cast<char *>(&hst.services) - ref, indirect_offset, false,
         0, extra_offset));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and "
         "has_been_checked",
-        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset, false,
-        1, extra_offset));
+        false, reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        false, 1, extra_offset));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each "
         "service",
-        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset, false,
-        2, extra_offset));
+        false, reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        false, 2, extra_offset));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of "
         "entries can grow in future versions.",
-        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset, false,
-        3, extra_offset));
+        false, reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        false, 3, extra_offset));
 
     table->addColumn(make_unique<MetricsColumn>(
         prefix + "metrics",

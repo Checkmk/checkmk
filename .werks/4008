@@ -1,0 +1,10 @@
+Title: Windows Agent, dotnet_clrmemory section: prevent indefinite freeze of windows agent
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1482314283
+Class: fix
+
+The windows agent could freeze in the dotnet_clrmemory section while querying WMI counters.
+This freeze is presumably caused by an earlier WMI query for the skype section which failed, due to a non-existing wmi counter.

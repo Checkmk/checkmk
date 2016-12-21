@@ -1,6 +1,6 @@
 title: Extreme Networks Switch: Temperature
 agents: snmp
-catalog: hw/other
+catalog: hw/network/netextreme
 license: GPL
 distribution: check_mk
 description:

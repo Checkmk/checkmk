@@ -1,6 +1,6 @@
 title: Extreme Networks Switch: Fan State and Speed
 agents: snmp
-catalog: hw/other
+catalog: hw/network/netextreme
 license: GPL
 distribution: check_mk
 description:

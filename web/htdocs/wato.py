@@ -9372,11 +9372,13 @@ def mode_edit_site(phase):
         # affecting all domains
         add_change("edit-sites", msg, sites=[id], domains=ConfigDomain.enabled_domains())
 
+        # In case a site is not being replicated anymore, confirm all changes for this site!
+        if not repl:
+            clear_site_replication_status(id)
+
         if id != config.omd_site():
-            # On central site issue a change only for the GUI
-            # NOTE: Was marking all to be restarted (ec and core) before, but I don't
-            # think that this was really needed.
-            add_change("edit-sites", msg, sites=[id], domains=[ConfigDomainGUI])
+            # On central site issue a change only affecting the GUI
+            add_change("edit-sites", msg, sites=[config.omd_site()], domains=[ConfigDomainGUI])
 
         return "sites"
 

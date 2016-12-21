@@ -478,7 +478,7 @@ modulesdir=$sharedir/modules
 web_dir=$sharedir/web
 localedir=$sharedir/locale
 agentsdir=$sharedir/agents
-activechecksdir=${check_icmp_pathr%/*}
+activechecksdir=${check_icmp_path%/*}
 
 if [ -z "$YES" ]
 then

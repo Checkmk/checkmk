@@ -110,6 +110,7 @@ catalog_titles = {
             "kemp"        : "KEMP",
             "lancom"      : "LANCOM Systems GmbH",
             "mikrotik"    : "MikroTik",
+            "netextreme"  : "Extreme Network",
             "netgear"     : "Netgear",
             "palo_alto"   : "Palo Alto Networks",
             "qnap"        : "QNAP Systems",

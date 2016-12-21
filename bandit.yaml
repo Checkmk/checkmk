@@ -6,6 +6,7 @@ exclude_dirs:
  - '/doc/treasures/localchecks'
  - '/doc/treasures/notifications'
  - '/scripts'
+ - '/agents/windows/plugins/build'
 
 ### Bandit config file generated from:
 # '/usr/local/bin/bandit-config-generator -o ../bandit.yaml'

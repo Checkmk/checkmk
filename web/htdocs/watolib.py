@@ -286,11 +286,21 @@ class ConfigDomain(object):
 
 
     @classmethod
+    def enabled_domains(cls):
+        return [ d for d in cls.all_classes() if d.enabled() ]
+
+
+    @classmethod
     def get_class(cls, ident):
         for domain_class in cls.__subclasses__(): # pylint: disable=no-member
             if domain_class.ident == ident:
                 return domain_class
         raise NotImplementedError(_("The domain \"%s\" does not exist") % ident)
+
+
+    @classmethod
+    def enabled(self):
+        return True
 
 
     def config_dir(self):
@@ -366,6 +376,12 @@ class ConfigDomainEventConsole(ConfigDomain):
     needs_activation   = True
     ident              = "ec"
     in_global_settings = False
+
+
+    @classmethod
+    def enabled(self):
+        return config.mkeventd_enabled
+
 
     def config_dir(self):
         return mkeventd_config_dir
@@ -3140,7 +3156,7 @@ def register_configvar_group(title, order=None):
 
 def load_configuration_settings():
     settings = {}
-    for domain in ConfigDomain.all_classes():
+    for domain in ConfigDomain.enabled_domains():
 	settings.update(domain().load())
     return settings
 
@@ -3159,7 +3175,7 @@ def save_configuration_settings(vars):
     if "userdb_automatic_sync" in vars:
         per_domain.setdefault("multisite", {})["userdb_automatic_sync"] = vars["userdb_automatic_sync"]
 
-    for domain in ConfigDomain.all_classes():
+    for domain in ConfigDomain.enabled_domains():
         domain().save(per_domain.get(domain, {}))
 
 

@@ -1027,7 +1027,7 @@ class LDAPUserConnector(UserConnector):
                     pw_changed = True
 
                 # Synchronize new user profile to remote sites if needed
-                if pw_changed and not changed and wato.is_distributed():
+                if pw_changed and not changed and wato.has_wato_slave_sites():
                     synchronize_profile_to_sites(self, user_id, user)
 
                 if changed:

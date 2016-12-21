@@ -30,10 +30,6 @@
 # and implement AJAX handlers. It uses classes, functions and globals
 # from watolib.py.
 
-# CLEANUP: is_distributed() now always returns True. Remove all occurrances
-# of this function as soon as we know that everything still works without
-# the old "single" mode.
-
 #   .--README--------------------------------------------------------------.
 #   |               ____                _                                  |
 #   |              |  _ \ ___  __ _  __| |  _ __ ___   ___                 |
@@ -7930,7 +7926,7 @@ def mode_user_notifications(phase, profilemode):
                 log_text = _("Deleted notification rule %d of user %s") % (nr, userid)
 
                 notification_rule_start_async_repl = False
-                if profilemode and is_distributed():
+                if profilemode and has_wato_slave_sites():
                     notification_rule_start_async_repl = True
                     log_audit(None, log_what, log_text)
                 else:
@@ -7953,7 +7949,7 @@ def mode_user_notifications(phase, profilemode):
                 log_text = _("Changed position of notification rule %d of user %s") % (from_pos, userid)
 
                 notification_rule_start_async_repl = False
-                if profilemode and is_distributed():
+                if profilemode and has_wato_slave_sites():
                     notification_rule_start_async_repl = True
                     log_audit(None, log_what, log_text)
                 else:
@@ -8052,7 +8048,7 @@ def mode_notification_rule(phase, profilemode):
             log_text = _("Changed notification rule %d") % edit_nr + suffix
 
         notification_rule_start_async_repl = False
-        if profilemode and is_distributed():
+        if profilemode and has_wato_slave_sites():
             notification_rule_start_async_repl = True
             log_audit(None, log_what, log_text)
             return # don't redirect to other page
@@ -8799,21 +8795,21 @@ def mode_sites(phase):
             # will be removed.
             test_sites = dict(configured_sites.items())
             del test_sites[delid]
-            if is_distributed(test_sites):
-                # Make sure that site is not being used by hosts and folders
-                if delid in Folder.root_folder().all_site_ids():
-                    search_url = html.makeactionuri([
-                        ("host_search_change_site", "on"),
-                        ("host_search_site", delid),
-                        ("host_search",      "1"),
-                        ("folder",           ""),
-                        ("mode",             "search"),
-                        ("filled_in",        "edit_host"),
-                    ])
-                    raise MKUserError(None,
-                        _("You cannot delete this connection. It has folders/hosts "
-                          "assigned to it. You can use the <a href=\"%s\">host "
-                          "search</a> to get a list of the hosts.") % search_url)
+
+            # Make sure that site is not being used by hosts and folders
+            if delid in Folder.root_folder().all_site_ids():
+                search_url = html.makeactionuri([
+                    ("host_search_change_site", "on"),
+                    ("host_search_site", delid),
+                    ("host_search",      "1"),
+                    ("folder",           ""),
+                    ("mode",             "search"),
+                    ("filled_in",        "edit_host"),
+                ])
+                raise MKUserError(None,
+                    _("You cannot delete this connection. It has folders/hosts "
+                      "assigned to it. You can use the <a href=\"%s\">host "
+                      "search</a> to get a list of the hosts.") % search_url)
 
             c = wato_confirm(_("Confirm deletion of site %s") % delid,
                              _("Do you really want to delete the connection to the site %s?") % delid)

@@ -6756,7 +6756,7 @@ class Rule(object):
           + (self.item_list or [])
 
         if self.ruleset.valuespec():
-            to_search.append(self.ruleset.valuespec().value_to_text(self.value))
+            to_search.append("%s" % self.ruleset.valuespec().value_to_text(self.value))
 
         if not match_one_of_search_expression(search_options, "fulltext", to_search):
             return False

@@ -12629,7 +12629,7 @@ class ModeEditRuleset(WatoMode):
             if len(text_list) == 1:
                 condition += text_list[0]
             else:
-                condition += ", ".join(text_list[:-1])
+                condition += ", ".join([ "%s" % s for s in text_list[:-1] ])
                 condition += _(" or ") + text_list[-1]
 
         # Other cases should not occur, e.g. list of explicit hosts
@@ -12678,7 +12678,7 @@ class ModeEditRuleset(WatoMode):
         if len(text_list) == 1:
             condition += text_list[0]
         else:
-            condition += ", ".join(text_list[:-1])
+            condition += ", ".join([ "%s" % s for s in text_list[:-1] ])
             condition += _(" or ") + text_list[-1]
 
         if condition:

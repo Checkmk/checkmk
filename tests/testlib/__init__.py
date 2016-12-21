@@ -434,14 +434,10 @@ class Site(object):
 class WebSession(requests.Session):
     def __init__(self):
         self.transids = []
-        # Resources are
+        # Resources are only fetched and verified once per session
         self.verified_resources = set()
-        self.via_system_apache = True
-        super(WebSession, self).__init__()
-
-
-    def dont_use_system_apache(self):
         self.via_system_apache = False
+        super(WebSession, self).__init__()
 
 
     def check_redirect(self, path, proto="http", expected_code=302, expected_target=None):

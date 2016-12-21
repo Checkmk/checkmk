@@ -68,7 +68,7 @@ class html_mod_python(htmllib.html):
         self.set_http_header("Cache-Control", "no-cache")
 
         self.init_mobile()
-        self.set_output_format(self.var("output_format", "html"))
+        self.set_output_format(self.var("output_format", "html").lower())
 
 
     def client_request_timeout(self):

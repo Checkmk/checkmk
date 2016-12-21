@@ -1,0 +1,10 @@
+Title: Fixed exception when setting output_format in wrong case
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p16
+Date: 1482311051
+
+

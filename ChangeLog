@@ -7,6 +7,9 @@
     * 4174 FIX: added missing perfometer for interface services
     * 4119 FIX: check_mk_agent.solaris: fixed run_cached function...
 
+    Multisite:
+    * 4145 FIX: Fixed exception when setting output_format in wrong case
+
 
 1.2.8p15:
     Core & Setup:

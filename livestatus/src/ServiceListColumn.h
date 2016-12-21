@@ -35,15 +35,12 @@ class Filter;
 class RowRenderer;
 
 class ServiceListColumn : public Column {
-    int _offset;
-    bool _show_host;
-    int _info_depth;
-
 public:
     ServiceListColumn(const std::string &name, const std::string &description,
-                      int offset, int indirect_offset, bool show_host,
-                      int info_depth, int extra_offset = -1)
+                      bool hostname_required, int offset, int indirect_offset,
+                      bool show_host, int info_depth, int extra_offset)
         : Column(name, description, indirect_offset, extra_offset)
+        , _hostname_required(hostname_required)
         , _offset(offset)
         , _show_host(show_host)
         , _info_depth(info_depth) {}
@@ -54,6 +51,11 @@ public:
     servicesmember *getMembers(void *data);
 
 private:
+    bool _hostname_required;
+    int _offset;
+    bool _show_host;
+    int _info_depth;
+
     int inCustomTimeperiod(service *svc, const char *varname);
 };
 

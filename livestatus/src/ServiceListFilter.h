@@ -39,13 +39,14 @@
 
 class ServiceListFilter : public ColumnFilter {
 public:
-    ServiceListFilter(ServiceListColumn *column, RelationalOperator relOp,
-                      const std::string &value);
+    ServiceListFilter(ServiceListColumn *column, bool hostname_required,
+                      RelationalOperator relOp, const std::string &value);
     bool accepts(void *row, contact *auth_user, int timezone_offset) override;
     ServiceListColumn *column() const override;
 
 private:
     ServiceListColumn *_column;
+    bool _hostname_required;
     RelationalOperator _relOp;
     std::string _ref_host;
     std::string _ref_service;

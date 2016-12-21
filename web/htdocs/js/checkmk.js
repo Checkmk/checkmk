@@ -236,8 +236,8 @@ function mouse_offset(obj, event){
     var obj_pos   = obj.getBoundingClientRect();
     var mouse_pos = mouse_position(event);
     return {
-        "x": mouse_pos.x - obj_pos.x,
-        "y": mouse_pos.y - obj_pos.y
+        "x": mouse_pos.left - obj_pos.x,
+        "y": mouse_pos.top - obj_pos.y
     }
 }
 
@@ -246,8 +246,8 @@ function mouse_offset_to_middle(obj, event){
     var obj_pos   = obj.getBoundingClientRect();
     var mouse_pos = mouse_position(event);
     return {
-        "x": mouse_pos.x - (obj_pos.x + obj_pos.width/2),
-        "y": mouse_pos.y - (obj_pos.y + obj_pos.height/2)
+        "x": mouse_pos.x - (obj_pos.left + obj_pos.width/2),
+        "y": mouse_pos.y - (obj_pos.top + obj_pos.height/2)
     }
 }
 
@@ -1733,8 +1733,9 @@ function element_drag_start(event, dragger, dragging_tag, base_url)
     add_class(dragging, "dragging");
 
     g_dragging = {
-        "dragging": dragging,
-        "base_url": base_url,
+        "dragging" : dragging,
+        "moved"    : false,
+        "base_url" : base_url,
     };
 
     return prevent_default_events(event);
@@ -1777,6 +1778,7 @@ function position_dragging_object(event)
     // Move it up?
     var previous = get_previous(dragging);
     while (previous && Math.abs(mouse_offset_to_middle(previous, event).y) < offset_y) {
+        g_dragging.moved = true;
         container.insertBefore(dragging, previous);
         previous = get_previous(dragging);
     }
@@ -1784,6 +1786,7 @@ function position_dragging_object(event)
     // Move it down?
     var next = get_next(dragging);
     while (next && Math.abs(mouse_offset_to_middle(next, event).y) < offset_y) {
+        g_dragging.moved = true;
         container.insertBefore(dragging, next.nextElementSibling);
         next = get_next(dragging);
     }
@@ -1808,6 +1811,9 @@ function finalize_dragging()
     var dragging = g_dragging.dragging;
     remove_class(dragging, "dragging");
 
+    if (!g_dragging.moved)
+        return; // Nothing changed. Fine.
+
     var elements = Array.prototype.slice.call(dragging.parentNode.children);
 
     var index = elements.indexOf(dragging);
@@ -1823,6 +1829,7 @@ function finalize_dragging()
         index -= 1;
 
     var url = g_dragging.base_url + "&_index="+encodeURIComponent(index);
+
     location.href = url;
 
     //call_ajax(url, {

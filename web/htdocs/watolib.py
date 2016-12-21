@@ -3233,13 +3233,7 @@ def load_sites():
 
 def save_sites(sites, activate=True):
     make_nagios_directory(multisite_dir)
-
-    # Important: even write out sites if it's empty. The global 'sites'
-    # variable will otherwise survive in the Python interpreter of the
-    # Apache processes.
-    out = create_user_file(sites_mk, "w")
-    out.write(wato_fileheader())
-    out.write("sites = \\\n%s\n" % pprint.pformat(sites))
+    store.save_to_mk_file(sites_mk, "sites", sites)
 
     # Do not activate when just the site's global settings have
     # been edited
@@ -3261,8 +3255,6 @@ def save_sites(sites, activate=True):
 
 def save_liveproxyd_config(sites):
     path = cmk.paths.default_config_dir + "/liveproxyd.mk"
-    out = create_user_file(path, "w")
-    out.write(wato_fileheader())
 
     conf = {}
     for siteid, siteconf in sites.items():
@@ -3270,7 +3262,8 @@ def save_liveproxyd_config(sites):
         if type(s) == tuple and s[0] == "proxy":
             conf[siteid] = s[1]
 
-    out.write("sites = \\\n%s\n" % pprint.pformat(conf))
+    store.save_to_mk_file(path, "sites", conf)
+
     try:
         pidfile = cmk.paths.livestatus_unix_socket + "proxyd.pid"
         pid = int(file(pidfile).read().strip())

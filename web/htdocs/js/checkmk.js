@@ -1823,12 +1823,14 @@ function finalize_dragging()
         index -= 1;
 
     var url = g_dragging.base_url + "&_index="+encodeURIComponent(index);
-    call_ajax(url, {
-        method           : "GET",
-        response_handler : handle_finalize_dragging,
-        error_handler    : handle_finalize_dragging_error,
-        plain_error      : true
-    });
+    location.href = url;
+
+    //call_ajax(url, {
+    //    method           : "GET",
+    //    response_handler : handle_finalize_dragging,
+    //    error_handler    : handle_finalize_dragging_error,
+    //    plain_error      : true
+    //});
 }
 
 function handle_finalize_dragging(handler_data, response_text) {

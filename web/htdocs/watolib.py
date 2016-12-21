@@ -3510,13 +3510,6 @@ def do_remote_automation(site, command, vars):
     return response
 
 
-# Determine, if we have any slaves to distribute
-# configuration to.
-def is_distributed(sites = None):
-    # TODO: Remove all calls of this function
-    return True
-
-
 # Returns the ID of the default site. This is the site the main folder has
 # configured by default. It inherits to all folders and hosts which don't have
 # a site set on their own.

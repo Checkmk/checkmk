@@ -436,7 +436,12 @@ class WebSession(requests.Session):
         self.transids = []
         # Resources are
         self.verified_resources = set()
+        self.via_system_apache = True
         super(WebSession, self).__init__()
+
+
+    def dont_use_system_apache(self):
+        self.via_system_apache = False
 
 
     def check_redirect(self, path, proto="http", expected_code=302, expected_target=None):
@@ -626,7 +631,11 @@ class CMKWebSession(WebSession):
         if "/" not in urlparse(path).path:
             path = "/%s/check_mk/%s" % (self.site.id, path)
 
-        return '%s://%s%s' % (self.site.http_proto, self.site.http_address, path)
+        if self.via_system_apache:
+            return '%s://%s%s' % (self.site.http_proto, self.site.http_address, path)
+        else:
+            return '%s://%s:%d%s' % (self.site.http_proto, self.site.http_address,
+                                     self.site.apache_port, path)
 
 
     def login(self, username="omdadmin", password="omd"):

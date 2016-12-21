@@ -57,6 +57,7 @@ class Worker(threading.Thread):
         self.idle      = True
 
         self.client = CMKWebSession(self.crawler.site)
+        self.client.dont_use_system_apache()
         self.client.login()
         self.client.set_language("en")
 

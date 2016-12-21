@@ -5885,7 +5885,7 @@ class Rulespecs(object):
                 if group_name.startswith(main_group_name + "/"):
                     # TODO: Move this subgroup title calculation to some generic place
                     sub_group_title = group_name.split("/", 1)[1]
-                    choices.append((group_name, "&nbsp;&nbsp;⌙ %s" % sub_group_title))
+                    choices.append((group_name, u"&nbsp;&nbsp;⌙ %s" % sub_group_title))
 
         return choices
 

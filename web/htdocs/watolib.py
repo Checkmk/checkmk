@@ -6770,10 +6770,10 @@ class Rule(object):
 
 
     def matches_search(self, search_options):
-        if "rule_disabled" in search_options and not self.is_disabled():
+        if "rule_disabled" in search_options and search_options["rule_disabled"] != self.is_disabled():
             return False
 
-        if "rule_ineffective" in search_options and not self.is_ineffective():
+        if "rule_ineffective" in search_options and search_options["rule_ineffective"] != self.is_ineffective():
             return False
 
         if not match_search_expression(search_options, "rule_description", self.description()):

@@ -468,9 +468,6 @@ def initialize_snmptrap_engine():
 
 
 def initialize_snmp_credentials():
-    # Add default v1/v2 config to make v1/v2 trap porcessing work
-    snmp_config.addV1System(g_snmp_engine, 'my-area', 'public')
-
     user_num = 0
     for spec in g_config["snmp_credentials"]:
         credentials = spec["credentials"]
@@ -4501,7 +4498,12 @@ def default_config():
         "archive_orphans"       : False,
         "archive_mode"          : "file",
         "translate_snmptraps"   : False,
-        "snmp_credentials"      : [],
+        "snmp_credentials"      : [
+            {
+                "description": "\"public\" default for receiving SNMPv1/v2 traps",
+                "credentials": "public",
+            },
+        ],
         "event_limit"           : {
             'by_host': {
                 'action': 'stop_overflow_notify',

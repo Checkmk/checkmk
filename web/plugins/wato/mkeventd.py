@@ -2677,6 +2677,12 @@ if mkeventd_enabled:
             help = _("When you want to process SNMP traps with the Event Console it is "
                      "necessary to configure the credentials to decrypt the incoming traps."),
             text_if_empty = _("SNMP traps not configured"),
+            default_value = [
+                {
+                    "description": _("\"public\" default for receiving SNMPv1/v2 traps"),
+                    "credentials": "public",
+                },
+            ],
         ),
         domain = ConfigDomainEventConsole,
     )

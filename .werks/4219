@@ -1,0 +1,15 @@
+Title: Trap processing with community "public" is now only default and not accepted in all cases anymore
+Level: 1
+Component: ec
+Compatible: incomp
+Version: 1.4.0i4
+Date: 1482396336
+Class: fix
+
+Since several versions you can configure the Event Console to receive only SNMP traps having
+specific SNMP communities set. Previous versions were simply processing all traps.
+
+The community "public" was somehow special since traps with this community were accepted in
+any cases. We have now changed the community public to just be accepted by default. In case
+you add additional communities, these will also be accepted. But in the moment you remove
+the public community, the traps containing this community will not be accepted anymore.

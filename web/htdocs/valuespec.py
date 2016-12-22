@@ -3018,7 +3018,7 @@ class Alternative(ValueSpec):
             html.write("<table><tr><td>")
         html.select(varprefix + "_use", options, sel_option, onchange)
         if self._orientation == "vertical":
-            html.write("&nbsp;")
+            html.write("<br><br>")
 
         for nr, vs in enumerate(self._elements):
             if str(nr) == sel_option:

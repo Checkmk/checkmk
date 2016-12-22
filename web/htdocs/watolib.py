@@ -6325,10 +6325,10 @@ class Ruleset(object):
 
 
     def matches_search(self, search_options):
-        if "ruleset_deprecated" in search_options and not self.is_deprecated():
+        if "ruleset_deprecated" in search_options and search_options["ruleset_deprecated"] != self.is_deprecated():
             return False
 
-        if "ruleset_used" in search_options and self.is_empty_in_folder(Folder.current()):
+        if "ruleset_used" in search_options and search_options["ruleset_used"] == self.is_empty_in_folder(Folder.current()):
             return False
 
         if "ruleset_group" in search_options \

@@ -11880,16 +11880,19 @@ class ModeRuleEditor(WatoMode):
 
         html.context_button(_("Used Rulesets"), folder_preserving_link([
             ("mode", "rulesets"),
-            ("search_p_ruleset_used_USE", "on")
+            ("search_p_ruleset_used", "0"),
+            ("search_p_ruleset_used_USE", "on"),
         ]), "usedrulesets")
 
         html.context_button(_("Ineffective rules"), folder_preserving_link([
             ("mode", "rulesets"),
+            ("search_p_rule_ineffective", "0"),
             ("search_p_rule_ineffective_USE", "on")]
         ), "rulesets_ineffective")
 
         html.context_button(_("Deprecated Rulesets"), folder_preserving_link([
             ("mode", "rulesets"),
+            ("search_p_ruleset_deprecated", "0"),
             ("search_p_ruleset_deprecated_USE", "on")
         ]), "rulesets_deprecated")
 
@@ -12820,13 +12823,19 @@ class ModeRuleSearch(WatoMode):
                     size = 60,
                     mode = RegExpUnicode.infix,
                 )),
-                ("ruleset_deprecated", FixedValue(False,
+                ("ruleset_deprecated", DropdownChoice(
                     title = _("Deprecated"),
-                    totext = _("Search for deprecated rulesets"),
+                    choices = [
+                        (True, _("Search for deprecated rulesets")),
+                        (False, _("Search for not deprecated rulesets")),
+                    ],
                 )),
-                ("ruleset_used", FixedValue(False,
+                ("ruleset_used", DropdownChoice(
                     title = _("Used"),
-                    totext = _("Search for rulesets that have rules configured"),
+                    choices = [
+                        (True, _("Search for rulesets that have rules configured")),
+                        (False, _("Search for rulesets that don't have rules configured")),
+                    ],
                 )),
 
                 ("rule_description", RegExpUnicode(

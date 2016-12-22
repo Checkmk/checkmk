@@ -3733,7 +3733,7 @@ class Password(TextAscii):
 
         html.password_input(varprefix, str(value), **kwargs)
         if self._is_stored_plain:
-            html.write("<span>%s</span>" % _("Please note that this password is stored in plain "
+            html.write("&nbsp;<span>%s</span>" % _("Please note that this password is stored in plain "
                                              "text."))
 
 

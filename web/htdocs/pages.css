@@ -1261,6 +1261,11 @@ a.element_dragger:hover {
 .dragging {
     cursor: move;
     box-shadow: 0px 2px 10px 0px rgba(0,0,0,0.6);
+    -webkit-transform: scale(1.005);
+    -moz-transform: scale(1.005);
+    -ms-transform: scale(1.005);
+    -o-transform: scale(1.005);
+    transform: scale(1.005);
 }
 
 

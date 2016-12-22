@@ -826,15 +826,16 @@ vs_mkeventd_event = Dictionary(
     elements = [
         ( "text",
           TextUnicode(
-            title = _("Message Text"),
-            size = 80,
+            title = _("Message text"),
+            size = 30,
+            try_max_width = True,
             allow_empty = False,
             default_value = _("Still nothing happened."),
             attrencode = True),
         ),
         ( "application",
           TextUnicode(
-            title = _("Application Name"),
+            title = _("Application name"),
             help = _("The syslog tag"),
             size = 40,
             default_value = _("Foobar-Daemon"),

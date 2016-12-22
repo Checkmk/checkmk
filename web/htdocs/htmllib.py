@@ -1886,7 +1886,15 @@ class html(DeprecationWrapper):
 
         # View
         style, size = None, None
-        if "size" in args and args["size"]:
+        if args.get("try_max_width"):
+            style = "width: calc(100% - 10px); "
+            if "size" in args:
+                cols = int(args["size"])
+            else:
+                cols = 16
+            style += "min-width: %d.8ex; " % cols
+
+        elif "size" in args and args["size"]:
             if args["size"] == "max":
                 style = "width: 100%;"
             else:

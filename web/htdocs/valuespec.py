@@ -366,6 +366,7 @@ class TextAscii(ValueSpec):
         super(TextAscii, self).__init__(**kwargs)
         self._label         = kwargs.get("label")
         self._size          = kwargs.get("size", 25) # also possible: "max"
+        self._try_max_width = kwargs.get("try_max_width", False) # If set, uses calc(100%-10px)
         self._cssclass      = kwargs.get("cssclass", "text")
         self._strip         = kwargs.get("strip", True)
         self._attrencode    = kwargs.get("attrencode", True)
@@ -410,6 +411,7 @@ class TextAscii(ValueSpec):
 
         html.text_input(varprefix, value,
             size=self._size,
+            try_max_width=self._try_max_width,
             read_only=self._read_only,
             cssclass=self._cssclass,
             type=type_,
@@ -956,7 +958,6 @@ class TextAreaUnicode(TextUnicode):
     def __init__(self, **kwargs):
         TextUnicode.__init__(self, **kwargs)
         self._cols = kwargs.get("cols", 60)
-        self._try_max_width = kwargs.get("try_max_width", False) # If set, uses calc(100%-10px)
         self._rows = kwargs.get("rows", 20)  # Allowed: "auto" -> Auto resizing
         self._minrows = kwargs.get("minrows", 0) # Minimum number of initial rows when "auto"
         self._monospaced = kwargs.get("monospaced", False) # select TT font

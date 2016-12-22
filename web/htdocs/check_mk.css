@@ -168,8 +168,7 @@ input.button.hot:active {
 /* pattern / regex input styling */
 
 input.regexp {
-    font-family: monospace;
-    background-color: #eee;
+    /* font-family: monospace; */
 }
 
 a.button {

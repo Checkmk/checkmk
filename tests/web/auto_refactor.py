@@ -8,21 +8,6 @@ def append_to_html(html, indent, addendum):
     return "%s\n%s%s" %(html, ' ' * indent, "%s" % addendum)
 
 
-def split_html(text):
-    index = 1
-    while index < len(text) and text[index - 1] != "(":
-        index += 1
-    open_braces = 1
-    while index < len(text) and open_braces > 0:
-        if text[index] == "(":
-            open_braces += 1
-        elif text[index] == ")":
-            open_braces -= 1
-        index += 1
-    while index < len(text) and text[index] != "\n":
-        index += 1
-    return text[:index], text[index:]
-
 
 def stripper(x):
     x = re.sub(r' %\s+\(.*', '', x)
@@ -48,9 +33,25 @@ def preprocess_tag(tag_str):
     return tag_str
 
 
+def add_to_formated_attr_string(attrs, key, val):
+
+    if key in ["class", "id", "type", "for"]:
+        key += '_'
+
+    if attrs and key and val:
+        attrs += ", "
+
+    if isinstance(val, list):
+        val = "[\"" + "\", \"".join(val) + "\"]"
+        attrs += "%s=%s" % (key, val)
+    else:
+        attrs += "%s=\"%s\"" % (key, val)
+
+    return attrs
+
+
+# Evaluate a tag and its attributes
 def eval_tag(tag_str, next_one, next_inbetween):
-
-
     skip_next = False
     children = list(bs(tag_str, 'html5lib').body.children)
 
@@ -63,20 +64,20 @@ def eval_tag(tag_str, next_one, next_inbetween):
         tag = children[0]
 
         tag_name = tag.name
+        if "id" in tag.attrs:
+            val = tag.attrs.pop("id")
+            attrs = add_to_formated_attr_string(attrs, "id", val)
+
+        if "class" in tag.attrs:
+            val = tag.attrs.pop("class")
+            attrs = add_to_formated_attr_string(attrs, "class", val)
+
         for key, val in tag.attrs.iteritems():
-            if key in ["class", "id", "type", "for"]:
-                key += '_'
-            if attrs and key and val:
-                attrs += ", "
-            if isinstance(val, list):
-                val = "[\"" + "\", \"".join(val) + "\"]"
-                attrs += "%s=%s" % (key, val)
-            else:
-                attrs += "%s=\"%s\"" % (key, val)
+            attrs = add_to_formated_attr_string(attrs, key, val)
 
         # See if we can close the tag right away
         if next_one and next_one == ("</%s>" % tag_name):
-            addendum = "html.%s(%s%s)" % (tag_name, next_inbetween, ", " + attrs if attrs else '')
+            addendum = "html.%s(%s%s)" % (tag_name, next_inbetween if next_inbetween else "\'\'", ", " + attrs if attrs else '')
             skip_next = True
         elif tag_name in ['br', 'hr', 'img']:
             addendum = "html.%s(%s)" % (tag_name, attrs)
@@ -94,12 +95,15 @@ def eval_tag(tag_str, next_one, next_inbetween):
     return addendum, skip_next
 
 
+# replace the input string modulo operator with [[[i]]] where i is the number
+# of the current string modulo operator
 def replace_inputs(text, inputs):
     for index, input in enumerate(inputs):
         text = re.sub("%" + "s", '[[[%s]]]' % index, text, 1)
     return text
 
 
+# insert the inputs into the fields where the [[[i]]] space holders are
 def insert_inputs(text, inputs):
     if not inputs:
         return text
@@ -116,10 +120,34 @@ def insert_inputs(text, inputs):
                 text = re.sub(r"[[]{3}%s[]]{3}" % counter, '%' + 's' + '\" % ' + input + "\"", text, 1)
     return text
 
+
 def test_replace_inputs():
     text = "<tag class=\"ein %s\" id=%s>%s</tag>"
     inputs = ["test", "id", "Hallo Welt!"]
     print replace_inputs(text, inputs)
+
+
+# Text extraction
+def find_end_of_first_expression(text):
+    index = 1
+    while index < len(text) and text[index - 1] != "(":
+        index += 1
+    open_braces = 1
+    while index < len(text) and open_braces > 0:
+        if text[index] == "(":
+            open_braces += 1
+        elif text[index] == ")":
+            open_braces -= 1
+        index += 1
+    while index < len(text) and text[index] != "\n":
+        index += 1
+    return index
+
+
+# Split text into a part to refactor and a rest part
+def split_html(text):
+    index = find_end_of_first_expression(text)
+    return text[:index], text[index:]
 
 
 # this function does a big chunk of the refactoring for me
@@ -138,9 +166,11 @@ def replace_tags(html, indent = 0):
     if " % " in html and len(html.split(" % ")) != 2:
         return html
 
+    # split into code to refactor and rest
     html, rest = split_html(html)
     orig_html = html
 
+    # for string inputs find the input arguments
     inputs = []
     if " % " in html or ' %\n' in html:
         if " % " in html:
@@ -155,9 +185,11 @@ def replace_tags(html, indent = 0):
     inbetween = re.split(r'<[^<]*>', re.sub(r'\s*html\.write\([\'|"]?', '', html, 1))
     inbetween = map(stripper, inbetween)
 
+    # if no tags are found, then return unchanged code
     if len(tags) == 0:
         return orig_html + rest
 
+    # First result which is not a tag
     html = ''
     if inbetween[0].strip(' ') not in ['', '\n']:
         html = append_to_html(html, indent, "html.write(%s)" % inbetween[0])
@@ -178,12 +210,13 @@ def replace_tags(html, indent = 0):
         elif skip_next and addendum.strip(' '):
             counter += 1
 
+    # Now indest the pipes
     html = insert_inputs(html, inputs)
     for index, input in enumerate(inputs):
         if "[[[%s]]]" % index in html:
             html = re.sub("[[[%s]]]" % index, input, html)
 
-
+    # Print string
     try:
         return orig_html + "\n(new)" + html + rest
     except:
@@ -195,27 +228,35 @@ def replace_tags(html, indent = 0):
         return orig_html + "\n(new)" + html + "\n" + rest
 
 
+# indent of a text part which was created using split(html.write).
+# This means the indent of the next code block is to be found at the end of the previous block.
+def get_indent(text):
+    indent = 0
+    while indent < len(text) and text[len(text) - 1 - indent] == ' ':
+        indent += 1
+    return indent
+
 
 if __name__ == "__main__":
 
     html = sys.argv[1]
     if html.endswith('.py'):
+
         whole_text = ''
         with open(html, 'r') as rfile:
             whole_text = "".join(line for line in rfile)
+
         parts = whole_text.split("html.write(")
         with open("refactored_file.py", "w") as wfile:
             part = parts.pop(0)
             wfile.write(part)
-            indent = 0
-            while indent < len(part) and part[len(part) - 1 - indent] == ' ':
-                indent += 1
+
+            indent = get_indent(part)
             for part in parts:
                 part = "html.write(" + part
                 wfile.write(replace_tags(part, indent))
-                indent = 0
-                while indent < len(part) and part[len(part) - 1 - indent] == ' ':
-                    indent += 1
+                indent = get_indent(part)
+
     elif html == "test":
         test_replace_inputs()
     else:

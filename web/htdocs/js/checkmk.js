@@ -1755,8 +1755,7 @@ function element_dragging(event)
 function position_dragging_object(event)
 {
     var dragging  = g_dragging.dragging,
-        container = dragging.parentNode,
-        offset_y  = Math.abs(mouse_offset_to_middle(dragging, event).y);
+        container = dragging.parentNode;
 
     var get_previous = function(node) {
         var previous = node.previousElementSibling;
@@ -1777,7 +1776,7 @@ function position_dragging_object(event)
 
     // Move it up?
     var previous = get_previous(dragging);
-    while (previous && Math.abs(mouse_offset_to_middle(previous, event).y) < offset_y) {
+    while (previous && mouse_offset_to_middle(previous, event).y < 0) {
         g_dragging.moved = true;
         container.insertBefore(dragging, previous);
         previous = get_previous(dragging);
@@ -1785,7 +1784,7 @@ function position_dragging_object(event)
 
     // Move it down?
     var next = get_next(dragging);
-    while (next && Math.abs(mouse_offset_to_middle(next, event).y) < offset_y) {
+    while (next && mouse_offset_to_middle(next, event).y > 0) {
         g_dragging.moved = true;
         container.insertBefore(dragging, next.nextElementSibling);
         next = get_next(dragging);

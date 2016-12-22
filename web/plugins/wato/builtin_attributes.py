@@ -173,6 +173,7 @@ class SNMPCredentials(Alternative):
             kwargs.setdefault("title", _("SNMPv3 credentials"))
         else:
             kwargs.setdefault("title", _("SNMP credentials"))
+        kwargs["orientation"] = "vertical"
         Alternative.__init__(self, **kwargs)
 
 declare_host_attribute(

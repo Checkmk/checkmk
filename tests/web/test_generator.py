@@ -39,3 +39,10 @@ def test_HTMLGenerator():
     html.close_table()
     assert html.drain() == "<table><tr><td>1</td><td>2</td></tr></table>"
 
+def test_exception_handling():
+    html = HTMLGenerator()
+    html.plug()
+    try:
+        raise Exception("Test")
+    except Exception, e:
+        assert html.render_div(e) == "<div>%s</div>" % e

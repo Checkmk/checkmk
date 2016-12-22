@@ -12857,13 +12857,19 @@ class ModeRuleSearch(WatoMode):
                 ("rule_hosttags", HostTagCondition(
                     title = _("Used host tags"))
                 ),
-                ("rule_disabled", FixedValue(False,
+                ("rule_disabled", DropdownChoice(
                     title = _("Disabled"),
-                    totext = _("Search for disabled rules"),
+                    choices = [
+                        (True, _("Search for disabled rules")),
+                        (False, _("Search for enabled rules")),
+                    ],
                 )),
-                ("rule_ineffective", FixedValue(False,
+                ("rule_ineffective", DropdownChoice(
                     title = _("Ineffective"),
-                    totext = _("Search for ineffective rules (not matching any host or service)"),
+                    choices = [
+                        (True, _("Search for ineffective rules (not matching any host or service)")),
+                        (False, _("Search for effective rules")),
+                    ],
                 )),
             ],
         )

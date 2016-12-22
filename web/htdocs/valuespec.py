@@ -30,7 +30,9 @@
 #   and rename to better name
 # - Consolidate RadioChoice and DropdownChoice to use same class
 #   and rename to better name
-# - Checkbox -> rename to Boolean
+# - Checkbox
+#   -> rename to Boolean
+#   -> Add alternative rendering "dropdown"
 
 import math, os, time, re, sre_constants, urlparse, forms, tempfile
 import base64

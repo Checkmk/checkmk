@@ -229,9 +229,9 @@ def add_change(action_name, text, obj=None, add_user=True, need_sync=None, need_
         # pylint: disable=undefined-variable
         need_to_bake_agents()
 
-    # All sites in case no specific site is given
+    # All replication sites in case no specific site is given
     if sites == None:
-        sites = config.sitenames()
+        sites = ActivateChanges().activation_site_ids()
 
     change_id = gen_id()
 
@@ -3863,11 +3863,17 @@ class ActivateChanges(object):
         return self._repstatus.get(site_id, {}).get("changes", [])
 
 
-    # Returns the list of sites that should be shown on activation page
+    # Returns the list of sites that are affected by WATO changes.
+    # these sites are shown on activation page and get change entries
+    # added during WATO changes.
     def _activation_sites(self):
         return [ (site_id, site) for site_id, site in config.configured_sites()
-                    if config.site_is_local(site_id)
-                       or site.get("replication") ]
+                 if config.site_is_local(site_id)
+                    or site.get("replication") ]
+
+
+    def activation_site_ids(self):
+        return [ s[0] for s in self._activation_sites() ]
 
 
     # Returns the list of sites that should be used when activating all
@@ -3953,7 +3959,7 @@ class ActivateChanges(object):
 
 
     def _affects_all_sites(self, change):
-        return len(change["affected_sites"]) == len(config.sitenames())
+        return not set(change["affected_sites"]).symmetric_difference(set(self.activation_site_ids()))
 
 
     def update_activation_time(self, site_id, ty, duration):

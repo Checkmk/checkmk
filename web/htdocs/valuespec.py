@@ -42,16 +42,6 @@ from lib import *
 import cmk.defines as defines
 from Crypto.PublicKey import RSA
 
-
-# debug display allows to view the class name of a certain element in the gui. If set False, then the corresponding div is hidden
-debug_display = False
-
-def display_type(self, do_display):
-#    pass
-    superclass = " ".join(base.__name__ for base in self.__class__.__bases__)
-    html.div("Check_MK-Type: %s %s" % (superclass, type(self).__name__), class_="legend", style="display:none;" if not do_display else None)
-
-
 try:
     import simplejson as json
 except ImportError:
@@ -202,12 +192,11 @@ class Age(ValueSpec):
             return 0
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         days,    rest    = divmod(value, 60*60*24)
         hours,   rest    = divmod(rest,   60*60)
         minutes, seconds = divmod(rest,      60)
 
-        html.open_div()
+        html.write("<div>")
         if self._label:
             html.write(self._label + " ")
 
@@ -220,12 +209,12 @@ class Age(ValueSpec):
             if uid in self._display:
                 value += takeover
                 takeover = 0
-                html.number_input(varprefix + "_" + uid, value, 3 if first else 2)
+                html.number_input(varprefix + "_" + uid, value, first and 3 or 2)
                 html.write(" %s " % title)
                 first = False
             else:
                 takeover = (takeover + value) * tkovr_fac
-        html.close_div()
+        html.write("</div>")
 
     def from_html_vars(self, varprefix):
         # TODO: Validate for correct numbers!
@@ -281,7 +270,7 @@ class Integer(ValueSpec):
 
         if "size" not in kwargs and "maxvalue" in kwargs and kwargs["maxvalue"] != None:
             self._size = 1 + int(math.log10(self._maxvalue)) + \
-               (3 if type(self._maxvalue) == float else 0)
+               (type(self._maxvalue) == float and 3 or 0)
 
     def canonical_value(self):
         if self._minvalue:
@@ -290,10 +279,9 @@ class Integer(ValueSpec):
             return 0
 
     def render_input(self, varprefix, value, convfunc = saveint):
-        display_type(self, debug_display)
         if self._label:
             html.write(self._label)
-            html.nbsp()
+            html.write("&nbsp;")
         if self._align == "right":
             style = "text-align: right;"
         else:
@@ -303,7 +291,7 @@ class Integer(ValueSpec):
         else:
             html.number_input(varprefix, self._display_format % convfunc(value), size = self._size, style = style)
         if self._unit:
-            html.nbsp()
+            html.write("&nbsp;")
             html.write(self._unit)
 
     def from_html_vars(self, varprefix):
@@ -357,10 +345,9 @@ class Filesize(Integer):
                 return exp, value / (1024 ** exp)
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         exp, count = self.get_exponent(value)
         html.number_input(varprefix + '_size', count, size = self._size)
-        html.nbsp()
+        html.write("&nbsp;")
         choices = [ (str(nr), name) for (nr, name) in enumerate(self._names) ]
         html.select(varprefix + '_unit', choices, str(exp))
 
@@ -403,7 +390,6 @@ class TextAscii(ValueSpec):
         return ""
 
     def render_input(self, varprefix, value, hidden=False):
-        display_type(self, debug_display)
         if value == None:
             value = ""
         else:
@@ -411,10 +397,10 @@ class TextAscii(ValueSpec):
 
         if self._label:
             html.write(self._label)
-            html.nbsp()
+            html.write("&nbsp;")
 
         if self._prefix_buttons:
-            html.open_div(style="white-space: nowrap;")
+            html.write('<div style="white-space: nowrap;">')
 
         if hidden:
             type_ = "password"
@@ -435,10 +421,10 @@ class TextAscii(ValueSpec):
         )
         if self._prefix_buttons:
             self.render_buttons()
-            html.close_div()
+            html.write('</div>')
 
     def render_buttons(self):
-        html.nbsp()
+        html.write("&nbsp;")
         for icon, textfunc, help in self._prefix_buttons:
             try:
                 text = textfunc()
@@ -648,7 +634,7 @@ class EmailAddress(TextAscii):
         if not value:
             return TextAscii.value_to_text(self, value)
         elif self._make_clickable:
-            return html.render_a(value, href="mailto:%s" % value)
+            return '<a href="mailto:%s">%s</a>' % (html.attrencode(value), html.attrencode(value))
         else:
             return value
 
@@ -957,7 +943,9 @@ class HTTPUrl(TextAscii):
 
         # Remove trailing / if the url does not contain
         # any path component
-        return html.render_a(text, href=url, target=self._target if self._target else None)
+        return '<a %shref="%s">%s</a>' % (
+            (self._target and 'target="%s" ' % self._target or ""),
+            html.attrencode(url), html.attrencode(text))
 
 def CheckMKVersion(**args):
     args = args.copy()
@@ -978,12 +966,11 @@ class TextAreaUnicode(TextUnicode):
 
     def value_to_text(self, value):
         if self._monospaced:
-            return html.render_pre(value, class_="ve_textarea")
+            return "<pre class=ve_textarea>%s</pre>" % html.attrencode(value)
         else:
             return html.attrencode(value).replace("\n", "<br>")
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         if value == None:
             value = "" # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
@@ -1002,13 +989,13 @@ class TextAreaUnicode(TextUnicode):
             attrs["class"] = "tt"
 
         if self._prefix_buttons:
-            html.open_div(style="white-space: nowrap;")
+            html.write('<div style="white-space: nowrap;">')
 
         html.text_area(varprefix, value, rows=rows, cols=self._cols,
                        attrs = attrs, try_max_width=self._try_max_width)
         if self._prefix_buttons:
             self.render_buttons()
-            html.close_div()
+            html.write('</div>')
 
 
     # Overridded because we do not want to strip() here and remove '\r'
@@ -1094,7 +1081,6 @@ class ListOfStrings(ValueSpec):
 
 
     def render_input(self, vp, value):
-        display_type(self, debug_display)
         # Form already submitted?
         if html.has_var(vp + "_0"):
             value = self.from_html_vars(vp)
@@ -1105,29 +1091,31 @@ class ListOfStrings(ValueSpec):
                 html.del_var(vp + "_%d" % nr)
                 nr += 1
 
-        html.open_div(id_=vp, class_=["listofstrings", "vertical" if self._vertical else "horizontal"])
+        html.write('<div class="listofstrings %s" id="%s">' % (self._vertical and 'vertical' or 'horizontal', vp))
 
         for nr, s in enumerate(value + [""]):
-            html.open_div()
+            html.write('<div>')
             self._valuespec.render_input(vp + "_%d" % nr, s)
-            html.close_div()
-        html.close_div()
-        html.div('', style="clear:left;")
+            html.write('</div>')
+        html.write('</div>')
+        html.write("<div style=\"clear:left\"></div>")
         html.help(self.help())
         html.javascript("list_of_strings_init('%s');" % vp);
 
     def canonical_value(self):
         return []
 
-    def value_to_text(self, values):
-        if not values:
+    def value_to_text(self, value):
+        if not value:
             return self._empty_text
 
         if self._vertical:
-            table = HTML().join([html.render_tr(html.render_td(self._valuespec.value_to_text(v))) for v in values])
-            return html.render_table(table)
+            s = '<table>'
+            for v in value:
+                s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
+            return s + '</table>'
         else:
-            return ", ".join([ self._valuespec.value_to_text(v) for v in values ])
+            return ", ".join([ self._valuespec.value_to_text(v) for v in value ])
 
     def from_html_vars(self, vp):
         value = []
@@ -1174,7 +1162,7 @@ class ListOfIntegers(ListOfStrings):
             if key in kwargs:
                 int_args[key] = kwargs[key]
         int_args["display_format"] = "%s"
-        int_args["convfunc"] = lambda x: x if x == '' else saveint(x)
+        int_args["convfunc"] = lambda x: x != "" and saveint(x) or ""
         int_args["minvalue"] = 17
         int_args["default_value"] = 34
         valuespec = Integer(**int_args)
@@ -1211,7 +1199,7 @@ class ListOf(ValueSpec):
         }
         html.empty_icon_button() # needed as placeholder
         html.icon_button("#", _("Move this entry %s") % (where_name[where]),
-           where, onclick=js, style = "display:none" if not self._movable else '')
+           where, onclick=js, style = (not self._movable) and "display: none" or "")
 
     # Implementation idea: we render our element-valuespec
     # once in a hidden div that is not evaluated. All occurances
@@ -1220,7 +1208,6 @@ class ListOf(ValueSpec):
     # numbering in labels, etc. possible). The current number
     # of entries is stored in the hidden variable 'varprefix'
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
 
         # Beware: the 'value' is only the default value in case the form
         # has not yet been filled in. In the complain phase we must
@@ -1230,23 +1217,18 @@ class ListOf(ValueSpec):
         # a wrong user input.
 
         # Render reference element for cloning
-        html.open_table(id_="%s_prototype" % varprefix, style="display:none;")
-        html.open_tr()
-        html.open_td(class_="vlof_buttons")
-
+        html.write('<table style="display:none" id="%s_prototype">' % varprefix)
+        html.write('<tr><td class=vlof_buttons>')
         html.hidden_field(varprefix + "_indexof_" + self._magic, "", add_var=True) # reconstruct order after moving stuff
         self.del_button(varprefix, self._magic)
         if self._movable:
             self.move_button(varprefix, self._magic, "up")
             self.move_button(varprefix, self._magic, "down")
-        html.close_td()
-        html.open_td(class_="vlof_content")
+        html.write('</td><td class=vlof_content>')
         self._valuespec.render_input(
             varprefix + "_" + self._magic,
             self._valuespec.default_value())
-        html.close_td()
-        html.close_tr()
-        html.close_table()
+        html.write('</td></tr></table>')
 
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the
@@ -1265,23 +1247,20 @@ class ListOf(ValueSpec):
             add_var = True)
 
         # Actual table of currently existing entries
-        html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof"])
+        html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
 
         for nr, v in enumerate(value):
-            html.open_tr()
-            html.open_td(class_="vlof_buttons")
+            html.write('<tr><td class=vlof_buttons>')
             html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "", add_var=True) # reconstruct order after moving stuff
             self.del_button(varprefix, nr+1)
             if self._movable:
                 self.move_button(varprefix, nr+1, "up") # visibility fixed by javascript
                 self.move_button(varprefix, nr+1, "down")
-            html.close_td()
-            html.open_td(class_="vlof_content")
+            html.write("</td><td class=vlof_content>")
             self._valuespec.render_input(varprefix + "_%d" % (nr+1), v)
-            html.close_td()
-            html.close_tr()
-        html.close_table()
-        html.br()
+            html.write("</td></tr>")
+        html.write("</table>")
+        html.write("<br>")
         html.jsbutton(varprefix + "_add", self._add_label,
             "valuespec_listof_add('%s', '%s')" % (varprefix, self._magic));
         html.javascript("valuespec_listof_fixarrows(document.getElementById('%s_table').childNodes[0]);" % varprefix)
@@ -1291,17 +1270,19 @@ class ListOf(ValueSpec):
         return []
 
 
-    def value_to_text(self, values):
+    def value_to_text(self, value):
         if self._totext:
             if "%d" in self._totext:
-                return self._totext % len(values)
+                return self._totext % len(value)
             else:
                 return self._totext
-        elif not values:
+        elif not value:
             return self._text_if_empty
         else:
-            table = HTML().join([html.render_tr(html.render_td(self._valuespec.value_to_text(v))) for v in values])
-            return html.render_table(table)
+            s = '<table>'
+            for v in value:
+                s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
+            return s + '</table>'
 
 
     def get_indexes(self, varprefix):
@@ -1357,7 +1338,6 @@ class ListOfMultiple(ValueSpec):
         html.icon_button("#", self._del_label, "delete", onclick=js)
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         # Beware: the 'value' is only the default value in case the form
         # has not yet been filled in. In the complain phase we must
         # ignore 'value' but reuse the input from the HTML variables -
@@ -1366,7 +1346,10 @@ class ListOfMultiple(ValueSpec):
         # a wrong user input.
 
         # Special styling for filters
-        extra_css = "filter" if self._delete_style == "filter" else None
+        if self._delete_style == "filter":
+            extra_css=" filter"
+        else:
+            extra_css=""
 
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the
@@ -1380,31 +1363,31 @@ class ListOfMultiple(ValueSpec):
             id = '%s_active' % varprefix, add_var = True)
 
         # Actual table of currently existing entries
-        html.open_table(id_="%s_table" % varprefix, class_=["valuespec_listof", extra_css])
+        html.write('<table class="valuespec_listof%s" id="%s_table">' % (extra_css, varprefix))
 
         def render_content():
-            html.open_td(class_=["vlof_content", extra_css])
+            html.write('<td class="vlof_content%s">' % extra_css)
             vs.render_input(prefix, value.get(ident))
-            html.close_td()
+            html.write("</td>")
 
         def render_del():
-            html.open_td(class_=["vlof_buttons", extra_css])
+            html.write('<td class="vlof_buttons%s">' % extra_css)
             self.del_button(varprefix, ident)
-            html.close_td()
+            html.write('</td>')
 
         for ident, vs in self._choices:
-            cls = 'unused' if ident not in value else ''
+            cls = ident not in value and 'unused' or ''
             prefix = varprefix + '_' + ident
-            html.open_tr(id_="%s_row" % prefix, class_=cls)
+            html.write('<tr id="%s_row" class="%s">' % (prefix, cls))
             if self._delete_style == "filter":
                 render_content()
                 render_del()
             else:
                 render_del()
                 render_content()
-            html.close_tr()
-        html.close_table()
-        html.br()
+            html.write("</tr>")
+        html.write("</table>")
+        html.write("<br>")
 
         choosable = [('', '')] + [ (ident, vs.title()) for ident, vs in self._choices ]
         attrs = {}
@@ -1420,12 +1403,11 @@ class ListOfMultiple(ValueSpec):
         return {}
 
     def value_to_text(self, value):
-        table_content = HTML()
+        s = '<table>'
         for ident, val in value:
             vs = self._choice_dict[ident]
-            table_content += html.render_tr(html.render_td(vs.title())\
-                                          + html.render_td(vs.value_to_text(val)))
-        return html.render_table(table_content)
+            s += '<tr><td>%s</td><td>%s</td></tr>' % (vs.title(), vs.value_to_text(val))
+        return s + '</table>'
 
     def from_html_vars(self, varprefix):
         value = {}
@@ -1459,7 +1441,6 @@ class Float(Integer):
         self._allow_int = kwargs.get("allow_int", False)
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         Integer.render_input(self, varprefix, value, convfunc = savefloat)
 
     def canonical_value(self):
@@ -1483,7 +1464,7 @@ class Float(Integer):
             return
 
         raise MKUserError(varprefix, _("The value %r has type %s, but must be of type float%s") %
-             (value, type_name(value),  _(" or int") if self._allow_int else ''))
+             (value, type_name(value), self._allow_int and _(" or int") or ""))
 
 
 class Percentage(Float):
@@ -1524,11 +1505,10 @@ class Checkbox(ValueSpec):
         return False
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         html.checkbox(varprefix, value, label = self._label, onclick=self._onclick)
 
     def value_to_text(self, value):
-        return self._true_label if value else self._false_label
+        return value and self._true_label or self._false_label
 
     def from_html_vars(self, varprefix):
         if html.var(varprefix):
@@ -1589,7 +1569,6 @@ class DropdownChoice(ValueSpec):
             return None
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         if self._label:
             html.write("%s " % self._label)
         # Convert values from choices to keys
@@ -1778,7 +1757,6 @@ class CascadingDropdown(ValueSpec):
                 return choices[0][0]
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         def_val = '0'
         options = []
         choices = self.choices()
@@ -1811,9 +1789,9 @@ class CascadingDropdown(ValueSpec):
         cur_val = html.var(vp)
 
         if self._orientation == "vertical":
-            html.br()
+            html.write("<br>")
         else:
-            html.nbsp()
+            html.write("&nbsp;")
         for nr, (val, title, vs) in enumerate(choices):
             if vs:
                 vp = varprefix + "_%d" % nr
@@ -1835,10 +1813,10 @@ class CascadingDropdown(ValueSpec):
                     else:
                         def_val_2 = vs.default_value()
                         disp = "none"
-                html.open_span(id_="%s_%s_sub" % (varprefix, nr), style="display:%s;" % disp)
+                html.write('<span id="%s_%s_sub" style="display: %s">' % (varprefix, nr, disp))
                 html.help(vs.help())
                 vs.render_input(vp, def_val_2)
-                html.close_span()
+                html.write('</span>')
 
     def value_to_text(self, value):
         choices = self.choices()
@@ -1914,11 +1892,10 @@ class RadioChoice(DropdownChoice):
             self._columns = 9999999
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         html.begin_radio_group()
         if self._columns != None:
-            html.open_table(class_=["radiochoice"])
-            html.open_tr()
+            html.write("<table class=radiochoice>")
+            html.write("<tr>")
 
         if self._sorted:
             choices = self._choices[:]
@@ -1927,29 +1904,25 @@ class RadioChoice(DropdownChoice):
             choices = self._choices
         for n, entry in enumerate(choices):
             if self._columns != None:
-                html.open_td()
+                html.write("<td>")
             if len(entry) > 2 and entry[2] != None: # icon!
                 label = html.render_icon(entry[2], entry[1])
             else:
                 label = entry[1]
             html.radiobutton(varprefix, str(n), value == entry[0], label)
             if len(entry) > 3 and entry[3]:
-                html.open_p()
-                html.write(entry[3])
-                html.close_p()
+                html.write('<p>%s</p>' % entry[3])
             if self._columns != None:
-                html.close_td()
+                html.write("</td>")
                 if (n+1) % self._columns == 0 and (n+1) < len(self._choices):
-                    html.tr('')
+                    html.write("<tr></tr>")
             else:
-                html.nbsp()
+                html.write("&nbsp;")
         if self._columns != None:
             mod = len(self._choices) % self._columns
             if mod:
-                for td_counter in range(self._columns - mod - 1):
-                    html.td('')
-            html.close_tr()
-            html.close_table()
+                html.write("<td></td>" * (self._columns - mod - 1))
+            html.write("</tr></table>")
         html.end_radio_group()
 
 
@@ -1988,42 +1961,25 @@ class ListChoice(ValueSpec):
     def canonical_value(self):
         return []
 
-
-    def _draw_listchoice(self, varprefix, value, elements, columns, toggle_all):
-
-        if self._toggle_all:
-            html.a(_("Check / Uncheck all"), href="javascript:vs_list_choice_toggle_all('%s')" % varprefix)
-
-        if self._columns > 1:
-            html.open_table(id_="%s_tbl" % varprefix, class_=["listchoice"])
-            for nr, (key, title) in enumerate(elements):
-                if nr % self._columns == 0:
-                    if nr > 0:
-                        html.close_tr()
-                    html.open_tr()
-                html.open_td()
-                html.checkbox("%s_%d" % (varprefix, nr), key in value, label = title)
-                html.close_td()
-            html.close_tr()
-            html.close_table()
-        else:
-            html.open_div(style="height:80px;overflow:hidden; overflow-y:scroll;")
-            for nr, (key, title) in enumerate(elements):
-                html.open_div()
-                html.checkbox("%s_%d" % (varprefix, nr), key in value, label = title)
-                html.close_div()
-            html.close_div()
-
-
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         self.load_elements()
         if not self._elements:
             html.write(self._no_elements_text)
             return
 
-        self._draw_listchoice(varprefix, value, self._elements, self._columns, self._toggle_all)
-
+        if self._toggle_all:
+            html.write("<a href=\"javascript:vs_list_choice_toggle_all('%s')\">%s</a>" %
+                        (varprefix, _("Check / Uncheck all")))
+        html.write("<table id=\"%s_tbl\" class=listchoice>" % varprefix)
+        for nr, (key, title) in enumerate(self._elements):
+            if nr % self._columns == 0:
+                if nr > 0:
+                    html.write("</tr>")
+                html.write("<tr>")
+            html.write("<td>")
+            html.checkbox("%s_%d" % (varprefix, nr), key in value, label = title)
+            html.write("</td>")
+        html.write("</tr></table>")
         # Make sure that at least one variable with the prefix is present
         html.hidden_field(varprefix, "1", add_var=True)
 
@@ -2034,7 +1990,7 @@ class ListChoice(ValueSpec):
         if self._render_orientation == "horizontal":
             return ", ".join(texts)
         else:
-            return html.render_table(html.render_tr(html.render_td(html.render_br().join(texts))))
+            return "<table><tr><td>" + "<br>".join(texts) + "</td></tr></table>"
 
     def from_html_vars(self, varprefix):
         self.load_elements()
@@ -2067,14 +2023,16 @@ class MultiSelect(ListChoice):
     def _render_field(self, name, choices, selected=None):
         if selected is None:
             selected = []
-        html.open_select(multiple="", name=name)
+        html.write("<select multiple name=\"%s\">\n" % name)
         for key, title in choices:
-            html.option(title, value=key, selected='' if key in selected else None)
-
-        html.close_select()
+            if key in selected:
+                sel = " selected"
+            else:
+                sel = ""
+            html.write('<option value="%s"%s>%s</option>\n' % (key, sel, title))
+        html.write("</select>\n")
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         self.load_elements()
         self._render_field(varprefix, self._elements, value)
 
@@ -2100,7 +2058,7 @@ class MultiSelect(ListChoice):
 # compatible to DropdownChoice()
 class DualListChoice(ListChoice):
     def __init__(self, **kwargs):
-        super(DualListChoice, self).__init__(**kwargs)
+        ListChoice.__init__(self, **kwargs)
         self._autoheight = kwargs.get("autoheight", True)
         self._custom_order = kwargs.get("custom_order", False)
         self._instant_add = kwargs.get("instant_add", False)
@@ -2114,8 +2072,6 @@ class DualListChoice(ListChoice):
 
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
-
         self.load_elements()
         if not self._elements:
             html.write(_("There are no elements for selection."))
@@ -2140,48 +2096,45 @@ class DualListChoice(ListChoice):
                 else:
                     unselected.append(e)
 
-        select_func   = 'vs_duallist_switch(\'unselected\', \'%s\', %d);' % (varprefix, 1 if self._custom_order else 0)
+        select_func   = 'vs_duallist_switch(\'unselected\', \'%s\', %d);' % (varprefix, self._custom_order and 1 or 0)
         unselect_func = 'vs_duallist_switch(\'selected\', \'%s\', 1);' % varprefix
 
-        html.open_table(class_=["vs_duallist"], style = "width: %dpx;" % (self._size * 6.4) if self._size else None)
-
-        html.open_tr()
-        html.open_td(class_="head")
-        html.write("%s rows %d" %(_('Available'), self._rows))
+        if self._size:
+            style = ' style="width: %dpx"' % (self._size * 6.4)
+        else:
+            style = ''
+        html.write('<table class="vs_duallist"%s><tr><td class="head">' % style)
+        html.write(_('Available'))
         if not self._instant_add:
-            html.a(">", href="javascript:%s;" % select_func, class_=["control", "add"])
-        html.close_td()
-
-        html.open_td(class_="head")
+            html.write('<a href="javascript:%s" class="control add">&gt;</a>' % select_func)
+        html.write('</td><td class="head">')
         html.write(_('Selected'))
         if not self._instant_add:
-            html.a("<", href="javascript:%s;" % unselect_func, class_=["control", "del"])
-        html.close_td()
-        html.close_tr()
+            html.write('<a href="javascript:%s" class="control del">&lt;</a>' % unselect_func)
+        html.write('</td></tr><tr><td>')
 
-        onchange_unselected = select_func if self._instant_add else ''
-        onchange_selected   = unselect_func if self._instant_add else ''
+        if self._instant_add:
+            onchange_unselected = select_func
+            onchange_selected   = unselect_func
+        else:
+            onchange_unselected = ''
+            onchange_selected = ''
+
         if self._enlarge_active:
-            onchange_selected   += 'vs_duallist_enlarge(\'selected\', \'%s\');' % varprefix
-            onchange_unselected += 'vs_duallist_enlarge(\'unselected\', \'%s\');' % varprefix
+            onchange_selected   += ';vs_duallist_enlarge(\'selected\', \'%s\')' % varprefix
+            onchange_unselected += ';vs_duallist_enlarge(\'unselected\', \'%s\')' % varprefix
 
-        func = html.select if self._custom_order else html.sorted_select
+        func = self._custom_order and html.select or html.sorted_select
         attrs = {
+            'foo'        : "bar",
             'multiple'   : 'multiple',
-            'style'      : 'height:auto' if self._autoheight else "height: %dpx" % (self._rows * 16),
-            'ondblclick' : select_func if not self._instant_add else '',
+            'style'      : self._autoheight and 'height:auto' or "height: %dpx" % (self._rows * 16),
+            'ondblclick' : not self._instant_add and select_func or '',
         }
-
-        html.open_tr()
-        html.open_td()
         func(varprefix + '_unselected', unselected, attrs = attrs, onchange = onchange_unselected)
-        html.close_td()
-        html.open_td()
+        html.write('</td><td>')
         func(varprefix + '_selected', selected, attrs = attrs, onchange = onchange_selected)
-        html.close_td()
-        html.close_tr()
-
-        html.close_table()
+        html.write('</td></tr></table>')
         html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)
 
 
@@ -2225,7 +2178,6 @@ class OptionalDropdownChoice(DropdownChoice):
         return value not in [ c[0] for c in self.choices() ]
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         defval = "other"
         options = []
         for n, (val, title) in enumerate(self.choices()):
@@ -2242,8 +2194,9 @@ class OptionalDropdownChoice(DropdownChoice):
         else:
             div_is_open = self.value_is_explicit(value)
 
-        html.open_span(id_="%s_ex" % varprefix, style=["white-space: nowrap;", None if div_is_open else "display:none;"])
-        html.nbsp()
+        html.write('<span id="%s_ex" style="white-space: nowrap; %s">' % (
+            varprefix, not div_is_open and "display: none;" or ""))
+        html.write("&nbsp;")
 
         if defval == "other":
             input_value = value
@@ -2251,7 +2204,7 @@ class OptionalDropdownChoice(DropdownChoice):
             input_value = self._explicit.default_value()
         html.help(self._explicit.help())
         self._explicit.render_input(varprefix + "_ex", input_value)
-        html.close_span()
+        html.write("</span>")
 
     def value_to_text(self, value):
         for val, title in self.choices():
@@ -2332,7 +2285,6 @@ class RelativeDate(OptionalDropdownChoice):
         return self._default_value
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         reldays = (round_date(value) - today()) / seconds_per_day
         OptionalDropdownChoice.render_input(self, varprefix, reldays)
 
@@ -2370,7 +2322,7 @@ class AbsoluteDate(ValueSpec):
         self._show_titles = kwargs.get("show_titles", True)
         self._label = kwargs.get("label")
         self._include_time = kwargs.get("include_time", False)
-        self._format = kwargs.get("format", "%F %T" if self._include_time else "%F")
+        self._format = kwargs.get("format", self._include_time and "%F %T" or "%F")
         self._default_value = kwargs.get("default_value", None)
         self._allow_empty = kwargs.get('allow_empty', False)
         # The default is that "None" means show current date/time in the
@@ -2401,63 +2353,62 @@ class AbsoluteDate(ValueSpec):
         return lt.tm_year, lt.tm_mon, lt.tm_mday, \
                lt.tm_hour, lt.tm_min, lt.tm_sec
 
-
     def render_input(self, varprefix, value):
-
-        display_type(self, debug_display)
-
         if self._label:
-            html.write("%s" % self._label)
-            html.nbsp()
+            html.write("%s&nbsp;" % self._label)
 
-        year, month, day, hour, mmin, sec = self.split_date(value)
-        values = [ ("_year",  year,  4),
-                   ("_month", month, 2),
-                   ("_day",   day,   2)]
-        if self._include_time:
-            values += [ None,
-                       ("_hour", hour, 2),
-                       ("_min",  mmin, 2),
-                       ("_sec",  sec,  2)]
-
-        if not self._show_titles:
-            titles = [_("Year"), _("Month"), _("Day")]
+        if self._show_titles:
+            html.write('<table class=vs_date>')
+            html.write('<tr><th>%s</th><th>%s</th><th>%s</th>' % (
+                    _("Year"), _("Month"), _("Day")))
             if self._include_time:
-                titles += ['', _("Hour"), _("Minute"), _("Sec.")]
-
-            html.open_table(class_=["vs_date"])
-
-            html.open_tr()
-            map(html.th, titles)
-            html.close_tr()
-
-            html.open_tr()
-            for val in values:
-                html.open_td()
-                html.nbsp() if val is None else\
-                    html.number_input(varprefix + val[0], val[1], size=val[2])
-                html.close_td()
-            html.close_tr()
-
-            html.close_table()
-
+                html.write('<th></th><th>%s</th><th>%s</th><th>%s</th>' % (
+                   _("Hour"), _("Minute"), _("Sec.")))
+            html.write('</tr><tr><td>')
+        year, month, day, hour, mmin, sec = self.split_date(value)
+        html.number_input(varprefix + "_year", year, size=4)
+        if self._show_titles:
+            html.write('</td><td>')
         else:
-            for count, val in enumerate(values):
-                if count > 0:
-                    html.write(" ")
-                if val is None:
-                    html.nbsp()
-                else:
-                    html.number_input(varprefix + val[0], val[1], size=val[2])
+            html.write(" ")
+        html.number_input(varprefix + "_month", month, size=2)
+        if self._show_titles:
+            html.write('</td><td>')
+        else:
+            html.write(" ")
+        html.number_input(varprefix + "_day", day, size=2)
+        if self._show_titles:
+            html.write('</td>')
 
+        if self._include_time:
+            if self._show_titles:
+                html.write('<td>&nbsp;</td><td>')
+            else:
+                html.write(" ")
+            html.number_input(varprefix + "_hour", hour, size=2)
+
+            if self._show_titles:
+                html.write('</td><td>')
+            else:
+                html.write(" ")
+            html.number_input(varprefix + "_min", mmin, size=2)
+
+            if self._show_titles:
+                html.write('</td><td>')
+            else:
+                html.write(" ")
+            html.number_input(varprefix + "_sec", sec, size=2)
+            if self._show_titles:
+                html.write('</td>')
+
+        if self._show_titles:
+            html.write('</tr></table>')
 
     def set_focus(self, varprefix):
         html.set_focus(varprefix + "_year")
 
-
     def value_to_text(self, value):
         return time.strftime(self._format, time.localtime(value))
-
 
     def from_html_vars(self, varprefix):
         parts = []
@@ -2489,7 +2440,7 @@ class AbsoluteDate(ValueSpec):
             parts.append(part)
 
         # Construct broken time from input fields. Assume no-dst
-        parts += [0] * (3 if self._include_time else 6)
+        parts += [0] * (self._include_time and 3 or 6)
         # Convert to epoch
         epoch = time.mktime(tuple(parts))
         # Convert back to localtime in order to know DST setting
@@ -2530,8 +2481,7 @@ class Timeofday(ValueSpec):
             return (0, 0)
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
-        text = ("%02d:%02d" % value) if value else ''
+        text = value and ("%02d:%02d" % value) or ""
         html.text_input(varprefix, text, size = 5)
 
     def value_to_text(self, value):
@@ -2604,13 +2554,10 @@ class TimeofdayRange(ValueSpec):
             return (0, 0), (24, 0)
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         if value == None:
             value = (None, None)
         self._bounds[0].render_input(varprefix + "_from", value[0])
-        html.nbsp()
-        html.write("-")
-        html.nbsp()
+        html.write("&nbsp;-&nbsp;")
         self._bounds[1].render_input(varprefix + "_until", value[1])
 
     def value_to_text(self, value):
@@ -2897,7 +2844,6 @@ class Optional(ValueSpec):
         return self._none_value
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked == None:
@@ -2906,7 +2852,7 @@ class Optional(ValueSpec):
             else:
                 checked = value != self._none_value
 
-        html.open_span()
+        html.write("<span>")
 
         if self._label is not None:
             label = self._label
@@ -2919,28 +2865,30 @@ class Optional(ValueSpec):
 
         html.checkbox(varprefix + "_use" , checked,
                       onclick="valuespec_toggle_option(this, %r, %r)" %
-                         (div_id, 1 if self._negate else 0),
+                         (div_id, self._negate and 1 or 0),
                       label = label)
 
         if self._sameline:
-            html.nbsp()
+            html.write("&nbsp;")
         else:
-            html.br()
-        html.close_span()
-
+            html.write("<br>")
+        html.write("</span>")
+        if checked == self._negate:
+            display = "none"
+        else:
+            display = ""
         if self._indent:
             indent = 40
         else:
             indent = 0
 
-        html.open_span(id_=div_id, style=["margin-left: %dpx;" % indent,
-                                          "display:none;" if checked == self._negate else None])
+        html.write('<span id="%s" style="margin-left: %dpx; display: %s">' % (div_id, indent, display))
         if value == self._none_value:
             value = self._valuespec.default_value()
         if self._valuespec.title():
             html.write(self._valuespec.title() + " ")
         self._valuespec.render_input(varprefix + "_value", value)
-        html.close_span()
+        html.write('</span>\n')
 
     def value_to_text(self, value):
         if value == self._none_value:
@@ -2973,7 +2921,6 @@ class OptionalEdit(Optional):
         self._label = ''
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         div_id = "option_" + varprefix
         checked = html.get_checkbox(varprefix + "_use")
         if checked == None:
@@ -2982,7 +2929,7 @@ class OptionalEdit(Optional):
             else:
                 checked = False
 
-        html.open_span()
+        html.write("<span>")
 
         if self._label is not None:
             label = self._label
@@ -2995,25 +2942,28 @@ class OptionalEdit(Optional):
 
         html.checkbox(varprefix + "_use" , checked,
                       onclick="valuespec_toggle_option(this, %r, %r);valuespec_toggle_option(this, %r, %r)" %
-                         (div_id + '_on', 1 if self._negate else 0,
-                          div_id + '_off', 0 if self._negate else 1),
+                         (div_id + '_on', self._negate and 1 or 0,
+                          div_id + '_off', self._negate and 0 or 1),
                       label = label)
 
-        html.nbsp()
-        html.close_span()
+        html.write("&nbsp;")
+        html.write("</span>")
+
+        display_on  = checked == self._negate and 'none' or ''
+        display_off = checked != self._negate and 'none' or ''
 
         if value == None:
             value = self._valuespec.default_value()
 
-        html.open_span(id_="%s_off" % div_id, style="display:none;" if checked != self._negate else None)
+        html.write('<span id="%s_off" style="display:%s">' % (div_id, display_off))
         html.write(value)
-        html.close_span()
+        html.write('</span>')
 
-        html.open_span(id_="%s_on" % div_id, style="display:none;" if checked == self._negate else None)
+        html.write('<span id="%s_on" style="display:%s">' % (div_id, display_on))
         if self._valuespec.title():
             html.write(self._valuespec.title() + " ")
         self._valuespec.render_input(varprefix + "_value", value)
-        html.close_span()
+        html.write('</span>\n')
 
     def from_html_vars(self, varprefix):
         return self._valuespec.from_html_vars(varprefix + "_value")
@@ -3051,7 +3001,6 @@ class Alternative(ValueSpec):
         return None, value
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         if self._style == "radio":
             self.render_input_radio(varprefix, value)
         else:
@@ -3069,9 +3018,7 @@ class Alternative(ValueSpec):
         if self._on_change:
             onchange += self._on_change
         if self._orientation == "horizontal":
-            html.open_table()
-            html.open_tr()
-            html.open_td()
+            html.write("<table><tr><td>")
         html.select(varprefix + "_use", options, sel_option, onchange)
         if self._orientation == "vertical":
             html.write("<br><br>")
@@ -3085,17 +3032,15 @@ class Alternative(ValueSpec):
                 cur_val = vs.default_value()
 
             if self._orientation == "horizontal":
-                html.close_td()
-                html.open_td()
-            html.open_span(id_="%s_%s_sub" % (varprefix, nr), style="display:%s" % disp)
+                html.write("</td><td>")
+            html.write('<span id="%s_%s_sub" style="display: %s">' %
+                    (varprefix, nr, disp))
             html.help(vs.help())
             vs.render_input(varprefix + "_%d" % nr, cur_val)
-            html.close_span()
+            html.write("</span>")
 
         if self._orientation == "horizontal":
-            html.close_td()
-            html.close_tr()
-            html.close_table()
+            html.write("</td></tr></table>")
 
     def render_input_radio(self, varprefix, value):
         mvs, value = self.matching_alternative(value)
@@ -3108,19 +3053,18 @@ class Alternative(ValueSpec):
             html.help(vs.help())
             title = vs.title()
             if not title and nr:
-                html.nbsp()
-                html.nbsp()
+                html.write("&nbsp;&nbsp;")
 
             html.radiobutton(varprefix + "_use", str(nr), checked, title)
             if title:
-                html.open_ul()
+                html.write("<ul>")
             if vs == mvs:
                 val = value
             else:
                 val = vs.default_value()
             vs.render_input(varprefix + "_%d" % nr, val)
             if title:
-                html.close_ul()
+                html.write("</ul>\n")
 
     def set_focus(self, varprefix):
         # TODO: Set focus to currently active option
@@ -3189,11 +3133,10 @@ class Tuple(ValueSpec):
         return tuple([x.default_value() for x in self._elements])
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         if self._orientation != "float":
-            html.open_table(class_=["valuespec_tuple"])
+            html.write('<table class="valuespec_tuple">')
             if self._orientation == "horizontal":
-                html.open_tr()
+                html.write("<tr>")
 
         for no, element in enumerate(self._elements):
             try:
@@ -3202,7 +3145,7 @@ class Tuple(ValueSpec):
                 val = element.default_value()
             vp = varprefix + "_" + str(no)
             if self._orientation == "vertical":
-                html.open_tr()
+                html.write("<tr>")
             elif self._orientation == "float":
                 html.write(self._separator)
 
@@ -3213,20 +3156,15 @@ class Tuple(ValueSpec):
                 else:
                     title = ""
                 if self._orientation == "vertical":
-                    html.open_td(class_="tuple_left")
-                    html.write(title)
-
+                    html.write("<td class=tuple_left>%s" % title)
                     html.help(element.help())
-                    html.close_td()
+                    html.write("</td>")
                 elif self._orientation == "horizontal":
-                    html.open_td(class_="tuple_td")
-                    html.open_span(class_=["title"])
-                    html.write(title)
-
+                    html.write("<td class=tuple_td><span class=title>%s" % title)
                     html.help(element.help())
-                    html.close_span()
+                    html.write("</span>")
                     if self._title_br:
-                        html.br()
+                        html.write("<br>")
                     else:
                         html.write(" ")
                 else:
@@ -3234,17 +3172,16 @@ class Tuple(ValueSpec):
                     html.help(element.help())
 
             if self._orientation == "vertical":
-                html.open_td(class_="tuple_right")
-
+                html.write("<td class=tuple_right>")
             element.render_input(vp, val)
             if self._orientation != "float":
-                html.close_td()
+                html.write("</td>")
                 if self._orientation == "vertical":
-                    html.close_tr()
+                    html.write("</tr>")
         if self._orientation == "horizontal":
-            html.close_tr()
+            html.write("</tr>")
         if self._orientation != "float":
-            html.close_table()
+            html.write("</table>")
 
     def set_focus(self, varprefix):
         self._elements[0].set_focus(varprefix + "_0")
@@ -3333,7 +3270,6 @@ class Dictionary(ValueSpec):
     # Additional variale form allows to specify the rendering
     # style right now
     def render_input(self, varprefix, value, form=None):
-        display_type(self, debug_display)
         value = self.migrate(value)
         if type(value) != dict:
             value = {} # makes code simpler in complain phase
@@ -3349,16 +3285,14 @@ class Dictionary(ValueSpec):
     def render_input_normal(self, varprefix, value, oneline = False):
         headers_sup = oneline and self._headers == "sup"
         if headers_sup or not oneline:
-            html.open_table(class_=["dictionary"])
+            html.write("<table class=dictionary>")
         if headers_sup:
-            html.open_tr()
+            html.write('<tr>')
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
                 continue
             if not oneline:
-                html.open_tr()
-                html.open_td(class_="dictleft")
-
+                html.write('<tr><td class=dictleft>')
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
             colon_printed = False
@@ -3377,13 +3311,11 @@ class Dictionary(ValueSpec):
                 visible = True
                 if vs.title():
                     if headers_sup:
-                        html.open_td()
-                        html.open_b(class_=["header"])
+                        html.write('<td><b class=header>')
                     html.write(" %s" % vs.title())
                     if oneline:
                         if self._headers == "sup":
-                            html.close_b()
-                            html.br()
+                            html.write('</b><br>')
                         else:
                             html.write(": ")
 
@@ -3392,18 +3324,14 @@ class Dictionary(ValueSpec):
                     html.write(':')
                 html.help(vs.help())
                 if not oneline:
-                    html.close_td()
-                    html.open_td(class_="dictright")
-
+                    html.write('</td><td class=dictright>')
             else:
                 if not oneline:
-                    html.br()
+                    html.write("<br>")
 
-            html.open_div(id_= div_id,
-                          class_=["dictelement", "indent" if (self._indent and self._columns == 1) else None],
-                          style= "display:none;" if not visible else
-                                ("display:inline-block;" if oneline else None))
-
+            html.write('<div class="dictelement%s" id="%s" style="display: %s">' % (
+                ((self._indent and self._columns == 1) and " indent" or ""),
+                div_id, not visible and "none" or (oneline and "inline-block" or "")))
             if self._columns == 1:
                 html.help(vs.help())
             # Remember: in complain mode we do not render 'value' (the default value),
@@ -3413,18 +3341,16 @@ class Dictionary(ValueSpec):
                 vs.render_input(vp, value.get(param, vs.default_value()))
             else:
                 vs.render_input(vp, None)
-            html.close_div()
+            html.write("</div>")
             if not oneline:
-                html.close_td()
-                html.close_tr()
+                html.write("</td></tr>")
             elif headers_sup:
-                html.close_td()
+                html.write("</td>")
 
         if not oneline:
-            html.close_table()
+            html.write("</table>")
         elif oneline and self._headers == "sup":
-            html.close_tr()
-            html.close_table()
+            html.write('</tr></table>')
 
     def render_input_form(self, varprefix, value, as_part=False):
         if self._headers:
@@ -3454,22 +3380,19 @@ class Dictionary(ValueSpec):
                 if visible == None:
                     visible = param in value
                 onclick = "valuespec_toggle_option(this, %r)" % div_id
-                checkbox_code = html.render_input(type_="checkbox",
-                                                  name="%s_USE" % vp,
-                                                  onclick=onclick,
-                                                  checked='' if visible else None)
-                #checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
-                #    vp + "_USE", visible and "CHECKED" or "", onclick)
+                checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
+                    vp + "_USE", visible and "CHECKED" or "", onclick)
                 html.add_form_var(vp + "_USE")
                 forms.section(vs.title(), checkbox=checkbox_code)
             else:
                 visible = True
                 forms.section(vs.title())
 
-            html.open_div(id_=div_id, style="display:none;" if not visible else None)
+            html.write('<div id="%s" style="display: %s">' % (
+                div_id, not visible and "none" or ""))
             html.help(vs.help())
             vs.render_input(vp, value.get(param, vs.default_value()))
-            html.close_div()
+            html.write("</div>")
 
     def set_focus(self, varprefix, key=None):
         elements = self._get_elements()
@@ -3505,8 +3428,11 @@ class Dictionary(ValueSpec):
         if self._default_text and value == self.default_value():
             return self._default_text
 
+        if not oneline:
+            s = '<table class=vs_dict_text>'
+        else:
+            s = ""
         elem = self._get_elements()
-        s = '' if oneline else HTML()
         for param, vs in elem:
             if param in value:
                 text = vs.value_to_text(value[param])
@@ -3515,9 +3441,9 @@ class Dictionary(ValueSpec):
                         s += ", "
                     s += "%s: %s" % (vs.title(), text)
                 else:
-                    s += html.render_tr(html.render_td("%s:&nbsp;" % vs.title()) + html.render_td(text))
+                    s += "<tr><td>%s:&nbsp;</td><td>%s</td></tr>" % (vs.title(), text)
         if not oneline:
-            s = html.render_table(s)
+            s += '</table>'
         return s
 
     def from_html_vars(self, varprefix):
@@ -3594,14 +3520,12 @@ class ElementSelection(ValueSpec):
             return self._elements.keys()[0]
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         self.load_elements()
         if len(self._elements) == 0:
             html.write(self._empty_text)
         else:
             if self._label:
-                html.write("%s" % self._label)
-                html.nbsp()
+                html.write("%s&nbsp;" % self._label)
             html.sorted_select(varprefix, self._elements.items(), value)
 
     def value_to_text(self, value):
@@ -3659,7 +3583,6 @@ class Foldable(ValueSpec):
         self._title_function = kwargs.get("title_function", None)
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         try:
             title_value = value
             if html.form_submitted():
@@ -3740,7 +3663,6 @@ class Transform(ValueSpec):
             return self._valuespec.help()
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         self._valuespec.render_input(varprefix, self.forth(value))
 
     def set_focus(self, *args):
@@ -3798,13 +3720,12 @@ class Password(TextAscii):
         TextAscii.__init__(self, attrencode = True, **kwargs)
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         if value == None:
             value = ""
 
         if self._label:
             html.write(self._label)
-            html.nbsp()
+            html.write("&nbsp;")
 
         kwargs = {
             "size": self._size,
@@ -3836,7 +3757,6 @@ class PasswordSpec(Password):
 
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         TextAscii.render_input(self, varprefix, value, hidden=self._hidden)
         if not value:
             html.icon_button("#", _(u"Randomize password"), "random",
@@ -3845,8 +3765,8 @@ class PasswordSpec(Password):
             html.icon_button("#", _(u"Show/Hide password"), "showhide",
                              onclick="vs_toggle_hidden(this);")
         if self._is_stored_plain:
-            html.span(_("Please note that this password is stored in plain text."))
-
+            html.write("<span>%s</span>" % _("Please note that this password is stored in plain "
+                                             "text."))
 
 
 
@@ -3923,7 +3843,6 @@ class FileUpload(ValueSpec):
 
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         html.upload_file(varprefix)
 
 
@@ -4056,14 +3975,15 @@ class IconSelector(ValueSpec):
         if not icon_name:
             icon_name = self._empty_img
 
-        icon = html.render_icon(icon_name, help=title, middle=True, id=id)
+        icon = ''
         if onclick:
-            icon = html.render_a(icon, href="javascript:void(0)", onclick=onclick)
-
+            icon += '<a href="javascript:void(0)" onclick="%s">' % onclick
+        icon += html.render_icon(icon_name, help=title, middle=True, id=id)
+        if onclick:
+            icon += '</a>'
         return icon
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         if not value:
             value = self._empty_img
 
@@ -4077,45 +3997,44 @@ class IconSelector(ValueSpec):
                            url_vars = [
                                 ('value',       value),
                                 ('varprefix',   varprefix),
-                                ('allow_empty', '1' if self._allow_empty else '0'),
+                                ('allow_empty', self._allow_empty and '1' or '0'),
                                 ('back',        html.makeuri([])),
                             ])
 
     def render_popup_input(self, varprefix, value):
-        html.open_div(class_=["icons"])
+        html.write('<div class="icons">')
 
         icons = self.available_icons()
         available_icons = self.available_icons_by_category(icons)
         active_category = icons.get(value, available_icons[0][0])
 
         # Render tab navigation
-        html.open_ul()
+        html.write('<ul>')
         for category_name, category_alias, icons in available_icons:
-            html.open_li(class_="active" if active_category == category_name else None)
-            html.a(category_alias, href="javascript:vs_iconselector_toggle(\'%s\', \'%s\')" % (varprefix, category_name),
-                                   id_="%s_%s_nav" % (varprefix, category_name), class_="%s_nav" % varprefix)
-            html.close_li()
-        html.close_ul()
+            active = active_category == category_name and ' class="active"' or ''
+            html.write('<li%s>' % active)
+            html.write('<a id="%s_%s_nav" class="%s_nav" href="javascript:vs_iconselector_toggle(\'%s\', \'%s\')">%s</a>' %
+                   (varprefix, category_name, varprefix, varprefix, category_name, category_alias))
+            html.write('</li>')
+        html.write('</ul>')
 
         # Now render the icons grouped by category
-        empty = ['empty'] if self._allow_empty else []
+        empty = self._allow_empty and ['empty'] or []
         for category_name, category_alias, icons in available_icons:
-            html.open_div(id_="%s_%s_container" % (varprefix, category_name),
-                          class_=["%s_container" % varprefix],
-                          style="display:none;" if active_category != category_name else None)
-
+            display = active_category != category_name and ' style="display:none"' or ''
+            html.write('<div%s id="%s_%s_container" class="%s_container">' % (display, varprefix, category_name, varprefix))
             for nr, icon in enumerate(empty + icons):
                 html.write(self.render_icon(icon,
                     onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
                     title = _('Choose this icon'), id = varprefix + '_i_' + icon))
-            html.close_div()
+            html.write('</div>')
 
         import config# FIXME: Clean this up. But how?
         if config.omd_site() and config.user.may('wato.icons'):
-            back_param = '&back='+html.urlencode(html.var('back')) if html.has_var('back') else ''
+            back_param = html.has_var('back') and '&back='+html.urlencode(html.var('back')) or ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
 
-        html.close_div()
+        html.write('</div>')
 
     def from_html_vars(self, varprefix):
         icon = html.var(varprefix + '_value')
@@ -4165,7 +4084,6 @@ class Color(ValueSpec):
 
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         if not value:
             value = "#FFFFFF"
 
@@ -4174,23 +4092,19 @@ class Color(ValueSpec):
         # Holds the actual value for form submission
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var = True)
 
-        indicator = html.render_div('', id_="%s_preview" % varprefix,
-                                        class_="cp-preview",
-                                        style="background-color:%s" % value)
+        indicator = "<div id=\"%s_preview\" style=\"background-color:%s\" " \
+                    "class=\"cp-preview\"></div>" % (varprefix, value)
 
-        menu_content = html.render_div('', id_="%s_picker" % varprefix, class_="cp-small")
+        menu_content = "<div id=\"%s_picker\" class=\"cp-small\"></div>" % varprefix
 
-        menu_content += html.render_javascript(\
-            "ColorPicker(document.getElementById(\"%s_picker\"),"\
-            "            function(hex, hsv, rgb) {"\
-            "               document.getElementById(\"%s_value\").value = hex;"\
-            "               document.getElementById(\"%s_preview\").style.backgroundColor = hex;"\
-            "}).setHex(\"%s\");" % (varprefix, varprefix, varprefix, value))
+        menu_content += "<script language=\"javascript\">" \
+            "ColorPicker(document.getElementById(\"%s_picker\")," \
+            "            function(hex, hsv, rgb) {" \
+            "               document.getElementById(\"%s_value\").value = hex;" \
+            "               document.getElementById(\"%s_preview\").style.backgroundColor = hex;" \
+            "}).setHex(\"%s\");</script>" % (varprefix, varprefix, varprefix, value)
 
-        html.popup_trigger(indicator, varprefix + '_popup',
-                           menu_content=menu_content,
-                           cssclass="colorpicker",
-                           onclose=self._on_change)
+        html.popup_trigger(indicator, varprefix + '_popup', menu_content=menu_content, cssclass="colorpicker", onclose=self._on_change)
 
 
 
@@ -4223,7 +4137,6 @@ class SSHKeyPair(ValueSpec):
 
 
     def render_input(self, varprefix, value):
-        display_type(self, debug_display)
         if value:
             html.write(_("Fingerprint: %s") % self.value_to_text(value))
             html.hidden_field(varprefix, self._encode_key_for_url(value), add_var=True)

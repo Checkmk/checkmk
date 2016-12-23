@@ -2234,33 +2234,23 @@ def mode_object_parameters(phase):
 
             elif origin == "classic":
                 rule_nr  = serviceinfo["rule_nr"]
-                rule     = all_rulesets["custom_checks"][rule_nr]
-
-                # Find relative rule number in folder
-                old_folder = None
-                rel_nr     = -1
-                for nr, r in enumerate(all_rulesets["custom_checks"]):
-                    if old_folder != r[0]:
-                        old_folder = r[0]
-                        rel_nr = -1
-                    rel_nr += 1
-                    if nr == rule_nr:
-                        break
+                rules    = all_rulesets.get("custom_checks").get_rules()
+                rule_folder, rule_index, rule = rules[rule_nr]
 
                 url = folder_preserving_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', hostname)])
                 forms.section('<a href="%s">%s</a>' % (url, _("Command Line")))
                 url = folder_preserving_link([
                     ('mode', 'edit_rule'),
                     ('varname', "custom_checks"),
-                    ('rule_folder', rule[0].path()),
-                    ('rulenr', rel_nr),
+                    ('rule_folder', rule_folder.path()),
+                    ('rulenr', rule_index),
                     ('host', hostname)])
 
                 html.open_table(class_="setting")
                 html.open_tr()
 
                 html.open_td(class_="reason")
-                html.a("%s %d %s %s" % (_("Rule"), rel_nr + 1, _("in"), rule[0].title()), href=url)
+                html.a("%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()), href=url)
                 html.close_td()
                 html.open_td(class_=["settingvalue", "used"])
                 if "command_line" in serviceinfo:

@@ -492,12 +492,9 @@ def load_users(lock = False):
     filename = root_dir + "contacts.mk"
 
     if lock:
-        # Make sure that the file exists without modifying it, *if* it exists
-        # to be able to lock and realease the file properly.
         # Note: the lock will be released on next save_users() call or at
         #       end of page request automatically.
-        file(filename, "a")
-        aquire_lock(filename)
+        store.aquire_lock(filename)
 
     if html.is_cached('users'):
         return html.get_cached('users')
@@ -505,37 +502,11 @@ def load_users(lock = False):
     # First load monitoring contacts from Check_MK's world. If this is
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
-    try:
-        vars = { "contacts" : {} }
-        execfile(filename, vars, vars)
-        contacts = vars["contacts"]
-    except IOError:
-        contacts = {} # a not existing file is ok, start with empty data
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
-        else:
-            logger(LOG_ERR, 'load_users: Problem while loading contacts (%s - %s). '
-                     'Initializing structure...' % (filename, e))
-        contacts = {}
+    contacts = store.load_from_mk_file(filename, "contacts", {})
 
-    # Now add information about users from the Web world
+    # Now load information about users from the GUI config world
     filename = multisite_dir + "users.mk"
-    try:
-        vars = { "multisite_users" : {} }
-        execfile(filename, vars, vars)
-        users = vars["multisite_users"]
-    except IOError:
-        users = {} # not existing is ok -> empty structure
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
-        else:
-            logger(LOG_ERR, 'load_users: Problem while loading users (%s - %s). '
-                     'Initializing structure...' % (filename, e))
-        users = {}
+    users = store.load_from_mk_file(multisite_dir + "users.mk", "multisite_users", {})
 
     # Merge them together. Monitoring users not known to Multisite
     # will be added later as normal users.
@@ -738,39 +709,19 @@ def save_users(profiles):
 
 
     # Check_MK's monitoring contacts
-    filename = root_dir + "contacts.mk.new"
-    out = create_user_file(filename, "w")
-    out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
-    out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
-    out.close()
-    os.rename(filename, filename[:-4])
+    store.save_to_mk_file(root_dir + "contacts.mk", "contacts", contacts)
 
-    # Users with passwords for Multisite
-    filename = multisite_dir + "users.mk.new"
-    make_nagios_directory(multisite_dir)
-    out = create_user_file(filename, "w")
-    out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
-    out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))
-    out.close()
-    os.rename(filename, filename[:-4])
+    # GUI specific user configuration
+    store.save_to_mk_file(multisite_dir + "users.mk", "multisite_users", users)
 
     # Execute user connector save hooks
     hook_save(profiles)
 
     # Write out the users serials
-    serials_file = '%s/auth.serials.new' % os.path.dirname(cmk.paths.htpasswd_file)
-    rename_file = True
-    try:
-        out = create_user_file(serials_file, "w")
-    except:
-        rename_file = False
-        out = create_user_file(serials_file[:-4], "w")
-
+    serials = ""
     for user_id, user in profiles.items():
-        out.write('%s:%d\n' % (make_utf8(user_id), user.get('serial', 0)))
-    out.close()
-    if rename_file:
-        os.rename(serials_file, serials_file[:-4])
+        serials += '%s:%d\n' % (make_utf8(user_id), user.get('serial', 0))
+    store.save_file('%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file), serials)
 
     # Write user specific files
     for user_id, user in profiles.items():
@@ -780,8 +731,7 @@ def save_users(profiles):
         # authentication secret for local processes
         auth_file = user_dir + "/automation.secret"
         if "automation_secret" in user:
-            with create_user_file(auth_file, "w") as f:
-                f.write("%s\n" % user["automation_secret"])
+            store.save_file(auth_file, "%s\n" % user["automation_secret"])
         else:
             remove_user_file(auth_file)
 

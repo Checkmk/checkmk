@@ -32,6 +32,7 @@
     * 4003 FIX: esx_vsphere_objects: fixed check parameters display bug during WATO service discovery
     * 4146 FIX: Fixed broken "Global settings" when having the Event Console disabled via "omd config"
     * 4218 FIX: Disabling replication with a site did not clear the changes for this site (1.4.0i3 regression)
+    * 4221 FIX: Fixed "analyse parameters" page for services with umlauts in names
 
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address

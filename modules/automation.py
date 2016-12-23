@@ -1294,7 +1294,7 @@ def replace_core_macros(hostname, commandline):
     macros = get_basic_host_macros_from_attributes(hostname, get_host_attributes(hostname))
     load_resource_file(macros)
     for varname, value in macros.items():
-        commandline = commandline.replace(varname, str(value))
+        commandline = commandline.replace(varname, "%s" % value)
     return commandline
 
 

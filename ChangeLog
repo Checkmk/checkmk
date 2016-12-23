@@ -3,6 +3,9 @@
     * 5302 FIX: oracle_instance: Fixed crash if output contains more than 12 columns
     * 5316 FIX: cmciii.access: Fixed error state handling...
 
+    WATO:
+    * 4222 FIX: Services of host page: Fixed encoding issue for hosts with umlauts in alias
+
 
 1.2.8p26:
     Core & Setup:

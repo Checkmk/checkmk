@@ -68,6 +68,17 @@ automation_commands = {}
 g_rulespecs = None
 g_rulegroups = {}
 
+# Global datastructure holding all attributes (in a defined order)
+# as pairs of (attr, topic). Topic is the title under which the
+# attribute is being displayed. All builtin attributes use the
+# topic None. As long as only one topic is used, no topics will
+# be displayed. They are useful if you have a great number of
+# custom attributes.
+g_host_attributes = []
+
+# Dictionary for quick access
+g_host_attribute = {}
+
 def initialize_before_loading_plugins():
     if g_rulespecs:
         g_rulespecs.clear()
@@ -2951,16 +2962,7 @@ class ContactGroupsAttribute(Attribute):
 
 def initialize_host_attribute_structures():
     global g_host_attributes, g_host_attribute
-
-    # Global datastructure holding all attributes (in a defined order)
-    # as pairs of (attr, topic). Topic is the title under which the
-    # attribute is being displayed. All builtin attributes use the
-    # topic None. As long as only one topic is used, no topics will
-    # be displayed. They are useful if you have a great number of
-    # custom attributes.
     g_host_attributes = []
-
-    # Dictionary for quick access
     g_host_attribute = {}
 
 

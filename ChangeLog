@@ -34,6 +34,7 @@
     * 4218 FIX: Disabling replication with a site did not clear the changes for this site (1.4.0i3 regression)
     * 4221 FIX: Fixed "analyse parameters" page for services with umlauts in names
     * 4222 FIX: Services of host page: Fixed encoding issue for hosts with umlauts in alias
+    * 4223 FIX: Fixed possible g_host_attribute related AttributeError exception
 
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address

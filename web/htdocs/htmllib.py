@@ -1458,6 +1458,14 @@ class html(DeprecationWrapper):
             raise MKUserError(varname, _("The given text is wrong encoded. "
                                          "You need to provide a UTF-8 encoded text."))
 
+    def get_integer_input(self, varname):
+        try:
+            return int(self.var(varname))
+        except TypeError:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        except ValueError:
+            raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
+
 
     def var(self, varname, deflt = None):
         return self.vars.get(varname, deflt)

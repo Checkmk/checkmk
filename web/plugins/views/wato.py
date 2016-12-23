@@ -41,6 +41,12 @@ def get_wato_folder(row, how, with_links = True):
     wato_path = filename[6:-9]
     try:
         title_path = wato.get_folder_title_path(wato_path, with_links)
+    except MKGeneralException:
+        # happens when a path can not be resolved using the local WATO.
+        # e.g. when having an independent site with different folder
+        # hierarchy added to the GUI.
+        # Display the raw path rather than the exception text.
+        title_path = wato_path.split("/")
     except Exception, e:
         return "%s" % e
 

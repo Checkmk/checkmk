@@ -158,12 +158,12 @@ def test_2():
     old.write('<div id="messages" style="display:none;">')
     old.write('</div>')
     old.write("<div class=copyright>%s</div>\n" %
-    _("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
+    _("&copy; <a target=\"_blank\" href=\"https://mathias-kettner.com\">Mathias Kettner</a>"))
     old.write('</div>')
     new.open_div(style="display:none;", id_="messages")
     new.close_div()
     new.open_div(class_=["copyright"])
-    new.write(_("&copy; " + new.render_a("Mathias Kettner", target="_blank", href="http://mathias-kettner.de")))
+    new.write(_("&copy; " + new.render_a("Mathias Kettner", target="_blank", href="https://mathias-kettner.com")))
     new.close_div()
     new.close_div()
 

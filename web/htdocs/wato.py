@@ -5610,7 +5610,7 @@ def vs_ldap_connection(new, connection_id):
                        "the certificates of the LDAP server. This is normally done via system wide "
                        "configuration of the CA certificate which signed the certificate of the LDAP "
                        "server. Please refer to the <a target=\"_blank\" "
-                       "href=\"http://mathias-kettner.de/checkmk_multisite_ldap_integration.html\">"
+                       "href=\"https://mathias-kettner.com/checkmk_multisite_ldap_integration.html\">"
                        "documentation</a> for details."),
             value  = True,
             totext = _("Encrypt the network connection using SSL."),
@@ -5935,7 +5935,7 @@ def mode_edit_ldap_connection(phase):
                        'the page reload, you should see the results of the test here.'),
                      _('If you need help during configuration or experience problems, please refer '
                        'to the Multisite <a target="_blank" '
-                       'href="http://mathias-kettner.de/checkmk_multisite_ldap_integration.html">'
+                       'href="https://mathias-kettner.com/checkmk_multisite_ldap_integration.html">'
                        'LDAP Documentation</a>.'))))
     else:
         def test_connect(connection, address):
@@ -9377,7 +9377,7 @@ def mode_edit_site(phase):
               "situations but locks a number of threads in the Livestatus module of the target site."))
 
     # URL-Prefix
-    docu_url = "http://mathias-kettner.de/checkmk_multisite_modproxy.html"
+    docu_url = "https://mathias-kettner.com/checkmk_multisite_modproxy.html"
     forms.section(_("URL prefix"))
     html.text_input("url_prefix", site.get("url_prefix", ""), size = 60)
     html.help(_("The URL prefix will be prepended to links of addons like PNP4Nagios "
@@ -9389,7 +9389,7 @@ def mode_edit_site(phase):
                  "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix.") % docu_url)
 
     # Status-Host
-    docu_url = "http://mathias-kettner.de/checkmk_multisite_statushost.html"
+    docu_url = "https://mathias-kettner.com/checkmk_multisite_statushost.html"
     forms.section(_("Status host"))
 
     sh = site.get("status_host")
@@ -13738,7 +13738,7 @@ def select_language(user):
                     'Note: currently Multisite is internationalized '
                     'but comes without any actual localisations (translations). If you want to '
                     'create you own translation, you find <a href="%(url)s">documentation online</a>.') %
-                    { "url" : "http://mathias-kettner.de/checkmk_multisite_i18n.html"} )
+                    { "url" : "https://mathias-kettner.com/checkmk_multisite_i18n.html"} )
 
 def user_profile_async_replication_page():
     html.header(_('Replicate new User Profile'),

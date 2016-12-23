@@ -186,7 +186,7 @@ def page_login():
     html.write('<div id="loginfoot">')
     html.write('<img class="logomk" src="images/logo_cmk_small.png">')
     html.write('<div class="copyright">%s</div>' %
-      _("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
+      _("&copy; <a target=\"_blank\" href=\"https://mathias-kettner.com\">Mathias Kettner</a>"))
     html.write('</div>')
     jqm_page_footer()
     mobile_html_foot()

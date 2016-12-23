@@ -1025,7 +1025,7 @@ class HTMLCheck_MK(HTMLGenerator):
 
         self.icon_button(None, _("Toggle context help texts"), "help", id="helpbutton",
                          onclick="toggle_help()", style="display:none", ty="icon", cssclass=cssclass)
-        self.open_a(href="http://mathias-kettner.de", class_="head_logo")
+        self.open_a(href="https://mathias-kettner.com", class_="head_logo")
         self.img(src="images/logo_cmk_small.png")
         self.close_a()
         self.close_td()

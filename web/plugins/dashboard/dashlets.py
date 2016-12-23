@@ -49,7 +49,7 @@ def dashlet_overview(nr, dashlet):
     html.open_table(class_="dashlet_overview")
     html.open_tr()
     html.open_td(valign="top")
-    html.open_a(href="http://mathias-kettner.de/check_mk.html")
+    html.open_a(href="https://mathias-kettner.com/check_mk.html")
     html.img("images/check_mk.trans.120.png", style="margin-right: 30px;")
     html.close_a()
     html.close_td()
@@ -57,9 +57,9 @@ def dashlet_overview(nr, dashlet):
     html.open_td()
     html.h2("Check_MK Multisite")
     html.write_html('Welcome to Check_MK Multisite. If you want to learn more about Multisite, please visit '
-                    'our <a href="http://mathias-kettner.de/checkmk_multisite.html">online documentation</a>. '
-                    'Multisite is part of <a href="http://mathias-kettner.de/check_mk.html">Check_MK</a> - an Open Source '
-                    'project by <a href="http://mathias-kettner.de">Mathias Kettner</a>.')
+                    'our <a href="https://mathias-kettner.com/checkmk_multisite.html">online documentation</a>. '
+                    'Multisite is part of <a href="https://mathias-kettner.com/check_mk.html">Check_MK</a> - an Open Source '
+                    'project by <a href="https://mathias-kettner.com">Mathias Kettner</a>.')
     html.close_td()
 
     html.close_tr()
@@ -86,7 +86,7 @@ dashlet_types["overview"] = {
 #   '----------------------------------------------------------------------'
 
 def dashlet_mk_logo(nr, dashlet):
-    html.open_a(href="http://mathias-kettner.de/check_mk.html")
+    html.open_a(href="https://mathias-kettner.com/check_mk.html")
     html.img("images/check_mk.trans.120.png", style="margin-right: 30px;")
     html.close_a()
 

@@ -16500,15 +16500,15 @@ def monitoring_macro_help():
                    "<ul>"
                    "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
                    "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
-                   "<li><tt>$USER1$</tt>: user macro 1 (usually path to shipped plugins)</li>"
-                   "<li><tt>$USER2$</tt>: user marco 2 (usually path to your own plugins)</li>"
                    "<li><tt>$_HOSTTAGS$</tt>: List of host tags</li>"
                    "<li><tt>$_HOSTADDRESS_4$</tt>: The IPv4 address of the host</li>"
                    "<li><tt>$_HOSTADDRESS_6$</tt>: The IPv6 address of the host</li>"
                    "<li><tt>$_HOSTADDRESS_FAMILY$</tt>: The primary address family of the host</li>"
                    "</ul>"
-                   "All custom variables defined for the host are available as <tt>$_HOST[VARNAME]$</tt>. "
-                   "Replace <tt>[VARNAME]</tt> with the <i>upper case</i> name of your variable.")
+                   "All custom attributes defined for the host are available as <tt>$_HOST[VARNAME]$</tt>. "
+                   "Replace <tt>[VARNAME]</tt> with the <i>upper case</i> name of your variable. "
+                   "For example, a host attribute named <tt>foo</tt> with the value <tt>bar</tt> would result in "
+                   "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
 
 
 #.

@@ -35,6 +35,7 @@
     * 4221 FIX: Fixed "analyse parameters" page for services with umlauts in names
     * 4222 FIX: Services of host page: Fixed encoding issue for hosts with umlauts in alias
     * 4223 FIX: Fixed possible g_host_attribute related AttributeError exception
+    * 4224 FIX: Improved exception handling during WATO slave site activation
 
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address

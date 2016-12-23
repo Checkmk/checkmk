@@ -119,7 +119,7 @@ class DeprecatedRenderer(object):
                          onclick="toggle_help()", style="display:none", ty="icon", cssclass=cssclass)
 
         self.write("%s</td></tr></table>" %
-                   _("<a class=head_logo href=\"http://mathias-kettner.de\">"
+                   _("<a class=head_logo href=\"https://mathias-kettner.com\">"
                      "<img src=\"images/logo_cmk_small.png\"/></a>"))
         self.write("<hr class=\"header\">\n")
         if self.enable_debug:

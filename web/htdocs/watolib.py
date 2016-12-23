@@ -4382,6 +4382,13 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def run(self):
         try:
+            self._do_run()
+        except:
+            log_exception()
+
+
+    def _do_run(self):
+        try:
             self._time_started = time.time()
             self._lock_activation()
 
@@ -5443,9 +5450,8 @@ def collect_hosts(folder):
 #   | host and similar things.                                             |
 #   '----------------------------------------------------------------------'
 
-class MKAutomationException(Exception):
-    def __init__(self, msg):
-        super(MKAutomationException, self).__init__(msg)
+class MKAutomationException(MKGeneralException):
+    pass
 
 
 def check_mk_automation(siteid, command, args=None, indata="", stdin_data=None, timeout=None, sync=True):

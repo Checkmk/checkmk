@@ -1,0 +1,10 @@
+Title: Improved exception handling during WATO slave site activation
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1482502812
+
+

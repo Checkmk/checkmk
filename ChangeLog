@@ -24,6 +24,7 @@
     * 4004 FIX: Fixed exception when viewing availability of BI aggregations...
     * 4144 FIX: Sidebar: Bottom of last snapin was not 100% visible
     * 4145 FIX: Fixed exception when setting output_format in wrong case
+    * 4220 FIX: WATO folder filter: improve output of unknown folders
 
     WATO:
     * 4142 New extended search dialog for rulesets and rules...

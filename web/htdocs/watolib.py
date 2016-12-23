@@ -49,6 +49,7 @@ import ast
 import multiprocessing
 import tarfile
 import cStringIO
+import requests
 from lib import *
 from valuespec import *
 from hashlib import sha256
@@ -3379,14 +3380,14 @@ def do_site_login(site_id, name, password):
     # Adding _ajaxid makes the web service fail silently with an HTTP code and
     # not output HTML code for an error screen.
     url = site["multisiteurl"] + 'login.py'
-    post_data = html.urlencode_vars([
-        ('_login', '1'),
-        ('_username', name),
-        ('_password', password),
-        ('_origtarget', 'automation_login.py'),
-        ('_plain_error', '1'),
-    ])
-    response = get_url(url, site.get('insecure', False), name, password, post_data=post_data).strip()
+    post_data = {
+        '_login'       : '1',
+        '_username'    : name,
+        '_password'    : password,
+        '_origtarget'  : 'automation_login.py',
+        '_plain_error' : '1',
+    }
+    response = get_url(url, site.get('insecure', False), auth=(name, password), data=post_data).strip()
     if '<html>' in response.lower():
         message = _("Authentication to web service failed.<br>Message:<br>%s") % \
             html.strip_tags(html.strip_scripts(response))
@@ -3401,50 +3402,24 @@ def do_site_login(site_id, name, password):
         except:
             raise MKAutomationException(response)
 
-# TODO: Better to use native python requests module instead of
-#       this curl call.
-def get_url(url, insecure, user=None, password=None, params = '', post_data = None):
-    cred = ''
-    if user:
-        cred = ' -u %s' % quote_shell_string("%s:%s" % (user, password))
 
-    insecure = insecure and ' --insecure' or ''
+def get_url(url, insecure, auth=None, data=None, files=None):
+    response = requests.post(url,
+        data=data,
+        verify=not insecure,
+        auth=auth,
+        files=files,
+    )
 
-    # -s: silent
-    # -S: show errors
-    # -w '%{http_code}': add the http status code to the end of the output
-    # -L: follow redirects
-    # -b /dev/null: handle cookies, but do not persist them
-    command = 'curl -b /dev/null -L -w "\n%%{http_code}" -s -S%s%s%s "%s" 2>&1' % (
-              insecure, cred, params, url)
-    tmp_file = None
-    if post_data != None:
-        # Put POST data on command line as long as it is not
-        # longer than 50 KB (remember: Linux has an upper limit
-        # of 132 KB for command line plus environment
-        if len(post_data) < 50000:
-            command += ' --data-binary "%s"' % post_data
-        else:
-            import tempfile
-            tmp_file = tempfile.NamedTemporaryFile(dir = cmk.paths.tmp_dir)
-            tmp_file.write(post_data)
-            tmp_file.flush()
-            command += ' --data-binary "@%s"' % tmp_file.name
+    response.encoding = "utf-8" # Always decode with utf-8
 
-    response = os.popen(command).read().strip()
-    try:
-        status_code = int(response[-3:])
-        response_body = response[:-3]
-    except:
-        status_code = None
-        response_body = response
-
-    if status_code == 401:
+    if response.status_code == 401:
         raise MKUserError("_passwd", _("Authentication failed. Invalid login/password."))
-    elif status_code != 200:
-        raise MKUserError("_passwd", _("HTTP Error - %s: %s") % (status_code, response_body))
+    elif response.status_code != 200:
+        raise MKUserError("_passwd", _("HTTP Error - %d: %s") %
+                            (response.status_code, response.text))
 
-    return response_body
+    return response.text
 
 
 def check_mk_remote_automation(site_id, command, args, indata, stdin_data=None, timeout=None, sync=True):
@@ -3504,9 +3479,8 @@ def do_remote_automation(site, command, vars):
                ("secret",  secret),
                ("debug",   config.debug and '1' or '')
         ])
-    vars_encoded = html.urlencode_vars(vars)
-    response = get_url(url, site.get('insecure', False),
-                       post_data=vars_encoded)
+
+    response = get_url(url, site.get('insecure', False), data=dict(vars))
 
     if not response:
         raise MKAutomationException(_("Empty output from remote site."))
@@ -3757,12 +3731,12 @@ def push_user_profile_to_site(site, user_id, profile):
         ("siteid",     site['id']),
         ("debug",      config.debug and "1" or ""),
     ])
-    content = html.urlencode_vars([
-        ('user_id', user_id),
-        ('profile', mk_repr(profile)),
-    ])
 
-    response = get_url(url, site.get('insecure', False), post_data = content)
+    response = get_url(url, site.get('insecure', False), data={
+        'user_id': user_id,
+        'profile': mk_repr(profile),
+    })
+
     if not response:
         raise MKAutomationException(_("Empty output from remote site."))
 
@@ -4554,12 +4528,12 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         try:
             return ast.literal_eval(response_text)
         except SyntaxError:
-            raise MKAutomationException(_("Garbled automation response from site %s: '%s'") %
-                (site["id"], response_text))
+            raise MKAutomationException(_("Garbled automation response: <pre>%s</pre>") %
+                (html.attrencode(response_text)))
 
 
     def _upload_file(self, url, insecure):
-        return get_url(url, insecure, params = ' -F snapshot=@%s' % self._snapshot_file)
+        return get_url(url, insecure, files={"snapshot": open(self._snapshot_file, "r")})
 
 
     def _cleanup_snapshot(self):
@@ -4687,7 +4661,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             self._status_details += _(" Finished at: %s.") % render.time_of_day(self._time_ended)
 
         if status_details:
-            self._status_details += "<br>" + status_details
+            self._status_details += "<br>%s" % status_details
 
 
     def _save_state(self):

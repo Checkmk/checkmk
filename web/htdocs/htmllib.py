@@ -28,6 +28,9 @@
 #
 # Notes for future rewrite:
 #
+# - Find all call sites which do something like "int(html.var(...))"
+#   and replace it with html.get_integer_input(...)
+#
 # - Make clear which functions return values and which write out values
 #   render_*, add_*, write_* (e.g. icon() -> outputs directly,
 #                                  render_icon() -> returns icon

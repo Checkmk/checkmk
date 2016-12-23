@@ -48,10 +48,10 @@ import cmk.store as store
 def render_about():
     html.write(_("Version: ") + cmk.__version__)
     html.open_ul()
-    bulletlink(_("Homepage"),        "http://mathias-kettner.de/check_mk.html")
-    bulletlink(_("Documentation"),   "http://mathias-kettner.de/checkmk.html")
-    bulletlink(_("Download"),        "http://mathias-kettner.de/check_mk_download.html")
-    bulletlink("Mathias Kettner", "http://mathias-kettner.de")
+    bulletlink(_("Homepage"),        "https://mathias-kettner.com/check_mk.html")
+    bulletlink(_("Documentation"),   "https://mathias-kettner.com/checkmk.html")
+    bulletlink(_("Download"),        "https://mathias-kettner.com/check_mk_download.html")
+    bulletlink("Mathias Kettner",    "https://mathias-kettner.com")
     html.close_ul()
 
 sidebar_snapins["about"] = {

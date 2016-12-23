@@ -1026,7 +1026,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
         # In case of SNMP checks but missing agent response, skip this check.
         # Special checks which still need to be called even with empty data
         # may declare this.
-        if info == [] and check_uses_snmp(checkname) \
+        if info == [] and checks.is_snmp_check(checkname) \
            and not checks.check_info[checkname]["handle_empty_info"]:
             error_sections.add(infotype)
             return False
@@ -1047,7 +1047,8 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                     x = info.exc_info()
                     raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
 
-                result = sanitize_check_result(check_function(item, params, info), check_uses_snmp(checkname))
+                result = sanitize_check_result(check_function(item, params, info),
+                                               checks.is_snmp_check(checkname))
                 item_state.raise_counter_wrap()
 
 
@@ -1149,7 +1150,7 @@ def create_crash_dump(hostname, check_type, item, params, description, info):
         prepare_crash_dump_directory(crash_dir)
 
         create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text)
-        if check_uses_snmp(check_type):
+        if checks.is_snmp_check(check_type):
             write_crash_dump_snmp_info(crash_dir, hostname, check_type)
         else:
             write_crash_dump_agent_output(crash_dir, hostname)
@@ -1193,7 +1194,7 @@ def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, d
         "check_type"    : check_type,
         "item"          : item,
         "params"        : params,
-        "uses_snmp"     : check_uses_snmp(check_type),
+        "uses_snmp"     : checks.is_snmp_check(check_type),
         "inline_snmp"   : config.is_inline_snmp_host(hostname),
         "manual_check"  : is_manual_check(hostname, check_type, item),
     })
@@ -1506,13 +1507,6 @@ def make_utf8(x):
 
 def i_am_root():
     return os.getuid() == 0
-
-# TODO: What about config.is_snmp_check?
-def check_uses_snmp(check_type):
-    info_type = check_type.split(".")[0]
-    return checks.snmp_info.get(info_type) != None or \
-       ("inventory_plugins" in sys.modules
-        and "snmp_info" in inventory_plugins.inv_info.get(info_type, {}))
 
 
 def worst_monitoring_state(status_a, status_b):

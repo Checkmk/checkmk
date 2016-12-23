@@ -165,7 +165,7 @@ def do_inv_for_realhost(hostname):
     for info_type, plugin in cmk_base.inventory_plugins.inv_info.items():
         # Skip SNMP sections that are not supported by this device
         use_caches = True
-        if check_uses_snmp(info_type):
+        if checks.is_snmp_check(info_type) or cmk_base.inventory_plugins.is_snmp_plugin(info_type):
             use_caches = False
             if info_type not in snmp_check_types:
                 continue

@@ -61,6 +61,11 @@ def load(): # pylint: disable=function-redefined
             sys.exit(5)
 
 
+def is_snmp_plugin(plugin_type):
+    info_type = plugin_type.split(".")[0]
+    return "snmp_info" in inv_info.get(info_type, {})
+
+
 #.
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |

@@ -579,7 +579,7 @@ def automation_get_check_information():
             if check["group"]:
                 check_infos[check_type]["group"] = check["group"]
             check_infos[check_type]["service_description"] = check.get("service_description","%s")
-            check_infos[check_type]["snmp"] = check_uses_snmp(check_type)
+            check_infos[check_type]["snmp"] = check.is_snmp_check(check_type)
         except Exception, e:
             if cmk.debug.enabled():
                 raise

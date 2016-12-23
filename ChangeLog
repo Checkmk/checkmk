@@ -33,6 +33,7 @@
     * 4146 FIX: Fixed broken "Global settings" when having the Event Console disabled via "omd config"
     * 4218 FIX: Disabling replication with a site did not clear the changes for this site (1.4.0i3 regression)
     * 4221 FIX: Fixed "analyse parameters" page for services with umlauts in names
+    * 4222 FIX: Services of host page: Fixed encoding issue for hosts with umlauts in alias
 
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address
@@ -49,7 +50,6 @@
     * 4200 FIX: Fix computation of Event Console performance snapin in distributed mode...
     * 4219 FIX: Trap processing with community "public" is now only default and not accepted in all cases anymore...
             NOTE: Please refer to the migration notes!
-
 
 
 1.4.0i3:

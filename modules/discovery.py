@@ -659,7 +659,7 @@ def gather_check_types_native(hostname, ipaddress, on_error, do_snmp_scan):
         # previously
         else:
             for check_type, _unused_item, _unused_params in read_autochecks_of(hostname):
-                if check_type not in check_types and check_uses_snmp(check_type):
+                if check_type not in check_types and checks.is_snmp_check(check_type):
                     check_types.append(check_type)
 
     if config.is_tcp_host(hostname) or piggyback.has_piggyback_info(hostname):
@@ -785,8 +785,12 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     for check_type, _unused_check in items:
         if check_type in config.ignored_checktypes:
             continue
-        elif not check_uses_snmp(check_type):
-            continue
+        else:
+            if for_inv and not inventory_plugins.is_snmp_plugin(check_type):
+                continue
+            elif not checks.is_snmp_check(check_type):
+                continue
+
         basename = check_type.split(".")[0]
         # The scan function should be assigned to the basename, because
         # subchecks sharing the same SNMP info of course should have
@@ -849,7 +853,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
         use_snmp = config.is_snmp_host(hostname)
 
     # Skip SNMP checks on non-SNMP hosts
-    if check_uses_snmp(check_type) and not use_snmp:
+    if checks.is_snmp_check(check_type) and not use_snmp:
         return []
 
     try:
@@ -880,7 +884,7 @@ def discover_check_type(hostname, ipaddress, check_type, use_caches, on_error, u
     # In case of SNMP checks but missing agent response, skip this check.
     # Special checks which still need to be called even with empty data
     # may declare this.
-    if not info and check_uses_snmp(check_type) \
+    if not info and checks.is_snmp_check(check_type) \
        and not checks.check_info[check_type]["handle_empty_info"]:
         return []
 
@@ -947,7 +951,7 @@ def discoverable_check_types(what): # snmp, tcp, all
     check_types = [ k for k in checks.check_info.keys()
                    if checks.check_info[k]["inventory_function"] != None
                    and (what == "all"
-                        or check_uses_snmp(k) == (what == "snmp"))
+                        or checks.is_snmp_check(k) == (what == "snmp"))
                  ]
     check_types.sort()
     return check_types
@@ -1172,7 +1176,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
 
                 try:
                     item_state.reset_wrapped_counters()
-                    result = sanitize_check_result(check_function(item, params, info), check_uses_snmp(check_type))
+                    result = sanitize_check_result(check_function(item, params, info), checks.is_snmp_check(check_type))
                     item_state.raise_counter_wrap()
                 except item_state.MKCounterWrapped, e:
                     result = (None, "WAITING - Counter based check, cannot be done offline")

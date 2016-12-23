@@ -314,7 +314,7 @@ def do_output_check_info():
             if 'command_line' in check:
                 what = 'active'
                 ty_color = tty.blue
-            elif check_uses_snmp(check_type):
+            elif checks.is_snmp_check(check_type):
                 what = 'snmp'
                 ty_color = tty.magenta
             else:
@@ -655,7 +655,7 @@ def check_period_of(hostname, service):
         return None
 
 def check_interval_of(hostname, checkname):
-    if not check_uses_snmp(checkname):
+    if not checks.is_snmp_check(checkname):
         return # no values at all for non snmp checks
     for match, minutes in rulesets.host_extra_conf(hostname, config.snmp_check_interval):
         if match is None or match == checkname:
@@ -1213,7 +1213,7 @@ def remove_duplicate_checks(check_table):
     for key, value in check_table.iteritems():
         checkname = key[0]
         descr = value[1]
-        if check_uses_snmp(checkname):
+        if checks.is_snmp_check(checkname):
             if descr in have_with_tcp:
                 continue
             have_with_snmp[descr] = key

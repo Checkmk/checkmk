@@ -1046,7 +1046,7 @@ if '-d' in sys.argv:
 
         needed_sections.add(check_type.split(".")[0])
         needed_check_types.add(check_type)
-        if check_uses_snmp(check_type):
+        if checks.is_snmp_check(check_type):
             need_snmp_module = True
 
     output.write("precompiled_check_intervals = %r\n" % check_intervals)

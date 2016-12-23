@@ -5476,6 +5476,8 @@ def check_mk_local_automation(command, args=None, indata="", stdin_data=None, ti
             html.show_error(_("<h1>Cannot activate changes</h1>%s") % e)
             return
 
+    cmd = [ make_utf8(a) for a in cmd ]
+
     try:
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output

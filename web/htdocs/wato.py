@@ -2102,7 +2102,7 @@ def mode_object_parameters(phase):
     if host is None:
         raise MKGeneralException(_('The given host does not exist.'))
     host.need_permission("read")
-    service = html.var("service")
+    service = html.get_unicode_input("service")
 
     if phase == "title":
         title = _("Parameters of") + " " + hostname

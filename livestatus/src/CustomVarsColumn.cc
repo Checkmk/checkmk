@@ -24,7 +24,12 @@
 
 #include "CustomVarsColumn.h"
 #include <utility>
+
+#ifdef CMC
+#include "Object.h"
+#else
 #include "nagios.h"
+#endif
 
 using std::string;
 using std::unordered_map;
@@ -36,7 +41,13 @@ CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
 
 CustomVarsColumn::~CustomVarsColumn() = default;
 
+// TODO(sp) This should live in our abstraction layer for cores.
 unordered_map<string, string> CustomVarsColumn::getCVM(void *row) const {
+#ifdef CMC
+    Object *data = static_cast<Object *>(shiftPointer(row));
+    return data == nullptr ? unordered_map<string, string>()
+                           : data->customAttributes();
+#else
     unordered_map<string, string> result;
     if (char *data = static_cast<char *>(shiftPointer(row))) {
         for (customvariablesmember *cvm =
@@ -46,6 +57,7 @@ unordered_map<string, string> CustomVarsColumn::getCVM(void *row) const {
         }
     }
     return result;
+#endif
 }
 
 string CustomVarsColumn::getVariable(void *row, const string &varname) {

@@ -120,17 +120,17 @@ void TableContacts::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
         "A list of all custom variables of the contact",
-        reinterpret_cast<char *>(&ctc.custom_variables) - ref,
-        indirect_offset));
+        reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
+        -1));
     table->addColumn(make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact",
-        reinterpret_cast<char *>(&ctc.custom_variables) - ref,
-        indirect_offset));
+        reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
+        -1));
     table->addColumn(make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        reinterpret_cast<char *>(&ctc.custom_variables) - ref,
-        indirect_offset));
+        reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
+        -1));
     table->addColumn(make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",

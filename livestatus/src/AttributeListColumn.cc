@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "AttributeListColumn.h"
+#include <bitset>
 #include <cctype>
 #include <map>
 #include <memory>
@@ -35,6 +36,7 @@
 #include "Renderer.h"
 #include "strutil.h"
 
+using std::bitset;
 using std::make_unique;
 using std::map;
 using std::string;
@@ -44,23 +46,17 @@ using std::vector;
 
 namespace {
 map<string, unsigned long> known_attributes = {
-    {"notifications_enabled", MODATTR_NOTIFICATIONS_ENABLED},
-    {"active_checks_enabled", MODATTR_ACTIVE_CHECKS_ENABLED},
-    {"passive_checks_enabled", MODATTR_PASSIVE_CHECKS_ENABLED},
-    {"event_handler_enabled", MODATTR_EVENT_HANDLER_ENABLED},
-    {"flap_detection_enabled", MODATTR_FLAP_DETECTION_ENABLED},
-    {"failure_prediction_enabled", MODATTR_FAILURE_PREDICTION_ENABLED},
-    {"performance_data_enabled", MODATTR_PERFORMANCE_DATA_ENABLED},
-    {"obsessive_handler_enabled", MODATTR_OBSESSIVE_HANDLER_ENABLED},
-    {"event_handler_command", MODATTR_EVENT_HANDLER_COMMAND},
-    {"check_command", MODATTR_CHECK_COMMAND},
-    {"normal_check_interval", MODATTR_NORMAL_CHECK_INTERVAL},
-    {"retry_check_interval", MODATTR_RETRY_CHECK_INTERVAL},
-    {"max_check_attempts", MODATTR_MAX_CHECK_ATTEMPTS},
-    {"freshness_checks_enabled", MODATTR_FRESHNESS_CHECKS_ENABLED},
-    {"check_timeperiod", MODATTR_CHECK_TIMEPERIOD},
-    {"custom_variable", MODATTR_CUSTOM_VARIABLE},
-    {"notification_timeperiod", MODATTR_NOTIFICATION_TIMEPERIOD}};
+    {"notifications_enabled", 0},    {"active_checks_enabled", 1},
+    {"passive_checks_enabled", 2},   {"event_handler_enabled", 3},
+    {"flap_detection_enabled", 4},   {"failure_prediction_enabled", 5},
+    {"performance_data_enabled", 6}, {"obsessive_handler_enabled", 7},
+    {"event_handler_command", 8},    {"check_command", 9},
+    {"normal_check_interval", 10},   {"retry_check_interval", 11},
+    {"max_check_attempts", 12},      {"freshness_checks_enabled", 13},
+    {"check_timeperiod", 14},        {"custom_variable", 15},
+    {"notification_timeperiod", 16}};
+
+using modified_atttibutes = bitset<32>;
 }  // namespace
 
 int32_t AttributeListColumn::getValue(void *row, contact * /*unused*/) {
@@ -74,10 +70,10 @@ int32_t AttributeListColumn::getValue(void *row, contact * /*unused*/) {
 
 void AttributeListColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
-    unsigned long mask = static_cast<unsigned long>(getValue(row, nullptr));
+    modified_atttibutes values(getValue(row, nullptr));
     ListRenderer l(r);
     for (const auto &entry : known_attributes) {
-        if ((mask & entry.second) != 0u) {
+        if (values[entry.second]) {
             l.output(entry.first);
         }
     }
@@ -103,7 +99,7 @@ string AttributeListColumn::refValueFor(const string &value, Logger *logger) {
     value_vec.push_back('\0');
     char *scan = &value_vec[0];
 
-    unsigned long ref_value = 0;
+    modified_atttibutes values;
     for (const char *t; (t = next_token(&scan, ',')) != nullptr;) {
         auto it = known_attributes.find(t);
         if (it == known_attributes.end()) {
@@ -111,7 +107,7 @@ string AttributeListColumn::refValueFor(const string &value, Logger *logger) {
                                   << "' for attribute list";
             continue;
         }
-        ref_value |= it->second;
+        values[it->second] = true;
     }
-    return to_string(ref_value);
+    return to_string(values.to_ulong());
 }

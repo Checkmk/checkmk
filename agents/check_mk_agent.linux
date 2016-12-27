@@ -1006,7 +1006,10 @@ then
 fi
 
 function is_valid_plugin () {
-    [[ -f "$1" && -x "$1" && ! "$1" =~ \.dpkg-(new|old|temp)$ ]] && true || false
+    # NOTE: Due to an escaping-related bug in some old bash versions
+    # (3.2.x), we have to use an intermediate variable for the pattern.
+    pattern='\.dpkg-(new|old|temp)$'
+    [[ -f "$1" && -x "$1" && ! "$1" =~ $pattern ]] && true || false
 }
 
 

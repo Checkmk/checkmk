@@ -28,7 +28,6 @@
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
-#include "Column.h"
 #include "ListColumn.h"
 #include "nagios.h"
 class DowntimeOrComment;
@@ -55,7 +54,6 @@ public:
         , _with_info(with_info)
         , _is_service(is_service)
         , _with_extra_info(with_extra_info) {}
-    ColumnType type() override { return ColumnType::list; }
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     bool isEmpty(void *data) override;

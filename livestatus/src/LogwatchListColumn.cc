@@ -42,7 +42,7 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
 
 #ifdef CMC
     Host *host = static_cast<Host *>(data);
-    string host_name = host->_name;
+    string host_name = host->name();
 #else
     host *hst = static_cast<host *>(data);
     string host_name = hst->name;

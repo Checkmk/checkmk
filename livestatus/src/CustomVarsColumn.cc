@@ -23,8 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsColumn.h"
+#include <utility>
+#include "nagios.h"
 
 using std::string;
+using std::unordered_map;
 
 CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
                                    int indirect_offset, int extra_offset)
@@ -33,21 +36,20 @@ CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
 
 CustomVarsColumn::~CustomVarsColumn() = default;
 
-customvariablesmember *CustomVarsColumn::getCVM(void *row) {
-    void *data = shiftPointer(row);
-    if (data == nullptr) {
-        return nullptr;
+unordered_map<string, string> CustomVarsColumn::getCVM(void *row) const {
+    unordered_map<string, string> result;
+    if (char *data = static_cast<char *>(shiftPointer(row))) {
+        for (customvariablesmember *cvm =
+                 *reinterpret_cast<customvariablesmember **>(data + _offset);
+             cvm != nullptr; cvm = cvm->next) {
+            result.emplace(cvm->variable_name, cvm->variable_value);
+        }
     }
-    return *reinterpret_cast<customvariablesmember **>(
-        reinterpret_cast<char *>(data) + _offset);
+    return result;
 }
 
 string CustomVarsColumn::getVariable(void *row, const string &varname) {
-    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
-         cvm = cvm->next) {
-        if (varname.compare(cvm->variable_name) == 0) {
-            return cvm->variable_value;
-        }
-    }
-    return "";
+    auto cvm = getCVM(row);
+    auto it = cvm.find(varname);
+    return it == cvm.end() ? "" : it->second;
 }

@@ -170,7 +170,7 @@ def query_instance(inst):
         d = dict(server_info)
         version = d.get(('info', 'version'), "unknown")
         product = d.get(('info', 'product'), "unknown")
-        if inst.has_key("product"):
+        if inst.get("product"):
             product = inst["product"]
         agentversion = d.get(('agent',), "unknown")
         sys.stdout.write("%s %s %s %s\n" % (inst["instance"], product, version, agentversion))
@@ -229,6 +229,7 @@ password = None
 mode     = "digest"
 suburi   = "jolokia"
 instance = None
+product  = None
 
 global_vars = [
   ( "java.lang:type=Memory/NonHeapMemoryUsage/used",              "NonHeapMemoryUsage",      [] ),
@@ -310,7 +311,8 @@ for inst in instances:
         ( "password", password ),
         ( "mode",     mode ),
         ( "suburi",   suburi ),
-        ( "instance", instance )]:
+        ( "instance", instance ),
+        ( "product",  product ),]:
         if varname not in inst:
             inst[varname] = value
     if not inst["instance"]:

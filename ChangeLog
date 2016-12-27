@@ -7,6 +7,7 @@
             NOTE: Please refer to the migration notes!
     * 4174 FIX: added missing perfometer for interface services
     * 4119 FIX: check_mk_agent.solaris: fixed run_cached function...
+    * 4209 FIX: mk_jolokia: Setting a default product now works...
 
     Multisite:
     * 4145 FIX: Fixed exception when setting output_format in wrong case

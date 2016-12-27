@@ -1,0 +1,12 @@
+Title: mk_jolokia: Setting a default product now works
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1482845861
+
+Previously, setting a product (such as tomcat) for all
+instances in jolokia.cfg would have no effect. This has
+been fixed.

@@ -28,7 +28,6 @@
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
-#include "Column.h"
 #include "ListColumn.h"
 #include "nagios.h"
 class RowRenderer;
@@ -41,7 +40,6 @@ public:
                         int offset, int indirect_offset, int extra_offset = -1)
         : ListColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
-    ColumnType type() override { return ColumnType::list; }
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
     bool isEmpty(void *data) override;

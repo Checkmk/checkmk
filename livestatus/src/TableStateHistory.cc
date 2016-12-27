@@ -512,10 +512,10 @@ void TableStateHistory::answerQuery(Query *query) {
                     state->_host = entry->_host;
                     state->_service = entry->_service;
 #ifdef CMC
-                    state->_host_name = entry->_host->_name.c_str();
+                    state->_host_name = entry->_host->name().c_str();
                     state->_service_description =
                         entry->_service != nullptr
-                            ? entry->_service->_name.c_str()
+                            ? entry->_service->name().c_str()
                             : "";
 #else
                     state->_host_name = entry->_host->name;

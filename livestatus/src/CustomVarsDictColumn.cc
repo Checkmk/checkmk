@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsDictColumn.h"
+#include <utility>
 #include "CustomVarsDictFilter.h"
 #include "Filter.h"
 #include "Renderer.h"
@@ -42,9 +43,8 @@ ColumnType CustomVarsDictColumn::type() { return ColumnType::dict; }
 void CustomVarsDictColumn::output(void *row, RowRenderer &r,
                                   contact * /* auth_user */) {
     DictRenderer d(r);
-    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
-         cvm = cvm->next) {
-        d.output(cvm->variable_name, cvm->variable_value);
+    for (const auto &it : getCVM(row)) {
+        d.output(it.first, it.second);
     }
 }
 
@@ -54,9 +54,8 @@ unique_ptr<Filter> CustomVarsDictColumn::createFilter(RelationalOperator relOp,
 }
 
 bool CustomVarsDictColumn::contains(void *row, const string &value) {
-    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
-         cvm = cvm->next) {
-        if (value.compare(cvm->variable_value) == 0) {
+    for (const auto &it : getCVM(row)) {
+        if (it.second == value) {
             return true;
         }
     }

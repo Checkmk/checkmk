@@ -23,6 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsNamesColumn.h"
+#include <unordered_map>
+#include <utility>
 #include "CustomVarsListFilter.h"
 #include "Filter.h"
 #include "Renderer.h"
@@ -42,9 +44,8 @@ ColumnType CustomVarsNamesColumn::type() { return ColumnType::list; }
 void CustomVarsNamesColumn::output(void *row, RowRenderer &r,
                                    contact * /* auth_user */) {
     ListRenderer l(r);
-    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
-         cvm = cvm->next) {
-        l.output(string(cvm->variable_name));
+    for (const auto &it : getCVM(row)) {
+        l.output(it.first);
     }
 }
 
@@ -54,11 +55,6 @@ unique_ptr<Filter> CustomVarsNamesColumn::createFilter(RelationalOperator relOp,
 }
 
 bool CustomVarsNamesColumn::contains(void *row, const string &value) {
-    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
-         cvm = cvm->next) {
-        if (value.compare(cvm->variable_name) == 0) {
-            return true;
-        }
-    }
-    return false;
+    auto cvm = getCVM(row);
+    return cvm.find(value) != cvm.end();
 }

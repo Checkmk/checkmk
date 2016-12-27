@@ -61,7 +61,7 @@ unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
     }
 
 #ifdef CMC
-    string host_name = static_cast<Host *>(data)->_name;
+    string host_name = static_cast<Host *>(data)->name();
 #else
     string host_name = static_cast<host *>(data)->name;
 #endif

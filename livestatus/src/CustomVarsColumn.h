@@ -27,8 +27,8 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+#include <unordered_map>
 #include "Column.h"
-#include "nagios.h"
 
 class CustomVarsColumn : public Column {
 public:
@@ -41,7 +41,7 @@ public:
 protected:
     const int _offset;  // within data structure (differs from host/service)
 
-    customvariablesmember *getCVM(void *row);
+    std::unordered_map<std::string, std::string> getCVM(void *row) const;
 };
 
 #endif  // CustomVarsColumn_h

@@ -30,16 +30,20 @@
 #include <string>
 #include "Column.h"
 #include "CustomVarsColumn.h"
-#include "nagios.h"
 #include "opids.h"
 class Filter;
 class RowRenderer;
 
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
 class CustomVarsValuesColumn : public CustomVarsColumn {
 public:
     CustomVarsValuesColumn(std::string name, std::string description,
-                           int offset, int indirect_offset,
-                           int extra_offset = -1);
+                           int offset, int indirect_offset, int extra_offset);
     ColumnType type() override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,

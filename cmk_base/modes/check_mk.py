@@ -433,40 +433,8 @@ modes.register(Mode(
 
 
 def mode_update_dns_cache():
-    import cmk_base.ip_lookup as ip_lookup
-
-    # Temporarily disable *use* of cache, we want to force an update
-    # TODO: Cleanup this hacky config override! Better add some global flag
-    # that is exactly meant for this situation.
-    config.use_dns_cache = False
-    updated = 0
-    failed = []
-
-    console.verbose("Updating DNS cache...\n")
-    for hostname in config.all_active_hosts():
-        # Use intelligent logic. This prevents DNS lookups for hosts
-        # with statically configured addresses, etc.
-        for family in [ 4, 6]:
-            if (family == 4 and config.is_ipv4_host(hostname)) \
-               or (family == 6 and config.is_ipv6_host(hostname)):
-                console.verbose("%s (IPv%d)..." % (hostname, family))
-                try:
-                    if family == 4:
-                        ip = ip_lookup.lookup_ipv4_address(hostname)
-                    else:
-                        ip = ip_lookup.lookup_ipv6_address(hostname)
-
-                    console.verbose("%s\n" % ip)
-                    updated += 1
-                except Exception, e:
-                    failed.append(hostname)
-                    console.verbose("lookup failed: %s\n" % e)
-                    if cmk.debug.enabled():
-                        raise
-                    continue
-
-    return updated, failed
-
+    import cmk_base.ip_lookup
+    cmk_base.ip_lookup.update_dns_cache()
 
 modes.register(Mode(
     long_option="update-dns-cache",

@@ -112,7 +112,7 @@ def create_nagios_config_host(outfile, hostname):
     outfile.write("\n# ----------------------------------------------------\n")
     outfile.write("# %s\n" % hostname)
     outfile.write("# ----------------------------------------------------\n")
-    host_attrs = get_host_attributes(hostname, tags_of_host(hostname))
+    host_attrs = core_config.get_host_attributes(hostname, tags_of_host(hostname))
     if config.generate_hostconf:
         create_nagios_hostdefs(outfile, hostname, host_attrs)
     create_nagios_servicedefs(outfile, hostname, host_attrs)
@@ -124,8 +124,8 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     ip = attrs["address"]
 
     if is_clust:
-        nodes = get_cluster_nodes_for_config(hostname)
-        attrs.update(get_cluster_attributes(hostname, nodes))
+        nodes = core_config.get_cluster_nodes_for_config(hostname)
+        attrs.update(core_config.get_cluster_attributes(hostname, nodes))
 
     #   _
     #  / |
@@ -137,7 +137,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     outfile.write("\ndefine host {\n")
     outfile.write("  host_name\t\t\t%s\n" % hostname)
     outfile.write("  use\t\t\t\t%s\n" % (is_clust and config.cluster_template or config.host_template))
-    outfile.write("  address\t\t\t%s\n" % (ip and make_utf8(ip) or fallback_ip_for(hostname)))
+    outfile.write("  address\t\t\t%s\n" % (ip and make_utf8(ip) or core_config.fallback_ip_for(hostname)))
 
     # Add custom macros
     for key, value in attrs.items():
@@ -1053,15 +1053,6 @@ if '-d' in sys.argv:
     output.write("ip_lookup.lookup_ip_address = lambda hostname: ipaddresses.get(hostname)\n\n");
 
     # datasource programs. Is this host relevant?
-    # ACHTUNG: HIER GIBT ES BEI CLUSTERN EIN PROBLEM!! WIR MUESSEN DIE NODES
-    # NEHMEN!!!!!
-
-    dsprogs = {}
-    for node, ipa in nodes:
-        program = get_datasource_program(node, ipa)
-        dsprogs[node] = program
-    output.write("def get_datasource_program(hostname, ipaddress):\n" +
-                 "    return %r[hostname]\n\n" % dsprogs)
 
     # I think this is not needed anymore. Keep it here for reference
     #

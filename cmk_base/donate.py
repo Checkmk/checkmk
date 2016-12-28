@@ -25,12 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 import base64
+import os
 import sys
 
 import cmk.paths
 
 import cmk_base.rulesets as rulesets
 import cmk_base.config as config
+import cmk_base.console as console
 
 def do_donation():
     donate = []

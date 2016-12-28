@@ -70,6 +70,7 @@ import cmk_base.core_config as core_config
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.classic_snmp as classic_snmp
 import cmk_base.snmp as snmp
+from cmk_base.modes import modes
 from cmk_base.exceptions import MKAgentError
 
 # TODO: Clean up all calls and remove these aliases
@@ -296,48 +297,7 @@ except Exception, e:
 
 
 #.
-#   .--Checks--------------------------------------------------------------.
-#   |                    ____ _               _                            |
-#   |                   / ___| |__   ___  ___| | _____                     |
-#   |                  | |   | '_ \ / _ \/ __| |/ / __|                    |
-#   |                  | |___| | | |  __/ (__|   <\__ \                    |
-#   |                   \____|_| |_|\___|\___|_|\_\___/                    |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
 
-def do_output_check_info():
-    all_check_manuals = man_pages.all_man_pages()
-
-    checks_sorted = checks.check_info.items() + \
-       [ ("check_" + name, entry) for (name, entry) in checks.active_check_info.items() ]
-    checks_sorted.sort()
-    for check_type, check in checks_sorted:
-        man_filename = all_check_manuals.get(check_type)
-        try:
-            if 'command_line' in check:
-                what = 'active'
-                ty_color = tty.blue
-            elif checks.is_snmp_check(check_type):
-                what = 'snmp'
-                ty_color = tty.magenta
-            else:
-                what = 'tcp'
-                ty_color = tty.yellow
-
-            if man_filename:
-                title = file(man_filename).readlines()[0].split(":", 1)[1].strip()
-            else:
-                title = "(no man page present)"
-
-            sys.stdout.write((tty.bold + "%-44s" + tty.normal
-                   + ty_color + " %-6s " + tty.normal
-                   + "%s\n") % \
-                  (check_type, what, title))
-        except Exception, e:
-            sys.stderr.write("ERROR in check_type %s: %s\n" % (check_type, e))
-
-
-#.
 #   .--Hosts---------------------------------------------------------------.
 #   |                       _   _           _                              |
 #   |                      | | | | ___  ___| |_ ___                        |
@@ -767,40 +727,6 @@ def replace_datasource_program_macros(hostname, ipaddress, cmd):
 
     macros = get_host_macros_from_attributes(hostname, attrs)
     return replace_macros(cmd, macros)
-
-
-def do_update_dns_cache():
-    # Temporarily disable *use* of cache, we want to force an update
-    # TODO: Cleanup this hacky config override! Better add some global flag
-    # that is exactly meant for this situation.
-    config.use_dns_cache = False
-    updated = 0
-    failed = []
-
-    console.verbose("Updating DNS cache...\n")
-    for hostname in config.all_active_hosts():
-        # Use intelligent logic. This prevents DNS lookups for hosts
-        # with statically configured addresses, etc.
-        for family in [ 4, 6]:
-            if (family == 4 and config.is_ipv4_host(hostname)) \
-               or (family == 6 and config.is_ipv6_host(hostname)):
-                console.verbose("%s (IPv%d)..." % (hostname, family))
-                try:
-                    if family == 4:
-                        ip = ip_lookup.lookup_ipv4_address(hostname)
-                    else:
-                        ip = ip_lookup.lookup_ipv6_address(hostname)
-
-                    console.verbose("%s\n" % ip)
-                    updated += 1
-                except Exception, e:
-                    failed.append(hostname)
-                    console.verbose("lookup failed: %s\n" % e)
-                    if cmk.debug.enabled():
-                        raise
-                    continue
-
-    return updated, failed
 
 
 def service_description(hostname, check_type, item):
@@ -1328,36 +1254,6 @@ def replace_macros(s, macros):
 #   | Implementation of some of the toplevel functions.                    |
 #   '----------------------------------------------------------------------'
 
-# Create a list of all hosts of a certain hostgroup. Needed only for
-# option --list-hosts
-def list_all_hosts(hostgroups):
-    hostlist = []
-    for hn in config.all_active_hosts():
-        if len(hostgroups) == 0:
-            hostlist.append(hn)
-        else:
-            for hg in config.hostgroups_of(hn):
-                if hg in hostgroups:
-                    hostlist.append(hn)
-                    break
-    hostlist.sort()
-    return hostlist
-
-# Same for host tags, needed for --list-tag
-def list_all_hosts_with_tags(tags):
-    hosts = []
-
-    if "offline" in tags:
-        hostlist = config.all_offline_hosts()
-    else:
-        hostlist = config.all_active_hosts()
-
-    for h in hostlist:
-        if rulesets.hosttags_match_taglist(tags_of_host(h), tags):
-            hosts.append(h)
-    return hosts
-
-
 def get_plain_hostinfo(hostname):
     info = read_cache_file(hostname, 999999999)
     if info:
@@ -1503,84 +1399,6 @@ def do_snmpget(oid, hostnames):
         cleanup_globals()
 
 
-def show_paths():
-    inst = 1
-    conf = 2
-    data = 3
-    pipe = 4
-    local = 5
-    dir = 1
-    fil = 2
-
-    paths = [
-        ( cmk.paths.modules_dir,                 dir, inst, "Main components of check_mk"),
-        ( cmk.paths.checks_dir,                  dir, inst, "Checks"),
-        ( cmk.paths.notifications_dir,           dir, inst, "Notification scripts"),
-        ( cmk.paths.inventory_dir,               dir, inst, "Inventory plugins"),
-        ( cmk.paths.agents_dir,                  dir, inst, "Agents for operating systems"),
-        ( cmk.paths.doc_dir,                     dir, inst, "Documentation files"),
-        ( cmk.paths.web_dir,                     dir, inst, "Check_MK's web pages"),
-        ( cmk.paths.check_manpages_dir,          dir, inst, "Check manpages (for check_mk -M)"),
-        ( cmk.paths.lib_dir,                     dir, inst, "Binary plugins (architecture specific)"),
-        ( cmk.paths.pnp_templates_dir,           dir, inst, "Templates for PNP4Nagios"),
-    ]
-    if config.monitoring_core == "nagios":
-        paths += [
-            ( cmk.paths.nagios_startscript,          fil, inst, "Startscript for Nagios daemon"),
-            ( cmk.paths.nagios_binary,               fil, inst, "Path to Nagios executable"),
-            ( cmk.paths.nagios_config_file,          fil, conf, "Main configuration file of Nagios"),
-            ( cmk.paths.nagios_conf_dir,             dir, conf, "Directory where Nagios reads all *.cfg files"),
-            ( cmk.paths.nagios_objects_file,         fil, data, "File into which Nagios configuration is written"),
-            ( cmk.paths.nagios_status_file,          fil, data, "Path to Nagios status.dat"),
-            ( cmk.paths.nagios_command_pipe_path,    fil, pipe, "Nagios' command pipe"),
-            ( cmk.paths.check_result_path,           fil, pipe, "Nagios' check results directory"),
-        ]
-
-    paths += [
-        ( cmk.paths.default_config_dir,          dir, conf, "Directory that contains main.mk"),
-        ( cmk.paths.check_mk_config_dir,         dir, conf, "Directory containing further *.mk files"),
-        ( cmk.paths.apache_config_dir,           dir, conf, "Directory where Apache reads all config files"),
-        ( cmk.paths.htpasswd_file,               fil, conf, "Users/Passwords for HTTP basic authentication"),
-
-        ( cmk.paths.var_dir,                     dir, data, "Base working directory for variable data"),
-        ( cmk.paths.autochecks_dir,              dir, data, "Checks found by inventory"),
-        ( cmk.paths.precompiled_hostchecks_dir,  dir, data, "Precompiled host checks"),
-        ( cmk.paths.snmpwalks_dir,               dir, data, "Stored snmpwalks (output of --snmpwalk)"),
-        ( cmk.paths.counters_dir,                dir, data, "Current state of performance counters"),
-        ( cmk.paths.tcp_cache_dir,               dir, data, "Cached output from agents"),
-        ( cmk.paths.logwatch_dir,                dir, data, "Unacknowledged logfiles of logwatch extension"),
-        ( cmk.paths.livestatus_unix_socket,     fil, pipe, "Socket of Check_MK's livestatus module"),
-
-        ( cmk.paths.local_checks_dir,           dir, local, "Locally installed checks"),
-        ( cmk.paths.local_notifications_dir,    dir, local, "Locally installed notification scripts"),
-        ( cmk.paths.local_inventory_dir,        dir, local, "Locally installed inventory plugins"),
-        ( cmk.paths.local_check_manpages_dir,   dir, local, "Locally installed check man pages"),
-        ( cmk.paths.local_agents_dir,           dir, local, "Locally installed agents and plugins"),
-        ( cmk.paths.local_web_dir,              dir, local, "Locally installed Multisite addons"),
-        ( cmk.paths.local_pnp_templates_dir,    dir, local, "Locally installed PNP templates"),
-        ( cmk.paths.local_doc_dir,              dir, local, "Locally installed documentation"),
-        ( cmk.paths.local_locale_dir,           dir, local, "Locally installed localizations"),
-    ]
-
-    def show_paths(title, t):
-        if t != inst:
-            sys.stdout.write("\n")
-        sys.stdout.write(tty.bold + title + tty.normal + "\n")
-        for path, filedir, typp, descr in paths:
-            if typp == t:
-                if filedir == dir:
-                    path += "/"
-                sys.stdout.write("  %-47s: %s%s%s\n" %
-                    (descr, tty.bold + tty.blue, path, tty.normal))
-
-    for title, t in [
-        ( "Files copied or created during installation", inst ),
-        ( "Configuration files edited by you", conf ),
-        ( "Data created by Nagios/Check_MK at runtime", data ),
-        ( "Sockets and pipes", pipe ),
-        ( "Locally installed addons", local ),
-        ]:
-        show_paths(title, t)
 
 def dump_all_hosts(hostlist):
     if hostlist == []:
@@ -1706,27 +1524,6 @@ def dump_host(hostname):
         ]
                   for checktype, item, params, description, deps in check_items ], "  ")
 
-def print_version():
-    sys.stdout.write("""This is Check_MK version %s
-Copyright (C) 2009 Mathias Kettner
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; see the file COPYING.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
-
-""" % cmk.__version__)
-
 def usage():
     sys.stdout.write("""WAYS TO CALL:
  cmk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
@@ -1742,37 +1539,23 @@ def usage():
  cmk -d HOSTNAME|IPADDRESS            show raw information from agent
  cmk --check-discovery HOSTNAME       check for items not yet checked
  cmk --discover-marked-hosts          run discovery for hosts known to have changed services
- cmk --update-dns-cache               update IP address lookup cache
- cmk -l, --list-hosts [G1 G2 ...]     print list of all hosts
- cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags
- cmk -L, --list-checks                list all available check types
  cmk -M, --man [CHECKTYPE]            show manpage for check CHECKTYPE
  cmk -m, --browse-man                 open interactive manpage browser
- cmk --paths                          list all pathnames and directories
  cmk -X, --check-config               check configuration for invalid vars
- cmk --backup BACKUPFILE.tar.gz       make backup of configuration and data
- cmk --restore BACKUPFILE.tar.gz      restore configuration and data
  cmk --flush [HOST1 HOST2...]         flush all data of some or all hosts
- cmk --donate                         Email data of configured hosts to MK
  cmk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on one or more hosts
  cmk --snmptranslate HOST             Do snmptranslate on walk
  cmk --snmpget OID HOST1 HOST2 ...    Fetch single OIDs and output them
- cmk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
- cmk -P, --package COMMAND            do package operations
- cmk --localize COMMAND               do localization operations
  cmk --notify                         used to send notifications from core
  cmk --create-rrd [--keepalive|SPEC]  create round robin database (only CEE)
  cmk --convert-rrds [--split] [H...]  convert exiting RRD to new format (only CEE)
- cmk --compress-history FILES...      optimize monitoring history files for CMC
  cmk --handle-alerts                  alert handling, always in keepalive mode (only CEE)
  cmk --real-time-checks               process real time check results (only CEE)
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
- cmk --cap pack|unpack|list FILE.cap  Pack/unpack agent packages (not in all versions)
- cmk --show-snmp-stats                Analyzes recorded Inline SNMP statistics
- cmk -V, --version                    print version
  cmk -h, --help                       print this help
+%s
 
 OPTIONS:
   -v             show what's going on
@@ -1788,7 +1571,6 @@ OPTIONS:
                  prevents DNS lookups.
   --usewalk      use snmpwalk stored with --snmpwalk
   --debug        never catch Python exceptions
-  --procs N      start up to N processes in parallel during --scan-parents
   --checks A,..  restrict checks/discovery to specified checks (tcp/snmp/check type)
   --keepalive    used by Check_MK Mirco Core: run check and --notify
                  in continous mode. Read data from stdin and from cmd line.
@@ -1836,44 +1618,14 @@ NOTES:
   check-discovery. The results of this discovery may be activated
   automatically if that was discovered.
 
-  --list-hosts called without argument lists all hosts. You may
-  specify one or more host groups to restrict the output to hosts
-  that are in at least one of those groups.
-
-  --list-tag prints all hosts that have all of the specified tags
-  at once.
-
   -M, --man shows documentation about a check type. If
   /usr/bin/less is available it is used as pager. Exit by pressing
   Q. Use -M without an argument to show a list of all manual pages.
-
-  --backup saves all configuration and runtime data to a gzip
-  compressed tar file. --restore *erases* the current configuration
-  and data and replaces it with that from the backup file.
 
   --flush deletes all runtime data belonging to a host. This includes
   the inventorized checks, the state of performance counters,
   cached agent output, and logfiles. Precompiled host checks
   are not deleted.
-
-  -P, --package brings you into packager mode. Packages are
-  used to ship inofficial extensions of Check_MK. Call without
-  arguments for a help on packaging.
-
-  --localize brings you into localization mode. You can create
-  and/or improve the localization of Check_MKs Multisite.  Call without
-  arguments for a help on localization.
-
-  --donate is for those who decided to help the Check_MK project
-  by donating live host data. It tars the cached agent data of
-  those host which are configured in main.mk:donation_hosts and sends
-  them via email to donatehosts@mathias-kettner.de. The host data
-  is then publicly available for others and can be used for setting
-  up demo sites, implementing checks and so on.
-  Do this only with test data from test hosts - not with productive
-  data! By donating real-live host data you help others trying out
-  Check_MK and developing checks by donating hosts. This is completely
-  voluntary and turned off by default.
 
   --snmpwalk does a complete snmpwalk for the specified hosts both
   on the standard MIB and the enterprises MIB and stores the
@@ -1889,19 +1641,11 @@ NOTES:
   You can add further MIBs to the directory
   %s.
 
-  --scan-parents uses traceroute in order to automatically detect
-  hosts's parents. It creates the file conf.d/parents.mk which
-  defines gateway hosts and parent declarations.
-
   -A, --bake-agents creates RPM/DEB/MSI packages with host-specific
   monitoring agents. If you add the option -f, --force then all
   agents are renewed, even if an uptodate version for a configuration
   already exists. Note: baking agents is only contained in the
   subscription version of Check_MK.
-
-  --show-snmp-stats analyzes and shows a summary of the Inline SNMP
-  statistics which might have been recorded on your system before.
-  Note: This is only contained in the subscription version of Check_MK.
 
   --convert-rrds converts the internal structure of existing RRDs
   to the new structure as configured via the rulesets cmc_host_rrd_config
@@ -1914,13 +1658,17 @@ NOTES:
   hosts. If you add the option -f, --force then persisted sections
   will be used even if they are outdated.
 
+%s
 
-""" % (cmk.paths.main_config_file,
-       cmk.paths.precompiled_hostchecks_dir,
-       cmk.paths.snmpwalks_dir,
-       cmk.paths.snmpwalks_dir,
-       cmk.paths.local_mibs_dir
-       ))
+""" % (
+    modes.short_help(),
+    cmk.paths.main_config_file,
+    cmk.paths.precompiled_hostchecks_dir,
+    cmk.paths.snmpwalks_dir,
+    cmk.paths.snmpwalks_dir,
+    cmk.paths.local_mibs_dir,
+    modes.long_help(),
+))
 
 
 def do_create_config(with_agents=True):
@@ -2252,26 +2000,26 @@ opt_delete_rrds = False
 opt_log_to_stdout = False
 
 # Do option parsing and execute main function -
-short_options = 'ASHVLCURODMmd:Ic:nhvpXPNBilf'
-long_options = [ "help", "version", "verbose", "compile", "debug",
-                 "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-                 "flush", "package", "localize", "donate", "snmpwalk", "oid=", "extraoid=",
-                 "snmptranslate", "bake-agents", "force", "show-snmp-stats",
-                 "usewalk", "scan-parents", "procs=", "automation=", "handle-alerts", "notify",
+short_options = 'ACURODMmd:Ic:nhvpNBif' + modes.short_options()
+long_options = [ "help", "vebose", "compile", "debug",
+                 "no-tcp", "cache",
+                 "flush", "snmpwalk", "oid=", "extraoid=",
+                 "snmptranslate", "bake-agents", "force",
+                 "usewalk", "automation=", "handle-alerts", "notify",
                  "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
-                 "convert-rrds", "compress-history", "split-rrds", "delete-rrds",
+                 "convert-rrds", "split-rrds", "delete-rrds",
                  "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
-                 "man", "config-check", "backup=", "restore=",
-                 "check-inventory=", "check-discovery=", "discover-marked-hosts", "paths",
+                 "man",
+                 "check-inventory=", "check-discovery=", "discover-marked-hosts",
                  "checks=", "inventory", "inventory-as-check=", "hw-changes=", "sw-changes=", "sw-missing=",
-                 "inv-fail-status=", "cmc-file=", "browse-man", "update-dns-cache", "cap", "real-time-checks",
-                 "log-to-stdout"]
+                 "inv-fail-status=", "cmc-file=", "browse-man",
+                 "log-to-stdout"] + modes.long_options()
 
-non_config_options = ['-L', '--list-checks', '-P', '--package', '-M',
+non_config_options = ['-M',
                       '--handle-alerts', '--notify', '--real-time-checks',
-                      '--man', '-V', '--version' ,'-h', '--help', '--automation',
-                      '--create-rrd', '--convert-rrds', '--compress-history', '--keepalive',
-                      '--cap', '--scan-parents' ]
+                      '--man', '-h', '--help', '--automation',
+                      '--create-rrd', '--convert-rrds', '--keepalive',
+                      ] + modes.non_config_options()
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -2331,8 +2079,6 @@ for o,a in opts:
         opt_oids.append(a)
     elif o == '--extraoid':
         opt_extra_oids.append(a)
-    elif o == '--procs':
-        config.max_num_processes = int(a)
     elif o == '--debug':
         cmk.debug.enable()
     elif o == '-I':
@@ -2368,17 +2114,6 @@ try:
         if o in [ '-h', '--help' ]:
             usage()
             done = True
-        elif o in [ '-V', '--version' ]:
-            print_version()
-            done = True
-        elif o in [ '-X', '--config-check' ]:
-            done = True
-        elif o in [ '-S', '-H' ]:
-            sys.stderr.write(tty.bold + tty.red + "ERROR" + tty.normal + "\n")
-            sys.stderr.write("The options -S and -H have been replaced with the option -N. If you \n")
-            sys.stderr.write("want to generate only the service definitions, please set \n")
-            sys.stderr.write("'generate_hostconf = False' in main.mk.\n")
-            done = True
         elif o == '-N':
             load_module("nagios")
             do_output_nagios_conf(args)
@@ -2402,34 +2137,8 @@ try:
         elif o in [ '-D', '--dump' ]:
             dump_all_hosts(args)
             done = True
-        elif o == '--backup':
-            import cmk_base.backup
-            cmk_base.backup.do_backup(a)
-            done = True
-        elif o ==  '--restore':
-            import cmk_base.backup
-            cmk_base.backup.do_restore(a)
-            done = True
         elif o == '--flush':
             do_flush(args)
-            done = True
-        elif o == '--paths':
-            show_paths()
-            done = True
-        elif o in ['-P', '--package']:
-            import cmk_base.packaging
-            cmk_base.packaging.do_packaging(args)
-            done = True
-        elif o in ['--localize']:
-            import cmk_base.localize
-            cmk_base.localize.do_localize(args)
-            done = True
-        elif o == '--donate':
-            import cmk_base.donation
-            cmk_base.donation.do_donation()
-            done = True
-        elif o == '--update-dns-cache':
-            do_update_dns_cache()
             done = True
         elif o == '--snmpwalk':
             do_snmpwalk(args)
@@ -2449,21 +2158,6 @@ try:
         elif o in [ '-m', '--browse-man' ]:
             man_pages.print_man_page_browser()
             done = True
-        elif o in [ '-l', '--list-hosts' ]:
-            l = list_all_hosts(args)
-            sys.stdout.write("\n".join(l))
-            if l != []:
-                sys.stdout.write("\n")
-            done = True
-        elif o == '--list-tag':
-            l = list_all_hosts_with_tags(args)
-            sys.stdout.write("\n".join(l))
-            if l != []:
-                sys.stdout.write("\n")
-            done = True
-        elif o in [ '-L', '--list-checks' ]:
-            do_output_check_info()
-            done = True
         elif o == '-d':
             output_plain_hostinfo(a)
             done = True
@@ -2472,11 +2166,6 @@ try:
             done = True
         elif o == '--discover-marked-hosts':
             discover_marked_hosts()
-            done = True
-        elif o == '--scan-parents':
-            import cmk_base.parent_scan
-            config.load(exclude_parents_mk=True)
-            cmk_base.parent_scan.do_scan_parents(args)
             done = True
         elif o == '--automation':
             load_module("automation")
@@ -2522,11 +2211,6 @@ try:
             do_convert_rrds(args)
             done = True
 
-        elif o == '--compress-history':
-            import cmk_base.compress_history
-            cmk_base.compress_history.do_compress_history(args)
-            done = True
-
         elif o in [ '-A', '--bake-agents' ]:
             if 'do_bake_agents' not in globals():
                 raise MKBailOut("Agent baking is not implemented in your version of Check_MK. Sorry.")
@@ -2538,21 +2222,8 @@ try:
             do_bake_agents(hostnames)
             done = True
 
-        elif o == '--cap':
-            try:
-                import cmk_base.cee.cap
-            except ImportError:
-                raise MKBailOut("Agent packages are not supported by your version of Check_MK.")
-
-            cmk_base.cee.cap.do_cap(args)
-            done = True
-
-        elif o in [ '--show-snmp-stats' ]:
-            try:
-                import cmk_base.cee.inline_snmp
-            except ImportError:
-                raise MKBailOut("Handling of SNMP statistics is not implemented in your version of Check_MK. Sorry.\n")
-            cmk_base.cee.inline_snmp.do_show_snmp_stats()
+        elif modes.exists(o):
+            modes.call(o, a, opts, args)
             done = True
 
     # handle -I / -II

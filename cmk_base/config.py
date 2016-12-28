@@ -29,6 +29,7 @@ import sys
 import marshal
 
 import cmk.paths
+from cmk.exceptions import MKGeneralException
 
 import cmk_base
 import cmk_base.console as console
@@ -500,6 +501,20 @@ def duplicate_hosts():
 
     return sorted(list(duplicates))
 
+
+# Returns a list of all hosts which are associated with this site,
+# but have been removed by the "only_hosts" rule. Normally these
+# are the hosts which have the tag "offline".
+#
+# This is not optimized for performance, so use in specific situations.
+def all_offline_hosts():
+    hostlist = filter_active_hosts(all_configured_realhosts().union(all_configured_clusters()),
+                                   keep_offline_hosts=True)
+
+    return [ hostname for hostname in hostlist
+             if not rulesets.in_binary_hostlist(hostname, only_hosts) ]
+
+
 #.
 #   .--Hosts---------------------------------------------------------------.
 #   |                       _   _           _                              |
@@ -802,6 +817,27 @@ def exit_code_spec(hostname):
     return spec
 
 
+def check_period_of(hostname, service):
+    periods = rulesets.service_extra_conf(hostname, service, check_periods)
+    if periods:
+        period = periods[0]
+        if period == "24X7":
+            return None
+        else:
+            return period
+    else:
+        return None
+
+
+def check_interval_of(hostname, checkname):
+    import cmk_base.checks
+    if not cmk_base.checks.is_snmp_check(checkname):
+        return # no values at all for non snmp checks
+
+    for match, minutes in rulesets.host_extra_conf(hostname, snmp_check_interval):
+        if match is None or match == checkname:
+            return minutes # use first match
+
 #.
 #   .--Cluster-------------------------------------------------------------.
 #   |                    ____ _           _                                |
@@ -821,6 +857,54 @@ def is_cluster(hostname):
     # the agent bakery, which needs all configured hosts instead of just the hosts
     # of this site
     return hostname in all_configured_clusters()
+
+
+# Returns the nodes of a cluster, or None if hostname is not a cluster
+def nodes_of(hostname):
+    nodes_of_cache = cmk_base.config_cache.get_dict("nodes_of")
+    nodes = nodes_of_cache.get(hostname, False)
+    if nodes != False:
+        return nodes
+
+    for tagged_hostname, nodes in clusters.items():
+        if hostname == tagged_hostname.split("|")[0]:
+            nodes_of_cache[hostname] = nodes
+            return nodes
+
+    nodes_of_cache[hostname] = None
+    return None
+
+
+# Determine weather a service (found on a physical host) is a clustered
+# service and - if yes - return the cluster host of the service. If
+# no, returns the hostname of the physical host.
+def host_of_clustered_service(hostname, servicedesc):
+    the_clusters = clusters_of(hostname)
+    if not the_clusters:
+        return hostname
+
+    cluster_mapping = rulesets.service_extra_conf(hostname, servicedesc, clustered_services_mapping)
+    for cluster in cluster_mapping:
+        # Check if the host is in this cluster
+        if cluster in the_clusters:
+            return cluster
+
+    # 1. New style: explicitly assigned services
+    for cluster, conf in clustered_services_of.items():
+        nodes = nodes_of(cluster)
+        if not nodes:
+            raise MKGeneralException("Invalid entry clustered_services_of['%s']: %s is not a cluster." %
+                   (cluster, cluster))
+        if hostname in nodes and \
+            rulesets.in_boolean_serviceconf_list(hostname, servicedesc, conf):
+            return cluster
+
+    # 1. Old style: clustered_services assumes that each host belong to
+    #    exactly on cluster
+    if rulesets.in_boolean_serviceconf_list(hostname, servicedesc, clustered_services):
+        return the_clusters[0]
+
+    return hostname
 
 
 #.

@@ -691,7 +691,7 @@ def automation_diag_host(args):
         except:
             raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 
-    ipv6_primary = is_ipv6_primary(hostname)
+    ipv6_primary = config.is_ipv6_primary(hostname)
 
     try:
         if test == 'ping':
@@ -1035,7 +1035,7 @@ def automation_active_check(args):
             if entry["service_description"] == item:
                 command_line = replace_core_macros(hostname, entry.get("command_line", ""))
                 if command_line:
-                    command_line = autodetect_plugin(command_line)
+                    command_line = core_config.autodetect_plugin(command_line)
                     return execute_check_plugin(command_line)
                 else:
                     return -1, "Passive check - cannot be executed"
@@ -1048,7 +1048,7 @@ def automation_active_check(args):
                 for params in entries:
                     description = act_info["service_description"](params).replace('$HOSTNAME$', hostname)
                     if description == item:
-                        args = checks.active_check_arguments(hostname, description, act_info["argument_function"](params))
+                        args = core_config.active_check_arguments(hostname, description, act_info["argument_function"](params))
                         command_line = replace_core_macros(hostname, act_info["command_line"].replace("$ARG1$", args))
                         return execute_check_plugin(command_line)
 

@@ -15,6 +15,8 @@ def test_pylint_misc():
     search_paths = [
         cmk_path() + "/cmk_base",
         cmc_path() + "/cmk_base",
+        cmc_path() + "/cmk_base/cee",
+        cmc_path() + "/cmk_base/default_config",
         cmk_path() + "/lib",
         cmk_path() + "/bin",
         cmk_path() + "/notifications",

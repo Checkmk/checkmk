@@ -1,0 +1,10 @@
+Title: mk_mysql: fixed handling of multiple instances
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1482927046
+Class: fix
+
+
+

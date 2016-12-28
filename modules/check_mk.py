@@ -1660,23 +1660,6 @@ def do_restore(tarname):
             os.system("tar xzf '%s' --force-local --to-stdout '%s' 2>/dev/null > '%s' 2>/dev/null" %
                       (tarname, filename, canonical_path))
 
-        if i_am_root():
-            if owned_by_nagios:
-                to_user = omd_site()
-            else:
-                to_user = "root"
-
-            if group_www:
-                to_group = ":%s" % omd_site()
-
-                console.verbose("  Adding group write permissions\n")
-                os.system("chmod -R g+w '%s'" % absdir)
-            else:
-                to_group = ":root"
-
-            console.verbose("  Changing ownership to %s%s\n", to_user, to_group)
-            os.system("chown -R '%s%s' '%s' 2>/dev/null" % (to_user, to_group, absdir))
-
     console.verbose("Successfully restored backup.\n")
 
 

@@ -59,7 +59,7 @@ bool timeout_reached(const struct timeval *start, int timeout_ms) {
 }
 }  // namespace
 
-InputBuffer::InputBuffer(int fd, const int *termination_flag, Logger *logger)
+InputBuffer::InputBuffer(int fd, const bool &termination_flag, Logger *logger)
     : _fd(fd)
     , _termination_flag(termination_flag)
     , _readahead_buffer(initial_buffer_size)
@@ -212,7 +212,7 @@ InputBuffer::Result InputBuffer::readData() {
     struct timeval start;
     gettimeofday(&start, nullptr);
 
-    while (*_termination_flag == 0) {
+    while (!_termination_flag) {
         if (timeout_reached(&start, g_query_timeout_msec)) {
             return Result::timeout;
         }

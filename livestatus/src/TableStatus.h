@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Table.h"
+#include "global_counters.h"
 #ifdef CMC
 class Core;
 #else
@@ -49,7 +50,7 @@ public:
 
 private:
     void addCounterColumns(const std::string &name,
-                           const std::string &description, int which);
+                           const std::string &description, Counter which);
 };
 
 #endif  // TableStatus_h

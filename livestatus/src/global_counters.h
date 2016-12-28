@@ -27,22 +27,25 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#define COUNTER_NEB_CALLBACKS 0
-#define COUNTER_REQUESTS 1
-#define COUNTER_CONNECTIONS 2
-#define COUNTER_SERVICE_CHECKS 3
-#define COUNTER_HOST_CHECKS 4
-#define COUNTER_FORKS 5
-#define COUNTER_LOG_MESSAGES 6
-#define COUNTER_COMMANDS 7
-#define COUNTER_LIVECHECKS 8
-#define COUNTER_LIVECHECK_OVERFLOWS 9
-#define COUNTER_OVERFLOWS 10
-#define NUM_COUNTERS 11
+// Remember to update num_counters when you change the enum below. C++ really
+// lacks a feature to iterate over enums easily...
+enum class Counter {
+    neb_callbacks,
+    requests,
+    connections,
+    service_checks,
+    host_checks,
+    forks,
+    log_messages,
+    commands,
+    livechecks,
+    livecheck_overflows,
+    overflows
+};
 
-extern double g_counters[NUM_COUNTERS];
-extern double g_counter_rate[NUM_COUNTERS];
-
+void counterIncrement(Counter which);
+const double *counterAddress(Counter which);
+const double *counterRateAddress(Counter which);
 void do_statistics();
 
 #endif  // global_counters_h

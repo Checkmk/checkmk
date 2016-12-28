@@ -96,7 +96,7 @@ void OutputBuffer::needSpace(unsigned len) {
     }
 }
 
-void OutputBuffer::flush(int fd, int *termination_flag) {
+void OutputBuffer::flush(int fd, const bool &termination_flag) {
     if (_response_header == ResponseHeader::fixed16) {
         const char *buffer = _buffer;
         int s = size();
@@ -120,9 +120,9 @@ void OutputBuffer::flush(int fd, int *termination_flag) {
     reset();
 }
 
-void OutputBuffer::writeData(int fd, int *termination_flag, const char *buffer,
-                             size_t bytes_to_write) {
-    while (*termination_flag == 0 && bytes_to_write > 0) {
+void OutputBuffer::writeData(int fd, const bool &termination_flag,
+                             const char *buffer, size_t bytes_to_write) {
+    while (!termination_flag && bytes_to_write > 0) {
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(fd, &fds);

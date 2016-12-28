@@ -45,14 +45,14 @@ public:
         timeout
     };
 
-    InputBuffer(int fd, const int *termination_flag, Logger *logger);
+    InputBuffer(int fd, const bool &termination_flag, Logger *logger);
     Result readRequest();
     bool empty() const;
     std::string nextLine();
 
 private:
     int _fd;
-    const int *_termination_flag;
+    const bool &_termination_flag;
     std::vector<char> _readahead_buffer;
     size_t _read_index;
     size_t _write_index;

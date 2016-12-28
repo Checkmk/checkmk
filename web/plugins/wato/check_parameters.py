@@ -4073,6 +4073,23 @@ register_check_parameters(
     "dict"
 )
 
+register_check_parameters(
+    subgroup_storage,
+    "veeam_tapejobs",
+    _("VEEAM tape backup jobs"),
+    Tuple(
+        title = _("Levels for duration of backup job"),
+        elements = [
+            Age(title = "Warning at"),
+            Age(title = "Critical at"),
+        ],
+    ),
+    TextAscii(
+        title = _("Name of the tape job"),
+    ),
+    "first",
+)
+
 #.
 #   .--Printing------------------------------------------------------------.
 #   |                ____       _       _   _                              |

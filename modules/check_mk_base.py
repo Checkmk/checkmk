@@ -58,11 +58,11 @@ import cmk.store as store
 import cmk.tty as tty
 import cmk.render as render
 import cmk.defines as defines
-import cmk.crash_reporting as crash_reporting
 import cmk.cpu_tracking as cpu_tracking
 import cmk.paths
 
 import cmk_base
+import cmk_base.crash_reporting
 import cmk_base.agent_simulator
 import cmk_base.utils
 import cmk_base.prediction
@@ -1065,7 +1065,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
             except Exception, e:
                 if cmk.debug.enabled():
                     raise
-                result = 3, create_crash_dump(hostname, checkname, item, params, description, info), []
+                result = 3, cmk_base.crash_reporting.create_crash_dump(hostname, checkname, item,
+                                            is_manual_check(hostname, checkname, item),
+                                            params, description, info), []
 
             if not dont_submit:
                 # Now add information about the age of the data in the agent
@@ -1139,41 +1141,6 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
     return cmk_info, num_success, error_section_list, ", ".join(problems)
 
 
-# Create a crash dump with a backtrace and the agent output.
-# This is put into a directory per service. The content is then
-# put into a tarball, base64 encoded and put into the long output
-# of the check :-)
-def create_crash_dump(hostname, check_type, item, params, description, info):
-    text = "check failed - please submit a crash report!"
-    try:
-        crash_dir = cmk.paths.var_dir + "/crashed_checks/" + hostname + "/" + description.replace("/", "\\")
-        prepare_crash_dump_directory(crash_dir)
-
-        create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text)
-        if checks.is_snmp_check(check_type):
-            write_crash_dump_snmp_info(crash_dir, hostname, check_type)
-        else:
-            write_crash_dump_agent_output(crash_dir, hostname)
-
-        text += "\n" + "Crash dump:\n" + pack_crash_dump(crash_dir) + "\n"
-    except:
-        if cmk.debug.enabled():
-            raise
-
-    return text
-
-
-def prepare_crash_dump_directory(crash_dir):
-    if not os.path.exists(crash_dir):
-        os.makedirs(crash_dir)
-    # Remove all files of former crash reports
-    for f in os.listdir(crash_dir):
-        try:
-            os.unlink(crash_dir + "/" + f)
-        except OSError:
-            pass
-
-
 def is_manual_check(hostname, check_type, item):
     # In case of nagios we don't have this information available (in precompiled mode)
     if not "get_check_table" in globals():
@@ -1183,43 +1150,6 @@ def is_manual_check(hostname, check_type, item):
                                     world=opt_keepalive and "active" or "config",
                                     skip_autochecks=True)
     return (check_type, item) in manual_checks
-
-
-def create_crash_dump_info_file(crash_dir, hostname, check_type, item, params, description, info, text):
-    crash_info = crash_reporting.create_crash_info("check", details={
-        "check_output"  : text,
-        "host"          : hostname,
-        "is_cluster"    : is_cluster(hostname),
-        "description"   : description,
-        "check_type"    : check_type,
-        "item"          : item,
-        "params"        : params,
-        "uses_snmp"     : checks.is_snmp_check(check_type),
-        "inline_snmp"   : config.is_inline_snmp_host(hostname),
-        "manual_check"  : is_manual_check(hostname, check_type, item),
-    })
-    file(crash_dir+"/crash.info", "w").write(crash_reporting.crash_info_to_string(crash_info)+"\n")
-
-
-def write_crash_dump_snmp_info(crash_dir, hostname, check_type):
-    cachefile = cmk.paths.tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
-    if os.path.exists(cachefile):
-        file(crash_dir + "/snmp_info", "w").write(file(cachefile).read())
-
-
-def write_crash_dump_agent_output(crash_dir, hostname):
-    if "get_rtc_package" in globals():
-        file(crash_dir + "/agent_output", "w").write(get_rtc_package())
-    else:
-        cachefile = cmk.paths.tcp_cache_dir + "/" + hostname
-        if os.path.exists(cachefile):
-            file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
-
-
-def pack_crash_dump(crash_dir):
-    import base64
-    tarcontent = os.popen("cd %s ; tar czf - *" % cmk_base.utils.quote_shell_string(crash_dir)).read()
-    return base64.b64encode(tarcontent)
 
 
 def check_unimplemented(checkname, params, info):

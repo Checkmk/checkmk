@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+veeam_tapejobs_default_levels = (1*3600*24, 2*3600*24)
+
 def parse_veeam_tapejobs(info):
     parsed = {}
     columns = map(lambda s: s.lower(), info[0])
@@ -42,19 +44,43 @@ def parse_veeam_tapejobs(info):
 
 def inventory_veeam_tapejobs(parsed):
     for job in parsed:
-        yield job, None
+        yield job, "veeam_tapejobs_default_levels"
 
 
-def check_veeam_tapejobs(item, _no_params, parsed):
+def check_veeam_tapejobs(item, params, parsed):
     last_result = parsed[item]["last_result"]
     last_state = parsed[item]["last_state"]
+    statetext = ", last state: " + last_state
 
-    if last_result == "Success":
-        yield 0, "Last backup successful"
+    warn, crit = params
+
+    now = time.time()
+
+    running_since = get_item_state("running_since")
+
+    if last_result == "None" and last_state == "Working":
+        if not running_since:
+            running_since = now
+            set_item_state("running_since", now)
+        running_time = now - running_since
+        status = 0
+        levelstext = " (warn/crit at %s/%s)" % tuple(map(get_age_human_readable, params))
+        if running_time >= crit:
+            status = 2
+        elif running_time >= warn:
+            status = 1
+        else:
+            levelstext = ""
+        infotext = "Backup in progress since " + get_timestamp_human_readable(running_since)\
+                    + " (" + get_age_human_readable(running_time) + ")" + levelstext
+        return status, infotext
     else:
-        yield 2, "Last backup result: " + last_result
+        clear_item_state("running_since")
+        if last_result == "Success":
+            return 0, "Last backup successful" + statetext
+        else:
+            return 2, "Last backup result: " + last_result + statetext
 
-    yield 0, "Last state: " + last_state
 
 
 check_info["veeam_tapejobs"] = {
@@ -62,4 +88,5 @@ check_info["veeam_tapejobs"] = {
     'inventory_function'    :   inventory_veeam_tapejobs,
     'check_function'        :   check_veeam_tapejobs,
     'service_description'   :   'VEEAM Tape Job %s',
+    'group'                 :   'veeam_tapejobs',
 }

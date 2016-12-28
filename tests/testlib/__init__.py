@@ -1248,3 +1248,71 @@ def ec(site, web):
     #ec.enable_remote_status_port(web)
     #ec.activate_changes(web)
     return ec
+
+
+#.
+#   .--Checks--------------------------------------------------------------.
+#   |                    ____ _               _                            |
+#   |                   / ___| |__   ___  ___| | _____                     |
+#   |                  | |   | '_ \ / _ \/ __| |/ / __|                    |
+#   |                  | |___| | | |  __/ (__|   <\__ \                    |
+#   |                   \____|_| |_|\___|\___|_|\_\___/                    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Testing of Check_MK checks                                           |
+#   '----------------------------------------------------------------------'
+
+class CheckManager(object):
+    # TODO: Make load only needed checks
+    def load(self):
+        import cmk_base.checks as checks
+        checks.load()
+
+    def get_check(self, name):
+        return Check(name)
+
+
+class Check(object):
+    def __init__(self, name):
+        import cmk_base.checks as checks
+        self.name = name
+        self.info = checks.check_info[name]
+
+
+    def run_parse(self, info):
+        if "parse_function" not in self.info:
+            raise Exception("This check has no parse function defined")
+
+        return self.info["parse_function"](info)
+
+
+    def run_discovery(self, info):
+        # TODO: use standard sanitizing code
+        return self.info["inventory_function"](info)
+
+
+    def run_check(self, item, params, info):
+        # TODO: use standard sanitizing code
+        return self.info["check_function"](item, params, info)
+
+    #def run_parse_with_walk(self, walk_name):
+    #    if "parse_function" not in self.info:
+    #        raise Exception("This check has no parse function defined")
+
+    #    return self.info["parse_function"]()
+
+
+    #def run_discovery_with_walk(self, walk_name):
+    #     # TODO: use standard walk processing code
+    #    info = self._get_walk(walk_name)
+
+    #    # TODO: use standard sanitizing code
+    #    return self.info["inventory_function"](info)
+
+
+    #def run_check_with_walk(self, walk_name, item, params):
+    #     # TODO: use standard walk processing code
+    #    info = self._get_walk(walk_name)
+
+    #    # TODO: use standard sanitizing code
+    #    return self.info["check_function"](item, params, info)

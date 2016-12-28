@@ -95,9 +95,6 @@ int g_num_active_connections =
 size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
 extern int g_disable_statehist_filtering;
 
-#define false 0
-#define true 1
-
 void *g_nagios_handle;
 int g_unix_socket = -1;
 int g_max_fd_ever = 0;

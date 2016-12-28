@@ -43,8 +43,6 @@ use_dns_cache                      = True # prevent DNS by using own cache file
 delay_precompile                   = False  # delay Python compilation to Nagios execution
 restart_locking                    = "abort" # also possible: "wait", None
 check_submission                   = "file" # alternative: "pipe"
-# TODO: Deprecate this and the whole summary host thing
-aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
 default_host_group                 = 'check_mk'
 
@@ -151,30 +149,18 @@ define_contactgroups                 = None
 contactgroup_members                 = {}
 contacts                             = {}
 timeperiods                          = {} # needed for WATO
-# TODO: Renamed references to config.* till here
 clusters                             = {}
 clustered_services                   = []
 clustered_services_of                = {} # new in 1.1.4
 clustered_services_mapping           = [] # new for 1.2.5i1 Wato Rule
 datasource_programs                  = []
-service_aggregations                 = []
 service_dependencies                 = []
-non_aggregated_hosts                 = []
-aggregate_check_mk                   = False
-aggregation_output_format            = "multiline" # new in 1.1.6. Possible also: "multiline"
-summary_host_groups                  = []
-summary_service_groups               = [] # service groups for aggregated services
-summary_service_contactgroups        = [] # service contact groups for aggregated services
-summary_host_notification_periods    = []
-summary_service_notification_periods = []
 ipaddresses                          = {} # mapping from hostname to IPv4 address
 ipv6addresses                        = {} # mapping from hostname to IPv6 address
 only_hosts                           = None
 distributed_wato_site                = None # used by distributed WATO
 extra_host_conf                      = {}
-extra_summary_host_conf              = {}
 extra_service_conf                   = {}
-extra_summary_service_conf           = {}
 extra_nagios_conf                    = ""
 service_descriptions                 = {}
 donation_hosts                       = []
@@ -196,3 +182,17 @@ service_icons_and_actions            = [] # Custom user icons / actions to be co
 # Rulesets for agent bakery
 agent_config                         = {}
 bake_agents_on_restart               = False
+
+# Kept for compatibility, but are deprecated and not used anymore
+extra_summary_host_conf              = {}
+extra_summary_service_conf           = {}
+summary_host_groups                  = []
+summary_service_groups               = [] # service groups for aggregated services
+summary_service_contactgroups        = [] # service contact groups for aggregated services
+summary_host_notification_periods    = []
+summary_service_notification_periods = []
+service_aggregations                 = []
+non_aggregated_hosts                 = []
+aggregate_check_mk                   = False
+aggregation_output_format            = "multiline" # new in 1.1.6. Possible also: "multiline"
+aggr_summary_hostname                = "%s-s"

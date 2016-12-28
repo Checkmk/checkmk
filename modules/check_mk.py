@@ -398,9 +398,6 @@ def extra_host_conf_of(hostname, exclude=None):
         exclude = []
     return extra_conf_of(config.extra_host_conf, hostname, None, exclude)
 
-def extra_summary_host_conf_of(hostname):
-    return extra_conf_of(config.extra_summary_host_conf, hostname, None)
-
 # Collect all extra configuration data for a service
 def extra_service_conf_of(hostname, description):
     conf = ""
@@ -421,8 +418,6 @@ def extra_service_conf_of(hostname, description):
     conf += extra_conf_of(config.extra_service_conf, hostname, description)
     return conf.encode("utf-8")
 
-def extra_summary_service_conf_of(hostname, description):
-    return extra_conf_of(config.extra_summary_service_conf, hostname, description)
 
 def extra_conf_of(confdict, hostname, service, exclude=None):
     if exclude == None:
@@ -560,69 +555,6 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
     args.append("-c %.2f,%.2f%%" % (rta[1], loss[1]))
     return " ".join(args)
 
-
-#.
-#   .--Aggregation---------------------------------------------------------.
-#   |         _                                    _   _                   |
-#   |        / \   __ _  __ _ _ __ ___  __ _  __ _| |_(_) ___  _ __        |
-#   |       / _ \ / _` |/ _` | '__/ _ \/ _` |/ _` | __| |/ _ \| '_ \       |
-#   |      / ___ \ (_| | (_| | | |  __/ (_| | (_| | |_| | (_) | | | |      |
-#   |     /_/   \_\__, |\__, |_|  \___|\__, |\__,_|\__|_|\___/|_| |_|      |
-#   |             |___/ |___/          |___/                               |
-#   +----------------------------------------------------------------------+
-#   |  Service aggregations is deprecated and has been superseeded by BI.  |
-#   |  This code will dropped soon. Do not use service_aggregations any    |
-#   |  more...                                                             |
-#   '----------------------------------------------------------------------'
-# TODO: Remove all this aggregation stuff
-
-# Checks if a host has service aggregations
-def host_is_aggregated(hostname):
-    if not config.service_aggregations:
-        return False
-
-    # host might by explicitly configured as not aggregated
-    if rulesets.in_binary_hostlist(hostname, config.non_aggregated_hosts):
-        return False
-
-    # convert into host_conf_list suitable for rulesets.host_extra_conf()
-    host_conf_list = [ entry[:-1] for entry in config.service_aggregations ]
-    is_aggr = len(rulesets.host_extra_conf(hostname, host_conf_list)) > 0
-    return is_aggr
-
-# Determines the aggregated service name for a given
-# host and service description. Returns "" if the service
-# is not aggregated
-def aggregated_service_name(hostname, servicedesc):
-    if not config.service_aggregations:
-        return ""
-
-    for entry in config.service_aggregations:
-        if len(entry) == 3:
-            aggrname, hostlist, pattern = entry
-            tags = []
-        elif len(entry) == 4:
-            aggrname, tags, hostlist, pattern = entry
-        else:
-            raise MKGeneralException("Invalid entry '%r' in service_aggregations: must have 3 or 4 entries" % entry)
-
-        if len(hostlist) == 1 and hostlist[0] == "":
-            sys.stderr.write('WARNING: deprecated hostlist [ "" ] in service_aggregations. Please use all_hosts instead\n')
-
-        if rulesets.hosttags_match_taglist(tags_of_host(hostname), tags) and \
-           rulesets.in_extraconf_hostlist(hostlist, hostname):
-            if type(pattern) != str:
-                raise MKGeneralException("Invalid entry '%r' in service_aggregations:\n "
-                                         "service specification must be a string, not %s.\n" %
-                                         (entry, pattern))
-            matchobject = re.search(pattern, servicedesc)
-            if matchobject:
-                try:
-                    item = matchobject.groups()[-1]
-                    return aggrname % item
-                except:
-                    return aggrname
-    return ""
 
 #.
 #   .--Helpers-------------------------------------------------------------.
@@ -1161,9 +1093,8 @@ def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"
         checks.set_service_description(description)
         item_state.set_item_state_prefix(check_type, item)
 
-        aggr_name = aggregated_service_name(hostname, description)
         params = get_precompiled_check_parameters(hostname, item, params, check_type)
-        precomp_table.append((check_type, item, params, description, aggr_name)) # deps not needed while checking
+        precomp_table.append((check_type, item, params, description)) # deps not needed while checking
     return precomp_table
 
 
@@ -2352,33 +2283,15 @@ def dump_host(hostname):
         agenttypes.append('PING only')
 
     sys.stdout.write(tty.yellow + "Type of agent:          " + tty.normal + '\n                        '.join(agenttypes) + "\n")
-    is_aggregated = host_is_aggregated(hostname)
-    if is_aggregated:
-        sys.stdout.write(tty.yellow + "Is aggregated:          " + tty.normal + "yes\n")
-        shn = summary_hostname(hostname)
-        sys.stdout.write(tty.yellow + "Summary host:           " + tty.normal + shn + "\n")
-        sys.stdout.write(tty.yellow + "Summary host groups:    " + tty.normal + ", ".join(config.summary_hostgroups_of(hostname)) + "\n")
-        sys.stdout.write(tty.yellow + "Summary contact groups: " + tty.normal + ", ".join(config.contactgroups_of(shn)) + "\n")
-        notperiod = (rulesets.host_extra_conf(hostname, config.summary_host_notification_periods) + [""])[0]
-        sys.stdout.write(tty.yellow + "Summary notification:   " + tty.normal + notperiod + "\n")
-    else:
-        sys.stdout.write(tty.yellow + "Is aggregated:          " + tty.normal + "no\n")
-
 
     sys.stdout.write(tty.yellow + "Services:" + tty.normal + "\n")
     check_items = get_sorted_check_table(hostname)
 
-    headers = ["checktype", "item",    "params", "description", "groups", "summarized to", "groups"]
-    colors =  [ tty.normal,  tty.blue, tty.normal, tty.green,     tty.normal, tty.red, tty.white ]
+    headers = ["checktype", "item",    "params", "description", "groups"]
+    colors =  [ tty.normal,  tty.blue, tty.normal, tty.green, tty.normal ]
     if config.service_dependencies != []:
         headers.append("depends on")
         colors.append(tty.magenta)
-
-    def if_aggr(a):
-        if is_aggregated:
-            return a
-        else:
-            return ""
 
     tty.print_table(headers, colors, [ [
         checktype,
@@ -2386,8 +2299,6 @@ def dump_host(hostname):
         params,
         make_utf8(description),
         make_utf8(",".join(rulesets.service_extra_conf(hostname, description, config.service_groups))),
-        if_aggr(aggregated_service_name(hostname, description)),
-        if_aggr(",".join(rulesets.service_extra_conf(hostname, aggregated_service_name(hostname, description), config.summary_service_groups))),
         ",".join(deps)
         ]
                   for checktype, item, params, description, deps in check_items ], "  ")

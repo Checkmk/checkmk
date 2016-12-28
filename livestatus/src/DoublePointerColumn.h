@@ -29,13 +29,14 @@
 #include "DoubleColumn.h"
 
 class DoublePointerColumn : public DoubleColumn {
-    double *_number;
-
 public:
     DoublePointerColumn(const std::string &name, const std::string &description,
-                        double *number)
+                        const double *number)
         : DoubleColumn(name, description, -1, -1), _number(number) {}
     double getValue(void *) { return *_number; }
+
+private:
+    const double *const _number;
 };
 
 #endif  // DoublePointerColumn_h

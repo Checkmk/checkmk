@@ -105,7 +105,7 @@ char g_mk_inventory_path[4096];  // base path of Check_MK inventory files
 char g_mk_logwatch_path[4096];   // base path of Check_MK logwatch files
 static char fl_logfile_path[4096];
 char g_mkeventd_socket_path[4096];
-int g_should_terminate = false;
+bool g_should_terminate = false;
 
 struct ThreadInfo {
     pthread_t id;
@@ -158,7 +158,7 @@ void count_services() {
 
 void *voidp;
 
-void livestatus_count_fork() { g_counters[COUNTER_FORKS]++; }
+void livestatus_count_fork() { counterIncrement(Counter::forks); }
 
 void livestatus_cleanup_after_fork() {
     // 4.2.2010: Deactivate the cleanup function. It might cause
@@ -189,7 +189,7 @@ void livestatus_cleanup_after_fork() {
 
 void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
-    while (g_should_terminate == 0) {
+    while (!g_should_terminate) {
         do_statistics();
         struct timeval tv;
         tv.tv_sec = 2;
@@ -211,7 +211,7 @@ void *main_thread(void *data) {
             }
             fl_client_queue->addConnection(cc);  // closes fd
             g_num_queued_connections++;
-            g_counters[COUNTER_CONNECTIONS]++;
+            counterIncrement(Counter::connections);
         }
     }
     Notice(fl_logger_livestatus) << "socket thread has terminated";
@@ -221,14 +221,14 @@ void *main_thread(void *data) {
 void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     OutputBuffer output_buffer(fl_logger_livestatus);
-    while (g_should_terminate == 0) {
+    while (!g_should_terminate) {
         int cc = fl_client_queue->popConnection();
         g_num_queued_connections--;
         g_num_active_connections++;
         if (cc >= 0) {
             Debug(fl_logger_livestatus) << "accepted client connection on fd "
                                         << cc;
-            InputBuffer input_buffer(cc, &g_should_terminate,
+            InputBuffer input_buffer(cc, g_should_terminate,
                                      fl_logger_livestatus);
             bool keepalive = true;
             unsigned requestnr = 1;
@@ -240,8 +240,8 @@ void *client_thread(void *data) {
                 }
                 keepalive =
                     fl_store->answerRequest(&input_buffer, &output_buffer);
-                output_buffer.flush(cc, &g_should_terminate);
-                g_counters[COUNTER_REQUESTS]++;
+                output_buffer.flush(cc, g_should_terminate);
+                counterIncrement(Counter::requests);
                 requestnr++;
             }
             close(cc);
@@ -363,7 +363,7 @@ void terminate_threads() {
     }
 }
 
-int open_unix_socket() {
+bool open_unix_socket() {
     struct stat st;
     if (stat(g_socket_path, &st) == 0) {
         if (unlink(g_socket_path) == 0) {
@@ -437,7 +437,7 @@ void close_unix_socket() {
 
 int broker_host(int event_type __attribute__((__unused__)),
                 void *data __attribute__((__unused__))) {
-    g_counters[COUNTER_NEB_CALLBACKS]++;
+    counterIncrement(Counter::neb_callbacks);
     return 0;
 }
 
@@ -447,13 +447,13 @@ int broker_check(int event_type, void *data) {
         nebstruct_service_check_data *c =
             reinterpret_cast<nebstruct_service_check_data *>(data);
         if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
-            g_counters[COUNTER_SERVICE_CHECKS]++;
+            counterIncrement(Counter::service_checks);
         }
     } else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
         nebstruct_host_check_data *c =
             reinterpret_cast<nebstruct_host_check_data *>(data);
         if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
-            g_counters[COUNTER_HOST_CHECKS]++;
+            counterIncrement(Counter::host_checks);
         }
     }
     trigger_notify_all(trigger_check());
@@ -464,7 +464,7 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     nebstruct_comment_data *co =
         reinterpret_cast<nebstruct_comment_data *>(data);
     fl_store->registerComment(co);
-    g_counters[COUNTER_NEB_CALLBACKS]++;
+    counterIncrement(Counter::neb_callbacks);
     trigger_notify_all(trigger_comment());
     return 0;
 }
@@ -473,15 +473,15 @@ int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     nebstruct_downtime_data *dt =
         reinterpret_cast<nebstruct_downtime_data *>(data);
     fl_store->registerDowntime(dt);
-    g_counters[COUNTER_NEB_CALLBACKS]++;
+    counterIncrement(Counter::neb_callbacks);
     trigger_notify_all(trigger_downtime());
     return 0;
 }
 
 int broker_log(int event_type __attribute__((__unused__)),
                void *data __attribute__((__unused__))) {
-    g_counters[COUNTER_NEB_CALLBACKS]++;
-    g_counters[COUNTER_LOG_MESSAGES]++;
+    counterIncrement(Counter::neb_callbacks);
+    counterIncrement(Counter::log_messages);
     trigger_notify_all(trigger_log());
     return 0;
 }
@@ -490,23 +490,23 @@ int broker_command(int event_type __attribute__((__unused__)), void *data) {
     nebstruct_external_command_data *sc =
         reinterpret_cast<nebstruct_external_command_data *>(data);
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
-        g_counters[COUNTER_COMMANDS]++;
+        counterIncrement(Counter::commands);
     }
-    g_counters[COUNTER_NEB_CALLBACKS]++;
+    counterIncrement(Counter::neb_callbacks);
     trigger_notify_all(trigger_command());
     return 0;
 }
 
 int broker_state(int event_type __attribute__((__unused__)),
                  void *data __attribute__((__unused__))) {
-    g_counters[COUNTER_NEB_CALLBACKS]++;
+    counterIncrement(Counter::neb_callbacks);
     trigger_notify_all(trigger_state());
     return 0;
 }
 
 int broker_program(int event_type __attribute__((__unused__)),
                    void *data __attribute__((__unused__))) {
-    g_counters[COUNTER_NEB_CALLBACKS]++;
+    counterIncrement(Counter::neb_callbacks);
     trigger_notify_all(trigger_program());
     return 0;
 }
@@ -557,7 +557,7 @@ void livestatus_log_initial_states() {
 }
 
 int broker_event(int event_type __attribute__((__unused__)), void *data) {
-    g_counters[COUNTER_NEB_CALLBACKS]++;
+    counterIncrement(Counter::neb_callbacks);
     struct nebstruct_timed_event_struct *ts =
         reinterpret_cast<struct nebstruct_timed_event_struct *>(data);
     if (ts->event_type == EVENT_LOG_ROTATION) {
@@ -1006,7 +1006,7 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
     livestatus_parse_arguments(args);
     omd_advertize();
 
-    if (open_unix_socket() == 0) {
+    if (!open_unix_socket()) {
         return 1;
     }
 

@@ -53,7 +53,7 @@ public:
     void add(const std::vector<char> &blob);
 
     void reset();
-    void flush(int fd, int *termination_flag);
+    void flush(int fd, const bool &termination_flag);
     size_t size() { return _writepos - _buffer; }
 
     void setResponseHeader(ResponseHeader r) { _response_header = r; }
@@ -83,7 +83,7 @@ private:
 
     void addBuffer(const char *, size_t);
     void needSpace(unsigned);
-    void writeData(int fd, int *, const char *, size_t);
+    void writeData(int fd, const bool &, const char *, size_t);
 };
 
 #endif  // OutputBuffer_h

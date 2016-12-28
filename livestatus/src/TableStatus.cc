@@ -67,11 +67,6 @@ extern int g_num_clientthreads;
 extern int g_num_queued_connections;
 extern int g_num_active_connections;
 
-// Livecheck has been removed, but we still need to provide the
-// columns - for compatibility
-int livechecks_performed = 0;
-int livecheck_overflows = 0;
-
 #ifndef NAGIOS4
 extern circular_buffer external_command_buffer;
 extern int external_command_buffer_slots;
@@ -80,23 +75,24 @@ extern int external_command_buffer_slots;
 #endif  // NAGIOS4
 
 TableStatus::TableStatus(Logger *logger) : Table(logger) {
-    addCounterColumns("neb_callbacks", "NEB callbacks", COUNTER_NEB_CALLBACKS);
-    addCounterColumns("requests", "requests to Livestatus", COUNTER_REQUESTS);
+    addCounterColumns("neb_callbacks", "NEB callbacks", Counter::neb_callbacks);
+    addCounterColumns("requests", "requests to Livestatus", Counter::requests);
     addCounterColumns("connections", "client connections to Livestatus",
-                      COUNTER_CONNECTIONS);
+                      Counter::connections);
     addCounterColumns("service_checks", "completed service checks",
-                      COUNTER_SERVICE_CHECKS);
-    addCounterColumns("host_checks", "host checks", COUNTER_HOST_CHECKS);
-    addCounterColumns("forks", "process creations", COUNTER_FORKS);
-    addCounterColumns("log_messages", "new log messages", COUNTER_LOG_MESSAGES);
+                      Counter::service_checks);
+    addCounterColumns("host_checks", "host checks", Counter::host_checks);
+    addCounterColumns("forks", "process creations", Counter::forks);
+    addCounterColumns("log_messages", "new log messages",
+                      Counter::log_messages);
     addCounterColumns("external_commands", "external commands",
-                      COUNTER_COMMANDS);
+                      Counter::commands);
     addCounterColumns("livechecks", "checks executed via livecheck",
-                      COUNTER_LIVECHECKS);
+                      Counter::livechecks);
     addCounterColumns("livecheck_overflows",
                       "times a check could not be executed because no "
                       "livecheck helper was free",
-                      COUNTER_LIVECHECK_OVERFLOWS);
+                      Counter::livecheck_overflows);
 
     // Nagios program status data
     addColumn(make_unique<IntPointerColumn>(
@@ -252,13 +248,13 @@ TableStatus::TableStatus(Logger *logger) : Table(logger) {
 }
 
 void TableStatus::addCounterColumns(const string &name,
-                                    const string &description, int which) {
+                                    const string &description, Counter which) {
     addColumn(make_unique<DoublePointerColumn>(
         name, "The number of " + description + " since program start",
-        &g_counters[which]));
+        counterAddress(which)));
     addColumn(make_unique<DoublePointerColumn>(
         name + "_rate", "The averaged number of " + description + " per second",
-        &g_counter_rate[which]));
+        counterRateAddress(which)));
 }
 
 string TableStatus::name() const { return "status"; }

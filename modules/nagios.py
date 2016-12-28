@@ -1121,25 +1121,25 @@ if '-d' in sys.argv:
     nodes = []
     if is_cluster(hostname):
         for node in nodes_of(hostname):
-            ipa = lookup_ip_address(node)
+            ipa = ip_lookup.lookup_ip_address(node)
             needed_ipaddresses[node] = ipa
             ipv6_primary_hosts[node] = is_ipv6_primary(node)
             nodes.append( (node, ipa) )
 
         try:
-            ipaddress = lookup_ip_address(hostname) # might throw exception
+            ipaddress = ip_lookup.lookup_ip_address(hostname) # might throw exception
             needed_ipaddresses[hostname] = ipaddress
         except:
             ipaddress = None
     else:
-        ipaddress = lookup_ip_address(hostname) # might throw exception
+        ipaddress = ip_lookup.lookup_ip_address(hostname) # might throw exception
         needed_ipaddresses[hostname] = ipaddress
         nodes = [ (hostname, ipaddress) ]
 
     ipv6_primary_hosts[hostname] = is_ipv6_primary(hostname)
 
-    output.write("ipaddresses = %r\n\n" % needed_ipaddresses)
-    output.write("def lookup_ip_address(hostname):\n   return ipaddresses.get(hostname)\n\n");
+    output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
+    output.write("ip_lookup.lookup_ip_address = lambda hostname: ipaddresses.get(hostname)\n\n");
 
     output.write("ipv6_primary_hosts = %r\n\n" % ipv6_primary_hosts)
     output.write("def is_ipv6_primary(hostname):\n   return ipv6_primary_hosts.get(hostname, False)\n\n");

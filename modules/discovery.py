@@ -34,6 +34,7 @@ import cmk_base.config as config
 import cmk_base.rulesets as rulesets
 import cmk_base.console as console
 import cmk_base.piggyback as piggyback
+import cmk_base.ip_lookup as ip_lookup
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
     MKSNMPError, MKTimeout
 
@@ -700,8 +701,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
         protocol = config.management_protocol(hostname)
         address = config.management_address(hostname)
         if not is_ipaddress(address):
-            family = is_ipv6_primary(hostname) and 6 or 4
-            address = cached_dns_lookup(address, family)
+            address = ip_lookup.lookup_ip_address(address)
 
         if protocol == "snmp":
             management_check_types = []
@@ -717,7 +717,7 @@ def discover_services(hostname, check_types, use_caches, do_snmp_scan, on_error,
                                               on_error, address, True)
 
     if ipaddress == None:
-        ipaddress = lookup_ip_address(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
 
     # Check types not specified (via --checks=)? Determine automatically
     if not check_types:
@@ -1108,7 +1108,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
     if is_cluster(hostname):
         ipaddress = None
     else:
-        ipaddress = lookup_ip_address(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
 
     table = []
     for (check_type, item), (check_source, paramstring) in services.items():

@@ -32,6 +32,7 @@ import cmk_base.console as console
 import cmk_base.checks as checks
 import cmk_base.inventory as inventory
 import cmk_base.inventory_plugins as inventory_plugins
+import cmk_base.ip_lookup as ip_lookup
 
 
 #.
@@ -150,7 +151,7 @@ def do_inv_for_cluster(hostname):
 
 def do_inv_for_realhost(hostname):
     try:
-        ipaddress = lookup_ip_address(hostname)
+        ipaddress = ip_lookup.lookup_ip_address(hostname)
     except:
         raise MKGeneralException("Cannot resolve hostname '%s'." % hostname)
 

@@ -642,6 +642,8 @@ def automation_get_check_manpage(args):
 
 
 def automation_scan_parents(args):
+    import cmk_base.parent_scan
+
     settings = {
         "timeout"     : int(args[0]),
         "probes"      : int(args[1]),
@@ -649,15 +651,15 @@ def automation_scan_parents(args):
         "ping_probes" : int(args[3]),
     }
     hostnames = args[4:]
-    traceroute_prog = find_bin_in_path('traceroute')
-    if not traceroute_prog:
+    if not cmk_base.parent_scan.traceroute_available():
         raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
 
     try:
-        gateways = scan_parents_of(hostnames, silent=True, settings=settings)
+        gateways = cmk_base.parent_scan.scan_parents_of(hostnames, silent=True,
+                                                        settings=settings)
         return gateways
     except Exception, e:
-        raise MKAutomationError(str(e))
+        raise MKAutomationError("%s" % e)
 
 def automation_diag_host(args):
     import subprocess
@@ -709,15 +711,17 @@ def automation_diag_host(args):
                 return 0, get_agent_info_tcp(hostname, ipaddress, agent_port or None)
 
         elif test == 'traceroute':
-            traceroute_prog = find_bin_in_path('traceroute')
-            if not traceroute_prog:
-                return 1, "Cannot find binary <tt>traceroute</tt>."
-            else:
-                family_flag = ipv6_primary and "-6" or "-4"
+            family_flag = ipv6_primary and "-6" or "-4"
+            try:
                 p = subprocess.Popen(['traceroute', family_flag, '-n', ipaddress ],
-                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                response = p.stdout.read()
-                return (p.wait(), response)
+                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            except OSError, e:
+                if e.errno == 2:
+                    return 1, "Cannot find binary <tt>traceroute</tt>."
+                else:
+                    raise
+            response = p.stdout.read()
+            return (p.wait(), response)
 
         elif test.startswith('snmp'):
             # SNMPv3 tuples

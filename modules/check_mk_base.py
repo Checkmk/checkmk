@@ -504,12 +504,9 @@ def write_cache_file(relpath, output):
         except Exception, e:
             raise MKGeneralException("Cannot create directory %s: %s" % (cmk.paths.tcp_cache_dir, e))
     try:
-        # write retrieved information to cache file - if we are not root.
-        # We assume that the core never runs as root.
-        if not i_am_root():
-            f = open(cachefile, "w+")
-            f.write(output)
-            f.close()
+        f = open(cachefile, "w+")
+        f.write(output)
+        f.close()
     except Exception, e:
         raise MKGeneralException("Cannot write cache file %s: %s" % (cachefile, e))
 
@@ -1034,8 +1031,8 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
         if info or info in [ [], {} ]:
             try:
                 check_function = checks.check_info[checkname]["check_function"]
-            except:
-                check_function = check_unimplemented
+            except KeyError:
+                check_function = lambda item, params, info: (3, 'UNKNOWN - Check not implemented')
 
             try:
                 dont_submit = False
@@ -1150,10 +1147,6 @@ def is_manual_check(hostname, check_type, item):
                                     world=opt_keepalive and "active" or "config",
                                     skip_autochecks=True)
     return (check_type, item) in manual_checks
-
-
-def check_unimplemented(checkname, params, info):
-    return (3, 'UNKNOWN - Check not implemented')
 
 
 def sanitize_check_result(result, is_snmp):
@@ -1435,10 +1428,6 @@ def make_utf8(x):
         return x
 
 
-def i_am_root():
-    return os.getuid() == 0
-
-
 def worst_monitoring_state(status_a, status_b):
     if status_a == 2 or status_b == 2:
         return 2
@@ -1457,6 +1446,8 @@ def set_use_cachefile(state=True):
 # This function is atomar so that no exception can arise if two processes
 # at the same time try to create the directory. Only fails if the directory
 # is not present for any reason after this function call.
+# TODO: Is not called often. Should we make this available in a general place
+# and use it more often or drop it?
 def ensure_directory(path):
     try:
         os.makedirs(path)

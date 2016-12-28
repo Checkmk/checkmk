@@ -474,7 +474,6 @@ fi
 checksdir=$sharedir/checks
 notificationsdir=$sharedir/notifications
 inventorydir=$sharedir/inventory
-modulesdir=$sharedir/modules
 web_dir=$sharedir/web
 localedir=$sharedir/locale
 agentsdir=$sharedir/agents
@@ -746,7 +745,6 @@ do
            tar xzf $SRCDIR/base.tar.gz -C $DESTDIR$python_lib_dir &&
            mkdir -p $DESTDIR$sharedir/werks &&
            tar xzf $SRCDIR/werks.tar.gz -C $DESTDIR$sharedir/werks &&
-	   mkdir -p $DESTDIR$modulesdir &&
            mkdir -p $DESTDIR$localedir &&
 	   mkdir -p $DESTDIR$checksdir &&
 	   tar xzf $SRCDIR/checks.tar.gz -C $DESTDIR$checksdir &&
@@ -760,9 +758,6 @@ do
 	   tar xzf $SRCDIR/web.tar.gz -C $DESTDIR$web_dir &&
 	   mkdir -p $DESTDIR$pnptemplates &&
 	   tar xzf $SRCDIR/pnp-templates.tar.gz -C $DESTDIR$pnptemplates &&
-	   mkdir -p $DESTDIR$modulesdir &&
-	   rm -f $DESTDIR$modulesdir/check_mk{,_admin} &&
-	   tar xzf $SRCDIR/modules.tar.gz -C $DESTDIR$modulesdir &&
 	   mkdir -p $DESTDIR$docdir &&
 	   tar xzf $SRCDIR/doc.tar.gz -C $DESTDIR$docdir &&
 	   mkdir -p $DESTDIR$checkmandir &&
@@ -827,11 +822,9 @@ do
 	   mkdir -p $DESTDIR$confdir/conf.d &&
 	   echo 'All files in this directory that end with .mk will be read in after main.mk' > $DESTDIR$confdir/conf.d/README &&
 	   mkdir -p $DESTDIR$bindir &&
-	   rm -f $DESTDIR$bindir/check_mk &&
-	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py "'"$@"' > $DESTDIR$bindir/check_mk &&
 	   chmod 755 $DESTDIR$bindir/check_mk &&
            ln -snf check_mk $DESTDIR$bindir/cmk &&
-	   echo -e "#!/bin/sh\nexec python $modulesdir/check_mk.py -P "'"$@"' > $DESTDIR$bindir/mkp &&
+	   echo -e "#!/bin/sh\nexec python $bindir/check_mk.py -P "'"$@"' > $DESTDIR$bindir/mkp &&
            chmod 755 $DESTDIR$bindir/mkp &&
 	   sed -i "s#@BINDIR@#$bindir#g"              $DESTDIR$sharedir/check_mk_templates.cfg &&
 	   sed -i "s#@VARDIR@#$vardir#g"              $DESTDIR$sharedir/check_mk_templates.cfg &&

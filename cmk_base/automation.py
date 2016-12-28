@@ -24,15 +24,36 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
+import pprint
 import signal
+import sys
+from cStringIO import StringIO
 
 import cmk.paths
 import cmk.man_pages as man_pages
+from cmk.exceptions import MKGeneralException
 
-import cmk_base.rulesets as rulesets
+import cmk_base.utils
+import cmk_base.console as console
 import cmk_base.config as config
+import cmk_base.rulesets as rulesets
+import cmk_base.core as core
+import cmk_base.core_config as core_config
+import cmk_base.core_nagios as core_nagios
 import cmk_base.ip_lookup as ip_lookup
+import cmk_base.agent_data as agent_data
 import cmk_base.snmp as snmp
+import cmk_base.checks as checks
+import cmk_base.discovery as discovery
+import cmk_base.check_table as check_table
+import cmk_base.profiling as profiling
+import cmk_base.piggyback as piggyback
+from cmk_base.exceptions import MKTimeout
+
+# TODO: Implement some plugin mechanism so that the enterprise
+# specific parts or custom things can register at the automation
+# module. Similar to cmk_base.modes.
 
 # TODO: Inherit from MKGeneralException
 class MKAutomationError(Exception):
@@ -43,11 +64,6 @@ class MKAutomationError(Exception):
         return self.reason
 
 
-def trigger_automation_timeout(signum, stackframe):
-    raise MKTimeout("Action timed out. The timeout of %d "
-                    "seconds was reached." % MKTimeout.timeout)
-
-
 def do_automation(cmd, args):
     # Handle generic arguments (currently only the optional timeout argument)
     if len(args) > 1 and args[0] == "--timeout":
@@ -56,99 +72,102 @@ def do_automation(cmd, args):
 
         if timeout:
             MKTimeout.timeout = timeout
-            signal.signal(signal.SIGALRM, trigger_automation_timeout)
+            signal.signal(signal.SIGALRM, _trigger_automation_timeout)
             signal.alarm(timeout)
-
 
     try:
         if cmd == "get-configuration":
             config.load(with_conf_d=False)
-            result = automation_get_configuration()
+            result = _automation_get_configuration()
         elif cmd == "get-check-information":
-            result = automation_get_check_information()
+            result = _automation_get_check_information()
         elif cmd == "get-real-time-checks":
-            result = automation_get_real_time_checks()
+            result = _automation_get_real_time_checks()
         elif cmd == "get-check-manpage":
-            result = automation_get_check_manpage(args)
+            result = _automation_get_check_manpage(args)
         elif cmd == "get-package-info":
-            result = automation_get_package_info(args)
+            result = _automation_get_package_info(args)
         elif cmd == "get-package":
-            result = automation_get_package(args)
+            result = _automation_get_package(args)
         elif cmd == "create-package":
-            result = automation_create_or_edit_package(args, "create")
+            result = _automation_create_or_edit_package(args, "create")
         elif cmd == "edit-package":
-            result = automation_create_or_edit_package(args, "edit")
+            result = _automation_create_or_edit_package(args, "edit")
         elif cmd == "install-package":
-            result = automation_install_package(args)
+            result = _automation_install_package(args)
         elif cmd == "remove-package":
-            result = automation_remove_or_release_package(args, "remove")
+            result = _automation_remove_or_release_package(args, "remove")
         elif cmd == "release-package":
-            result = automation_remove_or_release_package(args, "release")
+            result = _automation_remove_or_release_package(args, "release")
         elif cmd == "remove-unpackaged-file":
-            result = automation_remove_unpackaged_file(args)
+            result = _automation_remove_unpackaged_file(args)
         elif cmd == "notification-get-bulks":
-            result = automation_get_bulks(args)
+            result = _automation_get_bulks(args)
         else:
             config.load(validate_hosts=False)
             if cmd == "try-inventory":
-                result = automation_try_discovery(args)
+                result = _automation_try_discovery(args)
             elif cmd == "inventory":
-                result = automation_discovery(args)
+                result = _automation_discovery(args)
             elif cmd == "analyse-service":
-                result = automation_analyse_service(args)
+                result = _automation_analyse_service(args)
             elif cmd == "active-check":
-                result = automation_active_check(args)
+                result = _automation_active_check(args)
             elif cmd == "get-autochecks":
-                result = automation_get_autochecks(args)
+                result = _automation_get_autochecks(args)
             elif cmd == "set-autochecks":
-                result = automation_set_autochecks(args)
+                result = _automation_set_autochecks(args)
             elif cmd == "reload":
-                result = automation_restart("reload")
+                result = _automation_restart("reload")
             elif cmd == "restart":
-                result = automation_restart("restart")
+                result = _automation_restart("restart")
             elif cmd == "scan-parents":
-                result = automation_scan_parents(args)
+                result = _automation_scan_parents(args)
             elif cmd == "diag-host":
-                result = automation_diag_host(args)
+                result = _automation_diag_host(args)
             elif cmd == "delete-hosts":
-                result = automation_delete_hosts(args)
+                result = _automation_delete_hosts(args)
             elif cmd == "rename-hosts":
-                result = automation_rename_hosts()
+                result = _automation_rename_hosts()
             elif cmd == "notification-replay":
-                result = automation_notification_replay(args)
+                result = _automation_notification_replay(args)
             elif cmd == "notification-analyse":
-                result = automation_notification_analyse(args)
+                result = _automation_notification_analyse(args)
             elif cmd == "update-dns-cache":
-                result = automation_update_dns_cache()
+                result = _automation_update_dns_cache()
             elif cmd == "bake-agents":
-                result = automation_bake_agents()
+                result = _automation_bake_agents()
             elif cmd == "get-agent-output":
-                result = automation_get_agent_output(args)
+                result = _automation_get_agent_output(args)
             else:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
     except (MKAutomationError, MKTimeout), e:
-        sys.stderr.write("%s\n" % e)
+        console.error("%s\n" % e)
         if cmk.debug.enabled():
             raise
-        output_profile()
+        profiling.output_profile()
         sys.exit(1)
 
     except Exception, e:
         if cmk.debug.enabled():
             raise
         else:
-            sys.stderr.write("%s\n" % make_utf8("%s" % e))
-            output_profile()
+            console.error("%s\n" % make_utf8("%s" % e))
+            profiling.output_profile()
             sys.exit(2)
 
     if cmk.debug.enabled():
-        import pprint
-        sys.stdout.write(pprint.pformat(result)+"\n")
+        console.output(pprint.pformat(result)+"\n")
     else:
-        sys.stdout.write("%r\n" % (result,))
-    output_profile()
+        console.output("%r\n" % (result,))
+    profiling.output_profile()
     sys.exit(0)
+
+
+def _trigger_automation_timeout(signum, stackframe):
+    raise MKTimeout("Action timed out. The timeout of %d "
+                    "seconds was reached." % MKTimeout.timeout)
 
 
 # Does discovery for a list of hosts. Possible values for how:
@@ -158,7 +177,7 @@ def do_automation(cmd, args):
 # "refresh" - drop all services and reinventorize
 # Hosts on the list that are offline (unmonitored) will
 # be skipped.
-def automation_discovery(args):
+def _automation_discovery(args):
 
     # Error sensivity
     if args[0] == "@raiseerrors":
@@ -192,17 +211,17 @@ def automation_discovery(args):
     failed_hosts = {}
 
     for hostname in hostnames:
-        result, error = discover_on_host(how, hostname, do_snmp_scan, use_caches, on_error)
+        result, error = discovery.discover_on_host(how, hostname, do_snmp_scan, use_caches, on_error)
         counts[hostname] = result
         if error is not None:
             failed_hosts[hostname] = error
         else:
-            trigger_discovery_check(hostname)
+            _trigger_discovery_check(hostname)
 
     return counts, failed_hosts
 
 
-def automation_try_discovery(args):
+def _automation_try_discovery(args):
     use_caches = False
     do_snmp_scan = False
     if args[0] == '@noscan':
@@ -227,7 +246,7 @@ def automation_try_discovery(args):
     if use_caches:
         config.check_max_cachefile_age = config.inventory_max_cachefile_age
     hostname = args[0]
-    table = get_check_preview(hostname, use_caches=use_caches,
+    table = discovery.get_check_preview(hostname, use_caches=use_caches,
                               do_snmp_scan=do_snmp_scan, on_error=on_error)
     return table
 
@@ -237,32 +256,32 @@ def automation_try_discovery(args):
 # are either (1) kept from existing autochecks or (2) computed
 # from a new inventory. Note: we must never convert check parameters
 # from python source code to actual values.
-def automation_set_autochecks(args):
+def _automation_set_autochecks(args):
     hostname = args[0]
     new_items = eval(sys.stdin.read())
-    set_autochecks_of(hostname, new_items)
-    trigger_discovery_check(hostname)
+    discovery.set_autochecks_of(hostname, new_items)
+    _trigger_discovery_check(hostname)
     return None
 
 
 # if required, schedule an inventory check
-def trigger_discovery_check(hostname):
+def _trigger_discovery_check(hostname):
     if (config.inventory_check_autotrigger and config.inventory_check_interval) and\
-            (not is_cluster(hostname) or nodes_of(hostname)):
-        schedule_inventory_check(hostname)
+            (not config.is_cluster(hostname) or config.nodes_of(hostname)):
+        discovery.schedule_discovery_check(hostname)
 
 
-def automation_get_autochecks(args):
+def _automation_get_autochecks(args):
     hostname = args[0]
     result = []
-    for ct, item, paramstring in parse_autochecks_file(hostname):
+    for ct, item, paramstring in discovery.parse_autochecks_file(hostname):
         result.append((ct, item, eval(paramstring), paramstring))
     return result
 
 
 # Determine the type of the check, and how the parameters are being
 # constructed
-def automation_analyse_service(args):
+def _automation_analyse_service(args):
     hostname = args[0]
     servicedesc = args[1].decode("utf-8")
     checks.set_hostname(hostname)
@@ -275,7 +294,7 @@ def automation_analyse_service(args):
     # 4. active checks
 
     # Compute effective check table, in order to remove SNMP duplicates
-    check_table = get_check_table(hostname, remove_duplicates = True)
+    check_table = check_table.get_check_table(hostname, remove_duplicates = True)
 
     # 1. Manual checks
     for nr, (checkgroup, entries) in enumerate(config.static_checks.items()):
@@ -296,9 +315,9 @@ def automation_analyse_service(args):
                 hostlist = entry[1]
                 taglist = []
 
-            if rulesets.hosttags_match_taglist(tags_of_host(hostname), taglist) and \
+            if rulesets.hosttags_match_taglist(config.tags_of_host(hostname), taglist) and \
                rulesets.in_extraconf_hostlist(hostlist, hostname):
-               descr = service_description(hostname, checktype, item)
+               descr = config.service_description(hostname, checktype, item)
                if descr == servicedesc:
                    return {
                        "origin"       : "static",
@@ -324,7 +343,7 @@ def automation_analyse_service(args):
 
                 if (ct, item) not in check_table:
                     continue # this is a removed duplicate or clustered service
-                descr = service_description(hn, ct, item)
+                descr = config.service_description(hn, ct, item)
                 if hn == hostname and descr == servicedesc:
                     dlv = checks.check_info[ct].get("default_levels_variable")
                     if dlv:
@@ -339,7 +358,8 @@ def automation_analyse_service(args):
                         "item"             : item,
                         "inv_parameters"   : params,
                         "factory_settings" : fs,
-                        "parameters"       : compute_check_parameters(hostname, ct, item, params),
+                        "parameters"       :
+                            checks.compute_check_parameters(hostname, ct, item, params),
                     }
     except:
         if cmk.debug.enabled():
@@ -385,13 +405,13 @@ def automation_analyse_service(args):
     # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
 
 
-def automation_delete_hosts(args):
+def _automation_delete_hosts(args):
     for hostname in args:
-        delete_host_files(hostname)
+        _delete_host_files(hostname)
     return None
 
 
-def delete_host_files(hostname):
+def _delete_host_files(hostname):
     # The inventory_archive as well as the performance data is kept
     # we do not want to loose any historic data for accidently deleted hosts.
     #
@@ -435,8 +455,9 @@ def delete_host_files(hostname):
     return None
 
 
-def automation_restart(job = "restart"):
-    if check_plugins_have_changed():
+# TODO: Cleanup duplicate code with core.do_restart()
+def _automation_restart(job = "restart"):
+    if _check_plugins_have_changed():
         forced = True
         job = "restart"
     else:
@@ -474,7 +495,7 @@ def automation_restart(job = "restart"):
 
     try:
         backup_path = None
-        if try_get_activation_lock():
+        if core.try_get_activation_lock():
             raise MKAutomationError("Cannot activate changes. "
                   "Another activation process is currently in progresss")
 
@@ -485,10 +506,11 @@ def automation_restart(job = "restart"):
             backup_path = None
 
         try:
-            configuration_warnings = create_core_config()
+            configuration_warnings = core_config.create_core_config()
 
-            if "do_bake_agents" in globals() and config.bake_agents_on_restart:
-                do_bake_agents()
+            if cmk_base.utils.has_feature("cee.agent_bakery"):
+                import cmk_base.cee.agent_bakery as agent_bakery
+                agent_bakery.bake_on_restart()
 
         except Exception, e:
 	    if backup_path:
@@ -497,14 +519,12 @@ def automation_restart(job = "restart"):
                 raise
 	    raise MKAutomationError("Error creating configuration: %s" % e)
 
-        if do_check_nagiosconfig():
+        if config.monitoring_core == "cmc" or core_nagios.do_check_nagiosconfig():
             if backup_path:
                 os.remove(backup_path)
-            if config.monitoring_core == "cmc":
-                do_pack_config()
-            else:
-                do_precompile_hostchecks()
-            do_core_action(job)
+
+            core_config.precompile()
+            core.do_core_action(job)
         else:
             broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.paths.tmp_dir
             file(broken_config_path, "w").write(file(cmk.paths.nagios_objects_file).read())
@@ -528,20 +548,20 @@ def automation_restart(job = "restart"):
     return configuration_warnings
 
 
-def check_plugins_have_changed():
-    this_time = last_modification_in_dir(cmk.paths.local_checks_dir)
-    last_time = time_of_last_core_restart()
+def _check_plugins_have_changed():
+    this_time = _last_modification_in_dir(cmk.paths.local_checks_dir)
+    last_time = _time_of_last_core_restart()
     return this_time > last_time
 
 
-def last_modification_in_dir(dir_path):
+def _last_modification_in_dir(dir_path):
     max_time = os.stat(dir_path).st_mtime
     for file_name in os.listdir(dir_path):
         max_time = max(max_time, os.stat(dir_path + "/" + file_name).st_mtime)
     return max_time
 
 
-def time_of_last_core_restart():
+def _time_of_last_core_restart():
     if config.monitoring_core == "cmc":
         pidfile_path = cmk.paths.omd_root + "/tmp/run/cmc.pid"
     else:
@@ -552,7 +572,7 @@ def time_of_last_core_restart():
         return 0
 
 
-def automation_get_configuration():
+def _automation_get_configuration():
     # We read the list of variable names from stdin since
     # that could be too much for the command line
     variable_names = eval(sys.stdin.read())
@@ -565,7 +585,7 @@ def automation_get_configuration():
     return result
 
 
-def automation_get_check_information():
+def _automation_get_check_information():
     manuals = man_pages.all_man_pages()
 
     check_infos = {}
@@ -581,7 +601,7 @@ def automation_get_check_information():
             if check["group"]:
                 check_infos[check_type]["group"] = check["group"]
             check_infos[check_type]["service_description"] = check.get("service_description","%s")
-            check_infos[check_type]["snmp"] = check.is_snmp_check(check_type)
+            check_infos[check_type]["snmp"] = checks.is_snmp_check(check_type)
         except Exception, e:
             if cmk.debug.enabled():
                 raise
@@ -589,7 +609,7 @@ def automation_get_check_information():
     return check_infos
 
 
-def automation_get_real_time_checks():
+def _automation_get_real_time_checks():
     manuals = man_pages.all_man_pages()
 
     rt_checks = []
@@ -609,7 +629,7 @@ def automation_get_real_time_checks():
     return rt_checks
 
 
-def automation_get_check_manpage(args):
+def _automation_get_check_manpage(args):
     if len(args) != 1:
         raise MKAutomationError("Need exactly one argument.")
 
@@ -642,7 +662,7 @@ def automation_get_check_manpage(args):
     return manpage
 
 
-def automation_scan_parents(args):
+def _automation_scan_parents(args):
     import cmk_base.parent_scan
 
     settings = {
@@ -662,7 +682,7 @@ def automation_scan_parents(args):
     except Exception, e:
         raise MKAutomationError("%s" % e)
 
-def automation_diag_host(args):
+def _automation_diag_host(args):
     import subprocess
 
     hostname, test, ipaddress, snmp_community = args[:4]
@@ -793,7 +813,7 @@ def automation_diag_host(args):
 # several file and directory names. This function has no argument but reads
 # Python pair-list from stdin:
 # [("old1", "new1"), ("old2", "new2")])
-def automation_rename_hosts():
+def _automation_rename_hosts():
     renamings = eval(sys.stdin.read())
 
     actions = []
@@ -801,16 +821,16 @@ def automation_rename_hosts():
     # At this place WATO already has changed it's configuration. All further
     # data might be changed by the still running core. So we need to stop
     # it now.
-    core_was_running = core_is_running()
+    core_was_running = _core_is_running()
     if core_was_running:
-        do_core_action("stop", quiet=True)
+        core.do_core_action("stop", quiet=True)
 
     for oldname, newname in renamings:
         # Autochecks: simply read and write out the file again. We do
         # not store a host name here anymore - but old versions did.
         # by rewriting we get rid of the host name.
-        actions += rename_host_autochecks(oldname, newname)
-        actions += rename_host_files(oldname, newname)
+        actions += _rename_host_autochecks(oldname, newname)
+        actions += _rename_host_files(oldname, newname)
 
     # Start monitoring again. In case of CMC we need to ignore
     # any configuration created by the CMC Rushahead daemon
@@ -818,7 +838,7 @@ def automation_rename_hosts():
         # force config generation to succeed. The core *must* start.
         # TODO: Can't we drop this hack since we have config warnings now?
         core_config.ignore_ip_lookup_failures()
-        automation_restart("start")
+        _automation_restart("start")
 
         for hostname in core_config.failed_ip_lookups():
             actions.append("dnsfail-" + hostname)
@@ -832,11 +852,20 @@ def automation_rename_hosts():
     return action_counts
 
 
-def rename_host_autochecks(oldname, newname):
+def _core_is_running():
+    if config.monitoring_core == "nagios":
+        command = cmk.paths.nagios_startscript + " status >/dev/null 2>&1"
+    else:
+        command = "omd status cmc >/dev/null 2>&1"
+    code = os.system(command)
+    return not code
+
+
+def _rename_host_autochecks(oldname, newname):
     actions = []
     acpath = cmk.paths.autochecks_dir + "/" + oldname + ".mk"
     if os.path.exists(acpath):
-        old_autochecks = parse_autochecks_file(oldname)
+        old_autochecks = discovery.parse_autochecks_file(oldname)
         out = file(cmk.paths.autochecks_dir + "/" + newname + ".mk", "w")
         out.write("[\n")
         for ct, item, paramstring in old_autochecks:
@@ -848,38 +877,38 @@ def rename_host_autochecks(oldname, newname):
     return actions
 
 
-def rename_host_files(oldname, newname):
+def _rename_host_files(oldname, newname):
     actions = []
 
     # Rename temporary files of the host
     for d in [ "cache", "counters" ]:
-        if rename_host_file(cmk.paths.tmp_dir + "/" + d + "/", oldname, newname):
+        if _rename_host_file(cmk.paths.tmp_dir + "/" + d + "/", oldname, newname):
             actions.append(d)
 
-    if rename_host_dir(cmk.paths.tmp_dir + "/piggyback/", oldname, newname):
+    if _rename_host_dir(cmk.paths.tmp_dir + "/piggyback/", oldname, newname):
         actions.append("piggyback-load")
 
     # Rename piggy files *created* by the host
     piggybase = cmk.paths.tmp_dir + "/piggyback/"
     if os.path.exists(piggybase):
         for piggydir in os.listdir(piggybase):
-            if rename_host_file(piggybase + piggydir, oldname, newname):
+            if _rename_host_file(piggybase + piggydir, oldname, newname):
                 actions.append("piggyback-pig")
 
     # Logwatch
-    if rename_host_dir(cmk.paths.logwatch_dir, oldname, newname):
+    if _rename_host_dir(cmk.paths.logwatch_dir, oldname, newname):
         actions.append("logwatch")
 
     # SNMP walks
-    if rename_host_file(cmk.paths.snmpwalks_dir, oldname, newname):
+    if _rename_host_file(cmk.paths.snmpwalks_dir, oldname, newname):
         actions.append("snmpwalk")
 
     # HW/SW-Inventory
-    if rename_host_file(cmk.paths.var_dir + "/inventory", oldname, newname):
-        rename_host_file(cmk.paths.var_dir + "/inventory", oldname + ".gz", newname + ".gz")
+    if _rename_host_file(cmk.paths.var_dir + "/inventory", oldname, newname):
+        _rename_host_file(cmk.paths.var_dir + "/inventory", oldname + ".gz", newname + ".gz")
         actions.append("inv")
 
-    if rename_host_dir(cmk.paths.var_dir + "/inventory_archive", oldname, newname):
+    if _rename_host_dir(cmk.paths.var_dir + "/inventory_archive", oldname, newname):
         actions.append("invarch")
 
     # Baked agents
@@ -887,22 +916,22 @@ def rename_host_files(oldname, newname):
     have_renamed_agent = False
     if os.path.exists(baked_agents_dir):
         for opsys in os.listdir(baked_agents_dir):
-            if rename_host_file(baked_agents_dir + opsys, oldname, newname):
+            if _rename_host_file(baked_agents_dir + opsys, oldname, newname):
                 have_renamed_agent = True
     if have_renamed_agent:
         actions.append("agent")
 
     # Agent deployment
     deployment_dir = cmk.paths.var_dir + "/agent_deployment/"
-    if rename_host_file(deployment_dir, oldname, newname):
+    if _rename_host_file(deployment_dir, oldname, newname):
         actions.append("agent_deployment")
 
-    actions += omd_rename_host(oldname, newname)
+    actions += _omd_rename_host(oldname, newname)
 
     return actions
 
 
-def rename_host_dir(basedir, oldname, newname):
+def _rename_host_dir(basedir, oldname, newname):
     import shutil
     if os.path.exists(basedir + "/" + oldname):
         if os.path.exists(basedir + "/" + newname):
@@ -911,7 +940,7 @@ def rename_host_dir(basedir, oldname, newname):
         return 1
     return 0
 
-def rename_host_file(basedir, oldname, newname):
+def _rename_host_file(basedir, oldname, newname):
     if os.path.exists(basedir + "/" + oldname):
         if os.path.exists(basedir + "/" + newname):
             os.remove(basedir + "/" + newname)
@@ -920,7 +949,7 @@ def rename_host_file(basedir, oldname, newname):
     return 0
 
 # This functions could be moved out of Check_MK.
-def omd_rename_host(oldname, newname):
+def _omd_rename_host(oldname, newname):
     oldregex = oldname.replace(".", "[.]")
     newregex = newname.replace(".", "[.]")
     actions = []
@@ -939,7 +968,7 @@ def omd_rename_host(oldname, newname):
     os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' %s/*.xml 2>/dev/null" % (oldname, newname, dirpath))
 
     # RRD files
-    if rename_host_dir(cmk.paths.omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
+    if _rename_host_dir(cmk.paths.omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
         actions.append("rrd")
 
     # RRD files
@@ -1011,22 +1040,25 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
     return actions
 
 
-def automation_notification_replay(args):
+def _automation_notification_replay(args):
+    import cmk_base.notify as notify
     nr = args[0]
-    return notification_replay_backlog(int(nr))
+    return notify.notification_replay_backlog(int(nr))
 
 
-def automation_notification_analyse(args):
+def _automation_notification_analyse(args):
+    import cmk_base.notify as notify
     nr = args[0]
-    return notification_analyse_backlog(int(nr))
+    return notify.notification_analyse_backlog(int(nr))
 
 
-def automation_get_bulks(args):
+def _automation_get_bulks(args):
+    import cmk_base.notify as notify
     only_ripe = args[0] == "1"
-    return find_bulks(only_ripe)
+    return notify.find_bulks(only_ripe)
 
 
-def automation_active_check(args):
+def _automation_active_check(args):
     hostname, plugin, item = args
     item = item.decode("utf-8")
 
@@ -1034,10 +1066,10 @@ def automation_active_check(args):
         custchecks = rulesets.host_extra_conf(hostname, config.custom_checks)
         for entry in custchecks:
             if entry["service_description"] == item:
-                command_line = replace_core_macros(hostname, entry.get("command_line", ""))
+                command_line = _replace_core_macros(hostname, entry.get("command_line", ""))
                 if command_line:
                     command_line = core_config.autodetect_plugin(command_line)
-                    return execute_check_plugin(command_line)
+                    return _execute_check_plugin(command_line)
                 else:
                     return -1, "Passive check - cannot be executed"
     else:
@@ -1050,11 +1082,11 @@ def automation_active_check(args):
                     description = act_info["service_description"](params).replace('$HOSTNAME$', hostname)
                     if description == item:
                         args = core_config.active_check_arguments(hostname, description, act_info["argument_function"](params))
-                        command_line = replace_core_macros(hostname, act_info["command_line"].replace("$ARG1$", args))
-                        return execute_check_plugin(command_line)
+                        command_line = _replace_core_macros(hostname, act_info["command_line"].replace("$ARG1$", args))
+                        return _execute_check_plugin(command_line)
 
 
-def load_resource_file(macros):
+def _load_resource_file(macros):
     try:
         for line in file(cmk.paths.omd_root + "/etc/nagios/resource.cfg"):
             line = line.strip()
@@ -1072,16 +1104,16 @@ def load_resource_file(macros):
 # without OMD, since we do not know the value of $USER1$ and $USER2$
 # here. We could read the Nagios resource.cfg file, but we do not
 # know for sure the place of that either.
-def replace_core_macros(hostname, commandline):
+def _replace_core_macros(hostname, commandline):
     macros = core_config.get_host_macros_from_attributes(hostname,
-                         core_config.get_host_attributes(hostname, tags_of_host(hostname)))
-    load_resource_file(macros)
+                         core_config.get_host_attributes(hostname, config.tags_of_host(hostname)))
+    _load_resource_file(macros)
     for varname, value in macros.items():
         commandline = commandline.replace(varname, "%s" % value)
     return commandline
 
 
-def execute_check_plugin(commandline):
+def _execute_check_plugin(commandline):
     try:
         p = os.popen(commandline + " 2>&1")
         output = p.read().strip()
@@ -1104,39 +1136,42 @@ def execute_check_plugin(commandline):
         return 3, "UNKNOWN - Cannot execute command: %s" % e
 
 
-def automation_update_dns_cache():
+def _automation_update_dns_cache():
     return ip_lookup.update_dns_cache()
 
 
-def automation_bake_agents():
-    if "do_bake_agents" in globals():
-        return do_bake_agents()
+def _automation_bake_agents():
+    if cmk_base.utils.has_feature("cee.agent_bakery"):
+        import cmk_base.cee.agent_bakery as agent_bakery
+        return agent_bakery.do_bake_agents()
 
 
-def automation_get_agent_output(args):
+def _automation_get_agent_output(args):
     hostname, ty = args
 
-    success    = True
-    output     = ""
-    agent_data = ""
+    success = True
+    output  = ""
+    info    = ""
 
     try:
         if ty == "agent":
-            agent_data = get_plain_hostinfo(hostname)
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
+            info = agent_data.get_agent_info(hostname, ipaddress, 999999999)
+            info += piggyback.get_piggyback_info(hostname)
         else:
             path = cmk.paths.snmpwalks_dir + "/" + hostname
-            do_snmpwalk_on(hostname, path)
-            agent_data = file(path).read()
+            snmp.do_snmpwalk_on({}, hostname, path)
+            info = file(path).read()
     except Exception, e:
         success = False
         output = "Failed to fetch data from %s: %s\n" % (hostname, e)
         if cmk.debug.enabled():
             raise
 
-    return success, output, agent_data
+    return success, output, info
 
 
-def automation_get_package_info(args):
+def _automation_get_package_info(args):
     import cmk_base.packaging
     packages = {}
     for package_name in cmk_base.packaging.all_package_names():
@@ -1149,7 +1184,7 @@ def automation_get_package_info(args):
     }
 
 
-def automation_get_package(args):
+def _automation_get_package(args):
     import cmk_base.packaging
     package_name = args[0]
     package = cmk_base.packaging.read_package_info(package_name)
@@ -1161,7 +1196,7 @@ def automation_get_package(args):
     return package, output_file.getvalue()
 
 
-def automation_create_or_edit_package(args, mode):
+def _automation_create_or_edit_package(args, mode):
     import cmk_base.packaging
     package_name = args[0]
     new_package_info = eval(sys.stdin.read())
@@ -1172,7 +1207,7 @@ def automation_create_or_edit_package(args, mode):
     return None
 
 
-def automation_install_package(args):
+def _automation_install_package(args):
     import cmk_base.packaging
     input_file = StringIO(sys.stdin.read())
     try:
@@ -1183,7 +1218,7 @@ def automation_install_package(args):
         raise MKAutomationError("Cannot install package: %s" % e)
 
 
-def automation_remove_or_release_package(args, mode):
+def _automation_remove_or_release_package(args, mode):
     import cmk_base.packaging
     package_name = args[0]
     package = cmk_base.packaging.read_package_info(package_name)
@@ -1196,7 +1231,7 @@ def automation_remove_or_release_package(args, mode):
     return None
 
 
-def automation_remove_unpackaged_file(args):
+def _automation_remove_unpackaged_file(args):
     import cmk_base.packaging
     part_name = args[0]
     if part_name not in [ p[0] for p in cmk_base.packaging.package_parts ]:

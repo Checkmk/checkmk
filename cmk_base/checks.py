@@ -26,6 +26,7 @@
 
 import os
 import math
+import copy
 
 import cmk.paths
 import cmk.render as render
@@ -60,6 +61,13 @@ special_agent_info                 = {}
 # (if available) read from the config and applied to the checks module after
 # reading in the configuration of the user.
 g_check_variables = {}
+
+# workaround: set of check-groups that are to be treated as service-checks even if
+#   the item is None
+service_rule_groups = set([
+    "temperature"
+])
+
 
 #.
 #   .--Loading-------------------------------------------------------------.
@@ -265,12 +273,16 @@ def checks_by_checkgroup():
     return groups
 
 
+# These caches both only hold the base names of the checks
 def initialize_check_type_caches():
     snmp_cache = cmk_base.runtime_cache.get_set("check_type_snmp")
     snmp_cache.update(snmp_info.keys())
 
     tcp_cache = cmk_base.runtime_cache.get_set("check_type_tcp")
-    tcp_cache.update(check_info.keys())
+    for check_type, check in check_info.items():
+        basename = check_type.split(".")[0]
+        if basename not in snmp_cache:
+            tcp_cache.add(basename)
 
 #.
 #   .--Helpers-------------------------------------------------------------.
@@ -308,7 +320,7 @@ def sanitize_service_description(descr):
 
 
 def is_snmp_check(check_name):
-    cache = cmk_base.config_cache.get_dict("is_snmp_check")
+    cache = cmk_base.runtime_cache.get_dict("is_snmp_check")
 
     try:
         return cache[check_name]
@@ -321,18 +333,117 @@ def is_snmp_check(check_name):
 
 
 def is_tcp_check(check_name):
-    cache = cmk_base.config_cache.get_dict("is_tcp_check")
+    cache = cmk_base.runtime_cache.get_dict("is_tcp_check")
 
     try:
         return cache[check_name]
     except KeyError:
         tcp_checks = cmk_base.runtime_cache.get_set("check_type_tcp")
+<<<<<<< 4d46d11a9e875b5d76ec359949a862ae3d9618ce
         snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
+=======
+>>>>>>> Fully replaced modules by cmk_base
 
-        result = check_name in tcp_checks \
-                  and check_name.split(".")[0] not in snmp_checks # snmp check basename
+        result = check_name.split(".")[0] in tcp_checks
         cache[check_name] = result
         return result
+
+
+def discoverable_tcp_checks():
+    types = []
+
+    for check_type, check in check_info.items():
+        if is_tcp_check(check_type) and check["inventory_function"]:
+            types.append(check_type)
+
+    return sorted(types)
+
+
+# Compute parameters for a check honoring factory settings,
+# default settings of user in main.mk, check_parameters[] and
+# the values code in autochecks (given as parameter params)
+def compute_check_parameters(host, checktype, item, params):
+    if checktype not in check_info: # handle vanished checktype
+        return None
+
+    # Handle dictionary based checks
+    def_levels_varname = check_info[checktype].get("default_levels_variable")
+    # TODO: Can we skip this?
+    #if def_levels_varname:
+    #    vars_before_config.add(def_levels_varname)
+
+    # Handle case where parameter is None but the type of the
+    # default value is a dictionary. This is for example the
+    # case if a check type has gotten parameters in a new version
+    # but inventory of the old version left None as a parameter.
+    # Also from now on we support that the inventory simply puts
+    # None as a parameter. We convert that to an empty dictionary
+    # that will be updated with the factory settings and default
+    # levels, if possible.
+    if params == None and def_levels_varname:
+        fs = factory_settings.get(def_levels_varname)
+        if type(fs) == dict:
+            params = {}
+
+    # Honor factory settings for dict-type checks. Merge
+    # dict type checks with multiple matching rules
+    if type(params) == dict:
+
+        # Start with factory settings
+        if def_levels_varname:
+            new_params = factory_settings.get(def_levels_varname, {}).copy()
+        else:
+            new_params = {}
+
+        # Merge user's default settings onto it
+        if def_levels_varname and hasattr(config, def_levels_varname):
+            def_levels = getattr(config, def_levels_varname)
+            if type(def_levels) == dict:
+                new_params.update(def_levels)
+
+        # Merge params from inventory onto it
+        new_params.update(params)
+        params = new_params
+
+    descr = config.service_description(host, checktype, item)
+
+    # Get parameters configured via checkgroup_parameters
+    entries = _get_checkgroup_parameters(host, checktype, item)
+
+    # Get parameters configured via check_parameters
+    entries += rulesets.service_extra_conf(host, descr, config.check_parameters)
+
+    if entries:
+        # loop from last to first (first must have precedence)
+        for entry in entries[::-1]:
+            if type(params) == dict and type(entry) == dict:
+                params.update(entry)
+            else:
+                if type(entry) == dict:
+                    # The entry still has the reference from the rule..
+                    # If we don't make a deepcopy the rule might be modified by
+                    # a followup params.update(...)
+                    entry = copy.deepcopy(entry)
+                params = entry
+    return params
+
+
+def _get_checkgroup_parameters(host, checktype, item):
+    checkgroup = check_info[checktype]["group"]
+    if not checkgroup:
+        return []
+    rules = config.checkgroup_parameters.get(checkgroup)
+    if rules == None:
+        return []
+
+    try:
+        # checks without an item
+        if item == None and checkgroup not in service_rule_groups:
+            return rulesets.host_extra_conf(host, rules)
+        else: # checks with an item need service-specific rules
+            return rulesets.service_extra_conf(host, item, rules)
+    except MKGeneralException, e:
+        raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
 
 
 #.

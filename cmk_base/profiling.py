@@ -24,19 +24,41 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-"""This is the python module hierarchy used by Check_MK's core
-components, former called modules. This hosts the checking,
-discovery and a lot of other functionality."""
-
+import os
 import sys
-import cmk_base.caching
 
-# This cache manager holds all caches that rely on the configuration
-# and have to be flushed once the configuration is reloaded in the
-# keepalive mode
-config_cache = cmk_base.caching.CacheManager()
+import cmk_base.console as console
 
-# These caches are not automatically cleared during the whole execution
-# time of the current Check_MK process. Single cached may be cleaned
-# manually during execution.
-runtime_cache = cmk_base.caching.CacheManager()
+_profile      = None
+_profile_path = "profile.out"
+
+
+def enable():
+    global _profile
+    import cProfile
+    _profile = cProfile.Profile()
+    _profile.enable()
+    console.verbose("Enabled profiling.\n")
+
+
+def enabled():
+    return _profile != None
+
+
+def output_profile():
+    if not _profile:
+        return
+
+    _profile.dump_stats(_profile_path)
+    show_profile = os.path.join(os.path.dirname(_profile_path), "show_profile.py")
+    with file(show_profile, "w") as f:
+        f.write("#!/usr/bin/python\n"
+                "import pstats\n"
+                "stats = pstats.Stats('%s')\n"
+                "stats.sort_stats('time').print_stats()\n" % _profile_path)
+    os.chmod(show_profile, 0755)
+
+    console.output("Profile '%s' written. Please run %s.\n" %
+                   (_profile_path, show_profile), stream=sys.stderr)
+
+

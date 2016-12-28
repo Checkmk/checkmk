@@ -111,6 +111,11 @@ def clear_item_states_by_full_keys(full_keys):
             pass
 
 
+def cleanup_item_states():
+    global g_item_state
+    g_item_state = {}
+
+
 def set_item_state_prefix(*args):
     global g_item_state_prefix
     g_item_state_prefix = args

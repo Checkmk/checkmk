@@ -37,10 +37,34 @@
 #    => These already bear all information about the contact, the plugin
 #       to call and its parameters.
 
+import os
+import pprint
+import re
+import socket
+import signal
+import subprocess
+import sys
+import time
+import urllib
+
+import livestatus
 from cmk.regex import regex
 import cmk.paths
+from cmk.exceptions import MKGeneralException
 
+import cmk_base.utils
 import cmk_base.config as config
+import cmk_base.rulesets as rulesets
+import cmk_base.console as console
+import cmk_base.core as core
+import cmk_base.events as events
+
+try:
+    import cmk_base.cee.keepalive as keepalive
+except ImportError:
+    keepalive = None
+
+_log_to_stdout = False
 
 #   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
@@ -122,7 +146,7 @@ def _transform_user_disable_notifications_opts(contact):
 #   '----------------------------------------------------------------------'
 
 def notify_usage():
-    sys.stderr.write("""Usage: check_mk --notify [--keepalive]
+    console.error("""Usage: check_mk --notify [--keepalive]
        check_mk --notify spoolfile <filename>
 
 Normally the notify module is called without arguments to send real
@@ -143,7 +167,13 @@ Available commands:
 # Main function called by cmk --notify. It either starts the
 # keepalive mode (used by CMC), sends out one notifications from
 # several possible sources or sends out all ripe bulk notifications.
-def do_notify(args):
+def do_notify(options, args):
+    global _log_to_stdout
+    _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
+
+    if keepalive and "keepalive" in options:
+        keepalive.enable()
+
     convert_legacy_configuration()
 
     global notify_mode, notification_logging
@@ -159,12 +189,12 @@ def do_notify(args):
         if args:
             notify_mode = args[0]
             if notify_mode not in [ 'stdin', 'spoolfile', 'replay', 'send-bulks' ]:
-                sys.stderr.write("ERROR: Invalid call to check_mk --notify.\n\n")
+                console.error("ERROR: Invalid call to check_mk --notify.\n\n")
                 notify_usage()
                 sys.exit(1)
 
             if len(args) != 2 and notify_mode not in [ "stdin", "replay", "send-bulks" ]:
-                sys.stderr.write("ERROR: need an argument to --notify %s.\n\n" % notify_mode)
+                console.error("ERROR: need an argument to --notify %s.\n\n" % notify_mode)
                 sys.exit(1)
 
             elif notify_mode == 'spoolfile':
@@ -185,7 +215,7 @@ def do_notify(args):
         if notify_mode == "spoolfile":
             return handle_spoolfile(filename)
 
-        elif opt_keepalive:
+        elif keepalive and keepalive.enabled():
             notify_keepalive()
 
         elif notify_mode == 'replay':
@@ -193,7 +223,7 @@ def do_notify(args):
             notify_notify(raw_context)
 
         elif notify_mode == 'stdin':
-            notify_notify(raw_context_from_stdin())
+            notify_notify(events.raw_context_from_stdin())
 
         elif notify_mode == "send-bulks":
             send_ripe_bulks()
@@ -233,17 +263,17 @@ def notify_notify(raw_context, analyse=False):
     notify_log("----------------------------------------------------------------------")
     if analyse:
         notify_log("Analysing notification (%s) context with %s variables" % (
-            find_host_service_in_context(raw_context), len(raw_context)))
+            events.find_host_service_in_context(raw_context), len(raw_context)))
     else:
         notify_log("Got raw notification (%s) context with %s variables" % (
-            find_host_service_in_context(raw_context), len(raw_context)))
+            events.find_host_service_in_context(raw_context), len(raw_context)))
 
     # Add some further variable for the conveniance of the plugins
 
     if notification_logging >= 2:
-        notify_log(render_context_dump(raw_context))
+        notify_log(events.render_context_dump(raw_context))
 
-    complete_raw_context(raw_context, with_dump = notification_logging >= 2, event_log = notify_log)
+    events.complete_raw_context(raw_context, with_dump = notification_logging >= 2, event_log = notify_log)
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):
@@ -345,8 +375,8 @@ def notification_analyse_backlog(nr):
 
 # TODO: Make use of the generic do_keepalive() mechanism?
 def notify_keepalive():
-    register_keepalive_sigint_handler()
-    event_keepalive(
+    cmk_base.utils.register_sigint_handler()
+    events.event_keepalive(
         event_function  = notify_notify,
         log_function    = notify_log,
         call_every_loop = send_ripe_bulks,
@@ -573,7 +603,7 @@ def rbn_match_rule(rule, context):
     if rule.get("disabled"):
         return "This rule is disabled"
 
-    return event_match_rule(rule, context)             or \
+    return events.event_match_rule(rule, context)             or \
         rbn_match_escalation(rule, context)            or \
         rbn_match_escalation_throtte(rule, context)    or \
         rbn_match_host_event(rule, context)            or \
@@ -795,7 +825,7 @@ def rbn_object_contact_names(context):
     commasepped = context.get("CONTACTS")
     if commasepped == "?":
         notify_log("Warning: Contacts of %s cannot be determined. Using fallback contacts" %
-                   find_host_service_in_context(context))
+                   events.find_host_service_in_context(context))
         return [ contact["name"] for contact in rbn_fallback_contacts() ]
     elif commasepped:
         return commasepped.split(",")
@@ -910,9 +940,9 @@ def should_notify(context, entry):
     if "match_sl" in entry:
         from_sl, to_sl = entry['match_sl']
         if context['WHAT'] == "SERVICE" and context.get('SVC_SL','').isdigit():
-            sl = saveint(context.get('SVC_SL'))
+            sl = events.saveint(context.get('SVC_SL'))
         else:
-            sl = saveint(context.get('HOST_SL'))
+            sl = events.saveint(context.get('HOST_SL'))
 
         if sl < from_sl or sl > to_sl:
             notify_log(" - Skipping: service level %d not between %d and %d" % (sl, from_sl, to_sl))
@@ -979,7 +1009,7 @@ def should_notify(context, entry):
     if "timeperiod" in entry:
         timeperiod = entry["timeperiod"]
         if timeperiod and timeperiod != "24X7":
-            if not check_timeperiod(timeperiod):
+            if not core.check_timeperiod(timeperiod):
                 notify_log(" - Skipping: time period %s is currently not active" % timeperiod)
                 return False
     return True
@@ -1111,7 +1141,7 @@ def notify_via_email(plugin_context):
 def create_plugin_context(raw_context, params):
     plugin_context = {}
     plugin_context.update(raw_context) # Make a real copy
-    add_to_event_context(plugin_context, "PARAMETER", params)
+    events.add_to_event_context(plugin_context, "PARAMETER", params)
     return plugin_context
 
 
@@ -1174,8 +1204,8 @@ def call_notification_script(plugin, plugin_context):
             line = p.stdout.readline()
             if line != '':
                 plugin_log("Output: %s" % line.rstrip().decode('utf-8'))
-                if opt_log_to_stdout:
-                    sys.stdout.write(line)
+                if _log_to_stdout:
+                    console.output(line)
             else:
                 break
         # the stdout is closed but the return code may not be available just yet - wait for the
@@ -1254,7 +1284,7 @@ def handle_spoolfile(spoolfile):
             plugin = data["plugin"]
             notify_log("Got spool file %s (%s) for local delivery via %s" % (
                 notif_uuid[:8],
-                find_host_service_in_context(plugin_context), (plugin or "plain mail")))
+                events.find_host_service_in_context(plugin_context), (plugin or "plain mail")))
             return call_notification_script(plugin, plugin_context)
 
         else:
@@ -1263,7 +1293,7 @@ def handle_spoolfile(spoolfile):
             # several or no actual plugins.
             raw_context = data["context"]
             notify_log("Got spool file %s (%s) from remote host for local delivery." % (
-                       notif_uuid[:8], find_host_service_in_context(raw_context)))
+                       notif_uuid[:8], events.find_host_service_in_context(raw_context)))
 
             store_notification_backlog(data["context"])
             locally_deliver_raw_context(data["context"])
@@ -1601,7 +1631,7 @@ def raw_context_from_backlog(nr):
         backlog = []
 
     if nr < 0 or nr >= len(backlog):
-        sys.stderr.write("No notification number %d in backlog.\n" % nr)
+        console.error("No notification number %d in backlog.\n" % nr)
         sys.exit(2)
 
     notify_log("Replaying notification %d from backlog...\n" % nr)
@@ -1676,29 +1706,12 @@ def dead_nagios_variable(value):
 
 def notify_log(message):
     if notification_logging >= 1:
-        event_log(notification_log, message)
+        events.event_log(notification_log, message)
 
 
 def notify_log_debug(message):
     if notification_logging >= 2:
         notify_log(message)
-
-
-def get_readable_rel_date(timestamp):
-    try:
-        change = int(timestamp)
-    except:
-        change = 0
-    rel_time = time.time() - change
-    seconds = rel_time % 60
-    rem = rel_time / 60
-    minutes = rem % 60
-    hours = (rem % 1440) / 60
-    days = rem / 1440
-    return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
-
-def urlencode(s):
-    return urllib.quote(s)
 
 def fresh_uuid():
     try:

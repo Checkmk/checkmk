@@ -97,13 +97,17 @@ def _write_crash_dump_snmp_info(crash_dir, hostname, check_type):
 
 
 def _write_crash_dump_agent_output(crash_dir, hostname):
-    # TODO: This does not work!
-    #if "get_rtc_package" in globals():
-    #    file(crash_dir + "/agent_output", "w").write(get_rtc_package())
-    #else:
-    cachefile = cmk.paths.tcp_cache_dir + "/" + hostname
-    if os.path.exists(cachefile):
-        file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
+    try:
+        import cmk_base.cee.real_time_checks as real_time_checks
+    except ImportError:
+        real_time_checks = None
+
+    if real_time_checks and real_time_checks.is_real_time_check_helper():
+        file(crash_dir + "/agent_output", "w").write(real_time_checks.get_rtc_package())
+    else:
+        cachefile = cmk.paths.tcp_cache_dir + "/" + hostname
+        if os.path.exists(cachefile):
+            file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
 
 
 def _pack_crash_dump(crash_dir):

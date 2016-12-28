@@ -24,14 +24,41 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Code for support of Nagios (and compatible) cores
+"""Code for support of Nagios (and compatible) cores"""
 
-import cmk.tty as tty
+import os
+import sys
+import py_compile
+
 import cmk.paths
+import cmk.tty as tty
+from cmk.exceptions import MKGeneralException
 
+import cmk_base.utils
 import cmk_base.console as console
+import cmk_base.config as config
+import cmk_base.checks as checks
 import cmk_base.rulesets as rulesets
 import cmk_base.core_config as core_config
+import cmk_base.ip_lookup as ip_lookup
+
+
+def do_check_nagiosconfig():
+    command = cmk.paths.nagios_binary + " -vp "  + cmk.paths.nagios_config_file + " 2>&1"
+    console.verbose("Running '%s'\n" % command)
+    console.output("Validating Nagios configuration...")
+
+    process = os.popen(command, "r")
+    output = process.read()
+    exit_status = process.close()
+    if not exit_status:
+        console.output(tty.ok + "\n")
+        return True
+    else:
+        console.output("ERROR:\n")
+        console.output(output, stream=sys.stderr)
+        return False
+
 
 #   .--Create config-------------------------------------------------------.
 #   |      ____                _                          __ _             |
@@ -44,21 +71,14 @@ import cmk_base.core_config as core_config
 #   |  Create a configuration file for Nagios core with hosts + services   |
 #   '----------------------------------------------------------------------'
 
+# TODO: Move to modes?
 def do_output_nagios_conf(args):
     if len(args) == 0:
         args = None
-    create_nagios_config(sys.stdout, args)
+    create_config(sys.stdout, args)
 
 
-def output_conf_header(outfile):
-    outfile.write("""#
-# Created by Check_MK. Do not edit.
-#
-
-""")
-
-
-def create_nagios_config(outfile = sys.stdout, hostnames = None):
+def create_config(outfile = sys.stdout, hostnames = None):
     global hostgroups_to_define
     hostgroups_to_define = set([])
     global servicegroups_to_define
@@ -89,37 +109,45 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
         config.extra_service_conf["_SERVICE_PERIOD"] = config.extra_service_conf["service_period"]
         del config.extra_service_conf["service_period"]
 
-    output_conf_header(outfile)
+    _output_conf_header(outfile)
     if hostnames == None:
         hostnames = config.all_active_hosts()
 
     for hostname in hostnames:
-        create_nagios_config_host(outfile, hostname)
+        _create_nagios_config_host(outfile, hostname)
 
-    create_nagios_config_contacts(outfile, hostnames)
-    create_nagios_config_hostgroups(outfile)
-    create_nagios_config_servicegroups(outfile)
-    create_nagios_config_contactgroups(outfile)
-    create_nagios_config_commands(outfile)
-    create_nagios_config_timeperiods(outfile)
+    _create_nagios_config_contacts(outfile, hostnames)
+    _create_nagios_config_hostgroups(outfile)
+    _create_nagios_config_servicegroups(outfile)
+    _create_nagios_config_contactgroups(outfile)
+    _create_nagios_config_commands(outfile)
+    _create_nagios_config_timeperiods(outfile)
 
     if config.extra_nagios_conf:
         outfile.write("\n# extra_nagios_conf\n\n")
         outfile.write(config.extra_nagios_conf)
 
 
-def create_nagios_config_host(outfile, hostname):
+def _output_conf_header(outfile):
+    outfile.write("""#
+# Created by Check_MK. Do not edit.
+#
+
+""")
+
+
+def _create_nagios_config_host(outfile, hostname):
     outfile.write("\n# ----------------------------------------------------\n")
     outfile.write("# %s\n" % hostname)
     outfile.write("# ----------------------------------------------------\n")
-    host_attrs = core_config.get_host_attributes(hostname, tags_of_host(hostname))
+    host_attrs = core_config.get_host_attributes(hostname, config.tags_of_host(hostname))
     if config.generate_hostconf:
-        create_nagios_hostdefs(outfile, hostname, host_attrs)
-    create_nagios_servicedefs(outfile, hostname, host_attrs)
+        _create_nagios_hostdefs(outfile, hostname, host_attrs)
+    _create_nagios_servicedefs(outfile, hostname, host_attrs)
 
 
-def create_nagios_hostdefs(outfile, hostname, attrs):
-    is_clust = is_cluster(hostname)
+def _create_nagios_hostdefs(outfile, hostname, attrs):
+    is_clust = config.is_cluster(hostname)
 
     ip = attrs["address"]
 
@@ -137,7 +165,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     outfile.write("\ndefine host {\n")
     outfile.write("  host_name\t\t\t%s\n" % hostname)
     outfile.write("  use\t\t\t\t%s\n" % (is_clust and config.cluster_template or config.host_template))
-    outfile.write("  address\t\t\t%s\n" % (ip and make_utf8(ip) or core_config.fallback_ip_for(hostname)))
+    outfile.write("  address\t\t\t%s\n" % (ip and cmk_base.utils.make_utf8(ip) or core_config.fallback_ip_for(hostname)))
 
     # Add custom macros
     for key, value in attrs.items():
@@ -161,12 +189,12 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
         hostgroups_to_define.add(config.default_host_group)
     elif config.define_hostgroups:
         hostgroups_to_define.update(hgs)
-    outfile.write("  hostgroups\t\t\t%s\n" % make_utf8(hostgroups))
+    outfile.write("  hostgroups\t\t\t%s\n" % cmk_base.utils.make_utf8(hostgroups))
 
     # Contact groups
     cgrs = config.contactgroups_of(hostname)
     if len(cgrs) > 0:
-        outfile.write("  contact_groups\t\t%s\n" % make_utf8(",".join(cgrs)))
+        outfile.write("  contact_groups\t\t%s\n" % cmk_base.utils.make_utf8(",".join(cgrs)))
         contactgroups_to_define.update(cgrs)
 
     if not is_clust:
@@ -191,16 +219,18 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     if alias == None:
         outfile.write("  alias\t\t\t\t%s\n" % alias)
     else:
-        alias = make_utf8(alias)
+        alias = cmk_base.utils.make_utf8(alias)
 
     # Custom configuration last -> user may override all other values
-    outfile.write(make_utf8(extra_host_conf_of(hostname, exclude=["parents"] if is_clust else [])))
+    outfile.write(cmk_base.utils.make_utf8(_extra_host_conf_of(hostname, exclude=["parents"] if is_clust else [])))
 
     outfile.write("}\n")
     outfile.write("\n")
 
 
-def create_nagios_servicedefs(outfile, hostname, host_attrs):
+def _create_nagios_servicedefs(outfile, hostname, host_attrs):
+    import cmk_base.check_table as check_table
+
     #   _____
     #  |___ /
     #    |_ \
@@ -209,7 +239,7 @@ def create_nagios_servicedefs(outfile, hostname, host_attrs):
 
 
     def do_omit_service(hostname, description):
-        if service_ignored(hostname, None, description):
+        if config.service_ignored(hostname, None, description):
             return True
         if hostname != config.host_of_clustered_service(hostname, description):
             return True
@@ -217,7 +247,7 @@ def create_nagios_servicedefs(outfile, hostname, host_attrs):
 
     def get_dependencies(hostname,servicedesc):
         result = ""
-        for dep in service_deps(hostname, servicedesc):
+        for dep in check_table.service_deps(hostname, servicedesc):
             result += """
 define servicedependency {
   use\t\t\t\t%s
@@ -230,7 +260,7 @@ define servicedependency {
 
         return result
 
-    host_checks = get_check_table(hostname, remove_duplicates=True).items()
+    host_checks = check_table.get_check_table(hostname, remove_duplicates=True).items()
     host_checks.sort() # Create deterministic order
     have_at_least_one_service = False
     used_descriptions = {}
@@ -293,7 +323,7 @@ define servicedependency {
 }
 
 """ % ( template, hostname, description.encode("utf-8"), check_interval,
-        extra_service_conf_of(hostname, description), action_cfg, checkname ))
+        _extra_service_conf_of(hostname, description), action_cfg, checkname ))
 
         checknames_to_define.add(checkname)
         have_at_least_one_service = True
@@ -308,7 +338,7 @@ define service {
   host_name\t\t\t%s
 %s  service_description\t\tCheck_MK
 }
-""" % (config.active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK")))
+""" % (config.active_service_template, hostname, _extra_service_conf_of(hostname, "Check_MK")))
 
     # legacy checks via legacy_checks
     legchecks = rulesets.host_extra_conf(hostname, config.legacy_checks)
@@ -331,7 +361,7 @@ define service {
         else:
             used_descriptions[description] = ( "legacy(" + command + ")", description )
 
-        extraconf = extra_service_conf_of(hostname, description)
+        extraconf = _extra_service_conf_of(hostname, description)
         if has_perfdata:
             template = "check_mk_perf,"
         else:
@@ -344,7 +374,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t1
 %s}
-""" % (template, hostname, make_utf8(description), simulate_command(command), extraconf))
+""" % (template, hostname, cmk_base.utils.make_utf8(description), _simulate_command(command), extraconf))
 
         # write service dependencies for legacy checks
         outfile.write(get_dependencies(hostname,description))
@@ -399,7 +429,7 @@ define service {
                 used_descriptions[description] = ( "active(" + acttype + ")", description )
 
             template = has_perfdata and "check_mk_perf," or ""
-            extraconf = extra_service_conf_of(hostname, description)
+            extraconf = _extra_service_conf_of(hostname, description)
 
             if host_attrs["address"] in [ "0.0.0.0", "::" ]:
                 command_name = "check-mk-custom"
@@ -416,7 +446,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t1
 %s}
-""" % (template, hostname, make_utf8(description), make_utf8(simulate_command(command)), extraconf))
+""" % (template, hostname, cmk_base.utils.make_utf8(description), cmk_base.utils.make_utf8(_simulate_command(command)), extraconf))
 
             # write service dependencies for active checks
             outfile.write(get_dependencies(hostname,description))
@@ -448,7 +478,7 @@ define service {
                 freshness = "  check_freshness\t\t1\n" + \
                             "  freshness_threshold\t\t%d\n" % (60 * entry["freshness"]["interval"])
                 command_line = "echo %s && exit %d" % (
-                       quote_nagios_string(entry["freshness"]["output"]), entry["freshness"]["state"])
+                       _quote_nagios_string(entry["freshness"]["output"]), entry["freshness"]["state"])
             else:
                 freshness = ""
 
@@ -471,7 +501,7 @@ define service {
                 used_descriptions[description] = ( "custom(%s)" % command_name, description )
 
             template = has_perfdata and "check_mk_perf," or ""
-            extraconf = extra_service_conf_of(hostname, description)
+            extraconf = _extra_service_conf_of(hostname, description)
             command = "%s!%s" % (command_name, command_line)
             outfile.write("""
 define service {
@@ -481,7 +511,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t%d
 %s%s}
-""" % (template, hostname, make_utf8(description), simulate_command(command),
+""" % (template, hostname, cmk_base.utils.make_utf8(description), _simulate_command(command),
        (command_line and not freshness) and 1 or 0, extraconf, freshness))
 
             # write service dependencies for custom checks
@@ -492,13 +522,14 @@ define service {
     if 'cmk-inventory' in config.use_new_descriptions_for:
         service_discovery_name = 'Check_MK Discovery'
 
-    params = discovery_check_parameters(hostname) or \
-             default_discovery_check_parameters()
+    import cmk_base.discovery as discovery
+    params = discovery.discovery_check_parameters(hostname) or \
+             discovery.default_discovery_check_parameters()
 
     # Inventory checks - if user has configured them.
     if params["check_interval"] \
-        and not service_ignored(hostname, None, service_discovery_name) \
-        and not "ping" in tags_of_host(hostname): # FIXME/TODO: Why not user is_ping_host()?
+        and not config.service_ignored(hostname, None, service_discovery_name) \
+        and not "ping" in config.tags_of_host(hostname): # FIXME/TODO: Why not user is_ping_host()?
         outfile.write("""
 define service {
   use\t\t\t\t%s
@@ -509,7 +540,7 @@ define service {
 }
 """ % (config.inventory_check_template, hostname, params["check_interval"],
        params["check_interval"],
-       extra_service_conf_of(hostname, service_discovery_name),
+       _extra_service_conf_of(hostname, service_discovery_name),
        service_discovery_name))
 
         if have_at_least_one_service:
@@ -525,23 +556,23 @@ define servicedependency {
 
     # No check_mk service, no legacy service -> create PING service
     if not have_at_least_one_service and not legchecks and not actchecks and not custchecks:
-        add_ping_service(outfile, hostname, host_attrs["address"], config.is_ipv6_primary(hostname) and 6 or 4,
+        _add_ping_service(outfile, hostname, host_attrs["address"], config.is_ipv6_primary(hostname) and 6 or 4,
                          "PING", host_attrs.get("_NODEIPS"))
 
     if config.is_ipv4v6_host(hostname):
         if config.is_ipv6_primary(hostname):
-            add_ping_service(outfile, hostname, host_attrs["_ADDRESS_4"], 4,
+            _add_ping_service(outfile, hostname, host_attrs["_ADDRESS_4"], 4,
                              "PING IPv4", host_attrs.get("_NODEIPS_4"))
         else:
-            add_ping_service(outfile, hostname, host_attrs["_ADDRESS_6"], 6,
+            _add_ping_service(outfile, hostname, host_attrs["_ADDRESS_6"], 6,
                              "PING IPv6", host_attrs.get("_NODEIPS_6"))
 
 
-def add_ping_service(outfile, hostname, ipaddress, family, descr, node_ips):
+def _add_ping_service(outfile, hostname, ipaddress, family, descr, node_ips):
     arguments = core_config.check_icmp_arguments_of(hostname, family=family)
 
     ping_command = 'check-mk-ping'
-    if is_cluster(hostname):
+    if config.is_cluster(hostname):
         arguments += ' -m 1 ' + node_ips
     else:
         arguments += ' ' + ipaddress
@@ -554,17 +585,18 @@ define service {
 %s  host_name\t\t\t%s
 }
 
-""" % (config.pingonly_template, descr, ping_command, arguments, extra_service_conf_of(hostname, descr), hostname))
+""" % (config.pingonly_template, descr, ping_command, arguments, _extra_service_conf_of(hostname, descr), hostname))
 
 
-def simulate_command(command):
+def _simulate_command(command):
     if config.simulation_mode:
         custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
     else:
         return command
 
-def create_nagios_config_hostgroups(outfile):
+
+def _create_nagios_config_hostgroups(outfile):
     if config.define_hostgroups:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Host groups (controlled by define_hostgroups)\n")
@@ -581,7 +613,7 @@ define hostgroup {
   hostgroup_name\t\t%s
   alias\t\t\t\t%s
 }
-""" % (make_utf8(hg), make_utf8(alias)))
+""" % (cmk_base.utils.make_utf8(hg), cmk_base.utils.make_utf8(alias)))
 
     # No creation of host groups but we need to define
     # default host group
@@ -594,7 +626,7 @@ define hostgroup {
 """ % config.default_host_group)
 
 
-def create_nagios_config_servicegroups(outfile):
+def _create_nagios_config_servicegroups(outfile):
     if config.define_servicegroups:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Service groups (controlled by define_servicegroups)\n")
@@ -611,9 +643,9 @@ define servicegroup {
   servicegroup_name\t\t%s
   alias\t\t\t\t%s
 }
-""" % (make_utf8(sg), make_utf8(alias)))
+""" % (cmk_base.utils.make_utf8(sg), cmk_base.utils.make_utf8(alias)))
 
-def create_nagios_config_contactgroups(outfile):
+def _create_nagios_config_contactgroups(outfile):
     if config.define_contactgroups == False:
         return
 
@@ -632,7 +664,7 @@ def create_nagios_config_contactgroups(outfile):
 
         outfile.write("\ndefine contactgroup {\n"
                 "  contactgroup_name\t\t%s\n"
-                "  alias\t\t\t\t%s\n" % (make_utf8(name), make_utf8(alias)))
+                "  alias\t\t\t\t%s\n" % (cmk_base.utils.make_utf8(name), cmk_base.utils.make_utf8(alias)))
 
         members = config.contactgroup_members.get(name)
         if members:
@@ -641,7 +673,7 @@ def create_nagios_config_contactgroups(outfile):
         outfile.write("}\n")
 
 
-def create_nagios_config_commands(outfile):
+def _create_nagios_config_commands(outfile):
     if config.generate_dummy_commands:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Dummy check commands and active check commands\n")
@@ -683,7 +715,7 @@ def create_nagios_config_commands(outfile):
 """ % (command_name, command_line))
 
 
-def create_nagios_config_timeperiods(outfile):
+def _create_nagios_config_timeperiods(outfile):
     if len(config.timeperiods) > 0:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Timeperiod definitions (controlled by variable 'timeperiods')\n")
@@ -694,7 +726,7 @@ def create_nagios_config_timeperiods(outfile):
             tp = config.timeperiods[name]
             outfile.write("define timeperiod {\n  timeperiod_name\t\t%s\n" % name)
             if "alias" in tp:
-                outfile.write("  alias\t\t\t\t%s\n" % make_utf8(tp["alias"]))
+                outfile.write("  alias\t\t\t\t%s\n" % cmk_base.utils.make_utf8(tp["alias"]))
             for key, value in tp.items():
                 if key not in [ "alias", "exclude" ]:
                     times = ",".join([ ("%s-%s" % (fr, to)) for (fr, to) in value ])
@@ -704,7 +736,8 @@ def create_nagios_config_timeperiods(outfile):
                 outfile.write("  exclude\t\t\t%s\n" % ",".join(tp["exclude"]))
             outfile.write("}\n\n")
 
-def create_nagios_config_contacts(outfile, hostnames):
+
+def _create_nagios_config_contacts(outfile, hostnames):
     if len(config.contacts) > 0:
         outfile.write("\n# ------------------------------------------------------------\n")
         outfile.write("# Contact definitions (controlled by variable 'contacts')\n")
@@ -726,11 +759,11 @@ def create_nagios_config_contacts(outfile, hostnames):
             if not cgrs:
                 continue
 
-            outfile.write("define contact {\n  contact_name\t\t\t%s\n" % make_utf8(cname))
+            outfile.write("define contact {\n  contact_name\t\t\t%s\n" % cmk_base.utils.make_utf8(cname))
             if "alias" in contact:
-                outfile.write("  alias\t\t\t\t%s\n" % make_utf8(contact["alias"]))
+                outfile.write("  alias\t\t\t\t%s\n" % cmk_base.utils.make_utf8(contact["alias"]))
             if "email" in contact:
-                outfile.write("  email\t\t\t\t%s\n" % make_utf8(contact["email"]))
+                outfile.write("  email\t\t\t\t%s\n" % cmk_base.utils.make_utf8(contact["email"]))
             if "pager" in contact:
                 outfile.write("  pager\t\t\t\t%s\n" % contact["pager"])
             if config.enable_rulebased_notifications:
@@ -776,18 +809,23 @@ def create_nagios_config_contacts(outfile, hostnames):
 # Quote string for use in a nagios command execution.
 # Please note that also quoting for ! and \ vor Nagios
 # itself takes place here.
-def quote_nagios_string(s):
+def _quote_nagios_string(s):
     return "'" + s.replace('\\', '\\\\').replace("'", "'\"'\"'").replace('!', '\\!') + "'"
 
 
+<<<<<<< f54b54af64c5b7de0b365bd41c4f75b121136825:modules/nagios.py
 def extra_host_conf_of(hostname, exclude=None):
     if exclude == None:
         exclude = []
     return extra_conf_of(config.extra_host_conf, hostname, None, exclude)
+=======
+def _extra_host_conf_of(hostname):
+    return _extra_conf_of(config.extra_host_conf, hostname, None)
+>>>>>>> Fully replaced modules by cmk_base:cmk_base/core_nagios.py
 
 
 # Collect all extra configuration data for a service
-def extra_service_conf_of(hostname, description):
+def _extra_service_conf_of(hostname, description):
     conf = ""
 
     # Contact groups
@@ -803,14 +841,18 @@ def extra_service_conf_of(hostname, description):
         conf += "  service_groups\t\t" + ",".join(sergr) + "\n"
         if config.define_servicegroups:
             servicegroups_to_define.update(sergr)
-    conf += extra_conf_of(config.extra_service_conf, hostname, description)
+    conf += _extra_conf_of(config.extra_service_conf, hostname, description)
     return conf.encode("utf-8")
 
 
+<<<<<<< f54b54af64c5b7de0b365bd41c4f75b121136825:modules/nagios.py
 def extra_conf_of(confdict, hostname, service, exclude=None):
     if exclude == None:
         exclude = []
 
+=======
+def _extra_conf_of(confdict, hostname, service):
+>>>>>>> Fully replaced modules by cmk_base:cmk_base/core_nagios.py
     result = ""
     for key, conflist in confdict.items():
         if service != None:
@@ -825,7 +867,6 @@ def extra_conf_of(confdict, hostname, service, exclude=None):
             format = "  %-29s %s\n"
             result += format % (key, values[0])
     return result
-
 
 
 #.
@@ -845,11 +886,18 @@ def extra_conf_of(confdict, hostname, service, exclude=None):
 #   | in adhoc mode (about 75%).                                           |
 #   '----------------------------------------------------------------------'
 
+# TODO: Move to modes
+def do_precompile_hostchecks():
+    console.output("Precompiling host checks...")
+    precompile_hostchecks()
+    console.output(tty.ok + "\n")
+
+
 # Find files to be included in precompile host check for a certain
 # check (for example df or mem.used). In case of checks with a period
 # (subchecks) we might have to include both "mem" and "mem.used". The
 # subcheck *may* be implemented in a separate file.
-def find_check_plugins(checktype):
+def _find_check_plugins(checktype):
     if '.' in checktype:
         candidates = [ checktype.split('.')[0], checktype ]
     else:
@@ -874,11 +922,11 @@ def precompile_hostchecks():
         os.makedirs(cmk.paths.precompiled_hostchecks_dir)
     for host in config.all_active_hosts():
         try:
-            precompile_hostcheck(host)
+            _precompile_hostcheck(host)
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            sys.stderr.write("Error precompiling checks for host %s: %s\n" % (host, e))
+            console.error("Error precompiling checks for host %s: %s\n" % (host, e))
             sys.exit(5)
 
 
@@ -896,7 +944,9 @@ def stripped_python_file(filename):
     return a
 
 
-def precompile_hostcheck(hostname):
+def _precompile_hostcheck(hostname):
+    import cmk_base.check_table as check_table
+
     console.verbose("%s%s%-16s%s:", tty.bold, tty.blue, hostname, tty.normal, stream=sys.stderr)
 
     compiled_filename = cmk.paths.precompiled_hostchecks_dir + "/" + hostname
@@ -908,14 +958,28 @@ def precompile_hostcheck(hostname):
             pass
 
     # check table, enriched with addition precompiled information.
-    check_table = get_precompiled_check_table(hostname)
+    check_table = check_table.get_precompiled_check_table(hostname)
     if not check_table:
         console.verbose("(no Check_MK checks)\n")
         return
 
     output = file(source_filename + ".new", "w")
     output.write("#!/usr/bin/python\n")
-    output.write("# encoding: utf-8\n")
+    output.write("# encoding: utf-8\n\n")
+
+    output.write("import sys\n")
+    output.write("import cmk.log\n")
+    output.write("import cmk.debug\n")
+    output.write("from cmk.exceptions import MKTerminate\n")
+    output.write("\n")
+    output.write("import cmk_base.utils\n")
+    output.write("import cmk_base.checks as checks\n")
+    output.write("import cmk_base.config as config\n")
+    output.write("import cmk_base.console as console\n")
+    output.write("import cmk_base.checking as checking\n")
+    output.write("import cmk_base.ip_lookup as ip_lookup\n")
+
+    output.write("config.load(validate_hosts=False)\n")
 
     # Self-compile: replace symlink with precompiled python-code, if
     # we are run for the first time
@@ -930,10 +994,13 @@ if os.path.islink(%(dst)r):
 
 """ % { "src" : source_filename, "dst" : compiled_filename })
 
-    output.write(stripped_python_file(cmk.paths.modules_dir + "/check_mk_base.py"))
+    # Remove precompiled directory from sys.path. Leaving it in the path
+    # makes problems when host names (name of precompiled files) are equal
+    # to python module names like "random"
+    output.write("sys.path.pop(0)\n")
 
     # Register default Check_MK signal handler
-    output.write("register_sigint_handler()\n")
+    output.write("cmk_base.utils.register_sigint_handler()\n")
 
     # initialize global variables
     output.write("""
@@ -946,26 +1013,9 @@ logger = cmk.log.get_logger("base")
 #       The later regular argument parsing is handling this correctly. Try to clean this up.
 cmk.log.set_verbosity(verbosity=len([ a for a in sys.argv if a in [ "-v", "--verbose"] ]))
 
-import cmk.debug
-
 if '-d' in sys.argv:
     cmk.debug.enable()
 """)
-
-    # Compile in all neccessary global variables
-    output.write("\n# Global variables\n")
-    for var in [ 'tcp_connect_timeout', 'agent_min_version',
-                 'perfdata_format',
-                 'check_submission', 'monitoring_core',
-                 'cluster_max_cachefile_age', 'check_max_cachefile_age',
-                 'piggyback_max_cachefile_age', 'fallback_agent_output_encoding',
-                 'simulation_mode', 'agent_simulator',
-                 'check_mk_perfdata_with_times',
-                 ]:
-        output.write("%s = %r\n" % (var, getattr(config, var)))
-
-    output.write("\n# Checks for %s\n\n" % hostname)
-    output.write("def get_precompiled_check_table(hostname, remove_duplicates=False, world='config'):\n    return %r\n\n" % check_table)
 
     # Do we need to load the SNMP module? This is the case, if the host
     # has at least one SNMP based check. Also collect the needed check
@@ -1002,7 +1052,7 @@ if '-d' in sys.argv:
                 filenames.append(to_add)
 
         # Now add check file(s) itself
-        paths = find_check_plugins(check_type)
+        paths = _find_check_plugins(check_type)
         if not paths:
             raise MKGeneralException("Cannot find check file %s needed for check type %s" % \
                                      (basename, check_type))
@@ -1016,14 +1066,14 @@ if '-d' in sys.argv:
         console.verbose(" %s%s%s", tty.green, filename.split('/')[-1], tty.normal, stream=sys.stderr)
 
     # handling of clusters
-    if is_cluster(hostname):
-        cluster_nodes = nodes_of(hostname)
+    if config.is_cluster(hostname):
+        cluster_nodes = config.nodes_of(hostname)
         output.write("clusters = { %r : %r }\n" %
                      (hostname, cluster_nodes))
         output.write("def is_cluster(hostname):\n    return True\n\n")
 
         nodes_of_map = {hostname: cluster_nodes}
-        for node in nodes_of(hostname):
+        for node in config.nodes_of(hostname):
             nodes_of_map[node] = None
         output.write("def nodes_of(hostname):\n    return %r[hostname]\n\n" % nodes_of_map)
     else:
@@ -1033,8 +1083,8 @@ if '-d' in sys.argv:
     # IP addresses
     needed_ipaddresses = {}
     nodes = []
-    if is_cluster(hostname):
-        for node in nodes_of(hostname):
+    if config.is_cluster(hostname):
+        for node in config.nodes_of(hostname):
             ipa = ip_lookup.lookup_ip_address(node)
             needed_ipaddresses[node] = ipa
             nodes.append( (node, ipa) )
@@ -1077,7 +1127,10 @@ if '-d' in sys.argv:
 
     # perform actual check with a general exception handler
     output.write("try:\n")
-    output.write("    sys.exit(do_check(%r, %r))\n" % (hostname, ipaddress))
+    output.write("    sys.exit(checking.do_check(%r, %r))\n" % (hostname, ipaddress))
+    output.write("except MKTerminate:\n")
+    output.write("    console.output('<Interrupted>\\n', stream=sys.stderr)\n")
+    output.write("    sys.exit(1)\n")
     output.write("except SystemExit, e:\n")
     output.write("    sys.exit(e.code)\n")
     output.write("except Exception, e:\n")
@@ -1127,5 +1180,3 @@ if '-d' in sys.argv:
         os.symlink(hostname + ".py", compiled_filename)
 
     console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
-
-#.

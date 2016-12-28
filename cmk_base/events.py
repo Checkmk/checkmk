@@ -27,14 +27,23 @@
 # This file is being used by the rule based notifications and (CEE
 # only) by the alert handling
 
-import pprint, urllib, select, subprocess, socket
-import livestatus, os
+import os
+import pprint
+import sys
+import select
+import socket
+import subprocess
+import time
+import traceback
+import urllib
 
+import livestatus
 import cmk
 from cmk.regex import regex
 
+import cmk_base.config as config
 import cmk_base.rulesets as rulesets
-
+import cmk_base.core as core
 
 def event_keepalive(event_function, log_function, call_every_loop=None, loop_interval=None, shutdown_function=None):
     last_config_timestamp = config_timestamp()
@@ -95,7 +104,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
                 except Exception, e:
                     if cmk.debug.enabled():
                         raise
-                    log_function("ERROR %s\n%s" % (e, format_exception()))
+                    log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
 
                 # Signal that we are ready for the next event
                 sys.stdout.write("*")
@@ -108,7 +117,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
         except Exception, e:
             if cmk.debug.enabled():
                 raise
-            log_function("ERROR %s\n%s" % (e, format_exception()))
+            log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
 
         if call_every_loop:
             try:
@@ -116,7 +125,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
             except Exception, e:
                 if cmk.debug.enabled():
                     raise
-                log_function("ERROR %s\n%s" % (e, format_exception()))
+                log_function("ERROR %s\n%s" % (e, traceback.format_exc()))
 
 
 def config_timestamp():
@@ -259,15 +268,16 @@ def add_rulebased_macros(raw_context):
 
 # Add a few further helper variables that are useful in notification and alert plugins
 def complete_raw_context(raw_context, with_dump, event_log):
+    import cmk_base.notify as notify
     raw_keys = list(raw_context.keys())
 
     try:
         raw_context["WHAT"] = raw_context.get("SERVICEDESC") and "SERVICE" or "HOST"
         raw_context["MONITORING_HOST"] = socket.gethostname()
-        raw_context["LOGDIR"] = notification_logdir
+        raw_context["LOGDIR"] = notify.notification_logdir
         raw_context["OMD_ROOT"] = cmk.paths.omd_root
         raw_context["OMD_SITE"] = cmk.omd_site()
-        raw_context["MAIL_COMMAND"] = notification_mail_command
+        raw_context["MAIL_COMMAND"] = notify.notification_mail_command
 
         # The Check_MK Micro Core sends the MICROTIME and no other time stamps. We add
         # a few Nagios-like variants in order to be compatible
@@ -285,10 +295,10 @@ def complete_raw_context(raw_context, with_dump, event_log):
             raw_context["MICROTIME"] = "%d" % (time.time()*1000000)
 
         raw_context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % \
-                            urlencode('view.py?view_name=hoststatus&host=%s' % raw_context['HOSTNAME'])
+                            urllib.quote('view.py?view_name=hoststatus&host=%s' % raw_context['HOSTNAME'])
         if raw_context['WHAT'] == 'SERVICE':
             raw_context['SERVICEURL'] = '/check_mk/index.py?start_url=%s' % \
-                                        urlencode('view.py?view_name=service&host=%s&service=%s' %
+                                        urllib.quote('view.py?view_name=service&host=%s&service=%s' %
                                                      (raw_context['HOSTNAME'], raw_context['SERVICEDESC']))
 
         # Relative Timestamps for several macros
@@ -370,7 +380,6 @@ def complete_raw_context(raw_context, with_dump, event_log):
                    + "\n".join(sorted(["                    %s=%s" % (k, raw_context[k]) for k in raw_context if k not in raw_keys])))
 
 
-
 # There is common code with web/htdocs/lib.py:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.
@@ -386,6 +395,21 @@ def format_plugin_output(output):
               .replace("(.)", ok_marker)
 
     return output
+
+
+# TODO: Use cmk.render.*?
+def get_readable_rel_date(timestamp):
+    try:
+        change = int(timestamp)
+    except:
+        change = 0
+    rel_time = time.time() - change
+    seconds = rel_time % 60
+    rem = rel_time / 60
+    minutes = rem % 60
+    hours = (rem % 1440) / 60
+    days = rem / 1440
+    return '%dd %02d:%02d:%02d' % (days, hours, minutes, seconds)
 
 
 def event_match_rule(rule, context):
@@ -661,7 +685,7 @@ def event_match_checktype(rule, context):
 def event_match_timeperiod(rule):
     if "match_timeperiod" in rule:
         timeperiod = rule["match_timeperiod"]
-        if timeperiod != "24X7" and not check_timeperiod(timeperiod):
+        if timeperiod != "24X7" and not core.check_timeperiod(timeperiod):
             return "The timeperiod '%s' is currently not active." % timeperiod
 
 
@@ -720,3 +744,13 @@ def plugin_param_to_string(value):
         return "\t".join(value)
     else:
         return repr(value) # Should never happen
+
+
+# int() function that return 0 for strings the
+# cannot be converted to a number
+# TODO: Clean this up!
+def saveint(i):
+    try:
+        return int(i)
+    except:
+        return 0

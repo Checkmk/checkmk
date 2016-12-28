@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Future convention within all Check_MK modules for variable names:
+#
+# - host_name     - Monitoring name of a host (string)
+# - node_name     - Name of cluster member (string)
+# - cluster_name  - Name of a cluster (string)
+# - realhost_name - Name of a *real* host, not a cluster (string)
+
+import os
+import sys
+import getopt
+
+# Needs to be placed before cmk modules, because they are not available
+# when executed as non site user.
+if not os.environ.get("OMD_SITE"):
+    sys.stderr.write("Check_MK can be used only as site user.\n")
+    sys.exit(1)
+
+from cmk.exceptions import MKGeneralException, MKTerminate, MKBailOut
+import cmk.debug
+import cmk.log
+import cmk.paths
+
+import cmk_base
+import cmk_base.console as console
+import cmk_base.checks as checks
+import cmk_base.config as config
+import cmk_base.profiling as profiling
+from cmk_base.modes import modes
+
+try:
+    import cmk_base.cee.keepalive as keepalive
+except ImportError:
+    keepalive = None
+
+
+cmk.log.setup_console_logging()
+logger = cmk.log.get_logger("base")
+
+cmk_base.utils.register_sigint_handler()
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(),
+                                             modes.long_getopt_specs())
+except getopt.GetoptError, err:
+    console.error("ERROR: %s\n\n" % err)
+    modes.get("help").handler_function()
+    sys.exit(1)
+
+# First load the general modifying options
+modes.process_general_options(opts)
+
+# TODO: Why are we loading the checks in all modes? This is useless in some modes!
+# But at least in case the config is needed, the checks are needed too, because
+# the configuration may refer to check config variable names.
+checks.load()
+
+# Read the configuration files (main.mk, autochecks, etc.), but not for
+# certain operation modes that does not need them and should not be harmed
+# by a broken configuration
+if len(set.intersection(set(modes.non_config_options()),
+                        [o[0] for o in opts])) == 0:
+    config.load()
+
+try:
+    # Now find the requested mode and execute it
+    done, exit_status = False, 0
+    for o, a in opts:
+        if modes.exists(o):
+            exit_status = modes.call(o, a, opts, args)
+            done = True
+            break
+
+    # When no mode was found, Check_MK is running the "check" mode
+    if not done:
+        if (args and len(args) <= 2) or "--keepalive" in [ o[0] for o in opts ]:
+            exit_status = modes.call("--check", None, opts, args)
+        else:
+            modes.get("help").handler_function()
+            exit_status = 1
+
+    profiling.output_profile()
+    sys.exit(exit_status)
+
+except MKTerminate, e:
+    console.output("<Interrupted>\n", stream=sys.stderr)
+    sys.exit(1)
+
+except (MKGeneralException, MKBailOut), e:
+    sys.stderr.write("%s\n" % e)
+    if cmk.debug.enabled():
+        raise
+    sys.exit(3)

@@ -28,9 +28,10 @@
 Check_MK modules and/or cmk_base modules code."""
 
 import os
+import signal
 import time
 
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKTerminate
 
 # TODO: Try to find a better place for them.
 
@@ -164,3 +165,48 @@ def cachefile_age(path):
     except Exception, e:
         raise MKGeneralException("Cannot determine age of cache file %s: %s" \
                                  % (path, e))
+
+
+# Reset some global variable to their original value. This
+# is needed in keepalive mode.
+# We could in fact do some positive caching in keepalive
+# mode - e.g. the counters of the hosts could be saved in memory.
+def cleanup_globals():
+    import cmk_base.checks
+    cmk_base.checks.set_hostname("unknown")
+    import cmk_base.item_state
+    cmk_base.item_state.cleanup_item_states()
+    import cmk_base.core
+    cmk_base.core.cleanup_inactive_timeperiods()
+    import cmk_base.snmp
+    cmk_base.snmp.cleanup_host_caches()
+    import cmk_base.agent_data
+    cmk_base.agent_data.cleanup_host_caches()
+
+
+def has_feature(name):
+    try:
+        __import__("cmk_base.%s" % name)
+        return True
+    except ImportError:
+        return False
+
+#.
+#   .--Ctrl-C--------------------------------------------------------------.
+#   |                     ____ _        _        ____                      |
+#   |                    / ___| |_ _ __| |      / ___|                     |
+#   |                   | |   | __| '__| |_____| |                         |
+#   |                   | |___| |_| |  | |_____| |___                      |
+#   |                    \____|\__|_|  |_|      \____|                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Handling of Ctrl-C                                                  |
+#   '----------------------------------------------------------------------'
+
+# register SIGINT handler for consistent CTRL+C handling
+def _handle_keepalive_interrupt(signum, frame):
+    raise MKTerminate()
+
+
+def register_sigint_handler():
+    signal.signal(signal.SIGINT, _handle_keepalive_interrupt)

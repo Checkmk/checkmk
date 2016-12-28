@@ -28,12 +28,14 @@ import os
 
 import cmk.debug
 import cmk.tty as tty
-from cmk.exceptions import MKGeneralException
+from cmk.exceptions import MKGeneralException, MKBailOut
 
+import cmk_base.utils
 import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.classic_snmp as classic_snmp
 import cmk.cpu_tracking as cpu_tracking
+import cmk_base.ip_lookup as ip_lookup
 import cmk_base.agent_simulator
 from cmk_base.exceptions import MKSNMPError
 
@@ -660,3 +662,134 @@ def _get_stored_snmpwalk(hostname, oid):
         return [ rowinfo[0] ]
     else:
         return rowinfo
+
+#.
+#   .--Main modes----------------------------------------------------------.
+#   |       __  __       _                             _                   |
+#   |      |  \/  | __ _(_)_ __    _ __ ___   ___   __| | ___  ___         |
+#   |      | |\/| |/ _` | | '_ \  | '_ ` _ \ / _ \ / _` |/ _ \/ __|        |
+#   |      | |  | | (_| | | | | | | | | | | | (_) | (_| |  __/\__ \        |
+#   |      |_|  |_|\__,_|_|_| |_| |_| |_| |_|\___/ \__,_|\___||___/        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Some main modes to help the user                                     |
+#   '----------------------------------------------------------------------'
+
+def do_snmptranslate(walk_filename):
+    if not walk_filename:
+        raise MKGeneralException("Please provide the name of a SNMP walk file")
+
+    walk_path = "%s/%s" % (cmk.paths.snmpwalks_dir, walk_filename)
+    if not os.path.exists(walk_path):
+        raise MKGeneralException("The walk '%s' does not exist" % walk_path)
+
+    def translate(lines):
+        result_lines = []
+        try:
+            oids_for_command = []
+            for line in lines:
+                oids_for_command.append(line.split(" ")[0])
+
+            command = "snmptranslate -m ALL -M+%s %s 2>/dev/null" % \
+                        (cmk.paths.local_mibs_dir, " ".join(oids_for_command))
+            process = os.popen(command, "r")
+            output  = process.read()
+            result  = output.split("\n")[0::2]
+            for idx, line in enumerate(result):
+                result_lines.append((line.strip(), lines[idx].strip()))
+
+        except Exception, e:
+            console.error("%s\n" % e)
+
+        return result_lines
+
+
+    # Translate n-oid's per cycle
+    entries_per_cycle = 500
+    translated_lines = []
+
+    walk_lines = file(walk_path).readlines()
+    console.error("Processing %d lines.\n" %  len(walk_lines))
+
+    i = 0
+    while i < len(walk_lines):
+        console.error("\r%d to go...    " % (len(walk_lines) - i))
+        process_lines = walk_lines[i:i+entries_per_cycle]
+        translated = translate(process_lines)
+        i += len(translated)
+        translated_lines += translated
+    console.error("\rfinished.                \n")
+
+    # Output formatted
+    for translation, line in translated_lines:
+        console.output("%s --> %s\n" % (line, translation))
+
+
+def do_snmpwalk(options, hostnames):
+    if "oids" in options and "extraoids" in options:
+        raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
+
+    if not hostnames:
+        raise MKBailOut("Please specify host names to walk on.")
+
+    if not os.path.exists(cmk.paths.snmpwalks_dir):
+        os.makedirs(cmk.paths.snmpwalks_dir)
+
+    for host in hostnames:
+        try:
+            do_snmpwalk_on(options, host, cmk.paths.snmpwalks_dir + "/" + host)
+        except Exception, e:
+            console.error("Error walking %s: %s\n" % (host, e))
+            if cmk.debug.enabled():
+                raise
+        cmk_base.utils.cleanup_globals()
+
+
+def do_snmpwalk_on(options, hostname, filename):
+    console.verbose("%s:\n" % hostname)
+    ip = ip_lookup.lookup_ipv4_address(hostname)
+
+    oids_to_walk = [
+        ".1.3.6.1.2.1", # SNMPv2-SMI::mib-2
+        ".1.3.6.1.4.1"  # SNMPv2-SMI::enterprises
+    ]
+    if "oids" in options:
+        oids_to_walk = options["oids"]
+    elif "extraoids" in options:
+        oids_to_walk += options["extraoids"]
+
+    with open(filename, "w") as out:
+        for oid in sorted(oids_to_walk, key = lambda x: map(int, x.strip(".").split("."))):
+            try:
+                console.verbose("Walk on \"%s\"..." % oid)
+
+                rows = walk_for_export(hostname, ip, oid)
+                for oid, value in rows:
+                    out.write("%s %s\n" % (oid, value))
+
+                console.verbose("%d variables.\n" % len(rows))
+            except Exception, e:
+                console.error("Error: %s\n" % e)
+                if cmk.debug.enabled():
+                    raise
+
+    console.verbose("Successfully wrote %s%s%s.\n" % (tty.bold, filename, tty.normal))
+
+
+def do_snmpget(*args):
+    if not args[0]:
+        raise MKBailOut("You need to specify an OID.")
+    oid = args[0][0]
+
+    hostnames = args[0][1:]
+    if not hostnames:
+        hostnames = []
+        for host in config.all_active_realhosts():
+            if config.is_snmp_host(host):
+                hostnames.append(host)
+
+    for host in hostnames:
+        ip = ip_lookup.lookup_ipv4_address(host)
+        value = get_single_oid(host, ip, oid)
+        console.output("%s (%s): %r\n" % (host, ip, value))
+        cmk_base.utils.cleanup_globals()

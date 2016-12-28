@@ -29,18 +29,19 @@
 #include <string>
 #include "DoubleColumn.h"
 
-#define SSDC_STALENESS 1
-
 class ServiceSpecialDoubleColumn : public DoubleColumn {
-    int _type;
-
 public:
+    enum class Type { staleness };
+
     ServiceSpecialDoubleColumn(const std::string& name,
-                               const std::string& description, int ssdc_type,
+                               const std::string& description, Type ssdc_type,
                                int indirect, int extra_offset = -1)
         : DoubleColumn(name, description, indirect, extra_offset)
         , _type(ssdc_type) {}
     double getValue(void* data);
+
+private:
+    Type _type;
 };
 
 #endif  // ServiceSpecialDoubleColumn_h

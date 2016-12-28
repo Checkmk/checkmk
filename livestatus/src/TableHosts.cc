@@ -568,81 +568,96 @@ void TableHosts::addColumns(Table *table, const string &prefix,
 
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services of the host",
-        SLSC_NUM, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::num,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "worst_service_state",
         "The worst soft state of all of the host's services (OK <= WARN <= "
         "UNKNOWN <= CRIT)",
-        SLSC_WORST_STATE, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::worst_state,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_ok",
-        "The number of the host's services with the soft state OK", SLSC_NUM_OK,
+        "The number of the host's services with the soft state OK",
+        ServiceListStateColumn::Type::num_ok,
         reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
         extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_warn",
         "The number of the host's services with the soft state WARN",
-        SLSC_NUM_WARN, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::num_warn,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_crit",
         "The number of the host's services with the soft state CRIT",
-        SLSC_NUM_CRIT, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::num_crit,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_unknown",
         "The number of the host's services with the soft state UNKNOWN",
-        SLSC_NUM_UNKNOWN, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::num_unknown,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_pending",
         "The number of the host's services which have not been checked yet "
         "(pending)",
-        SLSC_NUM_PENDING, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::num_pending,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "worst_service_hard_state",
         "The worst hard state of all of the host's services (OK <= WARN <= "
         "UNKNOWN <= CRIT)",
-        SLSC_WORST_HARD_STATE, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::worst_hard_state,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
         "The number of the host's services with the hard state OK",
-        SLSC_NUM_HARD_OK, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::num_hard_ok,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_warn",
         "The number of the host's services with the hard state WARN",
-        SLSC_NUM_HARD_WARN, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::num_hard_warn,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_crit",
         "The number of the host's services with the hard state CRIT",
-        SLSC_NUM_HARD_CRIT, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::num_hard_crit,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_unknown",
         "The number of the host's services with the hard state UNKNOWN",
-        SLSC_NUM_HARD_UNKNOWN, reinterpret_cast<char *>(&hst.services) - ref,
-        indirect_offset, extra_offset));
+        ServiceListStateColumn::Type::num_hard_unknown,
+        reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
+        extra_offset));
 
     table->addColumn(make_unique<HostSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in "
         "hard_state)",
-        HSIC_REAL_HARD_STATE, indirect_offset, extra_offset));
+        HostSpecialIntColumn::Type::real_hard_state, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<HostSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
-        HSIC_PNP_GRAPH_PRESENT, indirect_offset, extra_offset));
+        HostSpecialIntColumn::Type::pnp_graph_present, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<HostSpecialIntColumn>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 "
         "means that no inventory data is present",
-        HSIC_MK_INVENTORY_LAST, indirect_offset, extra_offset));
+        HostSpecialIntColumn::Type::mk_inventory_last, indirect_offset,
+        extra_offset));
     table->addColumn(make_unique<HostFileColumn>(
         prefix + "mk_inventory",
         "The file content content of the Check_MK HW/SW-Inventory",
@@ -665,7 +680,8 @@ void TableHosts::addColumns(Table *table, const string &prefix,
 
     table->addColumn(make_unique<HostSpecialDoubleColumn>(
         prefix + "staleness", "Staleness indicator for this host",
-        HSDC_STALENESS, indirect_offset, extra_offset));
+        HostSpecialDoubleColumn::Type::staleness, indirect_offset,
+        extra_offset));
 
     table->addColumn(make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",

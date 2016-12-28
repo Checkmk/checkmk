@@ -51,8 +51,6 @@ using std::mutex;
 using std::shared_ptr;
 using std::string;
 
-#define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
-
 TableLog::TableLog(LogCache *log_cache,
 #ifdef CMC
                    const Downtimes &downtimes_holder,
@@ -190,7 +188,7 @@ void TableLog::answerQuery(Query *query) {
 
     // The second optimization is for log message types.
     // We want to load only those log type that are queried.
-    uint32_t classmask = LOGCLASS_ALL;
+    uint32_t classmask = LogEntry::all_classes;
     query->optimizeBitmask("class", &classmask);
     if (classmask == 0) {
         return;
@@ -239,11 +237,11 @@ bool TableLog::isAuthorized(contact *ctc, void *data) {
         // suppress entries for messages that belong to hosts that do not exist
         // anymore.
     }
-    return !(entry->_logclass == LOGCLASS_ALERT ||
-             entry->_logclass == LOGCLASS_NOTIFICATION ||
-             entry->_logclass == LOGCLASS_PASSIVECHECK ||
-             entry->_logclass == LOGCLASS_ALERT_HANDLERS ||
-             entry->_logclass == LOGCLASS_STATE);
+    return !(entry->_logclass == LogEntry::Class::alert ||
+             entry->_logclass == LogEntry::Class::hs_notification ||
+             entry->_logclass == LogEntry::Class::passivecheck ||
+             entry->_logclass == LogEntry::Class::alert_handlers ||
+             entry->_logclass == LogEntry::Class::state);
 }
 
 shared_ptr<Column> TableLog::column(string colname) {

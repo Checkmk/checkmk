@@ -37,7 +37,10 @@
 using std::string;
 using std::chrono::system_clock;
 
-#define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
+namespace {
+// Check memory every N'th new message
+constexpr unsigned long check_mem_cycle = 1000;
+}  // namespace
 
 // watch nagios' logfile rotation
 extern char *log_archive_path;
@@ -156,9 +159,9 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
        a new message is loaded when being in a sitation where no
        memory can be freed. We do this by suppressing the check when
        the number of messages loaded into memory has not grown
-       by at least CHECK_MEM_CYCLE messages */
+       by at least check_mem_cycle messages */
     if (static_cast<unsigned long>(num_cached_log_messages) <
-        _num_at_last_check + CHECK_MEM_CYCLE) {
+        _num_at_last_check + check_mem_cycle) {
         return;  // Do not check this time
     }
 

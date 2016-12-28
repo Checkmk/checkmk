@@ -37,7 +37,7 @@ double ServiceSpecialDoubleColumn::getValue(void *data) {
 
     service *svc = static_cast<service *>(data);
     switch (_type) {
-        case SSDC_STALENESS: {
+        case Type::staleness: {
             time_t check_result_age = time(nullptr) - svc->last_check;
             if (svc->check_interval != 0) {
                 return check_result_age /

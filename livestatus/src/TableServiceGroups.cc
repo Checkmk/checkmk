@@ -85,51 +85,57 @@ void TableServiceGroups::addColumns(Table *table, const string &prefix,
         prefix + "worst_service_state",
         "The worst soft state of all of the groups services (OK <= WARN <= "
         "UNKNOWN <= CRIT)",
-        SLSC_WORST_STATE, reinterpret_cast<char *>(&sgr.members) - ref,
-        indirect_offset));
+        ServiceListStateColumn::Type::worst_state,
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services in the group",
-        SLSC_NUM, reinterpret_cast<char *>(&sgr.members) - ref,
-        indirect_offset));
+        ServiceListStateColumn::Type::num,
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_ok",
-        "The number of services in the group that are OK", SLSC_NUM_OK,
+        "The number of services in the group that are OK",
+        ServiceListStateColumn::Type::num_ok,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_warn",
-        "The number of services in the group that are WARN", SLSC_NUM_WARN,
+        "The number of services in the group that are WARN",
+        ServiceListStateColumn::Type::num_warn,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_crit",
-        "The number of services in the group that are CRIT", SLSC_NUM_CRIT,
+        "The number of services in the group that are CRIT",
+        ServiceListStateColumn::Type::num_crit,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_unknown",
         "The number of services in the group that are UNKNOWN",
-        SLSC_NUM_UNKNOWN, reinterpret_cast<char *>(&sgr.members) - ref,
-        indirect_offset));
+        ServiceListStateColumn::Type::num_unknown,
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_pending",
         "The number of services in the group that are PENDING",
-        SLSC_NUM_PENDING, reinterpret_cast<char *>(&sgr.members) - ref,
-        indirect_offset));
+        ServiceListStateColumn::Type::num_pending,
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
-        "The number of services in the group that are OK", SLSC_NUM_HARD_OK,
+        "The number of services in the group that are OK",
+        ServiceListStateColumn::Type::num_hard_ok,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_warn",
-        "The number of services in the group that are WARN", SLSC_NUM_HARD_WARN,
+        "The number of services in the group that are WARN",
+        ServiceListStateColumn::Type::num_hard_warn,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_crit",
-        "The number of services in the group that are CRIT", SLSC_NUM_HARD_CRIT,
+        "The number of services in the group that are CRIT",
+        ServiceListStateColumn::Type::num_hard_crit,
         reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_unknown",
         "The number of services in the group that are UNKNOWN",
-        SLSC_NUM_HARD_UNKNOWN, reinterpret_cast<char *>(&sgr.members) - ref,
-        indirect_offset));
+        ServiceListStateColumn::Type::num_hard_unknown,
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
 }
 
 void TableServiceGroups::answerQuery(Query *query) {
@@ -145,7 +151,7 @@ void *TableServiceGroups::findObject(const string &objectspec) {
 }
 
 bool TableServiceGroups::isAuthorized(contact *ctc, void *data) {
-    if (ctc == UNKNOWN_AUTH_USER) {
+    if (ctc == unknown_auth_user()) {
         return false;
     }
 
@@ -153,10 +159,10 @@ bool TableServiceGroups::isAuthorized(contact *ctc, void *data) {
     for (servicesmember *mem = sg->members; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
         bool is = is_authorized_for(ctc, svc->host_ptr, svc);
-        if (is && g_group_authorization == AUTH_LOOSE) {
+        if (is && g_group_authorization == AuthorizationKind::loose) {
             return true;
         }
-        if (!is && g_group_authorization == AUTH_STRICT) {
+        if (!is && g_group_authorization == AuthorizationKind::strict) {
             return false;
         }
     }

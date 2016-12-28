@@ -35,14 +35,16 @@ using std::string;
 
 TableColumns::TableColumns(Logger *logger) : Table(logger) {
     addColumn(make_unique<ColumnsColumn>("table", "The name of the table",
-                                         COLCOL_TABLE, this));
+                                         ColumnsColumn::Type::table, this));
     addColumn(make_unique<ColumnsColumn>(
-        "name", "The name of the column within the table", COLCOL_NAME, this));
-    addColumn(make_unique<ColumnsColumn>(
-        "description", "A description of the column", COLCOL_DESCR, this));
+        "name", "The name of the column within the table",
+        ColumnsColumn::Type::name, this));
+    addColumn(
+        make_unique<ColumnsColumn>("description", "A description of the column",
+                                   ColumnsColumn::Type::description, this));
     addColumn(make_unique<ColumnsColumn>(
         "type", "The data type of the column (int, float, string, list)",
-        COLCOL_TYPE, this));
+        ColumnsColumn::Type::type, this));
 }
 
 string TableColumns::name() const { return "columns"; }
@@ -59,18 +61,19 @@ void TableColumns::answerQuery(Query *query) {
     }
 }
 
-string TableColumns::getValue(Column *column, int colcol) const {
+string TableColumns::getValue(Column *column,
+                              ColumnsColumn::Type colcol) const {
     static const char *typenames[8] = {"int",  "float", "string", "list",
                                        "time", "dict",  "blob",   "null"};
 
     switch (colcol) {
-        case COLCOL_TABLE:
+        case ColumnsColumn::Type::table:
             return tableNameOf(column);
-        case COLCOL_NAME:
+        case ColumnsColumn::Type::name:
             return column->name();
-        case COLCOL_DESCR:
+        case ColumnsColumn::Type::description:
             return column->description();
-        case COLCOL_TYPE:
+        case ColumnsColumn::Type::type:
             return typenames[static_cast<int>(column->type())];
     }
     return "";

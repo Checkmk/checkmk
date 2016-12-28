@@ -83,34 +83,36 @@ void TableHostGroups::addColumns(Table *table, const string &prefix,
         prefix + "worst_host_state",
         "The worst state of all of the groups' hosts (UP <= UNREACHABLE <= "
         "DOWN)",
-        HLSC_WORST_HST_STATE, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::worst_hst_state,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts", "The total number of hosts in the group",
-        HLSC_NUM_HST, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_hst,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_pending",
         "The number of hosts in the group that are pending",
-        HLSC_NUM_HST_PENDING, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_hst_pending,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_up", "The number of hosts in the group that are up",
-        HLSC_NUM_HST_UP, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_hst_up,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_down",
-        "The number of hosts in the group that are down", HLSC_NUM_HST_DOWN,
+        "The number of hosts in the group that are down",
+        HostListStateColumn::Type::num_hst_down,
         reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_unreach",
         "The number of hosts in the group that are unreachable",
-        HLSC_NUM_HST_UNREACH, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_hst_unreach,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
 
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services",
-        "The total number of services of hosts in this group", HLSC_NUM_SVC,
+        "The total number of services of hosts in this group",
+        HostListStateColumn::Type::num_svc,
         reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
 
     // soft states
@@ -118,68 +120,68 @@ void TableHostGroups::addColumns(Table *table, const string &prefix,
         prefix + "worst_service_state",
         "The worst state of all services that belong to a host of this group "
         "(OK <= WARN <= UNKNOWN <= CRIT)",
-        HLSC_WORST_SVC_STATE, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::worst_svc_state,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_pending",
         "The total number of services with the state Pending of hosts in this "
         "group",
-        HLSC_NUM_SVC_PENDING, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_svc_pending,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_ok",
         "The total number of services with the state OK of hosts in this group",
-        HLSC_NUM_SVC_OK, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_svc_ok,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_warn",
         "The total number of services with the state WARN of hosts in this "
         "group",
-        HLSC_NUM_SVC_WARN, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_svc_warn,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_crit",
         "The total number of services with the state CRIT of hosts in this "
         "group",
-        HLSC_NUM_SVC_CRIT, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_svc_crit,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_unknown",
         "The total number of services with the state UNKNOWN of hosts in this "
         "group",
-        HLSC_NUM_SVC_UNKNOWN, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_svc_unknown,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
 
     // hard state
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "worst_service_hard_state",
         "The worst state of all services that belong to a host of this group "
         "(OK <= WARN <= UNKNOWN <= CRIT)",
-        HLSC_WORST_SVC_HARD_STATE, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::worst_svc_hard_state,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_ok",
         "The total number of services with the state OK of hosts in this group",
-        HLSC_NUM_SVC_HARD_OK, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_svc_hard_ok,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_warn",
         "The total number of services with the state WARN of hosts in this "
         "group",
-        HLSC_NUM_SVC_HARD_WARN, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_svc_hard_warn,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_crit",
         "The total number of services with the state CRIT of hosts in this "
         "group",
-        HLSC_NUM_SVC_HARD_CRIT, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_svc_hard_crit,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_unknown",
         "The total number of services with the state "
         "UNKNOWN of hosts in this group",
-        HLSC_NUM_SVC_HARD_UNKNOWN, reinterpret_cast<char *>(&hgr.members) - ref,
-        indirect_offset));
+        HostListStateColumn::Type::num_svc_hard_unknown,
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
 }
 
 void TableHostGroups::answerQuery(Query *query) {
@@ -195,7 +197,7 @@ void *TableHostGroups::findObject(const string &objectspec) {
 }
 
 bool TableHostGroups::isAuthorized(contact *ctc, void *data) {
-    if (ctc == UNKNOWN_AUTH_USER) {
+    if (ctc == unknown_auth_user()) {
         return false;
     }
 
@@ -203,10 +205,10 @@ bool TableHostGroups::isAuthorized(contact *ctc, void *data) {
     for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
         bool is = is_authorized_for(ctc, hst, nullptr);
-        if (is && g_group_authorization == AUTH_LOOSE) {
+        if (is && g_group_authorization == AuthorizationKind::loose) {
             return true;
         }
-        if (!is && g_group_authorization == AUTH_STRICT) {
+        if (!is && g_group_authorization == AuthorizationKind::strict) {
             return false;
         }
     }

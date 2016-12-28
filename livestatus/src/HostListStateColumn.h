@@ -32,39 +32,50 @@
 #include "ServiceListStateColumn.h"
 #include "nagios.h"
 
-#define HLSC_NUM_SVC SLSC_NUM
-#define HLSC_NUM_SVC_PENDING SLSC_NUM_PENDING
-#define HLSC_NUM_SVC_OK SLSC_NUM_OK
-#define HLSC_NUM_SVC_WARN SLSC_NUM_WARN
-#define HLSC_NUM_SVC_CRIT SLSC_NUM_CRIT
-#define HLSC_NUM_SVC_UNKNOWN SLSC_NUM_UNKNOWN
-#define HLSC_WORST_SVC_STATE SLSC_WORST_STATE
-#define HLSC_NUM_SVC_HARD_OK SLSC_NUM_HARD_OK
-#define HLSC_NUM_SVC_HARD_WARN SLSC_NUM_HARD_WARN
-#define HLSC_NUM_SVC_HARD_CRIT SLSC_NUM_HARD_CRIT
-#define HLSC_NUM_SVC_HARD_UNKNOWN SLSC_NUM_HARD_UNKNOWN
-#define HLSC_WORST_SVC_HARD_STATE SLSC_WORST_HARD_STATE
-
-#define HLSC_NUM_HST_UP 10
-#define HLSC_NUM_HST_DOWN 11
-#define HLSC_NUM_HST_UNREACH 12
-#define HLSC_NUM_HST_PENDING 13
-#define HLSC_NUM_HST -11
-#define HLSC_WORST_HST_STATE -12
-
 class HostListStateColumn : public IntColumn {
-    int _offset;
-    int _logictype;
-
 public:
+    // TODO(sp) Remove the magic arithmetic
+    enum class Type {
+        num_svc = static_cast<int>(ServiceListStateColumn::Type::num),
+        num_svc_pending =
+            static_cast<int>(ServiceListStateColumn::Type::num_pending),
+        num_svc_ok = static_cast<int>(ServiceListStateColumn::Type::num_ok),
+        num_svc_warn = static_cast<int>(ServiceListStateColumn::Type::num_warn),
+        num_svc_crit = static_cast<int>(ServiceListStateColumn::Type::num_crit),
+        num_svc_unknown =
+            static_cast<int>(ServiceListStateColumn::Type::num_unknown),
+        worst_svc_state =
+            static_cast<int>(ServiceListStateColumn::Type::worst_state),
+        num_svc_hard_ok =
+            static_cast<int>(ServiceListStateColumn::Type::num_hard_ok),
+        num_svc_hard_warn =
+            static_cast<int>(ServiceListStateColumn::Type::num_hard_warn),
+        num_svc_hard_crit =
+            static_cast<int>(ServiceListStateColumn::Type::num_hard_crit),
+        num_svc_hard_unknown =
+            static_cast<int>(ServiceListStateColumn::Type::num_hard_unknown),
+        worst_svc_hard_state =
+            static_cast<int>(ServiceListStateColumn::Type::worst_hard_state),
+        num_hst_up = 10,
+        num_hst_down = 11,
+        num_hst_unreach = 12,
+        num_hst_pending = 13,
+        num_hst = -11,
+        worst_hst_state = -12,
+    };
+
     HostListStateColumn(const std::string &name, const std::string &description,
-                        int logictype, int offset, int indirect_offset,
+                        Type logictype, int offset, int indirect_offset,
                         int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset)
         , _logictype(logictype) {}
     int32_t getValue(void *row, contact *auth_user) override;
     hostsmember *getMembers(void *data);
+
+private:
+    int _offset;
+    const Type _logictype;
 };
 
 #endif  // HostListStateColumn_h

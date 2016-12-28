@@ -31,18 +31,19 @@
 #include "IntColumn.h"
 #include "nagios.h"
 
-#define SSIC_PNP_GRAPH_PRESENT 1
-
 class ServiceSpecialIntColumn : public IntColumn {
-    int _type;
-
 public:
+    enum class Type { pnp_graph_present };
+
     ServiceSpecialIntColumn(const std::string& name,
-                            const std::string& description, int ssic_type,
+                            const std::string& description, Type ssic_type,
                             int indirect_offset, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _type(ssic_type) {}
     int32_t getValue(void* row, contact* auth_user) override;
+
+private:
+    Type _type;
 };
 
 #endif  // ServiceSpecialIntColumn_h

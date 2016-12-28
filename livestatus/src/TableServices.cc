@@ -360,10 +360,10 @@ void TableServices::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<ServiceSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
-        SSIC_PNP_GRAPH_PRESENT, indirect_offset));
+        ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset));
     table->addColumn(make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
-        SSDC_STALENESS, indirect_offset));
+        ServiceSpecialDoubleColumn::Type::staleness, indirect_offset));
 
     // columns of type double
     table->addColumn(make_unique<OffsetDoubleColumn>(

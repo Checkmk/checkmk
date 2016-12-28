@@ -27,6 +27,4 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#define DEFAULT_SOCKET_PATH "/usr/local/nagios/var/rw/live"
-
 #endif  // livestatus_h

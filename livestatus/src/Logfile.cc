@@ -178,7 +178,7 @@ long Logfile::freeMessages(unsigned logclasses) {
     // ("Choose carefully among erasing options.").
     for (auto it = _entries.begin(); it != _entries.end();) {
         LogEntry *entry = it->second;
-        if (((1 << entry->_logclass) & logclasses) != 0u) {
+        if (((1u << static_cast<int>(entry->_logclass)) & logclasses) != 0u) {
             delete entry;
             _entries.erase(it++);
             freed++;
@@ -194,10 +194,10 @@ bool Logfile::processLogLine(uint32_t lineno, const char *linebuffer,
                              unsigned logclasses) {
     auto entry = make_unique<LogEntry>(_commands_holder, lineno, linebuffer);
     // ignored invalid lines
-    if (entry->_logclass == LOGCLASS_INVALID) {
+    if (entry->_logclass == LogEntry::Class::invalid) {
         return false;
     }
-    if (((1 << entry->_logclass) & logclasses) == 0u) {
+    if (((1u << static_cast<int>(entry->_logclass)) & logclasses) == 0u) {
         return false;
     }
     uint64_t key = makeKey(entry->_time, entry->_lineno);

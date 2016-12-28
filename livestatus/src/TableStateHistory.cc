@@ -73,6 +73,14 @@ using std::set;
 using std::shared_ptr;
 using std::string;
 
+namespace {
+constexpr unsigned classmask_statehist =
+    (1u << static_cast<int>(LogEntry::Class::alert)) |    //
+    (1u << static_cast<int>(LogEntry::Class::program)) |  //
+    (1u << static_cast<int>(LogEntry::Class::state)) |    //
+    (1u << static_cast<int>(LogEntry::Class::text));
+}  // namespace
+
 int g_disable_statehist_filtering = 0;
 
 #ifndef CMC
@@ -297,7 +305,7 @@ LogEntry *TableStateHistory::getPreviousLogentry() {
         }
         --_it_logs;
         _entries = _it_logs->second->getEntriesFromQuery(
-            _query, _log_cache, _since, _until, CLASSMASK_STATEHIST);
+            _query, _log_cache, _since, _until, classmask_statehist);
         _it_entries = _entries->end();
     }
 
@@ -316,7 +324,7 @@ LogEntry *TableStateHistory::getNextLogentry() {
         }
         ++_it_logs;
         _entries = _it_logs->second->getEntriesFromQuery(
-            _query, _log_cache, _since, _until, CLASSMASK_STATEHIST);
+            _query, _log_cache, _since, _until, classmask_statehist);
         _it_entries = _entries->begin();
     }
     return _it_entries->second;
@@ -414,7 +422,7 @@ void TableStateHistory::answerQuery(Query *query) {
     // Determine initial logentry
     LogEntry *entry;
     _entries = _it_logs->second->getEntriesFromQuery(
-        query, _log_cache, _since, _until, CLASSMASK_STATEHIST);
+        query, _log_cache, _since, _until, classmask_statehist);
     if (!_entries->empty() && _it_logs != newest_log) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too

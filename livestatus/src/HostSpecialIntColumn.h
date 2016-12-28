@@ -31,20 +31,19 @@
 #include "IntColumn.h"
 #include "nagios.h"
 
-#define HSIC_REAL_HARD_STATE 0
-#define HSIC_PNP_GRAPH_PRESENT 1
-#define HSIC_MK_INVENTORY_LAST 2
-
 class HostSpecialIntColumn : public IntColumn {
-    int _type;
-
 public:
+    enum class Type { real_hard_state, pnp_graph_present, mk_inventory_last };
+
     HostSpecialIntColumn(const std::string& name,
-                         const std::string& description, int hsic_type,
+                         const std::string& description, Type hsic_type,
                          int indirect_offset, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _type(hsic_type) {}
     int32_t getValue(void* row, contact* auth_user) override;
+
+private:
+    const Type _type;
 };
 
 #endif  // HostSpecialIntColumn_h

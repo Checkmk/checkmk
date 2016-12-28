@@ -58,19 +58,21 @@ int32_t HostListStateColumn::getValue(void *row, contact *auth_user) {
         if (auth_user == nullptr ||
             is_authorized_for(auth_user, hst, nullptr)) {
             switch (_logictype) {
-                case HLSC_NUM_SVC_PENDING:
-                case HLSC_NUM_SVC_OK:
-                case HLSC_NUM_SVC_WARN:
-                case HLSC_NUM_SVC_CRIT:
-                case HLSC_NUM_SVC_UNKNOWN:
-                case HLSC_NUM_SVC:
+                case Type::num_svc_pending:
+                case Type::num_svc_ok:
+                case Type::num_svc_warn:
+                case Type::num_svc_crit:
+                case Type::num_svc_unknown:
+                case Type::num_svc:
                     result += ServiceListStateColumn::getValue(
-                        _logictype, hst->services, auth_user);
+                        static_cast<ServiceListStateColumn::Type>(_logictype),
+                        hst->services, auth_user);
                     break;
 
-                case HLSC_WORST_SVC_STATE: {
+                case Type::worst_svc_state: {
                     int state = ServiceListStateColumn::getValue(
-                        _logictype, hst->services, auth_user);
+                        static_cast<ServiceListStateColumn::Type>(_logictype),
+                        hst->services, auth_user);
                     if (ServiceListStateColumn::svcStateIsWorse(state,
                                                                 result)) {
                         result = state;
@@ -78,29 +80,38 @@ int32_t HostListStateColumn::getValue(void *row, contact *auth_user) {
                     break;
                 }
 
-                case HLSC_NUM_HST_UP:
-                case HLSC_NUM_HST_DOWN:
-                case HLSC_NUM_HST_UNREACH:
+                case Type::num_hst_up:
+                case Type::num_hst_down:
+                case Type::num_hst_unreach:
                     if (hst->has_been_checked != 0 &&
-                        hst->current_state == _logictype - HLSC_NUM_HST_UP) {
+                        hst->current_state ==
+                            static_cast<int>(_logictype) -
+                                static_cast<int>(Type::num_hst_up)) {
                         result++;
                     }
                     break;
 
-                case HLSC_NUM_HST_PENDING:
+                case Type::num_hst_pending:
                     if (hst->has_been_checked == 0) {
                         result++;
                     }
                     break;
 
-                case HLSC_NUM_HST:
+                case Type::num_hst:
                     result++;
                     break;
 
-                case HLSC_WORST_HST_STATE:
+                case Type::worst_hst_state:
                     if (hst_state_is_worse(hst->current_state, result)) {
                         result = hst->current_state;
                     }
+                    break;
+                case Type::num_svc_hard_ok:
+                case Type::num_svc_hard_warn:
+                case Type::num_svc_hard_crit:
+                case Type::num_svc_hard_unknown:
+                case Type::worst_svc_hard_state:
+                    // TODO(sp) Why are these not handled?
                     break;
             }
         }

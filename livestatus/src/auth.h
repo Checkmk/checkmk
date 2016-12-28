@@ -28,15 +28,12 @@
 #include "config.h"  // IWYU pragma: keep
 #include "nagios.h"  // IWYU pragma: keep
 
-#define AUTH_LOOSE 0
-#define AUTH_STRICT 1
+enum class AuthorizationKind { loose = 0, strict = 1 };
 
-// Dummy pointer for unknown user (not no user)
-#define UNKNOWN_AUTH_USER reinterpret_cast<contact *>(0xdeadbeaf)
+extern AuthorizationKind g_service_authorization;
+extern AuthorizationKind g_group_authorization;
 
-extern int g_service_authorization;
-extern int g_group_authorization;
-
+contact *unknown_auth_user();
 bool is_authorized_for(contact *ctc, host *hst, service *svc);
 
 #endif  // auth_h

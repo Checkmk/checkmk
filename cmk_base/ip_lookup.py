@@ -215,3 +215,38 @@ def _write_ip_lookup_cache():
     # TODO: this file always grows... there should be a cleanup mechanism
     #       maybe on "cmk --update-dns-cache"
     cmk.store.save_data_to_file(cache_path, data_from_file, pretty=False)
+
+
+def update_dns_cache():
+    # Temporarily disable *use* of cache, we want to force an update
+    # TODO: Cleanup this hacky config override! Better add some global flag
+    # that is exactly meant for this situation.
+    config.use_dns_cache = False
+    updated = 0
+    failed = []
+
+    console.verbose("Updating DNS cache...\n")
+    for hostname in config.all_active_hosts():
+        # Use intelligent logic. This prevents DNS lookups for hosts
+        # with statically configured addresses, etc.
+        for family in [ 4, 6]:
+            if (family == 4 and config.is_ipv4_host(hostname)) \
+               or (family == 6 and config.is_ipv6_host(hostname)):
+                console.verbose("%s (IPv%d)..." % (hostname, family))
+                try:
+                    if family == 4:
+                        ip = lookup_ipv4_address(hostname)
+                    else:
+                        ip = lookup_ipv6_address(hostname)
+
+                    console.verbose("%s\n" % ip)
+                    updated += 1
+                except Exception, e:
+                    failed.append(hostname)
+                    console.verbose("lookup failed: %s\n" % e)
+                    if cmk.debug.enabled():
+                        raise
+                    continue
+
+    return updated, failed
+>>>>>>> Moved agent communication to cmk_base

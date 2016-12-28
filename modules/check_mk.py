@@ -352,51 +352,6 @@ def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
 #   | Misc functions which do not belong to any other topic                |
 #   '----------------------------------------------------------------------'
 
-# FIXME TODO: Cleanup the whole caching crap
-orig_opt_use_cachefile           = None
-orig_check_max_cachefile_age     = None
-orig_cluster_max_cachefile_age   = None
-orig_inventory_max_cachefile_age = None
-
-
-def restore_use_cachefile():
-    global opt_use_cachefile, orig_opt_use_cachefile
-    if orig_opt_use_cachefile != None:
-        opt_use_cachefile = orig_opt_use_cachefile
-        orig_opt_use_cachefile = None
-
-
-# TODO: Why 1000000000? Can't we really clean this up to a global variable which can
-# be toggled to enforce the cache usage (if available). This way we would not need
-# to store the original values of the different caches and modify them etc.
-def enforce_using_agent_cache():
-    global orig_check_max_cachefile_age, orig_cluster_max_cachefile_age, \
-           orig_inventory_max_cachefile_age
-
-    if config.check_max_cachefile_age != 1000000000:
-        orig_check_max_cachefile_age     = config.check_max_cachefile_age
-        orig_cluster_max_cachefile_age   = config.cluster_max_cachefile_age
-        orig_inventory_max_cachefile_age = config.inventory_max_cachefile_age
-
-    config.check_max_cachefile_age     = 1000000000
-    config.cluster_max_cachefile_age   = 1000000000
-    config.inventory_max_cachefile_age = 1000000000
-
-
-def restore_original_agent_caching_usage():
-    global orig_check_max_cachefile_age, orig_cluster_max_cachefile_age, \
-           orig_inventory_max_cachefile_age
-
-    if orig_check_max_cachefile_age != None:
-        config.check_max_cachefile_age     = orig_check_max_cachefile_age
-        config.cluster_max_cachefile_age   = orig_cluster_max_cachefile_age
-        config.inventory_max_cachefile_age = orig_inventory_max_cachefile_age
-
-        orig_check_max_cachefile_age     = None
-        orig_cluster_max_cachefile_age   = None
-        orig_inventory_max_cachefile_age = None
-
-
 def schedule_inventory_check(hostname):
     try:
         import socket
@@ -685,48 +640,6 @@ def get_sorted_check_table(hostname, remove_duplicates=False, world="config"):
         unsorted = left
     return sorted
 
-
-
-# Determine, which program to call to get the agent data. This is an alternative to fetch
-# the agent data via TCP port, mostly used for special agents.
-def get_datasource_program(hostname, ipaddress):
-    special_agents_dir       = cmk.paths.agents_dir + "/special"
-    local_special_agents_dir = cmk.paths.local_agents_dir + "/special"
-
-    # First check WATO-style special_agent rules
-    for agentname, ruleset in config.special_agents.items():
-        params = rulesets.host_extra_conf(hostname, ruleset)
-        if params: # rule match!
-            # Create command line using the special_agent_info
-            cmd_arguments = checks.special_agent_info[agentname](params[0], hostname, ipaddress)
-            if os.path.exists(local_special_agents_dir + "/agent_" + agentname):
-                path = local_special_agents_dir + "/agent_" + agentname
-            else:
-                path = special_agents_dir + "/agent_" + agentname
-            return replace_datasource_program_macros(hostname, ipaddress,
-                                                     path + " " + cmd_arguments)
-
-
-    programs = rulesets.host_extra_conf(hostname, config.datasource_programs)
-    if not programs:
-        return None
-    else:
-        return replace_datasource_program_macros(hostname, ipaddress, programs[0])
-
-
-def replace_datasource_program_macros(hostname, ipaddress, cmd):
-    # Make "legacy" translation. The users should use the $...$ macros in future
-    cmd = cmd.replace("<IP>", ipaddress).replace("<HOST>", hostname)
-
-    tags = tags_of_host(hostname)
-    attrs = get_host_attributes(hostname, tags)
-    if is_cluster(hostname):
-        parents_list = get_cluster_nodes_for_config(hostname)
-        attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
-        attrs.update(get_cluster_attributes(hostname, parents_list))
-
-    macros = get_host_macros_from_attributes(hostname, attrs)
-    return replace_macros(cmd, macros)
 
 
 def service_description(hostname, check_type, item):
@@ -1055,193 +968,6 @@ def verify_non_duplicate_hosts():
               "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
 
 
-def verify_cluster_address_family(hostname):
-    cluster_host_family = config.is_ipv6_primary(hostname) and "IPv6" or "IPv4"
-
-    address_families = [
-        "%s: %s" % (hostname, cluster_host_family),
-    ]
-
-    address_family = cluster_host_family
-    mixed = False
-    for nodename in nodes_of(hostname):
-        family = config.is_ipv6_primary(nodename) and "IPv6" or "IPv4"
-        address_families.append("%s: %s" % (nodename, family))
-        if address_family == None:
-            address_family = family
-        elif address_family != family:
-            mixed = True
-
-    if mixed:
-        core_config.warning("Cluster '%s' has different primary address families: %s" %
-                                                         (hostname, ", ".join(address_families)))
-
-
-def get_cluster_nodes_for_config(hostname):
-    verify_cluster_address_family(hostname)
-
-    nodes = nodes_of(hostname)[:]
-    for node in nodes:
-        if node not in config.all_active_realhosts():
-            core_config.warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
-                                                                                      (node, hostname))
-            nodes.remove(node)
-    return nodes
-
-
-def get_host_macros_from_attributes(hostname, attrs):
-    macros = {
-        "$HOSTNAME$"    : hostname,
-        "$HOSTADDRESS$" : attrs['address'],
-        "$HOSTALIAS$"   : attrs['alias'],
-    }
-
-    # Add custom macros
-    for macro_name, value in attrs.items():
-        if macro_name[0] == '_':
-            macros["$HOST" + macro_name + "$"] = value
-            # Be compatible to nagios making $_HOST<VARNAME>$ out of the config _<VARNAME> configs
-            macros["$_HOST" + macro_name[1:] + "$"] = value
-
-    return macros
-
-
-def get_host_attributes(hostname, tags):
-    attrs = extra_host_attributes(hostname)
-
-    attrs["_TAGS"] = " ".join(tags)
-
-    if "alias" not in attrs:
-        attrs["alias"] = config.alias_of(hostname, hostname)
-
-    # Now lookup configured IP addresses
-    if config.is_ipv4_host(hostname):
-        attrs["_ADDRESS_4"] = ip_address_of(hostname, 4)
-        if attrs["_ADDRESS_4"] == None:
-            attrs["_ADDRESS_4"] = ""
-    else:
-        attrs["_ADDRESS_4"] = ""
-
-    if config.is_ipv6_host(hostname):
-        attrs["_ADDRESS_6"] = ip_address_of(hostname, 6)
-        if attrs["_ADDRESS_6"] == None:
-            attrs["_ADDRESS_6"] = ""
-    else:
-        attrs["_ADDRESS_6"] = ""
-
-    ipv6_primary = config.is_ipv6_primary(hostname)
-    if ipv6_primary:
-        attrs["address"]        = attrs["_ADDRESS_6"]
-        attrs["_ADDRESS_FAMILY"] = "6"
-    else:
-        attrs["address"]        = attrs["_ADDRESS_4"]
-        attrs["_ADDRESS_FAMILY"] = "4"
-
-    # Add the optional WATO folder path
-    path = config.host_paths.get(hostname)
-    if path:
-        attrs["_FILENAME"] = path
-
-    # Add custom user icons and actions
-    actions = core_config.icons_and_actions_of("host", hostname)
-    if actions:
-        attrs["_ACTIONS"] = ",".join(actions)
-
-    if cmk.is_managed_edition():
-        attrs["_CUSTOMER"] = current_customer
-
-    return attrs
-
-
-def extra_host_attributes(hostname):
-    attrs = {}
-    for key, conflist in config.extra_host_conf.items():
-        values = rulesets.host_extra_conf(hostname, conflist)
-        if values:
-            if key[0] == "_":
-                key = key.upper()
-
-            if values[0] != None:
-                attrs[key] = values[0]
-    return attrs
-
-
-def get_cluster_attributes(hostname, nodes):
-    attrs = {}
-    node_ips_4 = []
-    if config.is_ipv4_host(hostname):
-        for h in nodes:
-            addr = ip_address_of(h, 4)
-            if addr != None:
-                node_ips_4.append(addr)
-            else:
-                node_ips_4.append(fallback_ip_for(hostname, 4))
-
-    node_ips_6 = []
-    if config.is_ipv6_host(hostname):
-        for h in nodes:
-            addr = ip_address_of(h, 6)
-            if addr != None:
-                node_ips_6.append(addr)
-            else:
-                node_ips_6.append(fallback_ip_for(hostname, 6))
-
-    if config.is_ipv6_primary(hostname):
-        node_ips = node_ips_6
-    else:
-        node_ips = node_ips_4
-
-    for suffix, val in [ ("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6) ]:
-        attrs["_NODEIPS%s" % suffix] = " ".join(val)
-
-    return attrs
-
-
-ignore_ip_lookup_failures = False
-g_failed_ip_lookups = []
-
-def ip_address_of(hostname, family=None):
-    try:
-        return ip_lookup.lookup_ip_address(hostname, family)
-    except Exception, e:
-        if is_cluster(hostname):
-            return ""
-        else:
-            g_failed_ip_lookups.append(hostname)
-            if not ignore_ip_lookup_failures:
-                core_config.warning("Cannot lookup IP address of '%s' (%s). "
-                                      "The host will not be monitored correctly." % (hostname, e))
-            return fallback_ip_for(hostname, family)
-
-
-def fallback_ip_for(hostname, family=None):
-    if family == None:
-        family = config.is_ipv6_primary(hostname) and 6 or 4
-
-    if family == 4:
-        return "0.0.0.0"
-    else:
-        return "::"
-
-def replace_macros(s, macros):
-    for key, value in macros.items():
-        if type(value) in (int, long, float):
-            value = str(value) # e.g. in _EC_SL (service level)
-
-        # TODO: Clean this up
-        try:
-            s = s.replace(key, value)
-        except: # Might have failed due to binary UTF-8 encoding in value
-            try:
-                s = s.replace(key, value.decode("utf-8"))
-            except:
-                # If this does not help, do not replace
-                if cmk.debug.enabled():
-                    raise
-
-    return s
-
-
 #.
 #   .--Main Functions------------------------------------------------------.
 #   | __  __       _         _____                 _   _                   |
@@ -1255,14 +981,14 @@ def replace_macros(s, macros):
 #   '----------------------------------------------------------------------'
 
 def get_plain_hostinfo(hostname):
-    info = read_cache_file(hostname, 999999999)
+    info = agent_data.read_cache_file(hostname, 999999999)
     if info:
         return info
     else:
         info = ""
         if config.is_tcp_host(hostname):
             ipaddress = ip_lookup.lookup_ip_address(hostname)
-            info += get_agent_info(hostname, ipaddress, 0)
+            info += agent_data.get_agent_info(hostname, ipaddress, 0)
         info += piggyback.get_piggyback_info(hostname)
         return info
 
@@ -1416,7 +1142,7 @@ def ip_address_for_dump_host(hostname, family=None):
         try:
             ipaddress = ip_lookup.lookup_ip_address(hostname, family)
         except:
-            ipaddress = fallback_ip_for(hostname, family)
+            ipaddress = core_config.fallback_ip_for(hostname, family)
     return ipaddress
 
 
@@ -1467,7 +1193,7 @@ def dump_host(hostname):
 
     agenttypes = []
     if config.is_tcp_host(hostname):
-        dapg = get_datasource_program(hostname, ipaddress)
+        dapg = agent_data.get_datasource_program(hostname, ipaddress)
         if dapg:
             agenttypes.append("Datasource program: %s" % dapg)
         else:
@@ -1857,23 +1583,14 @@ def try_get_activation_lock():
 # We could in fact do some positive caching in keepalive
 # mode - e.g. the counters of the hosts could be saved in memory.
 def cleanup_globals():
-    global g_agent_already_contacted
-    g_agent_already_contacted = {}
     checks.set_hostname("unknown")
     global g_item_state
     g_item_state = {}
-    global g_infocache
-    g_infocache = {}
-    global g_agent_cache_info
-    g_agent_cache_info = {}
-    global g_broken_agent_hosts
-    g_broken_agent_hosts = set([])
-    global g_broken_snmp_hosts
-    g_broken_snmp_hosts = set([])
     global g_inactive_timerperiods
     g_inactive_timerperiods = None
 
     snmp.cleanup_host_caches()
+    agent_data.cleanup_host_caches()
 
 
 
@@ -2050,21 +1767,23 @@ for o,a in opts:
         _verbosity += 1
     elif o in [ '-f', '--force' ]:
         opt_force = True
+        agent_data.enforce_persisting()
     elif o == '-c':
         if cmk.paths.main_config_file != a:
             sys.stderr.write("Please use the option -c separated by the other options.\n")
             sys.exit(1)
     elif o == '--cache':
-        set_use_cachefile()
-        enforce_using_agent_cache()
+        agent_data.set_use_cachefile()
+        agent_data.enforce_using_agent_cache()
     elif o == '--no-tcp':
-        opt_no_tcp = True
+        agent_data.disable_tcp()
     elif o == '--no-cache':
-        opt_no_cache = True
+        agent_data.disable_agent_cache()
     elif o == '-p':
         opt_showperfdata = True
     elif o == '-n':
         opt_dont_submit = True
+        agent_data.disable_submit()
         item_state.continue_on_counter_wrap()
     elif o == '--fake-dns':
         ip_lookup.enforce_fake_dns(a)
@@ -2230,7 +1949,11 @@ try:
     if not done and seen_I > 0:
         hostnames = parse_hostname_list(args)
         if not hostnames:
-            opt_use_cachefile = not opt_no_cache
+            # In case of discovery without host restriction, use the cache file
+            # by default. Otherwise Check_MK would have to connect to ALL hosts.
+            # This will make Check_MK only contact hosts in case the cache is not
+            # new enough.
+            agent_data.set_use_cachefile(not agent_data.is_agent_cache_disabled())
         do_discovery(hostnames, check_types, seen_I == 1)
         done = True
 

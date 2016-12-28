@@ -55,7 +55,7 @@ def do_inv(hostnames):
     # No hosts specified: do all hosts and force caching
     if hostnames == None:
         hostnames = config.all_active_hosts()
-        set_use_cachefile()
+        agent_data.set_use_cachefile()
 
     errors = []
     for hostname in hostnames:

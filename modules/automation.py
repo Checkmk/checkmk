@@ -223,7 +223,7 @@ def automation_try_discovery(args):
     # TODO: Remove this unlucky option opt_use_cachefile. At least do not
     # handle this option so deep in the code. It should only be handled
     # by top-level functions.
-    set_use_cachefile(use_caches)
+    agent_data.set_use_cachefile(use_caches)
     if use_caches:
         config.check_max_cachefile_age = config.inventory_max_cachefile_age
     hostname = args[0]
@@ -704,12 +704,12 @@ def automation_diag_host(args):
 
         elif test == 'agent':
             if not cmd:
-                cmd = get_datasource_program(hostname, ipaddress)
+                cmd = agent_data.get_datasource_program(hostname, ipaddress)
 
             if cmd:
-                return 0, get_agent_info_program(cmd)
+                return 0, agent_data.get_agent_info_program(cmd)
             else:
-                return 0, get_agent_info_tcp(hostname, ipaddress, agent_port or None)
+                return 0, agent_data.get_agent_info_tcp(hostname, ipaddress, agent_port or None)
 
         elif test == 'traceroute':
             family_flag = ipv6_primary and "-6" or "-4"
@@ -815,11 +815,12 @@ def automation_rename_hosts():
     # Start monitoring again. In case of CMC we need to ignore
     # any configuration created by the CMC Rushahead daemon
     if core_was_running:
-        global ignore_ip_lookup_failures
-        ignore_ip_lookup_failures = True # force config generation to succeed. The core *must* start.
+        # force config generation to succeed. The core *must* start.
+        # TODO: Can't we drop this hack since we have config warnings now?
+        core_config.ignore_ip_lookup_failures()
         automation_restart("start")
 
-        for hostname in g_failed_ip_lookups:
+        for hostname in core_config.failed_ip_lookups():
             actions.append("dnsfail-" + hostname)
 
     # Convert actions into a dictionary { "what" : count }
@@ -1072,8 +1073,8 @@ def load_resource_file(macros):
 # here. We could read the Nagios resource.cfg file, but we do not
 # know for sure the place of that either.
 def replace_core_macros(hostname, commandline):
-    macros = get_host_macros_from_attributes(hostname,
-                         get_host_attributes(hostname, tags_of_host(hostname)))
+    macros = core_config.get_host_macros_from_attributes(hostname,
+                         core_config.get_host_attributes(hostname, tags_of_host(hostname)))
     load_resource_file(macros)
     for varname, value in macros.items():
         commandline = commandline.replace(varname, "%s" % value)
@@ -1104,7 +1105,7 @@ def execute_check_plugin(commandline):
 
 
 def automation_update_dns_cache():
-    return do_update_dns_cache()
+    return ip_lookup.update_dns_cache()
 
 
 def automation_bake_agents():

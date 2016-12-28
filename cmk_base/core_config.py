@@ -35,6 +35,11 @@ import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.checks as checks
 import cmk_base.rulesets as rulesets
+import cmk_base.ip_lookup as ip_lookup
+
+_ignore_ip_lookup_failures = False
+_failed_ip_lookups         = []
+
 
 #.
 #   .--Warnings------------------------------------------------------------.
@@ -252,4 +257,212 @@ def active_check_arguments(hostname, description, args):
     else:
         raise MKGeneralException("The check argument function needs to return either a list of arguments or a "
                                  "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname, description))
+
+
+#.
+#   .--HostAttributes------------------------------------------------------.
+#   | _   _           _      _   _   _        _ _           _              |
+#   || | | | ___  ___| |_   / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___   |
+#   || |_| |/ _ \/ __| __| / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|  |
+#   ||  _  | (_) \__ \ |_ / ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \  |
+#   ||_| |_|\___/|___/\__/_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Managing of host attributes                                          |
+#   '----------------------------------------------------------------------'
+
+def get_host_attributes(hostname, tags):
+    attrs = _extra_host_attributes(hostname)
+
+    attrs["_TAGS"] = " ".join(tags)
+
+    if "alias" not in attrs:
+        attrs["alias"] = config.alias_of(hostname, hostname)
+
+    # Now lookup configured IP addresses
+    if config.is_ipv4_host(hostname):
+        attrs["_ADDRESS_4"] = ip_address_of(hostname, 4)
+        if attrs["_ADDRESS_4"] == None:
+            attrs["_ADDRESS_4"] = ""
+    else:
+        attrs["_ADDRESS_4"] = ""
+
+    if config.is_ipv6_host(hostname):
+        attrs["_ADDRESS_6"] = ip_address_of(hostname, 6)
+        if attrs["_ADDRESS_6"] == None:
+            attrs["_ADDRESS_6"] = ""
+    else:
+        attrs["_ADDRESS_6"] = ""
+
+    ipv6_primary = config.is_ipv6_primary(hostname)
+    if ipv6_primary:
+        attrs["address"]        = attrs["_ADDRESS_6"]
+        attrs["_ADDRESS_FAMILY"] = "6"
+    else:
+        attrs["address"]        = attrs["_ADDRESS_4"]
+        attrs["_ADDRESS_FAMILY"] = "4"
+
+    # Add the optional WATO folder path
+    path = config.host_paths.get(hostname)
+    if path:
+        attrs["_FILENAME"] = path
+
+    # Add custom user icons and actions
+    actions = icons_and_actions_of("host", hostname)
+    if actions:
+        attrs["_ACTIONS"] = ",".join(actions)
+
+    if cmk.is_managed_edition():
+        attrs["_CUSTOMER"] = current_customer
+
+    return attrs
+
+
+def _extra_host_attributes(hostname):
+    attrs = {}
+    for key, conflist in config.extra_host_conf.items():
+        values = rulesets.host_extra_conf(hostname, conflist)
+        if values:
+            if key[0] == "_":
+                key = key.upper()
+
+            if values[0] != None:
+                attrs[key] = values[0]
+    return attrs
+
+
+def get_cluster_attributes(hostname, nodes):
+    attrs = {}
+    node_ips_4 = []
+    if config.is_ipv4_host(hostname):
+        for h in nodes:
+            addr = ip_address_of(h, 4)
+            if addr != None:
+                node_ips_4.append(addr)
+            else:
+                node_ips_4.append(fallback_ip_for(hostname, 4))
+
+    node_ips_6 = []
+    if config.is_ipv6_host(hostname):
+        for h in nodes:
+            addr = ip_address_of(h, 6)
+            if addr != None:
+                node_ips_6.append(addr)
+            else:
+                node_ips_6.append(fallback_ip_for(hostname, 6))
+
+    if config.is_ipv6_primary(hostname):
+        node_ips = node_ips_6
+    else:
+        node_ips = node_ips_4
+
+    for suffix, val in [ ("", node_ips), ("_4", node_ips_4), ("_6", node_ips_6) ]:
+        attrs["_NODEIPS%s" % suffix] = " ".join(val)
+
+    return attrs
+
+
+
+def get_cluster_nodes_for_config(hostname):
+    _verify_cluster_address_family(hostname)
+
+    nodes = config.nodes_of(hostname)[:]
+    for node in nodes:
+        if node not in config.all_active_realhosts():
+            warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
+                                                                                      (node, hostname))
+            nodes.remove(node)
+    return nodes
+
+
+def _verify_cluster_address_family(hostname):
+    cluster_host_family = config.is_ipv6_primary(hostname) and "IPv6" or "IPv4"
+
+    address_families = [
+        "%s: %s" % (hostname, cluster_host_family),
+    ]
+
+    address_family = cluster_host_family
+    mixed = False
+    for nodename in config.nodes_of(hostname):
+        family = config.is_ipv6_primary(nodename) and "IPv6" or "IPv4"
+        address_families.append("%s: %s" % (nodename, family))
+        if address_family == None:
+            address_family = family
+        elif address_family != family:
+            mixed = True
+
+    if mixed:
+        warning("Cluster '%s' has different primary address families: %s" %
+                                    (hostname, ", ".join(address_families)))
+
+
+def ip_address_of(hostname, family=None):
+    try:
+        return ip_lookup.lookup_ip_address(hostname, family)
+    except Exception, e:
+        if config.is_cluster(hostname):
+            return ""
+        else:
+            _failed_ip_lookups.append(hostname)
+            if not _ignore_ip_lookup_failures:
+                warning("Cannot lookup IP address of '%s' (%s). "
+                        "The host will not be monitored correctly." % (hostname, e))
+            return fallback_ip_for(hostname, family)
+
+
+def ignore_ip_lookup_failures():
+    global _ignore_ip_lookup_failures
+    _ignore_ip_lookup_failures = True
+
+
+def failed_ip_lookups():
+    return _failed_ip_lookups
+
+
+def fallback_ip_for(hostname, family=None):
+    if family == None:
+        family = config.is_ipv6_primary(hostname) and 6 or 4
+
+    if family == 4:
+        return "0.0.0.0"
+    else:
+        return "::"
+
+
+def get_host_macros_from_attributes(hostname, attrs):
+    macros = {
+        "$HOSTNAME$"    : hostname,
+        "$HOSTADDRESS$" : attrs['address'],
+        "$HOSTALIAS$"   : attrs['alias'],
+    }
+
+    # Add custom macros
+    for macro_name, value in attrs.items():
+        if macro_name[0] == '_':
+            macros["$HOST" + macro_name + "$"] = value
+            # Be compatible to nagios making $_HOST<VARNAME>$ out of the config _<VARNAME> configs
+            macros["$_HOST" + macro_name[1:] + "$"] = value
+
+    return macros
+
+
+def replace_macros(s, macros):
+    for key, value in macros.items():
+        if type(value) in (int, long, float):
+            value = str(value) # e.g. in _EC_SL (service level)
+
+        # TODO: Clean this up
+        try:
+            s = s.replace(key, value)
+        except: # Might have failed due to binary UTF-8 encoding in value
+            try:
+                s = s.replace(key, value.decode("utf-8"))
+            except:
+                # If this does not help, do not replace
+                if cmk.debug.enabled():
+                    raise
+
+    return s
+
 

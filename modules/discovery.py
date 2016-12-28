@@ -36,6 +36,7 @@ import cmk_base.console as console
 import cmk_base.piggyback as piggyback
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.snmp as snmp
+import cmk_base.agent_data as agent_data
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
     MKSNMPError, MKTimeout
 
@@ -55,7 +56,7 @@ from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
 # hostnames is already prepared by the main code. If it is
 # empty then we use all hosts and switch to using cache files.
 def do_discovery(hostnames, check_types, only_new):
-    use_caches = opt_use_cachefile
+    use_caches = agent_data.get_use_cachefile()
     if not hostnames:
         console.verbose("Discovering services on all hosts:\n")
         hostnames = config.all_active_realhosts()
@@ -279,7 +280,7 @@ def check_discovery(hostname, ipaddress=None):
     try:
         # scan services, register changes
         try:
-            services = get_host_services(hostname, use_caches=opt_use_cachefile,
+            services = get_host_services(hostname, use_caches=agent_data.get_use_cachefile(),
                                         do_snmp_scan=params["inventory_check_do_scan"],
                                         on_error="raise",
                                         ipaddress=ipaddress)
@@ -586,12 +587,12 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
             return info
 
     max_cachefile_age = use_caches and config.inventory_max_cachefile_age or 0
-    rh_info = get_realhost_info(hostname, ipaddress, section_name, max_cachefile_age,
+    rh_info = agent_data.get_realhost_info(hostname, ipaddress, section_name, max_cachefile_age,
                                 ignore_check_interval=True, use_snmpwalk_cache=False)
 
     if rh_info != None:
         with_node_info = add_nodeinfo_during_discovery(rh_info, section_name)
-        info = apply_parse_function(with_node_info, section_name)
+        info = agent_data.apply_parse_function(with_node_info, section_name)
     else:
         info = None
 
@@ -599,10 +600,10 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
         info = [ info ]
         for es in checks.check_info[section_name]["extra_sections"]:
             try:
-                bare_info = get_realhost_info(hostname, ipaddress, es, max_cachefile_age,
+                bare_info = agent_data.get_realhost_info(hostname, ipaddress, es, max_cachefile_age,
                                               ignore_check_interval=True, use_snmpwalk_cache=False)
                 with_node_info = add_nodeinfo_during_discovery(bare_info, es)
-                parsed = apply_parse_function(with_node_info, es)
+                parsed = agent_data.apply_parse_function(with_node_info, es)
                 info.append(parsed)
 
             except MKAgentError:
@@ -1140,7 +1141,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             # Sorry. The whole caching stuff is the most horrible hack in
             # whole Check_MK. Nobody dares to clean it up, YET. But that
             # day is getting nearer...
-            set_use_cachefile()
+            agent_data.set_use_cachefile()
 
             if check_type not in checks.check_info:
                 continue # Skip not existing check silently
@@ -1148,7 +1149,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             try:
                 exitcode = None
                 perfdata = []
-                info = get_info_for_check(hostname, ipaddress, infotype)
+                info = agent_data.get_info_for_check(hostname, ipaddress, infotype)
             # Handle cases where agent does not output data
             except MKAgentError, e:
                 exitcode = 3
@@ -1166,7 +1167,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 exitcode = 3
                 output = "Error getting data for %s: %s" % (infotype, e)
 
-            restore_use_cachefile()
+            agent_data.restore_use_cachefile()
 
             item_state.set_item_state_prefix(check_type, item)
 

@@ -94,11 +94,11 @@ def lookup_ip_address(hostname, family=None):
     if rulesets.in_binary_hostlist(hostname, config.dyndns_hosts):
         return hostname
 
-    return _cached_dns_lookup(hostname, family)
+    return cached_dns_lookup(hostname, family)
 
 
 # Variables needed during the renaming of hosts (see automation.py)
-def _cached_dns_lookup(hostname, family):
+def cached_dns_lookup(hostname, family):
     cache = cmk_base.config_cache.get_dict("cached_dns_lookup")
     cache_id = hostname, family
 

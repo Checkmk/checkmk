@@ -306,12 +306,12 @@ build: config.h
 install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
 	cp -rv enterprise/web/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/modules
-	install -m 644 enterprise/modules/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/modules
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/cee
 	install -m 644 enterprise/cmk_base/cee/* $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/cee
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/default_config
 	install -m 644 enterprise/cmk_base/default_config/* $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/default_config
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/modes
+	install -m 644 enterprise/cmk_base/modes/* $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/modes
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/alert_handlers
 	install -m 755 enterprise/alert_handlers/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/alert_handlers
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/bakery

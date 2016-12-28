@@ -60,6 +60,7 @@ def inventory_fileinfo(info, case):
                         inventory.append((group, {}))
     return inventory
 
+
 def fileinfo_process_date(pattern, reftime):
     for what, the_time in [ ("DATE", reftime), ("YESTERDAY", reftime - 86400) ]:
         the_regex = '((?:/|[A-Za-z]).*)\$%s:((?:%%\w.?){1,})\$(.*)' % what
@@ -72,6 +73,7 @@ def fileinfo_process_date(pattern, reftime):
             return pattern
 
     return pattern
+
 
 def fileinfo_groups_of_file(check_filename, reftime):
     groups = []
@@ -112,6 +114,7 @@ def fileinfo_groups_of_file(check_filename, reftime):
 
     return groups
 
+
 def fileinfo_check_timeranges(params):
     ranges = params.get("timeofday")
     if ranges == None:
@@ -122,6 +125,7 @@ def fileinfo_check_timeranges(params):
         if fileinfo_in_timerange(now, *range_spec):
             return None
     return " (out of relevant time of day)"
+
 
 def fileinfo_in_timerange(now, range_from, range_to):
     minutes_from = range_from[0] * 60 + range_from[1]
@@ -159,6 +163,7 @@ def check_fileinfo(item, params, info):
         return in_timerange and state_missing or 0, "File not found" + (outof_range_txt or "")
 
     return fileinfo_check_function(check_definition, params, outof_range_txt)
+
 
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of patterns and makes them available for the check
@@ -269,6 +274,7 @@ def check_fileinfo_groups(item, params, info):
         check_definition.append(("Date pattern", "date pattern",  date_inclusion, str ))
 
     return fileinfo_check_function(check_definition, params, outof_range_txt)
+
 
 def fileinfo_check_function(check_definition, params, outof_range_txt):
     state = 0

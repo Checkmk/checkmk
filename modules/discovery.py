@@ -35,6 +35,7 @@ import cmk_base.rulesets as rulesets
 import cmk_base.console as console
 import cmk_base.piggyback as piggyback
 import cmk_base.ip_lookup as ip_lookup
+import cmk_base.snmp as snmp
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
     MKSNMPError, MKTimeout
 
@@ -760,7 +761,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
     if not rulesets.in_binary_hostlist(hostname, config.snmp_without_sys_descr):
         for oid, name in [ (".1.3.6.1.2.1.1.1.0", "system description"),
                            (".1.3.6.1.2.1.1.2.0", "system object") ]:
-            value = get_single_oid(hostname, ipaddress, oid)
+            value = snmp.get_single_oid(hostname, ipaddress, oid)
             if value == None:
                 raise MKSNMPError(
                     "Cannot fetch %s OID %s. This might be OK for some bogus devices. "
@@ -771,8 +772,8 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
         # Fake OID values to prevent issues with a lot of scan functions
         console.vverbose("       Skipping system description OID "
                  "(Set .1.3.6.1.2.1.1.1.0 and .1.3.6.1.2.1.1.2.0 to \"\")\n")
-        set_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
-        set_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
+        snmp.set_oid_cache(hostname, ".1.3.6.1.2.1.1.1.0", "")
+        snmp.set_oid_cache(hostname, ".1.3.6.1.2.1.1.2.0", "")
 
 
     found = []
@@ -810,7 +811,7 @@ def snmp_scan(hostname, ipaddress, on_error = "ignore", for_inv=False):
         if scan_function:
             try:
                 def oid_function(oid, default_value=None):
-                    value = get_single_oid(hostname, ipaddress, oid)
+                    value = snmp.get_single_oid(hostname, ipaddress, oid)
                     if value == None:
                         return default_value
                     else:

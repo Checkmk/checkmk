@@ -910,7 +910,6 @@ if '-d' in sys.argv:
                  'piggyback_max_cachefile_age', 'fallback_agent_output_encoding',
                  'simulation_mode', 'agent_simulator',
                  'check_mk_perfdata_with_times',
-                 'use_inline_snmp', 'record_inline_snmp_stats',
                  ]:
         output.write("%s = %r\n" % (var, getattr(config, var)))
 
@@ -920,7 +919,6 @@ if '-d' in sys.argv:
     # Do we need to load the SNMP module? This is the case, if the host
     # has at least one SNMP based check. Also collect the needed check
     # types and sections.
-    need_snmp_module = False
     needed_check_types = set([])
     needed_sections = set([])
     service_timeperiods = {}
@@ -943,23 +941,11 @@ if '-d' in sys.argv:
 
         needed_sections.add(check_type.split(".")[0])
         needed_check_types.add(check_type)
-        if checks.is_snmp_check(check_type):
-            need_snmp_module = True
 
     output.write("precompiled_check_intervals = %r\n" % check_intervals)
     output.write("def check_interval_of(hostname, checktype):\n    return precompiled_check_intervals.get(checktype)\n\n")
     output.write("precompiled_service_timeperiods = %r\n" % service_timeperiods)
     output.write("def check_period_of(hostname, service):\n    return precompiled_service_timeperiods.get(service)\n\n")
-
-    if need_snmp_module:
-        output.write(stripped_python_file(cmk.paths.modules_dir + "/snmp.py"))
-
-        if config.is_inline_snmp_host(hostname):
-            output.write(stripped_python_file(cmk.paths.modules_dir + "/inline_snmp.py"))
-        else:
-            output.write("has_inline_snmp = False\n")
-    else:
-        output.write("has_inline_snmp = False\n")
 
     # check info table
     # We need to include all those plugins that are referenced in the host's
@@ -1005,12 +991,6 @@ if '-d' in sys.argv:
     else:
         output.write("clusters = {}\ndef is_cluster(hostname):\n    return False\n\n")
         output.write("def nodes_of(hostname):\n    return None\n")
-
-    # snmp hosts
-    if not config.is_inline_snmp_host(hostname):
-        output.write("def snmp_proto_spec(hostname):\n    return   % r\n\n" % snmp_proto_spec(hostname))
-        output.write("def snmp_port_spec(hostname):\n    return   % r\n\n" % snmp_port_spec(hostname))
-        output.write("def snmp_walk_command(hostname):\n   return % r\n\n" % snmp_walk_command(hostname))
 
     # IP addresses
     needed_ipaddresses = {}

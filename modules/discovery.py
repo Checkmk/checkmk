@@ -29,6 +29,7 @@ import cmk.tty as tty
 import cmk.paths
 import cmk.defines as defines
 
+import cmk_base.crash_reporting
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
 import cmk_base.console as console
@@ -380,7 +381,8 @@ def check_discovery(hostname, ipaddress=None):
     except Exception, e:
         if cmk.debug.enabled():
             raise
-        output = create_crash_dump(hostname, "discovery", None, None, "Check_MK Discovery", [])\
+        output = cmk_base.crash_reporting.create_crash_dump(hostname, "discovery", None,
+                                                False, None, "Check_MK Discovery", [])\
             .replace("Crash dump:\n", "Crash dump:\\n")
         # Honor rule settings for "Status of the Check_MK service". In case of
         # a problem we assume a connection error here.

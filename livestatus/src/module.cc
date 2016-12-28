@@ -58,7 +58,6 @@
 #include "auth.h"
 #include "data_encoding.h"
 #include "global_counters.h"
-#include "livestatus.h"
 #include "nagios.h"
 #include "strutil.h"
 #include "waittriggers.h"
@@ -115,12 +114,12 @@ struct ThreadInfo {
 static vector<ThreadInfo> fl_thread_info;
 static thread_local ThreadInfo *tl_info;
 unsigned long g_max_cached_messages = 500000;
-unsigned long g_max_lines_per_logfile =
-    1000000;  // do never read more than that number of lines from a logfile
+// do never read more than that number of lines from a logfile
+unsigned long g_max_lines_per_logfile = 1000000;
 unsigned long g_max_response_size = 100 * 1024 * 1024;  // limit answer to 10 MB
 int g_thread_running = 0;
-int g_service_authorization = AUTH_LOOSE;
-int g_group_authorization = AUTH_STRICT;
+AuthorizationKind g_service_authorization = AuthorizationKind::loose;
+AuthorizationKind g_group_authorization = AuthorizationKind::strict;
 Encoding g_data_encoding = Encoding::utf8;
 
 // Map to speed up access via name/alias/address
@@ -141,6 +140,8 @@ extern int log_initial_states;
 
 int g_num_hosts;
 int g_num_services;
+
+constexpr const char *default_socket_path = "/usr/local/nagios/var/rw/live";
 
 void count_hosts() {
     g_num_hosts = 0;
@@ -784,7 +785,7 @@ void check_path(const char *name, char *path) {
 
 void livestatus_parse_arguments(const char *args_orig) {
     /* set default socket path */
-    strncpy(g_socket_path, DEFAULT_SOCKET_PATH, sizeof(g_socket_path));
+    strncpy(g_socket_path, default_socket_path, sizeof(g_socket_path));
 
     /* set default path to our logfile to be in the same path as nagios.log */
     strncpy(fl_logfile_path, log_file,
@@ -890,9 +891,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 }
             } else if (strcmp(left, "service_authorization") == 0) {
                 if (strcmp(right, "strict") == 0) {
-                    g_service_authorization = AUTH_STRICT;
+                    g_service_authorization = AuthorizationKind::strict;
                 } else if (strcmp(right, "loose") == 0) {
-                    g_service_authorization = AUTH_LOOSE;
+                    g_service_authorization = AuthorizationKind::loose;
                 } else {
                     Warning(fl_logger_nagios)
                         << "invalid service authorization mode, "
@@ -900,9 +901,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 }
             } else if (strcmp(left, "group_authorization") == 0) {
                 if (strcmp(right, "strict") == 0) {
-                    g_group_authorization = AUTH_STRICT;
+                    g_group_authorization = AuthorizationKind::strict;
                 } else if (strcmp(right, "loose") == 0) {
-                    g_group_authorization = AUTH_LOOSE;
+                    g_group_authorization = AuthorizationKind::loose;
                 } else {
                     Warning(fl_logger_nagios)
                         << "invalid group authorization mode, "

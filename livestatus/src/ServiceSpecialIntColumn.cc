@@ -34,7 +34,7 @@ int32_t ServiceSpecialIntColumn::getValue(void *row,
 
     service *svc = static_cast<service *>(data);
     switch (_type) {
-        case SSIC_PNP_GRAPH_PRESENT:
+        case Type::pnp_graph_present:
             return pnpgraph_present(svc->host_ptr->name, svc->description);
     }
     return -1;  // never reached

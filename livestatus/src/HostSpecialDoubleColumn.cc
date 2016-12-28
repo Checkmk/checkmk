@@ -37,7 +37,7 @@ double HostSpecialDoubleColumn::getValue(void *data) {
     host *hst = static_cast<host *>(data);
 
     switch (_type) {
-        case HSDC_STALENESS: {
+        case Type::staleness: {
             return (time(nullptr) - hst->last_check) /
                    ((hst->check_interval == 0 ? 1 : hst->check_interval) *
                     interval_length);

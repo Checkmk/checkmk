@@ -59,10 +59,10 @@ string TableServicesByGroup::name() const { return "servicesbygroup"; }
 string TableServicesByGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByGroup::answerQuery(Query *query) {
-    // When g_group_authorization is set to AUTH_STRICT we need to pre-check
-    // if every service of this group is visible to the _auth_user
-    bool requires_precheck =
-        (query->authUser() != nullptr) && g_group_authorization == AUTH_STRICT;
+    // When g_group_authorization is set to AuthorizationKind::strict we need to
+    // pre-check if every service of this group is visible to the _auth_user
+    bool requires_precheck = (query->authUser() != nullptr) &&
+                             g_group_authorization == AuthorizationKind::strict;
 
     for (servicegroup *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
         bool show_service_group = true;

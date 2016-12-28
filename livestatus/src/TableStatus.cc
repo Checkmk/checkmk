@@ -244,7 +244,7 @@ TableStatus::TableStatus(Logger *logger) : Table(logger) {
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by "
         "Check_MK HW/SW-Inventory",
-        g_mk_inventory_path, SPIC_MK_INVENTORY_LAST));
+        g_mk_inventory_path, StatusSpecialIntColumn::Type::mk_inventory_last));
 }
 
 void TableStatus::addCounterColumns(const string &name,

@@ -36,13 +36,13 @@
 #include "nagios.h"
 #endif
 
-#define SPIC_MK_INVENTORY_LAST 0
-
 class StatusSpecialIntColumn : public IntColumn {
 public:
+    enum class Type { mk_inventory_last };
+
     StatusSpecialIntColumn(const std::string& name,
                            const std::string& description,
-                           const std::string& inventory_path, int type,
+                           const std::string& inventory_path, Type type,
                            int indirect_offset = -1, int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _inventory_path(inventory_path)
@@ -51,7 +51,7 @@ public:
 
 private:
     std::string _inventory_path;
-    int _type;
+    const Type _type;
 };
 
 #endif  // StatusSpecialIntColumn_h

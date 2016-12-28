@@ -30,13 +30,13 @@ endif
 all: demo
 
 demo.o: demo.cc Livestatus.h
-	g++ $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 Livestatus.o: Livestatus.cc Livestatus.h
-	g++ $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 demo: demo.o Livestatus.o
-	g++ $(CXXFLAGS) $(LDFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
 clean:
-	rm -f demo.o demo Livetatus.o
+	$(RM) demo.o demo Livetatus.o

@@ -31,8 +31,6 @@
 using std::string;
 using std::vector;
 
-#define SEPARATORS "Separators: 10 1 2 3\n"
-
 void Livestatus::connectUNIX(const char *socket_path) {
     _connection = socket(PF_LOCAL, SOCK_STREAM, 0);
     struct sockaddr_un sa;
@@ -61,7 +59,8 @@ void Livestatus::disconnect() {
 
 void Livestatus::sendQuery(const char *query) {
     write(_connection, query, strlen(query));
-    write(_connection, SEPARATORS, strlen(SEPARATORS));
+    string separators = "Separators: 10 1 2 3\n";
+    write(_connection, separators.c_str(), separators.size());
     shutdown(_connection, SHUT_WR);
 }
 

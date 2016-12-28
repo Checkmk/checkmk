@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include <vector>
+#include "ColumnsColumn.h"
 #include "Table.h"
 class Column;
 class Logger;
@@ -44,7 +45,7 @@ public:
     void answerQuery(Query *query) override;
 
     void addTable(Table *);
-    std::string getValue(Column *column, int colcol) const;
+    std::string getValue(Column *column, ColumnsColumn::Type colcol) const;
     std::string tableNameOf(Column *column) const;
 };
 

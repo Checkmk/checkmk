@@ -48,8 +48,6 @@ class Core;
 class DowntimesOrComments;
 #endif
 
-#define CLASSMASK_STATEHIST 0xC6
-
 class TableStateHistory : public Table {
 public:
 #ifdef CMC

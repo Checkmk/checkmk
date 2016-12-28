@@ -36,7 +36,7 @@ int32_t HostSpecialIntColumn::getValue(void *row, contact * /* auth_user */) {
 
     host *hst = static_cast<host *>(data);
     switch (_type) {
-        case HSIC_REAL_HARD_STATE:
+        case Type::real_hard_state:
             if (hst->current_state == 0) {
                 return 0;
             } else if (hst->state_type == 1) {
@@ -45,10 +45,10 @@ int32_t HostSpecialIntColumn::getValue(void *row, contact * /* auth_user */) {
                 return hst->last_hard_state;
             }
 
-        case HSIC_PNP_GRAPH_PRESENT:
+        case Type::pnp_graph_present:
             return pnpgraph_present(hst->name);
 
-        case HSIC_MK_INVENTORY_LAST: {
+        case Type::mk_inventory_last: {
             extern char g_mk_inventory_path[];
             return mk_inventory_last(string(g_mk_inventory_path) + "/" +
                                      hst->name);

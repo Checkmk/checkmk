@@ -436,7 +436,7 @@ void Query::parseAuthUserHeader(char *line) {
     if (_auth_user == nullptr) {
         // Do not handle this as error any more. In a multi site setup
         // not all users might be present on all sites by design.
-        _auth_user = UNKNOWN_AUTH_USER;
+        _auth_user = unknown_auth_user();
     }
 }
 

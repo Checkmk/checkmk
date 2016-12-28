@@ -31,28 +31,26 @@
 #include "IntColumn.h"
 #include "nagios.h"
 
-#define SLSC_NUM_OK 0
-#define SLSC_NUM_WARN 1
-#define SLSC_NUM_CRIT 2
-#define SLSC_NUM_UNKNOWN 3
-#define SLSC_NUM_PENDING 4
-#define SLSC_WORST_STATE -2
-
-#define SLSC_NUM_HARD_OK (0 + 64)
-#define SLSC_NUM_HARD_WARN (1 + 64)
-#define SLSC_NUM_HARD_CRIT (2 + 64)
-#define SLSC_NUM_HARD_UNKNOWN (3 + 64)
-#define SLSC_WORST_HARD_STATE (-2 + 64)
-
-#define SLSC_NUM -1
-
 class ServiceListStateColumn : public IntColumn {
-    int _offset;
-    int _logictype;
-
 public:
+    // TODO(sp) Remove the magic arithmetic
+    enum class Type {
+        num_ok = 0,
+        num_warn = 1,
+        num_crit = 2,
+        num_unknown = 3,
+        num_pending = 4,
+        worst_state = -2,
+        num_hard_ok = (0 + 64),
+        num_hard_warn = (1 + 64),
+        num_hard_crit = (2 + 64),
+        num_hard_unknown = (3 + 64),
+        worst_hard_state = (-2 + 64),
+        num = -1
+    };
+
     ServiceListStateColumn(const std::string &name,
-                           const std::string &description, int logictype,
+                           const std::string &description, Type logictype,
                            int offset, int indirect_offset,
                            int extra_offset = -1)
         : IntColumn(name, description, indirect_offset, extra_offset)
@@ -60,9 +58,13 @@ public:
         , _logictype(logictype) {}
     int32_t getValue(void *row, contact *auth_user) override;
     servicesmember *getMembers(void *data);
-    static int32_t getValue(int logictype, servicesmember *mem,
+    static int32_t getValue(Type logictype, servicesmember *mem,
                             contact *auth_user);
     static bool svcStateIsWorse(int32_t state1, int32_t state2);
+
+private:
+    int _offset;
+    const Type _logictype;
 };
 
 #endif  // ServiceListStateColumn_h

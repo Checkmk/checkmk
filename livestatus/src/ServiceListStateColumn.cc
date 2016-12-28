@@ -52,7 +52,7 @@ servicesmember *ServiceListStateColumn::getMembers(void *data) {
                                                 _offset);
 }
 
-int32_t ServiceListStateColumn::getValue(int logictype, servicesmember *mem,
+int32_t ServiceListStateColumn::getValue(Type logictype, servicesmember *mem,
                                          contact *auth_user) {
     int32_t result = 0;
 
@@ -60,12 +60,12 @@ int32_t ServiceListStateColumn::getValue(int logictype, servicesmember *mem,
         service *svc = mem->service_ptr;
         if (auth_user == nullptr ||
             is_authorized_for(auth_user, svc->host_ptr, svc)) {
-            int lt = logictype;
+            Type lt = logictype;
             int state;
             int has_been_checked;
-            if (logictype >= 60) {
+            if (static_cast<int>(logictype) >= 60) {
                 state = svc->last_hard_state;
-                lt -= 64;
+                lt = static_cast<Type>(static_cast<int>(lt) - 64);
             } else {
                 state = svc->current_state;
             }
@@ -73,21 +73,22 @@ int32_t ServiceListStateColumn::getValue(int logictype, servicesmember *mem,
             has_been_checked = svc->has_been_checked;
 
             switch (lt) {
-                case SLSC_WORST_STATE:
+                case Type::worst_state:
                     if (svcStateIsWorse(state, result)) {
                         result = state;
                     }
                     break;
-                case SLSC_NUM:
+                case Type::num:
                     result++;
                     break;
-                case SLSC_NUM_PENDING:
+                case Type::num_pending:
                     if (has_been_checked == 0) {
                         result++;
                     }
                     break;
                 default:
-                    if ((has_been_checked != 0) && state == lt) {
+                    if (has_been_checked != 0 &&
+                        state == static_cast<int>(lt)) {
                         result++;
                     }
                     break;

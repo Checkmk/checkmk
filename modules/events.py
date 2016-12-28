@@ -30,6 +30,7 @@
 import pprint, urllib, select, subprocess, socket
 import livestatus, os
 
+import cmk
 from cmk.regex import regex
 
 import cmk_base.rulesets as rulesets
@@ -265,7 +266,7 @@ def complete_raw_context(raw_context, with_dump, event_log):
         raw_context["MONITORING_HOST"] = socket.gethostname()
         raw_context["LOGDIR"] = notification_logdir
         raw_context["OMD_ROOT"] = cmk.paths.omd_root
-        raw_context["OMD_SITE"] = omd_site()
+        raw_context["OMD_SITE"] = cmk.omd_site()
         raw_context["MAIL_COMMAND"] = notification_mail_command
 
         # The Check_MK Micro Core sends the MICROTIME and no other time stamps. We add

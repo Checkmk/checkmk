@@ -34,10 +34,18 @@ __version__ = "1.5.0i1"
 import os
 
 import cmk.paths
-
+from cmk.exceptions import MKGeneralException
 
 def omd_version():
     return os.path.basename(os.readlink(cmk.paths.omd_root + "/version"))
+
+
+def omd_site():
+    try:
+        return os.environ["OMD_SITE"]
+    except KeyError:
+        raise MKGeneralException(_("OMD_SITE environment variable not set. You can "
+                                   "only execute this in an OMD site."))
 
 
 def edition_short():

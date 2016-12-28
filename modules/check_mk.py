@@ -75,7 +75,7 @@ from cmk_base.exceptions import MKAgentError
 # TODO: Clean up all calls and remove these aliases
 tags_of_host    = config.tags_of_host
 is_cluster      = config.is_cluster
-is_ipv6_primary = config.is_ipv6_primary
+nodes_of        = config.nodes_of
 
 #   .--Prelude-------------------------------------------------------------.
 #   |                  ____           _           _                        |
@@ -350,19 +350,6 @@ def do_output_check_info():
 #   '----------------------------------------------------------------------'
 # TODO: Move to config.
 
-# Returns a list of all hosts which are associated with this site,
-# but have been removed by the "only_hosts" rule. Normally these
-# are the hosts which have the tag "offline".
-#
-# This is not optimized for performance, so use in specific situations.
-def all_offline_hosts():
-    hostlist = config.filter_active_hosts(config.all_configured_realhosts().union(config.all_configured_clusters()),
-                                   keep_offline_hosts=True)
-
-    return [ hostname for hostname in hostlist
-             if not rulesets.in_binary_hostlist(hostname, config.only_hosts) ]
-
-
 def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
     if with_foreign_hosts:
         valid_hosts = config.all_configured_realhosts()
@@ -392,171 +379,6 @@ def parse_hostname_list(args, with_clusters = True, with_foreign_hosts = False):
                 sys.exit(1)
     return hostlist
 
-# TODO: Remove this when checks have been moved to cmk_base.checks
-hosttags_match_taglist = rulesets.hosttags_match_taglist
-
-def extra_host_conf_of(hostname, exclude=None):
-    if exclude == None:
-        exclude = []
-    return extra_conf_of(config.extra_host_conf, hostname, None, exclude)
-
-# Collect all extra configuration data for a service
-def extra_service_conf_of(hostname, description):
-    conf = ""
-
-    # Contact groups
-    sercgr = rulesets.service_extra_conf(hostname, description, config.service_contactgroups)
-    contactgroups_to_define.update(sercgr)
-    if len(sercgr) > 0:
-        if config.enable_rulebased_notifications:
-            sercgr.append("check-mk-notify") # not nessary if not explicit groups defined
-        conf += "  contact_groups\t\t" + ",".join(sercgr) + "\n"
-
-    sergr = rulesets.service_extra_conf(hostname, description, config.service_groups)
-    if len(sergr) > 0:
-        conf += "  service_groups\t\t" + ",".join(sergr) + "\n"
-        if config.define_servicegroups:
-            servicegroups_to_define.update(sergr)
-    conf += extra_conf_of(config.extra_service_conf, hostname, description)
-    return conf.encode("utf-8")
-
-
-def extra_conf_of(confdict, hostname, service, exclude=None):
-    if exclude == None:
-        exclude = []
-
-    result = ""
-    for key, conflist in confdict.items():
-        if service != None:
-            values = rulesets.service_extra_conf(hostname, service, conflist)
-        else:
-            values = rulesets.host_extra_conf(hostname, conflist)
-
-        if exclude and key in exclude:
-            continue
-
-        if values:
-            format = "  %-29s %s\n"
-            result += format % (key, values[0])
-
-    return result
-
-def autodetect_plugin(command_line):
-    plugin_name = command_line.split()[0]
-    if command_line[0] not in [ '$', '/' ]:
-        try:
-            for dir in [ "/local", "" ]:
-                path = cmk.paths.omd_root + dir + "/lib/nagios/plugins/"
-                if os.path.exists(path + plugin_name):
-                    command_line = path + command_line
-                    break
-        except:
-            pass
-    return command_line
-
-def host_check_command(hostname, ip, is_clust):
-    # Check dedicated host check command
-    values = rulesets.host_extra_conf(hostname, config.host_check_commands)
-    if values:
-        value = values[0]
-    elif config.monitoring_core == "cmc":
-        value = "smart"
-    else:
-        value = "ping"
-
-    if config.monitoring_core != "cmc" and value == "smart":
-        value = "ping" # avoid problems when switching back to nagios core
-
-    if value == "smart" and not is_clust:
-        return "check-mk-host-smart"
-
-    elif value in [ "ping", "smart" ]: # Cluster host
-        ping_args = check_icmp_arguments_of(hostname)
-        if is_clust and ip: # Do check cluster IP address if one is there
-            return "check-mk-host-ping!%s" % ping_args
-        elif ping_args and is_clust: # use check_icmp in cluster mode
-            return "check-mk-host-ping-cluster!%s" % ping_args
-        elif ping_args: # use special arguments
-            return "check-mk-host-ping!%s" % ping_args
-        else:
-            return None
-
-    elif value == "ok":
-        return "check-mk-host-ok"
-
-    elif value == "agent" or value[0] == "service":
-        service = value == "agent" and "Check_MK" or value[1]
-        if config.monitoring_core == "cmc":
-            return "check-mk-host-service!" + service
-        command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
-        hostcheck_commands_to_define.append((command,
-           'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
-                (hostname, service.replace('$HOSTNAME$', hostname),
-                 hostname, service.replace('$HOSTNAME$', hostname))))
-        return command
-
-    elif value[0] == "tcp":
-        return "check-mk-host-tcp!" + str(value[1])
-
-    elif value[0] == "custom":
-        try:
-            custom_commands_to_define.add("check-mk-custom")
-        except:
-            pass # not needed and not available with CMC
-        return "check-mk-custom!" + autodetect_plugin(value[1])
-
-    raise MKGeneralException("Invalid value %r for host_check_command of host %s." % (
-            value, hostname))
-
-
-def icons_and_actions_of(what, hostname, svcdesc = None, checkname = None, params = None):
-    if what == 'host':
-        return list(set(rulesets.host_extra_conf(hostname, config.host_icons_and_actions)))
-    else:
-        actions = set(rulesets.service_extra_conf(hostname, svcdesc, config.service_icons_and_actions))
-
-        # Some WATO rules might register icons on their own
-        if checkname:
-            checkgroup = checks.check_info[checkname]["group"]
-            if checkgroup in [ 'ps', 'services' ] and type(params) == dict:
-                icon = params.get('icon')
-                if icon:
-                    actions.add(icon)
-
-        return list(actions)
-
-
-def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
-    values = rulesets.host_extra_conf(hostname, config.ping_levels)
-    levels = {}
-    for value in values[::-1]: # make first rules have precedence
-        levels.update(value)
-    if not add_defaults and not levels:
-        return ""
-
-    if family == None:
-        family = is_ipv6_primary(hostname) and 6 or 4
-
-    args = []
-
-    if family == 6:
-        args.append("-6")
-
-    rta = 200, 500
-    loss = 80, 100
-    for key, value in levels.items():
-        if key == "timeout":
-            args.append("-t %d" % value)
-        elif key == "packets":
-            args.append("-n %d" % value)
-        elif key == "rta":
-            rta = value
-        elif key == "loss":
-            loss = value
-    args.append("-w %.2f,%.2f%%" % (rta[0], loss[0]))
-    args.append("-c %.2f,%.2f%%" % (rta[1], loss[1]))
-    return " ".join(args)
-
 
 #.
 #   .--Helpers-------------------------------------------------------------.
@@ -569,32 +391,6 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
 #   +----------------------------------------------------------------------+
 #   | Misc functions which do not belong to any other topic                |
 #   '----------------------------------------------------------------------'
-
-def omd_site():
-    try:
-        return os.environ["OMD_SITE"]
-    except KeyError:
-        raise MKGeneralException(_("OMD_SITE environment variable not set. You can "
-                                   "only execute this in an OMD site."))
-
-
-def check_period_of(hostname, service):
-    periods = rulesets.service_extra_conf(hostname, service, config.check_periods)
-    if periods:
-        period = periods[0]
-        if period == "24X7":
-            return None
-        else:
-            return period
-    else:
-        return None
-
-def check_interval_of(hostname, checkname):
-    if not checks.is_snmp_check(checkname):
-        return # no values at all for non snmp checks
-    for match, minutes in rulesets.host_extra_conf(hostname, config.snmp_check_interval):
-        if match is None or match == checkname:
-            return minutes # use first match
 
 # FIXME TODO: Cleanup the whole caching crap
 orig_opt_use_cachefile           = None
@@ -661,81 +457,6 @@ def schedule_inventory_check(hostname):
     except Exception:
         if cmk.debug.enabled():
             raise
-
-
-#.
-#   .--SNMP----------------------------------------------------------------.
-#   |                      ____  _   _ __  __ ____                         |
-#   |                     / ___|| \ | |  \/  |  _ \                        |
-#   |                     \___ \|  \| | |\/| | |_) |                       |
-#   |                      ___) | |\  | |  | |  __/                        |
-#   |                     |____/|_| \_|_|  |_|_|                           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Some basic SNMP functions. Note: most of the SNMP related code is   |
-#   |  the separate module snmp.py.                                        |
-#   '----------------------------------------------------------------------'
-
-#.
-#   .--Cluster-------------------------------------------------------------.
-#   |                    ____ _           _                                |
-#   |                   / ___| |_   _ ___| |_ ___ _ __                     |
-#   |                  | |   | | | | / __| __/ _ \ '__|                    |
-#   |                  | |___| | |_| \__ \ ||  __/ |                       |
-#   |                   \____|_|\__,_|___/\__\___|_|                       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Code dealing with clusters (virtual hosts that are used to deal with |
-#   | services that can move between physical nodes.                       |
-#   '----------------------------------------------------------------------'
-
-# Returns the nodes of a cluster, or None if hostname is
-# not a cluster
-def nodes_of(hostname):
-    nodes_of_cache = cmk_base.config_cache.get_dict("nodes_of")
-    nodes = nodes_of_cache.get(hostname, False)
-    if nodes != False:
-        return nodes
-
-    for tagged_hostname, nodes in config.clusters.items():
-        if hostname == tagged_hostname.split("|")[0]:
-            nodes_of_cache[hostname] = nodes
-            return nodes
-
-    nodes_of_cache[hostname] = None
-    return None
-
-
-# Determine weather a service (found on a physical host) is a clustered
-# service and - if yes - return the cluster host of the service. If
-# no, returns the hostname of the physical host.
-def host_of_clustered_service(hostname, servicedesc):
-    the_clusters = config.clusters_of(hostname)
-    if not the_clusters:
-        return hostname
-
-    cluster_mapping = rulesets.service_extra_conf(hostname, servicedesc, config.clustered_services_mapping)
-    for cluster in cluster_mapping:
-        # Check if the host is in this cluster
-        if cluster in the_clusters:
-            return cluster
-
-    # 1. New style: explicitly assigned services
-    for cluster, conf in config.clustered_services_of.items():
-        nodes = nodes_of(cluster)
-        if not nodes:
-            raise MKGeneralException("Invalid entry clustered_services_of['%s']: %s is not a cluster." %
-                   (cluster, cluster))
-        if hostname in nodes and \
-            rulesets.in_boolean_serviceconf_list(hostname, servicedesc, conf):
-            return cluster
-
-    # 1. Old style: clustered_services assumes that each host belong to
-    #    exactly on cluster
-    if rulesets.in_boolean_serviceconf_list(hostname, servicedesc, config.clustered_services):
-        return the_clusters[0]
-
-    return hostname
 
 #.
 #   .--Checktable----------------------------------------------------------.
@@ -835,7 +556,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
             descr = service_description(hostname, checkname, item)
             if service_ignored(hostname, checkname, descr):
                 return
-            if hostname != host_of_clustered_service(hostname, descr):
+            if hostname != config.host_of_clustered_service(hostname, descr):
                 return
             deps  = service_deps(hostname, descr)
             check_table[(checkname, item)] = (params, descr, deps)
@@ -865,7 +586,7 @@ def get_check_table(hostname, remove_duplicates=False, use_cache=True, world='co
                     entry = entry[1:] # drop hostname from single_host_checks
                 checkname, item, params = entry
                 descr = service_description(node, checkname, item)
-                if hostname == host_of_clustered_service(node, descr):
+                if hostname == config.host_of_clustered_service(node, descr):
                     cluster_params = compute_check_parameters(hostname, checkname, item, params)
                     handle_entry((hostname, checkname, item, cluster_params))
 
@@ -1526,7 +1247,7 @@ def verify_non_duplicate_hosts():
 
 
 def verify_cluster_address_family(hostname):
-    cluster_host_family = is_ipv6_primary(hostname) and "IPv6" or "IPv4"
+    cluster_host_family = config.is_ipv6_primary(hostname) and "IPv6" or "IPv4"
 
     address_families = [
         "%s: %s" % (hostname, cluster_host_family),
@@ -1535,7 +1256,7 @@ def verify_cluster_address_family(hostname):
     address_family = cluster_host_family
     mixed = False
     for nodename in nodes_of(hostname):
-        family = is_ipv6_primary(nodename) and "IPv6" or "IPv4"
+        family = config.is_ipv6_primary(nodename) and "IPv6" or "IPv4"
         address_families.append("%s: %s" % (nodename, family))
         if address_family == None:
             address_family = family
@@ -1599,7 +1320,7 @@ def get_host_attributes(hostname, tags):
     else:
         attrs["_ADDRESS_6"] = ""
 
-    ipv6_primary = is_ipv6_primary(hostname)
+    ipv6_primary = config.is_ipv6_primary(hostname)
     if ipv6_primary:
         attrs["address"]        = attrs["_ADDRESS_6"]
         attrs["_ADDRESS_FAMILY"] = "6"
@@ -1613,7 +1334,7 @@ def get_host_attributes(hostname, tags):
         attrs["_FILENAME"] = path
 
     # Add custom user icons and actions
-    actions = icons_and_actions_of("host", hostname)
+    actions = core_config.icons_and_actions_of("host", hostname)
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
 
@@ -1656,7 +1377,7 @@ def get_cluster_attributes(hostname, nodes):
             else:
                 node_ips_6.append(fallback_ip_for(hostname, 6))
 
-    if is_ipv6_primary(hostname):
+    if config.is_ipv6_primary(hostname):
         node_ips = node_ips_6
     else:
         node_ips = node_ips_4
@@ -1686,7 +1407,7 @@ def ip_address_of(hostname, family=None):
 
 def fallback_ip_for(hostname, family=None):
     if family == None:
-        family = is_ipv6_primary(hostname) and 6 or 4
+        family = config.is_ipv6_primary(hostname) and 6 or 4
 
     if family == 4:
         return "0.0.0.0"
@@ -1744,7 +1465,7 @@ def list_all_hosts_with_tags(tags):
     hosts = []
 
     if "offline" in tags:
-        hostlist = all_offline_hosts()
+        hostlist = config.all_offline_hosts()
     else:
         hostlist = config.all_active_hosts()
 
@@ -2015,7 +1736,7 @@ def dump_host(hostname):
     if not config.is_ipv4v6_host(hostname):
         addresses = ipaddress
     else:
-        ipv6_primary = is_ipv6_primary(hostname)
+        ipv6_primary = config.is_ipv6_primary(hostname)
         try:
             if ipv6_primary:
                 secondary = ip_address_for_dump_host(hostname, 4)

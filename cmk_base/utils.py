@@ -38,6 +38,21 @@ import sys
 import itertools
 
 
+def make_utf8(x):
+    if type(x) == unicode:
+        return x.encode('utf-8')
+    else:
+        return x
+
+
+# Aggegates several monitoring states to the worst state
+def worst_service_state(*states):
+    if 2 in states:
+        return 2
+    else:
+        return max(states)
+
+
 # Quote string for use as arguments on the shell
 def quote_shell_string(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"

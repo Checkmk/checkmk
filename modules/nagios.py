@@ -30,6 +30,7 @@ import cmk.tty as tty
 import cmk.paths
 
 import cmk_base.console as console
+import cmk_base.rulesets as rulesets
 import cmk_base.core_config as core_config
 
 #   .--Create config-------------------------------------------------------.
@@ -145,7 +146,8 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
             outfile.write("  %s%s%s\n" % (key, tabs, value))
 
     # Host check command might differ from default
-    command = host_check_command(hostname, ip, is_clust)
+    command = core_config.host_check_command(hostname, ip, is_clust,
+                        hostcheck_commands_to_define, custom_commands_to_define)
     if command:
         outfile.write("  check_command\t\t\t%s\n" % command)
 
@@ -209,7 +211,7 @@ def create_nagios_servicedefs(outfile, hostname, host_attrs):
     def do_omit_service(hostname, description):
         if service_ignored(hostname, None, description):
             return True
-        if hostname != host_of_clustered_service(hostname, description):
+        if hostname != config.host_of_clustered_service(hostname, description):
             return True
         return False
 
@@ -274,12 +276,12 @@ define servicedependency {
                 check_interval = int(values[0])
             except:
                 check_interval = float(values[0])
-        value = check_interval_of(hostname, checkname)
+        value = config.check_interval_of(hostname, checkname)
         if value is not None:
             check_interval = value
 
         # Add custom user icons and actions
-        actions = icons_and_actions_of('service', hostname, description, checkname, params)
+        actions = core_config.icons_and_actions_of('service', hostname, description, checkname, params)
         action_cfg = actions and '  _ACTIONS\t\t\t%s\n' % ','.join(actions) or ''
 
         outfile.write("""define service {
@@ -369,13 +371,13 @@ define service {
             checks.set_hostname(hostname)
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = checks.active_check_service_description(act_info, params)
+            description = core_config.active_check_service_description(hostname, act_info, params)
 
             if do_omit_service(hostname, description):
                 continue
 
             # compute argument, and quote ! and \ for Nagios
-            args = checks.active_check_arguments(hostname, description,
+            args = core_config.active_check_arguments(hostname, description,
                                           act_info["argument_function"](params)).replace("\\", "\\\\").replace("!", "\\!")
 
             if description in used_descriptions:
@@ -440,7 +442,7 @@ define service {
                 continue
 
             if command_line:
-                command_line = autodetect_plugin(command_line).replace("\\", "\\\\").replace("!", "\\!")
+                command_line = core_config.autodetect_plugin(command_line).replace("\\", "\\\\").replace("!", "\\!")
 
             if "freshness" in entry:
                 freshness = "  check_freshness\t\t1\n" + \
@@ -523,11 +525,11 @@ define servicedependency {
 
     # No check_mk service, no legacy service -> create PING service
     if not have_at_least_one_service and not legchecks and not actchecks and not custchecks:
-        add_ping_service(outfile, hostname, host_attrs["address"], is_ipv6_primary(hostname) and 6 or 4,
+        add_ping_service(outfile, hostname, host_attrs["address"], config.is_ipv6_primary(hostname) and 6 or 4,
                          "PING", host_attrs.get("_NODEIPS"))
 
     if config.is_ipv4v6_host(hostname):
-        if is_ipv6_primary(hostname):
+        if config.is_ipv6_primary(hostname):
             add_ping_service(outfile, hostname, host_attrs["_ADDRESS_4"], 4,
                              "PING IPv4", host_attrs.get("_NODEIPS_4"))
         else:
@@ -536,7 +538,7 @@ define servicedependency {
 
 
 def add_ping_service(outfile, hostname, ipaddress, family, descr, node_ips):
-    arguments = check_icmp_arguments_of(hostname, family=family)
+    arguments = core_config.check_icmp_arguments_of(hostname, family=family)
 
     ping_command = 'check-mk-ping'
     if is_cluster(hostname):
@@ -777,6 +779,55 @@ def create_nagios_config_contacts(outfile, hostnames):
 def quote_nagios_string(s):
     return "'" + s.replace('\\', '\\\\').replace("'", "'\"'\"'").replace('!', '\\!') + "'"
 
+
+def extra_host_conf_of(hostname, exclude=None):
+    if exclude == None:
+        exclude = []
+    return extra_conf_of(config.extra_host_conf, hostname, None, exclude)
+
+
+# Collect all extra configuration data for a service
+def extra_service_conf_of(hostname, description):
+    conf = ""
+
+    # Contact groups
+    sercgr = rulesets.service_extra_conf(hostname, description, config.service_contactgroups)
+    contactgroups_to_define.update(sercgr)
+    if len(sercgr) > 0:
+        if config.enable_rulebased_notifications:
+            sercgr.append("check-mk-notify") # not nessary if not explicit groups defined
+        conf += "  contact_groups\t\t" + ",".join(sercgr) + "\n"
+
+    sergr = rulesets.service_extra_conf(hostname, description, config.service_groups)
+    if len(sergr) > 0:
+        conf += "  service_groups\t\t" + ",".join(sergr) + "\n"
+        if config.define_servicegroups:
+            servicegroups_to_define.update(sergr)
+    conf += extra_conf_of(config.extra_service_conf, hostname, description)
+    return conf.encode("utf-8")
+
+
+def extra_conf_of(confdict, hostname, service, exclude=None):
+    if exclude == None:
+        exclude = []
+
+    result = ""
+    for key, conflist in confdict.items():
+        if service != None:
+            values = rulesets.service_extra_conf(hostname, service, conflist)
+        else:
+            values = rulesets.host_extra_conf(hostname, conflist)
+
+        if exclude and key in exclude:
+            continue
+
+        if values:
+            format = "  %-29s %s\n"
+            result += format % (key, values[0])
+    return result
+
+
+
 #.
 #   .--Precompile----------------------------------------------------------.
 #   |          ____                                     _ _                |
@@ -921,8 +972,6 @@ if '-d' in sys.argv:
     # types and sections.
     needed_check_types = set([])
     needed_sections = set([])
-    service_timeperiods = {}
-    check_intervals = {}
     for check_type, _unused_item, _unused_param, descr in check_table:
         if check_type not in checks.check_info:
             sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_type)
@@ -932,20 +981,9 @@ if '-d' in sys.argv:
                 if section in checks.check_info:
                     needed_check_types.add(section)
                 needed_sections.add(section.split(".")[0])
-        period = check_period_of(hostname, descr)
-        if period:
-            service_timeperiods[descr] = period
-        interval = check_interval_of(hostname, check_type)
-        if interval is not None:
-            check_intervals[check_type] = interval
 
         needed_sections.add(check_type.split(".")[0])
         needed_check_types.add(check_type)
-
-    output.write("precompiled_check_intervals = %r\n" % check_intervals)
-    output.write("def check_interval_of(hostname, checktype):\n    return precompiled_check_intervals.get(checktype)\n\n")
-    output.write("precompiled_service_timeperiods = %r\n" % service_timeperiods)
-    output.write("def check_period_of(hostname, service):\n    return precompiled_service_timeperiods.get(service)\n\n")
 
     # check info table
     # We need to include all those plugins that are referenced in the host's
@@ -994,13 +1032,11 @@ if '-d' in sys.argv:
 
     # IP addresses
     needed_ipaddresses = {}
-    ipv6_primary_hosts = {}
     nodes = []
     if is_cluster(hostname):
         for node in nodes_of(hostname):
             ipa = ip_lookup.lookup_ip_address(node)
             needed_ipaddresses[node] = ipa
-            ipv6_primary_hosts[node] = is_ipv6_primary(node)
             nodes.append( (node, ipa) )
 
         try:
@@ -1013,13 +1049,8 @@ if '-d' in sys.argv:
         needed_ipaddresses[hostname] = ipaddress
         nodes = [ (hostname, ipaddress) ]
 
-    ipv6_primary_hosts[hostname] = is_ipv6_primary(hostname)
-
     output.write("config.ipaddresses = %r\n\n" % needed_ipaddresses)
     output.write("ip_lookup.lookup_ip_address = lambda hostname: ipaddresses.get(hostname)\n\n");
-
-    output.write("ipv6_primary_hosts = %r\n\n" % ipv6_primary_hosts)
-    output.write("def is_ipv6_primary(hostname):\n   return ipv6_primary_hosts.get(hostname, False)\n\n");
 
     # datasource programs. Is this host relevant?
     # ACHTUNG: HIER GIBT ES BEI CLUSTERN EIN PROBLEM!! WIR MUESSEN DIE NODES

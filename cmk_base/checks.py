@@ -39,7 +39,6 @@ import cmk_base.config as config
 import cmk_base.console as console
 import cmk_base.snmp as snmp
 import cmk_base.item_state as item_state
-import cmk_base.core_config as core_config
 
 # TODO: Cleanup access to check_info[] -> replace it by different function calls
 # like for example check_exists(...)
@@ -272,63 +271,6 @@ def initialize_check_type_caches():
 
     tcp_cache = cmk_base.runtime_cache.get_set("check_type_tcp")
     tcp_cache.update(check_info.keys())
-
-#.
-#   .--Active Checks-------------------------------------------------------.
-#   |       _        _   _              ____ _               _             |
-#   |      / \   ___| |_(_)_   _____   / ___| |__   ___  ___| | _____      |
-#   |     / _ \ / __| __| \ \ / / _ \ | |   | '_ \ / _ \/ __| |/ / __|     |
-#   |    / ___ \ (__| |_| |\ V /  __/ | |___| | | |  __/ (__|   <\__ \     |
-#   |   /_/   \_\___|\__|_| \_/ \___|  \____|_| |_|\___|\___|_|\_\___/     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Active check specific functions                                      |
-#   '----------------------------------------------------------------------'
-
-def active_check_service_description(act_info, params):
-    return sanitize_service_description(act_info["service_description"](params).replace('$HOSTNAME$', g_hostname))
-
-
-def active_check_arguments(hostname, description, args):
-    if type(args) in [ str, unicode ]:
-        return args
-
-    elif type(args) == list:
-        passwords, formated = [], []
-        for arg in args:
-            arg_type = type(arg)
-
-            if arg_type in [ int, float ]:
-                formated.append("%s" % arg)
-
-            elif arg_type in [ str, unicode ]:
-                formated.append(cmk_base.utils.quote_shell_string(arg))
-
-            elif arg_type == tuple and len(arg) == 3:
-                pw_ident, preformated_arg = arg[1:]
-                try:
-                    password = config.stored_passwords[pw_ident]["password"]
-                except KeyError:
-                    core_config.warning("The stored password \"%s\" used by service \"%s\" on host "
-                                        "\"%s\" does not exist (anymore)." %
-                                            (pw_ident, description, hostname))
-                    password = "%%%"
-
-                pw_start_index = str(preformated_arg.index("%s"))
-                formated.append(cmk_base.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
-                passwords.append((str(len(formated)), pw_start_index, pw_ident))
-
-            else:
-                raise MKGeneralException("Invalid argument for command line: %s" % arg)
-
-        if passwords:
-            formated = [ "--pwstore=%s" % ",".join([ "@".join(p) for p in passwords ]) ] + formated
-
-        return " ".join(formated)
-
-    else:
-        raise MKGeneralException("The check argument function needs to return either a list of arguments or a "
-                                 "string of the concatenated arguments (Host: %s, Service: %s)." % (hostname, description))
 
 #.
 #   .--Helpers-------------------------------------------------------------.

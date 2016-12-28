@@ -333,7 +333,7 @@ def check_discovery(hostname, ipaddress=None):
             if affected_check_types:
                 info = ", ".join([ "%s:%d" % e for e in affected_check_types.items() ])
                 st = params.get(params_key, default_state)
-                status = worst_monitoring_state(status, st)
+                status = cmk_base.utils.worst_service_state(status, st)
                 infotexts.append("%d %s services (%s)%s" % (count, title, info, checks.state_markers[st]))
 
                 if params.get("inventory_rediscovery", False):
@@ -1018,7 +1018,7 @@ def get_node_services(hostname, ipaddress, use_caches, do_snmp_scan, on_error):
             else:
                 continue # ignore
 
-        if hostname != host_of_clustered_service(hostname, descr):
+        if hostname != config.host_of_clustered_service(hostname, descr):
             if check_source == "vanished":
                 del services[(check_type, item)] # do not show vanished clustered services here
             else:
@@ -1082,7 +1082,7 @@ def get_cluster_services(hostname, use_caches, with_snmp_scan, on_error):
         services = get_discovered_services(node, None, use_caches, with_snmp_scan, on_error)
         for (check_type, item), (check_source, paramstring) in services.items():
             descr = service_description(hostname, check_type, item)
-            if hostname == host_of_clustered_service(node, descr):
+            if hostname == config.host_of_clustered_service(node, descr):
                 if (check_type, item) not in cluster_items:
                     cluster_items[(check_type, item)] = (check_source, paramstring)
                 else:
@@ -1399,7 +1399,7 @@ def set_autochecks_of(hostname, new_items):
             existing = parse_autochecks_file(node)
             for check_type, item, paramstring in existing:
                 descr = service_description(node, check_type, item)
-                if hostname != host_of_clustered_service(node, descr):
+                if hostname != config.host_of_clustered_service(node, descr):
                     new_autochecks.append((check_type, item, paramstring))
             for (check_type, item), paramstring in new_items.items():
                 new_autochecks.append((check_type, item, paramstring))
@@ -1446,7 +1446,7 @@ def remove_autochecks_of_host(hostname):
     new_items = []
     for check_type, item, paramstring in old_items:
         descr = service_description(hostname, check_type, item)
-        if hostname != host_of_clustered_service(hostname, descr):
+        if hostname != config.host_of_clustered_service(hostname, descr):
             new_items.append((check_type, item, paramstring))
         else:
             removed += 1

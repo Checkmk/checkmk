@@ -76,6 +76,9 @@ import cmk_base.snmp as snmp
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
     MKSNMPError, MKSkipCheck, MKTimeout
 
+# TODO: Cleanup these aliases
+make_utf8 = cmk_base.utils.make_utf8
+
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
 #   out because of errors. Remove all explicit "if cmk.debug.enabled()...".
@@ -306,7 +309,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
 
         # Handle SNMP check interval. The idea: An SNMP check should only be
         # executed every X seconds. Skip when called too often.
-        check_interval = check_interval_of(hostname, check_type)
+        check_interval = config.check_interval_of(hostname, check_type)
         if not ignore_check_interval \
            and not opt_dont_submit \
            and check_interval is not None and os.path.exists(cache_path) \
@@ -616,7 +619,7 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
     encryption_settings = config.agent_encryption_of(hostname)
 
     try:
-        s = socket.socket(is_ipv6_primary(hostname) and socket.AF_INET6 or socket.AF_INET,
+        s = socket.socket(config.is_ipv6_primary(hostname) and socket.AF_INET6 or socket.AF_INET,
                           socket.SOCK_STREAM)
         s.settimeout(config.tcp_connect_timeout)
 
@@ -971,7 +974,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
         item_state.set_item_state_prefix(checkname, item)
 
         # Skip checks that are not in their check period
-        period = check_period_of(hostname, description)
+        period = config.check_period_of(hostname, description)
         if period and not check_timeperiod(period):
             console.verbose("Skipping service %s: currently not in timeperiod %s.\n" % (description, period))
             return False
@@ -1176,7 +1179,7 @@ def sanitize_yield_check_result(result, is_snmp):
             # FIXME/TODO: Why is the state only aggregated when having text != None?
             if text != None:
                 infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
-                status = worst_monitoring_state(st, status)
+                status = cmk_base.utils.worst_service_state(st, status)
 
             if perf != None:
                 perfdata += subresult[2]
@@ -1401,20 +1404,6 @@ def submit_via_command_pipe(host, service, state, output):
 #   +----------------------------------------------------------------------+
 #   |  Some generic helper functions                                       |
 #   +----------------------------------------------------------------------+
-
-def make_utf8(x):
-    if type(x) == unicode:
-        return x.encode('utf-8')
-    else:
-        return x
-
-
-def worst_monitoring_state(status_a, status_b):
-    if status_a == 2 or status_b == 2:
-        return 2
-    else:
-        return max(status_a, status_b)
-
 
 def set_use_cachefile(state=True):
     global opt_use_cachefile, orig_opt_use_cachefile

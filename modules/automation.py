@@ -31,6 +31,7 @@ import cmk.man_pages as man_pages
 
 import cmk_base.rulesets as rulesets
 import cmk_base.config as config
+import cmk_base.ip_lookup as ip_lookup
 
 # TODO: Inherit from MKGeneralException
 class MKAutomationError(Exception):
@@ -683,7 +684,7 @@ def automation_diag_host(args):
 
     if not ipaddress:
         try:
-            ipaddress = lookup_ip_address(hostname)
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
         except:
             raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
 

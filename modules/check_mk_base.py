@@ -71,6 +71,7 @@ import cmk_base.item_state as item_state
 import cmk_base.checks as checks
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
+import cmk_base.ip_lookup as ip_lookup
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
     MKSNMPError, MKSkipCheck, MKTimeout
 
@@ -131,7 +132,6 @@ opt_keepalive_fd             = None
 opt_oids                     = []
 opt_extra_oids               = []
 opt_force                    = False
-opt_fake_dns                 = False
 
 
 #.
@@ -229,7 +229,7 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
                 # We must ignore the SNMP check interval when dealing with SNMP
                 # checks on cluster nodes because the cluster is always reading
                 # the cache files of the nodes.
-                ipaddress = lookup_ip_address(node)
+                ipaddress = ip_lookup.lookup_ip_address(node)
                 new_info = get_realhost_info(node, ipaddress, checkname,
                                max_cachefile_age == None and config.cluster_max_cachefile_age or max_cachefile_age,
                                ignore_check_interval=True)

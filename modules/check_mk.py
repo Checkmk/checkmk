@@ -67,6 +67,7 @@ import cmk_base.default_config as default_config
 import cmk_base.item_state as item_state
 import cmk_base.piggyback as piggyback
 import cmk_base.core_config as core_config
+import cmk_base.ip_lookup as ip_lookup
 from cmk_base.exceptions import MKAgentError
 
 # TODO: Clean up all calls and remove these aliases
@@ -1313,154 +1314,6 @@ def replace_datasource_program_macros(hostname, ipaddress, cmd):
     return replace_macros(cmd, macros)
 
 
-# Variables needed during the renaming of hosts (see automation.py)
-def cached_dns_lookup(hostname, family):
-    cache = cmk_base.config_cache.get_dict("cached_dns_lookup")
-    cache_id = hostname, family
-
-    # Address has already been resolved in prior call to this function?
-    try:
-        return cache[cache_id]
-    except KeyError:
-        pass
-
-    # Prepare file based fall-back DNS cache in case resolution fails
-    # TODO: Find a place where this only called once!
-    ip_lookup_cache = initialize_ip_lookup_cache()
-
-    cached_ip = ip_lookup_cache.get(cache_id)
-    if cached_ip and config.use_dns_cache:
-        cache[cache_id] = cached_ip
-        return cached_ip
-
-    # Now do the actual DNS lookup
-    try:
-        ipa = socket.getaddrinfo(hostname, None, family == 4 and socket.AF_INET or socket.AF_INET6)[0][4][0]
-
-        # Update our cached address if that has changed or was missing
-        if ipa != cached_ip:
-            console.verbose("Updating IPv%d DNS cache for %s: %s\n" % (family, hostname, ipa))
-            update_ip_lookup_cache(cache_id, ipa)
-
-        cache[cache_id] = ipa # Update in-memory-cache
-        return ipa
-
-    except Exception, e:
-        # DNS failed. Use cached IP address if present, even if caching
-        # is disabled.
-        if cached_ip:
-            cache[cache_id] = cached_ip
-            return cached_ip
-        else:
-            cache[cache_id] = None
-            raise MKGeneralException(
-                "Failed to lookup IPv%d address of %s via DNS: %s\n" %
-                (family, hostname, e))
-
-
-def lookup_ipv4_address(hostname):
-    return lookup_ip_address(hostname, 4)
-
-
-def lookup_ipv6_address(hostname):
-    return lookup_ip_address(hostname, 6)
-
-# Determine the IP address of a host. It returns either an IP address or, when
-# a hostname is configured as IP address, the hostname.
-# Or raise an exception when a hostname can not be resolved on the first
-# try to resolve a hostname. On later tries to resolve a hostname  it
-# returns None instead of raising an exception.
-# FIXME: This different handling is bad. Clean this up!
-def lookup_ip_address(hostname, family=None):
-    if family == None: # choose primary family
-        family = is_ipv6_primary(hostname) and 6 or 4
-
-    # Quick hack, where all IP addresses are faked (--fake-dns)
-    if opt_fake_dns:
-        return opt_fake_dns
-    if config.fake_dns:
-        return config.fake_dns
-
-    # Honor simulation mode und usewalk hosts. Never contact the network.
-    elif config.simulation_mode or opt_use_snmp_walk or \
-         (config.is_usewalk_host(hostname) and config.is_snmp_host(hostname)):
-        if family == 4:
-            return "127.0.0.1"
-        else:
-            return "::1"
-
-    # Now check, if IP address is hard coded by the user
-    if family == 4:
-        ipa = config.ipaddresses.get(hostname)
-    else:
-        ipa = config.ipv6addresses.get(hostname)
-
-    if ipa:
-        return ipa
-
-    # Hosts listed in dyndns hosts always use dynamic DNS lookup.
-    # The use their hostname as IP address at all places
-    if rulesets.in_binary_hostlist(hostname, config.dyndns_hosts):
-        return hostname
-
-    return cached_dns_lookup(hostname, family)
-
-
-def initialize_ip_lookup_cache():
-    # Already created and initialized. Simply return it!
-    if cmk_base.config_cache.exists("ip_lookup"):
-        return cmk_base.config_cache.get_dict("ip_lookup")
-
-    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
-
-    try:
-        data_from_file = cmk.store.load_data_from_file(cmk.paths.var_dir + '/ipaddresses.cache', {})
-        ip_lookup_cache.update(data_from_file)
-
-        # be compatible to old caches which were created by Check_MK without IPv6 support
-        convert_legacy_ip_lookup_cache(ip_lookup_cache)
-    except:
-        # TODO: Would be better to log it somewhere to make the failure transparent
-        pass
-
-    return ip_lookup_cache
-
-
-def convert_legacy_ip_lookup_cache(ip_lookup_cache):
-    if not ip_lookup_cache:
-        return
-
-    # New version has (hostname, ip family) as key
-    if type(ip_lookup_cache.keys()[0]) == tuple:
-        return
-
-    new_cache = {}
-    for key, val in ip_lookup_cache.items():
-        new_cache[(key, 4)] = val
-    ip_lookup_cache.clear()
-    ip_lookup_cache.update(new_cache)
-
-
-def update_ip_lookup_cache(cache_id, ipa):
-    ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
-
-    # Read already known data
-    cache_path = cmk.paths.var_dir + '/ipaddresses.cache'
-    data_from_file = cmk.store.load_data_from_file(cache_path,
-                                                   default={},
-                                                   lock=True)
-
-    convert_legacy_ip_lookup_cache(data_from_file)
-    ip_lookup_cache.update(data_from_file)
-    ip_lookup_cache[cache_id] = ipa
-
-    # (I don't like this)
-    # TODO: this file always grows... there should be a cleanup mechanism
-    #       maybe on "cmk --update-dns-cache"
-    # The cache_path is already locked from a previous function call..
-    cmk.store.save_data_to_file(cache_path, ip_lookup_cache)
-
-
 def do_update_dns_cache():
     # Temporarily disable *use* of cache, we want to force an update
     # TODO: Cleanup this hacky config override! Better add some global flag
@@ -1479,9 +1332,9 @@ def do_update_dns_cache():
                 console.verbose("%s (IPv%d)..." % (hostname, family))
                 try:
                     if family == 4:
-                        ip = lookup_ipv4_address(hostname)
+                        ip = ip_lookup.lookup_ipv4_address(hostname)
                     else:
-                        ip = lookup_ipv6_address(hostname)
+                        ip = ip_lookup.lookup_ipv6_address(hostname)
 
                     console.verbose("%s\n" % ip)
                     updated += 1
@@ -2102,7 +1955,7 @@ g_failed_ip_lookups = []
 
 def ip_address_of(hostname, family=None):
     try:
-        return lookup_ip_address(hostname, family)
+        return ip_lookup.lookup_ip_address(hostname, family)
     except Exception, e:
         if is_cluster(hostname):
             return ""
@@ -2191,7 +2044,7 @@ def get_plain_hostinfo(hostname):
     else:
         info = ""
         if config.is_tcp_host(hostname):
-            ipaddress = lookup_ip_address(hostname)
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
             info += get_agent_info(hostname, ipaddress, 0)
         info += piggyback.get_piggyback_info(hostname)
         return info
@@ -2289,7 +2142,7 @@ def do_snmpwalk(hostnames):
 
 def do_snmpwalk_on(hostname, filename):
     console.verbose("%s:\n" % hostname)
-    ip = lookup_ipv4_address(hostname)
+    ip = ip_lookup.lookup_ipv4_address(hostname)
 
     out = file(filename, "w")
     oids_to_walk = opt_oids
@@ -2327,7 +2180,7 @@ def do_snmpget(oid, hostnames):
                 hostnames.append(host)
 
     for host in hostnames:
-        ip = lookup_ipv4_address(host)
+        ip = ip_lookup.lookup_ipv4_address(host)
         value = get_single_oid(host, ip, oid)
         sys.stdout.write("%s (%s): %r\n" % (host, ip, value))
         cleanup_globals()
@@ -2421,12 +2274,12 @@ def dump_all_hosts(hostlist):
 def ip_address_for_dump_host(hostname, family=None):
     if is_cluster(hostname):
         try:
-            ipaddress = lookup_ip_address(hostname, family)
+            ipaddress = ip_lookup.lookup_ip_address(hostname, family)
         except:
             ipaddress = ""
     else:
         try:
-            ipaddress = lookup_ip_address(hostname, family)
+            ipaddress = ip_lookup.lookup_ip_address(hostname, family)
         except:
             ipaddress = fallback_ip_for(hostname, family)
     return ipaddress
@@ -3072,7 +2925,7 @@ def scan_parents_of(hosts, silent=False, settings=None):
         settings = {}
 
     if config.monitoring_host:
-        nagios_ip = lookup_ipv4_address(config.monitoring_host)
+        nagios_ip = ip_lookup.lookup_ipv4_address(config.monitoring_host)
     else:
         nagios_ip = None
 
@@ -3084,7 +2937,7 @@ def scan_parents_of(hosts, silent=False, settings=None):
     for host in hosts:
         console.verbose("%s " % host)
         try:
-            ip = lookup_ipv4_address(host)
+            ip = ip_lookup.lookup_ipv4_address(host)
             command = "traceroute -w %d -q %d -m %d -n %s 2>&1" % (
                 settings.get("timeout", 8),
                 settings.get("probes", 2),
@@ -3234,7 +3087,7 @@ def ip_to_hostname(ip):
         ip_to_hostname_cache = {}
         for host in config.all_active_realhosts():
             try:
-                ip_to_hostname_cache[lookup_ipv4_address(host)] = host
+                ip_to_hostname_cache[ip_lookup.lookup_ipv4_address(host)] = host
             except:
                 pass
     return ip_to_hostname_cache.get(ip)
@@ -3378,11 +3231,6 @@ def output_profile():
         sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
 
 
-def enforce_fake_dns(ip):
-    global opt_fake_dns
-    opt_fake_dns = ip
-
-
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -3446,7 +3294,6 @@ opt_inv_sw_changes = 0
 opt_inv_sw_missing = 0
 opt_inv_fail_status = 1 # State in case of an error (default: WARN)
 _verbosity = 0
-opt_fake_dns = None
 
 # Scan modifying options first (makes use independent of option order)
 for o,a in opts:
@@ -3472,13 +3319,14 @@ for o,a in opts:
         opt_dont_submit = True
         item_state.continue_on_counter_wrap()
     elif o == '--fake-dns':
-        enforce_fake_dns(a)
+        ip_lookup.enforce_fake_dns(a)
     elif o == '--keepalive':
         opt_keepalive = True
     elif o == '--keepalive-fd':
         opt_keepalive_fd = int(a)
     elif o == '--usewalk':
         opt_use_snmp_walk = True
+        ip_lookup.enforce_localhost()
     elif o == '--oid':
         opt_oids.append(a)
     elif o == '--extraoid':
@@ -3730,7 +3578,7 @@ try:
                     ipaddress = None
                 else:
                     try:
-                        ipaddress = lookup_ip_address(hostname)
+                        ipaddress = ip_lookup.lookup_ip_address(hostname)
                     except:
                         sys.stdout.write("Cannot resolve hostname '%s'.\n" % hostname)
                         sys.exit(2)

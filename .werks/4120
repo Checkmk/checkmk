@@ -1,0 +1,10 @@
+Title: fixed checks mysql and mysql.sessions for multiple MySQL instances
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1482924646
+
+Previously only one mysql (version) and mysql.sessions check was created. This has been fixed now.

@@ -28,6 +28,9 @@ import os
 import sys
 
 import cmk.paths
+import cmk.tty as tty
+import cmk.store as store
+import cmk.password_store
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.utils
@@ -37,9 +40,9 @@ import cmk_base.checks as checks
 import cmk_base.rulesets as rulesets
 import cmk_base.ip_lookup as ip_lookup
 
+_cmc_relfilename           = "config"
 _ignore_ip_lookup_failures = False
 _failed_ip_lookups         = []
-
 
 #.
 #   .--Warnings------------------------------------------------------------.
@@ -199,6 +202,101 @@ def check_icmp_arguments_of(hostname, add_defaults=True, family=None):
     args.append("-w %.2f,%.2f%%" % (rta[0], loss[0]))
     args.append("-c %.2f,%.2f%%" % (rta[1], loss[1]))
     return " ".join(args)
+
+
+#.
+#   .--Core Config---------------------------------------------------------.
+#   |          ____                  ____             __ _                 |
+#   |         / ___|___  _ __ ___   / ___|___  _ __  / _(_) __ _           |
+#   |        | |   / _ \| '__/ _ \ | |   / _ \| '_ \| |_| |/ _` |          |
+#   |        | |__| (_) | | |  __/ | |__| (_) | | | |  _| | (_| |          |
+#   |         \____\___/|_|  \___|  \____\___/|_| |_|_| |_|\__, |          |
+#   |                                                      |___/           |
+#   +----------------------------------------------------------------------+
+#   | Code for managing the core configuration creation.                   |
+#   '----------------------------------------------------------------------'
+
+def set_cmc_relfilename(name):
+    global _cmc_relfilename
+    _cmc_relfilename = name
+
+
+# TODO: Move to modes?
+def do_create_config(with_agents=True):
+    console.output("Generating configuration for core (type %s)..." %
+                                                config.monitoring_core)
+    create_core_config()
+    console.output(tty.ok + "\n")
+
+    if with_agents and cmk_base.utils.has_feature("cee.agent_bakery"):
+       import cmk_base.cee.agent_bakery as agent_bakery
+       agent_bakery.bake_on_restart()
+
+
+def create_core_config():
+    initialize_warnings()
+
+    _verify_non_duplicate_hosts()
+    _verify_non_deprecated_checkgroups()
+    _create_config()
+    cmk.password_store.save(config.stored_passwords)
+
+    return get_configuration_warnings()
+
+
+def _create_config():
+    if config.monitoring_core == "cmc":
+        import cmk_base.cee.core_cmc as core_cmc
+        core_cmc.create_config(_cmc_relfilename)
+    else:
+        import cmk_base.core_nagios as core_nagios
+        with file(cmk.paths.nagios_objects_file, "w") as out:
+            core_nagios.create_config(out)
+
+
+# Verify that the user has no deprecated check groups configured.
+def _verify_non_deprecated_checkgroups():
+    groups = checks.checks_by_checkgroup()
+
+    for checkgroup in config.checkgroup_parameters.keys():
+        if checkgroup not in groups:
+            warning(
+                "Found configured rules of deprecated check group \"%s\". These rules are not used "
+                "by any check. Maybe this check group has been renamed during an update, "
+                "in this case you will have to migrate your configuration to the new ruleset manually. "
+                "Please check out the release notes of the involved versions. "
+                "You may use the page \"Deprecated rules\" in WATO to view your rules and move them to "
+                "the new rulesets." % checkgroup)
+
+
+def _verify_non_duplicate_hosts():
+    duplicates = config.duplicate_hosts()
+    if duplicates:
+        warning(
+              "The following host names have duplicates: %s. "
+              "This might lead to invalid/incomplete monitoring for these hosts." % ", ".join(duplicates))
+
+
+def precompile():
+    if config.monitoring_core == "cmc":
+        import cmk_base.cee.core_cmc as core_cmc
+        core_cmc.do_pack_config()
+    else:
+        import cmk_base.core_nagios as core_nagios
+        core_nagios.do_precompile_hostchecks()
+
+
+def do_update(with_precompile):
+    try:
+        do_create_config(with_agents=with_precompile)
+        if with_precompile:
+            precompile()
+
+    except Exception, e:
+        console.error("Configuration Error: %s\n" % e)
+        if cmk.debug.enabled():
+            raise
+        sys.exit(1)
 
 
 #.

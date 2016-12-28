@@ -43,7 +43,6 @@ import cmk_base.console as console
 import cmk_base.checks as checks
 import cmk_base.item_state as item_state
 import cmk_base.ip_lookup as ip_lookup
-import cmk_base.inventory_plugins as inventory_plugins
 import cmk_base.piggyback as piggyback
 import cmk_base.snmp as snmp
 import cmk_base.core_config as core_config
@@ -205,6 +204,7 @@ def apply_parse_function(info, section_name):
 # only once for each host.
 def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
                       ignore_check_interval=False, use_snmpwalk_cache=True):
+    import cmk_base.inventory_plugins as inventory_plugins
 
     info = _get_cached_hostinfo(hostname)
     if info and info.has_key(check_type):

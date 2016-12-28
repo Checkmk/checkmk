@@ -30,25 +30,29 @@ import sys
 import textwrap
 import getopt
 
-from cmk.exceptions import MKBailOut
+from cmk.exceptions import MKBailOut, MKGeneralException
+
+import cmk_base.config as config
+import cmk_base.rulesets as rulesets
 
 __all__ = [ os.path.basename(f)[:-3]
             for f in glob.glob(os.path.dirname(__file__) + "/*.py")
             if os.path.basename(f) != "__init__.py" ]
 
-
 class Modes(object):
-    _modes    = {}
-    _by_short = {}
-    _by_long  = {}
+    def __init__(self):
+        super(Modes, self).__init__() # pylint: disable=bad-super-call
+        self._mode_map        = {}
+        self._modes           = []
+        self._general_options = []
+
 
     def register(self, mode):
-        self._modes[mode.long_option] = mode
-        self._by_long[mode.long_option] = mode
+        self._modes.append(mode)
 
+        self._mode_map[mode.long_option] = mode
         if mode.has_short_option():
-            self._modes[mode.short_option] = mode
-            self._by_short[mode.short_option] = mode
+            self._mode_map[mode.short_option] = mode
 
 
     def exists(self, opt):
@@ -64,89 +68,168 @@ class Modes(object):
         sub_options = mode.get_sub_options(all_opts)
 
         handler_args = []
-        if sub_options:
+        if mode.sub_options:
             handler_args.append(sub_options)
 
-        if mode.arguments == True:
+        if mode.argument and mode.argument_optional:
             handler_args.append(all_args)
-        elif mode.arguments:
-            # TODO: Really needed?
+        elif mode.argument:
             handler_args.append(arg)
 
-        mode.handler_function(*handler_args)
+        return mode.handler_function(*handler_args)
 
 
     def _get(self, opt):
+        opt_name = self._strip_dashes(opt)
+        return self._mode_map[opt_name]
+
+
+    def _strip_dashes(self, opt):
         if opt.startswith("--"):
-            opt_name = opt[2:]
+            return opt[2:]
         elif opt.startswith("-"):
-            opt_name = opt[1:]
+            return opt[1:]
         else:
             raise NotImplementedError()
 
-        return self._modes[opt_name]
+
+    def get(self, name):
+        return self._mode_map[name]
 
 
-    def short_options(self):
+    def short_getopt_specs(self):
         options = ""
-        for opt_name, mode in self._by_short.items():
-            options += opt_name
-            if mode.arguments != False and mode.arguments != True:
-                options += ":"
+        for mode in self._modes:
+            options += "".join(mode.short_getopt_specs())
+        for option in self._general_options:
+            options += "".join(option.short_getopt_specs())
         return options
 
 
-    def long_options(self):
+    def long_getopt_specs(self):
         options = []
-        for opt_name, mode in self._by_long.items():
-            spec = opt_name
-            if mode.arguments != False and mode.arguments != True:
-                spec += "="
-            options.append(spec)
-            if mode.sub_options:
-                options += mode.sub_options()
+        for mode in self._modes:
+            options += mode.long_getopt_specs()
+        for option in self._general_options:
+            options += option.long_getopt_specs()
         return options
 
 
     def short_help(self):
         texts = []
-        for mode in self._by_long.values():
-            text = mode.short_help_text()
+        for mode in self._modes:
+            text = mode.short_help_text(" cmk %-36s")
             if text:
-                texts.append(" %s" % text)
-        return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -")))
+                texts.append(text)
+        return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
 
     def long_help(self):
         texts = []
-        for mode in self._by_long.values():
+        for mode in self._modes:
             text = mode.long_help_text()
             if text:
                 texts.append(text)
-        return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -")))
+        return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
 
     def non_config_options(self):
         options = []
-        for mode in self._by_long.values():
+        for mode in self._modes:
             if not mode.needs_config:
                 options += mode.options()
         return options
 
 
-class Mode(object):
-    def __init__(self, long_option, handler_function, short_help, short_option=None,
-                 arguments=False, argument_descr=None, long_help=None,
-                 needs_config=True, sub_options=None):
-        self.long_option      = long_option
-        self.short_option     = short_option
-        self.handler_function = handler_function
-        self.short_help       = short_help
-        self.long_help        = long_help
-        self.arguments        = arguments
-        self.argument_descr   = argument_descr
-        self.needs_config     = needs_config
-        self.sub_option_specs = sub_options
+    def parse_hostname_list(self, args, with_clusters=True, with_foreign_hosts=False):
+        if with_foreign_hosts:
+            valid_hosts = config.all_configured_realhosts()
+        else:
+            valid_hosts = config.all_active_realhosts()
+
+        if with_clusters:
+            valid_hosts = valid_hosts.union(config.all_active_clusters())
+
+        hostlist = []
+        for arg in args:
+            if arg[0] != '@' and arg in valid_hosts:
+                hostlist.append(arg)
+            else:
+                if arg[0] == '@':
+                    arg = arg[1:]
+                tagspec = arg.split(',')
+
+                num_found = 0
+                for hostname in valid_hosts:
+                    if rulesets.hosttags_match_taglist(config.tags_of_host(hostname), tagspec):
+                        hostlist.append(hostname)
+                        num_found += 1
+                if num_found == 0:
+                    raise MKBailOut("Hostname or tag specification '%s' does "
+                                    "not match any host." % arg)
+        return hostlist
+
+    #
+    # GENERAL OPTIONS
+    #
+
+    def register_general_option(self, option):
+        self._general_options.append(option)
+
+
+    def process_general_options(self, all_opts):
+        for o, a in all_opts:
+            option = self._get_general_option(o)
+            if not option:
+                continue
+
+            if option.takes_argument():
+                option.handler_function(a)
+            else:
+                option.handler_function()
+
+
+    def general_option_help(self):
+        texts = []
+        for option in self._general_options:
+            text = option.short_help_text(fmt="  %-21s")
+            if text:
+                texts.append("%s" % text)
+        return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
+
+
+    def _get_general_option(self, opt):
+        opt_name = self._strip_dashes(opt)
+        for option in self._general_options:
+            if opt_name == option.long_option or opt_name == option.short_option:
+                return option
+        return None
+
+
+
+class Option(object):
+    def __init__(self, long_option, short_help, short_option=None,
+            argument=False, argument_descr=None, argument_conv=None,
+            argument_optional=False, count=False, handler_function=None):
+        super(Option, self).__init__() # pylint: disable=bad-super-call
+        self.long_option       = long_option
+        self.short_help        = short_help
+        self.short_option      = short_option
+
+        # An option can either
+        # a) have an argument
+        # b) have no argument and count it's occurance
+        # c) have no argument (will always be True in sub_options)
+        self.count             = count
+        self.argument          = argument
+        self.argument_descr    = argument_descr
+        self.argument_conv     = argument_conv
+        self.argument_optional = argument_optional
+        self.handler_function  = handler_function
+
+
+    def name(self):
+        return self.long_option
 
 
     def options(self):
@@ -157,37 +240,81 @@ class Mode(object):
         return options
 
 
-    def sub_options(self):
-        options = []
-        for option in self.sub_option_specs or []:
-            if option[1]:
-                options.append("%s=" % option[0])
-            else:
-                options.append("%s" % option[0])
-        return options
-
-
     def has_short_option(self):
         return self.short_option != None
 
 
-    # expected format is like this
-    # cmk -h, --help                       print this help
-    # TODO: Handle self.arguments
-    def short_help_text(self):
+    def takes_argument(self):
+        return self.argument
+
+
+    def short_help_text(self, fmt):
         if self.short_help is None:
             return
 
-        line = "cmk "
-        line += " %s" % (", ".join(self.options()))
+        option_txt = " %s" % (", ".join(self.options()))
 
-        if self.arguments:
-            if self.argument_descr:
-                line += " %s" % self.argument_descr
+        if self.argument:
+            option_txt += " "
+            descr = self.argument_descr if self.argument_descr else "..."
+            if self.argument_optional:
+                option_txt += "[%s]" % descr
             else:
-                line += " ..."
+                option_txt += descr
 
-        return "%-37s%s" % (line, self.short_help)
+        formated_option_txt = fmt % option_txt
+
+        wrapper = textwrap.TextWrapper(
+            initial_indent=formated_option_txt,
+            subsequent_indent=" " * len(fmt % ""),
+            width=80,
+        )
+        return wrapper.fill(self.short_help)
+
+
+    def short_getopt_specs(self):
+        if not self.has_short_option():
+            return []
+
+        spec = self.short_option
+        if self.argument and not self.argument_optional:
+            spec += ":"
+        return [ spec ]
+
+
+    def long_getopt_specs(self):
+        spec = self.long_option
+        if self.argument and not self.argument_optional:
+            spec += "="
+        return [ spec ]
+
+
+
+class Mode(Option):
+    def __init__(self, long_option, handler_function, short_help, short_option=None,
+                 argument=False, argument_descr=None, argument_conv=None, argument_optional=False,
+                 long_help=None, needs_config=True, sub_options=None):
+        # pylint: disable=bad-super-call
+        super(Mode, self).__init__(long_option, short_help, short_option, argument,
+                argument_descr, argument_conv, argument_optional,
+                handler_function=handler_function)
+        self.long_help        = long_help
+        self.needs_config     = needs_config
+        self.sub_options      = sub_options or []
+
+
+    def short_getopt_specs(self):
+        specs = super(Mode, self).short_getopt_specs() # pylint: disable=bad-super-call
+        for option in self.sub_options:
+            specs += option.short_getopt_specs()
+        return specs
+
+
+    def long_getopt_specs(self):
+        specs = super(Mode, self).long_getopt_specs() # pylint: disable=bad-super-call
+        for option in self.sub_options:
+            specs += option.long_getopt_specs()
+        return specs
 
 
     # expected format is like this
@@ -195,63 +322,78 @@ class Mode(object):
     #  hosts. If you add the option -f, --force then persisted sections
     #  will be used even if they are outdated.
     def long_help_text(self):
-        if not self.long_help and not self.sub_option_specs:
+        if not self.long_help and not self.sub_options:
             return
 
         text = []
-        for index, paragraph in enumerate(self.long_help or []):
-            if index == 0:
-                initial_indent = "  "
-                if self.short_option:
-                    initial_indent += "-%s, " % self.short_option
-                initial_indent += "--%s " % self.long_option
-            else:
-                initial_indent = "    "
 
-            wrapper = textwrap.TextWrapper(
-                initial_indent=initial_indent,
-                subsequent_indent="    ",
-                width=78,
-            )
-            text.append(wrapper.fill(paragraph))
+        option_text = "  "
+        if self.short_option:
+            option_text += "-%s, " % self.short_option
+        option_text += "--%s " % self.long_option
 
-        if self.sub_option_specs:
-            sub_text = "    Additional options:\n\n"
-            for opt_name, argument_descr, _unused_conv, short_help in self.sub_option_specs:
-                opt_descr = "--%s" % opt_name
-                if argument_descr:
-                    opt_descr += " %s" % argument_descr
+        if not self.long_help:
+            text.append(option_text)
+        else:
+            for index, paragraph in enumerate(self.long_help):
+                if index == 0:
+                    initial_indent = option_text
+                else:
+                    initial_indent = "    "
 
-                sub_text += "    %-12s %s" % (opt_descr, short_help)
+                wrapper = textwrap.TextWrapper(
+                    initial_indent=initial_indent,
+                    subsequent_indent="    ",
+                    width=80,
+                )
+                text.append(wrapper.fill(paragraph))
 
-            text.append(sub_text)
+        if self.sub_options:
+            sub_texts = []
+            for option in self.sub_options:
+                sub_texts.append(option.short_help_text(fmt="    %-21s"))
+            text.append("    Additional options:\n\n%s" % "\n".join(sub_texts))
 
         return "\n\n".join(text)
 
 
     def get_sub_options(self, all_opts):
-        if not self.sub_option_specs:
+        if not self.sub_options:
             return
 
         options = {}
 
         for o, a in all_opts:
-            for opt_name, argument_descr, convert_func, _unused_2 in self.sub_option_specs:
-                if o != "--%s" % opt_name:
+            for option in self.sub_options:
+                if o not in option.options():
                     continue
 
-                if a and not argument_descr:
+                if a and not option.takes_argument():
                     raise MKGeneralException("No argument to %s expected." % o)
 
-                if convert_func:
-                    try:
-                        a = convert_func(a)
-                    except ValueError:
-                        raise MKGeneralException("%s: Invalid argument" % o)
+                if not option.takes_argument():
+                    if option.count:
+                        options.setdefault(option.name(), 0)
+                        options[option.name()] += 1
+                        continue
+                    else:
+                        a = True
+                else:
+                    if option.argument_conv:
+                        try:
+                            a = option.argument_conv(a)
+                        except ValueError:
+                            raise MKGeneralException("%s: Invalid argument" % o)
 
-                options[o.lstrip("-")] = a
+                options[option.name()] = a
 
         return options
+
+
+keepalive_option = Option(
+    long_option="keepalive",
+    short_help="Execute in keepalive mode (CEE only)",
+)
 
 #
 # Initialize the modes object and load all available modes

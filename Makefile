@@ -88,7 +88,7 @@ LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       src/{Makefile.am,*.{cc,h}} standalone/config_files.m4
 
 # Files that are checked for trailing spaces
-HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* \
+HEAL_SPACES_IN     := checkman/* cmk_base/* checks/* notifications/* inventory/* \
                       $$(find -name Makefile) livestatus/src/*.{cc,h} \
                       agents/windows/*.cc \
                       web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
@@ -203,7 +203,6 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) COPYING AUTHORS ChangeLog
 	tar rf $(DISTNAME)/doc.tar $(TAROPTS) livestatus/api --exclude "*~" --exclude "*.pyc" --exclude ".gitignore" --exclude .f12
 	gzip $(DISTNAME)/doc.tar
-	tar czf $(DISTNAME)/modules.tar.gz $(TAROPTS) -C modules $$(cd modules ; ls *.py)
 
 	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents \
 		--exclude "msibuild" \

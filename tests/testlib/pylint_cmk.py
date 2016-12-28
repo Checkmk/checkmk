@@ -13,46 +13,6 @@ from pylint.utils import Message
 
 from testlib import repo_path, cmk_path, cmc_path, cme_path
 
-
-def ordered_module_files():
-    ordered_modules = [
-        cmk_path() + "/modules/check_mk_base.py",
-        cmk_path() + "/modules/check_mk.py",
-        cmk_path() + "/modules/discovery.py",
-        cmk_path() + "/modules/notify.py",
-        cmk_path() + "/modules/events.py",
-        cmk_path() + "/modules/nagios.py",
-        cmk_path() + "/modules/automation.py",
-        cmk_path() + "/modules/inventory.py",
-        cmc_path() + "/modules/real_time_checks.py",
-        cmc_path() + "/modules/alert_handling.py",
-        cmc_path() + "/modules/keepalive.py",
-        cmc_path() + "/modules/cmc.py",
-        cmc_path() + "/modules/agent_bakery.py",
-        cmc_path() + "/modules/rrd.py",
-        cme_path() + "/modules/managed.py",
-    ]
-
-    modules = ordered_modules
-
-    # Add modules which are not specified above
-    for path in module_files():
-        if path not in modules:
-            modules.append(path)
-
-    return modules
-
-
-def module_files():
-    modules = []
-    for base_path in [ cmk_path() + "/modules",
-                       cmc_path() + "/modules" ]:
-
-        modules += [ base_path + "/" + f for f in os.listdir(base_path)
-                     if not f.startswith(".") ]
-    return sorted(modules)
-
-
 def check_files(base_dir):
     filelist = sorted([ base_dir + "/" + f for f in os.listdir(base_dir)
                          if not f.startswith(".") ])

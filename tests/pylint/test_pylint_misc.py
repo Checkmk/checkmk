@@ -14,8 +14,12 @@ pytestmark = pytest.mark.pylint
 def test_pylint_misc():
     search_paths = [
         cmk_path() + "/cmk_base",
+        cmk_path() + "/cmk_base/modes",
+        cmk_path() + "/cmk_base/default_config",
         cmc_path() + "/cmk_base",
+        cmc_path() + "/cmk_base/cme",
         cmc_path() + "/cmk_base/cee",
+        cmc_path() + "/cmk_base/modes",
         cmc_path() + "/cmk_base/default_config",
         cmk_path() + "/lib",
         cmk_path() + "/bin",

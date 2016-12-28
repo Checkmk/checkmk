@@ -908,6 +908,163 @@ def host_of_clustered_service(hostname, servicedesc):
 
 
 #.
+#   .--Services------------------------------------------------------------.
+#   |                ____                  _                               |
+#   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
+#   |               \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|                |
+#   |                ___) |  __/ |   \ V /| | (_|  __/\__ \                |
+#   |               |____/ \___|_|    \_/ |_|\___\___||___/                |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Service related helper functions                                     |
+#   '----------------------------------------------------------------------'
+
+# Renaming of service descriptions while keeping backward compatibility with
+# existing installations.
+# Synchronize with htdocs/wato.py and plugins/wato/check_mk_configuration.py!
+
+# Cleanup! .. some day
+def _get_old_cmciii_temp_description(item):
+    if "Temperature" in item:
+        return False, item # old item format, no conversion
+
+    parts = item.split(" ")
+    if parts[0] == "Ambient":
+        return False, "%s Temperature" % parts[1]
+
+    elif len(parts) == 2:
+        return False, "%s %s.Temperature" % (parts[1], parts[0])
+
+    else:
+        if parts[1] == "LCP":
+            parts[1] = "Liquid_Cooling_Package"
+        return False, "%s %s.%s-Temperature" % (parts[1], parts[0], parts[2])
+
+
+_old_service_descriptions = {
+    "df"                               : "fs_%s",
+    "df_netapp"                        : "fs_%s",
+    "df_netapp32"                      : "fs_%s",
+    "esx_vsphere_datastores"           : "fs_%s",
+    "hr_fs"                            : "fs_%s",
+    "vms_diskstat.df"                  : "fs_%s",
+    "zfsget"                           : "fs_%s",
+    "ps"                               : "proc_%s",
+    "ps.perf"                          : "proc_%s",
+    "wmic_process"                     : "proc_%s",
+    "services"                         : "service_%s",
+    "logwatch"                         : "LOG %s",
+    "logwatch.groups"                  : "LOG %s",
+    "hyperv_vm"                        : "hyperv_vms",
+    "ibm_svc_mdiskgrp"                 : "MDiskGrp %s",
+    "ibm_svc_system"                   : "IBM SVC Info",
+    "ibm_svc_systemstats.diskio"       : "IBM SVC Throughput %s Total",
+    "ibm_svc_systemstats.iops"         : "IBM SVC IOPS %s Total",
+    "ibm_svc_systemstats.disk_latency" : "IBM SVC Latency %s Total",
+    "ibm_svc_systemstats.cache"        : "IBM SVC Cache Total",
+    "mknotifyd"                        : "Notification Spooler %s",
+    "mknotifyd.connection"             : "Notification Connection %s",
+
+    "casa_cpu_temp"                    : "Temperature %s",
+    "cmciii.temp"                      : _get_old_cmciii_temp_description,
+    "cmciii.psm_current"               : "%s",
+    "cmciii_lcp_airin"                 : "LCP Fanunit Air IN",
+    "cmciii_lcp_airout"                : "LCP Fanunit Air OUT",
+    "cmciii_lcp_water"                 : "LCP Fanunit Water %s",
+    "etherbox.temp"                    : "Sensor %s",
+    # While using the old description, don't append the item, even when discovered
+    # with the new check which creates an item.
+    "liebert_bat_temp"                 : lambda item: (False, "Battery Temp"),
+    "nvidia.temp"                      : "Temperature NVIDIA %s",
+    "ups_bat_temp"                     : "Temperature Battery %s",
+    "innovaphone_temp"                 : lambda item: (False, "Temperature"),
+    "enterasys_temp"                   : lambda item: (False, "Temperature"),
+    "raritan_emx"                      : "Rack %s",
+    "raritan_pdu_inlet"                : "Input Phase %s",
+    "postfix_mailq"                    : lambda item: (False, "Postfix Queue"),
+    "nullmailer_mailq"                 : lambda item: (False, "Nullmailer Queue"),
+    "barracuda_mailqueues"             : lambda item: (False, "Mail Queue"),
+    "qmail_stats"                      : lambda item: (False, "Qmail Queue"),
+}
+
+def service_description(hostname, check_type, item):
+    import cmk_base.checks as checks
+    if check_type not in checks.check_info:
+        if item:
+            return "Unimplemented check %s / %s" % (check_type, item)
+        else:
+            return "Unimplemented check %s" % check_type
+
+    # use user-supplied service description, if available
+    add_item = True
+    descr_format = service_descriptions.get(check_type)
+    if not descr_format:
+        # handle renaming for backward compatibility
+        if check_type in _old_service_descriptions and \
+            check_type not in use_new_descriptions_for:
+
+            # Can be a fucntion to generate the old description more flexible.
+            old_descr = _old_service_descriptions[check_type]
+            if callable(old_descr):
+                add_item, descr_format = old_descr(item)
+            else:
+                descr_format = old_descr
+
+        else:
+            descr_format = checks.check_info[check_type]["service_description"]
+
+    if type(descr_format) == str:
+        descr_format = descr_format.decode("utf-8")
+
+    # Note: we strip the service description (remove spaces).
+    # One check defines "Pages %s" as a description, but the item
+    # can by empty in some cases. Nagios silently drops leading
+    # and trailing spaces in the configuration file.
+
+    item_type = type(item)
+    if add_item and item_type in [ str, unicode, int, long ]:
+        # Remove characters from item name that are banned by Nagios
+        if item_type in [ str, unicode ]:
+            item_safe = checks.sanitize_service_description(item)
+        else:
+            item_safe = str(item)
+
+        if "%s" not in descr_format:
+            descr_format += " %s"
+
+        descr = descr_format % (item_safe,)
+    else:
+        descr = descr_format
+
+    if "%s" in descr:
+        raise MKGeneralException("Found '%%s' in service description (Host: %s, Check type: %s, Item: %s). "
+                                 "Please try to rediscover the service to fix this issue." % (hostname, check_type, item))
+
+    return descr.strip()
+
+
+def service_ignored(hostname, check_type, service_description):
+    if check_type and check_type in ignored_checktypes:
+        return True
+    if service_description != None \
+       and rulesets.in_boolean_serviceconf_list(hostname, service_description, ignored_services):
+        return True
+    if check_type and _checktype_ignored_for_host(hostname, check_type):
+        return True
+    return False
+
+
+def _checktype_ignored_for_host(host, checktype):
+    if checktype in ignored_checktypes:
+        return True
+    ignored = rulesets.host_extra_conf(host, ignored_checks)
+    for e in ignored:
+        if checktype == e or (type(e) == list and checktype in e):
+            return True
+    return False
+
+
+#.
 #   .--Misc Helpers--------------------------------------------------------.
 #   |        __  __ _            _   _      _                              |
 #   |       |  \/  (_)___  ___  | | | | ___| |_ __   ___ _ __ ___          |

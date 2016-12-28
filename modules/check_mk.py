@@ -68,6 +68,8 @@ import cmk_base.item_state as item_state
 import cmk_base.piggyback as piggyback
 import cmk_base.core_config as core_config
 import cmk_base.ip_lookup as ip_lookup
+import cmk_base.classic_snmp as classic_snmp
+import cmk_base.snmp as snmp
 from cmk_base.exceptions import MKAgentError
 
 # TODO: Clean up all calls and remove these aliases
@@ -280,8 +282,8 @@ def load_module(name):
 
 # at check time (and many of what is also needed at administration time).
 try:
-    modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'events',
-                 'alert_handling', 'cmc', 'inline_snmp', 'agent_bakery', 'managed' ]
+    modules = [ 'check_mk_base', 'discovery', 'notify', 'events',
+                'alert_handling', 'cmc', 'agent_bakery', 'managed' ]
     for module in modules:
         if module_exists(module):
             load_module(module)
@@ -673,205 +675,6 @@ def schedule_inventory_check(hostname):
 #   |  Some basic SNMP functions. Note: most of the SNMP related code is   |
 #   |  the separate module snmp.py.                                        |
 #   '----------------------------------------------------------------------'
-
-def snmp_port_spec(hostname):
-    port = config.snmp_port_of(hostname)
-    if port == None:
-        return ""
-    else:
-        return ":%d" % port
-
-
-def snmp_proto_spec(hostname):
-    if is_ipv6_primary(hostname):
-        return "udp6:"
-    else:
-        return ""
-
-
-# Returns command lines for snmpwalk and snmpget including
-# options for authentication. This handles communities and
-# authentication for SNMP V3. Also bulkwalk hosts
-def snmp_walk_command(hostname):
-    return snmp_base_command('walk', hostname) + [ "-Cc" ]
-
-# if the credentials are a string, we use that as community,
-# if it is a four-tuple, we use it as V3 auth parameters:
-# (1) security level (-l)
-# (2) auth protocol (-a, e.g. 'md5')
-# (3) security name (-u)
-# (4) auth password (-A)
-# And if it is a six-tuple, it has the following additional arguments:
-# (5) privacy protocol (DES|AES) (-x)
-# (6) privacy protocol pass phrase (-X)
-def snmp_base_command(what, hostname):
-    if what == 'get':
-        command = [ 'snmpget' ]
-    elif what == 'getnext':
-        command = [ 'snmpgetnext', '-Cf' ]
-    elif config.is_bulkwalk_host(hostname):
-        command = [ 'snmpbulkwalk' ]
-    else:
-        command = [ 'snmpwalk' ]
-
-    options = []
-    credentials = config.snmp_credentials_of(hostname)
-
-    if type(credentials) in [ str, unicode ]:
-        # Handle V1 and V2C
-        if config.is_bulkwalk_host(hostname):
-            options.append('-v2c')
-        else:
-            if what == 'walk':
-                command = [ 'snmpwalk' ]
-            if config.is_snmpv2c_host(hostname):
-                options.append('-v2c')
-            else:
-                options.append('-v1')
-
-        options += [ "-c", credentials ]
-
-    else:
-        # Handle V3
-        if len(credentials) == 6:
-            options += [
-                "-v3", "-l", credentials[0], "-a", credentials[1],
-                "-u", credentials[2], "-A", credentials[3],
-                "-x", credentials[4], "-X", credentials[5],
-            ]
-        elif len(credentials) == 4:
-            options += [
-                "-v3", "-l", credentials[0], "-a", credentials[1],
-                "-u", credentials[2], "-A", credentials[3],
-            ]
-        elif len(credentials) == 2:
-            options += [
-                "-v3", "-l", credentials[0], "-u", credentials[1],
-            ]
-        else:
-            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be "
-                                     "string, 2-tuple, 4-tuple or 6-tuple" % (credentials, hostname))
-
-    # Do not load *any* MIB files. This save lot's of CPU.
-    options += [ "-m", "", "-M", "" ]
-
-    # Configuration of timing and retries
-    settings = config.snmp_timing_of(hostname)
-    if "timeout" in settings:
-        options += [ "-t", "%0.2f" % settings["timeout"] ]
-    if "retries" in settings:
-        options += [ "-r", "%d" % settings["retries"] ]
-
-    return command + options
-
-def snmp_get_oid(hostname, ipaddress, oid):
-    if oid.endswith(".*"):
-        oid_prefix = oid[:-2]
-        commandtype = "getnext"
-    else:
-        oid_prefix = oid
-        commandtype = "get"
-
-    protospec = snmp_proto_spec(hostname)
-    portspec = snmp_port_spec(hostname)
-    command = snmp_base_command(commandtype, hostname) + \
-               [ "-On", "-OQ", "-Oe", "-Ot",
-                 "%s%s%s" % (protospec, ipaddress, portspec),
-                 oid_prefix ]
-
-    debug_cmd = [ "''" if a == "" else a for a in command ]
-    console.vverbose("Running '%s'\n" % " ".join(debug_cmd))
-
-    snmp_process = subprocess.Popen(command, close_fds=True,
-                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    exitstatus = snmp_process.wait()
-    if exitstatus:
-        console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal + "SNMP error\n")
-        console.verbose(snmp_process.stderr.read()+"\n")
-        return None
-
-    line = snmp_process.stdout.readline().strip()
-    if not line:
-        if cmk.debug.enabled():
-            sys.stdout.write("Error in response to snmpget.\n")
-        return None
-
-    item, value = line.split("=", 1)
-    value = value.strip()
-    if cmk.debug.enabled():
-        sys.stdout.write("SNMP answer: ==> [%s]\n" % value)
-    if value.startswith('No more variables') or value.startswith('End of MIB') \
-       or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
-        value = None
-
-    # In case of .*, check if prefix is the one we are looking for
-    if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
-        value = None
-
-    # Strip quotes
-    if value and value.startswith('"') and value.endswith('"'):
-        value = value[1:-1]
-    return value
-
-
-def clear_other_hosts_oid_cache(hostname):
-    global g_single_oid_hostname
-    if g_single_oid_hostname != hostname:
-        g_single_oid_cache.clear()
-        g_single_oid_hostname = hostname
-
-
-def set_oid_cache(hostname, oid, value):
-    clear_other_hosts_oid_cache(hostname)
-    g_single_oid_cache[oid] = value
-
-
-def get_single_oid(hostname, ipaddress, oid):
-    # New in Check_MK 1.1.11: oid can end with ".*". In that case
-    # we do a snmpgetnext and try to find an OID with the prefix
-    # in question. The *cache* is working including the X, however.
-
-    if oid[0] != '.':
-        if cmk.debug.enabled():
-            raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
-        else:
-            oid = '.' + oid
-
-    clear_other_hosts_oid_cache(hostname)
-
-    if oid in g_single_oid_cache:
-        return g_single_oid_cache[oid]
-
-    console.vverbose("       Getting OID %s: " % oid)
-    if opt_use_snmp_walk or config.is_usewalk_host(hostname):
-        walk = get_stored_snmpwalk(hostname, oid)
-        # get_stored_snmpwalk returns all oids that start with oid but here
-        # we need an exact match
-        if len(walk) == 1 and oid == walk[0][0]:
-            value = walk[0][1]
-        elif oid.endswith(".*") and len(walk) > 0:
-            value = walk[0][1]
-        else:
-            value = None
-
-    else:
-        try:
-            if config.is_inline_snmp_host(hostname):
-                value = inline_snmp_get_oid(hostname, oid, ipaddress=ipaddress)
-            else:
-                value = snmp_get_oid(hostname, ipaddress, oid)
-        except:
-            if cmk.debug.enabled():
-                raise
-            value = None
-
-    if value != None:
-        console.vverbose("%s%s%s%s\n" % (tty.bold, tty.green, value, tty.normal))
-    else:
-        console.vverbose("failed.\n")
-
-    set_oid_cache(hostname, oid, value)
-    return value
 
 #.
 #   .--Cluster-------------------------------------------------------------.
@@ -2070,14 +1873,10 @@ def do_snmpwalk_on(hostname, filename):
         try:
             console.verbose("Walk on \"%s\"..." % oid)
 
-            if config.is_inline_snmp_host(hostname):
-                rows = inline_snmpwalk_on_suboid(hostname, None, oid)
-                rows = inline_convert_rows_for_stored_walk(rows)
-            else:
-                rows = snmpwalk_on_suboid(hostname, ip, oid, hex_plain = True)
-
+            rows = snmp.walk_for_export(hostname, ip, oid)
             for oid, value in rows:
                 out.write("%s %s\n" % (oid, value))
+
             console.verbose("%d variables.\n" % len(rows))
         except:
             if cmk.debug.enabled():
@@ -2095,7 +1894,7 @@ def do_snmpget(oid, hostnames):
 
     for host in hostnames:
         ip = ip_lookup.lookup_ipv4_address(host)
-        value = get_single_oid(host, ip, oid)
+        value = snmp.get_single_oid(host, ip, oid)
         sys.stdout.write("%s (%s): %r\n" % (host, ip, value))
         cleanup_globals()
 
@@ -2745,14 +2544,8 @@ def cleanup_globals():
     g_broken_snmp_hosts = set([])
     global g_inactive_timerperiods
     g_inactive_timerperiods = None
-    global g_walk_cache
-    g_walk_cache = {}
-    global g_timeout
-    g_timeout = None
-    clear_other_hosts_oid_cache(None)
 
-    if has_inline_snmp:
-        cleanup_inline_snmp_globals()
+    snmp.cleanup_host_caches()
 
 
 
@@ -2952,7 +2745,7 @@ for o,a in opts:
     elif o == '--keepalive-fd':
         opt_keepalive_fd = int(a)
     elif o == '--usewalk':
-        opt_use_snmp_walk = True
+        snmp.enforce_use_stored_walks()
         ip_lookup.enforce_localhost()
     elif o == '--oid':
         opt_oids.append(a)
@@ -3172,10 +2965,11 @@ try:
             done = True
 
         elif o in [ '--show-snmp-stats' ]:
-            if 'do_show_snmp_stats' not in globals():
-                sys.stderr.write("Handling of SNMP statistics is not implemented in your version of Check_MK. Sorry.\n")
-                sys.exit(1)
-            do_show_snmp_stats()
+            try:
+                import cmk_base.cee.inline_snmp
+            except ImportError:
+                raise MKBailOut("Handling of SNMP statistics is not implemented in your version of Check_MK. Sorry.\n")
+            cmk_base.cee.inline_snmp.do_show_snmp_stats()
             done = True
 
     # handle -I / -II

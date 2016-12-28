@@ -72,6 +72,7 @@ import cmk_base.checks as checks
 import cmk_base.config as config
 import cmk_base.piggyback as piggyback
 import cmk_base.ip_lookup as ip_lookup
+import cmk_base.snmp as snmp
 from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
     MKSNMPError, MKSkipCheck, MKTimeout
 
@@ -107,11 +108,8 @@ g_inactive_timerperiods      = None # Cache for current state of timeperiods
 nagios_command_pipe          = None # Filedescriptor to open nagios command pipe.
 checkresult_file_fd          = None
 checkresult_file_path        = None
-g_single_oid_hostname        = None
-g_single_oid_cache           = {}
 g_broken_snmp_hosts          = set([])
 g_broken_agent_hosts         = set([])
-g_timeout                    = None
 
 # variables set later by getopt. These are defined here since in precompiled
 # mode the module check_mk.py is not present and we need all options to be
@@ -122,8 +120,6 @@ opt_showperfdata             = False
 opt_use_cachefile            = False
 opt_no_tcp                   = False
 opt_no_cache                 = False
-opt_no_snmp_hosts            = False
-opt_use_snmp_walk            = False
 opt_cleanup_autochecks       = False
 opt_keepalive                = False
 opt_cmc_relfilename          = "config"
@@ -338,12 +334,12 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age,
         # a separate snmp table. The overall result is then the list
         # of these results.
         if type(oid_info) == list:
-            table = [ get_snmp_table(hostname, ipaddress, check_type, entry, use_snmpwalk_cache) for entry in oid_info ]
+            table = [ snmp.get_snmp_table(hostname, ipaddress, check_type, entry, use_snmpwalk_cache) for entry in oid_info ]
             # if at least one query fails, we discard the hole table
             if None in table:
                 table = None
         else:
-            table = get_snmp_table(hostname, ipaddress, check_type, oid_info, use_snmpwalk_cache)
+            table = snmp.get_snmp_table(hostname, ipaddress, check_type, oid_info, use_snmpwalk_cache)
 
         store_cached_checkinfo(hostname, check_type, table)
         # only write cache file in non interactive mode. Otherwise it would
@@ -906,7 +902,8 @@ def do_check(hostname, ipaddress, only_check_types = None):
         output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
 
     if config.record_inline_snmp_stats and config.is_inline_snmp_host(hostname):
-        save_snmp_stats()
+        import cmk_base.cee.inline_snmp
+        cmk_base.cee.inline_snmp.save_snmp_stats()
 
     if opt_keepalive:
         add_keepalive_active_check_result(hostname, output)

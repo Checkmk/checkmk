@@ -1001,123 +1001,6 @@ def pack_autochecks():
             os.remove(dstpath + "/" + f)
 
 
-#.
-#   .--Backup & Restore----------------------------------------------------.
-#   |  ____             _                   ___     ____           _       |
-#   | | __ )  __ _  ___| | ___   _ _ __    ( _ )   |  _ \ ___  ___| |_     |
-#   | |  _ \ / _` |/ __| |/ / | | | '_ \   / _ \/\ | |_) / _ \/ __| __|    |
-#   | | |_) | (_| | (__|   <| |_| | |_) | | (_>  < |  _ <  __/\__ \ |_ _   |
-#   | |____/ \__,_|\___|_|\_\\__,_| .__/   \___/\/ |_| \_\___||___/\__(_)  |
-#   |                             |_|                                      |
-#   +----------------------------------------------------------------------+
-#   | Check_MK comes with a simple backup and restore of the current con-  |
-#   | figuration and cache files (cmk --backup and cmk --restore). This is |
-#   | implemented here.                                                    |
-#   '----------------------------------------------------------------------'
-
-
-def backup_paths():
-    return [
-        # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
-        ('check_mk_configfile', cmk.paths.main_config_file,    "main.mk",       "Main configuration file",           False, False, False ),
-        ('final_mk',            cmk.paths.final_config_file,   "final.mk",      "Final configuration file final.mk", False, False, False ),
-        ('check_mk_configdir',  cmk.paths.check_mk_config_dir, "",              "Configuration sub files",           True,  False, False ),
-        ('autochecksdir',       cmk.paths.autochecks_dir,      "",              "Automatically inventorized checks", True,  False, False ),
-        ('counters_directory',  cmk.paths.counters_dir,        "",              "Performance counters",              True,  True,  False ),
-        ('tcp_cache_dir',       cmk.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
-        ('logwatch_dir',        cmk.paths.logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
-    ]
-
-
-def do_backup(tarname):
-    import tarfile
-    console.verbose("Creating backup file '%s'...\n", tarname)
-    tar = tarfile.open(tarname, "w:gz")
-
-    for name, path, canonical_name, descr, is_dir, \
-        _unused_owned_by_nagios, _unused_group_www in backup_paths():
-
-        absdir = os.path.abspath(path)
-        if os.path.exists(path):
-            if is_dir:
-                basedir = absdir
-                filename = "."
-                subtarname = name + ".tar"
-                subdata = os.popen("tar cf - --dereference --force-local -C '%s' '%s'" % \
-                                   (basedir, filename)).read()
-            else:
-                basedir = os.path.dirname(absdir)
-                filename = os.path.basename(absdir)
-                subtarname = canonical_name
-                subdata = file(absdir).read()
-
-            info = tarfile.TarInfo(subtarname)
-            info.mtime = time.time()
-            info.uid = 0
-            info.gid = 0
-            info.size = len(subdata)
-            info.mode = 0644
-            info.type = tarfile.REGTYPE
-            info.name = subtarname
-            console.verbose("  Added %s (%s) with a size of %s\n", descr, absdir, render.bytes(info.size))
-            tar.addfile(info, StringIO(subdata))
-
-    tar.close()
-    console.verbose("Successfully created backup.\n")
-
-
-def do_restore(tarname):
-    import shutil
-
-    console.verbose("Restoring from '%s'...\n", tarname)
-
-    if not os.path.exists(tarname):
-        raise MKGeneralException("Unable to restore: File does not exist")
-
-    # TODO: Cleanup owned_by_nagios and group_www handling - not needed in pure OMD env anymore
-    for name, path, canonical_name, descr, is_dir, owned_by_nagios, group_www in backup_paths():
-        absdir = os.path.abspath(path)
-        if is_dir:
-            basedir = absdir
-            filename = "."
-            if os.path.exists(absdir):
-                console.verbose("  Deleting old contents of '%s'\n", absdir)
-                # The path might point to a symbalic link. So it is no option
-                # to call shutil.rmtree(). We must delete just the contents
-                for f in os.listdir(absdir):
-                    if f not in [ '.', '..' ]:
-                        try:
-                            p = absdir + "/" + f
-                            if os.path.isdir(p):
-                                shutil.rmtree(p)
-                            else:
-                                os.remove(p)
-                        except Exception, e:
-                            console.warning("  Cannot delete %s: %s", p, e)
-        else:
-            basedir = os.path.dirname(absdir)
-            filename = os.path.basename(absdir)
-            canonical_path = basedir + "/" + canonical_name
-            if os.path.exists(canonical_path):
-                console.verbose("  Deleting old version of '%s'\n", canonical_path)
-                os.remove(canonical_path)
-
-        if not os.path.exists(basedir):
-            console.verbose("  Creating directory %s\n", basedir)
-            os.makedirs(basedir)
-
-        console.verbose("  Extracting %s (%s)\n", descr, absdir)
-        if is_dir:
-            os.system("tar xzf '%s' --force-local --to-stdout '%s' 2>/dev/null "
-                      "| tar xf - -C '%s' '%s' 2>/dev/null" % \
-                      (tarname, name + ".tar", basedir, filename))
-        else:
-            os.system("tar xzf '%s' --force-local --to-stdout '%s' 2>/dev/null > '%s' 2>/dev/null" %
-                      (tarname, filename, canonical_path))
-
-    console.verbose("Successfully restored backup.\n")
-
-
 def do_flush(hosts):
     if not hosts:
         hosts = config.all_active_hosts()
@@ -2221,30 +2104,6 @@ def try_get_activation_lock():
     return False
 
 
-def do_donation():
-    donate = []
-    cache_files = os.listdir(cmk.paths.tcp_cache_dir)
-    for host in config.all_active_realhosts():
-        if rulesets.in_binary_hostlist(host, config.donation_hosts):
-            for f in cache_files:
-                if f == host or f.startswith("%s." % host):
-                    donate.append(f)
-    if not donate:
-        sys.stderr.write("No hosts specified. You need to set donation_hosts in main.mk.\n")
-        sys.exit(1)
-
-    console.verbose("Donating files %s\n" % " ".join(cache_files))
-    import base64
-    indata = base64.b64encode(os.popen("tar czf - -C %s %s" % (cmk.paths.tcp_cache_dir, " ".join(donate))).read())
-    output = os.popen(config.donation_command, "w")
-    output.write("\n\n@STARTDATA\n")
-    while len(indata) > 0:
-        line = indata[:64]
-        output.write(line)
-        output.write('\n')
-        indata = indata[64:]
-
-
 # Reset some global variable to their original value. This
 # is needed in keepalive mode.
 # We could in fact do some positive caching in keepalive
@@ -2544,10 +2403,12 @@ try:
             dump_all_hosts(args)
             done = True
         elif o == '--backup':
-            do_backup(a)
+            import cmk_base.backup
+            cmk_base.backup.do_backup(a)
             done = True
         elif o ==  '--restore':
-            do_restore(a)
+            import cmk_base.backup
+            cmk_base.backup.do_restore(a)
             done = True
         elif o == '--flush':
             do_flush(args)
@@ -2564,7 +2425,8 @@ try:
             cmk_base.localize.do_localize(args)
             done = True
         elif o == '--donate':
-            do_donation()
+            import cmk_base.donation
+            cmk_base.donation.do_donation()
             done = True
         elif o == '--update-dns-cache':
             do_update_dns_cache()

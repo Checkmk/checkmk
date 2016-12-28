@@ -360,7 +360,7 @@ def query_instance(inst):
 
                 for mbean_exp in paths:
                     queries.append( (inst, "%s/%s" % (urllib2.quote(mbean_exp), path), path,
-                                        itemspec, inst_add=mbean_exp) )
+                                        itemspec, mbean_exp) )
             else:
                 queries.append( (inst, mbean + "/" + path, title, itemspec) )
 

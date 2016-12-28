@@ -51,7 +51,7 @@
 def inventory_mysql(parsed):
     for instance, values in parsed.items():
         if len(values.keys()) > 200: # should be at least 321 line
-            return [(instance, {})]
+            yield instance, {}
 
 # FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql(info):
@@ -91,7 +91,7 @@ def parse_mysql(info):
 def inventory_mysql_version(parsed):
     for instance, values in parsed.items():
         if 'version' in values:
-            return [(instance, {})]
+            yield instance, {}
 
 def check_mysql_version(item, _no_params, parsed):
     if item in parsed:

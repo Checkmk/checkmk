@@ -103,7 +103,6 @@ from cmk_base.exceptions import MKAgentError, MKParseFunctionError, \
 g_infocache                  = {} # In-memory cache of host info.
 g_agent_cache_info           = {} # Information about agent caching
 g_agent_already_contacted    = {} # do we have agent data from this host?
-g_aggregated_service_results = {}   # store results for later submission
 g_inactive_timerperiods      = None # Cache for current state of timeperiods
 nagios_command_pipe          = None # Filedescriptor to open nagios command pipe.
 checkresult_file_fd          = None
@@ -885,13 +884,6 @@ def do_check(hostname, ipaddress, only_check_types = None):
         output = "%s, " % e
         status = exit_spec.get("exception", 3)
 
-    if config.aggregate_check_mk:
-        try:
-            submit_check_mk_aggregation(hostname, status, output)
-        except:
-            if cmk.debug.enabled():
-                raise
-
     if checkresult_file_fd != None:
         close_checkresult_file()
 
@@ -964,8 +956,6 @@ def is_expected_agent_version(agent_version, expected_version):
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to the Core.
 def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_agent_version = True):
-    global g_aggregated_service_results
-    g_aggregated_service_results = {}
     checks.set_hostname(hostname)
     error_sections = set([])
     check_table = get_precompiled_check_table(hostname, remove_duplicates=True,
@@ -974,7 +964,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
 
     parsed_infos = {} # temporary cache for section infos, maybe parsed
 
-    def execute_check(checkname, item, params, description, aggrname, ipaddress):
+    def execute_check(checkname, item, params, description, ipaddress):
         if only_check_types != None and checkname not in only_check_types:
             return False
 
@@ -1086,7 +1076,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                         oldest_cached_at = minn(oldest_cached_at, cached_at)
                         largest_interval = max(largest_interval, cache_interval)
 
-                submit_check_result(hostname, description, result, aggrname,
+                submit_check_result(hostname, description, result,
                                     cached_at=oldest_cached_at, cache_interval=largest_interval)
             return True
         else:
@@ -1105,17 +1095,15 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
     else:
         is_management_snmp = False
 
-    for checkname, item, params, description, aggrname in check_table:
+    for checkname, item, params, description in check_table:
         if checks.is_snmp_check(checkname) and is_management_snmp:
             address = management_addr
         else:
             address = ipaddress
 
-        res = execute_check(checkname, item, params, description, aggrname, address)
+        res = execute_check(checkname, item, params, description, address)
         if res:
             num_success += 1
-
-    submit_aggregated_results(hostname)
 
     if fetch_agent_version:
         cmk_info = { "version" : "(unknown)" }
@@ -1286,7 +1274,7 @@ def convert_perf_data(p):
     return "%s=%s;%s;%s;%s;%s" %  tuple(p)
 
 
-def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_interval=None):
+def submit_check_result(host, servicedesc, result, cached_at=None, cache_interval=None):
     if not result:
         result = 3, "Check plugin did not return any result"
 
@@ -1309,10 +1297,6 @@ def submit_check_result(host, servicedesc, result, sa, cached_at=None, cache_int
     else:
         # ...crash dumps, and hard-coded outputs are regular strings
         infotext = infotext.replace("|", u"\u2758".encode("utf8"))
-
-    # Aggregated service -> store for later
-    if sa != "":
-        store_aggregated_service_result(host, servicedesc, sa, state, infotext)
 
     # performance data - if any - is stored in the third part of the result
     perftexts = []
@@ -1506,86 +1490,6 @@ def check_timeperiod(timeperiod):
                 return True
 
     return timeperiod not in g_inactive_timerperiods
-
-
-#.
-#   .--Aggregation---------------------------------------------------------.
-#   |         _                                    _   _                   |
-#   |        / \   __ _  __ _ _ __ ___  __ _  __ _| |_(_) ___  _ __        |
-#   |       / _ \ / _` |/ _` | '__/ _ \/ _` |/ _` | __| |/ _ \| '_ \       |
-#   |      / ___ \ (_| | (_| | | |  __/ (_| | (_| | |_| | (_) | | | |      |
-#   |     /_/   \_\__, |\__, |_|  \___|\__, |\__,_|\__|_|\___/|_| |_|      |
-#   |             |___/ |___/          |___/                               |
-#   +----------------------------------------------------------------------+
-#   |  Service aggregation will be removed soon now.                       |
-#   '----------------------------------------------------------------------'
-
-# Compute the name of a summary host
-def summary_hostname(hostname):
-    return config.aggr_summary_hostname % hostname
-
-# Updates the state of an aggregated service check from the output of
-# one of the underlying service checks. The status of the aggregated
-# service will be updated such that the new status is the maximum
-# (crit > unknown > warn > ok) of all underlying status. Appends the output to
-# the output list and increases the count by 1.
-def store_aggregated_service_result(hostname, detaildesc, aggrdesc, newstatus, newoutput):
-    count, status, outputlist = g_aggregated_service_results.get(aggrdesc, (0, 0, []))
-    if status_worse(newstatus, status):
-        status = newstatus
-    if newstatus > 0 or config.aggregation_output_format == "multiline":
-        outputlist.append( (newstatus, detaildesc, newoutput) )
-    g_aggregated_service_results[aggrdesc] = (count + 1, status, outputlist)
-
-def status_worse(newstatus, status):
-    if status == 2:
-        return False # nothing worse then critical
-    elif newstatus == 2:
-        return True  # nothing worse then critical
-    else:
-        return newstatus > status # 0 < 1 < 3 are in correct order
-
-# Submit the result of all aggregated services of a host
-# to the core. Those are stored in g_aggregated_service_results
-def submit_aggregated_results(hostname):
-    if not host_is_aggregated(hostname):
-        return
-
-    console.verbose("\n%s%sAggregates Services:%s\n" % (tty.bold, tty.blue, tty.normal))
-
-    items = g_aggregated_service_results.items()
-    items.sort()
-    aggr_hostname = summary_hostname(hostname)
-    for servicedesc, (count, status, outputlist) in items:
-        if config.aggregation_output_format == "multiline":
-            longoutput = ""
-            statuscounts = [ 0, 0, 0, 0 ]
-            for itemstatus, item, output in outputlist:
-                longoutput += '\\n%s: %s' % (item, output)
-                statuscounts[itemstatus] = statuscounts[itemstatus] + 1
-            summarytexts = [ "%d service%s %s" % (x[0], x[0] != 1 and "s" or "", x[1])
-                           for x in zip(statuscounts, ["OK", "WARN", "CRIT", "UNKNOWN" ]) if x[0] > 0 ]
-            text = ", ".join(summarytexts) + longoutput
-        else:
-            if status == 0:
-                text = "OK - %d services OK" % count
-            else:
-                text = " *** ".join([ item + " " + output for itemstatus, item, output in outputlist ])
-
-        if not opt_dont_submit:
-            submit_to_core(aggr_hostname, servicedesc, status, text)
-
-        output_check_result(servicedesc, status, text, [])
-
-
-def submit_check_mk_aggregation(hostname, status, output):
-    if not host_is_aggregated(hostname):
-        return
-
-    if not opt_dont_submit:
-        submit_to_core(summary_hostname(hostname), "Check_MK", status, output)
-
-    console.verbose("%-20s %s%s%-70s%s\n" % ("Check_MK", tty.bold, tty.states[status], output, tty.normal))
 
 
 #.

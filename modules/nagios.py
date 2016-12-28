@@ -76,14 +76,8 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     if config.host_notification_periods != []:
         core_config.warning("host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead.")
 
-    if config.summary_host_notification_periods != []:
-        core_config.warning("summary_host_notification_periods is not longer supported. Please use extra_summary_host_conf['notification_period'] instead.")
-
     if config.service_notification_periods != []:
         core_config.warning("service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead.")
-
-    if config.summary_service_notification_periods != []:
-        core_config.warning("summary_service_notification_periods is not longer supported. Please use extra_summary_service_conf['notification_period'] instead.")
 
     # Map service_period to _SERVICE_PERIOD. This field das not exist in Nagios/Icinga.
     # The CMC has this field natively.
@@ -201,44 +195,6 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
     outfile.write(make_utf8(extra_host_conf_of(hostname, exclude=["parents"] if is_clust else [])))
 
     outfile.write("}\n")
-
-    #   ____
-    #  |___ \
-    #   __) |
-    #  / __/
-    #  |_____|  2. summary hosts
-
-    if host_is_aggregated(hostname):
-        outfile.write("\ndefine host {\n")
-        outfile.write("  host_name\t\t\t%s\n" % summary_hostname(hostname))
-        outfile.write("  use\t\t\t\t%s-summary\n" % (is_clust and config.cluster_template or config.host_template))
-        outfile.write("  alias\t\t\t\tSummary of %s\n" % alias)
-        outfile.write("  address\t\t\t%s\n" % (ip and ip or fallback_ip_for(hostname)))
-        outfile.write("  __REALNAME\t\t\t%s\n" % hostname)
-        outfile.write("  parents\t\t\t%s\n" % hostname)
-
-        # Add custom macros
-        for key, value in attrs.items():
-            if key[0] == '_':
-                outfile.write("  %s\t\t\t%s\n" % (key, value))
-
-        hgs = config.summary_hostgroups_of(hostname)
-        hostgroups = ",".join(hgs)
-        if len(hgs) == 0:
-            hostgroups = config.default_host_group
-            hostgroups_to_define.add(config.default_host_group)
-        elif config.define_hostgroups:
-            hostgroups_to_define.update(hgs)
-        outfile.write("  hostgroups\t\t\t+%s\n" % hostgroups)
-
-        # host gets same contactgroups as real host
-        if len(cgrs) > 0:
-            outfile.write("  contact_groups\t\t+%s\n" % make_utf8(",".join(cgrs)))
-
-        if is_clust:
-            outfile.write("  _NODEIPS\t\t\t%s\n" % " ".join(attrs.get("_NODEIPS")))
-        outfile.write(extra_summary_host_conf_of(hostname))
-        outfile.write("}\n")
     outfile.write("\n")
 
 
@@ -274,8 +230,6 @@ define servicedependency {
 
     host_checks = get_check_table(hostname, remove_duplicates=True).items()
     host_checks.sort() # Create deterministic order
-    aggregated_services_conf = set([])
-    do_aggregation = host_is_aggregated(hostname)
     have_at_least_one_service = False
     used_descriptions = {}
     for ((checkname, item), (params, description, deps)) in host_checks:
@@ -310,15 +264,6 @@ define servicedependency {
                          "}\n\n" % (config.service_dependency_template, hostname, dep, hostname, description))
 
 
-        # Handle aggregated services. If this service belongs to an aggregation,
-        # remember, that the aggregated service must be configured. We cannot
-        # do this here, because each aggregated service must occur only once
-        # in the configuration.
-        if do_aggregation:
-            asn = aggregated_service_name(hostname, description)
-            if asn != "":
-                aggregated_services_conf.add(asn)
-
         # Add the check interval of either the Check_MK service or
         # (if configured) the snmp_check_interval for snmp based checks
         check_interval = 1 # default hardcoded interval
@@ -350,53 +295,6 @@ define servicedependency {
 
         checknames_to_define.add(checkname)
         have_at_least_one_service = True
-
-
-    # Now create definitions of the aggregated services for this host
-    if do_aggregation and config.service_aggregations:
-        outfile.write("\n# Aggregated services\n\n")
-
-    aggr_descripts = aggregated_services_conf
-    if config.aggregate_check_mk and host_is_aggregated(hostname) and have_at_least_one_service:
-        aggr_descripts.add("Check_MK")
-
-    # If a ping-only-host is aggregated, the summary host gets it's own
-    # copy of the ping - as active check. We cannot aggregate the result
-    # from the ping of the real host since no Check_MK is running during
-    # the check.
-    elif host_is_aggregated(hostname) and not have_at_least_one_service:
-        outfile.write("""
-define service {
-  use\t\t\t\t%s
-%s  host_name\t\t\t%s
-}
-
-""" % (config.pingonly_template, extra_service_conf_of(hostname, "PING"), summary_hostname(hostname)))
-
-    for description in aggr_descripts:
-        sergr = rulesets.service_extra_conf(hostname, description, config.summary_service_groups)
-        if len(sergr) > 0:
-            sg = "  service_groups\t\t\t+" + make_utf8(",".join(sergr)) + "\n"
-            if config.define_servicegroups:
-                servicegroups_to_define.update(sergr)
-        else:
-            sg = ""
-
-        sercgr = rulesets.service_extra_conf(hostname, description, config.summary_service_contactgroups)
-        contactgroups_to_define.update(sercgr)
-        if len(sercgr) > 0:
-            scg = "  contact_groups\t\t\t+" + ",".join(sercgr) + "\n"
-        else:
-            scg = ""
-
-        outfile.write("""define service {
-  use\t\t\t\t%s
-  host_name\t\t\t%s
-%s%s%s  service_description\t\t%s
-}
-
-""" % ( config.summary_service_template, summary_hostname(hostname), sg, scg,
-extra_summary_service_conf_of(hostname, description), description  ))
 
     # Active check for check_mk
     if have_at_least_one_service:
@@ -960,7 +858,7 @@ def precompile_hostcheck(hostname):
 
     # check table, enriched with addition precompiled information.
     check_table = get_precompiled_check_table(hostname)
-    if len(check_table) == 0:
+    if not check_table:
         console.verbose("(no Check_MK checks)\n")
         return
 
@@ -1006,12 +904,11 @@ if '-d' in sys.argv:
     # Compile in all neccessary global variables
     output.write("\n# Global variables\n")
     for var in [ 'tcp_connect_timeout', 'agent_min_version',
-                 'perfdata_format', 'aggregation_output_format',
-                 'aggr_summary_hostname',
+                 'perfdata_format',
                  'check_submission', 'monitoring_core',
                  'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'piggyback_max_cachefile_age', 'fallback_agent_output_encoding',
-                 'simulation_mode', 'agent_simulator', 'aggregate_check_mk',
+                 'simulation_mode', 'agent_simulator',
                  'check_mk_perfdata_with_times',
                  'use_inline_snmp', 'record_inline_snmp_stats',
                  ]:
@@ -1028,7 +925,7 @@ if '-d' in sys.argv:
     needed_sections = set([])
     service_timeperiods = {}
     check_intervals = {}
-    for check_type, _unused_item, _unused_param, descr, _unused_aggr in check_table:
+    for check_type, _unused_item, _unused_param, descr in check_table:
         if check_type not in checks.check_info:
             sys.stderr.write('Warning: Ignoring missing check %s.\n' % check_type)
             continue
@@ -1155,26 +1052,25 @@ if '-d' in sys.argv:
     output.write("def get_datasource_program(hostname, ipaddress):\n" +
                  "    return %r[hostname]\n\n" % dsprogs)
 
-    # aggregation
-    output.write("def host_is_aggregated(hostname):\n    return %r\n\n" % host_is_aggregated(hostname))
+    # I think this is not needed anymore. Keep it here for reference
+    #
+    ## Parameters for checks: Default values are defined in checks/*. The
+    ## variables might be overridden by the user in main.mk. We need
+    ## to set the actual values of those variables here. Otherwise the users'
+    ## settings would get lost. But we only need to set those variables that
+    ## influence the check itself - not those needed during inventory.
+    #for var in checks.check_config_variables:
+    #    output.write("%s = %r\n" % (var, getattr(config, var)))
 
-    # Parameters for checks: Default values are defined in checks/*. The
-    # variables might be overridden by the user in main.mk. We need
-    # to set the actual values of those variables here. Otherwise the users'
-    # settings would get lost. But we only need to set those variables that
-    # influence the check itself - not those needed during inventory.
-    for var in checks.check_config_variables:
-        output.write("%s = %r\n" % (var, getattr(config, var)))
-
-    # The same for those checks that use the new API
-    for check_type in needed_check_types:
-        # Note: check_type might not be in checks.check_info. This is
-        # the case, if "mem" has been added to "extra_sections" and thus
-        # to "needed_check_types" - despite the fact that only subchecks
-        # mem.* exist
-        if check_type in checks.check_info:
-            for var in checks.check_info[check_type].get("check_config_variables", []):
-                output.write("%s = %r\n" % (var, getattr(config, var)))
+    ## The same for those checks that use the new API
+    #for check_type in needed_check_types:
+    #    # Note: check_type might not be in checks.check_info. This is
+    #    # the case, if "mem" has been added to "extra_sections" and thus
+    #    # to "needed_check_types" - despite the fact that only subchecks
+    #    # mem.* exist
+    #    if check_type in checks.check_info:
+    #        for var in checks.check_info[check_type].get("check_config_variables", []):
+    #            output.write("%s = %r\n" % (var, getattr(config, var)))
 
 
     # perform actual check with a general exception handler

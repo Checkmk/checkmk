@@ -27,6 +27,7 @@
 import os
 import sys
 import socket
+import subprocess
 import time
 import pprint
 
@@ -144,19 +145,21 @@ def scan_parents_of(hosts, silent=False, settings=None):
         console.verbose("%s " % host)
         try:
             ip = ip_lookup.lookup_ipv4_address(host)
-            command = "traceroute -w %d -q %d -m %d -n %s 2>&1" % (
-                settings.get("timeout", 8),
-                settings.get("probes", 2),
-                settings.get("max_ttl", 10),
-                cmk_base.utils.quote_shell_string(ip))
-            console.vverbose("Running '%s'\n" % command)
-            procs.append( (host, ip, os.popen(command) ) )
-        except:
-            # TODO: Too generic error handling!
+            command = [ "traceroute",
+                            "-w", "%d" % settings.get("timeout", 8),
+                            "-q", "%d" % settings.get("probes", 2),
+                            "-m", "%d" % settings.get("max_ttl", 10),
+                            "-n", ip ]
+            console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
+
+            procs.append((host, ip, subprocess.Popen(command,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT,
+                                        close_fds=True)))
+        except Exception, e:
             if cmk.debug.enabled():
                 raise
-            procs.append( (host, None, os.popen(
-                "echo 'ERROR: cannot resolve host name'")))
+            procs.append((host, None, "ERROR: %s" % e))
 
     # Output marks with status of each single scan
     def dot(color, dot='o'):
@@ -166,9 +169,14 @@ def scan_parents_of(hosts, silent=False, settings=None):
     # Now all run and we begin to read the answers. For each host
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output
     gateways = []
-    for host, ip, proc in procs:
-        lines = [l.strip() for l in proc.readlines()]
-        exitstatus = proc.close()
+    for host, ip, proc_or_error in procs:
+        if type(proc_or_error) in [ str, unicode ]:
+            lines      = [ proc_or_error ]
+            exitstatus = 1
+        else:
+            exitstatus = proc_or_error.wait()
+            lines = [ l.strip() for l in proc_or_error.stdout.readlines() ]
+
         if exitstatus:
             dot(tty.red, '*')
             gateways.append((None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255)))
@@ -285,8 +293,10 @@ def scan_parents_of(hosts, silent=False, settings=None):
 
 
 def gateway_reachable_via_ping(ip, probes):
-    return 0 == os.system("ping -q -i 0.2 -l 3 -c %d -W 5 %s >/dev/null 2>&1" %
-      (probes, cmk_base.utils.quote_shell_string(ip))) >> 8
+    return subprocess.call(["ping", "-q", "-i", "0.2", "-l", "3", "-c",
+                             "%d" % probes, "-W", "5", ip ],
+                           stdout=open(os.devnull, "w"),
+                           stderr=subprocess.STDOUT, close_fds=True) == 0
 
 
 # find hostname belonging to an ip address. We must not use

@@ -42,14 +42,14 @@ import cmk_base.console as console
 
 def backup_paths():
     return [
-        # tarname               path                 canonical name   description                is_dir owned_by_nagios www_group
-        ('check_mk_configfile', cmk.paths.main_config_file,    "main.mk",       "Main configuration file",           False, False, False ),
-        ('final_mk',            cmk.paths.final_config_file,   "final.mk",      "Final configuration file final.mk", False, False, False ),
-        ('check_mk_configdir',  cmk.paths.check_mk_config_dir, "",              "Configuration sub files",           True,  False, False ),
-        ('autochecksdir',       cmk.paths.autochecks_dir,      "",              "Automatically inventorized checks", True,  False, False ),
-        ('counters_directory',  cmk.paths.counters_dir,        "",              "Performance counters",              True,  True,  False ),
-        ('tcp_cache_dir',       cmk.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  True,  False ),
-        ('logwatch_dir',        cmk.paths.logwatch_dir,        "",              "Logwatch",                          True,  True,  True  ),
+        # tarname               path                 canonical name   description                is_dir
+        ('check_mk_configfile', cmk.paths.main_config_file,    "main.mk",       "Main configuration file",           False, ),
+        ('final_mk',            cmk.paths.final_config_file,   "final.mk",      "Final configuration file final.mk", False, ),
+        ('check_mk_configdir',  cmk.paths.check_mk_config_dir, "",              "Configuration sub files",           True,  ),
+        ('autochecksdir',       cmk.paths.autochecks_dir,      "",              "Automatically inventorized checks", True,  ),
+        ('counters_directory',  cmk.paths.counters_dir,        "",              "Performance counters",              True,  ),
+        ('tcp_cache_dir',       cmk.paths.tcp_cache_dir,       "",              "Agent cache",                       True,  ),
+        ('logwatch_dir',        cmk.paths.logwatch_dir,        "",              "Logwatch",                          True,  ),
     ]
 
 
@@ -57,20 +57,19 @@ def do_backup(tarname):
     console.verbose("Creating backup file '%s'...\n", tarname)
     tar = tarfile.open(tarname, "w:gz")
 
-    for name, path, canonical_name, descr, is_dir, \
-        _unused_owned_by_nagios, _unused_group_www in backup_paths():
+    for name, path, canonical_name, descr, is_dir, in backup_paths():
 
         absdir = os.path.abspath(path)
         if os.path.exists(path):
             if is_dir:
                 basedir = absdir
-                filename = "."
                 subtarname = name + ".tar"
-                subdata = os.popen("tar cf - --dereference --force-local -C '%s' '%s'" % \
-                                   (basedir, filename)).read()
+                subfile = StringIO.StringIO()
+                subtar = tarfile.open(mode="w", fileobj=subfile, dereference=True)
+                subtar.add(path, arcname=".")
+                subdata = subfile.getvalue()
             else:
                 basedir = os.path.dirname(absdir)
-                filename = os.path.basename(absdir)
                 subtarname = canonical_name
                 subdata = file(absdir).read()
 
@@ -95,8 +94,7 @@ def do_restore(tarname):
     if not os.path.exists(tarname):
         raise MKGeneralException("Unable to restore: File does not exist")
 
-    # TODO: Cleanup owned_by_nagios and group_www handling - not needed in pure OMD env anymore
-    for name, path, canonical_name, descr, is_dir, owned_by_nagios, group_www in backup_paths():
+    for name, path, canonical_name, descr, is_dir in backup_paths():
         absdir = os.path.abspath(path)
         if is_dir:
             basedir = absdir
@@ -128,12 +126,16 @@ def do_restore(tarname):
             os.makedirs(basedir)
 
         console.verbose("  Extracting %s (%s)\n", descr, absdir)
+        tar = tarfile.open(tarname, "r:gz")
         if is_dir:
-            os.system("tar xzf '%s' --force-local --to-stdout '%s' 2>/dev/null "
-                      "| tar xf - -C '%s' '%s' 2>/dev/null" % \
-                      (tarname, name + ".tar", basedir, filename))
-        else:
-            os.system("tar xzf '%s' --force-local --to-stdout '%s' 2>/dev/null > '%s' 2>/dev/null" %
-                      (tarname, filename, canonical_path))
+            subtar = tarfile.open(fileobj=tar.extractfile(name + ".tar"))
+            if filename == ".":
+                subtar.extractall(basedir)
+            elif filename in subtar.getnames():
+                subtar.extract(filename, basedir)
+            subtar.close()
+        elif filename in tar.getnames():
+            tar.extract(filename, basedir)
+        tar.close()
 
     console.verbose("Successfully restored backup.\n")

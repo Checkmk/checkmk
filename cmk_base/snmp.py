@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os
+import subprocess
 
 import cmk.debug
 import cmk.tty as tty
@@ -690,10 +691,12 @@ def do_snmptranslate(walk_filename):
             for line in lines:
                 oids_for_command.append(line.split(" ")[0])
 
-            command = "snmptranslate -m ALL -M+%s %s 2>/dev/null" % \
-                        (cmk.paths.local_mibs_dir, " ".join(oids_for_command))
-            process = os.popen(command, "r")
-            output  = process.read()
+            command = ["snmptranslate", "-m", "ALL",
+                       "-M+%s" % cmk.paths.local_mibs_dir ] + oids_for_command
+            p = subprocess.Popen(command, stdout=subprocess.PIPE,
+                                 stderr=open(os.devnull, "w"), close_fds=True)
+            p.wait()
+            output  = p.stdout.read()
             result  = output.split("\n")[0::2]
             for idx, line in enumerate(result):
                 result_lines.append((line.strip(), lines[idx].strip()))

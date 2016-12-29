@@ -976,10 +976,10 @@ def parse_history_file(path, headers, filters, greptexts, limit):
     # If we have greptexts we pre-filter the file using the extremely
     # fast GNU Grep
     # Revert lines from the log file to have the newer lines processed first
-    cmd = 'tac "%s"' % path
+    cmd = 'tac %s' % quote_shell_string(path)
     if greptexts:
         cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
-    grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)
+    grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE) # nosec
 
     for line in grep.stdout:
         line_no += 1
@@ -1252,10 +1252,15 @@ class EventServer:
                 os.remove(g_pipe_path)
         except:
             pass
+
         if not os.path.exists(g_pipe_path):
             os.mkfifo(g_pipe_path)
-        os.chmod(g_pipe_path, 0666)
+
+        # We want to be able to receive events from all users on the local system
+        os.chmod(g_pipe_path, 0666) # nosec
+
         log("Created FIFO '%s' for receiving events" % g_pipe_path)
+
 
     def open_syslog(self):
         if opt_syslog:
@@ -4009,17 +4014,15 @@ def execute_script(body, event):
     # Traps can contain 0-Bytes. We need to remove this from the script
     # body. Otherwise suprocess.Popen will crash.
     p = subprocess.Popen(
-        body.encode('utf-8'),
-        shell = True,
-        executable = '/bin/bash',
+        ['/bin/bash'],
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         close_fds=True,
         env = script_env,
     )
-    output = p.communicate()[0]
-    log('  Exitcode: %d' % p.returncode)
+    output = p.communicate(body.encode('utf-8'))[0]
+    log('  Exit code: %d' % p.returncode)
     if output:
-        log('  Output: %s' % output)
+        log('  Output: \'%s\'' % output)
 
 
 #.

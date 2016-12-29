@@ -1557,7 +1557,8 @@ def do_site_restore(opts, info, site=None):
         log(p.stderr.read())
         raise MKGeneralException("Site restore failed")
 
-    if os.system("omd start %s" % (is_root() and site or "")) >> 8 != 0:
+    site_arg = [ site ] if is_root() else []
+    if subprocess.call(["omd", "start" ] + site_arg) != 0:
         raise MKGeneralException("Failed to start the site after restore")
 
 
@@ -1675,7 +1676,8 @@ def enable_drbd_ip_addresses():
 
     log("Enabling DRBD network address (%s: %s/%s)" % (drbd_if, address, netmask))
 
-    os.system("ip a a %s/%s dev eth0" % (address, netmask))
+    subprocess.call(["ip", "a", "a", "%s/%s" % (address, netmask),
+                     "dev", "eth0"])
 
 
 def verify_cma_version_compatible(info):

@@ -27,6 +27,7 @@
 """Code for support of Nagios (and compatible) cores"""
 
 import os
+import subprocess
 import sys
 import py_compile
 
@@ -44,19 +45,19 @@ import cmk_base.ip_lookup as ip_lookup
 
 
 def do_check_nagiosconfig():
-    command = cmk.paths.nagios_binary + " -vp "  + cmk.paths.nagios_config_file + " 2>&1"
-    console.verbose("Running '%s'\n" % command)
+    command = [ cmk.paths.nagios_binary, "-vp", cmk.paths.nagios_config_file ]
+    console.verbose("Running '%s'\n" % subprocess.list2cmdline(command))
     console.output("Validating Nagios configuration...")
 
-    process = os.popen(command, "r")
-    output = process.read()
-    exit_status = process.close()
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                         close_fds=True)
+    exit_status = p.wait()
     if not exit_status:
         console.output(tty.ok + "\n")
         return True
     else:
         console.output("ERROR:\n")
-        console.output(output, stream=sys.stderr)
+        console.output(p.stdout.read(), stream=sys.stderr)
         return False
 
 

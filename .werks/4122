@@ -1,0 +1,10 @@
+Title: ibm_svc_enclosure: added support for firmware >= 7.8
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1483005691
+Class: fix
+
+SVC firmware >= 7.8 provides more output than former firmware versions. The additional data shows information about total and online secondary expander modules.
+The check has been customized to support the additional data.

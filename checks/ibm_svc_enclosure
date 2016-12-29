@@ -37,8 +37,14 @@
 # 3:online:expansion:yes:0:io_grp0:2072-24E:7804326:2:2:2:2:24:0:0
 # 4:online:expansion:yes:0:io_grp0:2072-24E:7804352:2:2:2:2:24:0:0
 
+# FW >= 7.8
+# 1:online:control:yes:0:io_grp0:2072-24C:7804037:2:2:2:2:24:0:0:0:0
+# 2:online:expansion:yes:0:io_grp0:2072-24E:7804306:2:2:2:2:24:0:0:0:0
+# 3:online:expansion:yes:0:io_grp0:2072-24E:7804326:2:2:2:2:24:0:0:0:0
+# 4:online:expansion:yes:0:io_grp0:2072-24E:7804352:2:2:2:2:24:0:0:0:0
+
 # The names of the columns are:
-# id:status:type:managed:IO_group_id:IO_group_name:product_MTM:serial_number:total_canisters:online_canisters:total_PSUs:online_PSUs:drive_slots:total_fan_modules:online_fan_modules
+# id:status:type:managed:IO_group_id:IO_group_name:product_MTM:serial_number:total_canisters:online_canisters:total_PSUs:online_PSUs:drive_slots:total_fan_modules:online_fan_modules:total_sems:online_sems
 
 
 def inventory_ibm_svc_enclosure(info):
@@ -51,12 +57,15 @@ def inventory_ibm_svc_enclosure(info):
 def check_ibm_svc_enclosure(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            if len(line) < 15: # old format
+            if len(line) < 15: # old(est) format
+                line = line + ["0", "0", "0", "0"] # do not modify line!
+            if len(line) < 17: # old format
                 line = line + ["0", "0"] # do not modify line!
 
             enclosure_id, enclosure_status, enclosure_type, managed, IO_group_id, \
                 IO_group_name, product_MTM, serial_number, total_canisters, online_canisters, \
-                total_PSUs, online_PSUs, drive_slots, total_fan_modules, online_fan_modules = line
+                total_PSUs, online_PSUs, drive_slots, total_fan_modules, online_fan_modules, \
+                total_secondary_expander_modules, online_secondary_expander_modules = line
 
             # Check status
             message = "Enclosure %s is %s" % (enclosure_id, enclosure_status)
@@ -87,6 +96,14 @@ def check_ibm_svc_enclosure(item, _no_params, info):
             else:
                 status = 2
                 message += ", only %s of %s fan modules are online(!!)" % (online_fan_modules, total_fan_modules)
+
+            # Check SEMs (only firmware >= 7.8)
+            if online_secondary_expander_modules == total_secondary_expander_modules:
+                if total_secondary_expander_modules != "0":
+                    message += ", all %s secondary expander modules are online" % total_secondary_expander_modules
+            else:
+                status = 2
+                message += ", only %s of %s secondary expander modules are online(!!)" % (online_secondary_expander_modules, total_secondary_expander_modules)
 
             return status, message
 

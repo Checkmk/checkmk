@@ -282,7 +282,7 @@ def check_auth_automation():
             html.set_ignore_transids()
             set_auth_type("automation")
             return user_id
-    raise MKAuthException(_("Invalid automation secret for user %s") % html.attrencode(user_id))
+    raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
 
 
 # When http header auth is enabled, try to read the user_id from the var
@@ -430,7 +430,7 @@ def normal_login_page(called_directly = True):
 
     html.begin_form("login", method = 'POST', add_transid = False, action = 'login.py')
     html.hidden_field('_login', '1')
-    html.hidden_field('_origtarget', html.attrencode(origtarget))
+    html.hidden_field('_origtarget', origtarget)
     html.write('<label id="label_user" class="legend" for="_username">%s:</label><br />\n' % _('Username'))
     html.text_input("_username", id_="input_user")
     html.write('<label id="label_pass" class="legend" for="_password">%s:</label><br />\n' % _('Password'))

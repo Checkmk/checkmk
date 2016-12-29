@@ -1101,7 +1101,7 @@ def notify_via_email(plugin_context):
     notify_log_debug("Executing command: %s" % command)
 
     # TODO: Cleanup this shell=True call!
-    p = subprocess.Popen(command_utf8, shell=True, stdout=subprocess.PIPE,
+    p = subprocess.Popen(command_utf8, shell=True, stdout=subprocess.PIPE, # nosec
                          stderr=subprocess.PIPE, stdin=subprocess.PIPE,
                          close_fds=True)
     stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))

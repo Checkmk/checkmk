@@ -48,9 +48,9 @@ def do_donation():
         sys.exit(1)
 
     console.verbose("Donating files %s\n" % " ".join(cache_files))
-    indata = base64.b64encode(os.popen("tar czf - -C %s %s" % (cmk.paths.tcp_cache_dir, " ".join(donate))).read())
+    indata = base64.b64encode(os.popen("tar czf - -C %s %s" % (cmk.paths.tcp_cache_dir, " ".join(donate))).read()) # nosec
 
-    output = os.popen(config.donation_command, "w")
+    output = os.popen(config.donation_command, "w") # nosec
     output.write("\n\n@STARTDATA\n")
     while len(indata) > 0:
         line = indata[:64]

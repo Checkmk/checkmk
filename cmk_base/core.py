@@ -29,6 +29,7 @@
 import fcntl
 import os
 import socket
+import subprocess
 import sys
 
 import cmk.paths
@@ -152,13 +153,16 @@ def do_core_action(action, quiet=False):
 
     if config.monitoring_core == "nagios":
         os.putenv("CORE_NOVERIFY", "yes")
-        command = cmk.paths.nagios_startscript + " %s 2>&1" % action
+        command = [ "%s/etc/init.d/core" % cmk.paths.omd_root,
+                    action ]
     else:
-        command = "omd %s cmc 2>&1" % action
+        command = [ "omd", action, "cmc" ]
 
-    process = os.popen(command, "r")
-    output = process.read()
-    if process.close():
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                        close_fds=True)
+    result = p.wait()
+    if result != 0:
+        output = p.stdout.read()
         if not quiet:
             console.output("ERROR: %s\n" % output)
         raise MKGeneralException("Cannot %s the monitoring core: %s" % (action, output))

@@ -857,7 +857,7 @@ def _core_is_running():
         command = cmk.paths.nagios_startscript + " status >/dev/null 2>&1"
     else:
         command = "omd status cmc >/dev/null 2>&1"
-    code = os.system(command)
+    code = os.system(command) # nosec
     return not code
 
 
@@ -1115,7 +1115,7 @@ def _replace_core_macros(hostname, commandline):
 
 def _execute_check_plugin(commandline):
     try:
-        p = os.popen(commandline + " 2>&1")
+        p = os.popen(commandline + " 2>&1") # nosec
         output = p.read().strip()
         ret = p.close()
         if not ret:

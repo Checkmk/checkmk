@@ -797,14 +797,14 @@ def get_agent_info_program(commandline):
     p = None
     try:
         if config.monitoring_core == "cmc":
-            p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull),
+            p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull), # nosec
                                  stdout=subprocess.PIPE, stderr = subprocess.PIPE,
                                  preexec_fn=os.setsid, close_fds=True)
         else:
             # We can not create a separate process group when running Nagios
             # Upon reaching the service_check_timeout Nagios only kills the process
             # group of the active check.
-            p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull),
+            p = subprocess.Popen(commandline, shell=True, stdin=open(os.devnull), # nosec
                                  stdout=subprocess.PIPE, stderr = subprocess.PIPE,
                                  close_fds=True)
         stdout, stderr = p.communicate()

@@ -192,7 +192,7 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None, what
     dateformat = painter_options.get("ts_date")
     age = time.time() - timestamp
     if mode == "abs" or \
-        (mode == "mixed" and age >= 48 * 3600 or age < -48 * 3600):
+        (mode == "mixed" and abs(age) >= 48 * 3600):
         return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
 
     warn_txt = ''

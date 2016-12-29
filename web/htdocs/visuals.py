@@ -1404,6 +1404,13 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
         if html.var('site') and all([ is_single_site_info(info_key)for info_key in visual['single_infos']]):
             vars_values.append(('site', html.var('site')))
 
+        # Optional feature of visuals: Make them dynamically available as links or not.
+        # This has been implemented for HW/SW inventory views which are often useless when a host
+        # has no such information available. For example the "Oracle Tablespaces" inventory view
+        # is useless on hosts that don't host Oracle databases.
+        if not skip and 'is_enabled_for' in thing_module.__dict__:
+            skip = not thing_module.__dict__['is_enabled_for'](this_visual, visual, vars_values)
+
         if not skip:
             # add context link to this visual. For reports we put in
             # the *complete* context, even the non-single one.

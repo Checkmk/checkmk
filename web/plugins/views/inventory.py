@@ -1102,16 +1102,38 @@ def declare_invtable_view(infoname, invpath, title_singular, title_plural):
     }
     multisite_builtin_views[infoname + "_of_host"].update(view_spec)
 
+    # View enabled checker for the _of_host view
+    view_is_enabled[infoname + "_of_host"] = _create_view_enabled_check_func(invpath)
+
+
+def _create_view_enabled_check_func(invpath):
+    def _check_view_enabled(linking_view, view, context_vars):
+        context = dict(context_vars)
+        if "host" not in context:
+            return True # No host data? Keep old behaviour
+
+        tree = inventory.host(context["host"])
+        if not tree:
+            return False # Don't show when no inventory data available
+
+        invdata = inventory.get(tree, invpath)
+        if not invdata:
+            return False
+        else:
+            return True
+
+    return _check_view_enabled
+
 # Now declare Multisite views for a couple of embedded tables
-declare_invtable_view("invswpac",      ".software.packages:",       _("Software Package"),   _("Software Packages"))
-declare_invtable_view("invinterface",  ".networking.interfaces:",   _("Network Interface"),  _("Network Interfaces"))
+declare_invtable_view("invswpac",      ".software.packages:",       _("Software package"),   _("Software packages"))
+declare_invtable_view("invinterface",  ".networking.interfaces:",   _("Network interface"),  _("Network interfaces"))
 declare_invtable_view("invbackplane",  ".hardware.components.backplanes:", _("Backplane"),  _("Backplanes"))
 declare_invtable_view("invfan",        ".hardware.components.fans:",       _("Fan"),        _("Fans"))
-declare_invtable_view("invpsu",        ".hardware.components.psus:",       _("Power Supply"), _("Power Supplies"))
+declare_invtable_view("invpsu",        ".hardware.components.psus:",       _("Power supply"), _("Power supplies"))
 declare_invtable_view("invsensor",     ".hardware.components.sensors:",    _("Sensor"),     _("Sensors"))
 declare_invtable_view("invmodule",     ".hardware.components.modules:",    _("Module"),     _("Modules"))
 
-declare_invtable_view("invora_tablespace", ".software.applications.oracle.tablespaces:", _("Oracle Tablespace"),  _("Oracle Tablespaces"))
+declare_invtable_view("invora_tablespace", ".software.applications.oracle.tablespaces:", _("Oracle tablespace"),  _("Oracle tablespaces"))
 
 
 # This would also be possible. But we muss a couple of display and filter hints.
@@ -1168,6 +1190,8 @@ multisite_builtin_views["inv_host"] = {
     'show_filters'                 : [],
     'sorters'                      : [],
 }
+
+view_is_enabled["inv_host"] = _create_view_enabled_check_func(".")
 
 generic_host_filters = multisite_builtin_views["allhosts"]["show_filters"]
 
@@ -1403,3 +1427,4 @@ multisite_builtin_views["inv_host_history"] = {
     'sorters'                      : [('invhist_time', False)],
 }
 
+view_is_enabled["inv_host_history"] = _create_view_enabled_check_func(".")

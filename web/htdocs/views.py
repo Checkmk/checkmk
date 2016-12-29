@@ -259,6 +259,17 @@ def transform_old_views():
 def save_views(us):
     visuals.save('views', multisite_views)
 
+
+# For each view a function can be registered that has to return either True
+# or False to show a view as context link
+view_is_enabled = {}
+
+def is_enabled_for(linking_view, view, context_vars):
+    if view["name"] not in view_is_enabled:
+        return True # Not registered are always visible!
+
+    return view_is_enabled[view["name"]](linking_view, view, context_vars)
+
 #.
 #   .--PainterOptions------------------------------------------------------.
 #   |  ____       _       _             ___        _   _                   |

@@ -35,7 +35,7 @@ class OffsetPerfdataColumn : public OffsetStringColumn {
 public:
     OffsetPerfdataColumn(const std::string& name,
                          const std::string& description, int offset,
-                         int indirect_offset = -1, int extra_offset = -1)
+                         int indirect_offset, int extra_offset)
         : OffsetStringColumn(name, description, offset, indirect_offset,
                              extra_offset) {}
 

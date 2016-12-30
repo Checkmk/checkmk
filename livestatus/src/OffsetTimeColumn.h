@@ -39,15 +39,15 @@
 class OffsetTimeColumn : public TimeColumn {
 public:
     OffsetTimeColumn(const std::string& name, const std::string& description,
-                     int offset, int indirect_offset, int extra_offset)
-        : TimeColumn(name, description, indirect_offset, extra_offset, -1)
+                     int offset, int indirect_offset, int extra_offset,
+                     int extra_extra_offset)
+        : TimeColumn(name, description, indirect_offset, extra_offset,
+                     extra_extra_offset)
         , _offset(offset) {}
 
     int32_t getValue(void* row, contact* auth_user) override;
 
-    int offset() const { return _offset; }
-
-private:
+protected:
     const int _offset;
 };
 

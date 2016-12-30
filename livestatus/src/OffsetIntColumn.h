@@ -39,13 +39,12 @@
 class OffsetIntColumn : public IntColumn {
 public:
     OffsetIntColumn(const std::string& name, const std::string& description,
-                    int offset, int indirect_offset = -1, int extra_offset = -1)
+                    int offset, int indirect_offset, int extra_offset)
         : IntColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
     int32_t getValue(void* row, contact* auth_user) override;
-    int offset() const { return _offset; }
 
-private:
+protected:
     const int _offset;
 };
 

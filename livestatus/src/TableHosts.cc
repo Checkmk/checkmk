@@ -271,12 +271,12 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         prefix + "last_notification",
         "Time of the last notification (Unix timestamp)",
         reinterpret_cast<char *>(&hst.last_host_notification) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "next_notification",
         "Time of the next notification (Unix timestamp)",
         reinterpret_cast<char *>(&hst.next_host_notification) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
 #else
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_notification",
@@ -291,12 +291,12 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         prefix + "next_check",
         "Scheduled time for the next check (Unix timestamp)",
         reinterpret_cast<char *>(&hst.next_check) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_hard_state_change",
         "Time of the last hard state change (Unix timestamp)",
         reinterpret_cast<char *>(&hst.last_hard_state_change) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "has_been_checked",
         "Whether the host has already been checked (0/1)",
@@ -357,28 +357,28 @@ void TableHosts::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_check", "Time of the last check (Unix timestamp)",
         reinterpret_cast<char *>(&hst.last_check) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_state_change",
         "Time of the last state change - soft or hard (Unix timestamp)",
         reinterpret_cast<char *>(&hst.last_state_change) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
 
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_time_up",
         "The last time the host was UP (Unix timestamp)",
         reinterpret_cast<char *>(&hst.last_time_up) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_time_down",
         "The last time the host was DOWN (Unix timestamp)",
         reinterpret_cast<char *>(&hst.last_time_down) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_time_unreachable",
         "The last time the host was UNREACHABLE (Unix timestamp)",
         reinterpret_cast<char *>(&hst.last_time_unreachable) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "is_flapping", "Whether the host state is flapping (0/1)",

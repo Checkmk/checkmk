@@ -34,7 +34,7 @@ class OffsetStringHostMacroColumn : public OffsetStringMacroColumn {
 public:
     OffsetStringHostMacroColumn(const std::string &name,
                                 const std::string &description, int offset,
-                                int indirect_offset = -1, int extra_offset = -1)
+                                int indirect_offset, int extra_offset)
         : OffsetStringMacroColumn(name, description, offset, indirect_offset,
                                   extra_offset) {}
     host *getHost(void *data) override;

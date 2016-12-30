@@ -37,9 +37,9 @@ OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description,
 
 int32_t OffsetTimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
     if (auto p = rowData<char>(row)) {
-        timeperiod *tp = (offset() == -1)
+        timeperiod *tp = (_offset == -1)
                              ? reinterpret_cast<timeperiod *>(p)
-                             : *reinterpret_cast<timeperiod **>(p + offset());
+                             : *reinterpret_cast<timeperiod **>(p + _offset);
         // no timeperiod set -> Nagios assumes 7x24
         return (tp == nullptr || g_timeperiods_cache->inTimeperiod(tp)) ? 1 : 0;
     }

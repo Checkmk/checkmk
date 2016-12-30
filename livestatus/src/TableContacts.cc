@@ -57,65 +57,66 @@ void TableContacts::addColumns(Table *table, const string &prefix,
     char *ref = reinterpret_cast<char *>(&ctc);
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "The login name of the contact person",
-        reinterpret_cast<char *>(&ctc.name) - ref, indirect_offset));
+        reinterpret_cast<char *>(&ctc.name) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "alias", "The full name of the contact",
-        reinterpret_cast<char *>(&ctc.alias) - ref, indirect_offset));
+        reinterpret_cast<char *>(&ctc.alias) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "email", "The email address of the contact",
-        reinterpret_cast<char *>(&ctc.email) - ref, indirect_offset));
+        reinterpret_cast<char *>(&ctc.email) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "pager", "The pager address of the contact",
-        reinterpret_cast<char *>(&ctc.pager) - ref, indirect_offset));
+        reinterpret_cast<char *>(&ctc.pager) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "host_notification_period",
         "The time period in which the contact will be notified about host "
         "problems",
         reinterpret_cast<char *>(&ctc.host_notification_period) - ref,
-        indirect_offset));
+        indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "service_notification_period",
         "The time period in which the contact will be notified about service "
         "problems",
         reinterpret_cast<char *>(&ctc.service_notification_period) - ref,
-        indirect_offset));
+        indirect_offset, -1));
     for (int i = 1; i <= MAX_CONTACT_ADDRESSES; ++i) {
         string b = "address" + to_string(i);
         table->addColumn(make_unique<OffsetStringColumn>(
             prefix + b, "The additional field " + b,
-            reinterpret_cast<char *>(&ctc.address[i]) - ref, indirect_offset));
+            reinterpret_cast<char *>(&ctc.address[i]) - ref, indirect_offset,
+            -1));
     }
 
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "can_submit_commands",
         "Wether the contact is allowed to submit commands (0/1)",
         reinterpret_cast<char *>(&ctc.can_submit_commands) - ref,
-        indirect_offset));
+        indirect_offset, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "host_notifications_enabled",
         "Wether the contact will be notified about host problems in general "
         "(0/1)",
         reinterpret_cast<char *>(&ctc.host_notifications_enabled) - ref,
-        indirect_offset));
+        indirect_offset, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "service_notifications_enabled",
         "Wether the contact will be notified about service problems in general "
         "(0/1)",
         reinterpret_cast<char *>(&ctc.service_notifications_enabled) - ref,
-        indirect_offset));
+        indirect_offset, -1));
 
     table->addColumn(make_unique<OffsetTimeperiodColumn>(
         prefix + "in_host_notification_period",
         "Wether the contact is currently in his/her host notification period "
         "(0/1)",
         reinterpret_cast<char *>(&ctc.host_notification_period_ptr) - ref,
-        indirect_offset));
+        indirect_offset, -1));
     table->addColumn(make_unique<OffsetTimeperiodColumn>(
         prefix + "in_service_notification_period",
         "Wether the contact is currently in his/her service notification "
         "period (0/1)",
         reinterpret_cast<char *>(&ctc.service_notification_period_ptr) - ref,
-        indirect_offset));
+        indirect_offset, -1));
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",

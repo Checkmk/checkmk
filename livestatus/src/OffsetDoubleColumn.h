@@ -30,18 +30,15 @@
 #include "DoubleColumn.h"
 
 class OffsetDoubleColumn : public DoubleColumn {
-    int _offset;
-
 public:
     OffsetDoubleColumn(const std::string& name, const std::string& description,
-                       int offset, int indirect_offset = -1,
-                       int extra_offset = -1)
+                       int offset, int indirect_offset, int extra_offset)
         : DoubleColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset) {}
     double getValue(void* data);
 
 protected:
-    int offset() { return _offset; }
+    const int _offset;
 };
 
 #endif  // OffsetDoubleColumn_h

@@ -54,21 +54,21 @@ void TableHostGroups::addColumns(Table *table, const string &prefix,
     char *ref = reinterpret_cast<char *>(&hgr);
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "Name of the hostgroup",
-        reinterpret_cast<char *>(&hgr.group_name) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.group_name) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "alias", "An alias of the hostgroup",
-        reinterpret_cast<char *>(&hgr.alias) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.alias) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional notes to the hostgroup",
-        reinterpret_cast<char *>(&hgr.notes) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.notes) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL with further information about the hostgroup",
-        reinterpret_cast<char *>(&hgr.notes_url) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.notes_url) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL to custom actions or information about the hostgroup",
-        reinterpret_cast<char *>(&hgr.action_url) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.action_url) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListColumn>(
         prefix + "members",
         "A list of all host names that are members of the hostgroup",

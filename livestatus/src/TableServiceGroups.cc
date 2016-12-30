@@ -54,21 +54,21 @@ void TableServiceGroups::addColumns(Table *table, const string &prefix,
     char *ref = reinterpret_cast<char *>(&sgr);
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "The name of the service group",
-        reinterpret_cast<char *>(&sgr.group_name) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.group_name) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "alias", "An alias of the service group",
-        reinterpret_cast<char *>(&sgr.alias) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.alias) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional additional notes about the service group",
-        reinterpret_cast<char *>(&sgr.notes) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.notes) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL to further notes on the service group",
-        reinterpret_cast<char *>(&sgr.notes_url) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.notes_url) - ref, indirect_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL to custom notes or actions on the service group",
-        reinterpret_cast<char *>(&sgr.action_url) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.action_url) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",

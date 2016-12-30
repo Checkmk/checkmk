@@ -42,7 +42,7 @@ class RowRenderer;
 class TimePointerColumn : public TimeColumn {
 public:
     TimePointerColumn(const std::string &name, const std::string &description,
-                      int *number)
+                      const int *number)
         : TimeColumn(name, description, -1, -1, -1), _number(number) {}
 
     int32_t getValue(void * /* row */, contact * /* auth_user */) override {
@@ -50,7 +50,7 @@ public:
     }
 
 private:
-    int *_number;
+    const int *const _number;
 };
 
 #endif  // TimePointerColumn_h

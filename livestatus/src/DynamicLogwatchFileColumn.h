@@ -37,9 +37,10 @@ public:
     DynamicLogwatchFileColumn(const std::string &name,
                               const std::string &description,
                               int indirect_offset, int extra_offset,
-                              Logger *logger, const std::string &logwatch_path)
+                              int extra_extra_offset, Logger *logger,
+                              const std::string &logwatch_path)
         : DynamicColumn(name, description, indirect_offset, extra_offset,
-                        logger)
+                        extra_extra_offset, logger)
         , _logwatch_path(logwatch_path) {}
     virtual ~DynamicLogwatchFileColumn() {}
     std::unique_ptr<Column> createColumn(const std::string &name,

@@ -35,7 +35,8 @@ class HostFileColumn : public BlobColumn {
 public:
     HostFileColumn(std::string name, std::string description,
                    std::string base_dir, std::string suffix,
-                   int indirect_offset, int extra_offset);
+                   int indirect_offset, int extra_offset,
+                   int extra_extra_offset);
 
     std::unique_ptr<std::vector<char>> getBlob(void *data) override;
 

@@ -35,7 +35,7 @@ using std::string;
 TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *core)
     : Table(core->loggerLivestatus()) {
     addDynamicColumn(make_unique<DynamicEventConsoleReplicationColumn>(
-        "value", "The replication value", -1, -1, core));
+        "value", "The replication value", -1, -1, -1, core));
 }
 
 string TableEventConsoleReplication::name() const {

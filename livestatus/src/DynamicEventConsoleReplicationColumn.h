@@ -37,6 +37,7 @@ public:
     DynamicEventConsoleReplicationColumn(const std::string &name,
                                          const std::string &description,
                                          int indirect_offset, int extra_offset,
+                                         int extra_extra_offset,
                                          MonitoringCore *core);
 
     std::unique_ptr<Column> createColumn(const std::string &name,

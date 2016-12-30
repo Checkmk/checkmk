@@ -661,11 +661,11 @@ void TableHosts::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<HostFileColumn>(
         prefix + "mk_inventory",
         "The file content content of the Check_MK HW/SW-Inventory",
-        g_mk_inventory_path, "", indirect_offset, extra_offset));
+        g_mk_inventory_path, "", indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<HostFileColumn>(
         prefix + "mk_inventory_gz",
         "The gzipped file content content of the Check_MK HW/SW-Inventory",
-        g_mk_inventory_path, ".gz", indirect_offset, extra_offset));
+        g_mk_inventory_path, ".gz", indirect_offset, extra_offset, -1));
 
     extern char g_mk_logwatch_path[];
     table->addColumn(make_unique<LogwatchListColumn>(
@@ -676,7 +676,7 @@ void TableHosts::addColumns(Table *table, const string &prefix,
     table->addDynamicColumn(make_unique<DynamicLogwatchFileColumn>(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", indirect_offset,
-        extra_offset, table->_logger, g_mk_logwatch_path));
+        extra_offset, -1, table->_logger, g_mk_logwatch_path));
 
     table->addColumn(make_unique<HostSpecialDoubleColumn>(
         prefix + "staleness", "Staleness indicator for this host",

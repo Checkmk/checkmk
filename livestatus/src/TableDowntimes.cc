@@ -60,7 +60,7 @@ TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
     addColumn(make_unique<OffsetIntColumn>(
         "id", "The id of the downtime",
         reinterpret_cast<char *>(&(ref->_id)) - reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetTimeColumn>(
         "entry_time", "The time the entry was made as UNIX timestamp",
         reinterpret_cast<char *>(&(ref->_entry_time)) -
@@ -70,13 +70,13 @@ TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
         "type",
         "The type of the downtime: 0 if it is active, 1 if it is pending",
         reinterpret_cast<char *>(&(ref->_type)) - reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service",
         reinterpret_cast<char *>(&(ref->_is_service)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
 
     addColumn(make_unique<OffsetTimeColumn>(
         "start_time", "The start time of the downtime as UNIX timestamp",
@@ -92,19 +92,19 @@ TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
         "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible",
         reinterpret_cast<char *>(&(ref->_fixed)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "duration", "The duration of the downtime in seconds",
         reinterpret_cast<char *>(&(ref->_duration)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "triggered_by",
         "The id of the downtime this downtime was triggered by or 0 if it was "
         "not triggered by another downtime",
         reinterpret_cast<char *>(&(ref->_triggered_by)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
 
     TableHosts::addColumns(
         this, "host_",

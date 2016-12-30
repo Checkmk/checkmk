@@ -60,7 +60,7 @@ TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
     addColumn(make_unique<OffsetIntColumn>(
         "id", "The id of the comment",
         reinterpret_cast<char *>(&(ref->_id)) - reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetTimeColumn>(
         "entry_time", "The time the entry was made as UNIX timestamp",
         reinterpret_cast<char *>(&(ref->_entry_time)) -
@@ -69,36 +69,36 @@ TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
     addColumn(make_unique<OffsetIntColumn>(
         "type", "The type of the comment: 1 is host, 2 is service",
         reinterpret_cast<char *>(&(ref->_type)) - reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service",
         reinterpret_cast<char *>(&(ref->_is_service)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
 
     addColumn(make_unique<OffsetIntColumn>(
         "persistent", "Whether this comment is persistent (0/1)",
         reinterpret_cast<char *>(&(ref->_persistent)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "source", "The source of the comment (0 is internal and 1 is external)",
         reinterpret_cast<char *>(&(ref->_source)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "entry_type",
         "The type of the comment: 1 is user, 2 is downtime, 3 is flap and 4 is "
         "acknowledgement",
         reinterpret_cast<char *>(&(ref->_entry_type)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "expires", "Whether this comment expires",
         reinterpret_cast<char *>(&(ref->_expires)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetTimeColumn>(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
         reinterpret_cast<char *>(&(ref->_expire_time)) -

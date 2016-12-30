@@ -39,7 +39,8 @@
 class OffsetTimeperiodColumn : public OffsetIntColumn {
 public:
     OffsetTimeperiodColumn(std::string name, std::string description,
-                           int offset, int indirect_offset, int extra_offset);
+                           int offset, int indirect_offset, int extra_offset,
+                           int extra_extra_offset);
     int32_t getValue(void *row, contact *auth_user) override;
 };
 

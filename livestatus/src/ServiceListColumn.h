@@ -37,8 +37,8 @@ class RowRenderer;
 class ServiceListColumn : public Column {
 public:
     ServiceListColumn(const std::string &name, const std::string &description,
-                      bool hostname_required, int offset, int indirect_offset,
-                      bool show_host, int info_depth, int extra_offset,
+                      bool hostname_required, bool show_host, int info_depth,
+                      int offset, int indirect_offset, int extra_offset,
                       int extra_extra_offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset)

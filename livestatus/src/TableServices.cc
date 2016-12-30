@@ -140,8 +140,8 @@ void TableServices::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period",
         "The name of the service period of the service",
-        reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        "SERVICE_PERIOD", -1, -1));
+        reinterpret_cast<char *>(&svc.custom_variables) - ref, "SERVICE_PERIOD",
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional notes about the service",
         reinterpret_cast<char *>(&svc.notes) - ref, indirect_offset, -1, -1));
@@ -188,57 +188,60 @@ void TableServices::addColumns(Table *table, const string &prefix,
 
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "initial_state", "The initial state of the service",
-        reinterpret_cast<char *>(&svc.initial_state) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.initial_state) - ref, indirect_offset, -1,
         -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "max_check_attempts", "The maximum number of check attempts",
-        reinterpret_cast<char *>(&svc.max_attempts) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.max_attempts) - ref, indirect_offset, -1,
         -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "current_attempt", "The number of the current check attempt",
         reinterpret_cast<char *>(&svc.current_attempt) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "state",
         "The current state of the service (0: OK, 1: WARN, "
         "2: CRITICAL, 3: UNKNOWN)",
-        reinterpret_cast<char *>(&svc.current_state) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.current_state) - ref, indirect_offset, -1,
         -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "has_been_checked",
         "Whether the service already has been checked (0/1)",
         reinterpret_cast<char *>(&svc.has_been_checked) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "last_state", "The last state of the service",
-        reinterpret_cast<char *>(&svc.last_state) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.last_state) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "last_hard_state", "The last hard state of the service",
         reinterpret_cast<char *>(&svc.last_hard_state) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "state_type",
         "The type of the current state (0: soft, 1: hard)",
-        reinterpret_cast<char *>(&svc.state_type) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.state_type) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "check_type",
         "The type of the last check (0: active, 1: passive)",
-        reinterpret_cast<char *>(&svc.check_type) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.check_type) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "acknowledged",
         "Whether the current service problem has been acknowledged (0/1)",
         reinterpret_cast<char *>(&svc.problem_has_been_acknowledged) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "acknowledgement_type",
         "The type of the acknownledgement (0: none, 1: normal, 2: sticky)",
         reinterpret_cast<char *>(&svc.acknowledgement_type) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "no_more_notifications",
         "Whether to stop sending notifications (0/1)",
         reinterpret_cast<char *>(&svc.no_more_notifications) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_time_ok",
         "The last time the service was OK (Unix timestamp)",
@@ -283,7 +286,7 @@ void TableServices::addColumns(Table *table, const string &prefix,
         prefix + "current_notification_number",
         "The number of the current notification",
         reinterpret_cast<char *>(&svc.current_notification_number) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_state_change",
         "The time of the last state change - soft or hard (Unix timestamp)",
@@ -298,21 +301,22 @@ void TableServices::addColumns(Table *table, const string &prefix,
         prefix + "scheduled_downtime_depth",
         "The number of scheduled downtimes the service is currently in",
         reinterpret_cast<char *>(&svc.scheduled_downtime_depth) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "is_flapping", "Whether the service is flapping (0/1)",
-        reinterpret_cast<char *>(&svc.is_flapping) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.is_flapping) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "checks_enabled",
         "Whether active checks are enabled for the service (0/1)",
         reinterpret_cast<char *>(&svc.checks_enabled) - ref, indirect_offset,
-        -1));
+        -1, -1));
 #ifndef NAGIOS4
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "accept_passive_checks",
         "Whether the service accepts passive checks (0/1)",
         reinterpret_cast<char *>(&svc.accept_passive_service_checks) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
 #else
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "accept_passive_checks",
@@ -323,49 +327,49 @@ void TableServices::addColumns(Table *table, const string &prefix,
         prefix + "event_handler_enabled",
         "Whether and event handler is activated for the service (0/1)",
         reinterpret_cast<char *>(&svc.event_handler_enabled) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "notifications_enabled",
         "Whether notifications are enabled for the service (0/1)",
         reinterpret_cast<char *>(&svc.notifications_enabled) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "process_performance_data",
         "Whether processing of performance data is enabled for the service "
         "(0/1)",
         reinterpret_cast<char *>(&svc.process_performance_data) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "is_executing",
         "is there a service check currently running... (0/1)",
-        reinterpret_cast<char *>(&svc.is_executing) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.is_executing) - ref, indirect_offset, -1,
         -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "active_checks_enabled",
         "Whether active checks are enabled for the service (0/1)",
         reinterpret_cast<char *>(&svc.checks_enabled) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "check_options",
         "The current check option, forced, normal, freshness... (0/1)",
-        reinterpret_cast<char *>(&svc.check_options) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.check_options) - ref, indirect_offset, -1,
         -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "flap_detection_enabled",
         "Whether flap detection is enabled for the service (0/1)",
         reinterpret_cast<char *>(&svc.flap_detection_enabled) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "check_freshness",
         "Whether freshness checks are activated (0/1)",
         reinterpret_cast<char *>(&svc.check_freshness) - ref, indirect_offset,
-        -1));
+        -1, -1));
 #ifndef NAGIOS4
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "obsess_over_service",
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
         reinterpret_cast<char *>(&svc.obsess_over_service) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
 #else
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "obsess_over_service",
@@ -385,7 +389,8 @@ void TableServices::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<ServiceSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
-        ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset, -1));
+        ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
         ServiceSpecialDoubleColumn::Type::staleness, indirect_offset, -1, -1));
@@ -439,17 +444,17 @@ void TableServices::addColumns(Table *table, const string &prefix,
         prefix + "in_check_period",
         "Whether the service is currently in its check period (0/1)",
         reinterpret_cast<char *>(&svc.check_period_ptr) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
-        reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        "SERVICE_PERIOD", -1));
+        reinterpret_cast<char *>(&svc.custom_variables) - ref, "SERVICE_PERIOD",
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetTimeperiodColumn>(
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",
         reinterpret_cast<char *>(&svc.notification_period_ptr) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
 
     table->addColumn(
         make_unique<ServiceContactsColumn>(prefix + "contacts",
@@ -459,23 +464,23 @@ void TableServices::addColumns(Table *table, const string &prefix,
                                            indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes", "A list of all downtime ids of the service",
-        indirect_offset, downtimes_holder, true, true, false, false, -1, -1));
+        downtimes_holder, true, true, false, false, indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        indirect_offset, downtimes_holder, true, true, true, false, -1, -1));
+        downtimes_holder, true, true, true, false, indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments", "A list of all comment ids of the service",
-        indirect_offset, comments_holder, false, true, false, false, -1, -1));
+        comments_holder, false, true, false, false, indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the service with id, author and comment",
-        indirect_offset, comments_holder, false, true, true, false, -1, -1));
+        comments_holder, false, true, true, false, indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry "
         "type and entry time",
-        indirect_offset, comments_holder, false, true, true, true, -1, -1));
+        comments_holder, false, true, true, true, indirect_offset, -1, -1));
 
     if (add_hosts) {
         TableHosts::addColumns(table, "host_",
@@ -504,9 +509,9 @@ void TableServices::addColumns(Table *table, const string &prefix,
         -1, -1));
     table->addColumn(make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
-        "A list of all contact groups this service is in",
+        "A list of all contact groups this service is in", core,
         reinterpret_cast<char *>(&svc.contact_groups) - ref, indirect_offset,
-        -1, -1, core));
+        -1, -1));
 
     table->addColumn(make_unique<MetricsColumn>(
         prefix + "metrics",

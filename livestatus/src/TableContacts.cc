@@ -91,32 +91,32 @@ void TableContacts::addColumns(Table *table, const string &prefix,
         prefix + "can_submit_commands",
         "Wether the contact is allowed to submit commands (0/1)",
         reinterpret_cast<char *>(&ctc.can_submit_commands) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "host_notifications_enabled",
         "Wether the contact will be notified about host problems in general "
         "(0/1)",
         reinterpret_cast<char *>(&ctc.host_notifications_enabled) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "service_notifications_enabled",
         "Wether the contact will be notified about service problems in general "
         "(0/1)",
         reinterpret_cast<char *>(&ctc.service_notifications_enabled) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
 
     table->addColumn(make_unique<OffsetTimeperiodColumn>(
         prefix + "in_host_notification_period",
         "Wether the contact is currently in his/her host notification period "
         "(0/1)",
         reinterpret_cast<char *>(&ctc.host_notification_period_ptr) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetTimeperiodColumn>(
         prefix + "in_service_notification_period",
         "Wether the contact is currently in his/her service notification "
         "period (0/1)",
         reinterpret_cast<char *>(&ctc.service_notification_period_ptr) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",

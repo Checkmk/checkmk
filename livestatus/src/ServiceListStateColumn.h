@@ -51,8 +51,10 @@ public:
 
     ServiceListStateColumn(const std::string &name,
                            const std::string &description, Type logictype,
-                           int offset, int indirect_offset, int extra_offset)
-        : IntColumn(name, description, indirect_offset, extra_offset, -1)
+                           int offset, int indirect_offset, int extra_offset,
+                           int extra_extra_offset)
+        : IntColumn(name, description, indirect_offset, extra_offset,
+                    extra_extra_offset)
         , _offset(offset)
         , _logictype(logictype) {}
     int32_t getValue(void *row, contact *auth_user) override;

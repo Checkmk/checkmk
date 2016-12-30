@@ -36,8 +36,8 @@ class RowRenderer;
 class ContactGroupsColumn : public ListColumn {
 public:
     ContactGroupsColumn(const std::string &name, const std::string &description,
-                        int offset, int indirect_offset, int extra_offset,
-                        int extra_extra_offset, MonitoringCore *core)
+                        MonitoringCore *core, int offset, int indirect_offset,
+                        int extra_offset, int extra_extra_offset)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset)
         , _core(core)

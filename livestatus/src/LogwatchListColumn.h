@@ -39,8 +39,8 @@ class RowRenderer;
 class LogwatchListColumn : public Column {
 public:
     LogwatchListColumn(const std::string &name, const std::string &description,
-                       int indirect_offset, int extra_offset,
-                       int extra_extra_offset, const std::string &logwatch_path)
+                       const std::string &logwatch_path, int indirect_offset,
+                       int extra_offset, int extra_extra_offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset)
         , _logwatch_path(logwatch_path) {}

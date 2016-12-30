@@ -47,7 +47,7 @@ public:
     DownCommColumn(const std::string &name, const std::string &description,
                    int indirect_offset, const DowntimesOrComments &holder,
                    bool is_downtime, bool is_service, bool with_info,
-                   bool with_extra_info, int extra_offset = -1)
+                   bool with_extra_info, int extra_offset)
         : ListColumn(name, description, indirect_offset, extra_offset)
         , _holder(holder)
         , _is_downtime(is_downtime)

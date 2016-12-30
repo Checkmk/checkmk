@@ -35,8 +35,8 @@ public:
     enum class Type { table, name, description, type };
 
     ColumnsColumn(const std::string &name, const std::string &description,
-                  Type colcol, TableColumns *tablecols,
-                  int indirect_offset = -1, int extra_offset = -1)
+                  Type colcol, TableColumns *tablecols, int indirect_offset,
+                  int extra_offset)
         : StringColumn(name, description, indirect_offset, extra_offset)
         , _colcol(colcol)
         , _table_columns(tablecols) {}

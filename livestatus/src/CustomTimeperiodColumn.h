@@ -39,8 +39,8 @@ public:
     CustomTimeperiodColumn(const std::string &name,
                            const std::string &description, int offset,
                            int indirect_offset, const char *varname,
-                           int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset)
+                           int extra_offset)
+        : IntColumn(name, description, indirect_offset, extra_offset, -1)
         , _offset(offset)
         , _varname(varname) {}
     int32_t getValue(void *row, contact *auth_user) override;

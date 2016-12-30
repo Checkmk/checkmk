@@ -35,7 +35,7 @@ public:
 
     ServiceSpecialDoubleColumn(const std::string& name,
                                const std::string& description, Type ssdc_type,
-                               int indirect, int extra_offset = -1)
+                               int indirect, int extra_offset)
         : DoubleColumn(name, description, indirect, extra_offset)
         , _type(ssdc_type) {}
     double getValue(void* data);

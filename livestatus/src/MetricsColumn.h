@@ -45,12 +45,12 @@ public:
 #ifdef CMC
     MetricsColumn(const std::string &name, const std::string &description,
                   int indirect_offset, int extra_offset, Core *core)
-        : Column(name, description, indirect_offset, extra_offset)
+        : Column(name, description, indirect_offset, extra_offset, -1)
         , _core(core) {}
 #else
     MetricsColumn(const std::string &name, const std::string &description,
                   int indirect_offset, int extra_offset)
-        : Column(name, description, indirect_offset, extra_offset) {}
+        : Column(name, description, indirect_offset, extra_offset, -1) {}
 #endif
     ColumnType type() override { return ColumnType::list; }
     void output(void *row, RowRenderer &r, contact *auth_user) override;

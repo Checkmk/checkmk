@@ -43,7 +43,7 @@ public:
 
     ListColumn(const std::string &name, const std::string &description,
                int indirect_offset, int extra_offset)
-        : Column(name, description, indirect_offset, extra_offset) {}
+        : Column(name, description, indirect_offset, extra_offset, -1) {}
     ColumnType type() override { return ColumnType::list; }
     virtual std::unique_ptr<Contains> makeContains(const std::string &name) = 0;
     virtual bool isEmpty(void *data) = 0;

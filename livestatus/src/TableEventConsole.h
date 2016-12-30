@@ -106,7 +106,7 @@ protected:
     public:
         IntEventConsoleColumn(const std::string &name,
                               const std::string &description)
-            : IntColumn(name, description, -1, -1)
+            : IntColumn(name, description, -1, -1, -1)
             , _ecc(name, 0, [](std::string x) {
                 return static_cast<int32_t>(atol(x.c_str()));
             }) {}

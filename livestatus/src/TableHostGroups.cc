@@ -72,48 +72,50 @@ void TableHostGroups::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<HostListColumn>(
         prefix + "members",
         "A list of all host names that are members of the hostgroup",
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, false));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, false,
+        -1));
     table->addColumn(make_unique<HostListColumn>(
         prefix + "members_with_state",
         "A list of all host names that are members of the hostgroup together "
         "with state and has_been_checked",
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, true));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, true,
+        -1));
 
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "worst_host_state",
         "The worst state of all of the groups' hosts (UP <= UNREACHABLE <= "
         "DOWN)",
         HostListStateColumn::Type::worst_hst_state,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts", "The total number of hosts in the group",
         HostListStateColumn::Type::num_hst,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_pending",
         "The number of hosts in the group that are pending",
         HostListStateColumn::Type::num_hst_pending,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_up", "The number of hosts in the group that are up",
         HostListStateColumn::Type::num_hst_up,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_down",
         "The number of hosts in the group that are down",
         HostListStateColumn::Type::num_hst_down,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_unreach",
         "The number of hosts in the group that are unreachable",
         HostListStateColumn::Type::num_hst_unreach,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
 
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services",
         "The total number of services of hosts in this group",
         HostListStateColumn::Type::num_svc,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
 
     // soft states
     table->addColumn(make_unique<HostListStateColumn>(
@@ -121,36 +123,36 @@ void TableHostGroups::addColumns(Table *table, const string &prefix,
         "The worst state of all services that belong to a host of this group "
         "(OK <= WARN <= UNKNOWN <= CRIT)",
         HostListStateColumn::Type::worst_svc_state,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_pending",
         "The total number of services with the state Pending of hosts in this "
         "group",
         HostListStateColumn::Type::num_svc_pending,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_ok",
         "The total number of services with the state OK of hosts in this group",
         HostListStateColumn::Type::num_svc_ok,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_warn",
         "The total number of services with the state WARN of hosts in this "
         "group",
         HostListStateColumn::Type::num_svc_warn,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_crit",
         "The total number of services with the state CRIT of hosts in this "
         "group",
         HostListStateColumn::Type::num_svc_crit,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_unknown",
         "The total number of services with the state UNKNOWN of hosts in this "
         "group",
         HostListStateColumn::Type::num_svc_unknown,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
 
     // hard state
     table->addColumn(make_unique<HostListStateColumn>(
@@ -158,30 +160,30 @@ void TableHostGroups::addColumns(Table *table, const string &prefix,
         "The worst state of all services that belong to a host of this group "
         "(OK <= WARN <= UNKNOWN <= CRIT)",
         HostListStateColumn::Type::worst_svc_hard_state,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_ok",
         "The total number of services with the state OK of hosts in this group",
         HostListStateColumn::Type::num_svc_hard_ok,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_warn",
         "The total number of services with the state WARN of hosts in this "
         "group",
         HostListStateColumn::Type::num_svc_hard_warn,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_crit",
         "The total number of services with the state CRIT of hosts in this "
         "group",
         HostListStateColumn::Type::num_svc_hard_crit,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_unknown",
         "The total number of services with the state "
         "UNKNOWN of hosts in this group",
         HostListStateColumn::Type::num_svc_hard_unknown,
-        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&hgr.members) - ref, indirect_offset, -1));
 }
 
 void TableHostGroups::answerQuery(Query *query) {

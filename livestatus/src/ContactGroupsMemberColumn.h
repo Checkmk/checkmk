@@ -35,7 +35,7 @@ class ContactGroupsMemberColumn : public ContactsColumn {
 public:
     ContactGroupsMemberColumn(const std::string& name,
                               const std::string& description,
-                              int indirect_offset, int extra_offset = -1)
+                              int indirect_offset, int extra_offset)
         : ContactsColumn(name, description, indirect_offset, extra_offset) {}
     std::unique_ptr<Contains> makeContains(const std::string& name) override;
     std::unique_ptr<Contains> containsContact(contact* ctc) override;

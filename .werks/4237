@@ -1,0 +1,11 @@
+Title: Fixed rendering of old timestamps
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i4
+Date: 1483094408
+Class: fix
+
+Some old timestamps have been rendered as absolute times, although they
+should have been relative.  This has been fixed.
+

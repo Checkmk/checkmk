@@ -40,8 +40,9 @@ class LogwatchListColumn : public Column {
 public:
     LogwatchListColumn(const std::string &name, const std::string &description,
                        int indirect_offset, int extra_offset,
-                       const std::string &logwatch_path)
-        : Column(name, description, indirect_offset, extra_offset, -1)
+                       int extra_extra_offset, const std::string &logwatch_path)
+        : Column(name, description, indirect_offset, extra_offset,
+                 extra_extra_offset)
         , _logwatch_path(logwatch_path) {}
     ColumnType type() override { return ColumnType::list; }
     void output(void *row, RowRenderer &r, contact *auth_user) override;

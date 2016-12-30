@@ -32,7 +32,7 @@ class StringPointerColumn : public StringColumn {
 public:
     StringPointerColumn(const std::string &name, const std::string &description,
                         const char *string)
-        : StringColumn(name, description, -1, -1), _string(string) {}
+        : StringColumn(name, description, -1, -1, -1), _string(string) {}
 
     std::string getValue(void *) const override { return _string; }
 

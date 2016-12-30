@@ -35,8 +35,10 @@ public:
 
     HostSpecialDoubleColumn(const std::string& name,
                             const std::string& description, Type hsdc_type,
-                            int indirect, int extra_offset)
-        : DoubleColumn(name, description, indirect, extra_offset)
+                            int indirect, int extra_offset,
+                            int extra_extra_offset)
+        : DoubleColumn(name, description, indirect, extra_offset,
+                       extra_extra_offset)
         , _type(hsdc_type) {}
     double getValue(void* data);
 

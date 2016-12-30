@@ -38,8 +38,10 @@ class ServiceListColumn : public Column {
 public:
     ServiceListColumn(const std::string &name, const std::string &description,
                       bool hostname_required, int offset, int indirect_offset,
-                      bool show_host, int info_depth, int extra_offset)
-        : Column(name, description, indirect_offset, extra_offset, -1)
+                      bool show_host, int info_depth, int extra_offset,
+                      int extra_extra_offset)
+        : Column(name, description, indirect_offset, extra_offset,
+                 extra_extra_offset)
         , _hostname_required(hostname_required)
         , _offset(offset)
         , _show_host(show_host)

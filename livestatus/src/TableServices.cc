@@ -82,22 +82,23 @@ void TableServices::addColumns(Table *table, const string &prefix,
     const char *ref = reinterpret_cast<const char *>(&svc);
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "description", "Description of the service (also used as key)",
-        reinterpret_cast<char *>(&svc.description) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.description) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "display_name",
         "An optional display name (not used by Nagios standard web pages)",
-        reinterpret_cast<char *>(&svc.display_name) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.display_name) - ref, indirect_offset, -1,
         -1));
 #ifndef NAGIOS4
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_command", "Nagios command used for active checks",
         reinterpret_cast<char *>(&svc.service_check_command) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
         reinterpret_cast<char *>(&svc.service_check_command) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
 #else
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_command", "Nagios command used for active checks",
@@ -109,74 +110,81 @@ void TableServices::addColumns(Table *table, const string &prefix,
 #endif
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "event_handler", "Nagios command used as event handler",
-        reinterpret_cast<char *>(&svc.event_handler) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.event_handler) - ref, indirect_offset, -1,
         -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "plugin_output", "Output of the last check plugin",
-        reinterpret_cast<char *>(&svc.plugin_output) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.plugin_output) - ref, indirect_offset, -1,
         -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "long_plugin_output",
         "Unabbreviated output of the last check plugin",
         reinterpret_cast<char *>(&svc.long_plugin_output) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetPerfdataColumn>(
         prefix + "perf_data", "Performance data of the last check plugin",
-        reinterpret_cast<char *>(&svc.perf_data) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.perf_data) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notification_period",
         "The name of the notification period of the service. It this is empty, "
         "service problems are always notified.",
         reinterpret_cast<char *>(&svc.notification_period) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_period",
         "The name of the check period of the service. It this is empty, the "
         "service is always checked.",
-        reinterpret_cast<char *>(&svc.check_period) - ref, indirect_offset,
+        reinterpret_cast<char *>(&svc.check_period) - ref, indirect_offset, -1,
         -1));
     table->addColumn(make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period",
         "The name of the service period of the service",
         reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        "SERVICE_PERIOD", -1));
+        "SERVICE_PERIOD", -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional notes about the service",
-        reinterpret_cast<char *>(&svc.notes) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.notes) - ref, indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_expanded",
         "The notes with (the most important) macros expanded",
-        reinterpret_cast<char *>(&svc.notes) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.notes) - ref, indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL for additional notes about the service",
-        reinterpret_cast<char *>(&svc.notes_url) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.notes_url) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "notes_url_expanded",
         "The notes_url with (the most important) macros expanded",
-        reinterpret_cast<char *>(&svc.notes_url) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.notes_url) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL for actions or custom information about the service",
-        reinterpret_cast<char *>(&svc.action_url) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.action_url) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "action_url_expanded",
         "The action_url with (the most important) macros expanded",
-        reinterpret_cast<char *>(&svc.action_url) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.action_url) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "icon_image",
         "The name of an image to be used as icon in the web interface",
-        reinterpret_cast<char *>(&svc.icon_image) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.icon_image) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "icon_image_expanded",
         "The icon_image with (the most important) macros expanded",
-        reinterpret_cast<char *>(&svc.icon_image) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.icon_image) - ref, indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "icon_image_alt",
         "An alternative text for the icon_image for browsers not displaying "
         "icons",
         reinterpret_cast<char *>(&svc.icon_image_alt) - ref, indirect_offset,
-        -1));
+        -1, -1));
 
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "initial_state", "The initial state of the service",
@@ -380,7 +388,7 @@ void TableServices::addColumns(Table *table, const string &prefix,
         ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset, -1));
     table->addColumn(make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
-        ServiceSpecialDoubleColumn::Type::staleness, indirect_offset, -1));
+        ServiceSpecialDoubleColumn::Type::staleness, indirect_offset, -1, -1));
 
     // columns of type double
     table->addColumn(make_unique<OffsetDoubleColumn>(
@@ -388,44 +396,44 @@ void TableServices::addColumns(Table *table, const string &prefix,
         "Number of basic interval lengths between two scheduled checks of the "
         "service",
         reinterpret_cast<char *>(&svc.check_interval) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "retry_interval",
         "Number of basic interval lengths between checks when retrying after a "
         "soft error",
         reinterpret_cast<char *>(&svc.retry_interval) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "notification_interval",
         "Interval of periodic notification or 0 if its off",
         reinterpret_cast<char *>(&svc.notification_interval) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "first_notification_delay",
         "Delay before the first notification",
         reinterpret_cast<char *>(&svc.first_notification_delay) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "low_flap_threshold", "Low threshold of flap detection",
         reinterpret_cast<char *>(&svc.low_flap_threshold) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "high_flap_threshold", "High threshold of flap detection",
         reinterpret_cast<char *>(&svc.high_flap_threshold) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "latency",
         "Time difference between scheduled check time and actual check time",
-        reinterpret_cast<char *>(&svc.latency) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&svc.latency) - ref, indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "execution_time",
         "Time the service check needed for execution",
         reinterpret_cast<char *>(&svc.execution_time) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "percent_state_change", "Percent state change",
         reinterpret_cast<char *>(&svc.percent_state_change) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
 
     table->addColumn(make_unique<OffsetTimeperiodColumn>(
         prefix + "in_check_period",
@@ -448,26 +456,26 @@ void TableServices::addColumns(Table *table, const string &prefix,
                                            "A list of all contacts of the "
                                            "service, either direct or via "
                                            "a contact group",
-                                           indirect_offset, -1));
+                                           indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes", "A list of all downtime ids of the service",
-        indirect_offset, downtimes_holder, true, true, false, false, -1));
+        indirect_offset, downtimes_holder, true, true, false, false, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        indirect_offset, downtimes_holder, true, true, true, false, -1));
+        indirect_offset, downtimes_holder, true, true, true, false, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments", "A list of all comment ids of the service",
-        indirect_offset, comments_holder, false, true, false, false, -1));
+        indirect_offset, comments_holder, false, true, false, false, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the service with id, author and comment",
-        indirect_offset, comments_holder, false, true, true, false, -1));
+        indirect_offset, comments_holder, false, true, true, false, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry "
         "type and entry time",
-        indirect_offset, comments_holder, false, true, true, true, -1));
+        indirect_offset, comments_holder, false, true, true, true, -1, -1));
 
     if (add_hosts) {
         TableHosts::addColumns(table, "host_",
@@ -479,31 +487,31 @@ void TableServices::addColumns(Table *table, const string &prefix,
         prefix + "custom_variable_names",
         "A list of the names of all custom variables of the service",
         reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variable of the service",
         reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        -1));
+        -1, -1));
 
     table->addColumn(make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",
         reinterpret_cast<char *>(&svc.servicegroups_ptr) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this service is in",
         reinterpret_cast<char *>(&svc.contact_groups) - ref, indirect_offset,
-        -1, core));
+        -1, -1, core));
 
     table->addColumn(make_unique<MetricsColumn>(
         prefix + "metrics",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<FixedIntColumn>(
         prefix + "cached_at",
         "A dummy column in order to be compatible with Check_MK Multisite", 0));

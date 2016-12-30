@@ -37,8 +37,9 @@ class ContactGroupsColumn : public ListColumn {
 public:
     ContactGroupsColumn(const std::string &name, const std::string &description,
                         int offset, int indirect_offset, int extra_offset,
-                        MonitoringCore *core)
-        : ListColumn(name, description, indirect_offset, extra_offset)
+                        int extra_extra_offset, MonitoringCore *core)
+        : ListColumn(name, description, indirect_offset, extra_offset,
+                     extra_extra_offset)
         , _core(core)
         , _offset(offset) {}
     void output(void *row, RowRenderer &r, contact *auth_user) override;

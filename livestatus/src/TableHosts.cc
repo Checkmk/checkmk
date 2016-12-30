@@ -84,20 +84,20 @@ void TableHosts::addColumns(Table *table, const string &prefix,
     char *ref = reinterpret_cast<char *>(&hst);
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "Host name", reinterpret_cast<char *>(&hst.name) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "display_name",
         "Optional display name of the host - not used by Nagios' web interface",
         reinterpret_cast<char *>(&hst.display_name) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "alias", "An alias name for the host",
         reinterpret_cast<char *>(&hst.alias) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "address", "IP address",
         reinterpret_cast<char *>(&hst.address) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
 #ifdef NAGIOS4
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_command",
@@ -113,95 +113,95 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         prefix + "check_command",
         "Nagios command for active host check of this host",
         reinterpret_cast<char *>(&hst.host_check_command) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check "
         "of this host with the macros expanded",
         reinterpret_cast<char *>(&hst.host_check_command) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
 #endif
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "event_handler", "Nagios command used as event handler",
         reinterpret_cast<char *>(&hst.event_handler) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notification_period",
         "Time period in which problems of this host will be notified. If empty "
         "then notification will be always",
         reinterpret_cast<char *>(&hst.notification_period) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_period",
         "Time period in which this host will be checked. If empty then the "
         "host will always be checked.",
         reinterpret_cast<char *>(&hst.check_period) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<CustomVarsExplicitColumn>(
         prefix + "service_period", "The name of the service period of the host",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        "SERVICE_PERIOD", extra_offset));
+        "SERVICE_PERIOD", extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional notes for this host",
         reinterpret_cast<char *>(&hst.notes) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_expanded",
         "The same as notes, but with the most important macros expanded",
         reinterpret_cast<char *>(&hst.notes) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL with further information about the host",
         reinterpret_cast<char *>(&hst.notes_url) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "notes_url_expanded",
         "Same es notes_url, but with the most important macros expanded",
         reinterpret_cast<char *>(&hst.notes_url) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL to custom actions or information about this host",
         reinterpret_cast<char *>(&hst.action_url) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "action_url_expanded",
         "The same as action_url, but with the most important macros expanded",
         reinterpret_cast<char *>(&hst.action_url) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "plugin_output", "Output of the last host check",
         reinterpret_cast<char *>(&hst.plugin_output) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetPerfdataColumn>(
         prefix + "perf_data",
         "Optional performance data of the last host check",
         reinterpret_cast<char *>(&hst.perf_data) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "icon_image",
         "The name of an image file to be used in the web pages",
         reinterpret_cast<char *>(&hst.icon_image) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "icon_image_expanded",
         "The same as icon_image, but with the most important macros expanded",
         reinterpret_cast<char *>(&hst.icon_image) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "icon_image_alt", "Alternative text for the icon_image",
         reinterpret_cast<char *>(&hst.icon_image_alt) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "statusmap_image",
         "The name of in image file for the status map",
         reinterpret_cast<char *>(&hst.statusmap_image) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "long_plugin_output", "Complete output from check plugin",
         reinterpret_cast<char *>(&hst.long_plugin_output) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "initial_state", "Initial host state",
@@ -433,56 +433,56 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         "Number of basic interval lengths between two scheduled checks of the "
         "host",
         reinterpret_cast<char *>(&hst.check_interval) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "retry_interval",
         "Number of basic interval lengths between checks when retrying after a "
         "soft error",
         reinterpret_cast<char *>(&hst.retry_interval) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "notification_interval",
         "Interval of periodic notification or 0 if its off",
         reinterpret_cast<char *>(&hst.notification_interval) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "first_notification_delay",
         "Delay before the first notification",
         reinterpret_cast<char *>(&hst.first_notification_delay) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "low_flap_threshold", "Low threshold of flap detection",
         reinterpret_cast<char *>(&hst.low_flap_threshold) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "high_flap_threshold", "High threshold of flap detection",
         reinterpret_cast<char *>(&hst.high_flap_threshold) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "x_3d", "3D-Coordinates: X",
         reinterpret_cast<char *>(&hst.x_3d) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "y_3d", "3D-Coordinates: Y",
         reinterpret_cast<char *>(&hst.y_3d) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "z_3d", "3D-Coordinates: Z",
         reinterpret_cast<char *>(&hst.z_3d) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "latency",
         "Time difference between scheduled check time and actual check time",
         reinterpret_cast<char *>(&hst.latency) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "execution_time", "Time the host check needed for execution",
         reinterpret_cast<char *>(&hst.execution_time) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetDoubleColumn>(
         prefix + "percent_state_change", "Percent state change",
         reinterpret_cast<char *>(&hst.percent_state_change) - ref,
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<OffsetTimeperiodColumn>(
         prefix + "in_notification_period",
@@ -505,48 +505,48 @@ void TableHosts::addColumns(Table *table, const string &prefix,
                                         "A list of all contacts of this "
                                         "host, either direct or via a "
                                         "contact group",
-                                        indirect_offset, extra_offset));
+                                        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host",
         indirect_offset, downtimes_holder, true, false, false, false,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes_with_info",
         "A list of the all scheduled downtimes of the host "
         "with id, author and comment",
         indirect_offset, downtimes_holder, true, false, true, false,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments", "A list of the ids of all comments of this host",
         indirect_offset, comments_holder, false, false, false, false,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
         indirect_offset, comments_holder, false, false, true, false,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, "
         "author, comment, entry type and entry time",
         indirect_offset, comments_holder, false, false, true, true,
-        extra_offset));
+        extra_offset, -1));
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
         "A list of the names of all custom variables",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of the custom variables",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
 
     // Add direct access to the custom macro _FILENAME. In a future version of
     // Livestatus this will probably be configurable so access to further custom
@@ -555,16 +555,16 @@ void TableHosts::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<CustomVarsExplicitColumn>(
         prefix + "filename", "The value of the custom variable FILENAME",
         reinterpret_cast<char *>(&hst.custom_variables) - ref, indirect_offset,
-        "FILENAME", extra_offset));
+        "FILENAME", extra_offset, -1));
 
     table->addColumn(make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
         reinterpret_cast<char *>(&hst.parent_hosts) - ref, indirect_offset,
-        false, extra_offset));
+        false, extra_offset, -1));
     table->addColumn(make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct childs of the host",
         reinterpret_cast<char *>(&hst.child_hosts) - ref, indirect_offset,
-        false, extra_offset));
+        false, extra_offset, -1));
 
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services of the host",
@@ -671,7 +671,7 @@ void TableHosts::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch",
-        indirect_offset, extra_offset, g_mk_logwatch_path));
+        indirect_offset, extra_offset, -1, g_mk_logwatch_path));
 
     table->addDynamicColumn(make_unique<DynamicLogwatchFileColumn>(
         prefix + "mk_logwatch_file",
@@ -680,46 +680,46 @@ void TableHosts::addColumns(Table *table, const string &prefix,
 
     table->addColumn(make_unique<HostSpecialDoubleColumn>(
         prefix + "staleness", "Staleness indicator for this host",
-        HostSpecialDoubleColumn::Type::staleness, indirect_offset,
-        extra_offset));
+        HostSpecialDoubleColumn::Type::staleness, indirect_offset, extra_offset,
+        -1));
 
     table->addColumn(make_unique<HostGroupsColumn>(
         prefix + "groups", "A list of all host groups this host is in",
         reinterpret_cast<char *>(&hst.hostgroups_ptr) - ref, indirect_offset,
-        extra_offset));
+        extra_offset, -1));
     table->addColumn(make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in",
         reinterpret_cast<char *>(&hst.contact_groups) - ref, indirect_offset,
-        extra_offset, core));
+        extra_offset, -1, core));
 
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services", "A list of all services of the host", false,
         reinterpret_cast<char *>(&hst.services) - ref, indirect_offset, false,
-        0, extra_offset));
+        0, extra_offset, -1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and "
         "has_been_checked",
         false, reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
-        false, 1, extra_offset));
+        false, 1, extra_offset, -1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each "
         "service",
         false, reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
-        false, 2, extra_offset));
+        false, 2, extra_offset, -1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of "
         "entries can grow in future versions.",
         false, reinterpret_cast<char *>(&hst.services) - ref, indirect_offset,
-        false, 3, extra_offset));
+        false, 3, extra_offset, -1));
 
     table->addColumn(make_unique<MetricsColumn>(
         prefix + "metrics",
         "A dummy column in order to be compatible with Check_MK Multisite",
-        indirect_offset, extra_offset));
+        indirect_offset, extra_offset, -1));
 }
 
 void TableHosts::answerQuery(Query *query) {

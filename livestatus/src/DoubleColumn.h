@@ -43,8 +43,9 @@ class RowRenderer;
 class DoubleColumn : public Column {
 public:
     DoubleColumn(const std::string &name, const std::string &description,
-                 int indirect_offset, int extra_offset)
-        : Column(name, description, indirect_offset, extra_offset, -1) {}
+                 int indirect_offset, int extra_offset, int extra_extra_offset)
+        : Column(name, description, indirect_offset, extra_offset,
+                 extra_extra_offset) {}
     virtual double getValue(void *data) = 0;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::double_; }

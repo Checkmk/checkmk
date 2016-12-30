@@ -35,14 +35,12 @@ class Filter;
 class RowRenderer;
 
 class HostListColumn : public Column {
-    int _offset;
-    bool _show_state;
-
 public:
     HostListColumn(const std::string &name, const std::string &description,
                    int offset, int indirect_offset, bool show_state,
-                   int extra_offset)
-        : Column(name, description, indirect_offset, extra_offset, -1)
+                   int extra_offset, int extra_extra_offset)
+        : Column(name, description, indirect_offset, extra_offset,
+                 extra_extra_offset)
         , _offset(offset)
         , _show_state(show_state) {}
     ColumnType type() override { return ColumnType::list; }
@@ -50,6 +48,10 @@ public:
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
     hostsmember *getMembers(void *data);
+
+private:
+    const int _offset;
+    const bool _show_state;
 };
 
 #endif  // HostListColumn_h

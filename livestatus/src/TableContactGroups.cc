@@ -42,12 +42,12 @@ TableContactGroups::TableContactGroups(MonitoringCore *core)
     char *ref = reinterpret_cast<char *>(&cg);
     addColumn(make_unique<OffsetStringColumn>(
         "name", "The name of the contactgroup",
-        reinterpret_cast<char *>(&cg.group_name) - ref, -1, -1));
+        reinterpret_cast<char *>(&cg.group_name) - ref, -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "alias", "The alias of the contactgroup",
-        reinterpret_cast<char *>(&cg.alias) - ref, -1, -1));
+        reinterpret_cast<char *>(&cg.alias) - ref, -1, -1, -1));
     addColumn(make_unique<ContactGroupsMemberColumn>(
-        "members", "A list of all members of this contactgroup", -1, -1));
+        "members", "A list of all members of this contactgroup", -1, -1, -1));
 }
 
 string TableContactGroups::name() const { return "contactgroups"; }

@@ -38,9 +38,10 @@ class OffsetStringMacroColumn : public OffsetStringColumn {
 public:
     OffsetStringMacroColumn(const std::string &name,
                             const std::string &description, int offset,
-                            int indirect_offset, int extra_offset)
+                            int indirect_offset, int extra_offset,
+                            int extra_extra_offset)
         : OffsetStringColumn(name, description, offset, indirect_offset,
-                             extra_offset) {}
+                             extra_offset, extra_extra_offset) {}
     // reimplement several functions from StringColumn
 
     std::string valueAsString(void *row, contact *auth_user) override;

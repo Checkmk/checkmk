@@ -57,34 +57,34 @@ void TableContacts::addColumns(Table *table, const string &prefix,
     char *ref = reinterpret_cast<char *>(&ctc);
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "The login name of the contact person",
-        reinterpret_cast<char *>(&ctc.name) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&ctc.name) - ref, indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "alias", "The full name of the contact",
-        reinterpret_cast<char *>(&ctc.alias) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&ctc.alias) - ref, indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "email", "The email address of the contact",
-        reinterpret_cast<char *>(&ctc.email) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&ctc.email) - ref, indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "pager", "The pager address of the contact",
-        reinterpret_cast<char *>(&ctc.pager) - ref, indirect_offset, -1));
+        reinterpret_cast<char *>(&ctc.pager) - ref, indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "host_notification_period",
         "The time period in which the contact will be notified about host "
         "problems",
         reinterpret_cast<char *>(&ctc.host_notification_period) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "service_notification_period",
         "The time period in which the contact will be notified about service "
         "problems",
         reinterpret_cast<char *>(&ctc.service_notification_period) - ref,
-        indirect_offset, -1));
+        indirect_offset, -1, -1));
     for (int i = 1; i <= MAX_CONTACT_ADDRESSES; ++i) {
         string b = "address" + to_string(i);
         table->addColumn(make_unique<OffsetStringColumn>(
             prefix + b, "The additional field " + b,
             reinterpret_cast<char *>(&ctc.address[i]) - ref, indirect_offset,
-            -1));
+            -1, -1));
     }
 
     table->addColumn(make_unique<OffsetIntColumn>(
@@ -122,16 +122,16 @@ void TableContacts::addColumns(Table *table, const string &prefix,
         prefix + "custom_variable_names",
         "A list of all custom variables of the contact",
         reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact",
         reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
         reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        -1));
+        -1, -1));
     table->addColumn(make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",

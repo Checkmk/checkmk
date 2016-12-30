@@ -37,8 +37,10 @@ class ServiceGroupsColumn : public ListColumn {
 
 public:
     ServiceGroupsColumn(const std::string &name, const std::string &description,
-                        int offset, int indirect_offset, int extra_offset)
-        : ListColumn(name, description, indirect_offset, extra_offset)
+                        int offset, int indirect_offset, int extra_offset,
+                        int extra_extra_offset)
+        : ListColumn(name, description, indirect_offset, extra_offset,
+                     extra_extra_offset)
         , _offset(offset) {}
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;

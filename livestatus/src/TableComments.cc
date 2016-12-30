@@ -51,12 +51,12 @@ TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
         "author", "The contact that entered the comment",
         reinterpret_cast<char *>(&(ref->_author_name)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetSStringColumn>(
         "comment", "A comment text",
         reinterpret_cast<char *>(&(ref->_comment)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "id", "The id of the comment",
         reinterpret_cast<char *>(&(ref->_id)) - reinterpret_cast<char *>(ref),

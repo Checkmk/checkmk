@@ -36,14 +36,15 @@ public:
 
     ColumnsColumn(const std::string &name, const std::string &description,
                   Type colcol, TableColumns *tablecols, int indirect_offset,
-                  int extra_offset)
-        : StringColumn(name, description, indirect_offset, extra_offset)
+                  int extra_offset, int extra_extra_offset)
+        : StringColumn(name, description, indirect_offset, extra_offset,
+                       extra_extra_offset)
         , _colcol(colcol)
         , _table_columns(tablecols) {}
     std::string getValue(void *data) const override;
 
 private:
-    Type _colcol;
+    const Type _colcol;
     TableColumns *_table_columns;
 };
 

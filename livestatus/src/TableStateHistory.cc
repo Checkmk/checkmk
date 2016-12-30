@@ -136,7 +136,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         "duration_part", "Duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "state",
         "The state of the host or service in question - OK(0) / WARNING(1) / "
@@ -175,7 +175,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         "The notification period of the host or service in question",
         reinterpret_cast<char *>(&(ref->_notification_period)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "in_service_period",
         "Shows if the host or service is within its service period",
@@ -187,26 +187,26 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         "The service period of the host or service in question",
         reinterpret_cast<char *>(&(ref->_service_period)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "debug_info", "Debug information",
         reinterpret_cast<char *>(&(ref->_debug_info)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "host_name", "Host name", reinterpret_cast<char *>(&(ref->_host_name)) -
                                       reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "service_description", "Description of the service",
         reinterpret_cast<char *>(&(ref->_service_description)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "log_output", "Logfile output relevant for this state",
         reinterpret_cast<char *>(&(ref->_log_output)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "duration_ok", "OK duration of state ( until - from )",
         reinterpret_cast<char *>(&(ref->_duration_state_OK)) -
@@ -216,7 +216,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         "duration_part_ok", "OK duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part_OK) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
 
     addColumn(make_unique<OffsetIntColumn>(
         "duration_warning", "WARNING duration of state (until - from)",
@@ -228,7 +228,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         "WARNING duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part_WARNING) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
 
     addColumn(make_unique<OffsetIntColumn>(
         "duration_critical", "CRITICAL duration of state (until - from)",
@@ -240,7 +240,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         "CRITICAL duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part_CRITICAL) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
 
     addColumn(make_unique<OffsetIntColumn>(
         "duration_unknown", "UNKNOWN duration of state (until - from)",
@@ -252,7 +252,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         "UNKNOWN duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part_UNKNOWN) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
 
     addColumn(make_unique<OffsetIntColumn>(
         "duration_unmonitored", "UNMONITORED duration of state (until - from)",
@@ -264,7 +264,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         "UNMONITORED duration part in regard to the query timeframe",
         reinterpret_cast<char *>(&ref->_duration_part_UNMONITORED) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
 
     // join host and service tables
     TableHosts::addColumns(

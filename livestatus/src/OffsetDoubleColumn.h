@@ -32,8 +32,10 @@
 class OffsetDoubleColumn : public DoubleColumn {
 public:
     OffsetDoubleColumn(const std::string& name, const std::string& description,
-                       int offset, int indirect_offset, int extra_offset)
-        : DoubleColumn(name, description, indirect_offset, extra_offset)
+                       int offset, int indirect_offset, int extra_offset,
+                       int extra_extra_offset)
+        : DoubleColumn(name, description, indirect_offset, extra_offset,
+                       extra_extra_offset)
         , _offset(offset) {}
     double getValue(void* data);
 

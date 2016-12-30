@@ -36,16 +36,16 @@ using std::string;
 TableColumns::TableColumns(Logger *logger) : Table(logger) {
     addColumn(make_unique<ColumnsColumn>("table", "The name of the table",
                                          ColumnsColumn::Type::table, this, -1,
-                                         -1));
+                                         -1, -1));
     addColumn(make_unique<ColumnsColumn>(
         "name", "The name of the column within the table",
-        ColumnsColumn::Type::name, this, -1, -1));
+        ColumnsColumn::Type::name, this, -1, -1, -1));
     addColumn(make_unique<ColumnsColumn>(
         "description", "A description of the column",
-        ColumnsColumn::Type::description, this, -1, -1));
+        ColumnsColumn::Type::description, this, -1, -1, -1));
     addColumn(make_unique<ColumnsColumn>(
         "type", "The data type of the column (int, float, string, list)",
-        ColumnsColumn::Type::type, this, -1, -1));
+        ColumnsColumn::Type::type, this, -1, -1, -1));
 }
 
 string TableColumns::name() const { return "columns"; }

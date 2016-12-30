@@ -35,8 +35,10 @@ class RowRenderer;
 class ContactsColumn : public ListColumn {
 public:
     ContactsColumn(const std::string &name, const std::string &description,
-                   int indirect_offset, int extra_offset)
-        : ListColumn(name, description, indirect_offset, extra_offset) {}
+                   int indirect_offset, int extra_offset,
+                   int extra_extra_offset)
+        : ListColumn(name, description, indirect_offset, extra_offset,
+                     extra_extra_offset) {}
     virtual std::unique_ptr<Contains> containsContact(contact *ctc) = 0;
     bool isEmpty(void *data) override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;

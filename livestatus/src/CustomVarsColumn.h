@@ -33,7 +33,8 @@
 class CustomVarsColumn : public Column {
 public:
     CustomVarsColumn(std::string name, std::string description, int offset,
-                     int indirect_offset, int extra_offset);
+                     int indirect_offset, int extra_offset,
+                     int extra_extra_offset);
     virtual ~CustomVarsColumn();
     virtual bool contains(void *row, const std::string &value) = 0;
     std::string getVariable(void *row, const std::string &varname);

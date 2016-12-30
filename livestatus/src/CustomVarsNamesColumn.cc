@@ -35,9 +35,10 @@ using std::unique_ptr;
 
 CustomVarsNamesColumn::CustomVarsNamesColumn(string name, string description,
                                              int offset, int indirect_offset,
-                                             int extra_offset)
-    : CustomVarsColumn(name, description, offset, indirect_offset,
-                       extra_offset) {}
+                                             int extra_offset,
+                                             int extra_extra_offset)
+    : CustomVarsColumn(name, description, offset, indirect_offset, extra_offset,
+                       extra_extra_offset) {}
 
 ColumnType CustomVarsNamesColumn::type() { return ColumnType::list; }
 

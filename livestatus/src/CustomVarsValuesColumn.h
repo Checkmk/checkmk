@@ -43,7 +43,8 @@ class RowRenderer;
 class CustomVarsValuesColumn : public CustomVarsColumn {
 public:
     CustomVarsValuesColumn(std::string name, std::string description,
-                           int offset, int indirect_offset, int extra_offset);
+                           int offset, int indirect_offset, int extra_offset,
+                           int extra_extra_offset);
     ColumnType type() override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,

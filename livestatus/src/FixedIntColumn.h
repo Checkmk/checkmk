@@ -31,9 +31,9 @@
 class FixedIntColumn : public IntColumn {
 public:
     FixedIntColumn(const std::string& name, const std::string& description,
-                   int value, int indirect_offset, int extra_offset)
-        : IntColumn(name, description, indirect_offset, extra_offset, -1)
-        , _value(value) {}
+                   int value)
+        : IntColumn(name, description, -1, -1, -1), _value(value) {}
+
     int32_t getValue(void* /* row */, contact* /* auth_user */) override {
         return _value;
     }

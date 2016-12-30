@@ -506,12 +506,10 @@ void TableServices::addColumns(Table *table, const string &prefix,
         indirect_offset, -1));
     table->addColumn(make_unique<FixedIntColumn>(
         prefix + "cached_at",
-        "A dummy column in order to be compatible with Check_MK Multisite", 0,
-        -1, -1));
+        "A dummy column in order to be compatible with Check_MK Multisite", 0));
     table->addColumn(make_unique<FixedIntColumn>(
         prefix + "cache_interval",
-        "A dummy column in order to be compatible with Check_MK Multisite", 0,
-        -1, -1));
+        "A dummy column in order to be compatible with Check_MK Multisite", 0));
 }
 
 void TableServices::answerQuery(Query *query) {

@@ -45,8 +45,10 @@ using std::vector;
 
 HostFileColumn::HostFileColumn(string name, string description,
                                std::string base_dir, std::string suffix,
-                               int indirect_offset, int extra_offset)
-    : BlobColumn(name, description, indirect_offset, extra_offset)
+                               int indirect_offset, int extra_offset,
+                               int extra_extra_offset)
+    : BlobColumn(name, description, indirect_offset, extra_offset,
+                 extra_extra_offset)
     , _base_dir(move(base_dir))
     , _suffix(move(suffix)) {}
 

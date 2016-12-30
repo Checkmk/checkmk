@@ -58,9 +58,11 @@ private:
 
 class ReplicationColumn : public BlobColumn {
 public:
-    ReplicationColumn(string name, string description, int indirect_offset,
-                      int extra_offset, string blob)
-        : BlobColumn(name, description, indirect_offset, extra_offset)
+    ReplicationColumn(string name, string description, string blob,
+                      int indirect_offset, int extra_offset,
+                      int extra_extra_offset)
+        : BlobColumn(name, description, indirect_offset, extra_offset,
+                     extra_extra_offset)
         , _blob(move(blob)) {}
 
     unique_ptr<vector<char>> getBlob(void * /* unused */) override {
@@ -74,9 +76,10 @@ private:
 
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
     const std::string &name, const std::string &description,
-    int indirect_offset, int extra_offset, MonitoringCore *core)
+    int indirect_offset, int extra_offset, int extra_extra_offset,
+    MonitoringCore *core)
     : DynamicColumn(name, description, indirect_offset, extra_offset,
-                    core->loggerLivestatus())
+                    extra_extra_offset, core->loggerLivestatus())
     , _core(core) {}
 
 unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
@@ -91,6 +94,6 @@ unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
             // Nothing to do here, returning an empty result is OK.
         }
     }
-    return make_unique<ReplicationColumn>(name, "replication value", -1, -1,
-                                          result);
+    return make_unique<ReplicationColumn>(name, "replication value", result, -1,
+                                          -1, -1);
 }

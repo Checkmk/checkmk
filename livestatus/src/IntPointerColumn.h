@@ -31,14 +31,15 @@
 class IntPointerColumn : public IntColumn {
 public:
     IntPointerColumn(const std::string& name, const std::string& description,
-                     int* number)
+                     const int* number)
         : IntColumn(name, description, -1, -1, -1), _number(number) {}
+
     int32_t getValue(void* /* row */, contact* /* auth_user */) override {
         return *_number;
     }
 
 private:
-    int* _number;
+    const int* const _number;
 };
 
 #endif  // IntPointerColumn_h

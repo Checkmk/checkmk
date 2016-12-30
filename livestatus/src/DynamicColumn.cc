@@ -30,11 +30,12 @@ using std::string;
 
 DynamicColumn::DynamicColumn(string name, string description,
                              int indirect_offset, int extra_offset,
-                             Logger *logger)
+                             int extra_extra_offset, Logger *logger)
     : _name(move(name))
     , _description(move(description))
     , _indirect_offset(indirect_offset)
     , _extra_offset(extra_offset)
+    , _extra_extra_offset(extra_extra_offset)
     , _logger(logger) {}
 
 DynamicColumn::~DynamicColumn() = default;

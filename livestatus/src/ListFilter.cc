@@ -43,7 +43,9 @@ ListFilter::ListFilter(ListColumn *column, RelationalOperator relOp,
 
 bool ListFilter::accepts(void *row, contact * /* auth_user */,
                          int /* timezone_offset */) {
-    void *data = _column->shiftPointer(row);
+    // TODO(sp) The typing here is ugly, push the shifting to its use sites and
+    // templatize the code.
+    auto data = _column->rowData<void>(row);
     if (data == nullptr) {
         return false;
     }

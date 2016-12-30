@@ -33,7 +33,7 @@ using std::unique_ptr;
 void ContactGroupsColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
-    if (auto data = static_cast<char *>(shiftPointer(row))) {
+    if (auto data = rowData<char>(row)) {
         for (contactgroupsmember *cgm =
                  *reinterpret_cast<contactgroupsmember **>(data + _offset);
              cgm != nullptr; cgm = cgm->next) {

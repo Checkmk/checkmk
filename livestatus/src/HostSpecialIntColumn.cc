@@ -29,31 +29,26 @@
 using std::string;
 
 int32_t HostSpecialIntColumn::getValue(void *row, contact * /* auth_user */) {
-    void *data = shiftPointer(row);
-    if (data == nullptr) {
-        return 0;
-    }
+    if (auto hst = rowData<host>(row)) {
+        switch (_type) {
+            case Type::real_hard_state:
+                if (hst->current_state == 0) {
+                    return 0;
+                } else if (hst->state_type == 1) {
+                    return hst->current_state;  // we have reached a hard state
+                } else {
+                    return hst->last_hard_state;
+                }
 
-    host *hst = static_cast<host *>(data);
-    switch (_type) {
-        case Type::real_hard_state:
-            if (hst->current_state == 0) {
-                return 0;
-            } else if (hst->state_type == 1) {
-                return hst->current_state;  // we have reached a hard state
-            } else {
-                return hst->last_hard_state;
+            case Type::pnp_graph_present:
+                return pnpgraph_present(hst->name);
+
+            case Type::mk_inventory_last: {
+                extern char g_mk_inventory_path[];
+                return mk_inventory_last(string(g_mk_inventory_path) + "/" +
+                                         hst->name);
             }
-
-        case Type::pnp_graph_present:
-            return pnpgraph_present(hst->name);
-
-        case Type::mk_inventory_last: {
-            extern char g_mk_inventory_path[];
-            return mk_inventory_last(string(g_mk_inventory_path) + "/" +
-                                     hst->name);
         }
     }
-    // never reached, make -Wall happy
     return 0;
 }

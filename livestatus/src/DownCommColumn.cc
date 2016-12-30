@@ -37,8 +37,7 @@ using std::unique_ptr;
 void DownCommColumn::output(void *row, RowRenderer &r,
                             contact * /* auth_user */) {
     ListRenderer l(r);
-    void *data = shiftPointer(row);  // points to host or service
-    if (data != nullptr) {
+    if (auto data = rowData<void>(row)) {
         for (const auto &entry : _holder) {
             unsigned long id = entry.first;
             DowntimeOrComment *dt = entry.second.get();

@@ -27,10 +27,9 @@
 using std::string;
 
 string OffsetSStringColumn::getValue(void *data) const {
-    char *p = reinterpret_cast<char *>(shiftPointer(data));
-    if (p == nullptr) {
-        return "";
+    if (auto p = rowData<char>(data)) {
+        string *s = reinterpret_cast<string *>(p + _offset);
+        return s == nullptr ? "" : *s;
     }
-    string *s = reinterpret_cast<string *>(p + _offset);
-    return s == nullptr ? "" : *s;
+    return "";
 }

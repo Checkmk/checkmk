@@ -26,11 +26,10 @@
 #include <cstring>
 
 double OffsetDoubleColumn::getValue(void *data) {
-    char *p = static_cast<char *>(shiftPointer(data));
-    if (p == nullptr) {
-        return 0;
+    if (auto p = rowData<char>(data)) {
+        double d;
+        memcpy(&d, p + _offset, sizeof(d));
+        return d;
     }
-    double d;
-    memcpy(&d, p + _offset, sizeof(d));
-    return d;
+    return 0;
 }

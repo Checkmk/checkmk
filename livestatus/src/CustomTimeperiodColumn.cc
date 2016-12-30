@@ -41,13 +41,8 @@ int32_t CustomTimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
 }
 
 customvariablesmember *CustomTimeperiodColumn::getCVM(void *data) {
-    if (data == nullptr) {
-        return nullptr;
+    if (auto p = rowData<char>(data)) {
+        return *reinterpret_cast<customvariablesmember **>(p + _offset);
     }
-    data = shiftPointer(data);
-    if (data == nullptr) {
-        return nullptr;
-    }
-    return *reinterpret_cast<customvariablesmember **>(
-        reinterpret_cast<char *>(data) + _offset);
+    return nullptr;
 }

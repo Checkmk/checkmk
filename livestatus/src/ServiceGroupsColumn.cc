@@ -30,12 +30,8 @@ using std::string;
 using std::unique_ptr;
 
 objectlist *ServiceGroupsColumn::getData(void *data) {
-    if (data != nullptr) {
-        data = shiftPointer(data);
-        if (data != nullptr) {
-            return *reinterpret_cast<objectlist **>(
-                reinterpret_cast<char *>(data) + _offset);
-        }
+    if (auto p = rowData<char>(data)) {
+        return *reinterpret_cast<objectlist **>(p + _offset);
     }
     return nullptr;
 }

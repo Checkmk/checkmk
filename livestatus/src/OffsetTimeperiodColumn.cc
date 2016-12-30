@@ -36,24 +36,12 @@ OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description,
                       extra_offset) {}
 
 int32_t OffsetTimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
-    void *data = shiftPointer(row);
-    if (data == nullptr) {
-        return 0;
-    }
-
-    timeperiod *tp;
-    if (offset() == -1) {
-        tp = reinterpret_cast<timeperiod *>(data);
-    } else {
-        tp = *reinterpret_cast<timeperiod **>(reinterpret_cast<char *>(data) +
-                                              offset());
-    }
-
-    if (tp == nullptr) {
-        return 1;  // no timeperiod set -> Nagios assumes 7x24
-    }
-    if (g_timeperiods_cache->inTimeperiod(tp)) {
-        return 1;
+    if (auto p = rowData<char>(row)) {
+        timeperiod *tp = (offset() == -1)
+                             ? reinterpret_cast<timeperiod *>(p)
+                             : *reinterpret_cast<timeperiod **>(p + offset());
+        // no timeperiod set -> Nagios assumes 7x24
+        return (tp == nullptr || g_timeperiods_cache->inTimeperiod(tp)) ? 1 : 0;
     }
     return 0;
 }

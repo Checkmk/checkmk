@@ -43,13 +43,10 @@ bool ServiceListStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
 }
 
 servicesmember *ServiceListStateColumn::getMembers(void *data) {
-    data = shiftPointer(data);
-    if (data == nullptr) {
-        return nullptr;
+    if (auto p = rowData<char>(data)) {
+        return *reinterpret_cast<servicesmember **>(p + _offset);
     }
-
-    return *reinterpret_cast<servicesmember **>(reinterpret_cast<char *>(data) +
-                                                _offset);
+    return nullptr;
 }
 
 int32_t ServiceListStateColumn::getValue(Type logictype, servicesmember *mem,

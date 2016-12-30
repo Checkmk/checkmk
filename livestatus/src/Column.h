@@ -50,7 +50,11 @@ public:
 
     std::string name() const { return _name; }
     std::string description() const { return _description; }
-    void *shiftPointer(void *data) const;
+
+    template <typename T>
+    T *rowData(void *data) const {
+        return static_cast<T *>(shiftPointer(data));
+    }
 
     // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
     // fixed, it is just an artifact.
@@ -78,6 +82,8 @@ private:
     int _indirect_offset;
     int _extra_offset;
     int _extra_extra_offset;
+
+    void *shiftPointer(void *data) const;
 };
 
 #endif  // Column_h

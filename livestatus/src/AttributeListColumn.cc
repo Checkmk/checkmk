@@ -60,12 +60,11 @@ using modified_atttibutes = bitset<32>;
 }  // namespace
 
 int32_t AttributeListColumn::getValue(void *row, contact * /*unused*/) {
-    char *p = reinterpret_cast<char *>(shiftPointer(row));
-    if (p == nullptr) {
-        return 0;
+    if (auto p = rowData<char>(row)) {
+        auto ptr = reinterpret_cast<int *>(p + _offset);
+        return *reinterpret_cast<int32_t *>(ptr);
     }
-    auto ptr = reinterpret_cast<int *>(p + _offset);
-    return *reinterpret_cast<int32_t *>(ptr);
+    return 0;
 }
 
 void AttributeListColumn::output(void *row, RowRenderer &r,

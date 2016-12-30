@@ -29,19 +29,14 @@
 extern int interval_length;
 
 double HostSpecialDoubleColumn::getValue(void *data) {
-    data = shiftPointer(data);
-    if (data == nullptr) {
-        return 0;
-    }
-
-    host *hst = static_cast<host *>(data);
-
-    switch (_type) {
-        case Type::staleness: {
-            return (time(nullptr) - hst->last_check) /
-                   ((hst->check_interval == 0 ? 1 : hst->check_interval) *
-                    interval_length);
+    if (auto hst = rowData<host>(data)) {
+        switch (_type) {
+            case Type::staleness: {
+                return (time(nullptr) - hst->last_check) /
+                       ((hst->check_interval == 0 ? 1 : hst->check_interval) *
+                        interval_length);
+            }
         }
     }
-    return -1;  // Never reached
+    return 0;
 }

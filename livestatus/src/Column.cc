@@ -27,6 +27,7 @@
 #include <utility>
 #include "Logger.h"
 
+using std::move;
 using std::runtime_error;
 using std::string;
 using std::unique_ptr;
@@ -34,38 +35,24 @@ using std::unique_ptr;
 Column::Column(string name, string description, int indirect_offset,
                int extra_offset, int extra_extra_offset)
     : _logger(Logger::getLogger("cmk.livestatus"))
-    , _name(std::move(name))
-    , _description(std::move(description))
+    , _name(move(name))
+    , _description(move(description))
     , _indirect_offset(indirect_offset)
     , _extra_offset(extra_offset)
     , _extra_extra_offset(extra_extra_offset) {}
 
+namespace {
+void *shift(void *data, int offset) {
+    return (data == nullptr || offset < 0)
+               ? data
+               : *(reinterpret_cast<void **>(static_cast<char *>(data) +
+                                             offset));
+}
+}  // namespace
+
 void *Column::shiftPointer(void *data) const {
-    if (data == nullptr) {
-        return nullptr;
-    }
-    if (_indirect_offset >= 0) {
-        data = *(reinterpret_cast<void **>(reinterpret_cast<char *>(data) +
-                                           _indirect_offset));
-    }
-
-    if (data == nullptr) {
-        return nullptr;
-    }
-    if (_extra_offset >= 0) {
-        data = *(reinterpret_cast<void **>(reinterpret_cast<char *>(data) +
-                                           _extra_offset));
-    }
-
-    if (data == nullptr) {
-        return nullptr;
-    }
-    if (_extra_extra_offset >= 0) {
-        data = *(reinterpret_cast<void **>(reinterpret_cast<char *>(data) +
-                                           _extra_extra_offset));
-    }
-
-    return data;
+    return shift(shift(shift(data, _indirect_offset), _extra_offset),
+                 _extra_extra_offset);
 }
 
 unique_ptr<Filter> Column::createFilter(RelationalOperator /*unused*/,

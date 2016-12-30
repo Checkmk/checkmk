@@ -42,13 +42,10 @@ static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
 }
 
 hostsmember *HostListStateColumn::getMembers(void *data) {
-    data = shiftPointer(data);
-    if (data == nullptr) {
-        return nullptr;
+    if (auto p = rowData<char>(data)) {
+        return *reinterpret_cast<hostsmember **>(p + _offset);
     }
-
-    return *reinterpret_cast<hostsmember **>(reinterpret_cast<char *>(data) +
-                                             _offset);
+    return nullptr;
 }
 
 int32_t HostListStateColumn::getValue(void *row, contact *auth_user) {

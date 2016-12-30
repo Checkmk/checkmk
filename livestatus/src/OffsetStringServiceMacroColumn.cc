@@ -25,13 +25,12 @@
 #include "OffsetStringServiceMacroColumn.h"
 
 host *OffsetStringServiceMacroColumn::getHost(void *data) {
-    service *svc = getService(data);
-    if (svc != nullptr) {
+    if (auto svc = getService(data)) {
         return svc->host_ptr;
     }
     return nullptr;
 }
 
 service *OffsetStringServiceMacroColumn::getService(void *data) {
-    return static_cast<service *>(shiftPointer(data));
+    return rowData<service>(data);
 }

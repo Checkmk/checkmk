@@ -27,15 +27,11 @@
 
 int32_t ServiceSpecialIntColumn::getValue(void *row,
                                           contact * /* auth_user */) {
-    void *data = shiftPointer(row);
-    if (data == nullptr) {
-        return 0;
+    if (auto svc = rowData<service>(row)) {
+        switch (_type) {
+            case Type::pnp_graph_present:
+                return pnpgraph_present(svc->host_ptr->name, svc->description);
+        }
     }
-
-    service *svc = static_cast<service *>(data);
-    switch (_type) {
-        case Type::pnp_graph_present:
-            return pnpgraph_present(svc->host_ptr->name, svc->description);
-    }
-    return -1;  // never reached
+    return 0;
 }

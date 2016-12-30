@@ -35,16 +35,17 @@ using std::string;
 
 void LogwatchListColumn::output(void *row, RowRenderer &r,
                                 contact * /* auth_user */) {
-    void *data = shiftPointer(row);
-    if (data == nullptr) {
+#ifdef CMC
+    auto hst = rowData<Host>(row);
+    if (hst == nullptr) {
         return;
     }
-
-#ifdef CMC
-    Host *host = static_cast<Host *>(data);
-    string host_name = host->name();
+    string host_name = hst->name();
 #else
-    host *hst = static_cast<host *>(data);
+    auto hst = rowData<host>(row);
+    if (hst == nullptr) {
+        return;
+    }
     string host_name = hst->name;
 #endif
 

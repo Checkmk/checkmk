@@ -55,15 +55,18 @@ unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
         return nullptr;  // Path is not configured
     }
 
-    data = shiftPointer(data);
-    if (data == nullptr) {
+#ifdef CMC
+    auto hst = rowData<Host>(data);
+    if (hst == nullptr) {
         return nullptr;
     }
-
-#ifdef CMC
-    string host_name = static_cast<Host *>(data)->name();
+    string host_name = hst->name();
 #else
-    string host_name = static_cast<host *>(data)->name;
+    auto hst = rowData<host>(data);
+    if (hst == nullptr) {
+        return nullptr;
+    }
+    string host_name = hst->name;
 #endif
 
     string path = _base_dir + "/" + host_name + _suffix;

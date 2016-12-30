@@ -25,12 +25,7 @@
 #include "MetricsColumn.h"
 #include "Renderer.h"
 
-void MetricsColumn::output(void *row, RowRenderer &r,
+void MetricsColumn::output(void * /* row */, RowRenderer &r,
                            contact * /* auth_user */) {
-    void *data = shiftPointer(row);
-    if (data == nullptr) {
-        return;
-    }
-
     ListRenderer l(r);
 }

@@ -28,15 +28,15 @@
 using std::move;
 using std::string;
 
-DynamicColumn::DynamicColumn(string name, string description,
+DynamicColumn::DynamicColumn(string name, string description, Logger *logger,
                              int indirect_offset, int extra_offset,
-                             int extra_extra_offset, Logger *logger)
+                             int extra_extra_offset)
     : _name(move(name))
     , _description(move(description))
+    , _logger(logger)
     , _indirect_offset(indirect_offset)
     , _extra_offset(extra_offset)
-    , _extra_extra_offset(extra_extra_offset)
-    , _logger(logger) {}
+    , _extra_extra_offset(extra_extra_offset) {}
 
 DynamicColumn::~DynamicColumn() = default;
 

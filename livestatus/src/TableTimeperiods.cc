@@ -45,7 +45,7 @@ TableTimeperiods::TableTimeperiods(Logger *logger) : Table(logger) {
         "alias", "The alias of the timeperiod",
         reinterpret_cast<char *>(&tp.alias) - ref, -1, -1, -1));
     addColumn(make_unique<OffsetTimeperiodColumn>(
-        "in", "Wether we are currently in this period (0/1)", -1, -1, -1));
+        "in", "Wether we are currently in this period (0/1)", -1, -1, -1, -1));
     // TODO(mk): add days and exceptions
 }
 

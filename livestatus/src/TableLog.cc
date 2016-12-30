@@ -72,14 +72,14 @@ TableLog::TableLog(LogCache *log_cache,
         "lineno", "The number of the line in the log file",
         reinterpret_cast<char *>(&(ref->_lineno)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, "
         "3:notification, 4:passive, 5:command)",
         reinterpret_cast<char *>(&(ref->_logclass)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "message", "The complete message line including the timestamp",
         reinterpret_cast<char *>(&(ref->_complete)) -
@@ -111,7 +111,7 @@ TableLog::TableLog(LogCache *log_cache,
         "state", "The state of the host or service in question",
         reinterpret_cast<char *>(&(ref->_state)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "state_type", "The type of the state (varies on different log classes)",
         reinterpret_cast<char *>(&(ref->_state_type)) -
@@ -121,7 +121,7 @@ TableLog::TableLog(LogCache *log_cache,
         "attempt", "The number of the check attempt",
         reinterpret_cast<char *>(&(ref->_attempt)) -
             reinterpret_cast<char *>(ref),
-        -1, -1));
+        -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "service_description",
         "The description of the service log entry is about (might be empty)",

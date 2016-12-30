@@ -43,8 +43,10 @@ public:
     StatusSpecialIntColumn(const std::string& name,
                            const std::string& description,
                            const std::string& inventory_path, Type type,
-                           int indirect_offset, int extra_offset)
-        : IntColumn(name, description, indirect_offset, extra_offset, -1)
+                           int indirect_offset, int extra_offset,
+                           int extra_extra_offset)
+        : IntColumn(name, description, indirect_offset, extra_offset,
+                    extra_extra_offset)
         , _inventory_path(inventory_path)
         , _type(type) {}
     int32_t getValue(void* row, contact* auth_user) override;

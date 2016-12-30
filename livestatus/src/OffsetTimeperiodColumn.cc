@@ -31,9 +31,10 @@ extern TimeperiodsCache *g_timeperiods_cache;
 
 OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description,
                                                int offset, int indirect_offset,
-                                               int extra_offset)
-    : OffsetIntColumn(name, description, offset, indirect_offset,
-                      extra_offset) {}
+                                               int extra_offset,
+                                               int extra_extra_offset)
+    : OffsetIntColumn(name, description, offset, indirect_offset, extra_offset,
+                      extra_extra_offset) {}
 
 int32_t OffsetTimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
     if (auto p = rowData<char>(row)) {

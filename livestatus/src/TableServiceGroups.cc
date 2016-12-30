@@ -86,56 +86,56 @@ void TableServiceGroups::addColumns(Table *table, const string &prefix,
         "The worst soft state of all of the groups services (OK <= WARN <= "
         "UNKNOWN <= CRIT)",
         ServiceListStateColumn::Type::worst_state,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services in the group",
         ServiceListStateColumn::Type::num,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_ok",
         "The number of services in the group that are OK",
         ServiceListStateColumn::Type::num_ok,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_warn",
         "The number of services in the group that are WARN",
         ServiceListStateColumn::Type::num_warn,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_crit",
         "The number of services in the group that are CRIT",
         ServiceListStateColumn::Type::num_crit,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_unknown",
         "The number of services in the group that are UNKNOWN",
         ServiceListStateColumn::Type::num_unknown,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_pending",
         "The number of services in the group that are PENDING",
         ServiceListStateColumn::Type::num_pending,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
         "The number of services in the group that are OK",
         ServiceListStateColumn::Type::num_hard_ok,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_warn",
         "The number of services in the group that are WARN",
         ServiceListStateColumn::Type::num_hard_warn,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_crit",
         "The number of services in the group that are CRIT",
         ServiceListStateColumn::Type::num_hard_crit,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_unknown",
         "The number of services in the group that are UNKNOWN",
         ServiceListStateColumn::Type::num_hard_unknown,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset));
+        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1));
 }
 
 void TableServiceGroups::answerQuery(Query *query) {

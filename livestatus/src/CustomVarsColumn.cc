@@ -36,7 +36,7 @@ using std::unordered_map;
 
 CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
                                    int indirect_offset, int extra_offset)
-    : Column(name, description, indirect_offset, extra_offset)
+    : Column(name, description, indirect_offset, extra_offset, -1)
     , _offset(offset) {}
 
 CustomVarsColumn::~CustomVarsColumn() = default;

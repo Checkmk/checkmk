@@ -45,7 +45,7 @@ enum class ColumnType { int_, double_, string, list, time, dict, blob, null };
 class Column {
 public:
     Column(std::string name, std::string description, int indirect_offset,
-           int extra_offset, int extra_extra_offset = -1);
+           int extra_offset, int extra_extra_offset);
     virtual ~Column() {}
 
     std::string name() const { return _name; }

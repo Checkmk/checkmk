@@ -37,8 +37,8 @@ public:
 
     ServiceSpecialIntColumn(const std::string& name,
                             const std::string& description, Type ssic_type,
-                            int indirect_offset, int extra_offset = -1)
-        : IntColumn(name, description, indirect_offset, extra_offset)
+                            int indirect_offset, int extra_offset)
+        : IntColumn(name, description, indirect_offset, extra_offset, -1)
         , _type(ssic_type) {}
     int32_t getValue(void* row, contact* auth_user) override;
 

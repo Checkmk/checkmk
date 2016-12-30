@@ -139,7 +139,7 @@ void TableServices::addColumns(Table *table, const string &prefix,
         prefix + "service_period",
         "The name of the service period of the service",
         reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        "SERVICE_PERIOD"));
+        "SERVICE_PERIOD", -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional notes about the service",
         reinterpret_cast<char *>(&svc.notes) - ref, indirect_offset, -1));
@@ -377,10 +377,10 @@ void TableServices::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<ServiceSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
-        ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset));
+        ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset, -1));
     table->addColumn(make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
-        ServiceSpecialDoubleColumn::Type::staleness, indirect_offset));
+        ServiceSpecialDoubleColumn::Type::staleness, indirect_offset, -1));
 
     // columns of type double
     table->addColumn(make_unique<OffsetDoubleColumn>(
@@ -436,7 +436,7 @@ void TableServices::addColumns(Table *table, const string &prefix,
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
         reinterpret_cast<char *>(&svc.custom_variables) - ref, indirect_offset,
-        "SERVICE_PERIOD"));
+        "SERVICE_PERIOD", -1));
     table->addColumn(make_unique<OffsetTimeperiodColumn>(
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",
@@ -448,26 +448,26 @@ void TableServices::addColumns(Table *table, const string &prefix,
                                            "A list of all contacts of the "
                                            "service, either direct or via "
                                            "a contact group",
-                                           indirect_offset));
+                                           indirect_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes", "A list of all downtime ids of the service",
-        indirect_offset, downtimes_holder, true, true, false, false));
+        indirect_offset, downtimes_holder, true, true, false, false, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        indirect_offset, downtimes_holder, true, true, true, false));
+        indirect_offset, downtimes_holder, true, true, true, false, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments", "A list of all comment ids of the service",
-        indirect_offset, comments_holder, false, true, false, false));
+        indirect_offset, comments_holder, false, true, false, false, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the service with id, author and comment",
-        indirect_offset, comments_holder, false, true, true, false));
+        indirect_offset, comments_holder, false, true, true, false, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry "
         "type and entry time",
-        indirect_offset, comments_holder, false, true, true, true));
+        indirect_offset, comments_holder, false, true, true, true, -1));
 
     if (add_hosts) {
         TableHosts::addColumns(table, "host_",
@@ -492,8 +492,8 @@ void TableServices::addColumns(Table *table, const string &prefix,
 
     table->addColumn(make_unique<ServiceGroupsColumn>(
         prefix + "groups", "A list of all service groups the service is in",
-        reinterpret_cast<char *>(&svc.servicegroups_ptr) - ref,
-        indirect_offset));
+        reinterpret_cast<char *>(&svc.servicegroups_ptr) - ref, indirect_offset,
+        -1));
     table->addColumn(make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
         "A list of all contact groups this service is in",
@@ -506,10 +506,12 @@ void TableServices::addColumns(Table *table, const string &prefix,
         indirect_offset, -1));
     table->addColumn(make_unique<FixedIntColumn>(
         prefix + "cached_at",
-        "A dummy column in order to be compatible with Check_MK Multisite", 0));
+        "A dummy column in order to be compatible with Check_MK Multisite", 0,
+        -1, -1));
     table->addColumn(make_unique<FixedIntColumn>(
         prefix + "cache_interval",
-        "A dummy column in order to be compatible with Check_MK Multisite", 0));
+        "A dummy column in order to be compatible with Check_MK Multisite", 0,
+        -1, -1));
 }
 
 void TableServices::answerQuery(Query *query) {

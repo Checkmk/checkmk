@@ -39,7 +39,7 @@ class RowRenderer;
 class NullColumn : public Column {
 public:
     NullColumn(const std::string &name, const std::string &description)
-        : Column(name, description, -1, -1) {}
+        : Column(name, description, -1, -1, -1) {}
     ColumnType type() override { return ColumnType::null; }
     void output(void *row, RowRenderer &r, contact *auth_user) override;
 };

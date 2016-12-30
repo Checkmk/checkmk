@@ -41,8 +41,8 @@ class HostListColumn : public Column {
 public:
     HostListColumn(const std::string &name, const std::string &description,
                    int offset, int indirect_offset, bool show_state,
-                   int extra_offset = -1)
-        : Column(name, description, indirect_offset, extra_offset)
+                   int extra_offset)
+        : Column(name, description, indirect_offset, extra_offset, -1)
         , _offset(offset)
         , _show_state(show_state) {}
     ColumnType type() override { return ColumnType::list; }

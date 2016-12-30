@@ -38,7 +38,7 @@ public:
     CustomVarsExplicitColumn(const std::string &name,
                              const std::string &description, int offset,
                              int indirect_offset, const char *varname,
-                             int extra_offset = -1)
+                             int extra_offset)
         : StringColumn(name, description, indirect_offset, extra_offset)
         , _offset(offset)
         , _varname(varname) {}

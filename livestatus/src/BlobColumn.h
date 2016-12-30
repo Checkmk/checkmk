@@ -42,7 +42,7 @@ class BlobColumn : public Column {
 public:
     BlobColumn(const std::string &name, const std::string &description,
                int indirect_offset, int extra_offset)
-        : Column(name, description, indirect_offset, extra_offset) {}
+        : Column(name, description, indirect_offset, extra_offset, -1) {}
     virtual std::unique_ptr<std::vector<char>> getBlob(void *data) = 0;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::blob; }

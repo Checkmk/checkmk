@@ -1,0 +1,13 @@
+Title: mysql_slave: fixed crash if agent output is empty
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p16
+Date: 1483367371
+
+The check will not crash anymore if the agent output does not contain data
+for this check. The given state will still be UNKNOWN but with more
+comprehensible information like "Item not found in agent output".
+

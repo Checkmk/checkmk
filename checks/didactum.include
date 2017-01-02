@@ -61,7 +61,7 @@ def parse_didactum_sensors(info):
             "value"          : value,
         })
 
-        if ty in [ "temperature", "voltage" ] and len(line) == 8:
+        if len(line) == 8:
             crit_lower, warn_lower, warn, crit = line[4:]
             parsed[ty][name].update({
                 "levels"       : (float(warn),       float(crit)),
@@ -72,5 +72,5 @@ def parse_didactum_sensors(info):
 
 
 def inventory_didactum_sensors(parsed, what):
-    return [ (sensorname, {}) for sensorname, vals in parsed[what].items()
-             if vals["state_readable"] not in [ "off", "not connected" ] ]
+    return [ (sensorname, {}) for sensorname, attrs in parsed.get(what, {}).items()
+             if attrs["state_readable"] not in [ "off", "not connected" ] ]

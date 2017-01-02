@@ -98,6 +98,32 @@ check_info['didactum_sensors_analog'] = {
 
 
 #.
+#   .--humidity------------------------------------------------------------.
+#   |              _                     _     _ _ _                       |
+#   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
+#   |             | '_ \| | | | '_ ` _ \| |/ _` | | __| | | |              |
+#   |             | | | | |_| | | | | | | | (_| | | |_| |_| |              |
+#   |             |_| |_|\__,_|_| |_| |_|_|\__,_|_|\__|\__, |              |
+#   |                                                  |___/               |
+#   '----------------------------------------------------------------------'
+
+
+def check_didactum_sensors_analog_humid(item, params, parsed):
+    if item in parsed["humidity"]:
+        return check_humidity(parsed["humidity"][item]["value"], params)
+
+
+check_info['didactum_sensors_analog.humidity'] = {
+    'inventory_function'      : lambda parsed: inventory_didactum_sensors(parsed, "humidity"),
+    'check_function'          : check_didactum_sensors_analog_humid,
+    'service_description'     : 'Humidity %s',
+    'has_perfdata'            : True,
+    'group'                   : 'humidity',
+    'includes'                : [ 'humidity.include', 'didactum.include' ],
+}
+
+
+#.
 #   .--voltage-------------------------------------------------------------.
 #   |                             _ _                                      |
 #   |                 __   _____ | | |_ __ _  __ _  ___                    |

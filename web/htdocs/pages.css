@@ -302,6 +302,7 @@ div.togglebutton.off a:active {
     overflow: hidden;
     line-height: 18px;
     box-shadow: none;
+    cursor: pointer;
 
     background-color: #497e95;
     border-width: 1px;
@@ -342,11 +343,11 @@ div.contextlink.hot a {
     background-color: #c37d19;
 }
 
-input.button.hot a:hover {
+div.contextlink.hot a:hover {
     background-color: #deb548;
 }
 
-input.button.hot a:active {
+div.contextlink.hot a:active {
     background-color: #c37d19;
     border-color: #6d5723 #d9bf81 #d9bf81 #6d5723;
 }
@@ -1207,7 +1208,7 @@ body.main table.footer .popup_menu a:hover {
     height: 20px;
 }
 
-#popup_menu .icons .image_button {
+#popup_menu .icons .button {
    float: right;
    margin: 4px;
 }

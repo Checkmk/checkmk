@@ -1370,10 +1370,10 @@ def mode_edit_host(phase, new, is_cluster):
 
     forms.end()
     if not Folder.current().locked_hosts():
-        html.image_button("services", _("Save &amp; go to Services"), "submit")
-        html.image_button("save", _("Save &amp; Finish"), "submit")
+        html.button("services", _("Save &amp; go to Services"), "submit")
+        html.button("save", _("Save &amp; Finish"), "submit")
         if not is_cluster:
-            html.image_button("diag_host", _("Save &amp; Test"), "submit")
+            html.button("diag_host", _("Save &amp; Test"), "submit")
     html.hidden_fields()
     html.end_form()
 
@@ -1771,7 +1771,7 @@ def mode_rename_host(phase):
     html.text_input("newname", "")
     forms.end()
     html.set_focus("newname")
-    html.image_button("rename", _("Rename host!"), "submit")
+    html.button("rename", _("Rename host!"), "submit")
     html.hidden_fields()
     html.end_form()
 

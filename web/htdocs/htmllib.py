@@ -1761,24 +1761,13 @@ class html(DeprecationWrapper):
                             (self.attrencode(var), self.attrencode(value), id))
 
 
-    def image_button(self, varname, title, cssclass = '', style=None):
-        if not self.mobile:
-            self.write('<label for="%s" class="image_button"%s>' %
-               (self.attrencode(varname), style and (" style=\"%s\"" % style) or ""))
-        self.raw_button(varname, title, cssclass)
-        if not self.mobile:
-            self.write('</label>')
+    def button(self, varname, title, cssclass = '', style=None):
+        if style:
+            style = ' style="%s"' % style
 
-
-    def button(self, *args, **kwargs):
-        self.image_button(*args, **kwargs)
-
-
-    def raw_button(self, varname, title, cssclass=""):
-        self.write("<input onfocus=\"if (this.blur) this.blur();\" "
-                   "type=\"submit\" name=\"%s\" id=\"%s\" value=\"%s\" "
-                   "class=\"%s\" />\n" % \
-                   (varname, varname, title, cssclass))
+        self.write("<input type=\"submit\" name=\"%s\" id=\"%s\" value=\"%s\" "
+                   "class=\"button %s\"%s />\n" % \
+                   (varname, varname, title, cssclass, style))
         self.add_form_var(varname)
 
 
@@ -1795,12 +1784,8 @@ class html(DeprecationWrapper):
         if disabled:
             title = ' disabled="%s"' % disabled
 
-        if not self.mobile:
-            self.write('<label for="%s" class="image_button">' % obj_id)
-        self.write('<input%s%s%s%s value="%s" class="buttonlink" type="button" onclick="location.href=\'%s\'" />\n' % \
+        self.write('<input%s%s%s%s value="%s" class="button buttonlink" type="button" onclick="location.href=\'%s\'" />\n' % \
                 (obj_id, style, title, disabled, text, href))
-        if not self.mobile:
-            self.write('</label>')
 
 
     def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, fkey=None):

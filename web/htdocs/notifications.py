@@ -149,7 +149,7 @@ def render_page_confirm(acktime, prev_url, failed_notifications):
                lib.datetime_human_readable(acktime))
     html.begin_form("confirm", method="GET", action=prev_url)
     html.hidden_field('acktime', acktime),
-    html.image_button('_confirm', _("Yes"))
+    html.button('_confirm', _("Yes"))
     html.end_form()
     html.write('</div>\n')
 

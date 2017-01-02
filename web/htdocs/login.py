@@ -442,7 +442,7 @@ def normal_login_page(called_directly = True):
         html.write('</div>\n')
 
     html.write('<div id="button_text">')
-    html.image_button("_login", _('Login'))
+    html.button("_login", _('Login'))
     html.write("</div>\n")
 
     html.write('<div id="foot">Version: %s - &copy; '

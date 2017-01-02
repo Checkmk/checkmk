@@ -126,6 +126,7 @@ input.button {
     padding: 2px 6px;
     background-color: #497E95;
     color: white;
+    cursor: pointer;
 }
 
 input.button:hover {
@@ -187,49 +188,6 @@ a.button {
     margin: 2px;
 }
 
-/* Image submit button styling */
-label.image_button {
-    display: inline-block;
-    margin: 0px 4px 0 0;
-    position: relative;
-    top: 0px;
-    background: transparent url('images/image_button_l.png') no-repeat;
-    background-position: 0px -35px;
-    padding: 0 0 0 7.5px;
-    height: 22px;
-    margin-right: 5px;
-    vertical-align: middle;
-}
-label.image_button:hover {
-    background-position: -0px -65px;
-}
-label.image_button:active {
-    background-position: -0px -95px;
-}
-label.image_button input {
-    height: 22px;
-    color: #fff;
-    border: none;
-    padding-left: 0px;
-    padding-right: 10px;
-    padding-top: 0px;
-    padding-bottom: 0px;
-    background: transparent url('images/image_button_r.png') no-repeat;
-    background-position: right -35px;
-    float: left;
-    font-size: 8pt;
-    margin-left: 3px;
-    border-radius: 0px;
-}
-label.image_button input:hover {
-    background-position: right -65px;
-}
-label.image_button input:active {
-    background-position: right -95px;
-}
-label.image_button input[type="submit"]::-moz-focus-inner {
-    border: 0px;
-}
 /*for IE8 */
 input[type="submit"]:focus {
     outline: none;

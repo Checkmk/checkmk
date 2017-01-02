@@ -1,4 +1,4 @@
-Title: didactum_sensors_analog.humid: new check which monitors the humidity of Didactum devices supporting the DIDACTUM-SYSTEM-MIB
+Title: didactum_sensors_analog.humidity: new check which monitors the humidity of Didactum devices supporting the DIDACTUM-SYSTEM-MIB
 Level: 1
 Component: checks
 Compatible: compat

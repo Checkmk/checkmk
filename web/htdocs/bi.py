@@ -30,12 +30,14 @@ import marshal
 import md5
 import copy
 from lib import *
+from log import logger
 from cmk.regex import regex
 import cmk
 import multiprocessing
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
+compile_logger = logger.getChild("bi.compilation")
 
 # Load all view plugins
 def load_plugins(force):
@@ -242,12 +244,10 @@ def aggregation_groups():
     return sorted(group_names, cmp = lambda a,b: cmp(a.lower(), b.lower()))
 
 def log(*args):
-    if not compile_logging():
-        return
     for idx, arg in enumerate(args):
         if type(arg) not in [ unicode, str ]:
             arg = pprint.pformat(arg)
-        logger(LOG_DEBUG, 'BI: %s%s' % (idx > 5 and "\n" or "", arg))
+        compile_logger.debug('BI: %s%s' % (idx > 5 and "\n" or "", arg))
 
 def get_cache_dir():
     bi_cache_dir = cmk.paths.tmp_dir + "/bi_cache"
@@ -1550,10 +1550,9 @@ def compile_forest(user, only_hosts = None, only_groups = None):
     log("This request: User: %s, Only-Groups: %r, Only-Hosts: %s PID: %d"
         % (user, only_groups, only_hosts, os.getpid()))
 
-    if compile_logging():
-        before   = time.time()
-        num_new_host_aggrs  = 0
-        num_new_multi_aggrs = 0
+    before   = time.time()
+    num_new_host_aggrs  = 0
+    num_new_multi_aggrs = 0
 
     aggr_list = [(AGGR_MULTI, config.aggregations), (AGGR_HOST, config.host_aggregations)]
 
@@ -1595,11 +1594,10 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
             new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
 
-            if compile_logging():
-                if aggr_type == AGGR_HOST:
-                    num_new_host_aggrs += len(new_entries)
-                else:
-                    num_new_multi_aggrs += len(new_entries)
+            if aggr_type == AGGR_HOST:
+                num_new_host_aggrs += len(new_entries)
+            else:
+                num_new_multi_aggrs += len(new_entries)
 
             # enter new aggregations into dictionary for these groups
             for group in groups:
@@ -1669,47 +1667,46 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     check_title_uniqueness(cache["forest"])
 
-    if compile_logging():
-        num_total_aggr = 0
-        for grp, aggrs in cache['forest'].iteritems():
-            num_total_aggr += len(aggrs)
+    num_total_aggr = 0
+    for grp, aggrs in cache['forest'].iteritems():
+        num_total_aggr += len(aggrs)
 
-        num_host_aggr = 0
-        for grp, aggrs in cache['host_aggregations'].iteritems():
-            num_host_aggr += len(aggrs)
+    num_host_aggr = 0
+    for grp, aggrs in cache['host_aggregations'].iteritems():
+        num_host_aggr += len(aggrs)
 
-        num_services = 0
-        for key, val in g_services.iteritems():
-            num_services += len(val[1])
+    num_services = 0
+    for key, val in g_services.iteritems():
+        num_services += len(val[1])
 
-        after = time.time()
+    after = time.time()
 
-        log("\nThis request:\n"
-            "  User: %s, Only-Groups: %r, Only-Hosts: %s\n"
-            "  PID: %d, Processed %d services on %d hosts in %.3f seconds.\n"
-            "\n"
-            "  %d compiled multi aggrs, %d compiled host aggrs, %d compiled groups\n"
-            "Cache:\n"
-            "  Everything compiled: %r\n"
-            "  %d compiled multi aggrs, %d compiled host aggrs, %d compiled groups\n"
-            "Config:\n"
-            "  Multi-Aggregations: %d, Host-Aggregations: %d"
-            % (
-               user, only_groups, only_hosts,
-               os.getpid(),
-               num_services, len(g_services_by_hostname),
-               after - before,
+    log("\nThis request:\n"
+        "  User: %s, Only-Groups: %r, Only-Hosts: %s\n"
+        "  PID: %d, Processed %d services on %d hosts in %.3f seconds.\n"
+        "\n"
+        "  %d compiled multi aggrs, %d compiled host aggrs, %d compiled groups\n"
+        "Cache:\n"
+        "  Everything compiled: %r\n"
+        "  %d compiled multi aggrs, %d compiled host aggrs, %d compiled groups\n"
+        "Config:\n"
+        "  Multi-Aggregations: %d, Host-Aggregations: %d"
+        % (
+           user, only_groups, only_hosts,
+           os.getpid(),
+           num_services, len(g_services_by_hostname),
+           after - before,
 
-               num_new_multi_aggrs, num_new_host_aggrs,
-               only_groups and len(only_groups) or 0,
+           num_new_multi_aggrs, num_new_host_aggrs,
+           only_groups and len(only_groups) or 0,
 
-               cache['compiled_all'],
-               num_total_aggr - num_host_aggr,
-               num_host_aggr,
-               len(cache['compiled_groups']),
-               len(config.aggregations),
-               len(config.host_aggregations),
-            ))
+           cache['compiled_all'],
+           num_total_aggr - num_host_aggr,
+           num_host_aggr,
+           len(cache['compiled_groups']),
+           len(config.aggregations),
+           len(config.host_aggregations),
+        ))
 
 
 def check_title_uniqueness(forest):
@@ -1725,9 +1722,6 @@ def check_title_uniqueness(forest):
                     html.attrencode(title)))
             else:
                 known_titles.add(title)
-
-def compile_logging():
-    return config.bi_compile_log not in [None, False]
 
 # Execute an aggregation rule, but prepare arguments
 # and iterate FOREACH first

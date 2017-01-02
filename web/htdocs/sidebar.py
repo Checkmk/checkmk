@@ -32,6 +32,7 @@ import config, views, userdb, pagetypes
 import notify, werks
 import sites
 from lib import *
+from log import logger
 import cmk.paths
 import cmk.store as store
 
@@ -450,7 +451,7 @@ def ajax_snapin():
     except Exception, e:
         html.flush()
         html.unplug()
-        logger(LOG_ERR, 'Exception during snapin refresh: %s' % e)
+        logger.error('Exception during snapin refresh: %s' % e)
         raise
 
 def move_snapin():

@@ -32,6 +32,7 @@ import os, tarfile, time, shutil, cStringIO, grp
 import subprocess
 import traceback
 from lib import *
+from log import logger
 
 def create(filename, components):
     tar = tarfile.open(filename, "w:gz")
@@ -209,8 +210,8 @@ def extract_domains(tar, domains):
         return []
 
     total_errors = []
-    logger(LOG_INFO, "Restoring snapshot: %s" % tar.name)
-    logger(LOG_INFO, "Domains: %s" % ", ".join(tar_domains.keys()))
+    logger.info("Restoring snapshot: %s" % tar.name)
+    logger.info("Domains: %s" % ", ".join(tar_domains.keys()))
     for what, abort_on_error, handler in [
                             ("Permissions",  True,  lambda domain, tar_member: check_domain(domain, tar_member)),
                             ("Pre-Restore",  True,  lambda domain, tar_member: execute_restore(domain, is_pre_restore = True)),
@@ -228,12 +229,12 @@ def extract_domains(tar, domains):
                     # This should NEVER happen
                     err_info = "Restore-Phase: %s, Domain: %s\nError: %s" % (what, name, traceback.format_exc())
                     errors.append(err_info)
-                    logger(LOG_CRIT, err_info)
+                    logger.critical(err_info)
                     if abort_on_error == False:
                         # At this state, the restored data is broken.
                         # We still try to apply the rest of the snapshot
                         # Hopefully the log entry helps in identifying the problem..
-                        logger(LOG_ALERT, "Snapshot restore FAILED! (possible loss of snapshot data)")
+                        logger.critical("Snapshot restore FAILED! (possible loss of snapshot data)")
                         continue
                     break
 

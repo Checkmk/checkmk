@@ -44,6 +44,7 @@ import time
 import copy
 
 import cmk.paths
+from log import logger
 
 try:
     # docs: http://www.python-ldap.org/doc/html/index.html
@@ -138,6 +139,7 @@ class LDAPUserConnector(UserConnector):
 
         self._ldap_obj        = None
         self._ldap_obj_config = None
+        self._ldap_logger     = logger.getChild("ldap")
 
         self._user_cache  = {}
         self._group_cache = {}
@@ -175,8 +177,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def log(self, s):
-        if self._config['debug_log']:
-            logger(LOG_DEBUG, 'LDAP [%s]: %s' % (self.id(), s))
+        self._ldap_logger.debug('LDAP [%s]: %s' % (self.id(), s))
 
 
     def connect_server(self, server):
@@ -197,7 +198,7 @@ class LDAPUserConnector(UserConnector):
         except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError), e:
             return None, '%s: %s' % (uri, e[0].get('info', e[0].get('desc', '')))
         except MKLDAPException, e:
-            return None, str(e)
+            return None, "%s" % e
 
 
     def format_ldap_uri(self, server):
@@ -291,7 +292,7 @@ class LDAPUserConnector(UserConnector):
             conn.simple_bind_s(user_dn, password)
             self.log('  SUCCESS')
         except ldap.LDAPError, e:
-            self.log('  FAILED (%s)' % e)
+            self.log('  FAILED (%s: %s)' % (e.__class__.__name__, e))
             if catch:
                 raise MKLDAPException(_('Unable to authenticate with LDAP (%s)') % e)
             else:
@@ -823,7 +824,6 @@ class LDAPUserConnector(UserConnector):
             'disabled'       : 'ldap' not in getattr(config, 'user_connectors', []),
             'cache_livetime' : getattr(config, 'ldap_cache_livetime', 300),
             'active_plugins' : getattr(config, 'ldap_active_plugins', []) or {'email': {}, 'alias': {}, 'auth_expire': {}},
-            'debug_log'      : getattr(config, 'ldap_debug_log', False),
             'directory_type' : getattr(config, 'ldap_connection', {}).get('type', 'ad'),
             'user_id_umlauts': 'keep',
             'user_dn'        : '',
@@ -927,6 +927,7 @@ class LDAPUserConnector(UserConnector):
         self.set_last_sync_time()
 
         if not self.has_user_base_dn_configured():
+            self.log("Not trying sync (no \"user base DN\" configured)")
             return # silently skip sync without configuration
 
         register_user_attribute_sync_plugins()
@@ -1099,7 +1100,7 @@ class LDAPUserConnector(UserConnector):
     def is_enabled(self):
         sync_config = user_sync_config()
         if type(sync_config) == tuple and self.id() not in sync_config[1]:
-            #logger(LOG_DEBUG, 'Skipping disabled connection %s' % (self.id()))
+            #self._ldap_logger('Skipping disabled connection %s' % (self.id()))
             return False
         return True
 

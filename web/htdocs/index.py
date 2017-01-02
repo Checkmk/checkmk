@@ -36,6 +36,7 @@ import userdb
 import config
 import login
 from lib import *
+import log
 from html_mod_python import html_mod_python, FinalizeRequest
 import cmk.paths
 
@@ -129,7 +130,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
             response_code = apache.HTTP_BAD_GATEWAY
 
         if ty in [MKConfigError, MKGeneralException]:
-            logger(LOG_ERR, _("%s: %s") % (plain_title, e))
+            log.logger.error(_("%s: %s") % (plain_title, e))
 
     except (apache.SERVER_RETURN,
             (apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED),
@@ -253,6 +254,7 @@ def init_profiling(is_profiling):
 # Early initialization upon first start of the application by the server
 def initialize():
     init_sys_path()
+    log.init_logging()
     modules.init_modules()
 
 

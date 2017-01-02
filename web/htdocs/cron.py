@@ -27,6 +27,7 @@
 import time
 import traceback
 from lib import *
+from log import logger
 import cmk.paths
 
 loaded_with_language = False
@@ -68,7 +69,7 @@ def page_run_cron():
             cron_job()
         except Exception:
             html.write("An exception occured. Take a look at the web.log.\n")
-            logger(LOG_ERR, "Exception in cron_job [%s]:\n%s" %
+            logger.error("Exception in cron_job [%s]:\n%s" %
                              (cron_job.__name__, traceback.format_exc()))
 
     html.write("OK\n")

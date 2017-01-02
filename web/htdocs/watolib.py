@@ -51,6 +51,7 @@ import tarfile
 import cStringIO
 import requests
 from lib import *
+from log import logger
 from valuespec import *
 from hashlib import sha256
 
@@ -3451,7 +3452,7 @@ def sync_changes_before_remote_automation(site_id):
     if not manager.is_sync_needed(site_id):
         return
 
-    logger(LOG_INFO, "Syncing %s" % site_id)
+    logger.info("Syncing %s" % site_id)
 
     activation_id = manager.start([site_id], activate_foreign=True, prevent_activate=True)
 
@@ -3463,8 +3464,8 @@ def sync_changes_before_remote_automation(site_id):
 
     state = manager.get_site_state(site_id)
     if state["_state"] != "success":
-        logger(LOG_ERR, _("Remote automation tried to sync pending changes but failed: %s") %
-                            state.get("_status_details"))
+        logger.error(_("Remote automation tried to sync pending changes but failed: %s") %
+                         state.get("_status_details"))
 
 
 def do_remote_automation(site, command, vars):

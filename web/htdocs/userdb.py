@@ -26,6 +26,7 @@
 
 import config, hooks
 from lib import *
+from log import logger
 import time, os, pprint, shutil, traceback
 from valuespec import *
 import cmk.paths
@@ -41,6 +42,7 @@ builtin_user_attribute_names = []
 connection_dict = {}
 # Connection object dictionary
 g_connections   = {}
+auth_logger = logger.getChild("auth")
 
 # Load all userdb plugins
 def load_plugins(force):
@@ -251,10 +253,9 @@ def login_timed_out(username, last_activity):
 
     timed_out = (time.time() - last_activity) > idle_timeout
 
-    # TODO: uncomment this once log level can be configured
-    #if timed_out:
-    #    logger(LOG_DEBUG, "%s login timed out (Inactive for %d seconds)" %
-    #                                (username, time.time() - last_activity))
+    if timed_out:
+        auth_logger.debug("%s login timed out (Inactive for %d seconds)" %
+                                    (username, time.time() - last_activity))
 
     return timed_out
 
@@ -375,9 +376,8 @@ def is_valid_user_session(username, session_id):
     if session_id == active_session_id:
         return True # Current session. Fine.
 
-    # TODO: uncomment this once log level can be configured
-    #logger(LOG_DEBUG, "%s session_id not valid (timed out?) (Inactive for %d seconds)" %
-    #                                (username, time.time() - last_activity))
+    auth_logger.debug("%s session_id not valid (timed out?) (Inactive for %d seconds)" %
+                                    (username, time.time() - last_activity))
 
     return False
 
@@ -396,9 +396,8 @@ def ensure_user_can_init_session(username):
     if (time.time() - last_activity) > session_timeout:
         return True # Former active session timed out
 
-    # TODO: uncomment this once log level can be configured
-    #logger(LOG_DEBUG, "%s another session is active (inactive for: %d seconds)" %
-    #                                (username, time.time() - last_activity))
+    auth_logger.debug("%s another session is active (inactive for: %d seconds)" %
+                                    (username, time.time() - last_activity))
 
     raise MKUserError(None, _("Another session is active"))
 
@@ -851,6 +850,7 @@ def convert_idle_timeout(value):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+# TODO: Use store. methods. Don't initialize strucutres on corrupted files.
 def load_roles():
     # Fake builtin roles into user roles.
     builtin_role_names = {  # Default names for builtin roles
@@ -891,7 +891,7 @@ def load_roles():
             raise MKGeneralException(_("Cannot read configuration file %s: %s") %
                           (filename, e))
         else:
-            logger(LOG_ERR, 'load_roles: Problem while loading roles (%s - %s). '
+            auth_logger.error('load_roles: Problem while loading roles (%s - %s). '
                      'Initializing structure...' % (filename, e))
         return roles
 
@@ -906,6 +906,7 @@ def load_roles():
 #   +----------------------------------------------------------------------+
 # TODO: Contact groups are fine here, but service / host groups?
 
+# TODO: Use store. methods. Don't initialize strucutres on corrupted files.
 def load_group_information():
     try:
         # Load group information from Check_MK world
@@ -948,7 +949,7 @@ def load_group_information():
             raise MKGeneralException(_("Cannot read configuration file %s: %s") %
                           (filename, e))
         else:
-            logger(LOG_ERR, 'load_group_information: Problem while loading groups (%s - %s). '
+            auth_logger.error('load_group_information: Problem while loading groups (%s - %s). '
                      'Initializing structure...' % (filename, e))
         return {}
 
@@ -1262,8 +1263,8 @@ def execute_userdb_job():
             if config.debug:
                 raise
             else:
-                logger(LOG_ERR, 'Exception (%s, userdb_job): %s' %
-                            (connection_id, traceback.format_exc()))
+                auth_logger.error('Exception (%s, userdb_job): %s' %
+                                  (connection_id, traceback.format_exc()))
 
     general_userdb_job()
 

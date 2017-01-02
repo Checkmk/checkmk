@@ -40,6 +40,54 @@ import cmk.paths
 group = _("User Interface")
 configvar_order()[group] = 20
 
+def web_log_level_elements():
+    import logging
+
+    elements = []
+    for level_id, title, help_text in [
+        ("cmk.web",          _("Web"),
+         _("The log level for all log entries not assigned to the other "
+           "log categories on this page.")),
+        ("cmk.web.auth",     _("Authentication"),
+         _("The log level for user authentication related log entries.")),
+        ("cmk.web.ldap",     _("LDAP"),
+         _("The log level for LDAP related log entries.")),
+        ("cmk.web.bi.compilation", _("BI compilation"),
+         _("If this option is enabled, Check_MK BI will create a log with details "
+           "about compiling BI aggregations. This includes statistics and "
+           "details for each executed compilation.")),
+        ]:
+        elements.append(
+            (level_id, DropdownChoice(
+                title = title,
+                help = help_text,
+                choices = [
+                        (logging.CRITICAL, _("Critical") ),
+                        (logging.ERROR,    _("Error") ),
+                        (logging.WARNING,  _("Warning") ),
+                        (logging.INFO,     _("Informational") ),
+                        (logging.DEBUG,    _("Debug") ),
+                ],
+                default_value = logging.WARNING,
+            ))
+        )
+
+    return elements
+
+register_configvar(
+    group,
+    "log_levels",
+    Dictionary(
+        title = _("Logging"),
+        help = _("This setting decides which types of messages to log into "
+                 "the web log <tt>%s</tt>.") % site_neutral_path(cmk.paths.log_dir + "/web.log"),
+        elements = web_log_level_elements,
+        optional_keys = [],
+    ),
+    domain = "multisite",
+)
+
+
 register_configvar(group,
     "debug",
     Checkbox(title = _("Debug mode"),
@@ -408,20 +456,6 @@ register_configvar(group,
              ),
              default_value = True),
     domain = "multisite")
-
-register_configvar(group,
-    "bi_compile_log",
-    Checkbox(
-        title = _("Enable BI compilation diagnostics"),
-        label = _("Activate logging of BI compilations"),
-        help = _("If this option is enabled, Check_MK BI will create a log with details "
-                 "about compiling BI aggregations. This includes statistics and "
-                 "details for each executed compilation. The logs are written to "
-                 "<tt>%s</tt>") % site_neutral_path(cmk.paths.log_dir + "/web.log"),
-        default_value = False,
-    ),
-    domain = "multisite"
-)
 
 register_configvar(group,
     "auth_by_http_header",

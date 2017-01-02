@@ -88,6 +88,7 @@ import i18n
 import config, table, multitar, userdb, weblib, login
 from hashlib import sha256
 from lib import *
+from log import logger
 from valuespec import *
 import forms
 import backup
@@ -5811,14 +5812,6 @@ def vs_ldap_connection(new, connection_id):
             default_value = 300,
             display = ["days", "hours", "minutes" ],
         )),
-        ("debug_log", Checkbox(
-            title = _("Connection Diagnostics"),
-            label = _("Activate logging of LDAP transactions"),
-            help = _("If this option is enabled, Check_MK will log LDAP related debug messages to <tt>%s</tt>. "
-                     "You should enable this option only for debugging.") % \
-                        site_neutral_path(cmk.paths.log_dir + "/web.log"),
-            default_value = False
-        )),
     ]
 
     return Dictionary(
@@ -5835,7 +5828,7 @@ def vs_ldap_connection(new, connection_id):
             (_("Users"),              [ key for key, vs in user_elements ]),
             (_("Groups"),             [ key for key, vs in group_elements ]),
             (_("Attribute Sync Plugins"), [ "active_plugins" ]),
-            (_("Other"),              [ "cache_livetime", "debug_log" ]),
+            (_("Other"),              [ "cache_livetime" ]),
         ],
         render = "form",
         form_narrow = True,
@@ -15723,7 +15716,7 @@ def execute_network_scan_job():
             "state"  : False,
             "output" : _("An exception occured: %s") % e,
         })
-        logger(LOG_ERR, "Exception in network scan:\n%s" % (traceback.format_exc()))
+        logger.error("Exception in network scan:\n%s" % (traceback.format_exc()))
 
     result["end"] = time.time()
 

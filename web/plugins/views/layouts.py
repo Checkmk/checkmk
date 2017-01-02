@@ -52,7 +52,7 @@ def render_checkbox_td(view, row, num_tds):
 def render_group_checkbox_th():
     html.open_th()
     html.input(type_="button", class_="checkgroup", name="_toggle_group",
-               onclick="toggle_group_rows(this);", value=_('X'))
+               onclick="toggle_group_rows(this);", value='X')
     html.close_th()
 
 #.

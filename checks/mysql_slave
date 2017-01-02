@@ -76,7 +76,7 @@ def inventory_mysql_slave(parsed):
 
 
 def check_mysql_slave(item, params, parsed):
-    if item in parsed:
+    if parsed.get(item):
         data = parsed[item]
 
         state = 0

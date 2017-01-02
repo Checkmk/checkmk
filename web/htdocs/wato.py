@@ -683,21 +683,16 @@ def show_hosts(folder):
         table.row(collect_headers=False, fixed=True)
         table.cell(css="bulksearch", colspan=3)
 
-        # FIXME: Consolidate with generic togglebox rendering function
         if not show_checkboxes:
             onclick_uri = html.makeuri([('show_checkboxes', '1'), ('selection', weblib.selection_id())])
-            updown_state = "up"
             checkbox_title = _('Show Checkboxes and bulk actions')
         else:
             onclick_uri = html.makeuri([('show_checkboxes', '0')])
-            updown_state = "down"
             checkbox_title = _('Hide Checkboxes and bulk actions')
 
-        html.div(html.render_img("images/icon_checkbox.png"),
-                 class_=["togglebutton", "checkbox", updown_state],
-                 id_="checkbox_on",
-                 title=checkbox_title,
-                 onclick="location.href=\'%s\'" % onclick_uri)
+        html.toggle_button("checkbox_on", show_checkboxes, "checkbox",
+            help=checkbox_title,
+            onclick="location.href=\'%s\'" % onclick_uri)
 
         if withsearch:
             html.text_input(top and "search" or "search")
@@ -787,7 +782,7 @@ def show_hosts(folder):
 
         if show_checkboxes:
             table.cell("<input type=button class=checkgroup name=_toggle_group"
-                       " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'), sortable=False)
+                       " onclick=\"toggle_all_rows();\" value=\"X\" />", sortable=False)
             # Use CSS class "failed" in order to provide information about
             # selective toggling inventory-failed hosts for Javascript
             html.input(name="_c_%s" % hostname, type_="checkbox", value=colspan,

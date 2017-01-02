@@ -2024,9 +2024,9 @@ def view_optiondial_off(option):
 def toggler(id, icon, help, onclick, value, hidden = False):
     html.begin_context_buttons() # just to be sure
     hide = hidden and ' style="display:none"' or ''
-    html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" '
-       'onclick="%s"%s><img src="images/icon_%s.png"></div>' % (
-        id, help, icon, value and "down" or "up", onclick, hide, icon))
+    html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" %s>'
+               '<a href="javascript:void(0)" onclick="%s"><img src="images/icon_%s.png"></a></div>' % (
+        id, help, icon, value and "down" or "up", hide, onclick, icon))
 
 
 # Will be called when the user presses the upper button, in order

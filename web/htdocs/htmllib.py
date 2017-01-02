@@ -1164,23 +1164,18 @@ class HTMLCheck_MK(HTMLGenerator):
     def begin_context_buttons(self):
         if not self.context_buttons_open:
             self.context_button_hidden = False
-            self.open_table(class_="contextlinks")
-            self.open_tr()
-            self.open_td()
+            self.open_div(class_="contextlinks")
             self.context_buttons_open = True
 
 
     def end_context_buttons(self):
         if self.context_buttons_open:
             if self.context_button_hidden:
-                self.open_div(title=_("Show all buttons"), id="toggle", class_=["contextlink", "short"],\
-                              onmouseover=self._render_context_button_onmouseover("_short"),
-                              onmouseout=self._render_context_button_onmouseout("_short"))
+                self.open_div(title=_("Show all buttons"), id="toggle", class_=["contextlink", "short"])
                 self.a("...", onclick='unhide_context_buttons(this);', href='#')
                 self.close_div()
-            self.close_td()
-            self.close_tr()
-            self.close_table()
+            self.div("", class_="end")
+            self.close_div()
         self.context_buttons_open = False
 
 
@@ -1190,7 +1185,6 @@ class HTMLCheck_MK(HTMLGenerator):
 
 
     def _context_button(self, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None):
-
         title = self.attrencode(title)
         display = "block"
         if bestof:
@@ -1206,8 +1200,6 @@ class HTMLCheck_MK(HTMLGenerator):
             self.begin_context_buttons()
 
         self.open_div(class_=["contextlink", "hot" if hot else '', 'button' if fkey and self.keybindings_enabled else ''],\
-                      onmouseover=self._render_context_button_onmouseover("_hot" if hot else ""),\
-                      onmouseout=self._render_context_button_onmouseout("_hot" if hot else ""),\
                       id_=id_, style="display:%s;" % display)
 
         self.open_a(href=url, title=hover_title, onclick="count_context_button(this);" if bestof else None)
@@ -1222,14 +1214,6 @@ class HTMLCheck_MK(HTMLGenerator):
         self.close_a()
 
         self.close_div()
-
-
-    def _render_context_button_onmouseover(self, what):
-        return HTML(r'''this.style.backgroundImage='url(&quot;images/contextlink%s_hi.png&quot;)';''' % what)
-
-
-    def _render_context_button_onmouseout(self, what):
-        return HTML(r'''this.style.backgroundImage='url(&quot;images/contextlink%s.png&quot;)';''' % what)
 
 
 #.
@@ -1830,8 +1814,11 @@ class html(DeprecationWrapper):
 
 
     # TODO: Refactor the arguments. It is only used in views/wato
-    def toggle_button(self, id, isopen, icon, help, hidden=False, disabled=False):
+    def toggle_button(self, id, isopen, icon, help, hidden=False, disabled=False, onclick=None):
         self.begin_context_buttons() # TODO: Check all calls. If done before, remove this!
+
+        if not onclick:
+            onclick = "view_toggle_form(this.parentNode, '%s');" % id
 
         if disabled:
             state    = "off" if disabled else "on"
@@ -1848,10 +1835,11 @@ class html(DeprecationWrapper):
             id_="%s_%s" % (id, state),
             class_=["togglebutton", state, icon, cssclass],
             title=help,
-            onclick="view_toggle_form(this, '%s');" % id,
             style='display:none' if hidden else None,
         )
+        self.open_a("javascript:void(0)", onclick=onclick)
         self.img(src="images/icon_%s.png" % icon)
+        self.close_a()
         self.close_div()
 
 

@@ -171,9 +171,8 @@ div.optiondial {
     cursor: pointer;
     height: 20px;
     position: relative;
-    top: 2px;
-    left: -1px;
-    margin: 0px 0px 0px -4px;
+    top: 1px;
+    margin: 0px 0px 0px 0;
     float: left;
     background-repeat: no-repeat;
     background-position: 1px -1px;

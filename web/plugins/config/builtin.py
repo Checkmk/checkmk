@@ -43,6 +43,13 @@ default_user_role      = "user"
 save_user_access_times = False
 user_online_maxage     = 30 # seconds
 
+log_levels = {
+    "cmk.web"                : 30,
+    "cmk.web.ldap"           : 30,
+    "cmk.web.auth"           : 30,
+    "cmk.web.bi.compilation" : 30,
+}
+
 # New style, used by WATO
 multisite_users = {}
 

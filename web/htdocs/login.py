@@ -27,6 +27,7 @@
 import config
 import userdb
 from lib import *
+from log import logger
 from html_mod_python import FinalizeRequest
 import os
 import time
@@ -37,6 +38,7 @@ from hashlib import md5
 import cmk.paths
 
 auth_type = None
+auth_logger = logger.getChild("auth")
 
 # Perform the user authentication. This is called by index.py to ensure user
 # authentication and initialization of the user related data structures.
@@ -183,7 +185,7 @@ def get_session_id_from_cookie(username):
 
     if cookie_username.decode("utf-8") != username \
        or cookie_hash != generate_hash(username, username.encode("utf-8") + ":" + session_id):
-        #logger(LOG_ERR, "Invalid session: %s, Cookie: %r" % (username, raw_value))
+        auth_logger.error("Invalid session: %s, Cookie: %r" % (username, raw_value))
         return ""
 
     return session_id
@@ -195,8 +197,7 @@ def renew_cookie(cookie_name, username):
     # b) A logout is requested
     if (html.myfile != 'logout' and not html.has_var('_ajaxid')) \
        and cookie_name == auth_cookie_name():
-        # TODO: uncomment this once log level can be configured
-        #logger(LOG_DEBUG, "Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, html.vars))
+        auth_logger.debug("Renewing auth cookie (%s.py, vars: %r)" % (html.myfile, html.vars))
         renew_auth_session(username)
 
 
@@ -315,11 +316,10 @@ def check_auth_by_cookie():
                 return check_auth_cookie(cookie_name)
             except MKAuthException:
                 # Suppress cookie validation errors from other sites cookies
-                if config.debug:
-                    logger(LOG_ERR, 'Exception while checking cookie %s: %s' %
-                                            (cookie_name, traceback.format_exc()))
+                auth_logger.debug('Exception while checking cookie %s: %s' %
+                                        (cookie_name, traceback.format_exc()))
             except Exception, e:
-                logger(LOG_ERR, 'Exception while checking cookie %s: %s' %
+                auth_logger.error('Exception while checking cookie %s: %s' %
                                     (cookie_name, traceback.format_exc()))
 
 

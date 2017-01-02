@@ -26,6 +26,7 @@
 
 import os, pprint, glob
 import i18n
+import log
 from lib import *
 import cmk.paths
 
@@ -96,6 +97,7 @@ aggregation_functions = {}
 def initialize():
     clear_user_login()
     load_config()
+    log.set_log_levels(log_levels)
 
 
 # Read in a multisite.d/*.mk file

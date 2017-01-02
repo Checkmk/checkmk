@@ -24,12 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-aggregation_rules         = {}
-aggregations              = []
-host_aggregations         = []
-bi_packs                  = {}
-bi_precompile_on_demand   = True
-bi_use_legacy_compilation = False
+import logging as _logging
+import cmk.paths
 
-# Deprecated. Kept for compatibility.
-bi_compile_log            = None
+logger = _logging.getLogger("cmk.web")
+
+def init_logging():
+    _setup_web_log_logging()
+
+
+def _setup_web_log_logging():
+    handler = _logging.FileHandler("%s/web.log" % cmk.paths.log_dir,
+                                   encoding="UTF-8")
+
+    formatter = _logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
+    handler.setFormatter(formatter)
+
+    logger.addHandler(handler)
+
+
+def set_log_levels(log_levels):
+    for logger_name, level in log_levels.items():
+        _logging.getLogger(logger_name).setLevel(level)

@@ -26,6 +26,7 @@
 
 from mod_python import Cookie, util, apache
 from lib import make_utf8, MKGeneralException, MKException
+from log import logger
 import htmllib
 import os, time, config, weblib, re
 import mobile
@@ -229,13 +230,12 @@ class html_mod_python(htmllib.html):
         self.top_heading_right()
 
     def log(self, *args):
-        from lib import logger, LOG_NOTICE
         for arg in args:
             if type(arg) in (str, unicode):
                 text = arg
             else:
                 text = repr(arg)
-            logger(LOG_NOTICE, text)
+            logger.warning(text)
 
     def http_redirect(self, url):
         self.set_http_header('Location', url)

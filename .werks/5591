@@ -1,0 +1,15 @@
+Title: Only load graphs that are currently visible
+Level: 2
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i3
+Date: 1483371250
+Class: feature
+
+With this change the graphs shown by the GUI are only rendered
+when they are (partially) visible to the user. The initial loading
+of the graphs out of the viewport is now being delayed until they
+become visible to the user.
+
+This is a performance improvement for views showing a lot of graphs.

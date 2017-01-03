@@ -101,6 +101,7 @@ check_info['postgres_stats'] = {
     "check_function"          : check_postgres_stats,
     "inventory_function"      : inventory_postgres_stats,
     "service_description"     : "PostgreSQL %s",
-    "group"                   : "postgres_maintenance"
+    "group"                   : "postgres_maintenance",
+    "includes"                : [ "postgres.include" ],
 }
 

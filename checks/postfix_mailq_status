@@ -28,6 +28,7 @@
 # single
 # <<<postfix_mailq_status:sep(58)>>>
 # postfix/postfix-script: the Postfix mail system is running: PID: 2839
+# postfix: Postfix is running with backwards-compatible default settings^M postfix: See http://www.postfix.org/COMPATIBILITY_README.html for details^M postfix: To disable backwards compatibility use "postconf compatibility_level=2" and "postfix reload"^M postfix/postfix-script: the Postfix mail system is running: PID: 3096
 
 # multi instances
 # <<<postfix_mailq_status:sep(58)>>>
@@ -37,6 +38,7 @@
 # postfix-uat-cdi/postfix-script: the Postfix mail system is not running
 
 
+
 def parse_postfix_mailq_status(info):
     parsed = {}
     for line in info:
@@ -44,9 +46,13 @@ def parse_postfix_mailq_status(info):
         queuename = stripped_line[0].split("/")[0]
         if queuename == "postfix":
             queuename = ""
-        parsed.setdefault(queuename, { "state" : stripped_line[1] })
-        if len(line) > 2:
+        parsed.setdefault(queuename, {})
+
+        state_index = -1
+        if len(stripped_line) > 2 and stripped_line[-2] == "PID":
+            state_index = -3
             parsed[queuename]["pid"] = stripped_line[-1]
+        parsed[queuename]["state"] = stripped_line[state_index]
 
     return parsed
 

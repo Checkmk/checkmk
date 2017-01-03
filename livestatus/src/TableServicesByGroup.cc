@@ -45,13 +45,11 @@ TableServicesByGroup::TableServicesByGroup(
     const DowntimesOrComments &downtimes_holder,
     const DowntimesOrComments &comments_holder, MonitoringCore *core)
     : Table(core->loggerLivestatus()) {
-    struct servicebygroup sgref;
     TableServices::addColumns(this, "", -1, true, downtimes_holder,
                               comments_holder, core);
     TableServiceGroups::addColumns(
         this, "servicegroup_",
-        reinterpret_cast<char *>(&(sgref._servicegroup)) -
-            reinterpret_cast<char *>(&sgref));
+        DANGEROUS_OFFSETOF(servicebygroup, _servicegroup));
 }
 
 string TableServicesByGroup::name() const { return "servicesbygroup"; }

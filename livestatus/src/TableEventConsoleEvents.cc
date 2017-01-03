@@ -100,8 +100,7 @@ void TableEventConsoleEvents::addColumns(
         "event_state", "The state of the event (0/1/2/3)"));
     table->addColumn(make_unique<StringEventConsoleColumn>(
         "event_phase",
-        "The phase the event is currently in (one of "
-        "open/closed/delayed/counting/ack)"));
+        "The phase the event is currently in (one of open/closed/delayed/counting/ack)"));
     table->addColumn(make_unique<StringEventConsoleColumn>(
         "event_owner", "The owner of the event"));
     table->addColumn(make_unique<ListEventConsoleColumn>(
@@ -111,17 +110,14 @@ void TableEventConsoleEvents::addColumns(
     table->addColumn(make_unique<StringEventConsoleColumn>(
         "event_ipaddress", "The IP address where the event originated"));
 
-    Row row;
-    TableHosts::addColumns(
-        table, "host_",
-        reinterpret_cast<char *>(&row._host) - reinterpret_cast<char *>(&row),
-        -1, downtimes_holder, comments_holder
+    TableHosts::addColumns(table, "host_", DANGEROUS_OFFSETOF(Row, _host), -1,
+                           downtimes_holder, comments_holder
 #ifdef CMC
-        ,
-        holder_lock
+                           ,
+                           holder_lock
 #endif
-        ,
-        core);
+                           ,
+                           core);
 }
 
 string TableEventConsoleEvents::name() const { return "eventconsoleevents"; }

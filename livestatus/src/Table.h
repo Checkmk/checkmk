@@ -37,6 +37,11 @@ class DynamicColumn;
 class Logger;
 class Query;
 
+// NOTE: This macro leads to undefined behaviour for non-POD/non-standard-layout
+// classes, e.g. Entity, Host, etc., nevertheless we have to use it below. :-/
+#define DANGEROUS_OFFSETOF(typename, member) \
+    (reinterpret_cast<size_t>(&(reinterpret_cast<typename *>(32))->member) - 32)
+
 /// A table-like view for some underlying data, exposed via LQL.
 class Table {
 public:

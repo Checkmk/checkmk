@@ -46,72 +46,47 @@ TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
                              const DowntimesOrComments &comments_holder,
                              MonitoringCore *core)
     : Table(core->loggerLivestatus()), _holder(comments_holder) {
-    Comment *ref = nullptr;
     addColumn(make_unique<OffsetSStringColumn>(
         "author", "The contact that entered the comment",
-        reinterpret_cast<char *>(&(ref->_author_name)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Comment, _author_name), -1, -1, -1));
     addColumn(make_unique<OffsetSStringColumn>(
-        "comment", "A comment text",
-        reinterpret_cast<char *>(&(ref->_comment)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
-    addColumn(make_unique<OffsetIntColumn>(
-        "id", "The id of the comment",
-        reinterpret_cast<char *>(&(ref->_id)) - reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        "comment", "A comment text", DANGEROUS_OFFSETOF(Comment, _comment), -1,
+        -1, -1));
+    addColumn(make_unique<OffsetIntColumn>("id", "The id of the comment",
+                                           DANGEROUS_OFFSETOF(Comment, _id), -1,
+                                           -1, -1));
     addColumn(make_unique<OffsetTimeColumn>(
         "entry_time", "The time the entry was made as UNIX timestamp",
-        reinterpret_cast<char *>(&(ref->_entry_time)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Comment, _entry_time), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "type", "The type of the comment: 1 is host, 2 is service",
-        reinterpret_cast<char *>(&(ref->_type)) - reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Comment, _type), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service",
-        reinterpret_cast<char *>(&(ref->_is_service)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Comment, _is_service), -1, -1, -1));
 
     addColumn(make_unique<OffsetIntColumn>(
         "persistent", "Whether this comment is persistent (0/1)",
-        reinterpret_cast<char *>(&(ref->_persistent)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Comment, _persistent), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "source", "The source of the comment (0 is internal and 1 is external)",
-        reinterpret_cast<char *>(&(ref->_source)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Comment, _source), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "entry_type",
-        "The type of the comment: 1 is user, 2 is downtime, 3 is flap and 4 is "
-        "acknowledgement",
-        reinterpret_cast<char *>(&(ref->_entry_type)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        "The type of the comment: 1 is user, 2 is downtime, 3 is flap and 4 is acknowledgement",
+        DANGEROUS_OFFSETOF(Comment, _entry_type), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "expires", "Whether this comment expires",
-        reinterpret_cast<char *>(&(ref->_expires)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Comment, _expires), -1, -1, -1));
     addColumn(make_unique<OffsetTimeColumn>(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
-        reinterpret_cast<char *>(&(ref->_expire_time)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Comment, _expire_time), -1, -1, -1));
 
-    TableHosts::addColumns(
-        this, "host_",
-        reinterpret_cast<char *>(&(ref->_host)) - reinterpret_cast<char *>(ref),
-        -1, downtimes_holder, comments_holder, core);
+    TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Comment, _host),
+                           -1, downtimes_holder, comments_holder, core);
     TableServices::addColumns(
-        this, "service_", reinterpret_cast<char *>(&(ref->_service)) -
-                              reinterpret_cast<char *>(ref),
+        this, "service_", DANGEROUS_OFFSETOF(Comment, _service),
         false /* no hosts table */, downtimes_holder, comments_holder, core);
 }
 

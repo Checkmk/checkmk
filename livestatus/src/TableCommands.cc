@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableCommands.h"
-#include <cstddef>
 #include <memory>
 #include "Column.h"
 #include "CommandsHolder.h"
@@ -47,10 +46,12 @@ string TableCommands::namePrefix() const { return "command_"; }
 void TableCommands::addColumns(Table *table, const string &prefix, int offset) {
     table->addColumn(make_unique<OffsetSStringColumn>(
         prefix + "name", "The name of the command",
-        offset + offsetof(CommandsHolder::Command, _name), -1, -1, -1));
+        offset + DANGEROUS_OFFSETOF(CommandsHolder::Command, _name), -1, -1,
+        -1));
     table->addColumn(make_unique<OffsetSStringColumn>(
         prefix + "line", "The shell command line",
-        offset + offsetof(CommandsHolder::Command, _command_line), -1, -1, -1));
+        offset + DANGEROUS_OFFSETOF(CommandsHolder::Command, _command_line), -1,
+        -1, -1));
 }
 
 void TableCommands::answerQuery(Query *query) {

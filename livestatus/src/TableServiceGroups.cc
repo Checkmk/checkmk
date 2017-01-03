@@ -50,95 +50,88 @@ string TableServiceGroups::namePrefix() const { return "servicegroup_"; }
 // static
 void TableServiceGroups::addColumns(Table *table, const string &prefix,
                                     int indirect_offset) {
-    servicegroup sgr;
-    char *ref = reinterpret_cast<char *>(&sgr);
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "The name of the service group",
-        reinterpret_cast<char *>(&sgr.group_name) - ref, indirect_offset, -1,
-        -1));
+        DANGEROUS_OFFSETOF(servicegroup, group_name), indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "alias", "An alias of the service group",
-        reinterpret_cast<char *>(&sgr.alias) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, alias), indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes", "Optional additional notes about the service group",
-        reinterpret_cast<char *>(&sgr.notes) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, notes), indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "notes_url",
         "An optional URL to further notes on the service group",
-        reinterpret_cast<char *>(&sgr.notes_url) - ref, indirect_offset, -1,
-        -1));
+        DANGEROUS_OFFSETOF(servicegroup, notes_url), indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "action_url",
         "An optional URL to custom notes or actions on the service group",
-        reinterpret_cast<char *>(&sgr.action_url) - ref, indirect_offset, -1,
-        -1));
+        DANGEROUS_OFFSETOF(servicegroup, action_url), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
-        true, true, 0, reinterpret_cast<char *>(&sgr.members) - ref,
+        true, true, 0, DANGEROUS_OFFSETOF(servicegroup, members),
         indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "members_with_state",
-        "A list of all members of the service group with state and "
-        "has_been_checked",
-        true, true, 1, reinterpret_cast<char *>(&sgr.members) - ref,
+        "A list of all members of the service group with state and has_been_checked",
+        true, true, 1, DANGEROUS_OFFSETOF(servicegroup, members),
         indirect_offset, -1, -1));
 
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "worst_service_state",
-        "The worst soft state of all of the groups services (OK <= WARN <= "
-        "UNKNOWN <= CRIT)",
+        "The worst soft state of all of the groups services (OK <= WARN <= UNKNOWN <= CRIT)",
         ServiceListStateColumn::Type::worst_state,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services in the group",
         ServiceListStateColumn::Type::num,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_ok",
         "The number of services in the group that are OK",
         ServiceListStateColumn::Type::num_ok,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_warn",
         "The number of services in the group that are WARN",
         ServiceListStateColumn::Type::num_warn,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_crit",
         "The number of services in the group that are CRIT",
         ServiceListStateColumn::Type::num_crit,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_unknown",
         "The number of services in the group that are UNKNOWN",
         ServiceListStateColumn::Type::num_unknown,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_pending",
         "The number of services in the group that are PENDING",
         ServiceListStateColumn::Type::num_pending,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
         "The number of services in the group that are OK",
         ServiceListStateColumn::Type::num_hard_ok,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_warn",
         "The number of services in the group that are WARN",
         ServiceListStateColumn::Type::num_hard_warn,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_crit",
         "The number of services in the group that are CRIT",
         ServiceListStateColumn::Type::num_hard_crit,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_unknown",
         "The number of services in the group that are UNKNOWN",
         ServiceListStateColumn::Type::num_hard_unknown,
-        reinterpret_cast<char *>(&sgr.members) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
 }
 
 void TableServiceGroups::answerQuery(Query *query) {

@@ -980,8 +980,6 @@ def _precompile_hostcheck(hostname):
     output.write("import cmk_base.checking as checking\n")
     output.write("import cmk_base.ip_lookup as ip_lookup\n")
 
-    output.write("config.load(validate_hosts=False)\n")
-
     # Self-compile: replace symlink with precompiled python-code, if
     # we are run for the first time
     if config.delay_precompile:
@@ -1016,6 +1014,7 @@ cmk.log.set_verbosity(verbosity=len([ a for a in sys.argv if a in [ "-v", "--ver
 
 if '-d' in sys.argv:
     cmk.debug.enable()
+
 """)
 
     # Do we need to load the SNMP module? This is the case, if the host
@@ -1065,6 +1064,8 @@ if '-d' in sys.argv:
     output.write("checks.load_checks(%r)\n" % filenames)
     for filename in filenames:
         console.verbose(" %s%s%s", tty.green, filename.split('/')[-1], tty.normal, stream=sys.stderr)
+
+    output.write("config.load(validate_hosts=False)\n")
 
     # handling of clusters
     if config.is_cluster(hostname):

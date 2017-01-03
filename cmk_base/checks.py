@@ -27,10 +27,10 @@
 import os
 import math
 import copy
+import ast
+from collections import OrderedDict
 
 import cmk.paths
-import cmk.render as render
-import cmk.defines as defines
 from cmk.exceptions import MKGeneralException
 
 import cmk_base
@@ -38,11 +38,14 @@ import cmk_base.utils
 import cmk_base.rulesets as rulesets
 import cmk_base.config as config
 import cmk_base.console as console
-import cmk_base.snmp as snmp
-import cmk_base.item_state as item_state
+import cmk_base.check_api as check_api
 
 # TODO: Cleanup access to check_info[] -> replace it by different function calls
 # like for example check_exists(...)
+
+_check_contexts                     = {} # The checks are loaded into this dictionary. Each check
+                                        # becomes a separat sub-dictionary, named by the check name
+_include_contexts                   = {} # These are the contexts of the check include files
 
 # The following data structures will be filled by the checks
 check_info                         = {} # all known checks
@@ -60,7 +63,7 @@ special_agent_info                 = {}
 # keep track of the variables needed by each file. Those variables are then
 # (if available) read from the config and applied to the checks module after
 # reading in the configuration of the user.
-g_check_variables = {}
+_check_variables                    = {}
 
 # workaround: set of check-groups that are to be treated as service-checks even if
 #   the item is None
@@ -83,15 +86,19 @@ service_rule_groups = set([
 
 # Load all checks and includes
 def load():
-    filelist = plugin_pathnames_in_directory(cmk.paths.local_checks_dir) \
-             + plugin_pathnames_in_directory(cmk.paths.checks_dir)
+    filelist = get_plugin_paths(cmk.paths.local_checks_dir, cmk.paths.checks_dir)
+    load_checks(filelist)
+
+
+def get_plugin_paths(*dirs):
+    filelist = []
+    for dir in dirs:
+        filelist += _plugin_pathnames_in_directory(dir)
 
     # read include files always first, but still in the sorted
     # order with local ones last (possibly overriding variables)
-    filelist = [ f for f in filelist if f.endswith(".include") ] + \
-               [ f for f in filelist if not f.endswith(".include") ]
-
-    load_checks(filelist)
+    return [ f for f in filelist if f.endswith(".include") ] + \
+           [ f for f in filelist if not f.endswith(".include") ]
 
 
 # Now read in all checks. Note: this is done *before* reading the
@@ -100,33 +107,56 @@ def load():
 # If a check or check.include is both found in local/ and in the
 # normal structure, then only the file in local/ must be read!
 def load_checks(filelist):
-    known_vars = set(globals().keys()) # track new configuration variables
-
     loaded_files = set()
+    check_variable_defaults = {}
+    ignored_variable_types = [ type(lambda: None), type(os) ]
     for f in filelist:
-        if f == "." or f[-1] == "~":
+        if f[0] == "." or f[-1] == "~":
             continue # ignore editor backup / temp files
 
-        file_name = os.path.basename(f)
+        file_name  = os.path.basename(f)
+        is_include = file_name.endswith(".include")
         if file_name in loaded_files:
             continue # skip already loaded files (e.g. from local)
 
         try:
+            check_context = _new_check_context(f)
+
+            known_vars = check_context.keys()
+            known_checks = check_info.keys()
+
+            execfile(f, check_context)
             loaded_files.add(file_name)
-            execfile(f, globals())
+
         except Exception, e:
             console.error("Error in plugin file %s: %s\n", f, e)
             if cmk.debug.enabled():
                 raise
+            else:
+                continue
 
-    ignored_variable_types = [ type(lambda: None), type(os) ]
-    for varname in set(globals().keys()).difference(known_vars):
-        value = globals()[varname]
+        new_checks = set(check_info.keys()).difference(known_checks)
+        if is_include:
+            _include_contexts[file_name] = check_context
+        else:
+            # Now store the check context for all checks found in this file
+            for check_name in new_checks:
+                _check_contexts[check_name] = check_context
 
-        if varname[0] != '_' and type(value) not in ignored_variable_types:
-            g_check_variables[varname] = value
+        for varname in set(check_context.keys()).difference(known_vars):
+            value = check_context[varname]
 
-    config.add_check_variables(g_check_variables)
+            if varname[0] != '_' and type(value) not in ignored_variable_types:
+                check_variable_defaults[varname] = value
+
+                # Keep track of which variable needs to be set to which context
+                context_ident_list = _check_variables.setdefault(varname, [])
+                if is_include:
+                    context_ident_list.append(file_name)
+                else:
+                    context_ident_list += new_checks
+
+    config.add_check_variables(check_variable_defaults)
 
     # Now convert check_info to new format.
     convert_check_info()
@@ -134,7 +164,83 @@ def load_checks(filelist):
     initialize_check_type_caches()
 
 
-def plugin_pathnames_in_directory(path):
+# Constructs a new check context dictionary. It contains the whole check API.
+def _new_check_context(check_file_path):
+    # Add the data structures where the checks register with Check_MK
+    context = {
+        "check_info"             : check_info,
+        "check_includes"         : check_includes,
+        "precompile_params"      : precompile_params,
+        "check_default_levels"   : check_default_levels,
+        "factory_settings"       : factory_settings,
+        "check_config_variables" : check_config_variables,
+        "snmp_info"              : snmp_info,
+        "snmp_scan_functions"    : snmp_scan_functions,
+        "active_check_info"      : active_check_info,
+        "special_agent_info"     : special_agent_info,
+    }
+
+    # Add the Check API
+    #
+    # For better separation it would be better to copy the check API objects, but
+    # this might consume too much memory. So we simply reference it.
+    for k, v in check_api.get_check_context():
+        context[k] = v
+
+    # Load the definitions of the required include files for this check
+    # Working with imports when specifying the includes would be much cleaner,
+    # sure. But we need to deal with the current check API.
+    if check_file_path and not check_file_path.endswith(".include"):
+        for include_file_name in includes_of_plugin(check_file_path):
+            try:
+                context.update(_include_contexts[include_file_name])
+            except KeyError, e:
+                raise MKGeneralException("The include file %s does not exist" % include_file_name)
+
+    return context
+
+
+# Parse the check file without executing the code to find the check include
+# files the check uses. The following statements are extracted:
+# check_info[...] = { "includes": [...] }
+# inv_info[...] = { "includes": [...] }
+# check_includes[...] = [...]
+def includes_of_plugin(check_file_path):
+    include_names = OrderedDict()
+
+    def _load_from_check_info(node):
+        if not isinstance(node.value, ast.Dict):
+            return
+
+        for key, val in zip(node.value.keys, node.value.values):
+            if key.s == "includes" and isinstance(val, ast.List):
+                for element in val.elts:
+                    include_names[element.s] = True
+
+
+    def _load_from_check_includes(node):
+        if isinstance(node.value, ast.List):
+            for element in node.value.elts:
+                include_names[element.s] = True
+
+
+    tree = ast.parse(open(check_file_path).read())
+    for child in ast.iter_child_nodes(tree):
+        if not isinstance(child, ast.Assign):
+            continue # We only care about top level assigns
+
+        # Filter out assignments to check_info dictionary
+        for target in child.targets:
+            if isinstance(target, ast.Subscript) and isinstance(target.value, ast.Name):
+                if target.value.id in [ "check_info", "inv_info" ]:
+                   _load_from_check_info(child)
+                elif target.value.id == "check_includes":
+                   _load_from_check_includes(child)
+
+    return include_names.keys()
+
+
+def _plugin_pathnames_in_directory(path):
     if path and os.path.exists(path):
         return sorted([
             path + "/" + f
@@ -146,7 +252,28 @@ def plugin_pathnames_in_directory(path):
 
 
 def check_variable_names():
-    return g_check_variables.keys()
+    return _check_variables.keys()
+
+
+def get_include_context(include_file_name):
+    return _include_contexts[include_file_name]
+
+
+# Some variables are accessed from the generic Check_MK code. E.g. during
+# constructing the parameters of a check before executing the check function,
+# or during loading of the configuration and the autochecks.
+# Some variables are accessed by the discovery function during discovery.
+# So store the variables in the global context of this module and the checks
+# context.
+# TODO: This could eventually be cleaned up when compute_check_parameters()
+#       would use the checks context.
+def set_check_variable(varname, value):
+    globals()[varname] = value
+    for context_ident in _check_variables[varname]:
+        if context_ident.endswith(".include"):
+            _include_contexts[context_ident][varname] = value
+        else:
+            _check_contexts[context_ident][varname] = value
 
 
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
@@ -174,7 +301,7 @@ def convert_check_info():
         if type(info) != dict:
             # Convert check declaration from old style to new API
             check_function, service_description, has_perfdata, inventory_function = info
-            if inventory_function == no_discovery_possible:
+            if inventory_function == check_api.no_discovery_possible:
                 inventory_function = None
 
             check_info[check_type] = {
@@ -220,11 +347,12 @@ def convert_check_info():
             base_check = check_type.split(".")[0]
             if base_check not in check_info:
                 if info["node_info"]:
-                    raise MKGeneralException("Invalid check implementation: node_info for %s is True, but base check %s not defined" %
-                        (check_type, base_check))
+                    raise MKGeneralException("Invalid check implementation: node_info for %s is "
+                                             "True, but base check %s not defined" %
+                                                (check_type, base_check))
             elif check_info[base_check]["node_info"] != info["node_info"]:
-               raise MKGeneralException("Invalid check implementation: node_info for %s and %s are different." % (
-                   (base_check, check_type)))
+               raise MKGeneralException("Invalid check implementation: node_info for %s "
+                                        "and %s are different." % ((base_check, check_type)))
 
     # Now gather snmp_info and snmp_scan_function back to the
     # original arrays. Note: these information is tied to a "agent section",
@@ -396,8 +524,8 @@ def compute_check_parameters(host, checktype, item, params):
             new_params = {}
 
         # Merge user's default settings onto it
-        if def_levels_varname and hasattr(config, def_levels_varname):
-            def_levels = getattr(config, def_levels_varname)
+        if def_levels_varname and def_levels_varname in globals():
+            def_levels = globals()[def_levels_varname]
             if type(def_levels) == dict:
                 new_params.update(def_levels)
 
@@ -444,332 +572,3 @@ def _get_checkgroup_parameters(host, checktype, item):
             return rulesets.service_extra_conf(host, item, rules)
     except MKGeneralException, e:
         raise MKGeneralException(str(e) + " (on host %s, checktype %s)" % (host, checktype))
-
-
-#.
-#   .--Check API-----------------------------------------------------------.
-#   |             ____ _               _         _    ____ ___             |
-#   |            / ___| |__   ___  ___| | __    / \  |  _ \_ _|            |
-#   |           | |   | '_ \ / _ \/ __| |/ /   / _ \ | |_) | |             |
-#   |           | |___| | | |  __/ (__|   <   / ___ \|  __/| |             |
-#   |            \____|_| |_|\___|\___|_|\_\ /_/   \_\_|  |___|            |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Helper API for being used in checks                                 |
-#   '----------------------------------------------------------------------'
-# TODO: Wrap everything in an API object
-
-# TODO: Move imports directly to checks?
-import re
-import time
-import fnmatch
-import socket
-import sys
-from cmk.regex import regex
-
-# Names of texts usually output by checks
-core_state_names = defines.short_service_state_names()
-
-# Symbolic representations of states in plugin output
-state_markers = ["", "(!)", "(!!)", "(?)"]
-
-BINARY     = snmp.BINARY
-CACHED_OID = snmp.CACHED_OID
-
-OID_END              = snmp.OID_END
-OID_STRING           = snmp.OID_STRING
-OID_BIN              = snmp.OID_BIN
-OID_END_BIN          = snmp.OID_END_BIN
-OID_END_OCTET_STRING = snmp.OID_END_OCTET_STRING
-binstring_to_int     = snmp.binstring_to_int
-
-# Is set before check execution
-g_hostname            = "unknown" # Host currently being checked
-g_service_description = None
-
-def saveint(i):
-    try:
-        return int(i)
-    except:
-        return 0
-
-
-def savefloat(f):
-    try:
-        return float(f)
-    except:
-        return 0.0
-
-
-# The function no_discovery_possible is as stub function used for
-# those checks that do not support inventory. It must be known before
-# we read in all the checks
-def no_discovery_possible(check_type, info):
-    console.verbose("%s does not support discovery. Skipping it.\n", check_type)
-    return []
-
-service_extra_conf       = rulesets.service_extra_conf
-host_extra_conf          = rulesets.host_extra_conf
-in_binary_hostlist       = rulesets.in_binary_hostlist
-in_extraconf_hostlist    = rulesets.in_extraconf_hostlist
-hosttags_match_taglist   = rulesets.hosttags_match_taglist
-host_extra_conf_merged   = rulesets.host_extra_conf_merged
-get_rule_options         = rulesets.get_rule_options
-all_matching_hosts       = rulesets.all_matching_hosts
-
-checkgroup_parameters    = config.checkgroup_parameters
-tags_of_host             = config.tags_of_host
-nagios_illegal_chars     = config.nagios_illegal_chars
-is_ipv6_primary          = config.is_ipv6_primary
-is_cmc                   = config.is_cmc
-
-get_age_human_readable   = render.approx_age
-get_bytes_human_readable = render.bytes
-quote_shell_string       = cmk_base.utils.quote_shell_string
-
-
-# Similar to get_bytes_human_readable, but optimized for file
-# sizes. Really only use this for files. We assume that for smaller
-# files one wants to compare the exact bytes of a file, so the
-# threshold to show the value as MB/GB is higher as the one of
-# get_bytes_human_readable().
-# TODO: Replace by some render.* function / move to render module?
-def get_filesize_human_readable(size):
-    if size < 4 * 1024 * 1024:
-        return "%d B" % int(size)
-    elif size < 4 * 1024 * 1024 * 1024:
-        return "%.2f MB" % (float(size) / (1024 * 1024))
-    else:
-        return "%.2f GB" % (float(size) / (1024 * 1024 * 1024))
-
-
-# TODO: Replace by some render.* function / move to render module?
-def get_nic_speed_human_readable(speed):
-    try:
-        speedi = int(speed)
-        if speedi == 10000000:
-            speed = "10 Mbit/s"
-        elif speedi == 100000000:
-            speed = "100 Mbit/s"
-        elif speedi == 1000000000:
-            speed = "1 Gbit/s"
-        elif speedi < 1500:
-            speed = "%d bit/s" % speedi
-        elif speedi < 1000000:
-            speed = "%.1f Kbit/s" % (speedi / 1000.0)
-        elif speedi < 1000000000:
-            speed = "%.2f Mbit/s" % (speedi / 1000000.0)
-        else:
-            speed = "%.2f Gbit/s" % (speedi / 1000000000.0)
-    except:
-        pass
-    return speed
-
-
-# TODO: Replace by some render.* function / move to render module?
-def get_timestamp_human_readable(timestamp):
-    if timestamp:
-        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(timestamp)))
-    else:
-        return "never"
-
-
-# TODO: Replace by some render.* function / move to render module?
-def get_relative_date_human_readable(timestamp):
-    now = time.time()
-    if timestamp > now:
-        return "in " + get_age_human_readable(timestamp - now)
-    else:
-        return get_age_human_readable(now - timestamp) + " ago"
-
-
-# Format perc (0 <= perc <= 100 + x) so that precision
-# digits are being displayed. This avoids a "0.00%" for
-# very small numbers
-# TODO: Replace by some render.* function / move to render module?
-def get_percent_human_readable(perc, precision=2):
-    if perc > 0:
-        perc_precision = max(1, 2 - int(round(math.log(perc, 10))))
-    else:
-        perc_precision = 1
-    return "%%.%df%%%%" % perc_precision % perc
-
-
-#
-# Counter handling
-#
-
-set_item_state                 = item_state.set_item_state
-get_item_state                 = item_state.get_item_state
-get_all_item_states            = item_state.get_all_item_states
-clear_item_state               = item_state.clear_item_state
-clear_item_states_by_full_keys = item_state.clear_item_states_by_full_keys
-get_rate                       = item_state.get_rate
-get_average                    = item_state.get_average
-# TODO: Cleanup checks and deprecate this
-last_counter_wrap              = item_state.last_counter_wrap
-
-SKIP  = item_state.SKIP
-RAISE = item_state.RAISE
-ZERO  = item_state.ZERO
-
-MKCounterWrapped = item_state.MKCounterWrapped
-
-def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemarkers=False):
-    """Generic function for checking a value against levels
-
-    This also supports predictive levels.
-
-    value:   currently measured value
-    dsname:  name of the datasource in the RRD that corresponds to this value
-    unit:    unit to be displayed in the plugin output, e.g. "MB/s"
-    factor:  the levels are multiplied with this factor before applying
-             them to the value. This is being used for the CPU load check
-             currently. The levels here are "per CPU", so the number of
-             CPUs is used as factor.
-    scale:   Scale of the levels in relation to "value" and the value in the RRDs.
-             For example if the levels are specified in GB and the RRD store KB, then
-             the scale is 1024*1024.
-    """
-    if unit:
-        unit = " " + unit # Insert space before MB, GB, etc.
-    perfdata = []
-    infotexts = []
-
-    def scale_value(v):
-        if v == None:
-            return None
-        else:
-            return v * factor * scale
-
-    def levelsinfo_ty(ty, warn, crit, unit):
-        return ("warn/crit %s %.2f/%.2f %s" % (ty, warn, crit, unit)).strip()
-
-    # None or (None, None) -> do not check any levels
-    if params == None or params == (None, None):
-        return 0, "", []
-
-    # Pair of numbers -> static levels
-    elif type(params) == tuple:
-        if len(params) == 2: # upper warn and crit
-            warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
-            warn_lower, crit_lower = None, None
-
-        else: # upper and lower warn and crit
-            warn_upper, crit_upper = scale_value(params[0]), scale_value(params[1])
-            warn_lower, crit_lower = scale_value(params[2]), scale_value(params[3])
-
-        ref_value = None
-
-    # Dictionary -> predictive levels
-    else:
-        try:
-            ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
-                cmk_base.prediction.get_levels(g_hostname, g_service_description,
-                                dsname, params, "MAX", levels_factor=factor * scale)
-
-            if ref_value:
-                infotexts.append("predicted reference: %.2f%s" % (ref_value / scale, unit))
-            else:
-                infotexts.append("no reference for prediction yet")
-
-        except MKGeneralException, e:
-            ref_value = None
-            warn_upper, crit_upper, warn_lower, crit_lower = None, None, None, None
-            infotexts.append("no reference for prediction (%s)" % e)
-
-        except Exception, e:
-            if cmk.debug.enabled():
-                raise
-            return 3, "%s" % e, []
-
-    if ref_value:
-        perfdata.append(('predict_' + dsname, ref_value))
-
-    # Critical cases
-    if crit_upper != None and value >= crit_upper:
-        state = 2
-        infotexts.append(levelsinfo_ty("at", warn_upper / scale, crit_upper / scale, unit))
-    elif crit_lower != None and value < crit_lower:
-        state = 2
-        infotexts.append(levelsinfo_ty("below", warn_lower / scale, crit_lower / scale, unit))
-
-    # Warning cases
-    elif warn_upper != None and value >= warn_upper:
-        state = 1
-        infotexts.append(levelsinfo_ty("at", warn_upper / scale, crit_upper / scale, unit))
-    elif warn_lower != None and value < warn_lower:
-        state = 1
-        infotexts.append(levelsinfo_ty("below", warn_lower / scale, crit_lower / scale, unit))
-
-    # OK
-    else:
-        state = 0
-
-    if infotexts:
-        infotext = " (" + ", ".join(infotexts) + ")"
-    else:
-        infotext = ""
-
-    if state and statemarkers:
-        if state == 1:
-            infotext += "(!)"
-        else:
-            infotext += "(!!)"
-
-    return state, infotext, perfdata
-
-
-# retrive the service level that applies to the calling check.
-def get_effective_service_level():
-    service_levels = rulesets.service_extra_conf(g_hostname, g_service_description,
-                                        config.service_service_levels)
-
-    if service_levels:
-        return service_levels[0]
-    else:
-        service_levels = rulesets.host_extra_conf(g_hostname, config.host_service_levels)
-        if service_levels:
-            return service_levels[0]
-    return 0
-
-
-# like time.mktime but assumes the time_struct to be in utc, not in local time.
-def utc_mktime(time_struct):
-    import calendar
-    return calendar.timegm(time_struct)
-
-
-def passwordstore_get_cmdline(fmt, pw):
-    if type(pw) != tuple:
-        pw = ("password", pw)
-
-    if pw[0] == "password":
-        return fmt % pw[1]
-    else:
-        return ("store", pw[1], fmt)
-
-
-# Use this function to get the age of the agent data cache file
-# of tcp or snmp hosts or None in case of piggyback data because
-# we do not exactly know the latest agent data. Maybe one time
-# we can handle this. For cluster hosts an exception is raised.
-def get_agent_data_time():
-    return agent_cache_file_age(g_hostname, g_check_type)
-
-
-def agent_cache_file_age(hostname, check_type):
-    if is_cluster(hostname):
-        raise MKGeneralException("get_agent_data_time() not valid for cluster")
-
-    if is_snmp_check(check_type):
-        cachefile = cmk.paths.tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
-    elif is_tcp_check(check_type):
-        cachefile = cmk.paths.tcp_cache_dir + "/" + hostname
-    else:
-        cachefile = None
-
-    if cachefile is not None and os.path.exists(cachefile):
-        return cachefile_age(cachefile)
-    else:
-        return None

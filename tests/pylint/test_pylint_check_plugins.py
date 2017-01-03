@@ -15,7 +15,7 @@ def test_pylint_checks(pylint_test_dir):
     f = file(pylint_test_dir + "/cmk-checks.py", "w")
 
     # add the modules
-    pylint_cmk.add_file(f, repo_path() + "/cmk_base/checks.py")
+    pylint_cmk.add_file(f, repo_path() + "/cmk_base/check_api.py")
 
     # Now add the checks
     for path in pylint_cmk.check_files(repo_path() + "/checks"):

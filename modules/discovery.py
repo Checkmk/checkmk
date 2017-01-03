@@ -344,7 +344,6 @@ def check_discovery(hostname, ipaddress=None):
         if need_rediscovery:
             infotexts.append("rediscovery scheduled")
 
-        long_infotexts.append("asd:asdasdasd: asd:")
         output = ", ".join(infotexts)
         if long_infotexts:
             output += "\n" + "\n".join(long_infotexts)

@@ -56,17 +56,15 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
     string path = _logwatch_path + pnp_cleanup(host_name);
     if (DIR *dir = opendir(path.c_str())) {
         while (true) {
-            struct dirent de;
-            struct dirent *dep;
-            readdir_r(dir, &de, &dep);
-            if (dep == nullptr) {
-                closedir(dir);
+            if (dirent *ent = readdir(dir)) {
+                string name = ent->d_name;
+                if (name != "." && name != "..") {
+                    l.output(name);
+                }
+            } else {
                 break;
             }
-            string name = dep->d_name;
-            if (name != "." && name != "..") {
-                l.output(name);
-            }
         }
+        closedir(dir);
     }
 }

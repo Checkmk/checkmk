@@ -49,15 +49,12 @@ TableEventConsoleHistory::TableEventConsoleHistory(
 {
     addColumn(make_unique<IntEventConsoleColumn>(
         "history_line", "The line number of the event in the history file"));
-    addColumn(make_unique<TimeEventConsoleColumn>("history_time",
-                                                  "Time when the event was "
-                                                  "written into the history "
-                                                  "file (Unix timestamp)"));
+    addColumn(make_unique<TimeEventConsoleColumn>(
+        "history_time",
+        "Time when the event was written into the history file (Unix timestamp)"));
     addColumn(make_unique<StringEventConsoleColumn>(
         "history_what",
-        "What happened (one of "
-        "ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/"
-        "DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)"));
+        "What happened (one of ARCHIVED/AUTODELETE/CANCELLED/CHANGESTATE/COUNTFAILED/COUNTREACHED/DELAYOVER/DELETE/EMAIL/EXPIRED/NEW/NOCOUNT/ORPHANED/SCRIPT/UPDATE)"));
     addColumn(make_unique<StringEventConsoleColumn>(
         "history_who", "The user who triggered the command"));
     addColumn(make_unique<StringEventConsoleColumn>(

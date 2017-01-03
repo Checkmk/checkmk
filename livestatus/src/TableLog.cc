@@ -63,106 +63,73 @@ TableLog::TableLog(LogCache *log_cache,
                    ,
                    MonitoringCore *mc)
     : Table(mc->loggerLivestatus()), _core(mc), _log_cache(log_cache) {
-    LogEntry *ref = nullptr;
     addColumn(make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (UNIX timestamp)",
-        reinterpret_cast<char *>(&(ref->_time)) - reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _time), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "lineno", "The number of the line in the log file",
-        reinterpret_cast<char *>(&(ref->_lineno)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _lineno), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "class",
-        "The class of the message as integer (0:info, 1:state, 2:program, "
-        "3:notification, 4:passive, 5:command)",
-        reinterpret_cast<char *>(&(ref->_logclass)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
+        DANGEROUS_OFFSETOF(LogEntry, _logclass), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "message", "The complete message line including the timestamp",
-        reinterpret_cast<char *>(&(ref->_complete)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _complete), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "type",
-        "The type of the message (text before the colon), the message itself "
-        "for info messages",
-        reinterpret_cast<char *>(&(ref->_text)) - reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        "The type of the message (text before the colon), the message itself for info messages",
+        DANGEROUS_OFFSETOF(LogEntry, _text), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "options", "The part of the message after the ':'",
-        reinterpret_cast<char *>(&(ref->_options)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _options), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "comment", "A comment field used in various message types",
-        reinterpret_cast<char *>(&(ref->_comment)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _comment), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "plugin_output",
         "The output of the check, if any is associated with the message",
-        reinterpret_cast<char *>(&(ref->_check_output)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _check_output), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "state", "The state of the host or service in question",
-        reinterpret_cast<char *>(&(ref->_state)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _state), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "state_type", "The type of the state (varies on different log classes)",
-        reinterpret_cast<char *>(&(ref->_state_type)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _state_type), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "attempt", "The number of the check attempt",
-        reinterpret_cast<char *>(&(ref->_attempt)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _attempt), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
-        reinterpret_cast<char *>(&(ref->_svc_desc)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _svc_desc), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "host_name",
         "The name of the host the log entry is about (might be empty)",
-        reinterpret_cast<char *>(&(ref->_host_name)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _host_name), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "contact_name",
         "The name of the contact the log entry is about (might be empty)",
-        reinterpret_cast<char *>(&(ref->_contact_name)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _contact_name), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(
         "command_name",
         "The name of the command of the log entry (e.g. for notifications)",
-        reinterpret_cast<char *>(&(ref->_command_name)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(LogEntry, _command_name), -1, -1, -1));
 
     // join host and service tables
-    TableHosts::addColumns(
-        this, "current_host_",
-        reinterpret_cast<char *>(&(ref->_host)) - reinterpret_cast<char *>(ref),
-        -1, downtimes_holder, comments_holder
+    TableHosts::addColumns(this, "current_host_",
+                           DANGEROUS_OFFSETOF(LogEntry, _host), -1,
+                           downtimes_holder, comments_holder
 #ifdef CMC
-        ,
-        holder_lock, core
+                           ,
+                           holder_lock, core
 #else
-        ,
-        mc
+                           ,
+                           mc
 #endif
-        );
+                           );
     TableServices::addColumns(
-        this, "current_service_", reinterpret_cast<char *>(&(ref->_service)) -
-                                      reinterpret_cast<char *>(ref),
+        this, "current_service_", DANGEROUS_OFFSETOF(LogEntry, _service),
         false /* no hosts table */, downtimes_holder, comments_holder
 #ifdef CMC
         ,
@@ -173,11 +140,9 @@ TableLog::TableLog(LogCache *log_cache,
 #endif
         );
     TableContacts::addColumns(this, "current_contact_",
-                              reinterpret_cast<char *>(&(ref->_contact)) -
-                                  reinterpret_cast<char *>(ref));
+                              DANGEROUS_OFFSETOF(LogEntry, _contact));
     TableCommands::addColumns(this, "current_command_",
-                              reinterpret_cast<char *>(&(ref->_command)) -
-                                  reinterpret_cast<char *>(ref));
+                              DANGEROUS_OFFSETOF(LogEntry, _command));
 }
 
 string TableLog::name() const { return "log"; }

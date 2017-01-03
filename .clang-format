@@ -15,4 +15,5 @@ IncludeCategories:
   - Regex: '.*'
     Priority: 4
 IndentWidth: 4
+BreakStringLiterals: false
 ...

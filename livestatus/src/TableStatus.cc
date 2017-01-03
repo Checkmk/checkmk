@@ -72,6 +72,9 @@ extern circular_buffer external_command_buffer;
 extern int external_command_buffer_slots;
 #else
 // TODO: check if this data is available in nagios_squeue
+namespace {
+time_t dummy = 0;
+}  // namespace
 #endif  // NAGIOS4
 
 TableStatus::TableStatus(Logger *logger) : Table(logger) {
@@ -89,10 +92,10 @@ TableStatus::TableStatus(Logger *logger) : Table(logger) {
                       Counter::commands);
     addCounterColumns("livechecks", "checks executed via livecheck",
                       Counter::livechecks);
-    addCounterColumns("livecheck_overflows",
-                      "times a check could not be executed because no "
-                      "livecheck helper was free",
-                      Counter::livecheck_overflows);
+    addCounterColumns(
+        "livecheck_overflows",
+        "times a check could not be executed because no livecheck helper was free",
+        Counter::livecheck_overflows);
 
     // Nagios program status data
     addColumn(make_unique<IntPointerColumn>(
@@ -122,11 +125,10 @@ TableStatus::TableStatus(Logger *logger) : Table(logger) {
         "enable_event_handlers",
         "Whether event handlers are activated in general (0/1)",
         &enable_event_handlers));
-    addColumn(
-        make_unique<IntPointerColumn>("obsess_over_services",
-                                      "Whether Nagios will obsess over service "
-                                      "checks and run the ocsp_command (0/1)",
-                                      &obsess_over_services));
+    addColumn(make_unique<IntPointerColumn>(
+        "obsess_over_services",
+        "Whether Nagios will obsess over service checks and run the ocsp_command (0/1)",
+        &obsess_over_services));
     addColumn(make_unique<IntPointerColumn>(
         "obsess_over_hosts",
         "Whether Nagios will obsess over host checks (0/1)",
@@ -153,23 +155,21 @@ TableStatus::TableStatus(Logger *logger) : Table(logger) {
         &check_external_commands));
     addColumn(make_unique<TimePointerColumn>(
         "program_start", "The time of the last program start as UNIX timestamp",
-        reinterpret_cast<int *>(&program_start)));
+        &program_start));
 #ifndef NAGIOS4
     addColumn(make_unique<TimePointerColumn>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp",
-        reinterpret_cast<int *>(&last_command_check)));
+        &last_command_check));
 #else
-    int dummy = 0;
     addColumn(make_unique<TimePointerColumn>(
         "last_command_check",
-        "The time of the last check for a command "
-        "as UNIX timestamp (placeholder)",
+        "The time of the last check for a command as UNIX timestamp (placeholder)",
         &dummy));
 #endif  // NAGIOS4
     addColumn(make_unique<TimePointerColumn>(
         "last_log_rotation", "Time time of the last log file rotation",
-        reinterpret_cast<int *>(&last_log_rotation)));
+        &last_log_rotation));
     addColumn(make_unique<IntPointerColumn>(
         "interval_length", "The default interval length from nagios.cfg",
         &interval_length));
@@ -204,14 +204,12 @@ TableStatus::TableStatus(Logger *logger) : Table(logger) {
         &dummy));
     addColumn(make_unique<IntPointerColumn>(
         "external_command_buffer_usage",
-        "The number of slots in use of the external "
-        "command buffer (placeholder)",
+        "The number of slots in use of the external command buffer (placeholder)",
         &dummy));
-    addColumn(
-        make_unique<IntPointerColumn>("external_command_buffer_max",
-                                      "The maximum number of slots used in the "
-                                      "external command buffer (placeholder)",
-                                      &dummy));
+    addColumn(make_unique<IntPointerColumn>(
+        "external_command_buffer_max",
+        "The maximum number of slots used in the external command buffer (placeholder)",
+        &dummy));
 #endif  // NAGIOS4
 
     // Livestatus' own status
@@ -228,22 +226,18 @@ TableStatus::TableStatus(Logger *logger) : Table(logger) {
         &g_num_active_connections));
     addColumn(make_unique<IntPointerColumn>(
         "livestatus_queued_connections",
-        "The current number of queued connections "
-        "to MK Livestatus (that wait for a free "
-        "thread)",
+        "The current number of queued connections to MK Livestatus (that wait for a free thread)",
         &g_num_queued_connections));
     addColumn(make_unique<IntPointerColumn>(
         "livestatus_threads",
-        "The maximum number of connections to MK "
-        "Livestatus that can be handled in parallel",
+        "The maximum number of connections to MK Livestatus that can be handled in parallel",
         &g_num_clientthreads));
 
     // Special stuff for Check_MK
     extern char g_mk_inventory_path[];
     addColumn(make_unique<StatusSpecialIntColumn>(
         "mk_inventory_last",
-        "The timestamp of the last time a host has been inventorized by "
-        "Check_MK HW/SW-Inventory",
+        "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
         g_mk_inventory_path, StatusSpecialIntColumn::Type::mk_inventory_last,
         -1, -1, -1));
 }

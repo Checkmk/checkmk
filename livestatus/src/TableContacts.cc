@@ -53,95 +53,86 @@ string TableContacts::namePrefix() const { return "contact_"; }
 // static
 void TableContacts::addColumns(Table *table, const string &prefix,
                                int indirect_offset) {
-    contact ctc;
-    char *ref = reinterpret_cast<char *>(&ctc);
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "The login name of the contact person",
-        reinterpret_cast<char *>(&ctc.name) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(contact, name), indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "alias", "The full name of the contact",
-        reinterpret_cast<char *>(&ctc.alias) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(contact, alias), indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "email", "The email address of the contact",
-        reinterpret_cast<char *>(&ctc.email) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(contact, email), indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "pager", "The pager address of the contact",
-        reinterpret_cast<char *>(&ctc.pager) - ref, indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(contact, pager), indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "host_notification_period",
-        "The time period in which the contact will be notified about host "
-        "problems",
-        reinterpret_cast<char *>(&ctc.host_notification_period) - ref,
-        indirect_offset, -1, -1));
+        "The time period in which the contact will be notified about host problems",
+        DANGEROUS_OFFSETOF(contact, host_notification_period), indirect_offset,
+        -1, -1));
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "service_notification_period",
-        "The time period in which the contact will be notified about service "
-        "problems",
-        reinterpret_cast<char *>(&ctc.service_notification_period) - ref,
+        "The time period in which the contact will be notified about service problems",
+        DANGEROUS_OFFSETOF(contact, service_notification_period),
         indirect_offset, -1, -1));
     for (int i = 1; i <= MAX_CONTACT_ADDRESSES; ++i) {
         string b = "address" + to_string(i);
         table->addColumn(make_unique<OffsetStringColumn>(
             prefix + b, "The additional field " + b,
-            reinterpret_cast<char *>(&ctc.address[i]) - ref, indirect_offset,
-            -1, -1));
+            DANGEROUS_OFFSETOF(contact, address[i]), indirect_offset, -1, -1));
     }
 
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "can_submit_commands",
         "Wether the contact is allowed to submit commands (0/1)",
-        reinterpret_cast<char *>(&ctc.can_submit_commands) - ref,
-        indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(contact, can_submit_commands), indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "host_notifications_enabled",
-        "Wether the contact will be notified about host problems in general "
-        "(0/1)",
-        reinterpret_cast<char *>(&ctc.host_notifications_enabled) - ref,
+        "Wether the contact will be notified about host problems in general (0/1)",
+        DANGEROUS_OFFSETOF(contact, host_notifications_enabled),
         indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "service_notifications_enabled",
-        "Wether the contact will be notified about service problems in general "
-        "(0/1)",
-        reinterpret_cast<char *>(&ctc.service_notifications_enabled) - ref,
+        "Wether the contact will be notified about service problems in general (0/1)",
+        DANGEROUS_OFFSETOF(contact, service_notifications_enabled),
         indirect_offset, -1, -1));
 
     table->addColumn(make_unique<OffsetTimeperiodColumn>(
         prefix + "in_host_notification_period",
-        "Wether the contact is currently in his/her host notification period "
-        "(0/1)",
-        reinterpret_cast<char *>(&ctc.host_notification_period_ptr) - ref,
+        "Wether the contact is currently in his/her host notification period (0/1)",
+        DANGEROUS_OFFSETOF(contact, host_notification_period_ptr),
         indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetTimeperiodColumn>(
         prefix + "in_service_notification_period",
-        "Wether the contact is currently in his/her service notification "
-        "period (0/1)",
-        reinterpret_cast<char *>(&ctc.service_notification_period_ptr) - ref,
+        "Wether the contact is currently in his/her service notification period (0/1)",
+        DANGEROUS_OFFSETOF(contact, service_notification_period_ptr),
         indirect_offset, -1, -1));
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",
         "A list of all custom variables of the contact",
-        reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        -1, -1));
+        DANGEROUS_OFFSETOF(contact, custom_variables), indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<CustomVarsValuesColumn>(
         prefix + "custom_variable_values",
         "A list of the values of all custom variables of the contact",
-        reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        -1, -1));
+        DANGEROUS_OFFSETOF(contact, custom_variables), indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<CustomVarsDictColumn>(
         prefix + "custom_variables", "A dictionary of the custom variables",
-        reinterpret_cast<char *>(&ctc.custom_variables) - ref, indirect_offset,
-        -1, -1));
+        DANGEROUS_OFFSETOF(contact, custom_variables), indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",
         "A bitmask specifying which attributes have been modified",
-        reinterpret_cast<char *>(&ctc.modified_attributes) - ref,
-        indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(contact, modified_attributes), indirect_offset, -1,
+        -1));
     table->addColumn(make_unique<AttributeListColumn>(
         prefix + "modified_attributes_list",
         "A list of all modified attributes",
-        reinterpret_cast<char *>(&ctc.modified_attributes) - ref,
-        indirect_offset, -1, -1));
+        DANGEROUS_OFFSETOF(contact, modified_attributes), indirect_offset, -1,
+        -1));
 }
 
 void TableContacts::answerQuery(Query *query) {

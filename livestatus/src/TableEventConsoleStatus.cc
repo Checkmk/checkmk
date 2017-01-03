@@ -61,16 +61,14 @@ TableEventConsoleStatus::TableEventConsoleStatus(MonitoringCore *mc)
         "status_average_rule_trie_rate", "The average rule trie rate"));
     addColumn(make_unique<IntEventConsoleColumn>(
         "status_drops",
-        "The number of message drops (decided by a rule) since startup "
-        "of the Event Console"));
+        "The number of message drops (decided by a rule) since startup of the Event Console"));
     addColumn(make_unique<DoubleEventConsoleColumn>("status_drop_rate",
                                                     "The drop rate"));
     addColumn(make_unique<DoubleEventConsoleColumn>("status_average_drop_rate",
                                                     "The average drop rate"));
     addColumn(make_unique<IntEventConsoleColumn>(
         "status_overflows",
-        "The number of message overflows, i.e. messages simply dropped due to "
-        "an overflow of the Event Console"));
+        "The number of message overflows, i.e. messages simply dropped due to an overflow of the Event Console"));
     addColumn(make_unique<DoubleEventConsoleColumn>("status_overflow_rate",
                                                     "The overflow rate"));
     addColumn(make_unique<DoubleEventConsoleColumn>(

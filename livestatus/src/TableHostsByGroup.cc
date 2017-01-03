@@ -46,12 +46,10 @@ TableHostsByGroup::TableHostsByGroup(
     const DowntimesOrComments &_downtimes_holder,
     const DowntimesOrComments &_comments_holder, MonitoringCore *core)
     : Table(core->loggerLivestatus()) {
-    struct hostbygroup ref;
     TableHosts::addColumns(this, "", -1, -1, _downtimes_holder,
                            _comments_holder, core);
     TableHostGroups::addColumns(this, "hostgroup_",
-                                reinterpret_cast<char *>(&(ref._hostgroup)) -
-                                    reinterpret_cast<char *>(&ref));
+                                DANGEROUS_OFFSETOF(hostbygroup, _hostgroup));
 }
 
 string TableHostsByGroup::name() const { return "hostsbygroup"; }

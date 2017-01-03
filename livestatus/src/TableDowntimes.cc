@@ -46,73 +46,48 @@ TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
                                const DowntimesOrComments &comments_holder,
                                MonitoringCore *core)
     : Table(core->loggerLivestatus()), _holder(downtimes_holder) {
-    Downtime *ref = nullptr;
     addColumn(make_unique<OffsetSStringColumn>(
         "author", "The contact that scheduled the downtime",
-        reinterpret_cast<char *>(&(ref->_author_name)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Downtime, _author_name), -1, -1, -1));
     addColumn(make_unique<OffsetSStringColumn>(
-        "comment", "A comment text",
-        reinterpret_cast<char *>(&(ref->_comment)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
-    addColumn(make_unique<OffsetIntColumn>(
-        "id", "The id of the downtime",
-        reinterpret_cast<char *>(&(ref->_id)) - reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        "comment", "A comment text", DANGEROUS_OFFSETOF(Downtime, _comment), -1,
+        -1, -1));
+    addColumn(make_unique<OffsetIntColumn>("id", "The id of the downtime",
+                                           DANGEROUS_OFFSETOF(Downtime, _id),
+                                           -1, -1, -1));
     addColumn(make_unique<OffsetTimeColumn>(
         "entry_time", "The time the entry was made as UNIX timestamp",
-        reinterpret_cast<char *>(&(ref->_entry_time)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Downtime, _entry_time), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "type",
         "The type of the downtime: 0 if it is active, 1 if it is pending",
-        reinterpret_cast<char *>(&(ref->_type)) - reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Downtime, _type), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service",
-        reinterpret_cast<char *>(&(ref->_is_service)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Downtime, _is_service), -1, -1, -1));
 
     addColumn(make_unique<OffsetTimeColumn>(
         "start_time", "The start time of the downtime as UNIX timestamp",
-        reinterpret_cast<char *>(&(ref->_start_time)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Downtime, _start_time), -1, -1, -1));
     addColumn(make_unique<OffsetTimeColumn>(
         "end_time", "The end time of the downtime as UNIX timestamp",
-        reinterpret_cast<char *>(&(ref->_end_time)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Downtime, _end_time), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible",
-        reinterpret_cast<char *>(&(ref->_fixed)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Downtime, _fixed), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "duration", "The duration of the downtime in seconds",
-        reinterpret_cast<char *>(&(ref->_duration)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        DANGEROUS_OFFSETOF(Downtime, _duration), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "triggered_by",
-        "The id of the downtime this downtime was triggered by or 0 if it was "
-        "not triggered by another downtime",
-        reinterpret_cast<char *>(&(ref->_triggered_by)) -
-            reinterpret_cast<char *>(ref),
-        -1, -1, -1));
+        "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
+        DANGEROUS_OFFSETOF(Downtime, _triggered_by), -1, -1, -1));
 
-    TableHosts::addColumns(
-        this, "host_",
-        reinterpret_cast<char *>(&(ref->_host)) - reinterpret_cast<char *>(ref),
-        -1, downtimes_holder, comments_holder, core);
+    TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Downtime, _host),
+                           -1, downtimes_holder, comments_holder, core);
     TableServices::addColumns(
-        this, "service_", reinterpret_cast<char *>(&(ref->_service)) -
-                              reinterpret_cast<char *>(ref),
+        this, "service_", DANGEROUS_OFFSETOF(Downtime, _service),
         false /* no hosts table */, downtimes_holder, comments_holder, core);
 }
 

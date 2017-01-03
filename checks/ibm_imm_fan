@@ -40,8 +40,8 @@ def check_ibm_imm_fan(item, params, info):
     for descr, speed_text in info:
         if descr == item:
 
-            if speed_text.lower() == "offline":
-                yield 2, "is offline"
+            if speed_text.lower() in ["offline", "unavailable"]:
+                yield 2, "is %s" % speed_text.lower()
                 return
 
             # speed_text can be "34 %", or "34%", or "34 % of maximum"

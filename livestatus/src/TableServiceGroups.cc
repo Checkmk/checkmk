@@ -151,7 +151,7 @@ bool TableServiceGroups::isAuthorized(contact *ctc, void *data) {
         return false;
     }
 
-    servicegroup *sg = reinterpret_cast<servicegroup *>(data);
+    auto sg = static_cast<servicegroup *>(data);
     for (servicesmember *mem = sg->members; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
         bool is = is_authorized_for(ctc, svc->host_ptr, svc);

@@ -445,14 +445,12 @@ int broker_host(int event_type __attribute__((__unused__)),
 int broker_check(int event_type, void *data) {
     int result = NEB_OK;
     if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
-        nebstruct_service_check_data *c =
-            reinterpret_cast<nebstruct_service_check_data *>(data);
+        auto c = static_cast<nebstruct_service_check_data *>(data);
         if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
             counterIncrement(Counter::service_checks);
         }
     } else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
-        nebstruct_host_check_data *c =
-            reinterpret_cast<nebstruct_host_check_data *>(data);
+        auto c = static_cast<nebstruct_host_check_data *>(data);
         if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
             counterIncrement(Counter::host_checks);
         }
@@ -462,8 +460,7 @@ int broker_check(int event_type, void *data) {
 }
 
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
-    nebstruct_comment_data *co =
-        reinterpret_cast<nebstruct_comment_data *>(data);
+    auto co = static_cast<nebstruct_comment_data *>(data);
     fl_store->registerComment(co);
     counterIncrement(Counter::neb_callbacks);
     trigger_notify_all(trigger_comment());
@@ -471,8 +468,7 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 }
 
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
-    nebstruct_downtime_data *dt =
-        reinterpret_cast<nebstruct_downtime_data *>(data);
+    auto dt = static_cast<nebstruct_downtime_data *>(data);
     fl_store->registerDowntime(dt);
     counterIncrement(Counter::neb_callbacks);
     trigger_notify_all(trigger_downtime());
@@ -488,8 +484,7 @@ int broker_log(int event_type __attribute__((__unused__)),
 }
 
 int broker_command(int event_type __attribute__((__unused__)), void *data) {
-    nebstruct_external_command_data *sc =
-        reinterpret_cast<nebstruct_external_command_data *>(data);
+    auto sc = static_cast<nebstruct_external_command_data *>(data);
     if (sc->type == NEBTYPE_EXTERNALCOMMAND_START) {
         counterIncrement(Counter::commands);
     }
@@ -559,8 +554,7 @@ void livestatus_log_initial_states() {
 
 int broker_event(int event_type __attribute__((__unused__)), void *data) {
     counterIncrement(Counter::neb_callbacks);
-    struct nebstruct_timed_event_struct *ts =
-        reinterpret_cast<struct nebstruct_timed_event_struct *>(data);
+    auto ts = static_cast<struct nebstruct_timed_event_struct *>(data);
     if (ts->event_type == EVENT_LOG_ROTATION) {
         if (g_thread_running == 1) {
             livestatus_log_initial_states();
@@ -630,8 +624,7 @@ private:
 NagiosCore core;
 
 int broker_process(int event_type __attribute__((__unused__)), void *data) {
-    struct nebstruct_process_struct *ps =
-        reinterpret_cast<struct nebstruct_process_struct *>(data);
+    auto ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
             for (host *hst = host_list; hst != nullptr; hst = hst->next) {

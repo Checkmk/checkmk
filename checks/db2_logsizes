@@ -37,7 +37,6 @@ factory_settings["db2_logsizes_default_levels"] = {
 }
 
 def parse_db2_logsizes(info):
-    pprint.pprint(info)
     pre_parsed = parse_db2_dbs(info)
     global_timestamp = pre_parsed[0]
     parsed = {}

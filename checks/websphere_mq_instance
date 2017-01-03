@@ -153,7 +153,6 @@ check_info['websphere_mq_instance'] = {
     'check_function'        : check_websphere_mq_instance,
     'service_description'   : 'MQ Instance %s',
     'group'                 : 'websphere_mq_states',
-    'includes'              : [ 'websphere_mq.include' ]
 }
 
 
@@ -221,5 +220,4 @@ check_info['websphere_mq_instance.manager'] = {
     'check_function'        : check_websphere_mq_manager,
     'service_description'   : 'MQ Manager %s',
     'group'                 : 'websphere_mq_states',
-    'includes'              : [ 'websphere_mq.include' ],
 }

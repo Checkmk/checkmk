@@ -425,13 +425,11 @@ def initialize_check_type_caches():
 #   '----------------------------------------------------------------------'
 
 def set_hostname(hostname):
-    global g_hostname
-    g_hostname = hostname
+    check_api._hostname = hostname
 
 
 def set_service_description(descr):
-    global g_service_description
-    g_service_description = descr
+    check_api._service_description = descr
 
 
 # Remove illegal characters from a service description

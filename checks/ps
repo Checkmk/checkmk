@@ -75,7 +75,6 @@ inventory_processes_rules = []
 inventory_processes = []
 inventory_processes_perf = []
 ANY_USER = None
-GRAB_USER = False
 
 
 def ps_cleanup_counters(parsed):

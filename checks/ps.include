@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+GRAB_USER = False
+
 factory_settings["ps_default_levels"] = {
     "levels" : (1, 1, 99999, 99999),
 }

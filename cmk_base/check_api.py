@@ -82,8 +82,17 @@ OID_END_OCTET_STRING = _snmp.OID_END_OCTET_STRING
 binstring_to_int     = _snmp.binstring_to_int
 
 # Is set before check execution
-g_hostname            = "unknown" # Host currently being checked
-g_service_description = None
+_hostname            = "unknown" # Host currently being checked
+_service_description = None
+
+
+def host_name():
+    return _hostname
+
+
+def service_description():
+    return _service_description
+
 
 def saveint(i):
     try:
@@ -263,7 +272,7 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     else:
         try:
             ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
-                      _prediction.get_levels(g_hostname, g_service_description,
+                      _prediction.get_levels(_hostname, _service_description,
                                 dsname, params, "MAX", levels_factor=factor * scale)
 
             if ref_value:
@@ -320,13 +329,13 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
 
 # retrive the service level that applies to the calling check.
 def get_effective_service_level():
-    service_levels = _rulesets.service_extra_conf(g_hostname, g_service_description,
+    service_levels = _rulesets.service_extra_conf(_hostname, _service_description,
                                         _config.service_service_levels)
 
     if service_levels:
         return service_levels[0]
     else:
-        service_levels = _rulesets.host_extra_conf(g_hostname, _config.host_service_levels)
+        service_levels = _rulesets.host_extra_conf(_hostname, _config.host_service_levels)
         if service_levels:
             return service_levels[0]
     return 0

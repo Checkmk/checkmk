@@ -14,6 +14,20 @@ pytestmark = pytest.mark.pylint
 def test_pylint_checks(pylint_test_dir):
     f = file(pylint_test_dir + "/cmk-checks.py", "w")
 
+    # Fake data structures where checks register (See cmk_base/checks.py)
+    f.write("""
+check_info                         = {}
+check_includes                     = {}
+precompile_params                  = {}
+check_default_levels               = {}
+factory_settings                   = {}
+check_config_variables             = []
+snmp_info                          = {}
+snmp_scan_functions                = {}
+active_check_info                  = {}
+special_agent_info                 = {}
+""")
+
     # add the modules
     pylint_cmk.add_file(f, repo_path() + "/cmk_base/check_api.py")
 

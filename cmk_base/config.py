@@ -77,7 +77,7 @@ def set_check_variables_for_checks():
     import cmk_base.checks
     global_dict = globals()
     for varname in cmk_base.checks.check_variable_names():
-        setattr(cmk_base.checks, varname, global_dict.pop(varname))
+        cmk_base.checks.set_check_variable(varname, global_dict.pop(varname))
         delattr(default_config, varname)
 
 

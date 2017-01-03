@@ -47,6 +47,7 @@ import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
 import cmk_base.checks as checks
+import cmk_base.check_api as check_api
 import cmk_base.discovery as discovery
 import cmk_base.ip_lookup as ip_lookup
 import cmk_base.agent_data as agent_data
@@ -118,7 +119,7 @@ def do_inv_check(options, hostname):
         if not inv_tree.get("software") and _inv_sw_missing:
             infotext += ", software information is missing"
             state = _inv_sw_missing
-            infotext += checks.state_markers[_inv_sw_missing]
+            infotext += check_api.state_markers[_inv_sw_missing]
 
         if old_timestamp:
             path = inventory_archive_dir + "/" + hostname + "/%d" % old_timestamp
@@ -128,7 +129,7 @@ def do_inv_check(options, hostname):
                 infotext += ", software changes"
                 if _inv_sw_changes:
                     state = _inv_sw_changes
-                    infotext += checks.state_markers[_inv_sw_changes]
+                    infotext += check_api.state_markers[_inv_sw_changes]
 
             if inv_tree.get("hardware") != old_tree.get("hardware"):
                 infotext += ", hardware changes"
@@ -137,7 +138,7 @@ def do_inv_check(options, hostname):
                 else:
                     state = max(state, _inv_sw_changes)
                 if _inv_hw_changes:
-                    infotext += checks.state_markers[_inv_hw_changes]
+                    infotext += check_api.state_markers[_inv_hw_changes]
 
         console.output(defines.short_service_state_name(state) + " - " + infotext + "\n")
         sys.exit(state)

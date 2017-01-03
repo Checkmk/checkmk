@@ -24,41 +24,92 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import os
+
 import cmk.paths
+from cmk.exceptions import MKGeneralException
 
 import cmk_base.checks as checks
+import cmk_base.check_api as check_api
 import cmk_base.console as console
 import cmk_base.inventory
 
 # Inventory plugins have dependencies to check plugins and the inventory
 # plugins need the check API. This is the easiest solution to get this
 # working at the moment. In future some kind of OOP approach would be better.
-from cmk_base.checks import *
+# TODO: Clean this up!
+#from cmk_base.checks import *
 
-inv_info = {}   # Inventory plugins
+inv_info   = {} # Inventory plugins
 inv_export = {} # Inventory export hooks
+_plugin_contexts  = {} # The checks are loaded into this dictionary. Each check
+                       # becomes a separat sub-dictionary, named by the check name
+_include_contexts = {} # These are the contexts of the check include files
+
 
 def load(): # pylint: disable=function-redefined
-    # Read all inventory plugins right now
-    filelist = checks.plugin_pathnames_in_directory(cmk.paths.inventory_dir) \
-             + checks.plugin_pathnames_in_directory(cmk.paths.local_inventory_dir)
-
-    # read include files always first, but still in the sorted
-    # order with local ones last (possibly overriding variables)
-    filelist = [ f for f in filelist if f.endswith(".include") ] + \
-               [ f for f in filelist if not f.endswith(".include") ]
+    loaded_files = set()
+    filelist = checks.get_plugin_paths(cmk.paths.local_inventory_dir,
+                                       cmk.paths.inventory_dir)
 
     for f in filelist:
-        if f.endswith("~"): # ignore emacs-like backup files
-            continue
+        if f[0] == "." or f[-1] == "~":
+            continue # ignore editor backup / temp files
+
+        file_name  = os.path.basename(f)
+        is_include = file_name.endswith(".include")
+        if file_name in loaded_files:
+            continue # skip already loaded files (e.g. from local)
 
         try:
-            execfile(f, globals(), globals())
+            plugin_context = _new_inv_context(f)
+            known_plugins = inv_info.keys()
+            execfile(f, plugin_context)
+            loaded_files.add(file_name)
         except Exception, e:
             console.error("Error in inventory plugin file %s: %s\n", f, e)
             if cmk.debug.enabled():
                 raise
-            sys.exit(5)
+            else:
+                continue
+
+        if is_include:
+            _include_contexts[file_name] = plugin_context
+        else:
+            # Now store the check context for all plugins found in this file
+            for check_name in set(inv_info.keys()).difference(known_plugins):
+                _plugin_contexts[check_name] = plugin_context
+
+
+def _new_inv_context(plugin_file_path):
+    # Add the data structures where the inventory plugins register with Check_MK
+    context = {
+        "inv_info"   : inv_info,
+        "inv_export" : inv_export,
+    }
+
+    # Add the inventory plugin and check API
+    #
+    # For better separation it would be better to copy the check API objects, but
+    # this might consume too much memory. So we simply reference it.
+    for k, v in check_api.get_check_context() + _get_inventory_context():
+        context[k] = v
+
+    # Load the definitions of the required include files for this check
+    # Working with imports when specifying the includes would be much cleaner,
+    # sure. But we need to deal with the current check API.
+    if plugin_file_path and not plugin_file_path.endswith(".include"):
+        for include_file_name in checks.includes_of_plugin(plugin_file_path):
+            try:
+                context.update(_include_contexts[include_file_name])
+            except KeyError, e:
+                # inventory plugins may also use check includes. Try to find one.
+                try:
+                    context.update(checks.get_include_context(include_file_name))
+                except KeyError, e:
+                    raise MKGeneralException("The include file %s does not exist" % include_file_name)
+
+    return context
 
 
 def is_snmp_plugin(plugin_type):
@@ -80,5 +131,8 @@ def is_snmp_plugin(plugin_type):
 #   | things declared here.                                                |
 #   '----------------------------------------------------------------------'
 
-inv_tree_list = cmk_base.inventory.inv_tree_list
-inv_tree      = cmk_base.inventory.inv_tree
+def _get_inventory_context():
+    return [
+        ("inv_tree_list", cmk_base.inventory.inv_tree_list),
+        ("inv_tree", cmk_base.inventory.inv_tree),
+    ]

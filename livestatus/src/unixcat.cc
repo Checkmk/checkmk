@@ -73,7 +73,7 @@ void *copy_thread(void *info) {
     // https://llvm.org/bugs/show_bug.cgi?id=29089
     signal(SIGWINCH, SIG_IGN);  // NOLINT
 
-    struct thread_info *ti = reinterpret_cast<struct thread_info *>(info);
+    auto *ti = static_cast<thread_info *>(info);
     int from = ti->from;
     int to = ti->to;
 
@@ -147,8 +147,8 @@ int main(int argc, char **argv) {
         exit(4);
     }
 
-    struct thread_info toleft_info = {sock, 1, 0, 1};
-    struct thread_info toright_info = {0, sock, 1, 0};
+    thread_info toleft_info = {sock, 1, 0, 1};
+    thread_info toright_info = {0, sock, 1, 0};
     pthread_t toright_thread, toleft_thread;
     if (pthread_create(&toright_thread, nullptr, copy_thread, &toright_info) !=
             0 ||

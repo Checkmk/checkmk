@@ -189,7 +189,7 @@ bool TableHostGroups::isAuthorized(contact *ctc, void *data) {
         return false;
     }
 
-    hostgroup *hg = reinterpret_cast<hostgroup *>(data);
+    auto hg = static_cast<hostgroup *>(data);
     for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
         bool is = is_authorized_for(ctc, hst, nullptr);

@@ -24,9 +24,7 @@
 
 #include "LogCache.h"
 #include <dirent.h>
-#include <unistd.h>
-#include <cstddef>
-#include <cstdlib>
+#include <cerrno>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -98,27 +96,32 @@ void LogCache::updateLogfileIndex() {
     // current nagios.log and all files in the archive.
     scanLogfile(log_file, true);
 
-    DIR *dir = opendir(log_archive_path);
-
-    if (dir != nullptr) {
-        struct dirent *ent, *result;
-        int len = offsetof(struct dirent, d_name) +
-                  pathconf(log_archive_path, _PC_NAME_MAX) + 1;
-        ent = static_cast<struct dirent *>(malloc(len));
-
-        while (0 == readdir_r(dir, ent, &result) && result != nullptr) {
-            if (ent->d_name[0] != '.') {
-                scanLogfile(string(log_archive_path) + "/" + ent->d_name,
-                            false);
-            }
-            // ent = result;
-        }
-        free(ent);
-        closedir(dir);
-    } else {
-        Informational(_logger) << "cannot open log archive "
-                               << log_archive_path;
+    // TODO(sp) Avoid global variable
+    string dirpath = log_archive_path;
+    DIR *dir = opendir(dirpath.c_str());
+    if (dir == nullptr) {
+        generic_error ge("cannot open log archive " + dirpath);
+        Informational(_logger) << ge;
+        return;
     }
+
+    while (true) {
+        errno = 0;
+        dirent *ent = readdir(dir);
+        if (ent == nullptr) {
+            if (errno != 0) {
+                generic_error ge("cannot read directory entry from " + dirpath);
+                Warning(_logger) << ge;
+            }
+            break;
+        }
+        string name = ent->d_name;
+        if (name != "." && name != "..") {
+            scanLogfile(dirpath + "/" + ent->d_name, false);
+        }
+    }
+
+    closedir(dir);
 }
 
 void LogCache::scanLogfile(const string &path, bool watch) {

@@ -1,0 +1,12 @@
+Title: ibm_imm_fan: Fixed crash if fan speed is "unavailable"
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p16
+Date: 1483438073
+
+If the value for speed is "unavailable" the behaviour is now similar to
+"offline": The state becomes CRIT and the status detail shows the output "is unvailable".
+

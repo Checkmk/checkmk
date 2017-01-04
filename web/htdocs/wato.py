@@ -7186,12 +7186,6 @@ def vs_notification_scripts():
        default_value = "mail"
     )
 
-def vs_notification_methods():
-    return CascadingDropdown(
-        title = _("Notification Method"),
-        choices = notification_script_choices_with_parameters,
-        default_value = ( "mail", {} )
-    )
 
 def vs_notification_rule(userid = None):
     if userid:
@@ -7311,7 +7305,7 @@ def vs_notification_rule(userid = None):
         + [
             # Notification
             ( "notify_plugin",
-              vs_notification_methods(),
+              get_vs_notification_methods(),
             ),
 
             # ( "notify_method",
@@ -8421,41 +8415,6 @@ def load_notification_scripts():
     return load_user_scripts("notifications")
 
 
-def notification_script_choices():
-    choices = []
-    for choice in user_script_choices("notifications") + [(None, _("ASCII Email (legacy)")) ]:
-        notificaton_plugin_name, notification_plugin_title = choice
-        if config.user.may("notification_plugin.%s" % notificaton_plugin_name):
-            choices.append( choice )
-    return choices
-
-
-def notification_script_choices_with_parameters():
-    choices = []
-    for script_name, title in notification_script_choices():
-        if script_name in g_notification_parameters:
-            vs = g_notification_parameters[script_name]
-        else:
-            vs = ListOfStrings(
-                 title = _("Call with the following parameters:"),
-                 valuespec = TextUnicode(size = 24),
-                 orientation = "horizontal",
-            )
-        choices.append((script_name, title,
-            Alternative(
-                style = "dropdown",
-                elements = [
-                    vs,
-                    FixedValue(None, totext = _("previous notifications of this type are cancelled"),
-                               title = _("Cancel previous notifications")),
-                ]
-            )
-        ))
-    return choices
-
-
-def notification_script_title(name):
-    return user_script_title("notifications", name)
 
 
 #.
@@ -10149,17 +10108,10 @@ def mode_users(phase):
     if phase == "action":
         if html.var('_delete'):
             delid = html.get_unicode_input("_delete")
-            if delid == config.user.id:
-                raise MKUserError(None, _("You cannot delete your own account!"))
-
-            if delid not in users:
-                return None # The account does not exist (anymore), no deletion needed
-
             c = wato_confirm(_("Confirm deletion of user %s") % delid,
                              _("Do you really want to delete the user %s?") % delid)
             if c:
-                delete_user(delid, users)
-                userdb.save_users(users)
+                delete_users([delid])
             elif c == False:
                 return ""
 
@@ -10354,87 +10306,50 @@ def bulk_delete_users_after_confirm(users):
         c = wato_confirm(_("Confirm deletion of %d users") % len(selected_users),
                          _("Do you really want to delete %d users?") % len(selected_users))
         if c:
-            for user in selected_users:
-                delete_user(user, users)
+            delete_users(selected_users)
         elif c == False:
             return ""
-
-    userdb.save_users(users)
-    return
-
-
-def delete_user(delid, users):
-    del users[delid]
-    add_change("edit-users", _("Deleted user %s") % (delid))
 
 
 def mode_edit_user(phase):
     # Check if rule based notifications are enabled (via WATO)
     rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
 
-    users = userdb.load_users(lock = phase == 'action')
-    userid = html.get_unicode_input("edit") # missing -> new user
+    users   = userdb.load_users(lock = phase == 'action')
+    user_id = html.get_unicode_input("edit") # missing -> new user
     cloneid = html.get_unicode_input("clone") # Only needed in 'new' mode
-    new = userid == None
+    is_new_user = user_id == None
     if phase == "title":
-        if new:
+        if is_new_user:
             return _("Create new user")
         else:
-            return _("Edit user %s") % userid
+            return _("Edit user %s") % user_id
 
     elif phase == "buttons":
         html.context_button(_("All Users"), folder_preserving_link([("mode", "users")]), "back")
-        if rulebased_notifications and not new:
+        if rulebased_notifications and not is_new_user:
             html.context_button(_("Notifications"), folder_preserving_link([("mode", "user_notifications"),
-                    ("user", userid)]), "notifications")
+                    ("user", user_id)]), "notifications")
         return
 
-    if new:
+    if is_new_user:
         if cloneid:
             user = users.get(cloneid, userdb.new_user_template('htpasswd'))
         else:
             user = userdb.new_user_template('htpasswd')
         pw_suffix = 'new'
     else:
-        user = users.get(userid, userdb.new_user_template('htpasswd'))
-        pw_suffix = base64.b64encode(userid.encode("utf-8"))
+        user = users.get(user_id, userdb.new_user_template('htpasswd'))
+        pw_suffix = base64.b64encode(user_id.encode("utf-8"))
 
-    if new:
-        vs_user_id = UserID(
-            allow_empty = False
-        )
-    else:
-        vs_user_id = FixedValue(userid)
-
-    vs_email = EmailAddressUnicode()
-
-    vs_user_idle_timeout = Alternative(
-        title = _("Session idle timeout"),
-        elements = [
-            FixedValue(None,
-                title = _("Use the global configuration"),
-                totext = "",
-            ),
-            FixedValue(False,
-                title = _("Disable the login timeout"),
-                totext = "",
-            ),
-            Age(
-                title = _("Set an individual idle timeout"),
-                display = [ "minutes", "hours", "days" ],
-                minvalue = 60,
-                default_value = 3600,
-            ),
-        ],
-        style = "dropdown",
-        orientation = "horizontal",
-    )
-
+    user_attrs = {}
     # Returns true if an attribute is locked and should be read only. Is only
     # checked when modifying an existing user
     locked_attributes = userdb.locked_attributes(user.get('connector'))
+    user_attrs["locked_attributes"] = locked_attributes
+
     def is_locked(attr):
-        return not new and attr in locked_attributes
+        return not is_new_user and attr in user_attrs["locked_attributes"]
 
     def custom_user_attributes(topic = None):
         for name, attr in userdb.get_user_attributes():
@@ -10453,184 +10368,138 @@ def mode_edit_user(phase):
                 html.close_div()
             html.help(_u(vs.help()))
 
+
     # Load data that is referenced - in order to display dropdown
     # boxes and to check for validity.
     contact_groups = userdb.load_group_information().get("contact", {})
-    timeperiods = load_timeperiods()
-    roles = userdb.load_roles()
+    timeperiods    = load_timeperiods()
+    roles          = userdb.load_roles()
 
     if phase == "action":
         if not html.check_transaction():
             return "users"
 
-        if new:
-            id = vs_user_id.from_html_vars("user_id")
-            vs_user_id.validate_value(id, "user_id")
-
-            if id in users:
-                raise MKUserError("user_id", _("This username is already being used by another user."))
-
-            new_user = {}
-            users[id] = new_user
+        if is_new_user:
+            user_id = UserID(allow_empty = False).from_html_vars("user_id")
         else:
-            id = html.get_unicode_input("edit").strip()
-            if id not in users:
-                raise MKUserError(None, _("The user you are trying to edit does not exist."))
-            new_user = users[id]
+            user_id = html.get_unicode_input("edit").strip()
+            user_attrs = users[user_id]
 
         # Full name
-        alias = html.get_unicode_input("alias").strip()
-        if not alias:
-            raise MKUserError("alias",
-            _("Please specify a full name or descriptive alias for the user."))
-        new_user["alias"] = alias
+        user_attrs["alias"] = html.get_unicode_input("alias").strip()
 
         # Locking
-        if id == config.user.id and html.get_checkbox("locked"):
-            raise MKUserError("locked", _("You cannot lock your own account!"))
-        new_user["locked"] = html.get_checkbox("locked")
-
+        user_attrs["locked"] = html.get_checkbox("locked")
         increase_serial = False
-        if users[id] != new_user["locked"] and new_user["locked"]:
+
+        if user_id in users and users[user_id]["locked"] != user_attrs["locked"] and user_attrs["locked"]:
             increase_serial = True # when user is being locked now, increase the auth serial
 
         # Authentication: Password or Secret
         auth_method = html.var("authmethod")
         if auth_method == "secret":
             secret = html.var("secret", "").strip()
-            if not secret or len(secret) < 10:
-                raise MKUserError('secret', _("Please specify a secret of at least 10 characters length."))
-            new_user["automation_secret"] = secret
-            new_user["password"] = userdb.encrypt_password(secret)
+            user_attrs["automation_secret"] = secret
+            user_attrs["password"] = userdb.encrypt_password(secret)
             increase_serial = True # password changed, reflect in auth serial
 
         else:
-            password = html.var("password_" + pw_suffix, '').strip()
+            password  = html.var("password_" + pw_suffix, '').strip()
             password2 = html.var("password2_" + pw_suffix, '').strip()
-
-            # Detect switch back from automation to password
-            if "automation_secret" in new_user:
-                del new_user["automation_secret"]
-                if "password" in new_user:
-                    del new_user["password"] # which was the encrypted automation password!
 
             # We compare both passwords only, if the user has supplied
             # the repeation! We are so nice to our power users...
+            # Note: this validation is done before the main-validiation later on
+            # It doesn't make any sense to put this block into the main validation function
             if password2 and password != password2:
                 raise MKUserError("password2", _("The both passwords do not match."))
 
+            user_attrs["password"] = password
+
+            # Detect switch back from automation to password
+            if "automation_secret" in user_attrs:
+                del user_attrs["automation_secret"]
+                if "password" in user_attrs:
+                    del user_attrs["password"] # which was the encrypted automation password!
+
             if password:
-                verify_password_policy(password)
-                new_user["password"] = userdb.encrypt_password(password)
-                new_user['last_pw_change'] = int(time.time())
+                user_attrs["password"] = userdb.encrypt_password(password)
+                user_attrs["last_pw_change"] = int(time.time())
                 increase_serial = True # password changed, reflect in auth serial
 
             # PW change enforcement
-            new_user["enforce_pw_change"] = html.get_checkbox("enforce_pw_change")
-            if new_user["enforce_pw_change"]:
+            user_attrs["enforce_pw_change"] = html.get_checkbox("enforce_pw_change")
+            if user_attrs["enforce_pw_change"]:
                 increase_serial = True # invalidate all existing user sessions, enforce relogon
 
 
         # Increase serial (if needed)
         if increase_serial:
-            new_user['serial'] = new_user.get('serial', 0) + 1
+            user_attrs["serial"] = user_attrs.get("serial", 0) + 1
 
         # Email address
-        email = vs_email.from_html_vars("email")
-        vs_email.validate_value(email, "email")
-        new_user["email"] = email
+        user_attrs["email"] = EmailAddressUnicode().from_html_vars("email")
 
-        idle_timeout = vs_user_idle_timeout.from_html_vars("idle_timeout")
-        vs_user_idle_timeout.validate_value(idle_timeout, "idle_timeout")
+        idle_timeout = get_vs_user_idle_timeout().from_html_vars("idle_timeout")
+        user_attrs["idle_timeout"] = idle_timeout
         if idle_timeout != None:
-            new_user["idle_timeout"] = idle_timeout
-        elif idle_timeout == None and "idle_timeout" in new_user:
-            del new_user["idle_timeout"]
+            user_attrs["idle_timeout"] = idle_timeout
+        elif idle_timeout == None and "idle_timeout" in user_attrs:
+            del user_attrs["idle_timeout"]
 
         # Pager
-        pager = html.var("pager", '').strip()
-        new_user["pager"] = pager
+        user_attrs["pager"] = html.var("pager", '').strip()
 
         # Roles
-        new_user["roles"] = filter(lambda role: html.get_checkbox("role_" + role),
+        user_attrs["roles"] = filter(lambda role: html.get_checkbox("role_" + role),
                                    roles.keys())
 
         # Language configuration
-        set_lang = html.get_checkbox('_set_lang')
-        language = html.var('language')
+        set_lang = html.get_checkbox("_set_lang")
+        language = html.var("language")
         if set_lang:
-            if language == '':
+            if language == "":
                 language = None
-            new_user['language'] = language
-        elif not set_lang and 'language' in new_user:
-            del new_user['language']
+            user_attrs["language"] = language
+        elif not set_lang and "language" in user_attrs:
+            del user_attrs["language"]
 
         # Contact groups
         cgs = []
         for c in contact_groups:
             if html.get_checkbox("cg_" + c):
                 cgs.append(c)
-        new_user["contactgroups"] = cgs
+        user_attrs["contactgroups"] = cgs
 
         # Notification settings are only active if we do *not* have
         # rule based notifications!
         if not rulebased_notifications:
             # Notifications
-            new_user["notifications_enabled"] = html.get_checkbox("notifications_enabled")
-
-            # Check if user can receive notifications
-            if new_user["notifications_enabled"]:
-                if not new_user["email"]:
-                    raise MKUserError("email",
-                         _('You have enabled the notifications but missed to configure a '
-                           'Email address. You need to configure your mail address in order '
-                           'to be able to receive emails.'))
-
-                if not new_user["contactgroups"]:
-                    raise MKUserError("notifications_enabled",
-                         _('You have enabled the notifications but missed to make the '
-                           'user member of at least one contact group. You need to make '
-                           'the user member of a contact group which has hosts assigned '
-                           'in order to be able to receive emails.'))
-
-                if not new_user["roles"]:
-                    raise MKUserError("role_user",
-                        _("Your user has no roles. Please assign at least one role."))
+            user_attrs["notifications_enabled"] = html.get_checkbox("notifications_enabled")
 
             ntp = html.var("notification_period")
             if ntp not in timeperiods:
                 ntp = "24X7"
-            new_user["notification_period"] = ntp
+            user_attrs["notification_period"] = ntp
 
             for what, opts in [ ( "host", "durfs"), ("service", "wucrfs") ]:
-                new_user[what + "_notification_options"] = "".join(
+                user_attrs[what + "_notification_options"] = "".join(
                   [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
 
             value = vs_notification_method.from_html_vars("notification_method")
-            vs_notification_method.validate_value(value, "notification_method")
-            new_user["notification_method"] = value
-
+            user_attrs["notification_method"] = value
         else:
-            new_user["fallback_contact"] = html.get_checkbox("fallback_contact")
-            if new_user["fallback_contact"] and not new_user["email"]:
-                raise MKUserError("email",
-                     _("You have enabled the fallback notifications but missed to configure an "
-                       "email address. You need to configure your mail address in order "
-                       "to be able to receive fallback notifications."))
-
+            user_attrs["fallback_contact"] = html.get_checkbox("fallback_contact")
 
         # Custom user attributes
         for name, attr in userdb.get_user_attributes():
             value = attr['valuespec'].from_html_vars('ua_' + name)
-            attr['valuespec'].validate_value(value, "ua_" + name)
-            new_user[name] = value
+            user_attrs[name] = value
 
-        # Saving
-        userdb.save_users(users)
-        if new:
-            add_change("edit-users", _("Create new user %s") % id)
-        else:
-            add_change("edit-users", _("Modified user %s") % id)
+        # Generate user "object" to update
+        user_object = {user_id: {"attributes": user_attrs, "is_new_user": is_new_user}}
+        # The following call validates and updated the users
+        edit_users(user_object)
         return "users"
 
     # Let exceptions from loading notification scripts happen now
@@ -10642,8 +10511,13 @@ def mode_edit_user(phase):
     forms.header(_("Identity"))
 
     # ID
-    forms.section(_("Username"), simple = not new)
-    vs_user_id.render_input("user_id", userid)
+    forms.section(_("Username"), simple = not is_new_user)
+    if is_new_user:
+        vs_user_id = UserID(allow_empty = False)
+
+    else:
+        vs_user_id = FixedValue(user_id)
+    vs_user_id.render_input("user_id", user_id)
 
     def lockable_input(name, dflt):
         if not is_locked(name):
@@ -10654,14 +10528,14 @@ def mode_edit_user(phase):
 
     # Full name
     forms.section(_("Full name"))
-    lockable_input('alias', userid)
+    lockable_input('alias', user_id)
     html.help(_("Full name or alias of the user"))
 
     # Email address
     forms.section(_("Email address"))
     email = user.get("email", "")
     if not is_locked("email"):
-        vs_email.render_input("email", email)
+        EmailAddressUnicode().render_input("email", email)
     else:
         html.write_text(email)
         html.hidden_field("email", email)
@@ -10704,7 +10578,7 @@ def mode_edit_user(phase):
         html.td("%s:" % _("Enforce change"))
         html.open_td()
         # Only make password enforcement selection possible when user is allowed to change the PW
-        if new or config.user_may(userid, 'general.edit_profile') and config.user_may(userid, 'general.change_password'):
+        if is_new_user or config.user_may(user_id, 'general.edit_profile') and config.user_may(user_id, 'general.change_password'):
             html.checkbox("enforce_pw_change", user.get("enforce_pw_change", False),
                           label=_("Change password at next login or access"))
         else:
@@ -10757,7 +10631,7 @@ def mode_edit_user(phase):
     forms.section(_("Idle timeout"))
     idle_timeout = user.get("idle_timeout")
     if not is_locked("idle_timeout"):
-        vs_user_idle_timeout.render_input("idle_timeout", idle_timeout)
+        get_vs_user_idle_timeout().render_input("idle_timeout", idle_timeout)
     else:
         html.write_text(idle_timeout)
         html.hidden_field("idle_timeout", idle_timeout)
@@ -10768,7 +10642,7 @@ def mode_edit_user(phase):
     entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
     is_member_of_at_least_one = False
     for role_id, role in entries:
-        if not is_locked('roles'):
+        if not is_locked("roles"):
             html.checkbox("role_" + role_id, role_id in user.get("roles", []))
             url = folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
             html.a(role["alias"], href=url)
@@ -10906,7 +10780,7 @@ def mode_edit_user(phase):
     # to store values in the monitoring core. We'll see what future brings.
     forms.end()
     html.button("save", _("Save"))
-    if new:
+    if is_new_user:
         html.set_focus("user_id")
     else:
         html.set_focus("alias")
@@ -13685,36 +13559,6 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
             deprecated = deprecated)
 
 
-# Registers notification parameters for a certain notification script,
-# e.g. "mail" or "sms". This will create:
-# - A WATO host rule
-# - A parametrization of the not-script also in the RBN module
-# Notification parameters are always expected to be of type Dictionary.
-# The match type will be set to "dict".
-g_notification_parameters = {}
-def register_notification_parameters(scriptname, valuespec):
-    register_user_script_parameters(
-        g_notification_parameters,
-        "notification_parameters",
-        "monconf/" + _("Notifications"),
-        scriptname,
-        valuespec)
-
-
-def register_user_script_parameters(ruleset_dict, ruleset_dict_name, ruleset_group, scriptname, valuespec):
-    script_title = notification_script_title(scriptname)
-    title = _("Parameters for %s") % script_title
-    valuespec._title = _("Call with the following parameters:")
-
-    register_rule(
-        ruleset_group,
-        ruleset_dict_name + ":" + scriptname,
-        valuespec,
-        title,
-        itemtype = None,
-        match = "dict"
-    )
-    ruleset_dict[scriptname] = valuespec
 
 
 
@@ -14030,29 +13874,6 @@ def do_hostname_translation(translation, hostname):
 #   +----------------------------------------------------------------------+
 #   | A user can change several aspects of it's own profile                |
 #   '----------------------------------------------------------------------'
-
-def verify_password_policy(password):
-    policy = config.password_policy
-    min_len = config.password_policy.get('min_length')
-    if min_len and len(password) < min_len:
-        raise MKUserError('password', _('The given password is too short. It must have at least %d characters.') % min_len)
-
-    num_groups = config.password_policy.get('num_groups')
-    if num_groups:
-        groups = {}
-        for c in password:
-            if c in "abcdefghijklmnopqrstuvwxyz":
-                groups['lcase'] = 1
-            elif c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
-                groups['ucase'] = 1
-            elif c in "0123456789":
-                groups['numbers'] = 1
-            else:
-                groups['special'] = 1
-
-        if sum(groups.values()) < num_groups:
-            raise MKUserError('password', _('The password does not use enough character groups. You need to '
-                'set a password which uses at least %d of them.') % num_groups)
 
 
 def select_language(user):

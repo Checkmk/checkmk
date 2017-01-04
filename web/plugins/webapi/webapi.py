@@ -26,11 +26,30 @@
 
 # TODO CLEANUP: Replace MKUserError by MKAPIError or something like that
 
-def validate_request_keys(request, valid_keys):
+def validate_request_keys(request, required_keys = None, optional_keys = None):
+    if required_keys:
+        missing = set(required_keys) - set(request.keys())
+        if missing:
+            raise MKUserError(None, _("Missing required key(s): %s") % ", ".join(missing))
+
+
+    all_keys = (required_keys or []) + (optional_keys or [])
     for key in request.keys():
-        if key not in valid_keys:
+        if key not in all_keys:
             raise MKUserError(None, _("Invalid key: %s") % key)
 
+
+def check_hostname(hostname, should_exist = True):
+    # Validate hostname
+    Hostname().validate_value(hostname, "hostname")
+
+    if should_exist:
+        host = Host.host(hostname)
+        if not host:
+            raise MKUserError(None, _("No such host"))
+    else:
+        if Host.host_exists(hostname):
+            raise MKUserError(None, _("Host %s already exists in the folder %s") % (hostname, Host.host(hostname).folder().path()))
 
 #.
 #   .--Hosts---------------------------------------------------------------.
@@ -86,7 +105,8 @@ def validate_host_attributes(attributes):
 
 
 def action_add_host(request):
-    validate_request_keys(request, ["hostname", "folder", "attributes", "nodes", "create_folders"])
+    validate_request_keys(request, required_keys=["hostname", "folder"],
+                                   optional_keys=["attributes", "nodes", "create_folders"])
 
     if html.var("create_folders"):
         create_folders = bool(int(html.var("create_folders")))
@@ -98,17 +118,9 @@ def action_add_host(request):
     attributes    = request.get("attributes", {})
     cluster_nodes = request.get("nodes")
 
-    # Validate hostname
-    if not hostname:
-        raise MKUserError(None, _("Hostname is missing"))
-    Hostname().validate_value(hostname, "hostname")
-    if Host.host_exists(hostname):
-        raise MKUserError(None, _("Host %s already exists in the folder %s") % (hostname, Host.host(hostname).folder().path()))
+    check_hostname(hostname, should_exist = False)
 
     # Validate folder
-    if folder_path == None:
-        raise MKUserError(None, _("Foldername is missing"))
-
     if folder_path != "" and folder_path != "/":
         folders = folder_path.split("/")
         for foldername in folders:
@@ -141,20 +153,17 @@ api_actions["add_host"] = {
 ###############
 
 def action_edit_host(request):
-    validate_request_keys(request, ["hostname", "unset_attributes", "attributes", "nodes"])
+    validate_request_keys(request, required_keys=["hostname"],
+                                   optional_keys=["unset_attributes", "attributes", "nodes"])
 
     hostname              = request.get("hostname")
     attributes            = request.get("attributes", {})
     unset_attribute_names = request.get("unset_attributes", [])
     cluster_nodes         = request.get("nodes")
 
-    # Validate host
-    if not hostname:
-        raise MKUserError(None, _("Hostname is missing"))
+    check_hostname(hostname, should_exist = True)
 
     host = Host.host(hostname)
-    if not host:
-        raise MKUserError(None, _("No such host"))
 
     # Deprecated, but still supported
     # Nodes are now specified in an extra key
@@ -183,16 +192,15 @@ api_actions["edit_host"] = {
 ###############
 
 def action_get_host(request):
-    validate_request_keys(request, ["hostname", "effective_attributes"])
+    validate_request_keys(request, required_keys=["hostname"],
+                                   optional_keys=["effective_attributes"])
 
     hostname = request.get("hostname")
-    if not hostname:
-        raise MKUserError(None, _("Hostname is missing"))
-    host = Host.host(hostname)
-    if not host:
-        raise MKUserError(None, _("No such host"))
-    host.need_permission("read")
 
+    check_hostname(hostname, should_exist = True)
+
+    host = Host.host(hostname)
+    host.need_permission("read")
     if html.var("effective_attributes") == "1":
         attributes = host.effective_attributes()
     else:
@@ -211,7 +219,7 @@ api_actions["get_host"] = {
 ###############
 
 def action_get_all_hosts(request):
-    validate_request_keys(request, ["effective_attributes"])
+    validate_request_keys(request, optional_keys=["effective_attributes"])
 
     if html.var("effective_attributes"):
         effective_attributes = bool(int(html.var("effective_attributes")))
@@ -242,17 +250,12 @@ api_actions["get_all_hosts"] = {
 ###############
 
 def action_delete_host(request):
-    validate_request_keys(request, ["hostname"])
+    validate_request_keys(request, required_keys=["hostname"])
 
     hostname = request.get("hostname")
-
-    if not hostname:
-        raise MKUserError(None, _("Hostname is missing"))
+    check_hostname(hostname, should_exist = True)
 
     host = Host.host(hostname)
-    if not host:
-        raise MKUserError(None, _("No such host"))
-
     host.folder().delete_hosts([host.name()])
 
 api_actions["delete_host"] = {
@@ -272,12 +275,11 @@ api_actions["delete_host"] = {
 
 
 def action_get_all_groups(request, group_type):
-    validate_request_keys(request, [])
     return userdb.load_group_information().get(group_type, {})
 
 
 def action_delete_group(request, group_type):
-    validate_request_keys(request, ["groupname"])
+    validate_request_keys(request, required_keys=["groupname"])
     groupname = request.get("groupname")
     delete_group(groupname, group_type)
 
@@ -292,9 +294,10 @@ def get_group_extra_info(request, group_type):
 
 def validate_group_request_keys(request, group_type):
     if group_type == "contact":
-        validate_request_keys(request, ["groupname", "alias", "nagvis_maps"])
+        validate_request_keys(request, required_keys=["groupname", "alias"],
+                                       optional_keys=["nagvis_maps"])
     else:
-        validate_request_keys(request, ["groupname", "alias"])
+        validate_request_keys(request, required_keys=["groupname", "alias"])
 
 
 def action_add_group(request, group_type):
@@ -336,6 +339,99 @@ def register_group_apis():
 register_group_apis() # Otherwise, group_type is known in the global scope..
 
 #.
+#   .--Users---------------------------------------------------------------.
+#   |                       _   _                                          |
+#   |                      | | | |___  ___ _ __ ___                        |
+#   |                      | | | / __|/ _ \ '__/ __|                       |
+#   |                      | |_| \__ \  __/ |  \__ \                       |
+#   |                       \___/|___/\___|_|  |___/                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def action_get_all_users(request):
+    validate_request_keys(request, [])
+    all_users = userdb.load_users(lock = False)
+    return all_users
+
+
+api_actions["get_all_users"] = {
+    "handler"     : action_get_all_users,
+    "locking"     : False,
+}
+
+###############
+
+def action_delete_users(request):
+    validate_request_keys(request, required_keys=["users"])
+    delete_users(request.get("users"))
+
+
+api_actions["delete_users"] = {
+    "handler"     : action_delete_users,
+    "locking"     : True,
+}
+
+###############
+
+def action_add_users(request):
+    validate_request_keys(request, required_keys=["users"])
+
+    users_from_request = request.get("users")
+    all_users = userdb.load_users()
+
+    new_user_objects = {}
+    for user_id, values in users_from_request.items():
+        user_template = userdb.new_user_template("htpasswd")
+        user_template.update(values)
+        new_user_objects[user_id] = {"attributes": user_template, "is_new_user": True}
+
+    edit_users(new_user_objects)
+
+
+api_actions["add_users"] = {
+    "handler"     : action_add_users,
+    "locking"     : True,
+}
+
+###############
+
+def action_edit_users(request):
+    validate_request_keys(request, required_keys=["users"])
+
+    # A dictionary with the userid as key
+    # Each value is a {"set_attributes": {"alias": "test"},
+    #                  "unset_attributes": ["pager", "email"]}
+
+    user_settings = request.get("users")
+    all_users = userdb.load_users()
+
+    import copy
+    edit_user_objects = {}
+    for user_id, settings in user_settings.items():
+        if user_id not in all_users:
+            raise MKUserError(None, _("Unknown user: %s") % user_id)
+
+        if all_users[user_id].get("connector") != "htpasswd":
+            raise MKUserError(None, _("This user is not a htpasswd user: %s") % user_id)
+
+        user_attrs = copy.deepcopy(all_users[user_id])
+        user_attrs.update(settings.get("set_attributes", {}))
+        for entry in settings.get("unset_attributes", []):
+            if entry not in user_attrs:
+                continue
+            del user_attrs[entry]
+        edit_user_objects[user_id] = {"attributes": user_attrs, "is_new_user": False}
+
+    edit_users(edit_user_objects)
+
+
+api_actions["edit_users"] = {
+    "handler"     : action_edit_users,
+    "locking"     : True,
+}
+
+
+#.
 #   .--Other---------------------------------------------------------------.
 #   |                       ___  _   _                                     |
 #   |                      / _ \| |_| |__   ___ _ __                       |
@@ -346,17 +442,16 @@ register_group_apis() # Otherwise, group_type is known in the global scope..
 #   +----------------------------------------------------------------------+
 
 def action_discover_services(request):
-    validate_request_keys(request, ["hostname", "mode"])
+    validate_request_keys(request, required_keys=["hostname"],
+                                   optional_keys=["mode"])
     config.user.need_permission("wato.services")
 
     mode = html.var("mode") and html.var("mode") or "new"
     hostname = request.get("hostname")
-    if not hostname:
-        raise MKUserError(None, _("Hostname is missing"))
+
+    check_hostname(hostname, should_exist = True)
 
     host = Host.host(hostname)
-    if not host:
-        raise MKUserError(None, _("No such host"))
 
     host_attributes = host.effective_attributes()
     counts, failed_hosts = check_mk_automation(host_attributes.get("site"), "inventory", [ "@scan", mode ] + [hostname])
@@ -386,7 +481,7 @@ api_actions["discover_services"] = {
 ###############
 
 def action_activate_changes(request):
-    validate_request_keys(request, ["mode", "sites", "allow_foreign_changes", "comment"])
+    validate_request_keys(request, optional_keys=["mode", "sites", "allow_foreign_changes", "comment"])
 
     mode = html.var("mode") and html.var("mode") or "dirty"
     if request.get("allow_foreign_changes"):

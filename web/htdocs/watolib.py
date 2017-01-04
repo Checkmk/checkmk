@@ -234,6 +234,7 @@ def add_change(action_name, text, obj=None, add_user=True, need_sync=None, need_
     if domains == None:
         domains = [ConfigDomainCore]
 
+
     log_audit(obj, action_name, text, config.user.id if add_user else '')
     need_sidebar_reload()
 
@@ -7169,7 +7170,7 @@ def find_usages_of_contact_group(name):
     used_in = find_usages_of_group_in_rules(name, [ 'host_contactgroups', 'service_contactgroups' ])
 
     # Is the contactgroup assigned to a user?
-    users = filter_hidden_users(userdb.load_users())
+    users = userdb.load_users()
     entries = users.items()
     entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
     for userid, user in entries:
@@ -7206,6 +7207,274 @@ def find_usages_of_host_group(name):
 
 def find_usages_of_service_group(name):
     return find_usages_of_group_in_rules(name, [ 'service_groups' ])
+
+
+#.
+#   .--Users---------------------------------------------------------------.
+#   |                       _   _                                          |
+#   |                      | | | |___  ___ _ __ ___                        |
+#   |                      | | | / __|/ _ \ '__/ __|                       |
+#   |                      | |_| \__ \  __/ |  \__ \                       |
+#   |                       \___/|___/\___|_|  |___/                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+# Registers notification parameters for a certain notification script,
+# e.g. "mail" or "sms". This will create:
+# - A WATO host rule
+# - A parametrization of the not-script also in the RBN module
+# Notification parameters are always expected to be of type Dictionary.
+# The match type will be set to "dict".
+
+def register_user_script_parameters(ruleset_dict, ruleset_dict_name, ruleset_group, scriptname, valuespec):
+    script_title = notification_script_title(scriptname)
+    title = _("Parameters for %s") % script_title
+    valuespec._title = _("Call with the following parameters:")
+
+    register_rule(
+        ruleset_group,
+        ruleset_dict_name + ":" + scriptname,
+        valuespec,
+        title,
+        itemtype = None,
+        match = "dict"
+    )
+    ruleset_dict[scriptname] = valuespec
+
+
+g_notification_parameters = {}
+def register_notification_parameters(scriptname, valuespec):
+    register_user_script_parameters(
+        g_notification_parameters,
+        "notification_parameters",
+        "monconf/" + _("Notifications"),
+        scriptname,
+        valuespec)
+
+def verify_password_policy(password):
+    policy = config.password_policy
+    min_len = config.password_policy.get('min_length')
+    if min_len and len(password) < min_len:
+        raise MKUserError('password', _('The given password is too short. It must have at least %d characters.') % min_len)
+
+    num_groups = config.password_policy.get('num_groups')
+    if num_groups:
+        groups = {}
+        for c in password:
+            if c in "abcdefghijklmnopqrstuvwxyz":
+                groups['lcase'] = 1
+            elif c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+                groups['ucase'] = 1
+            elif c in "0123456789":
+                groups['numbers'] = 1
+            else:
+                groups['special'] = 1
+
+        if sum(groups.values()) < num_groups:
+            raise MKUserError('password', _('The password does not use enough character groups. You need to '
+                'set a password which uses at least %d of them.') % num_groups)
+
+
+def notification_script_choices():
+    choices = []
+    for choice in user_script_choices("notifications") + [(None, _("ASCII Email (legacy)")) ]:
+        notificaton_plugin_name, notification_plugin_title = choice
+        if config.user.may("notification_plugin.%s" % notificaton_plugin_name):
+            choices.append( choice )
+    return choices
+
+
+def notification_script_choices_with_parameters():
+    choices = []
+    for script_name, title in notification_script_choices():
+        if script_name in g_notification_parameters:
+            vs = g_notification_parameters[script_name]
+        else:
+            vs = ListOfStrings(
+                 title = _("Call with the following parameters:"),
+                 valuespec = TextUnicode(size = 24),
+                 orientation = "horizontal",
+            )
+        choices.append((script_name, title,
+            Alternative(
+                style = "dropdown",
+                elements = [
+                    vs,
+                    FixedValue(None, totext = _("previous notifications of this type are cancelled"),
+                               title = _("Cancel previous notifications")),
+                ]
+            )
+        ))
+    return choices
+
+
+def notification_script_title(name):
+    return user_script_title("notifications", name)
+
+
+def get_vs_notification_methods():
+    return CascadingDropdown(
+        title = _("Notification Method"),
+        choices = notification_script_choices_with_parameters,
+        default_value = ( "mail", {} )
+    )
+
+def get_vs_user_idle_timeout():
+    return Alternative(
+        title = _("Session idle timeout"),
+        elements = [
+            FixedValue(None,
+                title = _("Use the global configuration"),
+                totext = "",
+            ),
+            FixedValue(False,
+                title = _("Disable the login timeout"),
+                totext = "",
+            ),
+            Age(
+                title = _("Set an individual idle timeout"),
+                display = [ "minutes", "hours", "days" ],
+                minvalue = 60,
+                default_value = 3600,
+            ),
+        ],
+        style = "dropdown",
+        orientation = "horizontal",
+    )
+
+
+def validate_user_attributes(all_users, user_id, user_attrs, is_new_user = True):
+    # Check user_id
+    if is_new_user:
+        if user_id in all_users:
+            raise MKUserError("user_id", _("This username is already being used by another user."))
+        vs_user_id = UserID(allow_empty = False)
+        vs_user_id.validate_value(user_id, "user_id")
+    else:
+        if user_id not in all_users:
+            raise MKUserError(None, _("The user you are trying to edit does not exist."))
+
+    # Full name
+    alias = user_attrs.get("alias")
+    if not alias:
+        raise MKUserError("alias", _("Please specify a full name or descriptive alias for the user."))
+
+    # Locking
+    locked = user_attrs.get("locked")
+    if user_id == config.user.id and locked:
+        raise MKUserError("locked", _("You cannot lock your own account!"))
+
+    # Authentication: Password or Secret
+    auth_method = user_attrs.get("authmethod")
+    if "automation_secret" in user_attrs:
+        secret = user_attrs["automation_secret"]
+        if len(secret) < 10:
+            raise MKUserError('secret', _("Please specify a secret of at least 10 characters length."))
+    else:
+        password =  user_attrs.get("password")
+        password2 = user_attrs.get("password2")
+
+        if password:
+            verify_password_policy(password)
+
+    # Email
+    email = user_attrs.get("email")
+    vs_email = EmailAddressUnicode()
+    vs_email.validate_value(email, "email")
+
+    # Idle timeout
+    idle_timeout = user_attrs.get("idle_timeout")
+    vs_user_idle_timeout = get_vs_user_idle_timeout()
+    vs_user_idle_timeout.validate_value(idle_timeout, "idle_timeout")
+
+    # Notification settings are only active if we do *not* have rule based notifications!
+    rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
+    if not rulebased_notifications:
+        # Notifications
+        notifications_enabled = user_attrs.get("notification_enabled")
+
+        # Check if user can receive notifications
+        if notifications_enabled:
+            if not email:
+                raise MKUserError("email",
+                     _('You have enabled the notifications but missed to configure a '
+                       'Email address. You need to configure your mail address in order '
+                       'to be able to receive emails.'))
+
+            contactgroups = user_attrs.get("contactgroups")
+            if not contactgroups:
+                raise MKUserError("notifications_enabled",
+                     _('You have enabled the notifications but missed to make the '
+                       'user member of at least one contact group. You need to make '
+                       'the user member of a contact group which has hosts assigned '
+                       'in order to be able to receive emails.'))
+
+            roles = user_attrs.get("roles")
+            if not roles:
+                raise MKUserError("role_user",
+                    _("Your user has no roles. Please assign at least one role."))
+
+
+        vs_notification_method = get_vs_notification_methods()
+        notification_method    = user_attrs.get("notification_method")
+        get_vs_notification_methods().validate_value(notification_method, "notification_method")
+    else:
+        fallback_contact = user_attrs.get("fallback_contact")
+        if fallback_contact and not email:
+            raise MKUserError("email",
+                 _("You have enabled the fallback notifications but missed to configure an "
+                   "email address. You need to configure your mail address in order "
+                   "to be able to receive fallback notifications."))
+
+
+    # Custom user attributes
+    for name, attr in userdb.get_user_attributes():
+        value = user_attrs.get(name)
+        attr['valuespec'].validate_value(value, "ua_" + name)
+
+
+def delete_users(users_to_delete):
+    if config.user.id in users_to_delete:
+        raise MKUserError(None, _("You cannot delete your own account!"))
+
+    all_users = userdb.load_users(lock = True)
+
+    deleted_users = []
+    for entry in users_to_delete:
+        if entry in all_users: # Silently ignore not existing users
+            deleted_users.append(entry)
+            del all_users[entry]
+        else:
+            raise MKUserError(None, _("Unknown user: %s") % entry)
+
+    if deleted_users:
+        add_change("edit-users", _("Deleted user: %s") % ", ".join(deleted_users))
+        userdb.save_users(all_users)
+
+
+def edit_users(changed_users):
+    all_users = userdb.load_users(lock = True)
+    new_users_info      = []
+    modified_users_info = []
+    for user_id, settings in changed_users.items():
+        user_attrs  = settings.get("attributes")
+        is_new_user = settings.get("is_new_user", True)
+        validate_user_attributes(all_users, user_id, user_attrs, is_new_user = is_new_user)
+        if is_new_user:
+            new_users_info.append(user_id)
+        else:
+            modified_users_info.append(user_id)
+
+        all_users[user_id] = user_attrs
+
+    if new_users_info:
+        add_change("edit-users", _("Created new user: %s") % ", ".join(new_users_info))
+    if modified_users_info:
+        add_change("edit-users", _("Modified user: %s") % ", ".join(modified_users_info))
+
+    userdb.save_users(all_users)
+
+
 
 
 #   .--MIXED STUFF---------------------------------------------------------.
@@ -7462,5 +7731,3 @@ def mk_repr(s):
         return base64.b64encode(repr(s))
     else:
         return base64.b64encode(pickle.dumps(s))
-
-

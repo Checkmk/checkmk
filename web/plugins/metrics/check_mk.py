@@ -4989,12 +4989,6 @@ perfometer_info.append({
 })
 
 perfometer_info.append({
-    "type"      : "linear",
-    "segments"  : [ "execution_time" ],
-    "total"     : 90.0,
-})
-
-perfometer_info.append({
     "type"          : "logarithmic",
     "metric"        : "load1",
     "half_value"    : 4.0,

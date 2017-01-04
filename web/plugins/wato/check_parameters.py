@@ -686,6 +686,17 @@ register_rule(group + '/' + subgroup_inventory,
                      help = _("This option lets Check_MK use the alias of the port (ifAlias) as item instead "
                               "of the port number. If no alias is available then the port number is used "
                               "anyway."))),
+        ( "pad_portnumbers",
+          Checkbox(title = _("Pad port numbers with zeroes"),
+              label = _("pad port numbers"),
+              help = _("If this option is activated then Check_MK will pad port numbers of "
+                       "network interfaces with zeroes so that all port descriptions from "
+                       "all ports of a host or switch have the same length and thus sort "
+                       "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
+                       "padding. You can switch back to the old behaviour by disabling this "
+                       "option. This will retain the old service descriptions and the old "
+                       "performance data."),
+        )),
         ( "match_alias",
           ListOfStrings(
               title = _("Match interface alias (regex)"),
@@ -698,17 +709,6 @@ register_rule(group + '/' + subgroup_inventory,
                   size = 32,
                   mode = RegExp.prefix,
               ),
-        )),
-        ( "pad_portnumbers",
-          Checkbox(title = _("Pad port numbers with zeroes"),
-              label = _("pad port numbers"),
-              help = _("If this option is activated then Check_MK will pad port numbers of "
-                       "network interfaces with zeroes so that all port descriptions from "
-                       "all ports of a host or switch have the same length and thus sort "
-                       "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
-                       "padding. You can switch back to the old behaviour by disabling this "
-                       "option. This will retain the old service descriptions and the old "
-                       "performance data."),
         )),
         ( "match_desc",
           ListOfStrings(

@@ -32,6 +32,16 @@ def validate_request_keys(request, valid_keys):
             raise MKUserError(None, _("Invalid key: %s") % key)
 
 
+#.
+#   .--Hosts---------------------------------------------------------------.
+#   |                       _   _           _                              |
+#   |                      | | | | ___  ___| |_ ___                        |
+#   |                      | |_| |/ _ \/ __| __/ __|                       |
+#   |                      |  _  | (_) \__ \ |_\__ \                       |
+#   |                      |_| |_|\___/|___/\__|___/                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
 # Check if the given attribute name exists, no type check
 def validate_general_host_attributes(host_attributes):
     # inventory_failed and site are no "real" host_attributes (TODO: Clean this up!)
@@ -250,7 +260,90 @@ api_actions["delete_host"] = {
     "locking"     : True,
 }
 
-###############
+#.
+#   .--Groups--------------------------------------------------------------.
+#   |                    ____                                              |
+#   |                   / ___|_ __ ___  _   _ _ __  ___                    |
+#   |                  | |  _| '__/ _ \| | | | '_ \/ __|                   |
+#   |                  | |_| | | | (_) | |_| | |_) \__ \                   |
+#   |                   \____|_|  \___/ \__,_| .__/|___/                   |
+#   |                                        |_|                           |
+#   +----------------------------------------------------------------------+
+
+
+def action_get_all_groups(request, group_type):
+    validate_request_keys(request, [])
+    return userdb.load_group_information().get(group_type, {})
+
+
+def action_delete_group(request, group_type):
+    validate_request_keys(request, ["groupname"])
+    groupname = request.get("groupname")
+    delete_group(groupname, group_type)
+
+
+def get_group_extra_info(request, group_type):
+    extra_info = {}
+    extra_info["alias"] = request.get("alias")
+    if group_type == "contact" and "nagvis_maps" in request:
+        extra_info["nagvis_maps"] = request["nagvis_maps"]
+    return extra_info
+
+
+def validate_group_request_keys(request, group_type):
+    if group_type == "contact":
+        validate_request_keys(request, ["groupname", "alias", "nagvis_maps"])
+    else:
+        validate_request_keys(request, ["groupname", "alias"])
+
+
+def action_add_group(request, group_type):
+    validate_group_request_keys(request, group_type)
+    add_group(request.get("groupname"), group_type, get_group_extra_info(request, group_type))
+
+
+def action_edit_group(request, group_type):
+    validate_group_request_keys(request, group_type)
+    edit_group(request.get("groupname"), group_type, get_group_extra_info(request, group_type))
+
+
+def register_group_apis():
+    for group_type in [ "contact", "host", "service" ]:
+        api_actions["get_all_%sgroups" % group_type] = {
+            # Note: group_type=group_type bypasses pythons late binding behaviour
+            "handler"     : lambda x, group_type=group_type: action_get_all_groups(x, group_type),
+            "locking"     : False,
+        }
+
+        api_actions["delete_%sgroup" % group_type] = {
+            # Note: group_type=group_type bypasses pythons late binding behaviour
+            "handler"     : lambda x, group_type=group_type: action_delete_group(x, group_type),
+            "locking"     : True,
+        }
+
+        api_actions["add_%sgroup" % group_type] = {
+            # Note: group_type=group_type bypasses pythons late binding behaviour
+            "handler"     : lambda x, group_type=group_type: action_add_group(x, group_type),
+            "locking"     : True,
+        }
+
+        api_actions["edit_%sgroup" % group_type] = {
+            # Note: group_type=group_type bypasses pythons late binding behaviour
+            "handler"     : lambda x, group_type=group_type: action_edit_group(x, group_type),
+            "locking"     : True,
+        }
+
+register_group_apis() # Otherwise, group_type is known in the global scope..
+
+#.
+#   .--Other---------------------------------------------------------------.
+#   |                       ___  _   _                                     |
+#   |                      / _ \| |_| |__   ___ _ __                       |
+#   |                     | | | | __| '_ \ / _ \ '__|                      |
+#   |                     | |_| | |_| | | |  __/ |                         |
+#   |                      \___/ \__|_| |_|\___|_|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
 
 def action_discover_services(request):
     validate_request_keys(request, ["hostname", "mode"])
@@ -338,4 +431,5 @@ api_actions["activate_changes"] = {
     "handler"         : action_activate_changes,
     "locking"         : True,
 }
+
 

@@ -100,16 +100,17 @@ def page_api():
         action_response = api_actions[action]["handler"](request_object)
         response = { "result_code": 0, "result": action_response }
 
+    except MKAuthException, e:
+        response = { "result_code": 1, "result": _("Authorization Error. Insufficent permissions for '%s'") % e }
     except MKException, e:
-        response = { "result_code": 1, "result": "%s" % e }
-
+        response = { "result_code": 1, "result": _("Check_MK exception: %s") % e }
     except Exception, e:
         if config.debug:
             raise
         log_exception()
         response = {
             "result_code" : 1,
-            "result"      : "Unhandled exception: %s" % traceback.format_exc(),
+            "result"      : _("Unhandled exception: %s") % traceback.format_exc(),
         }
 
     if html.output_format == "json":

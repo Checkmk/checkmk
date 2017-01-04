@@ -6910,6 +6910,25 @@ def may_override_read_only_mode():
 
 
 #.
+#   .--Timeperiods---------------------------------------------------------.
+#   |      _____ _                                _           _            |
+#   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |
+#   |       | | | | '_ ` _ \ / _ \ '_ \ / _ \ '__| |/ _ \ / _` / __|       |
+#   |       | | | | | | | | |  __/ |_) |  __/ |  | | (_) | (_| \__ \       |
+#   |       |_| |_|_| |_| |_|\___| .__/ \___|_|  |_|\___/ \__,_|___/       |
+#   |                            |_|                                       |
+#   +----------------------------------------------------------------------+
+
+def load_timeperiods():
+    return store.load_from_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", {})
+
+
+def save_timeperiods(timeperiods):
+    make_nagios_directory(wato_root_dir)
+    store.save_to_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", timeperiods)
+
+
+#.
 #   .--Groups--------------------------------------------------------------.
 #   |                    ____                                              |
 #   |                   / ___|_ __ ___  _   _ _ __  ___                    |
@@ -6918,29 +6937,6 @@ def may_override_read_only_mode():
 #   |                   \____|_|  \___/ \__,_| .__/|___/                   |
 #   |                                        |_|                           |
 #   +----------------------------------------------------------------------+
-
-
-def load_timeperiods():
-    filename = wato_root_dir + "timeperiods.mk"
-    if not os.path.exists(filename):
-        return {}
-    try:
-        vars = { "timeperiods" : {} }
-        execfile(filename, vars, vars)
-        return vars["timeperiods"]
-
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
-        return {}
-
-def save_timeperiods(timeperiods):
-    make_nagios_directory(wato_root_dir)
-    out = create_user_file(wato_root_dir + "timeperiods.mk", "w")
-    out.write(wato_fileheader())
-    out.write("timeperiods.update(%s)\n" % pprint.pformat(timeperiods))
-
 
 def is_alias_used(my_what, my_name, my_alias):
     # Host / Service / Contact groups

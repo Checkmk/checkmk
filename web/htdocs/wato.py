@@ -8023,14 +8023,6 @@ def mode_timeperiods(phase):
 
 
 
-def load_timeperiods():
-    return store.load_from_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", {})
-
-
-def save_timeperiods(timeperiods):
-    make_nagios_directory(wato_root_dir)
-    store.save_to_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", timeperiods)
-
 
 class ExceptionName(TextAscii):
     def __init__(self, **kwargs):

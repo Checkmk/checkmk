@@ -81,7 +81,7 @@ def check_hivemanager_devices(item, params, info):
             uptime_secs = 0
             if infos['upTime'] != 'down':
                 uptime_tokens = map(int, infos['upTime'].split()[-2::-2])
-                token_multiplier = [1, 60, 3600, 86400]
+                token_multiplier = [1, 60, 3600, 86400, 31536000]
                 for idx, entry in enumerate(uptime_tokens):
                     uptime_secs += token_multiplier[idx] * entry
                 infotext = "Uptime: %s" % get_age_human_readable(uptime_secs)

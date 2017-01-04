@@ -226,7 +226,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
 
         # Make a bit of context information globally available, so that functions
         # called by checks now this context
-        checks.set_service_description(description)
+        checks.set_service(checkname, description)
         item_state.set_item_state_prefix(checkname, item)
 
         # Skip checks that are not in their check period

@@ -73,18 +73,22 @@ g_walk_cache                 = {}
 #   '----------------------------------------------------------------------'
 
 def BINARY(oid):
+    """Tell Check_MK to process this OID as binary data to the check."""
     return "binary", oid
 
 
-# Wrapper to mark OIDs as being cached for regular checks, but not for discovery
 def CACHED_OID(oid):
+    """Use this to mark OIDs as being cached for regular checks,
+    but not for discovery"""
     return "cached", oid
 
 
-# Convert a string to an integer. This is done by consideren the string to by a
-# little endian byte string.  Such strings are sometimes used by SNMP to encode
-# 64 bit counters without needed COUNTER64 (which is not available in SNMP v1)
 def binstring_to_int(binstring):
+    """Convert a string to an integer.
+
+    This is done by consideren the string to by a little endian byte string.
+    Such strings are sometimes used by SNMP to encode 64 bit counters without
+    needed COUNTER64 (which is not available in SNMP v1)."""
     value = 0
     mult = 1
     for byte in binstring[::-1]:

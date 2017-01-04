@@ -362,6 +362,9 @@ def strip_tags(tagged_hostlist):
 
 
 def tags_of_host(hostname):
+    """Returns the list of all configured tags of a host. In case
+    a host has no tags configured or is not known, it returns an
+    empty list."""
     hosttags = cmk_base.config_cache.get_dict("hosttags")
     try:
         return hosttags[hostname]
@@ -601,6 +604,8 @@ def is_dual_host(hostname):
 #
 
 def is_ipv6_primary(hostname):
+    """Whether or not the given host is configured to be monitored
+    primarily via IPv6."""
     dual_stack_host = is_ipv4v6_host(hostname)
     return (not dual_stack_host and is_ipv6_host(hostname)) \
             or (dual_stack_host and rulesets.host_extra_conf(hostname, primary_address_family) == "ipv6")
@@ -1077,6 +1082,7 @@ def _checktype_ignored_for_host(host, checktype):
 #   '----------------------------------------------------------------------'
 
 def is_cmc():
+    """Whether or not the site is currently configured to use the Microcore."""
     return monitoring_core == "cmc"
 
 

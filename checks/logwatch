@@ -72,7 +72,7 @@ def logwatch_select_forwarded(info):
     forwarded_logs = []
     not_forwarded_logs = []
 
-    forward_settings = host_extra_conf(host_name(), checkgroup_parameters.get('logwatch_ec', []))
+    forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
 
     for l in info:
         # node info ignored (only used in regular logwatch check)
@@ -736,7 +736,7 @@ def inventory_logwatch_ec(info, one_svc_per_log):
     forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
 
     if forwarded_logs:
-        forward_settings = host_extra_conf(host_name(), checkgroup_parameters.get('logwatch_ec', []))
+        forward_settings = host_extra_conf(host_name(), get_checkgroup_parameters('logwatch_ec', []))
 
         merged_rules = {}
         for rule in forward_settings[-1::-1]:

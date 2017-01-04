@@ -3846,10 +3846,6 @@ check_metrics["check_mk-netapp_api_volumes"] = {
     "iscsi_write_latency"   : { "scale" : m },
 }
 
-check_metrics["check_mk_active-tcp"] = {
-    "time" : { "name": "response_time" }
-}
-
 check_metrics["check_mk-citrix_serverload"] = {
     "perf" : { "name" : "citrix_load", "scale" : 0.01 }
 }
@@ -3859,10 +3855,6 @@ check_metrics["check_mk-postfix_mailq"] = {
     "size"                  : { "name" : "mail_queue_deferred_size" },
     "~mail_queue_.*_size"   : { "name" : "mail_queue_active_size" },
     "~mail_queue_.*_length" : { "name" : "mail_queue_active_length" },
-}
-
-check_metrics["check-mk-host-tcp"] = {
-    "time" : { "name": "response_time" }
 }
 
 check_metrics["check_mk-jolokia_metrics.gc"] = {
@@ -4309,10 +4301,6 @@ check_metrics["check_mk-vms_sys.util"] = {
 
 check_metrics["check_mk-winperf.cpuusage"] = {
     "cpuusage" : { "name" : "util" }
-}
-
-check_metrics["check_mk-h3c_lanswitch_cpu"] = {
-    "usage" : { "name" : "util" }
 }
 
 check_metrics["check_mk-h3c_lanswitch_cpu"] = {

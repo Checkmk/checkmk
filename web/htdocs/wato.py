@@ -6367,76 +6367,6 @@ def mode_edit_configvar(phase, what = 'globalvars'):
 #   | Mode for editing host-, service- and contact groups                  |
 #   '----------------------------------------------------------------------'
 
-def find_usages_of_group_in_rules(name, varnames):
-    used_in = []
-    rulesets = AllRulesets()
-    rulesets.load()
-    for varname in varnames:
-        ruleset = rulesets.get(varname)
-        for folder, rulenr, rule in ruleset.get_rules():
-            if rule.value == name:
-                used_in.append(("%s: %s" % (_("Ruleset"), ruleset.title()),
-                               folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
-    return used_in
-
-# Check if a group is currently in use and cannot be deleted
-# Returns a list of occurrances.
-# Possible usages:
-# - 1. rules: host to contactgroups, services to contactgroups
-# - 2. user memberships
-def find_usages_of_contact_group(name):
-    # Part 1: Rules
-    used_in = find_usages_of_group_in_rules(name, [ 'host_contactgroups', 'service_contactgroups' ])
-
-    # Is the contactgroup assigned to a user?
-    users = filter_hidden_users(userdb.load_users())
-    entries = users.items()
-    entries.sort(cmp = lambda a, b: cmp(a[1].get("alias"), b[1].get("alias")))
-    for userid, user in entries:
-        cgs = user.get("contactgroups", [])
-        if name in cgs:
-            used_in.append(('%s: %s' % (_('User'), user.get('alias')),
-                folder_preserving_link([('mode', 'edit_user'), ('edit', userid)])))
-
-    global_config = load_configuration_settings()
-
-    # Used in default_user_profile?
-    domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()['default_user_profile']
-    configured = global_config.get('default_user_profile', {})
-    default_value = valuespec.default_value()
-    if (configured and name in configured['contactgroups']) \
-       or name in  default_value['contactgroups']:
-        used_in.append(('%s' % (_('Default User Profile')),
-            folder_preserving_link([('mode', 'edit_configvar'), ('varname', 'default_user_profile')])))
-
-    # Is the contactgroup used in mkeventd notify (if available)?
-    if 'mkeventd_notify_contactgroup' in configvars():
-        domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()['mkeventd_notify_contactgroup']
-        configured = global_config.get('mkeventd_notify_contactgroup')
-        default_value = valuespec.default_value()
-        if (configured and name == configured) \
-           or name == default_value:
-            used_in.append(('%s' % (valuespec.title()),
-                folder_preserving_link([('mode', 'edit_configvar'), ('varname', 'mkeventd_notify_contactgroup')])))
-
-    return used_in
-
-def find_usages_of_host_group(name):
-    return find_usages_of_group_in_rules(name, [ 'host_groups' ])
-
-def find_usages_of_service_group(name):
-    return find_usages_of_group_in_rules(name, [ 'service_groups' ])
-
-def get_nagvis_maps():
-    # Find all NagVis maps in the local installation to register permissions
-    # for each map. When no maps can be found skip this problem silently.
-    # This only works in OMD environments.
-    maps = []
-    nagvis_maps_path = cmk.paths.omd_root + '/etc/nagvis/maps'
-    for f in os.listdir(nagvis_maps_path):
-        if f[0] != '.' and f.endswith('.cfg'):
-            maps.append((f[:-4], f[:-4]))
-    return maps
 
 def mode_groups(phase, what):
     if what == "host":
@@ -6474,12 +6404,7 @@ def mode_groups(phase, what):
         if html.var('_delete'):
             delname = html.var("_delete")
 
-            if what == 'contact':
-                usages = find_usages_of_contact_group(delname)
-            elif what == 'host':
-                usages = find_usages_of_host_group(delname)
-            elif what == 'service':
-                usages = find_usages_of_service_group(delname)
+            usages = find_usages_of_group(what)
 
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % \
@@ -6494,11 +6419,7 @@ def mode_groups(phase, what):
 
             c = wato_confirm(_("Confirm deletion of group \"%s\"") % delname, confirm_txt)
             if c:
-                del groups[delname]
-                save_group_information(all_groups)
-                if what == 'contact':
-                    call_hook_contactsgroups_saved(all_groups)
-                add_change("edit-%sgroups", _("Deleted %s group %s") % (what, delname))
+                delete_group(delname, what)
             elif c == False:
                 return ""
 
@@ -6549,41 +6470,53 @@ def mode_groups(phase, what):
     table.end()
 
 
-def mode_edit_group(phase, what):
+def get_nagvis_maps():
+    # Find all NagVis maps in the local installation to register permissions
+    # for each map. When no maps can be found skip this problem silently.
+    # This only works in OMD environments.
+    maps = []
+    nagvis_maps_path = cmk.paths.omd_root + '/etc/nagvis/maps'
+    for f in os.listdir(nagvis_maps_path):
+        if f[0] != '.' and f.endswith('.cfg'):
+            maps.append((f[:-4], f[:-4]))
+    return maps
+
+def get_nagvis_maps_valuespec():
+    return ListChoice(
+        title = _('NagVis Maps'),
+        choices = get_nagvis_maps,
+        toggle_all = True,
+    )
+
+def mode_edit_group(phase, group_type):
     name = html.var("edit") # missing -> new group
     new = name == None
 
     if phase == "title":
         if new:
-            if what == "host":
+            if group_type == "host":
                 return _("Create new host group")
-            elif what == "service":
+            elif group_type == "service":
                 return _("Create new service group")
-            elif what == "contact":
+            elif group_type == "contact":
                 return _("Create new contact group")
         else:
-            if what == "host":
+            if group_type == "host":
                 return _("Edit host group")
-            elif what == "service":
+            elif group_type == "service":
                 return _("Edit service group")
-            elif what == "contact":
+            elif group_type == "contact":
                 return _("Edit contact group")
 
     elif phase == "buttons":
-        html.context_button(_("All groups"), folder_preserving_link([("mode", "%s_groups" % what)]), "back")
+        html.context_button(_("All groups"), folder_preserving_link([("mode", "%s_groups" % group_type)]), "back")
         return
 
     all_groups = userdb.load_group_information()
-    groups = all_groups.setdefault(what, {})
+    groups = all_groups.setdefault(group_type, {})
 
-    edit_nagvis_map_permissions = what == 'contact'
+    edit_nagvis_map_permissions = group_type == 'contact'
     if edit_nagvis_map_permissions:
-        vs_nagvis_maps = ListChoice(
-            title = _('NagVis Maps'),
-            choices = get_nagvis_maps,
-            toggle_all = True,
-        )
-
         if not new:
             permitted_maps = groups[name].get('nagvis_maps', [])
         else:
@@ -6595,41 +6528,21 @@ def mode_edit_group(phase, what):
             if not alias:
                 raise MKUserError("alias", _("Please specify an alias name."))
 
-            unique, info = is_alias_used(what, name, alias)
-            if not unique:
-                raise MKUserError("alias", info)
-
-            if new:
-                name = html.var("name").strip()
-                if len(name) == 0:
-                    raise MKUserError("name", _("Please specify a name of the new group."))
-                if ' ' in name:
-                    raise MKUserError("name", _("Sorry, spaces are not allowed in group names."))
-                if not re.match("^[-a-z0-9A-Z_\.]*$", name):
-                    raise MKUserError("name", _("Invalid group name. Only the characters a-z, A-Z, 0-9, _, . and - are allowed."))
-                if name in groups:
-                    raise MKUserError("name", _("Sorry, there is already a group with that name"))
-                groups[name] = {
-                    'alias': alias,
-                }
-                add_change("edit-%sgroups" % what, _("Create new %s group %s") % (what, name))
-            else:
-                groups[name] = {
-                    'alias': alias,
-                }
-                add_change("edit-%sgroups" % what, _("Updated properties of %s group %s") % (what, name))
-
+            extra_info = {"alias": alias}
             if edit_nagvis_map_permissions:
+                vs_nagvis_maps = get_nagvis_maps_valuespec()
                 permitted_maps = vs_nagvis_maps.from_html_vars('nagvis_maps')
                 vs_nagvis_maps.validate_value(permitted_maps, 'nagvis_maps')
                 if permitted_maps:
-                    groups[name]['nagvis_maps'] = permitted_maps
+                    extra_info['nagvis_maps'] = permitted_maps
 
-            save_group_information(all_groups)
-            if what == 'contact':
-                call_hook_contactsgroups_saved(all_groups)
+            if new:
+                name = html.var("name").strip()
+                add_group(name, group_type, extra_info)
+            else:
+                edit_group(name, group_type, extra_info)
 
-        return what + "_groups"
+        return group_type + "_groups"
 
 
     html.begin_form("group")
@@ -6658,6 +6571,7 @@ def mode_edit_group(phase, what):
 
     # Show permissions for NagVis maps if any of those exist
     if edit_nagvis_map_permissions and get_nagvis_maps():
+        vs_nagvis_maps = get_nagvis_maps_valuespec()
         forms.header(_("Permissions"))
         forms.section(_("Access to NagVis Maps"))
         html.help(_("Configure access permissions to NagVis maps."))
@@ -6667,42 +6581,6 @@ def mode_edit_group(phase, what):
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()
-
-
-def save_group_information(all_groups):
-    # Split groups data into Check_MK/Multisite parts
-    check_mk_groups  = {}
-    multisite_groups = {}
-
-    for what, groups in all_groups.items():
-        check_mk_groups[what] = {}
-        for gid, group in groups.items():
-            check_mk_groups[what][gid] = group['alias']
-
-            for attr, value in group.items():
-                if attr != 'alias':
-                    multisite_groups.setdefault(what, {})
-                    multisite_groups[what].setdefault(gid, {})
-                    multisite_groups[what][gid][attr] = value
-
-    # Save Check_MK world related parts
-    output = wato_fileheader()
-    for what in [ "host", "service", "contact" ]:
-        if what in check_mk_groups and len(check_mk_groups[what]) > 0:
-            output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what)
-            output += "define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(check_mk_groups[what]))
-
-    make_nagios_directory(wato_root_dir)
-    store.save_file(wato_root_dir + "groups.mk", output)
-
-    # Users with passwords for Multisite
-    output = wato_fileheader()
-    for what in [ "host", "service", "contact" ]:
-        if what in multisite_groups and len(multisite_groups[what]) > 0:
-            output += "multisite_%sgroups = \\\n%s\n\n" % (what, pprint.pformat(multisite_groups[what]))
-
-    make_nagios_directory(multisite_dir)
-    store.save_file(multisite_dir + "groups.mk", output)
 
 
 class GroupSelection(ElementSelection):
@@ -10527,12 +10405,6 @@ def mode_edit_user(phase):
     html.hidden_fields()
     html.end_form()
 
-
-def filter_hidden_users(users):
-    if config.wato_hidden_users:
-        return dict([ (id, user) for id, user in users.items() if id not in config.wato_hidden_users ])
-    else:
-        return users
 
 
 def generate_wato_users_elements_function(none_value, only_contacts = False):
@@ -16123,28 +15995,6 @@ def may_see_hosts():
     return config.user.may("wato.use") and \
        (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
 
-
-def is_alias_used(my_what, my_name, my_alias):
-    # Host / Service / Contact groups
-    all_groups = userdb.load_group_information()
-    for what, groups in all_groups.items():
-        for gid, group in groups.items():
-            if group['alias'] == my_alias and (my_what != what or my_name != gid):
-                return False, _("This alias is already used in the %s group %s.") % (what, gid)
-
-    # Timeperiods
-    timeperiods = load_timeperiods()
-    for key, value in timeperiods.items():
-        if value.get("alias") == my_alias and (my_what != "timeperiods" or my_name != key):
-            return False, _("This alias is already used in timeperiod %s.") % key
-
-    # Roles
-    roles = userdb.load_roles()
-    for key, value in roles.items():
-        if value.get("alias") == my_alias and (my_what != "roles" or my_name != key):
-            return False, _("This alias is already used in the role %s.") % key
-
-    return True, None
 
 
 # Checks if a valuespec is a Checkbox

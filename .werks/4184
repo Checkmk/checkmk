@@ -1,0 +1,10 @@
+Title: hivemanager_devices: Fixed bug if device is up for more than 1 year
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1483522214
+Class: fix
+
+The checkplugin does not crash anymore if a device is up for more than 1 year.
+

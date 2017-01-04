@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceListStateColumn.h"
+#include "Column.h"
 #include "auth.h"
 
 // return true if state1 is worse than state2
@@ -43,8 +44,8 @@ bool ServiceListStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
 }
 
 servicesmember *ServiceListStateColumn::getMembers(void *data) {
-    if (auto p = rowData<char>(data)) {
-        return *reinterpret_cast<servicesmember **>(p + _offset);
+    if (auto p = rowData<void>(data)) {
+        return *offset_cast<servicesmember *>(p, _offset);
     }
     return nullptr;
 }

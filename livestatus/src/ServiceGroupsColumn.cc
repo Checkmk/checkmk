@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceGroupsColumn.h"
+#include "Column.h"
 #include "Renderer.h"
 
 using std::make_unique;
@@ -30,8 +31,8 @@ using std::string;
 using std::unique_ptr;
 
 objectlist *ServiceGroupsColumn::getData(void *data) {
-    if (auto p = rowData<char>(data)) {
-        return *reinterpret_cast<objectlist **>(p + _offset);
+    if (auto p = rowData<void>(data)) {
+        return *offset_cast<objectlist *>(p, _offset);
     }
     return nullptr;
 }
@@ -40,7 +41,7 @@ void ServiceGroupsColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
     for (objectlist *list = getData(row); list != nullptr; list = list->next) {
-        servicegroup *sg = reinterpret_cast<servicegroup *>(list->object_ptr);
+        auto sg = static_cast<servicegroup *>(list->object_ptr);
         l.output(string(sg->group_name));
     }
 }
@@ -54,8 +55,7 @@ unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
 
         bool operator()(void *row) override {
             // row is already shifted
-            for (objectlist *list = *reinterpret_cast<objectlist **>(
-                     reinterpret_cast<char *>(row) + _offset);
+            for (auto list = *offset_cast<objectlist *>(row, _offset);
                  list != nullptr; list = list->next) {
                 if (list->object_ptr == _element) {
                     return true;
@@ -74,7 +74,5 @@ unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
 }
 
 bool ServiceGroupsColumn::isEmpty(void *data) {
-    objectlist *list = *reinterpret_cast<objectlist **>(
-        reinterpret_cast<char *>(data) + _offset);
-    return list == nullptr;
+    return *offset_cast<objectlist *>(data, _offset) == nullptr;
 }

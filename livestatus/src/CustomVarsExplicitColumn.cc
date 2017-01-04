@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomVarsExplicitColumn.h"
+#include "Column.h"
 
 using std::string;
 
@@ -37,8 +38,8 @@ string CustomVarsExplicitColumn::getValue(void *data) const {
 }
 
 customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data) const {
-    if (auto p = rowData<char>(data)) {
-        return *reinterpret_cast<customvariablesmember **>(p + _offset);
+    if (auto p = rowData<void>(data)) {
+        return *offset_cast<customvariablesmember *>(p, _offset);
     }
     return nullptr;
 }

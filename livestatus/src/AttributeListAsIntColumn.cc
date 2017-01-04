@@ -25,6 +25,7 @@
 #include "AttributeListAsIntColumn.h"
 #include <memory>
 #include "AttributeListColumn.h"
+#include "Column.h"
 #include "Filter.h"
 #include "IntFilter.h"
 
@@ -39,9 +40,8 @@ unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
 }
 
 int32_t AttributeListAsIntColumn::getValue(void *row, contact * /*unused*/) {
-    if (auto p = rowData<char>(row)) {
-        auto ptr = reinterpret_cast<int *>(p + _offset);
-        return *reinterpret_cast<int32_t *>(ptr);
+    if (auto p = rowData<void>(row)) {
+        return static_cast<int32_t>(*offset_cast<unsigned long>(p, _offset));
     }
     return 0;
 }

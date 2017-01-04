@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetTimeperiodColumn.h"
+#include "Column.h"
 #include "TimeperiodsCache.h"
 
 using std::string;
@@ -37,10 +38,10 @@ OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description,
                       extra_extra_offset) {}
 
 int32_t OffsetTimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
-    if (auto p = rowData<char>(row)) {
+    if (auto p = rowData<void>(row)) {
         timeperiod *tp = (_offset == -1)
-                             ? reinterpret_cast<timeperiod *>(p)
-                             : *reinterpret_cast<timeperiod **>(p + _offset);
+                             ? offset_cast<timeperiod>(p, 0)
+                             : *offset_cast<timeperiod *>(p, _offset);
         // no timeperiod set -> Nagios assumes 7x24
         return (tp == nullptr || g_timeperiods_cache->inTimeperiod(tp)) ? 1 : 0;
     }

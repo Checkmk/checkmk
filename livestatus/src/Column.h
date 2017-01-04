@@ -26,6 +26,7 @@
 #define Column_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <cstddef>
 #include <memory>
 #include <string>
 #include "Aggregator.h"
@@ -39,6 +40,11 @@ class RowRenderer;
 #else
 #include "nagios.h"
 #endif
+
+template <typename T>
+T *offset_cast(void *ptr, size_t offset) {
+    return reinterpret_cast<T *>(reinterpret_cast<char *>(ptr) + offset);
+}
 
 enum class ColumnType { int_, double_, string, list, time, dict, blob, null };
 

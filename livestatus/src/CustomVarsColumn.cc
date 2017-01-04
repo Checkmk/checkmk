@@ -46,14 +46,13 @@ CustomVarsColumn::~CustomVarsColumn() = default;
 // TODO(sp) This should live in our abstraction layer for cores.
 unordered_map<string, string> CustomVarsColumn::getCVM(void *row) const {
 #ifdef CMC
-    Object *data = rowData<Object>(row);
-    return data == nullptr ? unordered_map<string, string>()
-                           : data->customAttributes();
+    Object *object = rowData<Object>(row);
+    return object == nullptr ? unordered_map<string, string>()
+                             : object->customAttributes();
 #else
     unordered_map<string, string> result;
-    if (char *data = rowData<char>(row)) {
-        for (customvariablesmember *cvm =
-                 *reinterpret_cast<customvariablesmember **>(data + _offset);
+    if (auto p = rowData<void>(row)) {
+        for (auto cvm = *offset_cast<customvariablesmember *>(p, _offset);
              cvm != nullptr; cvm = cvm->next) {
             result.emplace(cvm->variable_name, cvm->variable_value);
         }

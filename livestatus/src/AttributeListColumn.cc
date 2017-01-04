@@ -45,6 +45,7 @@ using std::unique_ptr;
 using std::vector;
 
 namespace {
+// see MODATTR_FOO in nagios/common.h
 map<string, unsigned long> known_attributes = {
     {"notifications_enabled", 0},    {"active_checks_enabled", 1},
     {"passive_checks_enabled", 2},   {"event_handler_enabled", 3},
@@ -60,9 +61,8 @@ using modified_atttibutes = bitset<32>;
 }  // namespace
 
 int32_t AttributeListColumn::getValue(void *row, contact * /*unused*/) {
-    if (auto p = rowData<char>(row)) {
-        auto ptr = reinterpret_cast<int *>(p + _offset);
-        return *reinterpret_cast<int32_t *>(ptr);
+    if (auto p = rowData<void>(row)) {
+        return static_cast<int32_t>(*offset_cast<unsigned long>(p, _offset));
     }
     return 0;
 }

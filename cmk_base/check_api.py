@@ -24,6 +24,61 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+"""
+The things in this module specify the official Check_MK check API. Meaning all
+variables, functions etc. and default modules that are available to checks.
+
+Modules available by default (pre imported by Check_MK):
+    fnmatch
+    math
+    re
+    socket
+    sys
+    time
+
+
+Global variables:
+    from cmk.regex import regex
+    import cmk.render as render
+    core_state_names     Names of states. Usually used to convert numeric states
+                         to their name for adding it to the plugin output.
+                         The mapping is like this:
+
+                           -1: 'PEND'
+                            0: 'OK'
+                            1: 'WARN'
+                            2: 'CRIT'
+                            3: 'UNKN'
+
+    state_markers        Symbolic representations of states in plugin output.
+                         Will be displayed colored by the Check_MK GUI.
+                         The mapping is like this:
+
+                            0: ''
+                            1: '(!)'
+                            2: '(!!)'
+                            3: '(?)'
+
+    nagios_illegal_chars Characters not allowed to be used in service
+                         descriptions. Can be used in discovery functions to
+                         remove unwanted characters from a string. The unwanted
+                         chars default are: `;~!$%^&*|\'"<>?,()=
+
+
+    OID_BIN              TODO
+    OID_END              TODO
+    OID_END_BIN          TODO
+    OID_END_OCTET_STRING TODO
+    OID_STRING           TODO
+
+    RAISE                Used as value for the "onwrap" argument of the get_rate()
+                         function. See get_rate() documentation for details
+    SKIP                 Used as value for the "onwrap" argument of the get_rate()
+                         function. See get_rate() documentation for details
+    ZERO                 Used as value for the "onwrap" argument of the get_rate()
+                         function. See get_rate() documentation for details
+"""
+
 import cmk.debug as _debug
 from cmk.exceptions import MKGeneralException
 
@@ -39,7 +94,9 @@ import cmk_base.snmp as _snmp
 import cmk_base.item_state as _item_state
 import cmk_base.prediction as _prediction
 
-def get_check_context():
+def _get_check_context():
+    """This is called from cmk_base code to get the Check API things. Don't
+    use this from checks."""
     return [ (k, v) for k, v in globals().items() if k[0] != "_" ]
 
 #.
@@ -81,20 +138,36 @@ OID_END_BIN          = _snmp.OID_END_BIN
 OID_END_OCTET_STRING = _snmp.OID_END_OCTET_STRING
 binstring_to_int     = _snmp.binstring_to_int
 
-# Is set before check execution
+# Is set before check/discovery function execution
 _hostname            = "unknown" # Host currently being checked
+# Is set before check execution
 _service_description = None
+_check_type          = None
 
 
 def host_name():
+    """Returns the name of the host currently being checked or discovered."""
     return _hostname
 
 
+# TODO: Is this really needed? Could not find a call site.
 def service_description():
+    """Returns the name of the service currently being checked."""
     return _service_description
 
 
+def check_type():
+    """Returns the name of the check type currently being checked."""
+    return _check_type
+
+
 def saveint(i):
+    """Tries to cast a string to an integer and return it. In case this
+    fails, it returns 0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0 back from this function,
+    you can not know whether it is really 0 or something went wrong."""
     try:
         return int(i)
     except:
@@ -102,6 +175,12 @@ def saveint(i):
 
 
 def savefloat(f):
+    """Tries to cast a string to an float and return it. In case this fails,
+    it returns 0.0.
+
+    Advice: Please don't use this function in new code. It is understood as
+    bad style these days, because in case you get 0.0 back from this function,
+    you can not know whether it is really 0.0 or something went wrong."""
     try:
         return float(f)
     except:
@@ -111,7 +190,14 @@ def savefloat(f):
 # The function no_discovery_possible is as stub function used for
 # those checks that do not support inventory. It must be known before
 # we read in all the checks
+#
+# TODO: This seems to be an old part of the check API and not used for
+#       a long time. Deprecate this as part of the and move it to the
+#       cmk_base.checks module.
 def no_discovery_possible(check_type, info):
+    """In old checks we used this to declare that a check did not support
+    a service discovery. Please don't use this for new checks. Simply
+    skip the "inventory_function" argument of the check_info declaration."""
     _console.verbose("%s does not support discovery. Skipping it.\n", check_type)
     return []
 
@@ -124,7 +210,6 @@ host_extra_conf_merged   = _rulesets.host_extra_conf_merged
 get_rule_options         = _rulesets.get_rule_options
 all_matching_hosts       = _rulesets.all_matching_hosts
 
-checkgroup_parameters    = _config.checkgroup_parameters
 tags_of_host             = _config.tags_of_host
 nagios_illegal_chars     = _config.nagios_illegal_chars
 is_ipv6_primary          = _config.is_ipv6_primary
@@ -135,13 +220,19 @@ get_bytes_human_readable = render.bytes
 quote_shell_string       = _utils.quote_shell_string
 
 
-# Similar to get_bytes_human_readable, but optimized for file
-# sizes. Really only use this for files. We assume that for smaller
-# files one wants to compare the exact bytes of a file, so the
-# threshold to show the value as MB/GB is higher as the one of
-# get_bytes_human_readable().
+def get_checkgroup_parameters(group, deflt=None):
+    return _config.checkgroup_parameters.get(group, deflt)
+
+
 # TODO: Replace by some render.* function / move to render module?
 def get_filesize_human_readable(size):
+    """Format size of a file for humans.
+
+    Similar to get_bytes_human_readable, but optimized for file
+    sizes. Really only use this for files. We assume that for smaller
+    files one wants to compare the exact bytes of a file, so the
+    threshold to show the value as MB/GB is higher as the one of
+    get_bytes_human_readable()."""
     if size < 4 * 1024 * 1024:
         return "%d B" % int(size)
     elif size < 4 * 1024 * 1024 * 1024:
@@ -152,6 +243,7 @@ def get_filesize_human_readable(size):
 
 # TODO: Replace by some render.* function / move to render module?
 def get_nic_speed_human_readable(speed):
+    """Format network speed (bit/s) for humans."""
     try:
         speedi = int(speed)
         if speedi == 10000000:
@@ -175,6 +267,8 @@ def get_nic_speed_human_readable(speed):
 
 # TODO: Replace by some render.* function / move to render module?
 def get_timestamp_human_readable(timestamp):
+    """Format a time stamp for humans in "%Y-%m-%d %H:%M:%S" format.
+    In case None is given or timestamp is 0, it returns "never"."""
     if timestamp:
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(timestamp)))
     else:
@@ -183,6 +277,8 @@ def get_timestamp_human_readable(timestamp):
 
 # TODO: Replace by some render.* function / move to render module?
 def get_relative_date_human_readable(timestamp):
+    """Formats the given timestamp for humans "in ..." for future times
+    or "... ago" for past timestamps."""
     now = time.time()
     if timestamp > now:
         return "in " + get_age_human_readable(timestamp - now)
@@ -190,11 +286,11 @@ def get_relative_date_human_readable(timestamp):
         return get_age_human_readable(now - timestamp) + " ago"
 
 
-# Format perc (0 <= perc <= 100 + x) so that precision
-# digits are being displayed. This avoids a "0.00%" for
-# very small numbers
 # TODO: Replace by some render.* function / move to render module?
 def get_percent_human_readable(perc, precision=2):
+    """Format perc (0 <= perc <= 100 + x) so that precision
+    digits are being displayed. This avoids a "0.00%" for
+    very small numbers."""
     if perc > 0:
         perc_precision = max(1, 2 - int(round(math.log(perc, 10))))
     else:
@@ -327,8 +423,9 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     return state, infotext, perfdata
 
 
-# retrive the service level that applies to the calling check.
 def get_effective_service_level():
+    """Get the service level that applies to the current service.
+    This can only be used within check functions, not during discovery nor parsing."""
     service_levels = _rulesets.service_extra_conf(_hostname, _service_description,
                                         _config.service_service_levels)
 
@@ -341,13 +438,16 @@ def get_effective_service_level():
     return 0
 
 
-# like time.mktime but assumes the time_struct to be in utc, not in local time.
 def utc_mktime(time_struct):
+    """Works like time.mktime() but assumes the time_struct to be in UTC,
+    not in local time."""
     import calendar
     return calendar.timegm(time_struct)
 
 
 def passwordstore_get_cmdline(fmt, pw):
+    """Use this to prepare a command line argument for using a password from the
+    Check_MK password store or an explicitly configured password."""
     if type(pw) != tuple:
         pw = ("password", pw)
 
@@ -362,7 +462,7 @@ def passwordstore_get_cmdline(fmt, pw):
 # we do not exactly know the latest agent data. Maybe one time
 # we can handle this. For cluster hosts an exception is raised.
 def get_agent_data_time():
-    return _agent_cache_file_age(g_hostname, g_check_type)
+    return _agent_cache_file_age(host_name(), check_type())
 
 
 def _agent_cache_file_age(hostname, check_type):
@@ -381,3 +481,6 @@ def _agent_cache_file_age(hostname, check_type):
         return _utils.cachefile_age(cachefile)
     else:
         return None
+
+
+__all__ = dict(_get_check_context()).keys()

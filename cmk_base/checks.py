@@ -184,7 +184,7 @@ def _new_check_context(check_file_path):
     #
     # For better separation it would be better to copy the check API objects, but
     # this might consume too much memory. So we simply reference it.
-    for k, v in check_api.get_check_context():
+    for k, v in check_api._get_check_context():
         context[k] = v
 
     # Load the definitions of the required include files for this check
@@ -428,7 +428,8 @@ def set_hostname(hostname):
     check_api._hostname = hostname
 
 
-def set_service_description(descr):
+def set_service(check_type, descr):
+    check_api._check_type          = check_type
     check_api._service_description = descr
 
 

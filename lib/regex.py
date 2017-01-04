@@ -39,9 +39,9 @@ except NameError:
 
 g_compiled_regexes = {}
 
-# compile regex or look it up in already compiled regexes
-# (compiling is a CPU consuming process. We cache compiled regexes).
 def regex(pattern):
+    """Compile regex or look it up in already compiled regexes.
+    (compiling is a CPU consuming process. We cache compiled regexes)."""
     try:
         return g_compiled_regexes[pattern]
     except KeyError:

@@ -1155,7 +1155,7 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
                 else:
                     continue # ignore
 
-            checks.set_service_description(descr)
+            checks.set_service(check_type, descr)
             infotype = check_type.split('.')[0]
 
             # Sorry. The whole caching stuff is the most horrible hack in

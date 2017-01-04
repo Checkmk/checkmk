@@ -87,11 +87,12 @@ def approx_age(secs):
     return "%d days" % days
 
 
-# Takes bytes as integer and returns a string which represents the bytes in a
-# more human readable form scaled to TB/GB/MB/KB
-# The unit parameter simply changes the returned string, but does not interfere
-# with any calcluations
 def bytes(b, base=1024.0, bytefrac=True, unit="B"):
+    """Formats byte values to be used in texts for humans.
+
+    Takes bytes as integer and returns a string which represents the bytes in a
+    more human readable form scaled to TB/GB/MB/KB. The unit parameter simply
+    changes the returned string, but does not interfere with any calcluations."""
     base = float(base)
 
     # Handle negative bytes correctly

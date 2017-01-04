@@ -180,7 +180,7 @@ def get_precompiled_check_table(hostname, remove_duplicates=True, world="config"
     precomp_table = []
     for check_type, item, params, description, _unused_deps in host_checks:
         # make these globals available to the precompile function
-        checks.set_service_description(description)
+        checks.set_service(check_type, description)
         item_state.set_item_state_prefix(check_type, item)
 
         params = get_precompiled_check_parameters(hostname, item, params, check_type)

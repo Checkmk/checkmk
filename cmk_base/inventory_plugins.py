@@ -92,7 +92,7 @@ def _new_inv_context(plugin_file_path):
     #
     # For better separation it would be better to copy the check API objects, but
     # this might consume too much memory. So we simply reference it.
-    for k, v in check_api.get_check_context() + _get_inventory_context():
+    for k, v in check_api._get_check_context() + _get_inventory_context():
         context[k] = v
 
     # Load the definitions of the required include files for this check

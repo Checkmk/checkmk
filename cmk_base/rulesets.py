@@ -45,8 +45,8 @@ import cmk_base.console as console
 #   | Service rule set matching                                            |
 #   '----------------------------------------------------------------------'
 
-# Compute outcome of a service rule set that has an item
 def service_extra_conf(hostname, service, ruleset):
+    """Compute outcome of a service rule set that has an item."""
     import cmk_base.config
     # When the requested host is part of the local sites configuration,
     # then use only the sites hosts for processing the rules
@@ -244,6 +244,8 @@ def host_extra_conf_merged(hostname, conf):
 
 # TODO: Can we make this private?
 def all_matching_hosts(tags, hostlist, with_foreign_hosts):
+    """Returns a set containing the names of hosts that match the given
+    tags and hostlist conditions."""
     cache_id = tuple(tags), tuple(hostlist), with_foreign_hosts
     cache = cmk_base.config_cache.get_dict("hostlist_match")
 
@@ -287,12 +289,17 @@ def all_matching_hosts(tags, hostlist, with_foreign_hosts):
     return matching
 
 
-# Entries in list are hostnames that must equal the hostname.
-# Expressions beginning with ! are negated: if they match,
-# the item is excluded from the list. Expressions beginning
-# withy ~ are treated as Regular Expression. Also the three
-# special tags '@all', '@clusters', '@physical' are allowed.
 def in_extraconf_hostlist(hostlist, hostname):
+    """Whether or not the given host matches the hostlist.
+
+    Entries in list are hostnames that must equal the hostname.
+    Expressions beginning with ! are negated: if they match,
+    the item is excluded from the list.
+
+    Expressions beginning with ~ are treated as regular expression.
+    Also the three special tags '@all', '@clusters', '@physical'
+    are allowed.
+    """
 
     # Migration help: print error if old format appears in config file
     # FIXME: When can this be removed?
@@ -415,22 +422,24 @@ def parse_host_rule(rule):
     return item, tags, hostlist, rule_options
 
 
-# Pick out the last element of an entry if it is a dictionary.
-# This is a new feature (1.2.0p3) that allows to add options
-# to rules. Currently only the option "disabled" is being
-# honored. WATO also uses the option "comment".
 def get_rule_options(entry):
+    """Get the options from a rule.
+
+    Pick out the option element of a rule. Currently the options "disabled"
+    and "comments" are being honored."""
     if type(entry[-1]) == dict:
         return entry[:-1], entry[-1]
     else:
         return entry, {}
 
 
-# Check if a host fulfills the requirements of a tags
-# list. The host must have all tags in the list, except
-# for those negated with '!'. Those the host must *not* have!
-# New in 1.1.13: a trailing + means a prefix match
 def hosttags_match_taglist(hosttags, required_tags):
+    """Check if a host fulfills the requirements of a tag list.
+
+    The host must have all tags in the list, except
+    for those negated with '!'. Those the host must *not* have!
+    A trailing + means a prefix match."""
+
     for tag in required_tags:
         negate, tag = _parse_negated(tag)
         if tag and tag[-1] == '+':

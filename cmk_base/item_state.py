@@ -85,25 +85,44 @@ def save(hostname):
 
 
 def set_item_state(user_key, state):
-    """Store arbitrary values until the next execution of a check"""
+    """Store arbitrary values until the next execution of a check.
+
+    The user_key is the identifier of the stored value and needs
+    to be unique per service."""
     g_item_state[_unique_item_state_key(user_key)] = state
 
 
 def get_item_state(user_key, default=None):
+    """Returns the currently stored item with the user_key.
+
+    Returns None or the given default value in case there
+    is currently no such item stored."""
     return g_item_state.get(_unique_item_state_key(user_key), default)
 
 
 def get_all_item_states():
+    """Returns all stored items of the host that is currently being checked."""
     return g_item_state
 
 
 def clear_item_state(user_key):
+    """Deletes a stored matching the given key. This needs to be
+    the same key as used with set_item_state().
+
+    In case the given item does not exist, the function returns
+    without modification."""
     key = _unique_item_state_key(user_key)
     if key in g_item_state:
         del g_item_state[key]
 
 
 def clear_item_states_by_full_keys(full_keys):
+    """Clears all stored items specified in full_keys.
+
+    The items are deleted by their full identifiers, not only the
+    names specified with set_item_state(). For checks this is
+    normally (<check_name>, <item>, <user_key>).
+    """
     for key in full_keys:
         try:
             del g_item_state[key]
@@ -112,6 +131,7 @@ def clear_item_states_by_full_keys(full_keys):
 
 
 def cleanup_item_states():
+    """Clears all stored items of the host that is currently being checked."""
     global g_item_state
     g_item_state = {}
 
@@ -199,12 +219,14 @@ def raise_counter_wrap():
         raise g_last_counter_wrap # pylint: disable=raising-bad-type
 
 
-# Compute average by gliding exponential algorithm
-# itemname        : unique ID for storing this average until the next check
-# this_time       : timestamp of new value
-# backlog         : averaging horizon in minutes
-# initialize_zero : assume average of 0.0 when now previous average is stored
 def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero = True):
+    """Compute average by gliding exponential algorithm
+
+    itemname        : unique ID for storing this average until the next check
+    this_time       : timestamp of new value
+    backlog         : averaging horizon in minutes
+    initialize_zero : assume average of 0.0 when now previous average is stored
+    """
     old_state = get_item_state(itemname, None)
 
     # first call: take current value as average or assume 0.0

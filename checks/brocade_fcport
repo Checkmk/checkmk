@@ -123,7 +123,7 @@ def inventory_brocade_fcport(info):
     if len(info) < 2:
         return
 
-    settings = host_extra_conf_merged(g_hostname, brocade_fcport_inventory)
+    settings = host_extra_conf_merged(host_name(), brocade_fcport_inventory)
     uses_portname       = settings.get('use_portname', brocade_fcport_inventory_use_portname)
     shows_isl           = settings.get('show_isl', brocade_fcport_inventory_show_isl)
     admstates           = settings.get('admstates', brocade_fcport_inventory_admstates)

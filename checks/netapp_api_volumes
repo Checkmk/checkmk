@@ -66,7 +66,7 @@ def check_netapp_api_volumes(item, params, parsed):
     size_avail = int(volume.get("size-available")) / mega
     inodes_total = int(volume.get("files-total"))
     inodes_avail = inodes_total - int(volume.get("files-used"))
-    state, info, perf = df_check_filesystem_single(g_hostname, item, size_total, size_avail, 0,
+    state, info, perf = df_check_filesystem_single(host_name(), item, size_total, size_avail, 0,
                                                    inodes_total, inodes_avail, params)
 
     counter_wrapped = False

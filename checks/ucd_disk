@@ -38,7 +38,7 @@ def check_ucd_disk(item, params, info):
         if disk_path == item:
             disk_total_mb = float(disk_total_str) / 1024
             disk_avail_mb = float(disk_avail_str) / 1024
-            return df_check_filesystem(g_hostname, item, disk_total_mb, disk_avail_mb, 0, params)
+            return df_check_filesystem(host_name(), item, disk_total_mb, disk_avail_mb, 0, params)
 
 
 check_info['ucd_disk'] = {

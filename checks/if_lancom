@@ -92,7 +92,7 @@ check_info["if_lancom"] = {
          lambda oid: ("LANCOM"    in oid(".1.3.6.1.2.1.1.1.0") or \
                       "ELSA"      in oid(".1.3.6.1.2.1.1.1.0") or \
                       "T-Systems" in oid(".1.3.6.1.2.1.1.1.0")) and \
-                     (not if64_disabled(g_hostname)) and \
+                     (not if64_disabled(host_name())) and \
                      oid(".1.3.6.1.2.1.31.1.1.1.6.*") != None,
     'group':                   'if',
     'default_levels_variable': 'if_default_levels',

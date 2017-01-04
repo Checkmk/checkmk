@@ -72,7 +72,7 @@ def logwatch_select_forwarded(info):
     forwarded_logs = []
     not_forwarded_logs = []
 
-    forward_settings = host_extra_conf(g_hostname, checkgroup_parameters.get('logwatch_ec', []))
+    forward_settings = host_extra_conf(host_name(), checkgroup_parameters.get('logwatch_ec', []))
 
     for l in info:
         # node info ignored (only used in regular logwatch check)
@@ -237,7 +237,7 @@ def logwatch_parse_line(line):
 
 def inventory_logwatch_common(info, case):
     forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
-    inventory_groups = host_extra_conf(g_hostname, logwatch_groups)
+    inventory_groups = host_extra_conf(host_name(), logwatch_groups)
     inventory        = []
 
     for logfile in not_forwarded_logs:
@@ -498,7 +498,7 @@ def logwatch_username():
 
 
 def check_logwatch_generic(item, params, loglines, found, groups=False):
-    logdir = logwatch_dir + "/" + g_hostname
+    logdir = logwatch_dir + "/" + host_name()
 
     # Create directories, if neccessary
     try:
@@ -531,7 +531,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
         else:
             patterns = params # patterns already precompiled
     else:
-        patterns = logwatch_precompile(g_hostname, item, None)
+        patterns = logwatch_precompile(host_name(), item, None)
 
 
     state_counts = {} # for counting number of blocks with a certain state
@@ -736,7 +736,7 @@ def inventory_logwatch_ec(info, one_svc_per_log):
     forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
 
     if forwarded_logs:
-        forward_settings = host_extra_conf(g_hostname, checkgroup_parameters.get('logwatch_ec', []))
+        forward_settings = host_extra_conf(host_name(), checkgroup_parameters.get('logwatch_ec', []))
 
         merged_rules = {}
         for rule in forward_settings[-1::-1]:
@@ -833,7 +833,7 @@ def check_logwatch_ec(item, params, info):
     # Get the logwatch patterns if they are not already precompiled
     # The precompile feature is not required when using the cmc as core
     if not is_cmc() and "logwatch_settings" not in params:
-        params = logwatch_ec_precompile(g_hostname, item, params)
+        params = logwatch_ec_precompile(host_name(), item, params)
 
     # Keep track of reclassifed lines
     rclfd_total     = 0
@@ -853,7 +853,7 @@ def check_logwatch_ec(item, params, info):
         logfile_reclassify_settings["reclassify_states"]   = {}
         # Determine logwatch patterns specifically for this logfile
         if is_cmc():
-            logfile_settings = service_extra_conf(g_hostname, logfile, logwatch_rules)
+            logfile_settings = service_extra_conf(host_name(), logfile, logwatch_rules)
             for settings in logfile_settings:
                 add_reclassify_settings(settings)
         else:
@@ -878,7 +878,7 @@ def check_logwatch_ec(item, params, info):
                         continue
 
             msg = '<%d>' % (facility + logwatch_to_prio(rclfd_level or line[0]),)
-            msg += '@%s;%d;; %s %s: %s' % (cur_time, params.get("service_level", 0), g_hostname, logfile, line[2:])
+            msg += '@%s;%d;; %s %s: %s' % (cur_time, params.get("service_level", 0), host_name(), logfile, line[2:])
 
             messages.append(msg)
             forwarded_logfiles.add(logfile)
@@ -968,7 +968,7 @@ def logwatch_forward_spool_directory(method, item, messages):
         return LogwatchFordwardResult()
 
     spool_path = method[6:]
-    file_name  = '.%s_%s%d' % (g_hostname, item and item.replace('/', '\\') + '_' or '', time.time())
+    file_name  = '.%s_%s%d' % (host_name(), item and item.replace('/', '\\') + '_' or '', time.time())
     if not os.path.exists(spool_path):
         os.makedirs(spool_path)
     file('%s/%s' % (spool_path, file_name), 'w').write(('\n'.join(messages)).encode("utf-8") + '\n')
@@ -1163,7 +1163,7 @@ def logwatch_spool_drop_messages(path, result):
 
 
 def logwatch_spool_path():
-    return logwatch_spool_dir + "/" + g_hostname
+    return logwatch_spool_dir + "/" + host_name()
 
 
 def logwatch_ec_precompile(hostname, item, params):

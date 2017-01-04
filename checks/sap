@@ -117,8 +117,8 @@ def inventory_sap_value(info):
     for rule in inventory_sap_values:
         taglist, hostlist = rule[1:3]
         # Filter out entries with do not match our current host
-        if not hosttags_match_taglist(tags_of_host(g_hostname), taglist) \
-           or not in_extraconf_hostlist(hostlist, g_hostname):
+        if not hosttags_match_taglist(tags_of_host(host_name()), taglist) \
+           or not in_extraconf_hostlist(hostlist, host_name()):
             continue
 
         v = rule[0]
@@ -193,7 +193,7 @@ def sap_value_groups_precompile(hostname, item, _unused):
 def sap_groups_of_value( value_name, patterns=False ):
     groups = []
     if not patterns:
-        patterns = host_extra_conf(g_hostname, sap_value_groups)
+        patterns = host_extra_conf(host_name(), sap_value_groups)
 
     for line in patterns:
         for group_name, pattern in line:

@@ -120,7 +120,7 @@ def inventory_heartbeat_crm(info):
     # - Naildown the DC or not.
     # - Check the number of nodes/resources
     # - Check the age of "last updated"
-    settings = host_extra_conf_merged(g_hostname, inventory_heartbeat_crm_rules)
+    settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
     try:
         last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
     except:
@@ -267,7 +267,7 @@ def inventory_heartbeat_crm_resources(info):
     #     resource_slapmaster (ocf::heartbeat:OpenLDAP):  Started mwp
     # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
     inventory = []
-    settings = host_extra_conf_merged(g_hostname, inventory_heartbeat_crm_rules)
+    settings = host_extra_conf_merged(host_name(), inventory_heartbeat_crm_rules)
     for name, resources in heartbeat_crm_parse_resources(info).iteritems():
         # In naildown mode only resources which are started somewhere can be
         # inventorized

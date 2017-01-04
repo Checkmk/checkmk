@@ -78,7 +78,7 @@ def inventory_winperf_msx_queues(info):
         if num_instances > 0:
             # Its possible to set the wanted queues via wato
             inventory_rules = {}
-            for rulset in host_extra_conf(g_hostname, winperf_msx_queues_inventory):
+            for rulset in host_extra_conf(host_name(), winperf_msx_queues_inventory):
                 inventory_rules.update(dict(rulset))
             # In case that rules for this host are set,
             # only use this rules

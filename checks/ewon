@@ -206,7 +206,7 @@ def parse_ewon(info):
     return result
 
 def inventory_ewon(parsed):
-    settings = host_extra_conf(g_hostname, ewon_discovery_rules)
+    settings = host_extra_conf(host_name(), ewon_discovery_rules)
     deviceName = None
     if settings:
         deviceName = settings[0]

@@ -53,8 +53,8 @@ def ps_get_inventory_specs(invdata, invrules):
             default_levels = inv_entry[4:8]
 
         # Filter out entries with do not match our current host
-        if tags != None and ( not hosttags_match_taglist(tags_of_host(g_hostname), tags) or
-                              not in_extraconf_hostlist(hostlist, g_hostname)):
+        if tags != None and ( not hosttags_match_taglist(tags_of_host(host_name()), tags) or
+                              not in_extraconf_hostlist(hostlist, host_name())):
             continue
 
         if len(inv_entry) == 7: # extend old inventory_processes
@@ -72,8 +72,8 @@ def ps_get_inventory_specs(invdata, invrules):
                 continue
 
         # Filter out entries with do not match our current host
-        if not hosttags_match_taglist(tags_of_host(g_hostname), taglist) \
-           or not in_extraconf_hostlist(hostlist, g_hostname):
+        if not hosttags_match_taglist(tags_of_host(host_name()), taglist) \
+           or not in_extraconf_hostlist(hostlist, host_name()):
             continue
 
         v = rule[0]

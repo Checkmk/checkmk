@@ -40,7 +40,7 @@ check_info["if64"] = {
     'has_perfdata'              : True,
     'includes'                  : [ 'if.include', 'if64.include' ],
     'snmp_info'                 : ( ".1.3.6.1.2.1", if64_snmp_end_oids),
-    'snmp_scan_function'        : lambda oid: not if64_disabled(g_hostname) \
+    'snmp_scan_function'        : lambda oid: not if64_disabled(host_name()) \
                                               and if64_scan_function(oid, False),
     'group'                     : 'if',
     'node_info'                 : True,

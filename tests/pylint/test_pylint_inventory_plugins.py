@@ -11,6 +11,37 @@ def test_pylint_inventory_plugins():
 
     f = file(base_path + "/cmk-inventory-plugins.py", "w")
 
+    # Fake data structures where checks register (See cmk_base/checks.py)
+    f.write("""
+check_info                         = {}
+check_includes                     = {}
+precompile_params                  = {}
+check_default_levels               = {}
+factory_settings                   = {}
+check_config_variables             = []
+snmp_info                          = {}
+snmp_scan_functions                = {}
+active_check_info                  = {}
+special_agent_info                 = {}
+
+inv_info   = {} # Inventory plugins
+inv_export = {} # Inventory export hooks
+
+def inv_tree_list(path):
+    return inv_tree(path, [])
+
+def inv_tree(path, default_value=None):
+    if default_value != None:
+        node = default_value
+    else:
+        node = {}
+
+    return node
+""")
+
+    # add the modules
+    pylint_cmk.add_file(f, repo_path() + "/cmk_base/check_api.py")
+
     # add the modules
     pylint_cmk.add_file(f, repo_path() + "/cmk_base/inventory_plugins.py")
 

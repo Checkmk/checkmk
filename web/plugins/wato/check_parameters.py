@@ -1287,16 +1287,6 @@ register_rule(group + '/' + subgroup_inventory,
                      help = _("This option lets Check_MK use the alias of the port (ifAlias) as item instead "
                               "of the port number. If no alias is available then the port number is used "
                               "anyway."))),
-        ( "match_alias",
-          ListOfStrings(
-              title = _("Match interface alias (regex)"),
-              help = _("Only discover interfaces whose alias matches one of the configured "
-                       "regular expressions. The match is done on the beginning of the alias. "
-                       "This allows you to select interfaces based on the alias without having "
-                       "the alias be part of the service description."),
-              orientation = "horizontal",
-              valuespec = RegExp(size = 32),
-        )),
         ( "pad_portnumbers",
           Checkbox(title = _("Pad port numbers with zeroes"),
               label = _("pad port numbers"),
@@ -1307,6 +1297,16 @@ register_rule(group + '/' + subgroup_inventory,
                        "padding. You can switch back to the old behaviour by disabling this "
                        "option. This will retain the old service descriptions and the old "
                        "performance data."),
+        )),
+        ( "match_alias",
+          ListOfStrings(
+              title = _("Match interface alias (regex)"),
+              help = _("Only discover interfaces whose alias matches one of the configured "
+                       "regular expressions. The match is done on the beginning of the alias. "
+                       "This allows you to select interfaces based on the alias without having "
+                       "the alias be part of the service description."),
+              orientation = "horizontal",
+              valuespec = RegExp(size = 32),
         )),
         ( "match_desc",
           ListOfStrings(

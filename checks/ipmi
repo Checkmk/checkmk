@@ -201,7 +201,7 @@ def inventory_ipmi(info):
     # TODO: Cleanup Check API so extra_sections can be passed to parse_function.
     #       For the moment, this seemingly strange contraption has to remain as is.
     parsed = parse_ipmi(info)
-    rules  = host_extra_conf(g_hostname, inventory_ipmi_rules)
+    rules  = host_extra_conf(host_name(), inventory_ipmi_rules)
     if rules and type(rules[0]) == dict:
         if rules[0].get("summarize", True):
             summarize = True

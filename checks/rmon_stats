@@ -31,7 +31,7 @@
 
 
 def inventory_rmon_stats(info):
-    settings = host_extra_conf_merged(g_hostname, inventory_if_rules)
+    settings = host_extra_conf_merged(host_name(), inventory_if_rules)
     if settings.get("rmon"):
         inventory = []
         for line in info:

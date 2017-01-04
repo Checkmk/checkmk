@@ -267,7 +267,7 @@ def parse_multipath(info):
 # Get list of UUIDs of all multipath devices
 # Length of UUID is 360a9800043346937686f456f59386741
 def inventory_multipath(parsed):
-    settings = host_extra_conf_merged(g_hostname, inventory_multipath_rules)
+    settings = host_extra_conf_merged(host_name(), inventory_multipath_rules)
 
     inventory = []
     for uuid, info in parsed.items():

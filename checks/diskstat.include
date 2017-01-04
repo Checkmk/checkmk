@@ -50,7 +50,7 @@ def inventory_diskstat_generic(info):
 
     # New style: use rule based configuration, defaulting to summary mode
     if diskstat_inventory_mode == "rule":
-        hits = host_extra_conf(g_hostname, diskstat_inventory)
+        hits = host_extra_conf(host_name(), diskstat_inventory)
         if len(hits) > 0:
             modes = hits[0]
         else:

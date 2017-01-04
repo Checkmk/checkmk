@@ -71,7 +71,7 @@ def check_mail_loop_arguments(params):
     if 'delete_messages' in params:
         args += [ '--delete-messages' ]
 
-    args += [ '--status-suffix=%s' % (g_hostname + '-' + params['item']) ]
+    args += [ '--status-suffix=%s' % (host_name() + '-' + params['item']) ]
 
     if 'duration' in params:
         args += [ '--warning=%d' % params['duration'][0] ]

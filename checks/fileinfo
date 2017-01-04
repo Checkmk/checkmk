@@ -111,7 +111,7 @@ def inventory_fileinfo_common(info, case):
     if info:
         reftime = int(info[0][0])
 
-    inventory_groups = host_extra_conf(g_hostname, fileinfo_groups)
+    inventory_groups = host_extra_conf(host_name(), fileinfo_groups)
 
     for line in info:
         if len(line) >= 3:

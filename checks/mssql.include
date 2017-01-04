@@ -38,7 +38,7 @@ def format_item_mssql_datafiles(inst, database, file_name):
 
 
 def inventory_mssql_datafiles(mode, info):
-    settings = host_extra_conf(g_hostname, mssql_transactionlogs_discovery)
+    settings = host_extra_conf(host_name(), mssql_transactionlogs_discovery)
     summarize = settings and settings[0].get("summarize_%s" % mode, False)
 
     for line in info:

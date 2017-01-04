@@ -54,8 +54,8 @@ check_info["if64adm"] = {
     'snmp_info'                 : ( ".1.3.6.1.2.1", if64_snmp_end_oids + [
                                     "2.2.1.7", # ifAdminStatus
                                   ]),
-    'snmp_scan_function'        : lambda oid: not if64_disabled(g_hostname) \
-                                              and if64_scan_function(oid, False),
+    'snmp_scan_function'        : lambda oid: not if64_disabled(host_name()) \
+                                              and if64_scan_function(oid, True),
     'group'                     : 'if',
     'node_info'                 : True,
     'default_levels_variable'   : 'if_default_levels',

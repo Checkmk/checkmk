@@ -145,7 +145,7 @@ def parse_brocade_optical(info):
 
 
 def inventory_brocade_optical(parsed):
-    settings            = host_extra_conf_merged(g_hostname, inventory_if_rules)
+    settings            = host_extra_conf_merged(host_name(), inventory_if_rules)
     porttypes           = set(settings.get('porttypes', if_inventory_porttypes))
     portstates          = settings.get('portstates', if_inventory_portstates)
     match_desc          = settings.get('match_desc')

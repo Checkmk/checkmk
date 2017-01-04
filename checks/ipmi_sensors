@@ -171,7 +171,7 @@ inventory_ipmi_rules = []
 
 
 def inventory_freeipmi(parsed):
-    rules = host_extra_conf(g_hostname, inventory_ipmi_rules)
+    rules = host_extra_conf(host_name(), inventory_ipmi_rules)
     if rules == []:
         rules = [ ('single', {}) ]
 

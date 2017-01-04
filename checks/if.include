@@ -287,7 +287,7 @@ def inventory_if_common(info, has_nodeinfo = False):
     if len(info) == 0 or len(info[0]) != length:
         return []
 
-    settings_sets = host_extra_conf(g_hostname, inventory_if_rules)
+    settings_sets = host_extra_conf(host_name(), inventory_if_rules)
     global_seen   = set()
     pre_inventory = []
 

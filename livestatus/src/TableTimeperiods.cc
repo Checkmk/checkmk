@@ -26,8 +26,8 @@
 #include <memory>
 #include "Column.h"
 #include "OffsetStringColumn.h"
-#include "OffsetTimeperiodColumn.h"
 #include "Query.h"
+#include "TimeperiodColumn.h"
 #include "nagios.h"
 
 using std::make_unique;
@@ -42,8 +42,8 @@ TableTimeperiods::TableTimeperiods(Logger *logger) : Table(logger) {
     addColumn(make_unique<OffsetStringColumn>(
         "alias", "The alias of the timeperiod",
         DANGEROUS_OFFSETOF(timeperiod, alias), -1, -1, -1));
-    addColumn(make_unique<OffsetTimeperiodColumn>(
-        "in", "Wether we are currently in this period (0/1)", -1, -1, -1, -1));
+    addColumn(make_unique<TimeperiodColumn>(
+        "in", "Wether we are currently in this period (0/1)", -1, -1, -1));
     // TODO(mk): add days and exceptions
 }
 

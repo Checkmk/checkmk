@@ -22,26 +22,23 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef OffsetTimeperiodColumn_h
-#define OffsetTimeperiodColumn_h
+#include "TimeperiodColumn.h"
+#include "TimeperiodsCache.h"
 
-#include "config.h"  // IWYU pragma: keep
-#include <sys/types.h>
-#include <string>
-#include "OffsetIntColumn.h"
+using std::string;
 
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
+extern TimeperiodsCache *g_timeperiods_cache;
 
-class OffsetTimeperiodColumn : public OffsetIntColumn {
-public:
-    OffsetTimeperiodColumn(std::string name, std::string description,
-                           int offset, int indirect_offset, int extra_offset,
-                           int extra_extra_offset);
-    int32_t getValue(void *row, contact *auth_user) override;
-};
+TimeperiodColumn::TimeperiodColumn(string name, string description,
+                                   int indirect_offset, int extra_offset,
+                                   int extra_extra_offset)
+    : IntColumn(name, description, indirect_offset, extra_offset,
+                extra_extra_offset) {}
 
-#endif  // OffsetTimeperiodColumn_h
+int32_t TimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
+    if (auto tp = rowData<timeperiod>(row)) {
+        // no timeperiod set -> Nagios assumes 7x24
+        return (tp == nullptr || g_timeperiods_cache->inTimeperiod(tp)) ? 1 : 0;
+    }
+    return 0;
+}

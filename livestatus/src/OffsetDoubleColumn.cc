@@ -23,13 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetDoubleColumn.h"
-#include <cstring>
+#include "Column.h"
 
 double OffsetDoubleColumn::getValue(void *data) {
-    if (auto p = rowData<char>(data)) {
-        double d;
-        memcpy(&d, p + _offset, sizeof(d));
-        return d;
+    if (auto p = rowData<void>(data)) {
+        return *offset_cast<double>(p, _offset);
     }
     return 0;
 }

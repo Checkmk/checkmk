@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactGroupsColumn.h"
+#include "Column.h"
 #include "MonitoringCore.h"
 #include "Renderer.h"
 
@@ -33,9 +34,8 @@ using std::unique_ptr;
 void ContactGroupsColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
-    if (auto data = rowData<char>(row)) {
-        for (contactgroupsmember *cgm =
-                 *reinterpret_cast<contactgroupsmember **>(data + _offset);
+    if (auto p = rowData<void>(row)) {
+        for (auto cgm = *offset_cast<contactgroupsmember *>(p, _offset);
              cgm != nullptr; cgm = cgm->next) {
             l.output(string(cgm->group_ptr->group_name));
         }
@@ -56,9 +56,7 @@ unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
 
             // row is already shifted (_indirect_offset is taken into account),
             // but _offset needs still to be accounted for
-            for (contactgroupsmember *cgm =
-                     *reinterpret_cast<contactgroupsmember **>(
-                         reinterpret_cast<char *>(row) + _offset);
+            for (auto cgm = *offset_cast<contactgroupsmember *>(row, _offset);
                  cgm != nullptr; cgm = cgm->next) {
                 // TODO(sp) Remove evil cast below.
                 if (cgm->group_ptr ==
@@ -79,7 +77,5 @@ unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
 }
 
 bool ContactGroupsColumn::isEmpty(void *data) {
-    contactgroupsmember *cgm = *reinterpret_cast<contactgroupsmember **>(
-        reinterpret_cast<char *>(data) + _offset);
-    return cgm == nullptr;
+    return *offset_cast<contactgroupsmember *>(data, _offset) == nullptr;
 }

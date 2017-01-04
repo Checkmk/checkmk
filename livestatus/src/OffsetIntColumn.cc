@@ -23,11 +23,11 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetIntColumn.h"
+#include "Column.h"
 
 int32_t OffsetIntColumn::getValue(void *row, contact * /* auth_user */) {
-    if (auto p = rowData<char>(row)) {
-        auto ptr = reinterpret_cast<int *>(p + _offset);
-        return static_cast<int32_t>(*ptr);
+    if (auto p = rowData<void>(row)) {
+        return static_cast<int32_t>(*offset_cast<int>(p, _offset));
     }
     return 0;
 }

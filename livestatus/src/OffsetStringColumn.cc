@@ -23,12 +23,13 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetStringColumn.h"
+#include "Column.h"
 
 using std::string;
 
 string OffsetStringColumn::getValue(void *data) const {
-    if (auto p = rowData<char>(data)) {
-        const char *s = *reinterpret_cast<char **>(p + _offset);
+    if (auto p = rowData<void>(data)) {
+        auto s = *offset_cast<char *>(p, _offset);
         return s == nullptr ? "" : s;
     }
     return "";

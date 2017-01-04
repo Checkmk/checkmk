@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostGroupsColumn.h"
+#include "Column.h"
 #include "Renderer.h"
 
 using std::make_unique;
@@ -30,8 +31,8 @@ using std::string;
 using std::unique_ptr;
 
 objectlist *HostGroupsColumn::getData(void *data) {
-    if (auto p = rowData<char>(data)) {
-        return *reinterpret_cast<objectlist **>(p + _offset);
+    if (auto p = rowData<void>(data)) {
+        return *offset_cast<objectlist *>(p, _offset);
     }
     return nullptr;
 }
@@ -40,7 +41,7 @@ void HostGroupsColumn::output(void *row, RowRenderer &r,
                               contact * /* auth_user */) {
     ListRenderer l(r);
     for (objectlist *list = getData(row); list != nullptr; list = list->next) {
-        hostgroup *sg = reinterpret_cast<hostgroup *>(list->object_ptr);
+        auto sg = static_cast<hostgroup *>(list->object_ptr);
         l.output(string(sg->group_name));
     }
 }
@@ -59,8 +60,7 @@ unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
 
             // row is already shifted (_indirect_offset is taken into account),
             // but _offset needs still to be accounted for
-            for (objectlist *list = *reinterpret_cast<objectlist **>(
-                     reinterpret_cast<char *>(row) + _offset);
+            for (auto list = *offset_cast<objectlist *>(row, _offset);
                  list != nullptr; list = list->next) {
                 if (list->object_ptr == _element) {
                     return true;
@@ -79,7 +79,5 @@ unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
 }
 
 bool HostGroupsColumn::isEmpty(void *data) {
-    objectlist *list = *reinterpret_cast<objectlist **>(
-        reinterpret_cast<char *>(data) + _offset);
-    return list == nullptr;
+    return *offset_cast<objectlist *>(data, _offset) == nullptr;
 }

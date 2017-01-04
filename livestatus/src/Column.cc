@@ -43,10 +43,8 @@ Column::Column(string name, string description, int indirect_offset,
 
 namespace {
 void *shift(void *data, int offset) {
-    return (data == nullptr || offset < 0)
-               ? data
-               : *(reinterpret_cast<void **>(static_cast<char *>(data) +
-                                             offset));
+    return (data == nullptr || offset < 0) ? data
+                                           : *offset_cast<void *>(data, offset);
 }
 }  // namespace
 

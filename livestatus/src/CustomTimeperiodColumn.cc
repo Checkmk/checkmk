@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "CustomTimeperiodColumn.h"
+#include "Column.h"
 #include "TimeperiodsCache.h"
 
 extern TimeperiodsCache *g_timeperiods_cache;
@@ -41,8 +42,8 @@ int32_t CustomTimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
 }
 
 customvariablesmember *CustomTimeperiodColumn::getCVM(void *data) {
-    if (auto p = rowData<char>(data)) {
-        return *reinterpret_cast<customvariablesmember **>(p + _offset);
+    if (auto p = rowData<void>(data)) {
+        return *offset_cast<customvariablesmember *>(p, _offset);
     }
     return nullptr;
 }

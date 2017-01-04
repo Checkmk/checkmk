@@ -32,8 +32,8 @@
 #include "CustomVarsValuesColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
-#include "OffsetTimeperiodColumn.h"
 #include "Query.h"
+#include "TimeperiodColumn.h"
 #include "nagios.h"
 
 using std::make_unique;
@@ -98,16 +98,16 @@ void TableContacts::addColumns(Table *table, const string &prefix,
         DANGEROUS_OFFSETOF(contact, service_notifications_enabled),
         indirect_offset, -1, -1));
 
-    table->addColumn(make_unique<OffsetTimeperiodColumn>(
+    table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_host_notification_period",
         "Wether the contact is currently in his/her host notification period (0/1)",
-        DANGEROUS_OFFSETOF(contact, host_notification_period_ptr),
-        indirect_offset, -1, -1));
-    table->addColumn(make_unique<OffsetTimeperiodColumn>(
+        indirect_offset,
+        DANGEROUS_OFFSETOF(contact, host_notification_period_ptr), -1));
+    table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_service_notification_period",
         "Wether the contact is currently in his/her service notification period (0/1)",
-        DANGEROUS_OFFSETOF(contact, service_notification_period_ptr),
-        indirect_offset, -1, -1));
+        indirect_offset,
+        DANGEROUS_OFFSETOF(contact, service_notification_period_ptr), -1));
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",

@@ -94,7 +94,6 @@ livestatus_so_SOURCES = \
         OffsetStringMacroColumn.cc \
         OffsetStringServiceMacroColumn.cc \
         OffsetTimeColumn.cc \
-        OffsetTimeperiodColumn.cc \
         OringFilter.cc \
         OutputBuffer.cc \
         PerfdataAggregator.cc \
@@ -143,6 +142,7 @@ livestatus_so_SOURCES = \
         TableTimeperiods.cc \
         TimeColumn.cc \
         TimeFilter.cc \
+        TimeperiodColumn.cc \
         TimeperiodsCache.cc \
         VariadicFilter.cc \
         WorldNagios.cc \

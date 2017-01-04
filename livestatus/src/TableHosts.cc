@@ -51,10 +51,10 @@
 #include "OffsetStringColumn.h"
 #include "OffsetStringHostMacroColumn.h"
 #include "OffsetTimeColumn.h"
-#include "OffsetTimeperiodColumn.h"
 #include "Query.h"
 #include "ServiceListColumn.h"
 #include "ServiceListStateColumn.h"
+#include "TimeperiodColumn.h"
 #include "auth.h"
 
 extern host *host_list;
@@ -466,16 +466,16 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         DANGEROUS_OFFSETOF(host, percent_state_change), indirect_offset,
         extra_offset, -1));
 
-    table->addColumn(make_unique<OffsetTimeperiodColumn>(
+    table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_notification_period",
         "Whether this host is currently in its notification period (0/1)",
-        DANGEROUS_OFFSETOF(host, notification_period_ptr), indirect_offset,
-        extra_offset, -1));
-    table->addColumn(make_unique<OffsetTimeperiodColumn>(
+        indirect_offset, extra_offset,
+        DANGEROUS_OFFSETOF(host, notification_period_ptr)));
+    table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_check_period",
         "Whether this host is currently in its check period (0/1)",
-        DANGEROUS_OFFSETOF(host, check_period_ptr), indirect_offset,
-        extra_offset, -1));
+        indirect_offset, extra_offset,
+        DANGEROUS_OFFSETOF(host, check_period_ptr)));
     table->addColumn(make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this host is currently in its service period (0/1)",

@@ -43,13 +43,13 @@
 #include "OffsetStringColumn.h"
 #include "OffsetStringServiceMacroColumn.h"
 #include "OffsetTimeColumn.h"
-#include "OffsetTimeperiodColumn.h"
 #include "Query.h"
 #include "ServiceContactsColumn.h"
 #include "ServiceGroupsColumn.h"
 #include "ServiceSpecialDoubleColumn.h"
 #include "ServiceSpecialIntColumn.h"
 #include "TableHosts.h"
+#include "TimeperiodColumn.h"
 #include "WorldNagios.h"
 #include "auth.h"
 
@@ -397,21 +397,20 @@ void TableServices::addColumns(Table *table, const string &prefix,
         DANGEROUS_OFFSETOF(service, percent_state_change), indirect_offset, -1,
         -1));
 
-    table->addColumn(make_unique<OffsetTimeperiodColumn>(
+    table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_check_period",
         "Whether the service is currently in its check period (0/1)",
-        DANGEROUS_OFFSETOF(service, check_period_ptr), indirect_offset, -1,
-        -1));
+        indirect_offset, DANGEROUS_OFFSETOF(service, check_period_ptr), -1));
     table->addColumn(make_unique<CustomTimeperiodColumn>(
         prefix + "in_service_period",
         "Whether this service is currently in its service period (0/1)",
         DANGEROUS_OFFSETOF(service, custom_variables), "SERVICE_PERIOD",
         indirect_offset, -1, -1));
-    table->addColumn(make_unique<OffsetTimeperiodColumn>(
+    table->addColumn(make_unique<TimeperiodColumn>(
         prefix + "in_notification_period",
         "Whether the service is currently in its notification period (0/1)",
-        DANGEROUS_OFFSETOF(service, notification_period_ptr), indirect_offset,
-        -1, -1));
+        indirect_offset, DANGEROUS_OFFSETOF(service, notification_period_ptr),
+        -1));
 
     table->addColumn(make_unique<ServiceContactsColumn>(
         prefix + "contacts",

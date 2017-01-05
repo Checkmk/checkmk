@@ -173,8 +173,31 @@ def _sort_rows(rows, sort_col, sort_reverse):
     return rows
 
 
+def _write_csv(table, csv_separator):
 
+    rows = table["rows"]
+    headers = table["headers"]
+    limit = table['limit']
+    omit_headers = table["omit_headers"]
 
+    num_rows_unlimited = len(rows)
+    num_cols = len(headers)
+
+    # Apply limit after search / sorting etc.
+    if limit is not None:
+        rows = rows[:limit]
+
+    def render_headers():
+        html.write(csv_separator.join([html.strip_tags(header) or "" for (header, css, help, sortable) in headers]) + "\n")
+
+    # If we have no group headers then paint the headers now
+    if not omit_headers and table["rows"] and table["rows"][0][2] != "header":
+        render_headers()
+
+    odd = "even"
+    for nr, (row, css, state, fixed) in enumerate(rows):
+        html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
+        html.write("\n")
 
 
 def end():
@@ -200,15 +223,21 @@ def end():
         table = None
         return
 
+
+    if do_csv:
+        _write_csv(table, csv_separator)
+        table = None
+        return
+
     #html.guitest_record_output("data_tables", table)
 
-    if table["title"] and not do_csv:
+    if table["title"]:
         html.write("<h3>%s</h3>" % table["title"])
 
-    if table.get("help") and not do_csv:
+    if table.get("help"):
         html.help(table["help"])
 
-    if not table["rows"] and not do_csv:
+    if not table["rows"]:
         html.write("<div class=info>%s</div>" % table["empty_text"])
         table = None
         return
@@ -218,7 +247,7 @@ def end():
 
     # Controls whether or not actions are available for a table
     search_term = None
-    actions_enabled = (table["searchable"] or table["sortable"]) and not do_csv
+    actions_enabled = (table["searchable"] or table["sortable"])
     if actions_enabled:
 
         user_opts = config.user.load_file("tableoptions", {})
@@ -267,78 +296,74 @@ def end():
     if limit is not None:
         rows = rows[:limit]
 
-    if not do_csv:
-        html.write('<table class="data oddeven')
-        if "css" in table:
-            html.write(" %s" % table["css"])
-        html.write('">\n')
+    html.write('<table class="data oddeven')
+    if "css" in table:
+        html.write(" %s" % table["css"])
+    html.write('">\n')
 
     def render_headers():
         if table["omit_headers"]:
             return
 
-        if do_csv:
-            html.write(csv_separator.join([html.strip_tags(header) or "" for (header, css, help, sortable) in table["headers"]]) + "\n")
-        else:
-            html.write("  <tr>")
-            first_col = True
-            for nr, (header, css, help, sortable) in enumerate(table["headers"]):
-                text = header
+        html.write("  <tr>")
+        first_col = True
+        for nr, (header, css, help, sortable) in enumerate(table["headers"]):
+            text = header
 
-                if help:
-                    header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
+            if help:
+                header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
 
-                if css:
-                    css_def   = " class=\"header_%s\"" % css
-                    css_class = " header_%s" % css
-                else:
-                    css_def   = ""
-                    css_class = ""
+            if css:
+                css_def   = " class=\"header_%s\"" % css
+                css_class = " header_%s" % css
+            else:
+                css_def   = ""
+                css_class = ""
 
-                if not table["sortable"] or not sortable:
-                    html.write("  <th%s>" % css_def)
-                else:
-                    reverse = 0
-                    sort = html.var('_%s_sort' % table_id)
-                    if sort:
-                        sort_col, sort_reverse = map(int, sort.split(',', 1))
-                        if sort_col == nr:
-                            reverse = sort_reverse == 0 and 1 or 0
-                    html.write("  <th class=\"sort%s\" title=\"%s\" onclick=\"location.href='%s'\">" %
-                                (css_class, _('Sort by %s') % text, html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])))
+            if not table["sortable"] or not sortable:
+                html.write("  <th%s>" % css_def)
+            else:
+                reverse = 0
+                sort = html.var('_%s_sort' % table_id)
+                if sort:
+                    sort_col, sort_reverse = map(int, sort.split(',', 1))
+                    if sort_col == nr:
+                        reverse = sort_reverse == 0 and 1 or 0
+                html.write("  <th class=\"sort%s\" title=\"%s\" onclick=\"location.href='%s'\">" %
+                            (css_class, _('Sort by %s') % text, html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])))
 
-                # Add the table action link
-                if first_col:
-                    first_col = False
-                    if actions_enabled:
-                        if not header:
-                            header = "&nbsp;" # Fixes layout problem with white triangle
-                        if actions_visible:
-                            state = '0'
-                            help  = _('Hide table actions')
-                            img   = 'table_actions_on'
-                        else:
-                            state = '1'
-                            help  = _('Display table actions')
-                            img   = 'table_actions_off'
-                        html.write("<div class=\"toggle_actions\">")
-                        html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
-                            help, img, cssclass = 'toggle_actions')
-                        html.write("<span>%s</span>" % header)
-                        html.write("</div>")
+            # Add the table action link
+            if first_col:
+                first_col = False
+                if actions_enabled:
+                    if not header:
+                        header = "&nbsp;" # Fixes layout problem with white triangle
+                    if actions_visible:
+                        state = '0'
+                        help  = _('Hide table actions')
+                        img   = 'table_actions_on'
                     else:
-                        html.write(header)
+                        state = '1'
+                        help  = _('Display table actions')
+                        img   = 'table_actions_off'
+                    html.write("<div class=\"toggle_actions\">")
+                    html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
+                        help, img, cssclass = 'toggle_actions')
+                    html.write("<span>%s</span>" % header)
+                    html.write("</div>")
                 else:
                     html.write(header)
+            else:
+                html.write(header)
 
-                html.write("</th>\n")
-            html.write("  </tr>\n")
+            html.write("</th>\n")
+        html.write("  </tr>\n")
 
     # If we have no group headers then paint the headers now
     if table["rows"] and table["rows"][0][2] != "header":
         render_headers()
 
-    if actions_enabled and actions_visible and not do_csv:
+    if actions_enabled and actions_visible:
         html.write('<tr class="data even0 actions"><td colspan=%d>' % num_cols)
         if not html.in_form():
             html.begin_form("%s_actions" % table_id)
@@ -365,40 +390,34 @@ def end():
 
     odd = "even"
     for nr, (row, css, state, fixed) in enumerate(rows):
-        if do_csv:
-            html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
-            html.write("\n")
+        # Intermediate header
+        if state == "header":
+            # Show the header only, if at least one (non-header) row follows
+            if nr < len(rows) - 1 and rows[nr+1][2] != "header":
+                html.write('  <tr class="groupheader"><td colspan=%d><br>%s</td></tr>' % (num_cols, row))
+                odd = "even"
+                render_headers()
+            continue
 
-        else: # HTML output
-            # Intermediate header
-            if state == "header":
-                # Show the header only, if at least one (non-header) row follows
-                if nr < len(rows) - 1 and rows[nr+1][2] != "header":
-                    html.write('  <tr class="groupheader"><td colspan=%d><br>%s</td></tr>' % (num_cols, row))
-                    odd = "even"
-                    render_headers()
-                continue
+        odd = odd == "odd" and "even" or "odd"
+        html.write('  <tr class="data %s%d' % (odd, state))
+        if css:
+            html.write(' %s' % css)
+        html.write('">\n')
+        for cell_content, css_classes, colspan in row:
+            colspan = colspan and (' colspan="%d"' % colspan) or ''
+            html.write("    <td%s%s>" % (css_classes and (" class='%s'" % css_classes) or "", colspan))
+            html.write(cell_content)
+            html.write("</td>\n")
+        html.write("</tr>\n")
 
-            odd = odd == "odd" and "even" or "odd"
-            html.write('  <tr class="data %s%d' % (odd, state))
-            if css:
-                html.write(' %s' % css)
-            html.write('">\n')
-            for cell_content, css_classes, colspan in row:
-                colspan = colspan and (' colspan="%d"' % colspan) or ''
-                html.write("    <td%s%s>" % (css_classes and (" class='%s'" % css_classes) or "", colspan))
-                html.write(cell_content)
-                html.write("</td>\n")
-            html.write("</tr>\n")
-
-    if table["searchable"] and search_term and not rows and not do_csv:
+    if table["searchable"] and search_term and not rows:
         html.write('<tr class="data odd0 no_match"><td colspan=%d>%s</td></tr>' %
             (num_cols, _('Found no matching rows. Please try another search term.')))
 
-    if not do_csv:
-        html.write("</table>\n")
+    html.write("</table>\n")
 
-    if limit is not None and num_rows_unlimited > limit and not do_csv:
+    if limit is not None and num_rows_unlimited > limit:
         html.message(_('This table is limited to show only %d of %d rows. '
                        'Click <a href="%s">here</a> to disable the limitation.') %
                            (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))

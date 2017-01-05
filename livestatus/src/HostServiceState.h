@@ -26,8 +26,8 @@
 #define HostServiceState_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <cstring>
 #include <ctime>
+#include <string>  // for string
 #include <vector>
 #include "nagios.h"  // IWYU pragma: keep
 class HostServiceState;
@@ -77,7 +77,7 @@ public:
     bool _has_vanished;
     time_t _last_known_time;
 
-    const char *_debug_info;
+    std::string _debug_info;
 
     // NOTE: _log_output is the *only* pointer in this class to an object we
     // own, all other pointers are to foreign objects. This ownership is
@@ -85,16 +85,16 @@ public:
     // TODO in TableStateHistory::updateHostServiceState.
     char *_log_output;
 
-    const char *_notification_period;  // may be "": -> no period known, we
-                                       // assume "always"
-    const char
-        *_service_period;  // may be "": -> no period known, we assume "always"
+    // maybe "": -> no period known, we assume "always"
+    std::string _notification_period;
+    // maybe "": -> no period known, we assume "always"
+    std::string _service_period;
     host *_host;
     service *_service;
-    const char *_host_name;            // Fallback if host no longer exists
-    const char *_service_description;  // Fallback if service no longer exists
+    std::string _host_name;            // Fallback if host no longer exists
+    std::string _service_description;  // Fallback if service no longer exists
 
-    HostServiceState() { bzero(this, sizeof(HostServiceState)); }
+    HostServiceState();
     ~HostServiceState();
 #ifdef CMC
     void computePerStateDurations();

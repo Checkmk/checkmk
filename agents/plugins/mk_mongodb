@@ -77,7 +77,7 @@ if repl_info:
     sys.stdout.write("arbiters\t%s\n" % " ".join(repl_info.get("arbiters")))
 
     sys.stdout.write("<<<mongodb_replstatus>>>\n")
-    pprint.pprint(con.admin.command("replSetGetStatus"))
+    sys.stdout.write(pprint.pformat(con.admin.command("replSetGetStatus")))
 
 sys.stdout.write("<<<mongodb_asserts>>>\n")
 for key, value in server_status.get("asserts", {}).items():

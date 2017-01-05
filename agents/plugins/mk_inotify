@@ -337,7 +337,7 @@ def main():
     update_watched_folders()
     if opt_foreground:
         import pprint
-        pprint.pprint(folder_configs)
+        sys.stdout.write(pprint.pformat(folder_configs))
 
     # Save monitored file/folder information specified in mk_inotify.cfg
     file(configured_paths, "w").write("\n".join(get_watched_files())+"\n")

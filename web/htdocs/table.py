@@ -23,7 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
 import config
 from lib import num_split
 
@@ -172,6 +171,7 @@ def end():
     search_term = None
     actions_enabled = (table["searchable"] or table["sortable"]) and not do_csv
     if actions_enabled:
+
         user_opts = config.user.load_file("tableoptions", {})
         user_opts.setdefault(table_id, {})
         table_opts = user_opts[table_id]
@@ -388,9 +388,8 @@ def end():
                        'Click <a href="%s">here</a> to disable the limitation.') %
                            (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
 
-    if actions_enabled and not do_csv:
+    if actions_enabled:
         config.user.save_file("tableoptions", user_opts)
-
     table = None
 
 

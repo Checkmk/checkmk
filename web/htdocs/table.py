@@ -128,6 +128,55 @@ def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True
         table["headers"].append((title, css, help, sortable))
     table["rows"][-1][0].append((htmlcode, css, colspan))
 
+
+def _filter_rows(rows, search_term):
+    filtered_rows = []
+    for row, css, state, fixed in rows:
+        if state == "header" or fixed:
+            filtered_rows.append((row, css, state, fixed))
+            continue # skip filtering of headers or fixed rows
+
+        for cell_content, css_classes, colspan in row:
+            if search_term in cell_content.lower():
+                filtered_rows.append((row, css, state, fixed))
+                break # skip other cells when matched
+    return filtered_rows
+
+
+def _sort_rows(rows, sort_col, sort_reverse):
+
+    # remove and remind fixed rows, add to separate list
+    fixed_rows = []
+    for index, row in enumerate(rows[:]):
+        if row[3] == True:
+            rows.remove(row)
+            fixed_rows.append((index, row))
+
+    # Then use natural sorting to sort the list. Note: due to a
+    # change in the number of columns of a table in different software
+    # versions the cmp-function might fail. This is because the sorting
+    # column is persisted in a user file. So we ignore exceptions during
+    # sorting. This gives the user the chance to change the sorting and
+    # see the table in the first place.
+    try:
+        rows.sort(cmp=lambda a, b: cmp(num_split(a[0][sort_col][0]),
+                                       num_split(b[0][sort_col][0])),
+                  reverse=sort_reverse==1)
+    except IndexError:
+        pass
+
+    # Now re-add the removed "fixed" rows to the list again
+    if fixed_rows:
+        for index, row in fixed_rows:
+            rows.insert(index, row)
+
+    return rows
+
+
+
+
+
+
 def end():
     global table
     finish_previous()
@@ -194,17 +243,7 @@ def end():
             if search_term:
                 html.set_var('_%s_search' % table_id, search_term)
                 table_opts['search'] = search_term # persist
-                filtered_rows = []
-                for row, css, state, fixed in rows:
-                    if state == "header" or fixed:
-                        filtered_rows.append((row, css, state, fixed))
-                        continue # skip filtering of headers or fixed rows
-
-                    for cell_content, css_classes, colspan in row:
-                        if search_term in cell_content.lower():
-                            filtered_rows.append((row, css, state, fixed))
-                            break # skip other cells when matched
-                rows = filtered_rows
+                rows = _filter_rows(rows, search_term)
 
         if html.var('_%s_reset_sorting' % table_id):
             html.del_var('_%s_sort' % table_id)
@@ -218,31 +257,7 @@ def end():
                 html.set_var('_%s_sort' % table_id, sort)
                 table_opts['sort'] = sort # persist
                 sort_col, sort_reverse = map(int, sort.split(',', 1))
-
-                # remove and remind fixed rows, add to separate list
-                fixed_rows = []
-                for index, row in enumerate(rows[:]):
-                    if row[3] == True:
-                        rows.remove(row)
-                        fixed_rows.append((index, row))
-
-                # Then use natural sorting to sort the list. Note: due to a
-                # change in the number of columns of a table in different software
-                # versions the cmp-function might fail. This is because the sorting
-                # column is persisted in a user file. So we ignore exceptions during
-                # sorting. This gives the user the chance to change the sorting and
-                # see the table in the first place.
-                try:
-                    rows.sort(cmp=lambda a, b: cmp(num_split(a[0][sort_col][0]),
-                                                   num_split(b[0][sort_col][0])),
-                              reverse=sort_reverse==1)
-                except IndexError:
-                    pass
-
-                # Now re-add the removed "fixed" rows to the list again
-                if fixed_rows:
-                    for index, row in fixed_rows:
-                        rows.insert(index, row)
+                rows = _sort_rows(rows, sort_col, sort_reverse)
 
     num_rows_unlimited = len(rows)
     num_cols = len(table["headers"])

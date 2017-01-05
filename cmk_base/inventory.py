@@ -146,7 +146,8 @@ def do_inv_check(options, hostname):
     except Exception, e:
         if cmk.debug.enabled():
             raise
-        console.output("Inventory failed: %s\n" % e)
+        console.output("%s - Inventory failed: %s\n" %
+            (defines.short_service_state_name(_inv_fail_status), e))
         sys.exit(_inv_fail_status)
 
 

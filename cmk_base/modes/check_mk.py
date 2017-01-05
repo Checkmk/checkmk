@@ -629,6 +629,7 @@ modes.register(Mode(
     short_help="Check configuration for invalid vars",
 ))
 
+
 #.
 #   .--update-dns-cache----------------------------------------------------.
 #   |                        _            _                                |
@@ -638,7 +639,6 @@ modes.register(Mode(
 #   |        \__,_| .__/ \__,_(_)     \__,_|_| |_|___/      \___(_)        |
 #   |             |_|                                                      |
 #   '----------------------------------------------------------------------'
-
 
 def mode_update_dns_cache():
     import cmk_base.ip_lookup
@@ -1329,7 +1329,6 @@ modes.register(Mode(
 #   |                                                             |___/    |
 #   '----------------------------------------------------------------------'
 
-
 def mode_check_discovery(*args):
     import cmk_base.discovery as discovery
     discovery.check_discovery(*args)
@@ -1357,7 +1356,6 @@ modes.register(Mode(
 #   |                 \__,_|_|___/\___\___/ \_/ \___|_|                    |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
 
 def mode_discover(options, args):
     import cmk_base.discovery as discovery

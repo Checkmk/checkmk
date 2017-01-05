@@ -266,20 +266,19 @@ class Site(object):
 
     def delete_file(self, rel_path):
         if not self._is_running_as_site_user():
-            p = self.execute(["rm", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
+            p = self.execute(["rm", "-f", "%s/%s" % (self.root, rel_path)])
             if p.wait() != 0:
-                raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
-            return p.stdout.read()
+                raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            return os.unlink("%s/%s" % (self.root, rel_path))
+            os.unlink("%s/%s" % self.root, rel_path)
 
 
     def write_file(self, rel_path, content):
         if not self._is_running_as_site_user():
-            p = self.execute(["dd", "of=%s/%s" % (self.root, rel_path)],
-                             stdout=subprocess.PIPE, stdin=subprocess.PIPE,
-                             stderr=open(os.devnull, "w"))
+            p = self.execute(["tee", "%s/%s" % (self.root, rel_path)],
+                             stdin=subprocess.PIPE, stdout=open(os.devnull, "w"))
             p.communicate(content)
+            p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
@@ -292,6 +291,11 @@ class Site(object):
             return p.wait() == 0
         else:
             return os.path.exists("%s/%s" % (self.root, rel_path))
+
+
+    def makedirs(self, rel_path):
+        p = self.execute(["mkdir", "-p", "%s/%s" % (self.root, rel_path)])
+        return p.wait() == 0
 
 
     def cleanup_if_wrong_version(self):
@@ -1096,7 +1100,8 @@ class CMKWebSession(WebSession):
         assert len(result["sites"]) > 0
 
         for site_id, status in result["sites"].items():
-            assert status["_state"] == "success"
+            assert status["_state"] == "success", \
+                "Failed to activate %s: %r" % (site_id, status)
             assert status["_time_ended"] > time_started
 
 

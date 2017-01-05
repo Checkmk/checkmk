@@ -11,7 +11,10 @@ pytestmark = pytest.mark.git
 
 check_paths = [
     "bin",
-    "modules",
+    "cmk_base",
+    "cmk_base/cee",
+    "cmk_base/modes",
+    "cmk_base/default_config",
     "lib",
     "checks",
     "inventory",
@@ -42,6 +45,12 @@ def test_find_debug_code():
 
                         l = line.lstrip()
                         assert not l.startswith("print("), \
+                            "Found \"print(...)\" call in %s:%d" % \
+                                                    (file_path, nr+1)
+                        assert not l.startswith("pprint.pprint("), \
+                            "Found \"print(...)\" call in %s:%d" % \
+                                                    (file_path, nr+1)
+                        assert not l.startswith("pprint("), \
                             "Found \"print(...)\" call in %s:%d" % \
                                                     (file_path, nr+1)
                         assert not l.startswith("print "), \

@@ -618,10 +618,12 @@ class BaseFolder(WithPermissionsAndAttributes):
                  html.attrencode(folder.title()))
 
         def breadcrump_element_start(end = '', z_index = 0):
-            html.write('<li style="z-index:%d;"><div class="left %s"></div>' % (z_index, end))
+            html.open_li(style="z-index:%d;" % z_index)
+            html.div('', class_=["left", end])
 
         def breadcrump_element_end(end = ''):
-            html.write('<div class="right %s"></div></li>' % end)
+            html.div('', class_=["right", end])
+            html.close_li()
 
 
         parts = []
@@ -636,14 +638,17 @@ class BaseFolder(WithPermissionsAndAttributes):
 
 
         # Render the folder path
-        html.write("<div class=folderpath><ul>\n")
+        html.open_div(class_=["folderpath"])
+        html.open_ul()
         num = 0
         for part in parts:
             if num == 0:
                 breadcrump_element_start('end', z_index = 100 + num)
             else:
                 breadcrump_element_start(z_index = 100 + num)
-            html.write('<div class=content>%s</div>\n' % part)
+            html.open_div(class_=["content"])
+            html.write(part)
+            html.close_div()
 
             breadcrump_element_end(num == len(parts)-1
                       and not (self.has_subfolders() and not link_to_folder)
@@ -653,7 +658,8 @@ class BaseFolder(WithPermissionsAndAttributes):
         # Render the current folder when having subfolders
         if self.has_subfolders() and not link_to_folder:
             breadcrump_element_start(z_index = 100 + num)
-            html.write("<div class=content><form method=GET name=folderpath>")
+            html.open_div(class_=["content"])
+            html.open_form(name="folderpath", method="GET")
             html.sorted_select(
                 "folder", [ ("", "") ] + self.subfolder_choices(),
                 onchange = "folderpath.submit();",
@@ -664,10 +670,12 @@ class BaseFolder(WithPermissionsAndAttributes):
             else:
                 for var in keepvarnames:
                     html.hidden_field(var, html.var(var))
-            html.write("</form></div>")
+            html.close_form()
+            html.close_div()
             breadcrump_element_end('end')
 
-        html.write("</ul></div>\n")
+        html.close_ul()
+        html.close_div()
 
 
     def name(self):
@@ -2904,8 +2912,9 @@ class ContactGroupsAttribute(Attribute):
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         for name, group in items:
             html.checkbox(varprefix + self._name + "_n_" + name, name in value["groups"])
-            html.write(' <a href="%s">%s</a><br>' % (folder_preserving_link([("mode", "edit_contact_group"), ("edit", name)]), group['alias'] and group['alias'] or name))
-        html.write("<hr>")
+            html.a(group['alias'] if group['alias'] else name , href=folder_preserving_link([("mode", "edit_contact_group"), ("edit", name)]))
+            html.br()
+        html.hr()
 
         if is_host:
             html.checkbox(varprefix + self._name + "_use", value["use"],
@@ -2914,14 +2923,14 @@ class ContactGroupsAttribute(Attribute):
         elif not is_search:
             html.checkbox(varprefix + self._name + "_recurse_perms", value["recurse_perms"],
                 label = _("Give these groups also <b>permission on all subfolders</b>"))
-            html.write("<hr>")
+            html.hr()
             html.checkbox(varprefix + self._name + "_use", value["use"],
                 label = _("Add these groups as <b>contacts</b> to all hosts in this folder"))
-            html.write("<br>")
+            html.br()
             html.checkbox(varprefix + self._name + "_recurse_use", value["recurse_use"],
                 label = _("Add these groups as <b>contacts in all subfolders</b>"))
 
-        html.write("<hr>")
+        html.hr()
         html.help(_("With this option contact groups that are added to hosts are always "
                "being added to services, as well. This only makes a difference if you have "
                "assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. "
@@ -5604,7 +5613,7 @@ def render_condition_editor(tag_specs, varprefix=""):
     # Show dropdown with "is/isnot/ignore" and beginning
     # of div that is switched visible by is/isnot
     def tag_condition_dropdown(tagtype, deflt, id):
-        html.write("<td>")
+        html.open_td()
         html.select(varprefix + tagtype + "_" + id, [
             ("ignore", _("ignore")),
             ("is",     _("is")),
@@ -5612,13 +5621,13 @@ def render_condition_editor(tag_specs, varprefix=""):
             onchange="valuespec_toggle_dropdownn(this, '%stag_sel_%s');" % \
                     (varprefix, id)
         )
-        html.write("</td><td class=\"tag_sel\">")
+        html.close_td()
+        html.open_td(class_="tag_sel")
         if html.form_submitted():
             div_is_open = html.var(tagtype + "_" + id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
-        html.write('<div id="%stag_sel_%s" style="%s">' % (
-            varprefix, id, not div_is_open and "display: none;" or ""))
+        html.open_div(id_="%stag_sel_%s" % (varprefix, id), style="display: none;" if not div_is_open else None)
 
 
     auxtags = group_hosttags_by_topic(configured_aux_tags())
@@ -5633,14 +5642,17 @@ def render_condition_editor(tag_specs, varprefix=""):
         if make_foldable:
             html.begin_foldable_container("topic", varprefix + topic, True,
                                           HTML("<b>%s</b>" % (_u(topic))))
-        html.write("<table class=\"hosttags\">")
+        html.open_table(class_=["hosttags"])
 
         # Show main tags
         for t, grouped_tags in hosttags:
             if t == topic:
                 for entry in grouped_tags:
                     id, title, choices = entry[:3]
-                    html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
+                    html.open_tr()
+                    html.open_td(class_="title")
+                    html.write("%s: &nbsp;" % _u(title))
+                    html.close_td()
                     default_tag, deflt = current_tag_setting(choices)
                     tag_condition_dropdown("tag", deflt, id)
                     if len(choices) == 1:
@@ -5648,21 +5660,26 @@ def render_condition_editor(tag_specs, varprefix=""):
                     else:
                         html.select(varprefix + "tagvalue_" + id,
                             [(t[0], _u(t[1])) for t in choices if t[0] != None], deflt=default_tag)
-                    html.write("</div>")
-                    html.write("</td></tr>")
+                    html.close_div()
+                    html.close_td()
+                    html.close_tr()
 
         # And auxiliary tags
         for t, grouped_tags in auxtags:
             if t == topic:
                 for id, title in grouped_tags:
-                    html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
+                    html.open_tr()
+                    html.open_td(class_="title")
+                    html.write("%s: &nbsp;" % _u(title))
+                    html.close_td()
                     default_tag, deflt = current_tag_setting([(id, _u(title))])
                     tag_condition_dropdown("auxtag", deflt, id)
                     html.write(" " + _("set"))
-                    html.write("</div>")
-                    html.write("</td></tr>")
+                    html.close_div()
+                    html.close_td()
+                    html.close_tr()
 
-        html.write("</table>")
+        html.close_table()
         if make_foldable:
             html.end_foldable_container()
 

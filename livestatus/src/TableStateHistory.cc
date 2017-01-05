@@ -41,6 +41,7 @@
 #include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
+#include "OffsetSStringColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
@@ -84,14 +85,16 @@ constexpr unsigned classmask_statehist =
 int g_disable_statehist_filtering = 0;
 
 #ifndef CMC
-const char *getCustomVariable(customvariablesmember *cvm, const char *name) {
+namespace {
+string getCustomVariable(customvariablesmember *cvm, const char *name) {
     for (; cvm != nullptr; cvm = cvm->next) {
         if (strcmp(cvm->variable_name, name) == 0) {
-            return cvm->variable_value;
+            return cvm->variable_value == nullptr ? "" : cvm->variable_value;
         }
     }
     return "";
 }
+}  // namespace
 #endif
 
 TableStateHistory::TableStateHistory(LogCache *log_cache,
@@ -156,17 +159,17 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         "in_service_period",
         "Shows if the host or service is within its service period",
         DANGEROUS_OFFSETOF(HostServiceState, _in_service_period), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "service_period",
         "The service period of the host or service in question",
         DANGEROUS_OFFSETOF(HostServiceState, _service_period), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "debug_info", "Debug information",
         DANGEROUS_OFFSETOF(HostServiceState, _debug_info), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "host_name", "Host name",
         DANGEROUS_OFFSETOF(HostServiceState, _host_name), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "service_description", "Description of the service",
         DANGEROUS_OFFSETOF(HostServiceState, _service_description), -1, -1,
         -1));
@@ -473,24 +476,21 @@ void TableStateHistory::answerQuery(Query *query) {
                     state->_host = entry->_host;
                     state->_service = entry->_service;
 #ifdef CMC
-                    state->_host_name = entry->_host->name().c_str();
-                    state->_service_description =
-                        entry->_service != nullptr
-                            ? entry->_service->name().c_str()
-                            : "";
+                    state->_host_name = entry->_host->name();
+                    state->_service_description = entry->_service == nullptr
+                                                      ? ""
+                                                      : entry->_service->name();
 #else
                     state->_host_name = entry->_host->name;
                     state->_service_description =
-                        entry->_service != nullptr
-                            ? entry->_service->description
-                            : "";
+                        entry->_service == nullptr
+                            ? ""
+                            : entry->_service->description;
 #endif
 
                     // No state found. Now check if this host/services is
-                    // filtered out.
-                    // Note: we currently do not filter out hosts since they
-                    // might be
-                    // needed for service states
+                    // filtered out.  Note: we currently do not filter out hosts
+                    // since they might be needed for service states
                     if (entry->_svc_desc != nullptr) {
                         bool filtered_out = false;
                         for (auto filter : object_filter) {
@@ -534,31 +534,24 @@ void TableStateHistory::answerQuery(Query *query) {
                         state->_notification_period =
                             state->_service->notificationPeriod()->name();
 #else
-                        state->_notification_period =
-                            state->_service->notification_period;
+                        auto np = state->_service->notification_period;
+                        state->_notification_period = np == nullptr ? "" : np;
 #endif
                     } else if (state->_host != nullptr) {
 #ifdef CMC
                         state->_notification_period =
                             state->_host->notificationPeriod()->name();
 #else
-                        state->_notification_period =
-                            state->_host->notification_period;
+                        auto np = state->_host->notification_period;
+                        state->_notification_period = np == nullptr ? "" : np;
 #endif
                     } else {
-                        state->_notification_period = "";
-
-                        // If for some reason the notification period is missing
-                        // set
-                        // a default
-                    }
-                    if (state->_notification_period == nullptr) {
                         state->_notification_period = "";
                     }
 
                     // Same for service period. For Nagios this is a bit
-                    // different, since this
-                    // is no native field but just a custom variable
+                    // different, since this is no native field but just a
+                    // custom variable
                     if (state->_service != nullptr) {
 #ifdef CMC
                         state->_service_period =
@@ -578,9 +571,9 @@ void TableStateHistory::answerQuery(Query *query) {
 #endif
                     } else {
                         state->_service_period = "";
-
-                        // Determine initial in_notification_period status
                     }
+
+                    // Determine initial in_notification_period status
                     auto tmp_period =
                         _notification_periods.find(state->_notification_period);
                     if (tmp_period != _notification_periods.end()) {
@@ -878,14 +871,14 @@ int TableStateHistory::updateHostServiceState(Query *query,
         case LogEntryType::timeperiod_transition: {
             char *save_ptr;
             char *buffer = strdup(entry->_options);
-            char *tp_name = strtok_r(buffer, ";", &save_ptr);
+            string tp_name = strtok_r(buffer, ";", &save_ptr);
             strtok_r(nullptr, ";", &save_ptr);
             char *tp_state = strtok_r(nullptr, ";", &save_ptr);
 
             // if no _host pointer is available the initial status of
             // _in_notification_period (1) never changes
             if ((hs_state->_host != nullptr) &&
-                (strcmp(tp_name, hs_state->_notification_period) == 0)) {
+                (tp_name == hs_state->_notification_period)) {
                 int new_status = atoi(tp_state);
                 if (new_status != hs_state->_in_notification_period) {
                     if (!only_update) {
@@ -897,7 +890,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             }
             // same for service period
             if ((hs_state->_host != nullptr) &&
-                (strcmp(tp_name, hs_state->_service_period) == 0)) {
+                (tp_name == hs_state->_service_period)) {
                 int new_status = atoi(tp_state);
                 if (new_status != hs_state->_in_service_period) {
                     if (!only_update) {

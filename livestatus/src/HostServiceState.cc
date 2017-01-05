@@ -25,6 +25,38 @@
 #include "HostServiceState.h"
 #include <cstdlib>
 
+HostServiceState::HostServiceState()
+    : _is_host(false)
+    , _time(0)
+    , _lineno(0)
+    , _from(0)
+    , _until(0)
+    , _duration(0)
+    , _duration_part(0)
+    , _duration_state_UNMONITORED(0)
+    , _duration_part_UNMONITORED(0)
+    , _duration_state_OK(0)
+    , _duration_part_OK(0)
+    , _duration_state_WARNING(0)
+    , _duration_part_WARNING(0)
+    , _duration_state_CRITICAL(0)
+    , _duration_part_CRITICAL(0)
+    , _duration_state_UNKNOWN(0)
+    , _duration_part_UNKNOWN(0)
+    , _host_down(0)
+    , _state(0)
+    , _in_notification_period(0)
+    , _in_service_period(0)
+    , _in_downtime(0)
+    , _in_host_downtime(0)
+    , _is_flapping(0)
+    , _may_no_longer_exist(false)
+    , _has_vanished(false)
+    , _last_known_time(0)
+    , _log_output(nullptr)
+    , _host(nullptr)
+    , _service(nullptr) {}
+
 HostServiceState::~HostServiceState() {
     if (_log_output != nullptr) {
         free(_log_output);

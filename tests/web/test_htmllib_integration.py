@@ -285,7 +285,7 @@ def test_check_mk():
     gentest(old, new, lambda x: x.popup_trigger("CONTENT", 0, what="it", data=None, url_vars=[("lol", "true")],
                              style="height:50px;", menu_content="test_content", cssclass="class", onclose=None))
     gentest(old, new, lambda x: x.popup_trigger("CONTENT", 0, what="it", data=None, url_vars=[("lol", "true")],
-                             style="height:50px;", menu_content="test_content", cssclass="class", onclose="close();"))
+                             style="height:50px;", menu_content="test_content '<div> TEST </div>", cssclass="class", onclose="close();"))
 
     # headers
 

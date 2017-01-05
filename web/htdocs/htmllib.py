@@ -480,16 +480,26 @@ class HTMLGenerator(Escaper, OutputFunnel):
                     'cellspacing', 'cellpadding', 'border', 'allowTransparency', 'frameborder'], key
 
         for k, v in attrs.iteritems():
+
             if v is None: continue
+            k = k.rstrip('_')
 
             if not isinstance(v, list):
-                yield ' %s=\"%s\"' % (k.rstrip('_'), self._escape_attribute(v))
-            elif k in ["class", "class_"]:
-                yield ' %s=\"%s\"' % (k.rstrip('_'),  ' '.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
-            elif k == "style" or k.startswith('on'):
-                yield ' %s=\"%s;\"' % (k.rstrip('_'), re.sub(';+', ';', '; '.join(a for a in (self._escape_attribute(vi) for vi in v) if a)))
+                v = self._escape_attribute(v)
             else:
-                yield ' %s=\"%s\"' % (k.rstrip('_'),   '_'.join(a for a in (self._escape_attribute(vi) for vi in v) if a))
+                if k == "class":
+                    sep = ' '
+                elif k == "style" or k.startswith('on'):
+                    sep = '; '
+                else:
+                    sep = '_'
+
+                v = sep.join([a for a in (self._escape_attribute(vi) for vi in v) if a])
+
+                if sep.startswith(';'):
+                    v = re.sub(';+', ';', v)
+
+            yield ' %s=\"%s\"' %(k, v)
 
 
     # applies attribute encoding to prevent code injections.
@@ -497,13 +507,10 @@ class HTMLGenerator(Escaper, OutputFunnel):
         """ You have to replace attributes which are also python elements such as
             'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_'). """
         #self.indent_level += self.indent
-        if not attrs:
-            return HTML("%s<%s%s>" % (' ' * (self.indent_level - self.indent),\
-                                      tag_name, ' /' if close_tag else ''))
-        else:
-            return HTML("%s<%s%s%s>" % (' ' * (self.indent_level - self.indent),\
-                                     tag_name, ''.join(self._render_attributes(**attrs)),\
-                                     ' /' if close_tag else ''))
+        indent = ' ' * (self.indent_level - self.indent)
+        return HTML("%s<%s%s%s>" % (indent, tag_name,\
+                                    '' if not attrs else ''.join(self._render_attributes(**attrs)),\
+                                    '' if not close_tag else ' /'))
 
 
     def _render_closing_tag(self, tag_name):
@@ -519,7 +526,6 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
         else:
             tag = tag.rstrip("\n")
-
             if isinstance(tag_content, HTML):
                 tag += tag_content.lstrip(' ').rstrip('\n')
             else:

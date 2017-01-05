@@ -424,37 +424,42 @@ def normal_login_page(called_directly = True):
     if html.myfile == 'login' and check_auth(html.req):
         html.http_redirect(origtarget and origtarget or 'index.py')
 
-    html.write('<div id="login">\n')
-    html.write('<img id="login_window" src="images/login_window.png" />\n')
-    html.write('<div id="version">%s</div>\n' % cmk.__version__)
+    html.open_div(id_="login")
+    html.img(id_="login_window", src="images/login_window.png")
+    html.div(cmk.__version__, id_="version")
 
     html.begin_form("login", method = 'POST', add_transid = False, action = 'login.py')
     html.hidden_field('_login', '1')
     html.hidden_field('_origtarget', origtarget)
-    html.write('<label id="label_user" class="legend" for="_username">%s:</label><br />\n' % _('Username'))
+    html.label("%s:" % _('Username'), id_="label_user", class_=["legend"], for_="_username")
+    html.br()
     html.text_input("_username", id_="input_user")
-    html.write('<label id="label_pass" class="legend" for="_password">%s:</label><br />\n' % _('Password'))
+    html.label("%s:" % _('Password'), id_="label_pass", class_=["legend"], for_="_password")
+    html.br()
     html.password_input("_password", id_="input_pass", size=None)
 
     if html.has_user_errors():
-        html.write('<div id="login_error">')
+        html.open_div(id_="login_error")
         html.show_user_errors()
-        html.write('</div>\n')
+        html.close_div()
 
-    html.write('<div id="button_text">')
+    html.open_div(id_="button_text")
     html.button("_login", _('Login'))
-    html.write("</div>\n")
+    html.close_div()
 
-    html.write('<div id="foot">Version: %s - &copy; '
-               '<a href="https://mathias-kettner.com">Mathias Kettner</a><br /><br />' % cmk.__version__)
+    html.open_div(id_="foot")
+    html.write("Version: %s - &copy; " % cmk.__version__)
+    html.a("Mathias Kettner", href="https://mathias-kettner.com")
+    html.br()
+    html.br()
     html.write(_('You can use, modify and distribute Check_MK under the terms of the <a href="%s">'
                  'GNU GPL Version 2</a>.') % "https://mathias-kettner.com/gpl.html")
-    html.write("</div>\n")
+    html.close_div()
 
     html.set_focus('_username')
     html.hidden_fields()
     html.end_form()
-    html.write("</div>\n")
+    html.close_div()
 
     html.footer()
 

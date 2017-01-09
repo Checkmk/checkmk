@@ -160,8 +160,8 @@ def render_views():
     links = []
     if config.user.may("general.edit_views"):
         if config.debug:
-            links.append((_("EXPORT"), "export_views.py"))
-        links.append((_("EDIT"), "edit_views.py"))
+            links.append((_("Export"), "export_views.py"))
+        links.append((_("Edit"), "edit_views.py"))
         footnotelinks(links)
 
 sidebar_snapins["views"] = {
@@ -215,8 +215,8 @@ def render_dashboards():
     links = []
     if config.user.may("general.edit_dashboards"):
         if config.debug:
-            links.append((_("EXPORT"), "export_dashboards.py"))
-        links.append((_("EDIT"), "edit_dashboards.py"))
+            links.append((_("Export"), "export_dashboards.py"))
+        links.append((_("Edit"), "edit_dashboards.py"))
         footnotelinks(links)
 
 sidebar_snapins["dashboards"] = {
@@ -1472,7 +1472,7 @@ function add_bookmark() {
 
     begin_footnote_links()
     link(_("Add Bookmark"), "javascript:void(0)", onclick="add_bookmark()")
-    link(_("EDIT"), "bookmark_lists.py")
+    link(_("Edit"), "bookmark_lists.py")
     end_footnote_links()
 
 

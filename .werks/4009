@@ -1,0 +1,10 @@
+Title: Business intelligence: Multihost aggregations are no longer broken after a core restart
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1483972494
+
+

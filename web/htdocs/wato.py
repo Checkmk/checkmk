@@ -1926,6 +1926,8 @@ def rename_host_in_multisite(oldname, newname):
     for userid in os.listdir(config.config_dir):
         if userid[0] == '.':
             continue
+        if not os.path.isdir(config.config_dir + "/" + userid):
+            continue
 
         favpath = config.config_dir + "/" + userid + "/favorites.mk"
         num_changed = 0

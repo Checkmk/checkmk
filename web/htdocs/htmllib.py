@@ -2073,18 +2073,20 @@ class html(DeprecationWrapper):
         if cssclass:
             cssclass = ' class="%s"' % cssclass
         onclick_code = onclick and " onclick=\"%s\"" % (onclick) or ""
-        if label and not id:
+
+        if not id:
             id = "cb_" + varname
-        if id:
-            add_attr.append('id="%s"' % id)
+
+        add_attr.append('id="%s"' % id)
+
         add_attr_code = ''
         if add_attr:
             add_attr_code = ' ' + ' '.join(add_attr)
+
         code += "<input type=checkbox name=\"%s\"%s%s%s%s>\n" % \
                         (varname, checked, cssclass, onclick_code, add_attr_code)
         self.form_vars.append(varname)
-        if label:
-            code += '<label for="%s">%s</label>\n' % (id, label)
+        code += '<label for="%s">%s</label>\n' % (id, label or "")
         code += "</span>"
         if error:
             code += "</x>"

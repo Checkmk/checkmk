@@ -844,12 +844,14 @@ inventory_displayhints.update({
     ".networking.wlan.controller.accesspoints:*.sys_location" : { "title" : _("System Location") },
 })
 
-# create painters for node with a display hint
-for invpath, hint in inventory_displayhints.items():
-    if "*" not in invpath:
-        datatype = hint.get("paint", "str")
-        long_title = inv_titleinfo_long(invpath, None)
-        declare_inv_column(invpath, datatype, long_title, hint.get("short", hint["title"]))
+
+def declare_inventory_columns():
+    # create painters for node with a display hint
+    for invpath, hint in inventory_displayhints.items():
+        if "*" not in invpath:
+            datatype = hint.get("paint", "str")
+            long_title = inv_titleinfo_long(invpath, None)
+            declare_inv_column(invpath, datatype, long_title, hint.get("short", hint["title"]))
 
 
 #.

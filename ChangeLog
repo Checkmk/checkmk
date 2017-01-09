@@ -54,6 +54,7 @@
 
     BI:
     * 4202 FIX: Availability now avoids pending states for times before new hosts or services were added...
+    * 4009 FIX: Business intelligence: Multihost aggregations are no longer broken after a core restart
 
     Reporting & Availability:
     * 3652 FIX: Unbreak PDF exports...

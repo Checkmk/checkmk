@@ -47,16 +47,18 @@ public:
     time_t _duration;
     double _duration_part;
 
-    // Do not change order within this block!
-    // These durations will be bzero'd
     time_t _duration_state_UNMONITORED;
     double _duration_part_UNMONITORED;
+
     time_t _duration_state_OK;
     double _duration_part_OK;
+
     time_t _duration_state_WARNING;
     double _duration_part_WARNING;
+
     time_t _duration_state_CRITICAL;
     double _duration_part_CRITICAL;
+
     time_t _duration_state_UNKNOWN;
     double _duration_part_UNKNOWN;
 

@@ -939,8 +939,20 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
     hs_state->_duration_part = static_cast<double>(hs_state->_duration) /
                                static_cast<double>(_query_timeframe);
 
-    bzero(&hs_state->_duration_state_UNMONITORED,
-          sizeof(time_t) * 5 + sizeof(double) * 5);
+    hs_state->_duration_state_UNMONITORED = 0;
+    hs_state->_duration_part_UNMONITORED = 0;
+
+    hs_state->_duration_state_OK = 0;
+    hs_state->_duration_part_OK = 0;
+
+    hs_state->_duration_state_WARNING = 0;
+    hs_state->_duration_part_WARNING = 0;
+
+    hs_state->_duration_state_CRITICAL = 0;
+    hs_state->_duration_part_CRITICAL = 0;
+
+    hs_state->_duration_state_UNKNOWN = 0;
+    hs_state->_duration_part_UNKNOWN = 0;
 
     switch (hs_state->_state) {
         case -1:

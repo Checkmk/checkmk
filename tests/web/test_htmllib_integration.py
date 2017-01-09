@@ -212,21 +212,22 @@ def context_button_test(obj, title, url, icon=None, hot=False, id_=None, bestof=
     obj.end_context_buttons()
 
 
-def test_context_buttons():
-
-    old = HTMLOrigTester()
-    new = HTMLCheck_MKTester()
-    old.plug()
-    new.plug()
-
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me"))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico"))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id"))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!"))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112, bestof = True))
-    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112, bestof = True, id_in_best=True))
+# TODO: refactoring tests still needed?
+#def test_context_buttons():
+#
+#    old = HTMLOrigTester()
+#    new = HTMLCheck_MKTester()
+#    old.plug()
+#    new.plug()
+#
+#    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me"))
+#    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico"))
+#    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True))
+#    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id"))
+#    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!"))
+#    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112))
+#    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112, bestof = True))
+#    gentest(old, new, lambda x: context_button_test(x, "testtitle", "www.test.me", icon="ico", hot=True, id_="id", hover_title="HoverMeBaby!", fkey=112, bestof = True, id_in_best=True))
 
 
 

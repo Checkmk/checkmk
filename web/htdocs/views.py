@@ -80,6 +80,8 @@ def load_plugins(force):
     # Make sure that custom views also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
 
+    declare_inventory_columns()
+
 
 # Load all views - users or builtins
 def load_views():

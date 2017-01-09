@@ -1,0 +1,10 @@
+Title: Custom inventory painters are now correctly loaded when declared with inventory_displayhints
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1483958171
+
+

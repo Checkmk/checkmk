@@ -24,11 +24,9 @@
 
 #include "InputBuffer.h"
 #include <sys/select.h>
-#include <sys/time.h>
 #include <unistd.h>
 #include <cctype>
 #include <chrono>
-#include <cstdint>
 #include <cstring>
 #include <ostream>
 #include <ratio>

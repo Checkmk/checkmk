@@ -73,6 +73,8 @@ def load_plugins(force):
     # Make sure that custom views also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
 
+    declare_inventory_columns()
+
     # Add painter names to painter objects (e.g. for JSON web service)
     for n, p in multisite_painters.items():
         p["name"] = n

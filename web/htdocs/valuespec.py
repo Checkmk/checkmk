@@ -3379,10 +3379,9 @@ class Dictionary(ValueSpec):
                 visible = html.get_checkbox(vp + "_USE")
                 if visible == None:
                     visible = param in value
-                onclick = "valuespec_toggle_option(this, %r)" % div_id
-                checkbox_code = '<input type=checkbox name="%s" %s onclick="%s">' % (
-                    vp + "_USE", visible and "CHECKED" or "", onclick)
-                html.add_form_var(vp + "_USE")
+
+                checkbox_code = html.render_checkbox(vp + "_USE", deflt=visible,
+                                    onclick="valuespec_toggle_option(this, %r)" % div_id)
                 forms.section(vs.title(), checkbox=checkbox_code)
             else:
                 visible = True

@@ -1,0 +1,9 @@
+Title: logwatch.groups: now allows regular expressions within include and exclude patterns each beginning with a tilde
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1483952918
+Class: feature
+
+

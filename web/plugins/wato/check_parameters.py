@@ -12381,6 +12381,9 @@ register_rule(group + '/' + subgroup_applications,
     title     = _('Logfile Grouping Patterns'),
     help      = _('The check <tt>logwatch</tt> normally creates one service for each logfile. '
                   'By defining grouping patterns you can switch to the check <tt>logwatch.groups</tt>. '
+                  'If the pattern begins with a tilde then this pattern is interpreted as a regular '
+                  'expression instead of as a filename globbing pattern and  <tt>*</tt> and <tt>?</tt> '
+                  'are treated differently. '
                   'That check monitors a list of logfiles at once. This is useful if you have '
                   'e.g. a folder with rotated logfiles where the name of the current logfile'
                   'also changes with each rotation'),

@@ -2582,7 +2582,7 @@ def mode_diag_host(phase):
 
     if not html.var('_try'):
         html.message(_('You can diagnose the connection to a specific host using this dialog. '
-                       'You can either test wether your current configuration is still working '
+                       'You can either test whether your current configuration is still working '
                        'or investigate in which ways a host can be reached. Simply configure the '
                        'connection options you like to try on the right side of the screen and '
                        'press the "Test" button. The results will be displayed here.'))

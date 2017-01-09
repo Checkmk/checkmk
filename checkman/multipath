@@ -25,5 +25,5 @@ item:
 
 inventory:
  One check for each multipath device is created. Via {iventory_multipath_rules}
- you can specify wether an alias should be used as item instead of the UUID.
+ you can specify whether an alias should be used as item instead of the UUID.
 

@@ -1745,7 +1745,7 @@ def reclassify_bi_rows(rows):
 #   |  Various other functions                                             |
 #   '----------------------------------------------------------------------'
 
-# Helper function, needed in row and in summary line. Determines wether
+# Helper function, needed in row and in summary line. Determines whether
 # a certain cell should be visiable. For example when WARN is mapped
 # to CRIT because of state grouping, then the WARN column should not be
 # displayed.

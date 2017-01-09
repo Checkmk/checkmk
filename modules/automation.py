@@ -936,6 +936,10 @@ def omd_rename_host(oldname, newname):
     if rename_host_dir(cmk.paths.omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
         actions.append("rrd")
 
+    # RRD files
+    if rename_host_dir(cmk.paths.omd_root + "/var/check_mk/rrd", oldname, newname):
+        actions.append("rrd")
+
     # entries of rrdcached journal
     dirpath = cmk.paths.omd_root + "/var/rrdcached/"
     if not os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' "

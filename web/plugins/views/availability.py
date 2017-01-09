@@ -500,9 +500,9 @@ def render_bi_availability(title, aggr_rows):
     time_range, range_title = avoptions["range"]
 
     if av_mode == "timeline":
-        title = _("Timeline of ") + title
+        title = _("Timeline of") + " " + title
     else:
-        title = _("Availability of ") + title
+        title = _("Availability of") + " " + title
 
     if html.output_format != "csv_export":
         html.body_start(title, stylesheets=["pages","views","status", "bi"], javascripts=['bi'])

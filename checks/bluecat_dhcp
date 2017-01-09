@@ -43,12 +43,14 @@ def check_bluecat_dhcp(item, params, info):
         2 : "not running",
         3 : "currently starting",
         4 : "currently stopping",
-        5 : "fault"
+        5 : "fault",
+        None: "unknown",
     }
 
     ok_on_node = False
     states = {}
     state = 0
+    oper_state = None
 
     # Collect  states of nodes
     for node, oper_state, leases in info:

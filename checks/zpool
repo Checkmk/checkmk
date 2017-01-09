@@ -43,6 +43,7 @@ def inventory_zpool(parsed):
 
 def check_zpool(item, params, parsed):
     def mb(val):
+        idx=None
         # split number from unit
         for idx, ch in enumerate(val):
             if ch not in "0123456789.-":

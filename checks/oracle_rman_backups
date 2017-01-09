@@ -52,7 +52,7 @@ def check_oracle_rman_backups(item, params, info):
     state = 0
     output = []
 
-    job_state = line[2]
+    job_state = data[2]
 
     txt = "State: %s" % job_state
     if job_state not in [ "COMPLETED", "RUNNING" ]:
@@ -60,9 +60,9 @@ def check_oracle_rman_backups(item, params, info):
         state = max(state, 2)
     output.append(txt)
 
-    output.append("Start-Time: %s" % line[3])
+    output.append("Start-Time: %s" % data[3])
     if job_state != "RUNNING":
-        output.append("End-Time: %s" % line[4])
+        output.append("End-Time: %s" % data[4])
 
     return (state, ", ".join(output))
 

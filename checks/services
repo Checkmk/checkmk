@@ -202,7 +202,7 @@ def check_windows_services(item, params, info):
         return params["else"], "service not found"
 
     # We take the best found state (neccessary for clusters)
-    best_state = None
+    best_desc, best_state, best_info, best_running_on = None, None, None, None
     for running_on, state, start_type, desc in found:
         for t_state, t_start_type, mon_state in params["states"]:
             if (t_state == None or t_state == state) \
@@ -213,10 +213,12 @@ def check_windows_services(item, params, info):
             this_state = params["else"]
 
         if best_state == None or this_state < best_state:
-            best_state = this_state
-            best_info = state, start_type
+            best_state      = this_state
+            best_info       = state, start_type
             best_running_on = running_on
-    infotext = desc + ": %s (start type is %s)" % best_info
+            best_desc       = desc
+
+    infotext = best_desc + ": %s (start type is %s)" % best_info
     if best_running_on and best_state != 2: #if best state ist critical, there should no message "running on"
         infotext += " (running on: %s)" % best_running_on
 

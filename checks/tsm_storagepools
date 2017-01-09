@@ -43,8 +43,9 @@ def check_tsm_storagepools(item, _no_params, info):
     for inst, stype, name, size in info:
         if item == name or item == inst + " / " + name:
             return (0, "%s used - %s" %
-                (get_bytes_human_readable(int(float(size) * 1024 * 1024)), stype))
-    return (3, "no such storage pool", [ ("used", float(size)) ])
+                (get_bytes_human_readable(int(float(size) * 1024 * 1024)), stype),
+                [ ("used", float(size)) ])
+    return 3, "no such storage pool"
 
 
 check_info['tsm_storagepools'] = {

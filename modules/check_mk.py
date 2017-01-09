@@ -1123,8 +1123,6 @@ def extra_summary_host_conf_of(hostname):
 
 # Collect all extra configuration data for a service
 def extra_service_conf_of(hostname, description):
-    global contactgroups_to_define
-    global servicegroups_to_define
     conf = ""
 
     # Contact groups

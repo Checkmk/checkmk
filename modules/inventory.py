@@ -85,8 +85,6 @@ def inv_tree_list(path):
 # -> software is a dict
 # -> packages is a list
 def inv_tree(path, default_value=None):
-    global g_inv_tree
-
     if default_value != None:
         node = default_value
     else:

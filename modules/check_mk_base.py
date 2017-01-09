@@ -2369,7 +2369,6 @@ def summary_hostname(hostname):
 # (crit > unknown > warn > ok) of all underlying status. Appends the output to
 # the output list and increases the count by 1.
 def store_aggregated_service_result(hostname, detaildesc, aggrdesc, newstatus, newoutput):
-    global g_aggregated_service_results
     count, status, outputlist = g_aggregated_service_results.get(aggrdesc, (0, 0, []))
     if status_worse(newstatus, status):
         status = newstatus
@@ -2393,7 +2392,6 @@ def submit_aggregated_results(hostname):
 
     console.verbose("\n%s%sAggregates Services:%s\n" % (tty.bold, tty.blue, tty.normal))
 
-    global g_aggregated_service_results
     items = g_aggregated_service_results.items()
     items.sort()
     aggr_hostname = summary_hostname(hostname)

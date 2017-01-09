@@ -52,7 +52,7 @@ def inv_snmp_extended_info(info):
     for child, parent, description, child_type, name, serial, model in info:
         parsed.setdefault(child, (parent, description, child_type, name, serial, model))
 
-    for index, (parent, description, entity_type, name, serial, mode) in parsed.items():
+    for index, (parent, description, entity_type, name, serial, model) in parsed.items():
         # device itself
         if parent == "0":
             node = inv_tree("hardware.system.")

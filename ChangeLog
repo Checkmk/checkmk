@@ -24,8 +24,8 @@
     * 4120 FIX: fixed checks mysql and mysql.sessions for multiple MySQL instances...
     * 4121 FIX: mk_mysql: fixed handling of multiple instances
     * 4122 FIX: ibm_svc_enclosure: added support for firmware >= 7.8...
-    * 4176 FIX: postfix_mailq_status: fixed wrong status handling
     * 4182 FIX: mysql_slave: fixed crash if agent output is empty...
+    * 4176 FIX: postfix_mailq_status: fixed wrong status handling
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....
@@ -62,6 +62,9 @@
     * 4200 FIX: Fix computation of Event Console performance snapin in distributed mode...
     * 4219 FIX: Trap processing with community "public" is now only default and not accepted in all cases anymore...
             NOTE: Please refer to the migration notes!
+
+    HW/SW-Inventory:
+    * 4258 FIX: snmp_extended_info: fixed undefined variable
 
 
 1.4.0i3:

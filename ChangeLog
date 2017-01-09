@@ -51,6 +51,9 @@
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address
 
+    BI:
+    * 4202 FIX: Availability now avoids pending states for times before new hosts or services were added...
+
     Reporting & Availability:
     * 3652 FIX: Unbreak PDF exports...
 

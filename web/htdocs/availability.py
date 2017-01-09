@@ -684,9 +684,6 @@ def compute_availability(what, av_rawdata, avoptions):
     os_aggrs, os_states = get_outage_statistic_options(avoptions)
     need_statistics = os_aggrs and os_states
     grouping = avoptions["grouping"]
-    timeline_rows = [] # Need this as a global variable if just one service is affected
-    total_duration = 0
-    considered_duration = 0
 
     # Note: in case of timeline, we have data from exacly one host/service
     for site_host, site_host_entry in reclassified_rawdata.iteritems():
@@ -1264,11 +1261,13 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
         for sid, css, sname, help in availability_columns[what]:
             if not cell_active(sid, avoptions):
                 continue
+
             number = summary.get(sid, 0)
             if show_summary == "average" or avoptions["timeformat"].startswith("percentage"):
                 number /= len_availability_table
                 if avoptions["timeformat"].startswith("percentage"):
                     number *= entry["considered_duration"]
+
             if not number:
                 css = "unused"
 

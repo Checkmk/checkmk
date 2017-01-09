@@ -908,7 +908,7 @@ class Filter:
     def filter(self, infoname):
         return ""
 
-    # Wether this filter needs to load host inventory data
+    # Whether this filter needs to load host inventory data
     def need_inventory(self):
         return False
 

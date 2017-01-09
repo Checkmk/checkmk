@@ -8,7 +8,7 @@ description:
  by using MK Livestatus. This data tells you mainly about the performance
  of the core, the number of checks it executes per second and so on.
 
- Its second task is to determine wether some settings have been disabled
+ Its second task is to determine whether some settings have been disabled
  (e.g. notifications). Which disabled setting leads to which state can
  be configured via check parameters.
 

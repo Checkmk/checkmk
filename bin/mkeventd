@@ -1632,7 +1632,7 @@ class EventServer:
                     log('Exception handling a SNMP trap from "%s". Skipping this one.\n%s' %
                                                           (data[1][0], format_exception()))
 
-            # check wether or not spool files are available
+            # check whether or not spool files are available
             spool_dir = g_state_dir + "/spool"
             if os.path.exists(spool_dir):
                 spool_files = [ f for f in os.listdir(spool_dir) if f[0] != '.' ]
@@ -2630,7 +2630,7 @@ class EventServer:
 
                     hours, minutes, seconds = map(int, timeofday.split(":"))
 
-                    # A further problem here: we do not now wether the message is in DST or not
+                    # A further problem here: we do not now whether the message is in DST or not
                     event["time"] = time.mktime((year, month, day, hours, minutes, seconds, 0, 0, lt.tm_isdst))
 
             # The event simulator ships the simulated original IP address in the
@@ -4193,7 +4193,7 @@ def core_has_notifications_disabled(event):
             log("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
             return True
     except Exception, e:
-        log("Cannot determine wether notifcations are enabled in core: %s. Assuming YES." % e)
+        log("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
 
     return False
 
@@ -4251,7 +4251,7 @@ def replication_send(last_update):
 def replication_pull():
     # We distinguish two modes:
     # 1. slave mode: just pull the current state from the master.
-    #    if the master is not reachable then decide wether to
+    #    if the master is not reachable then decide whether to
     #    switch to takeover mode.
     # 2. takeover mode: if automatic fallback is enabled and the
     #    time frame for that has not yet ellapsed, then try to

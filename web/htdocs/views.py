@@ -2424,7 +2424,7 @@ def painter_choices_with_params(painters):
 #   | the other time of "action". Both is the same here...                 |
 #   '----------------------------------------------------------------------'
 
-# Checks wether or not this view handles commands for the current user
+# Checks whether or not this view handles commands for the current user
 # When it does not handle commands the command tab, command form, row
 # selection and processing commands is disabled.
 def should_show_command_form(datasource, ignore_display_option=False):
@@ -2819,7 +2819,7 @@ def get_separated_sorters(view):
 
     return group_sort, user_sort, view_sort
 
-# The Group-value of a row is used for deciding wether
+# The Group-value of a row is used for deciding whether
 # two rows are in the same group or not
 def group_value(row, group_cells):
     group = []

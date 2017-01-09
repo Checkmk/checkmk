@@ -2462,34 +2462,34 @@ class Attribute:
     def may_edit(self):
         return True
 
-    # Wether or not to show this attribute in tables.
+    # Whether or not to show this attribute in tables.
     # This value is set by declare_host_attribute
     def show_in_table(self):
         return self._show_in_table
 
-    # Wether or not to show this attribute in the edit form.
+    # Whether or not to show this attribute in the edit form.
     # This value is set by declare_host_attribute
     def show_in_form(self):
         return self._show_in_form
 
-    # Wether or not to make this attribute configurable in
+    # Whether or not to make this attribute configurable in
     # files and folders (as defaule value for the hosts)
     def show_in_folder(self):
         return self._show_in_folder
 
-    # Wether or not to make this attribute configurable in
+    # Whether or not to make this attribute configurable in
     # the host search form
     def show_in_host_search(self):
         return self._show_in_host_search
 
 
-    # Wether or not this attribute can be edited after creation
+    # Whether or not this attribute can be edited after creation
     # of the object
     def editable(self):
         return self._editable
 
 
-    # Wether it is allowed that a host has no explicit
+    # Whether it is allowed that a host has no explicit
     # value here (inherited or direct value). An mandatory
     # has *no* default value.
     def is_mandatory(self):

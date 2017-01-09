@@ -1165,11 +1165,11 @@ def hook_login(username, password):
             if type(username) not in [ str, unicode ]:
                 raise MKInternalError(_("The username returned by the %s "
                     "connector is not of type string (%r).") % (connection_id, username))
-            # Check wether or not the user exists (and maybe create it)
+            # Check whether or not the user exists (and maybe create it)
             create_non_existing_user(connection_id, username)
 
             # Now, after successfull login (and optional user account
-            # creation), check wether or not the user is locked.
+            # creation), check whether or not the user is locked.
             # In e.g. htpasswd connector this is checked by validating the
             # password against the hash in the htpasswd file prefixed with
             # a "!". But when using other conectors it might be neccessary

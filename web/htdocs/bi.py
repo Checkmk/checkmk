@@ -1523,7 +1523,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
     if only_hosts and cache['compiled_hosts']:
         # if only hosts is given and there are already compiled hosts
-        # check wether or not hosts are not compiled yet
+        # check whether or not hosts are not compiled yet
         only_hosts = to_compile(only_hosts, 'hosts')
         if not only_hosts:
             log('PID: %d - All requested hosts have already been compiled' % os.getpid())
@@ -1962,7 +1962,7 @@ def remove_empty_nodes(node):
             if node_is_empty(subnodes[i]):
                 del subnodes[i]
 
-# Checks wether or not a rule node has no subnodes
+# Checks whether or not a rule node has no subnodes
 def node_is_empty(node):
     if node["type"] != NT_RULE: # leaf node
         return False

@@ -2062,7 +2062,7 @@ class html(DeprecationWrapper):
         code += "<span class=checkbox>"
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
-        # wether we should add the default value, we need to detect
+        # whether we should add the default value, we need to detect
         # if the form is printed for the first time. This is the
         # case if "filled_in" is not set.
         value = self.get_checkbox(varname)

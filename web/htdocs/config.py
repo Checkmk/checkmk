@@ -240,7 +240,7 @@ def get_role_permissions():
     role_permissions = {}
     # Loop all permissions
     # and for each permission loop all roles
-    # and check wether it has the permission or not
+    # and check whether it has the permission or not
 
     roleids = roles.keys()
     for perm in permissions_by_order:

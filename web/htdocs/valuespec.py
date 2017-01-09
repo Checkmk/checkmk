@@ -3695,7 +3695,7 @@ class LDAPDistinguishedName(TextUnicode):
     def validate_value(self, value, varprefix):
         TextAscii.validate_value(self, value, varprefix)
 
-        # Check wether or not the given DN is below a base DN
+        # Check whether or not the given DN is below a base DN
         if self.enforce_suffix and value and not value.lower().endswith(self.enforce_suffix.lower()):
             raise MKUserError(varprefix, _('Does not ends with "%s".') % self.enforce_suffix)
         ValueSpec.custom_validate(self, value, varprefix)

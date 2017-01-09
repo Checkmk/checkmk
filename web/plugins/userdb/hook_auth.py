@@ -58,7 +58,7 @@
 # array of "read" and "write" elements with boolean values.
 #
 # may(<USER_NAME>, <PERMISSION>)
-# Returns true/false wether or not the user is permitted
+# Returns true/false whether or not the user is permitted
 
 import cmk.paths
 

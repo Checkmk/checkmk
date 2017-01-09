@@ -168,7 +168,7 @@ def end():
     table_id = table['id']
     rows = table["rows"]
 
-    # Controls wether or not actions are available for a table
+    # Controls whether or not actions are available for a table
     search_term = None
     actions_enabled = (table["searchable"] or table["sortable"]) and not do_csv
     if actions_enabled:

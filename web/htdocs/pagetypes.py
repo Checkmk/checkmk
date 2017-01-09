@@ -441,7 +441,7 @@ class Overridable(Base):
             header += " (%s)" % self.owner()
         return header
 
-    # Checks wether a page is publicly visible. This does not only need a flag
+    # Checks whether a page is publicly visible. This does not only need a flag
     # in the page itself, but also the permission from its owner to publish it.
     def is_public(self):
         return self._["public"] and (

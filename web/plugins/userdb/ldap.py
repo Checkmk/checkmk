@@ -589,7 +589,7 @@ class LDAPUserConnector(UserConnector):
 
         user_id_attr = self.user_id_attr()
 
-        # Check wether or not the user exists in the directory matching the username AND
+        # Check whether or not the user exists in the directory matching the username AND
         # the user search filter configured in the "LDAP User Settings".
         # It's only ok when exactly one entry is found. Returns the DN and user_id
         # as tuple in this case.
@@ -1439,9 +1439,9 @@ ldap_attribute_plugins['alias'] = {
 #   |       /_/   \_\__,_|\__|_| |_| |_____/_/\_\ .__/|_|_|  \___|         |
 #   |                                           |_|                        |
 #   +----------------------------------------------------------------------+
-#   | Checks wether or not the user auth must be invalidated (increasing   |
+#   | Checks whether or not the user auth must be invalidated (increasing   |
 #   | the serial). In first instance, it must parse the pw-changed field,  |
-#   | then check wether or not a date has been stored in the user before   |
+#   | then check whether or not a date has been stored in the user before   |
 #   | and then maybe increase the serial.                                  |
 #   '----------------------------------------------------------------------'
 
@@ -1488,7 +1488,7 @@ def ldap_needed_attributes_auth_expire(connection, params):
 
 ldap_attribute_plugins['auth_expire'] = {
     'title'                  : _('Authentication Expiration'),
-    'help'                   : _('This plugin fetches all information which are needed to check wether or '
+    'help'                   : _('This plugin fetches all information which are needed to check whether or '
                                  'not an already authenticated user should be deauthenticated, e.g. because '
                                  'the password has changed in LDAP or the account has been locked.'),
     'needed_attributes'      : ldap_needed_attributes_auth_expire,

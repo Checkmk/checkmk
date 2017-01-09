@@ -910,7 +910,7 @@ class BIJobManager(object):
                     # Single host aggregation, no hosts in queue - GOOD!
                     continue
             else:
-                if info.get("compiled") == True:
+                if not discard_old_cache and info.get("compiled") == True:
                     # Fully compiled multi aggregation - GOOD!
                     continue
 
@@ -981,12 +981,13 @@ class BIJobManager(object):
             job_id   = job["id"]
             job_info = job["info"]
 
-            jobfile_data["jobs"].setdefault(job_id, {"queued_hosts": set([]),
-                                                     "compiled_hosts": set([])})
             if job_id[0] == AGGR_HOST:
+                jobfile_data["jobs"].setdefault(job_id, {"queued_hosts": set([]),
+                                                         "compiled_hosts": set([])})
                 jobfile_data["jobs"][job_id]["queued_hosts"] -= job_info["queued_hosts"]
                 jobfile_data["jobs"][job_id]["compiled_hosts"].update(job_info["queued_hosts"])
             else:
+                jobfile_data["jobs"].setdefault(job_id, {})
                 jobfile_data["jobs"][job_id]["compiled"] = True
         self.save_jobs(jobfile_data)
         g_bi_cache_manager.generate_cachefiles()

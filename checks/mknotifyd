@@ -108,7 +108,7 @@ def parse_mknotifyd(info):
 
         for address, connections in remote_addresses.items():
             if len(connections) == 1:
-                stats["connections"][address] = connection
+                stats["connections"][address] = connections[0]
             else:
                 for nr, connection in enumerate(connections):
                     stats["connections"][address + "/" + str(nr+1)] = connection

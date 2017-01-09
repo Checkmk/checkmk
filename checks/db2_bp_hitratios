@@ -39,14 +39,14 @@ def parse_db2_bp_hitratios(info):
     # Each instance has its own bufferpool hitratio information. We create on service for each instance
     databases = {}
     for instance, lines in pre_parsed[1].items():
-        node_names = []
+        header_idx, node_names = None, []
         for idx, line in enumerate(lines):
             if line[0] == "node":
                 node_names.append(" ".join(line[1:]))
             elif line[0] == "BP_NAME":
+                header_idx = idx
                 node_headers = line
                 break
-        header_idx = idx
 
         if node_names:
             # DPF mode

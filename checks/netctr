@@ -69,7 +69,6 @@ def check_netctr_combined(nic, params, info):
     except:
         warn, crit = (0.01, 0.1)
 
-    global netctr_counter_indices
     this_time = int(info[0][0])
 
     # Look for line describing this nic

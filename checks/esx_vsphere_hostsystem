@@ -438,6 +438,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
     for path, states in esx_vsphere_multipath_convert(info).items():
         if path == item:
             # Collect states
+            path_type = None
             for path_state, path_type in states:
                 state_item = state_infos.get(path_state)
                 if state_item:

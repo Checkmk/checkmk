@@ -40,7 +40,8 @@ def check_bluecat_dns(item, params, info):
         2 : "not running",
         3 : "currently starting",
         4 : "currently stopping",
-        5 : "fault"
+        5 : "fault",
+        None: "unknown",
     }
 
     if not info:
@@ -49,6 +50,7 @@ def check_bluecat_dns(item, params, info):
     ok_on_node = False
     states = {}
     state = 0
+    oper_state = None
 
     for node, oper_state in info:
         oper_state = int(oper_state)

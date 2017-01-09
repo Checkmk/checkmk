@@ -96,13 +96,17 @@ def inventory_win_diskstat(info):
 def check_win_diskstat(item, params, info):
     read_bytes_ctr = 0
     write_bytes_ctr = 0
+    this_time = None
     for line in info:
         if line[0] == '2:16':
             read_bytes_ctr = int(line[2])
         elif line[0] == '2:18':
             write_bytes_ctr = int(line[2])
+            this_time = int(float(line[1]))
             break
-    this_time = int(float(line[1]))
+
+    if not this_time:
+        return
 
     try:
         read_per_sec  = get_rate("diskstat.read",  this_time, read_bytes_ctr)

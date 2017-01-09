@@ -120,17 +120,18 @@ def parse_cisco_temp_sensor(info):
         thresholds.setdefault(id, [])
 
     for endoid, level in levels_info:
-        level = float(level)/(10**int(precision))
         # endoid is e.g. 21549.9 or 21459.10
         id, subid = endoid.split('.')
-        thresholds.setdefault(id, []).append(level)
+        thresholds.setdefault(id, []).append(float(level))
 
     # Create main dictionary (only of temperature sensors)
     sensors = []
     for id, sensortype, scale, precision, value, sensorstate in state_info:
-        value = float(value)/(10**int(precision))
+        value     = float(value) / (10**int(precision))
+        threshold = thresholds[id] / (10**int(precision))
+
         sensors.append( ( id, descriptions.get(id), sensortype, scale,
-                        value, sensorstate, thresholds[id] ) )
+                        value, sensorstate, threshold ) )
     return sensors
 
 def inventory_cisco_temp_sensor(info):

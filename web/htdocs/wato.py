@@ -5466,8 +5466,8 @@ def mode_ldap_config(phase):
 
         elif html.has_var("_move"):
             if html.check_transaction():
-                from_pos = int(html.var("_move"))
-                to_pos = int(html.var("_where"))
+                from_pos = html.get_integer_input("_move")
+                to_pos = html.get_integer_input("_index")
                 connection = connections[from_pos]
                 add_ldap_change("move-ldap-connection",
                     _("Changed position of LDAP connection %s to %d") % (connection["id"], to_pos))
@@ -5485,26 +5485,11 @@ def mode_ldap_config(phase):
         table.cell(_("Actions"), css="buttons")
         edit_url   = folder_preserving_link([("mode", "edit_ldap_connection"), ("id", connection["id"])])
         delete_url = make_action_link([("mode", "ldap_config"), ("_delete", nr)])
-        top_url    = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", 0)])
-        bottom_url = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", len(connections)-1)])
-        up_url     = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", nr-1)])
-        down_url   = make_action_link([("mode", "ldap_config"), ("_move", nr), ("_where", nr+1)])
+        drag_url   = make_action_link([("mode", "ldap_config"), ("_move", nr)])
 
         html.icon_button(edit_url, _("Edit this LDAP connection"), "edit")
+        html.element_dragger("tr", base_url=drag_url)
         html.icon_button(delete_url, _("Delete this LDAP connection"), "delete")
-        if connection is not connections[0]:
-            html.icon_button(top_url, _("Move this LDAP connection to the top"), "top")
-            html.icon_button(up_url, _("Move this LDAP connection one position up"), "up")
-        else:
-            html.empty_icon_button()
-            html.empty_icon_button()
-
-        if connection is not connections[-1]:
-            html.icon_button(down_url, _("Move this LDAP connection one position down"), "down")
-            html.icon_button(bottom_url, _("Move this LDAP connection to the bottom"), "bottom")
-        else:
-            html.empty_icon_button()
-            html.empty_icon_button()
 
         table.cell("", css="narrow")
         if connection.get("disabled"):
@@ -7489,10 +7474,7 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             if show_buttons:
                 anavar = html.var("analyse", "")
                 delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
-                top_url    = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", 0)])
-                bottom_url = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
-                up_url     = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", nr-1)])
-                down_url   = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", nr+1)])
+                drag_url   = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr)])
                 suffix = profilemode and "_p" or ""
                 edit_url   = folder_preserving_link([("mode", "notification_rule" + suffix), ("edit", nr), ("user", userid)])
                 clone_url  = folder_preserving_link([("mode", "notification_rule" + suffix), ("clone", nr), ("user", userid)])
@@ -7500,23 +7482,11 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 table.cell(_("Actions"), css="buttons")
                 html.icon_button(edit_url, _("Edit this notification rule"), "edit")
                 html.icon_button(clone_url, _("Create a copy of this notification rule"), "clone")
+                html.element_dragger("tr", base_url=drag_url)
                 html.icon_button(delete_url, _("Delete this notification rule"), "delete")
-                if not rule is rules[0]:
-                    html.icon_button(top_url, _("Move this notification rule to the top"), "top")
-                    html.icon_button(up_url, _("Move this notification rule one position up"), "up")
-                else:
-                    html.empty_icon_button()
-                    html.empty_icon_button()
-
-                if not rule is rules[-1]:
-                    html.icon_button(down_url, _("Move this notification rule one position down"), "down")
-                    html.icon_button(bottom_url, _("Move this notification rule to the bottom"), "bottom")
-                else:
-                    html.empty_icon_button()
-                    html.empty_icon_button()
             else:
                 table.cell("", css="buttons")
-                for x in range(7):
+                for x in range(4):
                     html.empty_icon_button()
 
             table.cell("", css="narrow")
@@ -7604,8 +7574,8 @@ def generic_rule_list_actions(rules, what, what_title, save_rules):
 
     elif html.has_var("_move"):
         if html.check_transaction():
-            from_pos = int(html.var("_move"))
-            to_pos = int(html.var("_where"))
+            from_pos = html.get_integer_input("_move")
+            to_pos = html.get_integer_input("_index")
             rule = rules[from_pos]
             del rules[from_pos] # make to_pos now match!
             rules[to_pos:to_pos] = [rule]
@@ -7919,8 +7889,8 @@ def mode_user_notifications(phase, profilemode):
 
         elif html.has_var("_move"):
             if html.check_transaction():
-                from_pos = int(html.var("_move"))
-                to_pos = int(html.var("_where"))
+                from_pos = html.get_integer_input("_move")
+                to_pos = html.get_integer_input("_index")
                 rule = rules[from_pos]
                 del rules[from_pos] # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]

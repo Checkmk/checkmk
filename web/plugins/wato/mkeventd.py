@@ -1051,8 +1051,8 @@ def mode_mkeventd_rule_packs(phase):
 
         # Move rule packages
         elif html.has_var("_move"):
-            from_pos = int(html.var("_move"))
-            to_pos = int(html.var("_where"))
+            from_pos = html.get_integer_input("_move")
+            to_pos = html.get_integer_input("_index")
             rule_pack = rule_packs[from_pos]
             del rule_packs[from_pos] # make to_pos now match!
             rule_packs[to_pos:to_pos] = [rule_pack]
@@ -1088,10 +1088,7 @@ def mode_mkeventd_rule_packs(phase):
         for nr, rule_pack in enumerate(rule_packs):
             table.row()
             delete_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_delete", nr)])
-            top_url    = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", 0)])
-            bottom_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", len(rule_packs)-1)])
-            up_url     = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", nr-1)])
-            down_url   = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr), ("_where", nr+1)])
+            drag_url   = make_action_link([("mode", "mkeventd_rule_packs"), ("_move", nr)])
             edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("edit", nr)])
             # Cloning does not work. Rule IDs would not be unique. So drop it for a while
             # clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
@@ -1101,21 +1098,9 @@ def mode_mkeventd_rule_packs(phase):
             html.icon_button(edit_url, _("Edit properties of this rule pack"), "edit")
             # Cloning does not work until we have unique IDs
             # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
+            html.element_dragger("tr", base_url=drag_url)
             html.icon_button(delete_url, _("Delete this rule pack"), "delete")
             html.icon_button(rules_url, _("Edit the rules in this pack"), "mkeventd_rules")
-            if not rule_pack is rule_packs[0]:
-                html.icon_button(top_url, _("Move this rule pack to the top"), "top")
-                html.icon_button(up_url, _("Move this rule pack one position up"), "up")
-            else:
-                html.empty_icon_button()
-                html.empty_icon_button()
-
-            if not rule_pack is rule_packs[-1]:
-                html.icon_button(down_url, _("Move this rule pack one position down"), "down")
-                html.icon_button(bottom_url, _("Move this rule pack to the bottom"), "bottom")
-            else:
-                html.empty_icon_button()
-                html.empty_icon_button()
 
             # Icon for disabling
             table.cell("", css="buttons")
@@ -1270,8 +1255,8 @@ def mode_mkeventd_rules(phase):
 
         if html.check_transaction():
             if html.has_var("_move"):
-                from_pos = int(html.var("_move"))
-                to_pos = int(html.var("_where"))
+                from_pos = html.get_integer_input("_move")
+                to_pos = html.get_integer_input("_index")
                 rule = rules[from_pos]
                 del rules[from_pos] # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
@@ -1296,30 +1281,15 @@ def mode_mkeventd_rules(phase):
         for nr, rule in enumerate(rules):
             table.row()
             delete_url = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_delete", nr)])
-            top_url    = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", 0)])
-            bottom_url = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", len(rules)-1)])
-            up_url     = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", nr-1)])
-            down_url   = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr), ("_where", nr+1)])
+            drag_url   = make_action_link([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id), ("_move", nr)])
             edit_url   = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("edit", nr)])
             clone_url  = html.makeuri_contextless([("mode", "mkeventd_edit_rule"), ("rule_pack", rule_pack_id), ("clone", nr)])
 
             table.cell(_("Actions"), css="buttons")
             html.icon_button(edit_url, _("Edit this rule"), "edit")
             html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+            html.element_dragger("tr", base_url=drag_url)
             html.icon_button(delete_url, _("Delete this rule"), "delete")
-            if not rule is rules[0]:
-                html.icon_button(top_url, _("Move this rule to the top"), "top")
-                html.icon_button(up_url, _("Move this rule one position up"), "up")
-            else:
-                html.empty_icon_button()
-                html.empty_icon_button()
-
-            if not rule is rules[-1]:
-                html.icon_button(down_url, _("Move this rule one position down"), "down")
-                html.icon_button(bottom_url, _("Move this rule to the bottom"), "bottom")
-            else:
-                html.empty_icon_button()
-                html.empty_icon_button()
 
             table.cell("", css="buttons")
             if rule.get("disabled"):

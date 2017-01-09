@@ -757,7 +757,7 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
         if td_class == 'col4':
             if row["views"]["stale"]:
                 url = html.makeuri_contextless(row["views"]["stale"] + extra_url_variables, filename="view.py")
-                html.open_td(class_=[td_class, "states prob" if value != 0 else None])
+                html.open_td(class_=[td_class, "states prob" if stales != 0 else None])
                 link(str(stales), url)
                 html.close_td()
             else:

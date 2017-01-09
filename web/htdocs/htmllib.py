@@ -2067,7 +2067,7 @@ class html(DeprecationWrapper):
         # case if "filled_in" is not set.
         value = self.get_checkbox(varname)
         if value == None: # form not yet filled in
-             value = deflt
+            value = deflt
 
         checked = value and " CHECKED " or ""
         if cssclass:
@@ -2458,7 +2458,7 @@ class html(DeprecationWrapper):
             isopen = self.foldable_container_is_open(treename, id, isopen)
 
         onclick = ' onclick="toggle_foldable_container(\'%s\', \'%s\', \'%s\')"' % (
-               treename, id, fetch_url and fetch_url or '');
+               treename, id, fetch_url and fetch_url or '')
 
         if indent == "nform":
             self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' % (treename, id, onclick))

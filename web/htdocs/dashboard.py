@@ -1291,8 +1291,8 @@ def add_dashlet(dashlet, dashboard):
 
 def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
     if not config.user.may("general.edit_dashboards"):
-	# Exceptions do not work here.
-	return
+        # Exceptions do not work here.
+        return
 
     if dashlet_type == "pnpgraph":
         # Context will always be None here, but the graph_specification (in params)
@@ -1326,7 +1326,7 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
     load_dashboards(lock=True)
 
     if dashboard_name not in available_dashboards:
-	return
+        return
     dashboard = load_dashboard_with_cloning(dashboard_name)
 
     dashlet = default_dashlet_definition(dashlet_type)

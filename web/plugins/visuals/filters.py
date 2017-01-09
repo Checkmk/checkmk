@@ -29,7 +29,7 @@ import sites
 
 # Filters for substring search, displaying a text input field
 class FilterText(Filter):
-    def __init__(self, name, title, info, column, htmlvar, op, negateable=False):
+    def __init__(self, name, title, info, column, htmlvar, op, negateable=False, show_heading=True):
         htmlvars = [htmlvar]
         if negateable:
             htmlvars.append("neg_" + htmlvar)
@@ -38,6 +38,7 @@ class FilterText(Filter):
         self.op = op
         self.column = column
         self.negateable = negateable
+        self._show_heading = show_heading
 
     def _current_value(self):
         htmlvar = self.htmlvars[0]
@@ -70,7 +71,8 @@ class FilterText(Filter):
         return [ (self.htmlvars[0], row[self.column]) ]
 
     def heading_info(self):
-        return self._current_value()
+        if self._show_heading:
+            return self._current_value()
 
 
 class FilterUnicode(FilterText):
@@ -934,7 +936,7 @@ class FilterLogClass(Filter):
 declare_filter(255, FilterLogClass())
 #                               filter          title              info       column           htmlvar
 declare_filter(202, FilterUnicode("log_plugin_output",  _("Log: plugin output"), "log", "log_plugin_output", "log_plugin_output", "~~"))
-declare_filter(203, FilterText("log_type",           _("Log: message type"), "log", "log_type", "log_type", "~~"))
+declare_filter(203, FilterText("log_type",           _("Log: message type"), "log", "log_type", "log_type", "~~", show_heading=False))
 declare_filter(204, FilterText("log_state_type",     _("Log: state type"), "log", "log_state_type", "log_state_type", "~~"))
 declare_filter(260, FilterText("log_contact_name",   _("Log: contact name (exact match)"),  "log", "log_contact_name",  "log_contact_name",  "="),
                                                                                                   _("Exact match, used for linking"))

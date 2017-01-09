@@ -204,11 +204,11 @@ def show_file(site, host_name, file_name):
 
     html.write("<div id=logwatch>\n")
     for log in log_chunks:
-        html.write('<div class="chunk">\n');
-        html.write('<table class="section">\n<tr>\n');
-        html.write('<td class="%s">%s</td>\n' % (form_level(log['level']), form_level(log['level'])));
-        html.write('<td class="date">%s</td>\n' % (form_datetime(log['datetime'])));
-        html.write('</tr>\n</table>\n');
+        html.write('<div class="chunk">\n')
+        html.write('<table class="section">\n<tr>\n')
+        html.write('<td class="%s">%s</td>\n' % (form_level(log['level']), form_level(log['level'])))
+        html.write('<td class="date">%s</td>\n' % (form_datetime(log['datetime'])))
+        html.write('</tr>\n</table>\n')
 
         for line in log['lines']:
             html.write('<p class="%s">' % line['class'])

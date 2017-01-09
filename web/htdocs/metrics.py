@@ -610,9 +610,9 @@ def evaluate_literal(expression, translated_metrics):
     if percent:
         maxvalue = translated_metrics[varname]["scalar"]["max"]
         if maxvalue != 0:
-           value = 100.0 * float(value) / maxvalue
+            value = 100.0 * float(value) / maxvalue
         else:
-           value = 0.0
+            value = 0.0
         unit = unit_info["%"]
 
     else:

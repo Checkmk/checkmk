@@ -18,9 +18,14 @@ errors-only=yes
 disable=C0111,bad-whitespace,unsubscriptable-object,unsupported-membership-test,unpacking-non-sequence,assignment-from-none
 # W0612: Unused variable
 # TODO: enable this and prepare code for it!
-#enable=unused-variable
+# -unused-variable
+# - bad-indentation,mixed-indentation,unnecessary-semicolon
+# - redefined-builtin
+# - global-variable-undefined
+# - unused-import
+# - spelling? (need python-enchant, enchant packages)
 # https://pylint.readthedocs.io/en/latest/reference_guide/features.html
-enable=unreachable,dangerous-default-value,duplicate-key,using-constant-test,duplicate-except,binary-op-exception,overlapping-except,non-parent-init-called,super-init-not-called,no-init,bad-open-mode,redundant-unittest-assert,boolean-datetime,deprecated-method,nonstandard-exception
+enable=unreachable,dangerous-default-value,duplicate-key,using-constant-test,duplicate-except,binary-op-exception,overlapping-except,non-parent-init-called,super-init-not-called,no-init,bad-open-mode,redundant-unittest-assert,boolean-datetime,deprecated-method,nonstandard-exception,import-self,global-variable-not-assigned,undefined-loop-variable,lost-exception,property-on-old-class
 
 [TYPECHECK]
 # rrdtool
@@ -50,3 +55,13 @@ additional-builtins=html,_,_u,current_language,HTML
 [MISCELLANEOUS]
 # List of note tags to take in consideration, separated by a comma.
 notes=FIXME,TODO
+
+[SPELLING]
+spelling-dict=en_US
+# List of comma separated words that should not be checked.
+spelling-ignore-words=
+# A path to a file that contains private dictionary; one word per line.
+#spelling-private-dict-file=
+# Tells whether to store unknown words to indicated private dictionary in
+# --spelling-private-dict-file option instead of raising a message.
+#spelling-store-unknown-words=no

@@ -113,7 +113,7 @@ def initialize_before_loading_plugins():
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if config.mkeventd_enabled:
-	global mkeventd_config_dir
+        global mkeventd_config_dir
         mkeventd_config_dir = cmk.paths.default_config_dir + "/mkeventd.d/wato/"
         replication_paths.append(("dir", "mkeventd", mkeventd_config_dir))
         backup_paths.append(("dir", "mkeventd", mkeventd_config_dir))
@@ -1022,19 +1022,19 @@ class Folder(BaseFolder):
             # precedence over the folder entries.
 
             if host.has_explicit_attribute("contactgroups"):
-                 cgconfig = convert_cgroups_from_tuple(host.attribute("contactgroups"))
-                 cgs = cgconfig["groups"]
-                 if cgs and cgconfig["use"]:
-                     out.write("\nhost_contactgroups += [\n")
-                     for cg in cgs:
-                         out.write('    ( %r, [%r] ),\n' % (cg, hostname))
-                     out.write(']\n\n')
+                cgconfig = convert_cgroups_from_tuple(host.attribute("contactgroups"))
+                cgs = cgconfig["groups"]
+                if cgs and cgconfig["use"]:
+                    out.write("\nhost_contactgroups += [\n")
+                    for cg in cgs:
+                        out.write('    ( %r, [%r] ),\n' % (cg, hostname))
+                    out.write(']\n\n')
 
-                     if cgconfig.get("use_for_services"):
-                         out.write("\nservice_contactgroups += [\n")
-                         for cg in cgs:
-                             out.write('    ( %r, [%r], ALL_SERVICES ),\n' % (cg, hostname))
-                         out.write(']\n\n')
+                    if cgconfig.get("use_for_services"):
+                        out.write("\nservice_contactgroups += [\n")
+                        for cg in cgs:
+                            out.write('    ( %r, [%r], ALL_SERVICES ),\n' % (cg, hostname))
+                        out.write(']\n\n')
 
 
             for attr, topic in all_host_attributes():
@@ -3161,7 +3161,7 @@ def register_configvar_group(title, order=None):
 def load_configuration_settings():
     settings = {}
     for domain in ConfigDomain.enabled_domains():
-	settings.update(domain().load())
+        settings.update(domain().load())
     return settings
 
 
@@ -3779,7 +3779,7 @@ def ajax_profile_repl():
             result = "%s" % e
 
     if result == True:
-        answer = "0 %s" % _("Replication completed successfully.");
+        answer = "0 %s" % _("Replication completed successfully.")
     else:
         answer = "1 %s" % (_("Error: %s") % result)
         add_profile_replication_change(site_id, result)
@@ -5762,8 +5762,8 @@ def load_user_scripts(what):
     not_dir = cmk.paths.share_dir + "/" + what
     try:
         if what == "notifications":
-             # Support for setup.sh
-             not_dir = cmk.paths.notifications_dir
+            # Support for setup.sh
+            not_dir = cmk.paths.notifications_dir
     except:
         pass
 
@@ -6249,7 +6249,7 @@ class Ruleset(object):
         for _folder_path, folder_rules in self._rules.items():
             for rule_index, rule in enumerate(folder_rules):
                 rules.append((rule.folder, rule_index, rule))
-        return sorted(rules, key=lambda x: (x[0].path().split("/"), rule_index), reverse=True)
+        return sorted(rules, key=lambda x: (x[0].path().split("/"), x[1]), reverse=True)
 
 
     def get_folder_rules(self, folder):

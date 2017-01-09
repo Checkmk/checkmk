@@ -439,7 +439,7 @@ def werk_matches_options(werk, werk_table_options):
            werk_table_options["component"] in ( None, werk["component" ]) and \
            werk["date"] >= werk_table_options["date_range"][0] and \
            werk["date"] <= werk_table_options["date_range"][1]):
-           return False
+        return False
 
 
     if werk_table_options["edition"]:

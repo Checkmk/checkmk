@@ -246,7 +246,7 @@ def add_starttls_support(self, keyfile = None, certfile = None):
     self.capabilities = tuple(self.untagged_responses[cap][-1].upper().split())
 
 def fetch_mails():
-    global g_M, g_obsolete
+    global g_M
     if not g_expected:
         return # not expecting any mail, do not check for mails
 

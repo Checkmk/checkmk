@@ -119,7 +119,7 @@ def jqm_page_navfooter(items, current, page_id):
     for href, title, icon, custom_css in items:
         href = html.makeuri([("page", href),("search", "Search")])
         if custom_css == False:
-	    custom_css = ""
+            custom_css = ""
         if current == href:
             custom_css += ' ui-state-persist ui-btn-active'
         else:
@@ -204,7 +204,7 @@ def page_index():
             count = ""
             if not view.get("mustsearch"):
                 views.prepare_painter_options(view_name)
-	        count = views.show_view(view, only_count = True)
+                count = views.show_view(view, only_count = True)
                 count = '<span class="ui-li-count">%d</span>' % count
             items.append((view.get("topic"), url, '%s %s' % (view.get("linktitle", view["title"]), count)))
     jqm_page_index(_("Check_MK Mobile"), items)
@@ -236,12 +236,12 @@ def page_view():
     views.prepare_painter_options(view_name)
 
     try:
-	views.show_view(view, show_heading = False, show_buttons = False,
-			show_footer = False, render_function = render_view)
+        views.show_view(view, show_heading = False, show_buttons = False,
+            show_footer = False, render_function = render_view)
     except Exception, e:
-	if config.debug:
-	    raise
-	html.write("ERROR showing view: %s" % html.attrencode(e))
+        if config.debug:
+            raise
+        html.write("ERROR showing view: %s" % html.attrencode(e))
 
 
     mobile_html_foot()
@@ -258,7 +258,7 @@ def render_view(view, rows, datasource, group_painters, painters,
        if view.get("mustsearch"):
            page = "filter"
        else:
-	   page = "data"
+            page = "data"
 
     title = views.view_title(view)
     navbar = [ ( "data",     _("Results"), "grid", 'results_button'),
@@ -281,36 +281,36 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     elif page == "commands":
             # Page: Commands
-	    if config.user.may("general.act"):
-		jqm_page_header(_("Commands"), left_button=home, id="commands")
-		show_commands = True
-		if html.has_var("_do_actions"):
-		    try:
-			show_commands = do_commands(view, datasource["infos"][0], rows)
-		    except MKUserError, e:
-			html.show_error(e)
-			html.add_user_error(e.varname, e)
-			show_commands = True
-		if show_commands:
-		    show_command_form(view, datasource, rows)
-		jqm_page_navfooter(navbar, 'commands', page_id)
+            if config.user.may("general.act"):
+                jqm_page_header(_("Commands"), left_button=home, id="commands")
+                show_commands = True
+                if html.has_var("_do_actions"):
+                    try:
+                        show_commands = do_commands(view, datasource["infos"][0], rows)
+                    except MKUserError, e:
+                        html.show_error(e)
+                        html.add_user_error(e.varname, e)
+                        show_commands = True
+                if show_commands:
+                    show_command_form(view, datasource, rows)
+                jqm_page_navfooter(navbar, 'commands', page_id)
 
     elif page == "data":
           # Page: data rows of view
-	  jqm_page_header(title, left_button=home, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"), id="data")
-	  html.write('<div id="view_results">')
-	  if len(rows) == 0:
-	      html.write(_("No hosts/services found."))
-	  else:
-	      try:
-		  # TODO: special limit for mobile UI
-		  html.check_limit(rows, views.get_limit())
-		  layout["render"](rows, view, group_painters, painters, num_columns,
-				  show_checkboxes and not html.do_actions())
-	      except Exception, e:
-		  html.write(_("Error showing view: %s") % e)
-	  html.write("</div>")
-	  jqm_page_navfooter(navbar, 'data', page_id)
+          jqm_page_header(title, left_button=home, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"), id="data")
+          html.write('<div id="view_results">')
+          if len(rows) == 0:
+              html.write(_("No hosts/services found."))
+          else:
+              try:
+                  # TODO: special limit for mobile UI
+                  html.check_limit(rows, views.get_limit())
+                  layout["render"](rows, view, group_painters, painters, num_columns,
+                                  show_checkboxes and not html.do_actions())
+              except Exception, e:
+                  html.write(_("Error showing view: %s") % e)
+          html.write("</div>")
+          jqm_page_navfooter(navbar, 'data', page_id)
 
     # Page: Context buttons
     #if context_links:
@@ -360,7 +360,7 @@ def show_command_form(view, datasource, rows):
     one_shown = False
     html.write('<div data-role="collapsible-set">\n')
     for command in views.multisite_commands:
-       if what in command["tables"] and config.user.may(command["permission"]):
+        if what in command["tables"] and config.user.may(command["permission"]):
             html.write('<div class="command_group" data-role="collapsible">\n')
             html.write("<h3>%s</h3>" % command["title"])
             html.write('<p>\n')

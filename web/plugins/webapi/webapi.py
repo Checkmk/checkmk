@@ -100,9 +100,9 @@ def action_add_host(request):
         raise MKUserError(None, _("Foldername is missing"))
 
     if folder_path != "" and folder_path != "/":
-      folders = folder_path.split("/")
-      for foldername in folders:
-        check_wato_foldername(None, foldername, just_name=True)
+        folders = folder_path.split("/")
+        for foldername in folders:
+            check_wato_foldername(None, foldername, just_name=True)
     else:
        folder_path = ""
        folders =  [""]

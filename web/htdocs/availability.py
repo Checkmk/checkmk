@@ -877,7 +877,7 @@ def reclassify_service_by_annotation(history_entry, annotation, key_to_change):
                     if key_to_change == "in_downtime" \
                         and history_entry.get("in_host_downtime") \
                         and annotation["downtime"] == False:
-	                new_entry["in_host_downtime"] = 0
+                        new_entry["in_host_downtime"] = 0
                 new_history.append(new_entry)
     else:
         new_history.append(history_entry)
@@ -1069,7 +1069,7 @@ def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
             found = nr
             break
     if found != None:
-        del entries[nr]
+        del entries[found]
 
 
 #.

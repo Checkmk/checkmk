@@ -1469,7 +1469,7 @@ class CascadingDropdown(ValueSpec):
     def value_to_text(self, value):
         choices = self.choices()
         for val, title, vs in choices:
-            if (vs and value[0] == val) or \
+            if (vs and value and value[0] == val) or \
                (value == val):
                 if not vs:
                     return title

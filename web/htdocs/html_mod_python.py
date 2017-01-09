@@ -291,7 +291,7 @@ class html_mod_python(htmllib.html):
 
     def add_custom_style_sheet(self):
         for css in self.plugin_stylesheets():
-           self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
+            self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)
 
         if config.custom_style_sheet:
             self.write('<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)

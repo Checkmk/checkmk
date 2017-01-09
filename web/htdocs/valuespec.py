@@ -340,7 +340,7 @@ class Filesize(Integer):
     def get_exponent(self, value):
         for exp, unit_name in list(enumerate(self._names))[::-1]:
             if value == 0:
-               return 0,0
+                return 0,0
             if value % (1024 ** exp) == 0:
                 return exp, value / (1024 ** exp)
 
@@ -1100,7 +1100,7 @@ class ListOfStrings(ValueSpec):
         html.write('</div>')
         html.write("<div style=\"clear:left\"></div>")
         html.help(self.help())
-        html.javascript("list_of_strings_init('%s');" % vp);
+        html.javascript("list_of_strings_init('%s');" % vp)
 
     def canonical_value(self):
         return []
@@ -1262,7 +1262,7 @@ class ListOf(ValueSpec):
         html.write("</table>")
         html.write("<br>")
         html.jsbutton(varprefix + "_add", self._add_label,
-            "valuespec_listof_add('%s', '%s')" % (varprefix, self._magic));
+            "valuespec_listof_add('%s', '%s')" % (varprefix, self._magic))
         html.javascript("valuespec_listof_fixarrows(document.getElementById('%s_table').childNodes[0]);" % varprefix)
 
 

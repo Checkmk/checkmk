@@ -176,8 +176,6 @@ def localize_sniff():
                 if f.endswith(".py") or f.endswith(".mk"):
                     sniff_files.append(os.path.join(root, f))
 
-    print len(files)
-
     if subprocess.call(['xgettext', '--no-wrap', '--sort-output', '--force-po',
                  '-L', 'Python', '--from-code=utf-8', '--omit-header',
                  '-o', pot_file ] + sniff_files,

@@ -121,7 +121,7 @@ view_option_refreshes = [ 30, 60, 90, 0 ]
 view_option_columns   = [ 1, 2, 3, 4, 5, 6, 8, 10, 12 ]
 
 # MISC
-doculink_urlformat = "http://mathias-kettner.com/checkmk_%s.html";
+doculink_urlformat = "http://mathias-kettner.com/checkmk_%s.html"
 
 view_action_defaults = {
     "ack_sticky"     : True,

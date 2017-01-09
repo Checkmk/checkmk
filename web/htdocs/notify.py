@@ -139,6 +139,11 @@ def load_plugins(force):
            "the monitoring system using the web interface."),
          [ "admin" ])
 
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language
+
 
 def page_notify():
     if not config.user.may("general.notify"):

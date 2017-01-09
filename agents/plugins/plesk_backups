@@ -49,7 +49,6 @@ def connect():
         sys.exit(1)
 
 def get_domains():
-    global db
     cursor = db.cursor()
     cursor2 = db.cursor()
 

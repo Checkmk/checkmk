@@ -56,9 +56,13 @@ def load_plugins(force):
             _u(attrs["title"]), u"",
             [ "admin", "user" ])
 
+    # This must be set after plugin loading to make broken plugins raise
+    # exceptions all the time and not only the first time (when the plugins
+    # are loaded).
+    loaded_with_language = current_language
+
 
 def acknowledge_failed_notifications(timestamp):
-    global g_acknowledgement_time
     g_acknowledgement_time[config.user.id] = timestamp
     save_acknowledgements()
 
@@ -77,7 +81,6 @@ def acknowledged_time():
     return g_acknowledgement_time[config.user.id]
 
 def load_acknowledgements():
-    global g_acknowledgement_time
     g_acknowledgement_time[config.user.id] = config.user.load_file("acknowledged_notifications", 0)
     set_modified_time()
     if g_acknowledgement_time[config.user.id] == 0:
@@ -125,9 +128,8 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
         return sites.live().query(query)
 
 def render_notification_table(failed_notifications):
-    table.begin(title=_("Failed Notifications"))
+    table.begin()
 
-    #header = dict([(name, idx) for idx, name in enumerate(header)])
     header = dict([(name, idx) for idx, name in enumerate(g_columns)])
 
     for row in failed_notifications:
@@ -144,27 +146,19 @@ def render_notification_table(failed_notifications):
 # TODO: We should really recode this to use the view and a normal view command / action
 def render_page_confirm(acktime, prev_url, failed_notifications):
     html.header(_("Confirm failed notifications"), javascripts=[], stylesheets=[ "pages", "check_mk" ])
-    html.write('<div class="really">\n')
-    html.write(_("Do you really want to acknowledge all failed notifications up to %s?") %\
-               lib.datetime_human_readable(acktime))
-    html.begin_form("confirm", method="GET", action=prev_url)
-    html.hidden_field('acktime', acktime),
-    html.button('_confirm', _("Yes"))
-    html.end_form()
-    html.write('</div>\n')
+
+    if failed_notifications:
+        html.write('<div class="really">\n')
+        html.write(_("Do you really want to acknowledge all failed notifications up to %s?") %\
+                   lib.datetime_human_readable(acktime))
+        html.begin_form("confirm", method="GET", action=prev_url)
+        html.hidden_field('acktime', acktime),
+        html.button('_confirm', _("Yes"))
+        html.end_form()
+        html.write('</div>\n')
 
     render_notification_table(failed_notifications)
 
-    html.footer()
-
-# TODO: We should really recode this to use the view and a normal view command / action
-def render_page_done():
-    html.set_render_headfoot(False)
-    html.header(_("Confirm"), javascripts=[], stylesheets=[ "pages", "check_mk" ])
-    html.write('<div class="really">\n')
-    html.write('Done')
-    html.write('</div>')
-    html.jsbutton('_back', _("Back"), "window.history.go(-2); window.location.reload();")
     html.footer()
 
 def page_clear():
@@ -173,12 +167,17 @@ def page_clear():
         acktime = time.time()
     else:
         acktime = float(acktime)
+
     prev_url = html.var('prev_url')
     if html.var('_confirm'):
         acknowledge_failed_notifications(acktime)
-        wato.user_profile_async_replication_page()
-    else:
-        failed_notifications = load_failed_notifications(before=acktime,
-                                                         after=acknowledged_time())
-        render_page_confirm(acktime, prev_url, failed_notifications)
+        html.reload_sidebar()
+
+        if wato.get_login_sites():
+            wato.user_profile_async_replication_page()
+            return
+
+    failed_notifications = load_failed_notifications(before=acktime,
+                                                     after=acknowledged_time())
+    render_page_confirm(acktime, prev_url, failed_notifications)
 

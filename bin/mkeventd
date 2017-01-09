@@ -3283,7 +3283,7 @@ class StatusServer:
         if not opfunc:
             raise MKClientError("Unknown filter operator '%s'" % operator)
 
-        return (name, opfunc, argument)
+        return (column, opfunc, argument)
 
 
 #.
@@ -4385,7 +4385,6 @@ def get_state_from_master():
 
 
 def save_slave_status():
-    global g_slave_status
     path = g_state_dir + "/slave_status"
     file(path, "w").write(repr(g_slave_status) + "\n")
 

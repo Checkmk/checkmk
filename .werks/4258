@@ -1,0 +1,9 @@
+Title: snmp_extended_info: fixed undefined variable
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.4.0i3p1
+Date: 1483954440
+Class: fix
+
+

@@ -39,6 +39,9 @@
     * 4199 FIX: Fix detection of replication mode if EC is distributed...
     * 4200 FIX: Fix computation of Event Console performance snapin in distributed mode...
 
+    HW/SW-Inventory:
+    * 4258 FIX: snmp_extended_info: fixed undefined variable
+
 
 1.4.0i3:
     Core & Setup:

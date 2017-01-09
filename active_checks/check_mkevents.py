@@ -28,9 +28,10 @@
 # anymore...
 
 import os, socket, sys
+import ast
 
 try:
-    socket_path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+    socket_path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status" # nosec
 except:
     sys.stdout.write("UNKNOWN - OMD_ROOT is not set, no socket path is defined.\n")
     sys.exit(3)
@@ -62,7 +63,7 @@ def query(query, remote_host):
             if not chunk:
                 break
 
-        return eval(response_text)
+        return ast.literal_eval(response_text)
     except SyntaxError, e:
         sys.stdout.write("UNKNOWN - Invalid answer from event daemon\n%s\nQuery was:\n%s\n" \
                 % (e, query))

@@ -31,6 +31,7 @@
 # creating objects. Or at least update the documentation. It is not clear
 # which fields are mandatory for the events.
 
+import ast
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
        select, subprocess, stat, string
 import traceback
@@ -3474,7 +3475,7 @@ class EventStatus():
         path = g_state_dir + "/status"
         if os.path.exists(path):
             try:
-                status = eval(file(path).read())
+                status = ast.literal_eval(file(path).read())
                 self._next_event_id   = status["next_event_id"]
                 self._events          = status["events"]
                 self._rule_stats      = status["rule_stats"]
@@ -4343,7 +4344,7 @@ def save_master_config(new_state):
 def load_master_config():
     path = g_state_dir + "/master_config"
     try:
-        config = eval(file(path).read())
+        config = ast.literal_eval(file(path).read())
         g_config["rules"]      = config["rules"]
         g_config["rule_packs"] = config.get("rule_packs", [])
         g_config["actions"]    = config["actions"]
@@ -4371,7 +4372,7 @@ def get_state_from_master():
             if not chunk:
                 break
 
-        return eval(response_text)
+        return ast.literal_eval(response_text)
     except SyntaxError, e:
         raise Exception("Invalid response from event daemon: <pre>%s</pre>" % response_text)
 
@@ -4396,7 +4397,7 @@ def load_slave_status():
     path = g_state_dir + "/slave_status"
     if is_replication_slave():
         try:
-            g_slave_status = eval(file(path).read())
+            g_slave_status = ast.literal_eval(file(path).read())
         except:
             g_slave_status = {
                 "last_sync"         : 0, # Time of last successfull sync

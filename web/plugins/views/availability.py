@@ -397,12 +397,14 @@ def render_availability_table(group_title, availability_table, what, avoptions):
         searchable = False, limit = None,
         omit_headers = "omit_headers" in avoptions["labelling"])
 
+    show_urls, show_timeline = False, False
     for row in av_table["rows"]:
         table.row()
 
         # Column with icons
         timeline_url = None
         if row["urls"]:
+            show_urls = True
             table.cell("", css="buttons")
             for image, tooltip, url in row["urls"]:
                 html.icon_button(url, tooltip, image)
@@ -414,6 +416,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
             table.cell(title, '<a href="%s">%s</a>' % (url, name))
 
         if "timeline" in row:
+            show_timeline = True
             table.cell(_("Timeline"), css="timeline")
             html.open_a(href=timeline_url)
             render_timeline_bar(row["timeline"], "inline")
@@ -425,12 +428,12 @@ def render_availability_table(group_title, availability_table, what, avoptions):
 
     if "summary" in av_table:
         table.row(css="summary")
-        if row["urls"]:
+        if show_urls:
             table.cell("", "") # Empty cell in URLs column
         table.cell("", _("Summary"), css="heading")
         for x in range(1, len(av_table["object_titles"])):
             table.cell("", "") # empty cells, of more object titles than one
-        if "timeline" in row:
+        if show_timeline:
             table.cell("", "")
 
         for (title, help), (text, css) in zip(av_table["cell_titles"], av_table["summary"]):

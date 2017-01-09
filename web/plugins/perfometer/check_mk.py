@@ -257,14 +257,14 @@ def perfometer_temperature_multi(row, check_command, perf_data):
     display_color = "#60f020"
 
     for sensor, value, uom, warn, crit, min, max in perf_data:
-        value=saveint(value)
+        value = saveint(value)
         if value > display_value:
-            display_value=value
+            display_value = value
 
-    if display_value > saveint(warn):
-        display_color = "#FFC840"
-    if display_value > saveint(crit):
-        display_color = "#FF0000"
+            if display_value > saveint(warn):
+                display_color = "#FFC840"
+            if display_value > saveint(crit):
+                display_color = "#FF0000"
 
     display_string = "%s °C" % display_value
     return display_string, perfometer_linear(display_value, display_color)

@@ -26,6 +26,7 @@
 
 VERSION = "1.4.0i1"
 
+import ast
 import base64
 import errno
 import fcntl
@@ -258,7 +259,7 @@ def makedir(path, user=None, group=None, mode=None):
 # - Site-Konfiguration laden
 def load_config():
     def load_file(path):
-        return eval(file(path).read())
+        return ast.literal_eval(file(path).read())
 
     if is_root():
         config = load_file(system_config_path())

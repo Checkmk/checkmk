@@ -36,26 +36,21 @@
 #include "Logger.h"
 
 using std::chrono::milliseconds;
+using std::chrono::system_clock;
 using std::string;
 
-extern int g_query_timeout_msec;
-extern int g_idle_timeout_msec;
+extern milliseconds g_query_timeout;
+extern milliseconds g_idle_timeout;
 
 namespace {
 const size_t initial_buffer_size = 4096;
 // TODO(sp): Make this configurable?
 const size_t maximum_buffer_size = 500 * 1024 * 1024;
 
-bool timeout_reached(const struct timeval *start, int timeout_ms) {
-    if (timeout_ms == 0) {
-        return false;  // timeout disabled
-    }
-
-    struct timeval now;
-    gettimeofday(&now, nullptr);
-    int64_t elapsed = (now.tv_sec - start->tv_sec) * 1000000;
-    elapsed += now.tv_usec - start->tv_usec;
-    return elapsed / 1000 >= timeout_ms;
+bool timeout_reached(const system_clock::time_point &start,
+                     const milliseconds &timeout) {
+    return (timeout != milliseconds(0)) &&
+           (system_clock::now() - start >= timeout);
 }
 }  // namespace
 
@@ -70,11 +65,9 @@ InputBuffer::InputBuffer(int fd, const bool &termination_flag, Logger *logger)
 
 // read in data enough for one complete request (and maybe more).
 InputBuffer::Result InputBuffer::readRequest() {
-    // Remember when we started waiting for a request. This
-    // is needed for the idle_timeout. A connection may
-    // not be idle longer than that value.
-    struct timeval start_of_idle;  // Waiting for the first line
-    gettimeofday(&start_of_idle, nullptr);
+    // Remember when we started waiting for a request. This is needed for the
+    // idle_timeout. A connection may not be idle longer than that value.
+    auto start_of_idle = system_clock::now();
 
     // Remember if we have read some part of the query. During
     // a query the timeout is another (short) than between
@@ -107,14 +100,14 @@ InputBuffer::Result InputBuffer::readRequest() {
                 if (rd == Result::timeout) {
                     if (query_started) {
                         Informational(_logger)
-                            << "Timeout of " << g_query_timeout_msec
+                            << "Timeout of " << g_query_timeout.count()
                             << " ms exceeded while reading query";
                         return Result::timeout;
                     }
                     // Check if we exceeded the maximum time between two queries
-                    if (timeout_reached(&start_of_idle, g_idle_timeout_msec)) {
+                    if (timeout_reached(start_of_idle, g_idle_timeout)) {
                         Informational(_logger)
-                            << "Idle timeout of " << g_idle_timeout_msec
+                            << "Idle timeout of " << g_idle_timeout.count()
                             << " ms exceeded. Going to close connection.";
                         return Result::timeout;
                     }
@@ -209,11 +202,9 @@ InputBuffer::Result InputBuffer::readRequest() {
 // read at least *some* data. Return IB_TIMEOUT if that
 // lasts more than g_query_timeout_msec msecs.
 InputBuffer::Result InputBuffer::readData() {
-    struct timeval start;
-    gettimeofday(&start, nullptr);
-
+    auto start = system_clock::now();
     while (!_termination_flag) {
-        if (timeout_reached(&start, g_query_timeout_msec)) {
+        if (timeout_reached(start, g_query_timeout)) {
             return Result::timeout;
         }
 

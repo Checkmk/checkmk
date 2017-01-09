@@ -63,6 +63,9 @@
 #include "waittriggers.h"
 
 using mk::unsafe_tolower;
+using std::chrono::milliseconds;
+using std::chrono::minutes;
+using std::chrono::seconds;
 using std::chrono::system_clock;
 using std::make_unique;
 using std::ostream;
@@ -71,7 +74,6 @@ using std::string;
 using std::to_string;
 using std::unordered_map;
 using std::vector;
-
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
 #ifndef NAGIOS4
 extern int event_broker_options;
@@ -81,9 +83,11 @@ extern unsigned long event_broker_options;
 extern int enable_environment_macros;
 extern char *log_file;
 
-int g_idle_timeout_msec =
-    300 * 1000; /* maximum idle time for connection in keep alive state */
-int g_query_timeout_msec = 10 * 1000; /* maximum time for reading a query */
+// maximum idle time for connection in keep alive state
+milliseconds g_idle_timeout = minutes(5);
+
+// maximum time for reading a query
+milliseconds g_query_timeout = seconds(10);
 
 size_t g_num_clientthreads =
     10; /* allow 10 concurrent connections per default */
@@ -860,7 +864,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                 if (c < 0) {
                     Warning(fl_logger_nagios) << "query_timeout must be >= 0";
                 } else {
-                    g_query_timeout_msec = c;
+                    g_query_timeout = milliseconds(c);
                     if (c == 0) {
                         Notice(fl_logger_nagios) << "disabled query timeout!";
                     } else {
@@ -874,7 +878,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                 if (c < 0) {
                     Warning(fl_logger_nagios) << "idle_timeout must be >= 0";
                 } else {
-                    g_idle_timeout_msec = c;
+                    g_idle_timeout = milliseconds(c);
                     if (c == 0) {
                         Notice(fl_logger_nagios) << "disabled idle timeout!";
                     } else {

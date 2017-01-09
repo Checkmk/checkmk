@@ -1,0 +1,10 @@
+Title: LDAP sync: synchronizes sites for each user in case a profile changed
+Component: multisite
+State: open
+Date: 2017-01-09 11:50:42
+Targetversion: 1.2.8
+Class: nastiness
+
+In case the sync was not running for a longer time and the password changed for a lot
+of users, the WATO sync is performed very often during a single sync. Once for each
+user profile. This should only be done once after sync.

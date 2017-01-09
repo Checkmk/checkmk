@@ -655,9 +655,11 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     visibility_elements = [
         ('hidden', FixedValue(None,
             title = _('Hide this %s from the sidebar') % visual_type["title"],
+            totext = "",
         )),
         ('hidebutton', FixedValue(None,
             title = _('Do not show a context button to this %s') % visual_type["title"],
+            totext = "",
         )),
     ]
     if config.user.may("general.publish_" + what):

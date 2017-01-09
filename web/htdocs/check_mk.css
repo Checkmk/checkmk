@@ -88,6 +88,15 @@ input, select, textarea {
     margin-top: 0px;
 }
 
+/* consistent dropdown field styling for all browsers */
+select:not([multiple]) {
+    -webkit-appearance: none;  /* Removes default chrome and safari style */
+    -moz-appearance: none;     /* Removes default style Firefox */
+    background: url(images/select_arrow.png) no-repeat right #fff;
+    background-size: 20px 11px;
+    padding-right: 15px;
+}
+
 input[type=file] {
     color: black;
 }
@@ -96,10 +105,39 @@ form {
     margin: 0px;
 }
 
-input:hover, select:hover, textarea:hover {
+input:hover, select:hover, textarea:hover,
+input[type="checkbox"]:hover + label:before {
     background-color: #EDECEB;
 }
 
+/* checkbox styling */
+input[type="checkbox"] {
+    display: none;
+}
+
+input[type="checkbox"] + label:before {
+    box-shadow: 0.1px 1.0px 1.2px 0 #888 inset;
+    border: 1px #73767A solid;
+    background-color: #fff;
+    content: "\00a0";
+    display: inline-block;
+    font-size: 6pt;
+    height: 7pt;
+    margin: 0 .25em 0 0;
+    padding: 0;
+    vertical-align: middle;
+    width: 7pt;
+}
+
+input[type="checkbox"]:checked + label:before {
+  color: #000;
+  content: "\2713";
+  text-align: center;
+}
+
+input[type="checkbox"]:checked + label:after {
+  font-weight: bold;
+}
 
 /* Select element with icons */
 select.icon option {
@@ -108,12 +146,6 @@ select.icon option {
     background-size: 18px;
     padding-left:22px;
     height: 18px;
-}
-
-
-input.buttonlink {
-    padding: 1px;
-    font-size: 8pt;
 }
 
 input.button {
@@ -577,7 +609,6 @@ table.listchoice td {
 }
 table.listchoice td input[type=checkbox] {
     margin: 0px;
-    display: inline-block;
     height: 12px;
 }
 

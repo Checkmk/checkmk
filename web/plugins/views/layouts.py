@@ -43,6 +43,7 @@ def render_checkbox(view, row, num_tds):
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
     html.input(type_="checkbox", name=row_id(view, row), value=(num_tds+1))
+    html.label("", row_id(view, row))
 
 def render_checkbox_td(view, row, num_tds):
     html.open_td(class_="checkbox")

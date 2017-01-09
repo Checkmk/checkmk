@@ -1485,7 +1485,7 @@ function toggle_row(e, elem) {
 
     // Skip handling clicks on links/images/...
     var target = getTarget(e);
-    if(target.tagName != 'TD')
+    if(target.tagName != 'TD' && target.tagName != 'LABEL')
         return true;
 
     // Find the checkbox for this element
@@ -1678,6 +1678,7 @@ function table_init_rowselect(oTable) {
                 return highlight_row(this, false);
             };
             elem.onclick = function(e) {
+                console.log(this.parentNode);
                 return toggle_row(e, this);
             };
             elem = null;

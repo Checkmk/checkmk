@@ -787,6 +787,7 @@ def show_hosts(folder):
             # selective toggling inventory-failed hosts for Javascript
             html.input(name="_c_%s" % hostname, type_="checkbox", value=colspan,
                        class_="failed" if host.discovery_failed() else None)
+            html.label("", "_c_%s" % hostname)
 
         table.cell(_("Actions"), css="buttons", sortable=False)
         show_host_actions(host)

@@ -24,9 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import glob
 import os
 import pprint
 import signal
+import subprocess
 import sys
 from cStringIO import StringIO
 
@@ -683,8 +685,6 @@ def _automation_scan_parents(args):
         raise MKAutomationError("%s" % e)
 
 def _automation_diag_host(args):
-    import subprocess
-
     hostname, test, ipaddress, snmp_community = args[:4]
     agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
     cmd = args[7]
@@ -825,23 +825,23 @@ def _automation_rename_hosts():
     if core_was_running:
         core.do_core_action("stop", quiet=True)
 
-    for oldname, newname in renamings:
-        # Autochecks: simply read and write out the file again. We do
-        # not store a host name here anymore - but old versions did.
-        # by rewriting we get rid of the host name.
-        actions += _rename_host_autochecks(oldname, newname)
-        actions += _rename_host_files(oldname, newname)
+    try:
+        for oldname, newname in renamings:
+            # Autochecks: simply read and write out the file again. We do
+            # not store a host name here anymore - but old versions did.
+            # by rewriting we get rid of the host name.
+            actions += _rename_host_autochecks(oldname, newname)
+            actions += _rename_host_files(oldname, newname)
+    finally:
+        # Start monitoring again
+        if core_was_running:
+            # force config generation to succeed. The core *must* start.
+            # TODO: Can't we drop this hack since we have config warnings now?
+            core_config.ignore_ip_lookup_failures()
+            _automation_restart("start")
 
-    # Start monitoring again. In case of CMC we need to ignore
-    # any configuration created by the CMC Rushahead daemon
-    if core_was_running:
-        # force config generation to succeed. The core *must* start.
-        # TODO: Can't we drop this hack since we have config warnings now?
-        core_config.ignore_ip_lookup_failures()
-        _automation_restart("start")
-
-        for hostname in core_config.failed_ip_lookups():
-            actions.append("dnsfail-" + hostname)
+            for hostname in core_config.failed_ip_lookups():
+                actions.append("dnsfail-" + hostname)
 
     # Convert actions into a dictionary { "what" : count }
     action_counts = {}
@@ -963,35 +963,40 @@ def _omd_rename_host(oldname, newname):
     if rrdcache_running:
         os.system("omd stop rrdcached >/dev/null 2>&1 </dev/null")
 
-    # Fix pathnames in XML files
-    dirpath = cmk.paths.omd_root + "/var/pnp4nagios/perfdata/" + oldname
-    os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' %s/*.xml 2>/dev/null" % (oldname, newname, dirpath))
+    try:
+        # Fix pathnames in XML files
+        rename_host_in_files(os.path.join(cmk.paths.omd_root, "var/pnp4nagios/perfdata", oldname, "*.xml"),
+                             "/perfdata/%s/" % oldregex,
+                             "/perfdata/%s/" % newregex)
 
-    # RRD files
-    if _rename_host_dir(cmk.paths.omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
-        actions.append("rrd")
+        # RRD files
+        if _rename_host_dir(cmk.paths.omd_root + "/var/pnp4nagios/perfdata", oldname, newname):
+            actions.append("rrd")
 
-    # RRD files
-    if rename_host_dir(cmk.paths.omd_root + "/var/check_mk/rrd", oldname, newname):
-        actions.append("rrd")
+        # RRD files
+        if _rename_host_dir(cmk.paths.omd_root + "/var/check_mk/rrd", oldname, newname):
+            actions.append("rrd")
 
-    # entries of rrdcached journal
-    dirpath = cmk.paths.omd_root + "/var/rrdcached/"
-    if not os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' "
-        "%s/var/rrdcached/rrd.journal.* 2>/dev/null" % ( oldregex, newregex, cmk.paths.omd_root)):
-        actions.append("rrdcached")
+        # entries of rrdcached journal
+        if rename_host_in_files(os.path.join(cmk.paths.omd_root, "var/rrdcached/rrd.journal.*"),
+                             "/perfdata/%s/" % oldregex,
+                             "/perfdata/%s/" % newregex):
+            actions.append("rrdcached")
 
-    # Spoolfiles of NPCD
-    if not os.system("sed -i 's/HOSTNAME::%s	/HOSTNAME::%s	/' "
-                     "%s/var/pnp4nagios/perfdata.dump %s/var/pnp4nagios/spool/perfdata.* 2>/dev/null" % (
-                     oldregex, newregex, cmk.paths.omd_root, cmk.paths.omd_root)):
-        actions.append("pnpspool")
+        # Spoolfiles of NPCD
+        if rename_host_in_files("%s/var/pnp4nagios/perfdata.dump" % cmk.paths.omd_root,
+                             "HOSTNAME::%s    " % oldregex,
+                             "HOSTNAME::%s    " % newregex) or \
+           rename_host_in_files("%s/var/pnp4nagios/spool/perfdata.*" % cmk.paths.omd_root,
+                             "HOSTNAME::%s    " % oldregex,
+                             "HOSTNAME::%s    " % newregex):
+            actions.append("pnpspool")
+    finally:
+        if rrdcache_running:
+            os.system("omd start rrdcached >/dev/null 2>&1 </dev/null")
 
-    if rrdcache_running:
-        os.system("omd start rrdcached >/dev/null 2>&1 </dev/null")
-
-    if npcd_running:
-        os.system("omd start npcd >/dev/null 2>&1 </dev/null")
+        if npcd_running:
+            os.system("omd start npcd >/dev/null 2>&1 </dev/null")
 
     # Logfiles and history files of CMC and Nagios. Problem
     # here: the exact place of the hostname varies between the
@@ -1002,26 +1007,32 @@ s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: %(old)s;/\1 \2ALERT: %(new)s;/
 s/PASSIVE (HOST|SERVICE) CHECK: %(old)s;/PASSIVE \1 CHECK: %(new)s;/
 s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
 ''' % { "old" : oldregex, "new" : newregex }
-    patterns = [
+    path_patterns = [
         "var/check_mk/core/history",
         "var/check_mk/core/archive/*",
         "var/nagios/nagios.log",
         "var/nagios/archive/*",
     ]
     one_matched = False
-    for pattern in patterns:
-        command = "sed -ri --file=/dev/fd/0 %s/%s >/dev/null 2>&1" % (cmk.paths.omd_root, pattern)
-        p = os.popen(command, "w")
-        p.write(sed_commands)
-        if not p.close():
+    for path_pattern in path_patterns:
+        command = ["sed", "-ri", "--file=/dev/fd/0"]
+        files = glob.glob("%s/%s" % (cmk.paths.omd_root, path_pattern))
+        p = subprocess.Popen(command + files, stdin=subprocess.PIPE,
+                             stdout=open(os.devnull, "w"), stderr=subprocess.STDOUT,
+                             close_fds=True)
+        p.communicate(sed_commands)
+        if files:
             one_matched = True
+
     if one_matched:
         actions.append("history")
 
     # State retention (important for Downtimes, Acknowledgements, etc.)
     if config.monitoring_core == "nagios":
-        if not os.system("sed -ri 's/^host_name=%s$/host_name=%s/' %s/var/nagios/retention.dat" % (
-                    oldregex, newregex, cmk.paths.omd_root)):
+        if rename_host_in_files("%s/var/nagios/retention.dat" % cmk.paths.omd_root,
+                         "^host_name=%s$" % oldregex,
+                         "host_name=%s" % newregex,
+                         extended_regex=True):
             actions.append("retention")
 
     else: # CMC
@@ -1032,12 +1043,26 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         actions.append("retention")
 
     # NagVis maps
-    if not os.system("sed -i 's/^[[:space:]]*host_name=%s[[:space:]]*$/host_name=%s/' "
-                     "%s/etc/nagvis/maps/*.cfg 2>/dev/null" % (
-                     oldregex, newregex, cmk.paths.omd_root)):
+    if rename_host_in_files("%s/etc/nagvis/maps/*.cfg" % cmk.paths.omd_root,
+                        "^[[:space:]]*host_name=%s[[:space:]]*$" % oldregex,
+                        "host_name=%s" % newregex,
+                        extended_regex=True):
         actions.append("nagvis")
 
     return actions
+
+
+# Returns True in case files were found, otherwise False
+def rename_host_in_files(path_pattern, old, new, extended_regex=False):
+    import glob
+    paths = glob.glob(path_pattern)
+    if paths:
+        extended = ["-r"] if extended_regex else []
+        subprocess.call(["sed", "-i"] + extended + ["s@%s@/%s/@" % (old, new)] + paths,
+                        stderr=open(os.devnull, "w"))
+        return True
+    else:
+        return False
 
 
 def _automation_notification_replay(args):

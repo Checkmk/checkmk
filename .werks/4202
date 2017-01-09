@@ -1,0 +1,23 @@
+Title: Availability now avoids pending states for times before new hosts or services were added
+Level: 1
+Component: bi
+Compatible: compat
+Version: 1.4.0i4
+Date: 1483958830
+Class: fix
+
+When computing the availability of a BI aggregation for a time range during
+which new hosts or services were added to the monitoring the state of these
+objects would be displayed as (PEND) before point of time they were added. But
+this is not correct. These objects where not pending but simply not yet
+existing and thus not contained in the aggregation tree at all at that time.
+
+When computing a BI state it is a big difference if something is pending
+or simply not existing. One pending node can make the total tree state also
+(PEND).  While this is correct in the current monitoring it breaks the
+availability computation.
+
+BI availability has now been fixed so that unmonitored hosts and services
+are correctly being removed from the tree in the according time ranges and
+the real state at that time is reconstructed. That way bogus (PEND) phases
+of BI aggregations are being avoided.

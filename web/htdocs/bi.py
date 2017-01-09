@@ -2463,6 +2463,8 @@ def execute_rule_node(node, status_info, aggregation_options):
     one_assumption = False
     for n in node["nodes"]:
         result = execute_node(n, status_info, aggregation_options) # state, assumed_state, node [, subtrees]
+        if result[0]["state"] == None: # Omit this node (used in availability for unmonitored things)
+            continue
         subtrees.append(result)
 
         # Assume items in downtime as CRIT when computing downtime state
@@ -2486,10 +2488,12 @@ def execute_rule_node(node, status_info, aggregation_options):
             # no assumption, take real state into assumption array
             assumed_states.append(node_states[-1])
 
-    state = func(*([node_states] + funcargs))
-
-    # Compute downtime state
-    downtime_state = func(*([downtime_states] + funcargs))
+    if len(node_states) == 0:
+        state = { "state": None, "output" : _("Not yet monitored") }
+        downtime_state = state
+    else:
+        state = func(*([node_states] + funcargs))
+        downtime_state = func(*([downtime_states] + funcargs))
 
     if aggregation_options["downtime_aggr_warn"]:
         state["in_downtime"] = downtime_state["state"] >= 1
@@ -3018,7 +3022,7 @@ def aggr_render_node(tree, title, show_host, mousecode=None, img_class=None):
             _("This element is currently not in its service period.")) + title
 
     h = '<span class="content state state%d%s">%s</span>\n' \
-         % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))
+         % (effective_state["state"] if effective_state["state"] != None else -1, addclass, render_bi_state(effective_state["state"]))
     if mousecode:
         if img_class:
             h += '<img src="images/tree_black_closed.png" class="treeangle %s"%s>' % \

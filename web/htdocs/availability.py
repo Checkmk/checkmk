@@ -1681,13 +1681,16 @@ def compute_bi_tree_state(tree, status):
     for site_host_service, state_output in status.items():
         site_host = site_host_service[:2]
         service = site_host_service[2]
+        state = state_output[0]
+        if state == -1:
+            state = None # Means: consider this object as missing
         if service:
             services_by_host.setdefault(site_host, []).append((
                 service,         # service description
-                state_output[0], # state
+                state,
                 1,               # has_been_checked
                 state_output[1], # output
-                state_output[0], # hard state (we use the soft state here)
+                state,           # hard state (we use the soft state here)
                 1,               # attempt
                 1,               # max_attempts (not relevant)
                 state_output[2], # in_downtime
@@ -1699,9 +1702,12 @@ def compute_bi_tree_state(tree, status):
 
     status_info = {}
     for site_host, state_output in hosts.items():
+        state = state_output[0]
+        if state == -1:
+            state = None # Means: consider this object as missing
         status_info[site_host] = [
-            state_output[0],
-            state_output[0], # host hard state
+            state,
+            state, # host hard state
             state_output[1],
             state_output[2], # in_downtime
             False, # acknowledged

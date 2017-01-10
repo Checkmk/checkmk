@@ -175,6 +175,7 @@ def end():
 
     # Controls whether or not actions are available for a table
     search_term = None
+    actions_visible = False
     actions_enabled = (table["searchable"] or table["sortable"])
     if actions_enabled:
 
@@ -229,67 +230,9 @@ def end():
         html.write(" %s" % table["css"])
     html.write('">\n')
 
-    def render_headers():
-        if table["omit_headers"]:
-            return
-
-        html.write("  <tr>")
-        first_col = True
-        for nr, (header, css, help, sortable) in enumerate(table["headers"]):
-            text = header
-
-            if help:
-                header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
-
-            if css:
-                css_def   = " class=\"header_%s\"" % css
-                css_class = " header_%s" % css
-            else:
-                css_def   = ""
-                css_class = ""
-
-            if not table["sortable"] or not sortable:
-                html.write("  <th%s>" % css_def)
-            else:
-                reverse = 0
-                sort = html.var('_%s_sort' % table_id)
-                if sort:
-                    sort_col, sort_reverse = map(int, sort.split(',', 1))
-                    if sort_col == nr:
-                        reverse = sort_reverse == 0 and 1 or 0
-                html.write("  <th class=\"sort%s\" title=\"%s\" onclick=\"location.href='%s'\">" %
-                            (css_class, _('Sort by %s') % text, html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])))
-
-            # Add the table action link
-            if first_col:
-                first_col = False
-                if actions_enabled:
-                    if not header:
-                        header = "&nbsp;" # Fixes layout problem with white triangle
-                    if actions_visible:
-                        state = '0'
-                        help  = _('Hide table actions')
-                        img   = 'table_actions_on'
-                    else:
-                        state = '1'
-                        help  = _('Display table actions')
-                        img   = 'table_actions_off'
-                    html.write("<div class=\"toggle_actions\">")
-                    html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
-                        help, img, cssclass = 'toggle_actions')
-                    html.write("<span>%s</span>" % header)
-                    html.write("</div>")
-                else:
-                    html.write(header)
-            else:
-                html.write(header)
-
-            html.write("</th>\n")
-        html.write("  </tr>\n")
-
     # If we have no group headers then paint the headers now
     if table["rows"] and table["rows"][0][2] != "header":
-        render_headers()
+        _render_headers(table, actions_enabled, actions_visible)
 
     if actions_enabled and actions_visible:
         html.write('<tr class="data even0 actions"><td colspan=%d>' % num_cols)
@@ -324,7 +267,7 @@ def end():
             if nr < len(rows) - 1 and rows[nr+1][2] != "header":
                 html.write('  <tr class="groupheader"><td colspan=%d><br>%s</td></tr>' % (num_cols, row))
                 odd = "even"
-                render_headers()
+                _render_headers(table, actions_enabled, actions_visible)
             continue
 
         odd = odd == "odd" and "even" or "odd"
@@ -369,18 +312,75 @@ def _write_csv(table, csv_separator):
     if limit is not None:
         rows = rows[:limit]
 
-    def render_headers():
-        html.write(csv_separator.join([html.strip_tags(header) or "" for (header, css, help, sortable) in headers]) + "\n")
-
     # If we have no group headers then paint the headers now
     if not omit_headers and table["rows"] and table["rows"][0][2] != "header":
-        render_headers()
+        html.write(csv_separator.join([html.strip_tags(header) or "" for (header, css, help, sortable) in headers]) + "\n")
 
     odd = "even"
     for nr, (row, css, state, fixed) in enumerate(rows):
         html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
         html.write("\n")
 
+
+def _render_headers(table, actions_enabled, actions_visible):
+    if table["omit_headers"]:
+        return
+
+    table_id = table['id']
+
+    html.write("  <tr>")
+    first_col = True
+    for nr, (header, css, help, sortable) in enumerate(table["headers"]):
+        text = header
+
+        if help:
+            header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
+
+        if css:
+            css_def   = " class=\"header_%s\"" % css
+            css_class = " header_%s" % css
+        else:
+            css_def   = ""
+            css_class = ""
+
+        if not table["sortable"] or not sortable:
+            html.write("  <th%s>" % css_def)
+        else:
+            reverse = 0
+            sort = html.var('_%s_sort' % table_id)
+            if sort:
+                sort_col, sort_reverse = map(int, sort.split(',', 1))
+                if sort_col == nr:
+                    reverse = sort_reverse == 0 and 1 or 0
+            html.write("  <th class=\"sort%s\" title=\"%s\" onclick=\"location.href='%s'\">" %
+                        (css_class, _('Sort by %s') % text, html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])))
+
+        # Add the table action link
+        if first_col:
+            first_col = False
+            if actions_enabled:
+                if not header:
+                    header = "&nbsp;" # Fixes layout problem with white triangle
+                if actions_visible:
+                    state = '0'
+                    help  = _('Hide table actions')
+                    img   = 'table_actions_on'
+                else:
+                    state = '1'
+                    help  = _('Display table actions')
+                    img   = 'table_actions_off'
+                html.write("<div class=\"toggle_actions\">")
+                html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
+                    help, img, cssclass = 'toggle_actions')
+                html.write("<span>%s</span>" % header)
+                html.write("</div>")
+            else:
+                html.write(header)
+        else:
+            html.write(header)
+
+        html.write("</th>\n")
+    html.write("  </tr>\n")
 
 
 def _filter_rows(rows, search_term):

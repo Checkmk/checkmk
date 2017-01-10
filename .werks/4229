@@ -1,0 +1,13 @@
+Title: New Web GUI logging configuration
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i4
+Date: 1484055330
+Class: feature
+
+The logging mechanism of the Web GUI has been changed to a single
+global setting. Similar to the new core log level configuration.
+
+Existing verbose log level configurations will be reset to the
+default log level during update.

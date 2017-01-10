@@ -225,6 +225,23 @@ def end():
     if limit is not None:
         rows = rows[:limit]
 
+    # Render header
+    _write_table(table, rows, actions_enabled, actions_visible, search_term)
+
+    if limit is not None and num_rows_unlimited > limit:
+        html.message(_('This table is limited to show only %d of %d rows. '
+                       'Click <a href="%s">here</a> to disable the limitation.') %
+                           (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
+
+    if actions_enabled:
+        config.user.save_file("tableoptions", user_opts)
+    table = None
+
+
+def _write_table(table, rows, actions_enabled, actions_visible, search_term):
+
+    table_id = table["id"]
+
     html.write('<table class="data oddeven')
     if "css" in table:
         html.write(" %s" % table["css"])
@@ -288,15 +305,6 @@ def end():
 
     html.write("</table>\n")
 
-    if limit is not None and num_rows_unlimited > limit:
-        html.message(_('This table is limited to show only %d of %d rows. '
-                       'Click <a href="%s">here</a> to disable the limitation.') %
-                           (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
-
-    if actions_enabled:
-        config.user.save_file("tableoptions", user_opts)
-    table = None
-
 
 def _write_csv(table, csv_separator):
 
@@ -320,6 +328,7 @@ def _write_csv(table, csv_separator):
     for nr, (row, css, state, fixed) in enumerate(rows):
         html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
         html.write("\n")
+
 
 
 def _render_headers(table, actions_enabled, actions_visible):

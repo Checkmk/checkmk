@@ -1,0 +1,10 @@
+Title: Host/Service aggregation have been removed
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.4.0i4
+Date: 1484055672
+Class: fix
+
+The long deprecated and rarely used aggregated host and services feature
+has been removed now.

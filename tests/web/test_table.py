@@ -19,15 +19,12 @@ from tools import compare_html , gentest, compare_and_empty
 from classes import DeprecatedRenderer
 
 
-try:
-    from config.user import load_file, save_file
-except:
-    load_file = lambda x, y: {}
-    save_file = lambda x, y: None
-
+os.environ["OMD_SITE"] = "heute"
+import config
 import table
-
 import traceback
+def save_user_mock(name, data, user, unlock=False):
+    pass
 
 class TableTest(html):
 
@@ -44,6 +41,31 @@ class TableTest(html):
             self.tag_counter += 1
         else:
             self.written_text += " " * 4 * self.tag_counter + text + ''
+
+
+def test_table(monkeypatch):
+    monkeypatch.setattr(config, "save_user_file", save_user_mock)
+    table_test_cubical(False, False, None, 'html')
+
+
+def test_limit(monkeypatch):
+    monkeypatch.setattr(config, "save_user_file", save_user_mock)
+    table_test_cubical(False, False, 2, 'html')
+
+
+def test_sortable(monkeypatch):
+    monkeypatch.setattr(config, "save_user_file", save_user_mock)
+    table_test_cubical(True, False, None, 'html')
+
+
+def test_searchable(monkeypatch):
+    monkeypatch.setattr(config, "save_user_file", save_user_mock)
+    table_test_cubical(False, True, None, 'html')
+
+
+def test_csv(monkeypatch):
+    monkeypatch.setattr(config, "save_user_file", save_user_mock)
+    table_test_cubical(False, False, None, 'csv')
 
 
 def read_out_table(text):
@@ -117,25 +139,3 @@ def table_test_cubical(sortable, searchable, limit, output_format):
 
     assert len(data) == limit
     assert data == rows[:limit]
-
-
-def test_table():
-    table_test_cubical(False, False, None, 'html')
-
-
-def test_limit():
-    table_test_cubical(False, False, 2, 'html')
-
-
-def test_sortable():
-    table_test_cubical(True, False, None, 'html')
-
-
-def test_searchable():
-    table_test_cubical(False, True, None, 'html')
-
-
-def test_csv():
-    table_test_cubical(False, False, None, 'csv')
-
-

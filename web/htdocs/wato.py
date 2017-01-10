@@ -269,7 +269,7 @@ def page_handler():
                         html.context_button(buttontext, folder_preserving_link([("mode", target)]))
             html.end_context_buttons()
 
-        if not html.is_transaction() or may_override_read_only_mode():
+        if not html.is_transaction() or (is_read_only_mode_enabled() and may_override_read_only_mode()):
             show_read_only_warning()
 
         # Show outcome of action

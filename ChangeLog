@@ -12,6 +12,7 @@
     * 4121 FIX: mk_mysql: fixed handling of multiple instances
     * 4122 FIX: ibm_svc_enclosure: added support for firmware >= 7.8...
     * 4259 FIX: aix_sap_processlist: fixed ValueError; if process has stopped and does not report any start time
+    * 4260 FIX: db2_logsizes: removed pprint statement
 
     Multisite:
     * 4145 FIX: Fixed exception when setting output_format in wrong case

@@ -329,7 +329,7 @@ class html_mod_python(htmllib.html):
         for min_part in min_parts:
             path_pattern = cmk.paths.omd_root + "%s" + rel_path + "/" + jsname + min_part + ".js"
             if os.path.exists(path_pattern % "") or os.path.exists(path_pattern % "/local"):
-                filename_for_browser = 'js/%s%s-%s.js' % (jsname, min_part, cmk.__version__)
+                filename_for_browser = '%s%s-%s' % (jsname, min_part, cmk.__version__)
                 break
 
         return filename_for_browser

@@ -244,7 +244,7 @@ void *client_thread(void *data) {
                                                 << " on same connection";
                 }
                 keepalive =
-                    fl_store->answerRequest(&input_buffer, &output_buffer);
+                    fl_store->answerRequest(input_buffer, output_buffer);
                 output_buffer.flush(cc, g_should_terminate);
                 counterIncrement(Counter::requests);
                 requestnr++;

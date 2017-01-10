@@ -24,6 +24,7 @@
 
 #include "Query.h"
 #include <cctype>
+#include <chrono>
 #include <cstdlib>
 #include <cstring>
 #include <ostream>
@@ -44,6 +45,9 @@
 
 extern unsigned long g_max_response_size;
 
+using std::chrono::duration_cast;
+using std::chrono::milliseconds;
+using std::chrono::system_clock;
 using std::list;
 using std::make_shared;
 using std::make_unique;
@@ -669,7 +673,9 @@ void Query::parseLocaltimeLine(char *line) {
 
 bool Query::doStats() { return !_stats_columns.empty(); }
 
-void Query::process(OutputBuffer *output) {
+void Query::process(OutputBuffer &output) {
+    // Precondition: output has been reset
+    auto start_time = system_clock::now();
     auto renderer = Renderer::make(
         _output_format, output, _response_header, _do_keepalive,
         _invalid_header_message, _separators, _timezone_offset, _data_encoding);
@@ -679,6 +685,10 @@ void Query::process(OutputBuffer *output) {
     start(q);
     _table->answerQuery(this);
     finish(q);
+    auto elapsed =
+        duration_cast<milliseconds>(system_clock::now() - start_time);
+    Informational(_logger) << "processed request in " << elapsed.count()
+                           << " ms, replied with " << output.size() << " bytes";
 }
 
 void Query::start(QueryRenderer &q) {

@@ -54,7 +54,7 @@ class Query {
 public:
     Query(const std::list<std::string> &lines, Table *, Encoding data_encoding);
 
-    void process(OutputBuffer *output);
+    void process(OutputBuffer &output);
 
     bool processDataset(void *);
 

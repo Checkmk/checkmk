@@ -64,7 +64,7 @@ class Table;
 class Store {
 public:
     explicit Store(MonitoringCore *core);
-    bool answerRequest(InputBuffer *, OutputBuffer *);
+    bool answerRequest(InputBuffer &input, OutputBuffer &output);
 
     void registerDowntime(nebstruct_downtime_data *);
     void registerComment(nebstruct_comment_data *);
@@ -106,8 +106,8 @@ private:
     Table *findTable(const std::string &name);
     void logRequest(const std::string &line,
                     const std::list<std::string> &lines);
-    void answerGetRequest(const std::list<std::string> &lines, OutputBuffer *,
-                          const char *);
+    void answerGetRequest(const std::list<std::string> &lines,
+                          OutputBuffer &output, const std::string &tablename);
     void answerCommandRequest(const char *);
     bool handleCommand(const std::string &command);
 };

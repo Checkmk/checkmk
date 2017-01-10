@@ -34,7 +34,7 @@
 
 class RendererPython3 : public Renderer {
 public:
-    RendererPython3(OutputBuffer *output,
+    RendererPython3(OutputBuffer &output,
                     OutputBuffer::ResponseHeader response_header,
                     bool do_keep_alive, std::string invalid_header_message,
                     int timezone_offset, Encoding data_encoding);

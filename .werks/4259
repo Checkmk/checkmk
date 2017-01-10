@@ -1,0 +1,9 @@
+Title: aix_sap_processlist: fixed ValueError; if process has stopped and does not report any start time
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1484056407
+Class: fix
+
+

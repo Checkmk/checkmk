@@ -11,6 +11,7 @@
     * 4120 FIX: fixed checks mysql and mysql.sessions for multiple MySQL instances...
     * 4121 FIX: mk_mysql: fixed handling of multiple instances
     * 4122 FIX: ibm_svc_enclosure: added support for firmware >= 7.8...
+    * 4259 FIX: aix_sap_processlist: fixed ValueError; if process has stopped and does not report any start time
 
     Multisite:
     * 4145 FIX: Fixed exception when setting output_format in wrong case

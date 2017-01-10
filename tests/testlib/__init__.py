@@ -11,6 +11,7 @@ import requests
 import socket
 import pipes
 import subprocess
+import sys
 
 from urlparse import urlparse
 from bs4 import BeautifulSoup
@@ -49,6 +50,7 @@ def var_dir():
 def omd(cmd):
     cmdline = " ".join(["sudo", "/usr/bin/omd"] + cmd)
     print "Executing: %s" % cmdline
+    sys.stdout.flush()
     return os.system(cmdline) >> 8
 
 
@@ -140,6 +142,7 @@ class CMKVersion(object):
 
         cmd = "sudo /usr/bin/gdebi --non-interactive %s" % temp_package_path
         print(cmd)
+        sys.stdout.flush()
         if os.system(cmd) >> 8 != 0:
             raise Exception("Failed to install package: %s" % temp_package_path)
 
@@ -277,10 +280,12 @@ class Site(object):
         for path in paths:
             if os.path.exists("%s/.f12" % path):
                 print("Executing .f12 in \"%s\"..." % path)
+                sys.stdout.flush()
                 assert os.system("cd \"%s\" ; "
                                  "sudo PATH=$PATH ONLY_COPY=1 SITE=%s bash -x .f12" %
                                       (path, self.id)) >> 8 == 0
                 print("Executing .f12 in \"%s\" DONE" % path)
+                sys.stdout.flush()
 
 
     def rm_if_not_reusing(self):

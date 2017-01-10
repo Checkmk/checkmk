@@ -184,7 +184,7 @@ def end():
         rows = rows[:limit]
 
     # Render header
-    _write_table(table, rows, actions_enabled, actions_visible, search_term)
+    _write_table(table, rows, num_cols, actions_enabled, actions_visible, search_term)
 
     if limit is not None and num_rows_unlimited > limit:
         html.message(_('This table is limited to show only %d of %d rows. '
@@ -249,7 +249,7 @@ def _evaluate_user_opts(table, rows):
         return rows, actions_enabled, actions_visible, search_term, user_opts
 
 
-def _write_table(table, rows, actions_enabled, actions_visible, search_term):
+def _write_table(table, rows, num_cols, actions_enabled, actions_visible, search_term):
 
     table_id = table["id"]
 

@@ -1,0 +1,20 @@
+Title: New manual WATO configuration lock mechanism
+Level: 2
+Component: wato
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1484053905
+
+It is now possible to manually lock the WATO configuration for modifications and set
+the configuration to read only mode.
+
+You can find the option to configure it below <i>Global Settings > Read only mode</i>.
+
+On that page the WATO configuration can be set to read only mode for all users that are not 
+permitted to ignore the read only mode. All users that are permitted to set the read only mode
+can disable it again when another permitted user enabled it before.
+
+The read only mode can be set permanently or in a specific time window. You can set a message
+which is then shown to all users while the read only mode is active.

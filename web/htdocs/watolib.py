@@ -6830,6 +6830,60 @@ def match_one_of_search_expression(search_options, attr_name, search_in_list):
     return False
 
 #.
+#   .--Read-Only-----------------------------------------------------------.
+#   |           ____                _        ___        _                  |
+#   |          |  _ \ ___  __ _  __| |      / _ \ _ __ | |_   _            |
+#   |          | |_) / _ \/ _` |/ _` |_____| | | | '_ \| | | | |           |
+#   |          |  _ <  __/ (_| | (_| |_____| |_| | | | | | |_| |           |
+#   |          |_| \_\___|\__,_|\__,_|      \___/|_| |_|_|\__, |           |
+#   |                                                     |___/            |
+#   +----------------------------------------------------------------------+
+#   | WATO can be set into read only mode manually.                        |
+#   '----------------------------------------------------------------------'
+
+def read_only_message():
+    text = _("The configuration is currently in read only mode. ")
+
+    if config.wato_read_only["enabled"] == True:
+        text += _("The read only mode is enabled until it is turned of manually. ")
+
+    elif type(config.wato_read_only['enabled']) == tuple:
+        end_time = config.wato_read_only['enabled'][1]
+        text += _("The read only mode is enabled until %s %s. ") % \
+                    (fmt_date(end_time), fmt_time(end_time))
+
+    if may_override_read_only_mode():
+        text += _("But you are allowed to make changes anyway. ")
+
+    text += "<br><br>" + _("Reason: %s") % config.wato_read_only["message"]
+
+    return text
+
+
+def is_read_only_mode_enabled():
+    if not config.wato_read_only:
+        return False
+
+    enabled = False
+    if config.wato_read_only["enabled"] == True:
+        enabled = True
+    elif type(config.wato_read_only['enabled']) == tuple:
+        start_time, end_time = config.wato_read_only['enabled']
+        now = time.time()
+        enabled = now >= start_time and now <= end_time
+
+    if not enabled:
+        return False
+
+    return True
+
+
+def may_override_read_only_mode():
+    return config.user.id in config.wato_read_only["rw_users"] \
+            or (html.var("mode") == "read_only" and config.user.may("wato.set_read_only"))
+
+
+#.
 #   .--MIXED STUFF---------------------------------------------------------.
 #   |     __  __ _____  _______ ____    ____ _____ _   _ _____ _____       |
 #   |    |  \/  |_ _\ \/ / ____|  _ \  / ___|_   _| | | |  ___|  ___|      |

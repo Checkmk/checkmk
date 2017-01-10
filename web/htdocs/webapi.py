@@ -94,6 +94,9 @@ def page_api():
         if api_actions[action].get("locking", True):
             lock_exclusive() # unlock is done automatically
 
+        if is_read_only_mode_enabled() and not may_override_read_only_mode():
+            raise MKUserError(None, read_only_message())
+
         action_response = api_actions[action]["handler"](request_object)
         response = { "result_code": 0, "result": action_response }
 

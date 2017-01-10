@@ -42,6 +42,7 @@ wato_hidden_users              = []
 wato_user_attrs                = []
 wato_host_attrs                = []
 wato_legacy_eval               = False
+wato_read_only                 = {}
 
 def tag_alias(tag):
     for entry in wato_host_tags:

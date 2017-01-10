@@ -37,6 +37,7 @@
     * 4145 FIX: Fixed exception when setting output_format in wrong case
     * 4220 FIX: WATO folder filter: improve output of unknown folders
     * 4226 FIX: Custom inventory painters are now correctly loaded when declared with inventory_displayhints
+    * 4228 FIX: Context links to HW/SW inventory views are only shown when useful
 
     WATO:
     * 4142 New extended search dialog for rulesets and rules...

@@ -63,7 +63,7 @@ bool DownCommColumn::match(DowntimeOrComment *dt, void *data) {
     // TableDownComm always enumerates dowtimes/comments for both hosts and
     // services, regardless of what we are interested in. So we have to skip the
     // ones which have the wrong kind.
-    if (_is_service != (dt->_is_service != 0)) {
+    if (_is_service != dt->_is_service) {
         return false;
     }
 

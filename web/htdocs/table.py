@@ -170,14 +170,43 @@ def end():
         table = None
         return
 
-    table_id = table['id']
     rows = table["rows"]
 
     # Controls whether or not actions are available for a table
-    search_term = None
-    actions_visible = False
-    actions_enabled = (table["searchable"] or table["sortable"])
+    rows, actions_enabled, actions_visible, search_term, user_opts = _evaluate_user_opts(table, rows)
+
+    num_rows_unlimited = len(rows)
+    num_cols = len(table["headers"])
+
+    # Apply limit after search / sorting etc.
+    limit = table['limit']
+    if limit is not None:
+        rows = rows[:limit]
+
+    # Render header
+    _write_table(table, rows, actions_enabled, actions_visible, search_term)
+
+    if limit is not None and num_rows_unlimited > limit:
+        html.message(_('This table is limited to show only %d of %d rows. '
+                       'Click <a href="%s">here</a> to disable the limitation.') %
+                           (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
+
     if actions_enabled:
+        config.user.save_file("tableoptions", user_opts)
+    table = None
+
+
+def _evaluate_user_opts(table, rows):
+
+    table_id = table["id"]
+
+    search_term = None
+    actions_enabled = (table["searchable"] or table["sortable"])
+
+    if not actions_enabled:
+        return rows, False, False, None, None
+
+    else:
 
         user_opts = config.user.load_file("tableoptions", {})
         user_opts.setdefault(table_id, {})
@@ -217,25 +246,7 @@ def end():
                 sort_col, sort_reverse = map(int, sort.split(',', 1))
                 rows = _sort_rows(rows, sort_col, sort_reverse)
 
-    num_rows_unlimited = len(rows)
-    num_cols = len(table["headers"])
-
-    # Apply limit after search / sorting etc.
-    limit = table['limit']
-    if limit is not None:
-        rows = rows[:limit]
-
-    # Render header
-    _write_table(table, rows, actions_enabled, actions_visible, search_term)
-
-    if limit is not None and num_rows_unlimited > limit:
-        html.message(_('This table is limited to show only %d of %d rows. '
-                       'Click <a href="%s">here</a> to disable the limitation.') %
-                           (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
-
-    if actions_enabled:
-        config.user.save_file("tableoptions", user_opts)
-    table = None
+        return rows, actions_enabled, actions_visible, search_term, user_opts
 
 
 def _write_table(table, rows, actions_enabled, actions_visible, search_term):

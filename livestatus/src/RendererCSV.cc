@@ -27,7 +27,7 @@
 using std::string;
 using std::vector;
 
-RendererCSV::RendererCSV(OutputBuffer *output,
+RendererCSV::RendererCSV(OutputBuffer &output,
                          OutputBuffer::ResponseHeader response_header,
                          bool do_keep_alive, string invalid_header_message,
                          int timezone_offset, Encoding data_encoding)

@@ -51,7 +51,7 @@ struct HexEscape {
 class Renderer {
 public:
     static std::unique_ptr<Renderer> make(
-        OutputFormat format, OutputBuffer *output,
+        OutputFormat format, OutputBuffer &output,
         OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
         std::string invalid_header_message, const CSVSeparators &separators,
         int timezone_offset, Encoding data_encoding);
@@ -105,7 +105,7 @@ public:
     virtual void endDict() = 0;
 
 protected:
-    Renderer(OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
+    Renderer(OutputBuffer &output, OutputBuffer::ResponseHeader response_header,
              bool do_keep_alive, std::string invalid_header_message,
              int timezone_offset, Encoding data_encoding);
 
@@ -120,7 +120,7 @@ protected:
     const Encoding _data_encoding;
 
 private:
-    OutputBuffer *const _output;
+    OutputBuffer &_output;
     const int _timezone_offset;
     Logger *const _logger;
 

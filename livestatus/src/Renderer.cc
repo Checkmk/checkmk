@@ -44,19 +44,19 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-Renderer::Renderer(OutputBuffer *output,
+Renderer::Renderer(OutputBuffer &output,
                    OutputBuffer::ResponseHeader response_header,
                    bool do_keep_alive, string invalid_header_message,
                    int timezone_offset, Encoding data_encoding)
     : _data_encoding(data_encoding)
     , _output(output)
     , _timezone_offset(timezone_offset)
-    , _logger(output->getLogger()) {
-    _output->setResponseHeader(response_header);
-    _output->setDoKeepalive(do_keep_alive);
+    , _logger(output.getLogger()) {
+    _output.setResponseHeader(response_header);
+    _output.setDoKeepalive(do_keep_alive);
     if (invalid_header_message != "") {
-        _output->setError(OutputBuffer::ResponseCode::invalid_header,
-                          invalid_header_message);
+        _output.setError(OutputBuffer::ResponseCode::invalid_header,
+                         invalid_header_message);
     }
 }
 
@@ -64,7 +64,7 @@ Renderer::~Renderer() = default;
 
 // static
 unique_ptr<Renderer> Renderer::make(
-    OutputFormat format, OutputBuffer *output,
+    OutputFormat format, OutputBuffer &output,
     OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
     string invalid_header_message, const CSVSeparators &separators,
     int timezone_offset, Encoding data_encoding) {
@@ -95,14 +95,14 @@ unique_ptr<Renderer> Renderer::make(
 
 void Renderer::setError(OutputBuffer::ResponseCode code,
                         const string &message) {
-    _output->setError(code, message);
+    _output.setError(code, message);
 }
 
-size_t Renderer::size() const { return _output->size(); }
+size_t Renderer::size() const { return _output.size(); }
 
-void Renderer::add(const string &str) { _output->add(str); }
+void Renderer::add(const string &str) { _output.add(str); }
 
-void Renderer::add(const vector<char> &value) { _output->add(value); }
+void Renderer::add(const vector<char> &value) { _output.add(value); }
 
 void Renderer::output(double value) {
     // Funny cast for older non-C++11 headers

@@ -30,7 +30,7 @@ using std::string;
 using std::vector;
 
 RendererBrokenCSV::RendererBrokenCSV(
-    OutputBuffer *output, OutputBuffer::ResponseHeader response_header,
+    OutputBuffer &output, OutputBuffer::ResponseHeader response_header,
     bool do_keep_alive, string invalid_header_message, CSVSeparators separators,
     int timezone_offset, Encoding data_encoding)
     : Renderer(output, response_header, do_keep_alive, invalid_header_message,

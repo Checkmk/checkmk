@@ -57,7 +57,7 @@ private:
 // versions.
 class RendererBrokenCSV : public Renderer {
 public:
-    RendererBrokenCSV(OutputBuffer* output,
+    RendererBrokenCSV(OutputBuffer& output,
                       OutputBuffer::ResponseHeader response_header,
                       bool do_keep_alive, std::string invalid_header_message,
                       CSVSeparators separators, int timezone_offset,

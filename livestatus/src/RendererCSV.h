@@ -36,7 +36,7 @@
 // reference seems to be https://tools.ietf.org/html/rfc4180.
 class RendererCSV : public Renderer {
 public:
-    RendererCSV(OutputBuffer *output,
+    RendererCSV(OutputBuffer &output,
                 OutputBuffer::ResponseHeader response_header,
                 bool do_keep_alive, std::string invalid_header_message,
                 int timezone_offset, Encoding data_encoding);

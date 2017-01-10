@@ -27,7 +27,7 @@
 using std::string;
 using std::vector;
 
-RendererPython::RendererPython(OutputBuffer *output,
+RendererPython::RendererPython(OutputBuffer &output,
                                OutputBuffer::ResponseHeader response_header,
                                bool do_keep_alive,
                                string invalid_header_message,

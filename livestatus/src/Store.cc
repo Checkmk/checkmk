@@ -25,7 +25,6 @@
 // Some IWYU versions don't like it, some versions require it... :-P
 // IWYU pragma: no_include <memory>
 #include "Store.h"
-#include <chrono>
 #include <cstring>
 #include <ctime>
 #include <ostream>
@@ -48,9 +47,6 @@ extern unsigned long g_max_cached_messages;
 
 using mk::split;
 using mk::starts_with;
-using std::chrono::duration_cast;
-using std::chrono::milliseconds;
-using std::chrono::system_clock;
 using std::list;
 using std::lock_guard;
 using std::mutex;
@@ -126,10 +122,10 @@ void Store::registerComment(nebstruct_comment_data *data) {
 }
 
 namespace {
-list<string> getLines(InputBuffer *input) {
+list<string> getLines(InputBuffer &input) {
     list<string> lines;
-    while (!input->empty()) {
-        lines.push_back(input->nextLine());
+    while (!input.empty()) {
+        lines.push_back(input.nextLine());
         if (lines.back().empty()) {
             break;
         }
@@ -154,18 +150,18 @@ void Store::logRequest(const string &line, const list<string> &lines) {
     }
 }
 
-bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
-    output->reset();
-    InputBuffer::Result res = input->readRequest();
+bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
+    // Precondition: output has been reset
+    InputBuffer::Result res = input.readRequest();
     if (res != InputBuffer::Result::request_read) {
         if (res != InputBuffer::Result::eof) {
-            output->setError(
+            output.setError(
                 OutputBuffer::ResponseCode::incomplete_request,
                 "Client connection terminated while request still incomplete");
         }
         return false;
     }
-    string l = input->nextLine();
+    string l = input.nextLine();
     const char *line = l.c_str();
     if (strncmp(line, "GET ", 4) == 0) {
         auto lines = getLines(input);
@@ -179,7 +175,7 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     } else if (strncmp(line, "COMMAND ", 8) == 0) {
         logRequest(l, {});
         answerCommandRequest(lstrip(const_cast<char *>(line) + 8));
-        output->setDoKeepalive(true);
+        output.setDoKeepalive(true);
     } else if (strncmp(line, "LOGROTATE", 9) == 0) {
         logRequest(l, {});
         Informational(_logger) << "Forcing logfile rotation";
@@ -191,10 +187,10 @@ bool Store::answerRequest(InputBuffer *input, OutputBuffer *output) {
     } else {
         logRequest(l, {});
         Warning(_logger) << "Invalid request '" << l << "'";
-        output->setError(OutputBuffer::ResponseCode::invalid_request,
-                         "Invalid request method");
+        output.setError(OutputBuffer::ResponseCode::invalid_request,
+                        "Invalid request method");
     }
-    return output->doKeepalive();
+    return output.doKeepalive();
 }
 
 void Store::answerCommandRequest(const char *command) {
@@ -270,28 +266,21 @@ bool Store::handleCommand(const string &command) {
     return false;
 }
 
-void Store::answerGetRequest(const list<string> &lines, OutputBuffer *output,
-                             const char *tablename) {
-    output->reset();
-
-    if (tablename[0] == 0) {
-        output->setError(OutputBuffer::ResponseCode::invalid_request,
-                         "Invalid GET request, missing tablename");
+void Store::answerGetRequest(const list<string> &lines, OutputBuffer &output,
+                             const string &tablename) {
+    if (tablename.empty()) {
+        output.setError(OutputBuffer::ResponseCode::invalid_request,
+                        "Invalid GET request, missing tablename");
         return;
     }
 
     Table *table = findTable(tablename);
     if (table == nullptr) {
-        output->setError(
+        output.setError(
             OutputBuffer::ResponseCode::not_found,
             "Invalid GET request, no such table '" + string(tablename) + "'");
         return;
     }
 
-    auto start = system_clock::now();
     Query(lines, table, g_data_encoding).process(output);
-    auto elapsed = duration_cast<milliseconds>(system_clock::now() - start);
-    Informational(_logger) << "processed request in " << elapsed.count()
-                           << " ms, replied with " << output->size()
-                           << " bytes";
 }

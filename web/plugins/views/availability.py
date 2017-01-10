@@ -640,14 +640,8 @@ def render_bi_availability(title, aggr_rows):
 #   |  for loading, saving and using them is in the availability module.   |
 #   '----------------------------------------------------------------------'
 
-def render_annotations(annotations, by_host, what, avoptions, omit_service):
+def get_relevant_annotations(annotations, by_host, what, avoptions):
     (from_time, until_time), range_title = avoptions["range"]
-    format = "%H:%M:%S"
-    if time.localtime(from_time)[:3] != time.localtime(until_time-1)[:3]:
-        format = "%Y-%m-%d " + format
-    def render_date(ts):
-        return time.strftime(format, time.localtime(ts))
-
     annos_to_render = []
     annos_rendered = set()
 
@@ -666,7 +660,18 @@ def render_annotations(annotations, by_host, what, avoptions, omit_service):
 
     annos_to_render.sort(cmp=lambda a,b: cmp(a[1]["from"], b[1]["from"]) or cmp(a[0], b[0]))
 
-    labelling = avoptions["labelling"]
+    # Prepare rendering of time stamps
+    ts_format = "%H:%M:%S"
+    if time.localtime(from_time)[:3] != time.localtime(until_time-1)[:3]:
+        ts_format = "%Y-%m-%d " + ts_format
+    def render_date(ts):
+        return time.strftime(ts_format, time.localtime(ts))
+
+    return annos_to_render, render_date
+
+
+def render_annotations(annotations, av_rawdata, what, avoptions, omit_service):
+    annos_to_render, render_date = get_relevant_annotations(annotations, av_rawdata, what, avoptions)
 
     table.begin(title = _("Annotations"), omit_if_empty = True)
     for (site_id, host, service), annotation in annos_to_render:
@@ -685,7 +690,7 @@ def render_annotations(annotations, by_host, what, avoptions, omit_service):
         html.icon_button(delete_url, _("Delete this annotation"), "delete")
 
         if not omit_service:
-            if not "omit_host" in labelling:
+            if not "omit_host" in avoptions["labelling"]:
                 host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site_id), ("host", host)])
                 table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
 

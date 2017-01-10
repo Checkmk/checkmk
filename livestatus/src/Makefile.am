@@ -85,6 +85,7 @@ livestatus_so_SOURCES = \
         MetricsColumn.cc \
         NegatingFilter.cc \
         NullColumn.cc \
+        OffsetBoolColumn.cc \
         OffsetDoubleColumn.cc \
         OffsetIntColumn.cc \
         OffsetPerfdataColumn.cc \

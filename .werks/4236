@@ -1,0 +1,16 @@
+Title: Removed g_hostname and g_service_description from Check API
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i4
+Date: 1484066870
+Class: fix
+
+In previous versions the check and inventory plugins of Check_MK
+could use the variable <tt>g_hostname</tt> to refer to the host
+that is currently being checked and <tt>g_service_description</tt>
+to get the description of the service that is currently being
+checked.
+
+Instead of those variables, you can now use the functions
+<tt>host_name()</tt> and <tt>service_description()</tt>

@@ -31,6 +31,10 @@ class TableTest(html):
     written_text = ''
     tag_counter  = 0
 
+    def __init__(self):
+        super(TableTest, self).__init__()
+        self.myfile = "testfile"
+
     def lowlevel_write(self, text):
 
         if re.match(r'.*\.close_\w+[(][)]', '\n'.join(traceback.format_stack()), re.DOTALL):
@@ -99,6 +103,7 @@ def table_test_cubical(sortable, searchable, limit, output_format):
     separator = ';'
 
     html.add_var('_%s_sort'   % table_id, "1,0")
+    html.add_var('_%s_actions' % table_id, '1')
 
     rows = [ (i, i**3) for i in range(10) ]
     header = ["Number", "Cubical"]
@@ -138,7 +143,7 @@ def table_test_cubical(sortable, searchable, limit, output_format):
     else:
         assert False, 'Not yet implemented!'
 
-    data = [ tuple(map(int, row)) for row in data ]
+    data = [ tuple(map(int, row)) for row in data if row and row[0]]
     if limit is None:
         limit = len(rows)
 

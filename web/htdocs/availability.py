@@ -1099,6 +1099,8 @@ def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
 # }
 def layout_availability_table(what, group_title, availability_table, avoptions):
     time_range, range_title = avoptions["range"]
+    from_time, until_time = time_range
+    total_duration = until_time - from_time
 
     render_number = render_number_function(avoptions)
 
@@ -1203,7 +1205,6 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
         if show_timeline:
             row["timeline"] = layout_timeline(what, entry["timeline"], entry["considered_duration"], avoptions, style="inline")
 
-
         # Actuall cells with availability data
         row["cells"] = []
         for sid, css, sname, help in availability_columns[what]:
@@ -1266,16 +1267,16 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
             if show_summary == "average" or avoptions["timeformat"].startswith("percentage"):
                 number /= len_availability_table
                 if avoptions["timeformat"].startswith("percentage"):
-                    number *= entry["considered_duration"]
+                    number *= total_duration
 
             if not number:
                 css = "unused"
 
             if number and av_levels and sid in [ "ok", "up" ]:
-                css = "state%d" % check_av_levels(number, av_levels, entry["considered_duration"])
+                css = "state%d" % check_av_levels(number, av_levels, total_duration)
 
             css = css + " narrow number"
-            summary_cells.append((render_number(number, entry["considered_duration"]), css))
+            summary_cells.append((render_number(number, total_duration), css))
             if sid in os_states:
                 for aggr in os_aggrs:
                     if aggr == "cnt":

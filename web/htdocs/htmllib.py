@@ -640,9 +640,9 @@ class HTMLGenerator(Escaper, OutputFunnel):
         return self.write(self.render_javascript(code))
 
 
-    def javascript_file(self, src):
-        """ <script type="text/javascript" src="%(name)"/>\n """
-        return self.write(self._render_content_tag('script', '', type_="text/javascript", src=src))
+    def javascript_file(self, filename):
+        """ <script type="text/javascript" src="js/%(name)s.js"/>\n """
+        return self.write(self._render_content_tag('script', '', type_="text/javascript", src='js/%s.js' % filename))
 
 
     def render_img(self, src, **attrs):

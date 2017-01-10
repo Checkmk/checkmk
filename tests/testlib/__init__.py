@@ -276,10 +276,11 @@ class Site(object):
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                print("Executing .f12 in \"%s\"" % path)
+                print("Executing .f12 in \"%s\"..." % path)
                 assert os.system("cd \"%s\" ; "
-                                 "sudo PATH=$PATH ONLY_COPY=1 SITE=%s bash .f12" %
+                                 "sudo PATH=$PATH ONLY_COPY=1 SITE=%s bash -x .f12" %
                                       (path, self.id)) >> 8 == 0
+                print("Executing .f12 in \"%s\" DONE" % path)
 
 
     def rm_if_not_reusing(self):

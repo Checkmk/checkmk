@@ -14,6 +14,7 @@
     * 4122 FIX: ibm_svc_enclosure: added support for firmware >= 7.8...
     * 4176 FIX: postfix_mailq_status: fixed wrong status handling
     * 4225 FIX: db2_logsizes: Removed debug output (fixes regression)
+    * 4230 FIX: db2_logsizes Removed debug output (regression since 1.4.0i3)
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

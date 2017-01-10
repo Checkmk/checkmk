@@ -7,4 +7,5 @@ sudo rsync \
     --exclude=cee \
     --exclude=cee.py \
     -a * $OMD_ROOT/lib/python/cmk_base/
+sudo pycompile -q $OMD_ROOT/lib/python/cmk_base/cmk_base
 echo "Installed to $OMD_ROOT/lib/python/cmk_base/"

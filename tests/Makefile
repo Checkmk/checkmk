@@ -20,8 +20,11 @@ test-pylint-ci:
 	export TERM="linux" ; \
 	export PYLINT_ARGS="--output-format=cmk_parseable" ; \
 	export PYLINT_OUTPUT="$$WORKDIR/pylint.log" ; \
-	echo -n > $$WORKDIR/pylint.log ; \
-	$(MAKE) test-pylint
+	echo -n > "$$PYLINT_OUTPUT" ; \
+	$(MAKE) test-pylint ; \
+	echo "### PYLINT LOG ###############################################" ; \
+	cat "$$PYLINT_OUTPUT" ; \
+	echo "##############################################################"
 
 
 test-bandit:

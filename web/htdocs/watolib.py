@@ -6849,8 +6849,7 @@ def read_only_message():
 
     elif type(config.wato_read_only['enabled']) == tuple:
         end_time = config.wato_read_only['enabled'][1]
-        text += _("The read only mode is enabled until %s %s. ") % \
-                    (fmt_date(end_time), fmt_time(end_time))
+        text += _("The read only mode is enabled until %s. ") % render.date_and_time(end_time)
 
     if may_override_read_only_mode():
         text += _("But you are allowed to make changes anyway. ")

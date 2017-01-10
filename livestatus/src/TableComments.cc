@@ -29,6 +29,7 @@
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"  // IWYU pragma: keep
 #include "MonitoringCore.h"
+#include "OffsetBoolColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
 #include "OffsetTimeColumn.h"
@@ -61,7 +62,7 @@ TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
     addColumn(make_unique<OffsetIntColumn>(
         "type", "The type of the comment: 1 is host, 2 is service",
         DANGEROUS_OFFSETOF(Comment, _type), -1, -1, -1));
-    addColumn(make_unique<OffsetIntColumn>(
+    addColumn(make_unique<OffsetBoolColumn>(
         "is_service",
         "0, if this entry is for a host, 1 if it is for a service",
         DANGEROUS_OFFSETOF(Comment, _is_service), -1, -1, -1));

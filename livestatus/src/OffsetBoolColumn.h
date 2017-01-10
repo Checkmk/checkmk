@@ -22,36 +22,28 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "DowntimeOrComment.h"
+#ifndef OffsetBoolColumn_h
+#define OffsetBoolColumn_h
 
-DowntimeOrComment::DowntimeOrComment(nebstruct_downtime_struct *dt,
-                                     unsigned long id)
-    : _type(dt->downtime_type)
-    , _is_service(dt->service_description != nullptr)
-    , _host(find_host(dt->host_name))
-    , _service(_is_service
-                   ? find_service(dt->host_name, dt->service_description)
-                   : nullptr)
-    , _entry_time(dt->entry_time)
-    , _author_name(dt->author_name)
-    , _comment(dt->comment_data)
-    , _id(id) {}
+#include "config.h"  // IWYU pragma: keep
+#include <sys/types.h>
+#include <string>
+#include "OffsetIntColumn.h"
 
-DowntimeOrComment::~DowntimeOrComment() = default;
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
-Downtime::Downtime(nebstruct_downtime_struct *dt)
-    : DowntimeOrComment(dt, dt->downtime_id)
-    , _start_time(dt->start_time)
-    , _end_time(dt->end_time)
-    , _fixed(dt->fixed)
-    , _duration(dt->duration)
-    , _triggered_by(dt->triggered_by) {}
+class OffsetBoolColumn : public OffsetIntColumn {
+public:
+    OffsetBoolColumn(const std::string& name, const std::string& description,
+                     int offset, int indirect_offset, int extra_offset,
+                     int extra_extra_offset)
+        : OffsetIntColumn(name, description, offset, indirect_offset,
+                          extra_offset, extra_extra_offset) {}
+    int32_t getValue(void* row, contact* auth_user) override;
+};
 
-Comment::Comment(nebstruct_comment_struct *co)
-    : DowntimeOrComment(reinterpret_cast<nebstruct_downtime_struct *>(co),
-                        co->comment_id)
-    , _expire_time(co->expire_time)
-    , _persistent(co->persistent)
-    , _source(co->source)
-    , _entry_type(co->entry_type)
-    , _expires(co->expires) {}
+#endif  // OffsetBoolColumn_h

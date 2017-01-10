@@ -82,13 +82,13 @@
 class DowntimeOrComment {
 public:
     int _type;
+    bool _is_service;
     host *_host;
     service *_service;
     time_t _entry_time;
     std::string _author_name;
     std::string _comment;
     unsigned long _id;
-    int _is_service;
 
     DowntimeOrComment(nebstruct_downtime_struct *dt, unsigned long id);
     virtual ~DowntimeOrComment();

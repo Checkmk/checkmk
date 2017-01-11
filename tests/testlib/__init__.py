@@ -309,16 +309,26 @@ class Site(object):
     def start(self):
         if not self.is_running():
             assert omd(["start", self.id]) == 0
-            if not self.is_running():
-                raise Exception("The site %s is not running completely after starting" % self.id)
-
+            i = 0
+            while not self.is_running():
+                i += 1
+                if i > 10:
+                    raise Exception("Could not start site %s" % self.id)
+                print("The site %s is not running yet, sleeping... (round %d)" % (self.id, i))
+                sys.stdout.flush()
+                time.sleep(0.2)
 
     def stop(self):
         if self.is_running():
             assert omd(["stop", self.id]) == 0
-            if self.is_running():
-                raise Exception("The site %s is not completely stopped after stopping" % self.id)
-
+            i = 0
+            while self.is_running():
+                i += 1
+                if i > 10:
+                    raise Exception("Could not stop site %s" % self.id)
+                print("The site %s is still running, sleeping... (round %d)" % (self.id, i))
+                sys.stdout.flush()
+                time.sleep(0.2)
 
     def exists(self):
         return os.path.exists("/omd/sites/%s" % self.id)

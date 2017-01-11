@@ -32,6 +32,7 @@
     * 4232 FIX: tsm_storagepools: Fixed missing perfdata
     * 4259 FIX: aix_sap_processlist: fixed ValueError; if process has stopped and does not report any start time
     * 4261 FIX: db2_logsizes: fixed wrong discovery condition
+    * 4262 FIX: wmi_cpuload: fixed missing section handling...
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

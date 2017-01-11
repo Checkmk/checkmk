@@ -37,10 +37,15 @@ def check_wmi_cpuload(item, params, parsed):
     load15min = get_average("load_15min", this_time, load, 15)
 
     try:
-        cores = int(parsed["computer_system"].get(0, "NumberOfLogicalProcessors"))
-    except (ValueError, KeyError), e:
+        computer_system = parsed["computer_system"]
+    except KeyError:
+        computer_system = {}
+
+    try:
+        cores = int(computer_system.get(0, "NumberOfLogicalProcessors"))
+    except ValueError:
         # NumberOfLogicalProcessors can be an empty string, not sure why
-        cores = int(parsed["computer_system"].get(0, "NumberOfProcessors"))
+        cores = 1
 
     return check_cpu_load_generic(params, (load, load5min, load15min), cores)
 

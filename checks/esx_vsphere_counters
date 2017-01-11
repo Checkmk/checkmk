@@ -146,11 +146,13 @@ def esx_vsphere_get_average(values):
     int_values = map(int, values)
     return sum(int_values) / float(len(int_values))
 
+
 # esx datastores are either shown by human readable name (if available) or by the uid
 def esx_vsphere_counters_get_item_mapping(parsed):
     map_instance_to_item = {}
-    for instance in parsed.get("datastore.read", {}).keys():
-        map_instance_to_item[instance] = instance
+    for counter in [ "read", "write", "datastoreReadIops", "datastoreWriteIops", "sizeNormalizedDatstoreLatency" ]:
+        for instance in parsed.get("datastore." + counter, {}).keys():
+            map_instance_to_item[instance] = instance
 
     for instance, values in parsed.get("datastore.name", {}).items():
         if instance in map_instance_to_item and values[0][0] != "":

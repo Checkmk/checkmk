@@ -1,0 +1,10 @@
+Title: db2_logsizes: fixed wrong discovery condition
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1484120671
+
+

@@ -1,6 +1,6 @@
 title: Sentry PDU Devices: Outlets
 agents: snmp
-catalog: hw/other
+catalog: hw/power/servertech
 license: GPL
 distribution: check_mk
 description:

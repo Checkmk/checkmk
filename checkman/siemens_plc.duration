@@ -1,6 +1,6 @@
 title: Siemens PLC: Duration values
 agents: siemens_plc
-catalog: hw/other
+catalog: hw/server/siemens
 license: GPL
 distribution: check_mk
 description:

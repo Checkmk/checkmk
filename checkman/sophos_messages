@@ -1,6 +1,6 @@
 title: Sophos Email Appliance: Inbound and outbound messages
 agents: snmp
-catalog: hw/other
+catalog: hw/app/sophos
 license: GPL
 distribution: check_mk
 description:

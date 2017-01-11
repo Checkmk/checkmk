@@ -1,6 +1,6 @@
 title: Perle Mediaconverter: Chassis temperature
 agents: snmp
-catalog: hw/other
+catalog: hw/app/perle
 license: GPL
 distribution: check_mk
 description:

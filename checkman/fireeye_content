@@ -1,6 +1,6 @@
 title: FireEye Appliances: Content version
 agents: snmp
-catalog: hw/other
+catalog: hw/network/fireeye
 license: GPL
 distribution: check_mk
 description:

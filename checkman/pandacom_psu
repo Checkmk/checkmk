@@ -1,6 +1,6 @@
 title: Pandacom SpeedCarrier Chassis 5u: Power Supply State
 agents: snmp
-catalog: hw/other
+catalog: hw/network/pandacom
 license: GPL
 distribution: check_mk
 description:

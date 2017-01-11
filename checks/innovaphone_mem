@@ -38,6 +38,6 @@ check_info["innovaphone_mem"] = {
     "service_description"   : "Memory used",
     "has_perfdata"          : True,
     "group"                 : "innovaphone_mem",
-    "include"               : ["innovaphone.include"],
+    "includes"              : ["innovaphone.include"],
 }
 

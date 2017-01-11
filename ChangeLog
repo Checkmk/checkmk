@@ -20,6 +20,9 @@
     * 4145 FIX: Fixed exception when setting output_format in wrong case
     * 4226 FIX: Custom inventory painters are now correctly loaded when declared with inventory_displayhints
 
+    Reporting & Availability:
+    * 4267 FIX: PDF export of filtered alert statistics view was always empty
+
 
 1.2.8p15:
     Core & Setup:

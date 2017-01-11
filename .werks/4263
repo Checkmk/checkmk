@@ -1,0 +1,10 @@
+Title: oracle_crs_res: fixed UnboundLocalError; 'crs_nodename' referenced before assignment
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1484127916
+
+Above error occurs if section is empty.

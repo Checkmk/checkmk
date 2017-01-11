@@ -1,0 +1,10 @@
+Title: mysql.innodb_io: fixed incomplete data handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1484144358
+Class: fix
+
+If the values 'Innodb_data_read' and 'Innodb_data_written' are missing
+the check no longer crashes but reports 'Incomplete agent output'

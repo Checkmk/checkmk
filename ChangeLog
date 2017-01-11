@@ -1,4 +1,7 @@
 1.4.0i4:
+    Core & Setup:
+    * 4269 FIX: Verifying unexpected keys in check_info while loading checks...
+
     Checks & Agents:
     * 4104 veeam_tapejobs: New check to monitor Veeam tape jobs
     * 4170 local: local check is now clusteraware. Best or worst state in cluster mode can be configured...

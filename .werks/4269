@@ -1,0 +1,10 @@
+Title: Verifying unexpected keys in check_info while loading checks
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.4.0i4
+Date: 1484148162
+Class: fix
+
+When a check registers an unexpected key in the check_info dictionary,
+Check_MK is now detecting that and terminating with an error message.

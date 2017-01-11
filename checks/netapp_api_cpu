@@ -74,8 +74,8 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
 
     now = time.time()
 
-    cpu_busy = int(data["cpu_busy"])
-    num_cpus = int(data["num_processors"])
+    cpu_busy      = int(data["cpu_busy"])
+    num_cpus_str  = data.get("num_processors")
     ticks_per_sec = get_rate("netapp_api_cpu.utilization", now, cpu_busy, onwrap=RAISE)
     cpusecs_per_sec = ticks_per_sec / 1000000.0
     used_perc = 100.0 * cpusecs_per_sec
@@ -88,8 +88,10 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
         used_perc = 100
 
     state, infotext, perfdata = check_cpu_util(used_perc, params, now).next()
-    perfdata[0] = perfdata[0][:5] + (num_cpus,)
-    infotext += ", %d CPUs" % num_cpus
+    if num_cpus_str is not None:
+        num_cpus = int(num_cpus_str)
+        perfdata[0] = perfdata[0][:5] + (num_cpus,)
+        infotext += ", %d CPUs" % num_cpus
     return state, infotext, perfdata
 
 # Clustermode CPU utilization

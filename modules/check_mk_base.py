@@ -1611,6 +1611,19 @@ def check_unimplemented(checkname, params, info):
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to
 # use the legacy variables which are not set by newer checks.
 def convert_check_info():
+    check_info_defaults = {
+        "inventory_function"      : None,
+        "parse_function"          : None,
+        "group"                   : None,
+        "snmp_info"               : None,
+        "snmp_scan_function"      : None,
+        "handle_empty_info"       : False,
+        "handle_real_time_checks" : False,
+        "default_levels_variable" : None,
+        "node_info"               : False,
+        "extra_sections"          : [],
+    }
+
     for check_type, info in check_info.items():
         basename = check_type.split(".")[0]
 
@@ -1641,18 +1654,16 @@ def convert_check_info():
                 "extra_sections"          : [],
             }
         else:
+            # Ensure that there are only the known keys set. Is meant to detect typos etc.
+            for key in info.keys():
+                if key not in check_info_defaults:
+                    raise MKGeneralException("The check '%s' declares an unexpected key '%s' in 'check_info'." %
+                                                                                    (check_type, key))
+
             # Check does already use new API. Make sure that all keys are present,
             # extra check-specific information into file-specific variables.
-            info.setdefault("inventory_function", None)
-            info.setdefault("parse_function", None)
-            info.setdefault("group", None)
-            info.setdefault("snmp_info", None)
-            info.setdefault("snmp_scan_function", None)
-            info.setdefault("handle_empty_info", False)
-            info.setdefault("handle_real_time_checks", False)
-            info.setdefault("default_levels_variable", None)
-            info.setdefault("node_info", False)
-            info.setdefault("extra_sections", [])
+            for key, val in check_info_defaults.items():
+                info.setdefault(key, val)
 
             # Include files are related to the check file (= the basename),
             # not to the (sub-)check. So we keep them in check_includes.

@@ -68,6 +68,7 @@
 
     Reporting & Availability:
     * 3652 FIX: Unbreak PDF exports...
+    * 4267 FIX: PDF export of filtered alert statistics view was always empty
 
     Event Console:
     * 4154 Do not send notifications if host found and currently in downtime...

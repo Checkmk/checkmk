@@ -1,0 +1,10 @@
+Title: netapp_api_cpu: fixed missing number of cpus
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1484130017
+
+

@@ -21,6 +21,7 @@
     * 4263 FIX: oracle_crs_res: fixed UnboundLocalError; 'crs_nodename' referenced before assignment...
     * 4264 FIX: wmic_process: fixed invalid info handling
     * 4211 FIX: esx_vsphere_counters: No longer crash when counters are available for instances without a read value
+    * 4265 FIX: netapp_api_cpu: fixed missing number of cpus
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

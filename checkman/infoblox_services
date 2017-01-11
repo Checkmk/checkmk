@@ -1,6 +1,6 @@
 title: Infoblox devices: Services
 agents: snmp
-catalog: hw/other
+catalog: hw/network/infoblox
 license: GPL
 distribution: check_mk
 description:

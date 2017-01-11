@@ -1,6 +1,6 @@
 title: ICOM Repeater: Temperature
 agents: snmp
-catalog: hw/other
+catalog: hw/network/icom
 license: GPL
 distribution: check_mk
 description:

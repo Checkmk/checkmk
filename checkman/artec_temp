@@ -1,6 +1,6 @@
 title: ARTEC Mail Archive Appliance: Temperature
 agents: snmp
-catalog: hw/other
+catalog: hw/app/artec
 license: GPL
 distribution: check_mk
 description:

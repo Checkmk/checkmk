@@ -1,6 +1,6 @@
 title: ARTEC Mail Archive Appliance: Number and Types Of Documents
 agents: snmp
-catalog: hw/other
+catalog: hw/app/artec
 license: GPL
 distribution: check_mk
 description:

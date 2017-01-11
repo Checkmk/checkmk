@@ -1,6 +1,6 @@
 title: Supermicro Health Sensors
 agents: snmp
-catalog: hw/other
+catalog: hw/server/supermicro
 license: GPL
 distribution: check_mk
 description:

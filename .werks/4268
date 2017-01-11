@@ -1,0 +1,12 @@
+Title: cisco_vpn_tunnel: Reporting zero traffic in case the tunnel is down
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1484138387
+Class: fix
+
+Previous versions of the check were not providing any performance data in case
+the tunnel was down. The graphs were showing flat lines for the time the tunnel
+was down which could lead to confusions because in fact there was no traffic
+at all.

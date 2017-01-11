@@ -32,13 +32,13 @@ def inventory_sentry_pdu(info):
 
 def check_sentry_pdu(item, params, info):
     states = {
-        0: "off",
-        1: "on",
-        2: "offWait",
-        3: "onWait",
-        4: "offError",
-        5: "onError",
-        6: "noComm",
+        0 : "off",
+        1 : "on",
+        2 : "off wait",
+        3 : "on wait",
+        4 : "off error",
+        5 : "on error",
+        6 : "no comm",
     }
 
     for name, state, power_str in info:

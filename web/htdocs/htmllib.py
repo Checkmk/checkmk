@@ -1899,7 +1899,7 @@ class html(DeprecationWrapper):
             id_ = "ti_%s" % varname
 
         onkeydown = None if not submit else\
-                    HTML('function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };' % submit)
+                    HTML('function(e) { if (!e) e = window.event; textinput_enter_submit(e, \'%s\'); };' % submit)
         # TODO: REPLACE?
 #        if submit is not None:
 #            self.final_javascript('document.getElementById("%s").onkeydown = '

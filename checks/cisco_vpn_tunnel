@@ -466,7 +466,8 @@ def check_cisco_vpn_tunnel(item, params, parsed):
                [('if_in_octets',  phase1_in_rate + phase2_in_rate),
                 ('if_out_octets', phase1_out_rate + phase2_out_rate)]
 
-    return tunnel_not_found_state, "%sTunnel is missing" % alias
+    return tunnel_not_found_state, "%sTunnel is missing" % alias, \
+            [('if_in_octets', 0), ('if_out_octets', 0)]
 
 
 check_info["cisco_vpn_tunnel"] = {

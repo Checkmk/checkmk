@@ -52,6 +52,7 @@
     * 4273 FIX: innovaphone_temp: Fixed missing include of temperature.include
     * 4274 FIX: eltek_outdoor_temp: Fixed non working default levels
     * 4275 FIX: ibm_imm_voltage: Fixed not working perfdata processing
+    * 4010 FIX: netapp_api_qtree_quota: now only includes quotas where disk-limits are set
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

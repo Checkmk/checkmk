@@ -31,10 +31,10 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "OutputBuffer.h"
 #include "data_encoding.h"
 class CSVSeparators;
 class Logger;
+class OutputBuffer;
 
 enum class OutputFormat { csv, broken_csv, json, python, python3 };
 
@@ -50,15 +50,14 @@ struct HexEscape {
 
 class Renderer {
 public:
-    static std::unique_ptr<Renderer> make(
-        OutputFormat format, OutputBuffer &output,
-        OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
-        std::string invalid_header_message, const CSVSeparators &separators,
-        int timezone_offset, Encoding data_encoding);
+    static std::unique_ptr<Renderer> make(OutputFormat format,
+                                          OutputBuffer &output,
+                                          const CSVSeparators &separators,
+                                          int timezone_offset,
+                                          Encoding data_encoding);
 
     virtual ~Renderer();
 
-    void setError(OutputBuffer::ResponseCode code, const std::string &message);
     std::size_t size() const;
 
     template <typename T>
@@ -105,9 +104,7 @@ public:
     virtual void endDict() = 0;
 
 protected:
-    Renderer(OutputBuffer &output, OutputBuffer::ResponseHeader response_header,
-             bool do_keep_alive, std::string invalid_header_message,
-             int timezone_offset, Encoding data_encoding);
+    Renderer(OutputBuffer &output, int timezone_offset, Encoding data_encoding);
 
     void add(const std::string &str);
     void add(const std::vector<char> &value);
@@ -158,10 +155,6 @@ public:
     ~QueryRenderer() { renderer().endQuery(); }
 
     Renderer &renderer() const { return _renderer; }
-
-    void setError(OutputBuffer::ResponseCode code, const std::string &message) {
-        renderer().setError(code, message);
-    }
 
     std::size_t size() const { return renderer().size(); }
 

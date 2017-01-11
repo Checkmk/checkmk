@@ -282,5 +282,5 @@ void Store::answerGetRequest(const list<string> &lines, OutputBuffer &output,
         return;
     }
 
-    Query(lines, table, g_data_encoding).process(output);
+    Query(lines, table, g_data_encoding, output).process();
 }

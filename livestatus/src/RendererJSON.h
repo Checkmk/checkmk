@@ -28,16 +28,14 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include <vector>
-#include "OutputBuffer.h"
 #include "Renderer.h"
 #include "data_encoding.h"
+class OutputBuffer;
 
 class RendererJSON : public Renderer {
 public:
-    RendererJSON(OutputBuffer &output,
-                 OutputBuffer::ResponseHeader response_header,
-                 bool do_keep_alive, std::string invalid_header_message,
-                 int timezone_offset, Encoding data_encoding);
+    RendererJSON(OutputBuffer &output, int timezone_offset,
+                 Encoding data_encoding);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;

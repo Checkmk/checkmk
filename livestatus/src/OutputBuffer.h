@@ -36,12 +36,10 @@ public:
     enum class ResponseCode {
         ok = 200,
         invalid_header = 400,
-        unauthorized = 403,
         not_found = 404,
         limit_exceeded = 413,
         incomplete_request = 451,
         invalid_request = 452,
-        unknown_column = 450,
     };
 
     enum class ResponseHeader { off, fixed16 };

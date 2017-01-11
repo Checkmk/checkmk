@@ -28,18 +28,16 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include <vector>
-#include "OutputBuffer.h"
 #include "Renderer.h"
 #include "data_encoding.h"
+class OutputBuffer;
 
 // Note: The CSV format is a bit underspecified, but the most "authorative"
 // reference seems to be https://tools.ietf.org/html/rfc4180.
 class RendererCSV : public Renderer {
 public:
-    RendererCSV(OutputBuffer &output,
-                OutputBuffer::ResponseHeader response_header,
-                bool do_keep_alive, std::string invalid_header_message,
-                int timezone_offset, Encoding data_encoding);
+    RendererCSV(OutputBuffer &output, int timezone_offset,
+                Encoding data_encoding);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;

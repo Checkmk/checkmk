@@ -28,16 +28,14 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include <vector>
-#include "OutputBuffer.h"
 #include "Renderer.h"
 #include "data_encoding.h"
+class OutputBuffer;
 
 class RendererPython3 : public Renderer {
 public:
-    RendererPython3(OutputBuffer &output,
-                    OutputBuffer::ResponseHeader response_header,
-                    bool do_keep_alive, std::string invalid_header_message,
-                    int timezone_offset, Encoding data_encoding);
+    RendererPython3(OutputBuffer &output, int timezone_offset,
+                    Encoding data_encoding);
 
     void outputNull() override;
     void outputBlob(const std::vector<char> &value) override;

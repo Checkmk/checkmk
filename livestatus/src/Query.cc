@@ -65,6 +65,7 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
     : _data_encoding(data_encoding)
     , _output(output)
     , _table(table)
+    , _keepalive(false)
     , _auth_user(nullptr)
     , _wait_timeout(0)
     , _wait_trigger(nullptr)
@@ -530,9 +531,9 @@ void Query::parseKeepAliveLine(char *line) {
     }
 
     if (strcmp(value, "on") == 0) {
-        _output.setDoKeepalive(true);
+        _keepalive = true;
     } else if (strcmp(value, "off") == 0) {
-        _output.setDoKeepalive(false);
+        _keepalive = false;
     } else {
         invalidHeader("Invalid value for KeepAlive: must be 'on' or 'off'");
     }
@@ -664,7 +665,7 @@ void Query::parseLocaltimeLine(char *line) {
 
 bool Query::doStats() { return !_stats_columns.empty(); }
 
-void Query::process() {
+bool Query::process() {
     // Precondition: output has been reset
     auto start_time = system_clock::now();
     auto renderer = Renderer::make(_output_format, _output, _separators,
@@ -680,6 +681,7 @@ void Query::process() {
     Informational(_logger) << "processed request in " << elapsed.count()
                            << " ms, replied with " << _output.size()
                            << " bytes";
+    return _keepalive;
 }
 
 void Query::start(QueryRenderer &q) {

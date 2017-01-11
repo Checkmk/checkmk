@@ -56,9 +56,6 @@ public:
 
     void setResponseHeader(ResponseHeader r) { _response_header = r; }
 
-    void setDoKeepalive(bool d) { _do_keepalive = d; }
-    bool doKeepalive() { return _do_keepalive; }
-
     void setError(ResponseCode code, const std::string &message);
 
     Logger *getLogger() const { return _logger; }
@@ -71,7 +68,6 @@ private:
     ResponseHeader _response_header;
     ResponseCode _response_code;
     std::string _error_message;
-    bool _do_keepalive;
     Logger *const _logger;
 
     // We use dynamically allocated memory => disable copy/assignment

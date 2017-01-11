@@ -106,7 +106,7 @@ private:
     Table *findTable(const std::string &name);
     void logRequest(const std::string &line,
                     const std::list<std::string> &lines);
-    void answerGetRequest(const std::list<std::string> &lines,
+    bool answerGetRequest(const std::list<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
     void answerCommandRequest(const char *);
     bool handleCommand(const std::string &command);

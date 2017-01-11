@@ -55,7 +55,7 @@ public:
     Query(const std::list<std::string> &lines, Table *, Encoding data_encoding,
           OutputBuffer &output);
 
-    void process();
+    bool process();
 
     bool processDataset(void *);
 
@@ -78,6 +78,7 @@ private:
     OutputBuffer &_output;
     QueryRenderer *_renderer_query;
     Table *_table;
+    bool _keepalive;
     AndingFilter _filter;
     contact *_auth_user;
     AndingFilter _wait_condition;

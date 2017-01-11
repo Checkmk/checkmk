@@ -51,6 +51,7 @@
     * 4272 FIX: casa_cpu_temp: Fixed missing include of temperature.include
     * 4273 FIX: innovaphone_temp: Fixed missing include of temperature.include
     * 4274 FIX: eltek_outdoor_temp: Fixed non working default levels
+    * 4275 FIX: ibm_imm_voltage: Fixed not working perfdata processing
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

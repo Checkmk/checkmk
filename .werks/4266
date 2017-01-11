@@ -1,0 +1,10 @@
+Title: quantum_libsmall_status: fixed scan function
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1484131089
+
+

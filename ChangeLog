@@ -22,6 +22,7 @@
     * 4264 FIX: wmic_process: fixed invalid info handling
     * 4211 FIX: esx_vsphere_counters: No longer crash when counters are available for instances without a read value
     * 4265 FIX: netapp_api_cpu: fixed missing number of cpus
+    * 4266 FIX: quantum_libsmall_status: fixed scan function
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

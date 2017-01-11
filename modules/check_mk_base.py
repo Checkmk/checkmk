@@ -1612,6 +1612,7 @@ def check_unimplemented(checkname, params, info):
 # use the legacy variables which are not set by newer checks.
 def convert_check_info():
     check_info_defaults = {
+        "check_function"          : check_unimplemented,
         "inventory_function"      : None,
         "parse_function"          : None,
         "group"                   : None,
@@ -1622,6 +1623,8 @@ def convert_check_info():
         "default_levels_variable" : None,
         "node_info"               : False,
         "extra_sections"          : [],
+        "service_description"     : None,
+        "has_perfdata"            : False,
     }
 
     for check_type, info in check_info.items():

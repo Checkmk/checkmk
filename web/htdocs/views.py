@@ -1581,7 +1581,6 @@ def show_view(view, show_heading = False, show_buttons = True,
     else:
         rows = []
 
-
     # Apply non-Livestatus filters
     for filter in all_active_filters:
         rows = filter.filter_table(rows)
@@ -2216,8 +2215,12 @@ def do_query_data(query, columns, add_columns, merge_column,
     query += "Columns: %s\n" % " ".join(columns)
     query += add_headers
     sites.live().set_prepend_site(True)
+
     if limit != None:
         sites.live().set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
+    else:
+        sites.live().set_limit(None)
+
     if config.debug_livestatus_queries \
             and html.output_format == "html" and display_options.enabled(display_options.W):
         html.write('<div class="livestatus message">'

@@ -882,16 +882,13 @@ class FilterLogClass(Filter):
             (8, _("Alert Handlers")) ]
 
         Filter.__init__(self, "log_class", _("Logentry class"),
-                "log", [ "logclass%d" % l for l, c in self.log_classes ], [])
+                "log", [ "logclass_filled" ] + [ "logclass%d" % l for l, c in self.log_classes ], [])
 
     def double_height(self):
         return True
 
     def display(self):
-        if html.var("filled_in"):
-            defval = ""
-        else:
-            defval = "on"
+        html.hidden_field("logclass_filled", "1", add_var=True)
         html.open_table(cellspacing=0, cellpadding=0)
         if config.filter_columns == 1:
             num_cols = 4
@@ -902,7 +899,7 @@ class FilterLogClass(Filter):
             if col == 1:
                 html.open_tr()
             html.open_td()
-            html.checkbox("logclass%d" % l, defval)
+            html.checkbox("logclass%d" % l, True)
             html.write(c)
             html.close_td()
             if col == num_cols:
@@ -918,14 +915,10 @@ class FilterLogClass(Filter):
 
     def filter(self, infoname):
         headers = []
-        if html.var("filled_in"):
-            defval = ""
-        else:
-            defval = "on"
-
         for l, c in self.log_classes:
-            if html.var("logclass%d" % l, defval) == "on":
+            if html.get_checkbox("logclass%d" % l) != False:
                 headers.append("Filter: class = %d\n" % l)
+
         if len(headers) == 0:
             return "Limit: 0\n" # no class allowed
         else:

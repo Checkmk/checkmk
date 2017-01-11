@@ -15,6 +15,7 @@
     * 4260 FIX: db2_logsizes: removed pprint statement
     * 4261 FIX: db2_logsizes: fixed wrong discovery condition
     * 4262 FIX: wmi_cpuload: fixed missing section handling...
+    * 4263 FIX: oracle_crs_res: fixed UnboundLocalError; 'crs_nodename' referenced before assignment...
 
     Multisite:
     * 4145 FIX: Fixed exception when setting output_format in wrong case

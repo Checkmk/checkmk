@@ -26,9 +26,9 @@
 
 
 factory_settings["ups_eaton_enviroment_default"] = {
-    "temp" : (40, 50),
+    "temp"        : (40, 50),
     "remote_temp" : (40, 50),
-    "humidity"  : (65, 80),
+    "humidity"    : (65, 80),
 }
 
 
@@ -43,19 +43,26 @@ def check_ups_eaton_enviroment(item, params, info):
     state = 0
     messages = []
     perfdata = []
-    for sensor, sensor_name, unit in [("temp", "Temperature", u"°C"), ("remote_temp", "Remote-Temperature", u"°C"), ("humidity", "Humidity", "%")]:
+    for sensor, sensor_name, unit in [
+        ("temp", "Temperature", u"°C"),
+        ("remote_temp", "Remote-Temperature", u"°C"),
+        ("humidity", "Humidity", "%")]:
+
         warn, crit = params.get(sensor)
         perfdata.append((sensor, wert[i], warn, crit))
         text = "%s: %d%s (warn/crit at %d%s/%d%s)" % \
-        (sensor_name, wert[i],unit,  warn, unit, crit, unit)
+               (sensor_name, wert[i],unit,  warn, unit, crit, unit)
+
         if wert[i] >= crit:
             state = 2
             text += "(!!)"
         elif wert[i] >= warn:
             state = max(state, 1)
             text += "(!)"
+
         i += 1
         messages.append(text)
+
     return (state, ", ".join(messages), perfdata)
 
 
@@ -67,5 +74,8 @@ check_info['ups_eaton_enviroment'] = {
   "has_perfdata"            : True,
   "group"                   : "eaton_enviroment",
   "snmp_info"               : ( ".1.3.6.1.4.1.534.1.6", [1,5,6 ] ),
-  "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.705.1.2", ".1.3.6.1.4.1.534.1", ".1.3.6.1.4.1.705.1"],
+  "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
+                                     [".1.3.6.1.4.1.705.1.2",
+                                      ".1.3.6.1.4.1.534.1",
+                                      ".1.3.6.1.4.1.705.1"],
 }

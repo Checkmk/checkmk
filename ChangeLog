@@ -32,6 +32,7 @@
     * 4271 FIX: innovaphone_mem innovaphone_channels: Fixed wrong include statement
     * 4272 FIX: casa_cpu_temp: Fixed missing include of temperature.include
     * 4273 FIX: innovaphone_temp: Fixed missing include of temperature.include
+    * 4274 FIX: eltek_outdoor_temp: Fixed non working default levels
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

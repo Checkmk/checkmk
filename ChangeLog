@@ -25,6 +25,7 @@
     * 4288 FIX: sentry_pdu: fixed data handling if power value is missing
     * 4289 FIX: mysql.innodb_io: fixed incomplete data handling...
     * 4212 FIX: jolokia_info: Fix crash for certain product versions.
+    * 4290 FIX: cisco_fru_power: fixed invalid admin state handling
 
     Multisite:
     * 4145 FIX: Fixed exception when setting output_format in wrong case

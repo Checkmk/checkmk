@@ -24,29 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 # FRU = Field Replacable Unit
 
+
 cisco_fru_poweradmin_types = {
-  '1': ( 'on',                   0 ),
-  '2': ( 'off',                  2 ),
-  '3': ( 'inlineAuto',           1 ),
-  '4': ( 'inlineOn',             1 ),
-  '5': ( 'powerCycle',           1 ),
+  '1': ( 'on',          0 ),
+  '2': ( 'off',         2 ),
+  '3': ( 'inline auto', 1 ),
+  '4': ( 'inline on',   1 ),
+  '5': ( 'power cycle', 1 ),
 }
 
+
 cisco_fru_poweroper_types = {
-  '1' : ('offEnvOther',          1 ),
-  '2' : ('on',                   0 ),
-  '3' : ('offAdmin',             1 ),
-  '4' : ('offDenied',            2 ),
-  '5' : ('offEnvPower',          2 ),
-  '6' : ('offEnvTemp',           2 ),
-  '7' : ('offEnvFan',            2 ),
-  '8' : ('failed',               2 ),
-  '9' : ('onButFanFail',         1 ),
-  '10': ('offCooling',           1 ),
-  '11': ('offConnectorRating',   1 ),
-  '12': ('onButInlinePowerFail', 2 ),
+  '1' : ('off env other',            1 ),
+  '2' : ('on',                       0 ),
+  '3' : ('off admin',                1 ),
+  '4' : ('off denied',               2 ),
+  '5' : ('off env power',            2 ),
+  '6' : ('off env temp',             2 ),
+  '7' : ('off env fan',              2 ),
+  '8' : ('failed',                   2 ),
+  '9' : ('on but fan fail',          1 ),
+  '10': ('off cooling',              1 ),
+  '11': ('off connector rating',     1 ),
+  '12': ('on but inline power fail', 2 ),
 }
 
 
@@ -63,24 +66,11 @@ def inventory_cisco_fru_power(info):
 def check_cisco_fru_power(item, _no_params, info):
     for oid_end, admin_state, oper_state in info:
         if oid_end == item:
-            worst_state = 0
-            infotexts = []
-
-            for (name, state), title in [
-              ( cisco_fru_poweroper_types[oper_state],   "Operational state" ),
-              ( cisco_fru_poweradmin_types[admin_state], "Administrative state" )]:
-
-                text = title + ": " + name
-                worst_state = max(state, worst_state)
-                if state == 1:
-                    text += '(!)'
-                elif state == 2:
-                    text += '(!!)'
-                infotexts.append(text)
-
-            return worst_state, ", ".join(infotexts)
-
-    return 3, "No FRU with this id found"
+            for mapping, status, title in [
+              ( cisco_fru_poweroper_types,  oper_state,  "Operational state" ),
+              ( cisco_fru_poweradmin_types, admin_state, "Administrative state" )]:
+                state_readable, state = mapping.get(status, ("unknown[%s]" % status, 3))
+                yield state, "%s: %s" % (title, state_readable)
 
 
 check_info["cisco_fru_power"] = {

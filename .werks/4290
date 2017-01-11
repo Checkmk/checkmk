@@ -1,0 +1,9 @@
+Title: cisco_fru_power: fixed invalid admin state handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1484147800
+Class: fix
+
+

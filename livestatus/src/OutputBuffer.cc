@@ -57,7 +57,6 @@ void OutputBuffer::reset() {
     // because of legacy reasons... :-/
     _response_header = ResponseHeader::off;
     _response_code = ResponseCode::ok;
-    _do_keepalive = false;
     _error_message = "";
 }
 

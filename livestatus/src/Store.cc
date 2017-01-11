@@ -40,11 +40,11 @@
 #include "Table.h"
 #include "data_encoding.h"
 #include "mk_logwatch.h"
-#include "strutil.h"
 
 extern Encoding g_data_encoding;
 extern unsigned long g_max_cached_messages;
 
+using mk::lstrip;
 using mk::split;
 using mk::starts_with;
 using std::list;
@@ -161,36 +161,38 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
         }
         return false;
     }
-    string l = input.nextLine();
-    const char *line = l.c_str();
-    if (strncmp(line, "GET ", 4) == 0) {
+    string line = input.nextLine();
+    if (starts_with(line, "GET ")) {
         auto lines = getLines(input);
-        logRequest(l, lines);
-        answerGetRequest(lines, output, lstrip(const_cast<char *>(line) + 4));
-    } else if (strcmp(line, "GET") == 0) {
+        logRequest(line, lines);
+        return answerGetRequest(lines, output, lstrip(line.substr(4)));
+    }
+    if (starts_with(line, "GET")) {
         // only to get error message
         auto lines = getLines(input);
-        logRequest(l, lines);
-        answerGetRequest(lines, output, "");
-    } else if (strncmp(line, "COMMAND ", 8) == 0) {
-        logRequest(l, {});
-        answerCommandRequest(lstrip(const_cast<char *>(line) + 8));
-        output.setDoKeepalive(true);
-    } else if (strncmp(line, "LOGROTATE", 9) == 0) {
-        logRequest(l, {});
+        logRequest(line, lines);
+        return answerGetRequest(lines, output, "");
+    }
+    if (starts_with(line, "COMMAND ")) {
+        logRequest(line, {});
+        answerCommandRequest(lstrip(line.substr(8)).c_str());
+        return true;
+    }
+    if (starts_with(line, "LOGROTATE")) {
+        logRequest(line, {});
         Informational(_logger) << "Forcing logfile rotation";
         rotate_log_file(time(nullptr));
         schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
                            0, 0,
                            reinterpret_cast<void *>(get_next_log_rotation_time),
                            1, nullptr, nullptr, 0);
-    } else {
-        logRequest(l, {});
-        Warning(_logger) << "Invalid request '" << l << "'";
-        output.setError(OutputBuffer::ResponseCode::invalid_request,
-                        "Invalid request method");
+        return false;
     }
-    return output.doKeepalive();
+    logRequest(line, {});
+    Warning(_logger) << "Invalid request '" << line << "'";
+    output.setError(OutputBuffer::ResponseCode::invalid_request,
+                    "Invalid request method");
+    return false;
 }
 
 void Store::answerCommandRequest(const char *command) {
@@ -266,12 +268,12 @@ bool Store::handleCommand(const string &command) {
     return false;
 }
 
-void Store::answerGetRequest(const list<string> &lines, OutputBuffer &output,
+bool Store::answerGetRequest(const list<string> &lines, OutputBuffer &output,
                              const string &tablename) {
     if (tablename.empty()) {
         output.setError(OutputBuffer::ResponseCode::invalid_request,
                         "Invalid GET request, missing tablename");
-        return;
+        return false;
     }
 
     Table *table = findTable(tablename);
@@ -279,8 +281,8 @@ void Store::answerGetRequest(const list<string> &lines, OutputBuffer &output,
         output.setError(
             OutputBuffer::ResponseCode::not_found,
             "Invalid GET request, no such table '" + string(tablename) + "'");
-        return;
+        return false;
     }
 
-    Query(lines, table, g_data_encoding, output).process();
+    return Query(lines, table, g_data_encoding, output).process();
 }

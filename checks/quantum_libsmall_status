@@ -73,7 +73,7 @@ check_info['quantum_libsmall_status'] = {
                                     OID_END,
                                     "10",
                                 ]),
-    "snmp_scan_function"      : lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0").lower() \
-                                and "library" in oid(".1.3.6.1.2.1.1.6.0").lower(),
+    "snmp_scan_function"      : lambda oid: "linux" in oid(".1.3.6.1.2.1.1.1.0", "").lower() \
+                                      and "library" in oid(".1.3.6.1.2.1.1.6.0", "").lower(),
 }
 

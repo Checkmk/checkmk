@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 # <<<db2_logsizes>>>
 # [[[db2taddm:CMDBS1]]]
 # TIMESTAMP 1426495343
@@ -32,9 +33,11 @@
 # logprimary 6
 # logsecond 100
 
+
 factory_settings["db2_logsizes_default_levels"] = {
     "levels": (-20.0, -10.0) # Interpreted as free space in df_check_filesystem_single
 }
+
 
 def parse_db2_logsizes(info):
     pre_parsed = parse_db2_dbs(info)
@@ -60,7 +63,7 @@ def parse_db2_logsizes(info):
 
 def inventory_db2_logsizes(parsed):
     for db, db_info in parsed.items():
-        if "logfilsiz" not in db_info:
+        if "logfilsiz" in db_info:
             yield db, {}
 
 

@@ -14,20 +14,18 @@
 #       * llvm-include-order ("#includes are not sorted properly")
 #
 #   * desirable checks, but hard to fix currently:
-#       * cert-dcl50-cpp ("do not define a C-style variadic function; consider using a function parameter pack or currying instead")
 #       * cert-env33-c ("calling 'system' uses a command processor")
 #       * cert-err34-c ("'atoi' used to convert a string to an integer value, but function will not report conversion errors; consider using 'strtol' instead")
 #       * cppcoreguidelines-pro-type-member-init ("uninitialized record type: 'foo'")
 #       * cppcoreguidelines-pro-type-reinterpret-cast ("do not use reinterpret_cast")
 #       * cppcoreguidelines-pro-type-vararg ("do not call c-style vararg functions")
-
 #
 #   * desirable checks, but some places need to be suppressed:
 #       * cppcoreguidelines-pro-type-const-cast ("do not use const_cast")
 #       * cppcoreguidelines-pro-type-union-access ("do not access members of unions; use (boost::)variant instead")
 #       * modernize-use-bool-literals ("converting integer literal to bool, use bool literal instead") Incorrectly triggered by e.g. FD_ZERO
 #
-Checks: '*,-cert-dcl50-cpp,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-google-runtime-int,-google-runtime-references,-llvm-include-order,-modernize-use-bool-literals'
+Checks: '*,-cert-env33-c,-cert-err34-c,-cert-err58-cpp,-clang-analyzer-alpha*,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-static-cast-downcast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-type-vararg,-google-runtime-int,-google-runtime-references,-llvm-include-order,-modernize-use-bool-literals'
 CheckOptions:
   - key:             google-readability-namespace-comments.SpacesBeforeComments
     value:           '1'

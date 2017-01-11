@@ -57,7 +57,8 @@
 # }
 # Returns a pair of CRS node name and the former dict
 def parse_oracle_crs_res(info):
-    ressources = {}
+    crs_nodename = None
+    ressources   = {}
     for nodename, varsetting in info:
         if nodename == "nodename":
             crs_nodename = varsetting

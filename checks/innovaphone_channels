@@ -49,6 +49,6 @@ check_info["innovaphone_channels"] = {
     "service_description"   : "Channel %s",
     "has_perfdata"          : True,
     "group"                 : "hw_single_channelserature",
-    "include"               : ["innovaphone.include"]
+    "includes"              : ["innovaphone.include"]
 }
 

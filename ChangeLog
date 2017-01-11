@@ -47,6 +47,7 @@
     * 4289 FIX: mysql.innodb_io: fixed incomplete data handling...
     * 4212 FIX: jolokia_info: Fix crash for certain product versions.
     * 4270 FIX: checkpoint_temp: Fixed non working default levels
+    * 4271 FIX: innovaphone_mem innovaphone_channels: Fixed wrong include statement
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

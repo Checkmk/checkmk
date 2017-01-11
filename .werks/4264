@@ -1,0 +1,9 @@
+Title: wmic_process: fixed invalid info handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1484128972
+Class: fix
+
+

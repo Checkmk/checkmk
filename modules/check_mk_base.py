@@ -1659,7 +1659,7 @@ def convert_check_info():
         else:
             # Ensure that there are only the known keys set. Is meant to detect typos etc.
             for key in info.keys():
-                if key not in check_info_defaults:
+                if key != "includes" and key not in check_info_defaults:
                     raise MKGeneralException("The check '%s' declares an unexpected key '%s' in 'check_info'." %
                                                                                     (check_type, key))
 

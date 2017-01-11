@@ -22,6 +22,7 @@
     * 4266 FIX: quantum_libsmall_status: fixed scan function
     * 4287 FIX: job: fixed incomplete data handling...
     * 4268 FIX: cisco_vpn_tunnel: Reporting zero traffic in case the tunnel is down...
+    * 4288 FIX: sentry_pdu: fixed data handling if power value is missing
 
     Multisite:
     * 4145 FIX: Fixed exception when setting output_format in wrong case

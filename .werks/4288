@@ -1,0 +1,9 @@
+Title: sentry_pdu: fixed data handling if power value is missing
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1484143730
+Class: fix
+
+

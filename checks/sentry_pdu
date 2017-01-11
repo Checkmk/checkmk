@@ -29,6 +29,7 @@ def inventory_sentry_pdu(info):
     for line in info:
         yield line[0], int(line[1])
 
+
 def check_sentry_pdu(item, params, info):
     states = {
         0: "off",
@@ -39,7 +40,8 @@ def check_sentry_pdu(item, params, info):
         5: "onError",
         6: "noComm",
     }
-    for name, state, power in info:
+
+    for name, state, power_str in info:
         if item == name:
             required_state = params
             # The Wato rule returns eighter on or off
@@ -48,20 +50,18 @@ def check_sentry_pdu(item, params, info):
             elif required_state == 'off':
                 required_state = 0
             state = int(state)
-            power = int(power)
-            infotext = "State is %s" % states[state]
+            infotext = "Status: %s" % states[state]
             if state  != required_state:
                 yield 2, infotext
             else:
                 yield 0, infotext
 
-            infotext = "Current consumption %s Watt" % power
-            perfdata = [ ('power', power )]
-            yield 0, infotext, perfdata
-            return
+            if power_str:
+                power = int(power_str)
+                infotext = "Power: %s Watt" % power
+                perfdata = [ ('power', power )]
+                yield 0, infotext, perfdata
 
-    yield 3, 'Phase information not found'
-    return
 
 check_info["sentry_pdu"] = {
     "check_function"        : check_sentry_pdu,

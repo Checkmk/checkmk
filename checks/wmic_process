@@ -34,7 +34,9 @@ def check_wmic_process(item, params, info):
     legend = info[0]
     for line in info[1:]:
         psinfo = dict(zip(legend, line))
-        if "ThreadCount" in legend and psinfo["Name"].lower() == "system idle process":
+        if psinfo.get("Name") is None:
+            continue
+        elif "ThreadCount" in legend and psinfo["Name"].lower() == "system idle process":
             cpucores = int(psinfo["ThreadCount"])
         elif psinfo["Name"].lower() == name.lower():
             count   += 1

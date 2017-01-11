@@ -125,10 +125,10 @@ catalog_titles = {
             "qnap"        : "QNAP Systems",
             "riverbed"    : "Riverbed Technology",
             "symantec"    : "Symantec",
-            "servertech"  : "Server Technology"
+            "servertech"  : "Server Technology",
             "siemens"     : "Siemens",
             "sophos"      : "Sophos",
-            "supermicro"  : "Super Micro Computer"
+            "supermicro"  : "Super Micro Computer",
             "tplink"      : "TP-LINK",
             "viprinet"    : "Viprinet",
         "power"       : "Power supplies and PDUs",
@@ -153,7 +153,7 @@ catalog_titles = {
         "ad"            : "Active Directory",
         "apache"        : "Apache Webserver",
         "activemq"      : "Apache ActiveMQ",
-        "artec"         : "ARTEC"
+        "artec"         : "ARTEC",
         "db2"           : "IBM DB2",
         "mongodb"       : "MongoDB",
         "citrix"        : "Citrix",

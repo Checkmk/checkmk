@@ -36,7 +36,6 @@
 #include <unordered_set>
 #include <vector>
 #include "AndingFilter.h"
-#include "OutputBuffer.h"
 #include "Renderer.h"
 #include "RendererBrokenCSV.h"
 #include "StatsColumn.h"
@@ -48,13 +47,15 @@ class Aggregator;
 class Column;
 class Filter;
 class Logger;
+class OutputBuffer;
 class Table;
 
 class Query {
 public:
-    Query(const std::list<std::string> &lines, Table *, Encoding data_encoding);
+    Query(const std::list<std::string> &lines, Table *, Encoding data_encoding,
+          OutputBuffer &output);
 
-    void process(OutputBuffer &output);
+    void process();
 
     bool processDataset(void *);
 
@@ -74,10 +75,8 @@ public:
 
 private:
     const Encoding _data_encoding;
+    OutputBuffer &_output;
     QueryRenderer *_renderer_query;
-    OutputBuffer::ResponseHeader _response_header;
-    bool _do_keepalive;
-    std::string _invalid_header_message;
     Table *_table;
     AndingFilter _filter;
     contact *_auth_user;
@@ -104,8 +103,6 @@ private:
     void invalidHeader(const std::string &message);
 
     void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
-    void setResponseHeader(OutputBuffer::ResponseHeader r);
-    void setDoKeepalive(bool d);
 
     bool doStats();
     void doWait();

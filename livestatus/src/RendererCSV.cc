@@ -23,16 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "RendererCSV.h"
+class OutputBuffer;
 
 using std::string;
 using std::vector;
 
-RendererCSV::RendererCSV(OutputBuffer &output,
-                         OutputBuffer::ResponseHeader response_header,
-                         bool do_keep_alive, string invalid_header_message,
-                         int timezone_offset, Encoding data_encoding)
-    : Renderer(output, response_header, do_keep_alive, invalid_header_message,
-               timezone_offset, data_encoding) {}
+RendererCSV::RendererCSV(OutputBuffer &output, int timezone_offset,
+                         Encoding data_encoding)
+    : Renderer(output, timezone_offset, data_encoding) {}
 
 // --------------------------------------------------------------------------
 

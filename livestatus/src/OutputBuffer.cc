@@ -52,6 +52,9 @@ OutputBuffer::~OutputBuffer() { free(_buffer); }
 
 void OutputBuffer::reset() {
     _writepos = _buffer;
+    // TODO(sp) This is really the wrong default because it hides some early
+    // errors, e.g. an unknown table name. But we can't change this easily
+    // because of legacy reasons... :-/
     _response_header = ResponseHeader::off;
     _response_code = ResponseCode::ok;
     _do_keepalive = false;

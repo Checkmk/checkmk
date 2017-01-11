@@ -36,6 +36,7 @@
 #include "Logger.h"
 #include "NegatingFilter.h"
 #include "NullColumn.h"
+#include "OutputBuffer.h"
 #include "StatsColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
@@ -59,10 +60,10 @@ using std::to_string;
 using std::unique_ptr;
 using std::vector;
 
-Query::Query(const list<string> &lines, Table *table, Encoding data_encoding)
+Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
+             OutputBuffer &output)
     : _data_encoding(data_encoding)
-    , _response_header(OutputBuffer::ResponseHeader::off)
-    , _do_keepalive(false)
+    , _output(output)
     , _table(table)
     , _auth_user(nullptr)
     , _wait_timeout(0)
@@ -184,21 +185,12 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding)
     }
 }
 
-void Query::setResponseHeader(OutputBuffer::ResponseHeader r) {
-    _response_header = r;
-}
-
-void Query::setDoKeepalive(bool d) { _do_keepalive = d; }
-
 void Query::invalidHeader(const string &message) {
-    if (_invalid_header_message == "") {
-        _invalid_header_message = message;
-    }
+    _output.setError(OutputBuffer::ResponseCode::invalid_header, message);
 }
 
 void Query::invalidRequest(const string &message) {
-    _renderer_query->setError(OutputBuffer::ResponseCode::invalid_request,
-                              message);
+    _output.setError(OutputBuffer::ResponseCode::invalid_request, message);
 }
 
 unique_ptr<Filter> Query::createFilter(Column &column, RelationalOperator relOp,
@@ -538,9 +530,9 @@ void Query::parseKeepAliveLine(char *line) {
     }
 
     if (strcmp(value, "on") == 0) {
-        setDoKeepalive(true);
+        _output.setDoKeepalive(true);
     } else if (strcmp(value, "off") == 0) {
-        setDoKeepalive(false);
+        _output.setDoKeepalive(false);
     } else {
         invalidHeader("Invalid value for KeepAlive: must be 'on' or 'off'");
     }
@@ -555,9 +547,9 @@ void Query::parseResponseHeaderLine(char *line) {
     }
 
     if (strcmp(value, "off") == 0) {
-        setResponseHeader(OutputBuffer::ResponseHeader::off);
+        _output.setResponseHeader(OutputBuffer::ResponseHeader::off);
     } else if (strcmp(value, "fixed16") == 0) {
-        setResponseHeader(OutputBuffer::ResponseHeader::fixed16);
+        _output.setResponseHeader(OutputBuffer::ResponseHeader::fixed16);
     } else {
         invalidHeader("Invalid value '" + string(value) +
                       "' for ResponseHeader: must be 'off' or 'fixed16'");
@@ -585,10 +577,9 @@ void Query::parseTimelimitLine(char *line) {
         invalidHeader("Header Timelimit: missing value");
     } else {
         int timelimit = atoi(value);
-        if ((isdigit(value[0]) == 0) || timelimit < 0) {
+        if (isdigit(value[0]) == 0 || timelimit < 0) {
             invalidHeader(
-                "Invalid value for Timelimit: must be "
-                "non-negative integer (seconds)");
+                "Invalid value for Timelimit: must be non-negative integer (seconds)");
         } else {
             _time_limit = timelimit;
             _time_limit_timeout = time(nullptr) + _time_limit;
@@ -673,12 +664,11 @@ void Query::parseLocaltimeLine(char *line) {
 
 bool Query::doStats() { return !_stats_columns.empty(); }
 
-void Query::process(OutputBuffer &output) {
+void Query::process() {
     // Precondition: output has been reset
     auto start_time = system_clock::now();
-    auto renderer = Renderer::make(
-        _output_format, output, _response_header, _do_keepalive,
-        _invalid_header_message, _separators, _timezone_offset, _data_encoding);
+    auto renderer = Renderer::make(_output_format, _output, _separators,
+                                   _timezone_offset, _data_encoding);
     doWait();
     QueryRenderer q(*renderer);
     _renderer_query = &q;
@@ -688,7 +678,8 @@ void Query::process(OutputBuffer &output) {
     auto elapsed =
         duration_cast<milliseconds>(system_clock::now() - start_time);
     Informational(_logger) << "processed request in " << elapsed.count()
-                           << " ms, replied with " << output.size() << " bytes";
+                           << " ms, replied with " << _output.size()
+                           << " bytes";
 }
 
 void Query::start(QueryRenderer &q) {
@@ -712,10 +703,9 @@ bool Query::timelimitReached() {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
         Informational(_logger) << "Maximum query time of " << _time_limit
                                << " seconds exceeded!";
-        _renderer_query->setError(OutputBuffer::ResponseCode::limit_exceeded,
-                                  "Maximum query time of " +
-                                      to_string(_time_limit) +
-                                      " seconds exceeded!");
+        _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
+                         "Maximum query time of " + to_string(_time_limit) +
+                             " seconds exceeded!");
         return true;
     }
     return false;

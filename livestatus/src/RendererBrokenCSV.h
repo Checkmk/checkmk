@@ -28,9 +28,9 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include <vector>
-#include "OutputBuffer.h"
 #include "Renderer.h"
 #include "data_encoding.h"
+class OutputBuffer;
 
 class CSVSeparators {
 public:
@@ -57,11 +57,10 @@ private:
 // versions.
 class RendererBrokenCSV : public Renderer {
 public:
-    RendererBrokenCSV(OutputBuffer& output,
-                      OutputBuffer::ResponseHeader response_header,
-                      bool do_keep_alive, std::string invalid_header_message,
-                      CSVSeparators separators, int timezone_offset,
-                      Encoding data_encoding);
+    RendererBrokenCSV(OutputBuffer& output, const CSVSeparators& separators,
+                      int timezone_offset, Encoding data_encoding)
+        : Renderer(output, timezone_offset, data_encoding)
+        , _separators(separators) {}
 
     void outputNull() override;
     void outputBlob(const std::vector<char>& value) override;

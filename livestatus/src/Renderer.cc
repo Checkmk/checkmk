@@ -27,6 +27,7 @@
 #include <iomanip>
 #include <ostream>
 #include "Logger.h"
+#include "OutputBuffer.h"
 #include "RendererBrokenCSV.h"
 #include "RendererCSV.h"
 #include "RendererJSON.h"
@@ -44,58 +45,38 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-Renderer::Renderer(OutputBuffer &output,
-                   OutputBuffer::ResponseHeader response_header,
-                   bool do_keep_alive, string invalid_header_message,
-                   int timezone_offset, Encoding data_encoding)
+Renderer::Renderer(OutputBuffer &output, int timezone_offset,
+                   Encoding data_encoding)
     : _data_encoding(data_encoding)
     , _output(output)
     , _timezone_offset(timezone_offset)
-    , _logger(output.getLogger()) {
-    _output.setResponseHeader(response_header);
-    _output.setDoKeepalive(do_keep_alive);
-    if (invalid_header_message != "") {
-        _output.setError(OutputBuffer::ResponseCode::invalid_header,
-                         invalid_header_message);
-    }
-}
+    , _logger(output.getLogger()) {}
 
 Renderer::~Renderer() = default;
 
 // static
-unique_ptr<Renderer> Renderer::make(
-    OutputFormat format, OutputBuffer &output,
-    OutputBuffer::ResponseHeader response_header, bool do_keep_alive,
-    string invalid_header_message, const CSVSeparators &separators,
-    int timezone_offset, Encoding data_encoding) {
+unique_ptr<Renderer> Renderer::make(OutputFormat format, OutputBuffer &output,
+                                    const CSVSeparators &separators,
+                                    int timezone_offset,
+                                    Encoding data_encoding) {
     switch (format) {
         case OutputFormat::csv:
-            return make_unique<RendererCSV>(
-                output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset, data_encoding);
+            return make_unique<RendererCSV>(output, timezone_offset,
+                                            data_encoding);
         case OutputFormat::broken_csv:
             return make_unique<RendererBrokenCSV>(
-                output, response_header, do_keep_alive, invalid_header_message,
-                separators, timezone_offset, data_encoding);
+                output, separators, timezone_offset, data_encoding);
         case OutputFormat::json:
-            return make_unique<RendererJSON>(
-                output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset, data_encoding);
+            return make_unique<RendererJSON>(output, timezone_offset,
+                                             data_encoding);
         case OutputFormat::python:
-            return make_unique<RendererPython>(
-                output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset, data_encoding);
+            return make_unique<RendererPython>(output, timezone_offset,
+                                               data_encoding);
         case OutputFormat::python3:
-            return make_unique<RendererPython3>(
-                output, response_header, do_keep_alive, invalid_header_message,
-                timezone_offset, data_encoding);
+            return make_unique<RendererPython3>(output, timezone_offset,
+                                                data_encoding);
     }
     return nullptr;  // unreachable
-}
-
-void Renderer::setError(OutputBuffer::ResponseCode code,
-                        const string &message) {
-    _output.setError(code, message);
 }
 
 size_t Renderer::size() const { return _output.size(); }

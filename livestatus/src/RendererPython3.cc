@@ -23,17 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "RendererPython3.h"
+class OutputBuffer;
 
 using std::string;
 using std::vector;
 
-RendererPython3::RendererPython3(OutputBuffer &output,
-                                 OutputBuffer::ResponseHeader response_header,
-                                 bool do_keep_alive,
-                                 string invalid_header_message,
-                                 int timezone_offset, Encoding data_encoding)
-    : Renderer(output, response_header, do_keep_alive, invalid_header_message,
-               timezone_offset, data_encoding) {}
+RendererPython3::RendererPython3(OutputBuffer &output, int timezone_offset,
+                                 Encoding data_encoding)
+    : Renderer(output, timezone_offset, data_encoding) {}
 
 // --------------------------------------------------------------------------
 

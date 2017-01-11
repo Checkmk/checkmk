@@ -20,6 +20,7 @@
     * 4211 FIX: esx_vsphere_counters: No longer crash when counters are available for instances without a read value
     * 4265 FIX: netapp_api_cpu: fixed missing number of cpus
     * 4266 FIX: quantum_libsmall_status: fixed scan function
+    * 4287 FIX: job: fixed incomplete data handling...
 
     Multisite:
     * 4145 FIX: Fixed exception when setting output_format in wrong case

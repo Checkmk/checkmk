@@ -113,6 +113,9 @@ def check_job(item, params, info):
     if not job:
         return 3, 'Got no information for this job'
 
+    if job.get("exit_code") is None:
+        return 3, 'Got incomplete information for this job'
+
     def process_start_time(value, state, warn, crit):
         display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value) )
         job_age = time.time() - value

@@ -1,0 +1,9 @@
+Title: job: fixed incomplete data handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p16
+Date: 1484131919
+Class: fix
+
+KeyError occurs if data of job is incomplete, eg. exit code is missing.

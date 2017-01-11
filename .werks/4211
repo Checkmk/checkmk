@@ -1,0 +1,10 @@
+Title: esx_vsphere_counters: No longer crash when counters are available for instances without a read value
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1484129178
+
+

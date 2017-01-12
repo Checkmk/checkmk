@@ -1,0 +1,10 @@
+Title: check_mail_loop: Added missing Date header to sent mails
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1484236699
+
+

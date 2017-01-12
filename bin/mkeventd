@@ -3048,7 +3048,7 @@ class StatusServer:
                     "(allowed are python, json and plain)" % output_format)
 
 
-    # locked with lock_eventstatus
+    # All commands are already locked with lock_eventstatus
     def handle_command_request(self, commandline):
         log("Executing command: %s" % commandline)
         parts = commandline.split(";")
@@ -3072,6 +3072,8 @@ class StatusServer:
             self.handle_command_resetcounters(arguments)
         elif command == "UPDATE":
             self.handle_command_update(arguments)
+        elif command == "CREATE":
+            self.handle_command_create(arguments)
         elif command == "CHANGESTATE":
             self.handle_command_changestate(arguments)
         elif command == "ACTION":
@@ -3081,12 +3083,13 @@ class StatusServer:
         else:
             raise MKClientError("Unknown command %s" % command)
 
-    # locked with lock_eventstatus
+
     def handle_command_delete(self, arguments):
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
         event_id, user = arguments
         g_event_status.delete_event(int(event_id), user)
+
 
     def handle_command_update(self, arguments):
         event_id, user, acknowledged, comment, contact = arguments
@@ -3102,6 +3105,17 @@ class StatusServer:
         event["phase"] = int(acknowledged) and "ack" or "open"
         log_event_history(event, "UPDATE", user)
 
+
+    def handle_command_create(self, arguments):
+        # Would rather use g_event_server.process_raw_line(), but we are already
+        # holding lock_eventstatus and it's sub functions are setting
+        # lock_eventstatus too. The lock can not be allocated twice.
+        # TODO: Change the lock type in future?
+        # process_raw_lines("%s" % ";".join(arguments))
+        with file(g_pipe_path, "w") as pipe:
+            pipe.write("%s\n" % ";".join(arguments))
+
+
     def handle_command_changestate(self, arguments):
         event_id, user, newstate = arguments
         event = g_event_status.event(int(event_id))
@@ -3109,6 +3123,7 @@ class StatusServer:
             raise MKClientError("No event with id %s" % event_id)
         event["state"] = int(newstate)
         log_event_history(event, "CHANGESTATE", user)
+
 
     def handle_command_reload(self):
         with lock_configuration:
@@ -3118,10 +3133,12 @@ class StatusServer:
         g_status_server.reload_configuration()
         log("Reloaded configuration.")
 
+
     def handle_command_reopenlog(self):
         log("Closing this logfile")
         open_logfile()
         log("Opened new logfile")
+
 
     # Erase our current state and history!
     def handle_command_flush(self):

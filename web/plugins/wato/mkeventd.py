@@ -886,6 +886,10 @@ vs_mkeventd_event = Dictionary(
             choices = mkeventd.service_levels,
             prefix_values = True,
         )),
+        ("site", DropdownChoice(
+            title = _("Simulate for site"),
+            choices = get_event_console_site_choices,
+        )),
     ])
 
 

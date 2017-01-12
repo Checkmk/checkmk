@@ -36,25 +36,13 @@ import cmk.paths
 # Please sync these paths with htdocs/mkeventd.py
 mib_dirs = [ ('/usr/share/snmp/mibs', _('System MIBs')) ]
 
-try:
-    socket_path       = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
-    pipe_path         = cmk.paths.omd_root + "/tmp/run/mkeventd/events"
+socket_path       = cmk.paths.omd_root + "/tmp/run/mkeventd/status"
+compiled_mibs_dir = cmk.paths.omd_root + "/local/share/check_mk/compiled_mibs"
 
-    compiled_mibs_dir = cmk.paths.omd_root + "/local/share/check_mk/compiled_mibs"
-
-    # Please sync these paths with htdocs/mkeventd.py
-    mib_upload_dir    = cmk.paths.omd_root + "/local/share/snmp/mibs"
-    mib_dirs.insert(0, (cmk.paths.omd_root + "/share/snmp/mibs", _('MIBs shipped with Check_MK')))
-    mib_dirs.insert(0, (mib_upload_dir, _('Custom MIBs')))
-except:
-    run_dir           = cmk.paths.livestatus_unix_socket.rsplit("/",1)[0]
-    socket_path       = run_dir + "/mkeventd/status"
-    pipe_path         = run_dir + "/mkeventd/events"
-
-    # Please sync these paths with htdocs/mkeventd.py
-    mib_upload_dir    = cmk.paths.var_dir + "/mkeventd/mibs"
-    compiled_mibs_dir = "/var/lib/mkeventd/compiled_mibs"
-    mib_dirs.insert(0, (mib_upload_dir, _('Custom MIBs')))
+# Please sync these paths with htdocs/mkeventd.py
+mib_upload_dir    = cmk.paths.omd_root + "/local/share/snmp/mibs"
+mib_dirs.insert(0, (cmk.paths.omd_root + "/share/snmp/mibs", _('MIBs shipped with Check_MK')))
+mib_dirs.insert(0, (mib_upload_dir, _('Custom MIBs')))
 
 
 syslog_priorities = [
@@ -171,16 +159,16 @@ def daemon_running():
 def send_event(event):
     # "<%PRI%>@%TIMESTAMP%;%SL% %HOSTNAME% %syslogtag% %msg%\n"
     prio = (event["facility"] << 3) + event["priority"]
-    rfc = "<%d>@%s;%d %s|%s %s: %s\n" % (
-        prio, int(time.time()), event["sl"], event["host"],
-        event["ipaddress"], event["application"], event["text"])
-    if type(rfc) == unicode:
-        rfc = rfc.encode("utf-8")
-    pipe = file(pipe_path, "w")
-    pipe.write(rfc + "\n")
-    pipe.close()
 
-    return rfc
+    rfc = [
+        "<%d>@%d" % (prio, int(time.time())),
+        "%d %s|%s %s: %s\n" % (event["sl"], event["host"],
+                event["ipaddress"], event["application"], event["text"]),
+    ]
+
+    execute_command("CREATE", map(make_utf8, rfc), site=event["site"])
+
+    return ";".join(rfc)
 
 
 def get_local_ec_status():
@@ -235,8 +223,6 @@ def execute_command(name, args=None, site=None):
 
     query = "[%d] EC_%s%s" % (int(time.time()), name, formated_args)
     sites.live().command(query, site)
-
-
 
 
 def get_total_stats():

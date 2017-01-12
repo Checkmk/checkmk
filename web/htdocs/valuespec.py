@@ -4086,7 +4086,7 @@ class Color(ValueSpec):
         if not value:
             value = "#FFFFFF"
 
-        html.javascript_file("colorpicker")
+        html.javascript_file("js/colorpicker.js")
 
         # Holds the actual value for form submission
         html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var = True)

@@ -15,13 +15,8 @@ import i18n
 # internal imports
 from htmllib import html
 from htmllib import HTMLGenerator, HTMLCheck_MK
-from tools import compare_html , gentest, compare_and_empty
-from classes import HTMLOrigTester, GeneratorTester, HTMLCheck_MKTester, DeprecatedRenderer
-
-
-
-
-
+from tools import compare_html, gentest, compare_and_empty
+from classes import HTMLOrigTester, HTMLCheck_MKTester, DeprecatedRenderer
 
 
 def test_select():
@@ -168,10 +163,11 @@ def test_text_input():
                                     new.user_errors = {v: "(not) a test error"}
                                     gentest(old, new, lambda x: x.text_input(v,d,c,l,i,s,a,**arg))
 
+
 def test_generator():
 
     old = HTMLOrigTester()
-    new = GeneratorTester()
+    new = HTMLCheck_MKTester()
     old.plug()
     new.plug()
 
@@ -185,7 +181,9 @@ def test_generator():
 
     gentest(old, new, lambda x: x.javascript("set_reload(0, \'address\')"))
 
-    gentest(old, new, lambda x: x.javascript_file("Test"))
+    old.javascript_file("Test")
+    new.javascript_file("js/Test.js")
+    compare_and_empty(old, new)
 
     gentest(old, new, lambda x: x.play_sound("Test"))
 

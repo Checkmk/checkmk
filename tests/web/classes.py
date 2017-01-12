@@ -777,12 +777,6 @@ class HTMLTester(object):
         #raise NotImplementedError()
         return "file/name/css_%s" % css
 
-
-    def javascript_filename_for_browser(self, jsname):
-        #raise NotImplementedError()
-        return "file/name/js_%s" % jsname 
-
-
     def top_heading(self, title):
         self.top_heading_left(title)
         self.top_heading_right()
@@ -800,21 +794,22 @@ class HTMLTester(object):
         return {"1": 1, "2": 2, "3": 3,}
 
 
-class GeneratorTester(HTMLTester, HTMLGenerator):
-    def __init__(self):
-        super(GeneratorTester, self).__init__()
-        HTMLTester.__init__(self)
-        HTMLGenerator.__init__(self)
-
-
 class HTMLCheck_MKTester(HTMLTester, html):
-    pass
-#    def __init__(self):
-#        super(HTMLCheck_MKTester, self).__init__()
+
+    def javascript_filename_for_browser(self, jsname):
+        #raise NotImplementedError()
+        return "js/file/name/js_%s.js" % jsname 
+
+
 
 
 class HTMLOrigTester(HTMLTester, DeprecatedRenderer):
-    pass
+
+    def javascript_filename_for_browser(self, jsname):
+        #raise NotImplementedError()
+        return "file/name/js_%s" % jsname 
+
+
 
 
 

@@ -3545,12 +3545,26 @@ def get_login_sites():
 
 # Returns a list of site ids which gets the Event Console configuration replicated
 def get_event_console_sync_sites():
-    sites = []
-    for site_id, site in config.sites.items():
-        if config.site_is_local(site_id) or site.get("replicate_ec"):
-            sites.append(site_id)
-    return sites
+    return [ s[0] for s in get_event_console_site_choices() ]
 
+
+def get_event_console_site_choices():
+    return site_choices(filter_func=lambda site_id, site: config.site_is_local(site_id) or site.get("replicate_ec"))
+
+
+def site_choices(filter_func=None):
+    choices = []
+    for site_id, site in config.sites.items():
+        if filter_func and not filter_func(site_id, site):
+            continue
+
+        title = site_id
+        if site.get("alias"):
+            title += " - " + site["alias"]
+
+        choices.append((site_id, title))
+
+    return sorted(choices, key=lambda s: s[1])
 
 
 
@@ -3563,20 +3577,11 @@ class SiteAttribute(ValueSpecAttribute):
     def __init__(self):
         # Default is is the local one, if one exists or
         # no one if there is no local site
-        choices = []
-        for id, site in config.sites.items():
-            title = id
-            if site.get("alias"):
-                title += " - " + site["alias"]
-            choices.append((id, title))
-
-        choices.sort(cmp=lambda a,b: cmp(a[1], b[1]))
-
         ValueSpecAttribute.__init__(self, "site", DropdownChoice(
             title=_("Monitored on site"),
             help=_("Specify the site that should monitor this host."),
             default_value = default_site(),
-            choices = choices,
+            choices = site_choices,
             invalid_choice = "complain",
             invalid_choice_title = _("Unknown site (%s)"),
             invalid_choice_error = _("The configured site is not known to this site. In case you "

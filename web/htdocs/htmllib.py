@@ -1770,7 +1770,8 @@ class html(DeprecationWrapper):
     def button(self, varname, title, cssclass = '', style=None):
         if style:
             style = ' style="%s"' % style
-
+        else:
+            style = ''
         self.write("<input type=\"submit\" name=\"%s\" id=\"%s\" value=\"%s\" "
                    "class=\"button %s\"%s />\n" % \
                    (varname, varname, title, cssclass, style))

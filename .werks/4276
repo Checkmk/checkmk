@@ -1,0 +1,14 @@
+Title: Actions can now access the event macros via environment variables
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.4.0i4
+Date: 1484218737
+Class: feature
+
+In previous versios the actions of the Event Console could only get the
+variables of the events via substitution of macros.
+
+These information are now also available as environment variables with
+the prefix <tt>EVENT_</tt>. For example the text of the event is available as
+<tt>EVENT_TEXT</tt> as environment variable.

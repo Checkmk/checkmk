@@ -48,6 +48,7 @@ mkeventd_status_file = cmk.paths.omd_root + "/var/mkeventd/status"
 #   '----------------------------------------------------------------------'
 substitute_help = _("""
 The following macros will be substituted by value from the actual event:
+<br><br>
 <table class=help>
 <tr><td class=tt>$ID$</td><td>Event ID</td></tr>
 <tr><td class=tt>$COUNT$</td><td>Number of occurrances</td></tr>
@@ -57,6 +58,7 @@ The following macros will be substituted by value from the actual event:
 <tr><td class=tt>$COMMENT$</td><td>Event comment</td></tr>
 <tr><td class=tt>$SL$</td><td>Service Level</td></tr>
 <tr><td class=tt>$HOST$</td><td>Host name (as sent by syslog)</td></tr>
+<tr><td class=tt>$ORIG_HOST$</td><td>Original host name when host name has been rewritten, empty otherwise</td></tr>
 <tr><td class=tt>$CONTACT$</td><td>Contact information</td></tr>
 <tr><td class=tt>$APPLICATION$</td><td>Syslog tag / Application</td></tr>
 <tr><td class=tt>$PID$</td><td>Process ID of the origin process</td></tr>
@@ -176,7 +178,12 @@ vs_mkeventd_actions = \
                                ( "script",
                                  TextAreaUnicode(
                                    title = _("Script body"),
-                                   help = _("This script will be executed using the BASH shell. ") + substitute_help,
+                                   help = _("This script will be executed using the BASH shell. ") \
+                                        + substitute_help \
+                                        + "<br>" \
+                                        + _("These information are also available as environment variables with the prefix "
+                                            "<tt>EVENT_</tt>. For example the text of the event is available as "
+                                            "<tt>EVENT_TEXT</tt> as environment variable."),
                                    cols = 64,
                                    rows = 10,
                                    attrencode = True,

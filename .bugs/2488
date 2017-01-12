@@ -1,9 +1,12 @@
 Title: View-Editor: Remove [Try out] button. It's broken.
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2016-04-14 10:54:21
 Targetversion: future
-Class: bug
 
 This functionality is very complex and still has some bugs. Better remove
 it. It was never requested by any customers in the first place.
+
+2017-01-12 07:54:01: changed state open -> done
+Already done.

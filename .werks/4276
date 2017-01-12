@@ -10,5 +10,5 @@ In previous versios the actions of the Event Console could only get the
 variables of the events via substitution of macros.
 
 These information are now also available as environment variables with
-the prefix <tt>EVENT_</tt>. For example the text of the event is available as
-<tt>EVENT_TEXT</tt> as environment variable.
+the prefix <tt>CMK_</tt>. For example the text of the event is available as
+<tt>CMK_TEXT</tt> as environment variable.

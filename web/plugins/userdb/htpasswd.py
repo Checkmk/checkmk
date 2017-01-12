@@ -99,13 +99,7 @@ class HtpasswdUserConnector(UserConnector):
         # users from htpasswd are lost. If you start managing users with
         # WATO, you should continue to do so or stop doing to for ever...
         # Locked accounts get a '!' before their password. This disable it.
-        filename = cmk.paths.htpasswd_file + '.new'
-        rename_file = True
-        try:
-            out = create_user_file(filename, "w")
-        except:
-            rename_file = False
-            out = create_user_file(cmk.paths.htpasswd_file, "w")
+        output = ""
 
         for id, user in users.items():
             # only process users which are handled by htpasswd connector
@@ -117,10 +111,9 @@ class HtpasswdUserConnector(UserConnector):
                     locksym = '!'
                 else:
                     locksym = ""
-                out.write("%s:%s%s\n" % (make_utf8(id), locksym, user["password"]))
-        out.close()
-        if rename_file:
-            os.rename(filename, filename[:-4])
+                output += "%s:%s%s\n" % (make_utf8(id), locksym, user["password"])
+
+        store.save_file(cmk.paths.htpasswd_file, output)
 
 
 multisite_user_connectors['htpasswd'] = HtpasswdUserConnector

@@ -347,12 +347,12 @@ class ConfigDomain(object):
     def save(self, settings):
         filename = "%s/global.mk" % self.config_dir()
 
-        make_nagios_directory(os.path.dirname(filename))
+        output = wato_fileheader()
+        for varname, value in settings.items():
+            output += "%s = %s\n" % (varname, pprint.pformat(value))
 
-        with create_user_file(filename, 'w') as out:
-            out.write(wato_fileheader())
-            for varname, value in settings.items():
-                out.write("%s = %s\n" % (varname, pprint.pformat(value)))
+        make_nagios_directory(os.path.dirname(filename))
+        store.save_file(filename, output)
 
 
 
@@ -978,7 +978,6 @@ class Folder(BaseFolder):
         call_hook_hosts_changed(self)
 
 
-    # TODO: Use the store functions here!
     def _save_hosts_file(self):
         self._ensure_folder_directory()
         if not self.has_hosts():
@@ -986,7 +985,7 @@ class Folder(BaseFolder):
                 os.remove(self.hosts_file_path())
             return
 
-        out = create_user_file(self.hosts_file_path(), 'w')
+        out = cStringIO.StringIO()
         out.write(wato_fileheader())
 
         all_hosts = [] # list of [Python string for all_hosts]
@@ -1115,6 +1114,8 @@ class Folder(BaseFolder):
         # values stored for check_mk as well.
         out.write("\n# Host attributes (needed for WATO)\n")
         out.write("host_attributes.update(\n%s)\n" % pprint.pformat(cleaned_hosts))
+
+        store.save_file(self.hosts_file_path(), out.getvalue())
 
 
     # Remove dynamic tags like "wato" and the folder path.
@@ -3327,16 +3328,17 @@ def create_nagvis_backends(sites):
         if site.get("status_host"):
             cfg.append('statushost="%s"' % ':'.join(site['status_host']))
 
-    file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.paths.omd_root, 'w').write('\n'.join(cfg))
+    store.save_file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.paths.omd_root, '\n'.join(cfg))
 
 
 def create_distributed_wato_file(siteid):
-    out = create_user_file(cmk.paths.check_mk_config_dir + "/distributed_wato.mk", "w")
-    out.write(wato_fileheader())
-    out.write("# This file has been created by the master site\n"
-              "# push the configuration to us. It makes sure that\n"
-              "# we only monitor hosts that are assigned to our site.\n\n")
-    out.write("distributed_wato_site = '%s'\n" % siteid)
+    output = wato_fileheader()
+    output += ("# This file has been created by the master site\n"
+               "# push the configuration to us. It makes sure that\n"
+               "# we only monitor hosts that are assigned to our site.\n\n")
+    output += "distributed_wato_site = '%s'\n" % siteid
+
+    store.save_file(cmk.paths.check_mk_config_dir + "/distributed_wato.mk", output)
 
 
 def delete_distributed_wato_file():
@@ -3345,7 +3347,7 @@ def delete_distributed_wato_file():
     # we do not need write permissions to the conf.d
     # directory!
     if os.path.exists(p):
-        create_user_file(p, "w").write("")
+        store.save_file(p, "")
 
 
 def has_distributed_wato_file():
@@ -5167,11 +5169,13 @@ def is_builtin_aux_tag(taggroup_id):
 
 
 def save_hosttags(hosttags, auxtags):
+    output = wato_fileheader()
+    output += "wato_host_tags += \\\n%s\n\n" % pprint.pformat(hosttags)
+    output += "wato_aux_tags += \\\n%s\n" % pprint.pformat(auxtags)
+
     make_nagios_directory(multisite_dir)
-    out = create_user_file(multisite_dir + "hosttags.mk", "w")
-    out.write(wato_fileheader())
-    out.write("wato_host_tags += \\\n%s\n\n" % pprint.pformat(hosttags))
-    out.write("wato_aux_tags += \\\n%s\n" % pprint.pformat(auxtags))
+    store.save_file(multisite_dir + "hosttags.mk", output)
+
     export_hosttags_to_php(hosttags, auxtags)
 
 

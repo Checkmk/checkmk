@@ -58,6 +58,7 @@ class KeypairStore(object):
 
     def save(self, keys):
         make_nagios_directory(os.path.dirname(self._path))
+        # TODO: Recode to store. functions. But this is also used in appliance code, do we have cma system wide available?
         out = create_user_file(self._path, "w")
         out.write("# Written by WATO\n# encoding: utf-8\n\n")
         out.write("%s.update(%s)\n\n" % (self._attr, pprint.pformat(keys)))

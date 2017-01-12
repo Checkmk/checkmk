@@ -115,29 +115,12 @@ def make_nagios_directories(name):
             return
     make_nagios_directory(name)
 
+# TODO: Deprecate this function! Don't use this anymore. Use the store.* functions!
 def create_user_file(path, mode):
     path = make_utf8(path)
     f = file(path, mode, 0)
     os.chmod(path, 0660)
     return f
-
-def write_settings_file(path, content):
-    try:
-        data = pprint.pformat(content)
-    except UnicodeDecodeError:
-        # When writing a dict with unicode keys and normal strings with garbled
-        # umlaut encoding pprint.pformat() fails with UnicodeDecodeError().
-        # example:
-        #   pprint.pformat({'Z\xc3\xa4ug': 'on',  'Z\xe4ug': 'on', u'Z\xc3\xa4ugx': 'on'})
-        # Catch the exception and use repr() instead
-        data = repr(content)
-    create_user_file(path, "w").write(data + "\n")
-
-
-def remove_user_file(path):
-    path = path.encode("utf-8")
-    if os.path.exists(path):
-        os.remove(path)
 
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion

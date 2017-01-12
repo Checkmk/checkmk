@@ -496,7 +496,12 @@ def _convert_old_if_group_params(params):
     return params
 
 
-def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Group"):
+def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Group", timestamp = None):
+    if timestamp is None:
+        this_time = time.time()
+    else:
+        this_time = timestamp
+
     # If this item is in an ifgroup create a pseudo interface and
     # pass its data to the common instance.
     # This is done by simply adding the additional group_info data
@@ -557,7 +562,6 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
         # TODO Now we're done and have all matching interfaces
         # Accumulate info over matching_interfaces
         wrapped   = False
-        this_time = time.time()
 
         group_info = {"ifSpeed"     : 0, "ifInOctets"  : 0, "inucast"       : 0,
                       "inmcast"     : 0, "inbcast"     : 0, "ifInDiscards"  : 0,
@@ -707,7 +711,14 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
 # TODO: Check what the relationship between Errors, Discards, and ucast/mcast actually is.
 # One case of winperf_if appeared to indicate that in that case Errors = Discards.
 def check_if_common_single(item, params, info, force_counter_wrap = False,
-                           has_nodeinfo = False, group_members = None, group_name = "Group"):
+                           has_nodeinfo = False, group_members = None,
+                            group_name = "Group", timestamp = None):
+
+    if timestamp is None:
+        this_time = time.time()
+    else:
+        this_time = timestamp
+
     # Params now must be a dict. Some keys might
     # be set to None
     targetspeed        = params.get("speed")
@@ -889,7 +900,6 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                 return state, infotext
 
             # Performance counters
-            this_time = time.time()
             rates = []
             wrapped = False
             perfdata = []

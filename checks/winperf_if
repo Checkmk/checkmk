@@ -93,6 +93,11 @@ def parse_winperf_if(info):
     nic_names = map(winperf_if_canonize_nic_name, info[1][2:])
     nic_index = winperf_if_get_nic_index_map(nic_names)
 
+    try:
+        agent_timestamp = int(info[0][0])
+    except (IndexError, ValueError):
+        agent_timestamp = None
+
     lines = iter(info)
     lines.next() # skip line with timestamp and counter number
     lines.next() # skip interface line (already evaluated)
@@ -286,7 +291,7 @@ def parse_winperf_if(info):
            mac,
         ))
 
-    return converted, dhcp_lines, nic_names, nic_index
+    return agent_timestamp, converted, dhcp_lines, nic_names, nic_index
 
 
 def winperf_if_get_nic_index_map(nic_names):
@@ -327,16 +332,16 @@ def check_if_dhcp(item, _no_params, info, nic_names, nic_index):
 
 
 def inventory_winperf_if(parsed):
-    perf, dhcp, nic_names, nic_index = parsed
+    agent_timestamp, perf, dhcp, nic_names, nic_index = parsed
 
     # dhcp info irrelevant to inventory
     return inventory_if_common(perf)
 
 
 def check_winperf_if(item, params, parsed):
-    perf, dhcp, nic_names, nic_index = parsed
+    agent_timestamp, perf, dhcp, nic_names, nic_index = parsed
 
-    yield check_if_common(item, params, perf, group_name = "Teaming")
+    yield check_if_common(item, params, perf, group_name = "Teaming", timestamp = agent_timestamp)
     yield check_if_dhcp(item, params, dhcp, nic_names, nic_index)
 
 

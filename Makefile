@@ -98,7 +98,10 @@ check-binaries:
 
 check: check-spaces check-permissions check-binaries check-version
 
-dist: mk-livestatus
+precompile-werks:
+	python -c "import cmk.werks ; cmk.werks.write_precompiled_werks('.werks/werks', cmk.werks.load_raw_files('.werks'))"
+
+dist: mk-livestatus precompile-werks
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -111,7 +114,7 @@ dist: mk-livestatus
 	  tar czf $(DISTNAME)/base.tar.gz $(TAROPTS) cmk_base/*.py* ; \
 	  rm cmk_base/*.pyc
 	tar czf $(DISTNAME)/share.tar.gz $(TAROPTS) check_mk_templates.cfg
-	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks $$(cd .werks ; ls [0-9]*)
+	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)
 	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
@@ -260,6 +263,7 @@ clean:
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
                $(addprefix livestatus/,$(LIVESTATUS_AUTO))
+	rm .werks/werks || true
 	find -name "*~" | xargs rm -f
 
 mrproper:

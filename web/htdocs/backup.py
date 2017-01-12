@@ -45,7 +45,7 @@ except ImportError:
 import table
 import key_mgmt
 from valuespec import *
-from lib import write_settings_file, MKUserError
+from lib import MKUserError
 import cmk.render as render
 import cmk.store as store
 from cmk.schedule import next_scheduled_time

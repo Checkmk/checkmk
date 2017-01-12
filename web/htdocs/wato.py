@@ -3110,9 +3110,8 @@ class ModeBulkImport(WatoMode):
         file_name, mime_type, content = upload_info["file"]
 
         file_id = "%s-%d" % (config.user.id, int(time.time()))
-        f = create_user_file(self._file_path(), "w")
-        f.write(content.encode("utf-8"))
-        f.close()
+
+        store.save_file(self._file_path(), content.encode("utf-8"))
 
         # make selections available to next page
         html.set_var("file_id", file_id)
@@ -6687,24 +6686,24 @@ def save_group_information(all_groups):
                     multisite_groups[what][gid][attr] = value
 
     # Save Check_MK world related parts
-    make_nagios_directory(wato_root_dir)
-    out = create_user_file(wato_root_dir + "groups.mk", "w")
-    out.write(wato_fileheader())
+    output = wato_fileheader()
     for what in [ "host", "service", "contact" ]:
         if what in check_mk_groups and len(check_mk_groups[what]) > 0:
-            out.write("if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what))
-            out.write("define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(check_mk_groups[what])))
+            output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what)
+            output += "define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(check_mk_groups[what]))
+
+    make_nagios_directory(wato_root_dir)
+    store.save_file(wato_root_dir + "groups.mk", output)
 
     # Users with passwords for Multisite
-    filename = multisite_dir + "groups.mk.new"
-    make_nagios_directory(multisite_dir)
-    out = create_user_file(filename, "w")
-    out.write(wato_fileheader())
+    output = wato_fileheader()
     for what in [ "host", "service", "contact" ]:
         if what in multisite_groups and len(multisite_groups[what]) > 0:
-            out.write("multisite_%sgroups = \\\n%s\n\n" % (what, pprint.pformat(multisite_groups[what])))
-    out.close()
-    os.rename(filename, filename[:-4])
+            output += "multisite_%sgroups = \\\n%s\n\n" % (what, pprint.pformat(multisite_groups[what]))
+
+    make_nagios_directory(multisite_dir)
+    store.save_file(multisite_dir + "groups.mk", output)
+
 
 class GroupSelection(ElementSelection):
     def __init__(self, what, **kwargs):
@@ -8147,26 +8146,13 @@ def mode_timeperiods(phase):
 
 
 def load_timeperiods():
-    filename = wato_root_dir + "timeperiods.mk"
-    if not os.path.exists(filename):
-        return {}
-    try:
-        vars = { "timeperiods" : {} }
-        execfile(filename, vars, vars)
-        return vars["timeperiods"]
-
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (filename, e))
-        return {}
+    return store.load_from_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", {})
 
 
 def save_timeperiods(timeperiods):
     make_nagios_directory(wato_root_dir)
-    out = create_user_file(wato_root_dir + "timeperiods.mk", "w")
-    out.write(wato_fileheader())
-    out.write("timeperiods.update(%s)\n" % pprint.pformat(timeperiods))
+    store.save_to_mk_file(wato_root_dir + "timeperiods.mk", "timeperiods", timeperiods)
+
 
 class ExceptionName(TextAscii):
     def __init__(self, **kwargs):
@@ -10896,10 +10882,7 @@ def save_roles(roles):
     config.roles.update(roles)
 
     make_nagios_directory(multisite_dir)
-    filename = multisite_dir + "roles.mk"
-    out = create_user_file(filename, "w")
-    out.write(wato_fileheader())
-    out.write("roles.update(\n%s)\n" % pprint.pformat(roles))
+    store.save_to_mk_file(multisite_dir + "roles.mk", "roles", roles)
 
     call_hook_roles_saved(roles)
 
@@ -14423,13 +14406,14 @@ custom_attr_types = [
 ]
 
 def save_custom_attrs(attrs):
+    output = wato_fileheader()
+    for what in [ "user", "host" ]:
+        if what in attrs and len(attrs[what]) > 0:
+            output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)
+            output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
+
     make_nagios_directory(multisite_dir)
-    with create_user_file(multisite_dir + "custom_attrs.mk", "w") as out:
-        out.write(wato_fileheader())
-        for what in [ "user", "host" ]:
-            if what in attrs and len(attrs[what]) > 0:
-                out.write("if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what))
-                out.write("wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what])))
+    store.save_file(multisite_dir + "custom_attrs.mk", output)
 
 
 def mode_edit_custom_attr(phase, what):

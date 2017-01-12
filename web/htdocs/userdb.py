@@ -30,6 +30,7 @@ from log import logger
 import time, os, pprint, shutil, traceback
 from valuespec import *
 import cmk.paths
+import cmk.store as store
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
@@ -731,8 +732,8 @@ def save_users(profiles):
         auth_file = user_dir + "/automation.secret"
         if "automation_secret" in user:
             store.save_file(auth_file, "%s\n" % user["automation_secret"])
-        else:
-            remove_user_file(auth_file)
+        elif os.path.exists(auth_file):
+            os.unlink(make_utf8(auth_file))
 
         # Write out user attributes which are written to dedicated files in the user
         # profile directory. The primary reason to have separate files, is to reduce
@@ -1052,10 +1053,11 @@ def load_connection_config():
 
 
 def save_connection_config(connections):
+    output  = "# Written by Multisite UserDB\n# encoding: utf-8\n\n"
+    output += "user_connections = \\\n%s\n\n" % pprint.pformat(connections)
+
     make_nagios_directory(multisite_dir)
-    out = create_user_file(multisite_dir + "user_connections.mk", "w")
-    out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
-    out.write("user_connections = \\\n%s\n\n" % pprint.pformat(connections))
+    store.save_file(multisite_dir + "user_connections.mk", output)
 
 #.
 #   .--ConnectorAPI--------------------------------------------------------.

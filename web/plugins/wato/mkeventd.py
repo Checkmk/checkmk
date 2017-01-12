@@ -961,20 +961,21 @@ def default_rule_pack(rules):
 
 
 def save_mkeventd_rules(legacy_rules, rule_packs):
+    output = "# Written by WATO\n# encoding: utf-8\n\n"
+
+    if config.mkeventd_pprint_rules:
+        legacy_rules_text = pprint.pformat(legacy_rules)
+        rule_packs_text   = pprint.pformat(rule_packs)
+    else:
+        legacy_rules_text = repr(legacy_rules)
+        rule_packs_text   = repr(rule_packs)
+
+    output += "rules += \\\n%s\n\n" % legacy_rules_text
+    output += "rule_packs += \\\n%s\n" % rule_packs_text
+
     make_nagios_directory(cmk.paths.default_config_dir + "/mkeventd.d")
     make_nagios_directory(mkeventd_config_dir)
-    out = create_user_file(mkeventd_config_dir + "rules.mk", "w")
-    out.write("# Written by WATO\n# encoding: utf-8\n\n")
-    try:
-        if config.mkeventd_pprint_rules:
-            out.write("rules += \\\n%s\n\n" % pprint.pformat(legacy_rules))
-            out.write("rule_packs += \\\n%s\n" % pprint.pformat(rule_packs))
-            return
-    except:
-        pass
-
-    out.write("rules += \\\n%r\n\n" % legacy_rules)
-    out.write("rule_packs += \\\n%r\n" % rule_packs)
+    store.save_file(mkeventd_config_dir + "rules.mk", output)
 
 
 def save_mkeventd_sample_config():

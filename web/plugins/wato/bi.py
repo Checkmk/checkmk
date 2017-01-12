@@ -153,13 +153,14 @@ class ModeBI(WatoMode):
 
 
     def save_config(self):
-        make_nagios_directory(multisite_dir)
-        out = create_user_file(multisite_dir + "bi.mk", "w")
-        out.write(wato_fileheader())
+        output = wato_fileheader()
         for pack_id, pack in sorted(self._packs.items()):
             converted_pack = self._convert_pack_to_bi(pack)
-            out.write("bi_packs[%r] = %s\n\n" % (
-                pack_id, self._replace_bi_constants(pprint.pformat(converted_pack, width=50))))
+            output += "bi_packs[%r] = %s\n\n" % (
+                pack_id, self._replace_bi_constants(pprint.pformat(converted_pack, width=50)))
+
+        make_nagios_directory(multisite_dir)
+        store.save_file(multisite_dir + "bi.mk", output)
 
 
     def _convert_pack_to_bi(self, pack):

@@ -1,0 +1,23 @@
+Title: Quicksearch: Introduced new filters tg, ad and al
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i4
+Date: 1484219043
+Class: feature
+
+With this update the following filters are available.
+
+<ul>
+<li>h: matches hostname</li>
+<li>s: matches service description</li>
+<li>hg: matches hostgroup</li>
+<li>sg: matches servicegroup</li>
+<li>ad: matches host address</li>
+<li>al: matches host alias</li>
+<li>tg: matches host tag</li>
+</ul>
+
+You can specific multiple filters in a single query.
+Filters of different types are ANDed. Filters of the same type are ORed,
+with the exception of the tg: filter, where all tg: patterns are also ANDed.

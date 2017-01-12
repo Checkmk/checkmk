@@ -713,7 +713,7 @@ def paint_downtime_buttons(what):
     html.write("&nbsp; " + _("minutes"))
     html.hr()
     for time_range in config.user_downtime_timeranges:
-        html.button("_downrange__%s" % time_range['end'], time_range['title'])
+        html.button("_downrange__%s" % time_range['end'], _u(time_range['title']))
     if what != "aggr":
         html.write(" &nbsp; - &nbsp;")
         html.button("_down_remove", _("Remove all"))

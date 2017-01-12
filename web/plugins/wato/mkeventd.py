@@ -182,8 +182,8 @@ vs_mkeventd_actions = \
                                         + substitute_help \
                                         + "<br>" \
                                         + _("These information are also available as environment variables with the prefix "
-                                            "<tt>EVENT_</tt>. For example the text of the event is available as "
-                                            "<tt>EVENT_TEXT</tt> as environment variable."),
+                                            "<tt>CMK_</tt>. For example the text of the event is available as "
+                                            "<tt>CMK_TEXT</tt> as environment variable."),
                                    cols = 64,
                                    rows = 10,
                                    attrencode = True,

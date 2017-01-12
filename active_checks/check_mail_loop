@@ -328,6 +328,7 @@ def send_mail():
     mail['From']    = mail_from
     mail['To']      = mail_from
     mail['Subject'] = '%s %d %d' % (subject, now, key)
+    mail['Date']    = email.utils.formatdate(localtime=True)
 
     try:
         S = smtplib.SMTP(smtp_server, smtp_port)

@@ -33,7 +33,9 @@ def render_searchform():
 
 sidebar_snapins["search"] = {
     "title":       _("Quicksearch"),
-    "description": _("Interactive search field for direct access to hosts and services"),
+    "description": _("Interactive search field for direct access to hosts, services, host- and "\
+                     "servicegroups.<br>You can use the following filters:<br> <i>h:</i> {host}, <i>s:</i> {service} <br> "\
+                     "<i>hg:</i> {hostgroup}, <i>sg:</i> {servicegroup}<br><i>ad:</i> {address}, <i>al:</i> {alias}, tg: {hosttag}"),
     "render":      render_searchform,
     "restart":     False,
     "allowed":     [ "user", "admin", "guest" ],
@@ -109,6 +111,12 @@ sidebar_snapins["search"] = {
 
 #mk_search_results div.error {
     padding: 2px;
+    font-size: 9pt;
+}
+
+#mk_search_results div.warning {
+    padding: 2px;
+    font-size: 9pt;
 }
 
 """
@@ -126,192 +134,315 @@ sidebar_snapins["search"] = {
 #   | Realize the search mechanism to find objects via livestatus          |
 #   '----------------------------------------------------------------------'
 
-def search_filter_name(used_filters, column = 'name'):
-    return 'Filter: %s ~~ %s\n' % (column, lqencode(used_filters[0][1]))
 
-search_plugins.append({
-    'id'          : 'hosts',
-    "lq_columns"  : ["host_name"],
-    'filter_func' : search_filter_name,
-})
+class QuicksearchMatchPlugin(object):
+    def __init__(self, livestatus_tables):
+        self._livestatus_tables = livestatus_tables
+        super(QuicksearchMatchPlugin, self).__init__()
 
-search_plugins.append({
-    'id'          : 'services',
-    "lq_columns"  : ["service_description"],
-    'filter_func' : lambda q: search_filter_name(q, 'description'),
-})
 
-search_plugins.append({
-    'id'          : 'hostgroups',
-    "lq_columns"  : ["name"],
-    'filter_func' : search_filter_name,
-})
+    def get_filter_shortname(self):
+        return self._filter_shortname
 
-search_plugins.append({
-    'id'          : 'servicegroups',
-    "lq_columns"  : ["name"],
-    'filter_func' : search_filter_name,
-})
 
-def search_filter_ipaddress(used_filters):
-    q = used_filters[0][1]
-    if is_ipaddress(q):
-        return 'Filter: address ~~ %s\n' % lqencode(q)
+    def is_filter_set(self, used_filters):
+        return self.get_filter_shortname() in used_filters
 
-search_plugins.append({
-    'id'             : 'host_address',
-    "dftl_url_tmpl"  : "hosts",
-    "lq_table"       : "hosts",
-    "lq_columns"     : ["host_address"],
-    'filter_func'    : search_filter_ipaddress,
-    'search_url_tmpl': 'view.py?view_name=searchhost&host_address=%(search)s&filled_in=filter&host_address_prefix=yes',
-    'match_url_tmpl' : 'view.py?view_name=searchhost&host_address=%(search)s&filled_in=filter'
-})
 
-def search_filter_alias(used_filters):
-    return 'Filter: alias ~~ %s\n' % lqencode(used_filters[0][1])
+    def is_used_for_table(self, livestatus_table, used_filters):
+        # Check if this filters handles the table at all
+        if livestatus_table not in self._livestatus_tables:
+            return False
 
-search_plugins.append({
-    'id'              : 'host_alias',
-    "dftl_url_tmpl"   : "hosts",
-    'lq_table'        : "hosts",
-    'qs_show'         : 'host_alias',
-    'lq_columns'      : ['host_name', 'host_alias'],
-    'filter_func'     : search_filter_alias,
-    'search_url_tmpl' : 'view.py?view_name=searchhost&hostalias=%(search)s&filled_in=filter',
-    'match_url_tmpl'  : 'view.py?view_name=searchhost&hostalias=%(search)s&filled_in=filter'
-})
+        if self.get_filter_shortname() not in used_filters:
+            return False
 
-def search_hosts_filter(filters, host_is_ip = False):
-    lq_filter = ""
-    filter_template = host_is_ip and "Filter: host_address ~~ %s\n" or "Filter: host_name ~~ %s\n"
-    for name, value in filters:
-        lq_filter += filter_template % lqencode(value)
-    if len(filters) > 1:
-        lq_filter += 'Or: %d\n' % len(filters)
+        return True
 
-    return lq_filter
 
-def search_hosts_url_tmpl(used_filters, data, host_is_ip = False):
-    filter_field = host_is_ip and "host_address=(%s)" or "host_regex=(%s)" % "|".join(map(lambda x: x[1], used_filters))
-    return 'view.py?view_name=searchhost&filled_in=filter&' + filter_field
+    def get_livestatus_columns(self, livestatus_table):
+        raise NotImplementedError()
 
-def search_host_service_filter(filters, host_is_ip = False):
-    def get_filters(filter_type):
-        result = []
-        for entry in filters:
-            if entry[0] == filter_type:
-                result.append(entry[1])
-        return result
 
-    services      = get_filters("services")
-    hosts         = get_filters("hosts")
-    hostgroups    = get_filters("hostgroups")
-    servicegroups = get_filters("servicegroups")
+    def get_livestatus_filters(self, livestatus_table, used_filters):
+        raise NotImplementedError()
 
-    lq_filter = ""
-    group_count = 0
-    for filter_name, entries, optr in [ (host_is_ip and "host_address" or "host_name", hosts, "~~"),
-                                        ("service_description", services, "~~"),
-                                        ("host_groups", hostgroups, ">="),
-                                        ("groups", servicegroups, ">=") ]:
-        if entries:
-            group_count += 1
-        for entry in entries:
-            lq_filter += 'Filter: %s %s %s\n' % (filter_name, optr, lqencode(entry))
-        if len(entries) > 1:
-            lq_filter += 'Or: %d\n' % len(entries)
 
-    if group_count > 1:
-        lq_filter += "And: %d\n" % group_count
+    def get_matches(self, for_view, row, livestatus_table, used_filter, rows = None):
+        raise NotImplementedError()
 
-    return lq_filter
 
-def match_host_service_url_tmpl(used_filters, row_dict, host_is_ip = False):
-    tmpl = 'view.py?view_name=searchsvc&filled_in=filter'
-    # Sorry, no support for multiple host- or servicegroups filters in match templates (yet)
-    for ty, entry in [ ("hostgroup", "host_groups"), ("servicegroup", "service_groups")]:
-        if row_dict.get(entry):
-            if type(row_dict[entry]) == list:
-                row_dict[entry] = row_dict[entry][0]
+    def _matches_regex(self, pattern, value):
+        return re.match(pattern, value)
 
-    for param, key in [                ("service_regex",    "service_description"),
-          (host_is_ip and "host_address" or  "host_regex",  "host_name"),
-                                       ("opthost_group",    "host_groups"),
-                                       ("optservice_group", "service_groups"),
-                                       ("site",             "site")]:
-        if row_dict.get(key):
-            tmpl_pre = "&%s=%%(%s)s" % (param, key)
-            tmpl += tmpl_pre % row_dict
-    return tmpl
 
-def search_host_service_url_tmpl(used_filters, data, host_is_ip = False):
-    # We combine all used_filters of the same type with (abcd|dfdf)
-    filters_combined = {"hosts": [], "services": [], "hostgroups": [], "servicegroups": []}
+    def _create_textfilter_regex(self, used_filters):
+        patterns = used_filters[self.get_filter_shortname()]
+        if len(patterns) > 1:
+            return "(%s)" % "|".join(patterns)
+        else:
+            return patterns[0]
 
-    for entry in filters_combined.keys():
-        for filt in used_filters:
-            if filt[0] == entry:
-                filters_combined.setdefault(entry, []).append(filt[1].strip())
-    for key, value in filters_combined.items():
-        if len(value) > 1:
-            filters_combined[key] = "(%s)" % "|".join(value)
-        elif len(value) == 1:
-            filters_combined[key] = value[0]
 
-    tmpl = 'view.py?view_name=searchsvc&filled_in=filter'
-    for url_param, qs_name in [        ("service_regex",   "services"     ),
-                        host_is_ip and ("host_address",    "host"         )\
-                                    or ("host_regex",      "hosts"        ),
-                                       ("opthost_group",   "hostgroups"   ),
-                                       ("optservice_group", "servicegroups")]:
-        if filters_combined.get(qs_name):
-            tmpl_pre = "&%s=%%(%s)s" % (url_param, qs_name)
-            tmpl += tmpl_pre % filters_combined
-    return tmpl
 
-search_plugins.append({
-    "id"                    : "service_multi",
-    "required_types"        : ["services"],
-    "optional_types"        : ["hosts", "hostgroups", "servicegroups"],
-    "qs_show"               : "service_description",
-    "lq_table"              : "services",
-    "lq_columns"            : ["service_description", "host_name", "host_groups", "service_groups"],
-    "filter_func"           : lambda x: search_host_service_filter(x),
-    "match_url_tmpl_func"   : lambda x,y: match_host_service_url_tmpl(x, y),
-    "search_url_tmpl_func"  : lambda x,y: search_host_service_url_tmpl(x, y),
-})
+class GroupMatchPlugin(QuicksearchMatchPlugin):
+    def __init__(self, group_type = None, filter_shortname = None):
+        self._group_type = group_type
+        self._filter_shortname = filter_shortname
+        super(GroupMatchPlugin, self).__init__(["%sgroups" % self._group_type, "%ss" % self._group_type, "services"])
 
-search_plugins.append({
-    "id"                    : "service_multi_address",
-    "qs_show"               : "service_description",
-    "required_types"        : ["services"],
-    "optional_types"        : ["hosts", "hostgroups", "servicegroups"],
-    "lq_table"              : "services",
-    "lq_columns"            : ["service_description", "host_name", "host_groups", "service_groups", "host_address"],
-    "filter_func"           : lambda x: search_host_service_filter(x, host_is_ip = True),
-    "match_url_tmpl_func"   : lambda x,y: match_host_service_url_tmpl(x, y, host_is_ip = True),
-    "search_url_tmpl_func"  : lambda x,y: search_host_service_url_tmpl(x, y, host_is_ip = True),
-})
 
-search_plugins.append({
-    "id"                    : "host_multi",
-    "qs_show"               : "host_name",
-    "required_types"        : ["hosts"],
-    "lq_table"              : "hosts",
-    "lq_columns"            : ["host_name", "host_address"],
-    "filter_func"           : lambda x: search_hosts_filter(x),
-    "match_url_tmpl_func"   : lambda x,y: "view.py?view_name=host&host=%(host_name)s&site=%(site)s" % y,
-    "search_url_tmpl_func"  : lambda x,y: search_hosts_url_tmpl(x, y),
-})
+    def get_livestatus_columns(self, livestatus_table):
+        if livestatus_table == "%sgroups" % self._group_type:
+            return ["name"]
+        else:
+            return ["%s_groups" % self._group_type]
 
-search_plugins.append({
-    "id"                    : "host_multi_address",
-    "qs_show"               : "host_address",
-    "required_types"        : ["hosts"],
-    "lq_table"              : "hosts",
-    "lq_columns"            : ["host_address", "host_name"],
-    "filter_func"           : lambda x: search_hosts_filter(x, True),
-    "match_url_tmpl_func"   : lambda x,y: "view.py?view_name=host&host_address=%(host_address)s&site=%(site)s" % y,
-    "search_url_tmpl_func"  : lambda x,y: search_hosts_url_tmpl(x, y, True),
-})
+
+    def get_livestatus_filters(self, livestatus_table, used_filters):
+        filter_lines = []
+        filter_prefix = ""
+        if livestatus_table == "%sgroups" % self._group_type:
+            filter_prefix = "name ~~ "
+        else:
+            filter_prefix = "%s_groups >= " % self._group_type
+
+        for entry in used_filters.get(self.get_filter_shortname()):
+            filter_lines.append("Filter: %s%s" % (filter_prefix, entry))
+
+        if len(filter_lines) > 1:
+            filter_lines.append("Or: %d" % len(filter_lines))
+
+        return "\n".join(filter_lines)
+
+
+    def get_matches(self, for_view, row, livestatus_table, used_filters, rows = None):
+        supported_views = {
+            ### View name    url fieldname,                  key in row
+            # Group domains (hostgroups, servicegroups)
+            "hostgroup":    ["hostgroup",                    "name"],
+            "hostgroups":   ["hostgroup_regex",              "name"],
+            "servicegroup": ["servicegroup",                 "name"],
+            "svcgroups":    ["servicegroup_regex",           "name"],
+
+            # Host/Service domain (hosts, services)
+            "allservices":  ["%sgroups" % self._group_type ,
+                             self._group_type == "service" and "groups" or "host_groups"],
+            "searchsvc":    ["%sgroups" % self._group_type ,
+                             self._group_type == "service" and "groups" or "host_groups"],
+            "searchhost":   ["%sgroups" % self._group_type ,
+                             self._group_type == "service" and "groups" or "host_groups"]
+        }
+
+        view_info = supported_views.get(for_view)
+        if not view_info:
+            return
+
+        filter_name, row_fieldname = view_info
+        if row:
+            value = row.get(row_fieldname)
+        else:
+            value = used_filters.get(self.get_filter_shortname())
+
+        if type(value) == list:
+            value = "|".join(value)
+
+        return value, [(filter_name, value)]
+
+
+
+class ServiceMatchPlugin(QuicksearchMatchPlugin):
+    def __init__(self):
+        self._filter_shortname = "s"
+        super(ServiceMatchPlugin, self).__init__(["services"])
+
+
+    def get_livestatus_columns(self, livestatus_table):
+        return ["service_description"]
+
+
+    def get_livestatus_filters(self, livestatus_table, used_filters):
+        filter_lines = []
+        for entry in used_filters.get(self.get_filter_shortname()):
+            filter_lines.append("Filter: service_description ~~ %s" % entry)
+
+        if len(filter_lines) > 1:
+            filter_lines.append("Or: %d" % len(filter_lines))
+
+        return "\n".join(filter_lines)
+
+
+    def get_matches(self, for_view, row, livestatus_table, used_filters, rows = None):
+        supported_views = ["allservices", "searchsvc"]
+        if for_view not in supported_views:
+            return
+
+        if row:
+            field_value = row.get("description")
+        else:
+            field_value = self._create_textfilter_regex(used_filters)
+
+        return field_value, [("service_regex", field_value)]
+
+
+
+class HostMatchPlugin(QuicksearchMatchPlugin):
+    def __init__(self, livestatus_field = None, filter_shortname = None):
+        self._livestatus_field = livestatus_field # address, name or alias
+        self._filter_shortname = filter_shortname
+        super(HostMatchPlugin, self).__init__(["hosts", "services"])
+
+
+    def _get_real_fieldname(self, livestatus_table):
+        if livestatus_table != "hosts":
+            return "host_%s" % self._livestatus_field
+        else:
+            return self._livestatus_field
+
+
+    def get_livestatus_columns(self, livestatus_table):
+        return [self._get_real_fieldname(livestatus_table), "host_name"]
+
+
+    def get_livestatus_filters(self, livestatus_table, used_filters):
+        filter_lines = []
+        for entry in used_filters.get(self.get_filter_shortname()):
+            filter_lines.append("Filter: %s ~~ %s" % (self._get_real_fieldname(livestatus_table), entry))
+
+        if len(filter_lines) > 1:
+            filter_lines.append("Or: %d" % len(filter_lines))
+
+        return "\n".join(filter_lines)
+
+
+    def get_matches(self, for_view, row, livestatus_table, used_filters, rows = None):
+        supported_views = {
+            # View name     Filter name
+            # Exact matches (always uses hostname as filter)
+            "host":         {"name":    "host",
+                             "address": "host",
+                             "alias":   "host"},
+            "allservices":  {"name":    "host_regex",
+                             "address": "host_regex",
+                             "alias":   "host_regex"},
+            # Multi matches
+            "searchhost":   {"name":    "host_regex",
+                             "address": "host_address",
+                             "alias":   "hostalias"},
+            "searchsvc":    {"name":    "host_regex",
+                             "address": "host_address",
+                             "alias":   "hostalias"}
+        }
+
+
+        view_info = supported_views.get(for_view)
+        if not view_info:
+            return
+
+        filter_name = view_info.get(self._livestatus_field)
+
+        if row:
+            field_value = row.get(self._get_real_fieldname(livestatus_table))
+            hostname    = row.get("host_name", row.get("name"))
+            url_info    = [(filter_name, hostname)]
+        else:
+            field_value = self._create_textfilter_regex(used_filters)
+            url_info = [(filter_name, field_value)]
+            if self._livestatus_field == "address":
+                url_info.append(("host_address_prefix", "yes"))
+
+        return field_value, url_info
+
+
+
+class HosttagMatchPlugin(QuicksearchMatchPlugin):
+    def __init__(self):
+        self._filter_shortname = "tg"
+        super(HosttagMatchPlugin, self).__init__(["hosts", "services"])
+
+
+    def _get_hosttag_dict(self):
+        lookup_dict = {}
+        for group, text, values in config.wato_host_tags:
+            for value in values:
+                lookup_dict[value[0]] = group
+        return lookup_dict
+
+
+    def get_livestatus_columns(self, livestatus_table):
+        return ["custom_variables"]
+
+
+    def get_livestatus_filters(self, livestatus_table, used_filters):
+        filter_lines = []
+
+        if len(used_filters.get(self.get_filter_shortname())) > 3:
+            raise MKGeneralException("You can only set up to three 'tg:' filters")
+
+        for entry in used_filters.get(self.get_filter_shortname()):
+            filter_lines.append("Filter: host_custom_variables ~ TAGS (^|[ ])%s($|[ ])" % lqencode(entry))
+
+        if len(filter_lines) > 1:
+            filter_lines.append("And: %d" % len(filter_lines))
+
+        return "\n".join(filter_lines)
+
+
+    def get_matches(self, for_view, row, livestatus_table, used_filters, rows = None):
+        supported_views = {"searchhost": "host_regex",
+                           "host":       "host"}
+
+        filter_name = supported_views.get(for_view)
+        if not filter_name:
+            return
+
+        if row:
+            hostname = row.get("host_name", row.get("name"))
+            return hostname, [(filter_name, hostname)]
+        else:
+            url_infos = []
+            hosttag_to_group_dict = self._get_hosttag_dict()
+
+            for idx, entry in enumerate(used_filters.get(self.get_filter_shortname())):
+                if entry in hosttag_to_group_dict:
+                    url_infos.append(("host_tag_%d_grp" % idx, hosttag_to_group_dict[entry]))
+                    url_infos.append(("host_tag_%d_op"  % idx, "is"))
+                    url_infos.append(("host_tag_%d_val" % idx, entry))
+
+            return "", url_infos
+
+
+quicksearch_match_plugins = []
+
+
+quicksearch_match_plugins.append(
+    ServiceMatchPlugin()
+)
+
+quicksearch_match_plugins.append(
+    GroupMatchPlugin(group_type = "service", filter_shortname = "sg")
+)
+
+quicksearch_match_plugins.append(
+    GroupMatchPlugin(group_type = "host",    filter_shortname = "hg")
+)
+
+quicksearch_match_plugins.append(
+    HostMatchPlugin(livestatus_field = "name",    filter_shortname = "h")
+)
+
+quicksearch_match_plugins.append(
+    HostMatchPlugin(livestatus_field = "alias",   filter_shortname = "al")
+)
+
+quicksearch_match_plugins.append(
+    HostMatchPlugin(livestatus_field = "address", filter_shortname = "ad")
+)
+
+quicksearch_match_plugins.append(
+    HosttagMatchPlugin()
+)
+
+
+
+

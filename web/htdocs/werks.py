@@ -33,6 +33,7 @@ from lib import *
 from valuespec import *
 import cmk.store as store
 import cmk.paths
+import cmk.werks
 
 acknowledgement_path = cmk.paths.var_dir + "/acknowledged_werks.mk"
 
@@ -157,23 +158,7 @@ def page_werk():
 def load_werks():
     global g_werks
     if g_werks == None:
-        g_werks = {}
-        werks_dir = cmk.paths.share_dir + "/werks/"
-        try:
-            for file_name in os.listdir(werks_dir):
-                if file_name[0].isdigit():
-                    werk_id = int(file_name)
-                    try:
-                        werk = load_werk(werks_dir + file_name)
-                        werk["id"] = werk_id
-                        g_werks[werk_id] = werk
-                    except Exception, e:
-                        html.show_error(_("Failed to load werk \"%s\": %s") % (werk_id, e))
-        except OSError, e:
-            if e.errno == 2:
-                pass # werk directory not existing
-            else:
-                raise
+        g_werks = cmk.werks.load()
 
     ack_ids = load_acknowledgements()
     for werk in g_werks.values():
@@ -215,25 +200,6 @@ def acknowledge_all_werks(check_permission=True):
 def werk_is_pre_127(werk):
     return werk["version"].startswith("1.2.5") \
         or werk["version"].startswith("1.2.6")
-
-
-def load_werk(path):
-    werk = {
-        "body" : [],
-    }
-    in_header = True
-    for line in file(path):
-        line = line.strip().decode("utf-8")
-        if in_header and not line:
-            in_header = False
-        elif in_header:
-            key, text = line.split(":", 1)
-            werk[key.lower()] = tryint(text.strip())
-        else:
-            werk["body"].append(line)
-    if "compatible" not in werk: # missing in some legacy werks
-        werk["compatible"] = "compat"
-    return werk
 
 
 def load_acknowledgements():

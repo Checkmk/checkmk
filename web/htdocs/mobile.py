@@ -65,20 +65,17 @@ def mobile_html_head(title, ready_code=""):
 
     # Never allow the mobile page to be opened in a frameset. Redirect top page to the current content page.
     # This will result in a full screen mobile interface page.
-    html.javascript('''if(top != self) {
-    window.top.location.href = location;
-}''')
+    html.javascript('''if(top != self) { window.top.location.href = location; }''')
 
-    html.write("""<script type='text/javascript'>
+    html.javascript("""
       $(document).ready(function() { %s });
       $(document).ready(function() {
           $("a").click(function (event) {
             event.preventDefault();
             window.location = $(this).attr("href");
           });
-      });
-  </script>
-""" % (ready_code))
+      });""" % ready_code)
+
     html.close_head()
     html.open_body(class_="mobile")
 

@@ -586,31 +586,31 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
     def write_text(self, text):
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
-        return self.write(self._escape_text(text))
+        self.write(self._escape_text(text))
 
 
     def write_html(self, content):
         """ Write HTML code directly, without escaping. """
-        return self.write(content + "\n")
+        self.write(content + "\n")
 
 
     def comment(self, comment_text):
-        return self.write("<!--%s-->" % self.encode_attribute(comment_text))
+        self.write("<!--%s-->" % self.encode_attribute(comment_text))
 
 
     def meta(self, httpequiv=None, **attrs):
         if httpequiv:
             attrs['http-equiv'] = httpequiv
-        return self.write(self._render_opening_tag('meta', close_tag=True, **attrs))
+        self.write(self._render_opening_tag('meta', close_tag=True, **attrs))
 
 
     def base(self, target):
-        return self.write(self._render_opening_tag('base', close_tag=True, target=target))
+        self.write(self._render_opening_tag('base', close_tag=True, target=target))
 
 
     def open_a(self, href, **attrs):
         attrs['href'] = href
-        return self.write(self._render_opening_tag('a', **attrs))
+        self.write(self._render_opening_tag('a', **attrs))
 
 
     def render_a(self, content, href, **attrs):
@@ -619,11 +619,11 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def a(self, content, href, **attrs):
-        return self.write(self.render_a(content, href, **attrs))
+        self.write(self.render_a(content, href, **attrs))
 
 
     def stylesheet(self, href):
-        return self.write(self._render_opening_tag('link', rel="stylesheet", type_="text/css", href=href, close_tag=True))
+        self.write(self._render_opening_tag('link', rel="stylesheet", type_="text/css", href=href, close_tag=True))
 
 
     #
@@ -631,18 +631,13 @@ class HTMLGenerator(Escaper, OutputFunnel):
     #
 
 
-    # does not escape the script content
-    def render_javascript(self, code):
-        return HTML("<script language=\"javascript\">\n%s\n</script>\n" % code)
-
-
     def javascript(self, code):
-        return self.write(self.render_javascript(code))
+        self.write("<script type=\"text/javascript\">\n%s\n</script>\n" % code)
 
 
     def javascript_file(self, src):
         """ <script type="text/javascript" src="%(name)"/>\n """
-        return self.write(self._render_content_tag('script', '', type_="text/javascript", src=src))
+        self.write(self._render_content_tag('script', '', type_="text/javascript", src=src))
 
 
     def render_img(self, src, **attrs):
@@ -651,16 +646,16 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def img(self, src, **attrs):
-        return self.write(self.render_img(src, **attrs))
+        self.write(self.render_img(src, **attrs))
 
 
     def open_button(self, type_, **attrs):
         attrs['type'] = type_
-        return self.write(self._render_opening_tag('button', close_tag=True, **attrs))
+        self.write(self._render_opening_tag('button', close_tag=True, **attrs))
 
 
     def play_sound(self, url):
-        return self.write(self._render_opening_tag('audio autoplay', src_=url))
+        self.write(self._render_opening_tag('audio autoplay', src_=url))
 
 
     #
@@ -674,7 +669,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def label(self, content, for_, **attrs):
-        return self.write(self.render_label(content, for_, **attrs))
+        self.write(self.render_label(content, for_, **attrs))
 
 
     def render_input(self, name, type_, **attrs):
@@ -684,7 +679,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def input(self, name, type_, **attrs):
-        return self.write(self.render_input(name, type_, **attrs))
+        self.write(self.render_input(name, type_, **attrs))
 
 
     #
@@ -694,12 +689,12 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
     def td(self, content, **attrs):
         """ Only for text content. You can't put HTML structure here. """
-        return self.write(self._render_content_tag('td', content, **attrs))
+        self.write(self._render_content_tag('td', content, **attrs))
 
 
     def li(self, content, **attrs):
         """ Only for text content. You can't put HTML structure here. """
-        return self.write(self._render_content_tag('li', content, **attrs))
+        self.write(self._render_content_tag('li', content, **attrs))
 
 
     #
@@ -713,7 +708,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def heading(self, content):
-        return self.write(self.render_heading(content))
+        self.write(self.render_heading(content))
 
 
     def render_br(self):
@@ -721,7 +716,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def br(self):
-        return self.write(self.render_br())
+        self.write(self.render_br())
 
 
     def render_hr(self, **attrs):
@@ -729,7 +724,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def hr(self, **attrs):
-        return self.write(self.render_hr(**attrs))
+        self.write(self.render_hr(**attrs))
 
 
     def rule(self):
@@ -741,7 +736,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def nbsp(self):
-        return self.write(self.render_nbsp())
+        self.write(self.render_nbsp())
 
 
 

@@ -321,10 +321,12 @@ def send_mail():
     key = random.randint(1, 1000)
 
     from email.mime.text import MIMEText as text
+    import email.utils
     mail = email.mime.text.MIMEText("")
     mail['From']    = mail_from
     mail['To']      = mail_from
     mail['Subject'] = 'Check_MK-Mail-Loop %d %d' % (now, key)
+    mail['Date']    = email.utils.formatdate(localtime=True)
 
     try:
         S = smtplib.SMTP(smtp_server, smtp_port)

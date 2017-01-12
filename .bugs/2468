@@ -1,7 +1,10 @@
 Title: Host rename does not rename RRDs in var/check_mk/rrds
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2016-09-19 13:17:31
 Targetversion: 1.2.8
-Class: bug
 
+
+2017-01-12 08:02:49: changed state open -> done
+Has been fixed.

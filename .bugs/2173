@@ -1,9 +1,9 @@
 Title: WATO backup: Do not save configuration files which are derived from omd configs
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2015-03-10 11:30:33
 Targetversion: future
-Class: bug
 
 Example:
 Currently the file ~/etc/check_mk/multisite.d/mkeventd.mk can be stored in a WATO backup.
@@ -21,3 +21,6 @@ Fix:
 
 Hm. This whole WATO backup/snapshot system is broken. We need to find a more clean
 solution to all.
+
+2017-01-12 08:00:19: changed state open -> done
+The WATO backup / restore has been replaced by the new omd backup mechanism.

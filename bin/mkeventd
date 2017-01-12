@@ -3940,7 +3940,7 @@ def execute_script(body, event):
             key = key.encode("utf-8")
         if type(value) == unicode:
             value = value.encode("utf-8")
-        script_env["EVENT_" + key.upper()] = value
+        script_env["CMK_" + key.upper()] = value
 
     # Traps can contain 0-Bytes. We need to remove this from the script
     # body. Otherwise suprocess.Popen will crash.

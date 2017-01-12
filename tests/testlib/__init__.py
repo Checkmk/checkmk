@@ -263,6 +263,7 @@ class Site(object):
             cmk_path() + "/notifications",
             cmk_path() + "/livestatus",
             cmk_path() + "/livestatus/api/python",
+            cmk_path() + "/.werks",
 
             cmc_path() + "/bin",
             cmc_path() + "/modules",

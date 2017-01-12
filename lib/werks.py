@@ -28,11 +28,7 @@
 so it's best place is in the central library."""
 
 import os
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import json
 
 import cmk.paths
 import cmk.store as store

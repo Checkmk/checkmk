@@ -102,7 +102,7 @@ def inventory_local(info):
         nodename      = line[0]
         stripped_line = line[1:]
         if len(stripped_line) >= 4 or len(stripped_line) == 3 and stripped_line[0] == 'P':
-            inventory.append( (stripped_line[1], None) )
+            inventory.append( (stripped_line[1], {}) )
         else:
             raise MKGeneralException("Invalid line in agent section <<<local>>>: %s" % " ".join(stripped_line))
     return inventory

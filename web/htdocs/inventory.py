@@ -41,6 +41,9 @@ from lib import MKException, MKGeneralException, MKAuthException, MKUserError, l
 
 # Load data of a host, cache it in the current HTTP request
 def host(hostname):
+    if not hostname:
+        return {}
+
     invcache = html.get_cached("inventory")
     if not invcache:
         invcache = {}
@@ -54,6 +57,8 @@ def host(hostname):
         return invdata
 
 def has_inventory(hostname):
+    if not hostname:
+        return False
     path = cmk.paths.var_dir + "/inventory/" + hostname
     return os.path.exists(path)
 

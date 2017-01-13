@@ -1114,6 +1114,9 @@ def _create_view_enabled_check_func(invpath):
         if "host" not in context:
             return True # No host data? Keep old behaviour
 
+        if context["host"] == "":
+            return False
+
         tree = inventory.host(context["host"])
         if not tree:
             return False # Don't show when no inventory data available

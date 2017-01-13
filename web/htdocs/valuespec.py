@@ -150,7 +150,9 @@ class ValueSpec(object):
 
     def classtype_info(self):
         superclass = " ".join(base.__name__ for base in self.__class__.__bases__)
-        html.div("Check_MK-Type: %s %s" % (superclass, type(self).__name__), class_="legend", style="display:none;" if not self.debug_display else None)
+        if not self.debug_display:
+            return
+        html.div("Check_MK-Type: %s %s" % (superclass, type(self).__name__), class_="legend")
 
 
 

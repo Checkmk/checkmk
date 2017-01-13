@@ -398,7 +398,8 @@ class TextAscii(ValueSpec):
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
         self._prefix_buttons = kwargs.get("prefix_buttons", [])
-        self._onkeyup       = kwargs.get("onkeyup")
+        self._onkeyup        = kwargs.get("onkeyup")
+        self._autocomplete   = kwargs.get("autocomplete", True)
 
     def canonical_value(self):
         return ""
@@ -433,6 +434,7 @@ class TextAscii(ValueSpec):
             cssclass=self._cssclass,
             type=type_,
             attrs=attrs,
+            autocomplete="off" if not self._autocomplete else None,
         )
         if self._prefix_buttons:
             self.render_buttons()
@@ -733,6 +735,7 @@ class TextAsciiAutocomplete(TextAscii):
                              json.dumps(completion_params),
                              json.dumps(kwargs.get("onkeyup")),
                              kwargs.get("onkeyup", ""))
+        kwargs["autocomplete"] = False
         super(TextAsciiAutocomplete, self).__init__(**kwargs)
 
 

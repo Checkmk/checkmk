@@ -55,6 +55,7 @@
     * 4010 FIX: netapp_api_qtree_quota: now only includes quotas where disk-limits are set
     * 4278 FIX: check_mail_loop: Added missing Date header to sent mails
     * 4292 FIX: oracle_asm_diskgroup: fixed handling if disk status is DISMOUNTED
+    * 4012 FIX: Fixed broken windows MSI packages (Installer error 2725)...
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <cstddef>
+#include <sstream>
 #include <string>
 #include <vector>
 class Logger;
@@ -44,15 +45,13 @@ public:
 
     enum class ResponseHeader { off, fixed16 };
 
-    explicit OutputBuffer(Logger *logger);
+    OutputBuffer(int fd, const bool &termination_flag, Logger *logger);
     ~OutputBuffer();
 
     void add(const std::string &str);
     void add(const std::vector<char> &blob);
 
-    void reset();
-    void flush(int fd, const bool &termination_flag);
-    size_t size() { return _writepos - _buffer; }
+    size_t size();
 
     void setResponseHeader(ResponseHeader r) { _response_header = r; }
 
@@ -61,23 +60,16 @@ public:
     Logger *getLogger() const { return _logger; }
 
 private:
-    char *_buffer;
-    char *_writepos;
-    char *_end;
-    unsigned _max_size;
+    const int _fd;
+    const bool &_termination_flag;
+    Logger *const _logger;
+    std::ostringstream _os;
     ResponseHeader _response_header;
     ResponseCode _response_code;
     std::string _error_message;
-    Logger *const _logger;
 
-    // We use dynamically allocated memory => disable copy/assignment
-    // TODO: Just use vector instead of all this manual fiddling...
-    OutputBuffer(const OutputBuffer &) = delete;
-    OutputBuffer &operator=(const OutputBuffer &) = delete;
-
-    void addBuffer(const char *, size_t);
-    void needSpace(unsigned);
-    void writeData(int fd, const bool &, const char *, size_t);
+    void flush();
+    void writeData(std::ostringstream &os);
 };
 
 #endif  // OutputBuffer_h

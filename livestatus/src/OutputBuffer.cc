@@ -26,10 +26,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <chrono>
-#include <cstdlib>
-#include <cstring>
 #include <iomanip>
-#include <ostream>
 #include <ratio>
 #include "ChronoUtils.h"
 #include "Logger.h"
@@ -39,100 +36,60 @@ using std::ostringstream;
 using std::setfill;
 using std::setw;
 using std::string;
+using std::stringbuf;
 using std::to_string;
 using std::vector;
 
-OutputBuffer::OutputBuffer(Logger *logger) : _max_size(1), _logger(logger) {
-    _buffer = static_cast<char *>(malloc(_max_size));
-    _end = _buffer + _max_size;
-    reset();
-}
-
-OutputBuffer::~OutputBuffer() { free(_buffer); }
-
-void OutputBuffer::reset() {
-    _writepos = _buffer;
+OutputBuffer::OutputBuffer(int fd, const bool &termination_flag, Logger *logger)
+    : _fd(fd)
+    , _termination_flag(termination_flag)
+    , _logger(logger)
     // TODO(sp) This is really the wrong default because it hides some early
     // errors, e.g. an unknown table name. But we can't change this easily
     // because of legacy reasons... :-/
-    _response_header = ResponseHeader::off;
-    _response_code = ResponseCode::ok;
-    _error_message = "";
-}
+    , _response_header(ResponseHeader::off)
+    , _response_code(ResponseCode::ok) {}
 
-void OutputBuffer::add(const string &str) {
-    addBuffer(str.c_str(), str.size());
-}
+OutputBuffer::~OutputBuffer() { flush(); }
+
+void OutputBuffer::add(const string &str) { _os << str; }
 
 void OutputBuffer::add(const vector<char> &blob) {
-    addBuffer(&blob[0], blob.size());
+    _os.write(&blob[0], blob.size());
 }
 
-void OutputBuffer::addBuffer(const char *buf, size_t len) {
-    needSpace(len);
-    memcpy(_writepos, buf, len);
-    _writepos += len;
-}
-
-// TODO(sp): All this code is highly error-prone due to overflow, failed
-// allocations
-// etc. We should just use vector instead.
-void OutputBuffer::needSpace(unsigned len) {
-    if (_writepos + len > _end) {
-        unsigned s = size();
-        unsigned needed = s + len;
-        while (_max_size < needed) {  // double, until enough space
-            _max_size *= 2;
-        }
-
-        char *new_buffer = static_cast<char *>(realloc(_buffer, _max_size));
-        // It's better to crash voluntarily than overwriting random memory
-        // later.
-        if (new_buffer == nullptr) {
-            abort();
-        }
-
-        _buffer = new_buffer;
-        _writepos = _buffer + s;
-        _end = _buffer + _max_size;
-    }
-}
-
-void OutputBuffer::flush(int fd, const bool &termination_flag) {
+void OutputBuffer::flush() {
     if (_response_header == ResponseHeader::fixed16) {
-        const char *buffer = _buffer;
-        int s = size();
-
-        // if response code is not OK, output error
-        // message instead of data
         if (_response_code != ResponseCode::ok) {
-            buffer = _error_message.c_str();
-            s = _error_message.size();
+            _os.str(_error_message);
         }
-
-        ostringstream os;
-        os << setw(3) << setfill('0') << static_cast<unsigned>(_response_code)
-           << " " << setw(11) << setfill(' ') << s << "\n";
-        string header = os.str();
-        writeData(fd, termination_flag, header.c_str(), header.size());
-        writeData(fd, termination_flag, buffer, s);
-    } else {
-        writeData(fd, termination_flag, _buffer, size());
+        auto code = static_cast<unsigned>(_response_code);
+        size_t size = _os.tellp();
+        ostringstream header;
+        header << setw(3) << setfill('0') << code << " "  //
+               << setw(11) << setfill(' ') << size << "\n";
+        writeData(header);
     }
-    reset();
+    writeData(_os);
 }
 
-void OutputBuffer::writeData(int fd, const bool &termination_flag,
-                             const char *buffer, size_t bytes_to_write) {
-    while (!termination_flag && bytes_to_write > 0) {
+void OutputBuffer::writeData(ostringstream &os) {
+    // TODO(sp) This cruel and slightly non-portable hack avoids copying (which
+    // is important). We could do better by e.g. using boost::asio::streambuf.
+    struct Hack : public stringbuf {
+        const char *base() const { return pbase(); }
+    };
+    const char *buffer = static_cast<Hack *>(os.rdbuf())->base();
+    size_t bytes_to_write = os.tellp();
+    while (!_termination_flag && bytes_to_write > 0) {
         fd_set fds;
         FD_ZERO(&fds);
-        FD_SET(fd, &fds);
+        FD_SET(_fd, &fds);
 
         timeval tv = to_timeval(milliseconds(100));
-        int retval = select(fd + 1, nullptr, &fds, nullptr, &tv);
-        if (retval > 0 && FD_ISSET(fd, &fds)) {
-            ssize_t bytes_written = write(fd, buffer, bytes_to_write);
+        int retval = select(_fd + 1, nullptr, &fds, nullptr, &tv);
+        if (retval > 0 && FD_ISSET(_fd, &fds)) {
+            ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
             if (bytes_written == -1) {
                 generic_error ge("could not write " +
                                  to_string(bytes_to_write) +
@@ -145,6 +102,8 @@ void OutputBuffer::writeData(int fd, const bool &termination_flag,
         }
     }
 }
+
+size_t OutputBuffer::size() { return _os.tellp(); }
 
 void OutputBuffer::setError(ResponseCode code, const string &message) {
     // only the first error is being returned

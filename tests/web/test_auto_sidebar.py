@@ -213,7 +213,7 @@ def test_6():
     old.write("<b class=heading%s>%s</b>" % (toggle_actions, title))
     old.write("</div>")
     old.write("<div id=\"snapin_%s\" class=content%s>\n" % (name, style))
-    old.write('<script language="javascript">get_url("%s", updateContents, "snapin_%s")</script>' % (refresh_url, name))
+    old.write('<script type="text/javascript">get_url("%s", updateContents, "snapin_%s")</script>' % (refresh_url, name))
     old.write('</div>\n')
     old.write('</div>')
     old.write("<div class=snapinexception>\n"

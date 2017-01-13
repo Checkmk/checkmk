@@ -36,6 +36,7 @@
     * 4275 FIX: ibm_imm_voltage: Fixed not working perfdata processing
     * 4278 FIX: check_mail_loop: Added missing Date header to sent mails
     * 4292 FIX: oracle_asm_diskgroup: fixed handling if disk status is DISMOUNTED
+    * 4012 FIX: Fixed broken windows MSI packages (Installer error 2725)...
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

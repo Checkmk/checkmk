@@ -1,0 +1,11 @@
+Title: Fixed broken windows MSI packages (Installer error 2725)
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.4.0i3p1
+Date: 1484319304
+Class: fix
+
+Windows agents of version 1.4.0 had an incorrect version string
+stored in the msi package. An installation caused the msi installer
+to fail or to report the error 2725.

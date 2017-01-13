@@ -22,24 +22,30 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// IWYU pragma: no_include <ext/alloc_traits.h>
 #include "Logfile.h"
 #include <fcntl.h>
-#include <unistd.h>
 #include <cstdlib>
-#include <memory>
-#include <ostream>
+#include <fstream>
 #include <utility>
-#include <vector>
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logger.h"
 #include "Query.h"
 
 #ifdef CMC
+#include <new>
 #include "cmc.h"
+using std::bad_alloc;
+using std::unique_ptr;
 using std::to_string;
+#else
+#include <memory>
+#include <vector>
 #endif
 
+using std::ifstream;
+using std::ios;
 using std::make_unique;
 using std::string;
 using std::vector;
@@ -59,29 +65,27 @@ Logfile::Logfile(Logger *logger, const CommandsHolder &commands_holder,
 #endif
     , _logger(logger)
     , _logclasses_read(0) {
-    int fd = open(_path.c_str(), O_RDONLY);
-    if (fd < 0) {
+    ifstream is(_path, ios::binary);
+    if (!is) {
         generic_error ge("cannot open logfile " + _path);
         Informational(_logger) << ge;
         return;
     }
 
     char line[12];
-    if (12 != read(fd, line, 12)) {
-        close(fd);
+    is.read(line, sizeof(line));
+    if (!is) {
         return;  // ignoring. might be empty
     }
 
     if (line[0] != '[' || line[11] != ']') {
         Informational(_logger) << "ignoring logfile '" << _path
                                << "': does not begin with '[123456789] '";
-        close(fd);
         return;
     }
 
     line[11] = 0;
     _since = atoi(line + 1);
-    close(fd);
 }
 
 Logfile::~Logfile() { flush(); }
@@ -280,58 +284,40 @@ void Logfile::updateReferences() {
 }
 
 #ifdef CMC
-// Read complete file into newly allocated buffer. Returns a pointer
-// to a malloced buffer, that the caller must free (or 0, in case of
-// an error). The buffer is 2 bytes larger then the file. One byte
-// at the beginning and at the end of the buffer are '\0'.
-char *Logfile::readIntoBuffer(size_t *size) {
-    int fd = open(_path.c_str(), O_RDONLY);
-    if (fd < 0) {
-        generic_error ge("cannot open " + _path + " for reading");
+unique_ptr<vector<char>> Logfile::readIntoBuffer() {
+    unique_ptr<vector<char>> result;
+    ifstream is(_path, ios::binary | ios::ate);
+    if (!is) {
+        generic_error ge("cannot open logfile " + _path);
         Warning(_logger) << ge;
-        return nullptr;
+        return result;
     }
 
-    off_t o = lseek(fd, 0, SEEK_END);
-    if (o == -1) {
-        generic_error ge("cannot seek to end of " + _path);
+    auto end = is.tellg();
+    is.seekg(0, ios::beg);
+    if (!is) {
+        generic_error ge("cannot determine size of " + _path);
         Warning(_logger) << ge;
-        close(fd);
-        return nullptr;
+        return result;
+    }
+    auto size = end - is.tellg();
+
+    try {
+        // Remember: Zeroes at both ends, so we need a bit more space.
+        result = make_unique<vector<char>>(size + 2);
+    } catch (bad_alloc &) {
+        Warning(_logger) << "cannot allocate " << size << " byte buffer for "
+                         << _path;
+        return result;
     }
 
-    *size = o;
-    lseek(fd, 0, SEEK_SET);
-
-    // add space for binary 0 at beginning and end
-    char *buffer = static_cast<char *>(malloc(*size + 2));
-    if (buffer == nullptr) {
-        generic_error ge("cannot malloc buffer for reading " + _path);
+    is.read(&result->front() + 1, size);
+    if (!is) {
+        generic_error ge("cannot open read " + to_string(size) +
+                         " byted from " + _path);
         Warning(_logger) << ge;
-        close(fd);
-        return nullptr;
     }
 
-    ssize_t r = read(fd, buffer + 1, *size);
-    if (r < 0) {
-        generic_error ge("cannot read " + to_string(*size) + " bytes from " +
-                         _path);
-        Warning(_logger) << ge;
-        free(buffer);
-        close(fd);
-        return nullptr;
-    }
-    if (static_cast<size_t>(r) != *size) {
-        Warning(_logger) << "read only " << r << " out of " << *size
-                         << " bytes from " << _path;
-        free(buffer);
-        close(fd);
-        return nullptr;
-    }
-    buffer[0] = 0;
-    buffer[*size + 1] = 0;  // zero-terminate
-
-    close(fd);
-    return buffer;
+    return result;
 }
 #endif

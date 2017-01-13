@@ -38,6 +38,8 @@ class LogEntry;
 class Logger;
 
 #ifdef CMC
+#include <memory>
+#include <vector>
 class World;
 #endif
 
@@ -66,7 +68,9 @@ public:
 
     std::string path() { return _path; }
 #ifdef CMC
-    char *readIntoBuffer(size_t *size);
+    // Note: The buffer is 2 bytes larger then the file, containing a zero
+    // character at both ends.
+    std::unique_ptr<std::vector<char>> readIntoBuffer();
 #endif
     void load(LogCache *logcache, time_t since, time_t until,
               unsigned logclasses);

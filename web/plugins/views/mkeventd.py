@@ -724,6 +724,9 @@ if mkeventd_enabled:
             ( 'event_phase_counting', ""   ),
             ( 'event_phase_delayed',  ""   ),
         ],
+        'sorters': [
+            ('event_last', False)
+        ],
     })
 
     multisite_builtin_views['ec_events_of_monhost'] = mkeventd_view({
@@ -764,6 +767,9 @@ if mkeventd_enabled:
             'siteopt',
             'host',
         ],
+        'sorters': [
+            ('event_last', False)
+        ],
     })
     multisite_builtin_views['ec_events_of_host'] = mkeventd_view({
         'title':       _('Events of Host'),
@@ -802,6 +808,9 @@ if mkeventd_enabled:
         'hide_filters': [
             'siteopt',
             'event_host',
+        ],
+        'sorters': [
+            ('event_last', False)
         ],
     })
 
@@ -1144,7 +1153,9 @@ if mkeventd_enabled:
                         ('event_last', None, None)],
            'public': True,
            'single_infos': [],
-           'sorters': [],
+           'sorters': [
+               ('event_last', False)
+           ],
            'title': u'Events',
            'topic': u'Event Console',
            'user_sortable': True}

@@ -2053,6 +2053,25 @@ def passwordstore_get_cmdline(fmt, pw):
 #   |  Helper function for being used in checks                            |
 #   '----------------------------------------------------------------------'
 
+
+def get_agent_data_time():
+    return agent_cache_file_age(g_hostname, g_check_type)
+
+
+def agent_cache_file_age(hostname, check_type):
+    if is_snmp_check(check_type):
+        cachefile = cmk.paths.tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
+    elif is_tcp_check(check_type):
+        cachefile = cmk.paths.tcp_cache_dir + "/" + hostname
+    else:
+        cachefile = None
+
+    if cachefile is not None and os.path.exists(cachefile):
+        return cachefile_age(cachefile)
+    else:
+        return None
+
+
 # Generic function for checking a value against levels. This also supports
 # predictive levels.
 # value:   currently measured value
@@ -2068,7 +2087,7 @@ def passwordstore_get_cmdline(fmt, pw):
 def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemarkers=False):
     if unit:
         unit = " " + unit # Insert space before MB, GB, etc.
-    perfdata = []
+    perfdata  = []
     infotexts = []
 
     def scale_value(v):

@@ -1,0 +1,10 @@
+Title: oracle_asm_diskgroup: fixed handling if disk status is DISMOUNTED
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1484301711
+
+

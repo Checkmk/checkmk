@@ -35,6 +35,7 @@
     * 4274 FIX: eltek_outdoor_temp: Fixed non working default levels
     * 4275 FIX: ibm_imm_voltage: Fixed not working perfdata processing
     * 4278 FIX: check_mail_loop: Added missing Date header to sent mails
+    * 4292 FIX: oracle_asm_diskgroup: fixed handling if disk status is DISMOUNTED
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

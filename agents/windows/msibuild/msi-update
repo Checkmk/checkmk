@@ -71,7 +71,10 @@ try:
     # The original version name is also still visible in the list of programs
     match = re.search("[a-z]", new_product_version)
     if match:
-        new_version_build = "%s.%s" % (new_product_version[:match.start(0)], revision)
+        new_version_build = new_product_version[:match.start(0)]
+        if new_version_build[-1] == ".":
+            new_version_build += "0"
+        new_version_build += ".%s" % revision
     else:
         new_version_build = "%s.%s" % (new_product_version, revision)
 

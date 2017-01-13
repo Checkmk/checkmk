@@ -363,9 +363,19 @@ def parse_perf_data(perf_data_string, check_command=None):
             unit_name = value_text[i:]
             value = float_or_int(value_text[:i])
 
-            perf_data.append((varname, value, unit_name, warn, crit, min, max))
+            perf_data_tuple = (varname, value, unit_name)
+            for val in [ warn, crit, min, max ]:
+                if val is not None:
+                    try:
+                        val = float_or_int(val)
+                    except ValueError:
+                        val = None
+                perf_data_tuple += (val,)
+
+            perf_data.append(perf_data_tuple)
         except:
-            html.log("Failed to parse perfdata: %s" % perf_data_string)
+            html.log("Failed to parse perfdata '%s': %s" %
+                       (perf_data_string, traceback.format_exc()))
             if config.debug:
                 raise
 
@@ -446,12 +456,11 @@ def translate_metrics(perf_data, check_command):
                 break
             elif entry[index]:
                 try:
-                    value = float_or_int(entry[index])
-                    new_entry["scalar"][key] = value * translation_entry["scale"]
+                    new_entry["scalar"][key] = entry[index] * translation_entry["scale"]
                 except:
                     if config.debug:
                         raise
-                    pass # empty of invalid number
+                    pass # empty or invalid number
 
 
         new_entry.update(mi)

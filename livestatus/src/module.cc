@@ -108,7 +108,7 @@ char g_mk_inventory_path[4096];  // base path of Check_MK inventory files
 char g_mk_logwatch_path[4096];   // base path of Check_MK logwatch files
 static char fl_logfile_path[4096];
 char g_mkeventd_socket_path[4096];
-bool g_should_terminate = false;
+static bool fl_should_terminate = false;
 
 struct ThreadInfo {
     pthread_t id;
@@ -194,7 +194,7 @@ void livestatus_cleanup_after_fork() {
 
 void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
-    while (!g_should_terminate) {
+    while (!fl_should_terminate) {
         do_statistics();
         struct timeval tv;
         tv.tv_sec = 2;
@@ -225,29 +225,28 @@ void *main_thread(void *data) {
 
 void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
-    OutputBuffer output_buffer(fl_logger_livestatus);
-    while (!g_should_terminate) {
+    while (!fl_should_terminate) {
         int cc = fl_client_queue->popConnection();
         g_num_queued_connections--;
         g_num_active_connections++;
         if (cc >= 0) {
             Debug(fl_logger_livestatus) << "accepted client connection on fd "
                                         << cc;
-            InputBuffer input_buffer(cc, g_should_terminate,
+            InputBuffer input_buffer(cc, fl_should_terminate,
                                      fl_logger_livestatus);
             bool keepalive = true;
-            unsigned requestnr = 1;
+            unsigned requestnr = 0;
             while (keepalive) {
-                if (requestnr > 1) {
+                if (++requestnr > 1) {
                     Debug(fl_logger_livestatus) << "handling request "
                                                 << requestnr
                                                 << " on same connection";
                 }
+                counterIncrement(Counter::requests);
+                OutputBuffer output_buffer(cc, fl_should_terminate,
+                                           fl_logger_livestatus);
                 keepalive =
                     fl_store->answerRequest(input_buffer, output_buffer);
-                output_buffer.flush(cc, g_should_terminate);
-                counterIncrement(Counter::requests);
-                requestnr++;
             }
             close(cc);
         }
@@ -348,7 +347,7 @@ void start_threads() {
 
 void terminate_threads() {
     if (g_thread_running != 0) {
-        g_should_terminate = true;
+        fl_should_terminate = true;
         Informational(fl_logger_nagios) << "waiting for main to terminate...";
         pthread_join(fl_thread_info[0].id, nullptr);
         Informational(fl_logger_nagios)
@@ -364,7 +363,7 @@ void terminate_threads() {
                                         << g_num_clientthreads
                                         << " client threads have finished";
         g_thread_running = 0;
-        g_should_terminate = false;
+        fl_should_terminate = false;
     }
 }
 

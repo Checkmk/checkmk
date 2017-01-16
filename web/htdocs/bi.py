@@ -2422,7 +2422,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
             st = host_hard_state
         else:
             st = host_state
-        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN, -1:PENDING}[st]
+        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN, -1:PENDING, None: None}[st]
         state = {
             "state"             : aggr_state,
             "output"            : host_output,

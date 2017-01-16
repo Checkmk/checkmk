@@ -138,6 +138,7 @@ sidebar_snapins["search"] = {
 class QuicksearchMatchPlugin(object):
     def __init__(self, livestatus_tables):
         self._livestatus_tables = livestatus_tables
+        self._filter_shortname  = None
         super(QuicksearchMatchPlugin, self).__init__()
 
 

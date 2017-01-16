@@ -2054,11 +2054,18 @@ def passwordstore_get_cmdline(fmt, pw):
 #   '----------------------------------------------------------------------'
 
 
+# Use this function to get the age of the agent data cache file
+# of tcp or snmp hosts or None in case of piggyback data because
+# we do not exactly know the latest agent data. Maybe one time
+# we can handle this. For cluster hosts an exception is raised.
 def get_agent_data_time():
     return agent_cache_file_age(g_hostname, g_check_type)
 
 
 def agent_cache_file_age(hostname, check_type):
+    if is_cluster(hostname):
+        raise MKGeneralException("get_agent_data_time() not valid for cluster")
+
     if is_snmp_check(check_type):
         cachefile = cmk.paths.tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
     elif is_tcp_check(check_type):

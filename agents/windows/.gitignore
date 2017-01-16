@@ -13,3 +13,4 @@ log
 .depend
 check_mk_agent*.unstripped.exe
 depend
+testtools

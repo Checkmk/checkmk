@@ -275,9 +275,8 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
             return False
 
         if info or info in [ [], {} ]:
-            try:
-                check_function = checks.check_info[checkname]["check_function"]
-            except KeyError:
+            check_function = checks.check_info[checkname].get("check_function")
+            if check_function is None:
                 check_function = lambda item, params, info: (3, 'UNKNOWN - Check not implemented')
 
             try:

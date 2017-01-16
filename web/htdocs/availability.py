@@ -123,7 +123,7 @@ def get_avoption_entries(what):
         ]
 
     def aligned_label(text):
-        return "<div style=\"width: 196px; display: inline-block;\">%s:</div>" % text
+        return "<div style=\"width: 186px; display: inline-block;\">%s:</div>" % text
 
     return [
   # Time range selection

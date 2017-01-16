@@ -135,6 +135,11 @@ history_columns = [
     ( "history_addinfo",     "" ),
 ] + event_columns
 
+rule_columns = [
+    ( "rule_id",             "" ),
+    ( "rule_hits",            0 ),
+]
+
 # Alas, we often have no clue about the actual encoding, so we have to guess:
 # Initially we assume UTF-8, but fall back to latin-1 if it didn't work.
 def decode_from_bytes(string_as_bytes):
@@ -3209,10 +3214,13 @@ class StatusServer:
             columns = event_columns
         elif table == "history":
             columns = history_columns
+        elif table == "rules":
+            columns = rule_columns
         elif table == "status":
             columns = g_event_server.status_columns()
         else:
-            raise MKClientError("Invalid table %s, we only have 'events', 'history' and 'status'" % table)
+            raise MKClientError("Invalid table %s, we only have 'events', 'history', "
+                                "'rules' and 'status'" % table)
 
         filters = []
         only_host = None
@@ -3245,6 +3253,8 @@ class StatusServer:
             headers, list_rows = g_event_status.get_events(only_host)
         elif table == "history":
             headers, list_rows = get_event_history(filters, limit)
+        elif table == "rules":
+            headers, list_rows = g_event_status.get_rule_stats()
         else:
             headers, list_rows = g_event_server.get_status()
 
@@ -3792,6 +3802,10 @@ class EventStatus():
                 event_line.append(event.get(without_prefix, col_default))
             result.append(event_line)
         return [ e[0] for e in event_columns ], result
+
+
+    def get_rule_stats(self):
+        return [ e[0] for e in rule_columns ], sorted(self._rule_stats.items(), key=lambda x: x[0])
 
 #.
 #   .--Actions-------------------------------------------------------------.

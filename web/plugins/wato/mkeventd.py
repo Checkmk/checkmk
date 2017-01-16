@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import sites
 import mkeventd
 import zipfile
 import cStringIO
@@ -930,16 +931,18 @@ def load_mkeventd_rules():
     # Add information about rule hits: If we are running on OMD then we know
     # the path to the state retention file of mkeventd and can read the rule
     # statistics directly from that file.
-    mkeventd_status = store.load_data_from_file(mkeventd_status_file)
-    if mkeventd_status != None:
-        rule_stats = mkeventd_status["rule_stats"]
-        for rule_pack in vars["rule_packs"]:
-            pack_hits = 0
-            for rule in rule_pack["rules"]:
-                hits = rule_stats.get(rule["id"], 0)
-                rule["hits"] = hits
-                pack_hits += hits
-            rule_pack["hits"] = pack_hits
+    rule_stats = {}
+    for rule_id, count in sites.live().query("GET eventconsolerules\nColumns: rule_id rule_hits\n"):
+        rule_stats.setdefault(rule_id, 0)
+        rule_stats[rule_id] += count
+
+    for rule_pack in vars["rule_packs"]:
+        pack_hits = 0
+        for rule in rule_pack["rules"]:
+            hits = rule_stats.get(rule["id"], 0)
+            rule["hits"] = hits
+            pack_hits += hits
+        rule_pack["hits"] = pack_hits
 
     # Migrate old contact_group key (+ add False for notify option)
     for rule_pack in vars["rule_packs"]:

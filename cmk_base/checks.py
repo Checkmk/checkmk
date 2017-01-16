@@ -280,7 +280,7 @@ def set_check_variable(varname, value):
 # use the legacy variables which are not set by newer checks.
 def convert_check_info():
     check_info_defaults = {
-        "check_function"          : check_unimplemented,
+        "check_function"          : None,
         "inventory_function"      : None,
         "parse_function"          : None,
         "group"                   : None,

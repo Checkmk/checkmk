@@ -1003,8 +1003,6 @@ def save_mkeventd_sample_config():
 #   '----------------------------------------------------------------------'
 
 def mode_mkeventd_rule_packs(phase):
-    legacy_rules, rule_packs = load_mkeventd_rules()
-
     if phase == "title":
         return _("Event Console Rule Packages")
 
@@ -1020,6 +1018,7 @@ def mode_mkeventd_rule_packs(phase):
         mkeventd_mibs_button()
         return
 
+    legacy_rules, rule_packs = load_mkeventd_rules()
 
     if phase == "action":
         action_outcome = event_simulation_action()

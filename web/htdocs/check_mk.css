@@ -121,17 +121,18 @@ input[type="checkbox"] + label:before {
     background-color: #fff;
     content: "\00a0";
     display: inline-block;
-    font-size: 6pt;
-    height: 7pt;
-    margin: 0 .25em 0 0;
+    font-size: 7pt;
+    height: 7.5pt;
+    margin: 0 .6em 0 0;
     padding: 0;
     vertical-align: middle;
-    width: 7pt;
+    width: 7.5pt;
 }
 
 input[type="checkbox"]:checked + label:before {
   color: #000;
-  content: "\2713";
+  content: "\2716";
+  background-color: #ddd;
   text-align: center;
 }
 

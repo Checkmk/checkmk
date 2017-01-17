@@ -83,8 +83,7 @@ def mkeventd_performance_entries(only_sites):
 
 def render_mkeventd_performance():
     only_sites = snapin_site_choice("mkeventd_performance",
-                                    wato.get_event_console_site_choices())
-
+                                    config.get_event_console_site_choices())
 
     try:
         entries = mkeventd_performance_entries(only_sites)

@@ -3545,27 +3545,11 @@ def get_login_sites():
 
 # Returns a list of site ids which gets the Event Console configuration replicated
 def get_event_console_sync_sites():
-    return [ s[0] for s in get_event_console_site_choices() ]
+    return [ s[0] for s in config.get_event_console_site_choices() ]
 
 
-def get_event_console_site_choices():
-    return site_choices(filter_func=lambda site_id, site: config.site_is_local(site_id) or site.get("replicate_ec"))
-
-
-def site_choices(filter_func=None):
-    choices = []
-    for site_id, site in config.sites.items():
-        if filter_func and not filter_func(site_id, site):
-            continue
-
-        title = site_id
-        if site.get("alias"):
-            title += " - " + site["alias"]
-
-        choices.append((site_id, title))
-
-    return sorted(choices, key=lambda s: s[1])
-
+# TODO: cleanup all call sites to this name
+site_choices = config.site_choices
 
 
 def declare_site_attribute():

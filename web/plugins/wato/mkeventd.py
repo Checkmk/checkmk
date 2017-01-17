@@ -889,7 +889,7 @@ vs_mkeventd_event = Dictionary(
         )),
         ("site", DropdownChoice(
             title = _("Simulate for site"),
-            choices = get_event_console_site_choices,
+            choices = config.get_event_console_site_choices,
         )),
     ])
 

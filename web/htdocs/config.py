@@ -695,6 +695,26 @@ def is_single_local_site():
         sitename = sites.keys()[0]
         return site_is_local(sitename)
 
+
+def site_choices(filter_func=None):
+    choices = []
+    for site_id, site in sites.items():
+        if filter_func and not filter_func(site_id, site):
+            continue
+
+        title = site_id
+        if site.get("alias"):
+            title += " - " + site["alias"]
+
+        choices.append((site_id, title))
+
+    return sorted(choices, key=lambda s: s[1])
+
+
+def get_event_console_site_choices():
+    return site_choices(filter_func=lambda site_id, site: site_is_local(site_id) or site.get("replicate_ec"))
+
+
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |

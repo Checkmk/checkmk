@@ -124,7 +124,7 @@ if mkeventd_enabled:
         background-color: rgba(0, 0, 0, 0.1);
         border-style: solid;
         border-color: rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
-        border-width: 1.5px; */
+        border-width: 1.5px;
     }
 
     #snapin_mkeventd_performance select {

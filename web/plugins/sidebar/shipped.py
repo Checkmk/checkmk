@@ -897,13 +897,11 @@ sidebar_snapins["performance"] = {
     "styles" : """
 table.performance {
     width: %dpx;
-    -moz-border-radius: 5px;
-    background-color: #589;
-    /* background-color: #6da1b8;*/
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, 0.1);
     border-style: solid;
-    border-color: #444 #bbb #eee #666;
-    /* The border needs to be substracted from the width */
-    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
+    border-width: 1.5px;
 }
 table.performance td {
     padding: 0px 2px;

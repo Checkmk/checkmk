@@ -144,8 +144,7 @@ def snapin_site_choice(ident, choices):
     else:
         only_sites = [site]
 
-    import wato
-    site_choices = wato.get_event_console_site_choices()
+    site_choices = config.get_event_console_site_choices()
     if len(site_choices) <= 1:
         return None
 
@@ -647,9 +646,8 @@ def ajax_set_snapin_site():
         raise MKUserError(None, _("Invalid ident"))
 
     site  = html.var("site")
-    import wato
     site_choices = dict([ ("", _("All sites")), ] \
-                 +  wato.get_event_console_site_choices())
+                 +  config.get_event_console_site_choices())
 
     if site not in site_choices:
         raise MKUserError(None, _("Invalid site"))

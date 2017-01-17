@@ -856,6 +856,8 @@ sidebar_snapins["tactical_overview"] = {
 #   '----------------------------------------------------------------------'
 
 def render_performance():
+    only_sites = snapin_site_choice("performance",
+                                    config.site_choices())
 
     def write_line(left, right):
         html.open_tr()
@@ -865,9 +867,15 @@ def render_performance():
 
     html.open_table(class_=["content_center", "performance"])
 
-    data = sites.live().query("GET status\nColumns: service_checks_rate host_checks_rate "
-                           "external_commands_rate connections_rate forks_rate "
-                           "log_messages_rate cached_log_messages\n")
+    try:
+        sites.live().set_only_sites(only_sites)
+        data = sites.live().query(
+            "GET status\nColumns: service_checks_rate host_checks_rate "
+            "external_commands_rate connections_rate forks_rate "
+            "log_messages_rate cached_log_messages\n")
+    finally:
+        sites.live().set_only_sites(None)
+
     for what, col, format in \
         [("Service checks",         0, "%.2f/s"),
          ("Host checks",            1, "%.2f/s"),
@@ -878,9 +886,12 @@ def render_performance():
          ("Cached log messages",    6, "%d")]:
         write_line(what + ":", format % sum(row[col] for row in data))
 
-    if len(config.allsites()) == 1:
-        data = sites.live().query("GET status\nColumns: external_command_buffer_slots "
-                               "external_command_buffer_max\n")
+    if only_sites is None and len(config.allsites()) == 1:
+        try:
+            data = sites.live().query("GET status\nColumns: external_command_buffer_slots "
+                                   "external_command_buffer_max\n")
+        finally:
+            sites.live().set_only_sites(None)
         size = sum([row[0] for row in data])
         maxx = sum([row[1] for row in data])
         write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size))
@@ -895,6 +906,10 @@ sidebar_snapins["performance"] = {
     "render" : render_performance,
     "allowed" : [ "admin", ],
     "styles" : """
+#snapin_performance select {
+    margin-bottom: 2px;
+    width: 100%%;
+}
 table.performance {
     width: %dpx;
     border-radius: 2px;

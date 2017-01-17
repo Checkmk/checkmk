@@ -132,9 +132,28 @@ def footnotelinks(links):
     end_footnote_links()
 
 
-
 def heading(text):
     html.write("<h3>%s</h3>\n" % html.attrencode(text))
+
+
+def snapin_site_choice(ident, choices):
+    sites = config.user.load_file("sidebar_sites", {})
+    site  = sites.get(ident, "")
+    if site == "":
+        only_sites = None
+    else:
+        only_sites = [site]
+
+    import wato
+    site_choices = wato.get_event_console_site_choices()
+    if len(site_choices) <= 1:
+        return None
+
+    site_choices = [ ("", _("All sites")), ] + site_choices
+    html.select("site", site_choices, site, onchange="set_snapin_site(%s, this)" % json.dumps(ident))
+
+    return only_sites
+
 
 # Load current state of user's sidebar. Convert from
 # old format (just a snapin list) to the new format
@@ -622,8 +641,12 @@ def ajax_tag_tree_enter():
     config.user.save_file("virtual_host_tree", tree_conf)
 
 
-def ajax_set_ec_site():
-    site = html.var("site")
+def ajax_set_snapin_site():
+    ident = html.var("ident")
+    if ident not in sidebar_snapins:
+        raise MKUserError(None, _("Invalid ident"))
+
+    site  = html.var("site")
     import wato
     site_choices = dict([ ("", _("All sites")), ] \
                  +  wato.get_event_console_site_choices())
@@ -631,7 +654,9 @@ def ajax_set_ec_site():
     if site not in site_choices:
         raise MKUserError(None, _("Invalid site"))
 
-    config.user.save_file("mkeventd_performance_site", site)
+    sites = config.user.load_file("sidebar_sites", {}, lock=True)
+    sites[ident] = site
+    config.user.save_file("sidebar_sites", sites, unlock=True)
 
 
 def ajax_switch_site():

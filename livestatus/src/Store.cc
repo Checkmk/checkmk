@@ -76,7 +76,8 @@ Store::Store(MonitoringCore *core)
     , _table_eventconsoleevents(core, _downtimes, _comments)
     , _table_eventconsolehistory(core, _downtimes, _comments)
     , _table_eventconsolestatus(core)
-    , _table_eventconsolereplication(core) {
+    , _table_eventconsolereplication(core)
+    , _table_eventconsolerules(core) {
     addTable(&_table_columns);
     addTable(&_table_commands);
     addTable(&_table_comments);
@@ -98,6 +99,7 @@ Store::Store(MonitoringCore *core)
     addTable(&_table_eventconsolehistory);
     addTable(&_table_eventconsolestatus);
     addTable(&_table_eventconsolereplication);
+    addTable(&_table_eventconsolerules);
 }
 
 void Store::addTable(Table *table) {

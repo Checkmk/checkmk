@@ -32,8 +32,8 @@ except:
     mkeventd_enabled = False
 
 
-def mkeventd_performance_entries():
-    status = mkeventd.get_total_stats() # combination of several sites
+def mkeventd_performance_entries(only_sites):
+    status = mkeventd.get_total_stats(only_sites) # combination of several sites
     entries = []
 
     # TODO: Reorder these values and create a useful order.
@@ -82,8 +82,22 @@ def mkeventd_performance_entries():
 
 
 def render_mkeventd_performance():
+    site = config.user.load_file("mkeventd_performance_site", "")
+    if site == "":
+        only_sites = None
+    else:
+        only_sites = [site]
+
+    import wato
+    site_choices = wato.get_event_console_site_choices()
+    if len(site_choices) > 1:
+        site_choices = [ ("", _("All sites")), ] + site_choices
+        html.select("site", site_choices, site, onchange="mkeventd_performance_set_ec_site(this)")
+    else:
+        only_sites = None
+
     try:
-        entries = mkeventd_performance_entries()
+        entries = mkeventd_performance_entries(only_sites)
     except Exception, e:
         html.show_error(e)
         return
@@ -111,6 +125,11 @@ if mkeventd_enabled:
         border-style: solid;
         border-color: rgba(0, 0, 0, 0.3) rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.3);
         border-width: 1.5px; */
+    }
+
+    #snapin_mkeventd_performance select {
+        margin-bottom: 2px;
+        width: 100%%;
     }
 
     table.mkeventd_performance td {

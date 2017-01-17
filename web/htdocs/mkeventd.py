@@ -225,7 +225,7 @@ def execute_command(name, args=None, site=None):
     sites.live().command(query, site)
 
 
-def get_total_stats():
+def get_total_stats(only_sites):
     stats_keys = [
         "status_average_message_rate",
         "status_average_rule_trie_rate",
@@ -240,7 +240,7 @@ def get_total_stats():
         "status_average_sync_time",
     ]
 
-    stats_per_site = list(get_stats_per_site(stats_keys))
+    stats_per_site = list(get_stats_per_site(only_sites, stats_keys))
 
     # First simply add rates. Times must then be averaged
     # weighted by message rate or connect rate
@@ -251,7 +251,10 @@ def get_total_stats():
                 total_stats.setdefault(key, 0.0)
                 total_stats[key] += value
     if not total_stats:
-        return None # No site answered
+        if only_sites is None:
+            raise MKGeneralException(_("Got no data from any site"))
+        else:
+            raise MKGeneralException(_("Got no data from this site"))
 
     for row in stats_per_site:
         for time_key, in_relation_to in [
@@ -276,10 +279,13 @@ def get_total_stats():
     return total_stats
 
 
-def get_stats_per_site(stats_keys):
-    for list_row in sites.live().query("GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys)):
-        yield dict(zip(stats_keys, list_row))
-
+def get_stats_per_site(only_sites, stats_keys):
+    try:
+        sites.live().set_only_sites(only_sites)
+        for list_row in sites.live().query("GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys)):
+            yield dict(zip(stats_keys, list_row))
+    finally:
+        sites.live().set_only_sites(None)
 
 
 # Rule matching for simulation. Yes - there is some hateful code duplication

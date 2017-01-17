@@ -290,11 +290,11 @@ def render_availability_tables(availability_tables, what, avoptions):
         html.h3(_("Availability levels"))
 
         html.div(_("OK"), class_="state state0")
-        html.div("&ge; %.3f%%" % warn, class_="level")
+        html.div("> %.3f%%" % warn, class_="level")
         html.div(_("WARN"), class_="state state1")
-        html.div("&ge; %.3f%%" % crit, class_="level")
+        html.div("> %.3f%%" % crit, class_="level")
         html.div(_("CRIT"), class_="state state2")
-        html.div("&lt; %.3f%%" % crit, class_="level")
+        html.div("< %.3f%%" % crit, class_="level")
 
         html.close_div()
 

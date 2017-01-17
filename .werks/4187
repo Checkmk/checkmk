@@ -1,0 +1,12 @@
+Title: check_mk_agent.linux: better performance for tcp connections query
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1484661608
+Class: fix
+
+The previously method to get information about tcp connections will slow
+down if the host is under heavy load. The new option to get these information
+will be more stable in this point. The legacy method (cat /proc/net/tcp) will
+still be used for older linux distributions, where ss may not be available.

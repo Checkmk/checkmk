@@ -121,12 +121,12 @@ input[type="checkbox"] + label:before {
     background-color: #fff;
     content: "\00a0";
     display: inline-block;
-    font-size: 7pt;
-    height: 7.5pt;
+    font-size: 9pt;
+    height: 9.5pt;
     margin: 0 .6em 0 0;
     padding: 0;
     vertical-align: middle;
-    width: 7.5pt;
+    width: 9.5pt;
 }
 
 input[type="checkbox"]:checked + label:before {

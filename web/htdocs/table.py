@@ -155,13 +155,15 @@ def end():
     #html.guitest_record_output("data_tables", table)
 
     if table["title"]:
-        html.write("<h3>%s</h3>" % table["title"])
+        html.open_h3()
+        html.write(table["title"])
+        html.close_h3()
 
     if table.get("help"):
         html.help(table["help"])
 
     if not table["rows"]:
-        html.write("<div class=info>%s</div>" % table["empty_text"])
+        html.div(table["empty_text"], class_="info")
         table = None
         return
 
@@ -245,39 +247,37 @@ def _write_table(table, rows, actions_enabled, actions_visible, search_term):
     table_id = table["id"]
     num_cols = len(table["headers"])
 
-    html.write('<table class="data oddeven')
-    if "css" in table:
-        html.write(" %s" % table["css"])
-    html.write('">\n')
+    html.open_table(class_=["data", "oddeven", table["css"] if "css" in table else None])
 
     # If we have no group headers then paint the headers now
     if table["rows"] and table["rows"][0][2] != "header":
         _render_headers(table, actions_enabled, actions_visible)
 
     if actions_enabled and actions_visible:
-        html.write('<tr class="data even0 actions"><td colspan=%d>' % num_cols)
+        html.open_tr(class_=["data", "even0", "actions"])
+        html.open_td(colspan=num_cols)
         if not html.in_form():
             html.begin_form("%s_actions" % table_id)
 
         if table["searchable"]:
-            html.write("<div class=search>")
+            html.open_div(class_="search")
             html.text_input("_%s_search" % table_id)
             html.button("_%s_submit" % table_id, _("Search"))
             html.button("_%s_reset" % table_id, _("Reset search"))
             html.set_focus("_%s_search" % table_id)
-            html.write("</div>\n")
+            html.close_div()
 
         if html.has_var('_%s_sort' % table_id):
-            html.write("<div class=sort>")
+            html.open_div(class_=["sort"])
             html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
-            html.write("</div>\n")
+            html.close_div()
 
         if not html.in_form():
             html.begin_form("%s_actions" % table_id)
 
         html.hidden_fields()
         html.end_form()
-        html.write('</tr>')
+        html.close_tr()
 
     odd = "even"
     for nr, (row, css, state, fixed) in enumerate(rows):
@@ -285,28 +285,31 @@ def _write_table(table, rows, actions_enabled, actions_visible, search_term):
         if state == "header":
             # Show the header only, if at least one (non-header) row follows
             if nr < len(rows) - 1 and rows[nr+1][2] != "header":
-                html.write('  <tr class="groupheader"><td colspan=%d><br>%s</td></tr>' % (num_cols, row))
+                html.open_tr(class_="groupheader")
+                html.open_td(colspan=num_cols)
+                html.br()
+                html.write(row)
+                html.close_td()
+                html.close_tr()
+
                 odd = "even"
                 _render_headers(table, actions_enabled, actions_visible)
             continue
 
-        odd = odd == "odd" and "even" or "odd"
-        html.write('  <tr class="data %s%d' % (odd, state))
-        if css:
-            html.write(' %s' % css)
-        html.write('">\n')
+        odd = "even" if odd == "odd" else "odd"
+        html.open_tr(class_=["data", odd, state, css if css else None])
         for cell_content, css_classes, colspan in row:
-            colspan = colspan and (' colspan="%d"' % colspan) or ''
-            html.write("    <td%s%s>" % (css_classes and (" class='%s'" % css_classes) or "", colspan))
+            html.open_td(class_=css_classes if css_classes else None, colspan=colspan if colspan else None)
             html.write(cell_content)
-            html.write("</td>\n")
-        html.write("</tr>\n")
+            html.close_td()
+        html.close_tr()
 
-    if table["searchable"] and search_term and not rows:
-        html.write('<tr class="data odd0 no_match"><td colspan=%d>%s</td></tr>' %
-            (num_cols, _('Found no matching rows. Please try another search term.')))
+    if not rows and search_term:
+        html.open_tr(class_=["data", "odd0", "no_match"])
+        html.td(_('Found no matching rows. Please try another search term.'), colspan=num_cols)
+        html.close_tr()
 
-    html.write("</table>\n")
+    html.close_table()
 
 
 def _write_csv(table, csv_separator):
@@ -340,7 +343,7 @@ def _render_headers(table, actions_enabled, actions_visible):
 
     table_id = table['id']
 
-    html.write("  <tr>")
+    html.open_tr()
     first_col = True
     for nr, (header, css, help, sortable) in enumerate(table["headers"]):
         text = header
@@ -348,24 +351,22 @@ def _render_headers(table, actions_enabled, actions_visible):
         if help:
             header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
 
-        if css:
-            css_def   = " class=\"header_%s\"" % css
-            css_class = " header_%s" % css
-        else:
-            css_def   = ""
-            css_class = ""
+        css_class = "header_%s" % css if css else None
 
         if not table["sortable"] or not sortable:
-            html.write("  <th%s>" % css_def)
+            html.open_th(class_=css_class)
         else:
             reverse = 0
             sort = html.var('_%s_sort' % table_id)
             if sort:
                 sort_col, sort_reverse = map(int, sort.split(',', 1))
                 if sort_col == nr:
-                    reverse = sort_reverse == 0 and 1 or 0
-            html.write("  <th class=\"sort%s\" title=\"%s\" onclick=\"location.href='%s'\">" %
-                        (css_class, _('Sort by %s') % text, html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])))
+                    reverse = 1 if sort_reverse == 0 else 0
+
+            action_uri = html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])
+            html.open_th(class_=["sort", css_class],
+                         title=_("Sort by %s") % text,
+                         onclick="location.href='%s'" % action_uri)
 
         # Add the table action link
         if first_col:
@@ -381,18 +382,20 @@ def _render_headers(table, actions_enabled, actions_visible):
                     state = '1'
                     help  = _('Display table actions')
                     img   = 'table_actions_off'
-                html.write("<div class=\"toggle_actions\">")
+                html.open_div(class_=["toggle_actions"])
                 html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
                     help, img, cssclass = 'toggle_actions')
-                html.write("<span>%s</span>" % header)
-                html.write("</div>")
+                html.open_span()
+                html.write(header)
+                html.close_span()
+                html.close_div()
             else:
                 html.write(header)
         else:
             html.write(header)
 
-        html.write("</th>\n")
-    html.write("  </tr>\n")
+        html.close_th()
+    html.close_tr()
 
 
 def _filter_rows(rows, search_term):

@@ -80,8 +80,7 @@ def show_log_list():
     html.end_context_buttons()
 
     for site, host_name, logs in all_logs():
-        html.write('<h2><a href="%s">%s</a></h2>' % \
-                  (html.makeuri([('site', site), ('host', host_name)]), host_name))
+        html.h2(html.render_a(host_name, href=html.makeuri([('site', site), ('host', host_name)])))
         list_logs(site, host_name, logs)
     html.footer()
 
@@ -110,9 +109,9 @@ def show_host_log_list(site, host_name):
     ack_button(site, host_name)
     html.end_context_buttons()
 
-    html.write("<table class=data>\n")
+    html.open_table(class_=["data"])
     list_logs(site, host_name, logfiles_of_host(site, host_name))
-    html.write("</table>\n")
+    html.close_table()
 
     html.footer()
 
@@ -202,22 +201,25 @@ def show_file(site, host_name, file_name):
 
     html.end_context_buttons()
 
-    html.write("<div id=logwatch>\n")
+    html.open_div(id_="logwatch")
     for log in log_chunks:
-        html.write('<div class="chunk">\n')
-        html.write('<table class="section">\n<tr>\n')
-        html.write('<td class="%s">%s</td>\n' % (form_level(log['level']), form_level(log['level'])))
-        html.write('<td class="date">%s</td>\n' % (form_datetime(log['datetime'])))
-        html.write('</tr>\n</table>\n')
+        html.open_div(class_=["chunk"])
+        html.open_table(class_=["section"])
+        html.open_tr()
+        html.td(form_level(log['level']), class_=form_level(log['level']))
+        html.td(form_datetime(log['datetime']), class_="date")
+        html.close_tr()
+        html.close_table()
 
         for line in log['lines']:
-            html.write('<p class="%s">' % line['class'])
+            html.open_p(class_=line['class'])
             html.icon_button(analyse_url(site, host_name, file_name, line['line']), _("Analyze this line"), "analyze")
-            html.write('%s</p>\n' % (html.attrencode(line['line']).replace(" ", "&nbsp;").replace("\1", "<br>") ))
+            html.write(html.attrencode(line['line']).replace(" ", "&nbsp;").replace("\1", "<br>"))
+            html.close_p()
 
-        html.write('</div>\n')
+        html.close_div()
 
-    html.write("</div>\n")
+    html.close_div()
     html.footer()
 
 
@@ -295,8 +297,8 @@ def do_log_ack(site, host_name, file_name):
         return
 
     if not config.user.may("general.act"):
-        html.write("<h1 class=error>"+_('Permission denied')+"</h1>\n")
-        html.write("<div class=error>" + _('You are not allowed to acknowledge %s</div>') % ack_msg)
+        html.h1(_('Permission denied'), class_=["error"])
+        html.div(_('You are not allowed to acknowledge %s') % ack_msg, class_=["error"])
         html.footer()
         return
 

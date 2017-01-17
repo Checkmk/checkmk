@@ -622,6 +622,18 @@ def ajax_tag_tree_enter():
     config.user.save_file("virtual_host_tree", tree_conf)
 
 
+def ajax_set_ec_site():
+    site = html.var("site")
+    import wato
+    site_choices = dict([ ("", _("All sites")), ] \
+                 +  wato.get_event_console_site_choices())
+
+    if site not in site_choices:
+        raise MKUserError(None, _("Invalid site"))
+
+    config.user.save_file("mkeventd_performance_site", site)
+
+
 def ajax_switch_site():
     # _site_switch=sitename1:on,sitename2:off,...
     if not config.user.may("sidesnap.sitestatus"):

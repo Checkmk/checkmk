@@ -898,6 +898,14 @@ function add_html_var(url, varname, value) {
     return new_url;
 }
 
+/************************************************
+ * Event console site selection
+ *************************************************/
+
+function mkeventd_performance_set_ec_site(select_field) {
+    get_url('sidebar_ajax_set_ec_site.py?site=' + encodeURIComponent(select_field.value));
+    location.reload();
+}
 
 /************************************************
  * Popup Message Handling

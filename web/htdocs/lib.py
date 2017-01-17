@@ -1013,26 +1013,31 @@ interface_port_type_choices = dict_choices(interface_port_types)
 #   '----------------------------------------------------------------------'
 
 def begin_floating_options(div_id, is_open):
-    html.write('<div class="view_form" id="%s" %s>'
-            % (div_id, not is_open and 'style="display: none"' or '') )
-    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
+    html.open_div(id_=div_id, class_=["view_form"], style="display: none" if not is_open else None)
+    html.open_table(class_=["filterform"], cellpadding="0", cellspacing="0", border="0")
+    html.open_tr()
+    html.open_td()
 
 def end_floating_options(reset_url=None):
-    html.write("</td></tr>")
-    html.write("<tr><td>")
+    html.close_td()
+    html.close_tr()
+    html.open_tr()
+    html.open_td()
     html.button("apply", _("Apply"), "submit")
     if reset_url:
         html.buttonlink(reset_url, _("Reset to defaults"))
 
-    html.write("</td></tr></table>")
-    html.write("</div>")
+    html.close_td()
+    html.close_tr()
+    html.close_table()
+    html.close_div()
 
 def render_floating_option(name, height, varprefix, valuespec, value):
-    html.write('<div class="floatfilter %s %s">' % (height, name))
-    html.write('<div class=legend>%s</div>' % valuespec.title())
-    html.write('<div class=content>')
+    html.open_div(class_=["floatfilter", height, name])
+    html.div(valuespec.title(), class_=["legend"])
+    html.open_div(class_=["content"])
     valuespec.render_input(varprefix + name, value)
-    html.write("</div>")
-    html.write("</div>")
+    html.close_div()
+    html.close_div()
 
 

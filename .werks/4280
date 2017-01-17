@@ -1,0 +1,16 @@
+Title: Interactive login is now denied for automation users
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i4
+Date: 1484667468
+Class: fix
+
+It was possible to log into the Check_MK GUI interactively (using the login form)
+as automation user. This was never intended and was a bug. 
+
+Automation users are only meant to authenticate with the GUI for a single page or API
+call using the URL variables (<tt>_username</tt> and <tt>_secret</tt>).
+
+In case you want to login interactively to access multiple pages, you need a "normal"
+user that has a password configured instead of an automation secret.

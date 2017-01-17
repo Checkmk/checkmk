@@ -63,6 +63,9 @@ class HtpasswdUserConnector(UserConnector):
         if username not in users:
             return None # not existing user, skip over
 
+        if is_automation_user(username):
+            raise MKUserError(None, _("Automation user rejected"))
+
         if self.password_valid(users[username], password):
             return username
         else:

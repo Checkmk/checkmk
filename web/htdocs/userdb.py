@@ -212,6 +212,10 @@ def create_non_existing_user(connection_id, username):
     hook_sync(connection_id = connection_id, only_username = username)
 
 
+def is_automation_user(user_id):
+    return os.path.isfile(cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret")
+
+
 # This function is called very often during regular page loads so it has to be efficient
 # even when having a lot of users.
 #

@@ -134,13 +134,18 @@ def page_werk():
         html.context_button(_("Acknowledge"), ack_url, "werk_ack")
     html.end_context_buttons()
 
-    html.write('<table class="data headerleft werks">')
+    html.open_table(class_=["data", "headerleft", "werks"])
 
-    def werk_table_row(caption, content, css=""):
-        html.write('<tr><th>%s</th><td class="%s">%s</td></tr>' % (caption, css, content))
+    def werk_table_row(caption, content, css=None):
+        html.open_tr()
+        html.th(caption)
+        html.open_td(class_=css)
+        html.write(content)
+        html.close_td()
+        html.close_tr()
 
     werk_table_row(_("ID"), render_werk_id(werk, with_link=False))
-    werk_table_row(_("Title"), "<b>" + render_werk_title(werk) + "</b>")
+    werk_table_row(_("Title"), html.render_b(render_werk_title(werk)))
     werk_table_row(_("Component"), render_werk_component(werk))
     werk_table_row(_("Date"), render_werk_date(werk))
     werk_table_row(_("Check_MK Version"), werk["version"])
@@ -149,7 +154,7 @@ def page_werk():
     werk_table_row(_("Compatibility"), render_werk_compatibility(werk), css="werkcomp werkcomp%s" % werk["compatible"])
     werk_table_row(_("Description"), render_werk_description(werk), css="nowiki")
 
-    html.write("</table>")
+    html.close_table()
 
     html.footer()
 
@@ -334,11 +339,13 @@ def render_unacknowleged_werks():
         html.end_context_buttons()
 
     if werks and not html.has_var("show_unack"):
-        html.write("<div class=warning>")
-        html.write("%s<br><br>" % _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks))
-        url = html.makeuri_contextless([("show_unack", "1"), ("wo_compatibility", "3")])
-        html.write('<a href="%s">Show unacknowledged incompatible werks</a>' % url)
-        html.write("</div>")
+        html.open_div(class_=["warning"])
+        html.write_text(_("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks))
+        html.br()
+        html.br()
+        html.a(_("Show unacknowledged incompatible werks"),
+               href=html.makeuri_contextless([("show_unack", "1"), ("wo_compatibility", "3")]))
+        html.close_div()
 
 
 def render_werks_table():
@@ -383,7 +390,7 @@ def render_werks_table():
     if current_group != False:
         table.end()
     else:
-        html.write("<h3>%s</h3>" % _("No matching Werks found."))
+        html.h3(_("No matching Werks found."))
 
 def werk_group_value(werk, grouping):
     if grouping == None:
@@ -488,8 +495,8 @@ def render_werk_compatibility(werk):
 
 def render_werk_component(werk):
     if werk["component"] not in werk_components():
-        html.write("<li>Invalid component %s in werk %s</li>" %
-                    (werk["component"],render_werk_id(werk, with_link=True)))
+        html.li(_("Invalid component %s in werk %s")\
+                    % (werk["component"], render_werk_id(werk, with_link=True)))
         return werk["component"]
     else:
         return werk_components()[werk["component"]]

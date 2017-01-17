@@ -902,8 +902,8 @@ function add_html_var(url, varname, value) {
  * Event console site selection
  *************************************************/
 
-function mkeventd_performance_set_ec_site(select_field) {
-    get_url('sidebar_ajax_set_ec_site.py?site=' + encodeURIComponent(select_field.value));
+function set_snapin_site(ident, select_field) {
+    get_url('sidebar_ajax_set_snapin_site.py?ident=' + encodeURIComponent(ident) + '&site=' + encodeURIComponent(select_field.value));
     location.reload();
 }
 

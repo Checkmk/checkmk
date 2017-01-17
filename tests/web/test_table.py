@@ -119,19 +119,6 @@ def table_test_cubical(sortable, searchable, limit, output_format, tmpdir):
             table.cell(_(header[i]), row[i])
     table.end()
 
-    # TODO: Is this still needed?
-    ## write to file: This is part of the test! Look at the generated HTML!
-    #filename = "%s" % tmpdir.join("web/testtable_%s_%s_%s.html" % \
-    #                            ("sortable" * sortable, "searchable" * searchable, limit))
-    #try:
-    #    with open(filename, "w") as html_file:
-    #        pass
-    #except:
-    #    filename = os.path.basename(filename)
-
-    #text = html.written_text
-    #with open(filename, "w") as html_file:
-    #    html_file.write(text)
     text = html.written_text
 
     # Data assertions

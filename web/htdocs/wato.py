@@ -6404,7 +6404,7 @@ def mode_groups(phase, what):
         if html.var('_delete'):
             delname = html.var("_delete")
 
-            usages = find_usages_of_group(what)
+            usages = find_usages_of_group(delname, what)
 
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % \

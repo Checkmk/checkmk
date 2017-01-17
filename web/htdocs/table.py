@@ -130,6 +130,7 @@ def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True
 
 
 def end():
+
     global table
     finish_previous()
     html.unplug()
@@ -142,18 +143,12 @@ def end():
     if table["output_format"] == "fetch":
         return table["headers"], table["rows"]
 
-    if table["output_format"] == "csv":
-        do_csv = True
-        csv_separator = html.var("csv_separator", ";")
-    else:
-        do_csv = False
-
     if not table["rows"] and table["omit_if_empty"]:
         table = None
         return
 
-    if do_csv:
-        _write_csv(table, csv_separator)
+    if table["output_format"] == "csv":
+        _write_csv(table, csv_separator=html.var("csv_separator", ";"))
         table = None
         return
 
@@ -170,13 +165,8 @@ def end():
         table = None
         return
 
-    rows = table["rows"]
-
     # Controls whether or not actions are available for a table
-    rows, actions_enabled, actions_visible, search_term, user_opts = _evaluate_user_opts(table, rows)
-
-    num_rows_unlimited = len(rows)
-    num_cols = len(table["headers"])
+    rows, actions_enabled, actions_visible, search_term, user_opts = _evaluate_user_opts(table)
 
     # Apply limit after search / sorting etc.
     limit = table['limit']
@@ -184,8 +174,9 @@ def end():
         rows = rows[:limit]
 
     # Render header
-    _write_table(table, rows, num_cols, actions_enabled, actions_visible, search_term)
+    _write_table(table, rows, actions_enabled, actions_visible, search_term)
 
+    num_rows_unlimited = len(rows)
     if limit is not None and num_rows_unlimited > limit:
         html.message(_('This table is limited to show only %d of %d rows. '
                        'Click <a href="%s">here</a> to disable the limitation.') %
@@ -194,11 +185,13 @@ def end():
     if actions_enabled:
         config.user.save_file("tableoptions", user_opts)
     table = None
+    return
 
 
-def _evaluate_user_opts(table, rows):
+def _evaluate_user_opts(table):
 
     table_id = table["id"]
+    rows = table["rows"]
 
     search_term = None
     actions_enabled = (table["searchable"] or table["sortable"])
@@ -207,7 +200,6 @@ def _evaluate_user_opts(table, rows):
         return rows, False, False, None, None
 
     else:
-
         user_opts = config.user.load_file("tableoptions", {})
         user_opts.setdefault(table_id, {})
         table_opts = user_opts[table_id]
@@ -216,7 +208,6 @@ def _evaluate_user_opts(table, rows):
         actions_visible = user_opts[table_id].get('actions_visible', False)
         if html.var('_%s_actions' % table_id):
             actions_visible = html.var('_%s_actions' % table_id) == '1'
-
             user_opts[table_id]['actions_visible'] = actions_visible
 
         if html.var('_%s_reset' % table_id):
@@ -240,7 +231,7 @@ def _evaluate_user_opts(table, rows):
         if table["sortable"]:
             # Now apply eventual sorting settings
             sort = html.var('_%s_sort' % table_id, table_opts.get('sort'))
-            if sort != None:
+            if sort is not None:
                 html.set_var('_%s_sort' % table_id, sort)
                 table_opts['sort'] = sort # persist
                 sort_col, sort_reverse = map(int, sort.split(',', 1))
@@ -249,9 +240,10 @@ def _evaluate_user_opts(table, rows):
         return rows, actions_enabled, actions_visible, search_term, user_opts
 
 
-def _write_table(table, rows, num_cols, actions_enabled, actions_visible, search_term):
+def _write_table(table, rows, actions_enabled, actions_visible, search_term):
 
     table_id = table["id"]
+    num_cols = len(table["headers"])
 
     html.write('<table class="data oddeven')
     if "css" in table:

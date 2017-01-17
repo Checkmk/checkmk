@@ -180,4 +180,7 @@ if __name__ == "__main__":
                     print line
 
         if(counter > 0):
+            auto.write(indent + indent.join(old_line))
+            auto.write(indent + indent.join(new_line))
+            auto.write("\n\n")
             auto.write(function_end)

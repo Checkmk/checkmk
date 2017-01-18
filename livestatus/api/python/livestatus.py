@@ -344,15 +344,19 @@ class BaseConnection:
             else:
                 raise MKLivestatusQueryError("%s: %s" % (code, data.strip()))
 
-        # In case of an IO error or the other side having
-        # closed the socket do a reconnect and try again, but
-        # only once
         except (MKLivestatusSocketClosed, IOError), e:
+            # In case of an IO error or the other side having
+            # closed the socket do a reconnect and try again
             self.disconnect()
             now = time.time()
             if query and (not timeout_at or timeout_at > now):
                 if timeout_at == None:
-                    timeout_at = now + self.timeout
+                    # Try until timeout reached in case there was a timeout configured.
+                    # Otherwise only retry once.
+                    timeout_at = now
+                    if self.timeout:
+                        timeout_at += self.timeout
+
                 time.sleep(0.1)
                 self.connect()
                 self.send_query(query, add_headers)

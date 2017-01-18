@@ -70,6 +70,7 @@
     * 4226 FIX: Custom inventory painters are now correctly loaded when declared with inventory_displayhints
     * 4228 FIX: Context links to HW/SW inventory views are only shown when useful
     * 4280 FIX: Interactive login is now denied for automation users...
+    * 4307 FIX: Fixed wrong filters in Eventviews linked by Tactical Overview
 
     WATO:
     * 4142 New extended search dialog for rulesets and rules...

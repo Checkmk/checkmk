@@ -710,11 +710,17 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
                 ],
                 "handled"   : [
                     ("view_name", "ec_events"),
-                    ("event_phase_ack", "on"),
+		    ("event_state_1", "on",),
+		    ("event_state_2", "on",),
+		    ("event_state_3", "on",),
+
                 ],
                 "unhandled" : [
                     ("view_name", "ec_events"),
                     ("event_phase_open", "on"),
+		    ("event_state_1", "on",),
+                    ("event_state_2", "on",),
+                    ("event_state_3", "on",),
                 ],
                 "stale"     : None,
             },

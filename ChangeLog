@@ -44,6 +44,7 @@
     * 4144 FIX: Sidebar: Bottom of last snapin was not 100% visible
     * 4145 FIX: Fixed exception when setting output_format in wrong case
     * 4226 FIX: Custom inventory painters are now correctly loaded when declared with inventory_displayhints
+    * 4307 FIX: Fixed wrong filters in Eventviews linked by Tactical Overview
 
     WATO:
     * 4146 FIX: Fixed broken "Global settings" when having the Event Console disabled via "omd config"

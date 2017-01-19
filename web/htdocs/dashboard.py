@@ -1267,9 +1267,12 @@ def ajax_dashlet_pos():
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def popup_list_dashboards():
+def popup_list_dashboards(add_type):
     if not config.user.may("general.edit_dashboards"):
         return []
+
+    if add_type == "graph_collection":
+        return
 
     load_dashboards()
     return [ (name, board["title"])

@@ -1467,10 +1467,14 @@ def ajax_popup_add():
         if "popup_add_handler" in visual_type:
             module_name = visual_type["module_name"]
             visual_module = __import__(module_name)
+
             handler = visual_module.__dict__[visual_type["popup_add_handler"]]
-            visuals = handler()
+            visuals = handler(add_type)
+            if not visuals:
+                continue
+
             html.write('<li><span>%s %s:</span></li>' % (_('Add to'), visual_type["title"]))
-            for name, title in sorted(handler(), key=lambda x: x[1]):
+            for name, title in sorted(visuals, key=lambda x: x[1]):
                 html.write('<li><a href="javascript:void(0)" '
                            'onclick="add_to_visual(\'%s\', \'%s\')"><img src="images/icon_%s.png"> %s</a></li>' %
                            (visual_type_name, name, visual_type_name.rstrip('s'), title))

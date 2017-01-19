@@ -194,6 +194,10 @@ td.perfometer > a {
     position: relative;
 }
 
+td.perfometer > a.disabled {
+    cursor: auto;
+}
+
 td.perfometer div.content {
    width: 120px;
    z-index: 20;

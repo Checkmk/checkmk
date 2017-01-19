@@ -162,9 +162,9 @@ def paint_perfometer(row):
             raise
         return "perfometer", ("invalid data: %s" % e)
 
-    content =  '<div class=content>%s</div>' % h
-    content += '<div class=title>%s</div>' % title
-    content += '<img class=glass src="images/perfometer-bg.png">'
+    content = html.render_div(HTML(h), class_=["content"]) \
+            + html.render_div(title, class_=["title"]) \
+            + html.render_img(src="images/perfometer-bg.png", class_=["glass"])
 
     # pnpgraph_present: -1 means unknown (path not configured), 0: no, 1: yes
     if display_options.enabled(display_options.X) \
@@ -173,10 +173,14 @@ def paint_perfometer(row):
             url = new_graphing_url(row, "service")
         else:
             url = pnp_url(row, "service")
-        return "perfometer" + stale_css, ('<a href="%s" title="%s">%s</a>' % \
-                                            (url, title, content))
+        disabled = False
     else:
-        return "perfometer" + stale_css, content
+        url = "javascript:void(0)"
+        disabled = True
+
+    return "perfometer" + stale_css, \
+        html.render_a(content=content, href=url, title=title,
+                      class_=["disabled" if disabled else None])
 
 
 #.

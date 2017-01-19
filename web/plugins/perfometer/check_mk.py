@@ -642,7 +642,7 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     st = min(2, row['service_state'])
     color = colors[st]
 
-    return "<font color=\"%s\">%.0f%%</font>" % (fg_color, left), perfometer_linear(left, color)
+    return "%.0f%%" % left, perfometer_linear(left, color)
 
 perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply
 perfometers["check_mk-printer_supply_ricoh"] = perfometer_check_mk_printer_supply

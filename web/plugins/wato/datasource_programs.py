@@ -808,8 +808,23 @@ register_rule(group,
                   size = 70
               )
             ),
+            ( "cmk_agent",
+              Dictionary(
+                  title = _("Also contact Check_MK agent"),
+                  help  = _("With this setting, the special agent will also contact the "\
+                            "Check_MK agent on the same system at the specified port."),
+                  elements = [
+                    ("port", Integer(
+                        title = _("Port"),
+                        default_value = 6556,
+                        allow_empty = False,
+                    ))
+                  ],
+                  optional_keys = []
+              )
+            ),
         ],
-        optional_keys = False
+        optional_keys = ["cmk_agent"]
     ),
     title = _("Agent for Ruckus Spot"),
     help = _("This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "

@@ -3779,6 +3779,19 @@ metric_info["fan"] = {
     "color" : "16/b"
 }
 
+metric_info["inside_macs"] = {
+    "title" : _("Number of unique inside MAC addresses"),
+    "unit"  : "count",
+    "color" : "31/a",
+}
+
+metric_info["outside_macs"] = {
+    "title" : _("Number of unique outside MAC addresses"),
+    "unit"  : "count",
+    "color" : "33/a",
+}
+
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |

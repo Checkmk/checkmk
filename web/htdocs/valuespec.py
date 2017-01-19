@@ -653,7 +653,8 @@ class EmailAddress(TextAscii):
         if not value:
             return TextAscii.value_to_text(self, value)
         elif self._make_clickable:
-            return html.render_a(value, href="mailto:%s" % value)
+            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
+            return "%s" % html.render_a(   HTML(value)   , href="mailto:%s" % value)
         else:
             return value
 
@@ -985,7 +986,8 @@ class TextAreaUnicode(TextUnicode):
 
     def value_to_text(self, value):
         if self._monospaced:
-            return html.render_pre(value, class_="ve_textarea")
+            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
+            return "%s" % html.render_pre(   HTML(value)   , class_="ve_textarea")
         else:
             return html.attrencode(value).replace("\n", "<br>")
 
@@ -1131,8 +1133,9 @@ class ListOfStrings(ValueSpec):
             return self._empty_text
 
         if self._vertical:
-            s = map(lambda v: html.render_tr(html.render_td(self._valuespec.value_to_text(v))), value)
-            return html.render_table(HTML().join(s))
+            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
+            s = map(lambda v: html.render_tr(html.render_td(    HTML(self._valuespec.value_to_text(v))  )), value)
+            return "%s" % html.render_table(HTML().join(s))
         else:
             return ", ".join([ self._valuespec.value_to_text(v) for v in value ])
 
@@ -1307,8 +1310,9 @@ class ListOf(ValueSpec):
         elif not value:
             return self._text_if_empty
         else:
-            s = map(lambda v: html.render_tr(html.render_td(self._valuespec.value_to_text(v))), value)
-            return html.render_table(HTML().join(s))
+            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
+            s = map(lambda v: html.render_tr(html.render_td(   HTML(self._valuespec.value_to_text(v))    )), value)
+            return "%s" % html.render_table(HTML().join(s))
 
 
     def get_indexes(self, varprefix):
@@ -1430,9 +1434,10 @@ class ListOfMultiple(ValueSpec):
         table_content = HTML()
         for ident, val in value:
             vs = self._choice_dict[ident]
+            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
             table_content += html.render_tr(html.render_td(vs.title())\
-                                          + html.render_td(vs.value_to_text(val)))
-        return html.render_table(table_content)
+                                          + html.render_td(    HTML(vs.value_to_text(val))    ))
+        return "%s" % html.render_table(table_content)
 
     def from_html_vars(self, varprefix):
         value = {}
@@ -2041,7 +2046,8 @@ class ListChoice(ValueSpec):
         if self._render_orientation == "horizontal":
             return ", ".join(texts)
         else:
-            return html.render_table(html.render_tr(html.render_td(html.render_br().join(texts))))
+            # TODO: This is a workaround for a bug. This function needs to return str objects right now.
+            return "%s" % html.render_table(html.render_tr(html.render_td(html.render_br().join(    map(lambda x: HTML(x), texts)  ))))
             #OLD: return "<table><tr><td>" + "<br>".join(texts) + "</td></tr></table>"
 
     def from_html_vars(self, varprefix):
@@ -3509,7 +3515,8 @@ class Dictionary(ValueSpec):
         s = '' if oneline else HTML()
         for param, vs in elem:
             if param in value:
-                text = vs.value_to_text(value[param])
+                # TODO: This is a workaround for a bug. This function needs to return str objects right now.
+                text = HTML(vs.value_to_text(value[param]))
                 if oneline:
                     if param != elem[0][0]:
                         s += ", "
@@ -3518,7 +3525,7 @@ class Dictionary(ValueSpec):
                     s += html.render_tr(html.render_td("%s:&nbsp;" % vs.title()) + html.render_td(text))
         if not oneline:
             s = html.render_table(s)
-        return s
+        return "%s" % s
 
     def from_html_vars(self, varprefix):
         value = {}
@@ -4126,7 +4133,8 @@ class IconSelector(ValueSpec):
             return icon
 
     def value_to_text(self, value):
-        return self.render_icon(value)
+        # TODO: This is a workaround for a bug. This function needs to return str objects right now.
+        return "%s" % self.render_icon(value)
 
     def validate_datatype(self, value, varprefix):
         if value is not None and type(value) != str:

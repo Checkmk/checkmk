@@ -676,8 +676,8 @@ class Cell(object):
                 params.append(('display_options', display_options.title_options))
 
             classes += [ "sort", get_primary_sorter_order(self._view, self.painter_name()) ]
-            onclick = ' onclick="location.href=\'%s\'"' % html.makeuri(params, 'sort')
-            title   = ' title="%s"' % (_('Sort by %s') % self.title())
+            onclick = "location.href=\'%s\'" % html.makeuri(params, 'sort')
+            title   = _('Sort by %s') % self.title()
 
         if is_last_column_header:
             classes.append("last_col")

@@ -6538,10 +6538,6 @@ class Rule(object):
         self._initialize()
 
 
-    def get_value(self):
-        return self.value
-
-
     def clone(self):
         cloned = Rule(self.folder, self.ruleset)
         cloned.from_config(self._format_rule())

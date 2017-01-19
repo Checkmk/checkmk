@@ -2385,6 +2385,8 @@ class html(DeprecationWrapper):
         self.store_new_transids()
 
 
+    # TODO: Rename the status_icons because they are not only showing states. There are also actions.
+    # Something like footer icons or similar seems to be better
     def _write_status_icons(self):
         self.icon_button(self.makeuri([]), _("URL to this frame"),
                          "frameurl", target="_top", cssclass="inline")
@@ -2398,6 +2400,7 @@ class html(DeprecationWrapper):
                              _("Export as CSV"),
                              "download_csv", target="_top", cssclass="inline")
 
+        # TODO: This needs to be realized as plugin mechanism
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
 
@@ -2413,6 +2416,16 @@ class html(DeprecationWrapper):
                 self.render_icon("menu", _("Add this view to..."), cssclass="iconbutton inline"),
                 'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}],
                 url_vars=[("add_type", "view")])
+
+        # TODO: This should be handled by pagetypes.py
+        elif self.myfile == "graph_collection":
+
+            self.popup_trigger(
+                self.render_icon("menu", _("Add this graph collection to..."),
+                                 cssclass="iconbutton inline"),
+                'add_visual', 'add_visual', data=["graph_collection", {}, {'name': self.var('name')}],
+                url_vars=[("add_type", "graph_collection")])
+
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:

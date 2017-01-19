@@ -42,14 +42,15 @@ ruckus_spot_ap_bands = {
 ruckus_spot_ap_default_levels = ((None, None), (None, None))
 
 def parse_ruckus_spot_ap(info):
+    import json
+    data = json.loads(info[0][0])
     bands        = {}
-    current_band = None
-    for line in info:
-        if line[0] == "[band]":
-            current_band = line[1]
-            bands.setdefault(current_band, [])
-        else:
-            bands[current_band].append(line)
+    for band_info in data:
+        band_id = str(band_info["band"])
+        bands.setdefault(band_id, [])
+        for ap_dict in band_info.get("access_points"):
+            bands[band_id].append([ap_dict["name"], ap_dict["status"]])
+
     return bands
 
 def inventory_ruckus_spot_ap(parsed):
@@ -69,8 +70,8 @@ def check_ruckus_spot_ap(item, params, parsed):
     perfdata = [("ap_devices_total", len(band))]
 
     extra_info = []
-    for what, ap_state, warn, crit in [ ("drifted",        "2", drift_warn, drift_crit),
-                                        ("not responding", "0", down_warn,  down_crit) ]:
+    for what, ap_state, warn, crit in [ ("drifted",        2, drift_warn, drift_crit),
+                                        ("not responding", 0, down_warn,  down_crit) ]:
         problems = len([x for x in band if x[1] == ap_state])
         if crit and problems >= crit:
             state = 2

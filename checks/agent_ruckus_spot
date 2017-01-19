@@ -33,6 +33,8 @@ def agent_ruckus_spot_arguments(params, hostname, ipaddress):
         args += " --address " + quote_shell_string("%s:%s" % (params["address"], params["port"]))
     args += " --venueid " + quote_shell_string(params["venueid"])
     args += " --apikey " + quote_shell_string(params["api_key"])
+    if "cmk_agent" in params:
+        args += " --agent_port " + quote_shell_string(params["cmk_agent"]["port"])
 
     return args
 

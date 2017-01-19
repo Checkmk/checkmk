@@ -1,0 +1,10 @@
+Title: Ruckus Spot / ruckus_spot_locations: new check to monitor the number of unqiue MACs addresses
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1484827530
+Class: feature
+
+This check reports the number of unique inside and outside MACs addresses.
+You can configure upper and lower levels for the inside as well as the outside area.

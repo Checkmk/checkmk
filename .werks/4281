@@ -1,0 +1,16 @@
+Title: Fixed piggyback hosts with spaces in names leading to crashes
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p16
+Date: 1484818031
+
+It was possible for agent plugins / special agents to create piggyback hosts
+with spaces in their names which lead to crashes of Check_MK check helpers
+when trying to check these hosts.
+
+These spaces will now automatically be replaced by underscores to workaround
+this issue. In case you want to have another replacement logic, you can use
+the piggyback translation ruleset to override the default behaviour.

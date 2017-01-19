@@ -1,4 +1,7 @@
 1.2.8p16:
+    Core & Setup:
+    * 4281 FIX: Fixed piggyback hosts with spaces in names leading to crashes...
+
     Checks & Agents:
     * 3896 FIX: Agent RPMs: Fixing dependency issue with old check_mk-agent-oracle-*.rpm and check_mk-agent-logwatch-*.rpm
     * 4172 FIX: smart.temp: fixed discovery and check function...

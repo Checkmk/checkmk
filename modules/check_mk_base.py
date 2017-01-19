@@ -899,6 +899,14 @@ def parse_info(lines, hostname):
                 host = translate_piggyback_host(hostname, host)
                 if host == hostname:
                     host = None # unpiggybacked "normal" host
+
+                # Protect Check_MK against unallowed host names. Normally source scripts
+                # like agent plugins should care about cleaning their provided host names
+                # up, but we need to be sure here to prevent bugs in Check_MK code.
+                # a) Replace spaces by underscores
+                if host:
+                    host = host.replace(" ", "_")
+
         elif host: # processing data for an other host
             piggybacked.setdefault(host, []).append(line)
 

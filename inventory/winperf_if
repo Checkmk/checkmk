@@ -27,7 +27,7 @@
 
 # TODO unify with other if inventory plugins
 def inv_winperf_if(parsed, params):
-    perf, dhcp, nic_names, nic_index = parsed
+    agent_timestamp, perf, dhcp, nic_names, nic_index = parsed
     node = inv_tree_list("networking.interfaces:")
 
     usage_port_types = params.get("usage_port_types",

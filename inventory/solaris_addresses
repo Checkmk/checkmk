@@ -1,0 +1,94 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# ifconfig -a
+# lo0: flags=2001000849 <UP,LOOPBACK,RUNNING,MULTICAST,IPv4,VIRTUAL> mtu 8232 index 1
+# inet 127.0.0.1 netmask ff000000
+# ce0: flags=1000843 <UP,BROADCAST,RUNNING,MULTICAST,IPv4>mtu 1500 index 3
+# inet 192.168.84.253 netmask ffffff00 broadcast 192.168.84.255
+# ether 0:3:ba:7:84:5e
+# bge0: flags=1004843 <UP,BROADCAST,RUNNING,MULTICAST,DHCP,IPv4>mtu 1500 index 2
+# inet 10.8.57.39 netmask ffffff00 broadcast 10.8.57.255
+# ether 0:3:ba:29:fc:cc
+
+
+# executed before statgrab_net which provides some information
+def inv_solaris_addresses(info, params):
+    parsed   = {}
+    dev_name = None
+    for line in info:
+        if line[0][-1] == ":":
+            dev_name = line[0][:-1]
+            parsed.setdefault(dev_name, {
+                "description" : dev_name,
+                "index"       : int(line[-1]),
+            })
+        elif "ether" in line and dev_name:
+            parsed[dev_name]["phys_address"] = line[1]
+        else:
+            if "inet" in line and dev_name:
+                parsed[dev_name]["IPv4"] = line[1]
+            if "netmask" in line and dev_name:
+                parsed[dev_name]["netmask"] = line[3]
+            if "inet6" in line and dev_name:
+                parsed[dev_name]["ipv6"] = line[1]
+
+    node = inv_tree_list("networking.interfaces:")
+    for device, attrs in parsed.items():
+        if attrs.get("phys_address"):
+            node.append({
+                "index"        : attrs.get("index"),
+                "description"  : device,
+                "alias"        : device,
+                "speed"        : 0,
+                "phys_address" : attrs.get("phys_address", ""),
+                "port_type"    : 6,
+            })
+
+    addresses = inv_tree_list("networking.addresses:")
+    for device, attrs in parsed.items():
+        address = {"device"  : device}
+        if "IPv4" in attrs:
+            address.update({
+                "address" : attrs["IPv4"],
+                "type"    : "IPv4",
+            })
+        elif "IPv6" in attrs:
+            address.update({
+                "address" : attrs["IPv6"],
+                "type"    : "IPv6",
+            })
+        addresses.append(address)
+
+
+inv_info['solaris_addresses'] = {
+    'inv_function'      : inv_solaris_addresses,
+}
+
+
+
+

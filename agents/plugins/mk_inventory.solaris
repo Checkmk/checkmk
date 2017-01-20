@@ -78,5 +78,12 @@ then
         echo "<<<solaris_pkginfo:sep(58):persist($UNTIL)>>>"
         pkginfo -l
     fi
+
+    echo "<<<solaris_addresses:persist($UNTIL)>>>"
+    ifconfig -a
+
+    echo "<<<solaris_routes:persist($UNTIL)>>>"
+    netstat -nr
+
 fi
 

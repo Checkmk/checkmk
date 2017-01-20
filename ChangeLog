@@ -163,6 +163,7 @@
 
     HW/SW-Inventory:
     * 4188 snmp_extended_info: Now capable to inventorize cisco backplane chassis...
+    * 4295 solaris_addresses, solaris_routes, statgrab_net: new solaris inventory plugins...
     * 4258 FIX: snmp_extended_info: fixed undefined variable
 
 

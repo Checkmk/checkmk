@@ -620,6 +620,16 @@ inventory_displayhints.update({
     ".hardware.system.manufacturer"                    : { "title" : _("Manufacturer") },
 
     ".hardware.components."                            : { "title" : _("Physical Components") },
+    ".hardware.components.chassis:"                    : { "title" : _("Chassis"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "view" : "invchassis_of_host" },
+    ".hardware.components.chassis:*.index"             : { "title" : _("Index") },
+    ".hardware.components.chassis:*.name"              : { "title" : _("Name") },
+    ".hardware.components.chassis:*.description"       : { "title" : _("Description") },
+    ".hardware.components.chassis:*.serial"            : { "title" : _("Serial Number") },
+    ".hardware.components.chassis:*.model"             : { "title" : _("Model Name") },
+    ".hardware.components.chassis:*.location"          : { "title" : _("Location") },
+
     ".hardware.components.backplanes:"                 : { "title" : _("Backplanes"), "render" : render_inv_dicttable,
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
                                                            "view" : "invbackplane_of_host" },

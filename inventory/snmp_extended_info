@@ -35,17 +35,17 @@
 
 def inv_snmp_extended_info(info):
     map_type = {
-        "1"  : "Other",
-        "2"  : "Unknown",
-        "3"  : "Chassis",
-        "4"  : "Backplane",
-        "5"  : "Container",
-        "6"  : "PSU",
-        "7"  : "Fan",
-        "8"  : "Sensor",
-        "9"  : "Module",
-        "10" : "Port",
-        "11" : "Stack",
+        "1"  : ( "Other",       "others" ),
+        "2"  : ( "Unknown",     "unknowns" ),
+        "3"  : ( "Chassis",     "chassis" ),
+        "4"  : ( "Backplane",   "backplanes" ),
+        "5"  : ( "Container",   "containers" ),
+        "6"  : ( "PSU",         "psus" ),
+        "7"  : ( "Fan",         "fans" ),
+        "8"  : ( "Sensor",      "sensors" ),
+        "9"  : ( "Module",      "modules" ),
+        "10" : ( "Port",        "ports" ),
+        "11" : ( "Stack",       "stacks" ),
     }
 
     parsed = {}
@@ -61,12 +61,12 @@ def inv_snmp_extended_info(info):
             if model:
                 node["model"]  = model
         # backplanes, psus, fans, sensors, modules
-        elif entity_type in ["4", "6", "7", "8", "9"]:
+        elif entity_type in ["3", "4", "6", "7", "8", "9"]:
             if parsed.get(parent):
-                location_info = (map_type[parsed[parent][2]], parent)
+                location_info = (map_type[parsed[parent][2]][0], parent)
             else:
                 location_info = ("Missing in ENTITY table", parent)
-            node = inv_tree_list("hardware.components.%ss:" % (map_type[entity_type]).lower())
+            node = inv_tree_list("hardware.components.%s:" % (map_type[entity_type][1]))
             node.append({
                 "index"       : index,
                 "name"        : name,

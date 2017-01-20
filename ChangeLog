@@ -138,6 +138,7 @@
     * 4314 FIX: Quick event delete icon works with checkboxes enabled now
 
     HW/SW-Inventory:
+    * 4188 snmp_extended_info: Now capable to inventorize cisco backplane chassis...
     * 4258 FIX: snmp_extended_info: fixed undefined variable
 
 

@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL              := /bin/bash
-VERSION            := 1.2.8p16
+VERSION            := 1.2.8p17
 NAME               := check_mk
 PREFIX             := /usr
 BINDIR             := $(PREFIX)/bin

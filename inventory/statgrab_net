@@ -1,0 +1,75 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# executed after solaris_addresses which provides some information
+def inv_statgrab_net(info, params):
+    usage_port_types = params.get("usage_port_types",
+           [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229' ])
+    total_ethernet_ports = 0
+
+    parsed = {}
+    for line in info:
+        if_index, if_descr, if_type, if_speed, if_oper_status = line[:5]
+        if_alias, if_phys_address = line[-2:]
+
+        if not if_speed:
+            continue
+
+        parsed.setdefault(if_descr, {
+            "index"        : int(if_index),
+            "description"  : if_descr,
+            "alias"        : if_alias,
+            "speed"        : int(if_speed),
+            "phys_address" : if_phys_address,
+            "oper_status"  : int(if_oper_status),
+            "port_type"    : int(if_type),
+        })
+
+    node = inv_tree_list("networking.interfaces:")
+    for entry in node:
+        descr     = entry.get("description")
+        phys_addr = entry.get("phys_address")
+        if parsed.get(descr):
+            entry.update(parsed[descr])
+            if phys_addr and not parsed[descr].get("phys_address"):
+                entry["phys_address"] = phys_addr
+            del parsed[descr]
+
+        if entry.get("port_type") in usage_port_types:
+            total_ethernet_ports += 1
+
+    for entry in parsed.values():
+        node.append(entry)
+
+    node = inv_tree("networking.")
+    node["total_ethernet_ports"] = total_ethernet_ports
+    node["total_interfaces"] = len(info)
+
+
+inv_info['statgrab_net'] = {
+    'inv_function'      : inv_statgrab_net,
+}

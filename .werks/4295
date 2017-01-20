@@ -1,0 +1,10 @@
+Title: solaris_addresses, solaris_routes, statgrab_net: new solaris inventory plugins
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.4.0i4
+Date: 1485252287
+Class: feature
+
+{{solaris_addresses}} shows ip addresses, {{solaris_routes}} shows the routing table and
+{{statgrab_net}} now shows also physical addresses provided by {{solaris_addresses}}.

@@ -39,7 +39,7 @@ pagehandlers.update({
     "ajax_set_foldertree"       : wato.ajax_set_foldertree,
     "wato_ajax_diag_host"       : wato.ajax_diag_host,
     "wato_ajax_profile_repl"    : wato.ajax_profile_repl,
-    "wato_ajax_execute_check"   : wato.ajax_execute_check,
+    "wato_ajax_execute_check"   : lambda: wato.ModeAjaxExecuteCheck().handle_page(),
     "download_agent_output"     : wato.page_download_agent_output,
     "ajax_popup_move_to_folder" : wato.ajax_popup_move_to_folder,
     "ajax_backup_job_state"     : lambda: wato.ModeAjaxBackupJobState().page(),

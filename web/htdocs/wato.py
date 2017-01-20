@@ -2687,7 +2687,7 @@ def ajax_diag_host():
         html.write_text("1 %s" % _("Exception: %s") % traceback.format_exc())
 
 #.
-#   .--Inventory & Services------------------------------------------------.
+#   .--Discoveru & Services------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
 #   |               \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|                |
@@ -2695,310 +2695,367 @@ def ajax_diag_host():
 #   |               |____/ \___|_|    \_/ |_|\___\___||___/                |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Mode for doing the inventory on a single host and/or showing and     |
+#   | Mode for doing the discovery on a single host and/or showing and     |
 #   | editing the current services of a host.                              |
 #   '----------------------------------------------------------------------'
 
-def mode_inventory(phase, firsttime):
-    hostname = html.var("host")
-    host = Folder.current().host(hostname)
-    if not host:
-        raise MKGeneralException(_("You called this page with an invalid host name."))
+class ModeDiscovery(WatoMode):
+    def __init__(self):
+        super(ModeDiscovery, self).__init__()
+        self._from_vars()
 
-    host.need_permission("read")
 
-    if phase == "title":
-        title = _("Services of host %s") % hostname
+    def _from_vars(self):
+        self._host_name = html.var("host")
+        self._host = Folder.current().host(self._host_name)
+        if not self._host:
+            raise MKGeneralException(_("You called this page with an invalid host name."))
+
+        self._host.need_permission("read")
+
+
+    def title(self):
+        title = _("Services of host %s") % self._host_name
         if html.var("_scan"):
             title += _(" (live scan)")
         else:
             title += _(" (might be cached data)")
         return title
 
-    elif phase == "buttons":
+
+    def buttons(self):
         html.context_button(_("Folder"),
-                            folder_preserving_link([("mode", "folder")]), "back")
-        host_status_button(hostname, "host")
-        html.context_button(_("Properties"), folder_preserving_link([("mode", "edit_host"), ("host", hostname)]), "edit")
+            folder_preserving_link([("mode", "folder")]), "back")
+
+        host_status_button(self._host_name, "host")
+        html.context_button(_("Properties"), folder_preserving_link([("mode", "edit_host"),
+                                                    ("host", self._host_name)]), "edit")
+
         if config.user.may('wato.rulesets'):
             html.context_button(_("Parameters"),
-                                folder_preserving_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
-            if host.is_cluster():
+                                folder_preserving_link([("mode", "object_parameters"),
+                                                        ("host", self._host_name)]), "rulesets")
+
+            if self._host.is_cluster():
                 html.context_button(_("Clustered Services"),
-                  folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")]), "rulesets")
-        if not host.is_cluster():
+                  folder_preserving_link([("mode", "edit_ruleset"),
+                                          ("varname", "clustered_services")]), "rulesets")
+
+        if not self._host.is_cluster():
             # only display for non cluster hosts
             html.context_button(_("Diagnostic"),
-                  folder_preserving_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
+                  folder_preserving_link([("mode", "diag_host"),
+                                          ("host", self._host_name)]), "diagnose")
+
         if config.user.may("wato.services"):
             html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
-    elif phase == "action":
-        if html.check_transaction():
-            # Settings for showing parameters
-            if html.var("_show_parameters"):
-                parameter_column = True
-                config.user.save_file("parameter_column", True)
-                return
-            elif html.var("_hide_parameters"):
-                parameter_column = False
-                config.user.save_file("parameter_column", False)
-                return
 
-            config.user.need_permission("wato.services")
+    def action(self):
+        if not html.check_transaction():
+            return "folder"
 
-            cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
-            new_target = "folder"
+        host     = self._host
+        hostname = self._host.name()
 
-            if html.var("_refresh"):
-                counts, failed_hosts = check_mk_automation(host.site_id(), "inventory", [ "@scan", "refresh", hostname ])
-                count_added, count_removed, count_kept, count_new = counts[hostname]
+        # Settings for showing parameters
+        if html.var("_show_parameters"):
+            parameter_column = True
+            config.user.save_file("parameter_column", True)
+            return
+        elif html.var("_hide_parameters"):
+            parameter_column = False
+            config.user.save_file("parameter_column", False)
+            return
 
-                message = _("Refreshed check configuration of host [%s] with %d services") % \
-                            (hostname, count_added)
+        config.user.need_permission("wato.services")
 
-                if not host.locked():
-                    host.clear_discovery_failed()
+        cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
+        new_target = "folder"
 
-                add_service_change(host, "refresh-autochecks", message)
+        if html.var("_refresh"):
+            counts, failed_hosts = check_mk_automation(host.site_id(), "inventory", [ "@scan", "refresh", hostname ])
+            count_added, count_removed, count_kept, count_new = counts[hostname]
 
-            else:
-                table = check_mk_automation(host.site_id(), "try-inventory", cache_options + [hostname])
-                table.sort()
-                active_checks = {}
-                for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
-                    if (html.has_var("_cleanup") or html.has_var("_fixall")) \
-                        and st in [ "vanished", "obsolete" ]:
-                        pass
-                    elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
-                        and st == "new":
-                        active_checks[(ct, item)] = paramstring
-                    else:
-                        varname = "_%s_%s" % (ct, html.varencode(item))
-                        if html.var(varname, "") != "":
-                            active_checks[(ct, item)] = paramstring
-                    if st.startswith("clustered"):
-                        active_checks[(ct, item)] = paramstring
+            message = _("Refreshed check configuration of host [%s] with %d services") % \
+                        (hostname, count_added)
 
-                check_mk_automation(host.site_id(), "set-autochecks", [hostname], active_checks)
+            if not host.locked():
+                host.clear_discovery_failed()
 
-                message = _("Saved check configuration of host [%s] with %d services") % \
-                            (hostname, len(active_checks))
+            add_service_change(host, "refresh-autochecks", message)
 
-                if not host.locked():
-                    host.clear_discovery_failed()
-
-                add_service_change(host, "set-autochecks", message)
-
-            return new_target, message
-        return "folder"
-
-    else:
-        show_service_table(host, firsttime)
-
-
-def show_service_table(host, firsttime):
-    hostname = host.name()
-
-    # Read current check configuration
-    cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
-    parameter_column = config.user.load_file("parameter_column", False)
-    error_options = not html.var("ignoreerrors") and [ "@raiseerrors" ] or []
-
-    # We first try using the Cache (if the user has not pressed Full Scan).
-    # If we do not find any data, we omit the cache and immediately try
-    # again without using the cache.
-    try:
-        options = cache_options + error_options
-        checktable = check_mk_automation(host.site_id(), "try-inventory", options + [hostname])
-        if len(checktable) == 0 and cache_options != []:
-            checktable = check_mk_automation(host.site_id(), "try-inventory", [ '@scan', hostname ])
-            html.set_var("_scan", "on")
-    except Exception, e:
-        if config.debug:
-            raise
-        log_exception()
-        url = html.makeuri([("ignoreerrors", "1"), ("_scan", html.var("_scan"))])
-        retry_link = '<a href="%s">%s</a>' % (url, _("Retry discovery while ignoring this error (Result might be incomplete)."))
-        html.show_warning("<b>%s</b>: %s<br><br>%s" %
-                          (_("Service discovery failed for this host"), e, retry_link))
-        return
-
-    checktable.sort()
-
-    html.begin_form("checks", method = "POST")
-    fixall = 0
-    if config.user.may("wato.services"):
-        for entry in checktable:
-            if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
-                html.button("_activate_all", _("Activate missing"))
-                fixall += 1
-                break
-        for entry in checktable:
-            if entry[0] in [ 'obsolete', 'vanished', ]:
-                html.button("_cleanup", _("Remove vanished"))
-                fixall += 1
-                break
-
-        if fixall == 2:
-            html.button("_fixall", _("Fix all missing/vanished"))
-
-        if len(checktable) > 0:
-            html.button("_save", _("Save manual check configuration"))
-            html.button("_refresh", _("Automatic Refresh (Tabula Rasa)"))
-
-        html.write(" &nbsp; ")
-
-    if parameter_column:
-        html.button("_hide_parameters", _("Hide Check Parameters"))
-    else:
-        html.button("_show_parameters", _("Show Check Parameters"))
-
-    html.hidden_fields()
-    if html.var("_scan"):
-        html.hidden_field("_scan", "on")
-
-    table.begin(css ="data", searchable = False, limit = None, sortable = False)
-
-    # This option will later be switchable somehow
-
-    divid = 0
-    for state_name, check_source, checkbox in [
-        ( _("Available (missing) services"), "new", firsttime ),
-        ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ), # Cannot happen anymore
-        ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
-        ( _("Already configured services"), "old", True, ),
-        ( _("Disabled services (configured away by admin)"), "ignored", None),
-        ( _("Active checks"), "active", None ),
-        ( _("Manual services (defined in main.mk)"), "manual", None ),
-        ( _("Legacy services (defined in main.mk)"), "legacy", None ),
-        ( _("Custom checks (defined via rule)"), "custom", None ),
-        ( _("Already configured clustered services (located on cluster host)"), "clustered_old", None ),
-        ( _("Available clustered services"), "clustered_new", None ),
-        ]:
-        first = True
-        for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in checktable:
-            if check_source != st:
-                continue
-            if first:
-                table.groupheader(state_name)
-                first = False
-
-            statename = short_service_state_name(state, "")
-            if statename == "":
-                statename = short_service_state_name(-1)
-                stateclass = "state svcstate statep"
-                state = 0 # for tr class
-            else:
-                stateclass = "state svcstate state%s" % state
-
-            table.row(css="data", state=state)
-
-            # Status, Checktype, Item, Description, Check Output
-            if check_source == "active":
-                ctype = "check_" + ct
-            else:
-                ctype = ct
-            manpage_url = folder_preserving_link([("mode", "check_manpage"), ("check_type", ctype)])
-            table.cell(_("Status"),              statename, css=stateclass)
-            table.cell(_("Checkplugin"),         '<a href="%s">%s</a>' % (manpage_url, ctype))
-            table.cell(_("Item"),                html.attrencode(item))
-            table.cell(_("Service Description"), html.attrencode(descr))
-            table.cell(_("Plugin output"))
-
-            if cmk.paths.omd_root and check_source in ( "custom", "active" ):
-                divid += 1
-                html.div(html.render_icon("reload", cssclass="reloading"), id_="activecheck%d" % divid)
-                html.final_javascript("execute_active_check('%s', '%s', '%s', '%s', 'activecheck%d');" % (
-                     host.site_id() or '', hostname, ct, item.replace("'", "\'"), divid))
-            else:
-                html.write_text(output)
-
-            # Icon for Rule editor, Check parameters
-            varname = None
-            if checkgroup:
-                varname = "checkgroup_parameters:" + checkgroup
-            elif check_source == "active":
-                varname = "active_checks:" + ct
-
-            if parameter_column:
-                table.cell(_("Check Parameters"))
-                if varname and g_rulespecs.exists(varname):
-                    rulespec = g_rulespecs.get(varname)
-                    try:
-                        rulespec.valuespec.validate_datatype(params, "")
-                        rulespec.valuespec.validate_value(params, "")
-                        paramtext = rulespec.valuespec.value_to_text(params)
-                        html.write_html(paramtext)
-                    except Exception, e:
-                        if config.debug:
-                            err = traceback.format_exc()
-                        else:
-                            err = e
-                        paramtext = _("Invalid check parameter: %s!") % err
-                        paramtext += _(" The parameter is: %r") % (params,)
-                        paramtext += _(" The variable name is: %s") % varname
-                        html.write_text(paramtext)
-
-            # Icon for Service parameters. Not for missing services!
-            table.cell(css='buttons')
-            if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
-                # Link to list of all rulesets affecting this service
-                params_url = folder_preserving_link([("mode", "object_parameters"),
-                                        ("host", hostname),
-                                        ("service", descr)])
-                html.icon_button(params_url, _("View and edit the parameters for this service"), "rulesets")
-
-                url = folder_preserving_link([("mode", "edit_ruleset"),
-                                 ("varname", varname),
-                                 ("host", hostname),
-                                 ("item", mk_repr(item))])
-                html.icon_button(url, _("Edit and analyze the check parameters of this service"), "check_parameters")
-
-            if check_source == "ignored" and may_edit_ruleset("ignored_services"):
-                url = folder_preserving_link([("mode", "edit_ruleset"),
-                                 ("varname", "ignored_services"),
-                                 ("host", hostname),
-                                 ("item", mk_repr(descr))])
-                html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
-
-            # Permanently disable icon
-            if check_source in ['new', 'old'] and may_edit_ruleset("ignored_services"):
-                url = folder_preserving_link([
-                    ('mode', 'edit_ruleset'),
-                    ('varname', 'ignored_services'),
-                    ('host', hostname),
-                    ('item', mk_repr(descr)),
-                    ('mode', 'new_rule'),
-                    ('_new_host_rule', '1'),
-                    ('filled_in', 'new_rule'),
-                    ('rule_folder', ''),
-                    ('back_mode', 'inventory'),
-                ])
-                html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
-
-            # Temporary ignore checkbox
-            if config.user.may("wato.services"):
-                table.cell()
-                if checkbox != None:
+        else:
+            table = check_mk_automation(host.site_id(), "try-inventory", cache_options + [hostname])
+            table.sort()
+            active_checks = {}
+            for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
+                if (html.has_var("_cleanup") or html.has_var("_fixall")) \
+                    and st in [ "vanished", "obsolete" ]:
+                    pass
+                elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
+                    and st == "new":
+                    active_checks[(ct, item)] = paramstring
+                else:
                     varname = "_%s_%s" % (ct, html.varencode(item))
-                    html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+                    if html.var(varname, "") != "":
+                        active_checks[(ct, item)] = paramstring
+                if st.startswith("clustered"):
+                    active_checks[(ct, item)] = paramstring
 
-    table.end()
-    html.end_form()
+            check_mk_automation(host.site_id(), "set-autochecks", [hostname], active_checks)
+
+            message = _("Saved check configuration of host [%s] with %d services") % \
+                        (hostname, len(active_checks))
+
+            if not host.locked():
+                host.clear_discovery_failed()
+
+            add_service_change(host, "set-autochecks", message)
+
+        return new_target, message
 
 
-def ajax_execute_check():
-    site      = html.var("site")
-    hostname  = html.var("host")
-    checktype = html.var("checktype")
-    item      = html.var("item")
-    try:
-        status, output = check_mk_automation(site, "active-check", [ hostname, checktype, item ], sync=False)
-    except Exception, e:
-        status = 1
-        output = "%s" % e
-    html.write_text("%d\n%s\n%s" % (status, short_service_state_name(status, "UNKN"), output))
+    def page(self):
+        self._service_table()
+
+
+    def _service_table(self):
+        host      = self._host
+        hostname  = self._host.name()
+        firsttime = isinstance(self, ModeFirstDiscovery)
+
+        # Read current check configuration
+        cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
+        parameter_column = config.user.load_file("parameter_column", False)
+        error_options = not html.var("ignoreerrors") and [ "@raiseerrors" ] or []
+
+        # We first try using the Cache (if the user has not pressed Full Scan).
+        # If we do not find any data, we omit the cache and immediately try
+        # again without using the cache.
+        try:
+            options = cache_options + error_options
+            checktable = check_mk_automation(host.site_id(), "try-inventory", options + [hostname])
+            if len(checktable) == 0 and cache_options != []:
+                checktable = check_mk_automation(host.site_id(), "try-inventory", [ '@scan', hostname ])
+                html.set_var("_scan", "on")
+        except Exception, e:
+            if config.debug:
+                raise
+            log_exception()
+            url = html.makeuri([("ignoreerrors", "1"), ("_scan", html.var("_scan"))])
+            retry_link = '<a href="%s">%s</a>' % (url, _("Retry discovery while ignoring this error (Result might be incomplete)."))
+            html.show_warning("<b>%s</b>: %s<br><br>%s" %
+                              (_("Service discovery failed for this host"), e, retry_link))
+            return
+
+        checktable.sort()
+
+        html.begin_form("checks", method = "POST")
+        fixall = 0
+        if config.user.may("wato.services"):
+            for entry in checktable:
+                if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
+                    html.button("_activate_all", _("Activate missing"))
+                    fixall += 1
+                    break
+            for entry in checktable:
+                if entry[0] in [ 'obsolete', 'vanished', ]:
+                    html.button("_cleanup", _("Remove vanished"))
+                    fixall += 1
+                    break
+
+            if fixall == 2:
+                html.button("_fixall", _("Fix all missing/vanished"))
+
+            if len(checktable) > 0:
+                html.button("_save", _("Save manual check configuration"))
+                html.button("_refresh", _("Automatic Refresh (Tabula Rasa)"))
+
+            html.write(" &nbsp; ")
+
+        if parameter_column:
+            html.button("_hide_parameters", _("Hide Check Parameters"))
+        else:
+            html.button("_show_parameters", _("Show Check Parameters"))
+
+        html.hidden_fields()
+        if html.var("_scan"):
+            html.hidden_field("_scan", "on")
+
+        table.begin(css ="data", searchable = False, limit = None, sortable = False)
+
+        # This option will later be switchable somehow
+
+        divid = 0
+        for state_name, check_source, checkbox in [
+            ( _("Available (missing) services"), "new", firsttime ),
+            ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ), # Cannot happen anymore
+            ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
+            ( _("Already configured services"), "old", True, ),
+            ( _("Disabled services (configured away by admin)"), "ignored", None),
+            ( _("Active checks"), "active", None ),
+            ( _("Manual services (defined in main.mk)"), "manual", None ),
+            ( _("Legacy services (defined in main.mk)"), "legacy", None ),
+            ( _("Custom checks (defined via rule)"), "custom", None ),
+            ( _("Already configured clustered services (located on cluster host)"), "clustered_old", None ),
+            ( _("Available clustered services"), "clustered_new", None ),
+            ]:
+            first = True
+            for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in checktable:
+                if check_source != st:
+                    continue
+                if first:
+                    table.groupheader(state_name)
+                    first = False
+
+                statename = short_service_state_name(state, "")
+                if statename == "":
+                    statename = short_service_state_name(-1)
+                    stateclass = "state svcstate statep"
+                    state = 0 # for tr class
+                else:
+                    stateclass = "state svcstate state%s" % state
+
+                table.row(css="data", state=state)
+
+                # Status, Checktype, Item, Description, Check Output
+                if check_source == "active":
+                    ctype = "check_" + ct
+                else:
+                    ctype = ct
+                manpage_url = folder_preserving_link([("mode", "check_manpage"), ("check_type", ctype)])
+                table.cell(_("Status"),              statename, css=stateclass)
+                table.cell(_("Checkplugin"),         '<a href="%s">%s</a>' % (manpage_url, ctype))
+                table.cell(_("Item"),                html.attrencode(item))
+                table.cell(_("Service Description"), html.attrencode(descr))
+                table.cell(_("Plugin output"))
+
+                if cmk.paths.omd_root and check_source in ( "custom", "active" ):
+                    divid += 1
+                    html.div(html.render_icon("reload", cssclass="reloading"), id_="activecheck%d" % divid)
+                    html.final_javascript("execute_active_check('%s', '%s', '%s', '%s', 'activecheck%d');" % (
+                         host.site_id() or '', hostname, ct, item.replace("'", "\'"), divid))
+                else:
+                    html.write_text(output)
+
+                # Icon for Rule editor, Check parameters
+                varname = None
+                if checkgroup:
+                    varname = "checkgroup_parameters:" + checkgroup
+                elif check_source == "active":
+                    varname = "active_checks:" + ct
+
+                if parameter_column:
+                    table.cell(_("Check Parameters"))
+                    if varname and g_rulespecs.exists(varname):
+                        rulespec = g_rulespecs.get(varname)
+                        try:
+                            rulespec.valuespec.validate_datatype(params, "")
+                            rulespec.valuespec.validate_value(params, "")
+                            paramtext = rulespec.valuespec.value_to_text(params)
+                            html.write_html(paramtext)
+                        except Exception, e:
+                            if config.debug:
+                                err = traceback.format_exc()
+                            else:
+                                err = e
+                            paramtext = _("Invalid check parameter: %s!") % err
+                            paramtext += _(" The parameter is: %r") % (params,)
+                            paramtext += _(" The variable name is: %s") % varname
+                            html.write_text(paramtext)
+
+                # Icon for Service parameters. Not for missing services!
+                table.cell(css='buttons')
+                if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
+                    # Link to list of all rulesets affecting this service
+                    params_url = folder_preserving_link([("mode", "object_parameters"),
+                                            ("host", hostname),
+                                            ("service", descr)])
+                    html.icon_button(params_url, _("View and edit the parameters for this service"), "rulesets")
+
+                    url = folder_preserving_link([("mode", "edit_ruleset"),
+                                     ("varname", varname),
+                                     ("host", hostname),
+                                     ("item", mk_repr(item))])
+                    html.icon_button(url, _("Edit and analyze the check parameters of this service"), "check_parameters")
+
+                if check_source == "ignored" and may_edit_ruleset("ignored_services"):
+                    url = folder_preserving_link([("mode", "edit_ruleset"),
+                                     ("varname", "ignored_services"),
+                                     ("host", hostname),
+                                     ("item", mk_repr(descr))])
+                    html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
+
+                # Permanently disable icon
+                if check_source in ['new', 'old'] and may_edit_ruleset("ignored_services"):
+                    url = folder_preserving_link([
+                        ('mode', 'edit_ruleset'),
+                        ('varname', 'ignored_services'),
+                        ('host', hostname),
+                        ('item', mk_repr(descr)),
+                        ('mode', 'new_rule'),
+                        ('_new_host_rule', '1'),
+                        ('filled_in', 'new_rule'),
+                        ('rule_folder', ''),
+                        ('back_mode', 'inventory'),
+                    ])
+                    html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
+
+                # Temporary ignore checkbox
+                if config.user.may("wato.services"):
+                    table.cell()
+                    if checkbox != None:
+                        varname = "_%s_%s" % (ct, html.varencode(item))
+                        html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+
+        table.end()
+        html.end_form()
+
+
+
+class ModeFirstDiscovery(ModeDiscovery):
+    pass
+
+
+class ModeAjaxExecuteCheck(WatoWebApiMode):
+    def __init__(self):
+        super(ModeAjaxExecuteCheck, self).__init__()
+        self._from_vars()
+
+
+    def _from_vars(self):
+        # TODO: Validate the site
+        self._site      = html.var("site")
+
+        self._host_name = html.var("host")
+        self._host      = Folder.current().host(self._host_name)
+        if not self._host:
+            raise MKGeneralException(_("You called this page with an invalid host name."))
+
+        # TODO: Validate
+        self._check_type = html.var("checktype")
+        # TODO: Validate
+        self._item       = html.var("item")
+
+        self._host.need_permission("read")
+
+
+
+    def page(self):
+        init_wato_datastructures()
+        try:
+            status, output = check_mk_automation(self._site, "active-check",
+                                [ self._host_name, self._check_type, self._item ], sync=False)
+        except Exception, e:
+            status = 1
+            output = "%s" % e
+
+        return {
+            "status"     : status,
+            "state_name" : short_service_state_name(status, "UNKN"),
+            "output"     : output,
+        }
 
 
 #.
@@ -16474,8 +16531,8 @@ modes = {
    "edit_host_attr"     : (["hosts", "manage_hosts"], lambda phase: mode_edit_custom_attr(phase, "host")),
    "edit_host"          : (["hosts"], lambda phase: mode_edit_host(phase, new=False, is_cluster=None)),
    "parentscan"         : (["hosts"], mode_parentscan),
-   "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),
-   "inventory"          : (["hosts"], lambda phase: mode_inventory(phase, False)),
+   "firstinventory"     : (["hosts", "services"], ModeFirstDiscovery),
+   "inventory"          : (["hosts"], ModeDiscovery),
    "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
    "object_parameters"  : (["hosts", "rulesets"], mode_object_parameters),
    "search"             : (["hosts"], mode_search),

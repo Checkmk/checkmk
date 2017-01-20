@@ -1058,15 +1058,22 @@ function execute_active_check(site, hostname, checktype, item, divid)
 }
 
 
-function handle_execute_active_check(oDiv, response_text)
+function handle_execute_active_check(oDiv, response_json)
 {
-    // Response is STATUS\nOUTPUT
-    var parts = response_text.split("\n", 3);
-    var state = parts[0];
-    if (state == "-1")
-        state = "p"; // Pending
-    var statename = parts[1];
-    var output = parts[2];
+    var response = JSON.parse(response_json);
+
+    if (response.result_code == 1) {
+        var state     = 3;
+        var statename = "UNKN";
+        var output    = response.result;
+    } else {
+        var state     = response["state"];
+        if (state == -1)
+            state = "p"; // Pending
+        var statename = response["state_name"];
+        var output    = response["output"];
+    }
+
     oDiv.innerHTML = output;
 
     // Change name and class of status columns

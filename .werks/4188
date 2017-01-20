@@ -1,0 +1,11 @@
+Title: snmp_extended_info: Now capable to inventorize cisco backplane chassis
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.4.0i4
+Date: 1484941164
+Class: feature
+
+The inventory is now capable to inventorize chassis information in the same
+way as other backplane components information is already used.
+

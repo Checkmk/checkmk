@@ -2817,63 +2817,30 @@ class ModeDiscovery(WatoMode):
 
 
     def page(self):
-        self._service_table()
+        self._service_tables()
 
 
-    def _service_table(self):
+    def _service_tables(self):
         host      = self._host
         hostname  = self._host.name()
         firsttime = isinstance(self, ModeFirstDiscovery)
 
-        # Read current check configuration
-        cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
-        parameter_column = config.user.load_file("parameter_column", False)
-        error_options = not html.var("ignoreerrors") and [ "@raiseerrors" ] or []
-
-        # We first try using the Cache (if the user has not pressed Full Scan).
-        # If we do not find any data, we omit the cache and immediately try
-        # again without using the cache.
         try:
-            options = cache_options + error_options
-            checktable = check_mk_automation(host.site_id(), "try-inventory", options + [hostname])
-            if len(checktable) == 0 and cache_options != []:
-                checktable = check_mk_automation(host.site_id(), "try-inventory", [ '@scan', hostname ])
-                html.set_var("_scan", "on")
+            check_table = self._get_check_table()
         except Exception, e:
+            log_exception()
             if config.debug:
                 raise
-            log_exception()
             url = html.makeuri([("ignoreerrors", "1"), ("_scan", html.var("_scan"))])
             retry_link = '<a href="%s">%s</a>' % (url, _("Retry discovery while ignoring this error (Result might be incomplete)."))
             html.show_warning("<b>%s</b>: %s<br><br>%s" %
                               (_("Service discovery failed for this host"), e, retry_link))
             return
 
-        checktable.sort()
-
         html.begin_form("checks", method = "POST")
-        fixall = 0
-        if config.user.may("wato.services"):
-            for entry in checktable:
-                if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
-                    html.button("_activate_all", _("Activate missing"))
-                    fixall += 1
-                    break
-            for entry in checktable:
-                if entry[0] in [ 'obsolete', 'vanished', ]:
-                    html.button("_cleanup", _("Remove vanished"))
-                    fixall += 1
-                    break
+        self._show_action_buttons(check_table, firsttime)
 
-            if fixall == 2:
-                html.button("_fixall", _("Fix all missing/vanished"))
-
-            if len(checktable) > 0:
-                html.button("_save", _("Save manual check configuration"))
-                html.button("_refresh", _("Automatic Refresh (Tabula Rasa)"))
-
-            html.write(" &nbsp; ")
-
+        parameter_column = config.user.load_file("parameter_column", False)
         if parameter_column:
             html.button("_hide_parameters", _("Hide Check Parameters"))
         else:
@@ -2883,31 +2850,19 @@ class ModeDiscovery(WatoMode):
         if html.var("_scan"):
             html.hidden_field("_scan", "on")
 
-        table.begin(css ="data", searchable = False, limit = None, sortable = False)
+        table.begin(css="data", searchable=False, limit=None, sortable=False)
 
-        # This option will later be switchable somehow
+        checks_by_source = self._checks_by_source(check_table)
 
-        divid = 0
-        for state_name, check_source, checkbox in [
-            ( _("Available (missing) services"), "new", firsttime ),
-            ( _("Obsolete services (being checked, but should be ignored)"), "obsolete", True ), # Cannot happen anymore
-            ( _("Vanished services (checked, but no longer exist)"), "vanished", True ),
-            ( _("Already configured services"), "old", True, ),
-            ( _("Disabled services (configured away by admin)"), "ignored", None),
-            ( _("Active checks"), "active", None ),
-            ( _("Manual services (defined in main.mk)"), "manual", None ),
-            ( _("Legacy services (defined in main.mk)"), "legacy", None ),
-            ( _("Custom checks (defined via rule)"), "custom", None ),
-            ( _("Already configured clustered services (located on cluster host)"), "clustered_old", None ),
-            ( _("Available clustered services"), "clustered_new", None ),
-            ]:
-            first = True
-            for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in checktable:
-                if check_source != st:
-                    continue
-                if first:
-                    table.groupheader(state_name)
-                    first = False
+        for check_source, title, checkbox in self._check_sources():
+            checks = checks_by_source.get(check_source, [])
+            if not checks:
+                continue
+
+            table.groupheader(title)
+
+            for st, ct, checkgroup, item, paramstring, params, \
+                    descr, state, output, perfdata in checks:
 
                 statename = short_service_state_name(state, "")
                 if statename == "":
@@ -2920,31 +2875,42 @@ class ModeDiscovery(WatoMode):
                 table.row(css="data", state=state)
 
                 # Status, Checktype, Item, Description, Check Output
+                table.cell(_("Status"), statename, css=stateclass)
+
                 if check_source == "active":
                     ctype = "check_" + ct
                 else:
                     ctype = ct
-                manpage_url = folder_preserving_link([("mode", "check_manpage"), ("check_type", ctype)])
-                table.cell(_("Status"),              statename, css=stateclass)
-                table.cell(_("Checkplugin"),         '<a href="%s">%s</a>' % (manpage_url, ctype))
+
+                manpage_url = folder_preserving_link([("mode", "check_manpage"),
+                                                      ("check_type", ctype)])
+                table.cell(_("Checkplugin"),
+                           html.render_a(content=ctype, href=manpage_url))
+
                 table.cell(_("Item"),                html.attrencode(item))
                 table.cell(_("Service Description"), html.attrencode(descr))
-                table.cell(_("Plugin output"))
 
-                if cmk.paths.omd_root and check_source in ( "custom", "active" ):
-                    divid += 1
-                    html.div(html.render_icon("reload", cssclass="reloading"), id_="activecheck%d" % divid)
-                    html.final_javascript("execute_active_check('%s', '%s', '%s', '%s', 'activecheck%d');" % (
-                         host.site_id() or '', hostname, ct, item.replace("'", "\'"), divid))
+                table.cell(_("Plugin output"))
+                if check_source in ("custom", "active"):
+                    div_id = "activecheck_%s" % descr
+                    html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
+                    html.final_javascript("execute_active_check(%s, %s, %s, %s, %s);" % (
+                        json.dumps(host.site_id() or ''),
+                        json.dumps(hostname),
+                        json.dumps(ct),
+                        json.dumps(item),
+                        json.dumps(div_id)
+                    ))
                 else:
                     html.write_text(output)
 
                 # Icon for Rule editor, Check parameters
-                varname = None
                 if checkgroup:
                     varname = "checkgroup_parameters:" + checkgroup
                 elif check_source == "active":
                     varname = "active_checks:" + ct
+                else:
+                    varname = None
 
                 if parameter_column:
                     table.cell(_("Check Parameters"))
@@ -3013,9 +2979,81 @@ class ModeDiscovery(WatoMode):
         html.end_form()
 
 
+    def _check_sources(self):
+        return [
+            # check_source, title, initial checkbox value
+            ("new",           _("Available (missing) services"), isinstance(self, ModeFirstDiscovery)),
+            ("obsolete",      _("Obsolete services (being checked, but should be ignored)"), True ), # Cannot happen anymore
+            ("vanished",      _("Vanished services (checked, but no longer exist)"), True ),
+            ("old",           _("Already configured services"), True),
+            ("ignored",       _("Disabled services (configured away by admin)"), None),
+            ("active",        _("Active checks"), None),
+            ("manual",        _("Manual services (defined in main.mk)"), None ),
+            ("legacy",        _("Legacy services (defined in main.mk)"), None ),
+            ("custom",        _("Custom checks (defined via rule)"), None ),
+            ("clustered_old", _("Already configured clustered services (located on cluster host)"), None ),
+            ("clustered_new", _("Available clustered services"), None ),
+        ]
+
+
+    # We first try using the cache (if the user has not pressed Full Scan).
+    # If we do not find any data, we omit the cache and immediately try
+    # again without using the cache.
+    def _get_check_table(self):
+        # Read current check configuration
+        cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
+        error_options = not html.var("ignoreerrors") and [ "@raiseerrors" ] or []
+
+        options = cache_options + error_options + [ self._host_name ]
+        check_table = check_mk_automation(self._host.site_id(), "try-inventory", options)
+
+        if not check_table and cache_options != []:
+            check_table = check_mk_automation(self._host.site_id(), "try-inventory",
+                                              [ '@scan', self._host_name ])
+            html.set_var("_scan", "on")
+
+        return sorted(check_table)
+
+
+    def _checks_by_source(self, check_table):
+        by_source = {}
+        for entry in check_table:
+            entries = by_source.setdefault(entry[0], [])
+            entries.append(entry)
+        return by_source
+
+
+    def _show_action_buttons(self, check_table, firsttime):
+        if not config.user.may("wato.services"):
+            return
+
+        fixall = 0
+        for entry in check_table:
+            if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
+                html.button("_activate_all", _("Activate missing"))
+                fixall += 1
+                break
+
+        for entry in check_table:
+            if entry[0] in [ 'obsolete', 'vanished', ]:
+                html.button("_cleanup", _("Remove vanished"))
+                fixall += 1
+                break
+
+        if fixall == 2:
+            html.button("_fixall", _("Fix all missing/vanished"))
+
+        if check_table:
+            html.button("_save", _("Save manual check configuration"))
+            html.button("_refresh", _("Automatic Refresh (Tabula Rasa)"))
+
+        html.write(" &nbsp; ")
+
+
 
 class ModeFirstDiscovery(ModeDiscovery):
     pass
+
 
 
 class ModeAjaxExecuteCheck(WatoWebApiMode):
@@ -3041,19 +3079,18 @@ class ModeAjaxExecuteCheck(WatoWebApiMode):
         self._host.need_permission("read")
 
 
-
     def page(self):
         init_wato_datastructures()
         try:
-            status, output = check_mk_automation(self._site, "active-check",
+            state, output = check_mk_automation(self._site, "active-check",
                                 [ self._host_name, self._check_type, self._item ], sync=False)
         except Exception, e:
-            status = 1
+            state  = 3
             output = "%s" % e
 
         return {
-            "status"     : status,
-            "state_name" : short_service_state_name(status, "UNKN"),
+            "state"      : state,
+            "state_name" : short_service_state_name(state, "UNKN"),
             "output"     : output,
         }
 

@@ -1067,11 +1067,11 @@ function handle_execute_active_check(oDiv, response_json)
         var statename = "UNKN";
         var output    = response.result;
     } else {
-        var state     = response["state"];
+        var state     = response.result.state;
         if (state == -1)
             state = "p"; // Pending
-        var statename = response["state_name"];
-        var output    = response["output"];
+        var statename = response.result.state_name;
+        var output    = response.result.output;
     }
 
     oDiv.innerHTML = output;
@@ -1079,11 +1079,12 @@ function handle_execute_active_check(oDiv, response_json)
     // Change name and class of status columns
     var oTr = oDiv.parentNode.parentNode;
     if (has_class(oTr, "even0"))
-        var rowtype = "even";
+        add_class(oTr, "even" + state);
     else
-        var rowtype = "odd";
-    oTr.className = "data " + rowtype + state;
-    var oTdState = oTr.childNodes[1]; // 0 is a text node due to a \n
-    oTdState.className = "state statesvc state" + state;
+        add_class(oTr, "odd" + state);
+
+    var oTdState = oTr.firstChild
+    add_class(oTdState, "state" + state);
+
     oTdState.innerHTML = statename;
 }

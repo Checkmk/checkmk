@@ -2823,7 +2823,6 @@ class ModeDiscovery(WatoMode):
     def _service_tables(self):
         host      = self._host
         hostname  = self._host.name()
-        firsttime = isinstance(self, ModeFirstDiscovery)
 
         try:
             check_table = self._get_check_table()
@@ -2831,17 +2830,18 @@ class ModeDiscovery(WatoMode):
             log_exception()
             if config.debug:
                 raise
-            url = html.makeuri([("ignoreerrors", "1"), ("_scan", html.var("_scan"))])
-            retry_link = '<a href="%s">%s</a>' % (url, _("Retry discovery while ignoring this error (Result might be incomplete)."))
+            retry_link = html.render_a(
+                content=_("Retry discovery while ignoring this error (Result might be incomplete)."),
+                href=html.makeuri([("ignoreerrors", "1"), ("_scan", html.var("_scan"))])
+            )
             html.show_warning("<b>%s</b>: %s<br><br>%s" %
                               (_("Service discovery failed for this host"), e, retry_link))
             return
 
         html.begin_form("checks", method = "POST")
-        self._show_action_buttons(check_table, firsttime)
+        self._show_action_buttons(check_table)
 
-        parameter_column = config.user.load_file("parameter_column", False)
-        if parameter_column:
+        if self._show_parameter_column():
             html.button("_hide_parameters", _("Hide Check Parameters"))
         else:
             html.button("_show_parameters", _("Show Check Parameters"))
@@ -2861,119 +2861,8 @@ class ModeDiscovery(WatoMode):
 
             table.groupheader(title)
 
-            for st, ct, checkgroup, item, paramstring, params, \
-                    descr, state, output, perfdata in checks:
-
-                statename = short_service_state_name(state, "")
-                if statename == "":
-                    statename = short_service_state_name(-1)
-                    stateclass = "state svcstate statep"
-                    state = 0 # for tr class
-                else:
-                    stateclass = "state svcstate state%s" % state
-
-                table.row(css="data", state=state)
-
-                # Status, Checktype, Item, Description, Check Output
-                table.cell(_("Status"), statename, css=stateclass)
-
-                if check_source == "active":
-                    ctype = "check_" + ct
-                else:
-                    ctype = ct
-
-                manpage_url = folder_preserving_link([("mode", "check_manpage"),
-                                                      ("check_type", ctype)])
-                table.cell(_("Checkplugin"),
-                           html.render_a(content=ctype, href=manpage_url))
-
-                table.cell(_("Item"),                html.attrencode(item))
-                table.cell(_("Service Description"), html.attrencode(descr))
-
-                table.cell(_("Plugin output"))
-                if check_source in ("custom", "active"):
-                    div_id = "activecheck_%s" % descr
-                    html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
-                    html.final_javascript("execute_active_check(%s, %s, %s, %s, %s);" % (
-                        json.dumps(host.site_id() or ''),
-                        json.dumps(hostname),
-                        json.dumps(ct),
-                        json.dumps(item),
-                        json.dumps(div_id)
-                    ))
-                else:
-                    html.write_text(output)
-
-                # Icon for Rule editor, Check parameters
-                if checkgroup:
-                    varname = "checkgroup_parameters:" + checkgroup
-                elif check_source == "active":
-                    varname = "active_checks:" + ct
-                else:
-                    varname = None
-
-                if parameter_column:
-                    table.cell(_("Check Parameters"))
-                    if varname and g_rulespecs.exists(varname):
-                        rulespec = g_rulespecs.get(varname)
-                        try:
-                            rulespec.valuespec.validate_datatype(params, "")
-                            rulespec.valuespec.validate_value(params, "")
-                            paramtext = rulespec.valuespec.value_to_text(params)
-                            html.write_html(paramtext)
-                        except Exception, e:
-                            if config.debug:
-                                err = traceback.format_exc()
-                            else:
-                                err = e
-                            paramtext = _("Invalid check parameter: %s!") % err
-                            paramtext += _(" The parameter is: %r") % (params,)
-                            paramtext += _(" The variable name is: %s") % varname
-                            html.write_text(paramtext)
-
-                # Icon for Service parameters. Not for missing services!
-                table.cell(css='buttons')
-                if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
-                    # Link to list of all rulesets affecting this service
-                    params_url = folder_preserving_link([("mode", "object_parameters"),
-                                            ("host", hostname),
-                                            ("service", descr)])
-                    html.icon_button(params_url, _("View and edit the parameters for this service"), "rulesets")
-
-                    url = folder_preserving_link([("mode", "edit_ruleset"),
-                                     ("varname", varname),
-                                     ("host", hostname),
-                                     ("item", mk_repr(item))])
-                    html.icon_button(url, _("Edit and analyze the check parameters of this service"), "check_parameters")
-
-                if check_source == "ignored" and may_edit_ruleset("ignored_services"):
-                    url = folder_preserving_link([("mode", "edit_ruleset"),
-                                     ("varname", "ignored_services"),
-                                     ("host", hostname),
-                                     ("item", mk_repr(descr))])
-                    html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
-
-                # Permanently disable icon
-                if check_source in ['new', 'old'] and may_edit_ruleset("ignored_services"):
-                    url = folder_preserving_link([
-                        ('mode', 'edit_ruleset'),
-                        ('varname', 'ignored_services'),
-                        ('host', hostname),
-                        ('item', mk_repr(descr)),
-                        ('mode', 'new_rule'),
-                        ('_new_host_rule', '1'),
-                        ('filled_in', 'new_rule'),
-                        ('rule_folder', ''),
-                        ('back_mode', 'inventory'),
-                    ])
-                    html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
-
-                # Temporary ignore checkbox
-                if config.user.may("wato.services"):
-                    table.cell()
-                    if checkbox != None:
-                        varname = "_%s_%s" % (ct, html.varencode(item))
-                        html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+            for check in checks:
+                self._check_row(check, checkbox)
 
         table.end()
         html.end_form()
@@ -2994,6 +2883,129 @@ class ModeDiscovery(WatoMode):
             ("clustered_old", _("Already configured clustered services (located on cluster host)"), None ),
             ("clustered_new", _("Available clustered services"), None ),
         ]
+
+
+    def _check_row(self, check, checkbox):
+        check_source, check_type, checkgroup, item, paramstring, params, \
+            descr, state, output, perfdata = check
+
+        statename = short_service_state_name(state, "")
+        if statename == "":
+            statename = short_service_state_name(-1)
+            stateclass = "state svcstate statep"
+            state = 0 # for tr class
+        else:
+            stateclass = "state svcstate state%s" % state
+
+        table.row(css="data", state=state)
+
+        # Status, Checktype, Item, Description, Check Output
+        table.cell(_("Status"), statename, css=stateclass)
+
+        if check_source == "active":
+            ctype = "check_" + check_type
+        else:
+            ctype = check_type
+
+        manpage_url = folder_preserving_link([("mode", "check_manpage"),
+                                              ("check_type", ctype)])
+        table.cell(_("Checkplugin"),
+                   html.render_a(content=ctype, href=manpage_url))
+
+        table.cell(_("Item"),                html.attrencode(item))
+        table.cell(_("Service Description"), html.attrencode(descr))
+
+        table.cell(_("Plugin output"))
+        if check_source in ("custom", "active"):
+            div_id = "activecheck_%s" % descr
+            html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
+            html.final_javascript("execute_active_check(%s, %s, %s, %s, %s);" % (
+                json.dumps(self._host.site_id() or ''),
+                json.dumps(self._host_name),
+                json.dumps(check_type),
+                json.dumps(item),
+                json.dumps(div_id)
+            ))
+        else:
+            html.write_text(output)
+
+        # Icon for Rule editor, Check parameters
+        if checkgroup:
+            varname = "checkgroup_parameters:" + checkgroup
+        elif check_source == "active":
+            varname = "active_checks:" + check_type
+        else:
+            varname = None
+
+        if self._show_parameter_column():
+            table.cell(_("Check Parameters"))
+            if varname and g_rulespecs.exists(varname):
+                rulespec = g_rulespecs.get(varname)
+                try:
+                    rulespec.valuespec.validate_datatype(params, "")
+                    rulespec.valuespec.validate_value(params, "")
+                    paramtext = rulespec.valuespec.value_to_text(params)
+                    html.write_html(paramtext)
+                except Exception, e:
+                    if config.debug:
+                        err = traceback.format_exc()
+                    else:
+                        err = e
+                    paramtext = _("Invalid check parameter: %s!") % err
+                    paramtext += _(" The parameter is: %r") % (params,)
+                    paramtext += _(" The variable name is: %s") % varname
+                    html.write_text(paramtext)
+
+        # Icon for Service parameters. Not for missing services!
+        table.cell(css='buttons')
+        if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
+            # Link to list of all rulesets affecting this service
+            params_url = folder_preserving_link([("mode", "object_parameters"),
+                                    ("host", self._host_name),
+                                    ("service", descr)])
+            html.icon_button(params_url,
+                _("View and edit the parameters for this service"), "rulesets")
+
+            url = folder_preserving_link([("mode", "edit_ruleset"),
+                             ("varname", varname),
+                             ("host", self._host_name),
+                             ("item", mk_repr(item))])
+            html.icon_button(url,
+                _("Edit and analyze the check parameters of this service"), "check_parameters")
+
+        if check_source == "ignored" and may_edit_ruleset("ignored_services"):
+            url = folder_preserving_link([("mode", "edit_ruleset"),
+                             ("varname", "ignored_services"),
+                             ("host", self._host_name),
+                             ("item", mk_repr(descr))])
+            html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
+
+        # Permanently disable icon
+        if check_source in ['new', 'old'] and may_edit_ruleset("ignored_services"):
+            url = folder_preserving_link([
+                ('mode', 'edit_ruleset'),
+                ('varname', 'ignored_services'),
+                ('host', self._host_name),
+                ('item', mk_repr(descr)),
+                ('mode', 'new_rule'),
+                ('_new_host_rule', '1'),
+                ('filled_in', 'new_rule'),
+                ('rule_folder', ''),
+                ('back_mode', 'inventory'),
+            ])
+            html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
+
+        # Temporary ignore checkbox
+        if config.user.may("wato.services"):
+            table.cell()
+            if checkbox != None:
+                varname = "_%s_%s" % (check_type, html.varencode(item))
+                html.checkbox(varname, checkbox,
+                    add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+
+
+    def _show_parameter_column(self):
+        return config.user.load_file("parameter_column", False)
 
 
     # We first try using the cache (if the user has not pressed Full Scan).
@@ -3023,9 +3035,11 @@ class ModeDiscovery(WatoMode):
         return by_source
 
 
-    def _show_action_buttons(self, check_table, firsttime):
+    def _show_action_buttons(self, check_table):
         if not config.user.may("wato.services"):
             return
+
+        firsttime = isinstance(self, ModeFirstDiscovery)
 
         fixall = 0
         for entry in check_table:

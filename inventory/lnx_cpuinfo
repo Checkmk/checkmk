@@ -64,8 +64,6 @@ def inv_lnx_cpuinfo(info):
             node["cores_per_cpu"] = int(value)
         elif varname == "siblings":
             node["threads_per_cpu"] = int(value)
-        elif varname == "mode name":
-            node["model"] = value
         elif varname == "vendor_id":
             node["vendor"] = {
                 "GenuineIntel" : "intel",

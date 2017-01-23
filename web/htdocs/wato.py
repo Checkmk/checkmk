@@ -2755,29 +2755,33 @@ class ModeDiscovery(WatoMode):
         if not html.check_transaction():
             return "folder"
 
-        host     = self._host
-        hostname = self._host.name()
-
         # Settings for showing parameters
         if html.var("_show_parameters"):
-            parameter_column = True
             config.user.save_file("parameter_column", True)
             return
+
         elif html.var("_hide_parameters"):
-            parameter_column = False
             config.user.save_file("parameter_column", False)
             return
+
+        else:
+            return self._do_discovery()
+
+
+    def _do_discovery(self):
+        host     = self._host
+        hostname = self._host.name()
 
         config.user.need_permission("wato.services")
 
         cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
-        new_target = "folder"
 
         if html.var("_refresh"):
-            counts, failed_hosts = check_mk_automation(host.site_id(), "inventory", [ "@scan", "refresh", hostname ])
+            counts, failed_hosts = check_mk_automation(host.site_id(), "inventory",
+                                                       [ "@scan", "refresh", hostname ])
             count_added, count_removed, count_kept, count_new = counts[hostname]
 
-            message = _("Refreshed check configuration of host [%s] with %d services") % \
+            message = _("Refreshed check configuration of host '%s' with %d services") % \
                         (hostname, count_added)
 
             if not host.locked():
@@ -2786,34 +2790,38 @@ class ModeDiscovery(WatoMode):
             add_service_change(host, "refresh-autochecks", message)
 
         else:
-            table = check_mk_automation(host.site_id(), "try-inventory", cache_options + [hostname])
-            table.sort()
-            active_checks = {}
-            for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
-                if (html.has_var("_cleanup") or html.has_var("_fixall")) \
-                    and st == "vanished":
+            table = sorted(check_mk_automation(host.site_id(), "try-inventory",
+                                               cache_options + [hostname]))
+
+            checks = {}
+            for st, ct, checkgroup, item, paramstring, params, \
+                descr, state, output, perfdata in table:
+
+                if (html.has_var("_cleanup") or html.has_var("_fixall")) and st == "vanished":
                     pass
-                elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
-                    and st == "new":
-                    active_checks[(ct, item)] = paramstring
+
+                elif (html.has_var("_activate_all") or html.has_var("_fixall")) and st == "new":
+                    checks[(ct, item)] = paramstring
+
                 else:
                     varname = "_%s_%s" % (ct, html.varencode(item))
                     if html.var(varname, "") != "":
-                        active_checks[(ct, item)] = paramstring
+                        checks[(ct, item)] = paramstring
+
                 if st.startswith("clustered"):
-                    active_checks[(ct, item)] = paramstring
+                    checks[(ct, item)] = paramstring
 
-            check_mk_automation(host.site_id(), "set-autochecks", [hostname], active_checks)
+            check_mk_automation(host.site_id(), "set-autochecks", [hostname], checks)
 
-            message = _("Saved check configuration of host [%s] with %d services") % \
-                        (hostname, len(active_checks))
+            message = _("Saved check configuration of host '%s' with %d services") % \
+                        (hostname, len(checks))
 
             if not host.locked():
                 host.clear_discovery_failed()
 
             add_service_change(host, "set-autochecks", message)
 
-        return new_target, message
+        return "folder", message
 
 
     def page(self):
@@ -2846,9 +2854,9 @@ class ModeDiscovery(WatoMode):
         else:
             html.button("_show_parameters", _("Show Check Parameters"))
 
-        html.hidden_fields()
         if html.var("_scan"):
-            html.hidden_field("_scan", "on")
+            html.hidden_field("_scan", "on", add_var=True)
+
 
         table.begin(css="data", searchable=False, limit=None, sortable=False)
 
@@ -2865,6 +2873,8 @@ class ModeDiscovery(WatoMode):
                 self._check_row(check, checkbox)
 
         table.end()
+
+        html.hidden_fields()
         html.end_form()
 
 

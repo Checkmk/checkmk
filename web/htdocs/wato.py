@@ -2713,6 +2713,8 @@ class ModeDiscovery(WatoMode):
 
         self._host.need_permission("read")
 
+        self._cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
+
 
     def title(self):
         title = _("Services of host %s") % self._host_name
@@ -2774,8 +2776,6 @@ class ModeDiscovery(WatoMode):
 
         config.user.need_permission("wato.services")
 
-        cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
-
         if html.var("_refresh"):
             counts, failed_hosts = check_mk_automation(host.site_id(), "inventory",
                                                        [ "@scan", "refresh", hostname ])
@@ -2791,7 +2791,7 @@ class ModeDiscovery(WatoMode):
 
         else:
             table = sorted(check_mk_automation(host.site_id(), "try-inventory",
-                                               cache_options + [hostname]))
+                                               self._cache_options + [hostname]))
 
             checks = {}
             for st, ct, checkgroup, item, paramstring, params, \
@@ -2886,7 +2886,7 @@ class ModeDiscovery(WatoMode):
             ("old",           _("Already configured services"), True),
             ("ignored",       _("Disabled services (configured away by admin)"), None),
             ("active",        _("Active checks"), None),
-            ("manual",        _("Manual services"), None ),
+            ("manual",        _("Manual checks"), None ),
             ("legacy",        _("Legacy services (defined in main.mk)"), None ),
             ("custom",        _("Custom checks (defined via rule)"), None ),
             ("clustered_old", _("Already configured clustered services (located on cluster host)"), None ),
@@ -2906,38 +2906,6 @@ class ModeDiscovery(WatoMode):
         else:
             stateclass = "state svcstate state%s" % state
 
-        table.row(css="data", state=state)
-
-        # Status, Checktype, Item, Description, Check Output
-        table.cell(_("Status"), statename, css=stateclass)
-
-        if check_source == "active":
-            ctype = "check_" + check_type
-        else:
-            ctype = check_type
-
-        manpage_url = folder_preserving_link([("mode", "check_manpage"),
-                                              ("check_type", ctype)])
-        table.cell(_("Checkplugin"),
-                   html.render_a(content=ctype, href=manpage_url))
-
-        table.cell(_("Item"),                html.attrencode(item))
-        table.cell(_("Service Description"), html.attrencode(descr))
-
-        table.cell(_("Plugin output"))
-        if check_source in ("custom", "active"):
-            div_id = "activecheck_%s" % descr
-            html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
-            html.final_javascript("execute_active_check(%s, %s, %s, %s, %s);" % (
-                json.dumps(self._host.site_id() or ''),
-                json.dumps(self._host_name),
-                json.dumps(check_type),
-                json.dumps(item),
-                json.dumps(div_id)
-            ))
-        else:
-            html.write_text(output)
-
         # Icon for Rule editor, Check parameters
         if checkgroup:
             varname = "checkgroup_parameters:" + checkgroup
@@ -2946,27 +2914,18 @@ class ModeDiscovery(WatoMode):
         else:
             varname = None
 
-        if self._show_parameter_column():
-            table.cell(_("Check Parameters"))
-            if varname and g_rulespecs.exists(varname):
-                rulespec = g_rulespecs.get(varname)
-                try:
-                    rulespec.valuespec.validate_datatype(params, "")
-                    rulespec.valuespec.validate_value(params, "")
-                    paramtext = rulespec.valuespec.value_to_text(params)
-                    html.write_html(paramtext)
-                except Exception, e:
-                    if config.debug:
-                        err = traceback.format_exc()
-                    else:
-                        err = e
-                    paramtext = _("Invalid check parameter: %s!") % err
-                    paramtext += _(" The parameter is: %r") % (params,)
-                    paramtext += _(" The variable name is: %s") % varname
-                    html.write_text(paramtext)
+        table.row(css="data", state=state)
 
-        # Icon for Service parameters. Not for missing services!
-        table.cell(css='buttons')
+        # Checkbox for temporarily skipping services
+        if config.user.may("wato.services"):
+            table.cell()
+            if checkbox != None:
+                checkbox_varname = "_%s_%s" % (check_type, html.varencode(item))
+                html.checkbox(checkbox_varname, checkbox,
+                    add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+
+        # Icon for service parameters. Not for missing services!
+        table.cell(css="buttons")
         if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
             # Link to list of all rulesets affecting this service
             params_url = folder_preserving_link([("mode", "object_parameters"),
@@ -3004,17 +2963,60 @@ class ModeDiscovery(WatoMode):
             ])
             html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
 
-        # Temporary ignore checkbox
-        if config.user.may("wato.services"):
-            table.cell()
-            if checkbox != None:
-                varname = "_%s_%s" % (check_type, html.varencode(item))
-                html.checkbox(varname, checkbox,
-                    add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+
+        # Status, Checktype, Item, Description, Check Output
+        table.cell(_("State"), statename, css=stateclass)
+
+        table.cell(_("Service"), html.attrencode(descr))
+
+        table.cell(_("Status detail"))
+        if check_source in ("custom", "active"):
+            div_id = "activecheck_%s" % descr
+            html.div(html.render_icon("reload", cssclass="reloading"), id_=div_id)
+            html.final_javascript("execute_active_check(%s, %s, %s, %s, %s);" % (
+                json.dumps(self._host.site_id() or ''),
+                json.dumps(self._host_name),
+                json.dumps(check_type),
+                json.dumps(item),
+                json.dumps(div_id)
+            ))
+        else:
+            html.write_text(output)
+
+        ctype = "check_" + check_type if check_source == "active" else check_type
+        manpage_url = folder_preserving_link([("mode", "check_manpage"),
+                                              ("check_type", ctype)])
+        table.cell(_("Checkplugin"),
+                   html.render_a(content=ctype, href=manpage_url))
+
+        table.cell(_("Item"),    html.attrencode(item))
+
+        if self._show_parameter_column():
+            table.cell(_("Check Parameters"))
+            self._show_check_parameters(varname, params)
 
 
     def _show_parameter_column(self):
         return config.user.load_file("parameter_column", False)
+
+
+    def _show_check_parameters(self, varname, params):
+        if varname and g_rulespecs.exists(varname):
+            rulespec = g_rulespecs.get(varname)
+            try:
+                rulespec.valuespec.validate_datatype(params, "")
+                rulespec.valuespec.validate_value(params, "")
+                paramtext = rulespec.valuespec.value_to_text(params)
+                html.write_html(paramtext)
+            except Exception, e:
+                if config.debug:
+                    err = traceback.format_exc()
+                else:
+                    err = e
+                paramtext = _("Invalid check parameter: %s!") % err
+                paramtext += _(" The parameter is: %r") % (params,)
+                paramtext += _(" The variable name is: %s") % varname
+                html.write_text(paramtext)
 
 
     # We first try using the cache (if the user has not pressed Full Scan).
@@ -3022,13 +3024,12 @@ class ModeDiscovery(WatoMode):
     # again without using the cache.
     def _get_check_table(self):
         # Read current check configuration
-        cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
         error_options = not html.var("ignoreerrors") and [ "@raiseerrors" ] or []
 
-        options = cache_options + error_options + [ self._host_name ]
+        options = self._cache_options + error_options + [ self._host_name ]
         check_table = check_mk_automation(self._host.site_id(), "try-inventory", options)
 
-        if not check_table and cache_options != []:
+        if not check_table and self._cache_options != []:
             check_table = check_mk_automation(self._host.site_id(), "try-inventory",
                                               [ '@scan', self._host_name ])
             html.set_var("_scan", "on")

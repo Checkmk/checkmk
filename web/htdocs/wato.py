@@ -2791,7 +2791,7 @@ class ModeDiscovery(WatoMode):
             active_checks = {}
             for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
                 if (html.has_var("_cleanup") or html.has_var("_fixall")) \
-                    and st in [ "vanished", "obsolete" ]:
+                    and st == "vanished":
                     pass
                 elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
                     and st == "new":
@@ -2872,12 +2872,11 @@ class ModeDiscovery(WatoMode):
         return [
             # check_source, title, initial checkbox value
             ("new",           _("Available (missing) services"), isinstance(self, ModeFirstDiscovery)),
-            ("obsolete",      _("Obsolete services (being checked, but should be ignored)"), True ), # Cannot happen anymore
             ("vanished",      _("Vanished services (checked, but no longer exist)"), True ),
             ("old",           _("Already configured services"), True),
             ("ignored",       _("Disabled services (configured away by admin)"), None),
             ("active",        _("Active checks"), None),
-            ("manual",        _("Manual services (defined in main.mk)"), None ),
+            ("manual",        _("Manual services"), None ),
             ("legacy",        _("Legacy services (defined in main.mk)"), None ),
             ("custom",        _("Custom checks (defined via rule)"), None ),
             ("clustered_old", _("Already configured clustered services (located on cluster host)"), None ),
@@ -3049,7 +3048,7 @@ class ModeDiscovery(WatoMode):
                 break
 
         for entry in check_table:
-            if entry[0] in [ 'obsolete', 'vanished', ]:
+            if entry[0] == 'vanished':
                 html.button("_cleanup", _("Remove vanished"))
                 fixall += 1
                 break

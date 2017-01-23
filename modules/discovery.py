@@ -196,7 +196,7 @@ def discover_on_host(mode, hostname, do_snmp_scan, use_caches, on_error="ignore"
                 new_items[(check_type, item)] = paramstring
                 counts["kept"]  += 1
 
-            elif check_source in ("obsolete", "vanished"):
+            elif check_source == "vanished":
                 # keep item, if we are currently only looking for new services
                 # otherwise fix it: remove ignored and non-longer existing services
                 if mode not in ("fixall", "remove") or not service_filter(hostname, check_type, item):
@@ -960,7 +960,6 @@ def discoverable_check_types(what): # snmp, tcp, all
 #    "custom"        : Check is defined via custom_checks
 #    "manual"        : Check is a manual Check_MK check without service discovery
 #    "ignored"       : discovered or static, but disabled via ignored_services
-#    "obsolete"      : Discovered by vanished check is meanwhile ignored via ignored_services
 #    "clustered_new" : New service found on a node that belongs to a cluster
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
@@ -1042,7 +1041,7 @@ def merge_manual_services(services, hostname, on_error):
             descr = act_info["service_description"](params)
             services[(acttype, descr)] = ('active', repr(params))
 
-    # Handle disabled services -> "obsolete" and "ignored"
+    # Handle disabled services -> "ignored"
     for (check_type, item), (check_source, paramstring) in services.items():
         try:
             descr = service_description(hostname, check_type, item)
@@ -1055,10 +1054,7 @@ def merge_manual_services(services, hostname, on_error):
                 continue # ignore
 
         if service_ignored(hostname, check_type, descr):
-            if check_source == "vanished":
-                new_source = "obsolete"
-            else:
-                new_source = "ignored"
+            new_source = "ignored"
             services[(check_type, item)] = (new_source, paramstring)
 
     return services

@@ -2918,69 +2918,13 @@ class ModeDiscovery(WatoMode):
         else:
             stateclass = "state svcstate state%s" % state
 
-        # Icon for Rule editor, Check parameters
-        if checkgroup:
-            varname = "checkgroup_parameters:" + checkgroup
-        elif check_source == "active":
-            varname = "active_checks:" + check_type
-        else:
-            varname = None
-
         table.row(css="data", state=state)
 
-        # Checkbox for temporarily skipping services
-        if self._show_checkboxes:
-            table.cell("<input type=button class=checkgroup name=_toggle_group"
-                       " onclick=\"toggle_all_rows();\" value=\"X\" />", sortable=False)
+        self._show_bulk_checkbox(check_type, item)
+        self._show_actions(check)
 
-            html.checkbox("_%s_%s" % (check_type, html.varencode(item)), True,
-                add_attr = ['title="%s"' % _('Temporarily ignore this service')])
-
-        # Icon for service parameters. Not for missing services!
-        table.cell(css="buttons")
-        if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
-            # Link to list of all rulesets affecting this service
-            params_url = folder_preserving_link([("mode", "object_parameters"),
-                                    ("host", self._host_name),
-                                    ("service", descr)])
-            html.icon_button(params_url,
-                _("View and edit the parameters for this service"), "rulesets")
-
-            url = folder_preserving_link([("mode", "edit_ruleset"),
-                             ("varname", varname),
-                             ("host", self._host_name),
-                             ("item", mk_repr(item))])
-            html.icon_button(url,
-                _("Edit and analyze the check parameters of this service"), "check_parameters")
-
-        if check_source == "ignored" and may_edit_ruleset("ignored_services"):
-            url = folder_preserving_link([("mode", "edit_ruleset"),
-                             ("varname", "ignored_services"),
-                             ("host", self._host_name),
-                             ("item", mk_repr(descr))])
-            html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
-
-        # Permanently disable icon
-        if check_source in ['new', 'old'] and may_edit_ruleset("ignored_services"):
-            url = folder_preserving_link([
-                ('mode', 'edit_ruleset'),
-                ('varname', 'ignored_services'),
-                ('host', self._host_name),
-                ('item', mk_repr(descr)),
-                ('mode', 'new_rule'),
-                ('_new_host_rule', '1'),
-                ('filled_in', 'new_rule'),
-                ('rule_folder', ''),
-                ('back_mode', 'inventory'),
-            ])
-            html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
-
-
-        # Status, Checktype, Item, Description, Check Output
         table.cell(_("State"), statename, css=stateclass)
-
         table.cell(_("Service"), html.attrencode(descr))
-
         table.cell(_("Status detail"))
         if check_source in ("custom", "active"):
             div_id = "activecheck_%s" % descr
@@ -3005,14 +2949,89 @@ class ModeDiscovery(WatoMode):
 
         if self._show_parameter_column():
             table.cell(_("Check parameters"))
-            self._show_check_parameters(varname, params)
+            self._show_check_parameters(check_source, check_type, checkgroup, params)
+
+
+    def _show_actions(self, check):
+        check_source, check_type, checkgroup, item, paramstring, params, \
+            descr, state, output, perfdata = check
+
+        def disable_button():
+            url = "" # TODO
+            html.icon_button(url, _("Permanently disable this service"), "ignore", ty="icon")
+
+        def activate_button():
+            url = "" # TODO
+            html.icon_button(url, _("Activate this service"), "new", ty="icon")
+
+        def remove_button():
+            url = "" # TODO
+            html.icon_button(url, _("Remove this service"), "delete", ty="icon")
+
+        def rulesets_button():
+            # Link to list of all rulesets affecting this service
+            params_url = folder_preserving_link([("mode", "object_parameters"),
+                                    ("host", self._host_name),
+                                    ("service", descr)])
+            html.icon_button(params_url,
+                _("View and edit the parameters for this service"), "rulesets")
+
+        def check_parameters_button():
+            url = folder_preserving_link([("mode", "edit_ruleset"),
+                             ("varname", self._get_ruleset_name(check_source, check_type, checkgroup)),
+                             ("host", self._host_name),
+                             ("item", mk_repr(item))])
+            html.icon_button(url,
+                _("Edit and analyze the check parameters of this service"), "check_parameters")
+
+        def disabled_services_button():
+            url = folder_preserving_link([("mode", "edit_ruleset"),
+                             ("varname", "ignored_services"),
+                             ("host", self._host_name),
+                             ("item", mk_repr(descr))])
+            html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
+
+
+        table.cell(css="buttons")
+        if check_source == "new":
+            activate_button()
+
+        if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
+            rulesets_button()
+            check_parameters_button()
+
+        if check_source == "ignored" and may_edit_ruleset("ignored_services"):
+            disabled_services_button()
+
+        if check_source in [ "new", "old" ]:
+            disable_button()
+
+        if check_source in [ "old", "vanished" ]:
+            remove_button()
+
+        # TODO
+        ## Permanently disable icon
+        #if check_source in ['new', 'old'] and may_edit_ruleset("ignored_services"):
+        #    url = folder_preserving_link([
+        #        ('mode', 'edit_ruleset'),
+        #        ('varname', 'ignored_services'),
+        #        ('host', self._host_name),
+        #        ('item', mk_repr(descr)),
+        #        ('mode', 'new_rule'),
+        #        ('_new_host_rule', '1'),
+        #        ('filled_in', 'new_rule'),
+        #        ('rule_folder', ''),
+        #        ('back_mode', 'inventory'),
+        #    ])
+        #    html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
 
 
     def _show_parameter_column(self):
         return config.user.load_file("parameter_column", False)
 
 
-    def _show_check_parameters(self, varname, params):
+    def _show_check_parameters(self, check_source, check_type, checkgroup, params):
+        varname = self._get_ruleset_name(check_source, check_type, checkgroup)
         if varname and g_rulespecs.exists(varname):
             rulespec = g_rulespecs.get(varname)
             try:
@@ -3029,6 +3048,25 @@ class ModeDiscovery(WatoMode):
                 paramtext += _(" The parameter is: %r") % (params,)
                 paramtext += _(" The variable name is: %s") % varname
                 html.write_text(paramtext)
+
+
+    def _get_ruleset_name(self, check_source, check_type, checkgroup):
+        if checkgroup:
+            return "checkgroup_parameters:" + checkgroup
+        elif check_source == "active":
+            return "active_checks:" + check_type
+        else:
+            return None
+
+
+    def _show_bulk_checkbox(self, check_type, item):
+        # Checkbox for bulk actions
+        if self._show_checkboxes:
+            table.cell("<input type=button class=checkgroup name=_toggle_group"
+                       " onclick=\"toggle_all_rows();\" value=\"X\" />", sortable=False)
+
+            html.checkbox("_%s_%s" % (check_type, html.varencode(item)), True,
+                add_attr = ['title="%s"' % _('Temporarily ignore this service')])
 
 
     # We first try using the cache (if the user has not pressed Full Scan).

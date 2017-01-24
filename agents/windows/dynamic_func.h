@@ -33,6 +33,7 @@ FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName) {
     HMODULE mod = LoadLibraryW(dllName);
     if (mod != nullptr) {
         FARPROC proc = GetProcAddress(mod, funcName);
+        CloseHandle(mod);
         if (proc != nullptr) {
             return (FuncT)proc;
         }

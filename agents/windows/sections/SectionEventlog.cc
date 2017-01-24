@@ -167,19 +167,21 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
             int worst_state = 0;
             // record_number is the last event we read, so we want to seek past
             // it
-            first_record = log->seek(first_record + 1);
+            bool record_maxxed = std::numeric_limits<uint64_t>::max() == first_record;
+            first_record = log->seek(first_record + (record_maxxed ? 0 : 1));
 
             uint64_t last_record = first_record;
 
             // first pass - determine if there are records above level
             std::shared_ptr<IEventLogRecord> record = log->read();
+
             while (record.get() != nullptr) {
                 std::pair<char, int> state =
                     determine_event_state(*record, level);
                 worst_state = std::max(worst_state, state.second);
 
                 last_record = record->recordId();
-                record = log->read();
+                record      = log->read();
             }
 
             crash_log("    . worst state: %d", worst_state);
@@ -187,7 +189,8 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
             // second pass - if there were, print everything
             if (worst_state >= level) {
                 log->reset();
-                log->seek(first_record + 1);
+                bool record_maxxed = std::numeric_limits<uint64_t>::max() == first_record;
+                log->seek(first_record + (record_maxxed ? 0 : 1));
 
                 std::shared_ptr<IEventLogRecord> record = log->read();
                 while (record.get() != nullptr) {

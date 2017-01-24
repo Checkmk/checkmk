@@ -32,12 +32,122 @@
 #include <exception>
 #include <string>
 #include <vector>
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#include <winevt.h>
 #include "IEventLog.h"
+#include "types.h"
 
 // forward declaration
-struct EvtFunctionMap;
-
 class UnsupportedException : public std::exception {};
+
+class EventApiModule {
+public:
+    EventApiModule() : _mod(LoadLibraryW(L"wevtapi.dll")){};
+
+    ~EventApiModule() {
+        if (_mod != nullptr) {
+            FreeLibrary(_mod);
+        }
+    }
+
+    //    void *getAddress(const std::string& name) const { return
+    //    GetProcAddress(_mod, name.c_str()); }
+    HMODULE get_module() { return _mod; }
+
+private:
+    HMODULE _mod;
+};
+
+struct EvtFunctionMap {
+#define GET_FUNC(func) \
+    ((decltype(&func))GetProcAddress(_mod->get_module(), #func))
+    std::unique_ptr<EventApiModule> _mod;
+
+    EvtFunctionMap() : _mod(std::make_unique<EventApiModule>()) {
+        if (_mod->get_module() == nullptr) {
+            return;
+        }
+        this->openLog = GET_FUNC(EvtOpenLog);
+        this->query = GET_FUNC(EvtQuery);
+        this->close = GET_FUNC(EvtClose);
+        this->seek = GET_FUNC(EvtSeek);
+        this->next = GET_FUNC(EvtNext);
+        this->createBookmark = GET_FUNC(EvtCreateBookmark);
+        this->updateBookmark = GET_FUNC(EvtUpdateBookmark);
+        this->createRenderContext = GET_FUNC(EvtCreateRenderContext);
+        this->render = GET_FUNC(EvtRender);
+        this->subscribe = GET_FUNC(EvtSubscribe);
+        this->formatMessage = GET_FUNC(EvtFormatMessage);
+        this->getEventMetadataProperty = GET_FUNC(EvtGetEventMetadataProperty);
+        this->openPublisherMetadata = GET_FUNC(EvtOpenPublisherMetadata);
+        this->getLogInfo = GET_FUNC(EvtGetLogInfo);
+    }
+
+    decltype(&EvtOpenLog) openLog;
+    decltype(&EvtQuery) query;
+    decltype(&EvtClose) close;
+    decltype(&EvtSeek) seek;
+    decltype(&EvtNext) next;
+    decltype(&EvtCreateBookmark) createBookmark;
+    decltype(&EvtUpdateBookmark) updateBookmark;
+    decltype(&EvtCreateRenderContext) createRenderContext;
+    decltype(&EvtRender) render;
+    decltype(&EvtSubscribe) subscribe;
+    decltype(&EvtFormatMessage) formatMessage;
+    decltype(&EvtGetEventMetadataProperty) getEventMetadataProperty;
+    decltype(&EvtOpenPublisherMetadata) openPublisherMetadata;
+    decltype(&EvtGetLogInfo) getLogInfo;
+};
+
+class ManagedEventHandle {
+public:
+    ManagedEventHandle(const EvtFunctionMap &evt, EVT_HANDLE handle)
+        : _evt(evt), _handle(handle) {}
+
+    ~ManagedEventHandle() {
+        if (_handle != nullptr) {
+            _evt.close(_handle);
+        }
+    }
+
+    EVT_HANDLE get_handle() { return _handle; };
+
+private:
+    const EvtFunctionMap &_evt;
+    EVT_HANDLE _handle;
+
+    // We own the handle, so don't allow any copies.
+    ManagedEventHandle(const ManagedEventHandle &) = delete;
+    ManagedEventHandle(ManagedEventHandle &&from) = delete;
+    ManagedEventHandle &operator=(const ManagedEventHandle &) = delete;
+    ManagedEventHandle &operator=(ManagedEventHandle &&from) = delete;
+};
+
+class EventLogWrapper : public ManagedEventHandle {
+public:
+    EventLogWrapper(const EvtFunctionMap &evt, EVT_QUERY_FLAGS flags,
+                    const std::wstring &path)
+        : ManagedEventHandle(evt, create_log_handle(evt, flags, path)) {}
+
+private:
+    EVT_HANDLE create_log_handle(const EvtFunctionMap &evt,
+                                 EVT_QUERY_FLAGS flags,
+                                 const std::wstring &path) {
+        EVT_HANDLE handle =
+            evt.query(nullptr, path.c_str(), L"*", flags | EvtQueryChannelPath);
+
+        if (handle == nullptr) {
+            handle = evt.query(nullptr, path.c_str(), L"*",
+                               flags | EvtQueryFilePath);
+        }
+
+        if (handle == nullptr) {
+            throw win_exception("failed to open log");
+        }
+        return handle;
+    }
+};
 
 class EventLogVista : public IEventLog {
 public:
@@ -66,12 +176,12 @@ private:
     std::wstring renderBookmark(HANDLE bookmark) const;
 
 private:
+    std::shared_ptr<EvtFunctionMap> _evt;
     std::wstring _path;
-    HANDLE _handle;
-    HANDLE _signal;
+    std::unique_ptr<ManagedEventHandle> _handle;
+    std::unique_ptr<ManagedEventHandle> _render_context;
+    std::unique_ptr<ManagedHandle> _signal;
     // HANDLE _bookmark;
-    HANDLE _render_context;
-    EvtFunctionMap *_evt;
     std::vector<HANDLE> _events;
     size_t _next_event{0};
 };

@@ -232,6 +232,10 @@ table.validationerror img {
     text-align: right;
 }
 
+.wato td.bulkactions.service_discovery {
+    text-align: left;
+}
+
 .wato table.data tr.data td.bulksearch {
     padding-right: 0px;
     white-space: nowrap;

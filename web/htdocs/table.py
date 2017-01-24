@@ -297,7 +297,7 @@ def _write_table(table, rows, actions_enabled, actions_visible, search_term):
             continue
 
         odd = "even" if odd == "odd" else "odd"
-        html.open_tr(class_=["data", odd, state, css if css else None])
+        html.open_tr(class_=["data", "odd%d" % state, css if css else None])
         for cell_content, css_classes, colspan in row:
             html.open_td(class_=css_classes if css_classes else None, colspan=colspan if colspan else None)
             html.write(cell_content)

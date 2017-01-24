@@ -12502,7 +12502,8 @@ class ModeEditRuleset(WatoMode):
             html.open_td()
             html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
             html.hidden_field("host", self._hostname)
-            html.hidden_field("item", mk_repr(self._item))
+            if self._item:
+                html.hidden_field("item", mk_repr(self._item))
             html.close_td()
             html.open_td(style="vertical-align:middle")
             html.write_text(label)

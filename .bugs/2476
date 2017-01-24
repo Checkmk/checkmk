@@ -1,0 +1,29 @@
+Title: omd diff: Changes after setting up site without config changes
+Component: core
+State: open
+Date: 2017-01-24 19:59:51
+Targetversion: future
+Class: nastiness
+
+Right after creating a site and accessing WATO for the first time, the command
+"omd diff" already shows changes. It should only display modifications to the
+default files that were made by the user. These have been found:
+
+* var/check_mk/wato/auth/auth.php:
+  Ist im Skel leer. Könnte sein, dass PHP einen Fehler wirft, wenn die Datei am Anfang ganz fehlt.
+  oder kann man da evtl. ein "include if exists" einbauen?
+
+* etc/htpasswd:
+  Liegt am Automationuser, was korrekt ist. Frage ist, ob man "omdadmin" wirklich
+  durch skel anlegen muss
+
+* permissions etc/htpasswd:
+  wird scheinbar von uns auf 660 gesetzt. Im Skel aber scheinbar anders. Muss man
+  wohl skel reparieren?
+
+* etc/diskspace.conf:
+  Hier erzeugt WATO eine Defaultkonfig, die abweicht von skel. Einfach skel anpassen
+  auf WATO-Default?
+
+* etc/auth.secret:
+  Muss hier wirklich eine leere Datei nach skel/? 

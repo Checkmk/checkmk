@@ -2788,51 +2788,55 @@ class ModeDiscovery(WatoMode):
         config.user.need_permission("wato.services")
 
         if html.var("_refresh"):
-            counts, failed_hosts = check_mk_automation(host.site_id(), "inventory",
-                                                       [ "@scan", "refresh", hostname ])
-            count_added, count_removed, count_kept, count_new = counts[hostname]
-
-            message = _("Refreshed check configuration of host '%s' with %d services") % \
-                        (hostname, count_added)
-
-            if not host.locked():
-                host.clear_discovery_failed()
-
-            add_service_change(host, "refresh-autochecks", message)
+            message = self._refresh_discovery(hostname)
 
         else:
-            table = sorted(check_mk_automation(host.site_id(), "try-inventory",
+            check_table = sorted(check_mk_automation(host.site_id(), "try-inventory",
                                                self._cache_options + [hostname]))
 
             checks = {}
-            for st, ct, checkgroup, item, paramstring, params, \
-                descr, state, output, perfdata in table:
+            for check_source, check_type, checkgroup, item, paramstring, params, \
+                descr, state, output, perfdata in check_table:
 
-                if (html.has_var("_cleanup") or html.has_var("_fixall")) and st == "vanished":
+                if (html.has_var("_cleanup") or html.has_var("_fixall")) and check_source == "vanished":
                     pass
 
-                elif (html.has_var("_activate_all") or html.has_var("_fixall")) and st == "new":
-                    checks[(ct, item)] = paramstring
+                elif (html.has_var("_activate_all") or html.has_var("_fixall")) and check_source == "new":
+                    checks[(check_type, item)] = paramstring
 
                 else:
-                    varname = "_%s_%s" % (ct, html.varencode(item))
+                    varname = "_%s_%s" % (check_type, html.varencode(item))
                     if html.var(varname, "") != "":
-                        checks[(ct, item)] = paramstring
+                        checks[(check_type, item)] = paramstring
 
-                if st.startswith("clustered"):
-                    checks[(ct, item)] = paramstring
+                if check_source.startswith("clustered"):
+                    checks[(check_type, item)] = paramstring
 
             check_mk_automation(host.site_id(), "set-autochecks", [hostname], checks)
 
             message = _("Saved check configuration of host '%s' with %d services") % \
                         (hostname, len(checks))
 
-            if not host.locked():
-                host.clear_discovery_failed()
-
             add_service_change(host, "set-autochecks", message)
 
+        if not host.locked():
+            host.clear_discovery_failed()
+
         return "folder", message
+
+
+    def _refresh_discovery(self):
+        hostname = self._host.name()
+        counts, failed_hosts = check_mk_automation(self._host.site_id(), "inventory",
+                                                   [ "@scan", "refresh", hostname ])
+        count_added, count_removed, count_kept, count_new = counts[hostname]
+
+        message = _("Refreshed check configuration of host '%s' with %d services") % \
+                    (hostname, count_added)
+
+        add_service_change(host, "refresh-autochecks", message)
+
+        return message
 
 
     def page(self):
@@ -2920,7 +2924,7 @@ class ModeDiscovery(WatoMode):
 
         table.row(css="data", state=state)
 
-        self._show_bulk_checkbox(check_type, item)
+        self._show_bulk_checkbox(check_source, check_type, item)
         self._show_actions(check)
 
         table.cell(_("State"), statename, css=stateclass)
@@ -2944,8 +2948,6 @@ class ModeDiscovery(WatoMode):
                                               ("check_type", ctype)])
         table.cell(_("Check plugin"),
                    html.render_a(content=ctype, href=manpage_url))
-
-        table.cell(_("Item"),    html.attrencode(item))
 
         if self._show_parameter_column():
             table.cell(_("Check parameters"))
@@ -3059,14 +3061,15 @@ class ModeDiscovery(WatoMode):
             return None
 
 
-    def _show_bulk_checkbox(self, check_type, item):
-        # Checkbox for bulk actions
-        if self._show_checkboxes:
-            table.cell("<input type=button class=checkgroup name=_toggle_group"
-                       " onclick=\"toggle_all_rows();\" value=\"X\" />", sortable=False)
+    def _show_bulk_checkbox(self, check_source, check_type, item):
+        if not self._show_checkboxes:
+            return
 
-            html.checkbox("_%s_%s" % (check_type, html.varencode(item)), True,
-                add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+        table.cell("<input type=button class=checkgroup name=_toggle_group"
+                   " onclick=\"toggle_group_rows(this);\" value=\"X\" />", sortable=False)
+
+        html.checkbox("_%s_%s_%s" % (check_source, check_type, html.varencode(item)), True,
+            add_attr = ['title="%s"' % _('Temporarily ignore this service')])
 
 
     # We first try using the cache (if the user has not pressed Full Scan).
@@ -3130,8 +3133,7 @@ class ModeDiscovery(WatoMode):
 
         table.row(collect_headers=collect_headers, fixed=True)
 
-        table.cell(css="bulksearch")
-
+        table.cell()
         if not self._show_checkboxes:
             onclick_uri = html.makeuri([('_show_checkboxes', '1'), ('selection', weblib.selection_id())])
             checkbox_title = _('Show Checkboxes and bulk actions')
@@ -3144,7 +3146,7 @@ class ModeDiscovery(WatoMode):
             onclick="location.href=\'%s\'" % onclick_uri,
             is_context_button=False)
 
-        table.cell(css="bulkactions", colspan=self._bulk_action_colspan())
+        table.cell(css="bulkactions service_discovery", colspan=self._bulk_action_colspan())
 
         if self._show_checkboxes:
             label = _("Selected services")

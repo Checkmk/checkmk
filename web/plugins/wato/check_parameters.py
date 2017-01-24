@@ -2260,6 +2260,36 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "mssql_databases",
+    _("MSSQL Databases properties"),
+    Dictionary(
+        elements = [
+            ("map_auto_close_state", Dictionary(
+                elements = [
+                    ( "on",  MonitoringState(title=_("Auto close on")) ),
+                    ( "off", MonitoringState(title=_("Auto close off")) ),
+                ],
+                title = _('Map auto close status'),
+                optional_keys = [],
+            )),
+            ("map_auto_shrink_state", Dictionary(
+                elements = [
+                    ( "on",  MonitoringState(title=_("Auto shrink on")) ),
+                    ( "off", MonitoringState(title=_("Auto shrink off")) ),
+                ],
+                title = _('Map auto shrink status'),
+                optional_keys = [],
+            )),
+        ]
+    ),
+    TextAscii(
+       title = _("Database identifier"),
+    ),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "varnish_cache",
     _("Varnish Cache"),
     Dictionary(

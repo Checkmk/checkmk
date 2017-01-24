@@ -1,0 +1,13 @@
+Title: Option -N on omd backup (and om cp) disregards various historic data
+Component: core
+State: open
+Date: 2017-01-24 12:01:59
+Targetversion: future
+Class: bug
+
+It seems that <tt>-N</tt> just skips the monitoring history and the RRDs.
+Several possible large files are still handled, e.g.
+the EC archive and the HW/SW-Inventory history. Also we could
+arguably consider var/log/*.log as historic data and drop
+that. Maybe also a git Konfiguration history, WATO snapshots
+and other stuff.

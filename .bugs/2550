@@ -1,0 +1,13 @@
+Title: omd restore deletes historic data if backup was done with -N
+Component: core
+State: open
+Date: 2017-01-24 11:59:55
+Targetversion: future
+Class: bug
+
+If you create an <tt>omd backup</tt> without historic
+data then and <tt>omd restore</tt> into an existing
+site should keep the existing historic data - even if that is
+outdated.
+
+Or shouldn't it?

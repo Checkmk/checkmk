@@ -1,0 +1,14 @@
+Title: WATO Backup not working in distributed environments
+Component: wato
+State: open
+Date: 2017-01-24 12:05:22
+Targetversion: future
+Class: nastiness
+
+Neither is the backup configuration distributed via D-WATO nor
+is the Backup module usable in the slave sites. Anyway the
+restore of a slave wouldn't work.
+
+The only possible solution seems to delcare the Backup module
+als "always local" and allow access to that module even if
+using WATO on slave sites is disabled.

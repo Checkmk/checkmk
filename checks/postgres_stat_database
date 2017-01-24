@@ -33,14 +33,7 @@
 # 16385 foobardb 7 43619118 262 3589 838098632 854602076 441785363 8298 602481 2806
 
 
-# Create a check for all databases that have seen at least
-# one commit in their live.
-def inventory_postgres_stat_database(info):
-    parsed = parse_postgres_stat(info)
-    return [ (k, {}) for k in parsed.keys()
-             if parsed[k]["xact_commit"] > 0 ]
-
-def parse_postgres_stat(info):
+def parse_postgres_stat_database(info):
     if len(info) == 0:
         return {}
 
@@ -51,20 +44,36 @@ def parse_postgres_stat(info):
             return x
 
     parsed = {}
-    headers = info[0]
-    for line in info[1:]:
-        row = dict(zip(headers, map(s, line)))
-        parsed[row["datname"]] = row
+    instance_name = ""
+    for line in info:
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            instance_name = line[0][3:-3].upper()
+            continue
+        elif line[0] == "datid" and line[1] == "datname":
+            headers = line
+        else:
+            row = dict(zip(headers, map(s, line)))
+            if instance_name:
+                db_name = "%s/%s" % (instance_name, row["datname"])
+            else:
+                db_name = row["datname"]
+            parsed[db_name] = row
 
     return parsed
 
 
-def check_postgres_stat_database(item, params, info):
-    parsed = parse_postgres_stat(info)
+# Create a check for all databases that have seen at least
+# one commit in their live.
+def inventory_postgres_stat_database(parsed):
+    return [ (k, {}) for k in parsed.keys()
+             if parsed[k]["xact_commit"] > 0 ]
+
+
+def check_postgres_stat_database(item, params, parsed):
     if item not in parsed:
         return (3, "Database not found")
-    stats = parsed[item]
 
+    stats = parsed[item]
     status = 0
     infos = []
     perfdata = []
@@ -76,10 +85,7 @@ def check_postgres_stat_database(item, params, info):
         ( "tup_deleted",  "Deletes" ),
         ( "tup_updated",  "Updates" ),
         ( "tup_inserted", "Inserts" ), ]:
-        counter = stats[what]
-        counter_name = "postgres_stat_database.%s.%s" % (item, what)
-        rate = get_rate(counter_name, this_time, counter)
-
+        rate = get_rate("postgres_stat_database.%s.%s" % (item, what), this_time, stats[what])
         infos.append("%s: %.2f/s" % (title, rate))
         if what in params:
             warn, crit = params[what]
@@ -92,25 +98,28 @@ def check_postgres_stat_database(item, params, info):
         else:
             warn, crit = None, None
         perfdata.append((what, rate, warn, crit))
-
     return (status, ", ".join(infos), perfdata)
 
+
 check_info['postgres_stat_database'] = {
-    "check_function"          : check_postgres_stat_database,
+    "parse_function"          : parse_postgres_stat_database,
     "inventory_function"      : inventory_postgres_stat_database,
+    "check_function"          : check_postgres_stat_database,
     "service_description"     : "PostgreSQL DB %s Statistics" ,
     "has_perfdata"            : True,
     "group"                   : "postgres_stat_database",
 }
 
 
-def check_postgres_stat_database_size(item, _no_params, info):
-    parsed = parse_postgres_stat(info)
+def check_postgres_stat_database_size(item, _no_params, parsed):
     if item not in parsed:
-        return (3, "Database not found")
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped("Login into database failed")
+
     stats = parsed[item]
     size = stats["datsize"]
-
     return (0, "Size is %s" % get_bytes_human_readable(size), [("size", size)])
 
 

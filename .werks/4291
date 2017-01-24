@@ -1,0 +1,43 @@
+Title: mk_postgres, postgres_instances, postgres_bloat, postgres_conn_time, postgres_connections, postgres_locks, postgres_query_duration, postgres_sessions, postgres_stat_database, postgres_stats, postgres_version: plugin and checks are now instance aware
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i4
+Date: 1484221053
+Class: feature
+
+Now the {{mk_postgres}} agent plugin is instance aware. Moreover the new check
+{{postgres_instances}} reports if instance is running or not. All other checks
+go PEND if instance is not running.
+
+The following lines describe the agent plugin configuration.
+If you have default postgres installation it's not necessary to give a
+configuration file, ie. if
+- user is 'postgres' or 'pgsql' and
+- PGDATABASE is 'postgres'
+
+Configuration of the plugin is needed if you want to monitor multiple instances.
+Then you have to determine
+- database user
+- path to instance env file
+- user name for this instance
+- path to .pgpass file where password is stored
+
+This can be done via postgres.cfg file with following syntax:
+DBUSER=DB_USER_NAME
+INSTANCE=/home/postgres/INSTANCE1.env:USER_NAME:/PATH/TO/.pgpass
+INSTANCE=/home/postgres/INSTANCE2.env:USER_NAME:/PATH/TO/.pgpass
+
+It's incompatible because now the following checks need an item. Thus
+the service descriptions will change.
+- postgres_conn_time
+- postgres_sessions
+- postgres_version
+
+Another reason is that {{postgres_sessions}} needs a new rule set
+{{PostgreSQL Sessions}} which can handle items. The older one is
+marked as {{deprecated}}. It is located below
+{{WATO > Host & Service Parameters > Deprecated Rulesets}}.
+You have to transfer these old rulesets to new ones which can be found below
+{{WATO > Host & Service Parameters > Parameters for discovered services > PostgreSQL Sessions}}.
+

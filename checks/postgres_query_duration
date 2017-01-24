@@ -33,19 +33,31 @@
 # datname;datid;usename;client_addr;state;seconds;pid;current_query
 # postgres;12068;postgres;;active;0;12631;SELECT datname, datid, usename, ....
 
+# instance
+# <<<postgres_query_duration>>>
+# [[[foobar]]]
+# [databases_start]
+# postgres
+# testdb
+# [databases_end]
+# ...
+
+
 def inventory_postgres_query_duration(parsed):
     for entry in parsed.keys():
         yield entry, {}
 
+
 def check_postgres_query_duration(item, _no_params, parsed):
+    if item not in parsed:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped("Login into database failed")
+
     longest_time = -1
     longest_info = None
-
-    database = parsed.get(item)
-    if database == None:
-        return
-
-    for element in database:
+    for element in parsed[item]:
         if int(element["seconds"]) > longest_time:
             longest_info = element
             longest_time = int(element["seconds"])
@@ -58,10 +70,11 @@ def check_postgres_query_duration(item, _no_params, parsed):
             yield 0, "Client: %s" % longest_info["client_addr"]
         if longest_info["state"].lower() != "active":
             yield 0, "Query state: %s" % longest_info["state"]
-        yield 0, "PID: %s" %   longest_info["pid"]
-        yield 0, "Query: %s" % longest_info["current_query"]
+        yield 0, "PID: %s, Query: %s" % (longest_info["pid"], longest_info["current_query"])
+
     else:
         yield 0, "No query is running"
+
 
 check_info['postgres_query_duration'] = {
     "parse_function"          : parse_postgres_dbs,

@@ -37,18 +37,30 @@
 # template1;;
 # datenbank;;
 
+# instance
+# <<<postgres_locks>>>
+# [[[foobar]]]
+# [databases_start]
+# postgres
+# testdb
+# [databases_end]
+# ...
+
+
 def inventory_postgres_locks(parsed):
-    for entry in parsed.keys():
+    for entry in parsed:
         yield entry, {}
 
+
 def check_postgres_locks(item, params, parsed):
+    if item not in parsed:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped("Login into database failed")
+
     locks = {}
-
-    database = parsed.get(item)
-    if database == None:
-        return
-
-    for element in database:
+    for element in parsed[item]:
         if element["granted"]:
             locks.setdefault(element["mode"], 0)
             locks[element["mode"]] += 1
@@ -72,6 +84,7 @@ def check_postgres_locks(item, params, parsed):
         elif exclusive_locks >= warn:
             yield 1, "too high (Levels at %d/%d)" % (warn, crit)
 
+
 check_info['postgres_locks'] = {
     "parse_function"          : parse_postgres_dbs,
     "check_function"          : check_postgres_locks,
@@ -81,4 +94,3 @@ check_info['postgres_locks'] = {
     "group"                   : "postgres_locks",
     "includes"                : [ "postgres.include" ],
 }
-

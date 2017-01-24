@@ -6,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -23,14 +23,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Try to detect the postgres user
-if id pgsql >/dev/null 2>&1; then
-    USER=pgsql
-elif id postgres >/dev/null 2>&1; then
-    USER=postgres
-else
-    exit 0
-fi
+
+# TODO postgres_connections output format
+
+
+#   .--common funcs--------------------------------------------------------.
+#   |                                             __                       |
+#   |  ___ ___  _ __ ___  _ __ ___   ___  _ __   / _|_   _ _ __   ___ ___  |
+#   | / __/ _ \| '_ ` _ \| '_ ` _ \ / _ \| '_ \ | |_| | | | '_ \ / __/ __| |
+#   || (_| (_) | | | | | | | | | | | (_) | | | ||  _| |_| | | | | (__\__ \ |
+#   | \___\___/|_| |_| |_|_| |_| |_|\___/|_| |_||_|  \__,_|_| |_|\___|___/ |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 
 function compare_version_greater_equal() {
     GREATER_ONE=$(echo "$1 $2" | awk '{if ($1 >= $2) print $1; else print $2}')
@@ -41,266 +46,435 @@ function compare_version_greater_equal() {
     fi
 }
 
-echo '<<<postgres_sessions>>>'
-# Postgres 9.2 uses 'query' instead of 'current_query'
-QNAME="$(echo "select column_name from information_schema.columns where table_name='pg_stat_activity' and column_name in ('query','current_query');" |\
-        su - $USER -c "psql -X -d postgres -t -A -F';'")"
-OUTPUT="$(echo "select $QNAME = '<IDLE>', count(*) from pg_stat_activity group by ($QNAME = '<IDLE>');" |\
-    su - $USER -c "psql -X --variable ON_ERROR_STOP=1 -d postgres -A -t -F' '" 2>/dev/null)"
 
-echo "$OUTPUT"
-# line with number of idle sessions is sometimes missing on Postgres 8.x. This can lead
-# to an altogether empty section and thus the check disappearing.
-echo "$OUTPUT" | grep -q '^t ' || echo "t 0"
-
-echo '<<<postgres_stat_database:sep(59)>>>'
-echo 'select datid, datname, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, pg_database_size(datname) "datsize" from pg_stat_database;' \
-    | su - $USER -c "psql -X -d postgres -A -F';'" | sed '$d'
+function db_start_db_end() {
+    echo -e "[databases_start]\n${DATABASES}\n[databases_end]"
+}
 
 
-DATABASES="$(echo "SELECT datname FROM pg_database WHERE datistemplate = false;" |\
-        su - $USER -c "psql -X -d postgres -t -A -F';'")"
-
-POSTGRES_VERSION=$(su - $USER -c "psql -X -V | egrep -o '[0-9]{1,}\.[0-9]{1,}'")
-
-echo '<<<postgres_locks:sep(59)>>>'
-echo -e "[databases_start]\n$DATABASES\n[databases_end]"
-LOCKS="$(echo "SELECT datname, granted, mode FROM pg_locks l RIGHT JOIN pg_database d ON (d.oid=l.database) WHERE d.datallowconn;" |\
-        su - $USER -c "psql -X -d postgres -A -F';'")"
-echo "$LOCKS" | sed '$d'
-
-
-# Querytime
-# Supports versions >= 8.3, > 9.1
-echo '<<<postgres_query_duration:sep(59)>>>'
-echo -e "[databases_start]\n$DATABASES\n[databases_end]"
-if compare_version_greater_equal $POSTGRES_VERSION "9.2" ; then
-QUERYTIME_QUERY="SELECT datname, datid, usename, client_addr, state AS state, COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) AS seconds,
- pid, regexp_replace(query, E'[\\n\\r\\u2028]+', ' ', 'g' ) AS current_query FROM pg_stat_activity WHERE (query_start IS NOT NULL AND (state NOT LIKE 'idle%' OR state IS NULL)) ORDER BY query_start, pid DESC;"
-else
-QUERYTIME_QUERY="SELECT datname, datid, usename, client_addr, '' AS state,    COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) AS seconds,
- procpid as pid, regexp_replace(current_query, E'[\\n\\r\\u2028]+', ' ', 'g' ) AS current_query FROM pg_stat_activity WHERE (query_start IS NOT NULL AND current_query NOT LIKE '<IDLE>%') ORDER BY query_start, procpid DESC;"
-fi
-
-QUERYTIME="$(echo "$QUERYTIME_QUERY" |\
-        su - $USER -c "psql -X -d postgres -A -F';'")"
-echo "$QUERYTIME" | sed '$d'
-
-# Contains last vacuum time and analyze time
-echo '<<<postgres_stats:sep(59)>>>'
-echo -e "[databases_start]\n$DATABASES\n[databases_end]"
-FIRST=""
-for db in $DATABASES ; do
-    LASTVACUUM="$(echo "BEGIN;SET statement_timeout=30000;COMMIT;SELECT current_database() AS datname, nspname AS sname, relname AS tname,
-      CASE WHEN v IS NULL THEN -1 ELSE round(extract(epoch FROM v)) END AS vtime,
-      CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM g)) END AS atime
-    FROM (SELECT nspname, relname, GREATEST(pg_stat_get_last_vacuum_time(c.oid), pg_stat_get_last_autovacuum_time(c.oid)) AS v,
-          GREATEST(pg_stat_get_last_analyze_time(c.oid), pg_stat_get_last_autoanalyze_time(c.oid)) AS g
-          FROM pg_class c, pg_namespace n
-          WHERE relkind = 'r'
-          AND n.oid = c.relnamespace
-          AND n.nspname <> 'information_schema'
-          ORDER BY 3) AS foo;" |\
-            su - $USER -c "psql -X -d $db $FIRST-A -F';'")"
-    LASTVACUUM=$(echo "$LASTVACUUM" | grep -v -e 'COMMIT$' -e 'SET$' -e 'BEGIN$')
-    if [ -z $FIRST ] ; then
-        FIRST="-t "
-        echo "$LASTVACUUM" | sed '$d'
-    else
-        echo "$LASTVACUUM"
+function postgres_echo_instance_name() {
+    if [ ! -z "$instance_name" ]; then
+        echo "[[[$instance_name]]]"
     fi
-done
+}
 
-# Postgres version an connection time
-echo '<<<postgres_version:sep(1)>>>'
-(TIMEFORMAT='%3R'; time echo "SELECT version() AS v" |\
- su - $USER -c "psql -X -d postgres -t -A -F';'; echo '<<<postgres_conn_time>>>'") 2>&1
 
-# Number of current connections per database
-echo '<<<postgres_connections:sep(59)>>>'
-# We need to output the databases, too.
-# This query does not report databases without an active query
-echo -e "[databases_start]\n$DATABASES\n[databases_end]"
-if compare_version_greater_equal $POSTGRES_VERSION "9.2" ; then
-CONNECTIONS_QUERY="SELECT COUNT(datid) AS current,
-  (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
-  d.datname
-FROM pg_database d
-LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE state <> 'idle'
-GROUP BY 2,3
-ORDER BY datname"
-else
-CONNECTIONS_QUERY="SELECT COUNT(datid) AS current,
-  (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
-  d.datname
-FROM pg_database d
-LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE current_query <> '<IDLE>'
-GROUP BY 2,3
-ORDER BY datname"
-fi
+#.
+#   .--section funcs-------------------------------------------------------.
+#   |                   _   _                __                            |
+#   |     ___  ___  ___| |_(_) ___  _ __    / _|_   _ _ __   ___ ___       |
+#   |    / __|/ _ \/ __| __| |/ _ \| '_ \  | |_| | | | '_ \ / __/ __|      |
+#   |    \__ \  __/ (__| |_| | (_) | | | | |  _| |_| | | | | (__\__ \      |
+#   |    |___/\___|\___|\__|_|\___/|_| |_| |_|  \__,_|_| |_|\___|___/      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
-CONNECTIONS="$(echo "$CONNECTIONS_QUERY" |\
-            su - $USER -c "psql -X -d postgres -A -F';'")"
-CONNECTIONS=$(echo "$CONNECTIONS" | grep -v -e 'COMMIT$' -e 'SET$' -e 'BEGIN$')
-echo "$CONNECTIONS" | sed '$d'
 
-# Bloat index and tables
-# Supports versions <9.0, >=9.0
-# This huge query has been gratefully taken from Greg Sabino Mullane's check_postgres.pl
-echo '<<<postgres_bloat:sep(59)>>>'
-echo -e "[databases_start]\n$DATABASES\n[databases_end]"
-if compare_version_greater_equal $POSTGRES_VERSION "9.0" ; then
-BLOAT_QUERY="SELECT
-  current_database() AS db, schemaname, tablename, reltuples::bigint AS tups, relpages::bigint AS pages, otta,
-  ROUND(CASE WHEN otta=0 OR sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE sml.relpages/otta::numeric END,1) AS tbloat,
-  CASE WHEN relpages < otta THEN 0 ELSE relpages::bigint - otta END AS wastedpages,
-  CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::bigint END AS wastedbytes,
-  CASE WHEN relpages < otta THEN 0 ELSE (bs*(relpages-otta))::bigint END AS wastedsize,
-  iname, ituples::bigint AS itups, ipages::bigint AS ipages, iotta,
-  ROUND(CASE WHEN iotta=0 OR ipages=0 OR ipages=iotta THEN 0.0 ELSE ipages/iotta::numeric END,1) AS ibloat,
-  CASE WHEN ipages < iotta THEN 0 ELSE ipages::bigint - iotta END AS wastedipages,
-  CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta) END AS wastedibytes,
-  CASE WHEN ipages < iotta THEN 0 ELSE (bs*(ipages-iotta))::bigint END AS wastedisize,
-  CASE WHEN relpages < otta THEN
-    CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta::bigint) END
-    ELSE CASE WHEN ipages < iotta THEN bs*(relpages-otta::bigint)
-      ELSE bs*(relpages-otta::bigint + ipages-iotta::bigint) END
-  END AS totalwastedbytes
-FROM (
-  SELECT
-    nn.nspname AS schemaname,
-    cc.relname AS tablename,
-    COALESCE(cc.reltuples,0) AS reltuples,
-    COALESCE(cc.relpages,0) AS relpages,
-    COALESCE(bs,0) AS bs,
-    COALESCE(CEIL((cc.reltuples*((datahdr+ma-
-      (CASE WHEN datahdr%ma=0 THEN ma ELSE datahdr%ma END))+nullhdr2+4))/(bs-20::float)),0) AS otta,
-    COALESCE(c2.relname,'?') AS iname, COALESCE(c2.reltuples,0) AS ituples, COALESCE(c2.relpages,0) AS ipages,
-    COALESCE(CEIL((c2.reltuples*(datahdr-12))/(bs-20::float)),0) AS iotta -- very rough approximation, assumes all cols
-  FROM
-     pg_class cc
-  JOIN pg_namespace nn ON cc.relnamespace = nn.oid AND nn.nspname <> 'information_schema'
-  LEFT JOIN
-  (
-    SELECT
-      ma,bs,foo.nspname,foo.relname,
-      (datawidth+(hdr+ma-(case when hdr%ma=0 THEN ma ELSE hdr%ma END)))::numeric AS datahdr,
-      (maxfracsum*(nullhdr+ma-(case when nullhdr%ma=0 THEN ma ELSE nullhdr%ma END))) AS nullhdr2
-    FROM (
-      SELECT
-        ns.nspname, tbl.relname, hdr, ma, bs,
-        SUM((1-coalesce(null_frac,0))*coalesce(avg_width, 2048)) AS datawidth,
-        MAX(coalesce(null_frac,0)) AS maxfracsum,
-        hdr+(
-          SELECT 1+count(*)/8
-          FROM pg_stats s2
-          WHERE null_frac<>0 AND s2.schemaname = ns.nspname AND s2.tablename = tbl.relname
-        ) AS nullhdr
-      FROM pg_attribute att
-      JOIN pg_class tbl ON att.attrelid = tbl.oid
-      JOIN pg_namespace ns ON ns.oid = tbl.relnamespace
-      LEFT JOIN pg_stats s ON s.schemaname=ns.nspname
-      AND s.tablename = tbl.relname
-      AND s.inherited=false
-      AND s.attname=att.attname,
-      (
-        SELECT
-          (SELECT current_setting('block_size')::numeric) AS bs,
-            CASE WHEN SUBSTRING(SPLIT_PART(v, ' ', 2) FROM '#\[0-9]+.[0-9]+#\%' for '#')
-              IN ('8.0','8.1','8.2') THEN 27 ELSE 23 END AS hdr,
-          CASE WHEN v ~ 'mingw32' OR v ~ '64-bit' THEN 8 ELSE 4 END AS ma
-        FROM (SELECT version() AS v) AS foo
-      ) AS constants
-      WHERE att.attnum > 0 AND tbl.relkind='r'
-      GROUP BY 1,2,3,4,5
-    ) AS foo
-  ) AS rs
-  ON cc.relname = rs.relname AND nn.nspname = rs.nspname
-  LEFT JOIN pg_index i ON indrelid = cc.oid
-  LEFT JOIN pg_class c2 ON c2.oid = i.indexrelid
-) AS sml
- WHERE sml.relpages - otta > 0 OR ipages - iotta > 10 ORDER BY totalwastedbytes DESC LIMIT 10;"
-else
-BLOAT_QUERY="SELECT
-  current_database() AS db, schemaname, tablename, reltuples::bigint AS tups, relpages::bigint AS pages, otta,
-  ROUND(CASE WHEN otta=0 OR sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE sml.relpages/otta::numeric END,1) AS tbloat,
-  CASE WHEN relpages < otta THEN 0 ELSE relpages::bigint - otta END AS wastedpages,
-  CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::bigint END AS wastedbytes,
-  CASE WHEN relpages < otta THEN '0 bytes'::text ELSE (bs*(relpages-otta))::bigint || ' bytes' END AS wastedsize,
-  iname, ituples::bigint AS itups, ipages::bigint AS ipages, iotta,
-  ROUND(CASE WHEN iotta=0 OR ipages=0 OR ipages=iotta THEN 0.0 ELSE ipages/iotta::numeric END,1) AS ibloat,
-  CASE WHEN ipages < iotta THEN 0 ELSE ipages::bigint - iotta END AS wastedipages,
-  CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta) END AS wastedibytes,
-  CASE WHEN ipages < iotta THEN '0 bytes' ELSE (bs*(ipages-iotta))::bigint || ' bytes' END AS wastedisize,
-  CASE WHEN relpages < otta THEN
-    CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta::bigint) END
-    ELSE CASE WHEN ipages < iotta THEN bs*(relpages-otta::bigint)
-      ELSE bs*(relpages-otta::bigint + ipages-iotta::bigint) END
-  END AS totalwastedbytes
-FROM (
-  SELECT
-    nn.nspname AS schemaname,
-    cc.relname AS tablename,
-    COALESCE(cc.reltuples,0) AS reltuples,
-    COALESCE(cc.relpages,0) AS relpages,
-    COALESCE(bs,0) AS bs,
-    COALESCE(CEIL((cc.reltuples*((datahdr+ma-
-      (CASE WHEN datahdr%ma=0 THEN ma ELSE datahdr%ma END))+nullhdr2+4))/(bs-20::float)),0) AS otta,
-    COALESCE(c2.relname,'?') AS iname, COALESCE(c2.reltuples,0) AS ituples, COALESCE(c2.relpages,0) AS ipages,
-    COALESCE(CEIL((c2.reltuples*(datahdr-12))/(bs-20::float)),0) AS iotta -- very rough approximation, assumes all cols
-  FROM
-     pg_class cc
-  JOIN pg_namespace nn ON cc.relnamespace = nn.oid AND nn.nspname <> 'information_schema'
-  LEFT JOIN
-  (
-    SELECT
-      ma,bs,foo.nspname,foo.relname,
-      (datawidth+(hdr+ma-(case when hdr%ma=0 THEN ma ELSE hdr%ma END)))::numeric AS datahdr,
-      (maxfracsum*(nullhdr+ma-(case when nullhdr%ma=0 THEN ma ELSE nullhdr%ma END))) AS nullhdr2
-    FROM (
-      SELECT
-        ns.nspname, tbl.relname, hdr, ma, bs,
-        SUM((1-coalesce(null_frac,0))*coalesce(avg_width, 2048)) AS datawidth,
-        MAX(coalesce(null_frac,0)) AS maxfracsum,
-        hdr+(
-          SELECT 1+count(*)/8
-          FROM pg_stats s2
-          WHERE null_frac<>0 AND s2.schemaname = ns.nspname AND s2.tablename = tbl.relname
-        ) AS nullhdr
-      FROM pg_attribute att
-      JOIN pg_class tbl ON att.attrelid = tbl.oid
-      JOIN pg_namespace ns ON ns.oid = tbl.relnamespace
-      LEFT JOIN pg_stats s ON s.schemaname=ns.nspname
-      AND s.tablename = tbl.relname
-
-      AND s.attname=att.attname,
-      (
-        SELECT
-          (SELECT current_setting('block_size')::numeric) AS bs,
-            CASE WHEN SUBSTRING(SPLIT_PART(v, ' ', 2) FROM '#\"[0-9]+.[0-9]+#\"%' for '#')
-              IN ('8.0','8.1','8.2') THEN 27 ELSE 23 END AS hdr,
-          CASE WHEN v ~ 'mingw32' OR v ~ '64-bit' THEN 8 ELSE 4 END AS ma
-        FROM (SELECT version() AS v) AS foo
-      ) AS constants
-      WHERE att.attnum > 0 AND tbl.relkind='r'
-      GROUP BY 1,2,3,4,5
-    ) AS foo
-  ) AS rs
-  ON cc.relname = rs.relname AND nn.nspname = rs.nspname
-  LEFT JOIN pg_index i ON indrelid = cc.oid
-  LEFT JOIN pg_class c2 ON c2.oid = i.indexrelid
-) AS sml
- WHERE sml.relpages - otta > 0 OR ipages - iotta > 10 ORDER BY totalwastedbytes DESC LIMIT 10;"
-fi
-
-FIRST=""
-for db in $DATABASES ; do
-    RESPONSE="$(echo "$BLOAT_QUERY" | su - $USER -c "psql -X -d $db $FIRST-A -F';'")"
-    if [ -z $FIRST ] ; then
-        FIRST="-t "
-        echo "$RESPONSE" | sed '$d'
-    else
-        echo "$RESPONSE"
+function postgres_instances() {
+    echo '<<<postgres_instances>>>'
+    # If we have no instances we take db id (pqsql/postgres) because
+    # ps output may be unreadable
+    # In case of instances ps output shows them readable
+    if [ ! -z "${1}" ]; then
+        echo "[[[${1}]]]"
     fi
-done
+    pgrep -lf bin/postgres
+}
 
+
+function postgres_sessions() {
+    echo '<<<postgres_sessions>>>'
+    postgres_echo_instance_name
+    # Postgres 9.2 uses 'query' instead of 'current_query'
+    QNAME="$(echo "SELECT column_name FROM information_schema.columns where table_name='pg_stat_activity' and column_name in ('query','current_query');" |\
+             su - $DBUSER -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -t -A -F';'")"
+    OUTPUT="$(echo "SELECT $QNAME = '<IDLE>', count(*) FROM pg_stat_activity group by ($QNAME = '<IDLE>');" |\
+              su - $DBUSER -c "$export_PGPASSFILE $psql -X --variable ON_ERROR_STOP=1 -d $PGDATABASE ${EXTRA_ARGS} -A -t -F' '" 2>/dev/null)"
+
+    echo "$OUTPUT"
+    # line with number of idle sessions is sometimes missing on Postgres 8.x. This can lead
+    # to an altogether empty section and thus the check disappearing.
+    echo "$OUTPUT" | grep -q '^t ' || echo "t 0"
+}
+
+
+function postgres_stat_database() {
+    echo '<<<postgres_stat_database:sep(59)>>>'
+    postgres_echo_instance_name
+    echo 'SELECT datid, datname, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, pg_database_size(datname) AS "datsize" FROM pg_stat_database;' \
+        | su - $DBUSER -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -A -F';'" | sed '$d'
+}
+
+
+function postgres_locks() {
+    echo '<<<postgres_locks:sep(59)>>>'
+    postgres_echo_instance_name
+    db_start_db_end
+    LOCKS="$(echo "SELECT datname, granted, mode FROM pg_locks l RIGHT JOIN pg_database d ON (d.oid=l.database) WHERE d.datallowconn;" |\
+             su - $DBUSER -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -A -F';'")"
+    echo "$LOCKS" | sed '$d'
+}
+
+
+function postgres_query_duration() {
+    # Querytime
+    # Supports versions >= 8.3, > 9.1
+    echo '<<<postgres_query_duration:sep(59)>>>'
+    postgres_echo_instance_name
+    db_start_db_end
+    if compare_version_greater_equal $POSTGRES_VERSION "9.2" ; then
+        QUERYTIME_QUERY="SELECT datname, datid, usename, client_addr, state AS state, COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) AS seconds,
+        pid, regexp_replace(query, E'[\\n\\r\\u2028]+', ' ', 'g' ) AS current_query FROM pg_stat_activity WHERE (query_start IS NOT NULL AND (state NOT LIKE 'idle%' OR state IS NULL)) ORDER BY query_start, pid DESC;"
+    else
+        QUERYTIME_QUERY="SELECT datname, datid, usename, client_addr, '' AS state,    COALESCE(ROUND(EXTRACT(epoch FROM now()-query_start)),0) AS seconds,
+        procpid as pid, regexp_replace(current_query, E'[\\n\\r\\u2028]+', ' ', 'g' ) AS current_query FROM pg_stat_activity WHERE (query_start IS NOT NULL AND current_query NOT LIKE '<IDLE>%') ORDER BY query_start, procpid DESC;"
+    fi
+
+    QUERYTIME="$(echo "$QUERYTIME_QUERY" |\
+                 su - $DBUSER -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -A -F';'")"
+    echo "$QUERYTIME" | sed '$d'
+}
+
+
+function postgres_stats() {
+    # Contains last vacuum time and analyze time
+    echo '<<<postgres_stats:sep(59)>>>'
+    postgres_echo_instance_name
+    db_start_db_end
+    FIRST=""
+    for db in $DATABASES ; do
+        LASTVACUUM="$(echo "BEGIN;SET statement_timeout=30000;COMMIT;SELECT current_database() AS datname, nspname AS sname, relname AS tname,
+          CASE WHEN v IS NULL THEN -1 ELSE round(extract(epoch FROM v)) END AS vtime,
+          CASE WHEN g IS NULL THEN -1 ELSE round(extract(epoch FROM v)) END AS atime
+        FROM (SELECT nspname, relname, GREATEST(pg_stat_get_last_vacuum_time(c.oid), pg_stat_get_last_autovacuum_time(c.oid)) AS v,
+              GREATEST(pg_stat_get_last_analyze_time(c.oid), pg_stat_get_last_autoanalyze_time(c.oid)) AS g
+              FROM pg_class c, pg_namespace n
+              WHERE relkind = 'r'
+              AND n.oid = c.relnamespace
+              AND n.nspname <> 'information_schema'
+              ORDER BY 3) AS foo;" |\
+              su - $DBUSER -c "$export_PGPASSFILE $psql -X -d $db ${EXTRA_ARGS} $FIRST-A -F';'")"
+        LASTVACUUM=$(echo "$LASTVACUUM" | grep -v -e 'COMMIT$' -e 'SET$' -e 'BEGIN$')
+        if [ -z $FIRST ] ; then
+            FIRST="-t "
+            echo "$LASTVACUUM" | sed '$d'
+        else
+            echo "$LASTVACUUM"
+        fi
+    done
+}
+
+
+function postgres_version() {
+    # Postgres version an connection time
+    echo '<<<postgres_version:sep(1)>>>'
+    postgres_echo_instance_name
+    (TIMEFORMAT='%3R'; time echo "SELECT version() AS v" |\
+    su - $DBUSER -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -t -A -F';'; echo $'<<<postgres_conn_time>>>\n`postgres_echo_instance_name`'") 2>&1
+}
+
+
+function postgres_connections() {
+    # Number of current connections per database
+    echo '<<<postgres_connections:sep(59)>>>'
+    postgres_echo_instance_name
+    # We need to output the databases, too.
+    # This query does not report databases without an active query
+    db_start_db_end
+    if compare_version_greater_equal $POSTGRES_VERSION "9.2" ; then
+        CONNECTIONS_QUERY="SELECT COUNT(datid) AS current,
+          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
+          d.datname
+        FROM pg_database d
+        LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE state <> 'idle'
+        GROUP BY 2,3
+        ORDER BY datname"
+    else
+        CONNECTIONS_QUERY="SELECT COUNT(datid) AS current,
+          (SELECT setting AS mc FROM pg_settings WHERE name = 'max_connections') AS mc,
+          d.datname
+        FROM pg_database d
+        LEFT JOIN pg_stat_activity s ON (s.datid = d.oid) WHERE current_query <> '<IDLE>'
+        GROUP BY 2,3
+        ORDER BY datname"
+    fi
+
+    CONNECTIONS="$(echo "$CONNECTIONS_QUERY" | su - $DBUSER -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -A -F';'")"
+    CONNECTIONS=$(echo "$CONNECTIONS" | grep -v -e 'COMMIT$' -e 'SET$' -e 'BEGIN$')
+    echo "$CONNECTIONS" | sed '$d'
+}
+
+
+function postgres_bloat() {
+    # Bloat index and tables
+    # Supports versions <9.0, >=9.0
+    # This huge query has been gratefully taken from Greg Sabino Mullane's check_postgres.pl
+    echo '<<<postgres_bloat:sep(59)>>>'
+    postgres_echo_instance_name
+    db_start_db_end
+    if compare_version_greater_equal $POSTGRES_VERSION "9.0" ; then
+        BLOAT_QUERY="SELECT
+          current_database() AS db, schemaname, tablename, reltuples::bigint AS tups, relpages::bigint AS pages, otta,
+          ROUND(CASE WHEN otta=0 OR sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE sml.relpages/otta::numeric END,1) AS tbloat,
+          CASE WHEN relpages < otta THEN 0 ELSE relpages::bigint - otta END AS wastedpages,
+          CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::bigint END AS wastedbytes,
+          CASE WHEN relpages < otta THEN 0 ELSE (bs*(relpages-otta))::bigint END AS wastedsize,
+          iname, ituples::bigint AS itups, ipages::bigint AS ipages, iotta,
+          ROUND(CASE WHEN iotta=0 OR ipages=0 OR ipages=iotta THEN 0.0 ELSE ipages/iotta::numeric END,1) AS ibloat,
+          CASE WHEN ipages < iotta THEN 0 ELSE ipages::bigint - iotta END AS wastedipages,
+          CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta) END AS wastedibytes,
+          CASE WHEN ipages < iotta THEN 0 ELSE (bs*(ipages-iotta))::bigint END AS wastedisize,
+          CASE WHEN relpages < otta THEN
+            CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta::bigint) END
+            ELSE CASE WHEN ipages < iotta THEN bs*(relpages-otta::bigint)
+              ELSE bs*(relpages-otta::bigint + ipages-iotta::bigint) END
+          END AS totalwastedbytes
+        FROM (
+          SELECT
+            nn.nspname AS schemaname,
+            cc.relname AS tablename,
+            COALESCE(cc.reltuples,0) AS reltuples,
+            COALESCE(cc.relpages,0) AS relpages,
+            COALESCE(bs,0) AS bs,
+            COALESCE(CEIL((cc.reltuples*((datahdr+ma-
+              (CASE WHEN datahdr%ma=0 THEN ma ELSE datahdr%ma END))+nullhdr2+4))/(bs-20::float)),0) AS otta,
+            COALESCE(c2.relname,'?') AS iname, COALESCE(c2.reltuples,0) AS ituples, COALESCE(c2.relpages,0) AS ipages,
+            COALESCE(CEIL((c2.reltuples*(datahdr-12))/(bs-20::float)),0) AS iotta -- very rough approximation, assumes all cols
+          FROM
+             pg_class cc
+          JOIN pg_namespace nn ON cc.relnamespace = nn.oid AND nn.nspname <> 'information_schema'
+          LEFT JOIN
+          (
+            SELECT
+              ma,bs,foo.nspname,foo.relname,
+              (datawidth+(hdr+ma-(case when hdr%ma=0 THEN ma ELSE hdr%ma END)))::numeric AS datahdr,
+              (maxfracsum*(nullhdr+ma-(case when nullhdr%ma=0 THEN ma ELSE nullhdr%ma END))) AS nullhdr2
+            FROM (
+              SELECT
+                ns.nspname, tbl.relname, hdr, ma, bs,
+                SUM((1-coalesce(null_frac,0))*coalesce(avg_width, 2048)) AS datawidth,
+                MAX(coalesce(null_frac,0)) AS maxfracsum,
+                hdr+(
+                  SELECT 1+count(*)/8
+                  FROM pg_stats s2
+                  WHERE null_frac<>0 AND s2.schemaname = ns.nspname AND s2.tablename = tbl.relname
+                ) AS nullhdr
+              FROM pg_attribute att
+              JOIN pg_class tbl ON att.attrelid = tbl.oid
+              JOIN pg_namespace ns ON ns.oid = tbl.relnamespace
+              LEFT JOIN pg_stats s ON s.schemaname=ns.nspname
+              AND s.tablename = tbl.relname
+              AND s.inherited=false
+              AND s.attname=att.attname,
+              (
+                SELECT
+                  (SELECT current_setting('block_size')::numeric) AS bs,
+                    CASE WHEN SUBSTRING(SPLIT_PART(v, ' ', 2) FROM '#\[0-9]+.[0-9]+#\%' for '#')
+                      IN ('8.0','8.1','8.2') THEN 27 ELSE 23 END AS hdr,
+                  CASE WHEN v ~ 'mingw32' OR v ~ '64-bit' THEN 8 ELSE 4 END AS ma
+                FROM (SELECT version() AS v) AS foo
+              ) AS constants
+              WHERE att.attnum > 0 AND tbl.relkind='r'
+              GROUP BY 1,2,3,4,5
+            ) AS foo
+          ) AS rs
+          ON cc.relname = rs.relname AND nn.nspname = rs.nspname
+          LEFT JOIN pg_index i ON indrelid = cc.oid
+          LEFT JOIN pg_class c2 ON c2.oid = i.indexrelid
+        ) AS sml
+         WHERE sml.relpages - otta > 0 OR ipages - iotta > 10 ORDER BY totalwastedbytes DESC LIMIT 10;"
+    else
+        BLOAT_QUERY="SELECT
+          current_database() AS db, schemaname, tablename, reltuples::bigint AS tups, relpages::bigint AS pages, otta,
+          ROUND(CASE WHEN otta=0 OR sml.relpages=0 OR sml.relpages=otta THEN 0.0 ELSE sml.relpages/otta::numeric END,1) AS tbloat,
+          CASE WHEN relpages < otta THEN 0 ELSE relpages::bigint - otta END AS wastedpages,
+          CASE WHEN relpages < otta THEN 0 ELSE bs*(sml.relpages-otta)::bigint END AS wastedbytes,
+          CASE WHEN relpages < otta THEN '0 bytes'::text ELSE (bs*(relpages-otta))::bigint || ' bytes' END AS wastedsize,
+          iname, ituples::bigint AS itups, ipages::bigint AS ipages, iotta,
+          ROUND(CASE WHEN iotta=0 OR ipages=0 OR ipages=iotta THEN 0.0 ELSE ipages/iotta::numeric END,1) AS ibloat,
+          CASE WHEN ipages < iotta THEN 0 ELSE ipages::bigint - iotta END AS wastedipages,
+          CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta) END AS wastedibytes,
+          CASE WHEN ipages < iotta THEN '0 bytes' ELSE (bs*(ipages-iotta))::bigint || ' bytes' END AS wastedisize,
+          CASE WHEN relpages < otta THEN
+            CASE WHEN ipages < iotta THEN 0 ELSE bs*(ipages-iotta::bigint) END
+            ELSE CASE WHEN ipages < iotta THEN bs*(relpages-otta::bigint)
+              ELSE bs*(relpages-otta::bigint + ipages-iotta::bigint) END
+          END AS totalwastedbytes
+        FROM (
+          SELECT
+            nn.nspname AS schemaname,
+            cc.relname AS tablename,
+            COALESCE(cc.reltuples,0) AS reltuples,
+            COALESCE(cc.relpages,0) AS relpages,
+            COALESCE(bs,0) AS bs,
+            COALESCE(CEIL((cc.reltuples*((datahdr+ma-
+              (CASE WHEN datahdr%ma=0 THEN ma ELSE datahdr%ma END))+nullhdr2+4))/(bs-20::float)),0) AS otta,
+            COALESCE(c2.relname,'?') AS iname, COALESCE(c2.reltuples,0) AS ituples, COALESCE(c2.relpages,0) AS ipages,
+            COALESCE(CEIL((c2.reltuples*(datahdr-12))/(bs-20::float)),0) AS iotta -- very rough approximation, assumes all cols
+          FROM
+             pg_class cc
+          JOIN pg_namespace nn ON cc.relnamespace = nn.oid AND nn.nspname <> 'information_schema'
+          LEFT JOIN
+          (
+            SELECT
+              ma,bs,foo.nspname,foo.relname,
+              (datawidth+(hdr+ma-(case when hdr%ma=0 THEN ma ELSE hdr%ma END)))::numeric AS datahdr,
+              (maxfracsum*(nullhdr+ma-(case when nullhdr%ma=0 THEN ma ELSE nullhdr%ma END))) AS nullhdr2
+            FROM (
+              SELECT
+                ns.nspname, tbl.relname, hdr, ma, bs,
+                SUM((1-coalesce(null_frac,0))*coalesce(avg_width, 2048)) AS datawidth,
+                MAX(coalesce(null_frac,0)) AS maxfracsum,
+                hdr+(
+                  SELECT 1+count(*)/8
+                  FROM pg_stats s2
+                  WHERE null_frac<>0 AND s2.schemaname = ns.nspname AND s2.tablename = tbl.relname
+                ) AS nullhdr
+              FROM pg_attribute att
+              JOIN pg_class tbl ON att.attrelid = tbl.oid
+              JOIN pg_namespace ns ON ns.oid = tbl.relnamespace
+              LEFT JOIN pg_stats s ON s.schemaname=ns.nspname
+              AND s.tablename = tbl.relname
+              AND s.attname=att.attname,
+              (
+                SELECT
+                  (SELECT current_setting('block_size')::numeric) AS bs,
+                    CASE WHEN SUBSTRING(SPLIT_PART(v, ' ', 2) FROM '#\"[0-9]+.[0-9]+#\"%' for '#')
+                      IN ('8.0','8.1','8.2') THEN 27 ELSE 23 END AS hdr,
+                  CASE WHEN v ~ 'mingw32' OR v ~ '64-bit' THEN 8 ELSE 4 END AS ma
+                FROM (SELECT version() AS v) AS foo
+              ) AS constants
+              WHERE att.attnum > 0 AND tbl.relkind='r'
+              GROUP BY 1,2,3,4,5
+            ) AS foo
+          ) AS rs
+          ON cc.relname = rs.relname AND nn.nspname = rs.nspname
+          LEFT JOIN pg_index i ON indrelid = cc.oid
+          LEFT JOIN pg_class c2 ON c2.oid = i.indexrelid
+        ) AS sml
+         WHERE sml.relpages - otta > 0 OR ipages - iotta > 10 ORDER BY totalwastedbytes DESC LIMIT 10;"
+    fi
+
+    FIRST=""
+    for db in $DATABASES ; do
+        RESPONSE="$(echo "$BLOAT_QUERY" | su - $DBUSER -c "$export_PGPASSFILE $psql -X -d $db ${EXTRA_ARGS} $FIRST-A -F';'")"
+        if [ -z $FIRST ] ; then
+            FIRST="-t "
+            echo "$RESPONSE" | sed '$d'
+        else
+            echo "$RESPONSE"
+        fi
+    done
+}
+
+
+#.
+#   .--main----------------------------------------------------------------.
+#   |                                       _                              |
+#   |                       _ __ ___   __ _(_)_ __                         |
+#   |                      | '_ ` _ \ / _` | | '_ \                        |
+#   |                      | | | | | | (_| | | | | |                       |
+#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+### postgres.cfg ##
+# DBUSER=OS_USER_NAME
+# INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass
+# INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass
+
+# TODO @dba USERNAME in .pgpass ?
+# INSTANCE=/home/postgres/db2.env:/PATH/TO/.pgpass
+
+
+function postgres_main() {
+    if [ -z "$DBUSER" ] || [ -z "$PGDATABASE" ] ; then
+        exit 0
+    fi
+
+    EXTRA_ARGS=""
+    if [ ! -z "$PGUSER" ]; then
+        EXTRA_ARGS=$EXTRA_ARGS" -U $PGUSER"
+    fi
+    if [ ! -z "$PGPORT" ]; then
+        EXTRA_ARGS=$EXTRA_ARGS" -p $PGPORT"
+    fi
+
+    if [ ! -z $PGPASSFILE ]; then
+        export_PGPASSFILE="export PGPASSFILE=$PGPASSFILE; "
+    fi
+
+    DATABASES="$(echo "SELECT datname FROM pg_database WHERE datistemplate = false;" |\
+                 su - $DBUSER -c "$export_PGPASSFILE $psql -X -d $PGDATABASE ${EXTRA_ARGS} -t -A -F';'")"
+    POSTGRES_VERSION=$(su - $DBUSER -c "$psql -X -V -d $PGDATABASE ${EXTRA_ARGS} | egrep -o '[0-9]{1,}\.[0-9]{1,}'")
+
+    postgres_sessions
+    postgres_stat_database
+    postgres_locks
+    postgres_query_duration
+    postgres_stats
+    postgres_version
+    postgres_connections
+    postgres_bloat
+}
+
+
+MK_CONFFILE=$MK_CONFDIR/postgres.cfg
+if [ -e "$MK_CONFFILE" ]; then
+
+    postgres_instances
+
+    DBUSER=$(cat $MK_CONFFILE | grep DBUSER | sed 's/.*=//g')
+    cat "$MK_CONFFILE" | while read line
+    do
+        case $line in
+            INSTANCE*)
+                instance=$line
+                ;;
+            *)
+                instance=
+                ;;
+        esac
+
+        if [ ! -z "$instance" ]; then
+            instance_path=$(echo "$instance" | sed 's/.*=\(.*\):.*:.*$/\1/g')
+            instance_name=$(echo "$instance_path" | sed -e 's/.*\/\(.*\)/\1/g' -e 's/\.env$//g')
+            psql="/$DBUSER/$(cat $instance_path | grep "^export PGVERSION=" |
+                 sed -e 's/.*=//g' -e 's/\s*#.*$//g')/bin/psql"
+
+            PGUSER=$(echo "$instance" | sed 's/.*=.*:\(.*\):.*$/\1/g')
+            PGPASSFILE="$(echo "$instance" | sed 's/.*=.*:.*:\(.*\)$/\1/g')"
+            PGDATABASE=$(cat $instance_path | grep "^export PGDATABASE=" |
+                       sed -e 's/.*=//g' -e 's/\s*#.*$//g')
+            PGPORT=$(cat $instance_path | grep "^export PGPORT=" |
+                   sed -e 's/.*=//g' -e 's/\s*#.*$//g')
+
+            # Fallback
+            if [ ! -f "$psql" ]; then
+                psql="$(cat $instance_path | grep "^export PGHOME=" |
+                     sed -e 's/.*=//g' -e 's/\s*#.*$//g')/psql"
+            fi
+
+            postgres_main
+
+        fi
+    done
+
+else
+
+    if id pgsql >/dev/null 2>&1; then
+        DBUSER=pgsql
+    elif id postgres >/dev/null 2>&1; then
+        DBUSER=postgres
+    else
+        exit 0
+    fi
+
+    postgres_instances "$DBUSER"
+
+    psql="psql"
+    PGDATABASE=postgres
+    postgres_main
+
+fi

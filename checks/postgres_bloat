@@ -35,19 +35,33 @@
 # postgres;pg_catalog;pg_amproc;291;3;2;1.5;1;8192;8192;pg_amproc_fam_proc_index;291;4;2;2.0;2;16384;16384;24576
 # postgres;pg_catalog;pg_amop;403;4;3;1.3;1;8192;8192;pg_amop_opr_fam_index;403;4;2;2.0;2;16384;16384;24576
 
+# instances
+# <<<postgres_bloat>>>
+# [[[foobar]]]
+# [databases_start]
+# postgres
+# testdb
+# [databases_end]
+# ...
+
+
 factory_settings["postgres_bloat_default_levels"] = {
     'table_bloat_perc': (180.0, 200.0), # WARN at 180%, CRIT at 200%
     'index_bloat_perc': (180.0, 200.0)
 }
 
+
 def inventory_postgres_bloat(parsed):
-    for entry in parsed.keys():
-        yield entry, {}
+    return [ (entry, {}) for entry, values in parsed.items() if values ]
+
 
 def check_postgres_bloat(item, params, parsed):
     database = parsed.get(item)
     if not database:
-        return
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped("Login into database failed")
 
     table_perc_max = None
     table_abs_max  = None
@@ -123,6 +137,7 @@ def check_postgres_bloat(item, params, parsed):
         yield 0, "Summary of top %d wasted %sspace: %s" % (len(database), what,
             get_bytes_human_readable(total_value)), [("%sspace_wasted" % what, total_value)]
 
+
 check_info['postgres_bloat'] = {
     "parse_function"          : parse_postgres_dbs,
     "check_function"          : check_postgres_bloat,
@@ -133,4 +148,3 @@ check_info['postgres_bloat'] = {
     "has_perfdata"            : True,
     "includes"                : [ "postgres.include" ]
 }
-

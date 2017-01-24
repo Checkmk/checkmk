@@ -28,46 +28,72 @@
 # f 1
 # t 4
 
+# instance
+# <<<postgres_locks>>>
+# [[[foobar]]]
+# f 1
+# t 4
+
 # t -> idle sessions, f -> active sessions
 # Note: one (or both?) lines might be missing. They will never show 0.
 
-def inventory_postgres_sessions(info):
-    # inventorize only if at least one idle or active session exist
-    if info:
-        return [(None, {})]
 
-def check_postgres_sessions(_no_item, params, info):
-    parsed = dict(info)
-    idle = int(parsed.get('t', 0))
-    running = int(parsed.get('f', 0))
-    total = idle + running
+def parse_postgres_sessions(info):
+    parsed = {}
+    instance_name = ""
+    for line in info:
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            instance_name = line[0][3:-3].upper()
+            continue
+        parsed.setdefault(instance_name, {})
+        if line[0].startswith("t"):
+            parsed[instance_name]["total"] = int(line[1])
+        elif line[0].startswith("f"):
+            parsed[instance_name]["running"] = int(line[1])
+    return parsed
 
-    status = 0
-    infos = []
-    perfdata = []
-    for value, what, format, unit in [
-        ( total,   "total",       "%d",   "" ),
-        ( running, "running",     "%d",   "" )]:
-        infos.append((format + " %s%s") % (value, what, unit))
-        if what in params:
-            warn, crit = params[what]
-            if value >= crit:
-                status = 2
-                infos[-1] += "(!!)"
-            elif value >= warn:
-                status = max(status, 1)
-                infos[-1] += "(!)"
-        else:
-            warn, crit = None, None
-        perfdata.append((what, value, warn, crit))
 
-    return (status, ", ".join(infos), perfdata)
+def inventory_postgres_sessions(parsed):
+    return [ (db, {}) for db, dbinfo in parsed.items() if dbinfo  ]
+
+
+def check_postgres_sessions(item, params, parsed):
+    if item in parsed:
+        idle     = parsed[item]['total']
+        running  = parsed[item]['running']
+        total    = idle + running
+        status   = 0
+        infos    = []
+        perfdata = []
+        for value, what, format, unit in [
+            ( total,   "total",       "%d",   "" ),
+            ( running, "running",     "%d",   "" )]:
+            infos.append((format + " %s%s") % (value, what, unit))
+            if what in params:
+                warn, crit = params[what]
+                if value >= crit:
+                    status = 2
+                    infos[-1] += "(!!)"
+                elif value >= warn:
+                    status = max(status, 1)
+                    infos[-1] += "(!)"
+            else:
+                warn, crit = None, None
+            perfdata.append((what, value, warn, crit))
+
+        return (status, ", ".join(infos), perfdata)
+
+    # In case of missing information we assume that the login into
+    # the database has failed and we simply skip this check. It won't
+    # switch to UNKNOWN, but will get stale.
+    raise MKCounterWrapped("Login into database failed")
 
 
 check_info['postgres_sessions'] = {
-    "check_function"          : check_postgres_sessions,
+    "parse_function"          : parse_postgres_sessions,
     "inventory_function"      : inventory_postgres_sessions,
-    "service_description"     : "PostgreSQL Daemon Sessions",
+    "check_function"          : check_postgres_sessions,
+    "service_description"     : "PostgreSQL Daemon Sessions %s",
     "has_perfdata"            : True,
-    "group"                   : "postgres_sessions",
+    "group"                   : "postgres_instance_sessions",
 }

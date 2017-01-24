@@ -27,15 +27,43 @@
 # <<<postgres_conn_time>>>
 # 0.063
 
-def inventory_postgres_conn_time(info):
-    yield None, None
+# instances
+# <<<postgres_conn_time>>>
+# [[[foobar]]]
+# 0.063
 
-def check_postgres_conn_time(_no_item, _no_params, info):
-    yield 0, "%s seconds" % info[0][0], [("connection_time", float(info[0][0]))]
+
+def parse_postgres_conn_time(info):
+    parsed = {}
+    instance_name = ""
+    for line in info:
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            instance_name = line[0][3:-3].upper()
+            continue
+        parsed.setdefault(instance_name, float(line[0]))
+    return parsed
+
+
+def inventory_postgres_conn_time(parsed):
+    for instance_name in parsed:
+        yield instance_name, None
+
+
+def check_postgres_conn_time(item, _no_params, parsed):
+    if item in parsed:
+        conn_time = parsed[item]
+        return 0, "%s seconds" % conn_time, [("connection_time", conn_time)]
+
+    # In case of missing information we assume that the login into
+    # the database has failed and we simply skip this check. It won't
+    # switch to UNKNOWN, but will get stale.
+    raise MKCounterWrapped("Login into database failed")
+
 
 check_info['postgres_conn_time'] = {
-    "check_function"          : check_postgres_conn_time,
+    "parse_function"          : parse_postgres_conn_time,
     "inventory_function"      : inventory_postgres_conn_time,
-    "service_description"     : "PostgreSQL Connection Time",
+    "check_function"          : check_postgres_conn_time,
+    "service_description"     : "PostgreSQL Connection Time %s",
     "has_perfdata"            : True
 }

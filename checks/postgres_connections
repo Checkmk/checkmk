@@ -35,49 +35,65 @@
 # template0;0;100
 # template1;0;100
 
+# instances
+# <<<postgres_bloat>>>
+# [[[foobar]]]
+# [databases_start]
+# postgres
+# testdb
+# [databases_end]
+# ...
+
+
 factory_settings["postgres_connections_default_levels"] = {
     'levels_perc': (80.0, 90.0), # Levels at 80%/90% of maximum
 }
 
+
 def inventory_postgres_connections(parsed):
-    for db in parsed.keys():
-        yield db, {}
+    return [ (db, {}) for db, dbinfo in parsed.items() ]
+
 
 def check_postgres_connections(item, params, parsed):
-    database = parsed.get(item)
-    if database != None:
-        warn, crit = params.get("levels_abs", (0,0))
-        if database == []:
-            yield 0, "No active query", [("connections", 0, warn, crit, 0, 0)]
-            return
+    if item not in parsed:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped("Login into database failed")
 
-        current = float(database[0]["current"])
-        maximum = float(database[0]["mc"])
-        used_perc = current / maximum * 100
+    database = parsed[item]
+    warn, crit = params.get("levels_abs", (0,0))
+    if database == []:
+        yield 0, "No active query", [("connections", 0, warn, crit, 0, 0)]
+        return
 
-        state = 0
-        extra_info = ""
-        if "levels_abs" in params:
-            warn, crit = params["levels_abs"]
-            if current >= crit:
-                state = 2
-            elif current >= warn:
-                state = 1
-            if state :
-                extra_info = " (Levels at %s/%s)" % (warn, crit)
-        yield state, "Used connections %d%s" % (current, extra_info),\
-                        [("connections", current, warn, crit, 0, maximum)]
+    current = float(database[0]["current"])
+    maximum = float(database[0]["mc"])
+    used_perc = current / maximum * 100
 
-        state = 0
-        extra_info = ""
-        warn, crit = params["levels_perc"]
-        if used_perc >= crit:
+    state = 0
+    extra_info = ""
+    if "levels_abs" in params:
+        warn, crit = params["levels_abs"]
+        if current >= crit:
             state = 2
-        elif used_perc >= warn:
+        elif current >= warn:
             state = 1
-        if state:
-            extra_info = " (Levels at %s%%/%s%%)" % (warn, crit)
-        yield state, "Used percentage %.0f%%%s" % (used_perc, extra_info)
+        if state :
+            extra_info = " (Levels at %s/%s)" % (warn, crit)
+    yield state, "Used connections %d%s" % (current, extra_info),\
+                    [("connections", current, warn, crit, 0, maximum)]
+
+    state = 0
+    extra_info = ""
+    warn, crit = params["levels_perc"]
+    if used_perc >= crit:
+        state = 2
+    elif used_perc >= warn:
+        state = 1
+    if state:
+        extra_info = " (Levels at %s%%/%s%%)" % (warn, crit)
+    yield state, "Used percentage %.0f%%%s" % (used_perc, extra_info)
 
 
 check_info['postgres_connections'] = {

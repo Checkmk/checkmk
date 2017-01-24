@@ -9885,6 +9885,39 @@ register_check_parameters(
     ),
     None,
     match_type = "dict",
+    deprecated=True,
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "postgres_instance_sessions",
+    _("PostgreSQL Sessions"),
+    Dictionary(
+         help = _("This check monitors the current number of active and idle sessions on PostgreSQL"),
+         elements = [
+             ( "total",
+               Tuple(
+                   title = _("Number of current sessions"),
+                   elements = [
+                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 100),
+                       Integer(title = _("Critical at"), unit = _("sessions"), default_value = 200),
+                    ],
+               ),
+            ),
+            ( "running",
+               Tuple(
+                   title = _("Number of currently running sessions"),
+                   help = _("Levels for the number of sessions that are currently active"),
+                   elements = [
+                       Integer(title = _("Warning at"),  unit = _("sessions"), default_value = 10),
+                       Integer(title = _("Critical at"), unit = _("sessions"), default_value = 20),
+                    ],
+               ),
+            ),
+         ]
+    ),
+    TextAscii( title = _("Instance") ),
+    match_type = "dict",
 )
 
 register_check_parameters(

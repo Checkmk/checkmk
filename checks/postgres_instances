@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,39 +24,53 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<postgres_version>>>
-# PostgreSQL 9.3.6 on x86_64-unknown-linux-gnu, compiled by gcc (Ubuntu 4.8.2-19ubuntu1) 4.8.2, 64-bit
 
-# instance
-# <<<postgres_version>>>
-# [[[foobar]]]
-# PostgreSQL 9.3.6 on x86_64-unknown-linux-gnu, compiled by gcc (Ubuntu 4.8.2-19ubuntu1) 4.8.2, 64-bit
+# single instance without config
+# <<<postgres_instances>>>
+# [[[postgres]]]
+# 3717 /usr/lib/postgresql83/bin/postgres -D /var/lib/pgsql/data
+
+# single instance with config
+# <<<postgres_instances>>>
+# 9792 /postgres/9.5.5/bin/postgres -D /postgres/CCENTERE
+
+# multi instances with config
+# <<<postgres_instances>>>
+# 3960 /usr/lib/postgresql91/bin/postgres -D /var/lib/pgsql/bbtdb -p 5433
+# 4149 /usr/lib/postgresql91/bin/postgres -D /var/lib/pgsql/conftdb -p 5434
+# 16400 /usr/lib/postgresql91/bin/postgres -D /postgres/jiratdb
 
 
-def parse_postgres_version(info):
-    parsed = {}
-    instance_name = ""
+def parse_postgres_instances(info):
+    parsed    = {}
+    is_single = False
     for line in info:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
-            instance_name = line[0][3:-3]
-            continue
-        parsed.setdefault(instance_name, " ".join(line))
+            db_id     = line[0][3:-3]
+            is_single = True
+
+        elif len(line) >= 4:
+            if not is_single:
+                db_id = line[3].split("/")[-1]
+            parsed.setdefault(db_id.upper(), {"pid" : line[0]})
+
     return parsed
 
 
-def inventory_postgres_version(parsed):
-    for instance in parsed:
-        yield instance, None
+def inventory_postgres_instances(parsed):
+    for db_id in parsed:
+        yield db_id, None
 
 
-def check_postgres_version(item, _no_params, parsed):
+def check_postgres_instances(item, params, parsed):
     if item in parsed:
-        yield 0, parsed[item]
+        return 0, "Status: running with PID %s" % parsed[item]["pid"]
+    return 2, "Instance %s not running" % item
 
 
-check_info['postgres_version'] = {
-    "parse_function"          : parse_postgres_version,
-    "inventory_function"      : inventory_postgres_version,
-    "check_function"          : check_postgres_version,
-    "service_description"     : "PostgreSQL Version %s",
+check_info['postgres_instances'] = {
+    'parse_function'      : parse_postgres_instances,
+    'inventory_function'  : inventory_postgres_instances,
+    'check_function'      : check_postgres_instances,
+    'service_description' : 'PostgreSQL Instance %s',
 }

@@ -38,62 +38,67 @@
 
 
 def inventory_postgres_stats(parsed):
-    for db in parsed.keys():
+    for db in parsed:
         yield "VACUUM %s"  % db, {}
         yield "ANALYZE %s" % db, {}
 
+
 def check_postgres_stats(item, params, parsed):
-    is_vacuum = item.startswith("VACUUM")
-    database  = item.split(" ", 1)[1]
+    item_type, database = item.split(" ", 1)
 
-    if database in parsed:
-        stats_field = is_vacuum and "vtime" or "atime"
-        # namespace,  tablename, last_vacuum,  last_analyze
-        # ['public', 'my_table', '1424352356', '1424352356'],
-        oldest_element = None
-        never_checked  = []
-        for line in parsed[database]:
-            # Tables with metadata are ignored
-            if line["sname"] == "pg_catalog":
-                continue
+    if database not in parsed:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped("Login into database failed")
 
-            value = line[stats_field]
+    if item_type.startswith("VACUUM"):
+        stats_field, paramskey, text = "vtime", "vacuum", "vacuumed"
+    else:
+        stats_field, paramskey, text = "atime", "analyse", "analyzed"
 
-            if value == "-1" or value == "":
-                never_checked.append(line["tname"])
-                continue
+    # namespace,  tablename, last_vacuum,  last_analyze
+    # ['public', 'my_table', '1424352356', '1424352356'],
+    oldest_element = None
+    never_checked  = []
+    for line in parsed[database]:
+        # Tables with metadata are ignored
+        if line["sname"] == "pg_catalog":
+            continue
 
-            last_time = int(value)
+        value = line[stats_field]
+        if value == "-1" or value == "":
+            never_checked.append(line["tname"])
+            continue
 
-            if not oldest_element or last_time < oldest_element[stats_field]:
-                oldest_element = line
+        last_time = int(value)
+        if not oldest_element or last_time < oldest_element[stats_field]:
+            oldest_element = line
 
-        if oldest_element:
-            oldest_time = int(oldest_element[stats_field])
-            warn, crit  = params.get("last_%s" % (is_vacuum and "vacuum" or "analyze"),
-                                    (None, None))
+    if oldest_element:
+        oldest_time = int(oldest_element[stats_field])
+        warn, crit  = params.get("last_%s" % paramskey, (None, None))
+        yield 0, "Table: %s" % oldest_element["tname"]
 
-            yield 0, "Table: %s" % oldest_element["tname"]
+        now = time.time()
+        state = 0
+        if crit and now - crit > oldest_time:
+            state = 2
+        elif warn and now - warn > oldest_time:
+            state = 1
 
-            now = time.time()
-            state = 0
-            if crit and now - crit > oldest_time:
-                state = 2
-            elif warn and now - warn > oldest_time:
-                state = 1
+        extra_info = ""
+        if state:
+            extra_info = " (warn/crit at %s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
+        yield state, "Time since last vacuum %s%s" % (get_age_human_readable(now - oldest_time), extra_info)
 
-            extra_info = ""
-            if state:
-                extra_info = " (Levels at %s/%s)" % (get_age_human_readable(warn), get_age_human_readable(crit))
-            yield state, "Time since last vacuum %s%s" % (get_age_human_readable(now - oldest_time), extra_info)
-        elif not never_checked:
-            yield 0, "Contains no tables"
+    elif not never_checked:
+        yield 0, "Contains no tables"
 
-        if never_checked:
-            yield 1, "%d tables were never %s: %s%s" % \
-                (len(never_checked), is_vacuum and "vacuumed" or "analyzed",
-                "/".join(never_checked[:5]),
-                (len(never_checked) > 5 and " (first %d shown)" % min(5, len(never_checked)) or ""))
+    if never_checked:
+        yield 1, "%d tables were never %s: %s%s" % \
+              (len(never_checked), text, "/".join(never_checked[:5]),
+              (len(never_checked) > 5 and " (first %d shown)" % min(5, len(never_checked)) or ""))
 
 
 check_info['postgres_stats'] = {

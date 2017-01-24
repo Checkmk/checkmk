@@ -1803,8 +1803,9 @@ class html(DeprecationWrapper):
 
 
     # TODO: Refactor the arguments. It is only used in views/wato
-    def toggle_button(self, id, isopen, icon, help, hidden=False, disabled=False, onclick=None):
-        self.begin_context_buttons() # TODO: Check all calls. If done before, remove this!
+    def toggle_button(self, id, isopen, icon, help, hidden=False, disabled=False, onclick=None, is_context_button=True):
+        if is_context_button:
+            self.begin_context_buttons() # TODO: Check all calls. If done before, remove this!
 
         if not onclick:
             onclick = "view_toggle_form(this.parentNode, '%s');" % id

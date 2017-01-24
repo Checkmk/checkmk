@@ -1083,7 +1083,8 @@ function handle_execute_active_check(oDiv, response_json)
     else
         add_class(oTr, "odd" + state);
 
-    var oTdState = oTr.firstChild
+    var oTdState = oTr.getElementsByClassName("state")[0];
+    console.log(oTdState);
     add_class(oTdState, "state" + state);
 
     oTdState.innerHTML = statename;

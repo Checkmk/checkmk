@@ -36,45 +36,6 @@
 //          function pointers
 /////////////////////////////////////////////////////////////
 
-static LPCWSTR DLL_NAME = L"wevtapi.dll";
-
-struct EvtFunctionMap {
-    EvtFunctionMap() {
-        this->openLog = DYNAMIC_FUNC_DECL(EvtOpenLog, DLL_NAME);
-        this->query = DYNAMIC_FUNC_DECL(EvtQuery, DLL_NAME);
-        this->close = DYNAMIC_FUNC_DECL(EvtClose, DLL_NAME);
-        this->seek = DYNAMIC_FUNC_DECL(EvtSeek, DLL_NAME);
-        this->next = DYNAMIC_FUNC_DECL(EvtNext, DLL_NAME);
-        this->createBookmark = DYNAMIC_FUNC_DECL(EvtCreateBookmark, DLL_NAME);
-        this->updateBookmark = DYNAMIC_FUNC_DECL(EvtUpdateBookmark, DLL_NAME);
-        this->createRenderContext =
-            DYNAMIC_FUNC_DECL(EvtCreateRenderContext, DLL_NAME);
-        this->render = DYNAMIC_FUNC_DECL(EvtRender, DLL_NAME);
-        this->subscribe = DYNAMIC_FUNC_DECL(EvtSubscribe, DLL_NAME);
-        this->formatMessage = DYNAMIC_FUNC_DECL(EvtFormatMessage, DLL_NAME);
-        this->getEventMetadataProperty =
-            DYNAMIC_FUNC_DECL(EvtGetEventMetadataProperty, DLL_NAME);
-        this->openPublisherMetadata =
-            DYNAMIC_FUNC_DECL(EvtOpenPublisherMetadata, DLL_NAME);
-        this->getLogInfo = DYNAMIC_FUNC_DECL(EvtGetLogInfo, DLL_NAME);
-    }
-
-    decltype(&EvtOpenLog) openLog;
-    decltype(&EvtQuery) query;
-    decltype(&EvtClose) close;
-    decltype(&EvtSeek) seek;
-    decltype(&EvtNext) next;
-    decltype(&EvtCreateBookmark) createBookmark;
-    decltype(&EvtUpdateBookmark) updateBookmark;
-    decltype(&EvtCreateRenderContext) createRenderContext;
-    decltype(&EvtRender) render;
-    decltype(&EvtSubscribe) subscribe;
-    decltype(&EvtFormatMessage) formatMessage;
-    decltype(&EvtGetEventMetadataProperty) getEventMetadataProperty;
-    decltype(&EvtOpenPublisherMetadata) openPublisherMetadata;
-    decltype(&EvtGetLogInfo) getLogInfo;
-};
-
 class EventLogRecordVista : public IEventLogRecord {
     EVT_HANDLE _event;
     EvtFunctionMap *_evt;
@@ -215,14 +176,15 @@ public:
     virtual std::wstring message() const override {
         std::wstring result;
         result.resize(128);
-        EVT_HANDLE publisher_meta = _evt->openPublisherMetadata(
-            nullptr, source().c_str(), nullptr, 0, 0);
-        if (publisher_meta != nullptr) {
+        auto publisher_meta = std::make_unique<ManagedEventHandle>(
+            *_evt, _evt->openPublisherMetadata(nullptr, source().c_str(),
+                                               nullptr, 0, 0));
+        if (publisher_meta->get_handle() != nullptr) {
             for (;;) {
                 DWORD required;
-                if (_evt->formatMessage(publisher_meta, _event, 0, 0, nullptr,
-                                        EvtFormatMessageEvent, result.size(),
-                                        &result[0], &required)) {
+                if (_evt->formatMessage(publisher_meta->get_handle(), _event, 0,
+                                        0, nullptr, EvtFormatMessageEvent,
+                                        result.size(), &result[0], &required)) {
                     result.resize(required);
                     break;
                 } else if (::GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
@@ -244,21 +206,23 @@ public:
         std::replace_if(result.begin(), result.end(),
                         [](wchar_t ch) { return ch == '\n' || ch == '\r'; },
                         ' ');
-        _evt->close(publisher_meta);
         return result;
     }
 };
 
 EventLogVista::EventLogVista(LPCWSTR path) : _path(path), _handle(nullptr) {
-    _evt = new EvtFunctionMap();
+    _evt = std::make_shared<EvtFunctionMap>();
     if (_evt->openLog == nullptr) {
         throw UnsupportedException();
     }
-    _signal = CreateEvent(nullptr, TRUE, TRUE, nullptr);
 
-    _render_context = EventLogRecordVista::createRenderContext(*_evt);
+    _signal = std::make_unique<ManagedHandle>(
+        CreateEvent(nullptr, TRUE, TRUE, nullptr));
 
-    if (_render_context == nullptr) {
+    _render_context = std::make_unique<ManagedEventHandle>(
+        *_evt, EventLogRecordVista::createRenderContext(*_evt));
+
+    if (_render_context->get_handle() == nullptr) {
         throw win_exception("failed to create render context");
     }
 
@@ -267,9 +231,6 @@ EventLogVista::EventLogVista(LPCWSTR path) : _path(path), _handle(nullptr) {
 
 EventLogVista::~EventLogVista() noexcept {
     reset();
-    evt().close(_handle);
-
-    delete _evt;
 }
 
 EvtFunctionMap &EventLogVista::evt() const { return *_evt; }
@@ -309,13 +270,10 @@ std::wstring EventLogVista::renderBookmark(EVT_HANDLE bookmark) const {
 }
 
 uint64_t EventLogVista::seek(uint64_t record_id) {
-    EVT_HANDLE bookmark = nullptr;
-
     {
         // The api to retrieve the oldest event log id is bugged. bloody hell...
         // to get the right offset if record_id is beyond the valid range, we
-        // read
-        // one event from start or end
+        // read one event from start or end
         // if there is none we assume there have never been events.
         // That is wrong of course but can't be helped. thanks a lot MS.
 
@@ -324,26 +282,32 @@ uint64_t EventLogVista::seek(uint64_t record_id) {
                 ? EvtQueryReverseDirection
                 : EvtQueryForwardDirection;
 
-        EVT_HANDLE log = evt().query(nullptr, _path.c_str(), L"*",
-                                     flags | EvtQueryChannelPath);
-        if (log == nullptr) {
-            evt().query(nullptr, _path.c_str(), L"*", flags | EvtQueryFilePath);
-        }
-        if (log == nullptr) {
-            throw win_exception("failed to open log");
-        }
-        OnScopeExit guard([this, log]() { this->evt().close(log); });
+        auto log = std::make_unique<EventLogWrapper>(*_evt, flags, _path);
 
-        EVT_HANDLE event;
+        EVT_HANDLE event_handle;
         DWORD num_events = 0;
-        BOOL success = evt().next(log, 1, &event, 1, 0, &num_events);
+        BOOL success = evt().next(log->get_handle(), 1, &event_handle, INFINITE,
+                                  0, &num_events);
+
         if (success) {
-            EventLogRecordVista record(event, _evt, _render_context);
+            auto event =
+                std::make_unique<ManagedEventHandle>(*_evt, event_handle);
+
+            EventLogRecordVista record(event->get_handle(), _evt.get(),
+                                       _render_context->get_handle());
             if ((record_id < record.recordId()) ||
                 (record_id == std::numeric_limits<uint64_t>::max())) {
                 record_id = record.recordId();
-            }
+            } else
+                record_id--;
         } else {
+            // We expect an ERROR_NO_MORE_ITEMS!
+            // I've experienced a TIMEOUT_ERROR before, which totally broke the
+            // record_id handling
+            // Fixed it by setting the evt().next(..) timeout above to INFINITE
+            // DWORD lastError = GetLastError();
+            // std::cout << " GetLastError returned " << lastError << "." <<
+            // std::endl;
             record_id = 0;
         }
     }
@@ -353,20 +317,20 @@ uint64_t EventLogVista::seek(uint64_t record_id) {
         L"' RecordId='" + std::to_wstring(record_id) +
         L"' IsCurrent='true'/></BookmarkList>";
 
-    bookmark = evt().createBookmark(bookmarkXml.c_str());
+    std::unique_ptr<ManagedEventHandle> bookmark =
+        std::make_unique<ManagedEventHandle>(*_evt, evt().createBookmark(bookmarkXml.c_str()));
 
-    if (_handle != nullptr) {
-        evt().close(_handle);
-    }
+    _handle = std::make_unique<ManagedEventHandle>(
+        *_evt, evt().subscribe(nullptr, _signal->get_handle(), _path.c_str(),
+                               L"*", bookmark->get_handle(), nullptr, nullptr,
+                               EvtSubscribeStartAfterBookmark));
 
-    _handle = evt().subscribe(nullptr, _signal, _path.c_str(), L"*", bookmark,
-                              nullptr, nullptr, EvtSubscribeStartAfterBookmark);
-
-    if (_handle == nullptr) {
+    if (_handle->get_handle() == nullptr) {
         throw win_exception(
             (std::string("failed to subscribe to ") + to_utf8(_path.c_str()))
                 .c_str());
     }
+
     return record_id;
 }
 
@@ -376,21 +340,19 @@ std::shared_ptr<IEventLogRecord> EventLogVista::read() {
             return std::shared_ptr<IEventLogRecord>();
         }
     }
-    std::shared_ptr<IEventLogRecord> res(
-        new EventLogRecordVista(_events[_next_event], _evt, _render_context));
-    ++_next_event;
-    return res;
+    return std::make_shared<EventLogRecordVista>(_events[_next_event++],
+                                                 _evt.get(), _render_context->get_handle());
 }
 
 bool EventLogVista::fillBuffer() {
     // this ensures all previous event handles are closed and nulled
     reset();
     // don't wait, just query the signal
-    DWORD res = ::WaitForSingleObject(_signal, 0);
+    DWORD res = ::WaitForSingleObject(_signal->get_handle(), 0);
     if (res == WAIT_OBJECT_0) {
         DWORD num_events = 0;
-        BOOL success = evt().next(_handle, _events.size(), &_events[0],
-                                  INFINITE, 0, &num_events);
+        BOOL success = evt().next(_handle->get_handle(), _events.size(),
+                                  &_events[0], INFINITE, 0, &num_events);
         if (!success) {
             if (::GetLastError() != ERROR_NO_MORE_ITEMS) {
                 throw win_exception("failed to enumerate events");
@@ -405,6 +367,6 @@ bool EventLogVista::fillBuffer() {
 
     // we reach here if waiting for the signal would have blocked or
     // if the call to EvtNext reported no more errors
-    ::ResetEvent(_signal);
+    ::ResetEvent(_signal->get_handle());
     return false;
 }

@@ -33,6 +33,9 @@
 #include <string>
 #include <vector>
 #include "stringutil.h"
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#include <winevt.h>
 
 #if (__SIZEOF_POINTER__ == 8)
 #define PRIdword "d"
@@ -403,5 +406,43 @@ public:
 inline uint64_t to_u64(DWORD low, DWORD high) {
     return static_cast<uint64_t>(low) + (static_cast<uint64_t>(high) << 32);
 }
+
+class ManagedHandle {
+public:
+    ManagedHandle(HANDLE handle) : _handle(handle) {}
+
+    ~ManagedHandle() {
+        if (_handle != nullptr) {
+            CloseHandle(_handle);
+            _handle = nullptr;
+        }
+    }
+
+    ManagedHandle(const ManagedHandle &) = delete;  // Delete copy constructor
+
+    ManagedHandle &operator=(const ManagedHandle &) =
+        delete;  // Delete assignment operator
+
+    ManagedHandle(ManagedHandle &&from)
+        : _handle(from._handle) {  // Move constructor
+        from._handle = nullptr;
+    }
+
+    ManagedHandle &operator=(ManagedHandle &&from) =
+        delete;  // Move assignment operator
+
+    //    ManagedHandle &operator=(ManagedHandle &&from) {              //
+    //    Move assignment operator
+    //        close();
+    //        _handle = from._handle;
+    //        from._handle = nullptr;
+    //        return *this;
+    //    }
+
+    HANDLE get_handle() { return _handle; };
+
+private:
+    HANDLE _handle;
+};
 
 #endif  // types_h

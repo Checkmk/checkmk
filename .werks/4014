@@ -1,0 +1,11 @@
+Title: Windows Agent / Eventlogs with vista_api: Fixed numerous bugs and memory leaks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1485246741
+Class: fix
+
+The windows event log monitoring through the vista api had several memory leaks.
+Furthermore, some logical errors caused the loss of event log messages or the that
+messages were reported multiple times.

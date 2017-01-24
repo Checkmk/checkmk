@@ -6259,7 +6259,7 @@ class Ruleset(object):
         for _folder_path, folder_rules in self._rules.items():
             for rule_index, rule in enumerate(folder_rules):
                 rules.append((rule.folder, rule_index, rule))
-        return sorted(rules, key=lambda x: (x[0].path().split("/"), x[1]), reverse=True)
+        return sorted(rules, key=lambda x: (x[0].path().split("/"), len(rules)-x[1]), reverse=True)
 
 
     def get_folder_rules(self, folder):

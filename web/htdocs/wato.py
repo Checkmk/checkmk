@@ -698,7 +698,8 @@ def show_hosts(folder):
 
         html.toggle_button("checkbox_on", show_checkboxes, "checkbox",
             help=checkbox_title,
-            onclick="location.href=\'%s\'" % onclick_uri)
+            onclick="location.href=\'%s\'" % onclick_uri,
+            is_context_button=False)
 
         if withsearch:
             html.text_input(top and "search" or "search")
@@ -1440,7 +1441,7 @@ def action_edit_host(mode, hostname, is_cluster):
 
 
         if go_to_services:
-            return "firstinventory"
+            return "inventory"
         elif go_to_diag:
             html.set_var("_try", "1")
             return "diag_host", create_msg
@@ -2713,7 +2714,20 @@ class ModeDiscovery(WatoMode):
 
         self._host.need_permission("read")
 
-        self._cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
+        if config.user.may("wato.services"):
+            self._cache_options   = [ '@scan' ] if html.var("_scan") else [ '@noscan' ]
+
+            if html.has_var("_show_checkboxes"):
+                config.user.save_file("discovery_checkboxes", html.var("_show_checkboxes") == "1")
+
+        else:
+            self._cache_options   = [ '@noscan' ]
+
+        self._show_checkboxes = config.user.may("wato.services") \
+                                and config.user.load_file("discovery_checkboxes", False)
+
+        if html.has_var("_hide_parameters"):
+            config.user.save_file("parameter_column", html.var("_hide_parameters") == "no")
 
 
     def title(self):
@@ -2752,20 +2766,17 @@ class ModeDiscovery(WatoMode):
         if config.user.may("wato.services"):
             html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
+        if self._show_parameter_column():
+            html.context_button(_("Hide parameters"),
+                html.makeuri([("_hide_parameters", "yes")]), "check_parameters")
+        else:
+            html.context_button(_("Show parameters"),
+                html.makeuri([("_hide_parameters", "no")]), "check_parameters")
+
 
     def action(self):
         if not html.check_transaction():
             return "folder"
-
-        # Settings for showing parameters
-        if html.var("_show_parameters"):
-            config.user.save_file("parameter_column", True)
-            return
-
-        elif html.var("_hide_parameters"):
-            config.user.save_file("parameter_column", False)
-            return
-
         else:
             return self._do_discovery()
 
@@ -2849,28 +2860,28 @@ class ModeDiscovery(WatoMode):
         html.begin_form("checks", method = "POST")
         self._show_action_buttons(check_table)
 
-        if self._show_parameter_column():
-            html.button("_hide_parameters", _("Hide Check Parameters"))
-        else:
-            html.button("_show_parameters", _("Show Check Parameters"))
-
         if html.var("_scan"):
             html.hidden_field("_scan", "on", add_var=True)
-
 
         table.begin(css="data", searchable=False, limit=None, sortable=False)
 
         checks_by_source = self._checks_by_source(check_table)
 
-        for check_source, title, checkbox in self._check_sources():
+        for check_source, show_bulk_actions, title in self._check_sources():
             checks = checks_by_source.get(check_source, [])
             if not checks:
                 continue
 
             table.groupheader(title)
 
+            if show_bulk_actions and len(checks) > 10:
+                self._bulk_actions(check_source, collect_headers=False)
+
             for check in checks:
-                self._check_row(check, checkbox)
+                self._check_row(check)
+
+            if show_bulk_actions:
+                self._bulk_actions(check_source, collect_headers="finished")
 
         table.end()
 
@@ -2880,21 +2891,22 @@ class ModeDiscovery(WatoMode):
 
     def _check_sources(self):
         return [
-            # check_source, title, initial checkbox value
-            ("new",           _("Available (missing) services"), isinstance(self, ModeFirstDiscovery)),
-            ("vanished",      _("Vanished services (checked, but no longer exist)"), True ),
-            ("old",           _("Already configured services"), True),
-            ("ignored",       _("Disabled services (configured away by admin)"), None),
-            ("active",        _("Active checks"), None),
-            ("manual",        _("Manual checks"), None ),
-            ("legacy",        _("Legacy services (defined in main.mk)"), None ),
-            ("custom",        _("Custom checks (defined via rule)"), None ),
-            ("clustered_old", _("Already configured clustered services (located on cluster host)"), None ),
-            ("clustered_new", _("Available clustered services"), None ),
+            # check_source, show bulk actions, title
+            ("new",           True,  _("Available services (not yet checked)")),
+            ("vanished",      True,  _("Vanished services (checked, but no longer exist)")),
+            ("old",           True,  _("Already configured services")),
+            ("ignored",       False, _("Disabled services (configured away by admin)")),
+            ("active",        False, _("Active checks")),
+            ("manual",        False, _("Manual checks")),
+            ("legacy",        False, _("Legacy services (defined in main.mk)")),
+            ("custom",        False, _("Custom checks (defined via rule)")),
+            ("clustered_old", False, _("Already configured clustered services "
+                                       "(located on cluster host)")),
+            ("clustered_new", False, _("Available clustered services")),
         ]
 
 
-    def _check_row(self, check, checkbox):
+    def _check_row(self, check):
         check_source, check_type, checkgroup, item, paramstring, params, \
             descr, state, output, perfdata = check
 
@@ -2917,12 +2929,12 @@ class ModeDiscovery(WatoMode):
         table.row(css="data", state=state)
 
         # Checkbox for temporarily skipping services
-        if config.user.may("wato.services"):
-            table.cell()
-            if checkbox != None:
-                checkbox_varname = "_%s_%s" % (check_type, html.varencode(item))
-                html.checkbox(checkbox_varname, checkbox,
-                    add_attr = ['title="%s"' % _('Temporarily ignore this service')])
+        if self._show_checkboxes:
+            table.cell("<input type=button class=checkgroup name=_toggle_group"
+                       " onclick=\"toggle_all_rows();\" value=\"X\" />", sortable=False)
+
+            html.checkbox("_%s_%s" % (check_type, html.varencode(item)), True,
+                add_attr = ['title="%s"' % _('Temporarily ignore this service')])
 
         # Icon for service parameters. Not for missing services!
         table.cell(css="buttons")
@@ -2986,13 +2998,13 @@ class ModeDiscovery(WatoMode):
         ctype = "check_" + check_type if check_source == "active" else check_type
         manpage_url = folder_preserving_link([("mode", "check_manpage"),
                                               ("check_type", ctype)])
-        table.cell(_("Checkplugin"),
+        table.cell(_("Check plugin"),
                    html.render_a(content=ctype, href=manpage_url))
 
         table.cell(_("Item"),    html.attrencode(item))
 
         if self._show_parameter_column():
-            table.cell(_("Check Parameters"))
+            table.cell(_("Check parameters"))
             self._show_check_parameters(varname, params)
 
 
@@ -3049,29 +3061,95 @@ class ModeDiscovery(WatoMode):
         if not config.user.may("wato.services"):
             return
 
-        firsttime = isinstance(self, ModeFirstDiscovery)
-
         fixall = 0
         for entry in check_table:
-            if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
-                html.button("_activate_all", _("Activate missing"))
+            if entry[0] == 'new' and not html.has_var("_activate_all"):
                 fixall += 1
                 break
 
         for entry in check_table:
             if entry[0] == 'vanished':
-                html.button("_cleanup", _("Remove vanished"))
                 fixall += 1
                 break
 
         if fixall == 2:
             html.button("_fixall", _("Fix all missing/vanished"))
 
-        if check_table:
-            html.button("_save", _("Save manual check configuration"))
+        if self._already_has_services(check_table):
             html.button("_refresh", _("Automatic Refresh (Tabula Rasa)"))
 
-        html.write(" &nbsp; ")
+
+    def _already_has_services(self, check_table):
+        for check in check_table:
+            if check[0] in [ "old", "vanished" ]:
+                return True
+        return False
+
+
+    def _bulk_actions(self, check_source, collect_headers):
+        if not config.user.may("wato.services"):
+            return
+
+        table.row(collect_headers=collect_headers, fixed=True)
+
+        table.cell(css="bulksearch")
+
+        if not self._show_checkboxes:
+            onclick_uri = html.makeuri([('_show_checkboxes', '1'), ('selection', weblib.selection_id())])
+            checkbox_title = _('Show Checkboxes and bulk actions')
+        else:
+            onclick_uri = html.makeuri([('_show_checkboxes', '0')])
+            checkbox_title = _('Hide Checkboxes and bulk actions')
+
+        html.toggle_button("checkbox_on", self._show_checkboxes, "checkbox",
+            help=checkbox_title,
+            onclick="location.href=\'%s\'" % onclick_uri,
+            is_context_button=False)
+
+        table.cell(css="bulkactions", colspan=self._bulk_action_colspan())
+
+        if self._show_checkboxes:
+            label = _("Selected services")
+        else:
+            label = _("All services")
+        html.write_text(" %s: " % label)
+
+        if check_source == "new":
+            html.button("_bulk_activate", _("Activate"))
+            html.button("_bulk_disable",  _("Disable"))
+
+        elif check_source == "vanished":
+            html.button("_bulk_cleanup", _("Remove"))
+
+        elif check_source == "old":
+            html.button("_bulk_remove", _("Remove"))
+            html.button("_bulk_disable", _("Disable"))
+
+
+        #if not folder.locked_hosts():
+        #    if config.user.may("wato.manage_hosts"):
+        #        html.button("_bulk_delete", _("Delete"))
+        #    if config.user.may("wato.edit_hosts"):
+        #        html.button("_bulk_edit", _("Edit"))
+        #        html.button("_bulk_cleanup", _("Cleanup"))
+        #if config.user.may("wato.services"):
+        #    html.button("_bulk_inventory", _("Discovery"))
+        #if not folder.locked_hosts():
+        #    if config.user.may("wato.parentscan"):
+        #        html.button("_parentscan", _("Parentscan"))
+        #    if config.user.may("wato.edit_hosts") and config.user.may("wato.move_hosts"):
+        #        host_bulk_move_to_folder_combo(folder, top)
+        #        if at_least_one_imported:
+        #            html.button("_bulk_movetotarget", _("Move to Target Folders"))
+
+
+    def _bulk_action_colspan(self):
+        colspan = 5
+        if self._show_parameter_column():
+            colspan += 1
+        if self._show_checkboxes:
+            colspan += 1
+        return colspan
 
 
 
@@ -16592,7 +16670,6 @@ modes = {
    "edit_host_attr"     : (["hosts", "manage_hosts"], lambda phase: mode_edit_custom_attr(phase, "host")),
    "edit_host"          : (["hosts"], lambda phase: mode_edit_host(phase, new=False, is_cluster=None)),
    "parentscan"         : (["hosts"], mode_parentscan),
-   "firstinventory"     : (["hosts", "services"], ModeFirstDiscovery),
    "inventory"          : (["hosts"], ModeDiscovery),
    "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
    "object_parameters"  : (["hosts", "rulesets"], mode_object_parameters),

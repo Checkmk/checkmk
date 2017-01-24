@@ -92,13 +92,16 @@ def add_row(css=None, state=0, collect_headers=True, fixed=False):
     if table["next_header"]:
         table["rows"].append((table["next_header"], None, "header", True))
         table["next_header"] = None
+
     table["rows"].append(([], css, state, fixed))
+
     if collect_headers:
         if table["collect_headers"] == False:
             table["collect_headers"] = True
         elif table["collect_headers"] == True:
             table["collect_headers"] = "finished"
-    elif not collect_headers and table["collect_headers"]:
+
+    elif not collect_headers and table["collect_headers"] == True:
         table["collect_headers"] = False
 
 # Intermediate title, shown as soon as there is a following row.

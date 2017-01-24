@@ -102,6 +102,7 @@ End If
 Dim sections, section_id
 Set sections = CreateObject("Scripting.Dictionary")
 sections.add "instance", "<<<mssql_instance:sep(124)>>>"
+sections.add "databases", "<<<mssql_databases>>>"
 sections.add "counters", "<<<mssql_counters>>>"
 sections.add "tablespaces", "<<<mssql_tablespaces>>>"
 sections.add "blocked_sessions", "<<<mssql_blocked_sessions>>>"
@@ -185,7 +186,7 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Use either an instance specific config file named mssql_<instance-id>.ini
     ' or the default mysql.ini file.
-    cfg_file = cfg_dir & "\mssql_" & instance & ".ini"
+    cfg_file = cfg_dir & "\mssql_" & instance_id & ".ini"
     If Not FSO.FileExists(cfg_file) Then
         cfg_file = cfg_dir & "\mssql.ini"
         If Not FSO.FileExists(cfg_file) Then
@@ -394,7 +395,23 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         Loop
         RS.Close
     Next
-    
+
+    ' Database properties, full list at https://msdn.microsoft.com/en-us/library/ms186823.aspx
+    addOutput(sections("databases"))
+    RS.Open "SELECT name, " & _
+            "DATABASEPROPERTYEX(name, 'Status') AS Status, " & _
+            "DATABASEPROPERTYEX(name, 'Recovery') AS Recovery, " & _
+            "DATABASEPROPERTYEX(name, 'IsAutoClose') AS auto_close, " & _
+            "DATABASEPROPERTYEX(name, 'IsAutoShrink') AS auto_shrink " & _
+            "FROM master.dbo.sysdatabases", CONN
+    Do While Not RS.Eof
+        ' instance db_name status recovery auto_close auto_shrink
+        addOutput( instance_id & " " & Replace(Trim(RS("name")), " ", "_") & " " & Trim(RS("Status")) & _
+                   " " & Trim(RS("Recovery")) & " " & Trim(RS("auto_close")) & " " & Trim(RS("auto_shrink")) )
+        RS.MoveNext
+    Loop
+    RS.Close
+
     addOutput(sections("clusters"))
     Dim active_node, nodes
     For Each dbName in dbNames.Keys : Do

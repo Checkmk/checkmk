@@ -1,0 +1,9 @@
+Title: mssql_databases: new check which monitors the auto close and shrink state of MSSQL databases
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1485257668
+Class: feature
+
+Auto close and shrink states are configurable via WATO.

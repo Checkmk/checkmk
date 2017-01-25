@@ -326,7 +326,7 @@ def send_mail():
 
     mail = email.mime.text.MIMEText("")
     mail['From']    = mail_from
-    mail['To']      = mail_from
+    mail['To']      = mail_to
     mail['Subject'] = '%s %d %d' % (subject, now, key)
     mail['Date']    = email.utils.formatdate(localtime=True)
 

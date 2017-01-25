@@ -467,71 +467,43 @@ def inventory_jolokia_metrics_tp(info):
 
 
 def check_jolokia_metrics_tp(item, params, info):
+
+    if params == None:
+        params = {}
+
     tp = jolokia_metrics_tp(info, item.split())
-    if tp == None:
-        return(3,"data not found in agent output")
 
-    if params != None:
-        if 'currentThreadsBusy' in params:
-            bwarn, bcrit = params['currentThreadsBusy']
-            if bwarn:
-                bwarn = (int(tp["maxThreads"]) * bwarn) / 100
-            if bcrit:
-                bcrit = (int(tp["maxThreads"]) * bcrit) / 100
-        else:
-            bwarn, bcrit = (None, None)
+    if tp == None or "maxThreads" not in tp:
+        return
 
-        if 'currentThreadCount' in params:
-            cwarn, ccrit = params['currentThreadCount']
-            if cwarn:
-                cwarn = (int(tp["maxThreads"]) * cwarn) / 100
-            if ccrit:
-                ccrit = (int(tp["maxThreads"]) * ccrit) / 100
-        else:
-            cwarn, ccrit = (None, None)
+    max_threads = float(tp["maxThreads"])
 
-    status = 0
-    perf = []
+    def check_thread_levels(what):
+        threads_abs = int(tp[what])
+        threads_rel = threads_abs / max_threads
+        infotext = "%s: %d (%.1f%%)" % (what, threads_abs, threads_rel)
+        status = 0
 
-    btext = ""
-    ctext = ""
-
-    busy  = int(tp["currentThreadsBusy"])
-    count = int(tp["currentThreadCount"])
-    max   = int(tp["maxThreads"])
-
-    if params != None:
-        if cwarn != None and ccrit != None:
-            if count >= ccrit:
+        _params = params.get(what)
+        if _params and _params[0] != None and _params[1] != None:
+            warn, crit = params[what]
+            levelstext = " (warn/crit at %d/%d%%)" % (warn, crit)
+            if threads_rel >= crit:
                 status = 2
-                ctext = "((!!) Level %s) " % ccrit
-            elif count >= cwarn:
-                if status != 2:
-                    status = 1
-                ctext = "((!) Level %s) " % cwarn
-
-            perf.append(('currentThreadCount', count, cwarn, ccrit, 0, max))
+                infotext += levelstext
+            elif threads_rel >= warn:
+                status = 1
+                infotext += levelstext
         else:
-            perf.append(('currentThreadCount', count, "", "", 0, max))
+            warn, crit = ("", "")
+        perfdata = [ (what, threads_abs, warn, crit, 0, max_threads) ]
+        return status, infotext, perfdata
 
-        if bwarn != None and bcrit != None:
-            if busy >= bcrit:
-                status = 2
-                btext = "((!!) Level %s) " % bcrit
-            elif busy >= bwarn:
-                if status != 2:
-                    status = 1
-                btext = "((!) Level %s) " % bwarn
-
-            perf.append(('currentThreadsBusy', busy, bwarn, bcrit, 0, max))
-        else:
-            perf.append(('currentThreadsBusy', busy, "", "", 0, max))
-    else:
-        perf = [('currentThreadCount', count, "", "", 0, max), ('currentThreadsBusy', busy, "", "", 0, max)]
-
-    output = "%s currentThreadCount %sand %s currentThreadsBusy %s (maxThreads: %s)" % (count, \
-                                                            ctext, busy, btext, max)
-    return (status, output, perf)
+    if 'currentThreadsBusy' in tp:
+        yield check_thread_levels('currentThreadsBusy')
+    if 'currentThreadCount' in tp:
+        yield check_thread_levels('currentThreadCount')
+    yield 0, "Maximum threads: %d" % max_threads
 
 
 check_info["jolokia_metrics.tp"] = {

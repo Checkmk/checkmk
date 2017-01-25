@@ -2694,6 +2694,8 @@ class EventServer:
     def get_rules_with_active_event_limit(self):
         rule_ids = []
         for rule_id, num_existing_events in g_event_status.num_existing_events_by_rule.items():
+            if rule_id == None:
+                continue # Ignore rule unrelated overflow events. They have no rule id associated.
             if num_existing_events >= g_config["event_limit"]["by_rule"]["limit"]:
                 rule_ids.append(rule_id)
         return rule_ids

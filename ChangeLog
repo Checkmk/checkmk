@@ -94,6 +94,7 @@
 
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address
+    * 4284 FIX: Nagios: Added missing variable MICROTIME to notification contexts...
 
     BI:
     * 4202 FIX: Availability now avoids pending states for times before new hosts or services were added...

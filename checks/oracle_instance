@@ -30,6 +30,12 @@
 # TUX2|12.1.0.1.0|OPEN|ALLOWED|STARTED|6735|1297771692|ARCHIVELOG|PRIMARY|NO|TUX2
 # TUX5|12.1.0.1.1|MOUNTED|ALLOWED|STARTED|82883|1297771692|NOARCHIVELOG|PRIMARY|NO|0|TUX5
 
+# <<<oracle_instance:sep(124)>>>$
+# +ASM|FAILURE|ORA-99999 tnsping failed for +ASM $
+# ERROR:$
+# ORA-28002: the password will expire within 1 days$
+
+
 factory_settings["oracle_instance_defaults"] = {
     "logins"  : 2,
     "noforcelogging"  : 1,
@@ -44,11 +50,10 @@ def inventory_oracle_instance(info):
     # ORA-99999 tnsping failed for +ASM1
     return [ (line[0], {} ) for line in info
              if not (line[0].startswith('ORA-') and line[0][4].isdigit())
-                 and len(line[0]) < 20 ]
+                and len(line[0]) < 20 and len(line) >= 6 ]
 
 
 def check_oracle_instance(item, params, info):
-
     def state_marker(state, infotext, param, column, data):
         value = params.get(param)
         if value != None and column == data:

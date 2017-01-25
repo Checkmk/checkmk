@@ -70,6 +70,7 @@
     * 4302 FIX: win_wmi_software: fixed invalid data handling
     * 4213 FIX: fjdarye101_syscaps: Fix failing check when using Nagios core
     * 4303 FIX: sap_state: fixed error handling
+    * 4214 FIX: jolokia_metrics.tp: Fix crash in case of partial thread information...
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

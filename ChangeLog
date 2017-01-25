@@ -1,4 +1,7 @@
 1.2.8p17:
+    Checks & Agents:
+    * 4283 FIX: check_mail_loop: Now using "mail to" address in To header
+
 
 1.2.8p16:
     Core & Setup:

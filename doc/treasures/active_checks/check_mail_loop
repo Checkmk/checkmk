@@ -324,7 +324,7 @@ def send_mail():
     import email.utils
     mail = email.mime.text.MIMEText("")
     mail['From']    = mail_from
-    mail['To']      = mail_from
+    mail['To']      = mail_to
     mail['Subject'] = 'Check_MK-Mail-Loop %d %d' % (now, key)
     mail['Date']    = email.utils.formatdate(localtime=True)
 

@@ -731,6 +731,7 @@ check_info["jolokia_metrics.threads"] = {
     "inventory_function"  : lambda i: inventory_jolokia_metrics(i, "threads"),
     "group"               : "jvm_threads",
     "has_perfdata"        : True,
+}
 
 #.
 #   .--Uptime--------------------------------------------------------------.

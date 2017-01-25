@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
 help:
-	@echo "test           - Run all tests"
+	@echo "test           - Run integration and git tests"
 	@echo "test-pylint    - Run pylint based tests"
 	@echo "test-pylint-ci - Run pylint based tests within Jenkins"
 	@echo "test-bandit    - Run bandit (security) tests"
@@ -13,7 +13,7 @@ test:
 
 
 test-pylint:
-	py.test -k pylint
+	py.test -m pylint
 
 
 test-pylint-ci:

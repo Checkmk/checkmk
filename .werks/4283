@@ -1,0 +1,10 @@
+Title: check_mail_loop: Now using "mail to" address in To header
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1485329415
+
+

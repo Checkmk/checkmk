@@ -1,0 +1,10 @@
+Title: SNMP MIBs of the Event Console can now be packed using MKPs
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.4.0i4
+Date: 1485345684
+Class: feature
+
+The MIB files stored below <tt>local/share/snmp/mibs</tt> can now
+be packed with MKP packages.

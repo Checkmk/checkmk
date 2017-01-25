@@ -73,6 +73,7 @@ package_parts = [ (part, title, perm, ldir and ldir or dir) for part, title, per
   ( "doc",           "Documentation files",       0644, cmk.paths.doc_dir,             cmk.paths.local_doc_dir ),
   ( "bin",           "Binaries",                  0755, None,                          cmk.paths.local_bin_dir ),
   ( "lib",           "Libraries",                 0644, None,                          cmk.paths.local_lib_dir),
+  ( "mibs",          "SNMP MIBs",                 0644, None,                          cmk.paths.local_mib_dir),
 ]]
 
 package_ignored_files = {

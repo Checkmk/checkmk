@@ -1,0 +1,9 @@
+Title: omd_apache: fixed missing data handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p17
+Date: 1485339329
+Class: fix
+
+

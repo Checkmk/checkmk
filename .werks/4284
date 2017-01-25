@@ -1,0 +1,11 @@
+Title: Nagios: Added missing variable MICROTIME to notification contexts
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.4.0i4
+Date: 1485331748
+Class: fix
+
+When using the CMC, the MICROTIME context variable is always present.
+This fixes an error when using the pushover notification plugin with the
+Nagios core.

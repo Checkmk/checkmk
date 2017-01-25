@@ -261,6 +261,11 @@ def complete_raw_context(raw_context, with_dump, event_log):
             raw_context["DATE"] = time.strftime("%Y-%m-%d", broken)
             raw_context["SHORTDATETIME"] = time.strftime("%Y-%m-%d %H:%M:%S", broken)
             raw_context["LONGDATETIME"] = time.strftime("%a %b %d %H:%M:%S %Z %Y", broken)
+        elif "MICROTIME" not in raw_context:
+            # In case the microtime is not provided, e.g. when using Nagios, then set it here
+            # from the current time. We could look for "LONGDATETIME" and calculate the timestamp
+            # from that one, but we try to keep this simple here.
+            raw_context["MICROTIME"] = "%d" % (time.time()*1000000)
 
         raw_context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % \
                             urlencode('view.py?view_name=hoststatus&host=%s' % raw_context['HOSTNAME'])

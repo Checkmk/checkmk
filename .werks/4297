@@ -1,0 +1,11 @@
+Title: oracle_instance: fixed discovery function
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1485337707
+
+Some old {{mk_oracle}} plugin outputs are wrong formatted
+such that discovery function detects wrong items.

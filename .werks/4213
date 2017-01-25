@@ -1,0 +1,9 @@
+Title: fjdarye101_syscaps: Fix failing check when using Nagios core
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p17
+Date: 1485347460
+Class: fix
+
+

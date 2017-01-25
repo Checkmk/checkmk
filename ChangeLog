@@ -7,6 +7,7 @@
     * 4300 FIX: job: fixed missing information handling
     * 4301 FIX: winperf_tcp_conn: fixed missing data handling
     * 4302 FIX: win_wmi_software: fixed invalid data handling
+    * 4213 FIX: fjdarye101_syscaps: Fix failing check when using Nagios core
 
 
 1.2.8p16:

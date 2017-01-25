@@ -3,8 +3,13 @@
 
 import os
 import sys
+import pytest
+
 from testlib import repo_path
 import testlib.pylint_cmk as pylint_cmk
+
+# Mark all tests in this file to be pylint checks
+pytestmark = pytest.mark.pylint
 
 def test_pylint_checks():
     base_path = pylint_cmk.get_test_dir()

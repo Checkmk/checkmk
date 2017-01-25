@@ -44,6 +44,7 @@
     * 4297 FIX: oracle_instance: fixed discovery function...
     * 4298 FIX: omd_apache: fixed missing data handling
     * 4299 FIX: df: fixed missing filesystem type handling
+    * 4300 FIX: job: fixed missing information handling
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

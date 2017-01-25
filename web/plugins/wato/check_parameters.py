@@ -3385,6 +3385,231 @@ register_check_parameters(
     "dict"
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "jvm_uptime",
+    _("JVM uptime (since last reboot)"),
+    Dictionary(
+        help = _("This rule sets the warn and crit levels for the uptime of a JVM. "
+                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+        elements = [
+        ( "min",
+          Tuple(
+              title = _("Minimum required uptime"),
+              elements = [
+              Age(title = _("Warning if below")),
+              Age(title = _("Critical if below")),
+              ]
+              )),
+        ( "max",
+          Tuple(
+              title = _("Maximum allowed uptime"),
+              elements = [
+              Age(title = _("Warning at")),
+              Age(title = _("Critical at")),
+              ]
+              )),
+        ]
+    ),
+    TextAscii(
+            title = _("Name of the virtual machine"),
+            help = _("The name of the application server"),
+            allow_empty = False,
+            ),
+    match_type = "dict",
+)
+
+register_check_parameters(
+   subgroup_applications,
+    "jvm_sessions",
+    _("JVM session count"),
+    Tuple(
+        help = _("This rule sets the warn and crit levels for the number of current "
+                 "connections to a JVM application on the servlet level."),
+        elements = [
+            Integer(
+                title = _("Warning if below"),
+                unit = _("sessions"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Critical if below"),
+                unit = _("sessions"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Warning at"),
+                unit = _("sessions"),
+                default_value = 800,
+            ),
+            Integer(
+                title = _("Critical at"),
+                unit = _("sessions"),
+                default_value = 1000,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+   subgroup_applications,
+    "jvm_requests",
+    _("JVM request count"),
+    Tuple(
+        help = _("This rule sets the warn and crit levels for the number "
+                 "of incoming requests to a JVM application server."),
+        elements = [
+            Integer(
+                title = _("Warning if below"),
+                unit = _("requests/sec"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Critical if below"),
+                unit = _("requests/sec"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Warning at"),
+                unit = _("requests/sec"),
+                default_value = 800,
+            ),
+            Integer(
+                title = _("Critical at"),
+                unit = _("requests/sec"),
+                default_value = 1000,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+   subgroup_applications,
+    "jvm_queue",
+    _("JVM Execute Queue Count"),
+    Tuple(
+        help = _("The BEA application servers have 'Execute Queues' "
+                 "in which requests are processed. This rule allows to set "
+                 "warn and crit levels for the number of requests that are "
+                 "being queued for processing."),
+        elements = [
+            Integer(
+                title = _("Warning at"),
+                unit = _("requests"),
+                default_value = 20,
+            ),
+            Integer(
+                title = _("Critical at"),
+                unit = _("requests"),
+                default_value = 50,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+
+register_check_parameters(
+    subgroup_applications,
+    "jvm_memory",
+    _("JVM memory levels"),
+    Dictionary(
+            help = _("This rule allows to set the warn and crit levels of the heap / "
+                     "non-heap and total memory area usage on web application servers. "
+                     "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
+            elements = [
+                ( "totalheap",
+                   Alternative(
+                       title = _("Total Memory Levels"),
+                       elements = [
+                           Tuple(
+                               title = _("Percentage levels of used space"),
+                               elements = [
+                                   Percentage(title = _("Warning at"), label = _("% usage")),
+                                   Percentage(title = _("Critical at"), label = _("% usage")),
+                               ]
+                           ),
+                           Tuple(
+                               title = _("Absolute free space in MB"),
+                               elements = [
+                                    Integer(title = _("Warning if below"), unit = _("MB")),
+                                    Integer(title = _("Critical if below"), unit = _("MB")),
+                               ]
+                            )
+                       ])),
+                ( "heap",
+                   Alternative(
+                       title = _("Heap Memory Levels"),
+                       elements = [
+                           Tuple(
+                               title = _("Percentage levels of used space"),
+                               elements = [
+                                   Percentage(title = _("Warning at"), label = _("% usage")),
+                                   Percentage(title = _("Critical at"), label = _("% usage")),
+                               ]
+                           ),
+                           Tuple(
+                               title = _("Absolute free space in MB"),
+                               elements = [
+                                    Integer(title = _("Warning if below"), unit = _("MB")),
+                                    Integer(title = _("Critical if below"), unit = _("MB")),
+                               ]
+                            )
+                       ])),
+                ( "nonheap",
+                   Alternative(
+                       title = _("Nonheap Memory Levels"),
+                       elements = [
+                           Tuple(
+                               title = _("Percentage levels of used space"),
+                               elements = [
+                                   Percentage(title = _("Warning at"), label = _("% usage")),
+                                   Percentage(title = _("Critical at"), label = _("% usage")),
+                               ]
+                           ),
+                           Tuple(
+                               title = _("Absolute free space in MB"),
+                               elements = [
+                                    Integer(title = _("Warning if below"), unit = _("MB")),
+                                    Integer(title = _("Critical if below"), unit = _("MB")),
+                               ]
+                            )
+                       ])),
+                ( "perm",
+                    Tuple(
+                        title = _("Perm Memory usage"),
+                        elements = [
+                            Percentage(title = _("Warning at"), label = _("% usage")),
+                            Percentage(title = _("Critical at"), label = _("% usage")),
+                        ]
+                    )
+                ),
+            ]),
+        TextAscii(
+            title = _("Name of the virtual machine"),
+            help = _("The name of the application server"),
+            allow_empty = False,
+        ),
+        "dict"
+   )
+
 
 
 #.
@@ -11766,231 +11991,6 @@ register_check_parameters(
     ),
     "first"
 )
-
-register_check_parameters(
-    subgroup_applications,
-    "jvm_uptime",
-    _("JVM uptime (since last reboot)"),
-    Dictionary(
-        help = _("This rule sets the warn and crit levels for the uptime of a JVM. "
-                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
-        elements = [
-        ( "min",
-          Tuple(
-              title = _("Minimum required uptime"),
-              elements = [
-              Age(title = _("Warning if below")),
-              Age(title = _("Critical if below")),
-              ]
-              )),
-        ( "max",
-          Tuple(
-              title = _("Maximum allowed uptime"),
-              elements = [
-              Age(title = _("Warning at")),
-              Age(title = _("Critical at")),
-              ]
-              )),
-        ]
-    ),
-    TextAscii(
-            title = _("Name of the virtual machine"),
-            help = _("The name of the application server"),
-            allow_empty = False,
-            ),
-    match_type = "dict",
-)
-
-register_check_parameters(
-   subgroup_applications,
-    "jvm_sessions",
-    _("JVM session count"),
-    Tuple(
-        help = _("This rule sets the warn and crit levels for the number of current "
-                 "connections to a JVM application on the servlet level."),
-        elements = [
-            Integer(
-                title = _("Warning if below"),
-                unit = _("sessions"),
-                default_value = -1,
-            ),
-            Integer(
-                title = _("Critical if below"),
-                unit = _("sessions"),
-                default_value = -1,
-            ),
-            Integer(
-                title = _("Warning at"),
-                unit = _("sessions"),
-                default_value = 800,
-            ),
-            Integer(
-                title = _("Critical at"),
-                unit = _("sessions"),
-                default_value = 1000,
-            ),
-        ]
-    ),
-    TextAscii(
-        title = _("Name of the virtual machine"),
-        help = _("The name of the application server"),
-        allow_empty = False,
-    ),
-    "first"
-)
-
-register_check_parameters(
-   subgroup_applications,
-    "jvm_requests",
-    _("JVM request count"),
-    Tuple(
-        help = _("This rule sets the warn and crit levels for the number "
-                 "of incoming requests to a JVM application server."),
-        elements = [
-            Integer(
-                title = _("Warning if below"),
-                unit = _("requests/sec"),
-                default_value = -1,
-            ),
-            Integer(
-                title = _("Critical if below"),
-                unit = _("requests/sec"),
-                default_value = -1,
-            ),
-            Integer(
-                title = _("Warning at"),
-                unit = _("requests/sec"),
-                default_value = 800,
-            ),
-            Integer(
-                title = _("Critical at"),
-                unit = _("requests/sec"),
-                default_value = 1000,
-            ),
-        ]
-    ),
-    TextAscii(
-        title = _("Name of the virtual machine"),
-        help = _("The name of the application server"),
-        allow_empty = False,
-    ),
-    "first"
-)
-
-register_check_parameters(
-   subgroup_applications,
-    "jvm_queue",
-    _("JVM Execute Queue Count"),
-    Tuple(
-        help = _("The BEA application servers have 'Execute Queues' "
-                 "in which requests are processed. This rule allows to set "
-                 "warn and crit levels for the number of requests that are "
-                 "being queued for processing."),
-        elements = [
-            Integer(
-                title = _("Warning at"),
-                unit = _("requests"),
-                default_value = 20,
-            ),
-            Integer(
-                title = _("Critical at"),
-                unit = _("requests"),
-                default_value = 50,
-            ),
-        ]
-    ),
-    TextAscii(
-        title = _("Name of the virtual machine"),
-        help = _("The name of the application server"),
-        allow_empty = False,
-    ),
-    "first"
-)
-
-
-register_check_parameters(
-    subgroup_applications,
-    "jvm_memory",
-    _("JVM memory levels"),
-    Dictionary(
-            help = _("This rule allows to set the warn and crit levels of the heap / "
-                     "non-heap and total memory area usage on web application servers. "
-                     "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
-            elements = [
-                ( "totalheap",
-                   Alternative(
-                       title = _("Total Memory Levels"),
-                       elements = [
-                           Tuple(
-                               title = _("Percentage levels of used space"),
-                               elements = [
-                                   Percentage(title = _("Warning at"), label = _("% usage")),
-                                   Percentage(title = _("Critical at"), label = _("% usage")),
-                               ]
-                           ),
-                           Tuple(
-                               title = _("Absolute free space in MB"),
-                               elements = [
-                                    Integer(title = _("Warning if below"), unit = _("MB")),
-                                    Integer(title = _("Critical if below"), unit = _("MB")),
-                               ]
-                            )
-                       ])),
-                ( "heap",
-                   Alternative(
-                       title = _("Heap Memory Levels"),
-                       elements = [
-                           Tuple(
-                               title = _("Percentage levels of used space"),
-                               elements = [
-                                   Percentage(title = _("Warning at"), label = _("% usage")),
-                                   Percentage(title = _("Critical at"), label = _("% usage")),
-                               ]
-                           ),
-                           Tuple(
-                               title = _("Absolute free space in MB"),
-                               elements = [
-                                    Integer(title = _("Warning if below"), unit = _("MB")),
-                                    Integer(title = _("Critical if below"), unit = _("MB")),
-                               ]
-                            )
-                       ])),
-                ( "nonheap",
-                   Alternative(
-                       title = _("Nonheap Memory Levels"),
-                       elements = [
-                           Tuple(
-                               title = _("Percentage levels of used space"),
-                               elements = [
-                                   Percentage(title = _("Warning at"), label = _("% usage")),
-                                   Percentage(title = _("Critical at"), label = _("% usage")),
-                               ]
-                           ),
-                           Tuple(
-                               title = _("Absolute free space in MB"),
-                               elements = [
-                                    Integer(title = _("Warning if below"), unit = _("MB")),
-                                    Integer(title = _("Critical if below"), unit = _("MB")),
-                               ]
-                            )
-                       ])),
-                ( "perm",
-                    Tuple(
-                        title = _("Perm Memory usage"),
-                        elements = [
-                            Percentage(title = _("Warning at"), label = _("% usage")),
-                            Percentage(title = _("Critical at"), label = _("% usage")),
-                        ]
-                    )
-                ),
-            ]),
-        TextAscii(
-            title = _("Name of the virtual machine"),
-            help = _("The name of the application server"),
-            allow_empty = False,
-        ),
-        "dict"
-   )
 
 register_check_parameters(
     subgroup_applications,

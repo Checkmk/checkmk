@@ -4,6 +4,10 @@
 import os
 import glob
 from testlib import cmk_path, cmc_path
+import pytest
+
+# Mark all tests in this file to be executed in the git context
+pytestmark = pytest.mark.git
 
 check_paths = [
     "bin",

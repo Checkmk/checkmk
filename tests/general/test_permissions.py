@@ -4,6 +4,10 @@
 import os
 import glob
 from testlib import cmk_path
+import pytest
+
+# Mark all tests in this file to be executed in the git context
+pytestmark = pytest.mark.git
 
 def is_executable(path):
     return os.path.isfile(path) and os.access(path, os.X_OK)

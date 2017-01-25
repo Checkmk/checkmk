@@ -4,6 +4,10 @@
 import os
 import glob
 from testlib import cmc_path
+import pytest
+
+# Mark all tests in this file to be executed in the git context
+pytestmark = pytest.mark.git
 
 precompiled_files = [
     'plugins/cmk-update-agent.exe'

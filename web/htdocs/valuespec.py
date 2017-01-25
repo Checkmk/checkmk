@@ -546,7 +546,7 @@ class RegExp(TextAscii):
     prefix   = "prefix"
     complete = "complete"
 
-    def __init__(self, mode, help=None, **kwargs):
+    def __init__(self, mode, **kwargs):
         self._mode           = mode
         self._case_sensitive = kwargs.get("case_sensitive", True)
 

@@ -330,7 +330,7 @@ def render_availability_timeline(what, av_entry, avoptions):
     #    render_timewarp(
 
     # Table with detailed events
-    table.begin("av_timeline", "", css="timelineevents")
+    table.begin("av_timeline", "", css="timelineevents", sortable=False, searchable=False)
     for row_nr, row in enumerate(timeline_layout["table"]):
         table.row()
         table.cell(_("Links"), css="buttons")

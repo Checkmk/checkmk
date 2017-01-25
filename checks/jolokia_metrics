@@ -237,13 +237,12 @@ def inventory_jolokia_metrics_apps(info, what):
     return inv
 
 
-def inventory_jolokia_metrics_serv(info, what):
+def inventory_jolokia_metrics_serv(info):
     inv = []
     parsed = jolokia_metrics_parse(info)
     levels = None
-    if what == 'serv_req':
-        levels = 'jolokia_metrics_serv_req_default_levels'
-        needed_key = "Requests"
+    levels = 'jolokia_metrics_serv_req_default_levels'
+    needed_key = "Requests"
     for inst, vals in parsed.iteritems():
         if vals == None:
             continue # no data from agent
@@ -253,12 +252,10 @@ def inventory_jolokia_metrics_serv(info, what):
                     inv.append(('%s %s %s' % (inst, app, serv), levels))
     return inv
 
-def inventory_jolokia_metrics_gc(info, what):
+def inventory_jolokia_metrics_gc(info):
     inv = []
     parsed = jolokia_metrics_parse(info)
     levels = None
-    if what == 'gc':
-        needed_key = ["CollectionCount", "CollectionTime"]
     for inst, vals in parsed.iteritems():
         if vals == None:
             continue # no data from agent
@@ -266,12 +263,10 @@ def inventory_jolokia_metrics_gc(info, what):
             inv.append(("%s GC %s" % (inst ,gc) , levels))
     return inv
 
-def inventory_jolokia_metrics_tp(info, what):
+def inventory_jolokia_metrics_tp(info):
     inv = []
     parsed = jolokia_metrics_parse(info)
     levels = 'jolokia_metrics_tp_default_levels'
-    if what == 'tp':
-        needed_key = ["currentThreadsBusy", "currentThreadCount", "maxThreads"]
     for inst, vals in parsed.iteritems():
         if vals == None:
             continue # no data from agent
@@ -731,7 +726,7 @@ check_info["jolokia_metrics.uptime"] = {
 check_info["jolokia_metrics.gc"] = {
     "service_description" : "JVM %s",
     "check_function"      : check_jolokia_metrics_gc,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_gc(i, "gc"),
+    "inventory_function"  : inventory_jolokia_metrics_gc,
     "group"               : "jvm_gc",
     "has_perfdata"        : True,
 }
@@ -739,7 +734,7 @@ check_info["jolokia_metrics.gc"] = {
 check_info["jolokia_metrics.tp"] = {
     "service_description" : "JVM %s",
     "check_function"      : check_jolokia_metrics_tp,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_tp(i, "tp"),
+    "inventory_function"  : inventory_jolokia_metrics_tp,
     "group"               : "jvm_tp",
     "has_perfdata"        : True,
 }
@@ -774,7 +769,7 @@ check_info["jolokia_metrics.requests"] = {
 check_info["jolokia_metrics.serv_req"] = {
     "service_description" : "JVM %s Requests",
     "check_function"      : check_jolokia_metrics_serv_req,
-    "inventory_function"  : lambda i: inventory_jolokia_metrics_serv(i, "serv_req"),
+    "inventory_function"  : inventory_jolokia_metrics_serv,
     "group"               : "jvm_requests",
     "has_perfdata"        : True,
 }

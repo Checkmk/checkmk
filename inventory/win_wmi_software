@@ -37,17 +37,20 @@
 def inv_win_wmi_software(info):
     paclist = inv_tree("software.packages:")
     for line in info:
-        pacname, vendor, version = line[0:3]
+        if len(line) < 3:
+            continue
+
+        pacname, vendor, version = line[:3]
         dat = line[3]
 
         install_date = None
         if len(dat) == 8 and re.match("^20", dat):
             install_date = int(time.mktime(time.strptime(dat, "%Y%m%d")))
 
-	# contains language as well
-	if len(line) == 5:
-	    language = line[4]
-	else:
+        # contains language as well
+        if len(line) == 5:
+            language = line[4]
+        else:
             language = ""
 
         entry = {

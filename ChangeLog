@@ -77,6 +77,7 @@
     * 4280 FIX: Interactive login is now denied for automation users...
     * 4307 FIX: Fixed wrong filters in Eventviews linked by Tactical Overview
     * 4282 FIX: Fixed rendering of perfometers when no RRDs exist yet
+    * 4285 FIX: Availability: Timeline tables can now not be sorted and searched anymore
 
     WATO:
     * 4142 New extended search dialog for rulesets and rules...

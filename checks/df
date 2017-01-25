@@ -52,6 +52,39 @@
 # /dev/sda1      btrfs       20970496 4169036  16539348      21% /var/opt
 # /dev/sda1      btrfs       20970496 4169036  16539348      21% /var/log
 
+# <<<df>>>
+# dev                     795652         0    795652   0% /dev
+# run                     811756     11848    799908   1% /run
+# /dev/sda2              1040280    716340    271512  73% /
+# devtmpfs                795652         0    795652   0% /dev
+# tmpfs                   811756         0    811756   0% /dev/shm
+# tmpfs                   811756     11848    799908   1% /run
+# tmpfs                   811756         0    811756   0% /sys/fs/cgroup
+# none                    811756        12    811744   0% /var/tmp
+# none                    811756         0    811756   0% /var/lock
+# none                    409600     95460    314140  23% /var/log
+# tmpfs                   811756     11848    799908   1% /var/run
+# none                    811756        56    811700   0% /tmp
+# /dev/sda1               126931     33759     86619  28% /boot
+# /dev/sda5             12668904    360184  11670236   3% /persist
+# <<<df>>>
+# [df_inodes_start]
+# dev                     198913       365    198548   0% /dev
+# run                     202939       336    202603   0% /run
+# /dev/sda2                65536     25533     40003  39% /
+# devtmpfs                198913       365    198548   0% /dev
+# tmpfs                   202939         1    202938   0% /dev/shm
+# tmpfs                   202939       336    202603   0% /run
+# tmpfs                   202939         7    202932   0% /sys/fs/cgroup
+# none                    202939         4    202935   0% /var/tmp
+# none                    202939         1    202938   0% /var/lock
+# none                    202939        28    202911   0% /var/log
+# tmpfs                   202939       336    202603   0% /var/run
+# none                    202939        27    202912   0% /tmp
+# /dev/sda1                32768        25     32743   0% /boot
+# /dev/sda5               799680       118    799562   0% /persist
+# [df_inodes_end]
+
 
 def df_parse_info(info):
     df_blocks = []
@@ -69,23 +102,35 @@ def df_parse_info(info):
             elif line[-1] == '[df_inodes_end]':
                 is_inode = False
                 continue
+
+            try:
+                int(line[1])
+            except ValueError:
+                pass
+            else:
+                line = [ line[0], None ] + line[1:]
+
             if not is_inode:
                 # Handle known cases, where the file system contains spaces
                 if line[2] == "File" and line[3] == "System":
                     line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
+
                 if line[1] == "btrfs":
                     device = line[0]
                     if device not in btrfs_devices:
                         btrfs_devices.add(device)
                         df_blocks.append(line[:6] + [ "btrfs " + line[0] ]) # replace mount point with device
+
                 else:
                     df_blocks.append(line)
             else:
                 df_inodes.append(line)
+
     except StopIteration:
         pass
 
     return df_blocks, df_inodes
+
 
 def inventory_df(info):
     df_blocks, df_inodes = df_parse_info(info)

@@ -66,6 +66,7 @@
     * 4299 FIX: df: fixed missing filesystem type handling
     * 4300 FIX: job: fixed missing information handling
     * 4301 FIX: winperf_tcp_conn: fixed missing data handling
+    * 4302 FIX: win_wmi_software: fixed invalid data handling
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

@@ -124,6 +124,7 @@
     * 4200 FIX: Fix computation of Event Console performance snapin in distributed mode...
     * 4219 FIX: Trap processing with community "public" is now only default and not accepted in all cases anymore...
             NOTE: Please refer to the migration notes!
+    * 4312 FIX: Counting events are now also respecting the EC limits
 
     HW/SW-Inventory:
     * 4258 FIX: snmp_extended_info: fixed undefined variable

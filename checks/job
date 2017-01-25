@@ -48,9 +48,11 @@
 # max_res_kbytes 1984
 # avg_mem_kbytes 0
 
+
 factory_settings["job_default_levels"] = {
     "age": (0, 0) # disabled as default
 }
+
 
 def inventory_job(info):
     inventory = []
@@ -61,6 +63,7 @@ def inventory_job(info):
                 inventory.append( (item, {} ) )
     return inventory
 
+
 def job_parse_real_time(s):
     parts = s.split(':')
     min_sec, hour_sec = 0, 0
@@ -69,6 +72,7 @@ def job_parse_real_time(s):
     if len(parts) >= 2:
         min_sec = int(parts[-2]) * 60
     return float(parts[-1]) + min_sec + hour_sec
+
 
 def job_parse(item, info):
     data = {}
@@ -107,6 +111,7 @@ def job_parse(item, info):
 
     return data
 
+
 def check_job(item, params, info):
     warn, crit = params.get('age')
     job = job_parse(item, info)
@@ -143,18 +148,22 @@ def check_job(item, params, info):
         txt += ' (!!)'
     output.append(txt)
 
-    for key, title, value in [
-        ('start_time',             'Started',                 job['start_time']),
-        ('real_time',              'Real-Time',               job['real_time']),
-        ('user_time',              'User-Time',               job['user_time']),
-        ('system_time',            'System-Time',             job['system_time']),
-        ('reads',                  'Filesystem Reads',        job['reads']),
-        ('writes',                 'Filesystem Writes',       job['writes']),
-        ('max_res_bytes',          'Max. Memory',             job['max_res_bytes']),
-        ('avg_mem_bytes',          'Avg. Memory',             job['avg_mem_bytes']),
-        ('vol_context_switches',   'Vol. Context Switches',   job['vol_context_switches']),
-        ('invol_context_switches', 'Invol. Context Switches', job['invol_context_switches']),
+    for key, title in [
+        ('start_time',             'Started'),
+        ('real_time',              'Real-Time'),
+        ('user_time',              'User-Time'),
+        ('system_time',            'System-Time'),
+        ('reads',                  'Filesystem Reads'),
+        ('writes',                 'Filesystem Writes'),
+        ('max_res_bytes',          'Max. Memory'),
+        ('avg_mem_bytes',          'Avg. Memory'),
+        ('vol_context_switches',   'Vol. Context Switches'),
+        ('invol_context_switches', 'Invol. Context Switches'),
       ]:
+        value = job.get(key)
+        if value is None:
+            continue
+
         if key in [ 'max_res_bytes', 'avg_mem_bytes' ]:
             display_value = get_bytes_human_readable(value, 1000)
         elif key in [ 'real_time', 'user_time', 'system_time' ]:
@@ -168,6 +177,7 @@ def check_job(item, params, info):
         perfdata.append((key, value))
 
     return state, ', '.join(output), perfdata
+
 
 check_info["job"] = {
     'check_function'          : check_job,

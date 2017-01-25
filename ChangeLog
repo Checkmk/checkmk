@@ -45,6 +45,7 @@
     * 4298 FIX: omd_apache: fixed missing data handling
     * 4299 FIX: df: fixed missing filesystem type handling
     * 4300 FIX: job: fixed missing information handling
+    * 4301 FIX: winperf_tcp_conn: fixed missing data handling
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

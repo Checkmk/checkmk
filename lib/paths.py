@@ -85,8 +85,10 @@ mibs_dir                  = None
 web_dir                   = None
 pnp_templates_dir         = None
 doc_dir                   = None
+locale_dir                = None
 bin_dir                   = None
 lib_dir                   = None
+mib_dir                   = None
 
 # TODO: Add active_checks_dir and make it used in code
 local_share_dir           = None
@@ -99,10 +101,10 @@ local_mibs_dir            = None
 local_web_dir             = None
 local_pnp_templates_dir   = None
 local_doc_dir             = None
-locale_dir                = None
 local_locale_dir          = None
 local_bin_dir             = None
 local_lib_dir             = None
+local_mib_dir             = None
 
 
 def _set_paths():
@@ -206,6 +208,7 @@ def _set_overridable_paths(local=False):
         var_prefix+"locale_dir"         : os.path.join(omd_root, rel_base, "share/check_mk/locale"),
         var_prefix+"bin_dir"            : os.path.join(omd_root, rel_base, "bin"),
         var_prefix+"lib_dir"            : os.path.join(omd_root, rel_base, "lib"),
+        var_prefix+"mib_dir"            : os.path.join(omd_root, rel_base, "share/snmp/mibs"),
     })
 
 

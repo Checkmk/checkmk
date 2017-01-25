@@ -727,6 +727,7 @@ check_info["jolokia_metrics.threads"] = {
     "inventory_function"  : lambda i: inventory_jolokia_metrics(i, "threads"),
     "group"               : "jvm_threads",
     "has_perfdata"        : True,
+}
 
 #.
 #   .--Uptime--------------------------------------------------------------.
@@ -899,7 +900,6 @@ def check_jolokia_metrics_bea_threads(item, _no_params, info):
         infos.append("%s: %d" % (title, value))
 
     return (0, ", ".join(infos), perfdata)
-}
 
 check_info["jolokia_metrics.app_sess"] = {
     "service_description" : "JVM %s Sessions",

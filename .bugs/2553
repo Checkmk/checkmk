@@ -1,0 +1,15 @@
+Title: Matching of Texts in EC inconsistent if no regexes are used
+Component: ec
+State: open
+Date: 2017-01-25 14:13:01
+Targetversion: 1.2.8
+Class: bug
+
+The matching if "app" and "ap[p]" differ - but shouldn't. The EC uses
+if different semantic for regexes and fixed strings. This can lead
+to strange behaviours. Also a prefix of .* seems to be removed before
+the distinction is made. So a match of .*foo seems to be treated jus
+like foo.
+
+Investigate this. Maybe we need to migrate existing match strings
+in order to stay compabible and fix the problem anyway.

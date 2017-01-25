@@ -1,0 +1,10 @@
+Title: mk_inventory.linux: fixed missing redirection to null device in if statement
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1485356915
+
+

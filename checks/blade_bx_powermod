@@ -32,8 +32,8 @@ def check_blade_bx_powermod(item, _no_param, info):
         4 : "error",
         5 : "critical",
         6 : "off",
-        7 : "dummy"
-        }
+        7 : "dummy",
+    }
 
     for index, status, product_name in info:
         status = saveint(status)

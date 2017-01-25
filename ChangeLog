@@ -48,6 +48,7 @@
     * 4301 FIX: winperf_tcp_conn: fixed missing data handling
     * 4302 FIX: win_wmi_software: fixed invalid data handling
     * 4213 FIX: fjdarye101_syscaps: Fix failing check when using Nagios core
+    * 4303 FIX: sap_state: fixed error handling
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

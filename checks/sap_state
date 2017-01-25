@@ -26,8 +26,9 @@
 
 
 def inventory_sap_state(info):
-    for node, value in info:
-        yield node, None
+    for line in info:
+        if len(line) == 2:
+            yield line[0], None
 
 
 def check_sap_state(item, _no_parameters, info):
@@ -37,9 +38,10 @@ def check_sap_state(item, _no_parameters, info):
         else:
             return 2
 
-    for node, value in info:
-        if node == item:
-            return value_to_status(value), value
+    for line in info:
+        if line[0] == item:
+            value = line[1]
+            return value_to_status(value), "Status: %s" % value
 
 
 check_info['sap_state'] = {

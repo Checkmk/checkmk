@@ -797,7 +797,7 @@ def quote_tab(col):
     elif type(col) == bool:
         return col and "1" or "0"
     elif type(col) in [ tuple, list ]:
-        col = "\1" + "\1".join(map(to_utf8, col))
+        col = "\1" + "\1".join([ quote_tab(e) for e in col ])
     elif col == None:
         col = "\2"
 
@@ -3735,8 +3735,7 @@ class EventStatus():
         # None found, create one
         event["count"] = 1
         event["phase"] = "counting"
-        with lock_eventstatus:
-            self.new_event(event)
+        g_event_server.new_event_respecting_limits(event)
 
 
     def count_event(self, event, rule, count):
@@ -3769,8 +3768,7 @@ class EventStatus():
         else:
             event["count"] = 1
             event["phase"] = "counting"
-            with lock_eventstatus:
-                self.new_event(event)
+            g_event_server.new_event_respecting_limits(event)
             found = event
 
         # Did we just count the event that was just one too much?

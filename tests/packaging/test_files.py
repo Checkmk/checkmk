@@ -3,6 +3,7 @@ import os
 import subprocess
 import re
 
+# Mark all tests in this file to be tests verifying build packages
 pytestmark = pytest.mark.packaging
 
 @pytest.mark.parametrize("what", [

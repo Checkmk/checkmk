@@ -11733,7 +11733,7 @@ class ModeRuleEditor(WatoMode):
 
 # TODO: Cleanup all calls using title and remove the argument
 def search_form(title=None, mode=None, default_value=""):
-    html.begin_form("search")
+    html.begin_form("search", add_transid=False)
     if title:
         html.write_text(title+' ')
     html.text_input("search", size=32, default_value=default_value)

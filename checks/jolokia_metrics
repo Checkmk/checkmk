@@ -52,16 +52,9 @@ jolokia_metrics_serv_req_default_levels = (-1, -1, 5000, 6000)
 
 jolokia_metrics_queue_default_levels = ( 20, 50 )
 
-# Garbage collections count and time per minute
-factory_settings["jolokia_metrics_gc_default_levels"] = {
-            'CollectionTime': (None, None),
-            'CollectionCount': (None, None)
-}
-
 # Tomcat ThreadPools Count/Busy in relation to max value
 factory_settings["jolokia_metrics_tp_default_levels"] = {
             'currentThreadsBusy': (80, 90),
-            'currentThreadsCount': (None, None)
 }
 
 
@@ -435,7 +428,6 @@ def check_jolokia_metrics_gc(item, params, info):
 
 
 check_info["jolokia_metrics.gc"] = {
-    "default_levels_variable"   : "jolokia_metrics_gc_default_levels",
     "service_description"       : "JVM %s",
     "check_function"            : check_jolokia_metrics_gc,
     "inventory_function"        : inventory_jolokia_metrics_gc,

@@ -24,6 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 # Example output from agent:
 # <<<winperf_tcp_conn>>>
 # 1368619819.06 638
@@ -36,10 +37,16 @@
 # 14 34830 counter
 # 16 18437 counter
 
+
 def inventory_winperf_tcp_conn(info):
-    return [ (None, {}) ]
+    if len(info) > 1:
+        return [ (None, {}) ]
+
 
 def check_winperf_tcp_conn(item, params, info):
+    if len(info) == 1:
+        raise MKCounterWrapped("Got no information from agent")
+
     fields = [
                 ( 2, "Established", "ESTABLISHED" ),
              ]
@@ -63,6 +70,7 @@ def check_winperf_tcp_conn(item, params, info):
 
     infotext = infotext[:-2]
     return worst_state, infotext, perfdata
+
 
 check_info["winperf_tcp_conn"] = {
     'check_function':          check_winperf_tcp_conn,

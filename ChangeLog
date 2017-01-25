@@ -59,6 +59,7 @@
 
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address
+    * 4284 FIX: Nagios: Added missing variable MICROTIME to notification contexts...
 
     BI:
     * 4009 FIX: Business intelligence: Multihost aggregations are no longer broken after a core restart

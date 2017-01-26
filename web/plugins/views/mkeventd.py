@@ -312,7 +312,7 @@ if mkeventd_enabled:
                     urlvars += parse_qsl(url.query)
             else:
                 # Regular view
-                view = get_view_by_name(html.var("view_name"))
+                view = permitted_views()[(html.var("view_name"))]
                 target = None
                 filename = None
 

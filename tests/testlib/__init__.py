@@ -268,8 +268,9 @@ class Site(object):
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
-            p = self.execute(["/usr/bin/omd", "-V", self.version.version_directory(),
-                              "create", "--apache-reload", self.id])
+            p = subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
+                                  "-V", self.version.version_directory(),
+                                  "create", "--apache-reload", self.id])
             assert p.wait() == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
 
@@ -324,7 +325,8 @@ class Site(object):
     def rm(self, site_id=None):
         if site_id == None:
             site_id = self.id
-        assert self.execute(["/usr/bin/omd", "-f", "rm", "--kill", site_id]).wait() == 0
+        assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
+                                 "-f", "rm", "--kill", site_id]).wait() == 0
 
 
     def cleanup_old_sites(self, cleanup_pattern):

@@ -3464,8 +3464,8 @@ Copyright (C) 2009 Mathias Kettner
 def usage():
     sys.stdout.write("""WAYS TO CALL:
  cmk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
- cmk -I [HOST ..]                     inventory - find new services
- cmk -II ...                          renew inventory, drop old services
+ cmk -I [HOST ..]                     discovery - find new services
+ cmk -II ...                          renew discovery, drop old services
  cmk -N [HOSTS...]                    output Nagios configuration
  cmk -B                               create configuration for core
  cmk -C, --compile                    precompile host checks
@@ -3526,7 +3526,7 @@ OPTIONS:
                  is a TTY. This option forces interactive mode even if the output
                  is directed into a pipe or file.
   --procs N      start up to N processes in parallel during --scan-parents
-  --checks A,..  restrict checks/inventory to specified checks (tcp/snmp/check type)
+  --checks A,..  restrict checks/discovery to specified checks (tcp/snmp/check type)
   --keepalive    used by Check_MK Mirco Core: run check and --notify
                  in continous mode. Read data from stdin and from cmd line.
   --cmc-file=X   relative filename for CMC config file (used by -B/-U)
@@ -3563,7 +3563,7 @@ NOTES:
   real hosts.
 
   --check-discovery make check_mk behave as monitoring plugins that
-  checks if an inventory would find new or vanished services for the host.
+  checks if a discovery would find new or vanished services for the host.
   If configured to do so, this will queue those hosts for automatic
   discover-marked-hosts
 

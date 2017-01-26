@@ -14,9 +14,12 @@ def _all_path_names():
     return names
 
 
-def test_without_omd_environment():
-    assert cmk.paths.omd_root == ""
-    assert cmk.paths.var_dir == "var/check_mk"
+def test_paths_in_site(site):
+    for var_name in _all_path_names():
+        value = cmk.paths.__dict__[var_name]
+        assert value != None
+        assert type(value) == str
+        assert value.startswith(site.root)
 
 
 def test_no_path_variable_none(monkeypatch):

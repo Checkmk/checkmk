@@ -47,13 +47,6 @@ def var_dir():
     return base_dir + "/var"
 
 
-def omd(cmd):
-    cmdline = " ".join(["sudo", "/usr/bin/omd"] + cmd)
-    print "Executing: %s" % cmdline
-    sys.stdout.flush()
-    return os.system(cmdline) >> 8
-
-
 class APIError(Exception):
     pass
 
@@ -198,25 +191,58 @@ class Site(object):
         return live
 
 
+    def _is_running_as_site_user(self):
+        return pwd.getpwuid(os.getuid()).pw_name == self.id
+
+
     def execute(self, cmd, *args, **kwargs):
         assert type(cmd) == list, "The command must be given as list"
 
-        cmd = [ "sudo", "su", "-l", self.id,
-                "-c", pipes.quote(" ".join([ pipes.quote(p) for p in cmd ])) ]
-        cmd_txt = " ".join(cmd)
-        return subprocess.Popen(cmd_txt, shell=True, *args, **kwargs)
+        sys.stdout.write("Executing: %s\n" % subprocess.list2cmdline(cmd))
+        if not self._is_running_as_site_user():
+            cmd = [ "sudo", "su", "-l", self.id,
+                    "-c", pipes.quote(" ".join([ pipes.quote(p) for p in cmd ])) ]
+            cmd_txt = " ".join(cmd)
+            return subprocess.Popen(cmd_txt, shell=True, *args, **kwargs)
+        else:
+            return subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, *args, **kwargs)
+
+
+    def omd(self, mode, *args):
+        if not self._is_running_as_site_user():
+            cmd = [ "sudo" ]
+        else:
+            cmd = []
+
+        cmd += [ "/usr/bin/omd", mode ]
+
+        if not self._is_running_as_site_user():
+            cmd += [ self.id ]
+        else:
+            cmd += []
+
+        cmd += args
+
+        sys.stdout.write("Executing: %s\n" % subprocess.list2cmdline(cmd))
+        return subprocess.call(cmd)
 
 
     def read_file(self, rel_path):
-        p = self.execute(["cat", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
-        if p.wait() != 0:
-            raise MKGeneralException("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
-        return p.stdout.read()
+        if not self._is_running_as_site_user():
+            p = self.execute(["cat", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
+            if p.wait() != 0:
+                raise MKGeneralException("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
+            return p.stdout.read()
+        else:
+            return open("%s/%s" % (self.root, rel_path)).read()
 
 
     def file_exists(self, rel_path):
-        p = self.execute(["test", "-e", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
-        return p.wait() == 0
+        if not self._is_running_as_site_user():
+            p = self.execute(["test", "-e", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
+            return p.wait() == 0
+        else:
+            return os.path.exists("%s/%s" % (self.root, rel_path))
 
 
     def cleanup_if_wrong_version(self):
@@ -242,8 +268,9 @@ class Site(object):
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
-            assert omd(["-V", self.version.version_directory(), "create",
-                        "--apache-reload", self.id]) == 0
+            p = self.execute(["/usr/bin/omd", "-V", self.version.version_directory(),
+                              "create", "--apache-reload", self.id])
+            assert p.wait() == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
 
         if self.update_with_git:
@@ -297,7 +324,7 @@ class Site(object):
     def rm(self, site_id=None):
         if site_id == None:
             site_id = self.id
-        assert omd(["-f", "rm", "--kill", site_id]) == 0
+        assert self.execute(["/usr/bin/omd", "-f", "rm", "--kill", site_id]).wait() == 0
 
 
     def cleanup_old_sites(self, cleanup_pattern):
@@ -309,7 +336,7 @@ class Site(object):
 
     def start(self):
         if not self.is_running():
-            assert omd(["start", self.id]) == 0
+            assert self.omd("start") == 0
             i = 0
             while not self.is_running():
                 i += 1
@@ -319,9 +346,10 @@ class Site(object):
                 sys.stdout.flush()
                 time.sleep(0.2)
 
+
     def stop(self):
         if self.is_running():
-            assert omd(["stop", self.id]) == 0
+            assert self.omd("stop") == 0
             i = 0
             while self.is_running():
                 i += 1
@@ -331,12 +359,14 @@ class Site(object):
                 sys.stdout.flush()
                 time.sleep(0.2)
 
+
     def exists(self):
         return os.path.exists("/omd/sites/%s" % self.id)
 
 
     def is_running(self):
-        return omd(["status", "--bare", self.id]) == 0
+        return self.execute(["/usr/bin/omd", "status", "--bare"],
+                            stdout=open(os.devnull, "w")).wait() == 0
 
 
     def set_config(self, key, val, with_restart=False):
@@ -344,7 +374,7 @@ class Site(object):
             print "Stopping site"
             self.stop()
 
-        assert omd(["config", self.id, "set", key, val]) == 0
+        assert self.omd("config", "set", key, val) == 0
 
         if with_restart:
             self.start()
@@ -352,8 +382,10 @@ class Site(object):
 
 
     def get_config(self, key):
-        p = self.execute(["omd", "config", "show", key], stdout=subprocess.PIPE)
-        return p.communicate()[0].strip()
+        p = self.execute(["omd", "config", "show", key], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        print stderr
+        return stdout.strip()
 
 
     # These things are needed to make the site basically being setup. So this
@@ -409,6 +441,20 @@ class Site(object):
         assert not missing_files, \
             "Failed to initialize WATO data structures " \
             "(Still missing: %s)" % missing_files
+
+
+    # For reliable testing we need the site environment. The only environment for executing
+    # Check_MK is now the site, so all tests that somehow rely on the environment should be
+    # executed this way.
+    def switch_to_site_user(self):
+        print os.getcwd()
+        #cmd = subprocess.list2cmdline(["cd", self.root, ";", ] + sys.argv)
+        #args = ["--", "/bin/su", "-l", self.id, "-c", cmd]
+        #print args
+        cmd = subprocess.list2cmdline(sys.argv + [ cmk_path() + "/tests" ])
+        args = [ "/usr/bin/sudo",  "--", "/bin/su", "-l", self.id, "-c", cmd ]
+        subprocess.call(args)
+        #os.execv("/usr/bin/sudo", tuple(args))
 
 
     # This opens a currently free TCP port and remembers it in the object for later use
@@ -716,9 +762,8 @@ class CMKWebSession(WebSession):
     #
 
     def _automation_credentials(self):
-        secret_path = "%s/var/check_mk/web/automation/automation.secret" % self.site.root
-        p = self.site.execute(["cat", secret_path], stdout=subprocess.PIPE)
-        secret = p.communicate()[0].rstrip()
+        secret = self.site.read_file("var/check_mk/web/automation/automation.secret")
+
         if secret == "":
             raise Exception("Failed to read secret from %s" % secret_path)
 

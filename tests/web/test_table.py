@@ -47,29 +47,29 @@ class TableTest(html):
             self.written_text += " " * 4 * self.tag_counter + text + ''
 
 
-def test_table(monkeypatch):
+def test_table(monkeypatch, tmpdir):
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
-    table_test_cubical(False, False, None, 'html')
+    table_test_cubical(False, False, None, 'html', tmpdir)
 
 
-def test_limit(monkeypatch):
+def test_limit(monkeypatch, tmpdir):
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
-    table_test_cubical(False, False, 2, 'html')
+    table_test_cubical(False, False, 2, 'html', tmpdir)
 
 
-def test_sortable(monkeypatch):
+def test_sortable(monkeypatch, tmpdir):
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
-    table_test_cubical(True, False, None, 'html')
+    table_test_cubical(True, False, None, 'html', tmpdir)
 
 
-def test_searchable(monkeypatch):
+def test_searchable(monkeypatch, tmpdir):
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
-    table_test_cubical(False, True, None, 'html')
+    table_test_cubical(False, True, None, 'html', tmpdir)
 
 
-def test_csv(monkeypatch):
+def test_csv(monkeypatch, tmpdir):
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
-    table_test_cubical(False, False, None, 'csv')
+    table_test_cubical(False, False, None, 'csv', tmpdir)
 
 
 def read_out_table(text):
@@ -93,7 +93,7 @@ def read_out_csv(text, separator):
     return data
 
 
-def table_test_cubical(sortable, searchable, limit, output_format):
+def table_test_cubical(sortable, searchable, limit, output_format, tmpdir):
 
     html = TableTest()
     __builtin__.html = html
@@ -121,16 +121,20 @@ def table_test_cubical(sortable, searchable, limit, output_format):
             table.cell(_(header[i]), row[i])
     table.end()
 
-    # write to file: This is part of the test! Look at the generated HTML!
-    filename = "./web/testtable_%s_%s_%s.html" % ("sortable" * sortable, "searchable" * searchable, limit)
-    try:
-        with open(filename, "w") as html_file:
-            pass
-    except:
-        filename = filename[6:]
+    # TODO: Is this still needed?
+    ## write to file: This is part of the test! Look at the generated HTML!
+    #filename = "%s" % tmpdir.join("web/testtable_%s_%s_%s.html" % \
+    #                            ("sortable" * sortable, "searchable" * searchable, limit))
+    #try:
+    #    with open(filename, "w") as html_file:
+    #        pass
+    #except:
+    #    filename = os.path.basename(filename)
+
+    #text = html.written_text
+    #with open(filename, "w") as html_file:
+    #    html_file.write(text)
     text = html.written_text
-    with open(filename, "w") as html_file:
-        html_file.write(text)
 
     # Data assertions
     assert output_format in ['html', 'csv'], 'Fetch is not yet implemented'

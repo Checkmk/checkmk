@@ -1,8 +1,9 @@
 # This file initializes the py.test environment
 import os
+import pwd
+import pytest
 import sys
 import glob
-import pytest
 import testlib
 
 
@@ -65,36 +66,19 @@ def pytest_runtest_setup(item):
         if envname != item.config.getoption("-E"):
             pytest.skip("test requires env %r" % envname)
 
-#
-# MAIN
-#
 
-add_python_paths()
-ensure_equal_branches()
+def setup_site_and_switch_user():
+    def is_running_as_site_user():
+        return pwd.getpwuid(os.getuid()).pw_name == _site_id()
 
-import testlib
+    if is_running_as_site_user():
+        return # This is executed as site user. Nothing to be done.
 
-# Session fixtures must be in conftest.py to work properly
-@pytest.fixture(scope="session")
-def site(request):
-    def site_id():
-        site_id = os.environ.get("SITE")
-        if site_id == None:
-            site_id = file(testlib.repo_path() + "/.site").read().strip()
+    sys.stdout.write("===============================================\n")
+    sys.stdout.write("Setting up site site\n")
+    sys.stdout.write("===============================================\n")
 
-        return site_id
-
-    def site_version():
-        return os.environ.get("VERSION", testlib.CMKVersion.DEFAULT)
-
-    def site_edition():
-        return os.environ.get("EDITION", testlib.CMKVersion.CEE)
-
-    def reuse_site():
-        return os.environ.get("REUSE", "1") == "1"
-
-    site = testlib.Site(site_id=site_id(), version=site_version(),
-                        edition=site_edition(), reuse=reuse_site())
+    site = _get_site_object()
 
     cleanup_pattern = os.environ.get("CLEANUP_OLD")
     if cleanup_pattern:
@@ -106,10 +90,53 @@ def site(request):
     site.start()
     site.prepare_for_tests()
 
-    def fin():
-        site.rm_if_not_reusing()
-    request.addfinalizer(fin)
+    sys.stdout.write("===============================================\n")
+    sys.stdout.write("Switching to site context\n")
+    sys.stdout.write("===============================================\n")
 
-    return site
+    site.switch_to_site_user()
+
+    sys.stdout.write("===============================================\n")
+    sys.stdout.write("Cleaning up after testing\n")
+    sys.stdout.write("===============================================\n")
+
+    site.rm_if_not_reusing()
+    sys.exit(0)
 
 
+def _get_site_object():
+    def site_version():
+        return os.environ.get("VERSION", testlib.CMKVersion.DEFAULT)
+
+    def site_edition():
+        return os.environ.get("EDITION", testlib.CMKVersion.CEE)
+
+    def reuse_site():
+        return os.environ.get("REUSE", "1") == "1"
+
+    return testlib.Site(site_id=_site_id(), version=site_version(),
+                        edition=site_edition(), reuse=reuse_site())
+
+
+def _site_id():
+    site_id = os.environ.get("SITE")
+    if site_id == None:
+        site_id = file(testlib.repo_path() + "/.site").read().strip()
+
+    return site_id
+
+
+#
+# MAIN
+#
+
+add_python_paths()
+ensure_equal_branches()
+setup_site_and_switch_user()
+
+import testlib
+
+# Session fixtures must be in conftest.py to work properly
+@pytest.fixture(scope="session", autouse=True)
+def site(request):
+    return _get_site_object()

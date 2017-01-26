@@ -3,8 +3,8 @@
 
 import os
 import glob
-from testlib import cmc_path
 import pytest
+from testlib import cmc_path
 
 # Mark all tests in this file to be executed in the git context
 pytestmark = pytest.mark.git

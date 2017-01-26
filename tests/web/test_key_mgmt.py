@@ -6,7 +6,6 @@ import time
 def test_key_mgmt_create_key(monkeypatch):
     import config
     monkeypatch.setattr(config.user, "id", u"dingdöng")
-    monkeypatch.setitem(os.environ, "OMD_SITE", "heute")
     monkeypatch.setattr(time, "time", lambda: 123)
 
     import requests

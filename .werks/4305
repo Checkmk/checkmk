@@ -1,0 +1,9 @@
+Title: postgres_stat_database.size: fixed missing database size perfometer
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p17
+Date: 1485435749
+Class: fix
+
+

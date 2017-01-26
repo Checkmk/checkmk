@@ -1914,6 +1914,8 @@ class html(DeprecationWrapper):
         for key, val in attrs.iteritems():
             if key not in attributes and key not in ["name", "type", "type_"]:
                 attributes[key] = val
+            elif key in attributes and attributes[key] is None:
+                attributes[key] = val
 
         if error:
             self.open_x(class_="inputerror")

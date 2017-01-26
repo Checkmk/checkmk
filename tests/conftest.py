@@ -132,11 +132,11 @@ def _site_id():
 
 add_python_paths()
 ensure_equal_branches()
-setup_site_and_switch_user()
 
 import testlib
 
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(scope="session", autouse=True)
 def site(request):
+    setup_site_and_switch_user()
     return _get_site_object()

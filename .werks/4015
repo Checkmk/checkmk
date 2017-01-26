@@ -1,0 +1,11 @@
+Title: Multisite events page: Fixed slow page generation caused by the event delete icon
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i4
+Date: 1485421223
+Class: fix
+
+The render function for the event delete icon has been improved.
+It now uses cache data.
+

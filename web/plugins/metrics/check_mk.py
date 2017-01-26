@@ -4497,6 +4497,10 @@ check_metrics["check_mk-postgres_sessions"] = {
     "running": {"name": "running_sessions"}
 }
 
+check_metrics["check_mk-postgres_stat_database.size"] = {
+    "size" : { "name" : "database_size"}
+}
+
 check_metrics["check_mk-oracle_sessions"] = {
     "sessions" : {"name": "running_sessions"}
 }

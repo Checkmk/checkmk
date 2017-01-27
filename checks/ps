@@ -117,11 +117,11 @@ def ps_get_counters_to_delete(pids):
 
 
 def ps_get_current_pids(parsed):
-    pids = []
+    pids = set()
     for line in parsed:
         process_info = line[1]
         if ps_has_extended_perfdata(process_info):
-            pids.append(process_info[4])
+            pids.add(process_info[4])
     return pids
 
 

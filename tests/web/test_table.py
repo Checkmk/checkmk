@@ -14,8 +14,6 @@ from tools import compare_html , gentest, compare_and_empty
 from classes import DeprecatedRenderer
 
 
-import config
-import table
 import traceback
 def save_user_mock(name, data, user, unlock=False):
     pass
@@ -47,21 +45,25 @@ def test_table(monkeypatch, tmpdir):
 
 
 def test_limit(monkeypatch, tmpdir):
+    import config
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
     table_test_cubical(False, False, 2, 'html', tmpdir)
 
 
 def test_sortable(monkeypatch, tmpdir):
+    import config
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
     table_test_cubical(True, False, None, 'html', tmpdir)
 
 
 def test_searchable(monkeypatch, tmpdir):
+    import config
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
     table_test_cubical(False, True, None, 'html', tmpdir)
 
 
 def test_csv(monkeypatch, tmpdir):
+    import config
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
     table_test_cubical(False, False, None, 'csv', tmpdir)
 
@@ -88,6 +90,7 @@ def read_out_csv(text, separator):
 
 
 def table_test_cubical(sortable, searchable, limit, output_format, tmpdir):
+    import table
 
     html = TableTest()
     __builtin__.html = html

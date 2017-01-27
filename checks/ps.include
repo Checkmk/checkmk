@@ -327,7 +327,11 @@ def ps_cleanup_params(params):
 
 
 def ps_has_extended_perfdata(process_info):
-    return len(process_info) > 4
+    try:
+        process_info[4]
+        return True
+    except IndexError:
+        return False
 
 
 def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes", total_ram = None):

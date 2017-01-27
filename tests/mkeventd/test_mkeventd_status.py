@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import pytest
-import livestatus
 import time
 from testlib import web, ec
 

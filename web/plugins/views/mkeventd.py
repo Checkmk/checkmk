@@ -324,7 +324,8 @@ if mkeventd_enabled:
                 ("_delete_event", _("Archive Event")),
                 ("_show_result", "0"),
             ]
-            url = html.makeactionuri(urlvars, filename=filename)
+            url = html.makeactionuri(urlvars, filename=filename,
+                                     delvars=["selection", "show_checkboxes"])
             return html.render_icon_button(url, _("Archive this event"), "delete")
         else:
             return ''

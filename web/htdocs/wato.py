@@ -5825,7 +5825,31 @@ def vs_ldap_connection(new, connection_id):
             'user_filter', 'user_filter_group', 'user_id', 'lower_user_ids', 'connect_timeout', 'version',
             'group_filter', 'group_member', 'suffix',
         ],
+        validate = validate_ldap_connection,
     )
+
+
+def validate_ldap_connection(value, varprefix):
+    for role_id, group_specs in value["active_plugins"].get("groups_to_roles", {}).items():
+        for index, group_spec in enumerate(group_specs):
+            dn, connection_id = group_spec
+
+            if connection_id == None:
+                group_dn = value["group_dn"]
+
+            else:
+                connection = userdb.get_connection(connection_id)
+                if not connection:
+                    continue
+                group_dn = connection.get_group_dn()
+
+            if not group_dn:
+                raise MKUserError(varprefix, _("You need to configure the group base DN to be able to "
+                                               "use the roles synchronization plugin."))
+
+            if not dn.lower().endswith(group_dn.lower()):
+                varname = "connection_p_active_plugins_p_groups_to_roles_p_%s_1_%d" % (role_id, index)
+                raise MKUserError(varname, _("The configured DN does not match the group base DN."))
 
 
 def mode_edit_ldap_connection(phase):

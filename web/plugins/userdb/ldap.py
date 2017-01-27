@@ -334,6 +334,10 @@ class LDAPUserConnector(UserConnector):
         return self._config['group_dn'] != ''
 
 
+    def get_group_dn(self):
+        return self.replace_macros(self._config['group_dn'])
+
+
     def get_suffix(self):
         return self._config.get('suffix')
 
@@ -378,7 +382,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def group_base_dn_exists(self):
-        return self.object_exists(self.replace_macros(self._config['group_dn']))
+        return self.object_exists(self.get_group_dn())
 
 
     def ldap_paged_async_search(self, base, scope, filt, columns):
@@ -669,7 +673,7 @@ class LDAPUserConnector(UserConnector):
 
     def get_groups(self, specific_dn = None):
         filt = self.ldap_filter('groups')
-        dn   = self.replace_macros(self._config['group_dn'])
+        dn   = self.get_group_dn()
 
         if specific_dn:
             # When using AD, the groups can be filtered by the DN attribute. With
@@ -712,8 +716,8 @@ class LDAPUserConnector(UserConnector):
                 add_filt = '(|%s)' % ''.join([ '(%s=%s)' % (filt_attr, f) for f in filters ])
                 filt = '(&%s%s)' % (filt, add_filt)
 
-            for dn, obj in self.ldap_search(self.replace_macros(self._config['group_dn']),
-                                            filt, ['cn', member_attr], self._config['group_scope']):
+            for dn, obj in self.ldap_search(self.get_group_dn(), filt, ['cn', member_attr],
+                                            self._config['group_scope']):
                 groups[dn] = {
                     'cn'      : obj['cn'][0],
                     'members' : [ m.encode('utf-8').lower() for m in obj.get(member_attr,[]) ],
@@ -738,7 +742,7 @@ class LDAPUserConnector(UserConnector):
         groups = {}
         for filter_val in filters:
             if filt_attr == 'cn':
-                result = self.ldap_search(self.replace_macros(self._config['group_dn']),
+                result = self.ldap_search(self.get_group_dn(),
                                      '(&%s(cn=%s))' % (self.ldap_filter('groups'), filter_val),
                                      ['dn'], self._config['group_scope'])
                 if not result:

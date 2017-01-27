@@ -86,3 +86,19 @@ def test_status_table_via_core(site, ec, core):
     assert type(status["status_event_limit_host"]) == int
     assert type(status["status_event_limit_rule"]) == int
     assert type(status["status_event_limit_overall"]) == int
+
+# core == None means direct query to status socket
+@pytest.mark.parametrize(("core"), [ None, "nagios", "cmc" ])
+def test_rules_table_via_core(site, ec, core):
+    print "Checking core: %s" % core
+
+    live = ensure_core_and_get_connection(site, ec, core)
+    if core == None:
+        result = live.query_table_assoc("GET rules\n")
+    else:
+        result = live.query_table_assoc("GET eventconsolerules\n")
+
+    assert type(result) == list
+    #assert len(result) == 0
+    # TODO: Add some rule before the test and then check the existing
+    # keys and types in the result set

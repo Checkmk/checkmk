@@ -2,11 +2,6 @@
 # call using
 # > py.test -s -k test_html_generator.py
 
-# enable imports from web directory
-from testlib import cmk_path
-import sys, os
-sys.path.insert(0, "%s/web/htdocs" % cmk_path())
-
 # external imports
 import re
 from bs4 import BeautifulSoup as bs
@@ -19,7 +14,6 @@ from tools import compare_html , gentest, compare_and_empty
 from classes import DeprecatedRenderer
 
 
-os.environ["OMD_SITE"] = "heute"
 import config
 import table
 import traceback

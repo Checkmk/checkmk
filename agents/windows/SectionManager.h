@@ -65,7 +65,7 @@ public:
     ~SectionManager() { _sections.clear(); }
 
     void emitConfigLoaded(const Environment &env);
-
+    void loadDynamicSections();
     const std::vector<std::unique_ptr<Section>> &sections() const {
         return _sections;
     }

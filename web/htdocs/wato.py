@@ -2300,7 +2300,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
             ('rule_folder', rule.folder.path()),
             ('rulenr',      rule.index()),
             ('host',        hostname),
-            ('item',        service and mk_repr(service) or ''),
+            ('item',        mk_repr(service) if service else ''),
         ])
 
     varname = rulespec.name
@@ -2310,7 +2310,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         ('mode', 'edit_ruleset'),
         ('varname', varname),
         ('host', hostname),
-        ('item', mk_repr(service))
+        ('item', mk_repr(service)),
     ])
 
     forms.section('<a href="%s">%s</a>' % (url, rulespec.title))
@@ -11978,8 +11978,9 @@ class ModeEditRuleset(WatoMode):
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
 
-        # TODO: Clean this up. In which case is it used?
         self._item = None
+
+        # TODO: Clean this up. In which case is it used?
         if html.var("check_command"):
             check_command = html.var("check_command")
             checks = check_mk_local_automation("get-check-information")
@@ -11992,7 +11993,7 @@ class ModeEditRuleset(WatoMode):
                     try:
                         self._item = matcher.group(1)
                     except:
-                        self._item = None
+                        pass
             elif check_command.startswith("check_mk_active-"):
                 check_command = check_command[16:].split(" ")[0][:-1]
                 self._name = "active_checks:" + check_command
@@ -12502,8 +12503,7 @@ class ModeEditRuleset(WatoMode):
             html.open_td()
             html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
             html.hidden_field("host", self._hostname)
-            if self._item:
-                html.hidden_field("item", mk_repr(self._item))
+            html.hidden_field("item", mk_repr(self._item))
             html.close_td()
             html.open_td(style="vertical-align:middle")
             html.write_text(label)
@@ -13070,9 +13070,10 @@ class ModeNewRule(ModeEditRule):
             if hostname:
                 host_list = [hostname]
 
-            item = mk_eval(html.var("item")) if html.has_var("item") else NO_ITEM
-            if item != NO_ITEM:
-                item_list = [ "%s$" % escape_regex_chars(item) ]
+            if self._rulespec.item_type:
+                item = mk_eval(html.var("item")) if html.has_var("item") else NO_ITEM
+                if item != NO_ITEM:
+                    item_list = [ "%s$" % escape_regex_chars(item) ]
 
         self._rule = Rule.create(self._folder, self._ruleset, host_list, item_list)
 

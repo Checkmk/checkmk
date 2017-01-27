@@ -6,9 +6,6 @@
 import re
 import json
 
-import sys
-print sys.path
-
 # internal imports
 from htmllib import html
 from htmllib import HTMLGenerator, HTMLCheck_MK

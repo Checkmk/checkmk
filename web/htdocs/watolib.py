@@ -667,8 +667,9 @@ class BaseFolder(WithPermissionsAndAttributes):
                       and "end" or "")
             num += 1
 
+
         # Render the current folder when having subfolders
-        if self.has_subfolders() and not link_to_folder:
+        if not link_to_folder and self.has_subfolders() and self.visible_subfolders():
             breadcrump_element_start(z_index = 100 + num)
             html.open_div(class_=["content"])
             html.open_form(name="folderpath", method="GET")
@@ -695,6 +696,10 @@ class BaseFolder(WithPermissionsAndAttributes):
 
 
     def title(self):
+        raise NotImplementedError()
+
+
+    def visible_subfolders(self):
         raise NotImplementedError()
 
 
@@ -1290,7 +1295,7 @@ class Folder(BaseFolder):
 
     def num_hosts_recursively(self):
         num = self.num_hosts()
-        for subfolder in self.subfolders().values():
+        for subfolder in self.visible_subfolders().values():
             num += subfolder.num_hosts_recursively()
         return num
 
@@ -1298,12 +1303,21 @@ class Folder(BaseFolder):
     def all_hosts_recursively(self):
         hosts = {}
         hosts.update(self.hosts())
-        for subfolder in self.subfolders().values():
+        for subfolder in self.all_subfolders().values():
             hosts.update(subfolder.all_hosts_recursively())
         return hosts
 
 
-    def subfolders(self):
+    def visible_subfolders(self):
+        visible_folders = {}
+        for folder_name, folder in self._subfolders.items():
+            if folder.folder_should_be_shown("read"):
+                visible_folders[folder_name] = folder
+
+        return visible_folders
+
+
+    def all_subfolders(self):
         return self._subfolders
 
 
@@ -1312,7 +1326,7 @@ class Folder(BaseFolder):
 
 
     def subfolder_by_title(self, title):
-        for subfolder in self.subfolders().values():
+        for subfolder in self.all_subfolders().values():
             if subfolder.title() == title:
                 return subfolder
 
@@ -1326,8 +1340,10 @@ class Folder(BaseFolder):
 
 
     def subfolder_choices(self):
-        return [ (subfolder.path(), subfolder.title())
-                 for subfolder in self.subfolders().values() ]
+        choices = []
+        for subfolder in self.visible_subfolders().values():
+            choices.append((subfolder.path(), subfolder.title()))
+        return choices
 
 
     def recursive_subfolder_choices(self, current_depth=0):
@@ -1337,7 +1353,7 @@ class Folder(BaseFolder):
             title_prefix = ""
         sel = [ (self.path(), HTML(title_prefix + html.attrencode(self.title()))) ]
 
-        for subfolder in self.subfolders_sorted_by_title():
+        for subfolder in self.visible_subfolders_sorted_by_title():
             sel += subfolder.recursive_subfolder_choices(current_depth + 1)
         return sel
 
@@ -1354,8 +1370,22 @@ class Folder(BaseFolder):
             return self._choices_for_moving_host
 
 
+    def folder_should_be_shown(self, how):
+        if not config.wato_hide_folders_without_read_permissions:
+            return True
+
+        has_permission = self.may(how)
+        for subfolder in self.all_subfolders().values():
+            if has_permission:
+                break
+            has_permission = subfolder.folder_should_be_shown(how)
+
+        return has_permission
+
+
     def _choices_for_moving(self, what):
         choices = []
+
         for folder_path, folder in Folder.all_folders().items():
             if not folder.may("write"):
                 continue
@@ -1365,7 +1395,7 @@ class Folder(BaseFolder):
             if what == "folder":
                 if folder.is_same_as(self.parent()):
                     continue # We are already in that folder
-                if folder.name() in folder.subfolders():
+                if folder.name() in folder.all_subfolders():
                     continue # naming conflict
                 if self.is_transitive_parent_of(folder):
                     continue # we cannot be moved in our child folder
@@ -1378,7 +1408,11 @@ class Folder(BaseFolder):
 
 
     def subfolders_sorted_by_title(self):
-        return sorted(self.subfolders().values(), cmp=lambda a,b: cmp(a.title(), b.title()))
+        return sorted(self.all_subfolders().values(), cmp=lambda a,b: cmp(a.title(), b.title()))
+
+
+    def visible_subfolders_sorted_by_title(self):
+        return sorted(self.visible_subfolders().values(), cmp=lambda a,b: cmp(a.title(), b.title()))
 
 
     def site_id(self):
@@ -1478,7 +1512,7 @@ class Folder(BaseFolder):
         if host:
             return host
 
-        for subfolder in self.subfolders().values():
+        for subfolder in self.all_subfolders().values():
             host = subfolder.find_host_recursively(host_name)
             if host:
                 return host
@@ -1517,7 +1551,7 @@ class Folder(BaseFolder):
             self.need_unlocked_subfolders()
             self.need_unlocked_hosts()
 
-        for subfolder in self.subfolders().values():
+        for subfolder in self.all_subfolders().values():
             subfolder.need_recursive_permission(how)
 
 
@@ -1843,7 +1877,7 @@ class Folder(BaseFolder):
 
     def rewrite_hosts_files(self):
         self._rewrite_hosts_file()
-        for subfolder in self.subfolders().values():
+        for subfolder in self.all_subfolders().values():
             subfolder.rewrite_hosts_files()
 
 
@@ -1869,7 +1903,7 @@ class Folder(BaseFolder):
         site_ids.add(self.site_id())
         for host in self.hosts().values():
             site_ids.add(host.site_id())
-        for subfolder in self.subfolders().values():
+        for subfolder in self.all_subfolders().values():
             subfolder._add_all_sites_to_set(site_ids)
 
 
@@ -2083,7 +2117,7 @@ class SearchFolder(BaseFolder):
 
     def _search_hosts_recursively(self, in_folder):
         hosts = self._search_hosts(in_folder)
-        for subfolder in in_folder.subfolders().values():
+        for subfolder in in_folder.all_subfolders().values():
             hosts.update(self._search_hosts_recursively(subfolder))
         return hosts
 
@@ -6175,7 +6209,7 @@ class RulesetCollection(object):
 
 class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(self, folder, only_varname=None):
-        for subfolder in folder.subfolders().values():
+        for subfolder in folder.all_subfolders().values():
             self._load_rulesets_recursively(subfolder, only_varname)
 
         self._load_folder_rulesets(folder, only_varname)

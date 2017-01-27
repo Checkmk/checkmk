@@ -103,7 +103,7 @@ class FilterWatoFile(Filter):
             title_prefix = ""
         self.path_to_tree[my_path] = folder.title()
         sel = [ (my_path , title_prefix + folder.title()) ]
-        sel += self.sublist(folder.subfolders(), my_path, depth)
+        sel += self.sublist(folder.all_subfolders(), my_path, depth)
         return sel
 
 

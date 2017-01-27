@@ -938,6 +938,7 @@ void RunImmediate(const char *mode, int argc, char **argv) {
 
     g_config->parser.readSettings();
     postProcessOnlyFrom();
+    g_sections->loadDynamicSections();
     g_sections->emitConfigLoaded(env);
 
     if (!strcmp(mode, "test"))

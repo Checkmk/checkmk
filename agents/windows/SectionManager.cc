@@ -41,13 +41,19 @@ void SectionManager::addSection(Section *section) {
 }
 
 bool SectionManager::sectionEnabled(const std::string &name) const {
-    // if no sections were set, assume they are all enabled
+    // If no sections were set, assume they are all enabled
+    std::string section_name = name;
+
+    // Special handling for winperf_* custom sections
+    if (name.substr(0, 8) == std::string("winperf_"))
+        section_name = std::string("winperf");
+
     bool is_disabled =
-        _disabled_sections->find(name) != _disabled_sections->end();
+        _disabled_sections->find(section_name) != _disabled_sections->end();
 
     bool is_enabled =
         !_enabled_sections.wasAssigned() ||
-        (_enabled_sections->find(name) != _enabled_sections->end());
+        (_enabled_sections->find(section_name) != _enabled_sections->end());
     return !is_disabled && is_enabled;
 }
 
@@ -57,6 +63,15 @@ bool SectionManager::realtimeSectionEnabled(const std::string &name) const {
 
 bool SectionManager::useRealtimeMonitoring() const {
     return _realtime_sections->size();
+}
+
+void SectionManager::loadDynamicSections() {
+    for (winperf_counter *counter : *_winperf_counters) {
+        if (counter->id != -1) {
+            addSection((new SectionWinperf(counter->name.c_str()))
+                           ->withBase(counter->id));
+        }
+    }
 }
 
 void SectionManager::loadStaticSections(Configuration &config,
@@ -76,12 +91,6 @@ void SectionManager::loadStaticSections(Configuration &config,
                    ->withBase(238)
                    ->withRealtimeSupport());
 
-    for (winperf_counter *counter : *_winperf_counters) {
-        if (counter->id != -1) {
-            addSection((new SectionWinperf(counter->name.c_str()))
-                           ->withBase(counter->id));
-        }
-    }
 
     addSection(new SectionEventlog(config));
     addSection(new SectionLogwatch(config, env));

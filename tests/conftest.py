@@ -16,22 +16,10 @@ def cmc_path():
 
 
 def add_python_paths():
-    # make python modules needed by Check_MK available. Hope it is sufficient to use
-    # the OMD default version here. Otherwise we would need to get cmk-omd git and
-    # load the modules from there.
-    # Maybe add a check for a default version matching the current branch.
-    sys.path = glob.glob("/omd/versions/default/lib/python/*.egg") \
-               + [ "/omd/versions/default/lib/python" ] \
-               + sys.path
-
     # make the testlib available to the test modules
     sys.path.insert(0, os.path.dirname(__file__))
     # make the repo directory available (cmk lib)
     sys.path.insert(0, cmk_path())
-    sys.path.insert(0, cmc_path())
-    sys.path.insert(0, cmk_path() + "/livestatus/api/python")
-
-    #print("Import path: %s" % " ".join(sys.path))
 
 
 # Some pre-testing to ensure the developer uses the correct branches in all involved repos
@@ -67,6 +55,14 @@ def pytest_runtest_setup(item):
             pytest.skip("test requires env %r" % envname)
 
 
+def pytest_cmdline_main(config):
+    # Some special tests are not executed in a site environment
+    if config.getoption('markexpr') in [ "packaging", "git" ]:
+        return
+
+    setup_site_and_switch_user()
+
+
 def setup_site_and_switch_user():
     def is_running_as_site_user():
         return pwd.getpwuid(os.getuid()).pw_name == _site_id()
@@ -75,7 +71,7 @@ def setup_site_and_switch_user():
         return # This is executed as site user. Nothing to be done.
 
     sys.stdout.write("===============================================\n")
-    sys.stdout.write("Setting up site site\n")
+    sys.stdout.write("Setting up site '%s'\n" % _site_id())
     sys.stdout.write("===============================================\n")
 
     site = _get_site_object()
@@ -86,7 +82,7 @@ def setup_site_and_switch_user():
 
     site.cleanup_if_wrong_version()
     site.create()
-    site.open_livestatus_tcp()
+    #site.open_livestatus_tcp()
     site.start()
     site.prepare_for_tests()
 
@@ -119,7 +115,7 @@ def _get_site_object():
 
 
 def _site_id():
-    site_id = os.environ.get("SITE")
+    site_id = os.environ.get("OMD_SITE")
     if site_id == None:
         site_id = file(testlib.repo_path() + "/.site").read().strip()
 
@@ -133,10 +129,7 @@ def _site_id():
 add_python_paths()
 ensure_equal_branches()
 
-import testlib
-
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(scope="session", autouse=True)
 def site(request):
-    setup_site_and_switch_user()
     return _get_site_object()

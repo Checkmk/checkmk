@@ -1,12 +1,6 @@
-
 #!/usr/bin/python
 # call using
 # > py.test -s -k test_html_generator.py
-
-# enable imports from web directory
-from testlib import cmk_path
-import sys
-sys.path.insert(0, "%s/web/htdocs" % cmk_path())
 
 # external imports
 import re
@@ -15,8 +9,6 @@ from bs4 import BeautifulSoup as bs
 # internal imports
 from classes import HTMLOrigTester, HTMLCheck_MKTester
 from tools import compare_html, gentest, compare_and_empty
-
-_ = lambda x: x
 
 title = "title"
 key = "key"

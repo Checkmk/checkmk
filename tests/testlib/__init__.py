@@ -161,7 +161,7 @@ class Site(object):
 
         self._apache_port = None # internal cache for the port
 
-        self._gather_livestatus_port()
+        #self._gather_livestatus_port()
 
 
     @property
@@ -175,6 +175,7 @@ class Site(object):
     def internal_url(self):
         return "%s://%s:%s/%s/check_mk/" % (self.http_proto, self.http_address, self.apache_port, self.id)
 
+
     @property
     def livestatus_port(self):
         if self._livestatus_port == None:
@@ -185,8 +186,7 @@ class Site(object):
     @property
     def live(self):
         import livestatus
-        live = livestatus.SingleSiteConnection("tcp:127.0.0.1:%d" %
-                                                     self.livestatus_port)
+        live = livestatus.LocalConnection()
         live.set_timeout(2)
         return live
 
@@ -410,6 +410,10 @@ class Site(object):
 
 
     def init_wato(self):
+        if not self._missing_but_required_wato_files():
+            print "WATO is already initialized -> Skipping initializiation"
+            return
+
         web = CMKWebSession(self)
         web.login()
         web.set_language("en")
@@ -420,7 +424,18 @@ class Site(object):
         assert "<div class=\"title\">Manual Checks</div>" in response, \
                 "WATO does not seem to be initialized: %r" % response
 
-        missing_files = [
+        wait_time = 10
+        while self._missing_but_required_wato_files() and wait_time >= 0:
+            time.sleep(0.5)
+            wait_time -= 0.5
+
+        assert not self._missing_but_required_wato_files(), \
+            "Failed to initialize WATO data structures " \
+            "(Still missing: %s)" % missing_files
+
+
+    def _missing_but_required_wato_files(self):
+        required_files = [
             "etc/check_mk/conf.d/wato/rules.mk",
             "etc/check_mk/multisite.d/wato/hosttags.mk",
             "etc/check_mk/conf.d/wato/global.mk",
@@ -428,35 +443,20 @@ class Site(object):
             "var/check_mk/web/automation/automation.secret"
         ]
 
-        wait_time = 10
-        while missing_files and wait_time >= 0:
-            for f in missing_files[:]:
-                if self.file_exists(f):
-                    missing_files.remove(f)
-
-            if not missing_files:
-                break
-
-            time.sleep(0.5)
-            wait_time -= 0.5
-
-        assert not missing_files, \
-            "Failed to initialize WATO data structures " \
-            "(Still missing: %s)" % missing_files
+        missing = []
+        for f in required_files:
+            if not self.file_exists(f):
+                missing.append(f)
+        return missing
 
 
     # For reliable testing we need the site environment. The only environment for executing
     # Check_MK is now the site, so all tests that somehow rely on the environment should be
     # executed this way.
     def switch_to_site_user(self):
-        print os.getcwd()
-        #cmd = subprocess.list2cmdline(["cd", self.root, ";", ] + sys.argv)
-        #args = ["--", "/bin/su", "-l", self.id, "-c", cmd]
-        #print args
         cmd = subprocess.list2cmdline(sys.argv + [ cmk_path() + "/tests" ])
         args = [ "/usr/bin/sudo",  "--", "/bin/su", "-l", self.id, "-c", cmd ]
         subprocess.call(args)
-        #os.execv("/usr/bin/sudo", tuple(args))
 
 
     # This opens a currently free TCP port and remembers it in the object for later use
@@ -923,9 +923,8 @@ class CMKWebSession(WebSession):
 class CMKEventConsole(CMKWebSession):
     def __init__(self, site):
         super(CMKEventConsole, self).__init__(site)
-
-        self._gather_status_port()
-        self.status = CMKEventConsoleStatus(("127.0.0.1", self.status_port))
+        #self._gather_status_port()
+        self.status = CMKEventConsoleStatus("%s/tmp/run/mkeventd/status" % site.root)
 
 
     def _config(self):
@@ -987,7 +986,7 @@ class CMKEventConsoleStatus(object):
 
     # Copied from web/htdocs/mkeventd.py. Better move to some common lib.
     def query(self, query):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         timeout = 10
 
         sock.settimeout(timeout)
@@ -1031,6 +1030,6 @@ def web(site):
 @pytest.fixture(scope="module")
 def ec(site, web):
     ec = CMKEventConsole(site)
-    ec.enable_remote_status_port(web)
-    ec.activate_changes(web)
+    #ec.enable_remote_status_port(web)
+    #ec.activate_changes(web)
     return ec

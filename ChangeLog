@@ -133,6 +133,7 @@
     * 4219 FIX: Trap processing with community "public" is now only default and not accepted in all cases anymore...
             NOTE: Please refer to the migration notes!
     * 4312 FIX: Counting events are now also respecting the EC limits
+    * 4314 FIX: Quick event delete icon works with checkboxes enabled now
 
     HW/SW-Inventory:
     * 4258 FIX: snmp_extended_info: fixed undefined variable

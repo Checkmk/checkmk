@@ -1649,12 +1649,14 @@ class html(DeprecationWrapper):
             return filename
 
 
-    def makeactionuri(self, addvars, filename=None):
-        return self.makeuri(addvars + [("_transid", self.get_transid())], filename=filename)
+    def makeactionuri(self, addvars, filename=None, delvars=None):
+        return self.makeuri(addvars + [("_transid", self.get_transid())],
+                            filename=filename, delvars=delvars)
 
 
     def makeactionuri_contextless(self, addvars, filename=None):
-        return self.makeuri_contextless(addvars + [("_transid", self.get_transid())], filename=filename)
+        return self.makeuri_contextless(addvars + [("_transid", self.get_transid())],
+                                        filename=filename)
 
 
     #

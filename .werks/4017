@@ -1,0 +1,14 @@
+Title: New option to hide WATO folders when the user has insufficent permissions
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0i4
+Date: 1485527559
+Class: feature
+
+The new global settings option <i>Hide folders without read permissions</i> allows
+you to hide WATO folders from users. If a user does not have read permission to the
+subfolder AND any of its subfolders, the folder is simply not shown.
+
+Note: This feature only reduces the number of folders in the WATO folder overview.
+It does not hide these folders in other WATO pages.

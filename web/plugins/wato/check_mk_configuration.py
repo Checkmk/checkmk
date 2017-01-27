@@ -922,6 +922,16 @@ register_configvar(group,
              default_value = False),
     domain = "multisite")
 
+register_configvar(group,
+    "wato_hide_folders_without_read_permissions",
+    Checkbox(title = _("Hide folders without read permissions"),
+             label = _("hide folders without read permissions"),
+             help = _("When enabled, a subfolder is not shown, when the user does not have sufficient "
+                      "permissions to this folder and all of its subfolders. However, the subfolder is "
+                      "shown if the user has permissions to any of its subfolder."),
+             default_value = False),
+    domain = "multisite")
+
 #.
 #   .--User Management-----------------------------------------------------.
 #   |          _   _                 __  __                 _              |

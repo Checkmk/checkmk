@@ -572,10 +572,11 @@ def show_empty_folder_menu(folder):
     render_main_menu(menu_items)
 
 
+
 def show_subfolders_of(folder):
     if folder.has_subfolders():
-        html.open_div(class_="folders")
-        for subfolder in folder.subfolders_sorted_by_title():
+        html.open_div(class_="folders") # This won't hurt even if there are no visible subfolders
+        for subfolder in folder.visible_subfolders_sorted_by_title():
             show_subfolder(subfolder)
         html.close_div()
         html.div('', class_="folder_foot")
@@ -1575,7 +1576,7 @@ def recurse_hosts_for_renaming(folder, renaming_config):
         if target_name and host.may("write"):
             entries.append((folder, host_name, target_name))
     if renaming_config["recurse"]:
-        for subfolder in folder.subfolders().values():
+        for subfolder in folder.all_subfolders().values():
             entries += recurse_hosts_for_renaming(subfolder, renaming_config)
     return entries
 
@@ -1823,7 +1824,7 @@ def rename_host_as_parent(oldname, newname, in_folder=None):
         if in_folder.rename_parent(oldname, newname):
             parents.append(in_folder.name())
 
-    for subfolder in in_folder.subfolders().values():
+    for subfolder in in_folder.all_subfolders().values():
         parents += rename_host_as_parent(oldname, newname, subfolder)
 
     return parents
@@ -1853,7 +1854,7 @@ def rename_host_in_rulesets(folder, oldname, newname):
                 sites=folder.all_site_ids())
             rulesets.save()
 
-        for subfolder in folder.subfolders().values():
+        for subfolder in folder.all_subfolders().values():
             rename_host_in_folder_rules(subfolder)
 
     rename_host_in_folder_rules(Folder.root_folder())
@@ -4024,7 +4025,7 @@ def mode_bulk_discovery(phase):
             if not only_failed or host.discovery_failed():
                 entries.append((host_name, folder))
         if recurse:
-            for subfolder in folder.subfolders().values():
+            for subfolder in folder.all_subfolders().values():
                 entries += recurse_hosts(subfolder, recurse, only_failed)
         return entries
 
@@ -4460,7 +4461,7 @@ def mode_parentscan(phase):
                 entries.append(host)
 
         if recurse:
-            for subfolder in folder.subfolders().values():
+            for subfolder in folder.all_subfolders().values():
                 entries += recurse_hosts(subfolder, recurse, select)
         return entries
 
@@ -11165,7 +11166,7 @@ def make_unicode(s):
     if type(s) != unicode: # assume utf-8 encoded bytestring
         return s.decode("utf-8")
     else:
-	return s
+        return s
 
 def save_roles(roles):
     # Reflect the data in the roles dict kept in the config module Needed
@@ -11972,7 +11973,7 @@ def change_host_tags_in_folders(tag_id, operations, mode, folder):
                 # Ignore MKAuthExceptions of locked host.mk files
                 pass
 
-        for subfolder in folder.subfolders().values():
+        for subfolder in folder.all_subfolders().values():
             aff_folders, aff_hosts, aff_rulespecs = change_host_tags_in_folders(tag_id, operations, mode, subfolder)
             affected_folders += aff_folders
             affected_hosts += aff_hosts
@@ -16766,7 +16767,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
 # of mandatory attributes.
 def some_host_hasnt_set(folder, attrname):
     # Check subfolders
-    for subfolder in folder.subfolders().values():
+    for subfolder in folder.all_subfolders().values():
         # If the attribute is not set in the subfolder, we need
         # to check all hosts and that folder.
         if attrname not in subfolder.attributes() \

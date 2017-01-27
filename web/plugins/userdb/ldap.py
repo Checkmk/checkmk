@@ -381,28 +381,6 @@ class LDAPUserConnector(UserConnector):
         return self.object_exists(self.replace_macros(self._config['group_dn']))
 
 
-    def ldap_async_search(self, base, scope, filt, columns):
-        self.log('  ASYNC SEARCH')
-        msgid = self._ldap_obj.search_ext(base, scope, filt, columns)
-
-        results = []
-        while True:
-            restype, resdata = self._ldap_obj.result(msgid = msgid,
-                timeout = self._config.get('response_timeout', 5))
-
-            results.extend(resdata)
-            if restype == ldap.RES_SEARCH_RESULT or not resdata:
-                break
-
-            # no limit at the moment
-            #if sizelimit and len(users) >= sizelimit:
-            #    self._ldap_obj.abandon_ext(msgid)
-            #    break
-            time.sleep(0.1)
-
-        return results
-
-
     def ldap_paged_async_search(self, base, scope, filt, columns):
         self.log('  PAGED ASYNC SEARCH')
         page_size = self._config.get('page_size', 1000)
@@ -462,9 +440,8 @@ class LDAPUserConnector(UserConnector):
                 self.connect()
                 result = []
                 try:
-                    search_func = self._config.get('page_size') \
-                                  and self.ldap_paged_async_search or self.ldap_async_search
-                    for dn, obj in search_func(make_utf8(base), self.ldap_get_scope(scope), make_utf8(filt), columns):
+                    for dn, obj in self.ldap_paged_async_search(make_utf8(base),
+                                        self.ldap_get_scope(scope), make_utf8(filt), columns):
                         if dn is None:
                             continue # skip unwanted answers
                         new_obj = {}

@@ -118,6 +118,7 @@ def _site_id():
     site_id = os.environ.get("OMD_SITE")
     if site_id == None:
         site_id = file(testlib.repo_path() + "/.site").read().strip()
+        putenv("OMD_SITE", site_id)
 
     return site_id
 

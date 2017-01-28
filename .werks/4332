@@ -1,0 +1,12 @@
+Title: check_http: Add support for TLSv1.1 and TLSv1.2 as configuration option
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1485602837
+Class: feature
+
+The new released monitoring plugins version 2.2 offer new parameters for check_http. The
+new SSL options 1.1 for TLSv1.1 and 1.2 for TLSv1.2 were added to support this new protocol
+version.
+

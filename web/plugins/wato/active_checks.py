@@ -825,6 +825,8 @@ register_rule(group,
                                     title = _("Use SSL/HTTPS for the connection"),
                                     choices = [
                                         ("auto",  _("Use SSL with auto negotiation")),
+                                        ("1.2",   _("Use SSL, enforce TLSv1.2")),
+                                        ("1.1",   _("Use SSL, enforce TLSv1.1")),
                                         ("1",     _("Use SSL, enforce TLSv1")),
                                         ("2",     _("Use SSL, enforce SSLv2")),
                                         ("3",     _("Use SSL, enforce SSLv3")),

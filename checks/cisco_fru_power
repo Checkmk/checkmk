@@ -86,7 +86,8 @@ def parse_cisco_fru_power(info):
 
     ppre_parsed = {}
     for end_oid, oper_state, fru_current in info[0]:
-        if oper_state not in [ "", "0", "1", "5" ] and int(fru_current) >= 0:
+        if oper_state not in [ "", "0", "1", "5" ] and \
+           fru_current and int(fru_current) >= 0:
             ppre_parsed.setdefault(end_oid, map_states.get(oper_state, (3, "unexpected(%s)" % oper_state)))
 
     pre_parsed = {}

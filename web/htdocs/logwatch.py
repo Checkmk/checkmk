@@ -126,32 +126,29 @@ def show_host_log_list(host):
 def list_logs(host, logfiles):
     rowno = 0
     for log_file in logfiles:
-        rowno += 1
-        if rowno == 1:
+        file_display = form_file_to_ext(log_file)
+
+        logs = parse_file(host, log_file)
+        if not logs:
+            continue
+
+        if rowno == 0:
             html.write("<tr class=groupheader>\n")
             html.write("<th>"+_('Level')+"</th><th>"+_('Logfile')+"</th>")
             html.write("<th>"+_('Last Entry')+"</th><th>"+_('Entries')+"</th></tr>\n")
 
-        file_display = form_file_to_ext(log_file)
+        worst_log = get_worst_log(logs)
+        last_log = get_last_log(logs)
+        state = worst_log['level']
+        state_name = form_level(state)
+        html.write("<tr class=\"data %s%d\">\n" % (rowno % 2 == 0 and "odd" or "even", state))
 
-        logs = parse_file(host, log_file)
-        if logs == [] or type(logs) != list: # corrupted logfile
-            if logs == []: logs = "empty"
-            html.write("<tr class=\"data %s0\">\n" % (rowno % 2 == 0 and "odd" or "even"))
-            html.write("<td>-</td><td>%s</td><td>%s</td><td>0</td></tr>\n" %
-                             (html.attrencode(logs), html.attrencode(file_display)))
-        else:
-            worst_log = get_worst_log(logs)
-            last_log = get_last_log(logs)
-            state = worst_log['level']
-            state_name = form_level(state)
-            html.write("<tr class=\"data %s%d\">\n" % (rowno % 2 == 0 and "odd" or "even", state))
-
-            html.write("<td class=\"state%d\">%s</td>\n" % (state, state_name))
-            html.write("<td><a href=\"%s\">%s</a></td>\n" %
-                        (html.makeuri([('host', host), ('file', file_display)]), html.attrencode(file_display)))
-            html.write("<td>%s</td><td>%s</td></tr>\n" % \
-                        (form_datetime(last_log['datetime']), len(logs)))
+        html.write("<td class=\"state%d\">%s</td>\n" % (state, state_name))
+        html.write("<td><a href=\"%s\">%s</a></td>\n" %
+                    (html.makeuri([('host', host), ('file', file_display)]), html.attrencode(file_display)))
+        html.write("<td>%s</td><td>%s</td></tr>\n" % \
+                    (form_datetime(last_log['datetime']), len(logs)))
+        rowno += 1
 
     if rowno == 0:
         html.write('<tr><td class="data" colspan=4>')

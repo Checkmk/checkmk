@@ -1,0 +1,10 @@
+Title: Logwatch problematic logfiles list was showing too many logfiles
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p17
+Date: 1485770800
+
+

@@ -26,7 +26,7 @@
 
 
 def inventory_hp_webmgmt_status(info):
-    for index, health in info:
+    for index, health in info[0]:
         yield index, None
 
 

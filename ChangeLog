@@ -52,6 +52,7 @@
     * 4214 FIX: jolokia_metrics.tp: Fix crash in case of partial thread information...
     * 4304 FIX: mk_inventory.linux: fixed missing redirection to null device in if statement
     * 4305 FIX: postgres_stat_database.size: fixed missing database size perfometer
+    * 4306 FIX: cisco_fru_power: fixed empty FRU current handling
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

@@ -2006,25 +2006,17 @@ class ListChoice(ValueSpec):
         if self._toggle_all:
             html.a(_("Check / Uncheck all"), href="javascript:vs_list_choice_toggle_all('%s')" % varprefix)
 
-        if self._columns > 1:
-            html.open_table(id_="%s_tbl" % varprefix, class_=["listchoice"])
-            for nr, (key, title) in enumerate(elements):
-                if nr % self._columns == 0:
-                    if nr > 0:
-                        html.close_tr()
-                    html.open_tr()
-                html.open_td()
-                html.checkbox("%s_%d" % (varprefix, nr), key in value, label = title)
-                html.close_td()
-            html.close_tr()
-            html.close_table()
-        else:
-            html.open_div(style="height:80px;overflow:hidden; overflow-y:scroll;")
-            for nr, (key, title) in enumerate(elements):
-                html.open_div()
-                html.checkbox("%s_%d" % (varprefix, nr), key in value, label = title)
-                html.close_div()
-            html.close_div()
+        html.open_table(id_="%s_tbl" % varprefix, class_=["listchoice"])
+        for nr, (key, title) in enumerate(elements):
+            if nr % self._columns == 0:
+                if nr > 0:
+                    html.close_tr()
+                html.open_tr()
+            html.open_td()
+            html.checkbox("%s_%d" % (varprefix, nr), key in value, label = title)
+            html.close_td()
+        html.close_tr()
+        html.close_table()
 
 
     def render_input(self, varprefix, value):

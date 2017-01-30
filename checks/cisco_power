@@ -73,9 +73,9 @@ def check_cisco_power(item, no_params, info):
         if cisco_sensor_item(textinfo, sid) == item or\
                 cisco_sensor_item(textinfo, sid)+" "+sid == item or\
                 cisco_sensor_item(textinfo, sid)+"/"+sid == item:
-            state = int(state)
+            state  = int(state)
             source = int(source)
-            output = 'state: %s, source: %s' % \
+            output = 'Status: %s, Source: %s' % \
                 (cisco_power_states[state], cisco_power_sources[source])
             if state == 1:
                 return 0, "%s" % output

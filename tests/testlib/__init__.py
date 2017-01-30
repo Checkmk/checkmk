@@ -429,7 +429,8 @@ class Site(object):
             time.sleep(0.5)
             wait_time -= 0.5
 
-        assert not self._missing_but_required_wato_files(), \
+        missing_files = self._missing_but_required_wato_files()
+        assert not missing_files, \
             "Failed to initialize WATO data structures " \
             "(Still missing: %s)" % missing_files
 

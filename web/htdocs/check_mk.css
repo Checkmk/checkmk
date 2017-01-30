@@ -613,6 +613,13 @@ table.listchoice td input[type=checkbox] {
     height: 12px;
 }
 
+div.floatfilter.double > div.content > table.listchoice {
+    display: block;
+    height: 80px;
+    overflow: hidden;
+    overflow-y:scroll;
+}
+
 div.popup_container {
     position: relative;
 }

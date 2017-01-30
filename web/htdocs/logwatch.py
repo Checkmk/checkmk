@@ -130,7 +130,7 @@ def list_logs(site, host_name, logfile_names):
 
         try:
             log_chunks = parse_file(site, host_name, file_name)
-            if log_chunks == None:
+            if not log_chunks:
                 continue # Logfile vanished
 
             worst_log  = get_worst_chunk(log_chunks)

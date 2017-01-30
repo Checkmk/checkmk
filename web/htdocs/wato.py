@@ -10232,7 +10232,7 @@ def mode_edit_user(phase):
 
     html.open_ul()
     html.text_input("secret", user.get("automation_secret", ""), size=30,
-                    id="automation_secret")
+                    id_="automation_secret")
     html.write_text(" ")
     html.open_b(style=["position: relative", "top: 4px;"])
     html.write(" &nbsp;")

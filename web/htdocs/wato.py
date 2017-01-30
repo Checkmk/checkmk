@@ -9140,24 +9140,24 @@ def mode_sites(phase):
                                "sites, please do not forget to add your local monitoring site also, if "
                                "you want to display its data."))
 
-    entries = configured_sites.items()
-    sort_sites(entries)
-    for id, site in entries:
+    sites = sort_sites(configured_sites.items())
+    for site_id, site in sites:
         table.row()
+
         # Buttons
-        edit_url = folder_preserving_link([("mode", "edit_site"), ("edit", id)])
-        clone_url = folder_preserving_link([("mode", "edit_site"), ("clone", id)])
-        delete_url = html.makeactionuri([("_delete", id)])
+        edit_url = folder_preserving_link([("mode", "edit_site"), ("edit", site_id)])
+        clone_url = folder_preserving_link([("mode", "edit_site"), ("clone", site_id)])
+        delete_url = html.makeactionuri([("_delete", site_id)])
         table.cell(_("Actions"), css="buttons")
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Clone this connection in order to create a new one"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
-        if site.get("replication"):
-            globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", id)])
-            html.icon_button(globals_url, _("Site-specific global configuration"), "configuration")
+        if has_wato_slave_sites() and (site.get("replication") or config.site_is_local(site_id)):
+            globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
+            html.icon_button(globals_url, _("Site specific global configuration"), "configuration")
 
         # Site-ID
-        table.cell(_("ID"), id)
+        table.cell(_("ID"), site_id)
 
         # Alias
         table.cell(_("Alias"), site.get("alias", ""))
@@ -9212,28 +9212,34 @@ def mode_sites(phase):
         table.cell(_("Login"))
         if repl:
             if site.get("secret"):
-                logout_url = make_action_link([("mode", "sites"), ("_logout", id)])
+                logout_url = make_action_link([("mode", "sites"), ("_logout", site_id)])
                 html.buttonlink(logout_url, _("Logout"))
             else:
-                login_url = make_action_link([("mode", "sites"), ("_login", id)])
+                login_url = make_action_link([("mode", "sites"), ("_login", site_id)])
                 html.buttonlink(login_url, _("Login"))
 
     table.end()
 
+
 def mode_edit_site_globals(phase):
     configured_sites = load_sites()
-    siteid = html.var("site")
-    site = configured_sites[siteid]
+    site_id = html.var("site")
+
+    try:
+        site = configured_sites[site_id]
+    except KeyError:
+        raise MKUserError("site", _("This site does not exist."))
 
     search = get_search_expression()
 
     if phase == "title":
-        return _("Edit site-specific global settings of %s") % siteid
+        return _("Edit site specific global settings of %s") % site_id
 
     elif phase == "buttons":
+        global_buttons()
         html.context_button(_("All Sites"), folder_preserving_link([("mode", "sites")]), "back")
         html.context_button(_("Connection"), folder_preserving_link([("mode", "edit_site"),
-                                                                     ("edit", siteid)]), "sites")
+                                                                     ("edit", site_id)]), "sites")
         return
 
     # The site's default values are the current global settings
@@ -9250,7 +9256,7 @@ def mode_edit_site_globals(phase):
 
             if action == "reset" and not is_a_checkbox(valuespec):
                 c = wato_confirm(
-                    _("Removing site-specific configuration variable"),
+                    _("Removing site specific configuration variable"),
                     _("Do you really want to remove the configuration variable <b>%s</b> "
                       "of the specific configuration of this site and that way use the global value "
                       "of <b><tt>%s</tt></b>?") %
@@ -9265,12 +9271,12 @@ def mode_edit_site_globals(phase):
                     current_settings[varname] = not current_settings[varname]
                 else:
                     current_settings[varname] = not def_value
-                msg = _("Changed site-specific configuration variable %s to %s.") % (varname,
+                msg = _("Changed site specific configuration variable %s to %s.") % (varname,
                     current_settings[varname] and _("on") or _("off"))
                 site.setdefault("globals", {})[varname] = current_settings[varname]
                 save_sites(configured_sites, activate=False)
 
-                add_change("edit-configvar", msg, sites=[siteid], need_restart=need_restart)
+                add_change("edit-configvar", msg, sites=[site_id], need_restart=need_restart)
                 if action == "_reset":
                     return "edit_site_globals", msg
                 else:
@@ -9284,11 +9290,16 @@ def mode_edit_site_globals(phase):
         return
 
     html.help(_("Here you can configure global settings, that should just be applied "
-                "on that remote site. <b>Note</b>: this only makes sense if the site "
-                "is a configuration slave."))
+                "on that site. <b>Note</b>: this only makes sense if the site "
+                "is part of a distributed setup."))
 
-    if site.get("replication") != "slave":
-        html.show_error(_("This site is not a replication slave. "
+    if not has_wato_slave_sites():
+       html.show_error(_("You can not configure site specific global settings "
+                         "in non distributed setups."))
+       return
+
+    if not site.get("replication") and not config.site_is_local(site_id):
+        html.show_error(_("This site is not the master site nor a replication slave. "
                           "You cannot configure specific settings for it."))
         return
 

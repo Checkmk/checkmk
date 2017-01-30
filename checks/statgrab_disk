@@ -24,31 +24,60 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_statgrab_disk(info):
+
+# <<<statgrab_disk>>>
+# 1/md0.disk_name 1/md0
+# 1/md0.read_bytes 611352576
+# 1/md0.systime 1471423620
+# 1/md0.write_bytes 39462400
+# 1/md1.disk_name 1/md1
+# 1/md1.read_bytes 611352576
+# 1/md1.systime 1471423620
+# 1/md1.write_bytes 39462400
+# 1/md2.disk_name 1/md2
+# 1/md2.read_bytes 611351552
+
+
+def parse_statgrab_disk(info):
+    parsed = {}
     for line in info:
-        if line[0].endswith('read_bytes') or line[0].endswith('write_bytes'):
-            return [ ('read', None), ('write', None) ]
-    return []
+        disk_name = line[0].split(".")[0]
+        parsed.setdefault(disk_name, {})
 
-def check_statgrab_disk(item, _no_params, info):
-    # item is 'read' or 'write'
-    if item != 'read' and item != "write":
-        return (3, "invalid item %s" % (item,))
+        if line[0].endswith('read_bytes'):
+            parsed[disk_name]["read_bytes"] = int(line[1])
 
-    this_val = 0
-    for var, value in info:
-        if var.endswith("." + item + "_bytes"):
-            this_val += int(value)
+        elif line[0].endswith('write_bytes'):
+            parsed[disk_name]["write_bytes"] = int(line[1])
 
-    this_time = int(time.time())
-    bytes_per_sec = get_rate("diskstat." + item, this_time, this_val)
-    perfdata = [ (item, bytes_per_sec) ]
-    return 0, "%s/s" % get_bytes_human_readable(bytes_per_sec), perfdata
+        elif line[0].endswith("systime"):
+            parsed[disk_name]["systime"] = int(line[1])
+
+    return parsed
+
+
+def inventory_statgrab_disk(parsed):
+    return inventory_diskstat_generic([[None, item] for item in parsed])
+
+
+def check_statgrab_disk(item, params, parsed):
+    now   = time.time()
+    disks = {}
+    for disk_name, attrs in parsed.items():
+        disks[disk_name] = {
+            "read_throughput"  : get_rate("statgrab_disk.read.%s" % item, now, attrs["read_bytes"]),
+            "write_throughput" : get_rate("statgrab_disk.write.%s" % item, now, attrs["write_bytes"]),
+        }
+
+    return check_diskstat_dict(item, params, disks)
 
 
 check_info["statgrab_disk"] = {
-    'check_function':          check_statgrab_disk,
-    'inventory_function':      inventory_statgrab_disk,
-    'service_description':     'Disk IO %s',
-    'has_perfdata':            True,
+    'parse_function'        : parse_statgrab_disk,
+    'inventory_function'    : inventory_statgrab_disk,
+    'check_function'        : check_statgrab_disk,
+    'service_description'   : 'Disk IO %s',
+    'has_perfdata'          : True,
+    'group'                 : 'diskstat',
+    'includes'              : [ "diskstat.include" ],
 }

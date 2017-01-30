@@ -166,6 +166,9 @@ def save_file(path, content, mode=0660):
             os.chmod(tmp_path, mode)
             tmp.write(content)
 
+            tmp.flush()
+            os.fsync(tmp.fileno())
+
         os.rename(tmp_path, path)
 
     except Exception, e:

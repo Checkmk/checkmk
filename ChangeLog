@@ -96,6 +96,7 @@
     * 4282 FIX: Fixed rendering of perfometers when no RRDs exist yet
     * 4285 FIX: Availability: Timeline tables can now not be sorted and searched anymore
     * 4015 FIX: Multisite events page: Fixed slow page generation caused by the event delete icon...
+    * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles
 
     WATO:
     * 4142 New extended search dialog for rulesets and rules...

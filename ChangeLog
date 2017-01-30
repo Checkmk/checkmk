@@ -78,6 +78,7 @@
     * 4305 FIX: postgres_stat_database.size: fixed missing database size perfometer
     * 4313 FIX: ps: Improved performance of ps check on systems with a large number of processes
     * 4016 FIX: Windows Agents: fixed broken custom windows performance counter monitoring (winperf section)
+    * 4306 FIX: cisco_fru_power: fixed empty FRU current handling
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

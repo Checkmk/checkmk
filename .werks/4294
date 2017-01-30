@@ -1,0 +1,17 @@
+Title: statgrab_disk: Works now in the same way as other diskstat check plugins
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i4
+Date: 1485251642
+Class: feature
+
+Reconstructed statgrab_disk check plugin: {{read}} and {{write}} values
+will be handled in one service as in other diskstat check plugins.
+Moreover the check has a discovery rule within which you can specify whether
+a summary service or services for each disk are generated. Default is
+summary mode.
+
+In order to make the new check plugin work you have to perform a
+re-discovery on the affected hosts.
+

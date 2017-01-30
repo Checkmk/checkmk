@@ -4207,7 +4207,7 @@ class ActivateChangesManager(ActivateChanges):
             "userdb_automatic_sync" : site.get("user_sync", userdb.user_sync_default_config(site_id)),
         })
 
-        file(tmp_dir + "/sitespecific.mk", "w").write("%r\n" % config)
+        store.save_data_to_file(tmp_dir + "/sitespecific.mk", config)
 
 
 

@@ -40,6 +40,7 @@ class TableTest(html):
 
 
 def test_table(monkeypatch, tmpdir):
+    import config
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
     table_test_cubical(False, False, None, 'html', tmpdir)
 

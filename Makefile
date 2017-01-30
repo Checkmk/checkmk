@@ -192,7 +192,8 @@ version:
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.04" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.10" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 16.04" \
-          -o "$$(head -c 20 /etc/issue)" = "Debian GNU/Linux 6.0" ] \
+          -o "$$(head -c 20 /etc/issue)" = "Debian GNU/Linux 6.0" \
+          -o "$$(head -c 18 /etc/issue)" = "Debian GNU/Linux 7" ] \
           || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
 	if [ -n "$$newversion" ] ; then $(MAKE) NEW_VERSION=$$newversion setversion ; fi

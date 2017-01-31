@@ -57,7 +57,7 @@ def pytest_runtest_setup(item):
 
 def pytest_cmdline_main(config):
     # Some special tests are not executed in a site environment
-    if config.getoption('markexpr') in [ "packaging", "git" ]:
+    if config.getoption('markexpr') in [ "packaging", "git", "html_gentest" ]:
         return
 
     setup_site_and_switch_user()

@@ -39,13 +39,13 @@ def check_wmi_cpuload(item, params, parsed):
     try:
         computer_system = parsed["computer_system"]
     except KeyError:
-        computer_system = {}
+        return 3, "Missing information from agent"
 
     try:
         cores = int(computer_system.get(0, "NumberOfLogicalProcessors"))
     except ValueError:
         # NumberOfLogicalProcessors can be an empty string, not sure why
-        cores = 1
+        cores = int(computer_system.get(0, "NumberOfProcessors"))
 
     return check_cpu_load_generic(params, (load, load5min, load15min), cores)
 

@@ -2266,7 +2266,7 @@ register_check_parameters(
         elements = [
             ("map_auto_close_state", Dictionary(
                 elements = [
-                    ( "on",  MonitoringState(title=_("Auto close on")) ),
+                    ( "on",  MonitoringState(title=_("Auto close on"), default_value=1) ),
                     ( "off", MonitoringState(title=_("Auto close off")) ),
                 ],
                 title = _('Map auto close status'),
@@ -2274,7 +2274,7 @@ register_check_parameters(
             )),
             ("map_auto_shrink_state", Dictionary(
                 elements = [
-                    ( "on",  MonitoringState(title=_("Auto shrink on")) ),
+                    ( "on",  MonitoringState(title=_("Auto shrink on"), default_value=1) ),
                     ( "off", MonitoringState(title=_("Auto shrink off")) ),
                 ],
                 title = _('Map auto shrink status'),

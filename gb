@@ -661,4 +661,3 @@ elif len(hits) > 1:
 
 else:
     hits[0][1](sys.argv[2:])
-

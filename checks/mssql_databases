@@ -56,7 +56,7 @@ def inventory_mssql_databases(parsed):
 
 
 def check_mssql_databases(item, params, parsed):
-    map_states = {"1" : (2, "on"),
+    map_states = {"1" : (1, "on"),
                   "0" : (0, "off"), }
 
     if item in parsed:

@@ -1678,7 +1678,6 @@ function table_init_rowselect(oTable) {
                 return highlight_row(this, false);
             };
             elem.onclick = function(e) {
-                console.log(this.parentNode);
                 return toggle_row(e, this);
             };
             elem = null;

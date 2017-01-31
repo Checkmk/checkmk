@@ -427,40 +427,42 @@ var startY = 0;
 var startScroll = 0;
 
 function startDragScroll(event) {
-  if (!event)
-    event = window.event;
+    if (!event)
+        event = window.event;
 
-  if (g_sidebar_folded) {
-      unfold_sidebar();
-      return false;
-  }
-  else if (!g_sidebar_folded && event.clientX < 10) {
-      fold_sidebar();
-      return false;
-  }
+    var target = getTarget(event);
+    var button = getButton(event);
 
+    if (button != 'LEFT')
+        return true; // only care about left clicks!
 
-  var target = getTarget(event);
-  var button = getButton(event);
+    if (g_sidebar_folded) {
+        unfold_sidebar();
+        return prevent_default_events(event);
+    }
+    else if (!g_sidebar_folded && event.clientX < 10 && target.tagName != "OPTION") {
+        // When clicking on an <option> of the "core performance" snapins, an event
+        // with event.clientX equal 0 is triggered, don't know why. Filter out clicks
+        // on OPTION tags.
+        fold_sidebar();
+        return prevent_default_events(event);
+    }
 
-  if (dragging === false && button == 'LEFT'
-      && target.tagName != 'A'
-      && target.tagName != 'INPUT'
-      && target.tagName != 'SELECT'
-      && !(target.tagName == 'DIV' && target.className == 'heading')) {
-    if (event.preventDefault)
-      event.preventDefault();
-    if (event.stopPropagation)
-      event.stopPropagation();
-    event.returnValue = false;
+    if (dragging === false
+        && target.tagName != 'A'
+        && target.tagName != 'INPUT'
+        && target.tagName != 'SELECT'
+        && target.tagName != 'OPTION'
+        && !(target.tagName == 'DIV' && target.className == 'heading')) {
 
-    dragging = event;
-    startY = event.clientY;
-    startScroll = document.getElementById('side_content').scrollTop;
+        dragging = event;
+        startY = event.clientY;
+        startScroll = document.getElementById('side_content').scrollTop;
 
-    return false;
-  }
-  return true;
+        return prevent_default_events(event);
+    }
+
+    return true;
 }
 
 function stopDragScroll(event){
@@ -902,9 +904,14 @@ function add_html_var(url, varname, value) {
  * Event console site selection
  *************************************************/
 
-function set_snapin_site(ident, select_field) {
-    get_url('sidebar_ajax_set_snapin_site.py?ident=' + encodeURIComponent(ident) + '&site=' + encodeURIComponent(select_field.value));
+function set_snapin_site(event, ident, select_field) {
+    if (!event)
+        event = window.event;
+
+    get_url('sidebar_ajax_set_snapin_site.py?ident=' + encodeURIComponent(ident)
+          + '&site=' + encodeURIComponent(select_field.value));
     location.reload();
+    return prevent_default_events(event);
 }
 
 /************************************************

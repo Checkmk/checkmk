@@ -149,7 +149,7 @@ def snapin_site_choice(ident, choices):
         return None
 
     site_choices = [ ("", _("All sites")), ] + site_choices
-    html.select("site", site_choices, site, onchange="set_snapin_site(%s, this)" % json.dumps(ident))
+    html.select("site", site_choices, site, onchange="set_snapin_site(event, %s, this)" % json.dumps(ident))
 
     return only_sites
 

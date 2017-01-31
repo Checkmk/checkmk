@@ -24,35 +24,61 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 # <<<tsm_storagepool>>>
 # tsmfarm2      Bkup      LTOBACK               1399378.64
 # tsmfarm2      Arch      LTOARCHCOPY            157288.14
 
+# <<<tsm_storagepool>>>
+# default        Bkup      VP4200.GOLD                                                254776345.58^M
+# default        Bkup      VP4200.TDP                                                 204386407.76^M
+# default        Bkup      VP860.CM                                                   122661787.24^M
+# default                  DPC.EXC.2013                                                           ^M
+# default                  DPC.EXC.CM                                                             ^M
+# default                  DPC.EXCDAG                                                             ^M
+# default                  DPC.GOLD.ALL                                                           ^M
+# default                  DPC.GOLD.UNIX                                                          ^M
+# default                  DPC.GOLD.VE
 
-def inventory_tsm_storagepools(info):
-    inventory = []
-    for inst, stype, name, size in info:
+
+def parse_tsm_storagepools(info):
+    parsed = {}
+    for line in info:
+        if len(line) < 4:
+            continue
+
+        inst, stype, name, size = line[:4]
         if inst == "default":
             item = name
         else:
             item = inst + " / " + name
-        inventory.append((item, None))
-    return inventory
+        parsed.setdefault(item, {"type" : stype, "size" : size})
 
-def check_tsm_storagepools(item, _no_params, info):
-    for inst, stype, name, size in info:
-        if item == name or item == inst + " / " + name:
-            return (0, "%s used - %s" %
-                (get_bytes_human_readable(int(float(size) * 1024 * 1024)), stype))
-    return (3, "no such storage pool", [ ("used", float(size)) ])
+    return parsed
+
+
+def inventory_tsm_storagepools(parsed):
+    for inst in parsed:
+        yield inst, None
+
+
+def check_tsm_storagepools(item, _no_params, parsed):
+    if item not in parsed:
+        return 3, "no such storage pool"
+
+    data  = parsed[item]
+    stype = data["type"]
+    size  = data["size"]
+    return 0, "Used size: %s, Type: %s" % \
+           (get_bytes_human_readable(int(float(size) * 1024 * 1024)), stype), \
+           [ ("used", float(size)) ]
 
 
 check_info['tsm_storagepools'] = {
-    "check_function"          : check_tsm_storagepools,
-    "inventory_function"      : inventory_tsm_storagepools,
-    "service_description"     : "TSM Storagepool %s",
-    "has_perfdata"            : True,
-    "group"                   : "tsm_storagepools",
-    "default_levels_variable" : "tsm_storagepools_default_levels",
+    "parse_function"      : parse_tsm_storagepools,
+    "inventory_function"  : inventory_tsm_storagepools,
+    "check_function"      : check_tsm_storagepools,
+    "service_description" : "TSM Storagepool %s",
+    "has_perfdata"        : True,
 }
 

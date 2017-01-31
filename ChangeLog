@@ -53,6 +53,7 @@
     * 4304 FIX: mk_inventory.linux: fixed missing redirection to null device in if statement
     * 4305 FIX: postgres_stat_database.size: fixed missing database size perfometer
     * 4306 FIX: cisco_fru_power: fixed empty FRU current handling
+    * 4333 FIX: tsm_storage_pools: fixed incomplete data handling
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

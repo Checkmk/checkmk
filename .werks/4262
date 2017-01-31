@@ -6,4 +6,4 @@ Version: 1.2.8p16
 Date: 1484124769
 Class: fix
 
-If computer system section is missing then we assume that there's one core.
+

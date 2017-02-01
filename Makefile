@@ -51,6 +51,9 @@ LIVESTATUS_SOURCES := $(LIVESTATUS_AUTO) config.guess config.sub configure.ac \
                       nagios4/README m4/* nagios4/*.h src/*.{h,cc} \
                       src/Makefile.am api/python/{*.py,README} api/perl/*
 
+CORE_SOURCES        := $(wildcard $(addprefix enterprise/core/src/,*.cc *.h))
+CHECKHELPER_SOURCES := $(wildcard $(addprefix enterprise/core/src/checkhelper/,*.cc *.h))
+
 # Files that are checked for trailing spaces
 HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* \
                       $$(find -name Makefile) livestatus/src/*.{cc,h} \
@@ -69,7 +72,8 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix agents/windows/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
-                      $(wildcard $(addprefix bin/,*.cc *.c *.h))
+                      $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
+                      $(CORE_SOURCES) $(CHECKHELPER_SOURCES)
 
 .PHONY: all analyze check check-binaries check-permissions check-spaces \
         check-version clean cppcheck dist documentation format \

@@ -47,7 +47,7 @@ BEAR               := bear
 LIVESTATUS_AUTO    := aclocal.m4 ar-lib compile config.h.in configure depcomp \
                       install-sh Makefile.in missing src/Makefile.in
 LIVESTATUS_SOURCES := $(LIVESTATUS_AUTO) config.guess config.sub configure.ac \
-                      ltmain.sh Makefile.am nagios/README nagios/*.h \
+                      Makefile.am nagios/README nagios/*.h \
                       nagios4/README m4/* nagios4/*.h src/*.{h,cc} \
                       src/Makefile.am api/python/{*.py,README} api/perl/*
 

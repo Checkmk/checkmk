@@ -7,7 +7,7 @@ import re
 import json
 
 # internal imports
-from htmllib import html
+from htmllib import html, RequestHandler
 from htmllib import HTMLGenerator, HTMLCheck_MK, OutputFunnel
 
 #   .--Deprecated Renderer-------------------------------------------------.
@@ -29,11 +29,31 @@ from htmllib import HTMLGenerator, HTMLCheck_MK, OutputFunnel
 #   '----------------------------------------------------------------------'
 
 
-class DeprecatedRenderer(OutputFunnel):
+class RequestHandlerTester(RequestHandler):
+
+    # Nonrandom transid generator
+    def fresh_transid(self):
+        transid = "%d/%d" % (1, 32)
+        self.new_transids.append(transid)
+        return transid
+
+
+    def load_transids(self, lock=False):
+        return ["1" , "2", "3/4"]
+    #    raise NotImplementedError()
+
+
+    def save_transids(self, used_ids):
+        pass
+    #    raise NotImplementedError()
+
+
+class DeprecatedRenderer(OutputFunnel, RequestHandler):
 
 
     def __init__(self):
-        super(DeprecatedRenderer, self).__init__()
+        OutputFunnel.__init__(self)
+        RequestHandler.__init__(self)
 
         self.header_sent = False
         self._default_stylesheets = ['check_mk', 'graphs']
@@ -382,6 +402,48 @@ class DeprecatedRenderer(OutputFunnel):
         return src
 
 
+    def hidden_field(self, *args, **kwargs):
+        self.write(self.render_hidden_field(*args, **kwargs))
+
+
+    def render_hidden_field(self, var, value, id=None, add_var=False):
+        if value == None:
+            return ""
+
+        if add_var:
+            self.add_form_var(var)
+
+        id = id and ' id="%s"' % self.attrencode(id) or ''
+        return HTML("<input type=\"hidden\" name=\"%s\" value=\"%s\"%s />" % \
+                            (self.attrencode(var), self.attrencode(value), id))
+
+
+    def button(self, varname, title, cssclass = '', style=None):
+        if style:
+            style = ' style="%s"' % style
+        else:
+            style = ''
+        self.write("<input type=\"submit\" name=\"%s\" id=\"%s\" value=\"%s\" "
+                   "class=\"button %s\"%s />\n" % \
+                   (varname, varname, title, cssclass, style))
+        self.add_form_var(varname)
+
+
+    def buttonlink(self, href, text, add_transid=False, obj_id='', style='', title='', disabled=''):
+        if add_transid:
+            href += "&_transid=%s" % self.get_transid()
+        if not obj_id:
+            obj_id = self.some_id()
+        obj_id = ' id=\"%s\" name=\"%s\" ' % (obj_id, obj_id)
+        style = ' style="%s"' % style if style else ''
+        title = ' title="%s"' % title if title else ''
+        disabled = ' disabled="%s"' % disabled if disabled else ''
+
+        self.write('<input%s%s%s%s value="%s" class="button buttonlink" type="button" onclick="location.href=\'%s\'" />\n' % \
+                (obj_id, style, title, disabled, text, href))
+
+
+
 
     #
     # Context Buttons
@@ -717,12 +779,11 @@ class DeprecatedRenderer(OutputFunnel):
 
 #
 # A Class which can be used to simulate HTML generation in varios tests in tests/web/
-class HTMLTester(object):
+class HTMLTester(RequestHandlerTester):
 
     def __init__(self):
         super(HTMLTester, self).__init__()
         self.plugged_text = ''
-        self.vars = {"var": "varname"}
         self.form_vars = []
         self.user_errors = {"error1": "error_message <a href = www.beispiel.de></a>"}
         self.mobile = False
@@ -793,17 +854,15 @@ class HTMLTester(object):
     def set_focus(self, varname):
         self.focus_object = (self.form_name, varname)
 
-    def add_var(self, varname, value):
-        self.vars[varname] = value
-
-    def var(self, varname, deflt = None):
-        return self.vars.get(varname, deflt)
-
     def get_unicode_input(self, varname, deflt):
         return self.var(varname, deflt)
 
-    def has_var(self, varname):
-        return varname in self.vars
+
+    # Needed if input elements are put into forms without the helper
+    # functions of us. TODO: Should really be removed and cleaned up!
+    def add_form_var(self, varname):
+        self.form_vars.append(varname)
+
 
 
     def write(self, text):

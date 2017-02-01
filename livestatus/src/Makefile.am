@@ -158,6 +158,7 @@ livestatus_so_SOURCES = \
         strutil.cc \
         waittriggers.cc
 
+livestatus_so_CPPFLAGS = -I..
 livestatus_so_CXXFLAGS = -fPIC
 livestatus_so_CFLAGS   = -fPIC
 

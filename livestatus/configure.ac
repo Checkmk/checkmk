@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,15 +22,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT([MK Livestatus], [1.4.0i4], [mk@mathias-kettner.de])
+AC_INIT([Check_MK], [1.4.0i4], [mk@mathias-kettner.de])
 AM_INIT_AUTOMAKE([-Wall foreign])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADER([config.h])
+AC_DEFINE_UNQUOTED([BUILD_DATE], ["`date -R`"], [build date])
+AC_DEFINE_UNQUOTED([BUILD_HOSTNAME], ["`uname -n`"], [name of the build host])
 AC_REQUIRE_AUX_FILE([compile])
 AC_REQUIRE_AUX_FILE([config.guess])
 AC_REQUIRE_AUX_FILE([config.sub])
@@ -61,6 +60,9 @@ AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stdint.h stdlib.h string.h strings.h sys/socket.h sys/time.h sys/timeb.h syslog.h unistd.h])
 
 # Checks for C++ features
+AX_BOOST_BASE
+AX_BOOST_ASIO
+
 AC_LANG_PUSH([C++])
 
 AC_MSG_CHECKING([whether C++14 headers are supported by default])
@@ -76,6 +78,14 @@ AC_COMPILE_IFELSE(
          [AC_MSG_RESULT([yes])],
          [AC_MSG_RESULT([no])
           AC_MSG_ERROR([C++ headers are too old. Please install a newer g++/clang/libc++-dev package.])])])
+
+AC_MSG_CHECKING([whether <shared_mutex> defines std::shared_timed_mutex])
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM([#include <shared_mutex>], [std::shared_timed_mutex stm])],
+  [AC_MSG_RESULT([yes])
+   AC_DEFINE(HAVE_STD_SHARED_TIMED_MUTEX, 1,
+	     [Define to 1 if <shared_mutex> defines std::shared_timed_mutex])],
+  [AC_MSG_RESULT([no])])
 
 AC_LANG_POP([C++])
 
@@ -103,6 +113,26 @@ AC_ARG_WITH(nagios4,AC_HELP_STRING([--with-nagios4],[enabled compilation for nag
     ],
     nagios_headers=nagios)
 AC_SUBST(nagios_headers)
+
+# Compiling or executing a std::regex can fail with a stack overflow, causing
+# our Livestatus threads to die, see e.g. the related bug report
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61582. A workaround for this is
+# to limit the number of NFA states, but this must be done at compile-time. To
+# be sure that the limit is defined before <regex> is included, we set it
+# here. If the limit is reached during runtime, the regex library will throw a
+# std::regex_error with a std::regex_constants::error_space code. This whole
+# thing is a kind of a hack, but currently there seems to be no way around that,
+# at least not until the libstdc++ uses heap allocated memory instead of the
+# stack... :-/
+#
+# Some numbers for x86_64: At the point where we compile or execute a regex, we
+# already use almost 12kB stack. For compilation of a regex, each level of
+# recursion uses additional 112 bytes. For executing a regex, each level of
+# recursion uses additional 384 bytes. Our current stack size for the Livestatus
+# threads is 1MB, so we can handle roughly 2700 states. To be on the safe side,
+# we leave some breathing room and use a slightly lower limit.
+AC_DEFINE([_GLIBCXX_REGEX_STATE_LIMIT], [2500],
+          [the maximum number of states the regex NFA can have])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])

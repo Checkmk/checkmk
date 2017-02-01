@@ -43,10 +43,14 @@ DOXYGEN            := doxygen
 IWYU_TOOL          := tests/iwyu_tool_jenkins.py
 BEAR               := bear
 
+M4_DEPS            := $(wildcard m4/*) configure.ac
+CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
+
 # File to pack into livestatus-$(VERSION).tar.gz
-LIVESTATUS_AUTO    := aclocal.m4 ar-lib compile config.h.in configure depcomp \
-                      install-sh Makefile.in missing src/Makefile.in
-LIVESTATUS_SOURCES := $(LIVESTATUS_AUTO) config.guess config.sub configure.ac \
+LIVESTATUS_AUTO    := aclocal.m4 ar-lib compile config.guess config.h.in \
+                      config.sub configure depcomp install-sh missing \
+                      Makefile.in src/Makefile.in
+LIVESTATUS_SOURCES := $(LIVESTATUS_AUTO) configure.ac \
                       Makefile.am nagios/README nagios/*.h \
                       nagios4/README m4/* nagios4/*.h src/*.{h,cc} \
                       src/Makefile.am api/python/{*.py,README} api/perl/*
@@ -290,13 +294,32 @@ setup:
 	    pngcrush \
 	    slimit
 
-$(addprefix %/,$(LIVESTATUS_AUTO)): $(addprefix %/,configure.ac m4/* Makefile.am src/Makefile.am)
-	@echo "making $@: $? is newer"
-	cd livestatus && autoreconf --install --include=m4
+config.status: configure
+	if test -f config.status; then \
+	  ./config.status --recheck; \
+	else \
+	  autoreconf --install --include=m4; \
+	  ./configure CXXFLAGS="$(CXX_FLAGS)"; \
+	fi
 
-config.h: configure config.h.in
-	@echo "making $@: $? is newer"
-	./configure CXXFLAGS="$(CXX_FLAGS)"
+configure: $(CONFIGURE_DEPS)
+	autoconf
+
+aclocal.m4: $(M4_DEPS)
+	aclocal
+
+config.h.in: $(CONFIGURE_DEPS)
+	autoheader
+	rm -f stamp-h1
+	touch $@
+
+config.h: stamp-h1
+	@test -f $@ || rm -f stamp-h1
+	@test -f $@ || $(MAKE) stamp-h1
+
+stamp-h1: config.h.in config.status
+	@rm -f stamp-h1
+	./config.status config.h
 
 GTAGS: config.h
 	$(MAKE) -C livestatus distclean-tags

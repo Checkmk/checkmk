@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+
+import os
+import cmk.werks
+
+werks = cmk.werks.load_raw_files('.werks')
+if os.path.exists('enterprise/.werks'):
+    werks.update(cmk.werks.load_raw_files('enterprise/.werks'))
+
+cmk.werks.write_precompiled_werks('.werks/werks', werks)

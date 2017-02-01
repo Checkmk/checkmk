@@ -3940,7 +3940,7 @@ check_metrics["check_mk-hr_mem"] = ram_used_swap_translation
 check_metrics["check_mk-mem.used"] = {
     "ramused"       : { "name" : "mem_used",  "scale" : MB },
     "swapused"      : { "name" : "swap_used", "scale" : MB },
-    "memused"       : { "name" : "mem_total", "scale" : MB },
+    "memused"       : { "name" : "mem_lnx_total_used", "scale" : MB },
     "shared"        : { "name" : "mem_lnx_shmem", "scale" : MB },
     "pagetable"     : { "name" : "mem_lnx_page_tables", "scale" : MB },
     "mapped"        : { "name" : "mem_lnx_mapped", "scale" : MB },

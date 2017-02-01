@@ -1,0 +1,28 @@
+Title: lnx_quota: Fixed wrong value calculation and removed performance data
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.4.0i3p1
+Date: 1485955329
+
+Fixed wrong value calculation for filesystem usage. Now the factor 1024
+is used.
+
+Removed the performance data for the filesystem usage and amount of files.
+
+Reasons for this decision:
+<ul>
+  <li>Graphing system is not able to handle such kind of dynamic performance variables like
+    <ul>
+      <li>group_USERNAME_blocks</li>
+      <li>group_USERNAME_files</li>
+      <li>USERNAME_blocks</li>
+      <li>USERNAME_files</li>
+    </ul></li>
+  <li>Generated graphs use the standard logarithmic scale for painting the filesystem usage.
+      This view is not useful for the user and makes the handling complicated.</li>
+</ul>
+
+The check will work as expected and does not need further user modifications or configurations.

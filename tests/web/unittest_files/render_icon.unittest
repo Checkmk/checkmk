@@ -1,0 +1,11 @@
+[{'function_name': 'render_icon',
+  'input': {'arguments': {'cssclass': 'test',
+                          'help': 'Icon Title',
+                          'icon_name': 'TestIcon',
+                          'id': 'TestID',
+                          'middle': True},
+            'attributes': {},
+            'variables': {}},
+  'output': {'attributes': {},
+             'html_code': '',
+             'return_value': '<img src="test/TestIcon.jpg" class="icon test" align=absmiddle title="Icon Title" id="TestID" />'}}]

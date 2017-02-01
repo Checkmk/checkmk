@@ -1,0 +1,7 @@
+[{'function_name': 'javascript',
+  'input': {'arguments': {'code': '<tag> foo </tag> <bar class_="class "><hello onclick = "malicious_code(void);"/>" this is a test </bar>'},
+            'attributes': {},
+            'variables': {}},
+  'output': {'attributes': {},
+             'html_code': '<script type="text/javascript">\n<tag> foo </tag> <bar class_="class "><hello onclick = "malicious_code(void);"/>" this is a test </bar>\n</script>\n',
+             'return_value': None}}]

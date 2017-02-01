@@ -13,6 +13,7 @@
     * 4304 FIX: mk_inventory.linux: fixed missing redirection to null device in if statement
     * 4305 FIX: postgres_stat_database.size: fixed missing database size perfometer
     * 4333 FIX: tsm_storage_pools: fixed incomplete data handling
+    * 4343 FIX: apt: Fixed wrong state information of pending updates of normal and security updates...
 
     Multisite:
     * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles

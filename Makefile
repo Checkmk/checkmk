@@ -107,7 +107,7 @@ check-binaries:
 check: check-spaces check-permissions check-binaries check-version
 
 precompile-werks:
-	python -c "import cmk.werks ; cmk.werks.write_precompiled_werks('.werks/werks', cmk.werks.load_raw_files('.werks'))"
+	PYTHONPATH=. python scripts/precompile-werks
 
 dist: mk-livestatus precompile-werks
 	@echo "Making $(DISTNAME)"

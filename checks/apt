@@ -83,6 +83,7 @@ def check_apt(_no_item, params, info):
         state = params["normal"]
     yield state, "%d normal updates" % len(updates), [ ("normal_updates", len(updates)) ]
 
+    state = 0
     if sec_updates:
         state = params["security"]
         text = " (%s)" % ", ".join(sec_updates)

@@ -34,7 +34,7 @@ def cmk_path():
 
 
 def cmc_path():
-    return os.path.realpath(repo_path() + "/../cmc")
+    return repo_path() + "/enterprise"
 
 
 # Directory for persisting variable data produced by tests
@@ -292,19 +292,22 @@ class Site(object):
             cmk_path() + "/livestatus",
             cmk_path() + "/livestatus/api/python",
             cmk_path() + "/.werks",
-
-            cmc_path() + "/bin",
-            cmc_path() + "/modules",
-            cmc_path() + "/cmk_base",
-            cmc_path() + "/cmk",
-            cmc_path() + "/web",
-            cmc_path() + "/alert_handlers",
-            cmc_path() + "/misc",
-            cmc_path() + "/core",
-            cmc_path() + "/agents/bakery",
-            cmc_path() + "/agents/plugins",
-            cmc_path() + "/agents",
         ]
+
+        if os.path.exists(cmc_path()):
+            paths += [
+                cmc_path() + "/bin",
+                cmc_path() + "/modules",
+                cmc_path() + "/cmk_base",
+                cmc_path() + "/cmk",
+                cmc_path() + "/web",
+                cmc_path() + "/alert_handlers",
+                cmc_path() + "/misc",
+                cmc_path() + "/core",
+                cmc_path() + "/agents/bakery",
+                cmc_path() + "/agents/plugins",
+                cmc_path() + "/agents",
+            ]
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):

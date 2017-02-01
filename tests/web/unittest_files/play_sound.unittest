@@ -1,0 +1,7 @@
+[{'function_name': 'play_sound',
+  'input': {'arguments': {'url': 'www.test.de'},
+            'attributes': {},
+            'variables': {}},
+  'output': {'attributes': {},
+             'html_code': '<audio src="www.test.de" autoplay>\n',
+             'return_value': None}}]

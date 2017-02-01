@@ -1,0 +1,5 @@
+[{'function_name': 'html_foot',
+  'input': {'arguments': {}, 'attributes': {}, 'variables': {}},
+  'output': {'attributes': {},
+             'html_code': '</html>\n',
+             'return_value': None}}]

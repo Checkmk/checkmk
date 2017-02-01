@@ -272,7 +272,11 @@ mrproper:
             --exclude='\.bugs/.last' \
             --exclude='\.bugs/.my_ids' \
             --exclude='\.werks/.last' \
-            --exclude='\.werks/.my_ids'
+            --exclude='\.werks/.my_ids' \
+            --exclude='enterprise/\.bugs/.last' \
+            --exclude='enterprise/\.bugs/.my_ids' \
+            --exclude='enterprise/\.werks/.last' \
+            --exclude='enterprise/\.werks/.my_ids'
 
 setup:
 	sudo apt-get install figlet pngcrush slimit bear dietlibc-dev

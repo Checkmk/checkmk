@@ -1,4 +1,5 @@
 *kate-swp
+.ropeproject
 .*.swp
 .*.swo
 *.pyc

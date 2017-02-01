@@ -31,7 +31,7 @@ test-bandit:
 	# Currently only care about high severity reported issues. Once this is
 	# reached, go and enable the medium/low checks.
 	CMK_DIR="$(realpath ..)" ; \
-	CMC_DIR="$(realpath ../../cmc/)" ; \
+	ENTERPRISE_DIR="$(realpath ../enterprise)" ; \
 	bandit \
 		-c "$$CMK_DIR/bandit.yaml" \
 		-r \
@@ -40,9 +40,8 @@ test-bandit:
 		"$$CMK_DIR" \
 		$$(grep -l python "$$CMK_DIR"/bin/*) \
 		"$$CMK_DIR"/{checks,inventory}/* \
-		"$$CMC_DIR" \
-		$$(grep -l python "$$CMC_DIR"/bin/*) \
-		"$$CMC_DIR"/agents/{plugins,bakery}/*
+		$$(grep -l python "$$ENTERPRISE_DIR"/bin/*) \
+		"$$ENTERPRISE_DIR"/agents/{plugins,bakery}/*
 
 
 test-bandit-ci:

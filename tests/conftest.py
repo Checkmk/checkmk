@@ -12,7 +12,7 @@ def cmk_path():
 
 
 def cmc_path():
-    return os.path.realpath(cmk_path() + "/../cmc")
+    return os.path.realpath(cmk_path() + "/enterprise")
 
 
 def add_python_paths():
@@ -21,13 +21,6 @@ def add_python_paths():
     # make the repo directory available (cmk lib)
     sys.path.insert(0, cmk_path())
 
-
-# Some pre-testing to ensure the developer uses the correct branches in all involved repos
-def ensure_equal_branches():
-    cmk_branch = os.popen("cd \"%s\" ; git rev-parse --abbrev-ref HEAD" % cmk_path()).read().strip()
-    cmc_branch = os.popen("cd \"%s\" ; git rev-parse --abbrev-ref HEAD" % cmc_path()).read().strip()
-
-    assert cmk_branch == cmc_branch, "Different branches (%s != %s)\n" % (cmk_branch, cmc_branch)
 
 #
 # Make tests classification possible to only execute in specific environments.
@@ -128,7 +121,6 @@ def _site_id():
 #
 
 add_python_paths()
-ensure_equal_branches()
 
 # Session fixtures must be in conftest.py to work properly
 @pytest.fixture(scope="session", autouse=True)

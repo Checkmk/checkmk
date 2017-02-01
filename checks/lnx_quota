@@ -69,14 +69,14 @@ def parse_lnx_quota(info):
 
         elif fs and mode and len(line) == 10:
             # new table entry for quota
-            parsed[fs][mode][line[0]] = map(int, line[2:])
+            parsed[fs][mode][line[0]] = map(lambda x: int(x)*1024, line[2:5]) + map(int, line[5:])
 
     return parsed
 
 
 def lnx_quota_limit_check(mode, what, user, used, soft, hard, grace):
     fmt = lambda value, what: what == 'files' and '%d' % value \
-                                or get_bytes_human_readable(value*1000, 1000)
+                                or get_bytes_human_readable(value)
 
     if mode == 'usr':
         txt = 'User %s' % user
@@ -123,7 +123,7 @@ def inventory_lnx_quota(parsed):
 
 
 def check_lnx_quota(item, params, parsed):
-    perfdata = []
+    #perfdata = []
 
     if item not in parsed:
         yield 3, 'Quota info not found for this filesystem'
@@ -149,14 +149,23 @@ def check_lnx_quota(item, params, parsed):
 
                     state, txt = lnx_quota_limit_check(thing, what, user, used, soft, hard, grace)
 
-                    perfdata.append(('%s%s_%s' % (perf_prefix, user, what),
-                                    used*1000, soft*1000, hard*1000, 0, hard*1000))
+                    # Performance data was removed, because the graphing system is not
+                    # able to handle such kind of dynamic performance data. Performance
+                    # variables were named like group_USERNAME_blocks, group_USERNAME_files,
+                    # USERNAME_blocks or USERNAME_files and can appear and disappear in the
+                    # configuration.
+                    # Additional the graphs show the performance data like filesystem usage
+                    # in the standard logarithmic scale which is not a useful view for the user.
+                    #perfdata.append(('%s%s_%s' % (perf_prefix, user, what),
+                    #                used, soft, hard, 0, hard))
 
                     if txt:
                         at_least_one_problematic = True
-                        yield state, (txt + ', '), perfdata
+                        yield state, (txt + ', ')
+                        #yield state, (txt + ', '), perfdata
                     else:
-                        yield state, None, perfdata
+                        yield state, None
+                        #yield state, None, perfdata
 
             if not at_least_one_problematic:
                 yield 0, 'All %s within quota limits' % name

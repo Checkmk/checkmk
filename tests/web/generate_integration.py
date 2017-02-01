@@ -192,9 +192,33 @@ def build_test(function_name):
     elif function_name == "html_foot":
         tests.append(build_orig_test(function_name, args, state_in=state_in, add_vars=add_vars))
 
+
+    elif function_name == "hidden_field":
+        arguments = {"var": ["var"], "value": ["value", None], "id":[None,"id"], "add_var": [True, False]}
+        for args in get_cartesian_product(arguments):
+            tests.append(build_orig_test(function_name, args, state_in=state_in, add_vars=add_vars))
+
+    elif function_name == "button":
+        arguments = {"varname": ["var"],
+                     "title": ["title", ''],
+                     "cssclass": ['', "test class"],
+                     "style": [None, "height:10pt;"]}
+        for args in get_cartesian_product(arguments):
+            tests.append(build_orig_test(function_name, args, state_in=state_in, add_vars=add_vars))
+
+    elif function_name == "buttonlink":
+        arguments = {"href": ["www.buttonlink.de"],
+                     "text": ["text"],
+                     "add_transid": [True, False],
+                     "obj_id": ['', "objid"],
+                     "style": [None, "height:10pt;"],
+                     "title": ["title", None],
+                     "disabled": [None, "disabled"],}
+        for args in get_cartesian_product(arguments):
+            tests.append(build_orig_test(function_name, args, state_in=state_in, add_vars=add_vars))
+
     else:
         raise Exception("Testcase \'%s\' unknown!" % function_name)
-
     return tests
 
 
@@ -245,4 +269,17 @@ def test_context_buttons():
 def test_body_foot():
     for function_name in ["body_start", "html_foot"]:
         run_tests(function_name)
+
+
+def test_hidden_field():
+    run_tests("hidden_field")
+
+
+def test_buttons():
+    run_tests("button")
+    run_tests("buttonlink")
+
+
+
+
 

@@ -1236,52 +1236,12 @@ class DeprecationWrapper(HTMLCheck_MK):
         return self._escape_attribute(value)
 
 
+
 #.
-#   .--html----------------------------------------------------------------.
-#   |                        _     _             _                         |
-#   |                       | |__ | |_ _ __ ___ | |                        |
-#   |                       | '_ \| __| '_ ` _ \| |                        |
-#   |                       | | | | |_| | | | | | |                        |
-#   |                       |_| |_|\__|_| |_| |_|_|                        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Caution! The class needs to be derived from Outputfunnel first!      |
-#   '----------------------------------------------------------------------'
-
-
-class html(DeprecationWrapper):
-
+class RequestHandler(object):
 
     def __init__(self):
-        super(html, self).__init__()
-
-        self.myfile = None
-        self.cookies = {}
-        self._user_id = None
-        self.user_errors = {}
-        self.focus_object = None
-        self.events = set([]) # currently used only for sounds
-        self.status_icons = {}
-        self.final_javascript_code = ""
-        self.auto_id = 0
-        self.caches = {}
-        self.treestates = None
-        self.new_transids = []
-        self.ignore_transids = False
-        self.current_transid = None
-        self.page_context = {}
-        self._request_timeout = 110 # seconds
-
-        # Settings
-        self.io_error = False
-        self.mobile = False
-        self.buffering = True
-        self.keybindings_enabled = True
-        self.keybindings = []
-
-        # Forms
-        self.form_name = None
-        self.form_vars = []
+        super(RequestHandler, self).__init__()
 
         # Variable management
         self.vars      = {}
@@ -1289,60 +1249,12 @@ class html(DeprecationWrapper):
         self.uploads   = {}
         self.var_stash = []
 
-        # Time measurement
-        self.times            = {}
-        self.start_time       = time.time()
-        self.last_measurement = self.start_time
+        # Transaction IDs
+        self.new_transids = []
+        self.ignore_transids = False
+        self.current_transid = None
+        self.auto_id = 0
 
-
-    RETURN    = 13
-    SHIFT     = 16
-    CTRL      = 17
-    ALT       = 18
-    BACKSPACE = 8
-    F1        = 112
-
-
-    def set_user_id(self, user_id):
-        self._user_id = user_id
-
-
-    def is_mobile(self):
-        return self.mobile
-
-
-    def is_api_call(self):
-        return self.output_format != "html"
-
-
-    def get_user_agent(self):
-        raise NotImplementedError()
-
-
-    def get_referer(self):
-        raise NotImplementedError()
-
-
-    # The system web servers configured request timeout. This is the time
-    # before the request is terminated from the view of the client.
-    def client_request_timeout(self):
-        raise NotImplementedError()
-
-
-    def is_ssl_request(self):
-        raise NotImplementedError()
-
-
-    def request_method(self):
-        raise NotImplementedError()
-
-
-    def set_page_context(self, c):
-        self.page_context = c
-
-
-    def set_buffering(self, b):
-        self.buffering = b
 
 
     # TODO: Can this please be dropped?
@@ -1351,108 +1263,10 @@ class html(DeprecationWrapper):
         return "id_%d" % self.auto_id
 
 
-    def set_output_format(self, f):
-        self.output_format = f
-        if f == "json":
-            content_type = "application/json; charset=UTF-8"
-
-        elif f == "jsonp":
-            content_type = "application/javascript; charset=UTF-8"
-
-        elif f in ("csv", "csv_export"): # Cleanup: drop one of these
-            content_type = "text/csv; charset=UTF-8"
-
-        elif f == "python":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "text":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "html":
-            content_type = "text/html; charset=UTF-8"
-
-        elif f == "xml":
-            content_type = "text/xml; charset=UTF-8"
-
-        elif f == "pdf":
-            content_type = "application/pdf"
-
-        else:
-            raise MKGeneralException(_("Unsupported context type '%s'") % f)
-        self.set_content_type(content_type)
-
-
-    def set_content_type(self, ty):
-        raise NotImplementedError()
-
-
-    def set_link_target(self, framename):
-        self.link_target = framename
-
-
-    def set_focus(self, varname):
-        self.focus_object = (self.form_name, varname)
-
-
-    def set_render_headfoot(self, render):
-        self.render_headfoot = render
-
-
-    def set_browser_reload(self, secs):
-        self.browser_reload = secs
-
-
-    def set_browser_redirect(self, secs, url):
-        self.browser_reload   = secs
-        self.browser_redirect = url
-
-
-    def immediate_browser_redirect(self, secs, url):
-        self.javascript("set_reload(%s, '%s');" % (secs, url))
-
-
-    def add_body_css_class(self, cls):
-        self.body_classes.append(cls)
-
-
-    def add_status_icon(self, img, tooltip, url = None):
-        if url:
-            self.status_icons[img] = tooltip, url
-        else:
-            self.status_icons[img] = tooltip
-
-
-    def final_javascript(self, code):
-        self.final_javascript_code += code + "\n"
-
-
-    def reload_sidebar(self):
-        if not self.has_var("_ajaxid"):
-            self.javascript("reload_sidebar()")
-
-
-    def http_redirect(self, url):
-        raise MKGeneralException("http_redirect not implemented")
-
 
     #
-    # Request processing
+    # Request Processing
     #
-
-    def get_unicode_input(self, varname, deflt = None):
-        try:
-            return self.var_utf8(varname, deflt)
-        except UnicodeDecodeError:
-            raise MKUserError(varname, _("The given text is wrong encoded. "
-                                         "You need to provide a UTF-8 encoded text."))
-
-    def get_integer_input(self, varname):
-        try:
-            return int(self.var(varname))
-        except TypeError:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
-        except ValueError:
-            raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
 
 
     def var(self, varname, deflt = None):
@@ -1544,6 +1358,328 @@ class html(DeprecationWrapper):
     def uploaded_file(self, varname, default = None):
         return self.uploads.get(varname, default)
 
+
+    #
+    # Transaction IDs
+    #
+
+    def set_ignore_transids(self):
+        self.ignore_transids = True
+
+
+    # Compute a (hopefully) unique transaction id. This is generated during rendering
+    # of a form or an action link, stored in a user specific file for later validation,
+    # sent to the users browser via HTML code, then submitted by the user together
+    # with the action (link / form) and then validated if it is a known transid. When
+    # it is a known transid, it will be used and invalidated. If the id is not known,
+    # the action will not be processed.
+    def fresh_transid(self):
+        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
+        self.new_transids.append(transid)
+        return transid
+
+
+    def get_transid(self):
+        if not self.current_transid:
+            self.current_transid = self.fresh_transid()
+        return self.current_transid
+
+
+    # All generated transids are saved per user. They are stored in the transids.mk.
+    # Per user only up to 20 transids of the already existing ones are kept. The transids
+    # generated on the current page are all kept. IDs older than one day are deleted.
+    def store_new_transids(self):
+        if self.new_transids:
+            valid_ids = self.load_transids(lock = True)
+            cleared_ids = []
+            now = time.time()
+            for valid_id in valid_ids:
+                timestamp = valid_id.split("/")[0]
+                if now - int(timestamp) < 86400: # one day
+                    cleared_ids.append(valid_id)
+            self.save_transids((cleared_ids[-20:] + self.new_transids))
+
+
+    # Remove the used transid from the list of valid ones
+    def invalidate_transid(self, used_id):
+        valid_ids = self.load_transids(lock = True)
+        try:
+            valid_ids.remove(used_id)
+        except ValueError:
+            return
+        self.save_transids(valid_ids)
+
+
+    # Checks, if the current transaction is valid, i.e. in case of
+    # browser reload a browser reload, the form submit should not
+    # be handled  a second time.. The HTML variable _transid must be present.
+    #
+    # In case of automation users (authed by _secret in URL): If it is empty
+    # or -1, then it's always valid (this is used for webservice calls).
+    # This was also possible for normal users, but has been removed to preven
+    # security related issues.
+    def transaction_valid(self):
+        if not self.has_var("_transid"):
+            return False
+
+        id = self.var("_transid")
+        if self.ignore_transids and (not id or id == '-1'):
+            return True # automation
+
+        if '/' not in id:
+            return False
+
+        # Normal user/password auth user handling
+        timestamp = id.split("/", 1)[0]
+
+        # If age is too old (one week), it is always
+        # invalid:
+        now = time.time()
+        if now - int(timestamp) >= 604800: # 7 * 24 hours
+            return False
+
+        # Now check, if this id is a valid one
+        if id in self.load_transids():
+            #self.guitest_set_transid_valid()
+            return True
+        else:
+            return False
+
+    # Checks, if the current page is a transation, i.e. something
+    # that is secured by a transid (such as a submitted form)
+    def is_transaction(self):
+        return self.has_var("_transid")
+
+
+    # called by page functions in order to check, if this was
+    # a reload or the original form submission. Increases the
+    # transid of the user, if the latter was the case.
+    # There are three return codes:
+    # True:  -> positive confirmation by the user
+    # False: -> not yet confirmed, question is being shown
+    # None:  -> a browser reload or a negative confirmation
+    def check_transaction(self):
+        if self.transaction_valid():
+            id = self.var("_transid")
+            if id and id != "-1":
+                self.invalidate_transid(id)
+            return True
+        else:
+            return False
+
+
+    def load_transids(self, lock=False):
+        raise NotImplementedError()
+
+
+    def save_transids(self, used_ids):
+        raise NotImplementedError()
+
+
+
+
+#.
+#   .--html----------------------------------------------------------------.
+#   |                        _     _             _                         |
+#   |                       | |__ | |_ _ __ ___ | |                        |
+#   |                       | '_ \| __| '_ ` _ \| |                        |
+#   |                       | | | | |_| | | | | | |                        |
+#   |                       |_| |_|\__|_| |_| |_|_|                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Caution! The class needs to be derived from Outputfunnel first!      |
+#   '----------------------------------------------------------------------'
+
+
+class html(DeprecationWrapper, RequestHandler):
+
+    def __init__(self):
+        DeprecationWrapper.__init__(self)
+        RequestHandler.__init__(self)
+
+        self.myfile = None
+        self.cookies = {}
+        self._user_id = None
+        self.user_errors = {}
+        self.focus_object = None
+        self.events = set([]) # currently used only for sounds
+        self.status_icons = {}
+        self.final_javascript_code = ""
+        self.caches = {}
+        self.treestates = None
+        self.page_context = {}
+        self._request_timeout = 110 # seconds
+
+        # Settings
+        self.io_error = False
+        self.mobile = False
+        self.buffering = True
+        self.keybindings_enabled = True
+        self.keybindings = []
+
+        # Forms
+        self.form_name = None
+        self.form_vars = []
+
+        # Time measurement
+        self.times            = {}
+        self.start_time       = time.time()
+        self.last_measurement = self.start_time
+
+
+    RETURN    = 13
+    SHIFT     = 16
+    CTRL      = 17
+    ALT       = 18
+    BACKSPACE = 8
+    F1        = 112
+
+
+    def set_user_id(self, user_id):
+        self._user_id = user_id
+
+
+    def is_mobile(self):
+        return self.mobile
+
+
+    def is_api_call(self):
+        return self.output_format != "html"
+
+
+    def get_user_agent(self):
+        raise NotImplementedError()
+
+
+    def get_referer(self):
+        raise NotImplementedError()
+
+
+    # The system web servers configured request timeout. This is the time
+    # before the request is terminated from the view of the client.
+    def client_request_timeout(self):
+        raise NotImplementedError()
+
+
+    def is_ssl_request(self):
+        raise NotImplementedError()
+
+
+    def request_method(self):
+        raise NotImplementedError()
+
+
+    def set_page_context(self, c):
+        self.page_context = c
+
+
+    def set_buffering(self, b):
+        self.buffering = b
+
+
+    def set_output_format(self, f):
+        self.output_format = f
+        if f == "json":
+            content_type = "application/json; charset=UTF-8"
+
+        elif f == "jsonp":
+            content_type = "application/javascript; charset=UTF-8"
+
+        elif f in ("csv", "csv_export"): # Cleanup: drop one of these
+            content_type = "text/csv; charset=UTF-8"
+
+        elif f == "python":
+            content_type = "text/plain; charset=UTF-8"
+
+        elif f == "text":
+            content_type = "text/plain; charset=UTF-8"
+
+        elif f == "html":
+            content_type = "text/html; charset=UTF-8"
+
+        elif f == "xml":
+            content_type = "text/xml; charset=UTF-8"
+
+        elif f == "pdf":
+            content_type = "application/pdf"
+
+        else:
+            raise MKGeneralException(_("Unsupported context type '%s'") % f)
+        self.set_content_type(content_type)
+
+
+    def set_content_type(self, ty):
+        raise NotImplementedError()
+
+
+    def set_link_target(self, framename):
+        self.link_target = framename
+
+
+    def set_focus(self, varname):
+        self.focus_object = (self.form_name, varname)
+
+
+    def set_render_headfoot(self, render):
+        self.render_headfoot = render
+
+
+    def set_browser_reload(self, secs):
+        self.browser_reload = secs
+
+
+    def set_browser_redirect(self, secs, url):
+        self.browser_reload   = secs
+        self.browser_redirect = url
+
+
+    def immediate_browser_redirect(self, secs, url):
+        self.javascript("set_reload(%s, '%s');" % (secs, url))
+
+
+    def add_body_css_class(self, cls):
+        self.body_classes.append(cls)
+
+
+    def add_status_icon(self, img, tooltip, url = None):
+        if url:
+            self.status_icons[img] = tooltip, url
+        else:
+            self.status_icons[img] = tooltip
+
+
+    def final_javascript(self, code):
+        self.final_javascript_code += code + "\n"
+
+
+    def reload_sidebar(self):
+        if not self.has_var("_ajaxid"):
+            self.javascript("reload_sidebar()")
+
+
+    def http_redirect(self, url):
+        raise MKGeneralException("http_redirect not implemented")
+
+
+    #
+    # Request processing
+    #
+
+
+    def get_unicode_input(self, varname, deflt = None):
+        try:
+            return self.var_utf8(varname, deflt)
+        except UnicodeDecodeError:
+            raise MKUserError(varname, _("The given text is wrong encoded. "
+                                         "You need to provide a UTF-8 encoded text."))
+
+    def get_integer_input(self, varname):
+        try:
+            return int(self.var(varname))
+        except TypeError:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        except ValueError:
+            raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
 
     # Returns a dictionary containing all parameters the user handed over to this request.
     # The concept is that the user can either provide the data in a single "request" variable,
@@ -1748,61 +1884,47 @@ class html(DeprecationWrapper):
                     self.hidden_field(var, self.get_unicode_input(var))
 
 
-    def hidden_field(self, *args, **kwargs):
-        self.write(self.render_hidden_field(*args, **kwargs))
+    def hidden_field(self, var, value, id=None, add_var=False):
+        self.write_html(self.render_hidden_field(var=var, value=value, id=id, add_var=add_var))
 
 
     def render_hidden_field(self, var, value, id=None, add_var=False):
+        # TODO: Refactor
+        id_ = id
         if value == None:
             return ""
-
         if add_var:
             self.add_form_var(var)
-
-        id = id and ' id="%s"' % self.attrencode(id) or ''
-        return HTML("<input type=\"hidden\" name=\"%s\" value=\"%s\"%s />" % \
-                            (self.attrencode(var), self.attrencode(value), id))
+        return self.render_input(name=var, type_="hidden", id_=id_, value = value)
 
 
-    # TODO: refactor title -> name and help -> title
-    def button(self, varname, title, cssclass = '', style=None, help=None):
-        if style:
-            style = ' style="%s"' % style
-        else:
-            style = ''
+    def button(self, varname, title, cssclass = None, style=None, help=None):
+        self.write_html(self.render_button(varname, title, cssclass, style))
 
-        if help:
-            help = ' title="%s"' % help
 
-        self.write("<input type=\"submit\" name=\"%s\" id=\"%s\" value=\"%s\" "
-                   "class=\"button %s\"%s%s />\n" % \
-                   (varname, varname, title, cssclass, style, help))
+    def render_button(self, varname, title, cssclass = None, style=None, help=None):
         self.add_form_var(varname)
+        return self.render_input(name=varname, type_="submit",
+                                 id_=varname, class_=["button", cssclass if cssclass else None],
+                                 value=title, title=help, style=style)
 
 
-    def buttonlink(self, href, text, add_transid=False, obj_id='', style='', title='', disabled=''):
+    def buttonlink(self, href, text, add_transid=False, obj_id=None, style=None, title=None, disabled=None):
         if add_transid:
             href += "&_transid=%s" % self.get_transid()
         if not obj_id:
             obj_id = self.some_id()
-        obj_id = ' id=%s' % obj_id
-        if style:
-            style = ' style="%s"' % style
-        if title:
-            title = ' title="%s"' % title
-        if disabled:
-            title = ' disabled="%s"' % disabled
-
-        self.write('<input%s%s%s%s value="%s" class="button buttonlink" type="button" onclick="location.href=\'%s\'" />\n' % \
-                (obj_id, style, title, disabled, text, href))
+        self.input(name=obj_id, type_="button",
+                   id_=obj_id, class_=["button", "buttonlink"],
+                   value=text, style=style,
+                   title=title, disabled=disabled,
+                   onclick="location.href=\'%s\'" % href)
 
 
     def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, fkey=None):
-
         # TODO: REFACTOR
         id_ = id
         self._context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title, fkey=fkey)
-
         if fkey and self.keybindings_enabled:
             self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self._escape_attribute(url))
 
@@ -2567,122 +2689,6 @@ class html(DeprecationWrapper):
     def save_tree_states(self):
         raise NotImplementedError()
 
-
-    #
-    # Transaction IDs
-    #
-
-    def set_ignore_transids(self):
-        self.ignore_transids = True
-
-
-    # Compute a (hopefully) unique transaction id. This is generated during rendering
-    # of a form or an action link, stored in a user specific file for later validation,
-    # sent to the users browser via HTML code, then submitted by the user together
-    # with the action (link / form) and then validated if it is a known transid. When
-    # it is a known transid, it will be used and invalidated. If the id is not known,
-    # the action will not be processed.
-    def fresh_transid(self):
-        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
-        self.new_transids.append(transid)
-        return transid
-
-
-    def get_transid(self):
-        if not self.current_transid:
-            self.current_transid = self.fresh_transid()
-        return self.current_transid
-
-
-    # All generated transids are saved per user. They are stored in the transids.mk.
-    # Per user only up to 20 transids of the already existing ones are kept. The transids
-    # generated on the current page are all kept. IDs older than one day are deleted.
-    def store_new_transids(self):
-        if self.new_transids:
-            valid_ids = self.load_transids(lock = True)
-            cleared_ids = []
-            now = time.time()
-            for valid_id in valid_ids:
-                timestamp = valid_id.split("/")[0]
-                if now - int(timestamp) < 86400: # one day
-                    cleared_ids.append(valid_id)
-            self.save_transids((cleared_ids[-20:] + self.new_transids))
-
-
-    # Remove the used transid from the list of valid ones
-    def invalidate_transid(self, used_id):
-        valid_ids = self.load_transids(lock = True)
-        try:
-            valid_ids.remove(used_id)
-        except ValueError:
-            return
-        self.save_transids(valid_ids)
-
-
-    # Checks, if the current transaction is valid, i.e. in case of
-    # browser reload a browser reload, the form submit should not
-    # be handled  a second time.. The HTML variable _transid must be present.
-    #
-    # In case of automation users (authed by _secret in URL): If it is empty
-    # or -1, then it's always valid (this is used for webservice calls).
-    # This was also possible for normal users, but has been removed to preven
-    # security related issues.
-    def transaction_valid(self):
-        if not self.has_var("_transid"):
-            return False
-
-        id = self.var("_transid")
-        if self.ignore_transids and (not id or id == '-1'):
-            return True # automation
-
-        if '/' not in id:
-            return False
-
-        # Normal user/password auth user handling
-        timestamp = id.split("/", 1)[0]
-
-        # If age is too old (one week), it is always
-        # invalid:
-        now = time.time()
-        if now - int(timestamp) >= 604800: # 7 * 24 hours
-            return False
-
-        # Now check, if this id is a valid one
-        if id in self.load_transids():
-            #self.guitest_set_transid_valid()
-            return True
-        else:
-            return False
-
-    # Checks, if the current page is a transation, i.e. something
-    # that is secured by a transid (such as a submitted form)
-    def is_transaction(self):
-        return self.has_var("_transid")
-
-
-    # called by page functions in order to check, if this was
-    # a reload or the original form submission. Increases the
-    # transid of the user, if the latter was the case.
-    # There are three return codes:
-    # True:  -> positive confirmation by the user
-    # False: -> not yet confirmed, question is being shown
-    # None:  -> a browser reload or a negative confirmation
-    def check_transaction(self):
-        if self.transaction_valid():
-            id = self.var("_transid")
-            if id and id != "-1":
-                self.invalidate_transid(id)
-            return True
-        else:
-            return False
-
-
-    def load_transids(self, lock=False):
-        raise NotImplementedError()
-
-
-    def save_transids(self, used_ids):
-        raise NotImplementedError()
 
 
     #

@@ -1,0 +1,13 @@
+Title: apt: Fixed wrong state information of pending updates of normal and security updates
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1485945687
+
+If normal updates were pending for installation the service changes
+to warn. Additional the security updates were also at least warn,
+because the same state was used. Now the state is reset and will be
+calculated only for security updates.

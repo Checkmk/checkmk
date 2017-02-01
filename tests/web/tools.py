@@ -145,21 +145,35 @@ def test_compare_soup():
     compare_soup(html1, html1)
 
 
-def compare_attributes(old, new):
+def get_attributes(html_object):
+    attrs = {var: getattr(html_object, var) for var in dir(html_object)\
+                if not callable(getattr(html_object,var)) and not var.startswith("__")}
+    attrs = {key: val for key, val in attrs.iteritems() if key not in ['start_time', 'last_measurement', 'plugged_text', 'indent_level']
+                                                        and not key.startswith("_unescaper")}
+    return attrs
 
-    vars_old = {var: getattr(old, var) for var in dir(old) if not callable(getattr(old,var))\
-                                                              and not var.startswith("__")}
-    vars_new = {var: getattr(new, var) for var in dir(new) if not callable(getattr(new,var))\
-                                                              and not var.startswith("__")}
+def compare_attributes(attrs1, attrs2):
     # compare variables
-    exclusives_old = {var for var in vars_old if var not in vars_new}
-    exclusives_new = {var for var in vars_new if var not in vars_old}
+    exclusives_1 = {var for var in attrs1 if var not in attrs2}
+    exclusives_2 = {var for var in attrs2 if var not in attrs1}
 
     # compare variable_content
-    for var in vars_old:
-         if var not in exclusives_old and var not in ['start_time', 'last_measurement', 'plugged_text', 'indent_level']:
-            assert getattr(old, var) == getattr(new, var),\
-                "Values for attribute %s differ: %s %s" % (var, getattr(old, var), getattr(new, var))
+    for key in attrs1:
+        if key in exclusives_1:
+            continue
+
+        assert attrs1[key] == attrs2[key],\
+            "Values for attribute %s differ: %s VS. %s" % (key, attrs1[key], attrs2[key])
+
+    return True
+
+
+def compare_attributes_of(old, new):
+
+    vars_old = get_attributes(old)
+    vars_new = get_attributes(new)
+
+    compare_attributes(vars_old, vars_new)
 
 
 # For classes using the drain() functionality
@@ -169,7 +183,7 @@ def compare_and_empty(old, new):
     compare_html(old.plugged_text, new.plugged_text)
 
     # compare attribute values
-    compare_attributes(old, new)
+    compare_attributes_of(old, new)
 
     # empty plugged_text
     old.drain()
@@ -183,14 +197,21 @@ def _html_generator_test(old, new, fun, reinit=True):
         old.plug()
         new.plug()
 
+
+        vars_before = get_attributes(old)
+
         fun(old)
         fun(new)
+
+        vars_after = get_attributes(old)
 
         # compare html code
         compare_html(old.plugged_text, new.plugged_text)
 
         # compare attribute values
-        compare_attributes(old, new)
+        compare_attributes_of(old, new)
+
+#        write_unittest_file(old, fun, old.plugged_text, vars_before, vars_after)
 
 #     except (NotImplementedError) as err:
 # 
@@ -209,6 +230,7 @@ def _html_generator_test(old, new, fun, reinit=True):
 
         old.plug()
         new.plug()
+
 
 
 # Try to render and write the html using the function fun. (e.g. old.open_head())
@@ -243,5 +265,32 @@ def html_generator_test(old, new, fun, attributes=None, reinit=True):
 
 def gentest(old, new, fun, **attrs):
     html_generator_test(old, new, fun, **attrs)
+
+
+import inspect
+def _get_fun_call(fun):
+    funcall = re.sub(".*lambda x: x.", "html.", inspect.getsource(fun))
+    funcall = re.sub('\n', ' ', funcall)
+    funcall = re.sub('[ ]+', ' ', funcall).rstrip(' ')[:-1]
+    return funcall
+
+
+def _get_fun_name(fun):
+    return re.search("html.([^(]+)\(", _get_fun_call(fun)).group(1)
+
+
+def write_unittest_file(old, fun, result, vars_before, vars_after):
+
+    print inspect.getargvalues(fun)
+
+    funcall = _get_fun_call(fun)
+    funname = _get_fun_name(fun)
+    print funname
+    print [var for var in vars_before if var not in vars_after]
+
+    with open("unittest_files/%s.unittest" % funname, "a+") as ufile:
+        ufile.write("%s" % funcall)
+        ufile.write("\n------------------------------\n")
+        ufile.write("%s\n\n" % result)
 
 

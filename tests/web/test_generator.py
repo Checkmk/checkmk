@@ -9,8 +9,6 @@ import re
 from htmllib import HTML, HTMLGenerator
 
 
-
-
 def test_HTMLGenerator():
 
     html = HTMLGenerator()

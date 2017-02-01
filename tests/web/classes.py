@@ -8,7 +8,7 @@ import json
 
 # internal imports
 from htmllib import html
-from htmllib import HTMLGenerator, HTMLCheck_MK
+from htmllib import HTMLGenerator, HTMLCheck_MK, OutputFunnel
 
 #   .--Deprecated Renderer-------------------------------------------------.
 #   |          ____                                _           _           |
@@ -29,7 +29,7 @@ from htmllib import HTMLGenerator, HTMLCheck_MK
 #   '----------------------------------------------------------------------'
 
 
-class DeprecatedRenderer(object):
+class DeprecatedRenderer(OutputFunnel):
 
 
     def __init__(self):
@@ -132,8 +132,9 @@ class DeprecatedRenderer(object):
             self.write('</div>')
 
 
-    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None,
+    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id_ = None,
                    submit = None, attrs = {}, **args):
+        id = id_
         if default_value == None:
             default_value = ""
         addprops = ""
@@ -162,7 +163,7 @@ class DeprecatedRenderer(object):
         if submit != None:
             if not id:
                 id = "ti_%s" % varname
-            addprops += ' onkeydown="function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };"' % submit
+            addprops += " onkeydown=\"function(e) { if (!e) e = window.event; textinput_enter_submit(e, \'%s\'); };\"" % submit
             #self.final_javascript('document.getElementById("%s").onkeydown = '
             #                 'function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };'
             #                 % (id, submit))
@@ -234,7 +235,8 @@ class DeprecatedRenderer(object):
             self.form_vars.append(varname)
 
 
-    def icon_select(self, varname, options, deflt=""):
+    def icon_select(self, varname, choices, deflt=""):
+        options = choices
         current = self.var(varname, deflt)
         self.write("<select class=icon name=\"%s\" id=\"%s\" size=\"1\">\n" %
                     (varname, varname))
@@ -728,6 +730,65 @@ class HTMLTester(object):
         self.focus_object = None
         self.form_name = "form"
 
+        # rendering state
+        self.html_is_open = False
+        self.header_sent = False
+        self.context_buttons_open = False
+        self.context_buttons_hidden = False
+
+        # style options
+        self.body_classes = ['main']
+        self._default_stylesheets = [ "check_mk", "graphs" ]
+        self._default_javascripts = [ "checkmk", "graphs" ]
+
+        # behaviour options
+        self.render_headfoot = True
+        self.enable_debug = False
+        self.screenshotmode = False
+        self.have_help = False
+        self.help_visible = False
+
+        # browser options
+        self.output_format = "html"
+        self.browser_reload = 0
+        self.browser_redirect = ''
+        self.link_target = None
+        self.keybindings_enabled = True
+
+
+    def context_button_test(obj, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None, id_in_best=False):
+        obj.begin_context_buttons()
+        obj.context_button(title, url, icon=icon, hot=hot, id=id_, bestof=bestof, hover_title=hover_title, fkey=fkey)
+        if id_in_best:
+            obj.context_button_hidden = True
+        obj.end_context_buttons()
+
+
+    def unittesting_tester(self, arg1, arg2, **args):
+        self.write("<html>")
+        self.html_is_open = True
+        if not self.header_sent:
+            self.write("<header>")
+            self.write("</header>")
+            self.header_sent = True
+        self.write("<body class=\"%s\">" % " ".join(self.body_classes))
+        self.write("<div class=\"%s\">Content</div>" % " ".join(["content", arg1, arg2]))
+        self.write("</body>")
+        self.write("</html>")
+        return True
+
+    # only for test purposes
+    def radiobuttons(self, **args):
+        horizontal = args.pop("horizontal", False)
+        values = args.pop("values", [])
+        varnames = args.pop("varnames", [])
+        self.begin_radio_group(horizontal)
+        for n, v in zip(varnames, values):
+            args["varname"] = n
+            args["value"] = v
+            self.radiobutton(**args)
+        self.end_radio_group()
+
 
     def set_focus(self, varname):
         self.focus_object = (self.form_name, varname)
@@ -794,8 +855,6 @@ class HTMLCheck_MKTester(HTMLTester, html):
     def javascript_filename_for_browser(self, jsname):
         #raise NotImplementedError()
         return "js/file/name/js_%s.js" % jsname 
-
-
 
 
 class HTMLOrigTester(HTMLTester, DeprecatedRenderer):

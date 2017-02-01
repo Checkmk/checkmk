@@ -279,7 +279,15 @@ mrproper:
             --exclude='enterprise/\.werks/.my_ids'
 
 setup:
-	sudo apt-get install figlet pngcrush slimit bear dietlibc-dev
+	sudo apt-get install \
+	    autoconf \
+	    bear \
+	    build-essential \
+	    figlet \
+	    libpcap-dev \
+	    librrd-dev \
+	    pngcrush \
+	    slimit
 
 $(addprefix %/,$(LIVESTATUS_AUTO)): $(addprefix %/,configure.ac m4/* Makefile.am src/Makefile.am)
 	@echo "making $@: $? is newer"

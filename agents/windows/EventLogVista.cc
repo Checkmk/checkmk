@@ -229,9 +229,7 @@ EventLogVista::EventLogVista(LPCWSTR path) : _path(path), _handle(nullptr) {
     reset();
 }
 
-EventLogVista::~EventLogVista() noexcept {
-    reset();
-}
+EventLogVista::~EventLogVista() noexcept { reset(); }
 
 EvtFunctionMap &EventLogVista::evt() const { return *_evt; }
 
@@ -318,7 +316,8 @@ uint64_t EventLogVista::seek(uint64_t record_id) {
         L"' IsCurrent='true'/></BookmarkList>";
 
     std::unique_ptr<ManagedEventHandle> bookmark =
-        std::make_unique<ManagedEventHandle>(*_evt, evt().createBookmark(bookmarkXml.c_str()));
+        std::make_unique<ManagedEventHandle>(
+            *_evt, evt().createBookmark(bookmarkXml.c_str()));
 
     _handle = std::make_unique<ManagedEventHandle>(
         *_evt, evt().subscribe(nullptr, _signal->get_handle(), _path.c_str(),
@@ -340,8 +339,8 @@ std::shared_ptr<IEventLogRecord> EventLogVista::read() {
             return std::shared_ptr<IEventLogRecord>();
         }
     }
-    return std::make_shared<EventLogRecordVista>(_events[_next_event++],
-                                                 _evt.get(), _render_context->get_handle());
+    return std::make_shared<EventLogRecordVista>(
+        _events[_next_event++], _evt.get(), _render_context->get_handle());
 }
 
 bool EventLogVista::fillBuffer() {

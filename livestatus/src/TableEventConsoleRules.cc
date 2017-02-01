@@ -31,12 +31,11 @@ using std::string;
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    addColumn(make_unique<StringEventConsoleColumn>(
-        "rule_id", "The ID of the rule"));
+    addColumn(
+        make_unique<StringEventConsoleColumn>("rule_id", "The ID of the rule"));
 
     addColumn(make_unique<IntEventConsoleColumn>(
-        "rule_hits",
-        "The times rule matched an incoming message"));
+        "rule_hits", "The times rule matched an incoming message"));
 }
 
 string TableEventConsoleRules::name() const { return "eventconsolerules"; }

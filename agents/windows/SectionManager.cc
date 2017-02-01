@@ -91,7 +91,6 @@ void SectionManager::loadStaticSections(Configuration &config,
                    ->withBase(238)
                    ->withRealtimeSupport());
 
-
     addSection(new SectionEventlog(config));
     addSection(new SectionLogwatch(config, env));
 

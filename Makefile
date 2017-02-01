@@ -72,7 +72,7 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h))
 
 .PHONY: all analyze check check-binaries check-permissions check-spaces \
-        check-version clean cppcheck dist documentation format git-clean \
+        check-version clean cppcheck dist documentation format \
         GTAGS headers healspaces help iwyu minify-js mk-livestatus mrproper \
         optimize-images packages setup setversion tidy version
 

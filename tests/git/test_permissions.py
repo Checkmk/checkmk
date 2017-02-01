@@ -27,6 +27,12 @@ permissions = [
     ('pnp-templates/*',               is_not_executable, []),
     ('notifications/*',               is_executable, ['README', 'debug']),
     ('bin/*',                         is_executable, ['Makefile', 'mkevent.cc', 'mkeventd_open514.cc']),
+    # Enterprise specific
+    ('enterprise/bin/*',              is_executable, []),
+    ('enterprise/agents/bakery/*',    is_not_executable, []),
+    ('enterprise/agents/plugins/*',   is_executable, []),
+    ('enterprise/alert_handlers/*',   is_executable, []),
+    ('enterprise/alert_handlers/*',   is_executable, []),
 ]
 
 def test_permissions():

@@ -35,6 +35,7 @@ AC_DEFINE_UNQUOTED([BUILD_HOSTNAME], ["`uname -n`"], [name of the build host])
 AC_REQUIRE_AUX_FILE([compile])
 AC_REQUIRE_AUX_FILE([config.guess])
 AC_REQUIRE_AUX_FILE([config.sub])
+AM_CONDITIONAL([ENTERPRISE_OPT], [test -d enterprise])
 
 # Checks for programs.
 AC_PROG_CC([gcc-6 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang])
@@ -134,6 +135,12 @@ AC_SUBST(nagios_headers)
 AC_DEFINE([_GLIBCXX_REGEX_STATE_LIMIT], [2500],
           [the maximum number of states the regex NFA can have])
 
-AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+AC_CONFIG_FILES([livestatus/Makefile
+                 livestatus/src/Makefile])
+AM_COND_IF([ENTERPRISE_OPT],
+           [AC_CONFIG_FILES([enterprise/core/Makefile
+                             enterprise/core/src/Makefile
+                             enterprise/core/src/livestatus/Makefile
+                             enterprise/core/src/checkhelper/Makefile])])
+
 AC_OUTPUT

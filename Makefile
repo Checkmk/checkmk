@@ -157,7 +157,7 @@ dist: mk-livestatus precompile-werks
 		--exclude "crash.exe" \
 		--exclude "openhardwaremonitor" \
 		--exclude .f12 $$(cd agents ; ls)
-	cd $(DISTNAME) ; ../make_package_info $(VERSION) > package_info
+	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION
@@ -331,7 +331,7 @@ compile_commands.json: config.h $(FILES_TO_FORMAT)
 	$(BEAR) $(MAKE) -C livestatus -j8
 
 tidy: compile_commands.json
-	@./compiled_sources | xargs $(CLANG_TIDY) --extra-arg=-D__clang_analyzer__
+	@scripts/compiled_sources | xargs $(CLANG_TIDY) --extra-arg=-D__clang_analyzer__
 
 # Not really perfect rules, but better than nothing
 iwyu: compile_commands.json
@@ -347,7 +347,7 @@ analyze: config.h
 
 # GCC-like output on stderr intended for human consumption.
 cppcheck: compile_commands.json
-	@./compiled_sources | \
+	@scripts/compiled_sources | \
 	sed 's/^"\(.*\)"$$/\1/' | \
 	$(CPPCHECK) --max-configs=16 -UCMC --enable=all --suppress=missingIncludeSystem --inline-suppr -I livestatus/src -I livestatus --file-list=- --quiet --template=gcc
 

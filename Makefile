@@ -127,8 +127,7 @@ dist: mk-livestatus precompile-werks
 	$(MAKE) minify-js
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins
 
-	tar cf $(DISTNAME)/livestatus.tar $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
-	gzip $(DISTNAME)/livestatus.tar
+	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
 
 	tar czf $(DISTNAME)/pnp-templates.tar.gz $(TAROPTS) -C pnp-templates $$(cd pnp-templates ; ls *.php)
 	tar cf $(DISTNAME)/doc.tar $(TAROPTS) -C doc $$(cd doc ; ls)
@@ -167,14 +166,12 @@ dist: mk-livestatus precompile-werks
 packages:
 	$(MAKE) -C agents packages
 
+# NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
+# so we do things in a slightly complicated way.
 mk-livestatus: $(addprefix livestatus/,$(LIVESTATUS_AUTO))
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
-	cd livestatus ; tar cf - $(LIVESTATUS_SOURCES) | tar xf - -C ../mk-livestatus-$(VERSION)
-	mkdir -p mk-livestatus-$(VERSION)/nagios
-	cp livestatus/nagios/*.h mk-livestatus-$(VERSION)/nagios/
-	mkdir -p mk-livestatus-$(VERSION)/nagios4
-	cp livestatus/nagios4/*.h mk-livestatus-$(VERSION)/nagios4/
+	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
 	tar czf mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 

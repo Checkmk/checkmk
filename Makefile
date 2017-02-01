@@ -201,7 +201,7 @@ version:
 
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
-	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
+	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' configure.ac ; \
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' bin/mkeventd bin/mkbackup ; \
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' lib/__init__.py ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
@@ -294,15 +294,15 @@ $(addprefix %/,$(LIVESTATUS_AUTO)): $(addprefix %/,configure.ac m4/* Makefile.am
 	@echo "making $@: $? is newer"
 	cd livestatus && autoreconf --install --include=m4
 
-livestatus/config.h: livestatus/configure livestatus/config.h.in
+config.h: configure config.h.in
 	@echo "making $@: $? is newer"
-	cd livestatus && ./configure CXXFLAGS="$(CXX_FLAGS)"
+	./configure CXXFLAGS="$(CXX_FLAGS)"
 
-GTAGS: livestatus/config.h
+GTAGS: config.h
 	$(MAKE) -C livestatus distclean-tags
 	$(MAKE) -C livestatus GTAGS
 
-compile_commands.json: livestatus/config.h $(FILES_TO_FORMAT)
+compile_commands.json: config.h $(FILES_TO_FORMAT)
 	@echo "making $@: $? is newer"
 	$(MAKE) -C livestatus clean
 	$(BEAR) $(MAKE) -C livestatus -j8
@@ -315,7 +315,7 @@ iwyu: compile_commands.json
 	@$(IWYU_TOOL) --output-format=clang -p .
 
 # Not really perfect rules, but better than nothing
-analyze: livestatus/config.h
+analyze: config.h
 	$(MAKE) -C livestatus clean
 	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++14"
 
@@ -341,5 +341,5 @@ format:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT)
 
 # Note: You need the doxygen and graphviz packages.
-documentation: livestatus/config.h
+documentation: config.h
 	$(DOXYGEN) doc/Doxyfile

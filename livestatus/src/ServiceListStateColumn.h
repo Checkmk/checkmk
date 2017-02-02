@@ -29,7 +29,14 @@
 #include <cstdint>
 #include <string>
 #include "IntColumn.h"
+
+#ifdef CMC
+#include <unordered_set>
+class Service;
+typedef std::unordered_set<Service *> servicelist_t;
+#else
 #include "nagios.h"
+#endif
 
 class ServiceListStateColumn : public IntColumn {
 public:
@@ -58,13 +65,18 @@ public:
         , _offset(offset)
         , _logictype(logictype) {}
     int32_t getValue(void *row, contact *auth_user) override;
-    servicesmember *getMembers(void *data);
+#ifdef CMC
+    static int32_t getValue(Type logictype, servicelist_t *mem,
+                            contact *auth_user);
+#else
     static int32_t getValue(Type logictype, servicesmember *mem,
                             contact *auth_user);
+    servicesmember *getMembers(void *data);
+#endif
     static bool svcStateIsWorse(int32_t state1, int32_t state2);
 
 private:
-    int _offset;
+    const int _offset;
     const Type _logictype;
 };
 

@@ -460,7 +460,7 @@ class Site(object):
     def switch_to_site_user(self):
         cmd = subprocess.list2cmdline(sys.argv + [ cmk_path() + "/tests" ])
         args = [ "/usr/bin/sudo",  "--", "/bin/su", "-l", self.id, "-c", cmd ]
-        subprocess.call(args)
+        return subprocess.call(args)
 
 
     # This opens a currently free TCP port and remembers it in the object for later use

@@ -2260,6 +2260,23 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "mssql_instance",
+    _("MSSQL Instance"),
+    Dictionary(
+        elements = [
+            ("map_connection_state", MonitoringState(
+                title = _("Connection status"),
+                default_value = 2))
+        ],
+    ),
+    TextAscii(
+       title = _("Instance identifier"),
+    ),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "mssql_databases",
     _("MSSQL Databases properties"),
     Dictionary(

@@ -1,0 +1,9 @@
+Title: mssql_instance: now the connection status is configurable
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486028435
+Class: feature
+
+

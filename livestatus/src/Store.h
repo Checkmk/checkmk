@@ -77,28 +77,29 @@ private:
     DowntimesOrComments _downtimes;
     DowntimesOrComments _comments;
     LogCache _log_cache;
-    TableContacts _table_contacts;
+
+    TableColumns _table_columns;
     TableCommands _table_commands;
+    TableComments _table_comments;
+    TableContactGroups _table_contactgroups;
+    TableContacts _table_contacts;
+    TableDowntimes _table_downtimes;
+    TableEventConsoleEvents _table_eventconsoleevents;
+    TableEventConsoleHistory _table_eventconsolehistory;
+    TableEventConsoleReplication _table_eventconsolereplication;
+    TableEventConsoleRules _table_eventconsolerules;
+    TableEventConsoleStatus _table_eventconsolestatus;
     TableHostGroups _table_hostgroups;
     TableHosts _table_hosts;
     TableHostsByGroup _table_hostsbygroup;
+    TableLog _table_log;
     TableServiceGroups _table_servicegroups;
     TableServices _table_services;
     TableServicesByGroup _table_servicesbygroup;
     TableServicesByHostGroup _table_servicesbyhostgroup;
-    TableTimeperiods _table_timeperiods;
-    TableContactGroups _table_contactgroups;
-    TableDowntimes _table_downtimes;
-    TableComments _table_comments;
-    TableStatus _table_status;
-    TableLog _table_log;
     TableStateHistory _table_statehistory;
-    TableColumns _table_columns;
-    TableEventConsoleEvents _table_eventconsoleevents;
-    TableEventConsoleHistory _table_eventconsolehistory;
-    TableEventConsoleStatus _table_eventconsolestatus;
-    TableEventConsoleReplication _table_eventconsolereplication;
-    TableEventConsoleRules _table_eventconsolerules;
+    TableStatus _table_status;
+    TableTimeperiods _table_timeperiods;
 
     std::map<std::string, Table *> _tables;
 

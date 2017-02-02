@@ -28,10 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <list>
 #include <map>
-#include <mutex>
 #include <string>
-#include "CommandsHolderNagios.h"
-#include "DowntimesOrComments.h"
 #include "LogCache.h"
 #include "TableColumns.h"
 #include "TableCommands.h"
@@ -55,29 +52,69 @@
 #include "TableStateHistory.h"
 #include "TableStatus.h"
 #include "TableTimeperiods.h"
-#include "nagios.h"
-class Logger;
 class InputBuffer;
+class Logger;
 class MonitoringCore;
 class OutputBuffer;
 class Table;
 
+#ifdef CMC
+#include <cstdint>
+#include "TableCachedStatehist.h"
+class Config;
+class Core;
+class Object;
+#else
+#include <mutex>
+#include "CommandsHolderNagios.h"
+#include "DowntimesOrComments.h"
+#include "nagios.h"
+#endif
+
 class Store {
 public:
+#ifdef CMC
+    Store(MonitoringCore *mc, Core *core);
+    LogCache *logCache() { return &_log_cache; };
+    bool answerRequest(InputBuffer *, OutputBuffer *);
+    bool answerGetRequest(const std::list<std::string> &lines,
+                          OutputBuffer &output, const std::string &tablename);
+    void answerCommandRequest(const char *command, Logger *logger);
+    void setMaxCachedMessages(unsigned long m);
+    void switchStatehistTable();
+    void buildStatehistCache();
+    void flushStatehistCache();
+    void tryFinishStatehistCache();
+    bool addObjectHistcache(Object *);
+    void addAlertToStatehistCache(Object *, int state, const char *output);
+    void addDowntimeToStatehistCache(Object *, bool started);
+    void addFlappingToStatehistCache(Object *, bool started);
+    Logger *logger() const { return _logger; }
+#else
     explicit Store(MonitoringCore *core);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
 
     void registerDowntime(nebstruct_downtime_data *);
     void registerComment(nebstruct_comment_data *);
+#endif
 
 private:
+#ifdef CMC
+    Core *_core;
+#else
     MonitoringCore *_core;
+#endif
     Logger *const _logger;
+#ifndef CMC
     CommandsHolderNagios _commands_holder;
     DowntimesOrComments _downtimes;
     DowntimesOrComments _comments;
+#endif
     LogCache _log_cache;
 
+#ifdef CMC
+    TableCachedStatehist _table_cached_statehist;
+#endif
     TableColumns _table_columns;
     TableCommands _table_commands;
     TableComments _table_comments;
@@ -103,16 +140,23 @@ private:
 
     std::map<std::string, Table *> _tables;
 
+#ifndef CMC
     std::mutex _command_mutex;
+#endif
 
     void addTable(Table *table);
     Table *findTable(const std::string &name);
+#ifdef CMC
+    Config *config() const;
+    uint32_t horizon() const;
+#else
     void logRequest(const std::string &line,
                     const std::list<std::string> &lines);
     bool answerGetRequest(const std::list<std::string> &lines,
                           OutputBuffer &output, const std::string &tablename);
     void answerCommandRequest(const char *);
     bool handleCommand(const std::string &command);
+#endif
 };
 
 #endif  // Store_h

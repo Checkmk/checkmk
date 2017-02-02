@@ -290,8 +290,9 @@ def _write_table(table, rows, actions_enabled, actions_visible, search_term):
             if nr < len(rows) - 1 and rows[nr+1][2] != "header":
                 html.open_tr(class_="groupheader")
                 html.open_td(colspan=num_cols)
-                html.br()
+                html.open_h3()
                 html.write(row)
+                html.close_h3()
                 html.close_td()
                 html.close_tr()
 

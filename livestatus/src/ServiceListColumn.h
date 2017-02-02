@@ -29,10 +29,16 @@
 #include <memory>
 #include <string>
 #include "Column.h"
-#include "nagios.h"
 #include "opids.h"
 class Filter;
 class RowRenderer;
+
+#ifdef CMC
+#include <unordered_set>
+class Service;
+#else
+#include "nagios.h"
+#endif
 
 class ServiceListColumn : public Column {
 public:
@@ -50,7 +56,11 @@ public:
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
+#ifdef CMC
+    std::unordered_set<Service *> *getMembers(void *data);
+#else
     servicesmember *getMembers(void *data);
+#endif
 
 private:
     bool _hostname_required;
@@ -58,7 +68,9 @@ private:
     bool _show_host;
     int _info_depth;
 
+#ifndef CMC
     int inCustomTimeperiod(service *svc, const char *varname);
+#endif
 };
 
 #endif  // ServiceListColumn_h

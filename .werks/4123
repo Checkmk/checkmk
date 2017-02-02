@@ -1,0 +1,13 @@
+Title: active check check_sql: changed handling of query results and fixed hostname parameter
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486044551
+Class: fix
+
+If the used SQL query results in only one column its value is shown in check output now. Otherwise the second column of the result is used for check output.
+
+Also, the hostname parameter has been fixed to prevent erros like this:
+
+Error while connecting to database: [2005] Unknown MySQL server host "10.11.12.13"

@@ -41,7 +41,12 @@ public:
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset)
         , _core(core)
-        , _offset(offset) {}
+        , _offset(offset) {
+#ifdef CMC
+        (void)_core;
+        (void)_offset;
+#endif
+    }
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
     bool isEmpty(void *data) override;

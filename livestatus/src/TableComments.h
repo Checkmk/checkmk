@@ -33,6 +33,7 @@ class Query;
 #ifdef CMC
 #include <mutex>
 #include "Notes.h"
+#include "cmc.h"
 class Core;
 #else
 #include "nagios.h"

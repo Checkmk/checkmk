@@ -35,6 +35,7 @@ class RowRenderer;
 
 #ifdef CMC
 #include <unordered_set>
+#include "cmc.h"
 class Host;
 #else
 #include "nagios.h"

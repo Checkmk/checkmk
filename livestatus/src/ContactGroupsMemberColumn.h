@@ -31,6 +31,7 @@
 #include "ContactsColumn.h"
 
 #ifdef CMC
+#include "cmc.h"
 class RowRenderer;
 #else
 #include "nagios.h"

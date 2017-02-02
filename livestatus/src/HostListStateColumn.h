@@ -30,7 +30,13 @@
 #include <string>
 #include "IntColumn.h"
 #include "ServiceListStateColumn.h"
+
+#ifdef CMC
+#include <unordered_set>
+class Host;
+#else
 #include "nagios.h"
+#endif
 
 class HostListStateColumn : public IntColumn {
 public:
@@ -72,10 +78,14 @@ public:
         , _offset(offset)
         , _logictype(logictype) {}
     int32_t getValue(void *row, contact *auth_user) override;
+#ifdef CMC
+    std::unordered_set<Host *> *getMembers(void *data);
+#else
     hostsmember *getMembers(void *data);
+#endif
 
 private:
-    int _offset;
+    const int _offset;
     const Type _logictype;
 };
 

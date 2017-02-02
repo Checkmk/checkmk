@@ -60,6 +60,9 @@ LIVESTATUS_SOURCES := $(LIVESTATUS_AUTO) configure.ac \
                       Makefile.am nagios/README nagios/*.h \
                       nagios4/README m4/* nagios4/*.h src/*.{h,cc} \
                       src/Makefile.am api/python/{*.py,README} api/perl/*
+LIVESTATUS_SRCS    := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
+                      api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
+                      src/{Makefile.am,*.{cc,h}} standalone/config_files.m4
 
 CORE_SOURCES        := $(wildcard $(addprefix enterprise/core/src/,*.cc *.h))
 CHECKHELPER_SOURCES := $(wildcard $(addprefix enterprise/core/src/checkhelper/,*.cc *.h))
@@ -178,13 +181,14 @@ packages:
 
 # NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
 # so we do things in a slightly complicated way.
-mk-livestatus: $(addprefix livestatus/,$(LIVESTATUS_AUTO))
+mk-livestatus:
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
-	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
+	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SRCS) ) | tar xf - -C mk-livestatus-$(VERSION)
+	cp -a configure.ac m4 mk-livestatus-$(VERSION)
+	cd mk-livestatus-$(VERSION) && autoreconf --install --include=m4 && rm -rf autom4te.cache
 	tar czf mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
-
 
 check-version:
 	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \

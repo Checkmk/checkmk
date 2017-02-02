@@ -2763,16 +2763,6 @@ class ModeDiscovery(WatoMode):
                   folder_preserving_link([("mode", "diag_host"),
                                           ("host", self._host_name)]), "diagnose")
 
-        if config.user.may("wato.services"):
-            html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
-
-        if self._show_parameter_column():
-            html.context_button(_("Hide parameters"),
-                html.makeuri([("_hide_parameters", "yes")]), "check_parameters")
-        else:
-            html.context_button(_("Show parameters"),
-                html.makeuri([("_hide_parameters", "no")]), "check_parameters")
-
 
     def action(self):
         if not html.check_transaction():
@@ -2898,7 +2888,7 @@ class ModeDiscovery(WatoMode):
             # check_source, show bulk actions, title
             ("new",           True,  _("Available services (not yet checked)")),
             ("vanished",      True,  _("Vanished services (checked, but no longer exist)")),
-            ("old",           True,  _("Already configured services")),
+            ("old",           True,  _("Enabled services (being checked)")),
             ("ignored",       False, _("Disabled services (configured away by admin)")),
             ("active",        False, _("Active checks")),
             ("manual",        False, _("Manual checks")),
@@ -2964,7 +2954,7 @@ class ModeDiscovery(WatoMode):
 
         def activate_button():
             url = "" # TODO
-            html.icon_button(url, _("Activate this service"), "new", ty="icon")
+            html.icon_button(url, _("Monitor this service"), "new", ty="icon")
 
         def remove_button():
             url = "" # TODO
@@ -3117,7 +3107,16 @@ class ModeDiscovery(WatoMode):
             html.button("_fixall", _("Fix all missing/vanished"))
 
         if self._already_has_services(check_table):
-            html.button("_refresh", _("Automatic Refresh (Tabula Rasa)"))
+            html.button("_refresh", _("Automatic refresh (tabula rasa)"))
+
+        if self._show_parameter_column():
+            html.buttonlink(html.makeuri([("_hide_parameters", "yes")]),
+                            _("Hide check parameters"))
+        else:
+            html.buttonlink(html.makeuri([("_hide_parameters", "no")]),
+                            _("Show check parameters"))
+
+        html.buttonlink(html.makeuri([("_scan", "yes")]), _("Full scan"))
 
 
     def _already_has_services(self, check_table):
@@ -3155,7 +3154,7 @@ class ModeDiscovery(WatoMode):
         html.write_text(" %s: " % label)
 
         if check_source == "new":
-            html.button("_bulk_activate", _("Activate"))
+            html.button("_bulk_activate", _("Enable"))
             html.button("_bulk_disable",  _("Disable"))
 
         elif check_source == "vanished":

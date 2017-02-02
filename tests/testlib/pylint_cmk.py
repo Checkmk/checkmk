@@ -97,7 +97,6 @@ def run_pylint(base_path, check_files=None, cleanup_test_dir=False):
     pylint_args = os.environ.get("PYLINT_ARGS", "")
     if pylint_args:
         pylint_args += " "
-    pylint_output = os.environ.get("PYLINT_OUTPUT")
 
     pylint_cfg = repo_path() + "/pylintrc"
 
@@ -109,17 +108,8 @@ def run_pylint(base_path, check_files=None, cleanup_test_dir=False):
     os.putenv("TEST_PATH", repo_path() + "/tests")
     cmd = "pylint --rcfile=\"%s\" %s%s" % (pylint_cfg, pylint_args, " ".join(check_files))
     print("Running pylint with: %s" % cmd)
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                         shell=True, cwd=base_path)
-    stdout = p.communicate()[0]
-
-    if stdout.strip():
-        if pylint_output:
-            file(pylint_output, "a").write(stdout)
-        else:
-            print(stdout)
-
-    exit_code = p.returncode
+    p = subprocess.Popen(cmd, shell=True, cwd=base_path)
+    exit_code = p.wait()
     print("Finished with exit code: %d" % exit_code)
 
     if exit_code == 0 and cleanup_test_dir:

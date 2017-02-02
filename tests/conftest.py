@@ -83,14 +83,14 @@ def setup_site_and_switch_user():
     sys.stdout.write("Switching to site context\n")
     sys.stdout.write("===============================================\n")
 
-    site.switch_to_site_user()
+    exit_code = site.switch_to_site_user()
 
     sys.stdout.write("===============================================\n")
     sys.stdout.write("Cleaning up after testing\n")
     sys.stdout.write("===============================================\n")
 
     site.rm_if_not_reusing()
-    sys.exit(0)
+    sys.exit(exit_code)
 
 
 def _get_site_object():

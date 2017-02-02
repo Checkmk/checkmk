@@ -105,6 +105,7 @@
     * 4285 FIX: Availability: Timeline tables can now not be sorted and searched anymore
     * 4015 FIX: Multisite events page: Fixed slow page generation caused by the event delete icon...
     * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles
+    * 4316 FIX: Views: Fixed editing of "hide from sidebar" and "show context button" options
 
     WATO:
     * 4142 New extended search dialog for rulesets and rules...
@@ -149,6 +150,7 @@
     HW/SW-Inventory:
     * 4188 snmp_extended_info: Now capable to inventorize cisco backplane chassis...
     * 4258 FIX: snmp_extended_info: fixed undefined variable
+
 
 1.4.0i3:
     Core & Setup:

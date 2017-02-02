@@ -22,6 +22,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+ifneq (,$(wildcard enterprise))
+ENTERPRISE         := yes
+else
+ENTERPRISE         := no
+endif
+
 SHELL              := /bin/bash
 VERSION            := 1.4.0i4
 NAME               := check_mk
@@ -330,9 +336,12 @@ GTAGS: config.h
 	$(MAKE) -C livestatus GTAGS
 
 compile_commands.json: config.h $(FILES_TO_FORMAT)
-	@echo "making $@: $? is newer"
 	$(MAKE) -C livestatus clean
 	$(BEAR) $(MAKE) -C livestatus -j8
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core clean
+	$(BEAR) --append $(MAKE) -C enterprise/core -j8
+endif
 
 tidy: compile_commands.json
 	@scripts/compiled_sources | xargs $(CLANG_TIDY) --extra-arg=-D__clang_analyzer__

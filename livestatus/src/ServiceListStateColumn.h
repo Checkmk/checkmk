@@ -32,6 +32,7 @@
 
 #ifdef CMC
 #include <unordered_set>
+#include "cmc.h"
 class Service;
 typedef std::unordered_set<Service *> servicelist_t;
 #else

@@ -255,7 +255,12 @@ try:
         sys.exit(3)
 
     number = float(result[0])
-    text   = "%s %s" % (number, str(result[1]))
+
+    # handle case where sql query only results in one column
+    if len(result) == 1:
+        text = "%s" % result[0]
+    else:
+        text = "%s" % result[1]
 
     try:
         perf = " | performance_data=%s" % str(result[2])

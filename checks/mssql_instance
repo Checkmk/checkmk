@@ -70,16 +70,21 @@ def parse_mssql_instance(info):
 
 def inventory_mssql_instance(parsed):
     for instance_id, instance in parsed.items():
-        yield instance_id, None
+        yield instance_id, {}
 
 
-def check_mssql_instance(item, _unused, parsed):
+def check_mssql_instance(item, params, parsed):
     instance = parsed.get(item)
     if not instance:
         return
 
+    state = 2
+    if params is not None and \
+       params.get("map_connection_state") is not None:
+        state = params["map_connection_state"]
+
     if instance["state"] == "0":
-        yield 2, "Failed to connect to database (%s)" % instance["error_msg"]
+        yield state, "Failed to connect to database (%s)" % instance["error_msg"]
 
     yield 0, "Server is running version %s, %s" % (instance["version"], instance["edition"])
 
@@ -92,4 +97,5 @@ check_info["mssql_instance"] = {
     'check_function'      : check_mssql_instance,
     'inventory_function'  : inventory_mssql_instance,
     'service_description' : 'MSSQL %s Instance',
+    'group'               : 'mssql_instance',
 }

@@ -459,14 +459,24 @@ multisite_icons_and_actions['custom_action'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
+def get_master_url():
+    s = config.site(config.default_site())
+    if s is None or not s.get('url_prefix'):
+        url_prefix = defaults.url_prefix
+    else:
+        url_prefix = s['url_prefix']
+    return url_prefix + 'check_mk/'
+
+
 def logwatch_url(sitename, hostname, item):
     host_item_url = "check_mk/logwatch.py?host=%s&file=%s" % (html.urlencode(hostname), html.urlencode(item))
     site = html.site_status[sitename]["site"]
     master_url = ''
-    if config.is_multisite():
-        master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
-
+    if not config.is_single_local_site():
+        master_url = '&master_url=' + html.urlencode(get_master_url())
     return site["url_prefix"] + host_item_url + master_url
+
 
 def paint_logwatch(what, row, tags, host_custom_vars):
     if what != "service":

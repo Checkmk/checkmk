@@ -1,0 +1,9 @@
+Title: logwatch: fixed redundant master url in single site environment and added master url prefix if configured in master site
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p17
+Date: 1486050486
+Class: fix
+
+

@@ -10,15 +10,17 @@ Class: feature
 A few new functions to manage host, service and contact groups have been introduced.
 <br>
 
-First of all you can get all groups of a specific type with the url parameter action=get_all_{groupname}
+
 <tt>
 Example calls:
+
+
+You can get all groups of a specific type with the action get_all_{groupname}<br>
 curl http://localhost/heute/check_mk/webapi.py?action=get_all_hostgroups&_username=automation&_secret=1122<br>
 
 curl http://localhost/heute/check_mk/webapi.py?action=get_all_servicegroups&_username=automation&_secret=1122<br>
 
 curl http://localhost/heute/check_mk/webapi.py?action=get_all_contactgroups&_username=automation&_secret=1122<br>
-</tt>
 <br>
 <br>
 Furthermore you can add, edit and delete these groups

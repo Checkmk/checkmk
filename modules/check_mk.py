@@ -3552,7 +3552,8 @@ NOTES:
   of hosts. In that case the configuration is generated only for
   that hosts (useful for debugging).
 
-  -U redirects both the output of -S and -H to the file %s
+  -U redirects both the output of -S and -H to the file
+  %s
   and also calls check_mk -C.
 
   -D, --dump dumps out the complete configuration and information
@@ -3613,14 +3614,16 @@ NOTES:
 
   --snmpwalk does a complete snmpwalk for the specified hosts both
   on the standard MIB and the enterprises MIB and stores the
-  result in the directory %s. Use the option --oid one or several
+  result in the directory %s.
+  Use the option --oid one or several
   times in order to specify alternative OIDs to walk. You need to
   specify numeric OIDs. If you want to keep the two standard OIDS
   .1.3.6.1.2.1  and .1.3.6.1.4.1 then use --extraoid for just adding
   additional OIDs to walk.
 
   --snmptranslate does not contact the host again, but reuses the hosts
-  walk from the directory %s. You can add further MIBs to the directory
+  walk from the directory %s.
+  You can add further MIBs to the directory
   %s.
 
   --scan-parents uses traceroute in order to automatically detect

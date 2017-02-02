@@ -28,16 +28,29 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Table.h"
+class Query;
+
+#ifdef CMC
+#include <mutex>
+#include "Notes.h"
+class Core;
+#else
 #include "nagios.h"
 class DowntimesOrComments;
 class MonitoringCore;
-class Query;
+#endif
 
 class TableComments : public Table {
 public:
+#ifdef CMC
+    TableComments(const Downtimes &downtimes_holder,
+                  const Comments &comments_holder,
+                  std::recursive_mutex &holder_lock, Core *core);
+#else
     TableComments(const DowntimesOrComments &downtimes_holder,
                   const DowntimesOrComments &comments_holder,
                   MonitoringCore *core);
+#endif
 
     std::string name() const override;
     std::string namePrefix() const override;
@@ -45,7 +58,12 @@ public:
     bool isAuthorized(contact *ctc, void *data) override;
 
 private:
+#ifdef CMC
+    const Comments &_holder;
+    std::recursive_mutex &_holder_lock;
+#else
     const DowntimesOrComments &_holder;
+#endif
 };
 
 #endif  // TableComments_h

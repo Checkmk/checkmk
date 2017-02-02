@@ -43,14 +43,12 @@
 
 def inv_perle_psmu(parsed):
     node = inv_tree_list("hardware.components.psus:")
-    for itemname, data in parsed.items():
-        itemname_splitted = itemname.split(" ")
-
+    for psu_index, data in parsed.items():
         node.append({
-            "index"  : itemname_splitted[0],
-            "name"   : itemname,
-            "model"  : " ".join(itemname_splitted[1:]),
-            "serial" : data["serial"]
+            "index"       : psu_index,
+            "description" : data["descr"],
+            "model"       : data["model"],
+            "serial"      : data["serial"]
         })
 
 
@@ -60,6 +58,7 @@ inv_info['perle_psmu'] = {
     'snmp_info'             : ('.1.3.6.1.4.1.1966.21.1.1.1.1.2.1', [
                                     '2',    # PERLE-MCR-MGT-MIB::mcrPsmuIndex
                                     '3',    # PERLE-MCR-MGT-MIB::mcrPsmuModelName
+                                    '4',    # PERLE-MCR-MGT-MIB::mcrPsmuModelDesc
                                     '5',    # PERLE-MCR-MGT-MIB::mcrPsmuPsuSerialNumber
                                     '9',    # PERLE-MCR-MGT-MIB::mcrPsmuPsuStatus
                                     '10',   # PERLE-MCR-MGT-MIB::mcrPsmuPsuVoltageUsage

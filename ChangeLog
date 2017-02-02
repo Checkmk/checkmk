@@ -147,7 +147,6 @@
     * 4188 snmp_extended_info: Now capable to inventorize cisco backplane chassis...
     * 4258 FIX: snmp_extended_info: fixed undefined variable
 
-
 1.4.0i3:
     Core & Setup:
     * 3978 FIX: mkbackup: Fixed backup to some CIFS shares ([Errno 13] Permission denied) '...')...

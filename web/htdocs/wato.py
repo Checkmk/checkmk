@@ -12197,7 +12197,7 @@ class ModeEditRuleset(WatoMode):
                     continue
 
                 table.begin("rules", title="%s %s" % (_("Rules in folder"), alias_path),
-                    css="ruleset", searchable=False, sortable=False)
+                    css="ruleset", searchable=False, sortable=False, limit=None)
             else:
                 if skip_this_folder:
                     continue

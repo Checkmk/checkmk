@@ -29,18 +29,28 @@
 #include <memory>
 #include <string>
 #include "ContactsColumn.h"
+
+#ifdef CMC
+class RowRenderer;
+#else
 #include "nagios.h"
+#endif
 
 class ContactGroupsMemberColumn : public ContactsColumn {
 public:
-    ContactGroupsMemberColumn(const std::string& name,
-                              const std::string& description,
+    ContactGroupsMemberColumn(const std::string &name,
+                              const std::string &description,
                               int indirect_offset, int extra_offset,
                               int extra_extra_offset)
         : ContactsColumn(name, description, indirect_offset, extra_offset,
                          extra_extra_offset) {}
-    std::unique_ptr<Contains> makeContains(const std::string& name) override;
-    std::unique_ptr<Contains> containsContact(contact* ctc) override;
+    std::unique_ptr<Contains> makeContains(const std::string &name) override;
+#ifdef CMC
+    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    bool isEmpty(void *data) override;
+#else
+    std::unique_ptr<Contains> containsContact(contact *ctc) override;
+#endif
 };
 
 #endif  // ContactGroupsMemberColumn_h

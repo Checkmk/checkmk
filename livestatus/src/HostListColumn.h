@@ -29,10 +29,16 @@
 #include <memory>
 #include <string>
 #include "Column.h"
-#include "nagios.h"
 #include "opids.h"
 class Filter;
 class RowRenderer;
+
+#ifdef CMC
+#include <unordered_set>
+class Host;
+#else
+#include "nagios.h"
+#endif
 
 class HostListColumn : public Column {
 public:
@@ -47,7 +53,11 @@ public:
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
+#ifdef CMC
+    std::unordered_set<Host *> *getMembers(void *data);
+#else
     hostsmember *getMembers(void *data);
+#endif
 
 private:
     const int _offset;

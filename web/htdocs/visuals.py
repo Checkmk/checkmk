@@ -653,11 +653,11 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     # appear as boolean-keys directly in the visual dict, but encapsulated
     # in a list choice in the value spec.
     visibility_elements = [
-        ('hidden', FixedValue(None,
+        ('hidden', FixedValue(True,
             title = _('Hide this %s from the sidebar') % visual_type["title"],
             totext = "",
         )),
-        ('hidebutton', FixedValue(None,
+        ('hidebutton', FixedValue(True,
             title = _('Do not show a context button to this %s') % visual_type["title"],
             totext = "",
         )),

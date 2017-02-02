@@ -1,4 +1,4 @@
-SHELL=/bin/bash
+SHELL=/bin/bash -e
 
 help:
 	@echo "test           - Run integration and git tests"

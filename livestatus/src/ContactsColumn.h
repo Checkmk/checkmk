@@ -29,8 +29,13 @@
 #include <memory>
 #include <string>
 #include "ListColumn.h"
-#include "nagios.h"
 class RowRenderer;
+
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 class ContactsColumn : public ListColumn {
 public:
@@ -39,7 +44,11 @@ public:
                    int extra_extra_offset)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset) {}
+#ifdef CMC
+    std::unique_ptr<Contains> makeContains(const std::string &name) override;
+#else
     virtual std::unique_ptr<Contains> containsContact(contact *ctc) = 0;
+#endif
     bool isEmpty(void *data) override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
 };

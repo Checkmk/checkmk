@@ -322,7 +322,11 @@ stamp-h1: config.h.in config.status
 	./config.status config.h
 
 GTAGS: config.h
-	$(MAKE) -C livestatus distclean-tags
+# automake generates "gtags -i ...", but incremental updates seem to be a bit
+# fragile, so let's start from scratch, gtags is quite fast.
+	$(RM) GTAGS GRTAGS GSYMS GPATH
+# Note: Even if we descend into livestatus, gtags is run on the top level (next
+# to configure.ac).
 	$(MAKE) -C livestatus GTAGS
 
 compile_commands.json: config.h $(FILES_TO_FORMAT)

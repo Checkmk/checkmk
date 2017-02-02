@@ -10,6 +10,9 @@
 .directory
 .metadata
 .ropeproject
+GPATH
+GRTAGS
+GTAGS
 RemoteSystemsTempFiles
 aclocal.m4
 api

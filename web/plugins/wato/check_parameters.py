@@ -9984,7 +9984,7 @@ def transform_if_groups_forth(params):
             param["group_name"] = param["name"]
             del param["name"]
         if param.get("include_items"):
-            param["node_items"] = param["include_items"]
+            param["items"] = param["include_items"]
             del param["include_items"]
         if param.get("single") is not None:
             if param["single"]:
@@ -10005,7 +10005,7 @@ vs_elements_if_groups_matches = [
         ), forth = lambda x: str(x),
            back  = lambda x: int(x),
     )),
-    ("node_items", ListOfStrings(
+    ("items", ListOfStrings(
         title = _("Restrict interface items"),
         help =  _("Only interface with these item names are put into this group."),
     )),

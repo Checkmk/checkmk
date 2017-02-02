@@ -671,7 +671,8 @@ inventory_displayhints.update({
     ".hardware.components.sensors:*.location"          : { "title" : _("Location") },
 
     ".hardware.components.modules:"                    : { "title" : _("Modules"), "render" : render_inv_dicttable,
-                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model",
+                                                                          "location", "bootloader", "firmware", "type" ],
                                                            "view" : "invmodule_of_host" },
     ".hardware.components.modules:*.index"             : { "title" : _("Index") },
     ".hardware.components.modules:*.name"              : { "title" : _("Name") },
@@ -679,6 +680,9 @@ inventory_displayhints.update({
     ".hardware.components.modules:*.serial"            : { "title" : _("Serial Number") },
     ".hardware.components.modules:*.model"             : { "title" : _("Model Name") },
     ".hardware.components.modules:*.location"          : { "title" : _("Location") },
+    ".hardware.components.modules:*.bootloader"        : { "title" : _("Bootloader") },
+    ".hardware.components.modules:*.firmware"          : { "title" : _("Firmware") },
+    ".hardware.components.modules:*.type"              : { "title" : _("Type") },
 
     ".hardware.storage."                               : { "title" : _("Storage") },
     ".hardware.storage.disks:"                         : { "title" : _("Block Devices"), "render" : render_inv_dicttable },

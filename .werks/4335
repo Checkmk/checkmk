@@ -1,0 +1,17 @@
+Title: perle check and inventory plugins: some updates and improvements
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.4.0i4
+Date: 1486040229
+Class: fix
+
+Concerns check plugins
+perle_chassis, perle_chassis.temp, perle_chassis_slots, perle_modules_cm1000,
+perle_modules_cm1110, perle_modules_mgt, perle_psmu and perle_psmu.fan,
+and inventory plugins
+perle_chassis_slots, perle_modules_mgt and perle_psmu.
+
+These updates include:
+- changed items for check plugins,
+- inventory plugin perle_modules_mgt has been removed.

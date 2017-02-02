@@ -42,23 +42,22 @@
 
 
 def parse_perle_psmu(info):
-    map_states = {
-        "0" : (2, "not present"),
-        "1" : (0, "good"),
-        "2" : (2, "fail"),
-    }
+    map_states = { "0" : (2, "not present"),
+                   "1" : (0, "good"),
+                   "2" : (2, "fail"), }
 
     parsed = {}
-    for index, name, serial, psu_status, voltage_str, power_str, fan_status in info:
-        itemname = "%s %s" % (index, name)
-        parsed.setdefault(itemname, {
+    for index, modelname, descr, serial, psu_status, voltage_str, power_str, fan_status in info:
+        parsed.setdefault(index, {
+            "model"    : modelname,
+            "descr"    : descr,
             "serial"   : serial,
-            "fanstate" : map_states[fan_status],
-            "psustate" : map_states[psu_status],
+            "fanstate" : map_states.get(fan_status, (3, "unknown[%s]" % fan_status)),
+            "psustate" : map_states.get(psu_status, (3, "unknown[%s]" % psu_status)),
         })
         for what, value_str in [ ("power", power_str), ("voltage", voltage_str) ]:
             try:
-                parsed[itemname].setdefault(what, float(value_str))
+                parsed[index].setdefault(what, float(value_str))
             except ValueError:
                 pass
 
@@ -88,6 +87,7 @@ check_info['perle_psmu'] = {
     'snmp_info'             : ('.1.3.6.1.4.1.1966.21.1.1.1.1.2.1', [
                                     '2',    # PERLE-MCR-MGT-MIB::mcrPsmuIndex
                                     '3',    # PERLE-MCR-MGT-MIB::mcrPsmuModelName
+                                    '4',    # PERLE-MCR-MGT-MIB::mcrPsmuModelDesc
                                     '5',    # PERLE-MCR-MGT-MIB::mcrPsmuPsuSerialNumber
                                     '9',    # PERLE-MCR-MGT-MIB::mcrPsmuPsuStatus
                                     '10',   # PERLE-MCR-MGT-MIB::mcrPsmuPsuVoltageUsage

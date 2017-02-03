@@ -22,12 +22,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-ifneq (,$(wildcard enterprise))
-ENTERPRISE         := yes
-else
-ENTERPRISE         := no
-endif
-
 SHELL              := /bin/bash
 VERSION            := 1.4.0i4
 NAME               := check_mk
@@ -226,11 +220,9 @@ setversion:
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
-ifeq ($(ENTERPRISE),yes)
-	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/liveproxyd
-	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/cmcdump
-	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' enterprise/agents/plugins/cmk-update-agent
-endif
+	test -d enterprise && sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/liveproxyd
+	test -d enterprise && sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/cmcdump
+	test -d enterprise && sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' enterprise/agents/plugins/cmk-update-agent
 
 headers:
 	doc/helpers/headrify
@@ -352,10 +344,8 @@ GTAGS: config.h
 compile_commands.json: config.h $(FILES_TO_FORMAT)
 	$(MAKE) -C livestatus clean
 	$(BEAR) $(MAKE) -C livestatus -j8
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core clean
-	$(BEAR) --append $(MAKE) -C enterprise/core -j8
-endif
+	test -d enterprise && $(MAKE) -C enterprise/core clean
+	test -d enterprise && $(BEAR) --append $(MAKE) -C enterprise/core -j8
 
 tidy: compile_commands.json
 	@scripts/compiled_sources | xargs $(CLANG_TIDY) --extra-arg=-D__clang_analyzer__

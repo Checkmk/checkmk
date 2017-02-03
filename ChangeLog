@@ -126,6 +126,7 @@
     * 4237 FIX: Fixed rendering of old timestamps...
     * 4231 FIX: Fixed broken host renaming when files are in var/check_mk/web
     * 4317 FIX: Rule list: Removed the row limit of the rule tables
+    * 4318 FIX: Rule editor: Fixed wrong default value for yes/no rulesets
 
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address

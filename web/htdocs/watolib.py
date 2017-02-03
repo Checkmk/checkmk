@@ -6545,11 +6545,15 @@ class Rule(object):
 
 
     def _initialize(self):
-        self.value        = None
         self.tag_specs    = []
         self.host_list    = []
         self.item_list    = None
         self.rule_options = {}
+
+        if self.ruleset.valuespec():
+            self.value = None
+        else:
+            self.value = True
 
 
     def from_config(self, rule_config):

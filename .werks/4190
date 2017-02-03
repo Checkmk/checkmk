@@ -1,0 +1,12 @@
+Title: mssql_blocked_sessions: Fixed unknown states if only one session is blocked
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486137493
+Class: fix
+
+The check state has been unknown if only one session was blocked, because
+the checkplugin was expecting one additional first line from the agent output
+which does not exist anymore. The new version can handle both cases and will
+not accidentally drop any information anymore.

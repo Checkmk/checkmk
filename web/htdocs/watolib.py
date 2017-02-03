@@ -6269,7 +6269,13 @@ class Ruleset(object):
             return []
 
 
-    def add_rule(self, folder, rule):
+    def prepend_rule(self, folder, rule):
+        rules = self._rules.setdefault(folder.path(), [])
+        rules.insert(0, rule)
+        self._on_change()
+
+
+    def append_rule(self, folder, rule):
         rules = self._rules.setdefault(folder.path(), [])
         rules.append(rule)
         self._on_change()

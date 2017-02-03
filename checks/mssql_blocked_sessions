@@ -43,7 +43,11 @@ def check_mssql_blocked_sessions(_no_item, params, info):
         return
 
     state = 2
-    for session_id, wait_duration_ms, wait_type, blocking_session_id in info[1:]:
+    for line in info:
+        if "blocked" in line[0].lower():
+            continue # Skip debug output which was send by old agent by accident
+        session_id, wait_duration_ms, wait_type, blocking_session_id = line
+
         if params:
             state               = params.get("state", 2)
             warn, crit          = params.get("waittime", (0, 0))

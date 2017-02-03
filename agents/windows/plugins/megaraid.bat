@@ -60,6 +60,10 @@ REM get logical disc info
 ECHO ^<^<^<megaraid_ldisks^>^>^>
 "!MegaCli!" -LDInfo -Lall -aALL -NoLog | FINDSTR "Size State Number Adapter Virtual"
 
+REM get bbu info
+ECHO ^<^<^<megaraid_bbu^>^>^>
+"!MegaCli!" -AdpBbuCmd -GetBbuStatus -aAll -NoLog | FINDSTR /V "Exit"
+
 REM delete tmpfiles
 DEL "!tmpfile!"
 DEL "!enclist!"

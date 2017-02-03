@@ -1,0 +1,28 @@
+Title: Reworked the service discovery dialog
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486133553
+Class: feature
+
+The service discovery dialog of hosts has completely been reworked. It has been changed
+to be more user friendly and make bulk actions more comfortable.
+
+We have reduced the number of columns, moved the action icons to the first columns and made
+the checkboxes for bulk actions optional. Each table has now it's own bulk actions. These
+actions are performed on all rows of the table by default. If you enabled the checkboxes,
+the actions are performed on the selected rows. The full scan button is now an action button
+like the other actions.
+
+Actions on that page will now make you stay on the page to see the result of your action.
+
+The disabling of services is now totally done via the "disabled services" ruleset. For each
+host a host specific rule is added to this ruleset for setting the disabled services you
+choose in the service discovery dialog. If you have global rules that disable services and
+choose to enable that service via the service discovery dialog, a "enable" rule is created
+for the selected service.
+
+This means the service discovery page creates up to two rules in "disabled services" for each
+host, one positive and one negative rule. These rules have the description 
+"Discovery rule of '[hostname]'".

@@ -2974,9 +2974,9 @@ class ModeDiscovery(WatoMode):
         elif check_source in [ "clustered_old", "clustered_new" ]:
             return ModeDiscovery.SERVICE_ADD
 
-        elif check_source not in [ "active", "ignored", ]:
-            # TODO: Remove this after finishing new service discovery page
-            raise NotImplementedError("source: %s" % check_source)
+        #elif check_source not in [ "active", "ignored", ]:
+        #    # TODO: Remove this after finishing new service discovery page
+        #    raise NotImplementedError("source: %s" % check_source)
 
         return ModeDiscovery.SERVICE_REMOVE
 

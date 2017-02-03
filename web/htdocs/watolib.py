@@ -6077,6 +6077,26 @@ class RulesetCollection(object):
         raise NotImplementedError()
 
 
+    def save_folder(self, folder):
+        raise NotImplementedError()
+
+
+    def _save_folder(self, folder):
+        make_nagios_directory(wato_root_dir)
+
+        content = ""
+        for varname, ruleset in sorted(self._rulesets.items(), key=lambda x: x[0]):
+            if not g_rulespecs.exists(varname):
+                continue # don't save unknown rulesets
+
+            if ruleset.is_empty():
+                continue # don't save empty rule sets
+
+            content += ruleset.to_config(folder)
+
+        store.save_mk_file(folder.rules_file_path(), content)
+
+
     def exists(self, name):
         return name in self._rulesets
 
@@ -6131,6 +6151,10 @@ class AllRulesets(RulesetCollection):
         self._load_rulesets_recursively(Folder.root_folder())
 
 
+    def save_folder(self, folder):
+        self._save_folder(folder)
+
+
 
 class SingleRulesetRecursively(AllRulesets):
     def __init__(self, name):
@@ -6140,6 +6164,10 @@ class SingleRulesetRecursively(AllRulesets):
     # Load single ruleset from all folders
     def load(self):
         self._load_rulesets_recursively(Folder.root_folder(), only_varname=self._name)
+
+
+    def save_folder(self, folder):
+        raise NotImplementedError()
 
 
 
@@ -6154,19 +6182,7 @@ class FolderRulesets(RulesetCollection):
 
 
     def save(self):
-        make_nagios_directory(wato_root_dir)
-
-        content = ""
-        for varname, ruleset in sorted(self._rulesets.items(), key=lambda x: x[0]):
-            if not g_rulespecs.exists(varname):
-                continue # don't save unknown rulesets
-
-            if ruleset.is_empty():
-                continue # don't save empty rule sets
-
-            content += ruleset.to_config(self._folder)
-
-        store.save_mk_file(self._folder.rules_file_path(), content)
+        self._save_folder(self._folder)
 
 
 
@@ -6847,6 +6863,21 @@ class Rule(object):
     def comment(self):
         return self.rule_options.get("comment", "")
 
+
+    def is_discovery_rule_of(self, host_name):
+        return self.rule_options.get("discovery_host") == host_name
+
+
+    def set_discovery_host(self, host_name):
+        self.rule_options.update({
+            "description" : _("Discovery rule of '%s'" % host_name),
+            #"comment"    : _("This rule has been created by disabling a service on the the "
+            #                 "service discovery page. Only edit this rule if you know what "
+            #                 "you are doing. The rule will be altered by Check_MK when you "
+            #                 "make changes to the disabled services of a host on the service "
+            #                 "discovery page."),
+            "discovery_host" : host_name,
+        })
 
 
 def match_search_expression(search_options, attr_name, search_in):

@@ -1843,6 +1843,10 @@ def rename_host_in_rulesets(folder, oldname, newname):
                     changed_rulesets.append(varname)
                     changed = True
 
+                if rule.is_discovery_rule_of(oldname):
+                    rule.set_discovery_host(newname)
+
+
         if changed:
             add_change("edit-ruleset", _("Renamed host in %d rulesets of folder %s") %
                                                     (len(changed_rulesets), folder.title),
@@ -2701,9 +2705,10 @@ def ajax_diag_host():
 #   '----------------------------------------------------------------------'
 
 class ModeDiscovery(WatoMode):
-    SERVICE_ADD     = True
-    SERVICE_REMOVE  = False
-    SERVICE_DISABLE = None
+    SERVICE_ADD     = "add"
+    SERVICE_REMOVE  = "remove"
+    SERVICE_DISABLE = "disable"
+    SERVICE_ENABLE  = "enable"
 
     def __init__(self):
         super(ModeDiscovery, self).__init__()
@@ -2787,7 +2792,7 @@ class ModeDiscovery(WatoMode):
             check_table = sorted(check_mk_automation(host.site_id(), "try-inventory",
                                                self._cache_options + [hostname]))
 
-            checks, to_disable = {}, []
+            checks, to_disable, to_enable = {}, [], []
             for check_source, check_type, checkgroup, item, paramstring, params, \
                 descr, state, output, perfdata in check_table:
 
@@ -2797,10 +2802,14 @@ class ModeDiscovery(WatoMode):
                     checks[(check_type, item)] = paramstring
 
                 elif state == ModeDiscovery.SERVICE_DISABLE:
-                    to_disable.append((descr))
+                    to_disable.append(descr)
+
+                elif state == ModeDiscovery.SERVICE_ENABLE:
+                    to_enable.append(descr)
+                    checks[(check_type, item)] = paramstring
 
             self._save_services(checks)
-            self._save_disabled_services(to_disable)
+            self._save_host_service_enable_disable_rules(to_enable, to_disable)
 
         if not host.locked():
             host.clear_discovery_failed()
@@ -2817,14 +2826,24 @@ class ModeDiscovery(WatoMode):
         add_service_change(self._host, "set-autochecks", message)
 
 
-    # Load all disabled services rules from the folder, then check whether or not there is a
-    # rule for that host and replace it with the new calculated rule for that host. Otherwise
-    # add a new rule for the host as first rule in the folder.
-    # Then simply add the service entries for the services to be disabled.
-    def _save_disabled_services(self, disabled_services):
-        folder = self._host.folder()
+    def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
+        self._save_service_enable_disable_rules(to_enable, value=False)
+        self._save_service_enable_disable_rules(to_disable, value=True)
 
-        rulesets = FolderRulesets(folder)
+
+    # Load all disabled services rules from the folder, then check whether or not there is a
+    # rule for that host and check whether or not it currently disabled the services in question.
+    # if so, remove them and save the rule again.
+    # Then check whether or not the services are still disabled (by other rules). If so, search
+    # for an existing host dedicated negative rule that enables services. Modify this or create
+    # a new rule to override the disabling of other rules.
+    #
+    # Do the same vice versa for disabling services.
+    def _save_service_enable_disable_rules(self, services, value):
+        if not services:
+            return
+
+        rulesets = AllRulesets()
         rulesets.load()
 
         try:
@@ -2832,29 +2851,57 @@ class ModeDiscovery(WatoMode):
         except KeyError:
             ruleset = Ruleset("ignored_services")
 
-        # TODO: Find existing: ruleset.get_rules()
+        service_patterns = [ ("%s$" % s) for s in services ]
+        self._remove_from_rule_of_host(ruleset, service_patterns, value=not value)
 
-        if not disabled_services:
-            # TODO: Remove possibly existing rule
-            return
+        # Check whether or not the service still needs a host specific setting after removing
+        # the host specific setting above and remove all services from the service list
+        # that are fine without an additional change.
+        for service in services[:]:
+            value_without_host_rule = ruleset.analyse_ruleset(self._host.name(), service)[0]
+            if (value == False and value_without_host_rule in [None, False]) \
+               or value == value_without_host_rule:
+                services.remove(service)
 
-        disabled_service_patterns = sorted([ ("%s$" % s) for s in disabled_services ])
+        service_patterns = [ ("%s$" % s) for s in services ]
+        self._update_rule_of_host(ruleset, service_patterns, value=value)
 
-        rule = Rule.create(folder, ruleset, [self._host.name()], disabled_service_patterns)
-        rule.rule_options.update({
-            "description" : _("Discovery rule of '%s'" % self._host.name()),
-            "comment"     : _("This rule has been created by disabling a service on the the "
-                              "service discovery page. Only edit this rule if you know what "
-                              "you are doing. The rule will be altered by Check_MK when you "
-                              "make changes to the disabled services of a host on the service "
-                              "discovery page."),
-            "discovery_host" : self._host.name(),
-        })
+        rulesets.save_folder(self._host.folder())
 
-        ruleset.prepend_rule(folder, rule)
 
-        rulesets.save()
-        pass # TODO
+    def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
+        other_rule = self._get_rule_of_host(ruleset, value)
+        if other_rule:
+            disable_patterns = set(other_rule.item_list).difference(service_patterns)
+            other_rule.item_list = sorted(list(disable_patterns))
+
+            if not other_rule.item_list:
+                ruleset.delete_rule(other_rule)
+
+
+    def _update_rule_of_host(self, ruleset, service_patterns, value):
+        folder = self._host.folder()
+
+        rule = self._get_rule_of_host(ruleset, value)
+        if rule:
+            rule.item_list = sorted(list(set(service_patterns).union(rule.item_list)))
+
+            if not rule.item_list:
+                ruleset.delete_rule(rule)
+
+        elif service_patterns:
+            rule = Rule.create(folder, ruleset, [self._host.name()],
+                               sorted(service_patterns))
+            rule.set_discovery_host(self._host.name())
+            rule.value = value
+            ruleset.prepend_rule(folder, rule)
+
+
+    def _get_rule_of_host(self, ruleset, value):
+        for folder, index, rule in ruleset.get_rules():
+            if rule.is_discovery_rule_of(self._host.name()) and rule.value == value:
+                return rule
+        return None
 
 
     def _get_service_state(self, check_source, check_type, item):
@@ -2877,7 +2924,7 @@ class ModeDiscovery(WatoMode):
             if html.has_var("_bulk_activate") and is_checked:
                 return ModeDiscovery.SERVICE_ADD
 
-            if html.has_var("_activate") and is_target_object:
+            if html.has_var("_activate_new") and is_target_object:
                 return ModeDiscovery.SERVICE_ADD
 
             if html.has_var("_bulk_disable_new") and is_checked:
@@ -2895,6 +2942,9 @@ class ModeDiscovery(WatoMode):
             if html.has_var("_bulk_remove_vanished") and is_checked:
                 return ModeDiscovery.SERVICE_REMOVE
 
+            if html.has_var("_remove_vanished") and is_target_object:
+                return ModeDiscovery.SERVICE_REMOVE
+
             return ModeDiscovery.SERVICE_ADD
 
         elif check_source == "old":
@@ -2907,12 +2957,24 @@ class ModeDiscovery(WatoMode):
             if html.has_var("_bulk_disable_old") and is_checked:
                 return ModeDiscovery.SERVICE_DISABLE
 
+            if html.has_var("_disable_old") and is_target_object:
+                return ModeDiscovery.SERVICE_DISABLE
+
             return ModeDiscovery.SERVICE_ADD
+
+        elif check_source == "ignored":
+            if html.has_var("_bulk_activate") and is_checked:
+                return ModeDiscovery.SERVICE_ENABLE
+
+            if html.has_var("_activate_ignored") and is_target_object:
+                return ModeDiscovery.SERVICE_ENABLE
+
+            return ModeDiscovery.SERVICE_REMOVE
 
         elif check_source in [ "clustered_old", "clustered_new" ]:
             return ModeDiscovery.SERVICE_ADD
 
-        elif check_source not in [ "active" ]:
+        elif check_source not in [ "active", "ignored", ]:
             # TODO: Remove this after finishing new service discovery page
             raise NotImplementedError("source: %s" % check_source)
 
@@ -2975,7 +3037,7 @@ class ModeDiscovery(WatoMode):
             if show_bulk_actions and len(checks) > 10:
                 self._bulk_actions(check_source, collect_headers=False)
 
-            for check in checks:
+            for check in sorted(checks, key=lambda c: c[6]):
                 self._check_row(check, show_bulk_actions)
 
             if show_bulk_actions:
@@ -2993,7 +3055,7 @@ class ModeDiscovery(WatoMode):
             ("new",           True,  _("Available services (not yet checked)")),
             ("vanished",      True,  _("Vanished services (checked, but no longer exist)")),
             ("old",           True,  _("Enabled services (being checked)")),
-            ("ignored",       False, _("Disabled services (configured away by admin)")),
+            ("ignored",       True,  _("Disabled services (configured away)")),
             ("active",        False, _("Active checks")),
             ("manual",        False, _("Manual checks")),
             ("legacy",        False, _("Legacy services (defined in main.mk)")),
@@ -3059,9 +3121,9 @@ class ModeDiscovery(WatoMode):
             ])
             html.icon_button(url, _("Permanently disable this service"), "ignore", ty="icon")
 
-        def activate_button():
+        def enable_button():
             url = html.makeactionuri([
-                ("_activate", "1"),
+                ("_activate_%s" % check_source, "1"),
                 (self._checkbox_name(check_source, check_type, item), ""),
             ])
             html.icon_button(url, _("Enable this service"), "new", ty="icon")
@@ -3094,18 +3156,19 @@ class ModeDiscovery(WatoMode):
                              ("varname", "ignored_services"),
                              ("host", self._host_name),
                              ("item", mk_repr(descr))])
-            html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
+            html.icon_button(url, _("Edit and analyze the disabled services rules"), "rulesets")
 
 
         table.cell(css="buttons")
         if check_source == "new":
-            activate_button()
+            enable_button()
 
         if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
             rulesets_button()
             check_parameters_button()
 
         if check_source == "ignored" and may_edit_ruleset("ignored_services"):
+            enable_button()
             disabled_services_button()
 
         if check_source in [ "new", "old" ] and may_edit_ruleset("ignored_services"):
@@ -3205,7 +3268,7 @@ class ModeDiscovery(WatoMode):
 
         fixall = 0
         for entry in check_table:
-            if entry[0] == 'new' and not html.has_var("_activate_all"):
+            if entry[0] == 'new':
                 fixall += 1
                 break
 
@@ -3274,6 +3337,9 @@ class ModeDiscovery(WatoMode):
         elif check_source == "old":
             html.button("_bulk_remove_old", _("Remove"))
             html.button("_bulk_disable_old", _("Disable"))
+
+        elif check_source == "ignored":
+            html.button("_bulk_activate", _("Enable"))
 
 
     def _bulk_action_colspan(self):
@@ -12418,7 +12484,7 @@ class ModeEditRuleset(WatoMode):
         try:
             rulenr = int(html.var("_rulenr")) # rule number relativ to folder
             rule = ruleset.get_rule(rule_folder, rulenr)
-        except (IndexError, TypeError, ValueError):
+        except (IndexError, TypeError, ValueError, KeyError):
             raise MKUserError("rulenr", _("You are trying to edit a rule which does not exist "
                                               "anymore."))
 

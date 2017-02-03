@@ -3590,7 +3590,7 @@ def load_site_replication_status(site_id, lock=False):
 
 
 def save_site_replication_status(site_id, repl_status):
-    store.save_data_to_file(site_replication_status_path(site_id), repl_status)
+    store.save_data_to_file(site_replication_status_path(site_id), repl_status, pretty=False)
     cleanup_legacy_replication_status()
 
 

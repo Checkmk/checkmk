@@ -34,39 +34,43 @@
 # sessions independent of instances anymore. Use same service description
 # schema as "mssql_instance".
 
+factory_settings['mssql_blocked_sessions_default_levels'] = {
+        'state' : 2,
+}
+
 def inventory_mssql_blocked_sessions(info):
-    return [(None, None)]
+    return [(None, {})]
 
 def check_mssql_blocked_sessions(_no_item, params, info):
     if not info:
         yield 0, "No blocked sessions"
         return
 
-    state = 2
+    state = params['state']
+
     for line in info:
         if "blocked" in line[0].lower():
             continue # Skip debug output which was send by old agent by accident
         session_id, wait_duration_ms, wait_type, blocking_session_id = line
 
-        if params:
-            state               = params.get("state", 2)
-            warn, crit          = params.get("waittime", (0, 0))
-            wait_duration_sec   = float(wait_duration_ms) / 1000
-            if wait_duration_sec >= crit and not crit == 0:
+        if params.has_key('waittime'):
+            warn, crit = params['waittime']
+            wait_duration_sec = float(wait_duration_ms) / 1000
+            if wait_duration_sec >= crit:
                 state = 2
-            elif wait_duration_sec >= warn and not warn == 0:
+            elif wait_duration_sec >= warn:
                 state = 1
-            elif warn > 0 or crit > 0:
+            else:
                 state = 0
 
         yield state, \
               "Session %s blocked by %s (Wait %s ms, Type: %s)" % \
               ( session_id, blocking_session_id, wait_duration_ms, wait_type )
 
-
 check_info['mssql_blocked_sessions'] = {
     'inventory_function'        : inventory_mssql_blocked_sessions,
     'check_function'            : check_mssql_blocked_sessions,
-    'service_description'       : "MSSQL Blocked Sessions",
-    'group'                     : "mssql_blocked_sessions",
+    'service_description'       : 'MSSQL Blocked Sessions',
+    'group'                     : 'mssql_blocked_sessions',
+    'default_levels_variable'   : 'mssql_blocked_sessions_default_levels',
 }

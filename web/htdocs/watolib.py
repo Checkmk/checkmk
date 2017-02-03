@@ -6217,7 +6217,7 @@ class SearchedRulesets(FilteredRulesetCollection):
         e.g. by their name, title or help."""
 
         for ruleset in self._origin_rulesets.get_rulesets().values():
-            if ruleset.matches_search(self._search_options):
+            if ruleset.matches_search_with_rules(self._search_options):
                 self._rulesets[ruleset.name] = ruleset
 
 
@@ -6319,7 +6319,39 @@ class Ruleset(object):
         return content
 
 
-    def matches_search(self, search_options):
+    # Whether or not either the ruleset itself matches the search or the rules match
+    def matches_search_with_rules(self, search_options):
+        if not self.matches_ruleset_search_options(search_options):
+            return False
+
+        # The ruleset matched or did not decide to skip the whole ruleset.
+        # The ruleset should be matched in case a rule matches.
+
+        if not self.has_rule_search_options(search_options):
+            return self.matches_fulltext_search(search_options)
+
+        # Store the matching rules for later result rendering
+        self.search_matching_rules = []
+        for folder, rule_index, rule in self.get_rules():
+            if rule.matches_search(search_options):
+                self.search_matching_rules.append(rule)
+
+        if not self.search_matching_rules:
+            return self.matches_fulltext_search(search_options)
+        else:
+            return True
+
+
+    def has_rule_search_options(self, search_options):
+        return bool([ k for k in search_options.keys() if k == "fulltext" or k.startswith("rule_") ])
+
+
+    def matches_fulltext_search(self, search_options):
+        return match_one_of_search_expression(search_options, "fulltext",
+                                              [self.name, self.title(), self.help()])
+
+
+    def matches_ruleset_search_options(self, search_options):
         if "ruleset_deprecated" in search_options and search_options["ruleset_deprecated"] != self.is_deprecated():
             return False
 
@@ -6338,28 +6370,6 @@ class Ruleset(object):
 
         if not match_search_expression(search_options, "ruleset_help", self.help()):
             return False
-
-        has_rules_search = bool([ s for s in search_options.keys() \
-                                if s == "fulltext" or s.startswith("rule_") ])
-
-        if not has_rules_search and "fulltext" not in search_options:
-            return True
-
-        # Store the matching rules for later result rendering
-        self.search_matching_rules = []
-        for folder, rule_index, rule in self.get_rules():
-            if rule.matches_search(search_options):
-                self.search_matching_rules.append(rule)
-
-        if "fulltext" not in search_options:
-            return bool(self.search_matching_rules)
-
-        if not match_one_of_search_expression(search_options, "fulltext",
-                   [self.name, self.title(), self.help()]):
-            if self.search_matching_rules:
-                return True
-            else:
-                return False
 
         return True
 
@@ -6781,6 +6791,9 @@ class Rule(object):
         if not match_search_expression(search_options, "rule_comment", self.comment()):
             return False
 
+        if "rule_value" in search_options and not self.ruleset.valuespec():
+            return False
+
         if self.ruleset.valuespec() and \
            not match_search_expression(search_options, "rule_value",
                                        "%s" % self.ruleset.valuespec().value_to_text(self.value)):
@@ -6843,8 +6856,8 @@ def match_one_of_search_expression(search_options, attr_name, search_in_list):
             return True
     return False
 
-#.
 
+#.
 #   .--Read-Only-----------------------------------------------------------.
 #   |           ____                _        ___        _                  |
 #   |          |  _ \ ___  __ _  __| |      / _ \ _ __ | |_   _            |

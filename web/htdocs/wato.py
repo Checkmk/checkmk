@@ -12210,9 +12210,9 @@ class ModeEditRuleset(WatoMode):
             if rule.is_disabled():
                 css.append("disabled")
 
-            has_rule_search_options  = bool([ k for k in search_options.keys()
-                                            if k == "fulltext" or k.startswith("rule_") ])
-            if has_rule_search_options and rule.matches_search(search_options):
+            if ruleset.has_rule_search_options(search_options) \
+               and rule.matches_search(search_options) \
+               and ("fulltext" in search_options and not ruleset.matches_fulltext_search(search_options)):
                 css.append("matches_search")
 
             table.row(css=" ".join(css) if css else None)

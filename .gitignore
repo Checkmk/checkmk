@@ -21,6 +21,7 @@ autom4te.cache/
 check_mk-*.spec
 check_mk-*.tar.gz
 clang-analyzer/
+cmc-*.tar.gz
 compile
 compile_commands.json
 config.guess

@@ -169,7 +169,7 @@ dist: mk-livestatus precompile-werks
 	tar czf $(DISTNAME).tar.gz $(TAROPTS) $(DISTNAME)
 	rm -rf $(DISTNAME)
 
-	test -d enterprise && tar czf cmc-$(VERSION).tar.gz $(TAROPTS) -C enterprise $$(cd enterprise && echo .bugs .werks *)
+	test -d enterprise && tar czf cmc-$(VERSION).tar.gz $(TAROPTS) -C enterprise $$(cd enterprise && echo .bugs *)
 
 	@echo "=============================================================================="
 	@echo "   FINISHED. "

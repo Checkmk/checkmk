@@ -12946,7 +12946,6 @@ class ModeEditRule(WatoMode):
             for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
                 val = img == "yes"
                 html.img("images/rule_%s.png" % img, class_="ruleyesno", align="top")
-
                 html.radiobutton("value", img, self._rule.value == val, _("Make the outcome of the ruleset <b>%s</b><br>") % posneg)
         # Conditions
         forms.header(_("Conditions"))

@@ -1,0 +1,12 @@
+Title: Windows powershell scripts are now always called with the options -noprofile -executionpolicy bypass
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486125546
+Class: feature
+
+The -noprofile option improves the startup of the powershell interpreter.
+The "-executionpolicy bypass" means that the agent will no longer check any
+signatures of powershell scripts, since we don't provide them in ps1 script, anyway.
+

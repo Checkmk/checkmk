@@ -110,6 +110,10 @@ input[type="checkbox"]:hover + label:before {
     background-color: #EDECEB;
 }
 
+td.checkbox input[type="checkbox"] + label:before {
+    margin: 0;
+}
+
 /* checkbox styling */
 input[type="checkbox"] {
     display: none;

@@ -91,17 +91,17 @@ def initialize_before_loading_plugins():
     # Directories and files to synchronize during replication
     global replication_paths
     replication_paths = [
-        ( "dir",  "check_mk",   wato_root_dir ),
-        ( "dir",  "multisite",  multisite_dir ),
-        ( "file", "htpasswd",   cmk.paths.htpasswd_file ),
+        ( "dir",  "check_mk",     wato_root_dir, ["sitespecific.mk"]),
+        ( "dir",  "multisite",    multisite_dir, ["sitespecific.mk"] ),
+        ( "file", "htpasswd",     cmk.paths.htpasswd_file ),
         ( "file", "auth.secret",  '%s/auth.secret' % os.path.dirname(cmk.paths.htpasswd_file) ),
         ( "file", "auth.serials", '%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file) ),
         # Also replicate the user-settings of Multisite? While the replication
         # as such works pretty well, the count of pending changes will not
         # know.
-        ( "dir", "usersettings", cmk.paths.var_dir + "/web" ),
-        ( "dir", "mkps",  cmk.paths.var_dir + "/packages" ),
-        ( "dir", "local", cmk.paths.omd_root + "/local" ),
+        ( "dir", "usersettings",  cmk.paths.var_dir + "/web" ),
+        ( "dir", "mkps",          cmk.paths.var_dir + "/packages" ),
+        ( "dir", "local",         cmk.paths.omd_root + "/local" ),
     ]
 
     # Directories and files for backup & restore
@@ -115,7 +115,7 @@ def initialize_before_loading_plugins():
     if config.mkeventd_enabled:
         global mkeventd_config_dir
         mkeventd_config_dir = cmk.paths.default_config_dir + "/mkeventd.d/wato/"
-        replication_paths.append(("dir", "mkeventd", mkeventd_config_dir))
+        replication_paths.append(("dir", "mkeventd", mkeventd_config_dir, ["sitespecific.mk"]))
         backup_paths.append(("dir", "mkeventd", mkeventd_config_dir))
 
     global backup_domains
@@ -320,12 +320,19 @@ class ConfigDomain(object):
         raise NotImplementedError()
 
 
+    def config_file(self, site_specific):
+        if site_specific:
+            return "%s/sitespecific.mk" % self.config_dir()
+        else:
+            return "%s/global.mk" % self.config_dir()
+
+
     def activate(self):
         raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
 
 
     def load(self):
-        filename = "%s/global.mk" % self.config_dir()
+        filename = self.config_file(site_specific=False)
         settings = {}
 
         if not os.path.exists(filename):
@@ -344,8 +351,8 @@ class ConfigDomain(object):
                                     (filename, e))
 
 
-    def save(self, settings):
-        filename = "%s/global.mk" % self.config_dir()
+    def save(self, settings, site_specific=False):
+        filename = self.config_file(site_specific)
 
         output = wato_fileheader()
         for varname, value in settings.items():
@@ -353,6 +360,10 @@ class ConfigDomain(object):
 
         make_nagios_directory(os.path.dirname(filename))
         store.save_file(filename, output)
+
+
+    def save_site_globals(self, settings):
+        self.save(settings, site_specific=True)
 
 
 
@@ -3175,7 +3186,7 @@ def load_configuration_settings():
     return settings
 
 
-def save_configuration_settings(vars):
+def save_global_settings(vars, site_specific=False):
     per_domain = {}
     for varname, (domain, valuespec, need_restart, allow_reset, in_global_settings) in g_configvars.items():
         if varname not in vars:
@@ -3190,7 +3201,14 @@ def save_configuration_settings(vars):
         per_domain.setdefault("multisite", {})["userdb_automatic_sync"] = vars["userdb_automatic_sync"]
 
     for domain in ConfigDomain.enabled_domains():
-        domain().save(per_domain.get(domain, {}))
+        if site_specific:
+            domain().save_site_globals(per_domain.get(domain, {}))
+        else:
+            domain().save(per_domain.get(domain, {}))
+
+
+def save_site_global_settings(vars):
+    save_global_settings(vars, site_specific=True)
 
 
 #.
@@ -3667,18 +3685,7 @@ def automation_push_snapshot():
     multitar.extract_from_buffer(tarcontent, replication_paths)
 
     try:
-        tmp_dir = cmk.paths.tmp_dir + "/sitespecific-%s" % id(html)
-        if not os.path.exists(tmp_dir):
-            make_nagios_directory(tmp_dir)
-        multitar.extract_from_buffer(tarcontent, [ ("dir", "sitespecific", tmp_dir) ])
-
-        site_globals = store.load_data_from_file(tmp_dir + "/sitespecific.mk", {})
-
-        current_settings = load_configuration_settings()
-        current_settings.update(site_globals)
-        save_configuration_settings(current_settings)
-
-        shutil.rmtree(tmp_dir)
+        save_site_globals_on_slave_site(tarcontent)
 
         confirm_all_local_changes() # pending changes are lost
 
@@ -3694,6 +3701,22 @@ def automation_push_snapshot():
     log_audit(None, "replication", _("Synchronized with master (my site id is %s.)") % site_id)
 
     return True
+
+
+def save_site_globals_on_slave_site(tarcontent):
+    tmp_dir = cmk.paths.tmp_dir + "/sitespecific-%s" % id(html)
+    try:
+        if not os.path.exists(tmp_dir):
+            make_nagios_directory(tmp_dir)
+
+        multitar.extract_from_buffer(tarcontent, [ ("dir", "sitespecific", tmp_dir) ])
+
+        site_globals = store.load_data_from_file(tmp_dir + "/sitespecific.mk", {})
+        current_settings = load_configuration_settings()
+        current_settings.update(site_globals)
+        save_global_settings(current_settings)
+    finally:
+        shutil.rmtree(tmp_dir)
 
 
 automation_commands["push-snapshot"] = automation_push_snapshot

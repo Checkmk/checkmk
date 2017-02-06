@@ -1,0 +1,22 @@
+Title: Distributed: Master site has now also site specific global settings
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486374880
+Class: feature
+
+It is now possible to configure site specific global settings for the central
+master site in distributed setups. In previous versions it was difficult to
+set a configuration setting (like the number of check helpers) for the master
+site and another value for the remote sites. You had to set the configuration
+setting for each site individually which could be a problem when having a lot
+of remote sites.
+
+With this change the "Global settings" can now be handled as default
+configuration settings for all sites while the site specific settings can be
+configured on the site specific globals page which can be opened from the
+distributed configuration page.
+
+So you can now easily set a individual setting for the master site and leave
+the configuration for the slave sites at the global defaults.

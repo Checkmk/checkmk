@@ -2692,7 +2692,7 @@ def ajax_diag_host():
         html.write_text("1 %s" % _("Exception: %s") % traceback.format_exc())
 
 #.
-#   .--Discoveru & Services------------------------------------------------.
+#   .--Discovery & Services------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
 #   |               \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|                |
@@ -6531,7 +6531,7 @@ def mode_globalvars(phase):
                     current_settings[varname] = not def_value
                 msg = _("Changed Configuration variable %s to %s.") % (varname,
                     current_settings[varname] and "on" or "off")
-                save_configuration_settings(current_settings)
+                save_global_settings(current_settings)
 
                 add_change("edit-configvar", msg, domains=[domain],
                     need_restart=need_restart)
@@ -6711,12 +6711,13 @@ def mode_edit_configvar(phase, what = 'globalvars'):
 
         if siteid:
             save_sites(configured_sites, activate=False)
+            if siteid == config.omd_site():
+                save_site_global_settings(current_settings)
             add_change("edit-configvar", msg, sites=[siteid], domains=[domain], need_restart=need_restart)
 
             return "edit_site_globals"
         else:
-            save_configuration_settings(current_settings)
-
+            save_global_settings(current_settings)
 
             sites = None
             if what == 'mkeventd':
@@ -9273,6 +9274,7 @@ def mode_edit_site_globals(phase):
                     current_settings[varname] = not def_value
                 msg = _("Changed site specific configuration variable %s to %s.") % (varname,
                     current_settings[varname] and _("on") or _("off"))
+
                 site.setdefault("globals", {})[varname] = current_settings[varname]
                 save_sites(configured_sites, activate=False)
 
@@ -14336,7 +14338,7 @@ def create_sample_config():
         prepare_git_commit()
 
     # Global configuration settings
-    save_configuration_settings(
+    save_global_settings(
         {
             "use_new_descriptions_for": [
                 "df",

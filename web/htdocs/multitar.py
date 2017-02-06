@@ -31,12 +31,19 @@ import cmk.paths
 import os, tarfile, time, shutil, cStringIO, grp
 import subprocess
 import traceback
+import itertools
 from lib import *
 from log import logger
 
 def create(filename, components):
     tar = tarfile.open(filename, "w:gz")
-    for what, name, path in components:
+    for component in components:
+        if len(component) == 4:
+            what, name, path, excludes = component
+        else:
+            what, name, path = component
+            excludes = []
+
         abspath = os.path.abspath(path)
         if os.path.exists(path):
             if what == "dir":
@@ -47,10 +54,13 @@ def create(filename, components):
                 filename = os.path.basename(abspath)
             subtarname = name + ".tar"
 
-            subdata = subprocess.check_output([
-                "tar", "cf", "-", "--dereference", "--force-local",
-                       "-C", basedir, filename
-            ])
+            exclude_args = list(itertools.chain.from_iterable([ ("--exclude", f) for f in excludes ]))
+
+            subdata = subprocess.check_output(
+                [ "tar", "cf", "-", "--dereference", "--force-local" ]
+                + exclude_args
+                + [ "-C", basedir, filename ]
+            )
 
             info = tarfile.TarInfo(subtarname)
             info.mtime = time.time()
@@ -255,7 +265,13 @@ def extract_domains(tar, domains):
 
 # Extract a tarball
 def extract(tar, components):
-    for what, name, path in components:
+    for component in components:
+        if len(component) == 4:
+            what, name, path, excludes = component
+        else:
+            what, name, path = component
+            excludes = []
+
         try:
             try:
                 subtarstream = tar.extractfile(name + ".tar")

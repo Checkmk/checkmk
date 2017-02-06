@@ -95,6 +95,9 @@ WERKS              := $(wildcard $(addsuffix /.werks/[0-9]*,. enterprise))
 JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/js/*.js,. enterprise)))
 JAVASCRIPT_MINI    := $(patsubst %.js,%_min.js,$(JAVASCRIPT_SOURCES))
 
+PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons))
+
+
 .PHONY: all analyze build check check-binaries check-permissions check-spaces \
         check-version clean cppcheck dist documentation format \
         GTAGS headers healspaces help install iwyu mrproper \
@@ -311,7 +314,7 @@ healspaces:
 
 optimize-images:
 	@if type pngcrush >/dev/null 2>&1; then \
-	    for F in web/htdocs/images/*.png web/htdocs/images/icons/*.png; do \
+	    for F in $(PNG_FILES); do \
 	        echo "Optimizing $$F..." ; \
 	        pngcrush -q -rem alla -brute $$F $$F.opt ; \
 	        mv $$F.opt $$F; \

@@ -113,6 +113,7 @@
     * 4015 FIX: Multisite events page: Fixed slow page generation caused by the event delete icon...
     * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles
     * 4316 FIX: Views: Fixed editing of "hide from sidebar" and "show context button" options
+    * 4321 FIX: LDAP: Improved validation of groups to attributes sync plugin
 
     WATO:
     * 4142 New extended search dialog for rulesets and rules...

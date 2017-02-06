@@ -1022,7 +1022,7 @@ class LDAPUserConnector(UserConnector):
         self.log('SYNC FINISHED - Duration: %0.3f sec' % duration)
 
         if changes:
-            wato.add_change("edit-users", "\n".join(changes), add_user=False)
+            wato.add_change("edit-users", "<br>\n".join(changes), add_user=False)
 
         # delete the fail flag file after successful sync
         try:

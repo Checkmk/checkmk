@@ -22,6 +22,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+ifneq (,$(wildcard enterprise))
+ENTERPRISE         := yes
+else
+ENTERPRISE         := no
+endif
+
 SHELL              := /bin/bash
 VERSION            := 1.4.0i4
 NAME               := check_mk
@@ -58,9 +64,6 @@ LIVESTATUS_SRCS    := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
                       src/{Makefile.am,*.{cc,h}} standalone/config_files.m4
 
-CORE_SOURCES        := $(wildcard $(addprefix enterprise/core/src/,*.cc *.h))
-CHECKHELPER_SOURCES := $(wildcard $(addprefix enterprise/core/src/checkhelper/,*.cc *.h))
-
 # Files that are checked for trailing spaces
 HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* \
                       $$(find -name Makefile) livestatus/src/*.{cc,h} \
@@ -68,23 +71,30 @@ HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* 
                       web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
                       doc/helpers/* scripts/setup.sh scripts/autodetect.py \
                       $$(find pnp-templates -type f -name "*.php") \
-                      bin/mkeventd bin/*.c active_checks/* \
+                      bin/mkeventd bin/*.cc active_checks/* \
                       check_mk_templates.cfg \
                       agents/check_mk_*agent* agents/*.c \
                       $$(find agents/cfg_examples -type f) \
                       agents/special/* \
-                      $$(find agents/plugins -type f)
+                      $$(find agents/plugins -type f) \
+                      $(wildcard enterprise/cmk_base/cee/*.py enterprise/modules/*.py enterprise/web/htdocs/*.py enterprise/web/plugins/*/*/*.py)
 
 FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix agents/windows/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
-                      $(CORE_SOURCES) $(CHECKHELPER_SOURCES)
+                      $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \
+                      $(wildcard $(addprefix enterprise/core/src/checkhelper/,*.cc *.h))
 
-.PHONY: all analyze check check-binaries check-permissions check-spaces \
+WERKS              := $(wildcard $(addsuffix /.werks/[0-9]*,. enterprise))
+
+JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/js/*.js,. enterprise)))
+JAVASCRIPT_MINI    := $(patsubst %.js,%_min.js,$(JAVASCRIPT_SOURCES))
+
+.PHONY: all analyze build check check-binaries check-permissions check-spaces \
         check-version clean cppcheck dist documentation format \
-        GTAGS headers healspaces help iwyu minify-js mk-livestatus mrproper \
+        GTAGS headers healspaces help iwyu mrproper \
         optimize-images packages setup setversion tidy version
 
 all: dist packages
@@ -99,6 +109,20 @@ help:
 	@echo "make healspaces                --> remove trailing spaces in code"
 	@echo "setup			      --> prepare system for development"
 
+check: check-spaces check-permissions check-binaries check-version
+
+check-spaces:
+	@echo -n "Checking for trailing spaces..."
+	@if grep -q '[[:space:]]$$' $(HEAL_SPACES_IN) ; then \
+          echo FAILED ; \
+          figlet "Space error"; \
+          echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair."; \
+          echo "Affected files: "; \
+          grep -l '[[:space:]]$$' $(HEAL_SPACES_IN); \
+          exit 1; \
+        fi
+	@echo OK
+
 check-permissions:
 	@echo -n "Checking permissions... with find -not -perm -444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
 
@@ -107,12 +131,14 @@ check-binaries:
 	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
 	fi
 
-check: check-spaces check-permissions check-binaries check-version
+check-version:
+	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
+	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
+	    false ; }
 
-precompile-werks:
-	PYTHONPATH=. python scripts/precompile-werks
+dist: $(DISTNAME).tar.gz
 
-dist: mk-livestatus precompile-werks
+$(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI)
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -131,7 +157,6 @@ dist: mk-livestatus precompile-werks
 	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
 	tar czf $(DISTNAME)/inventory.tar.gz $(TAROPTS) -C inventory $$(cd inventory ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
-	$(MAKE) minify-js
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins
 
 	tar xzf mk-livestatus-$(VERSION).tar.gz
@@ -162,14 +187,10 @@ dist: mk-livestatus precompile-werks
 		--exclude "crash.exe" \
 		--exclude "openhardwaremonitor" \
 		--exclude .f12 $$(cd agents ; ls)
-
-	test -d enterprise && tar czf $(DISTNAME)/cmc.tar.gz $(TAROPTS) -C enterprise $$(cd enterprise && echo .bugs *)
-
 	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION
-
 	tar czf $(DISTNAME).tar.gz $(TAROPTS) $(DISTNAME)
 	rm -rf $(DISTNAME)
 
@@ -177,12 +198,13 @@ dist: mk-livestatus precompile-werks
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
 
-packages:
-	$(MAKE) -C agents packages
+.werks/werks: $(WERKS)
+	echo $(WERKS)
+	PYTHONPATH=. python scripts/precompile-werks
 
 # NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
 # so we do things in a slightly complicated way.
-mk-livestatus:
+mk-livestatus-$(VERSION).tar.gz:
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SRCS) ) | tar xf - -C mk-livestatus-$(VERSION)
@@ -191,10 +213,24 @@ mk-livestatus:
 	tar czf mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 
-check-version:
-	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
-	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
-	    false ; }
+ifeq ($(ENTERPRISE),yes)
+dist: cmc-$(VERSION).tar.gz
+
+cmc-$(VERSION).tar.gz:
+	test -d enterprise && tar czf cmc-$(VERSION).tar.gz $(TAROPTS) \
+		Makefile \
+		configure.ac \
+		enterprise \
+		livestatus \
+		m4
+
+build: config.h
+	$(MAKE) -C enterprise/core -j8
+	$(MAKE) -C enterprise/locale all
+endif
+
+packages:
+	$(MAKE) -C agents packages
 
 version:
 	[ "$$(head -c 12 /etc/issue)" = "Ubuntu 10.10" \
@@ -222,22 +258,14 @@ setversion:
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
-	test -d enterprise && sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/liveproxyd
-	test -d enterprise && sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/cmcdump
-	test -d enterprise && sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' enterprise/agents/plugins/cmk-update-agent
+ifeq ($(ENTERPRISE),yes)
+	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/liveproxyd
+	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/cmcdump
+	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' enterprise/agents/plugins/cmk-update-agent
+endif
 
 headers:
 	doc/helpers/headrify
-
-check-spaces:
-	@echo -n "Checking for trailing spaces..."
-	@if grep -q '[[:space:]]$$' $(HEAL_SPACES_IN) ; then echo $$? ; figlet "Space error" \
-          ; echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair." \
-          ; echo "Affected files: " \
-          ; grep -l '[[:space:]]$$' $(HEAL_SPACES_IN) \
-          ; exit 1 ; fi
-	@echo OK
-
 
 healspaces:
 	@echo "Removing trailing spaces from code lines..."
@@ -254,22 +282,14 @@ optimize-images:
 	    echo "Missing pngcrush, not optimizing images! (run \"make setup\" to fix this)" ; \
 	fi
 
-minify-js:
+install-minified-js: $(JAVASCRIPT_MINI)
+	cp $? $(DESTDIR)/web/htdocs/js
+
+%_min.js: %.js
 	@if type slimit >/dev/null 2>&1; then \
-	    [ -n "$(DESTDIR)" ] && DESTDIR="$(DESTDIR)/" ; \
-	    for F in $$(cd web/htdocs/js ; ls *.js); do \
-	        if [ $${F/_min/} == $$F ] ; then \
-	            NAME=$${F%.*} ; \
-	            SRC=web/htdocs/js/$$F ; \
-	            DST=$${DESTDIR}web/htdocs/js/$${NAME}_min.js ; \
-	            if [ ! -f $$DST ] || [ $$(stat -c%Y $$SRC) -gt $$(stat -c%Y $$DST) ]; then \
-	                echo "Minifying $$F..." ; \
-	                cat $$SRC | slimit > $$DST ; \
-	            fi ; \
-	        fi ; \
-	    done ; \
+	  cat $< | slimit > $@ ; \
 	else \
-	    echo "Missing slimit, not minifying javascript files! (run \"make setup\" to fix this)" ; \
+	    echo "missing slimit: $< not minified, run \"make setup\" to fix this" ; \
 	fi
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
@@ -313,7 +333,9 @@ config.status: configure
 	  ./config.status --recheck; \
 	else \
 	  autoreconf --install --include=m4; \
-	  ./configure CXXFLAGS="$(CXX_FLAGS)"; \
+	  ./configure CXXFLAGS="$(CXX_FLAGS)" \
+            $(shell test -d ../rrdtool/rrdtool-1.5.4/src/.libs && echo LDFLAGS="-L$(realpath ../rrdtool/rrdtool-1.5.4/src/.libs)") \
+            $(shell test ! -d /usr/include/boost -a -d /usr/include/boost141/boost && echo "CPPFLAGS=-I/usr/include/boost141"); \
 	fi
 
 configure: $(CONFIGURE_DEPS)
@@ -346,8 +368,10 @@ GTAGS: config.h
 compile_commands.json: config.h $(FILES_TO_FORMAT)
 	$(MAKE) -C livestatus clean
 	$(BEAR) $(MAKE) -C livestatus -j8
+ifeq ($(ENTERPRISE),yes)
 	test -d enterprise && $(MAKE) -C enterprise/core clean
 	test -d enterprise && $(BEAR) --append $(MAKE) -C enterprise/core -j8
+endif
 
 tidy: compile_commands.json
 	@scripts/compiled_sources | xargs $(CLANG_TIDY) --extra-arg=-D__clang_analyzer__

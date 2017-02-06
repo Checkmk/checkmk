@@ -73,7 +73,7 @@ then
   if [ -z "$mysql_sockets" ] ; then
     do_query ""
   else
-    for socket in $mysql_sockets ; do 
+    for socket in $mysql_sockets ; do
       do_query "--socket="$socket
     done
   fi

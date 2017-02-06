@@ -152,7 +152,7 @@ custom_links['guest'] = [
 custom_links['user'] = custom_links['guest'] + [
   ( "Open Source Components", False, [
         ( "Check_MK",      "http://mathias-kettner.com/check_mk.html", None, "_blank"),
-        ( "Nagios",        "http://www.nagios.org/", None, "_blank"), 
+        ( "Nagios",        "http://www.nagios.org/", None, "_blank"),
         ( "PNP4Nagios",    "http://pnp4nagios.org/", None, "_blank"),
         ( "NagVis",        "http://nagvis.org/", None, "_blank"),
         ( "RRDTool",       "http://oss.oetiker.ch/rrdtool/", None, "_blank"),

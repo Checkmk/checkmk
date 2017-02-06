@@ -16,7 +16,7 @@ fi
 
 # Per Default wird geguckt, ob die *_min.js-Dateien älter sind, als
 # die Original-Dateien. Wenn ja, dann werden sie neu erstellt.
-sudo make DESTDIR=/omd/sites/$SITE/share/check_mk -C .. minify-js
+sudo make DESTDIR=/omd/sites/$SITE/share/check_mk -C .. install-minified-js
 # Wenn man ohne die min-Dateien entwickeln will, kann man das hier
 # auskommentieren. Dies räumt dann auch die Dateien weg, die
 # schon in der original-Installation vom OMD vorhanden waren.

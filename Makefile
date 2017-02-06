@@ -162,14 +162,16 @@ dist: mk-livestatus precompile-werks
 		--exclude "crash.exe" \
 		--exclude "openhardwaremonitor" \
 		--exclude .f12 $$(cd agents ; ls)
+
+	test -d enterprise && tar czf $(DISTNAME)/cmc-$(VERSION).tar.gz $(TAROPTS) -C enterprise $$(cd enterprise && echo .bugs *)
+
 	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)
 	echo "$(VERSION)" > $(DISTNAME)/VERSION
+
 	tar czf $(DISTNAME).tar.gz $(TAROPTS) $(DISTNAME)
 	rm -rf $(DISTNAME)
-
-	test -d enterprise && tar czf cmc-$(VERSION).tar.gz $(TAROPTS) -C enterprise $$(cd enterprise && echo .bugs *)
 
 	@echo "=============================================================================="
 	@echo "   FINISHED. "

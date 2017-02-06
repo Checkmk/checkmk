@@ -1,0 +1,10 @@
+Title: aix_hacmp_resources: fixed state handling
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1486379960
+
+

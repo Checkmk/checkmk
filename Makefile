@@ -77,7 +77,10 @@ HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* 
                       $$(find agents/cfg_examples -type f) \
                       agents/special/* \
                       $$(find agents/plugins -type f) \
-                      $(wildcard enterprise/cmk_base/cee/*.py enterprise/modules/*.py enterprise/web/htdocs/*.py enterprise/web/plugins/*/*/*.py)
+                      $(wildcard enterprise/cmk_base/cee/*.py \
+                                 enterprise/modules/*.py \
+                                 enterprise/web/htdocs/*.py \
+                                 enterprise/web/plugins/*/*/*.py)
 
 FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix agents/windows/,*.cc *.c *.h)) \
@@ -94,7 +97,7 @@ JAVASCRIPT_MINI    := $(patsubst %.js,%_min.js,$(JAVASCRIPT_SOURCES))
 
 .PHONY: all analyze build check check-binaries check-permissions check-spaces \
         check-version clean cppcheck dist documentation format \
-        GTAGS headers healspaces help iwyu mrproper \
+        GTAGS headers healspaces help install iwyu mrproper \
         optimize-images packages setup setversion tidy version
 
 all: dist packages
@@ -227,6 +230,41 @@ cmc-$(VERSION).tar.gz:
 build: config.h
 	$(MAKE) -C enterprise/core -j8
 	$(MAKE) -C enterprise/locale all
+
+install:
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
+	cp -rv enterprise/web/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/modules
+	install -m 644 enterprise/modules/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/modules
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/cee
+	install -m 644 enterprise/cmk_base/cee/* $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/cee
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/alert_handlers
+	install -m 755 enterprise/alert_handlers/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/alert_handlers
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/bakery
+	install -m 644 enterprise/agents/bakery/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/bakery
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/plugins
+	install -m 755 enterprise/agents/mk-remote-alert-handler $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents
+	install -m 755 enterprise/agents/plugins/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/plugins
+	install -m 755 enterprise/agents/windows/plugins/*.exe $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/reporting/images
+	install -m 644 enterprise/reporting/images/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/reporting/images
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 enterprise/core/src/cmc $(DESTDIR)$(OMD_ROOT)/bin
+	install -m 755 enterprise/bin/* $(DESTDIR)$(OMD_ROOT)/bin
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/cmc
+	install -m 755 enterprise/core/src/checkhelper/checkhelper $(DESTDIR)$(OMD_ROOT)/lib/cmc
+	install -m 755 enterprise/core/src/checkhelper/icmpsender $(DESTDIR)$(OMD_ROOT)/lib/cmc
+	install -m 755 enterprise/core/src/checkhelper/icmpreceiver $(DESTDIR)$(OMD_ROOT)/lib/cmc
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de/LC_MESSAGES
+	install -m 644 enterprise/locale/de/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de/LC_MESSAGES
+	install -m 644 enterprise/locale/de/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	install -m 755 enterprise/active_checks/check_lql_service $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_enterprise
+	install -m 644 enterprise/ChangeLog enterprise/EULA-* $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_enterprise/
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
+	install -m 644 enterprise/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk_enterprise
 endif
 
 packages:

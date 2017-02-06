@@ -163,7 +163,7 @@ dist: mk-livestatus precompile-werks
 		--exclude "openhardwaremonitor" \
 		--exclude .f12 $$(cd agents ; ls)
 
-	test -d enterprise && tar czf $(DISTNAME)/cmc-$(VERSION).tar.gz $(TAROPTS) -C enterprise $$(cd enterprise && echo .bugs *)
+	test -d enterprise && tar czf $(DISTNAME)/cmc.tar.gz $(TAROPTS) -C enterprise $$(cd enterprise && echo .bugs *)
 
 	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)

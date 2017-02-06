@@ -4731,7 +4731,8 @@ def execute_activate_changes(domains):
     results = {}
     for domain in domains:
         domain_class = ConfigDomain.get_class(domain)
-        results[domain] = domain_class().activate()
+        warnings = domain_class().activate()
+        results[domain] = warnings or []
 
     return results
 

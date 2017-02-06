@@ -1212,9 +1212,10 @@ def ldap_attribute_plugins_elements(connection_id):
             )))
         else:
             elements.append((key, Dictionary(
-                title    = plugin['title'],
-                help     = plugin['help'],
-                elements = plugin['parameters'],
+                title         = plugin['title'],
+                help          = plugin['help'],
+                elements      = plugin['parameters'],
+                required_keys = plugin.get('required_parameters', []),
             )))
     return elements
 
@@ -1667,8 +1668,10 @@ ldap_attribute_plugins['groups_to_attributes'] = {
                      "not a member of a group, the attribute will be left at it's default value. When "
                      "a single attribute is set by multiple groups and a user is member of multiple "
                      "of these groups, the later plugin in the list will override the others."),
+            allow_empty=False,
         )),
-    ]
+    ],
+    'required_parameters': ["groups"],
 }
 
 #.

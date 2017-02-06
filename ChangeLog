@@ -69,6 +69,7 @@
     * 4282 FIX: Fixed rendering of perfometers when no RRDs exist yet
     * 4285 FIX: Availability: Timeline tables can now not be sorted and searched anymore
     * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles
+    * 4321 FIX: LDAP: Improved validation of groups to attributes sync plugin
 
     WATO:
     * 4146 FIX: Fixed broken "Global settings" when having the Event Console disabled via "omd config"

@@ -729,7 +729,7 @@ def save_users(profiles):
 
     # Write user specific files
     for user_id, user in profiles.items():
-        user_dir = cmk.paths.var_dir + "/web/" + user_id
+        user_dir = cmk.paths.var_dir + "/web/" + user_id.encode("utf-8")
         make_nagios_directory(user_dir)
 
         # authentication secret for local processes
@@ -737,7 +737,7 @@ def save_users(profiles):
         if "automation_secret" in user:
             store.save_file(auth_file, "%s\n" % user["automation_secret"])
         elif os.path.exists(auth_file):
-            os.unlink(make_utf8(auth_file))
+            os.unlink(auth_file)
 
         # Write out user attributes which are written to dedicated files in the user
         # profile directory. The primary reason to have separate files, is to reduce

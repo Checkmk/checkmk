@@ -928,6 +928,8 @@ class LDAPUserConnector(UserConnector):
         import wato
         users = load_users(lock = True)
 
+        changes = []
+
         def load_user(user_id):
             if user_id in users:
                 user = copy.deepcopy(users[user_id])
@@ -944,8 +946,7 @@ class LDAPUserConnector(UserConnector):
             if user_connection_id == connection_id and self.strip_suffix(user_id) not in ldap_users:
                 del users[user_id] # remove the user
                 if config.wato_enabled:
-                    wato.add_change("edit-users",
-                        _("LDAP [%s]: Removed user %s") % (connection_id, user_id), add_user=False)
+                    changes.append(_("LDAP [%s]: Removed user %s") % (connection_id, user_id))
 
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
@@ -986,10 +987,8 @@ class LDAPUserConnector(UserConnector):
                 changed = self.find_changed_user_keys(intersect, users[user_id], user) # returns a dict
 
             users[user_id] = user # Update the user record
-            if mode_create:
-                if config.wato_enabled:
-                    wato.add_change("edit-users",
-                                     _("LDAP [%s]: Created user %s") % (connection_id, user_id), add_user=False)
+            if mode_create and config.wato_enabled:
+                changes.append(_("LDAP [%s]: Created user %s") % (connection_id, user_id))
             else:
                 details = []
                 if added:
@@ -1017,12 +1016,12 @@ class LDAPUserConnector(UserConnector):
                         details.append(('Changed %s from %s to %s' % (key, old_value, new_value)))
 
                 if details and config.wato_enabled:
-                    wato.add_change("edit-users",
-                         _("LDAP [%s]: Modified user %s (%s)") % (connection_id, user_id, ', '.join(details)),
-                         add_user=False)
+                    changes.append(_("LDAP [%s]: Modified user %s (%s)") % (connection_id, user_id, ', '.join(details)))
 
         duration = time.time() - start_time
         self.log('SYNC FINISHED - Duration: %0.3f sec' % duration)
+
+        wato.add_change("edit-users", "\n".join(changes), add_user=False)
 
         # delete the fail flag file after successful sync
         try:

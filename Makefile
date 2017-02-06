@@ -205,7 +205,6 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	@echo "=============================================================================="
 
 .werks/werks: $(WERKS)
-	echo $(WERKS)
 	PYTHONPATH=. python scripts/precompile-werks
 
 # NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,

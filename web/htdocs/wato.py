@@ -7866,7 +7866,7 @@ def generic_rule_list_actions(rules, what, what_title, save_rules):
     if html.has_var("_delete"):
         nr = int(html.var("_delete"))
         rule = rules[nr]
-        c = wato_confirm(_("Confirm deletion of %s"),
+        c = wato_confirm(_("Confirm deletion of %s") % what_title,
                          _("Do you really want to delete the %s <b>%d</b> <i>%s</i>?") %
                            (what_title, nr, rule.get("description","")))
         if c:

@@ -133,6 +133,7 @@
     * 4231 FIX: Fixed broken host renaming when files are in var/check_mk/web
     * 4317 FIX: Rule list: Removed the row limit of the rule tables
     * 4318 FIX: Rule editor: Fixed wrong default value for yes/no rulesets
+    * 4323 FIX: Fixed wrong %s in notification rule title deletion confirm dialog
 
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address

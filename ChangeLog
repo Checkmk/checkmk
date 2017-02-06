@@ -16,12 +16,13 @@
     * 4343 FIX: apt: Fixed wrong state information of pending updates of normal and security updates...
     * 4344 FIX: lnx_quota: Fixed wrong value calculation and removed performance data...
             NOTE: Please refer to the migration notes!
+    * 4338 FIX: aix_hacmp_resources: fixed state handling
 
     Multisite:
     * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles
 
     WATO:
-    * 4337 FIX: logwatch: fixed redundant master url in single site environment and added master url prefix if configured in master site
+    * 4337 FIX: logwatch: removed redundant master url in single site environment and fixed missing master url prefix if configured in master site
 
 
 1.2.8p16:

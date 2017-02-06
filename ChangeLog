@@ -20,6 +20,7 @@
 
     Multisite:
     * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles
+    * 4321 FIX: LDAP: Improved validation of groups to attributes sync plugin
 
     WATO:
     * 4337 FIX: logwatch: removed redundant master url in single site environment and fixed missing master url prefix if configured in master site

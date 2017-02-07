@@ -117,6 +117,7 @@
     * 4316 FIX: Views: Fixed editing of "hide from sidebar" and "show context button" options
     * 4321 FIX: LDAP: Improved validation of groups to attributes sync plugin
     * 4048 FIX: Fixed bug in tables: the notification message for reached row limits is visible again
+    * 4049 FIX: Fixed cut-off of bulk options when row-limit is reached.
 
     WATO:
     * 4142 New extended search dialog for rulesets and rules...

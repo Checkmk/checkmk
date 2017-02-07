@@ -1,0 +1,9 @@
+Title: Fixed cut-off of bulk options when row-limit is reached.
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486463810
+Class: fix
+
+

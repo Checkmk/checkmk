@@ -58,6 +58,7 @@
     * 4344 FIX: lnx_quota: Fixed wrong value calculation and removed performance data...
             NOTE: Please refer to the migration notes!
     * 4338 FIX: aix_hacmp_resources: fixed state handling
+    * 4339 FIX: fixed AtrributeError in oracle sessions ruleset
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

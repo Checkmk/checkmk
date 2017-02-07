@@ -8967,7 +8967,7 @@ register_check_parameters(
     TextAscii(
         title = _("Database name"),
         allow_empty = False),
-    match_type = "dict",
+    match_type = "first",
 )
 
 register_check_parameters(

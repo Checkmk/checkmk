@@ -45,15 +45,6 @@ function real_next_sibling(o) {
     return n;
 }
 
-// simple string replace that replaces all occurrances.
-// Unbelievable that JS does not have a builtin way to
-// to that.
-function replace_all(haystack, needle, r) {
-    while (haystack.search(needle) != -1)
-        haystack = haystack.replace(needle, r);
-    return haystack;
-}
-
 function has_class(o, cn) {
     if (typeof(o.className) === 'undefined')
         return false;
@@ -2017,9 +2008,13 @@ function valuespec_listof_add(varprefix, magic)
     var oPrototype = document.getElementById(varprefix + "_prototype").childNodes[0].childNodes[0]; // TR
     var htmlcode = oPrototype.innerHTML;
     // replace the magic
-    htmlcode = replace_all(htmlcode, magic, strcount);
+    var re = new RegExp(magic, "g")
+    htmlcode = htmlcode.replace(re, strcount)
+
     // in some cases the magic might be URL encoded. Also replace these occurences.
-    htmlcode = replace_all(htmlcode, encodeURIComponent(magic).replace('!', '%21'), strcount);
+    re       = new RegExp(encodeURIComponent(magic).replace('!', '%21'), "g")
+    htmlcode = htmlcode.replace(re, strcount)
+
     var oTable = document.getElementById(varprefix + "_table");
 
     var oTbody = oTable.childNodes[0];

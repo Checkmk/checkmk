@@ -139,6 +139,7 @@
     * 4318 FIX: Rule editor: Fixed wrong default value for yes/no rulesets
     * 4323 FIX: Fixed wrong %s in notification rule title deletion confirm dialog
     * 4324 FIX: Fixed possible exception when saving user with special characters in user name
+    * 4327 FIX: Allowing dollar sign in mail addresses now
 
     Notifications:
     * 4197 FIX: Fix sending notification to global fallback email address

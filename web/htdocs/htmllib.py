@@ -66,6 +66,7 @@ import __builtin__
 import signal
 
 from collections import deque
+from contextlib import contextmanager
 
 try:
     import simplejson as json
@@ -94,9 +95,13 @@ class RequestTimeout(MKException):
     pass
 
 
-from contextlib import contextmanager
-
 # Plug context
+# Usage:
+#         with plug(html):
+#            html.write("something")
+#            html_code = html.drain()
+#         print html_code
+
 @contextmanager
 def plug(html):
     html.plug()
@@ -150,7 +155,6 @@ class Escaper(object):
         text = self._unescaper_href.sub(r'<a href="\1">', text)
         text = re.sub(r'&amp;nbsp;', '&nbsp;', text)
         return text
-
 
 
 #.
@@ -351,7 +355,7 @@ class OutputFunnel(object):
 
     # Put in a plug which stops the text stream and redirects it to a sink.
     def plug(self):
-        self.plug_text += ['']
+        self.plug_text.append('')
         self.plug_level += 1
 
 
@@ -389,6 +393,10 @@ class OutputFunnel(object):
         self.plug_text.pop()
         self.plug_level -= 1
 
+
+    def unplug_all(self):
+        while(self.is_plugged()):
+            self.unplug()
 
 #.
 #   .--HTML Generator------------------------------------------------------.
@@ -559,20 +567,17 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
         # generating the shortcut tag calls
         if len(parts) == 1 and name in self._shortcut_tags:
-            return lambda content, **attrs: self.write(self._render_content_tag(name, content, **attrs))
+            return lambda content, **attrs: self.write_html(self._render_content_tag(name, content, **attrs))
 
         # generating the open, close and render calls
         elif len(parts) == 2:
             what, tag_name = parts[0], parts[1]
 
             if what == "open" and tag_name in self._tag_names:
-                return lambda **attrs: self.write(self._render_opening_tag(tag_name, **attrs))
+                return lambda **attrs: self.write_html(self._render_opening_tag(tag_name, **attrs))
 
             elif what == "close" and tag_name in self._tag_names:
-                return lambda : self.write(self._render_closing_tag(tag_name))
-
-            elif what == "idle" and tag_name in self._tag_names:
-                return lambda **attrs: self.write(self._render_content_tag(tag_name, '', **attrs))
+                return lambda : self.write_html(self._render_closing_tag(tag_name))
 
             elif what == "render" and tag_name in self._tag_names:
                 return lambda content, **attrs: HTML(self._render_content_tag(tag_name, content, **attrs))
@@ -609,16 +614,16 @@ class HTMLGenerator(Escaper, OutputFunnel):
     def meta(self, httpequiv=None, **attrs):
         if httpequiv:
             attrs['http-equiv'] = httpequiv
-        self.write(self._render_opening_tag('meta', close_tag=True, **attrs))
+        self.write_html(self._render_opening_tag('meta', close_tag=True, **attrs))
 
 
     def base(self, target):
-        self.write(self._render_opening_tag('base', close_tag=True, target=target))
+        self.write_html(self._render_opening_tag('base', close_tag=True, target=target))
 
 
     def open_a(self, href, **attrs):
         attrs['href'] = href
-        self.write(self._render_opening_tag('a', **attrs))
+        self.write_html(self._render_opening_tag('a', **attrs))
 
 
     def render_a(self, content, href, **attrs):
@@ -627,11 +632,11 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def a(self, content, href, **attrs):
-        self.write(self.render_a(content, href, **attrs))
+        self.write_html(self.render_a(content, href, **attrs))
 
 
     def stylesheet(self, href):
-        self.write(self._render_opening_tag('link', rel="stylesheet", type_="text/css", href=href, close_tag=True))
+        self.write_html(self._render_opening_tag('link', rel="stylesheet", type_="text/css", href=href, close_tag=True))
 
 
     #
@@ -640,12 +645,12 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def javascript(self, code):
-        self.write("<script type=\"text/javascript\">\n%s\n</script>\n" % code)
+        self.write_html("<script type=\"text/javascript\">\n%s\n</script>\n" % code)
 
 
     def javascript_file(self, src):
         """ <script type="text/javascript" src="%(name)"/>\n """
-        self.write(self._render_content_tag('script', '', type_="text/javascript", src=src))
+        self.write_html(self._render_content_tag('script', '', type_="text/javascript", src=src))
 
 
     def render_img(self, src, **attrs):
@@ -654,16 +659,16 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def img(self, src, **attrs):
-        self.write(self.render_img(src, **attrs))
+        self.write_html(self.render_img(src, **attrs))
 
 
     def open_button(self, type_, **attrs):
         attrs['type'] = type_
-        self.write(self._render_opening_tag('button', close_tag=True, **attrs))
+        self.write_html(self._render_opening_tag('button', close_tag=True, **attrs))
 
 
     def play_sound(self, url):
-        self.write(self._render_opening_tag('audio autoplay', src_=url))
+        self.write_html(self._render_opening_tag('audio autoplay', src_=url))
 
 
     #
@@ -677,7 +682,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def label(self, content, for_, **attrs):
-        self.write(self.render_label(content, for_, **attrs))
+        self.write_html(self.render_label(content, for_, **attrs))
 
 
     def render_input(self, name, type_, **attrs):
@@ -687,7 +692,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def input(self, name, type_, **attrs):
-        self.write(self.render_input(name, type_, **attrs))
+        self.write_html(self.render_input(name, type_, **attrs))
 
 
     #
@@ -697,12 +702,12 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
     def td(self, content, **attrs):
         """ Only for text content. You can't put HTML structure here. """
-        self.write(self._render_content_tag('td', content, **attrs))
+        self.write_html(self._render_content_tag('td', content, **attrs))
 
 
     def li(self, content, **attrs):
         """ Only for text content. You can't put HTML structure here. """
-        self.write(self._render_content_tag('li', content, **attrs))
+        self.write_html(self._render_content_tag('li', content, **attrs))
 
 
     #
@@ -716,7 +721,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def heading(self, content):
-        self.write(self.render_heading(content))
+        self.write_html(self.render_heading(content))
 
 
     def render_br(self):
@@ -724,7 +729,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def br(self):
-        self.write(self.render_br())
+        self.write_html(self.render_br())
 
 
     def render_hr(self, **attrs):
@@ -732,7 +737,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def hr(self, **attrs):
-        self.write(self.render_hr(**attrs))
+        self.write_html(self.render_hr(**attrs))
 
 
     def rule(self):
@@ -744,7 +749,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
     def nbsp(self):
-        self.write(self.render_nbsp())
+        self.write_html(self.render_nbsp())
 
 
 
@@ -909,7 +914,7 @@ class HTMLCheck_MK(HTMLGenerator):
     def default_html_headers(self):
         self.meta(httpequiv="Content-Type", content="text/html; charset=utf-8")
         self.meta(httpequiv="X-UA-Compatible", content="IE=edge")
-        self.write(self._render_opening_tag('link', rel="shortcut icon", href="images/favicon.ico", type_="image/ico", close_tag=True))
+        self.write_html(self._render_opening_tag('link', rel="shortcut icon", href="images/favicon.ico", type_="image/ico", close_tag=True))
 
 
     def _head(self, title, javascripts=None, stylesheets=None):
@@ -1065,7 +1070,7 @@ class HTMLCheck_MK(HTMLGenerator):
 
 
     def help(self, text):
-        self.write(self.render_help(text))
+        self.write_html(self.render_help(text))
 
     #
     # HTML form rendering
@@ -1083,11 +1088,11 @@ class HTMLCheck_MK(HTMLGenerator):
         title = help
         icon_name = icon
 
-        self.write(self.render_icon(icon_name=icon_name, help=title, **kwargs))
+        self.write_html(self.render_icon(icon_name=icon_name, help=title, **kwargs))
 
 
     def empty_icon(self):
-        self.write(self.render_icon("images/trans.png"))
+        self.write_html(self.render_icon("images/trans.png"))
 
 
     def render_icon(self, icon_name, help=None, middle=True, id=None, cssclass=None):
@@ -1129,11 +1134,11 @@ class HTMLCheck_MK(HTMLGenerator):
 
 
     def icon_button(self, *args, **kwargs):
-        self.write(self.render_icon_button(*args, **kwargs))
+        self.write_html(self.render_icon_button(*args, **kwargs))
 
 
     def popup_trigger(self, *args, **kwargs):
-        self.write(self.render_popup_trigger(*args, **kwargs))
+        self.write_html(self.render_popup_trigger(*args, **kwargs))
 
 
     def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None,
@@ -1158,7 +1163,7 @@ class HTMLCheck_MK(HTMLGenerator):
 
 
     def element_dragger(self, dragging_tag, base_url):
-        self.write(self.render_element_dragger(dragging_tag, base_url))
+        self.write_html(self.render_element_dragger(dragging_tag, base_url))
 
 
     # Currently only tested with tables. But with some small changes it may work with other

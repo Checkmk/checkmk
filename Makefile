@@ -237,7 +237,8 @@ cmc-$(VERSION).tar.gz: config.h
           enterprise \
           livestatus \
           m4 | tar xf - -C cmc-$(VERSION)
-	cd cmc-$(VERSION) && mv enterprise/skel enterprise/skel.permissions .
+	mv cmc-$(VERSION)/enterprise/skel{,.permissions} cmc-$(VERSION)
+	sed -i '1 i\include ../../Makefile.omd' cmc-$(VERSION)/Makefile
 	cd cmc-$(VERSION) && tar czf ../cmc-$(VERSION).tar.gz $(TAROPTS) .bugs *
 	rm -rf cmc-$(VERSION)
 

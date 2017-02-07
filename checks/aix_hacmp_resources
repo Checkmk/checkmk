@@ -56,19 +56,18 @@ def inventory_aix_hacmp_resources(parsed):
 def check_aix_hacmp_resources(item, params, parsed):
     if item in parsed:
         resource_stats = []
-        infotexts      = []
+        infotext = ""
         for node_name, resource_status in parsed[item]:
             resource_stats.append(resource_status)
-            infotexts.append("%s on node %s" % \
-                             (resource_status, node_name))
-        if "online" in resource_stats:
-            state = 0
-        elif "error" in resource_stats:
-            state = 2
-        else:
-            state = 1
+            infotext += "%s on node %s, " % (resource_status, node_name)
 
-        return state, "Status: %s" % ", ".join(infotexts)
+        # The first node is always online in an OK scenario
+        # Something is wrong if an other node is online
+        state = 0
+        if resource_stats[0] != "online":
+            state = 2
+
+        return state, infotext[:-2]
 
 
 check_info['aix_hacmp_resources'] = {

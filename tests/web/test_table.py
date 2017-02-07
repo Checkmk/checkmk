@@ -138,3 +138,58 @@ def table_test_cubical(sortable, searchable, limit, output_format, tmpdir):
 
     assert len(data) == limit
     assert data == rows[:limit]
+
+
+
+
+
+def test_context():
+    import table
+
+    html = TableTest()
+    __builtin__.html = html
+
+    table_id = 0
+    rows    = [ (i, i**3) for i in range(10) ]
+    header  = ["Number", "Cubical"]
+
+    with table.open(table_id=table_id, searchable=False, sortable=False):
+        for row in rows:
+            table.row()
+            for i in range(len(header)):
+                table.cell(_(header[i]), row[i])
+
+    text = html.written_text
+    data = read_out_table(text)
+    assert data.pop(0) == header
+    data = [ tuple(map(int, row)) for row in data if row and row[0]]
+    assert data == rows
+
+
+#def test_nested_context():
+#    import table
+#
+#    html = TableTest()
+#    __builtin__.html = html
+#
+#    table_id = 0
+#    rows    = [ (i, i**3) for i in range(2) ]
+#    header  = ["Number", "Cubical"]
+#
+#    with table.open(table_id=table_id, searchable=False, sortable=False):
+#        for row in rows:
+#            table.row()
+#            for i in range(len(header)):
+#                table.cell(_(header[i]), row[i])
+#                with table.open(table_id=table_id, searchable=False, sortable=False):
+#                    for row in rows:
+#                        table.row()
+#                        for i in range(len(header)):
+#                            table.cell(_(header[i]), row[i])
+#
+#    text = html.written_text
+#    print "\n" + text
+#    data = read_out_table(text)
+#    assert data.pop(0) == header
+#    data = [ tuple(map(int, row)) for row in data if row and row[0]]
+#    assert data == rows

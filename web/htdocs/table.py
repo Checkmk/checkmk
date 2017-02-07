@@ -26,6 +26,16 @@
 import config
 from lib import num_split
 
+# TODO: Is contextlib part of older versions of python?
+# external imports
+from contextlib import contextmanager
+@contextmanager
+def open(**kwargs):
+    begin(**kwargs)
+    yield
+    end()
+
+
 table     = None
 mode      = None
 next_func = None

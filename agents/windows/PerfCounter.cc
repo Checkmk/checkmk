@@ -205,8 +205,12 @@ PerfCounterObject::PerfCounterObject(unsigned int counter_base_number)
     _buffer = retrieveCounterData(std::to_wstring(counter_base_number).c_str());
 
     _object = findObject(counter_base_number);
+
+    std::ostringstream stringStream;
+    stringStream << "counter id not found: " << counter_base_number;
+
     if (_object == NULL) {
-        throw std::runtime_error("counter id not found");
+        throw std::runtime_error(stringStream.str());
     }
 
     if (_object->NumInstances <= 0) {

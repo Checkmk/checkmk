@@ -93,6 +93,7 @@
             NOTE: Please refer to the migration notes!
     * 4123 FIX: active check check_sql: changed handling of query results and fixed hostname parameter...
     * 4338 FIX: aix_hacmp_resources: fixed state handling
+    * 4325 FIX: check_cpu_peaks: Make the check working with current Check_MK APi
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

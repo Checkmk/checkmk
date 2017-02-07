@@ -26,23 +26,8 @@
 
 import sys, os, time, getopt
 
-class MKGeneralException(Exception):
-    def __init__(self, reason):
-        super(MKGeneralException, self).__init__()
-        self.reason = reason
-
-
-    def __str__(self):
-        return self.reason
-
-
-# Note: This check only works in an OMD environment!
-# TODO: Clean this mess up! Define and use an official API to predictive monitoring.
-sys.path.append(os.path.expanduser("~/share/check_mk/modules"))
-execfile(os.path.expanduser("~/etc/check_mk/defaults"))
-execfile(os.path.expanduser("~/share/check_mk/modules/prediction.py"))
-execfile(os.path.expanduser("~/share/check_mk/modules/check_mk_base.py"))
-rrdcached_socket = None
+from cmk.exceptions import MKGeneralException
+import cmk_base.prediction as prediction
 
 def usage():
     sys.stderr.write("""== check_cpu_peaks ==
@@ -112,9 +97,7 @@ try:
     util_total = []
     is_windows = True
     try:
-        # can not check for get_rrd_data because it's hacky included with execfile
-        # pylint: disable=undefined-variable
-        data = get_rrd_data(host, "CPU utilization", "util", "MAX", fromtime, untiltime)
+        data = prediction.get_rrd_data(host, "CPU utilization", "util", "MAX", fromtime, untiltime)
         datasets.append(data[1])
         step_secs = data[0]
         #util_total = [ x for x in datasets[0] if x != None ]
@@ -125,9 +108,7 @@ try:
         # looks like this is not a windows rrd...
         is_windows = False
         for key in ["system", "user", "wait"]:
-            # can not check for get_rrd_data because it's hacky included with execfile
-            # pylint: disable=undefined-variable
-            data = get_rrd_data(host, "CPU utilization", key, "MAX", fromtime, untiltime)
+            data = prediction.get_rrd_data(host, "CPU utilization", key, "MAX", fromtime, untiltime)
             datasets.append(data[1])
             step_secs = data[0]
 

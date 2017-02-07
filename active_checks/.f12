@@ -1,10 +1,10 @@
 #!/bin/bash
-SITE=${SITE:-$(cat ../../../.site 2>/dev/null)}
+SITE=${SITE:-$(cat ../.site 2>/dev/null)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 echo "Installing to /omd/sites/$SITE/lib/nagios/plugins" 
 make
 
-RSYNC_OPTS="-av
+RSYNC_OPTS="-a
            --chown=root:root
            --exclude=.*.swp
            --exclude=Makefile

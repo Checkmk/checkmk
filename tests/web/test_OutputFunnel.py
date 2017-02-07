@@ -69,23 +69,6 @@ def test_plug():
     assert html.written == "ABC"
 
 
-
-def test_context():
-    html = OutputFunnelTester()
-
-    html.write("A")
-    assert html.written == "A"
-    with plug(html):
-        html.write("B")
-        assert html.plug_text == ["B"]
-        with plug(html):
-            html.write("C")
-            assert html.plug_text == ["B", "C"]
-        assert html.plug_text == ["BC"]
-    assert html.written == "ABC"
-
-
-
 def test_drain():
     html = OutputFunnelTester()
 
@@ -112,5 +95,32 @@ def test_flush():
     assert html.written == "A"
 
 
+def test_context_nesting():
+    html = OutputFunnelTester()
+
+    html.write("A")
+    assert html.written == "A"
+    with plug(html):
+        html.write("B")
+        assert html.plug_text == ["B"]
+        with plug(html):
+            html.write("C")
+            assert html.plug_text == ["B", "C"]
+        assert html.plug_text == ["BC"]
+    assert html.written == "ABC"
+
+
+def test_context_drain():
+    html = OutputFunnelTester()
+
+    html.write("A")
+    assert html.written == "A"
+    with plug(html):
+        html.write("B")
+        assert html.plug_text == ['B']
+        code = html.drain()
+        assert html.plug_text == ['']
+    test = "Hallo " + code
+    assert html.written == "A"
 
 

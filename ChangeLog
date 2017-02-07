@@ -25,6 +25,7 @@
 
     WATO:
     * 4337 FIX: logwatch: removed redundant master url in single site environment and fixed missing master url prefix if configured in master site
+    * 4327 FIX: Allowing dollar sign in mail addresses now
 
 
 1.2.8p16:

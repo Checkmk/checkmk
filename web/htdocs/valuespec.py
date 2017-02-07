@@ -538,7 +538,7 @@ class EmailAddressUnicode(TextUnicode, EmailAddress):
     def __init__(self, **kwargs):
         TextUnicode.__init__(self, **kwargs)
         EmailAddress.__init__(self, **kwargs)
-        self._regex = re.compile(r'^[\w._%+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
+        self._regex = re.compile(r'^[$\w._%+-]+@(localhost|[\w.-]+\.[\w]{2,24})$', re.I | re.UNICODE)
 
     def validate_value(self, value, varprefix):
         TextUnicode.validate_value(self, value, varprefix)

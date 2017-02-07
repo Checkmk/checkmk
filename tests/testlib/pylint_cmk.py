@@ -26,13 +26,13 @@ def ordered_module_files():
         "modules/nagios.py",
         "modules/automation.py",
         "modules/inventory.py",
-        "../cmc/modules/real_time_checks.py",
-        "../cmc/modules/alert_handling.py",
-        "../cmc/modules/keepalive.py",
-        "../cmc/modules/cmc.py",
-        "../cmc/modules/inline_snmp.py",
-        "../cmc/modules/agent_bakery.py",
-        "../cmc/modules/rrd.py",
+        "enterprise/modules/real_time_checks.py",
+        "enterprise/modules/alert_handling.py",
+        "enterprise/modules/keepalive.py",
+        "enterprise/modules/cmc.py",
+        "enterprise/modules/inline_snmp.py",
+        "enterprise/modules/agent_bakery.py",
+        "enterprise/modules/rrd.py",
     ]
 
     modules = [ os.path.realpath(repo_path() + "/" + p)
@@ -49,7 +49,7 @@ def ordered_module_files():
 def module_files():
     modules = []
     for base_path in [ repo_path() + "/modules",
-                       os.path.realpath(repo_path() + "/../cmc/modules") ]:
+                       repo_path() + "/enterprise/modules" ]:
 
         modules += [ base_path + "/" + f for f in os.listdir(base_path)
                      if not f.startswith(".") ]

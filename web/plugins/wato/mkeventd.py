@@ -1764,7 +1764,7 @@ def mode_mkeventd_config(phase):
             msg = _("Changed Configuration variable %s to %s.") % (varname,
                 current_settings[varname] and _("on") or _("off"))
 
-            save_configuration_settings(current_settings)
+            save_global_settings(current_settings)
 
             add_ec_change("edit-configvar", msg)
 

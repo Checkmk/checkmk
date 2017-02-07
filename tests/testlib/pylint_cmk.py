@@ -11,7 +11,7 @@ import tempfile
 from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter
 from pylint.utils import Message
 
-from testlib import repo_path
+from testlib import repo_path, cmk_path, cmc_path
 
 
 def ordered_module_files():

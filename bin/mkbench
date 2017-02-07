@@ -71,8 +71,9 @@ import traceback
 import logging
 import multiprocessing
 
-import psutil
-import npyscreen
+# TODO: Remove the disablings below once the builds ship these modules
+import psutil # pylint: disable=import-error
+import npyscreen # pylint: disable=import-error
 
 from collections import namedtuple
 

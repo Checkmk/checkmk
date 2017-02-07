@@ -5,7 +5,7 @@ import os
 import sys
 import pytest
 
-from testlib import repo_path
+from testlib import repo_path, cmc_path
 import testlib.pylint_cmk as pylint_cmk
 
 # Mark all tests in this file to be pylint checks

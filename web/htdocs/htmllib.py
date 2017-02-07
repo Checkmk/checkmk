@@ -1330,10 +1330,15 @@ class RequestHandler(object):
 
 
     def set_var(self, varname, value):
-        if value == None:
+        if value is None:
             self.del_var(varname)
-        else:
+
+        elif type(value) in [ str, unicode ]:
             self.vars[varname] = value
+
+        else:
+            # crash report please
+            raise TypeError(_("Only str and unicode values are allowed"))
 
 
     def del_var(self, varname):

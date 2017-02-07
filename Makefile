@@ -52,15 +52,7 @@ BEAR               := bear
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
 
-# File to pack into livestatus-$(VERSION).tar.gz
-LIVESTATUS_AUTO    := aclocal.m4 ar-lib compile config.guess config.h.in \
-                      config.sub configure depcomp install-sh missing \
-                      Makefile.in src/Makefile.in
-LIVESTATUS_SOURCES := $(LIVESTATUS_AUTO) configure.ac \
-                      Makefile.am nagios/README nagios/*.h \
-                      nagios4/README m4/* nagios4/*.h src/*.{h,cc} \
-                      src/Makefile.am api/python/{*.py,README} api/perl/*
-LIVESTATUS_SRCS    := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
+LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
                       src/{Makefile.am,*.{cc,h}} standalone/config_files.m4
 
@@ -212,7 +204,7 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 mk-livestatus-$(VERSION).tar.gz:
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
-	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SRCS) ) | tar xf - -C mk-livestatus-$(VERSION)
+	tar cf -  $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac m4 mk-livestatus-$(VERSION)
 	cd mk-livestatus-$(VERSION) && autoreconf --install --include=m4 && rm -rf autom4te.cache
 	tar czf mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
@@ -221,13 +213,27 @@ mk-livestatus-$(VERSION).tar.gz:
 ifeq ($(ENTERPRISE),yes)
 dist: cmc-$(VERSION).tar.gz
 
-cmc-$(VERSION).tar.gz:
-	test -d enterprise && tar czf cmc-$(VERSION).tar.gz $(TAROPTS) \
-		Makefile \
-		configure.ac \
-		enterprise \
-		livestatus \
-		m4
+cmc-$(VERSION).tar.gz: config.h
+	make -C livestatus distclean
+	make -C enterprise/core distclean
+	tar czf cmc-$(VERSION).tar.gz $(TAROPTS) \
+          aclocal.m4 \
+          ar-lib \
+          compile \
+          config.guess \
+          config.h.in \
+          config.sub \
+          configure \
+          depcomp \
+          install-sh \
+          missing \
+          stamp-h1 \
+          .bugs \
+          Makefile \
+          configure.ac \
+          enterprise \
+          livestatus \
+          m4
 
 build: config.h
 	$(MAKE) -C enterprise/core -j8
@@ -341,9 +347,7 @@ clean:
 	rm -rf api clang-analyzer compile_commands.json dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
-	       precompiled cache web/htdocs/js/*_min.js \
-               $(addprefix livestatus/,$(LIVESTATUS_AUTO))
-	rm .werks/werks || true
+	       precompiled cache web/htdocs/js/*_min.js .werks/werks
 	find -name "*~" | xargs rm -f
 
 mrproper:
@@ -367,12 +371,13 @@ setup:
 	    librrd-dev \
 	    pngcrush \
 	    slimit
+ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
+	  autoreconf --install --include=m4
 
-config.status: configure
+config.status: ar-lib compile config.guess config.sub install-sh missing depcomp configure
 	if test -f config.status; then \
 	  ./config.status --recheck; \
 	else \
-	  autoreconf --install --include=m4; \
 	  ./configure CXXFLAGS="$(CXX_FLAGS)" \
             $(shell test -d ../rrdtool/rrdtool-1.5.4/src/.libs && echo LDFLAGS="-L$(realpath ../rrdtool/rrdtool-1.5.4/src/.libs)") \
             $(shell test ! -d /usr/include/boost -a -d /usr/include/boost141/boost && echo "CPPFLAGS=-I/usr/include/boost141"); \

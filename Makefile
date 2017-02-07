@@ -421,8 +421,8 @@ compile_commands.json: config.h $(FILES_TO_FORMAT)
 	$(MAKE) -C livestatus clean
 	$(BEAR) $(MAKE) -C livestatus -j8
 ifeq ($(ENTERPRISE),yes)
-	test -d enterprise && $(MAKE) -C enterprise/core clean
-	test -d enterprise && $(BEAR) --append $(MAKE) -C enterprise/core -j8
+	$(MAKE) -C enterprise/core clean
+	$(BEAR) --append $(MAKE) -C enterprise/core -j8
 endif
 
 tidy: compile_commands.json
@@ -461,3 +461,6 @@ format:
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h
 	$(DOXYGEN) doc/Doxyfile
+ifeq ($(ENTERPRISE),yes)
+	cd enterprise && $(DOXYGEN) doc/Doxyfile
+endif

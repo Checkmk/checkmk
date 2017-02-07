@@ -1043,14 +1043,21 @@ class HTMLCheck_MK(HTMLGenerator):
 
     # TODO: Add to integration tests!!!
 
-    def help(self, text):
+    def render_help(self, text):
         if text and text.strip():
             self.have_help = True
-            self.open_div(class_="help", style="display: %s;" % (
-                        "block" if self.help_visible else "none"))
+            c = self.render_div(
+                text.strip(),
+                class_="help",
+                style="display: %s;" % ("block" if self.help_visible else "none"))
             # TODO: Replace with write_text???
-            self.write(text.strip())
-            self.close_div()
+            return c
+        else:
+            return ""
+
+
+    def help(self, text):
+        self.write(self.render_help(text))
 
     #
     # HTML form rendering

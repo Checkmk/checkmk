@@ -250,7 +250,8 @@ def end():
     # Apply limit after search / sorting etc.
     limit = table['limit']
     if limit is not None:
-        rows = rows[:limit]
+        # only use rows up to the limit plus the fixed rows
+        rows = [ rows[i] for i in range(num_rows_unlimited) if i < limit or rows[i][3]]
 
     if not do_csv:
         html.write('<table class="data oddeven')

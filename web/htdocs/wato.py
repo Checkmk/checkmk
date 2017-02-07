@@ -3036,12 +3036,25 @@ class ModeDiscovery(WatoMode):
 
         checks_by_source = self._checks_by_source(check_table)
 
-        for check_source, show_bulk_actions, title in self._check_sources():
+        for check_source, show_bulk_actions, title, help_text in self._check_sources():
             checks = checks_by_source.get(check_source, [])
             if not checks:
                 continue
 
-            table.groupheader(title)
+            if check_source == "new":
+                icon = "undecided"
+            elif check_source == "ignored":
+                icon = "disabled"
+            elif check_source == "old":
+                icon = "monitored"
+            else:
+                icon = None
+            if icon:
+                grouptitle = html.render_icon(icon + "_service") + " " + title
+            else:
+                grouptitle = title
+
+            table.groupheader(grouptitle + html.render_help(help_text))
 
             if show_bulk_actions and len(checks) > 10:
                 self._bulk_actions(check_source, collect_headers=False)
@@ -3061,18 +3074,45 @@ class ModeDiscovery(WatoMode):
     def _check_sources(self):
         return [
             # check_source, show bulk actions, title
-            ("new",           True,  _("Available services (not yet checked)")),
-            ("vanished",      True,  _("Vanished services (checked, but no longer exist)")),
-            # TODO: Rename this to "current" or something: Old is missleading.
-            ("old",           True,  _("Enabled services (being checked)")),
-            ("ignored",       True,  _("Disabled services (configured away)")),
-            ("active",        False, _("Active checks")),
-            ("manual",        False, _("Manual checks")),
-            ("legacy",        False, _("Legacy services (defined in main.mk)")),
-            ("custom",        False, _("Custom checks (defined via rule)")),
-            ("clustered_old", False, _("Already configured clustered services "
-                                       "(located on cluster host)")),
-            ("clustered_new", False, _("Available clustered services")),
+            ("new",           True,  _("Undecided services (currently not monitored)"),
+            _("These services have been found by the service discovery but are not yet added "
+              "to the monitoring. You should either decide to monitor them or to permanently "
+              "disable them. If you are sure that they are just transitional, just leave them "
+              "until they vanish.")), # undecided
+            ("vanished",      True,  _("Vanished services (monitored, but no longer exist)"),
+            _("These service had been added to the monitoring by a previous discovery "
+              "but the actual items that are monitored are not present anymore. This might "
+              "be due to a real failure. In that case you should leave them in the monitoring. "
+              "If the actually monitored things are really not relevant for the monitoring "
+              "anymore then you should remove them in order to avoid UNKNOWN services in the "
+              "monitoring.")),
+            ("old",           True,  _("Monitored services"),
+            _("These services had been found by a discovery and are currently configured "
+              "to be monitored.")),
+            ("ignored",       True,  _("Disabled services"),
+            _("These services are being discovery but have been disabled by creating a rule "
+              "in the rule set <i>Disabled service</i> oder <i>Disabled checks</i>.")),
+            ("active",        False, _("Active checks"),
+            _("These service do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+              "call classical check plugins. They have been added by a rule in the section "
+              "<i>Active checks</i> or implicitely by Check_MK.")),
+            ("manual",        False, _("Manual checks"),
+            _("These services have not been found by the discovery but have been added "
+              "manually by a rule in the WATO module <i>Manual checks</i>")),
+            ("legacy",        False, _("Legacy services (defined in main.mk)"),
+            _("These services have been configured by the deprecated variable <i>legacy_check</i> "
+              "in <tt>main.mk</tt> or a similar configuration file.")),
+            ("custom",        False, _("Custom checks (defined via rule)"),
+            _("These service do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+              "call a classical check plugin, that you have installed yourself.")),
+            ("clustered_old", False, _("Monitored clustered services (located on cluster host)"),
+            _("These services have been found on this host but have been mapped to "
+              "a cluster host by a rule in the set <i>Clustered services</i>.")),
+            ("clustered_new", False, _("Undecided clustered services"),
+            _("These services have been found on this host and have been mapped to "
+              "a cluster host by a rule in the set <i>Clustered services</i>, but are not "
+              "yet added to the active monitoring. Please either add them or permanently disable "
+              "them.")),
         ]
 
 
@@ -3131,19 +3171,32 @@ class ModeDiscovery(WatoMode):
             ])
             html.icon_button(url, _("Move to disabled services"), "service_to_disabled", ty="icon")
 
+
         def to_enabled_button():
             url = html.makeactionuri([
                 ("_%s_to_old" % check_source, "1"),
                 (self._checkbox_name(check_source, check_type, item), ""),
             ])
-            html.icon_button(url, _("Move to enabled services"), "service_to_enabled", ty="icon")
+            html.icon_button(url, _("Move to monitored services"), "service_to_monitored", ty="icon")
 
-        def to_new_button():
+
+        def to_removed_button():
             url = html.makeactionuri([
                 ("_%s_to_new" % check_source, "1"),
                 (self._checkbox_name(check_source, check_type, item), ""),
             ])
-            html.icon_button(url, _("Move to new services"), "service_to_new", ty="icon")
+            html.icon_button(url, _("Remove from monitoring"),
+                "service_to_removed", ty="icon")
+
+
+        def to_undecided_button():
+            url = html.makeactionuri([
+                ("_%s_to_new" % check_source, "1"),
+                (self._checkbox_name(check_source, check_type, item), ""),
+            ])
+            html.icon_button(url, _("Move to undecided services"), 
+                "service_to_undecided", ty="icon")
+
 
         def rulesets_button():
             # Link to list of all rulesets affecting this service
@@ -3178,16 +3231,16 @@ class ModeDiscovery(WatoMode):
         elif check_source == "ignored":
             if may_edit_ruleset("ignored_services"):
                 to_enabled_button()
-                to_new_button()
+                to_undecided_button()
                 disabled_services_button()
 
         elif check_source == "old":
-            to_new_button()
+            to_undecided_button()
             if may_edit_ruleset("ignored_services"):
                 to_disabled_button()
 
         elif check_source == "vanished":
-            to_new_button()
+            to_removed_button()
             if may_edit_ruleset("ignored_services"):
                 to_disabled_button()
 
@@ -3349,7 +3402,7 @@ class ModeDiscovery(WatoMode):
             label = _("all services")
 
         if check_source == "new":
-            html.button("_bulk_new_to_old",   _("Enable"),
+            html.button("_bulk_new_to_old",   _("Monitor"),
                 help=_("Move %s to enabled services") % label)
             html.button("_bulk_new_to_disabled", _("Disable"),
                 help=_("Move %s to disabled services") % label)
@@ -3361,15 +3414,15 @@ class ModeDiscovery(WatoMode):
                 help=_("Move %s to disabled services") % label)
 
         elif check_source == "old":
-            html.button("_bulk_old_to_new", _("Remove"),
+            html.button("_bulk_old_to_new", _("Move to undecided"),
                 help=_("Move %s to new services") % label)
             html.button("_bulk_old_to_disabled", _("Disable"),
                 help=_("Move %s to new services") % label)
 
         elif check_source == "ignored":
-            html.button("_bulk_ignored_to_old", _("Enable"),
+            html.button("_bulk_ignored_to_old", _("Monitor"),
                 help=_("Move %s to enabled services") % label)
-            html.button("_bulk_ignored_to_new", _("Remove"),
+            html.button("_bulk_ignored_to_new", _("Move to undecided"),
                 help=_("Move %s to new services") % label)
 
 

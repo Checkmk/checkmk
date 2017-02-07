@@ -213,10 +213,13 @@ mk-livestatus-$(VERSION).tar.gz:
 ifeq ($(ENTERPRISE),yes)
 dist: cmc-$(VERSION).tar.gz
 
+# We currently fake a package for cmc. Ugly...
 cmc-$(VERSION).tar.gz: config.h
 	make -C livestatus distclean
 	make -C enterprise/core distclean
-	tar czf cmc-$(VERSION).tar.gz $(TAROPTS) \
+	rm -rf cmc-$(VERSION)
+	mkdir cmc-$(VERSION)
+	tar cf - $(TAROPTS) \
           aclocal.m4 \
           ar-lib \
           compile \
@@ -233,7 +236,10 @@ cmc-$(VERSION).tar.gz: config.h
           configure.ac \
           enterprise \
           livestatus \
-          m4
+          m4 | tar xf - -C cmc-$(VERSION)
+	cd cmc-$(VERSION) && mv enterprise/skel enterprise/skel.permissions .
+	cd cmc-$(VERSION) && tar czf ../cmc-$(VERSION).tar.gz $(TAROPTS) .bugs *
+	rm -rf cmc-$(VERSION)
 
 build: config.h
 	$(MAKE) -C enterprise/core -j8

@@ -7136,13 +7136,6 @@ def save_group_information(all_groups):
     os.rename(filename, filename[:-4])
 
 
-
-def filter_hidden_users(users):
-    if config.wato_hidden_users:
-        return dict([ (id, user) for id, user in users.items() if id not in config.wato_hidden_users ])
-    else:
-        return users
-
 def find_usages_of_group(name, group_type):
     usages = []
     if group_type== 'contact':

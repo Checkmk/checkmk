@@ -6943,7 +6943,7 @@ def mode_groups(phase, what):
 
     # Show member of contact groups
     if what == "contact":
-        users = filter_hidden_users(userdb.load_users())
+        users = userdb.load_users()
         members = {}
         for userid, user in users.items():
             cgs = user.get("contactgroups", [])
@@ -10142,7 +10142,7 @@ def mode_users(phase):
         return
 
     roles = userdb.load_roles()
-    users = filter_hidden_users(userdb.load_users(lock = phase == 'action' and html.var('_delete')))
+    users = userdb.load_users(lock = phase == 'action' and html.var('_delete'))
     timeperiods = load_timeperiods()
     contact_groups = userdb.load_group_information().get("contact", {})
 
@@ -10917,7 +10917,7 @@ def mode_edit_user(phase):
 
 def generate_wato_users_elements_function(none_value, only_contacts = False):
     def get_wato_users(nv):
-        users = filter_hidden_users(userdb.load_users())
+        users = userdb.load_users()
         elements = [ (name, "%s - %s" % (name, us.get("alias", name)))
                      for (name, us)
                      in users.items()
@@ -10979,7 +10979,7 @@ def mode_roles(phase):
         return
 
     roles = userdb.load_roles()
-    users = filter_hidden_users(userdb.load_users())
+    users = userdb.load_users()
 
     if phase == "action":
         if html.var("_delete"):

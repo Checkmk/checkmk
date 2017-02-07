@@ -1,0 +1,10 @@
+Title: FIX Fixed broken PDF export of BI aggregation group view
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p17
+Date: 1486463740
+
+

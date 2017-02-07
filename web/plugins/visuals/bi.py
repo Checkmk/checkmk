@@ -29,7 +29,7 @@ import bi
 class BIGroupFilter(FilterUnicodeFilter):
     def __init__(self):
         self.column = "aggr_group"
-        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group"), "aggr", [self.column], [self.column])
+        FilterUnicodeFilter.__init__(self, self.column, _("Aggregation group"), "aggr_group", [self.column], [self.column])
 
     def variable_settings(self, row):
         return [ (self.htmlvars[0], row[self.column]) ]

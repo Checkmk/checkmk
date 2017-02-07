@@ -6889,19 +6889,10 @@ class Rule(object):
 
 
     def is_discovery_rule_of(self, host_name):
-        return self.rule_options.get("discovery_host") == host_name
+        return self.host_list == [host_name] \
+               and self.tag_specs == [] \
+               and all([ i.endswith("$") for i in self.item_list ])
 
-
-    def set_discovery_host(self, host_name):
-        self.rule_options.update({
-            "description" : _("Discovery rule of '%s'" % host_name),
-            #"comment"    : _("This rule has been created by disabling a service on the the "
-            #                 "service discovery page. Only edit this rule if you know what "
-            #                 "you are doing. The rule will be altered by Check_MK when you "
-            #                 "make changes to the disabled services of a host on the service "
-            #                 "discovery page."),
-            "discovery_host" : host_name,
-        })
 
 
 def match_search_expression(search_options, attr_name, search_in):

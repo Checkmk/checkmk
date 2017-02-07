@@ -1764,14 +1764,19 @@ class html(DeprecationWrapper):
                             (self.attrencode(var), self.attrencode(value), id))
 
 
-    def button(self, varname, title, cssclass = '', style=None):
+    # TODO: refactor title -> name and help -> title
+    def button(self, varname, title, cssclass = '', style=None, help=None):
         if style:
             style = ' style="%s"' % style
         else:
             style = ''
+
+        if help:
+            help = ' title="%s"' % help
+
         self.write("<input type=\"submit\" name=\"%s\" id=\"%s\" value=\"%s\" "
-                   "class=\"button %s\"%s />\n" % \
-                   (varname, varname, title, cssclass, style))
+                   "class=\"button %s\"%s%s />\n" % \
+                   (varname, varname, title, cssclass, style, help))
         self.add_form_var(varname)
 
 

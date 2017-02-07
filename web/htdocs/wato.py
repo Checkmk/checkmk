@@ -1843,9 +1843,6 @@ def rename_host_in_rulesets(folder, oldname, newname):
                     changed_rulesets.append(varname)
                     changed = True
 
-                if rule.is_discovery_rule_of(oldname):
-                    rule.set_discovery_host(newname)
-
 
         if changed:
             add_change("edit-ruleset", _("Renamed host in %d rulesets of folder %s") %
@@ -2808,6 +2805,11 @@ class ModeDiscovery(WatoMode):
                     to_enable.append(descr)
                     checks[(check_type, item)] = paramstring
 
+                elif state in [ ModeDiscovery.SERVICE_ENABLE, ModeDiscovery.SERVICE_REMOVE ]:
+                    to_enable.append(descr)
+                    if state == ModeDiscovery.SERVICE_ENABLE:
+                        checks[(check_type, item)] = paramstring
+
             self._save_services(checks)
             self._save_host_service_enable_disable_rules(to_enable, to_disable)
 
@@ -2892,7 +2894,6 @@ class ModeDiscovery(WatoMode):
         elif service_patterns:
             rule = Rule.create(folder, ruleset, [self._host.name()],
                                sorted(service_patterns))
-            rule.set_discovery_host(self._host.name())
             rule.value = value
             ruleset.prepend_rule(folder, rule)
 
@@ -2921,16 +2922,16 @@ class ModeDiscovery(WatoMode):
             if html.has_var("_fixall"):
                 return ModeDiscovery.SERVICE_ADD # Fixall does not care about the checkboxes
 
-            if html.has_var("_bulk_activate") and is_checked:
+            if html.has_var("_bulk_new_to_old") and is_checked:
                 return ModeDiscovery.SERVICE_ADD
 
-            if html.has_var("_activate_new") and is_target_object:
+            if html.has_var("_new_to_old") and is_target_object:
                 return ModeDiscovery.SERVICE_ADD
 
-            if html.has_var("_bulk_disable_new") and is_checked:
+            if html.has_var("_bulk_new_to_disabled") and is_checked:
                 return ModeDiscovery.SERVICE_DISABLE
 
-            if html.has_var("_disable_new") and is_target_object:
+            if html.has_var("_new_to_disabled") and is_target_object:
                 return ModeDiscovery.SERVICE_DISABLE
 
             return ModeDiscovery.SERVICE_REMOVE
@@ -2939,44 +2940,52 @@ class ModeDiscovery(WatoMode):
             if html.has_var("_fixall"):
                 return ModeDiscovery.SERVICE_REMOVE # Fixall does not care about the checkboxes
 
-            if html.has_var("_bulk_remove_vanished") and is_checked:
+            if html.has_var("_bulk_vanished_to_new") and is_checked:
                 return ModeDiscovery.SERVICE_REMOVE
 
-            if html.has_var("_remove_vanished") and is_target_object:
+            if html.has_var("_vanished_to_new") and is_target_object:
                 return ModeDiscovery.SERVICE_REMOVE
+
+            if html.has_var("_bulk_vanished_to_disabled") and is_checked:
+                return ModeDiscovery.SERVICE_DISABLE
+
+            if html.has_var("_old_vanished_disabled") and is_target_object:
+                return ModeDiscovery.SERVICE_DISABLE
 
             return ModeDiscovery.SERVICE_ADD
 
         elif check_source == "old":
-            if html.has_var("_bulk_remove_old") and is_checked:
+            if html.has_var("_bulk_old_to_new") and is_checked:
                 return ModeDiscovery.SERVICE_REMOVE
 
-            if html.has_var("_remove_old") and is_target_object:
+            if html.has_var("_old_to_new") and is_target_object:
                 return ModeDiscovery.SERVICE_REMOVE
 
-            if html.has_var("_bulk_disable_old") and is_checked:
+            if html.has_var("_bulk_old_to_disabled") and is_checked:
                 return ModeDiscovery.SERVICE_DISABLE
 
-            if html.has_var("_disable_old") and is_target_object:
+            if html.has_var("_old_to_disabled") and is_target_object:
                 return ModeDiscovery.SERVICE_DISABLE
 
             return ModeDiscovery.SERVICE_ADD
 
         elif check_source == "ignored":
-            if html.has_var("_bulk_activate") and is_checked:
+            if html.has_var("_bulk_%s_to_old" % check_source) and is_checked:
                 return ModeDiscovery.SERVICE_ENABLE
 
-            if html.has_var("_activate_ignored") and is_target_object:
+            if html.has_var("_%s_to_old" % check_source) and is_target_object:
                 return ModeDiscovery.SERVICE_ENABLE
 
-            return ModeDiscovery.SERVICE_REMOVE
+            if html.has_var("_bulk_%s_to_new" % check_source) and is_checked:
+                return ModeDiscovery.SERVICE_REMOVE
+
+            if html.has_var("_%s_to_new" % check_source) and is_target_object:
+                return ModeDiscovery.SERVICE_REMOVE
+
+            return ModeDiscovery.SERVICE_DISABLE
 
         elif check_source in [ "clustered_old", "clustered_new" ]:
             return ModeDiscovery.SERVICE_ADD
-
-        #elif check_source not in [ "active", "ignored", ]:
-        #    # TODO: Remove this after finishing new service discovery page
-        #    raise NotImplementedError("source: %s" % check_source)
 
         return ModeDiscovery.SERVICE_REMOVE
 
@@ -3054,6 +3063,7 @@ class ModeDiscovery(WatoMode):
             # check_source, show bulk actions, title
             ("new",           True,  _("Available services (not yet checked)")),
             ("vanished",      True,  _("Vanished services (checked, but no longer exist)")),
+            # TODO: Rename this to "current" or something: Old is missleading.
             ("old",           True,  _("Enabled services (being checked)")),
             ("ignored",       True,  _("Disabled services (configured away)")),
             ("active",        False, _("Active checks")),
@@ -3114,26 +3124,26 @@ class ModeDiscovery(WatoMode):
         check_source, check_type, checkgroup, item, paramstring, params, \
             descr, state, output, perfdata = check
 
-        def disable_button():
+        def to_disabled_button():
             url = html.makeactionuri([
-                ("_disable_%s" % check_source, "1"),
+                ("_%s_to_disabled" % check_source, "1"),
                 (self._checkbox_name(check_source, check_type, item), ""),
             ])
-            html.icon_button(url, _("Permanently disable this service"), "ignore", ty="icon")
+            html.icon_button(url, _("Move to disabled services"), "service_to_disabled", ty="icon")
 
-        def enable_button():
+        def to_enabled_button():
             url = html.makeactionuri([
-                ("_activate_%s" % check_source, "1"),
+                ("_%s_to_old" % check_source, "1"),
                 (self._checkbox_name(check_source, check_type, item), ""),
             ])
-            html.icon_button(url, _("Enable this service"), "new", ty="icon")
+            html.icon_button(url, _("Move to enabled services"), "service_to_enabled", ty="icon")
 
-        def remove_button():
+        def to_new_button():
             url = html.makeactionuri([
-                ("_remove_%s" % check_source, "1"),
+                ("_%s_to_new" % check_source, "1"),
                 (self._checkbox_name(check_source, check_type, item), ""),
             ])
-            html.icon_button(url, _("Remove this service"), "delete", ty="icon")
+            html.icon_button(url, _("Move to new services"), "service_to_new", ty="icon")
 
         def rulesets_button():
             # Link to list of all rulesets affecting this service
@@ -3161,21 +3171,33 @@ class ModeDiscovery(WatoMode):
 
         table.cell(css="buttons")
         if check_source == "new":
-            enable_button()
+            to_enabled_button()
+            if may_edit_ruleset("ignored_services"):
+                to_disabled_button()
+
+        elif check_source == "ignored":
+            if may_edit_ruleset("ignored_services"):
+                to_enabled_button()
+                to_new_button()
+                disabled_services_button()
+
+        elif check_source == "old":
+            to_new_button()
+            if may_edit_ruleset("ignored_services"):
+                to_disabled_button()
+
+        elif check_source == "vanished":
+            to_new_button()
+            if may_edit_ruleset("ignored_services"):
+                to_disabled_button()
+
+        else:
+            html.empty_icon()
+            html.empty_icon()
 
         if check_source not in [ "new", "ignored" ] and config.user.may('wato.rulesets'):
             rulesets_button()
             check_parameters_button()
-
-        if check_source == "ignored" and may_edit_ruleset("ignored_services"):
-            enable_button()
-            disabled_services_button()
-
-        if check_source in [ "new", "old" ] and may_edit_ruleset("ignored_services"):
-            disable_button()
-
-        if check_source in [ "old", "vanished" ]:
-            remove_button()
 
 
     def _show_parameter_column(self):
@@ -3322,24 +3344,33 @@ class ModeDiscovery(WatoMode):
         table.cell(css="bulkactions service_discovery", colspan=self._bulk_action_colspan())
 
         if self._show_checkboxes:
-            label = _("Selected services")
+            label = _("selected services")
         else:
-            label = _("All services")
-        html.write_text(" %s: " % label)
+            label = _("all services")
 
         if check_source == "new":
-            html.button("_bulk_activate", _("Enable"))
-            html.button("_bulk_disable_new",  _("Disable"))
+            html.button("_bulk_new_to_old",   _("Enable"),
+                help=_("Move %s to enabled services") % label)
+            html.button("_bulk_new_to_disabled", _("Disable"),
+                help=_("Move %s to disabled services") % label)
 
         elif check_source == "vanished":
-            html.button("_bulk_remove_vanished", _("Remove"))
+            html.button("_bulk_vanished_to_new", _("Remove"),
+                help=_("Move %s to new services") % label)
+            html.button("_bulk_vanished_to_disabled", _("Disable"),
+                help=_("Move %s to disabled services") % label)
 
         elif check_source == "old":
-            html.button("_bulk_remove_old", _("Remove"))
-            html.button("_bulk_disable_old", _("Disable"))
+            html.button("_bulk_old_to_new", _("Remove"),
+                help=_("Move %s to new services") % label)
+            html.button("_bulk_old_to_disabled", _("Disable"),
+                help=_("Move %s to new services") % label)
 
         elif check_source == "ignored":
-            html.button("_bulk_activate", _("Enable"))
+            html.button("_bulk_ignored_to_old", _("Enable"),
+                help=_("Move %s to enabled services") % label)
+            html.button("_bulk_ignored_to_new", _("Remove"),
+                help=_("Move %s to new services") % label)
 
 
     def _bulk_action_colspan(self):

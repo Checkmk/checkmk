@@ -115,6 +115,7 @@
     * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles
     * 4316 FIX: Views: Fixed editing of "hide from sidebar" and "show context button" options
     * 4321 FIX: LDAP: Improved validation of groups to attributes sync plugin
+    * 4048 FIX: Fixed bug in tables: the notification message for reached row limits is visible again
 
     WATO:
     * 4142 New extended search dialog for rulesets and rules...

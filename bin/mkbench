@@ -1106,8 +1106,9 @@ class Measurement(object):
     def set_value(self, k, val):
         """Set an attribute of the measurement. Cares about converting tuples
         to the correct namedtuples."""
-        from psutil._common import sdiskusage
-        from psutil._pslinux import svmem, sdiskio
+        # TODO: Remove the disablings below once the builds ship these modules
+        from psutil._common import sdiskusage # pylint: disable=import-error
+        from psutil._pslinux import svmem, sdiskio # pylint: disable=import-error
 
         if k == "memory":
             val = svmem(*val)

@@ -177,7 +177,8 @@ def end():
     num_rows_unlimited = len(rows)
     limit = table['limit']
     if limit is not None:
-        rows = rows[:limit]
+        # only use rows up to the limit plus the fixed rows
+        rows = [ rows[i] for i in range(num_rows_unlimited) if i < limit or rows[i][3]]
 
     # Render header
     _write_table(table, rows, actions_enabled, actions_visible, search_term)

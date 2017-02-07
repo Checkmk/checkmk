@@ -1,0 +1,32 @@
+Title: WATO Web API: Now able to add/edit/delete htpasswd users
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486477736
+Class: feature
+
+
+New functions for the WATO Web-API have been introduced.
+You can now manage htpasswd users with automation calls.
+
+The following (not very fleshed out) examples provide a quick overview.
+A more elaborate version will be written later on in our official manual.
+
+<pre>
+Common url prefix:
+http://localhost/heute/check_mk/webapi.py?_username=automation&_secret=1122...
+
+To get a list of all supported attributes, you'll need to have a look in the actual config files
+~/etc/check_mk/conf.d/wato/contacts.mk
+~/etc/check_mk/multisite.d/wato/users.mk
+
+Add users:
+curl {common_prefix}&action=add_users -d 'request={"users": {"klaus": {"alias": "mr. klaus", "password": "1234", "contactgroups": ["all"]}}}'
+
+Edit users:
+curl {common_prefix}&action=edit_users -d 'request={"users": {"klaus": {"set_attributes": {"alias": "mr. santa"}, "unset_attributes": ["contactgroups"]}}}'
+
+Delete users:
+curl {common_prefix}&action=delete_users -d 'request={"users": ["klaus", "guest12", "guest2332"]}'
+</pre>

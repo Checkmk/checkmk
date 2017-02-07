@@ -16,27 +16,26 @@ from testlib import repo_path
 
 def ordered_module_files():
     ordered_modules = [
-        "modules/check_mk_base.py",
-        "modules/check_mk.py",
-        "modules/config.py",
-        "modules/discovery.py",
-        "modules/snmp.py",
-        "modules/notify.py",
-        "modules/events.py",
-        "modules/nagios.py",
-        "modules/automation.py",
-        "modules/inventory.py",
-        "enterprise/modules/real_time_checks.py",
-        "enterprise/modules/alert_handling.py",
-        "enterprise/modules/keepalive.py",
-        "enterprise/modules/cmc.py",
-        "enterprise/modules/inline_snmp.py",
-        "enterprise/modules/agent_bakery.py",
-        "enterprise/modules/rrd.py",
+        cmk_path() + "/modules/check_mk_base.py",
+        cmk_path() + "/modules/check_mk.py",
+        cmk_path() + "/modules/config.py",
+        cmk_path() + "/modules/discovery.py",
+        cmk_path() + "/modules/snmp.py",
+        cmk_path() + "/modules/notify.py",
+        cmk_path() + "/modules/events.py",
+        cmk_path() + "/modules/nagios.py",
+        cmk_path() + "/modules/automation.py",
+        cmk_path() + "/modules/inventory.py",
+        cmc_path() + "/modules/real_time_checks.py",
+        cmc_path() + "/modules/alert_handling.py",
+        cmc_path() + "/modules/keepalive.py",
+        cmc_path() + "/modules/cmc.py",
+        cmc_path() + "/modules/inline_snmp.py",
+        cmc_path() + "/modules/agent_bakery.py",
+        cmc_path() + "/modules/rrd.py",
     ]
 
-    modules = [ os.path.realpath(repo_path() + "/" + p)
-                for p in ordered_modules ]
+    modules = ordered_modules
 
     # Add modules which are not specified above
     for path in module_files():
@@ -48,8 +47,8 @@ def ordered_module_files():
 
 def module_files():
     modules = []
-    for base_path in [ repo_path() + "/modules",
-                       repo_path() + "/enterprise/modules" ]:
+    for base_path in [ cmk_path() + "/modules",
+                       cmc_path() + "/modules" ]:
 
         modules += [ base_path + "/" + f for f in os.listdir(base_path)
                      if not f.startswith(".") ]

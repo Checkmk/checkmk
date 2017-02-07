@@ -29,8 +29,7 @@ def test_pylint_checks():
         pylint_cmk.add_file(f, path)
 
     # Also add bakery plugins
-    for path in pylint_cmk.check_files(os.path.realpath(repo_path()
-                                       + "/../cmc/agents/bakery")):
+    for path in pylint_cmk.check_files(cmc_path() + "/agents/bakery"):
         pylint_cmk.add_file(f, path)
 
     f.close()

@@ -5,7 +5,7 @@ import os
 import sys
 import pytest
 
-from testlib import repo_path
+from testlib import cmk_path, cmc_path
 import testlib.pylint_cmk as pylint_cmk
 
 # Mark all tests in this file to be pylint checks
@@ -13,21 +13,20 @@ pytestmark = pytest.mark.pylint
 
 def test_pylint_misc():
     search_paths = [
-        "cmk_base",
-        "../cmc/cmk_base",
-        "lib",
-        "bin",
-        "notifications",
-        "agents/plugins",
-        "active_checks",
-        "../cmc/agents/plugins",
-        "../cmc/bin",
-        "../cmc/misc",
+        cmk_path() + "/cmk_base",
+        cmc_path() + "/cmk_base",
+        cmk_path() + "/lib",
+        cmk_path() + "/bin",
+        cmk_path() + "/notifications",
+        cmk_path() + "/agents/plugins",
+        cmk_path() + "/active_checks",
+        cmc_path() + "/agents/plugins",
+        cmc_path() + "/bin",
+        cmc_path() + "/misc",
     ]
 
     checked, worst = 0, 0
-    for rel_path in search_paths:
-        path = os.path.realpath(repo_path() + "/" + rel_path)
+    for path in search_paths:
         worst = max(worst, pylint_cmk.run_pylint(path))
         checked += 1
 

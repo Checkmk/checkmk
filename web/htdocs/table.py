@@ -174,6 +174,7 @@ def end():
     rows, actions_enabled, actions_visible, search_term, user_opts = _evaluate_user_opts(table)
 
     # Apply limit after search / sorting etc.
+    num_rows_unlimited = len(rows)
     limit = table['limit']
     if limit is not None:
         rows = rows[:limit]
@@ -181,7 +182,6 @@ def end():
     # Render header
     _write_table(table, rows, actions_enabled, actions_visible, search_term)
 
-    num_rows_unlimited = len(rows)
     if limit is not None and num_rows_unlimited > limit:
         html.message(_('This table is limited to show only %d of %d rows. '
                        'Click <a href="%s">here</a> to disable the limitation.') %

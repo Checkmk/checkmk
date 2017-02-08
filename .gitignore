@@ -31,7 +31,6 @@ config.log
 config.status
 config.sub
 configure
-cppcheck-result.xml
 depcomp
 install-sh
 missing

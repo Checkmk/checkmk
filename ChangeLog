@@ -102,6 +102,7 @@
     * 4024 FIX: netapp_api_volumes: fixed incorrect computation of read/write latency
     * 4342 FIX: hp_proliant: fixed empty status handling
     * 4216 FIX: cmciii.phase: Fix wrong scaling of power and energy values
+    * 4345 FIX: hp_proliant_temp: Ignore device levels of 0
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

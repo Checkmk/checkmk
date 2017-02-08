@@ -40,7 +40,7 @@ def check_hp_proliant_temp(item, params, info):
 
             # This case means no threshold available and
             # the devices' web interface displays "N/A"
-            if threshold == "-99":
+            if threshold == "-99" or threshold == "0":
                 devlevels = (None, None)
             else:
                 threshold = float(threshold)

@@ -20,6 +20,7 @@
     * 4340 FIX: blade_bays: cleanup and some improvements...
     * 4341 FIX: cisco_wlc: fixed invalid parameters during service discovery
     * 4342 FIX: hp_proliant: fixed empty status handling
+    * 4345 FIX: hp_proliant_temp: Ignore device levels of 0
 
     Multisite:
     * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles

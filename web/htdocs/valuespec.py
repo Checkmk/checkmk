@@ -2153,7 +2153,7 @@ class DualListChoice(ListChoice):
 
         html.open_tr()
         html.open_td(class_="head")
-        html.write("%s rows %d" %(_('Available'), self._rows))
+        html.write(_('Available'))
         if not self._instant_add:
             html.a(">", href="javascript:%s;" % select_func, class_=["control", "add"])
         html.close_td()

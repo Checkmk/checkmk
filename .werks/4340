@@ -1,0 +1,11 @@
+Title: blade_bays: cleanup and some improvements
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p1
+Date: 1486550914
+
+Some devices send duplicate bay names.
+The check plugin now detects all bays.

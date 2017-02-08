@@ -100,6 +100,7 @@
     * 4340 FIX: blade_bays: cleanup and some improvements...
     * 4341 FIX: cisco_wlc: fixed invalid parameters during service discovery
     * 4024 FIX: netapp_api_volumes: fixed incorrect computation of read/write latency
+    * 4342 FIX: hp_proliant: fixed empty status handling
 
     Multisite:
     * 4169 View action: Default values of sticky, notification and persistent options can now be configured via global settings....

@@ -243,7 +243,8 @@ cmc-$(VERSION).tar.gz: config.h
 	rm -rf cmc-$(VERSION)
 
 build: config.h
-	$(MAKE) -C enterprise/core -j8
+	LANG=C $(MAKE) -C livestatus -j8
+	LANG=C $(MAKE) -C enterprise/core -j8
 	$(MAKE) -C enterprise/locale all
 
 install:

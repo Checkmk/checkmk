@@ -277,7 +277,7 @@ def check_ipmi_summarized(parsed, params):
             worst_status = max(worst_status, 1)
             warn_texts.append(infotext)
 
-        elif status.startswith('nr') and ipmi_ignore_nr:
+        elif (status.startswith('nr') or status.startswith('ns')) and ipmi_ignore_nr:
             pass
 
         elif not status.startswith('ok') or "failure detected" in status.lower():

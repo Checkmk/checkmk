@@ -2080,14 +2080,19 @@ function valuespec_listof_fixarrows(oTbody) {
     for(var i = 0, row; row = oTbody.rows[i]; i++) {
         if(row.cells.length == 0)
             continue;
+
         var oTd = row.cells[0]; /* TD with buttons */
-        if(row.cells[0].childNodes.length == 0)
+        if(oTd.childNodes.length == 0)
             continue;
-        var oIndex = oTd.childNodes[0];
+
+        var oIndex = oTd.getElementsByClassName("index")[0];
         oIndex.value = "" + (parseInt(i) + 1);
+
         if (oTd.childNodes.length > 4) { /* movable */
-            var oUpTrans = oTd.childNodes[2];
-            var oUp      = oTd.childNodes[3];
+            var buttons = oTd.getElementsByClassName("iconbutton");
+            
+            var oUpTrans = buttons[1];
+            var oUp      = buttons[2];
             if (i == 0) {
                 oUpTrans.style.display = "";
                 oUp.style.display = "none";
@@ -2096,8 +2101,8 @@ function valuespec_listof_fixarrows(oTbody) {
                 oUpTrans.style.display = "none";
                 oUp.style.display = "";
             }
-            var oDownTrans = oTd.childNodes[4];
-            var oDown      = oTd.childNodes[5];
+            var oDownTrans = buttons[3];
+            var oDown      = buttons[4];
             if (i >= oTbody.rows.length - 1) {
                 oDownTrans.style.display = "";
                 oDown.style.display = "none";

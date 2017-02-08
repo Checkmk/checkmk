@@ -1,0 +1,11 @@
+Title: check_mail: Fixed bug with fetching mails
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486569909
+Class: fix
+
+Previously the active check was not able to handle response messages containing
+more information than expected. Additionally the check was not closing the
+connection afterwards, so the messages never have been deleted.

@@ -39,7 +39,7 @@ def cisco_wlc_convert(info):
 
 def inventory_cisco_wlc(info):
     data = cisco_wlc_convert(info)
-    return [ (x[0], None) for x in data ]
+    return [ (x[0], {}) for x in data ]
 
 def check_cisco_wlc(item, params, info):
     data = cisco_wlc_convert(info)

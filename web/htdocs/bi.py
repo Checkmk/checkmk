@@ -265,16 +265,20 @@ class JobWorker(object):
 
 
     @staticmethod
-    def run(job, mp_queue):
+    def run(job, mp_queue, mp_errors):
         new_data = {}
         start_time = time.time()
         try:
             new_data = JobWorker.compile_job(job["id"], job["info"])
-            if job["id"][0] == AGGR_HOST:
-                new_data["compiled_hosts"] = job["info"]["queued_hosts"]
         except Exception, e:
             log("MP-Worker Exception %s" % e)
             log_exception()
+            mp_errors.put("Aggregation error: %s" % e)
+        finally:
+            # Even in an error scenario we consider these hosts as compiled
+            if job["id"][0] == AGGR_HOST:
+                new_data["compiled_hosts"] = job["info"]["queued_hosts"]
+
         mp_queue.put((job, new_data))
         log("Compilation finished - took %.3f sec" % (time.time() - start_time))
 
@@ -935,7 +939,8 @@ class BIJobManager(object):
             self.maximum_workers = 2
 
         # Multiprocessing queue for IPC
-        self._mp_queue = multiprocessing.Queue()
+        self._mp_queue  = multiprocessing.Queue()
+        self._mp_errors = multiprocessing.Queue()
 
         # Contains running worker jobs
         self._currently_compiling = []
@@ -952,7 +957,7 @@ class BIJobManager(object):
         while True:
             if self._queued_jobs and len(self._currently_compiling) < self.maximum_workers:
                 job = self._queued_jobs.pop()
-                new_worker = multiprocessing.Process(target = JobWorker.run, args = [job, self._mp_queue])
+                new_worker = multiprocessing.Process(target = JobWorker.run, args = [job, self._mp_queue, self._mp_errors])
                 new_worker.daemon = True
                 self._currently_compiling.append(new_worker)
                 self._currently_compiling[-1].start()
@@ -962,10 +967,16 @@ class BIJobManager(object):
 
     def _reap_worker_results(self):
         results = []
+        errors  = []
         while not self._mp_queue.empty():
             result = self._mp_queue.get()
             results.append(result)
-        return results
+
+        while not self._mp_errors.empty():
+            error = self._mp_errors.get()
+            errors.append(error)
+
+        return results, errors
 
 
     def _merge_worker_results(self, results):
@@ -1012,6 +1023,7 @@ class BIJobManager(object):
             self._prepare_compilation(discard_old_cache = discard_old_cache)
             self._set_compilation_info(current_sitestats)
 
+            error_info = ""
             while True:
                 if self._is_compilation_finished():
                     break
@@ -1020,7 +1032,8 @@ class BIJobManager(object):
                 self._manage_workers()
 
                 # Collect results
-                results = self._reap_worker_results()
+                results, errors = self._reap_worker_results()
+                error_info += "<br>".join(errors)
 
                 # Update cache with new results
                 self._merge_worker_results(results)
@@ -1031,15 +1044,16 @@ class BIJobManager(object):
 
             # At the end of the compilation check the title uniquness and for fully compiled
             fully_compiled = self._is_fully_compiled()
-            titles_broken_info = ""
+
             try:
                 check_title_uniqueness(g_bi_cache_manager.get_compiled_trees()["forest"])
             except MKConfigError, e:
-                titles_broken_info = str(e)
+                error_info += str(e)
 
-            if fully_compiled or titles_broken_info:
+
+            if fully_compiled or error_info:
                 g_bi_cache_manager.generate_cachefiles(is_fully_compiled  = fully_compiled,
-                                                       titles_broken_info  = titles_broken_info)
+                                                       error_info  = error_info)
 
         return True # Did compilation
 
@@ -1137,9 +1151,9 @@ class BICacheManager(object):
         self._bicache_file.clear_cache()
 
 
-    def get_titles_broken_info(self):
+    def get_error_info(self):
         cacheinfo_content = self.get_bicacheinfo()
-        return (cacheinfo_content and cacheinfo_content.get("titles_broken_info", None)) or None
+        return (cacheinfo_content and cacheinfo_content.get("error_info", None)) or None
 
 
     def truncate_cachefiles(self):
@@ -1226,12 +1240,12 @@ class BICacheManager(object):
         return True
 
 
-    def generate_cachefiles(self, is_fully_compiled=False, titles_broken_info=""):
-        self._save_cacheinfofile(titles_broken_info = titles_broken_info)
+    def generate_cachefiles(self, is_fully_compiled=False, error_info=""):
+        self._save_cacheinfofile(error_info = error_info)
         self._save_cachefile(is_fully_compiled = is_fully_compiled)
 
 
-    def _save_cacheinfofile(self, titles_broken_info=""):
+    def _save_cacheinfofile(self, error_info=""):
         old_compilation_info    = self.get_bicacheinfo()
         if not old_compilation_info:
             old_compiled_sites      = None
@@ -1259,7 +1273,7 @@ class BICacheManager(object):
 
         content  = { "timestamps":          compiled_timestamps,
                      "compiled_sites":      compiled_sites,
-                     "titles_broken_info":  titles_broken_info
+                     "error_info":  error_info
                 }
         self._bicacheinfo_file.save(content)
 
@@ -1302,13 +1316,13 @@ class BICacheManager(object):
                        "affected_services_ref",
                        "forest",
                        "forest_ref" ]:
-            for key, values in new_data.get(what).items():
+            for key, values in new_data.get(what, {}).items():
                 self._compiled_trees[what].setdefault(key, [])
                 self._compiled_trees[what][key].extend(values)
 
         # Rendering related parameters
         for what in [ "aggr_ref" ]:
-            self._compiled_trees[what].update(new_data.get(what))
+            self._compiled_trees[what].update(new_data.get(what, {}))
 
         # Cache related parameters
         job_id = job["id"]
@@ -1382,8 +1396,8 @@ def setup_bi_instances():
 
     cache_is_valid = g_bi_cache_manager.load_cachefile(force_validation = True)
 
-    if cache_is_valid and g_bi_cache_manager.get_titles_broken_info():
-        raise MKConfigError(g_bi_cache_manager.get_titles_broken_info())
+    if cache_is_valid and g_bi_cache_manager.get_error_info():
+        raise MKConfigError(g_bi_cache_manager.get_error_info())
 
 def compile_forest_improved(only_hosts=None, only_groups=None):
     log("###########################################################")
@@ -1437,8 +1451,8 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
         log("Exception in BI compilation main loop:")
         log_exception()
     finally:
-        if g_bi_cache_manager.get_titles_broken_info():
-            raise MKConfigError(g_bi_cache_manager.get_titles_broken_info())
+        if g_bi_cache_manager.get_error_info():
+            raise MKConfigError(g_bi_cache_manager.get_error_info())
 
         global g_tree_cache
         g_tree_cache = g_bi_cache_manager.get_compiled_trees()

@@ -1,0 +1,10 @@
+Title: df: Fixed handling of incomplete information about inodes
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p18
+Date: 1486560996
+
+The check will not crash anymore if the information about inodes are incomplete, e.g. if a value is "-".

@@ -59,6 +59,7 @@
             NOTE: Please refer to the migration notes!
     * 4339 FIX: fixed AtrributeError in oracle sessions ruleset
     * 4340 FIX: blade_bays: cleanup and some improvements...
+    * 4341 FIX: cisco_wlc: fixed invalid parameters during service discovery
 
     Multisite:
     * 4143 FIX: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log...

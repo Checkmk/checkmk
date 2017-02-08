@@ -1889,7 +1889,7 @@ class Folder(BaseFolder):
 
         # Locked hosts
         if self._locked_hosts == True:
-            lock_messages.append(_("Hosts attributes are locked "
+            lock_messages.append(_("Host attributes are locked "
                                     "(You cannot create, edit or delete hosts in this folder)"))
         elif self._locked_hosts:
             lock_messages.append(self._locked_hosts)

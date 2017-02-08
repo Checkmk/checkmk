@@ -71,14 +71,17 @@ def check_netapp_api_volumes(item, params, parsed):
 
     counter_wrapped = False
     counters        = []
-    now = time.time()
+    now  = time.time()
+    base = {}
 
     perf_protocols = params.get("perfdata", [])
     for protocol in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]:
         if protocol[:-1] not in perf_protocols:
             continue
         for mode in ["read_", "write_", "other_"]:
-            for field, factor, format_text in [ ("data", None, None), ("latency", 10000.0, "%s: %.2f ms")]:
+            for field, factor, format_text in [ ("data", None, None),
+                                                ("ops", None, "%s: %.2f 1/s"),
+                                                ("latency", 10000.0, "%s: %.2f ms")]:
                 key = protocol + mode + field
                 value = volume.get(key)
                 if value != None:
@@ -87,9 +90,17 @@ def check_netapp_api_volumes(item, params, parsed):
                         delta = get_rate("netapp_api_volumes.%s.%s" % (item, key), now, value, onwrap=RAISE)
                         perf.append( (key, delta) )
 
+                        # Quite hacky.. this base information is used later on by the "latency" field
+                        if field == "ops":
+                           if delta==0.0:
+                             base[key] = 1.0
+                           else:
+                             base[key] = float(delta)
+
+
                         if protocol == "" and mode in ["read_", "write_"]:
                             if factor:
-                                delta = delta / factor
+                                delta = delta / (factor * base[protocol + mode + "ops"])
                             if format_text:
                                 counters.append(format_text % (key, delta))
                             else:

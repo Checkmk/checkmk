@@ -1,0 +1,9 @@
+Title: netapp_api_volumes: fixed incorrect computation of read/write latency
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486560986
+Class: fix
+
+

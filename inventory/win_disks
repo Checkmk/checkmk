@@ -79,20 +79,25 @@ def inv_win_disks(info):
 
         if varname == "Manufacturer":
             array["vendor"] = value
+
         elif varname == "InterfaceType":
             array["bus"] = value
+
         elif varname == "Model":
             array["product"] = value
+
         elif varname == "Name":
             array["fsnode"] = value
+
         elif varname == "SerialNumber":
             array["serial"] = value
-        elif varname == "Size":
-            if value != "":
-                array["size"] = int(value)
-        elif varname == "MediaType":
-            if value != "":
-                array["type"] = value
+
+        elif varname == "Size" and value != "":
+            array["size"] = int(value)
+
+        elif varname == "MediaType" and value != "":
+            array["type"] = value
+
         elif varname == "Signature":
             if value != "":
                 array["signature"] = int(value)

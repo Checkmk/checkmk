@@ -19,6 +19,7 @@
     * 4191 FIX: esx_vsphere_hostsystem.cpu_usage: Fixed wrong total GHz...
     * 4340 FIX: blade_bays: cleanup and some improvements...
     * 4341 FIX: cisco_wlc: fixed invalid parameters during service discovery
+    * 4342 FIX: hp_proliant: fixed empty status handling
 
     Multisite:
     * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles

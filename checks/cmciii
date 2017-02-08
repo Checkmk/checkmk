@@ -162,8 +162,11 @@ def parse_cmciii(info):
             elif int(scale) > 0:
                 scale_f = lambda a: float(a) * float(scale)
             else:
-                scale_f = lambda a: int(a)
+                scale_f = int
             value = scale_f(value_int)
+
+        if "Power" in container or "Energy" in container:
+            value = value * 1000 # kW, kWh
 
         if itemname in parsed[this_table] and \
            parsed[this_table][itemname]["_location_"] != location:

@@ -1,4 +1,4 @@
-Title: veem_jobs: fix problems with spaces or single quotes in the names of jobs
+Title: veeam_jobs: fix problems with spaces or single quotes in the names of jobs
 Level: 1
 Component: checks
 Class: fix

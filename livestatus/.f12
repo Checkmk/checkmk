@@ -1,9 +1,10 @@
 #!/bin/bash
+set -e
+
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
-set -e
-make -C .. livestatus/config.h
+make -C .. config.h
 make -j8
 sudo install src/livestatus.o /omd/sites/$SITE/lib/mk-livestatus/livestatus.o
 (cd api/python ; bash .f12 )

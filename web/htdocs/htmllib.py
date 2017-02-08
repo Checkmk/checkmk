@@ -1896,18 +1896,18 @@ class html(DeprecationWrapper, RequestHandler):
                     self.hidden_field(var, self.get_unicode_input(var))
 
 
-    def hidden_field(self, var, value, id=None, add_var=False):
-        self.write_html(self.render_hidden_field(var=var, value=value, id=id, add_var=add_var))
+    def hidden_field(self, var, value, id=None, add_var=False, class_=None):
+        self.write_html(self.render_hidden_field(var=var, value=value, id=id, add_var=add_var, class_=class_))
 
 
-    def render_hidden_field(self, var, value, id=None, add_var=False):
+    def render_hidden_field(self, var, value, id=None, add_var=False, class_=None):
         # TODO: Refactor
         id_ = id
         if value == None:
             return ""
         if add_var:
             self.add_form_var(var)
-        return self.render_input(name=var, type_="hidden", id_=id_, value = value)
+        return self.render_input(name=var, type_="hidden", id_=id_, value=value, class_=class_)
 
 
     def button(self, varname, title, cssclass = None, style=None, help=None):

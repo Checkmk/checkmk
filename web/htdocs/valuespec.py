@@ -1280,7 +1280,8 @@ class ListOf(ValueSpec):
         for nr, v in enumerate(value):
             html.open_tr()
             html.open_td(class_="vlof_buttons")
-            html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "", add_var=True) # reconstruct order after moving stuff
+            html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "",
+                              add_var=True, class_="index") # reconstruct order after moving stuff
             self.del_button(varprefix, nr+1)
             if self._movable:
                 self.move_button(varprefix, nr+1, "up") # visibility fixed by javascript

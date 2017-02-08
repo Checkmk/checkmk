@@ -1,0 +1,10 @@
+Title: EC archive: Fixed exception in "line number column" of event detail page
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486543924
+Class: fix
+
+The error "Type Error: html.write accepts str and unicode input object only" has
+been fixed.

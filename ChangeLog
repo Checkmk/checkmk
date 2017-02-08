@@ -169,6 +169,7 @@
     * 4312 FIX: Counting events are now also respecting the EC limits
     * 4314 FIX: Quick event delete icon works with checkboxes enabled now
     * 4322 FIX: Activate changes: Fixed exception when having EC changes and core changes while core produces a warning
+    * 4328 FIX: EC archive: Fixed exception in "line number column" of event detail page...
 
     HW/SW-Inventory:
     * 4188 snmp_extended_info: Now capable to inventorize cisco backplane chassis...

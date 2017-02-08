@@ -245,8 +245,8 @@ def cleanup_mailbox():
         for index in g_forwarded:
             if fetch_proto == 'POP3':
                 if cleanup_messages == 'delete':
-                    response = g_M.dele(index)
-                if response != "+OK":
+                    response = g_M.dele(index+1)
+                if not response.startswith("+OK"):
                     raise Exception("Response from server: [%s]" % response)
             else:
                 if cleanup_messages != 'delete':
@@ -398,11 +398,14 @@ def main():
     if opt_debug:
         imaplib.Debug = 4
 
-    connect()
-    if forward_ec:
-        forward_to_ec(fetch_mails())
-    else:
-        bail_out(0, 'Successfully logged in to mailbox')
+    try:
+        connect()
+        if forward_ec:
+            forward_to_ec(fetch_mails())
+        else:
+            bail_out(0, 'Successfully logged in to mailbox')
+    finally:
+        close_mailbox()
 
 socket.setdefaulttimeout(conn_timeout)
 

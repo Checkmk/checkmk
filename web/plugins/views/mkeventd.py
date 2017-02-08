@@ -369,7 +369,7 @@ if mkeventd_enabled:
         "title"   : _("Line number in log file"),
         "short"   : _("Line"),
         "columns" : ["history_line" ],
-        "paint"   : lambda row: ("number", row["history_line"]),
+        "paint"   : lambda row: ("number", "%s" % row["history_line"]),
     }
 
     multisite_painters["history_time"] = {

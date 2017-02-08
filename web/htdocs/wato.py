@@ -1195,7 +1195,7 @@ def mode_editfolder(phase, new):
 
         forms.end()
         if new or not Folder.current().locked():
-            html.button("save", _("Save &amp; Finish"), "submit")
+            html.button("save", _("Save & Finish"), "submit")
         html.hidden_fields()
         html.end_form()
 
@@ -1378,10 +1378,10 @@ def mode_edit_host(phase, new, is_cluster):
 
     forms.end()
     if not Folder.current().locked_hosts():
-        html.button("services", _("Save &amp; go to Services"), "submit")
-        html.button("save", _("Save &amp; Finish"), "submit")
+        html.button("services", _("Save & go to Services"), "submit")
+        html.button("save", _("Save & Finish"), "submit")
         if not is_cluster:
-            html.button("diag_host", _("Save &amp; Test"), "submit")
+            html.button("diag_host", _("Save & Test"), "submit")
     html.hidden_fields()
     html.end_form()
 
@@ -4229,7 +4229,7 @@ def mode_bulk_edit(phase):
     html.hidden_field("host_hash", current_host_hash)
     configure_attributes(False, hosts, "bulk", parent = Folder.current())
     forms.end()
-    html.button("_save", _("Save &amp; Finish"))
+    html.button("_save", _("Save & Finish"))
     html.hidden_fields()
     html.end_form()
 
@@ -4289,7 +4289,7 @@ def mode_bulk_cleanup(phase):
         html.write_text(_("The selected hosts have no explicit attributes"))
     else:
         forms.end()
-        html.button("_save", _("Save &amp; Finish"))
+        html.button("_save", _("Save & Finish"))
     html.hidden_fields()
     html.end_form()
 

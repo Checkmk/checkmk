@@ -86,7 +86,7 @@
 # [df_inodes_end]
 
 
-def df_parse_info(info):
+def parse_df(info):
     df_blocks = []
     df_inodes = []
     btrfs_devices = set() # We might generalize that later
@@ -132,8 +132,8 @@ def df_parse_info(info):
     return df_blocks, df_inodes
 
 
-def inventory_df(info):
-    df_blocks, df_inodes = df_parse_info(info)
+def inventory_df(parsed):
+    df_blocks, df_inodes = parsed
     mplist = []
     for line in df_blocks:
         if line[1] in inventory_df_exclude_fs:
@@ -151,10 +151,10 @@ def inventory_df(info):
     return df_inventory(mplist)
 
 
-def check_df(item, params, info):
+def check_df(item, params, parsed):
     fslist_blocks = []
     fslist_inodes = []
-    df_blocks, df_inodes = df_parse_info(info)
+    df_blocks, df_inodes = parsed
     for idx, line in enumerate(df_blocks):
         # df outputs seven columns:
         # DEVICE FS-TYPE SIZE(KB) USED(KB) AVAIL(KB) USED(%) MOUNTPOINT
@@ -176,8 +176,9 @@ def check_df(item, params, info):
     return df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes)
 
 check_info['df'] = {
-    "check_function"          : check_df,
+    "parse_function"          : parse_df,
     "inventory_function"      : inventory_df,
+    "check_function"          : check_df,
     "service_description"     : "Filesystem %s",
     "has_perfdata"            : True,
     "group"                   : "filesystem",

@@ -55,7 +55,7 @@ def parse_blade_bays(info):
         parsed.setdefault(itemname, {
             "_type_"         : ty.split("(")[0],
             "_id_"           : identifier,
-            "_power_max_"    : power_max_str,
+            "_power_max_"    : power_max,
             "_device_state_" : map_states.get(state, (3, "unhandled[%s]" % state)),
             "power"          : power,
         })

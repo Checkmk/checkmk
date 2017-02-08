@@ -44,6 +44,13 @@
 #include "strutil.h"
 #include "waittriggers.h"
 
+int blah()
+{
+    char a[10];
+    a[10] = 0;
+    return 0;
+}
+
 extern unsigned long g_max_response_size;
 
 using std::chrono::duration_cast;

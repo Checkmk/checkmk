@@ -201,6 +201,10 @@ def set_permissions(path, uid, gid, mode):
         if e.errno == 13:
             pass # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
                  # are set, this is not possible. So skip over.
+        elif e.errno == 1:
+            pass # On NFS mounts where "" mount options are set, we get an
+                 # "Operation not permitted" error when trying to change e.g.
+                 # the group permission.
         else:
             raise
 
@@ -210,6 +214,10 @@ def set_permissions(path, uid, gid, mode):
         if e.errno == 13:
             pass # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
                  # are set, this is not possible. So skip over.
+        elif e.errno == 1:
+            pass # On NFS mounts where "" mount options are set, we get an
+                 # "Operation not permitted" error when trying to change e.g.
+                 # the group permission.
         else:
             raise
 

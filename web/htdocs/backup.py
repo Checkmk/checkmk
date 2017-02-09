@@ -416,7 +416,7 @@ class Jobs(BackupEntityCollection):
 
 
     def show_list(self, editable=True):
-        html.write("<h2>%s</h2>" % _("Jobs"))
+        html.h2(_("Jobs"))
         table.begin(sortable=False, searchable=False)
 
         for job_ident, job in sorted(self.objects.items()):
@@ -867,9 +867,9 @@ class PageBackupJobState(object):
 
 
     def page(self):
-        html.write("<div id=\"job_details\">")
+        html.open_div(id_="job_details")
         self.show_job_details()
-        html.write("</div>")
+        html.close_div()
         html.javascript("refresh_job_details('%s', '%s', %s)" %
              (self._update_url(), self._ident, "true" if is_site() else "false"))
 
@@ -882,7 +882,7 @@ class PageBackupJobState(object):
         job   = self._job
         state = job.state()
 
-        html.write("<table class=\"data backup_job\">")
+        html.open_table(class_=["data", "backup_job"])
 
         css = "state0"
         state_txt = job.state_name(state["state"])
@@ -893,13 +893,18 @@ class PageBackupJobState(object):
             else:
                 state_txt = _("Finished")
         elif state["state"] == None:
-            css = ""
+            css = None
 
-        html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("State"))
-        html.write("<td class=\"state %s\">%s</td></tr>" % (css, state_txt))
+        html.open_tr(class_=["data", "even0"])
+        html.td(_("State"), class_=["left", "legend"])
+        html.open_td(class_=["state", css])
+        html.write(state_txt)
+        html.close_td()
+        html.close_tr()
 
-        html.write("<tr class=\"data odd0\"><td class=\"left\">%s</td>" % _("Runtime"))
-        html.write("<td>")
+        html.open_tr(class_=["data", "odd0"])
+        html.td(_("Runtime"), class_="left")
+        html.open_td()
         if state["started"]:
             html.write(_("Started at %s") % render.date_and_time(state["started"]))
             duration = time.time() - state["started"]
@@ -908,12 +913,17 @@ class PageBackupJobState(object):
                 duration = state["finished"] - state["started"]
 
             html.write(_(" (Duration: %s)") % render.timespan(duration))
-        html.write("</td></tr>")
+        html.close_td()
+        html.close_tr()
 
-        html.write("<tr class=\"data even0\"><td class=\"left legend\">%s</td>" % _("Output"))
-        html.write("<td class=\"log\"><pre>%s</pre></td></tr>" % html.attrencode(state["output"]))
+        html.open_tr(class_=["data", "even0"])
+        html.td(_("Output"), class_=["left", "legend"])
+        html.open_td(class_="log")
+        html.pre(state["output"])
+        html.close_td()
+        html.close_tr()
 
-        html.write("</table>")
+        html.close_table()
 
 
 #.
@@ -985,7 +995,7 @@ class Target(BackupEntity):
             if info["config"]["encrypt"] != None:
                 html.write(info["config"]["encrypt"])
             else:
-                html.write(_("No"))
+                html.write_text(_("No"))
 
             if info["type"] == "Appliance":
                 table.cell(_("Clustered"))
@@ -1023,7 +1033,9 @@ class Targets(BackupEntityCollection):
 
     def show_list(self, title=None, editable=True):
         title = title if title else _("Targets")
-        html.write("<h2>%s</h2>" % title)
+        html.open_h2()
+        html.write(title)
+        html.close_h2()
         if not editable and is_site():
             html.write("<p>%s</p>" % _("These backup targets can not be edited here. You need to "
                                        "open the device backup management."))
@@ -1734,9 +1746,8 @@ class PageBackupRestore(object):
             html.end_context_buttons()
 
         html.show_user_errors()
-        html.write("<p>%s</p>" %
-            _("To be able to decrypt and restore the encrypted backup, you need to enter the "
-              "passphrase of the encryption key."))
+        html.p(_("To be able to decrypt and restore the encrypted backup, you need to enter the "
+                 "passphrase of the encryption key."))
         html.begin_form("key", method="GET")
         html.hidden_field("_action", "start")
         html.hidden_field("_backup", backup_ident)

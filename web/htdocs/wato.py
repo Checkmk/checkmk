@@ -15757,6 +15757,7 @@ def mode_download_agents(phase):
         '/special',
         '/windows/msibuild',
         '/windows/msibuild/patches',
+        '/windows/sections',
     ]
 
     file_titles = {}

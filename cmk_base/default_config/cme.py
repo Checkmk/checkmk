@@ -1,0 +1,1 @@
+../../managed/cmk_base/default_config/cme.py

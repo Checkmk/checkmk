@@ -80,6 +80,7 @@ Global variables:
 """
 
 import cmk.debug as _debug
+import cmk.paths as _paths
 from cmk.exceptions import MKGeneralException
 
 # These imports are not meant for use in the API. So we prefix the names
@@ -117,6 +118,7 @@ import math
 import re
 import socket
 import sys
+import os
 import time
 
 from cmk.regex import regex
@@ -471,9 +473,9 @@ def _agent_cache_file_age(hostname, check_type):
 
     import cmk_base.checks as checks
     if checks.is_snmp_check(check_type):
-        cachefile = cmk.paths.tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
+        cachefile = _paths.tcp_cache_dir + "/" + hostname + "." + check_type.split(".")[0]
     elif checks.is_tcp_check(check_type):
-        cachefile = cmk.paths.tcp_cache_dir + "/" + hostname
+        cachefile = _paths.tcp_cache_dir + "/" + hostname
     else:
         cachefile = None
 

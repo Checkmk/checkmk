@@ -40,7 +40,7 @@ def cmc_path():
 # Directory for persisting variable data produced by tests
 def var_dir():
     if "WORKSPACE" in os.environ:
-        base_dir = os.environ["WORKSPACE"]
+        base_dir = os.environ["WORKSPACE"] + "/results"
     else:
         base_dir = repo_path() + "/tests"
 

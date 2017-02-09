@@ -23,402 +23,431 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+
+# external imports
+from contextlib import contextmanager
+# internal imports
 import config
 from lib import num_split
 
-# TODO: Is contextlib part of older versions of python?
-# external imports
-from contextlib import contextmanager
+
+tables = []
+
+
 @contextmanager
-def open(**kwargs):
-    begin(**kwargs)
+def open(table_id=None, title=None, **kwargs):
+    begin(table_id, title, **kwargs)
     yield
     end()
 
 
-table     = None
-mode      = None
-next_func = None
-row_css   = None
-
-
 def begin(table_id=None, title=None, **kwargs):
-    global table, mode, next_func
-
-    # Use our pagename as table id if none is specified
-    if table_id == None:
-        table_id = html.myfile
-
-    try:
-        limit = config.table_row_limit
-    except:
-        limit = None
-
-    limit = kwargs.get('limit', limit)
-    if html.var('limit') == 'none' or kwargs.get("output_format", "html") != "html":
-        limit = None
-
-    table = {
-        "id"              : table_id,
-        "title"           : title,
-        "headers"         : [],
-        "collect_headers" : False, # also: True, "finished"
-        "rows"            : [],
-        "limit"           : limit,
-        "omit_if_empty"   : kwargs.get("omit_if_empty", False),
-        "omit_headers"    : kwargs.get("omit_headers", False),
-        "searchable"      : kwargs.get("searchable", True),
-        "sortable"        : kwargs.get("sortable", True),
-        "next_header"     : None,
-        "output_format"   : kwargs.get("output_format", "html"), # possible: html, csv, fetch
-    }
-    if kwargs.get("empty_text"):
-        table["empty_text"] = kwargs["empty_text"]
-    else:
-        table["empty_text"] = _("No entries.")
-
-    if kwargs.get("help"):
-        table["help"] = kwargs["help"]
-
-    if kwargs.get("css"):
-        table["css"] = kwargs["css"]
-
-    html.plug()
-    mode = 'row'
-    next_func = None
+    tables.append(Table(table_id, title, **kwargs))
 
 
 def row(*posargs, **kwargs):
-    finish_previous()
-    global next_func, next_args
-    next_func = add_row
-    next_args = posargs, kwargs
+    assert tables
+    tables[-1].row(*posargs, **kwargs)
 
 
 def cell(*posargs, **kwargs):
-    finish_previous()
-    global next_func, next_args
-    next_func = add_cell
-    next_args = posargs, kwargs
+    assert tables
+    tables[-1].cell(*posargs, **kwargs)
 
 
 # Intermediate title, shown as soon as there is a following row.
-# We store the group headers in the list of rows, with css None
-# and state set to "header"
 def groupheader(title):
-    table["next_header"] = title
+    assert tables
+    tables[-1].groupheader(title)
 
 
 def end():
+    assert tables
+    table = tables.pop()
+    return table.end()
 
-    global table
-    finish_previous()
-    html.unplug()
 
-    if not table:
+#.
+#   .--Table---------------------------------------------------------------.
+#   |                       _____     _     _                              |
+#   |                      |_   _|_ _| |__ | | ___                         |
+#   |                        | |/ _` | '_ \| |/ _ \                        |
+#   |                        | | (_| | |_) | |  __/                        |
+#   |                        |_|\__,_|_.__/|_|\___|                        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   | Usage:                                                               |
+#   |        table.begin()                                                 |
+#   |        table.row()                                                   |
+#   |        table.cell("header", "content")                               |
+#   |        table.end()                                                   |
+#   |            table.cell("header", "content")                           |
+#   |                                                                      |
+#   | Alternatively using a context:                                       |
+#   |                                                                      |
+#   |        with table.open():                                            |
+#   |            table.row()                                               |
+#   |            table.cell("header", "content")                           |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+class Table(object):
+
+    def __init__(self, table_id=None, title=None, **kwargs):
+        super(Table, self).__init__()
+        self.next_func   = id
+        self.next_args   = None
+        self.next_header = None
+
+        # Use our pagename as table id if none is specified
+        table_id = table_id if table_id is not None else html.myfile
+
+        # determine row limit
+        try:
+            limit = config.table_row_limit
+        except:
+            limit = None
+        limit = kwargs.get('limit', limit)
+        if html.var('limit') == 'none' or kwargs.get("output_format", "html") != "html":
+            limit = None
+
+        self.id      = table_id
+        self.title   = title
+        self.rows    = []
+        self.limit   = limit
+        self.headers = []
+        self.options = {
+            "collect_headers" : False, # also: True, "finished"
+            "omit_if_empty"   : kwargs.get("omit_if_empty", False),
+            "omit_headers"    : kwargs.get("omit_headers", False),
+            "searchable"      : kwargs.get("searchable", True),
+            "sortable"        : kwargs.get("sortable", True),
+            "output_format"   : kwargs.get("output_format", "html"), # possible: html, csv, fetch
+        }
+
+        self.empty_text = kwargs.get("empty_text", _("No entries."))
+        self.help = kwargs.get("help", None)
+        self.css  = kwargs.get("css", None)
+        self.mode = 'row'
+
+        html.plug()
+
+
+    def row(self, *posargs, **kwargs):
+        self.finish_previous()
+        self.next_func = self.add_row
+        self.next_args = posargs, kwargs
+
+
+    def cell(self, *posargs, **kwargs):
+        self.finish_previous()
+        self.next_func = self.add_cell
+        self.next_args = posargs, kwargs
+
+
+    def finish_previous(self):
+        if self.next_args is not None:
+            self.next_func(*self.next_args[0], **self.next_args[1])
+            self.next_func = None
+
+
+    def add_row(self, css=None, state=0, collect_headers=True, fixed=False):
+        if self.next_header:
+            self.rows.append((self.next_header, None, "header", True))
+            self.next_header = None
+        self.rows.append(([], css, state, fixed))
+        if collect_headers:
+            if self.options["collect_headers"] == False:
+                self.options["collect_headers"] = True
+            elif self.options["collect_headers"] == True:
+                self.options["collect_headers"] = "finished"
+        elif not collect_headers and self.options["collect_headers"] == True:
+            self.options["collect_headers"] = False
+
+
+    def add_cell(self, title="", text="", css=None, help=None, colspan=None, sortable=True):
+        if isinstance(text, HTML):
+            text = "%s" % text
+        if type(text) != unicode:
+            text = str(text)
+        htmlcode = text + html.drain()
+        if self.options["collect_headers"] == True:
+            # small helper to make sorting introducion easier. Cells which contain
+            # buttons are never sortable
+            if css and 'buttons' in css and sortable:
+                sortable = False
+            self.headers.append((title, css, help, sortable))
+        self.rows[-1][0].append((htmlcode, css, colspan))
+
+
+    # Intermediate title, shown as soon as there is a following row.
+    # We store the group headers in the list of rows, with css None
+    # and state set to "header"
+    def groupheader(self, title):
+        self.next_header = title
+
+
+    def end(self):
+
+        self.finish_previous()
+        html.unplug()
+
+        # Output-Format "fetch" simply means that all data is being
+        # returned as Python-values to be rendered somewhere else.
+        if self.options["output_format"] == "fetch":
+            return self.headers, self.rows
+
+        if not self.rows and self.options["omit_if_empty"]:
+            return
+
+        if self.options["output_format"] == "csv":
+            self._write_csv(csv_separator=html.var("csv_separator", ";"))
+            return
+
+        if self.title:
+            html.open_h3()
+            html.write(self.title)
+            html.close_h3()
+
+        if self.help:
+            html.help(self.help)
+
+        if not self.rows:
+            html.div(self.empty_text, class_="info")
+            return
+
+        # Controls whether or not actions are available for a table
+        rows, actions_enabled, actions_visible, search_term, user_opts = self._evaluate_user_opts()
+
+        # Apply limit after search / sorting etc.
+        num_rows_unlimited = len(rows)
+        limit = self.limit
+        if limit is not None:
+            # only use rows up to the limit plus the fixed rows
+            rows = [ rows[i] for i in range(num_rows_unlimited) if i < limit or rows[i][3]]
+            # Display corrected number of rows
+            num_rows_unlimited -= len([row for row in rows if row[3]])
+
+        # Render header
+        self._write_table(rows, actions_enabled, actions_visible, search_term)
+
+        if limit is not None and num_rows_unlimited > limit:
+            html.message(_('This table is limited to show only %d of %d rows. '
+                           'Click <a href="%s">here</a> to disable the limitation.') %
+                               (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
+
+        if actions_enabled:
+            config.user.save_file("tableoptions", user_opts)
         return
 
-    # Output-Format "fetch" simply means that all data is being
-    # returned as Python-values to be rendered somewhere else.
-    if table["output_format"] == "fetch":
-        return table["headers"], table["rows"]
-
-    if not table["rows"] and table["omit_if_empty"]:
-        table = None
-        return
-
-    if table["output_format"] == "csv":
-        _write_csv(table, csv_separator=html.var("csv_separator", ";"))
-        table = None
-        return
-
-    #html.guitest_record_output("data_tables", table)
-
-    if table["title"]:
-        html.open_h3()
-        html.write(table["title"])
-        html.close_h3()
-
-    if table.get("help"):
-        html.help(table["help"])
-
-    if not table["rows"]:
-        html.div(table["empty_text"], class_="info")
-        table = None
-        return
-
-    # Controls whether or not actions are available for a table
-    rows, actions_enabled, actions_visible, search_term, user_opts = _evaluate_user_opts(table)
-
-    # Apply limit after search / sorting etc.
-    num_rows_unlimited = len(rows)
-    limit = table['limit']
-    if limit is not None:
-        # only use rows up to the limit plus the fixed rows
-        rows = [ rows[i] for i in range(num_rows_unlimited) if i < limit or rows[i][3]]
-        # Display corrected number of rows
-        num_rows_unlimited -= len([row for row in rows if row[3]])
-
-    # Render header
-    _write_table(table, rows, actions_enabled, actions_visible, search_term)
-
-    if limit is not None and num_rows_unlimited > limit:
-        html.message(_('This table is limited to show only %d of %d rows. '
-                       'Click <a href="%s">here</a> to disable the limitation.') %
-                           (limit, num_rows_unlimited, html.makeuri([('limit', 'none')])))
-
-    if actions_enabled:
-        config.user.save_file("tableoptions", user_opts)
-    table = None
-    return
 
 
-def finish_previous():
-    global next_func
-    if next_func:
-        next_func(*next_args[0], **next_args[1])
-        next_func = None
+    def _evaluate_user_opts(self):
 
+        table_id = self.id
+        rows = self.rows
 
-def add_row(css=None, state=0, collect_headers=True, fixed=False):
-    if table["next_header"]:
-        table["rows"].append((table["next_header"], None, "header", True))
-        table["next_header"] = None
+        search_term = None
+        actions_enabled = (self.options["searchable"] or self.options["sortable"])
 
-    table["rows"].append(([], css, state, fixed))
-
-    if collect_headers:
-        if table["collect_headers"] == False:
-            table["collect_headers"] = True
-        elif table["collect_headers"] == True:
-            table["collect_headers"] = "finished"
-
-    elif not collect_headers and table["collect_headers"] == True:
-        table["collect_headers"] = False
-
-
-def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True):
-
-    if isinstance(text, HTML):
-        text = "%s" % text
-    if type(text) != unicode:
-        text = str(text)
-    htmlcode = text + html.drain()
-    if table["collect_headers"] == True:
-        # small helper to make sorting introducion easier. Cells which contain
-        # buttons are never sortable
-        if css and 'buttons' in css and sortable:
-            sortable = False
-        table["headers"].append((title, css, help, sortable))
-    table["rows"][-1][0].append((htmlcode, css, colspan))
-
-
-def _evaluate_user_opts(table):
-
-    table_id = table["id"]
-    rows = table["rows"]
-
-    search_term = None
-    actions_enabled = (table["searchable"] or table["sortable"])
-
-    if not actions_enabled:
-        return rows, False, False, None, None
-
-    else:
-        user_opts = config.user.load_file("tableoptions", {})
-        user_opts.setdefault(table_id, {})
-        table_opts = user_opts[table_id]
-
-        # Handle the initial visibility of the actions
-        actions_visible = user_opts[table_id].get('actions_visible', False)
-        if html.var('_%s_actions' % table_id):
-            actions_visible = html.var('_%s_actions' % table_id) == '1'
-            user_opts[table_id]['actions_visible'] = actions_visible
-
-        if html.var('_%s_reset' % table_id):
-            html.del_var('_%s_search' % table_id)
-            if 'search' in table_opts:
-                del table_opts['search'] # persist
-
-        if table["searchable"]:
-            # Search is always lower case -> case insensitive
-            search_term = html.get_unicode_input('_%s_search' % table_id, table_opts.get('search', '')).lower()
-            if search_term:
-                html.set_var('_%s_search' % table_id, search_term)
-                table_opts['search'] = search_term # persist
-                rows = _filter_rows(rows, search_term)
-
-        if html.var('_%s_reset_sorting' % table_id):
-            html.del_var('_%s_sort' % table_id)
-            if 'sort' in table_opts:
-                del table_opts['sort'] # persist
-
-        if table["sortable"]:
-            # Now apply eventual sorting settings
-            sort = html.var('_%s_sort' % table_id, table_opts.get('sort'))
-            if sort is not None:
-                html.set_var('_%s_sort' % table_id, sort)
-                table_opts['sort'] = sort # persist
-                sort_col, sort_reverse = map(int, sort.split(',', 1))
-                rows = _sort_rows(rows, sort_col, sort_reverse)
-
-        return rows, actions_enabled, actions_visible, search_term, user_opts
-
-
-def _write_table(table, rows, actions_enabled, actions_visible, search_term):
-
-    table_id = table["id"]
-    num_cols = len(table["headers"])
-
-    html.open_table(class_=["data", "oddeven", table["css"] if "css" in table else None])
-
-    # If we have no group headers then paint the headers now
-    if table["rows"] and table["rows"][0][2] != "header":
-        _render_headers(table, actions_enabled, actions_visible)
-
-    if actions_enabled and actions_visible:
-        html.open_tr(class_=["data", "even0", "actions"])
-        html.open_td(colspan=num_cols)
-        if not html.in_form():
-            html.begin_form("%s_actions" % table_id)
-
-        if table["searchable"]:
-            html.open_div(class_="search")
-            html.text_input("_%s_search" % table_id)
-            html.button("_%s_submit" % table_id, _("Search"))
-            html.button("_%s_reset" % table_id, _("Reset search"))
-            html.set_focus("_%s_search" % table_id)
-            html.close_div()
-
-        if html.has_var('_%s_sort' % table_id):
-            html.open_div(class_=["sort"])
-            html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
-            html.close_div()
-
-        if not html.in_form():
-            html.begin_form("%s_actions" % table_id)
-
-        html.hidden_fields()
-        html.end_form()
-        html.close_tr()
-
-    odd = "even"
-    for nr, (row, css, state, fixed) in enumerate(rows):
-        # Intermediate header
-        if state == "header":
-            # Show the header only, if at least one (non-header) row follows
-            if nr < len(rows) - 1 and rows[nr+1][2] != "header":
-                html.open_tr(class_="groupheader")
-                html.open_td(colspan=num_cols)
-                html.open_h3()
-                html.write(row)
-                html.close_h3()
-                html.close_td()
-                html.close_tr()
-
-                odd = "even"
-                _render_headers(table, actions_enabled, actions_visible)
-            continue
-
-        odd = "even" if odd == "odd" else "odd"
-        html.open_tr(class_=["data", "odd%d" % state, css if css else None])
-        for cell_content, css_classes, colspan in row:
-            html.open_td(class_=css_classes if css_classes else None, colspan=colspan if colspan else None)
-            html.write(cell_content)
-            html.close_td()
-        html.close_tr()
-
-    if not rows and search_term:
-        html.open_tr(class_=["data", "odd0", "no_match"])
-        html.td(_('Found no matching rows. Please try another search term.'), colspan=num_cols)
-        html.close_tr()
-
-    html.close_table()
-
-
-def _write_csv(table, csv_separator):
-
-    rows = table["rows"]
-    headers = table["headers"]
-    limit = table['limit']
-    omit_headers = table["omit_headers"]
-
-    num_rows_unlimited = len(rows)
-    num_cols = len(headers)
-
-    # Apply limit after search / sorting etc.
-    if limit is not None:
-        rows = rows[:limit]
-
-    # If we have no group headers then paint the headers now
-    if not omit_headers and table["rows"] and table["rows"][0][2] != "header":
-        html.write(csv_separator.join([html.strip_tags(header) or "" for (header, css, help, sortable) in headers]) + "\n")
-
-    odd = "even"
-    for nr, (row, css, state, fixed) in enumerate(rows):
-        html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
-        html.write("\n")
-
-
-def _render_headers(table, actions_enabled, actions_visible):
-    if table["omit_headers"]:
-        return
-
-    table_id = table['id']
-
-    html.open_tr()
-    first_col = True
-    for nr, (header, css, help, sortable) in enumerate(table["headers"]):
-        text = header
-
-        if help:
-            header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
-
-        css_class = "header_%s" % css if css else None
-
-        if not table["sortable"] or not sortable:
-            html.open_th(class_=css_class)
+        if not actions_enabled:
+            return rows, False, False, None, None
         else:
-            reverse = 0
-            sort = html.var('_%s_sort' % table_id)
-            if sort:
-                sort_col, sort_reverse = map(int, sort.split(',', 1))
-                if sort_col == nr:
-                    reverse = 1 if sort_reverse == 0 else 0
+            user_opts = config.user.load_file("tableoptions", {})
+            user_opts.setdefault(table_id, {})
+            table_opts = user_opts[table_id]
 
-            action_uri = html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])
-            html.open_th(class_=["sort", css_class],
-                         title=_("Sort by %s") % text,
-                         onclick="location.href='%s'" % action_uri)
+            # Handle the initial visibility of the actions
+            actions_visible = user_opts[table_id].get('actions_visible', False)
+            if html.var('_%s_actions' % table_id):
+                actions_visible = html.var('_%s_actions' % table_id) == '1'
+                user_opts[table_id]['actions_visible'] = actions_visible
 
-        # Add the table action link
-        if first_col:
-            first_col = False
-            if actions_enabled:
-                if not header:
-                    header = "&nbsp;" # Fixes layout problem with white triangle
-                if actions_visible:
-                    state = '0'
-                    help  = _('Hide table actions')
-                    img   = 'table_actions_on'
-                else:
-                    state = '1'
-                    help  = _('Display table actions')
-                    img   = 'table_actions_off'
-                html.open_div(class_=["toggle_actions"])
-                html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
-                    help, img, cssclass = 'toggle_actions')
-                html.open_span()
-                html.write(header)
-                html.close_span()
+            if html.var('_%s_reset' % table_id):
+                html.del_var('_%s_search' % table_id)
+                if 'search' in table_opts:
+                    del table_opts['search'] # persist
+
+            if self.options["searchable"]:
+                # Search is always lower case -> case insensitive
+                search_term = html.get_unicode_input('_%s_search' % table_id, table_opts.get('search', '')).lower()
+                if search_term:
+                    html.set_var('_%s_search' % table_id, search_term)
+                    table_opts['search'] = search_term # persist
+                    rows = _filter_rows(rows, search_term)
+
+            if html.var('_%s_reset_sorting' % table_id):
+                html.del_var('_%s_sort' % table_id)
+                if 'sort' in table_opts:
+                    del table_opts['sort'] # persist
+
+            if self.options["sortable"]:
+                # Now apply eventual sorting settings
+                sort = html.var('_%s_sort' % table_id, table_opts.get('sort'))
+                if sort is not None:
+                    html.set_var('_%s_sort' % table_id, sort)
+                    table_opts['sort'] = sort # persist
+                    sort_col, sort_reverse = map(int, sort.split(',', 1))
+                    rows = _sort_rows(rows, sort_col, sort_reverse)
+
+            return rows, actions_enabled, actions_visible, search_term, user_opts
+
+
+    def _write_table(self, rows, actions_enabled, actions_visible, search_term):
+
+        table_id = self.id
+        num_cols = len(self.headers)
+
+        html.open_table(class_=["data", "oddeven", self.css])
+
+        # If we have no group headers then paint the headers now
+        if self.rows and self.rows[0][2] != "header":
+            self._render_headers(actions_enabled, actions_visible)
+
+        if actions_enabled and actions_visible:
+            html.open_tr(class_=["data", "even0", "actions"])
+            html.open_td(colspan=num_cols)
+            if not html.in_form():
+                html.begin_form("%s_actions" % table_id)
+
+            if self.options["searchable"]:
+                html.open_div(class_="search")
+                html.text_input("_%s_search" % table_id)
+                html.button("_%s_submit" % table_id, _("Search"))
+                html.button("_%s_reset" % table_id, _("Reset search"))
+                html.set_focus("_%s_search" % table_id)
                 html.close_div()
+
+            if html.has_var('_%s_sort' % table_id):
+                html.open_div(class_=["sort"])
+                html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
+                html.close_div()
+
+            if not html.in_form():
+                html.begin_form("%s_actions" % table_id)
+
+            html.hidden_fields()
+            html.end_form()
+            html.close_tr()
+
+        odd = "even"
+        for nr, (row, css, state, fixed) in enumerate(rows):
+            # Intermediate header
+            if state == "header":
+                # Show the header only, if at least one (non-header) row follows
+                if nr < len(rows) - 1 and rows[nr+1][2] != "header":
+                    html.open_tr(class_="groupheader")
+                    html.open_td(colspan=num_cols)
+                    html.open_h3()
+                    html.write(row)
+                    html.close_h3()
+                    html.close_td()
+                    html.close_tr()
+
+                    odd = "even"
+                    self._render_headers(actions_enabled, actions_visible)
+                continue
+
+            odd = "even" if odd == "odd" else "odd"
+            html.open_tr(class_=["data", "odd%d" % state, css if css else None])
+            for cell_content, css_classes, colspan in row:
+                html.open_td(class_=css_classes if css_classes else None, colspan=colspan if colspan else None)
+                html.write(cell_content)
+                html.close_td()
+            html.close_tr()
+
+        if not rows and search_term:
+            html.open_tr(class_=["data", "odd0", "no_match"])
+            html.td(_('Found no matching rows. Please try another search term.'), colspan=num_cols)
+            html.close_tr()
+
+        html.close_table()
+
+
+    def _write_csv(self, csv_separator):
+
+        rows = self.rows
+        headers = self.headers
+        limit = self.limit
+        omit_headers = self.options["omit_headers"]
+
+        num_rows_unlimited = len(rows)
+        num_cols = len(headers)
+
+        # Apply limit after search / sorting etc.
+        if limit is not None:
+            rows = rows[:limit]
+
+        # If we have no group headers then paint the headers now
+        if not omit_headers and self.rows and self.rows[0][2] != "header":
+            html.write(csv_separator.join([html.strip_tags(header) or "" for (header, css, help, sortable) in headers]) + "\n")
+
+        odd = "even"
+        for nr, (row, css, state, fixed) in enumerate(rows):
+            html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
+            html.write("\n")
+
+
+    def _render_headers(self, actions_enabled, actions_visible):
+        if self.options["omit_headers"]:
+            return
+
+        table_id = self.id
+
+        html.open_tr()
+        first_col = True
+        for nr, (header, css, help, sortable) in enumerate(self.headers):
+            text = header
+
+            if help:
+                header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
+
+            css_class = "header_%s" % css if css else None
+
+            if not self.options["sortable"] or not sortable:
+                html.open_th(class_=css_class)
+            else:
+                reverse = 0
+                sort = html.var('_%s_sort' % table_id)
+                if sort:
+                    sort_col, sort_reverse = map(int, sort.split(',', 1))
+                    if sort_col == nr:
+                        reverse = 1 if sort_reverse == 0 else 0
+
+                action_uri = html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])
+                html.open_th(class_=["sort", css_class],
+                             title=_("Sort by %s") % text,
+                             onclick="location.href='%s'" % action_uri)
+
+            # Add the table action link
+            if first_col:
+                first_col = False
+                if actions_enabled:
+                    if not header:
+                        header = "&nbsp;" # Fixes layout problem with white triangle
+                    if actions_visible:
+                        state = '0'
+                        help  = _('Hide table actions')
+                        img   = 'table_actions_on'
+                    else:
+                        state = '1'
+                        help  = _('Display table actions')
+                        img   = 'table_actions_off'
+                    html.open_div(class_=["toggle_actions"])
+                    html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
+                        help, img, cssclass = 'toggle_actions')
+                    html.open_span()
+                    html.write(header)
+                    html.close_span()
+                    html.close_div()
+                else:
+                    html.write(header)
             else:
                 html.write(header)
-        else:
-            html.write(header)
 
-        html.close_th()
-    html.close_tr()
+            html.close_th()
+        html.close_tr()
 
 
 def _filter_rows(rows, search_term):

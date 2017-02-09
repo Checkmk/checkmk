@@ -168,17 +168,14 @@ class TableTester(Refactored_htmlTester):
         self.myfile = "testfile"
 
     def lowlevel_write(self, text):
-
+        indent = 1
         if re.match(r'.*\.close_\w+[(][)]', '\n'.join(traceback.format_stack()), re.DOTALL):
             self.tag_counter -= 1 if self.tag_counter > 0 else 0
-            self.written_text += " " * 4 * self.tag_counter + text
+            self.written_text += " " * indent * self.tag_counter + text
         elif re.match(r'.*\.open_\w+[(]', '\n'.join(traceback.format_stack()), re.DOTALL):
-            self.written_text += " " * 4 * self.tag_counter + text
+            self.written_text += " " * indent * self.tag_counter + text
             self.tag_counter += 1
         else:
-            self.written_text += " " * 4 * self.tag_counter + text + ''
-
-
-
+            self.written_text += " " * indent * self.tag_counter + text + ''
 
 

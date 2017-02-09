@@ -22,6 +22,7 @@
     * 4342 FIX: hp_proliant: fixed empty status handling
     * 4345 FIX: hp_proliant_temp: Ignore device levels of 0
     * 4355 FIX: ipmi: added missing case: ignore sensor status 'ns'
+    * 4356 FIX: brocade_fcport: since FW 8.0.* tx/rxwords are no longer available, use values from FCMGMT-MIB instead
 
     Multisite:
     * 4315 FIX: Logwatch problematic logfiles list was showing too many logfiles

@@ -158,11 +158,30 @@ def inventory_brocade_fcport(info):
 
 
 def check_brocade_fcport(item, params, info):
+    if_info, link_info, speed_info, if64_info = info
+
     # Accept item, even if port name or ISL state has changed
-    item_index = int(item.split()[0])
-    portinfo = [ line for line in info[0] if int(line[0]) == item_index + 1]
+    item_index       = int(item.split()[0])
+    portinfo         = [ line for line in if_info if int(line[0]) == item_index + 1]
+
+    # Since FW v8.0.1b [rx/tx]words are no longer available
+    fcmgmt_portstats = []
+    if portinfo[0][4] == "" or portinfo[0][5] == "":
+        for oidend, tx_elements, rx_elements in if64_info:
+            if item_index + 1 == int(oidend.split(".")[-1]):
+                fcmgmt_portstats = [ binstring_to_int(tx_elements),
+                                     binstring_to_int(rx_elements) ]
+                break
+        if fcmgmt_portstats:
+            portinfo[0][4] = fcmgmt_portstats[0]
+            portinfo[0][5] = fcmgmt_portstats[1]
+        else:
+            portinfo[0][4] = 0
+            portinfo[0][5] = 0
+
     index, phystate, opstate, admstate, txwords, rxwords, txframes, rxframes, \
          notxcredits, rxcrcs, rxencoutframes, c3discards = map(int, portinfo[0][:-2])
+
     speed = saveint(portinfo[0][-2])
 
     summarystate = 0
@@ -172,7 +191,7 @@ def check_brocade_fcport(item, params, info):
 
     # Lookup port speed in ISL table for ISL ports (older switches do not provide this
     # information in the normal table)
-    isl_ports = dict(info[1])
+    isl_ports = dict(link_info)
     if str(index) in isl_ports:
         gbit = isl_speed.get( isl_ports.get( str(index) ) )
         speedmsg = ("ISL at %.0fGbit/s"  % gbit)
@@ -187,7 +206,7 @@ def check_brocade_fcport(item, params, info):
                 # and assume that the sequence number of the FC port here is the same
                 # as the sequence number in the borcade MIB (pindex = item_index)
                 pindex = -1
-                for vals in info[2]:
+                for vals in speed_info:
                     port_type, actual_speed = map(saveint, vals)
                     if port_type == 56:
                         pindex += 1
@@ -355,6 +374,7 @@ def check_brocade_fcport(item, params, info):
 
     return (summarystate, ', '.join(output), perfdata)
 
+
 check_info["brocade_fcport"] = {
     'check_function':          check_brocade_fcport,
     'inventory_function':      inventory_brocade_fcport,
@@ -383,11 +403,15 @@ check_info["brocade_fcport"] = {
             2, # swNbMyPort
             5, # swNbBaudRate
         ]),
-
         # new way to get port speed supported by Brocade
         ( ".1.3.6.1.2.1", [
             "2.2.1.3",      # ifType, needed to extract fibre channel ifs only (type 56)
             "31.1.1.1.15",  # IF-MIB::ifHighSpeed
+        ]),
+        (".1.3.6.1.3.94.4.5.1", [
+            OID_END,
+            "6",    # FCMGMT-MIB::connUnitPortStatCountTxElements
+            "7",    # FCMGMT-MIB::connUnitPortStatCountRxElements
         ]),
     ],
     'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1") \

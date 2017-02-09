@@ -1,0 +1,12 @@
+Title: kaspersky_av_client: made fullscan state optional, simplified plugin
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i4
+Date: 1486648291
+
+Simplified the vbs plugin regarding detection of installed AV client.
+
+Fullscan state is now optional in order to be more compatible to status Kaspersky Labs reports.

@@ -237,7 +237,7 @@ def get_specific_traffic_levels(general_traffic_levels, unit, ref_speed, assumed
 
 def _prepare_if_group_patterns_from_conf():
     group_patterns = {}
-    for line in host_extra_conf(g_hostname, if_groups):
+    for line in host_extra_conf(host_name(), if_groups):
         for entry in line:
             if entry.get("name"):
                 group_name = entry["name"]
@@ -268,13 +268,13 @@ def _prepare_if_group_patterns_from_conf():
 
             else:
                 this_group.setdefault("group_type", "single_host")
-                this_group["group_patterns"].setdefault(g_hostname, {})
+                this_group["group_patterns"].setdefault(host_name(), {})
                 if entry.get("include_items"):
-                    this_group["group_patterns"][g_hostname].setdefault("items", entry["include_items"])
+                    this_group["group_patterns"][host_name()].setdefault("items", entry["include_items"])
                 elif entry.get("items"):
-                    this_group["group_patterns"][g_hostname].setdefault("items", entry["items"])
+                    this_group["group_patterns"][host_name()].setdefault("items", entry["items"])
                 if entry.get("iftype"):
-                    this_group["group_patterns"][g_hostname].setdefault("iftype", entry["iftype"])
+                    this_group["group_patterns"][host_name()].setdefault("iftype", entry["iftype"])
 
     return group_patterns
 
@@ -407,7 +407,7 @@ def inventory_if_common(info, has_nodeinfo = False):
                     "interfaces"     : [],
                     "group_type"     : "single_host",
                     "group_presence" : "instead",
-                    "group_patterns" : {g_hostname : {"items" : [], "iftype" : ifType}},
+                    "group_patterns" : {host_name(): {"items" : [], "iftype" : ifType}},
                 })
                 have_groups[ifGroup]["interfaces"].append(
                     (saveint(ifSpeed), ifOperStatus, ifType))
@@ -490,13 +490,13 @@ def _convert_old_if_group_params(params):
         del params["aggregate"]
         params.setdefault("aggregate", {})
         params["aggregate"].setdefault("group_patterns", {})
-        params["aggregate"]["group_patterns"].setdefault(g_hostname, {})
+        params["aggregate"]["group_patterns"].setdefault(host_name(), {})
 
         for old_key, new_key in [
             ("include_items", "items"),
             ("iftype",        "iftype")]:
             if params.get(old_key) is not None:
-                params["aggregate"]["group_patterns"][g_hostname].setdefault(new_key, params[old_key])
+                params["aggregate"]["group_patterns"][host_name()].setdefault(new_key, params[old_key])
                 del params[old_key]
 
         if params.get("aggr_member_item") is not None:

@@ -30,7 +30,7 @@ factory_settings['cisco_cpu_multiitem_default_levels'] = {
 
 def parse_cisco_cpu_multiitem(info):
     ph_idx_to_desc = {}
-    cpus = {}
+    parsed = {}
     for idx, desc in info[1]:
         if desc.lower().startswith("cpu "):
            desc = desc[4:]
@@ -41,10 +41,10 @@ def parse_cisco_cpu_multiitem(info):
             name = ph_idx_to_desc[idx]
         else:
             name = idx
-        cpus[name] = {
+        parsed[name] = {
             'util': float(util),
         }
-    return cpus
+    return parsed
 
 def inventory_cisco_cpu_multiitem(parsed):
     for name in parsed:

@@ -137,7 +137,7 @@ check-version:
 
 dist: $(DISTNAME).tar.gz
 
-$(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI)
+$(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) ChangeLog
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
@@ -198,7 +198,10 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	@echo "=============================================================================="
 
 .werks/werks: $(WERKS)
-	PYTHONPATH=. python scripts/precompile-werks .werks .werks/werks
+	PYTHONPATH=. python scripts/precompile-werks.py .werks .werks/werks
+
+ChangeLog: .werks/werks
+	PYTHONPATH=. python scripts/create-changelog.py ChangeLog .werks/werks
 
 # NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
 # so we do things in a slightly complicated way.
@@ -214,12 +217,15 @@ mk-livestatus-$(VERSION).tar.gz:
 ifeq ($(ENTERPRISE),yes)
 
 enterprise/.werks/werks: $(ENTERPRISE_WERKS)
-	PYTHONPATH=. python scripts/precompile-werks enterprise/.werks enterprise/.werks/werks
+	PYTHONPATH=. python scripts/precompile-werks.py enterprise/.werks enterprise/.werks/werks
+
+enterprise/ChangeLog: enterprise/.werks/werks
+	PYTHONPATH=. python scripts/create-changelog.py enterprise/ChangeLog enterprise/.werks/werks
 
 dist: cmc-$(VERSION).tar.gz
 
 # We currently fake a package for cmc. Ugly...
-cmc-$(VERSION).tar.gz: config.h enterprise/.werks/werks
+cmc-$(VERSION).tar.gz: config.h enterprise/.werks/werks enterprise/ChangeLog
 	$(MAKE) -C livestatus distclean
 	$(MAKE) -C enterprise/core distclean
 	rm -rf cmc-$(VERSION)
@@ -245,6 +251,7 @@ cmc-$(VERSION).tar.gz: config.h enterprise/.werks/werks
 	mv cmc-$(VERSION)/enterprise/skel{,.permissions} cmc-$(VERSION)
 	mv cmc-$(VERSION)/enterprise/LIVEPROXYD.hook cmc-$(VERSION)
 	cp enterprise/.werks/werks cmc-$(VERSION)/werks
+	cp enterprise/ChangeLog cmc-$(VERSION)/ChangeLog
 	sed -i '1 i\include ../../Makefile.omd' cmc-$(VERSION)/Makefile
 	cd cmc-$(VERSION) && tar czf ../cmc-$(VERSION).tar.gz $(TAROPTS) .bugs *
 	rm -rf cmc-$(VERSION)
@@ -366,7 +373,9 @@ clean:
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
 	       .werks/werks \
-	       enterprise/.werks/werks
+	       enterprise/.werks/werks \
+	       ChangeLog \
+	       enterprise/ChangeLog
 	find -name "*~" | xargs rm -f
 
 mrproper:

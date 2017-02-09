@@ -37,63 +37,6 @@ import cmk.werks
 
 acknowledgement_path = cmk.paths.var_dir + "/acknowledged_werks.mk"
 
-def werk_classes():
-    return {
-        "feature"  : _("New Feature"),
-        "fix"      : _("Bug Fix"),
-        "security" : _("Security Fix"),
-    }
-
-
-def werk_levels():
-    return {
-        1 : _("Trivial Change"),
-        2 : _("Prominent Change"),
-        3 : _("Major Feature"),
-    }
-
-
-def werk_compatibilities():
-    return {
-        "compat"       : _("Compatible"),
-        "incomp_ack"   : _("Incompatible"),
-        "incomp_unack" : _("Incompatible - TODO"),
-    }
-
-
-def werk_components():
-    return {
-        # CRE
-        "core" :          _("Core & Setup"),
-        "checks" :        _("Checks & Agents"),
-        "multisite" :     _("User Interface"),
-        "wato" :          _("WATO"),
-        "notifications" : _("Notifications"),
-        "bi" :            _("BI"),
-        "reporting" :     _("Reporting & Availability"),
-        "ec" :            _("Event Console"),
-        "livestatus" :    _("Livestatus"),
-        "liveproxy" :     _("Livestatus-Proxy"),
-        "inv" :           _("HW/SW-Inventory"),
-
-        # CEE
-        "cmc" :           _("The Check_MK Micro Core"),
-        "setup" :         _("Setup, Site Management"),
-        "config" :        _("Configuration generation"),
-        "inline-snmp" :   _("Inline SNMP"),
-        "agents" :        _("Agent Bakery"),
-        "metrics" :       _("Metrics System"),
-
-        # CMK-OMD
-        "omd":            _("Site Management"),
-        "rpm":            _("RPM Packaging"),
-        "deb":            _("DEB Packaging"),
-        "nagvis":         _("NagVis"),
-        "packages":       _("Other Components"),
-        "distros":        _("Linux Distributions"),
-    }
-
-
 # Keep global variable for caching werks between requests. The never change.
 g_werks = None
 
@@ -237,7 +180,7 @@ def werk_table_option_entries():
           "double",
           ListChoice(
               title = _("Classes"),
-              choices = sorted(werk_classes().items()),
+              choices = sorted(cmk.werks.werk_classes().items()),
           ),
           [ "feature", "fix", "security" ],
         ),
@@ -245,7 +188,7 @@ def werk_table_option_entries():
           "double",
           ListChoice(
               title = _("Levels"),
-              choices = sorted(werk_levels().items()),
+              choices = sorted(cmk.werks.werk_levels().items()),
           ),
           [ 1, 2, 3 ],
         ),
@@ -287,7 +230,7 @@ def werk_table_option_entries():
               title = _("Component"),
               choices = [
                 ( None, _("All components") ),
-              ] + sorted(werk_components().items()),
+              ] + sorted(cmk.werks.werk_components().items()),
           ),
           None,
          ),
@@ -372,7 +315,7 @@ def render_werks_table():
     werklist = []
 
     if werk_table_options["grouping"] == "version":
-        werklist = werks_sorted_by_version(g_werks.values())
+        werklist = cmk.werks.sort_by_version_and_component(g_werks.values())
     else:
         werklist = werks_sorted_by_date(g_werks.values())
 
@@ -493,21 +436,21 @@ def render_werk_date(werk):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 def render_werk_level(werk):
-    return werk_levels()[werk["level"]]
+    return cmk.werks.werk_levels()[werk["level"]]
 
 def render_werk_class(werk):
-    return werk_classes()[werk["class"]]
+    return cmk.werks.werk_classes()[werk["class"]]
 
 def render_werk_compatibility(werk):
-    return werk_compatibilities()[werk["compatible"]]
+    return cmk.werks.werk_compatibilities()[werk["compatible"]]
 
 def render_werk_component(werk):
-    if werk["component"] not in werk_components():
+    if werk["component"] not in cmk.werks.werk_components():
         html.li(_("Invalid component %s in werk %s")\
                     % (werk["component"], render_werk_id(werk, with_link=True)))
         return werk["component"]
     else:
-        return werk_components()[werk["component"]]
+        return cmk.werks.werk_components()[werk["component"]]
 
 def render_werk_title(werk):
     title = werk["title"]
@@ -575,61 +518,3 @@ def insert_manpage_links(text):
 
 def werks_sorted_by_date(werks):
     return sorted(werks, cmp = lambda a, b: -cmp(a["date"], b["date"]))
-
-
-# sort by version and within one version by date
-def werks_sorted_by_version(werks):
-    def by_version(lhs, rhs):
-        if lhs["version"] == rhs["version"]:
-            return cmp(lhs["date"], rhs["date"])
-        else:
-            return cmp(parse_check_mk_version(lhs["version"]),
-                       parse_check_mk_version(rhs["version"]))
-
-    return sorted(werks, cmp=by_version, reverse=True)
-
-
-# Parses versions of Check_MK and converts them into comparable integers.
-# This does not handle daily build numbers, only official release numbers.
-# 1.2.4p1   -> 01020450001
-# 1.2.4     -> 01020450000
-# 1.2.4b1   -> 01020420100
-# 1.2.3i1p1 -> 01020310101
-# 1.2.3i1   -> 01020310100
-# TODO: Copied from check_mk_base.py - find location for common code.
-def parse_check_mk_version(v):
-    def extract_number(s):
-        number = ''
-        for i, c in enumerate(s):
-            try:
-                int(c)
-                number += c
-            except ValueError:
-                s = s[i:]
-                return number and int(number) or 0, s
-        return number and int(number) or 0, ''
-
-    parts = v.split('.')
-    while len(parts) < 3:
-        parts.append("0")
-
-    major, minor, rest = parts
-    sub, rest = extract_number(rest)
-
-    if not rest:
-        val = 50000
-    elif rest[0] == 'p':
-        num, rest = extract_number(rest[1:])
-        val = 50000 + num
-    elif rest[0] == 'i':
-        num, rest = extract_number(rest[1:])
-        val = 10000 + num*100
-
-        if rest and rest[0] == 'p':
-            num, rest = extract_number(rest[1:])
-            val += num
-    elif rest[0] == 'b':
-        num, rest = extract_number(rest[1:])
-        val = 20000 + num*100
-
-    return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, val))

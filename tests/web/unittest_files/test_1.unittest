@@ -1,5 +1,3 @@
 [{'function_name': 'empty_icon',
-  'input': {'arguments': {}, 'attributes': {}, 'variables': {}},
-  'output': {'attributes': {},
-             'html_code': '<img src="images/trans.png" class="icon" align=absmiddle />',
-             'return_value': None}}]
+  'input': {'arguments': {}},
+  'output': {'html_code': '<img src="images/trans.png" class="icon" align=absmiddle />'}}]

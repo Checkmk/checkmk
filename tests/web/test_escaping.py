@@ -22,7 +22,7 @@ def test_HTMLGenerator():
     html.a("Test", href = "javascript:void(0);",
             onclick = "testfunction(\"The whole wide world.\")")
 
-    print html.plugged_text
+    print html.drain()
     html.plug()
 
     submit = "Title"
@@ -30,17 +30,17 @@ def test_HTMLGenerator():
     html.a("Test", href="#", onfocus="if (this.blur) this.blur();",
             onclick="this.innerHTML=\'%s\'; document.location.reload();" % submit)
 
-    print html.plugged_text
+    print html.drain()
     html.plug()
 
     html.a("Test", href = "javascript:void(0);",
             onmouseover="this.style.backgroundImage=\"url(\'images/contextlink%s_hi.png\')\";" % submit)
 
-    print html.plugged_text
+    print html.drain()
     html.plug()
 
     html.a("Test", href = "javascript:void(0);",
         onkeydown="function(e) { if (!e) e = window.event; textinput_enter_submit(e, \"%s\"); };" % submit)
 
-    print html.plugged_text
+    print html.drain()
     assert True

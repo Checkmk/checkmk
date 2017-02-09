@@ -666,11 +666,18 @@ def site(site_id):
     return s
 
 
-# TODO: Does this work when using liveproxyd locally?
 def site_is_local(site_name):
     s = sites.get(site_name, {})
     sock = s.get("socket")
-    return not sock or sock == "unix:" + cmk.paths.livestatus_unix_socket
+
+    if not sock or sock == "unix:" + cmk.paths.livestatus_unix_socket:
+        return True
+
+    if type(s["socket"]) == tuple and s["socket"][0] == "proxy" \
+       and s["socket"][1]["socket"] is None:
+        return True
+
+    return False
 
 
 def default_site():

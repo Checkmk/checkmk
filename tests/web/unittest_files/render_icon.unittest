@@ -3,9 +3,6 @@
                           'help': 'Icon Title',
                           'icon_name': 'TestIcon',
                           'id': 'TestID',
-                          'middle': True},
-            'attributes': {},
-            'variables': {}},
-  'output': {'attributes': {},
-             'html_code': '',
+                          'middle': True}},
+  'output': {'html_code': '',
              'return_value': '<img src="test/TestIcon.jpg" class="icon test" align=absmiddle title="Icon Title" id="TestID" />'}}]

@@ -4,7 +4,7 @@
 
 # internal imports
 from classes import HTMLCheck_MKTester
-from html_tests import load_html_test
+from html_tests import load_html_test, run_all_generated_tests
 
 
 def run_tests(function_name, tests=None):
@@ -12,7 +12,8 @@ def run_tests(function_name, tests=None):
     for test in tests:
         assert test.run(), "%s" % test
 
-
+def test_generated_tests():
+    run_all_generated_tests()
 
 def test_select():
     run_tests("select")

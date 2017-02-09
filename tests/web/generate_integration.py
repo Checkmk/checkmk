@@ -17,12 +17,13 @@ pytestmark = pytest.mark.html_gentest
 import re
 import copy
 
+
 # internal imports
 from htmllib import html
 from htmllib import HTMLGenerator, HTMLCheck_MK
 from tools import compare_html, gentest, compare_and_empty, get_attributes, compare_attributes
 from classes import HTMLOrigTester, HTMLCheck_MKTester, DeprecatedRenderer
-
+import html_tests
 from html_tests import build_orig_test, build_cmk_test, save_html_test, load_html_test, HtmlTest, set_html_state, get_cartesian_product
 
 
@@ -220,6 +221,10 @@ def build_test(function_name):
     else:
         raise Exception("Testcase \'%s\' unknown!" % function_name)
     return tests
+
+
+def test_testgen():
+    html_tests.generate_tests()
 
 
 def test_select():

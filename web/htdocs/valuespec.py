@@ -1244,7 +1244,8 @@ class ListOf(ValueSpec):
         html.open_tr()
         html.open_td(class_="vlof_buttons")
 
-        html.hidden_field(varprefix + "_indexof_" + self._magic, "", add_var=True) # reconstruct order after moving stuff
+        html.hidden_field(varprefix + "_indexof_" + self._magic, "",
+                          add_var=True, class_="index") # reconstruct order after moving stuff
         self.del_button(varprefix, self._magic)
         if self._movable:
             self.move_button(varprefix, self._magic, "up")

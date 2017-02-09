@@ -41,6 +41,7 @@ mode      = None
 next_func = None
 row_css   = None
 
+
 def begin(table_id=None, title=None, **kwargs):
     global table, mode, next_func
 
@@ -86,11 +87,6 @@ def begin(table_id=None, title=None, **kwargs):
     mode = 'row'
     next_func = None
 
-def finish_previous():
-    global next_func
-    if next_func:
-        next_func(*next_args[0], **next_args[1])
-        next_func = None
 
 def row(*posargs, **kwargs):
     finish_previous()
@@ -98,27 +94,6 @@ def row(*posargs, **kwargs):
     next_func = add_row
     next_args = posargs, kwargs
 
-def add_row(css=None, state=0, collect_headers=True, fixed=False):
-    if table["next_header"]:
-        table["rows"].append((table["next_header"], None, "header", True))
-        table["next_header"] = None
-
-    table["rows"].append(([], css, state, fixed))
-
-    if collect_headers:
-        if table["collect_headers"] == False:
-            table["collect_headers"] = True
-        elif table["collect_headers"] == True:
-            table["collect_headers"] = "finished"
-
-    elif not collect_headers and table["collect_headers"] == True:
-        table["collect_headers"] = False
-
-# Intermediate title, shown as soon as there is a following row.
-# We store the group headers in the list of rows, with css None
-# and state set to "header"
-def groupheader(title):
-    table["next_header"] = title
 
 def cell(*posargs, **kwargs):
     finish_previous()
@@ -126,20 +101,12 @@ def cell(*posargs, **kwargs):
     next_func = add_cell
     next_args = posargs, kwargs
 
-def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True):
 
-    if isinstance(text, HTML):
-        text = "%s" % text
-    if type(text) != unicode:
-        text = str(text)
-    htmlcode = text + html.drain()
-    if table["collect_headers"] == True:
-        # small helper to make sorting introducion easier. Cells which contain
-        # buttons are never sortable
-        if css and 'buttons' in css and sortable:
-            sortable = False
-        table["headers"].append((title, css, help, sortable))
-    table["rows"][-1][0].append((htmlcode, css, colspan))
+# Intermediate title, shown as soon as there is a following row.
+# We store the group headers in the list of rows, with css None
+# and state set to "header"
+def groupheader(title):
+    table["next_header"] = title
 
 
 def end():
@@ -204,6 +171,46 @@ def end():
         config.user.save_file("tableoptions", user_opts)
     table = None
     return
+
+
+def finish_previous():
+    global next_func
+    if next_func:
+        next_func(*next_args[0], **next_args[1])
+        next_func = None
+
+
+def add_row(css=None, state=0, collect_headers=True, fixed=False):
+    if table["next_header"]:
+        table["rows"].append((table["next_header"], None, "header", True))
+        table["next_header"] = None
+
+    table["rows"].append(([], css, state, fixed))
+
+    if collect_headers:
+        if table["collect_headers"] == False:
+            table["collect_headers"] = True
+        elif table["collect_headers"] == True:
+            table["collect_headers"] = "finished"
+
+    elif not collect_headers and table["collect_headers"] == True:
+        table["collect_headers"] = False
+
+
+def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True):
+
+    if isinstance(text, HTML):
+        text = "%s" % text
+    if type(text) != unicode:
+        text = str(text)
+    htmlcode = text + html.drain()
+    if table["collect_headers"] == True:
+        # small helper to make sorting introducion easier. Cells which contain
+        # buttons are never sortable
+        if css and 'buttons' in css and sortable:
+            sortable = False
+        table["headers"].append((title, css, help, sortable))
+    table["rows"][-1][0].append((htmlcode, css, colspan))
 
 
 def _evaluate_user_opts(table):
@@ -351,7 +358,6 @@ def _write_csv(table, csv_separator):
     for nr, (row, css, state, fixed) in enumerate(rows):
         html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
         html.write("\n")
-
 
 
 def _render_headers(table, actions_enabled, actions_visible):

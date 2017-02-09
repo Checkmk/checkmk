@@ -22,32 +22,6 @@ def add_python_paths():
     sys.path.insert(0, cmk_path())
 
 
-#
-# Make tests classification possible to only execute in specific environments.
-# For example only on the CI server.
-#
-
-def pytest_addoption(parser):
-    parser.addoption("-E", action="store", metavar="NAME",
-        help="only run tests matching the environment NAME.")
-
-
-def pytest_configure(config):
-    config.addinivalue_line("markers",
-        "env(name): mark test to run only on named environment. Some long running tests "
-        "are only meant to be executed on the CI server. Those tests use the "
-        "\'@pytest.mark.env(\"ci-server\")' marker. If you want to execute them, add "
-        "\"-E ci-server\" to the py.test command.")
-
-
-def pytest_runtest_setup(item):
-    envmarker = item.get_marker("env")
-    if envmarker is not None:
-        envname = envmarker.args[0]
-        if envname != item.config.getoption("-E"):
-            pytest.skip("test requires env %r" % envname)
-
-
 def pytest_cmdline_main(config):
     # Some special tests are not executed in a site environment
     if config.getoption('markexpr') in [ "packaging", "git", "html_gentest" ]:

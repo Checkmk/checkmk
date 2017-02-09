@@ -6120,7 +6120,7 @@ class RulesetCollection(object):
             if not g_rulespecs.exists(varname):
                 continue # don't save unknown rulesets
 
-            if ruleset.is_empty():
+            if ruleset.is_empty_in_folder(folder):
                 continue # don't save empty rule sets
 
             content += ruleset.to_config(folder)

@@ -7,9 +7,6 @@
                           'style': 'size=98%',
                           'target': 'test target',
                           'ty': 'button',
-                          'url': 'www.test.de'},
-            'attributes': {},
-            'variables': {}},
-  'output': {'attributes': {},
-             'html_code': '',
+                          'url': 'www.test.de'}},
+  'output': {'html_code': '',
              'return_value': '<a id=\'TestID\' onclick="do_something(void);" style="size=98%" target="test target" class="test" onfocus="if (this.blur) this.blur();" href="javascript:void(0)" title="Icon Title"><img src="images/button_TestIcon.png" class="icon iconbutton" align=absmiddle /></a>'}}]

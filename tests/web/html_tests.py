@@ -8,6 +8,8 @@ import pprint
 import itertools
 import copy
 import os
+from os import listdir
+from os.path import isfile, join
 
 # internal imports
 from testlib import cmk_path
@@ -71,25 +73,33 @@ class HtmlTest(object):
 
     # convert to json serializable object
     def to_dict(self):
-        return { "function_name": self.function_name, \
-                 "input"        : { "attributes" : self.state_in,\
-                                    "arguments"  : self.arguments,\
-                                    "variables"  : self.add_vars },\
-                 "output"       : { "html_code"  : self.expected_html,\
-                                    "attributes" : self.state_out,\
-                                    "return_value": self.return_value }\
-               }
+        # required attributes
+        d = { "function_name": self.function_name, \
+              "input"        : { "arguments"  : self.arguments, }, \
+              "output"       : { "html_code"  : self.expected_html } }
+        # optional attributes
+        if self.state_in:
+            d["input"]["attributes"] = self.state_in
+        if self.add_vars:
+            d["input"]["variables"] = self.add_vars
+        if self.state_out:
+            d["output"]["attributes"] = self.state_out
+        if self.return_value is not None:
+            d["output"]["return_value"] = self.return_value
+        return d
 
 
     # parse the json serializable object
     def from_dict(self, test):
+        # required attributes
         self.function_name = test["function_name"]
         self.arguments     = test["input"]["arguments"]
-        self.state_in      = test["input"]["attributes"]
-        self.add_vars      = test["input"]["variables"]
         self.expected_html = test["output"]["html_code"]
-        self.state_out     = test["output"]["attributes"]
-        self.return_value  = test["output"]["return_value"]
+        # optional attributes
+        self.state_in      = test["input"].get("attributes", {})
+        self.add_vars      = test["input"].get("variables", {})
+        self.state_out     = test["output"].get("attributes", {})
+        self.return_value  = test["output"].get("return_value", None)
         return self
 
 
@@ -212,9 +222,10 @@ def save_html_test(test_name, test, test_files_dir = "%s/tests/web/unittest_file
     assert all(isinstance(t, HtmlTest) for t in test), test
     if not os.path.exists(test_files_dir):
         os.makedirs(test_files_dir)
-    with open("%s/%s.unittest" % (test_files_dir.rstrip('/'), test_name), "w+") as tfile:
+    file_location = "%s/%s.unittest" % (test_files_dir.rstrip('/'), test_name)
+    with open(file_location, "w+") as tfile:
         tfile.write(pprint.pformat([t.to_dict() for t in test]))
-    return True
+    return file_location
 
 
 # load a unittest file and return a list of test objects
@@ -254,11 +265,10 @@ def load_html_test(test_name, test_files_dir = "%s/tests/web/unittest_files" % c
 #                "javascripts": [['hallo_welt.js'], ['adios_mundo.js']],              #
 #                "stylesheets": [['pages'], ['pages', 'teststylesheet']], }           #
 #   state_in  = {"header_sent": [True, False]}                                        #
-#   tests = get_tests_args_state(function_name, arguments, state_in)                  #
+#   tests = [ build_cmk_test(function_name, args, s_in)                               #
+#             for args in get_cartesian_product(arguments)                            #
+#             for s_in in get_cartesian_product(state_in)]                            #
 #                                                                                     #
-# ATTENTION!!!                                                                        #
-# You should always make sure that the html object gets deleted for each case         #
-# in order to construct correct test cases! Best use the function "build_orig_test"   #
 #######################################################################################
 
 # cartesian product of dictionary value sets
@@ -290,3 +300,91 @@ def get_tests_args(function_name, arguments, state_in=None):
     return tests
 
 
+
+#######################################################################################
+# User interface for creating tests.                                                  #
+#                                                                                     #
+# Call using                                                                          #
+#                                                                                     #
+#       pytest -sv -m html_gentest web/generate_integration.py -k testgen             #
+#                                                                                     #
+#######################################################################################
+
+
+# scans a text for the opening and closing {} braces.
+# returns the intermediate text and the end index of the finding
+def readout_next_dict(text, start_index = 0):
+    begindex     = start_index
+    index        = start_index
+    bracecounter = 0
+    while index < len(text) - 1:
+        if text[index] == '{':
+            if bracecounter == 0:
+                begindex = index
+            bracecounter += 1
+        elif text[index] == '}':
+            bracecounter -= 1
+            if bracecounter == 0:
+                return text[begindex:(index+1)], index + 1
+        index += 1
+    return text, len(text)
+
+
+def readout_gentest_file(filename):
+    text = ''
+    # read filename
+    with open(filename, "r") as f:
+        function_name = ast.literal_eval(f.readline().split('=')[1].strip())
+        text = f.read().lstrip()
+    # read arguments and states
+    arguments, start_index = readout_next_dict(text)
+    states_in, start_index = readout_next_dict(text, start_index)
+    return function_name, arguments, states_in
+
+
+def create_tests_from_file(filename):
+    function_name, arguments, states_in = readout_gentest_file(filename)
+    # evaluate dictionaries
+    print states_in
+    arguments = ast.literal_eval(arguments)
+    states_in = ast.literal_eval(states_in)
+    assert isinstance(arguments, dict)
+    assert isinstance(states_in, dict)
+    # build cartesian products if necessary
+    arguments = get_cartesian_product(arguments)\
+                if all(isinstance(val, list) for val in arguments.values())\
+                else [arguments]
+    states_in = get_cartesian_product(states_in)\
+                if all(isinstance(val, list) for val in states_in.values())\
+                else [states_in]
+    # build tests
+    tests = [build_cmk_test(function_name, args, s_in) for args in arguments for s_in in states_in]
+    # save the tests to file and write out
+    testfile = save_html_test(filename.split('/')[-1].split('.')[0], tests)
+    assert testfile
+    print tools.bcolors.HEADER + tools.bcolors.BOLD\
+            + "\nSUCCESS: Unittestfile %s successfully generated!\n" % testfile\
+            + tools.bcolors.ENDC
+
+
+def generate_tests(filepath = "all", file_ending = ".testgen"):
+    assert filepath, "Specify a test file using the '--testfile $name' option!"
+
+    if filepath.endswith(file_ending):
+        create_tests_from_file(filepath)
+    elif filepath == "all":
+        genpath = cmk_path() + "/tests/web/unittest_generation/"
+        onlyfiles = [f for f in listdir(genpath) if f.endswith(".testgen") and isfile(join(genpath, f))]
+        for testfile in onlyfiles:
+            create_tests_from_file(genpath + testfile)
+    else:
+        assert filepath == "all" or filepath.endswith(file_ending)
+
+
+def run_all_generated_tests(file_ending = ".testgen"):
+    genpath = cmk_path() + "/tests/web/unittest_generation/"
+    onlyfiles = [f for f in listdir(genpath) if f.endswith(".testgen") and isfile(join(genpath, f))]
+    for test_name in onlyfiles:
+        tests = load_html_test(test_name.rstrip(file_ending), test_files_dir = "%s/tests/web/unittest_files" % cmk_path())
+        for test in tests:
+            test.run()

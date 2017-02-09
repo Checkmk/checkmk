@@ -1,0 +1,10 @@
+Title: brocade_fcport: since FW 8.0.* tx/rxwords are no longer available, use values from FCMGMT-MIB instead
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p2
+Date: 1486646748
+
+

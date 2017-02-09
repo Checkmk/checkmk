@@ -1,4 +1,7 @@
 1.4.0i3p2:
+    Checks & Agents:
+    * 4356 FIX: brocade_fcport: since FW 8.0.* tx/rxwords are no longer available, use values from FCMGMT-MIB instead
+
 
 1.4.0i3p1:
     Core & Setup:

@@ -180,14 +180,10 @@ def compare_attributes_of(old, new):
 def compare_and_empty(old, new):
 
     # compare html code
-    compare_html(old.plugged_text, new.plugged_text)
+    compare_html(old.drain(), new.drain())
 
     # compare attribute values
     compare_attributes_of(old, new)
-
-    # empty plugged_text
-    old.drain()
-    new.drain()
 
 
 def _html_generator_test(old, new, fun, reinit=True):
@@ -206,24 +202,13 @@ def _html_generator_test(old, new, fun, reinit=True):
         vars_after = get_attributes(old)
 
         # compare html code
-        compare_html(old.plugged_text, new.plugged_text)
+        old_html = old.drain()
+        new_html = new.drain()
+        compare_html(old_html, new_html)
 
         # compare attribute values
         compare_attributes_of(old, new)
 
-#        write_unittest_file(old, fun, old.plugged_text, vars_before, vars_after)
-
-#     except (NotImplementedError) as err:
-# 
-#         trace = traceback.format_exc().splitlines()
-#         print bcolors.WARNING + "WARNING: " + bcolors.ENDC\
-#               + trace[-1] + " in class " + bcolors.OKBLUE\
-#               + ''.join(s.strip('(').strip(')') for s in re.findall(r'\(.*\)', trace[2]))\
-#               + bcolors.ENDC
-#         print '\n'.join(trace[5:-1])
-# 
-#     finally:
-# 
         if reinit:
             old.__init__()
             new.__init__()

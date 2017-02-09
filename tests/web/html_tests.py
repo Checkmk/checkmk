@@ -177,7 +177,7 @@ def eval_func(html, function_name, arguments):
     html.plug()
     func = getattr(html, function_name)
     return_value = func(**arguments)
-    html_code = html.plugged_text
+    html_code = html.drain()
     html.unplug()
     return return_value, html_code
 

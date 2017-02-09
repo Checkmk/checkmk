@@ -42,7 +42,11 @@ factory_settings['kaspersky_av_client_default_levels'] = {
 def parse_kaspersky_av_client(info):
     now = time.time()
     parsed = {}
+
     for line in info:
+        if line[1] == 'Missing':
+            continue
+
         timestamp_text = line[1] + " " + line[2]
         # We assume that the timestamp is to be interpreted in the timezone of
         # the Check_MK server. This might be a problem, if e.g. the agent is located
@@ -54,7 +58,10 @@ def parse_kaspersky_av_client(info):
 
         elif line[0] == "Fullscan":
             parsed['fullscan_age'] = age
-            parsed['fullscan_failed'] = line[3] != "0"
+
+            # handle state of last fullscan if provided
+            if len(line) == 4:
+                parsed['fullscan_failed'] = line[3] != "0"
 
     return parsed
 

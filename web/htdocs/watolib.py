@@ -3333,7 +3333,13 @@ def create_nagvis_backends(sites):
 
         # Handle special data format of livestatus proxy config
         if type(site['socket']) == tuple:
-            socket = 'tcp:%s:%d' % site['socket'][1]['socket']
+            if type(site['socket'][1]['socket']) == tuple:
+                socket = 'tcp:%s:%d' % site['socket'][1]['socket']
+            elif site['socket'][1]['socket'] is None:
+                socket = 'unix:%s' % cmk.paths.livestatus_unix_socket
+            else:
+                raise NotImplementedError()
+
         else:
             socket = site['socket']
 

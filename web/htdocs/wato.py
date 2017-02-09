@@ -9388,14 +9388,17 @@ def mode_edit_site(phase):
                 TextAscii(label = _("Host:"), allow_empty = False, size=15),
                 Integer(label = _("Port:"), minvalue=1, maxvalue=65535, default_value=6557),
     ])
+
     conn_choices = [
-        ( None, _("Connect to the local site") ),
-        ( "tcp",   _("Connect via TCP"), vs_tcp_port),
-        ( "unix",  _("Connect via UNIX socket"), TextAscii(
+        (None,   _("Connect to the local site")),
+        ("tcp",  _("Connect via TCP"), vs_tcp_port),
+        ("unix", _("Connect via UNIX socket"), TextAscii(
             label = _("Path:"),
             size = 40,
-            allow_empty = False)),
+            allow_empty = False)
+        ),
     ]
+
     if config.liveproxyd_enabled:
         conn_choices[2:2] = [
         ( "proxy", _("Use Livestatus Proxy-Daemon"),
@@ -9403,7 +9406,17 @@ def mode_edit_site(phase):
               optional_keys = False,
               columns = 1,
               elements = [
-                  ( "socket", vs_tcp_port ),
+                  ("socket", Alternative(
+                      title = _("Connect to"),
+                      style = "dropdown",
+                      elements = [
+                          FixedValue(None,
+                              title = _("Connect to the local site"),
+                              totext = "",
+                          ),
+                          vs_tcp_port,
+                      ],
+                  )),
                   ( "channels",
                     Integer(
                         title = _("Number of channels to keep open"),

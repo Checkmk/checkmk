@@ -83,6 +83,15 @@ def werk_components():
         "inline-snmp" :   _("Inline-SNMP"),
         "agents" :        _("Agent Bakery"),
         "metrics" :       _("Metrics System"),
+
+        # CMK-OMD
+        "omd":            _("Site Management"),
+        "rpm":            _("RPM Packaging"),
+        "deb":            _("DEB Packaging"),
+        "nagvis":         _("NagVis"),
+        "inline-snmp":    _("Inline-SNMP"),
+        "packages":       _("Other Components"),
+        "distros":        _("Linux Distributions"),
     }
 
 

@@ -3185,7 +3185,7 @@ def do_snmpwalk_on(hostname, filename):
             ".1.3.6.1.4.1"  # SNMPv2-SMI::enterprises
         ] + opt_extra_oids
 
-    for oid in oids_to_walk:
+    for oid in sorted(oids_to_walk, key = lambda x: map(int, x.strip(".").split("."))):
         try:
             console.verbose("Walk on \"%s\"..." % oid)
 

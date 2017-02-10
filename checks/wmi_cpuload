@@ -31,9 +31,9 @@ def check_wmi_cpuload(item, params, parsed):
     # unlike cpu load this does not include processes currently being processed,
     # so unless to cpu is (almost) fully utilized, this will be 0.
 
-    load = int(parsed["system_perf"].get(0, "ProcessorQueueLength"))
+    load      = int(parsed["system_perf"].get(0, "ProcessorQueueLength"))
     this_time = get_wmi_time(parsed["system_perf"], 0)
-    load5min = get_average("load_5min", this_time, load, 5)
+    load5min  = get_average("load_5min", this_time, load, 5)
     load15min = get_average("load_15min", this_time, load, 15)
 
     try:
@@ -43,7 +43,7 @@ def check_wmi_cpuload(item, params, parsed):
 
     try:
         cores = int(computer_system.get(0, "NumberOfLogicalProcessors"))
-    except ValueError:
+    except (ValueError, MKGeneralException):
         # NumberOfLogicalProcessors can be an empty string, not sure why
         cores = int(computer_system.get(0, "NumberOfProcessors"))
 

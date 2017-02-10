@@ -36,25 +36,26 @@ def test_enterprise_werks(site):
 #    assert cmk_omd_werks
 
 def test_write_precompiled_werks(tmpdir, site, monkeypatch):
-    tmp_path = "%s" % tmpdir.join("test-werks")
+    tmp_dir = "%s" % tmpdir
 
     cmk_werks = cmk.werks.load_raw_files(os.path.join(testlib.cmk_path(), ".werks"))
     assert len(cmk_werks) > 1000
     assert [ w for w in cmk_werks.keys() if w >= 7500 ] == []
+
+    cmk.werks.write_precompiled_werks(os.path.join(tmp_dir, "werks"), cmk_werks)
 
     if site.version.edition() == "raw":
         cmc_werks = cmk.werks.load_raw_files(os.path.join(testlib.cmc_path(), ".werks"))
         assert len(cmc_werks) > 1000
         assert [ w for w in cmc_werks.keys() if  w < 8000 ] == []
 
-    werks = {}
-    werks.update(cmk_werks)
-    if site.version.edition() == "raw":
-        werks.update(cmc_werks)
+        cmk.werks.write_precompiled_werks(os.path.join(tmp_dir, "werks-enterprise"), cmc_werks)
 
-    cmk.werks.write_precompiled_werks(tmp_path, werks)
-
-    monkeypatch.setattr(cmk.werks, "_compiled_werks_path", lambda: tmp_path)
+    monkeypatch.setattr(cmk.werks, "_compiled_werks_dir", lambda: tmp_dir)
     werks_loaded = cmk.werks.load()
 
-    assert werks == werks_loaded
+    merged_werks = cmk_werks
+    if site.version.edition() == "raw":
+        merged_werks.update(cmc_werks)
+
+    assert merged_werks == werks_loaded

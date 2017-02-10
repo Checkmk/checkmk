@@ -82,7 +82,8 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/checkhelper/,*.cc *.h))
 
-WERKS              := $(wildcard $(addsuffix /.werks/[0-9]*,. enterprise))
+WERKS              := $(wildcard .werks/[0-9]*)
+ENTERPRISE_WERKS   := $(wildcard enterprise/.werks/[0-9]*)
 
 JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/js/*.js,. enterprise)))
 JAVASCRIPT_MINI    := $(patsubst %.js,%_min.js,$(JAVASCRIPT_SOURCES))
@@ -197,7 +198,7 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	@echo "=============================================================================="
 
 .werks/werks: $(WERKS)
-	PYTHONPATH=. python scripts/precompile-werks
+	PYTHONPATH=. python scripts/precompile-werks .werks .werks/werks
 
 # NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
 # so we do things in a slightly complicated way.
@@ -211,12 +212,16 @@ mk-livestatus-$(VERSION).tar.gz:
 	rm -rf mk-livestatus-$(VERSION)
 
 ifeq ($(ENTERPRISE),yes)
+
+enterprise/.werks/werks: $(ENTERPRISE_WERKS)
+	PYTHONPATH=. python scripts/precompile-werks enterprise/.werks enterprise/.werks/werks
+
 dist: cmc-$(VERSION).tar.gz
 
 # We currently fake a package for cmc. Ugly...
-cmc-$(VERSION).tar.gz: config.h
-	make -C livestatus distclean
-	make -C enterprise/core distclean
+cmc-$(VERSION).tar.gz: config.h enterprise/.werks/werks
+	$(MAKE) -C livestatus distclean
+	$(MAKE) -C enterprise/core distclean
 	rm -rf cmc-$(VERSION)
 	mkdir cmc-$(VERSION)
 	tar cf - $(TAROPTS) \
@@ -239,6 +244,7 @@ cmc-$(VERSION).tar.gz: config.h
           m4 | tar xf - -C cmc-$(VERSION)
 	mv cmc-$(VERSION)/enterprise/skel{,.permissions} cmc-$(VERSION)
 	mv cmc-$(VERSION)/enterprise/LIVEPROXYD.hook cmc-$(VERSION)
+	cp enterprise/.werks/werks cmc-$(VERSION)/werks
 	sed -i '1 i\include ../../Makefile.omd' cmc-$(VERSION)/Makefile
 	cd cmc-$(VERSION) && tar czf ../cmc-$(VERSION).tar.gz $(TAROPTS) .bugs *
 	rm -rf cmc-$(VERSION)
@@ -282,6 +288,8 @@ install:
 	install -m 644 enterprise/ChangeLog enterprise/EULA-* $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_enterprise/
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 enterprise/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk_enterprise
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
+	install -m 644 werks-cmc $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
 endif
 
 packages:
@@ -356,7 +364,9 @@ clean:
 	rm -rf api clang-analyzer compile_commands.json dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
-	       precompiled cache web/htdocs/js/*_min.js .werks/werks
+	       precompiled cache web/htdocs/js/*_min.js \
+	       .werks/werks \
+	       enterprise/.werks/werks
 	find -name "*~" | xargs rm -f
 
 mrproper:

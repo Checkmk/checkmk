@@ -637,7 +637,10 @@ def get_tactical_overview_data(extra_filter_headers):
         if notdata is None:
             notdata = [0]
 
-        event_data = sites.live().query_summed_stats(event_query)
+        try:
+            event_data = sites.live().query_summed_stats(event_query)
+        except livestatus.MKLivestatusNotFoundError:
+            event_data = [0, 0, 0]
 
     except livestatus.MKLivestatusNotFoundError:
         return None, None, None, None

@@ -1,0 +1,10 @@
+Title: Tactical overview: Show data of core even when Event Console is currently not reachable
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0i4
+Date: 1486713568
+Class: fix
+
+The data of the core and failed notifications are shown even when the Event Console
+is not running

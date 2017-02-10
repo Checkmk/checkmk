@@ -92,27 +92,28 @@ syslog_facilities = [ "kern", "user", "mail", "daemon", "auth", "syslog", "lpr",
 # - maybe add a field into the event simulator
 
 event_columns = [
-    ( "event_id",              1 ),
-    ( "event_count",           1 ),
-    ( "event_text",           "" ),
-    ( "event_first",         0.0 ),
-    ( "event_last",          0.0 ),
-    ( "event_comment",        "" ),
-    ( "event_sl",              0 ), # filter fehlt
-    ( "event_host",           "" ),
-    ( "event_contact",        "" ),
-    ( "event_application",    "" ),
-    ( "event_pid",             0 ),
-    ( "event_priority",        5 ),
-    ( "event_facility",        1 ),
-    ( "event_rule_id",        "" ),
-    ( "event_state",           0 ),
-    ( "event_phase",          "" ),
-    ( "event_owner",          "" ),
-    ( "event_match_groups",   "" ),
-    ( "event_contact_groups", "" ),
-    ( "event_ipaddress",      "" ), # introduced in 1.2.7
-    ( "event_orig_host",      "" ),
+    ( "event_id",                          1 ),
+    ( "event_count",                       1 ),
+    ( "event_text",                       "" ),
+    ( "event_first",                     0.0 ),
+    ( "event_last",                      0.0 ),
+    ( "event_comment",                    "" ),
+    ( "event_sl",                          0 ), # filter fehlt
+    ( "event_host",                       "" ),
+    ( "event_contact",                    "" ),
+    ( "event_application",                "" ),
+    ( "event_pid",                         0 ),
+    ( "event_priority",                    5 ),
+    ( "event_facility",                    1 ),
+    ( "event_rule_id",                    "" ),
+    ( "event_state",                       0 ),
+    ( "event_phase",                      "" ),
+    ( "event_owner",                      "" ),
+    ( "event_match_groups",               "" ),
+    ( "event_contact_groups",             "" ),
+    ( "event_ipaddress",                  "" ), # introduced in 1.2.7
+    ( "event_orig_host",                  "" ),
+    ( "event_contact_groups_precedence",  "host" ), # introduced in 1.4.0b1
 ]
 
 grepping_filters = [

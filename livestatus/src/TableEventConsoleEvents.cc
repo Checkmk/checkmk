@@ -108,6 +108,9 @@ void TableEventConsoleEvents::addColumns(
     table->addColumn(make_unique<ListEventConsoleColumn>("event_contact_groups",
                                                          "Contact groups"));
     table->addColumn(make_unique<StringEventConsoleColumn>(
+        "event_contact_groups_precedence",
+        "Whether or not the host- or rule groups have precedence"));
+    table->addColumn(make_unique<StringEventConsoleColumn>(
         "event_ipaddress", "The IP address where the event originated"));
 
     TableHosts::addColumns(table, "host_", DANGEROUS_OFFSETOF(Row, _host), -1,

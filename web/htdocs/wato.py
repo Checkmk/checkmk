@@ -2746,6 +2746,8 @@ class ModeDiscovery(WatoMode):
 
 
     def buttons(self):
+        global_buttons()
+
         html.context_button(_("Folder"),
             folder_preserving_link([("mode", "folder")]), "back")
 

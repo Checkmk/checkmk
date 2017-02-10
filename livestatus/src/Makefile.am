@@ -158,13 +158,13 @@ livestatus_so_SOURCES = \
         strutil.cc \
         waittriggers.cc
 
-livestatus_so_CPPFLAGS = -I..
+livestatus_so_CPPFLAGS = -I.. @BOOST_CPPFLAGS@
 livestatus_so_CXXFLAGS = -fPIC
 livestatus_so_CFLAGS   = -fPIC
 
 livestatus.o: $(livestatus_so_OBJECTS) $(livestatus_so_DEPENDENCIES)
 	-rm -f plugin.so
-	$(CXX) $(LDFLAGS) -s -fPIC -shared $(livestatus_so_OBJECTS) -o $@ -lpthread -static-libstdc++
+	$(CXX) $(LDFLAGS) -s -fPIC -shared $(livestatus_so_OBJECTS) -o $@ -lpthread -static-libstdc++ @BOOST_LDFLAGS@
 
 all-local: livestatus.o
 

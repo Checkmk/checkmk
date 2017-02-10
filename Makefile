@@ -384,12 +384,22 @@ ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	  autoreconf --install --include=m4
 
 config.status: ar-lib compile config.guess config.sub install-sh missing depcomp configure
-	if test -f config.status; then \
+	@if test -f config.status; then \
+	  echo "update config.status by reconfiguring in the same conditions" ; \
 	  ./config.status --recheck; \
 	else \
-	  ./configure CXXFLAGS="$(CXX_FLAGS)" \
-            $(shell test -d ../rrdtool/rrdtool-1.5.4/src/.libs && echo LDFLAGS="-L$(realpath ../rrdtool/rrdtool-1.5.4/src/.libs)") \
-            $(shell test ! -d /usr/include/boost -a -d /usr/include/boost141/boost && echo "CPPFLAGS=-I/usr/include/boost141"); \
+	  if test -d $(abspath ../boost/local) ; then \
+	    BOOST_OPT="--with-boost=$(abspath ../boost/local)" ; \
+	  elif test -d $(abspath ../cmk-omd/packages/boost/local) ; then \
+	    BOOST_OPT="--with-boost=$(abspath ../cmk-omd/packages/boost/local)" ; \
+	  elif test ! -d /usr/include/boost -a -d /usr/include/boost141/boost ; then \
+	    BOOST_OPT="CPPFLAGS=-I/usr/include/boost141" ; \
+	  else \
+	    BOOST_OPT="" ; \
+	  fi ; \
+	  RRD_OPT="$(shell test -d ../rrdtool/rrdtool-1.5.4/src/.libs && echo LDFLAGS="-L$(realpath ../rrdtool/rrdtool-1.5.4/src/.libs)")" ; \
+	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" $$BOOST_OPT $$RRD_OPT" ; \
+	  ./configure CXXFLAGS="$(CXX_FLAGS)" $$BOOST_OPT $$RRD_OPT ; \
 	fi
 
 configure: $(CONFIGURE_DEPS)

@@ -44,9 +44,13 @@ except NameError:
     _ = lambda x: x # Fake i18n when not available
 
 
+def _compiled_werks_path():
+    return cmk.paths.share_dir + "/werks/werks"
+
+
 def load():
     werks = {}
-    for werk_id, werk in json.load(open(cmk.paths.share_dir + "/werks/werks")).items():
+    for werk_id, werk in json.load(open(_compiled_werks_path())).items():
         werks[int(werk_id)] = werk
     return werks
 

@@ -25,8 +25,12 @@ def test_paths_in_site(site):
 def test_no_path_variable_none(monkeypatch):
     monkeypatch.setitem(os.environ, 'OMD_ROOT', '/omd/sites/dingeling')
     reload(cmk.paths)
+
     for var_name in _all_path_names():
         value = cmk.paths.__dict__[var_name]
         assert value != None
         assert type(value) == str
         assert value.startswith("/omd/sites/dingeling")
+
+    monkeypatch.undo()
+    reload(cmk.paths)

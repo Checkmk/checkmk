@@ -851,6 +851,75 @@ class CMKWebSession(WebSession):
         assert hostname not in hosts
 
 
+    def get_all_groups(self, group_type):
+        result = self._api_request("webapi.py?action=get_all_%sgroups" % group_type, {})
+        return result
+
+
+    def add_group(self, group_type, group_name, attributes, expect_error = False):
+        request_object = {
+            "groupname" : group_name
+        }
+        request_object.update(attributes)
+
+        result = self._api_request("webapi.py?action=add_%sgroup" % group_type, {
+            "request": json.dumps(request_object)}, expect_error = expect_error
+        )
+
+        assert result == None
+
+
+    def edit_group(self, group_type, group_name, attributes, expect_error = False):
+        request_object = {
+            "groupname" : group_name
+        }
+        request_object.update(attributes)
+
+        result = self._api_request("webapi.py?action=edit_%sgroup" % group_type, {
+            "request": json.dumps(request_object)}, expect_error = expect_error
+        )
+
+        assert result == None
+
+
+    def delete_group(self, group_type, group_name, expect_error = False):
+        result = self._api_request("webapi.py?action=delete_%sgroup" % group_type, {
+            "request": json.dumps({
+                "groupname" : group_name,
+            })}, expect_error = expect_error
+        )
+
+        assert result == None
+
+
+    def get_all_users(self):
+        return self._api_request("webapi.py?action=get_all_users", {})
+
+
+    def add_htpasswd_users(self, users):
+        result = self._api_request("webapi.py?action=add_users", {
+            "request": json.dumps({"users": users})
+        })
+        assert result == None
+
+
+    def edit_htpasswd_users(self, users):
+        result = self._api_request("webapi.py?action=edit_users", {
+            "request": json.dumps({"users": users})
+        })
+
+        assert result == None
+
+
+    def delete_htpasswd_users(self, userlist):
+        result = self._api_request("webapi.py?action=delete_users", {
+            "request": json.dumps({
+                "users" : userlist
+            }),
+        })
+        assert result == None
+
+
     def discover_services(self, hostname, mode=None):
         request = {
             "hostname"   : hostname,

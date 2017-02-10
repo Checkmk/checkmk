@@ -24,41 +24,66 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-steelhead_counter_names = {
-    1: "optimized",
-    2: "passthrough",
-    3: "halfOpened",
-    4: "halfClosed",
-    5: "established",
-    6: "active",
-    7: "total",
-}
-
 def inventory_steelhead_connections(info):
     if len(info) >= 7:
-        return [(None, None)]
+        return [(None, {})]
 
 
 def check_steelhead_connections(item, params, info):
+    if params is None:
+        params = {}
+
+    map_counter_types = {
+        "1" : "optimized",
+        "2" : "passthrough",
+        "3" : "halfOpened",
+        "4" : "halfClosed",
+        "5" : "established",
+        "6" : "active",
+        "7" : "total", }
+
     values = {}
-    for line in info:
-        oid, value = line
-        oidparts = oid.strip('.').split('.')
-        itemname = steelhead_counter_names.get(int(oidparts[11]), "unknown")
-        values[itemname] = int(value)
+    for oid, value in info:
+        counter_type = oid.strip('.').split('.')[-2]
+        key = map_counter_types.get(counter_type, "unknown")
+        values[key] = int(value)
 
-    perfdata = []
-    infos = []
-    # leave out total and optimized since they can be computed
-    for v in [ "active", "established", "halfOpened", "halfClosed", "passthrough" ]:
-        infos.append("%s: %d" % (v, values[v]))
-        perfdata.append((v, values[v]))
-    return (0, "%d connections: %s" % (values["total"], ", ".join(infos)), perfdata)
+    # leave out total and optimized in perfdata since they can be computed
+    for key, title, has_perf in [
+        ("total",       "Total connections", False),
+        ("passthrough", "Passthrough",       True),
+        ("optimized",   "Optimized",         False),
+        ("active",      "Active",            True),
+        ("established", "Established",       True),
+        ("halfOpened",  "Half opened",       True),
+        ("halfClosed",  "Half closed",       True),
+        ]:
+        value = values[key]
+        if has_perf:
+            perfdata = [(key, value)]
+        else:
+            perfdata = []
+
+        infotext = "%s: %d" % (title, value)
+        state = 0
+        if params.get(key):
+            warn, crit = params[key]
+            if value >= crit:
+                state = 2
+            elif value >= warn:
+                state = 1
+            if state > 0:
+                infotext += " (warn/crit at %d/%d)" % (warn, crit)
+
+        yield state, infotext, perfdata
 
 
-check_info['steelhead_connections'] = (check_steelhead_connections, "Connections", 1, inventory_steelhead_connections)
-
-snmp_info['steelhead_connections']  = ( ".1.3.6.1.4.1.17163.1.1.5", [ OID_STRING, 2 ])
-
-snmp_scan_functions['steelhead_connections'] = \
-    lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.17163.")
+check_info['steelhead_connections'] = {
+    "inventory_function"    : inventory_steelhead_connections,
+    "check_function"        : check_steelhead_connections,
+    "service_description"   : "Connections",
+    "has_perfdata"          : True,
+    "snmp_info"             : (".1.3.6.1.4.1.17163.1.1.5", [ OID_STRING, 2 ]),
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.17163."),
+    "group"                 : "steelhead_connections",
+}

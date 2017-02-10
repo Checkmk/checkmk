@@ -9,8 +9,7 @@ description:
  up into {optimized} and {passthrough}. The optimized connections
  are divided into {active}, {established}, {half opened} and {half closed}.
 
- Currently there is no way to apply levels and the check is always {OK}.
-
+ For all connection types upper levels can be set. There are no default levels.
 
 inventory:
  One service per Riverbed Steelhead appliance will be created.

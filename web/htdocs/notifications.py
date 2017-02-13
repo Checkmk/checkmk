@@ -123,7 +123,17 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
         query += extra_headers
 
     if stat_only:
-        return sites.live().query_summed_stats(query)
+        result = sites.live().query_summed_stats(query)
+        if result is None:
+            result = [0] # Normalize the result when no site answered
+
+        if result[0] == 0 and not sites.live().dead_sites():
+            # In case there are no errors and all sites are reachable:
+            # advance the users acknowledgement time
+            acknowledge_failed_notifications(time.time())
+
+        return result
+
     else:
         return sites.live().query(query)
 

@@ -1,0 +1,10 @@
+Title: mssql_counters: ignore invalid lines
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3p2
+Date: 1486999784
+
+

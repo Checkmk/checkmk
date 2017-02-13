@@ -2,6 +2,7 @@
     Checks & Agents:
     * 4356 FIX: brocade_fcport: since FW 8.0.* tx/rxwords are no longer available, use values from FCMGMT-MIB instead
     * 4358 FIX: wmi_cpuload: fixed exception handling
+    * 4359 FIX: mssql_counters: ignore invalid lines
 
 
 1.4.0i3p1:

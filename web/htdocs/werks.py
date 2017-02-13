@@ -80,7 +80,7 @@ def werk_components():
         "cmc" :           _("The Check_MK Micro Core"),
         "setup" :         _("Setup, Site Management"),
         "config" :        _("Configuration generation"),
-        "inline-snmp" :   _("Inline-SNMP"),
+        "inline-snmp" :   _("Inline SNMP"),
         "agents" :        _("Agent Bakery"),
         "metrics" :       _("Metrics System"),
 
@@ -89,7 +89,6 @@ def werk_components():
         "rpm":            _("RPM Packaging"),
         "deb":            _("DEB Packaging"),
         "nagvis":         _("NagVis"),
-        "inline-snmp":    _("Inline-SNMP"),
         "packages":       _("Other Components"),
         "distros":        _("Linux Distributions"),
     }

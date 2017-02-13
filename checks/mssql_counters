@@ -37,10 +37,14 @@
 # MSSQL_SQLEXPRESS:Databases master Transactions/sec 13733
 # MSSQL_SQLEXPRESS:Databases master Percent_Log_Used 57
 # MSSQL_SQLEXPRESS:Databases master Log_File(s)_Size_(KB)
+# FOOBAR 170
+
 
 def mssql_counters_item(line, add_counter_name):
-    obj, counter, instance = line[:3]
+    if len(line) < 3:
+        return None
 
+    obj, counter, instance = line[:3]
     if obj.endswith(':Databases'):
         obj = obj[:-10]
 
@@ -48,6 +52,7 @@ def mssql_counters_item(line, add_counter_name):
         return obj + ' ' + instance + ' ' + counter
     else:
         return obj + ' ' + instance
+
 
 def inventory_mssql_counters(info, want_counters, perc_w_base, add_counter_name, dflt = None):
     inventory = []

@@ -1,4 +1,7 @@
 1.2.8p18:
+    Checks & Agents:
+    * 4359 FIX: mssql_counters: ignore invalid lines
+
 
 1.2.8p17:
     Checks & Agents:

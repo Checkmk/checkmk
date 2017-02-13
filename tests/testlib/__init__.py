@@ -460,7 +460,7 @@ class Site(object):
     def switch_to_site_user(self):
         env_vars = []
         if "WORKSPACE" in os.environ:
-            env_vars.append("WORKSPACE=%s" % os.environ["WORKSPACE"])
+            env_vars.append("WORKSPACE=\"%s\"" % os.environ["WORKSPACE"])
 
         cmd = subprocess.list2cmdline(env_vars + sys.argv + [ cmk_path() + "/tests" ])
         args = [ "/usr/bin/sudo",  "--", "/bin/su", "-l", self.id, "-c", cmd ]

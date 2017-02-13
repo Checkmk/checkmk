@@ -94,7 +94,6 @@ class RequestTimeout(MKException):
     pass
 
 
-# TODO: is contextlib supported by older versions?
 from contextlib import contextmanager
 
 # Plug context

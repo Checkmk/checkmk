@@ -407,7 +407,7 @@ class WithPermissionsAndAttributes(WithPermissions):
 #   '----------------------------------------------------------------------'
 class BaseFolder(WithPermissionsAndAttributes):
     def __init__(self):
-        WithPermissions.__init__(self)
+        WithPermissionsAndAttributes.__init__(self)
 
 
     def hosts(self):
@@ -664,6 +664,7 @@ class Folder(BaseFolder):
         self._parent = parent_folder
         self._subfolders = {}
         self._choices_for_moving_host = None
+
         if folder_path != None:
             self._init_by_loading_existing_directory(folder_path)
         else:

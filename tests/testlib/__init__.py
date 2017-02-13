@@ -458,11 +458,11 @@ class Site(object):
     # Check_MK is now the site, so all tests that somehow rely on the environment should be
     # executed this way.
     def switch_to_site_user(self):
-        env_vars = []
+        env_var_str = ""
         if "WORKSPACE" in os.environ:
-            env_vars.append("WORKSPACE=\"%s\"" % os.environ["WORKSPACE"])
+            env_var_str = "WORKSPACE='%s' " % os.environ["WORKSPACE"]
 
-        cmd = subprocess.list2cmdline(env_vars + sys.argv + [ cmk_path() + "/tests" ])
+        cmd = env_var_str + subprocess.list2cmdline(sys.argv + [ cmk_path() + "/tests" ])
         args = [ "/usr/bin/sudo",  "--", "/bin/su", "-l", self.id, "-c", cmd ]
         return subprocess.call(args)
 

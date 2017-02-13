@@ -878,9 +878,13 @@ class HTMLTester(RequestHandlerTester):
 
 
     def drain(self):
-            t = self.plugged_text
-            self.plugged_text = ''
-            return t
+        t = self.plugged_text
+        self.plugged_text = ''
+        return t
+
+
+    def unplug(self):
+        self.plugged_text = ""
 
 
     def add_custom_style_sheet(self):

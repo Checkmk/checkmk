@@ -203,6 +203,8 @@ try:
     cursor = db_connection.cursor()
 
 except Exception, e:
+    if opt_debug:
+        raise
     if len(e.args) > 1:
         sys.stderr.write("UNKNOWN - Error while connecting to database: [%d] %s\n" % (e.args[0], e.args[1]))
     else:

@@ -2,6 +2,9 @@
     Checks & Agents:
     * 4331 FIX: check_sql: Is now printing FreeTDS debug messages in verbose mode (with MSSQL)
 
+    Multisite:
+    * 4365 FIX: Service availability: Host down could not be rewritten to other states like CRIT
+
 
 1.4.0b1:
     Core & Setup:

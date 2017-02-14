@@ -1,0 +1,10 @@
+Title: Service availability: Host down could not be rewritten to other states like CRIT
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0b2
+Date: 1487081636
+
+

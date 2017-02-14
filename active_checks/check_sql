@@ -30,7 +30,9 @@
 #  https://pypi.python.org/pypi/ibm_db
 
 
-import sys, getopt
+import sys
+import getopt
+import os
 
 
 def usage():
@@ -166,6 +168,9 @@ try:
             db=opt_name, user=opt_user, passwd=opt_password )
 
     elif opt_dbms == "mssql":
+        if opt_verbose:
+            os.environ["TDSDUMP"] = "stdout"
+
         import pymssql  # mssql driver
         db = pymssql
         if opt_port == None:

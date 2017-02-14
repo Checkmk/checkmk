@@ -2,7 +2,7 @@ Title: Fix detection of replication mode if EC is distributed
 Level: 1
 Component: ec
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482244177
 Class: fix
 

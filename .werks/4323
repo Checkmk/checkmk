@@ -2,7 +2,7 @@ Title: Fixed wrong %s in notification rule title deletion confirm dialog
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1486393832
 Class: fix
 

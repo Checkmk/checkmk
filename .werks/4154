@@ -2,7 +2,7 @@ Title: Do not send notifications if host found and currently in downtime
 Level: 2
 Component: ec
 Compatible: incomp
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482144072
 Class: feature
 

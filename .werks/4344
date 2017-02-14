@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: incomp
 State: unknown
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1485955329
 
 Fixed wrong value calculation for filesystem usage. Now the factor 1024

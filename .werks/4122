@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1483005691
 
 SVC firmware >= 7.8 provides more output than former firmware versions. The additional data shows information about total and online secondary expander modules.

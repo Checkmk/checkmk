@@ -2,7 +2,7 @@ Title: statgrab_disk: Works now in the same way as other diskstat check plugins
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1485251642
 Class: feature
 

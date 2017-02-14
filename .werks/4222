@@ -2,7 +2,7 @@ Title: Services of host page: Fixed encoding issue for hosts with umlauts in ali
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482490622
 Class: fix
 

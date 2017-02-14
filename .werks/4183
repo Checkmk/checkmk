@@ -2,7 +2,7 @@ Title: ibm_imm_fan: Fixed crash if fan speed is "unavailable"
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1483438073
 Class: fix
 

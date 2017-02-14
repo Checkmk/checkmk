@@ -2,7 +2,7 @@ Title: solaris_addresses, solaris_routes, statgrab_net: new solaris inventory pl
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1485252287
 Class: feature
 

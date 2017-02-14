@@ -2,7 +2,7 @@ Title: Availability now avoids pending states for times before new hosts or serv
 Level: 1
 Component: bi
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1483958830
 Class: fix
 

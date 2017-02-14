@@ -4,7 +4,7 @@ Component: wato
 Class: feature
 Compatible: compat
 State: unknown
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1484053905
 
 It is now possible to manually lock the WATO configuration for modifications and set

@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: incomp
 State: unknown
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482225291
 
 Previously, the mk_jolokia plugin would default to the port as

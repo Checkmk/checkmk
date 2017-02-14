@@ -2,7 +2,7 @@ Title: Windows Agent: Reduced number of needless WMI Queries when Skype performa
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482313422
 Class: feature
 

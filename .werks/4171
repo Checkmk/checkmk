@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482132240
 
 Some power supplies report no power or voltage if the device state is failed.

@@ -5,6 +5,9 @@
     * 4192 FIX: df: Fixed handling of incomplete information about inodes...
     * 4359 FIX: mssql_counters: ignore invalid lines
 
+    Multisite:
+    * 4365 FIX: Service availability: Host down could not be rewritten to other states like CRIT
+
 
 1.2.8p17:
     Checks & Agents:

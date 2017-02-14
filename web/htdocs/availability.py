@@ -704,7 +704,9 @@ def compute_availability(what, av_rawdata, avoptions):
                     else:
                         s = "in_downtime"
                 elif what != "host" and span["host_down"] and avoptions["consider"]["host_down"]:
-                    s = "host_down"
+                    # Reclassification due to state grouping
+                    s = avoptions["state_grouping"].get("host_down", "host_down")
+
                 elif span["is_flapping"] and avoptions["consider"]["flapping"]:
                     s = "flapping"
                 else:

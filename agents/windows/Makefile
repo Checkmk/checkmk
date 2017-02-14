@@ -27,12 +27,12 @@ SHELL         = /bin/bash
 VERSION       = 1.4.0b2
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
-GIT_REV       = $(shell git describe --abbrev=4 --dirty --always --tags)
+GIT_REV       = $(shell git rev-parse --verify --short HEAD)
 
 DEPDIR = depend
 DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.Td
 
-COMMON_OPTS   = -Wall -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++14 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO -DVCS_REV=\"$(GIT_REV)\"
+COMMON_OPTS   = -Wall -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++14 -gdwarf-2 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO -DVCS_REV=\"$(VERSION)-$(GIT_REV)\"
 COPTIONS      = -O2 -Wformat=2 -Werror $(COMMON_OPTS) $(DEPFLAGS)
 # for debug builds
 #COPTIONS      = -O0 $(COMMON_OPTS) $(DEPFLAGS)

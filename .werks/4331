@@ -1,0 +1,10 @@
+Title: check_sql: Is now printing FreeTDS debug messages in verbose mode (with MSSQL)
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0b2
+Date: 1487080179
+
+

@@ -1,0 +1,26 @@
+Title: agent_3par: New special agent for HPE 3PAR
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.5.0i1
+Date: 1487068767
+Class: feature
+
+Check_MK is now able to monitor HPE 3PAR devices. At the moment it is only
+possible to monitor the following sections of the api:
+cpgs
+volumes
+hosts
+capacity
+system
+ports
+All other sections will not lead into the discovery of additional services.
+
+The associated checkplugins are:
+3par_capacity
+3par_cpgs
+3par_cpgs.usage
+3par_hosts
+3par_ports
+3par_system
+3par_volumes

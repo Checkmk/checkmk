@@ -1,0 +1,16 @@
+title: HPE 3PAR: Ports
+agents: 3par
+catalog: hw/storagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This check displays the state of a connection, the associated
+ WWN and the mode. If there is information about it, it will
+ display also the failover state and the label of this port.
+
+ The service state depends on the link and failover state.
+ You can define the service state for each possible value a port can
+ have.
+
+inventory:
+ One service is created for each port connection.

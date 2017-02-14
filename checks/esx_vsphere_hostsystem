@@ -399,7 +399,22 @@ def esx_vsphere_multipath_convert(info):
     for path, state in data:
         # ESX 6.0 uses a different format, e.g "vmhba32:C0:T0:L0 active"
         if len(path.split(":")) == 4:
-            real_path = ":".join(path.split(":")[:3])
+            hba_num = int(path.split(":")[0].replace("vmhba", ""))
+            real_path = path.split(":")[-1]
+
+            # vmware specificies three different types of LUNs. Physical LUNs will
+            # reserves vmhba number 0-31. The other two reserve numbers of base64.
+            # The lower 32 range is reserved for pseudo logical LUNs. The upper 32
+            # for logical LUNs. e.g. 32-63 for pseudo logical LUNs like USB and
+            # 64-95 for logical LUNs like iSCSI.
+            # These should be added as different multipath LUNs.
+            if hba_num >= 32 and hba_num % 64 < 33:
+                real_path = "%s pseudo-logical" % real_path
+            elif hba_num >= 32 and hba_num % 64 > 32:
+                real_path = "%s logical" % real_path
+            else:
+                real_path = "%s physical" % real_path
+
             paths.setdefault(real_path, [])
             # Note: There is no path type information available in these esx paths
             paths[real_path].append((state, None))

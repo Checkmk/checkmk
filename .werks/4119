@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482250470
 
 Previously the run_cached function simply exited if cache file $CACHEFILE.new was too old.

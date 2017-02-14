@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482142004
 
 Discovery function now detects Temperature_Celsius or Temperature_Internal keys in a right way.

@@ -2,7 +2,7 @@ Title: Fix computation of Event Console performance snapin in distributed mode
 Level: 2
 Component: ec
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482244286
 Class: fix
 

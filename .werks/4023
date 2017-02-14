@@ -2,7 +2,7 @@ Title: WATO Web API: Now able to add/edit/delete htpasswd users
 Level: 2
 Component: wato
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1486477736
 Class: feature
 

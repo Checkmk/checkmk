@@ -2,7 +2,7 @@ Title: Fixed bug in tables: the notification message for reached row limits is v
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1486458071
 Class: fix
 

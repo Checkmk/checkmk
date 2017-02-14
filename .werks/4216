@@ -2,7 +2,7 @@ Title: cmciii.phase: Fix wrong scaling of power and energy values
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1486562407
 Class: fix
 

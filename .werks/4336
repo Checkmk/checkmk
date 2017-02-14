@@ -2,7 +2,7 @@ Title: diskstat: now detects NVMe drives, eg. solid-state drives
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1486045514
 Class: feature
 

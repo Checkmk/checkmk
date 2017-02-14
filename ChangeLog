@@ -1,6 +1,7 @@
 1.5.0i1:
 
-1.4.0i4:
+
+1.4.0b1:
     Core & Setup:
     * 4286 SNMP MIBs of the Event Console can now be packed using MKPs...
     * 4269 FIX: Verifying unexpected keys in check_info while loading checks...

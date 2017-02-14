@@ -2,7 +2,7 @@ Title: Verifying unexpected keys in check_info while loading checks
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1484148162
 Class: fix
 

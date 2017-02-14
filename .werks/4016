@@ -2,7 +2,7 @@ Title: Windows Agents: fixed broken custom windows performance counter monitorin
 Level: 2
 Component: checks
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1485519795
 Class: fix
 

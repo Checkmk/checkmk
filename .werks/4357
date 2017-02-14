@@ -2,7 +2,7 @@ Title: steelhead_connections: now you can set upper levels for all connection ty
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1486719400
 Class: feature
 

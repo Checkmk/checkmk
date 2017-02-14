@@ -2,7 +2,7 @@ Title: Ruckus Spot / ruckus_spot_locations: new check to monitor the number of u
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1484827530
 Class: feature
 

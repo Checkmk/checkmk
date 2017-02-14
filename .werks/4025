@@ -2,7 +2,7 @@ Title: BI Aggregations: No longer suppressing error messages for invalid configu
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1486565762
 Class: fix
 

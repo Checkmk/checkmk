@@ -1,0 +1,13 @@
+title: HPE 3PAR: Hosts
+agents: 3par
+catalog: hw/storagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This checks shows the ID, Type of OS and number of paths of a
+ connected host. The state will always be {OK} if the host is
+ in the output of the filer. Otherwise the state will change to
+ {UNKNOWN}.
+
+inventory:
+ One service is created for each connected host.

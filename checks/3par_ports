@@ -1,0 +1,139 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+factory_settings['threepar_ports_default_levels'] = {
+                "1_link" : 1,
+                "2_link" : 1,
+                "3_link" : 1,
+                "4_link" : 0,
+                "5_link" : 2,
+                "6_link" : 2,
+                "7_link" : 1,
+                "8_link" : 0,
+                "9_link" : 1,
+               "10_link" : 1,
+               "11_link" : 1,
+               "12_link" : 1,
+               "13_link" : 1,
+               "14_link" : 1,
+
+                "1_fail" : 0,
+                "2_fail" : 2,
+                "3_fail" : 2,
+                "4_fail" : 2,
+                "5_fail" : 2,
+                "6_fail" : 2,
+                "7_fail" : 1,
+}
+
+
+def translate_protocol_3par_ports(number):
+    protocols = {
+        1: "FC",
+        2: "iSCSI",
+        3: "FCOE",
+        4: "IP",
+        5: "SAS",
+    }
+    return protocols[number]
+
+def inventory_3par_ports(parsed):
+    for entry in parsed['members']:
+        item = "%s Node %s Slot %s Port %s" % (translate_protocol_3par_ports(entry['protocol']), \
+                                                 entry['portPos']['node'],
+                                                 entry['portPos']['slot'],
+                                                 entry['portPos']['cardPort'])
+        yield (item, {})
+
+
+def check_3par_ports(item, params, parsed):
+    failover_translate = {
+        1 : "NONE",
+        2 : "FAILOVER_PENDING",
+        3 : "FAILED_OVER",
+        4 : "ACTIVE",
+        5 : "ACTIVE_DOWN",
+        6 : "ACTIVE_FAILED",
+        7 : "FAILBACK_PENDING",
+    }
+
+    link_translate = {
+        1 : "CONFIG_WAIT",
+        2 : "ALPA_WAIT",
+        3 : "LOGIN_WAIT",
+        4 : "READY",
+        5 : "LOSS_SYNC",
+        6 : "ERROR_STATE",
+        7 : "XXX",
+        8 : "NONPARTICIPATE",
+        9 : "COREDUMP",
+       10 : "OFFLINE",
+       11 : "FWDEAD",
+       12 : "IDLE_FOR_RESET",
+       13 : "DHCP_IN_PROGRESS",
+       14 : "PENDING_RESET",
+    }
+
+    mode_translate = {
+        1 : "SUSPENDED",
+        2 : "TARGET",
+        3 : "INITIATOR",
+        4 : "PEER",
+    }
+
+    for entry in parsed['members']:
+        if item == "%s Node %s Slot %s Port %s" % (translate_protocol_3par_ports(entry['protocol']), \
+                                                   entry['portPos']['node'],
+                                                   entry['portPos']['slot'],
+                                                   entry['portPos']['cardPort']):
+            if "label" in entry:
+                yield 0, "Label: %s" % entry['label']
+
+            if "linkState" in entry:
+                state = entry['linkState']
+                yield params["%s_link" % state], link_translate[state]
+
+            if "portWWN" in entry:
+                yield 0, "portWWN: %s" % entry['portWWN']
+
+            if "mode" in entry:
+                yield 0, "Mode: %s" % mode_translate[entry['mode']]
+
+            if "failoverState" in entry:
+                state = entry['failoverState']
+                yield params["%s_fail" % state], "Failover: %s" % failover_translate[state]
+
+
+check_info['3par_ports'] = {
+    'parse_function'            : parse_3par,
+    'inventory_function'        : inventory_3par_ports,
+    'check_function'            : check_3par_ports,
+    'service_description'       : "Port %s",
+    'default_levels_variable'   : "threepar_ports_default_levels",
+    'group'                     : "threepar_ports",
+    'includes'                  : [ "3par.include" ],
+}

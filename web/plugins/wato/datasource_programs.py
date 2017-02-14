@@ -1012,4 +1012,34 @@ register_rule(group,
         optional_keys = ["port"]
     ),
     title = _("Nutanix Prism"),
-    match = 'first')
+    match = 'first'
+)
+
+
+register_rule("datasource_programs",
+              "special_agents:3par",
+              Dictionary(elements = [("user",
+                                     TextAscii(title = _("Username"),
+                                               allow_empty = False,
+                                     )),
+                                     ("password",
+                                     TextAscii(title = _("Password"),
+                                               allow_empty = False,
+                                     )),
+                                     ("values",
+                                      ListOfStrings(title = _("Values to fetch"),
+                                                    orientation = "horizontal",
+                                                    help = _("Possible values are the following: "
+                                                             "cpgs, volumes, hosts, capacity, "
+                                                             "system, ports, hostsets, volumesets, "
+                                                             "vluns, flashcache, users, roles, qos.\n"
+                                                             "If you do not specify any value the "
+                                                             "first six are used as default.")
+                                     )),
+                         ],
+                         optional_keys = [ "values" ],
+              ),
+              title = _("Agent 3PAR Configuration"),
+              match = 'first'
+
+)

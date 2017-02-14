@@ -106,6 +106,7 @@ catalog_titles = {
             "genua"       : "genua",
             "h3c"         : "H3C Technologies (also 3Com)",
             "hp"          : "Hewlett-Packard (HP)",
+            "hpe"         : "Hewlett Packard Enterprise",
             "ibm"         : "IBM",
             "icom"        : "ICOM",
             "infoblox"    : "Infoblox",

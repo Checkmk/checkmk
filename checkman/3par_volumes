@@ -1,0 +1,19 @@
+title: HPE 3PAR: Volumes
+agents: 3par
+catalog: hw/storagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This check measures the utilization of a virtual volume. You
+ can define thresholds as known by other filesystem checks.
+
+ Additionally there is information about the used space of this
+ virtual volume on the filer, the provisioning type and the
+ associated WWN. If available there is also information about
+ the compaction and/or deduplication ratio.
+
+ The check will also change the state if the virtual volume on
+ the filer reports a degraded or failed state.
+
+inventory:
+ One service is created for each virtual volume.

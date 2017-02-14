@@ -324,6 +324,42 @@ def get_avoption_entries(what):
     )
   ),
 
+  ( "timeformat",
+    "double",
+    True,
+    Tuple(
+        title = _("Format time ranges"),
+        elements = [
+            RadioChoice(
+                choices = [
+                    ("both", _("Percent and time")),
+                    ("perc", _("Only percent")),
+                    ("time", _("Only time")),
+                ],
+                default_value = "perc",
+            ),
+            DropdownChoice(
+                choices = [
+                    ("percentage_0", _("Percentage - XX %") ),
+                    ("percentage_1", _("Percentage - XX.X %") ),
+                    ("percentage_2", _("Percentage - XX.XX %") ),
+                    ("percentage_3", _("Percentage - XX.XXX %") ),
+                ],
+                default_value = "percentage_2"
+            ),
+            DropdownChoice(
+                choices = [
+                    ("seconds", _("Seconds") ),
+                    ("minutes", _("Minutes") ),
+                    ("hours",   _("Hours") ),
+                    ("hhmmss",  _("HH:MM:SS") ),
+                ],
+                default_value = None
+            ),
+        ],
+    ),
+  ),
+
   # Optionally group some states together
   ( "host_state_grouping",
     "single",
@@ -413,24 +449,6 @@ def get_avoption_entries(what):
         default_value = "yyyy-mm-dd hh:mm:ss",
     )
   ),
-  ( "timeformat",
-    "single",
-    True,
-    DropdownChoice(
-        title = _("Format time ranges as"),
-        choices = [
-            ("percentage_0", _("Percentage - XX %") ),
-            ("percentage_1", _("Percentage - XX.X %") ),
-            ("percentage_2", _("Percentage - XX.XX %") ),
-            ("percentage_3", _("Percentage - XX.XXX %") ),
-            ("seconds",      _("Seconds") ),
-            ("minutes",      _("Minutes") ),
-            ("hours",        _("Hours") ),
-            ("hhmmss",       _("HH:MM:SS") ),
-        ],
-        default_value = "percentage_2",
-    )
-  ),
 
   # Short time intervals
   ( "short_intervals",
@@ -503,6 +521,49 @@ def get_avoption_entries(what):
    ),
 ]
 
+
+# Creates a function for rendering time values according to
+# the avoptions of the report.
+def render_number_function(timeformat):
+    if timeformat.startswith("percentage_"):
+        def render_number(n, d):
+            if not d:
+                return _("n/a")
+            else:
+                return ("%." + timeformat[11:] + "f%%") % ( float(n) / float(d) * 100.0)
+    elif timeformat == "seconds":
+        def render_number(n, d):
+            return "%d s" % n
+    elif timeformat == "minutes":
+        def render_number(n, d):
+            return "%d min" % (n / 60)
+    elif timeformat == "hours":
+        def render_number(n, d):
+            return "%d h" % (n / 3600)
+    else:
+        def render_number(n, d):
+            minn, sec = divmod(n, 60)
+            hours, minn = divmod(minn, 60)
+            return "%02d:%02d:%02d" % (hours, minn, sec)
+    return render_number
+
+
+def prepare_avo_timeformats(timeformat):
+    this_timeformat = [ ("percentage_2", render_number_function("percentage_2")) ]
+    if type(timeformat) in [ list, tuple ]:
+        if timeformat[0] == "both":
+            this_timeformat = map(lambda x: (x, render_number_function(x)), timeformat[1:])
+        elif timeformat[0] == "perc":
+            this_timeformat = [ (timeformat[1], render_number_function(timeformat[1])) ]
+        elif timeformat[0] == "time":
+            this_timeformat = [ (timeformat[2], render_number_function(timeformat[2])) ]
+    elif timeformat.startswith("percentage_") or \
+         timeformat in [ "seconds", "minutes", "hours", "hhmmss" ]:
+        # Old style
+        this_timeformat = [ (timeformat, render_number_function(timeformat)) ]
+    return this_timeformat
+
+
 def get_default_avoptions():
     return {
         "range"               : (time.time() - 86400, time.time()),
@@ -516,7 +577,7 @@ def get_default_avoptions():
         "notification_period" : "ignore",
         "grouping"            : None,
         "dateformat"          : "yyyy-mm-dd hh:mm:ss",
-        "timeformat"          : "percentage_2",
+        "timeformat"          : ("perc", "percentage_2", None),
         "short_intervals"     : 0,
         "dont_merge"          : False,
         "summary"             : "sum",
@@ -1101,24 +1162,18 @@ def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
 # }
 def layout_availability_table(what, group_title, availability_table, avoptions):
     time_range, range_title = avoptions["range"]
-    from_time, until_time = time_range
-    total_duration = until_time - from_time
-
-    render_number = render_number_function(avoptions)
-
-    show_timeline = avoptions["show_timeline"]
-    labelling = avoptions["labelling"]
-    av_levels = avoptions["av_levels"]
-    show_summary = avoptions.get("summary")
-
-    summary = {}
-    summary_counts = {}
-    unmonitored_objects = 0
-
-    av_table = {
-        "title" : group_title,
-        "rows" : [],
-    }
+    from_time, until_time   = time_range
+    total_duration          = until_time - from_time
+    timeformats             = prepare_avo_timeformats(avoptions["timeformat"])
+    show_timeline           = avoptions["show_timeline"]
+    labelling               = avoptions["labelling"]
+    av_levels               = avoptions["av_levels"]
+    show_summary            = avoptions.get("summary")
+    summary                 = {}
+    summary_counts          = {}
+    unmonitored_objects     = 0
+    av_table                = { "title" : group_title,
+                                "rows"  : [], }
 
     # Titles for the columns that specify the object
     titles = []
@@ -1143,18 +1198,20 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
     # Headers for availability cells
     av_table["cell_titles"] = []
     os_aggrs, os_states = get_outage_statistic_options(avoptions)
-    for sid, css, sname, help in availability_columns[what]:
-        if not cell_active(sid, avoptions):
-            continue
-        if avoptions["av_mode"]:
-            sname = _("Avail.")
+    for timeformat, render_number in timeformats:
+        for sid, css, sname, help in availability_columns[what]:
+            ssid = "%s-%s" % (sid, timeformat)
+            if not cell_active(sid, avoptions):
+                continue
+            if avoptions["av_mode"]:
+                sname = _("Avail.")
 
-        av_table["cell_titles"].append((sname, help))
+            av_table["cell_titles"].append((sname, help))
 
-        if sid in os_states:
-            for aggr in os_aggrs:
-                title = statistics_headers[aggr]
-                av_table["cell_titles"].append((title, None))
+            if sid in os_states:
+                for aggr in os_aggrs:
+                    title = statistics_headers[aggr]
+                    av_table["cell_titles"].append((title, None))
 
     # Actual rows
     for entry in availability_table:
@@ -1209,51 +1266,55 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 
         # Actuall cells with availability data
         row["cells"] = []
-        for sid, css, sname, help in availability_columns[what]:
-            if not cell_active(sid, avoptions):
-                continue
 
-            number = entry["states"].get(sid, 0)
-            if not number:
-                css = "unused"
-            elif show_summary:
-                summary.setdefault(sid, 0.0)
-                if avoptions["timeformat"].startswith("percentage"):
-                    if entry["considered_duration"] > 0:
-                        summary[sid] += float(number) / entry["considered_duration"]
-                else:
-                    summary[sid] += number
+        for timeformat, render_number in timeformats:
+            for sid, css, sname, help in availability_columns[what]:
+                ssid = "%s-%s" % (sid, timeformat)
+                if not cell_active(sid, avoptions):
+                    continue
 
-            # Apply visual availability levels (render OK in yellow/red, if too low)
-            if number and av_levels and sid in [ "ok", "up" ]:
-                css = "state%d" % check_av_levels(number, av_levels, entry["considered_duration"])
+                number = entry["states"].get(sid, 0)
+                if not number:
+                    css = "unused"
 
-            css = css + " narrow number"
-            row["cells"].append((render_number(number, entry["considered_duration"]), css))
-
-            # Statistics?
-            x_cnt, x_min, x_max = entry["statistics"].get(sid, (None, None, None))
-            os_aggrs, os_states = get_outage_statistic_options(avoptions)
-            if sid in os_states:
-                for aggr in os_aggrs:
-                    if x_cnt != None:
-                        if aggr == "avg":
-                            r = render_number(number / x_cnt, entry["considered_duration"])
-                        elif aggr == "min":
-                            r = render_number(x_min, entry["considered_duration"])
-                        elif aggr == "max":
-                            r = render_number(x_max, entry["considered_duration"])
-                        else:
-                            r = str(x_cnt)
-                            summary_counts.setdefault(sid, 0)
-                            summary_counts[sid] += x_cnt
-                        row["cells"].append((r, css))
+                elif show_summary:
+                    summary.setdefault(ssid, 0.0)
+                    if timeformat.startswith("percentage"):
+                        if entry["considered_duration"] > 0:
+                            summary[ssid] += float(number) / entry["considered_duration"]
                     else:
-                        row["cells"].append(("", ""))
+                        summary[ssid] += number
 
-        # If timeline == [] and states == {} then this objects has complete unmonitored state
-        if entry["timeline"] == [] and entry["states"] == {}:
-            unmonitored_objects += 1
+                # Apply visual availability levels (render OK in yellow/red, if too low)
+                if number and av_levels and sid in [ "ok", "up" ]:
+                    css = "state%d" % check_av_levels(number, av_levels, entry["considered_duration"])
+
+                css = css + " narrow number"
+                row["cells"].append((render_number(number, entry["considered_duration"]), css))
+
+                # Statistics?
+                x_cnt, x_min, x_max = entry["statistics"].get(sid, (None, None, None))
+                os_aggrs, os_states = get_outage_statistic_options(avoptions)
+                if sid in os_states:
+                    for aggr in os_aggrs:
+                        if x_cnt != None:
+                            if aggr == "avg":
+                                r = render_number(number / x_cnt, entry["considered_duration"])
+                            elif aggr == "min":
+                                r = render_number(x_min, entry["considered_duration"])
+                            elif aggr == "max":
+                                r = render_number(x_max, entry["considered_duration"])
+                            else:
+                                r = str(x_cnt)
+                                summary_counts.setdefault(ssid, 0)
+                                summary_counts[ssid] += x_cnt
+                            row["cells"].append((r, css))
+                        else:
+                            row["cells"].append(("", ""))
+
+            # If timeline == [] and states == {} then this objects has complete unmonitored state
+            if entry["timeline"] == [] and entry["states"] == {}:
+                unmonitored_objects += 1
 
     # Summary line. It has the same format as each entry in cells
     # We ignore unmonitored objects
@@ -1261,36 +1322,38 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
     if show_summary and len_availability_table > 0:
         summary_cells = []
 
-        for sid, css, sname, help in availability_columns[what]:
-            if not cell_active(sid, avoptions):
-                continue
+        for timeformat, render_number in timeformats:
+            for sid, css, sname, help in availability_columns[what]:
+                ssid = "%s-%s" % (sid, timeformat)
+                if not cell_active(sid, avoptions):
+                    continue
 
-            number = summary.get(sid, 0)
-            if show_summary == "average" or avoptions["timeformat"].startswith("percentage"):
-                number /= len_availability_table
-                if avoptions["timeformat"].startswith("percentage"):
-                    number *= total_duration
+                number = summary.get(ssid, 0)
+                if show_summary == "average" or timeformat.startswith("percentage"):
+                    number /= len_availability_table
+                    if timeformat.startswith("percentage"):
+                        number *= total_duration
 
-            if not number:
-                css = "unused"
+                if not number:
+                    css = "unused"
 
-            if number and av_levels and sid in [ "ok", "up" ]:
-                css = "state%d" % check_av_levels(number, av_levels, total_duration)
+                if number and av_levels and sid in [ "ok", "up" ]:
+                    css = "state%d" % check_av_levels(number, av_levels, total_duration)
 
-            css = css + " narrow number"
-            summary_cells.append((render_number(number, total_duration), css))
-            if sid in os_states:
-                for aggr in os_aggrs:
-                    if aggr == "cnt":
-                        count = summary_counts.get(sid, 0)
-                        if show_summary == "average":
-                            count = float(count) / len_availability_table
-                            text = "%.2f" % count
+                css = css + " narrow number"
+                summary_cells.append((render_number(number, total_duration), css))
+                if sid in os_states:
+                    for aggr in os_aggrs:
+                        if aggr == "cnt":
+                            count = summary_counts.get(ssid, 0)
+                            if show_summary == "average":
+                                count = float(count) / len_availability_table
+                                text = "%.2f" % count
+                            else:
+                                text = str(count)
+                            summary_cells.append((text, css))
                         else:
-                            text = str(count)
-                        summary_cells.append((text, css))
-                    else:
-                        summary_cells.append(("", ""))
+                            summary_cells.append(("", ""))
         av_table["summary"] = summary_cells
 
     return av_table
@@ -1304,10 +1367,11 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
 # }
 def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
 
-    render_number = render_number_function(avoptions)
+    timeformats             = prepare_avo_timeformats(avoptions["timeformat"])
     time_range, range_title = avoptions["range"]
-    from_time, until_time = time_range
-    total_duration = until_time - from_time
+    from_time, until_time   = time_range
+    total_duration          = until_time - from_time
+
 
     # Timeformat: show date only if the displayed time range spans over
     # more than one day.
@@ -1347,13 +1411,18 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
     chaos_count = 0
     chaos_width = 0
 
+    def apply_render_number_functions(n, d):
+        texts = []
+        for timeformat, render_number in timeformats:
+            texts.append(render_number(n, d))
+        return ", ".join(texts)
+
     def chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width):
         title = _("%d chaotic state changes from %s until %s (%s)") % (
             chaos_count,
             render_date(chaos_begin), render_date(chaos_end),
-            render_number(chaos_end - chaos_begin, considered_duration))
+            apply_render_number_functions(chaos_end - chaos_begin, considered_duration))
         return (None, title, chaos_width, "chaos")
-
 
     current_time = from_time
     for row_nr, (row, state_id) in enumerate(timeline_rows):
@@ -1363,54 +1432,56 @@ def layout_timeline(what, timeline_rows, considered_duration, avoptions, style):
             spans.append((None, "", 100.0 * (this_from_time - current_time) / total_duration, "unmonitored"))
         current_time = this_until_time
 
-        from_text = render_date(this_from_time)
-        until_text = render_date(this_until_time)
-        duration_text = render_number(row["duration"], considered_duration)
+        from_text     = render_date(this_from_time)
+        until_text    = render_date(this_until_time)
+        duration_text = apply_render_number_functions(row["duration"], considered_duration)
 
         for sid, css, sname, help in availability_columns[what]:
-            if sid == state_id:
-                title = _("From %s until %s (%s) %s") % (from_text, until_text, duration_text, help and help or sname)
+            if sid != state_id:
+                continue
+
+            title = _("From %s until %s (%s) %s") % (from_text, until_text, duration_text, help and help or sname)
+            if "log_output" in row and row["log_output"]:
+                title += " - " + row["log_output"]
+            width = rest_percentage * row["duration"] / total_duration
+
+            # Information for table of detailed events
+            if style == "standalone":
+                table.append({
+                    "state"         : state_id,
+                    "css"           : css,
+                    "state_name"    : sname,
+                    "from"          : row["from"],
+                    "until"         : row["until"],
+                    "from_text"     : from_text,
+                    "until_text"    : until_text,
+                    "duration_text" : duration_text,
+                })
                 if "log_output" in row and row["log_output"]:
-                    title += " - " + row["log_output"]
-                width = rest_percentage * row["duration"] / total_duration
+                    table[-1]["log_output"] = row["log_output"]
 
-                # Information for table of detailed events
-                if style == "standalone":
-                    table.append({
-                        "state"         : state_id,
-                        "css"           : css,
-                        "state_name"    : sname,
-                        "from"          : row["from"],
-                        "until"         : row["until"],
-                        "from_text"     : from_text,
-                        "until_text"    : until_text,
-                        "duration_text" : duration_text,
-                    })
-                    if "log_output" in row and row["log_output"]:
-                        table[-1]["log_output"] = row["log_output"]
+            # If the width is very small then we group several phases into
+            # one single "chaos period".
+            if style == "inline" and width < 0.05:
+                if not chaos_begin:
+                    chaos_begin = row["from"]
+                chaos_width += width
+                chaos_count += 1
+                chaos_end = row["until"]
+                continue
 
-                # If the width is very small then we group several phases into
-                # one single "chaos period".
-                if style == "inline" and width < 0.05:
-                    if not chaos_begin:
-                        chaos_begin = row["from"]
-                    chaos_width += width
-                    chaos_count += 1
-                    chaos_end = row["until"]
-                    continue
+            # Chaos period has ended? One not-small phase:
+            elif chaos_begin:
+                # Only output chaos phases with a certain length
+                if chaos_count >= 4:
+                    spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
 
-                # Chaos period has ended? One not-small phase:
-                elif chaos_begin:
-                    # Only output chaos phases with a certain length
-                    if chaos_count >= 4:
-                        spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
+                chaos_begin = None
+                chaos_count = 0
+                chaos_width = 0
 
-                    chaos_begin = None
-                    chaos_count = 0
-                    chaos_width = 0
-
-                width += min_percentage
-                spans.append((row_nr, title, width, css))
+            width += min_percentage
+            spans.append((row_nr, title, width, css))
 
     if chaos_count > 1:
         spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
@@ -1816,32 +1887,6 @@ def cmp_av_entry(a, b):
            cmp(cmp_service_name_equiv(a["service"]), cmp_service_name_equiv(b["service"])) or \
            cmp(a["service"], b["service"])
 
-# Creates a function for rendering time values according to
-# the avoptions of the report.
-def render_number_function(avoptions):
-    timeformat = avoptions["timeformat"]
-    if timeformat.startswith("percentage_"):
-        def render_number(n, d):
-            if not d:
-                return _("n/a")
-            else:
-                return ("%." + timeformat[11:] + "f%%") % ( float(n) / float(d) * 100.0)
-    elif timeformat == "seconds":
-        def render_number(n, d):
-            return "%d s" % n
-    elif timeformat == "minutes":
-        def render_number(n, d):
-            return "%d min" % (n / 60)
-    elif timeformat == "hours":
-        def render_number(n, d):
-            return "%d h" % (n / 3600)
-    else:
-        def render_number(n, d):
-            minn, sec = divmod(n, 60)
-            hours, minn = divmod(minn, 60)
-            return "%02d:%02d:%02d" % (hours, minn, sec)
-
-    return render_number
 
 def history_url_of(av_object, time_range):
     site, host, service = av_object

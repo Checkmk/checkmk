@@ -1,4 +1,6 @@
 1.5.0i1:
+    Checks & Agents:
+    * 4331 FIX: check_sql: Is now printing FreeTDS debug messages in verbose mode (with MSSQL)
 
 
 1.4.0b1:

@@ -2,7 +2,7 @@ Title: Fixed possible log spam "MKAuthException: Invalid credentials" in web.log
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482175956
 Class: fix
 

@@ -2,7 +2,7 @@ Title: Nagios: Added missing variable MICROTIME to notification contexts
 Level: 1
 Component: notifications
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1485331748
 Class: fix
 

@@ -2,7 +2,7 @@ Title: local: local check is now clusteraware. Best or worst state in cluster mo
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482131073
 Class: feature
 

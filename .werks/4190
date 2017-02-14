@@ -2,7 +2,7 @@ Title: mssql_blocked_sessions: Fixed unknown states if only one session is block
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1486137493
 Class: fix
 

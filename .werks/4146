@@ -2,7 +2,7 @@ Title: Fixed broken "Global settings" when having the Event Console disabled via
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1482313552
 Class: fix
 

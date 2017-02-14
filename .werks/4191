@@ -2,7 +2,7 @@ Title: esx_vsphere_hostsystem.cpu_usage: Fixed wrong total GHz
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.4.0b1
 Date: 1486550603
 Class: fix
 

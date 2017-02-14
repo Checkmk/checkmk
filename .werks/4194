@@ -1,0 +1,12 @@
+Title: esx_vsphere_hostsystem.multipath: Fixed grouping of paths
+Level: 2
+Component: checks
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.2.8p21
+Date: 1487062070
+
+The changes in vSphere6 made it impossible to display the data in the known way. Now it's necessary to display the information as L#. Additionally there is a suffix to identify the type of the LUN correctly. Otherwise the path to a pseudo-logical device like USB sticks could be accidentally added to the paths of a SAN-LUN.
+
+A rediscovery will be necessary since this fix will change the Service Description!

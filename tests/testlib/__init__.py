@@ -42,9 +42,9 @@ def var_dir():
     if "WORKSPACE" in os.environ:
         base_dir = os.environ["WORKSPACE"] + "/results"
     else:
-        base_dir = repo_path() + "/tests"
+        base_dir = repo_path() + "/tests/var"
 
-    return base_dir + "/var"
+    return base_dir
 
 
 class APIError(Exception):

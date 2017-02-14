@@ -1,0 +1,18 @@
+Title: Fix failed SSH login in Linux remote alert handlers on some distributions
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.5.0i1
+Date: 1487081543
+
+When the baked agent package automatically creates the SSH access for
+executing remote alert handlers by modifying <tt>.ssh/authorized_keys</tt>
+it puts two spaces instead of just one after the word <tt>ssh-rsa</tt>. This
+seems to make <b>some</b> versions of SSH unhappy and ignore that key. This
+has been fixed. You need to rebake and reinstall your agents in order to
+fix that after updating Check_MK.
+
+As a workaround you can manually remove the duplicate space in
+<tt>.ssh/authorized_keys</tt> in the home directory of the target user.

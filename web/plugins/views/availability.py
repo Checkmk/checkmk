@@ -322,8 +322,6 @@ def render_availability_timeline(what, av_entry, avoptions):
     timeline_layout = availability.layout_timeline(what, timeline_rows, av_entry["considered_duration"], avoptions, "standalone")
     render_timeline_bar(timeline_layout, "standalone")
     render_date = timeline_layout["render_date"]
-    render_number = availability.render_number_function(avoptions)
-
 
     # TODO: Hier fehlt bei BI der Timewarpcode (also der Baum im Zauberzustand)
     # if what == "bi":

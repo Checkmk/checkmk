@@ -2090,7 +2090,7 @@ function valuespec_listof_fixarrows(oTbody) {
 
         if (oTd.childNodes.length > 4) { /* movable */
             var buttons = oTd.getElementsByClassName("iconbutton");
-            
+
             var oUpTrans = buttons[1];
             var oUp      = buttons[2];
             if (i == 0) {

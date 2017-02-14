@@ -417,7 +417,7 @@ def esx_vsphere_multipath_convert(info):
 
             paths.setdefault(real_path, [])
             # Note: There is no path type information available in these esx paths
-            paths[real_path].append((state, None))
+            paths[real_path].append((state, None, path))
             continue
 
         path_tokens = path.split('-')
@@ -429,7 +429,7 @@ def esx_vsphere_multipath_convert(info):
             hw_type = path.split('.')[0]
             if hw_type != 'unknown':
                 paths.setdefault(path_id, [])
-                paths[path_id].append((state, "%s/%s" % (path_type, hw_type)))
+                paths[path_id].append((state, "%s/%s" % (path_type, hw_type), path))
 
     return paths
 
@@ -449,12 +449,14 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
 
     state   = 0
     message = ""
+    path_names = []
 
     for path, states in esx_vsphere_multipath_convert(info).items():
         if path == item:
             # Collect states
             path_type = None
-            for path_state, path_type in states:
+            for path_state, path_type, path_name in states:
+                path_names.append(path_name)
                 state_item = state_infos.get(path_state)
                 if state_item:
                     state_item[1] += 1
@@ -500,6 +502,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
             for element in "active", "dead", "disabled", "standby", "unknown":
                 element_text.append("%d %s%s" % ( state_infos[element][1], element, state_infos[element][2]))
             message += ", ".join(element_text)
+            message += "\nIncluded Paths:\n" + "\n".join(path_names)
             break
     else:
         return 3, "Path not found in agent output"

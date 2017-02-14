@@ -1,0 +1,13 @@
+Title: mem.used: Fixed graphing
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p18
+Date: 1486137493
+Class: fix
+
+The graphing ist now correct rendering the information given by the check
+mem.used. Previously the graphing was trying to sell the "total used memory"
+information as installed RAM. In consequense also the rendering of Perf-O-Meter
+was broken and thresholds "total used memory" never have been displayed.
+

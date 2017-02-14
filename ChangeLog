@@ -1,5 +1,6 @@
 1.2.8p18:
     Checks & Agents:
+    * 4189 FIX: mem.used: Fixed graphing...
     * 4190 FIX: mssql_blocked_sessions: Fixed unknown states if only one session is blocked...
     * 4359 FIX: mssql_counters: ignore invalid lines
 

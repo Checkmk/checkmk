@@ -1,6 +1,7 @@
 1.5.0i1:
     Checks & Agents:
     * 4331 FIX: check_sql: Is now printing FreeTDS debug messages in verbose mode (with MSSQL)
+    * 4203 FIX: Fix failed SSH login in Linux remote alert handlers on some distributions...
 
     Multisite:
     * 4365 FIX: Service availability: Host down could not be rewritten to other states like CRIT

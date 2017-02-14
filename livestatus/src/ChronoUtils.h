@@ -47,6 +47,10 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
     return ret;
 }
 
+inline std::chrono::system_clock::time_point from_tm(tm tp) {
+    return std::chrono::system_clock::from_time_t(mktime(&tp));
+}
+
 template <typename Rep, typename Period>
 inline timeval to_timeval(std::chrono::duration<Rep, Period> dur) {
     using namespace std::chrono;

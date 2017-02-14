@@ -3196,7 +3196,7 @@ class ModeDiscovery(WatoMode):
                 ("_%s_to_new" % check_source, "1"),
                 (self._checkbox_name(check_source, check_type, item), ""),
             ])
-            html.icon_button(url, _("Move to undecided services"), 
+            html.icon_button(url, _("Move to undecided services"),
                 "service_to_undecided", ty="icon")
 
 

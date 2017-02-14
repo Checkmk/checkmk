@@ -1,0 +1,81 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inventory_3par_cpgs(parsed):
+    for entry in parsed['members']:
+        if "name" in entry:
+           yield (entry['name'], {})
+
+
+def check_3par_cpgs(item, params, parsed):
+    states = {
+        1: (0, "Normal"),
+        2: (1, "Degraded"),
+        3: (2, "Failed"),
+    }
+
+    for entry in parsed['members']:
+        if not "name" in entry:
+            continue
+
+        if entry['name'] == item:
+            state, state_readable = states[entry['state']]
+            yield state, "%s, %s VVs" % (state_readable, \
+                entry['numFPVVs'] + entry['numTDVVs'] + entry['numTPVVs'])
+
+
+check_info['3par_cpgs'] = {
+    'parse_function'        : parse_3par,
+    'inventory_function'    : inventory_3par_cpgs,
+    'check_function'        : check_3par_cpgs,
+    'service_description'   : "CPG %s",
+    'includes'              : [ "3par.include", "df.include" ]
+}
+
+
+def inventory_3par_cpgs_usage(parsed):
+    for entry in parsed['members']:
+        for fs in ["SAUsage", "SDUsage", "UsrUsage"]:
+            yield ("%s %s" % (entry['name'], fs), {})
+
+def check_3par_cpgs_usage(item, params, parsed):
+    for entry in parsed['members']:
+        for fs in ["SAUsage", "SDUsage", "UsrUsage"]:
+            if "%s %s" % (entry['name'], fs) == item:
+                total = entry[fs]['totalMiB']
+                free = entry[fs]['totalMiB']-entry[fs]['usedMiB']
+                yield df_check_filesystem_list(item, params, [ (item, total, free, 0) ])
+
+
+check_info['3par_cpgs.usage'] = {
+    'inventory_function'        : inventory_3par_cpgs_usage,
+    'check_function'            : check_3par_cpgs_usage,
+    'service_description'       : "CPG %s",
+    'has_perfdata'              : True,
+    'group'                     : "filesystem",
+    'default_levels_variable'   : "filesystem_default_levels",
+}

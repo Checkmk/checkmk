@@ -4173,6 +4173,8 @@ check_metrics["check_mk-netapp_api_qtree_quota"]                = df_translation
 check_metrics["check_mk-emc_isilon_quota"]                      = df_translation
 check_metrics["check_mk-emc_isilon_ifs"]                        = df_translation
 check_metrics["check_mk-mongodb_collections"]                   = df_translation
+check_metrics["check_mk-3par_cpgs.usage"]                       = df_translation
+check_metrics["check_mk-3par_capacity"]                         = df_translation
 
 disk_utilization_translation = { "disk_utilization" : { "scale" : 100.0 } }
 

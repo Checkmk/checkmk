@@ -29,7 +29,7 @@ ENTERPRISE         := no
 endif
 
 SHELL              := /bin/bash
-VERSION            := 1.4.0i4
+VERSION            := 1.5.0i1
 NAME               := check_mk
 PREFIX             := /usr
 BINDIR             := $(PREFIX)/bin

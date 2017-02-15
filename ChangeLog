@@ -5,6 +5,7 @@
 
     Multisite:
     * 4365 FIX: Service availability: Host down could not be rewritten to other states like CRIT
+    * 4367 FIX: FIX Fixed random exception related to html.unplug() in GUI
 
 
 1.4.0b1:

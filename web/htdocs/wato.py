@@ -10429,8 +10429,6 @@ def mode_edit_user(phase):
             if password2 and password != password2:
                 raise MKUserError("password2", _("The both passwords do not match."))
 
-            user_attrs["password"] = password
-
             # Detect switch back from automation to password
             if "automation_secret" in user_attrs:
                 del user_attrs["automation_secret"]

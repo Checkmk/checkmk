@@ -251,7 +251,6 @@ cmc-$(VERSION).tar.gz: config.h enterprise/.werks/werks enterprise/ChangeLog
 	mv cmc-$(VERSION)/enterprise/skel{,.permissions} cmc-$(VERSION)
 	mv cmc-$(VERSION)/enterprise/LIVEPROXYD.hook cmc-$(VERSION)
 	cp enterprise/.werks/werks cmc-$(VERSION)/werks
-	cp enterprise/ChangeLog cmc-$(VERSION)/ChangeLog
 	sed -i '1 i\include ../../Makefile.omd' cmc-$(VERSION)/Makefile
 	cd cmc-$(VERSION) && tar czf ../cmc-$(VERSION).tar.gz $(TAROPTS) .bugs *
 	rm -rf cmc-$(VERSION)

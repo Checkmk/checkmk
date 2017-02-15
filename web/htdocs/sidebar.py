@@ -433,44 +433,41 @@ def ajax_snapin():
     else:
         snapnames = html.var('names', '').split(',')
 
-    html.plug()
     snapin_code = []
-    try:
-        for snapname in snapnames:
-            if not config.user.may("sidesnap." + snapname):
+    for snapname in snapnames:
+        if not config.user.may("sidesnap." + snapname):
+            continue
+        snapin = sidebar_snapins.get(snapname)
+
+        # When restart snapins are about to be refreshed, only render
+        # them, when the core has been restarted after their initial
+        # rendering
+        if not snapin.get('refresh') and snapin.get('restart'):
+            since = float(html.var('since', 0))
+            newest = since
+            for site in sites.states().values():
+                prog_start = site.get("program_start", 0)
+                if prog_start > newest:
+                    newest = prog_start
+            if newest <= since:
+                # no restart
+                snapin_code.append('')
                 continue
-            snapin = sidebar_snapins.get(snapname)
 
-            # When restart snapins are about to be refreshed, only render
-            # them, when the core has been restarted after their initial
-            # rendering
-            if not snapin.get('refresh') and snapin.get('restart'):
-                since = float(html.var('since', 0))
-                newest = since
-                for site in sites.states().values():
-                    prog_start = site.get("program_start", 0)
-                    if prog_start > newest:
-                        newest = prog_start
-                if newest <= since:
-                    # no restart
-                    snapin_code.append('')
-                    continue
-
-            try:
-                snapin["render"]()
-            except Exception, e:
-                if config.debug:
-                    raise
-                snapin_exception(e)
+        html.plug()
+        try:
+            # For testing purposes only: raise Exception("Test")
+            snapin["render"]()
+        except Exception, e:
+            snapin_exception(e)
+            e_message = _("Exception during snapin refresh (snapin \'%s\')") % snapname
+            logger.error("%s %s: %s" % (html.request_uri(), e_message, traceback.format_exc()))
+        finally:
             snapin_code.append(html.drain())
+        html.unplug()
 
-        html.unplug()
-        html.write('[%s]' % ','.join([ '"%s"' % s.replace('"', '\\"').replace('\n', '') for s in snapin_code]))
-    except Exception, e:
-        html.flush()
-        html.unplug()
-        logger.error('Exception during snapin refresh: %s' % e)
-        raise
+    html.write('[%s]' % ','.join([ '"%s"' % s.replace('"', '\\"').replace('\n', '') for s in snapin_code]))
+
 
 def move_snapin():
     if not config.user.may("general.configure_sidebar"):

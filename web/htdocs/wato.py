@@ -102,6 +102,8 @@ from cmk.regex import escape_regex_chars, regex
 from cmk.defines import short_service_state_name
 import cmk.render as render
 
+
+
 try:
     import simplejson as json
 except ImportError:
@@ -285,14 +287,14 @@ def page_handler():
         raise
 
     except MKInternalError:
-        html.unplug()
+        html.unplug_all()
         raise
 
     except MKAuthException:
         raise
 
     except Exception, e:
-        html.unplug()
+        html.unplug_all()
         html.show_error(traceback.format_exc().replace('\n', '<br />'))
 
     html.close_div()
@@ -7828,10 +7830,7 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             title = _("Notification rules")
         elif userid:
             url = html.makeuri([("mode", "user_notifications"), ("user", userid)])
-            html.plug()
-            html.icon_button(url, _("Edit this user's notifications"), "edit")
-            code = html.drain()
-            html.unplug()
+            code = html.render_icon_button(url, _("Edit this user's notifications"), "edit")
             title = code + _("Notification rules of user %s") % userid
         else:
             title = _("Global notification rules")

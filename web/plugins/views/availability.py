@@ -27,6 +27,7 @@
 import availability, table
 from valuespec import *
 
+
 # Variable name conventions
 # av_rawdata: a two tier dict: (site, host) -> service -> list(spans)
 #   In case of BI (site, host) is (None, aggr_group), service is aggr_name
@@ -47,10 +48,9 @@ from valuespec import *
 
 # Get availability options without rendering the valuespecs
 def get_availability_options_from_url(what):
-    html.plug()
-    avoptions = render_availability_options(what)
-    html.drain()
-    html.unplug()
+    with html.plugged():
+        avoptions = render_availability_options(what)
+        html.drain()
     return avoptions
 
 
@@ -184,10 +184,9 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
         title += view_title(view)
 
     # Deletion must take place before computation, since it affects the outcome
-    html.plug()
-    handle_delete_annotations()
-    confirmation_html_code = html.drain()
-    html.unplug()
+    with html.plugged():
+        handle_delete_annotations()
+        confirmation_html_code = html.drain()
 
     # Now compute all data, we need this also for CSV export
     if not html.has_user_errors():
@@ -528,11 +527,13 @@ def render_bi_availability(title, aggr_rows):
 
         avoptions = render_availability_options("bi")
 
-    timewarpcode = ""
     if not html.has_user_errors():
         countdown_logrow_limit   = avoptions["logrow_limit"]
         has_reached_logrow_limit = False
         spans = []
+
+        # iterate all aggregation rows
+        timewarpcode = ""
         for aggr_row in aggr_rows:
             tree = aggr_row["aggr_tree"]
             reqhosts = tree["reqhosts"]
@@ -551,6 +552,8 @@ def render_bi_availability(title, aggr_rows):
                 break
 
             spans += these_spans
+
+            # render selected time warp for the corresponding aggregation row (should be matched by only one)
             if timewarp and timewarp_tree_state:
                 state, assumed_state, node, subtrees = timewarp_tree_state
                 eff_state = state
@@ -570,33 +573,43 @@ def render_bi_availability(title, aggr_rows):
                 }
                 tdclass, htmlcode = bi.render_tree_foldable(row, boxes=False, omit_root=False,
                                          expansion_level=bi.load_ex_level(), only_problems=False, lazy=False)
-                html.plug()
-                # TODO: SOMETHING IS WRONG IN HERE (used to be the same situation in original code!)
-                html.open_h3()
 
-                # render icons for back and forth
-                if int(these_spans[0]["from"]) == timewarp:
-                    html.disabled_icon_button("back_off")
-                have_forth = False
-                previous_span = None
-                for span in these_spans:
-                    if int(span["from"]) == timewarp and previous_span != None:
-                        html.icon_button(html.makeuri([("timewarp", str(int(previous_span["from"])))]), _("Jump one phase back"), "back")
-                    elif previous_span and int(previous_span["from"]) == timewarp and span != these_spans[-1]:
-                        html.icon_button(html.makeuri([("timewarp", str(int(span["from"])))]), _("Jump one phase forth"), "forth")
-                        have_forth = True
-                    previous_span = span
-                if not have_forth:
-                    html.disabled_icon_button("forth_off")
+                with html.plugged():
+                    # TODO: SOMETHING IS WRONG IN HERE (used to be the same situation in original code!)
+                    # FIXME: WHAT is wrong in here??
 
-                html.write(" &nbsp; ")
-                html.icon_button(html.makeuri([("timewarp", "")]), _("Close Timewarp"), "closetimewarp")
-                timewarpcode = html.drain()
-                html.unplug()
-                timewarpcode += '%s %s</h3>' % (_("Timewarp to "), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timewarp))) + \
-                               '<table class="data table timewarp"><tr class="data odd0"><td class="%s">' % tdclass + \
-                               htmlcode + \
-                               '</td></tr></table>'
+                    html.open_h3()
+                    # render icons for back and forth
+                    if int(these_spans[0]["from"]) == timewarp:
+                        html.disabled_icon_button("back_off")
+                    have_forth = False
+                    previous_span = None
+                    for span in these_spans:
+                        if int(span["from"]) == timewarp and previous_span != None:
+                            html.icon_button(html.makeuri([("timewarp", str(int(previous_span["from"])))]), _("Jump one phase back"), "back")
+                        elif previous_span and int(previous_span["from"]) == timewarp and span != these_spans[-1]:
+                            html.icon_button(html.makeuri([("timewarp", str(int(span["from"])))]), _("Jump one phase forth"), "forth")
+                            have_forth = True
+                        previous_span = span
+                    if not have_forth:
+                        html.disabled_icon_button("forth_off")
+
+                    html.write_text(" &nbsp; ")
+                    html.icon_button(html.makeuri([("timewarp", "")]), _("Close Timewarp"), "closetimewarp")
+                    html.write_text("%s %s" % (_("Timewarp to "), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timewarp))))
+                    html.close_h3()
+
+                    html.open_table(class_=["data", "table", "timewarp"])
+                    html.open_tr(class_=["data", "odd0"])
+                    html.open_td(class_=tdclass)
+                    html.write_html(htmlcode)
+                    html.close_td()
+                    html.close_tr()
+                    html.close_table()
+
+                    timewarpcode = html.drain()
+
+                html.write_text("LOL%sLOL" % type(htmlcode))
 
         # Note: 'spans_by_object' returns two arguments which are used by
         # all availability views but not by BI. There we have to take
@@ -619,7 +632,7 @@ def render_bi_availability(title, aggr_rows):
             return
 
         html.write(timewarpcode)
-        do_render_availability("bi", av_rawdata, av_data, av_mode, None, avoptions)# ,  timewarpcode)
+        do_render_availability("bi", av_rawdata, av_data, av_mode, None, avoptions)
 
     html.bottom_footer()
     html.body_end()
@@ -731,23 +744,9 @@ def edit_annotation():
         }
     else:
         value = annotation.copy()
-
     value["host"] = hostname
     value["service"] = service
     value["site"] = site_id
-
-    # FIXME: Why use plugging here? Can we clean this up?
-    html.plug()
-
-    title = _("Edit annotation of ") + hostname
-    if service:
-        title += "/" + service
-    html.body_start(title, stylesheets=["pages","views","status"])
-    html.top_heading(title)
-
-    html.begin_context_buttons()
-    html.context_button(_("Abort"), html.makeuri([("anno_host", "")]), "abort")
-    html.end_context_buttons()
 
     value = forms.edit_dictionary([
         ( "site",     TextAscii(title = _("Site")) ),
@@ -771,6 +770,7 @@ def edit_annotation():
         formname = "editanno",
         focus = "text")
 
+    # FIXME: Is value not always given by the lines above??
     if value:
         site_host_svc = value["site"], value["host"], value["service"]
         del value["site"]
@@ -778,17 +778,25 @@ def edit_annotation():
         value["date"] = time.time()
         value["author"] = config.user.id
         availability.update_annotations(site_host_svc, value, replace_existing=annotation)
-        html.drain() # omit previous HTML code, not needed
-        html.unplug()
         html.del_all_vars(prefix="editanno_")
         html.del_var("filled_in")
         return False
 
-    html.unplug() # show HTML code
+    else:
+        title = _("Edit annotation of ") + hostname
+        if service:
+            title += "/" + service
 
-    html.bottom_footer()
-    html.body_end()
-    return True
+        html.body_start(title, stylesheets=["pages","views","status"])
+        html.top_heading(title)
+
+        html.begin_context_buttons()
+        html.context_button(_("Abort"), html.makeuri([("anno_host", "")]), "abort")
+        html.end_context_buttons()
+
+        html.bottom_footer()
+        html.body_end()
+        return True
 
 
 # Called at the beginning of every availability page

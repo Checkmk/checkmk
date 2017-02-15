@@ -102,8 +102,9 @@ def handler(mod_python_req, fields = None, is_profiling = False):
 
     except (MKUserError, MKAuthException, MKUnauthenticatedException, MKConfigError, MKGeneralException,
             livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusException), e:
-        if html.is_plugged():
-            html.unplug()
+
+        html.unplug_all()
+
         ty = type(e)
         if ty == livestatus.MKLivestatusNotFoundError:
             title       = _("Data not found")
@@ -138,7 +139,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
         raise
 
     except Exception, e:
-        html.unplug()
+        html.unplug_all()
         log_exception()
         if plain_error():
             html.write(_("Internal error") + ": %s\n" % html.attrencode(e))

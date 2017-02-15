@@ -36,6 +36,7 @@ from log import logger
 import cmk.paths
 import cmk.store as store
 
+
 try:
     import simplejson as json
 except ImportError:
@@ -395,12 +396,12 @@ def render_snapin(name, state):
             refresh_url = url
             html.javascript("get_url(\"%s\", updateContents, \"snapin_%s\")" % (refresh_url, name))
     except Exception, e:
-        snapin_exception(e)
+        write_snapin_exception(e)
     html.close_div()
     html.close_div()
     return refresh_url
 
-def snapin_exception(e):
+def write_snapin_exception(e):
     html.open_div(class_=["snapinexception"])
     html.h2(_('Error'))
     html.p(e)
@@ -423,7 +424,9 @@ def ajax_openclose():
     config["snapins"] = new_snapins
     save_user_config(config)
 
+
 def ajax_snapin():
+
     # Update online state of the user (if enabled)
     userdb.update_user_access_time(config.user.id)
 
@@ -454,18 +457,18 @@ def ajax_snapin():
                 snapin_code.append('')
                 continue
 
-        html.plug()
-        try:
-            # For testing purposes only: raise Exception("Test")
-            snapin["render"]()
-        except Exception, e:
-            snapin_exception(e)
-            e_message = _("Exception during snapin refresh (snapin \'%s\')") % snapname
-            logger.error("%s %s: %s" % (html.request_uri(), e_message, traceback.format_exc()))
-        finally:
-            snapin_code.append(html.drain())
-        html.unplug()
+        with html.plugged():
+            try:
+                # For testing purposes only: raise Exception("Test")
+                snapin["render"]()
+            except Exception, e:
+                write_snapin_exception(e)
+                e_message = _("Exception during snapin refresh (snapin \'%s\')") % snapname
+                logger.error("%s %s: %s" % (html.request_uri(), e_message, traceback.format_exc()))
+            finally:
+                snapin_code.append(html.drain())
 
+    # write all snapins
     html.write('[%s]' % ','.join([ '"%s"' % s.replace('"', '\\"').replace('\n', '') for s in snapin_code]))
 
 

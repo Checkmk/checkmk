@@ -18,7 +18,7 @@ from contextlib import contextmanager
 
 
 # internal imports
-from htmllib import HTML, OutputFunnel, plug
+from htmllib import HTML, OutputFunnel
 from classes import HTMLOrigTester, HTMLCheck_MKTester
 
 
@@ -40,7 +40,7 @@ class OutputFunnelTester(OutputFunnel):
 # decorator for automatical test generation
 # def ofdecorate(func):
 #    def func_wrapper(html, *args, **kwargs):
-#        with plug(html):
+#        with html.plugged():
 #            func(html, *args, **kwargs)
 #            print "_" * 10 + " %s|%s|%s" % (args, kwargs, html.plug_text)
 #    return func_wrapper
@@ -100,10 +100,10 @@ def test_context_nesting():
 
     html.write("A")
     assert html.written == "A"
-    with plug(html):
+    with html.plugged():
         html.write("B")
         assert html.plug_text == ["B"]
-        with plug(html):
+        with html.plugged():
             html.write("C")
             assert html.plug_text == ["B", "C"]
         assert html.plug_text == ["BC"]
@@ -115,12 +115,48 @@ def test_context_drain():
 
     html.write("A")
     assert html.written == "A"
-    with plug(html):
+    with html.plugged():
         html.write("B")
         assert html.plug_text == ['B']
         code = html.drain()
         assert html.plug_text == ['']
-    test = "Hallo " + code
+    assert code == 'B'
     assert html.written == "A"
+
+
+def test_context_raise():
+    html = OutputFunnelTester()
+
+    try:
+        html.write("A")
+        assert html.written == "A"
+        with html.plugged():
+            html.write("B")
+            assert html.plug_text == ['B']
+            raise Exception("Test exception")
+    except Exception, e:
+        assert e.message == "Test exception"
+    finally:
+        assert not html.is_plugged()
+
+
+def test_try_finally():
+    html = OutputFunnelTester()
+    try:
+        html.write("try1\n")
+        try:
+            html.write("try2\n")
+            raise Exception("Error")
+        except Exception, e:
+            html.write("except2\n")
+            raise
+        finally:
+            html.write("finally2\n")
+    except Exception, e:
+        html.write("except1\n")
+        html.write("%s\n" % e.message)
+    finally:
+        html.write("finally1\n")
+    assert html.written == "try1\ntry2\nexcept2\nfinally2\nexcept1\nError\nfinally1\n"
 
 

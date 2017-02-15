@@ -1,0 +1,10 @@
+Title: cisco_cpu_multiitem, cisco_cpu: Make checks mutually exclusive
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0b2
+Date: 1487178458
+Class: fix
+
+Both of these checks being discovered on a device would lead to duplicate
+services. This has been fixed.

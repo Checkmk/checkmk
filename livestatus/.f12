@@ -5,7 +5,7 @@ SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
 LANG=C make -C .. config.h
-LANG=C make -j8
+LANG=C make -j4
 sudo install src/livestatus.o /omd/sites/$SITE/lib/mk-livestatus/livestatus.o
 
 (cd api/python ; bash .f12 )

@@ -257,8 +257,8 @@ cmc-$(VERSION).tar.gz: config.h enterprise/.werks/werks enterprise/ChangeLog
 	rm -rf cmc-$(VERSION)
 
 build: config.h
-	LANG=C $(MAKE) -C livestatus -j8
-	LANG=C $(MAKE) -C enterprise/core -j8
+	LANG=C $(MAKE) -C livestatus -j2
+	LANG=C $(MAKE) -C enterprise/core -j2
 	$(MAKE) -C enterprise/locale all
 
 install:
@@ -451,10 +451,10 @@ GTAGS: config.h
 
 compile_commands.json: config.h $(FILES_TO_FORMAT)
 	$(MAKE) -C livestatus clean
-	$(BEAR) $(MAKE) -C livestatus -j8
+	$(BEAR) $(MAKE) -C livestatus -j4
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core clean
-	$(BEAR) --append $(MAKE) -C enterprise/core -j8
+	$(BEAR) --append $(MAKE) -C enterprise/core -j4
 endif
 
 tidy: compile_commands.json

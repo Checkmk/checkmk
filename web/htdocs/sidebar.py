@@ -464,7 +464,8 @@ def ajax_snapin():
 
         with html.plugged():
             try:
-                # For testing purposes only: raise Exception("Test")
+                # For testing purposes uncomment:
+                # raise Exception("Test")
                 snapin["render"]()
             except Exception, e:
                 write_snapin_exception(e)

@@ -28,6 +28,7 @@ import inventory
 from cmk.regex import regex
 import cmk.defines as defines
 
+
 def paint_host_inventory(row, invpath):
     invdata = inventory.get(row.get("host_inventory"), invpath)
 
@@ -105,10 +106,9 @@ def paint_inv_tree(row, invpath = ".", column = "host_inventory"):
     else:
         tree_id = "/" + str(row["invhist_time"])
     node = inventory.get(tree, invpath)
-    html.plug()
-    render_inv_subtree_container(hostname, tree_id, invpath, node)
-    code = html.drain()
-    html.unplug()
+    with html.plugged():
+        render_inv_subtree_container(hostname, tree_id, invpath, node)
+        code = html.drain()
     return "invtree", code
 
 def render_inv_subtree(hostname, tree_id, invpath, node):

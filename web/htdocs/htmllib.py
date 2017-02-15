@@ -95,19 +95,6 @@ class RequestTimeout(MKException):
     pass
 
 
-# Plug context
-# Usage:
-#         with plug(html):
-#            html.write("something")
-#            html_code = html.drain()
-#         print html_code
-
-@contextmanager
-def plug(html):
-    html.plug()
-    yield
-    html.unplug()
-
 #
 # Encoding and escaping
 #
@@ -315,6 +302,12 @@ __builtin__.HTML = HTML
 #   +----------------------------------------------------------------------+
 #   | Provides the write functionality. The method lowlevel_write needs to |
 #   | to be overwritten in the specific subclass!                          |
+#   |                                                                      |
+#   |  Usage of plugged context:                                           |
+#   |          with html.plugged():                                        |
+#   |             html.write("something")                                  |
+#   |             html_code = html.drain()                                 |
+#   |          print html_code                                             |
 #   '----------------------------------------------------------------------'
 
 
@@ -351,6 +344,18 @@ class OutputFunnel(object):
 
     def lowlevel_write(self, text):
         raise NotImplementedError()
+
+
+    @contextmanager
+    def plugged(self):
+        self.plug()
+        try:
+            yield
+        except Exception, e:
+            self.drain()
+            raise
+        finally:
+            self.unplug()
 
 
     # Put in a plug which stops the text stream and redirects it to a sink.
@@ -1351,7 +1356,7 @@ class RequestHandler(object):
 
         else:
             # crash report please
-            raise TypeError(_("Only str and unicode values are allowed"))
+            raise TypeError(_("Only str and unicode values are allowed, got got %s") % type(value))
 
 
     def del_var(self, varname):

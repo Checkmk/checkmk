@@ -27,6 +27,7 @@
 import bi
 from cmk.defines import short_service_state_name
 
+
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___
 #    | | | |/ _` | __/ _` / __|/ _ \| | | | '__/ __/ _ \/ __|
@@ -79,21 +80,22 @@ multisite_datasources["bi_hostnamebygroup_aggregations"] = {
 #
 
 def paint_bi_icons(row):
-    html.plug()
+
     single_url = "view.py?" + html.urlencode_vars([
             ("view_name", "aggr_single"),
             ("aggr_name", row["aggr_name"])])
-    html.icon_button(single_url, _("Show only this aggregation"), "showbi")
     avail_url = single_url + "&mode=availability"
-    html.icon_button(avail_url, _("Analyse availability of this aggregation"), "availability")
-    if row["aggr_effective_state"]["in_downtime"] != 0:
-        html.icon(_("A service or host in this aggregation is in downtime."), "derived_downtime")
-    if row["aggr_effective_state"]["acknowledged"]:
-        html.icon(_("The critical problems that make this aggregation non-OK have been acknowledged."), "ack")
-    if not row["aggr_effective_state"]["in_service_period"]:
-        html.icon(_("This aggregation is currently out of its service period."), "outof_serviceperiod")
-    code = html.drain()
-    html.unplug()
+
+    with html.plugged():
+        html.icon_button(single_url, _("Show only this aggregation"), "showbi")
+        html.icon_button(avail_url, _("Analyse availability of this aggregation"), "availability")
+        if row["aggr_effective_state"]["in_downtime"] != 0:
+            html.icon(_("A service or host in this aggregation is in downtime."), "derived_downtime")
+        if row["aggr_effective_state"]["acknowledged"]:
+            html.icon(_("The critical problems that make this aggregation non-OK have been acknowledged."), "ack")
+        if not row["aggr_effective_state"]["in_service_period"]:
+            html.icon(_("This aggregation is currently out of its service period."), "outof_serviceperiod")
+        code = html.drain()
     return "buttons", code
 
 multisite_painters["aggr_icons"] = {

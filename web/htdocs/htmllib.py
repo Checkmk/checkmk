@@ -94,15 +94,6 @@ class RequestTimeout(MKException):
     pass
 
 
-from contextlib import contextmanager
-
-# Plug context
-@contextmanager
-def plug(html):
-    html.plug()
-    yield
-    html.unplug()
-
 #
 # Encoding and escaping
 #
@@ -318,8 +309,8 @@ class OutputFunnel(object):
 
 
     def __init__(self):
-        self.plug_level = -1
-        self.plug_text = []
+        self.plugged = False
+        self.plugged_text = ""
 
 
     # Accepts str and unicode objects only!
@@ -334,8 +325,8 @@ class OutputFunnel(object):
         if type(text) not in [str, unicode]: # also possible: type Exception!
             raise MKGeneralException(_('Type Error: html.write accepts str and unicode input objects only!'))
 
-        if self.is_plugged():
-            self.plug_text[self.plug_level] += text
+        if self.plugged:
+            self.plugged_text += text
         else:
             # encode when really writing out the data. Not when writing plugged,
             # because the plugged code will be handled somehow by our code. We
@@ -343,6 +334,7 @@ class OutputFunnel(object):
             if type(text) == unicode:
                 text = text.encode("utf-8")
             self.lowlevel_write(text)
+    #TODO:    return self
 
 
     def lowlevel_write(self, text):
@@ -351,29 +343,34 @@ class OutputFunnel(object):
 
     # Put in a plug which stops the text stream and redirects it to a sink.
     def plug(self):
-        self.plug_text += ['']
-        self.plug_level += 1
+        self.plugged = True
+        self.plugged_text = ''
 
 
     def is_plugged(self):
-        return self.plug_level > -1
+        return self.plugged
 
 
     # Pull the plug for a moment to allow the sink content to pass through.
     def flush(self):
-        if self.is_plugged():
-            text = self.plug_text[self.plug_level]
-            self.plug_text[self.plug_level] = ""
-            self.plug_level -= 1
-            self.write(text)
-            self.plug_level += 1
+        if self.plugged:
+            text = self.plugged_text
+
+            # encode when really writing out the data. Not when writing plugged,
+            # because the plugged code will be handled somehow by our code. We
+            # only encode when leaving the pythonic world.
+            if type(text) == unicode:
+                text = text.encode("utf-8")
+
+            self.lowlevel_write(text)
+            self.plugged_text = ''
 
 
     # Get the sink content in order to do something with it.
     def drain(self):
-        if self.is_plugged():
-            text = self.plug_text[self.plug_level]
-            self.plug_text[self.plug_level] = ''
+        if self.plugged:
+            text = self.plugged_text
+            self.plugged_text = ''
             return text
         else:
             return ''
@@ -381,8 +378,7 @@ class OutputFunnel(object):
 
     def unplug(self):
         self.flush()
-        self.plug_text.pop()
-        self.plug_level -= 1
+        self.plugged = False
 
 
 #.

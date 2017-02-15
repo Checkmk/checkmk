@@ -354,7 +354,7 @@ class TestCrawler(object):
 
 
     def report(self):
-        with file(self.report_file(), "w") as f:
+        with file(self.report_file()+".tmp", "w") as f:
             f.write("Skipped URLs:\n")
             for skipped_url in sorted(self.skipped):
                 f.write("  %s\n" % skipped_url)
@@ -368,6 +368,8 @@ class TestCrawler(object):
             if self.errors:
                 f.write("Crawled %d URLs in %d seconds. Failures:\n%s\n" %
                         (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
+
+        os.rename(self.report_file()+".tmp", self.report_file())
 
         if self.errors:
             pytest.fail("Crawled %d URLs in %d seconds. Failures:\n%s" %

@@ -44,6 +44,63 @@ except NameError:
     _ = lambda x: x # Fake i18n when not available
 
 
+def werk_classes():
+    return {
+        "feature"  : _("New Feature"),
+        "fix"      : _("Bug Fix"),
+        "security" : _("Security Fix"),
+    }
+
+
+def werk_components():
+    return {
+        # CRE
+        "core" :          _("Core & Setup"),
+        "checks" :        _("Checks & Agents"),
+        "multisite" :     _("User Interface"),
+        "wato" :          _("WATO"),
+        "notifications" : _("Notifications"),
+        "bi" :            _("BI"),
+        "reporting" :     _("Reporting & Availability"),
+        "ec" :            _("Event Console"),
+        "livestatus" :    _("Livestatus"),
+        "liveproxy" :     _("Livestatus-Proxy"),
+        "inv" :           _("HW/SW-Inventory"),
+
+        # CEE
+        "cmc" :           _("The Check_MK Micro Core"),
+        "setup" :         _("Setup, Site Management"),
+        "config" :        _("Configuration generation"),
+        "inline-snmp" :   _("Inline SNMP"),
+        "agents" :        _("Agent Bakery"),
+        "metrics" :       _("Metrics System"),
+
+        # CMK-OMD
+        "omd":            _("Site Management"),
+        "rpm":            _("RPM Packaging"),
+        "deb":            _("DEB Packaging"),
+        "nagvis":         _("NagVis"),
+        "packages":       _("Other Components"),
+        "distros":        _("Linux Distributions"),
+    }
+
+
+def werk_levels():
+    return {
+        1 : _("Trivial Change"),
+        2 : _("Prominent Change"),
+        3 : _("Major Feature"),
+    }
+
+
+def werk_compatibilities():
+    return {
+        "compat"       : _("Compatible"),
+        "incomp_ack"   : _("Incompatible"),
+        "incomp_unack" : _("Incompatible - TODO"),
+    }
+
+
 def _compiled_werks_dir():
     return cmk.paths.share_dir + "/werks"
 
@@ -55,9 +112,16 @@ def load():
         if file_name != "werks" and not file_name.startswith("werks-"):
             continue
 
-        path = os.path.join(_compiled_werks_dir(), file_name)
-        for werk_id, werk in json.load(open(path)).items():
-            werks[int(werk_id)] = werk
+        werks.update(load_precompiled_werks_file(os.path.join(_compiled_werks_dir(), file_name)))
+
+    return werks
+
+
+def load_precompiled_werks_file(path):
+    werks = {}
+
+    for werk_id, werk in json.load(open(path)).items():
+        werks[int(werk_id)] = werk
 
     return werks
 
@@ -114,3 +178,58 @@ def write_precompiled_werks(path, werks):
     with open(path, "w") as f:
         json.dump(werks, f, check_circular=False)
     #store.save_data_to_file(path, werks, pretty=False)
+
+
+
+# sort by version and within one version by component
+def sort_by_version_and_component(werks):
+    return sorted(werks, key=lambda x: \
+            (parse_check_mk_version(x["version"]), werk_components().get(x["component"], x["component"]),
+             x["class"] != "fix", x["class"] != "sec", x["title"]),
+           reverse=True)
+
+
+# Parses versions of Check_MK and converts them into comparable integers.
+# This does not handle daily build numbers, only official release numbers.
+# 1.2.4p1   -> 01020450001
+# 1.2.4     -> 01020450000
+# 1.2.4b1   -> 01020420100
+# 1.2.3i1p1 -> 01020310101
+# 1.2.3i1   -> 01020310100
+# TODO: Copied from check_mk_base.py - find location for common code.
+def parse_check_mk_version(v):
+    def extract_number(s):
+        number = ''
+        for i, c in enumerate(s):
+            try:
+                int(c)
+                number += c
+            except ValueError:
+                s = s[i:]
+                return number and int(number) or 0, s
+        return number and int(number) or 0, ''
+
+    parts = v.split('.')
+    while len(parts) < 3:
+        parts.append("0")
+
+    major, minor, rest = parts
+    sub, rest = extract_number(rest)
+
+    if not rest:
+        val = 50000
+    elif rest[0] == 'p':
+        num, rest = extract_number(rest[1:])
+        val = 50000 + num
+    elif rest[0] == 'i':
+        num, rest = extract_number(rest[1:])
+        val = 10000 + num*100
+
+        if rest and rest[0] == 'p':
+            num, rest = extract_number(rest[1:])
+            val += num
+    elif rest[0] == 'b':
+        num, rest = extract_number(rest[1:])
+        val = 20000 + num*100
+
+    return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, val))

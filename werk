@@ -104,73 +104,15 @@ def save_last_werkid(id):
     except:
         pass
 
-g_current_version = None
-def parse_changelog():
-    global g_current_version
-    ch = file("../ChangeLog")
-    version = ch.readline().strip().rstrip(":")
-    if len(version) not in [ 5, 6, 7, 8, 9, 10 ] or \
-       not version[0].isdigit() or \
-       version[1] != '.':
-       bail_out("Invalid version number '%s' in ChangeLog" % version)
-    g_current_version = version
 
+def load_current_version():
+    for line in file("../Makefile"):
+        if line.startswith("VERSION"):
+            version = line.split("=", 1)[1].strip()
+            return version
 
-def rewrite_changelog(*args):
-    # Rewrite just section with current version
-    chn = file("../ChangeLog.new", "w")
-    chn.write("%s:\n" % g_current_version)
+    bail_out("Failed to read VERSION  from Makefile")
 
-    ch = file("../ChangeLog")
-    ch.readline() # skip current version
-    while True:
-        line = ch.readline()
-        # Konfliktmarker einfach ignorieren
-        if line[0] not in [ '\n', ' ', '\t', '<', '>', '=' ]:
-            break
-
-    oldlines = [line] + ch.readlines()
-
-    werks = [ werk for werkid, werk in g_werks.items() if werk["version"] == g_current_version ]
-    werks.sort(cmp = lambda a,b: cmp(a["class"] == "fix", b["class"] == "fix") or cmp(a["date"], b["date"]))
-
-    werks_by_comp = {}
-    for werk in werks:
-        comp = werk["component"]
-        werks_by_comp.setdefault(comp, []).append(werk)
-
-    comps_sorted = werks_by_comp.items()
-    comps_sorted.sort(cmp = lambda a,b: cmp(component_sort_key(a[0]), component_sort_key(b[0])))
-
-    first = True
-    for compid, werks in comps_sorted:
-        if first:
-            first = False
-        else:
-            chn.write("\n")
-        compname = dict(components).get(compid, compid)
-        chn.write("    %s:\n" % compname)
-        for werk in werks:
-            write_changelog_line(chn, werk)
-
-    chn.write("\n\n")
-    chn.write("".join(oldlines))
-    chn.close()
-    ch.close()
-    os.rename("../ChangeLog.new", "../ChangeLog")
-
-def write_changelog_line(chn, werk):
-    prefix = ""
-    for classid, classname, p in classes:
-        if werk["class"] == classid and p:
-            prefix = " " + p + ":"
-    if werk["description"] and len(werk["description"])> 3:
-        omit = "..."
-    else:
-        omit = ""
-    chn.write("    * %04d%s %s%s\n" % (werk["id"], prefix, werk["title"], omit))
-    if werk["compatible"] == "incomp":
-        chn.write("            NOTE: Please refer to the migration notes!\n")
 
 def component_sort_key(comp):
     for nr, component in enumerate(components):
@@ -232,7 +174,6 @@ def save_werk(werk):
     f.close()
     git_add(werk)
     save_last_werkid(werk["id"])
-    rewrite_changelog()
 
 def change_werk_version(werk_id, new_version):
     werk = g_werks[werk_id]
@@ -254,7 +195,7 @@ def git_commit(werk, custom_files):
 
     if custom_files:
         files_to_commit = custom_files
-        default_files   = [ ".werks", "ChangeLog" ]
+        default_files   = [ ".werks" ]
         for entry in default_files:
             files_to_commit.append("%s/%s" % (git_top_level(), entry))
 
@@ -265,7 +206,7 @@ def git_commit(werk, custom_files):
     else:
         if something_in_git_index():
             dash_a = ''
-            os.system("cd '%s' ; git add .werks ChangeLog" % git_top_level())
+            os.system("cd '%s' ; git add .werks" % git_top_level())
         else:
             dash_a = '-a'
 
@@ -316,7 +257,6 @@ where COMMAND is one of:
   grep [-v] KW1 KW2...   - show werks containing all of the given keywords (-v: verbose)
   edit [#]               - open werk # in editor (or newest werk)
   blame [#]              - show who worked on a werk
-  rewrite                - rewrite changelog
   url #                  - show the online URL of werk #
 
 """)
@@ -608,7 +548,6 @@ def main_delete(args):
     for ids in args:
         if 0 == os.system("git rm %s" % ids):
             sys.stdout.write("Deleted werk %s (%s).\n" % (ids, g_werks[int(ids)]["description"]))
-    rewrite_changelog()
 
 def grep(line, kw, n):
     lc = kw.lower()
@@ -703,7 +642,6 @@ def edit_werk(werkid, custom_files = [], commit = True):
         load_werks()
         werk = g_werks[werkid]
         git_add(g_werks[werkid])
-        rewrite_changelog()
         if commit:
             git_commit(werk, custom_files)
 
@@ -736,11 +674,6 @@ def main_pick(args):
 
 
 def werk_cherry_pick(commit_id, no_commit):
-    # Create a copy of our current ChangeLog in order to deal
-    # with merge conflicts (different branches use different version
-    # numbers).
-    old_changelog = file("../ChangeLog").read()
-
     # Cherry-pick the commit in question from the other branch
     os.system("git cherry-pick --no-commit '%s'" % commit_id)
 
@@ -749,18 +682,12 @@ def werk_cherry_pick(commit_id, no_commit):
     load_werks() # might have changed
     for line in os.popen("git status --porcelain"):
         # M  .werks/103
-        #  M ChangeLog
         #  M werk
         status, filename = line.strip().split(None, 1)
         if filename.startswith(".werks/") and filename[7].isdigit():
             werk_id = int(filename[7:])
             change_werk_version(werk_id, g_current_version)
             sys.stdout.write("Changed version of werk #%04d to %s.\n" % (werk_id, g_current_version))
-
-    # Move back our saved ChangeLog and rewrite it so the new werk appears
-    file("../ChangeLog", "w").write(old_changelog)
-    rewrite_changelog()
-    os.system("git add ../ChangeLog")
 
     # Commit
     if not no_commit:
@@ -838,7 +765,7 @@ versions = set([])
 goto_werksdir()
 load_config()
 load_werks()
-parse_changelog()
+g_current_version = load_current_version()
 
 if len(sys.argv) < 2:
     usage()
@@ -854,7 +781,6 @@ commands = {
   "grep"        : main_grep,
   "edit"        : main_edit,
   "ids"         : main_fetch_ids,
-  "rewrite"     : rewrite_changelog,
   "pick"        : main_pick,
   "cherry-pick" : main_pick,
   "url"         : main_url,

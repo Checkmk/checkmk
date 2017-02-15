@@ -292,7 +292,8 @@ install:
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	install -m 755 enterprise/active_checks/check_lql_service $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_enterprise
-	install -m 644 ChangeLog-cmc enterprise/EULA-* $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_enterprise/ChangeLog
+	install -m 644 enterprise/EULA-* $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_enterprise
+	install -m 644 ChangeLog-cmc $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_enterprise/ChangeLog
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
 	install -m 644 enterprise/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk_enterprise
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks

@@ -10,5 +10,10 @@ it will be not removed. The host tag is stiull assigned to the hosts.
 
 Inheritance of folder host tags does not work if you try to remove the host tags.
 
-Workaround:
-Please edit single hosts and remove the wrong host tag. This will remove the host tag from the host.
+----
+
+It is working as expected. What you need to know is that the "bulk edit"
+dialog can not be used for removing set attributes. You need to use
+the dialog "bulk cleanup" to remove attributes from hosts in bulk.
+
+I improved the description on top of the bulk edit page.

@@ -2,8 +2,8 @@ Title: Permissions for views and dashboards inconsistent
 Component: multisite
 State: open
 Date: 2016-03-01 09:58:31
-Targetversion: 1.2.9
-Class: bug
+Targetversion: 1.5.0
+Class: nastiness
 
 1. Views und Dashboards:
 In beiden Fällen gibt es die Option, dass Ansicht oder Gesamtübersicht

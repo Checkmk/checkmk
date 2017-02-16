@@ -397,7 +397,9 @@ def inventory_if_common(info, has_nodeinfo = False):
             if ifGroup:
                 have_groups.setdefault(ifGroup, {
                     "interfaces"     : [],
-                    "group_patterns" : {g_hostname : {}},
+                    "group_type"     : "single_host",
+                    "group_presence" : "instead",
+                    "group_patterns" : {g_hostname : {"items" : [], "iftype" : ifType}},
                 })
                 have_groups[ifGroup]["interfaces"].append(
                     (saveint(ifSpeed), ifOperStatus, ifType))

@@ -1,9 +1,9 @@
 Title: Generalize file IO handling and catch various issues in a general way
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2015-12-02 16:18:27
 Targetversion: future
-Class: bug
 
 Some general errors like:
 
@@ -45,3 +45,9 @@ But how? If the disk is full various other things will also crash. No state
 files can be written. Funny things can happen. Maybe the safest way would
 be to immediately shut down the core if there is no space left. Can we actively
 watch that and if the free space falls below X MB we stop the core?
+
+2017-02-15 17:14:16: changed state open -> done
+This is now handled (at least for the files written by the python code) via the cmk.store
+functions which works nice. We are first writing to a temporary file. When this fails,
+e.g. because of not enough space, the original file is not affected and the user sees
+an error message.

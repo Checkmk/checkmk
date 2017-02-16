@@ -4220,11 +4220,14 @@ def mode_bulk_edit(phase):
         html.del_all_vars(prefix="attr_")
         html.del_all_vars(prefix="bulk_change_")
 
-    html.p("%s%s" % (_("You have selected <b>%d</b> hosts for bulk edit. You can now change "
-                       "host attributes for all selected hosts at once. ") % len(hosts),
-                     _("If a select is set to <i>don't change</i> then currenty not all selected "
-                       "hosts share the same setting for this attribute. "
-                       "If you leave that selection, all hosts will keep their individual settings.")))
+    html.p("%s%s %s" % (
+        _("You have selected <b>%d</b> hosts for bulk edit. You can now change "
+          "host attributes for all selected hosts at once. ") % len(hosts),
+        _("If a select is set to <i>don't change</i> then currenty not all selected "
+          "hosts share the same setting for this attribute. "
+          "If you leave that selection, all hosts will keep their individual settings."),
+        _("In case you want to <i>unset</i> attributes on multiple hosts, you need to "
+          "use the <i>bulk cleanup</i> action instead of bulk edit.")))
 
     html.begin_form("edit_host", method = "POST")
     html.prevent_password_auto_completion()

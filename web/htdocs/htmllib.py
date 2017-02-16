@@ -1302,7 +1302,7 @@ class RequestHandler(object):
 
     def var_utf8(self, varname, deflt = None):
         val = self.vars.get(varname, deflt)
-        if val != None and type(val) != unicode:
+        if type(val) == str:
             return val.decode("utf-8")
         else:
             return val

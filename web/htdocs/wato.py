@@ -8757,11 +8757,11 @@ def mode_timeperiod_import_ical(phase):
                 html.set_var('%s_0_from' % day, '')
                 html.set_var('%s_0_until' % day, '')
 
-            html.set_var('except_count', len(data['events']))
+            html.set_var('except_count', "%d" % len(data['events']))
             for index, event in enumerate(data['events']):
                 index += 1
                 html.set_var('except_%d_0' % index, event['date'])
-                html.set_var('except_indexof_%d' % index, index)
+                html.set_var('except_indexof_%d' % index, "%d" % index)
                 if ical['times']:
                     for n in range(3):
                         if ical['times'][n]:

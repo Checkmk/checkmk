@@ -1,9 +1,9 @@
 Title: Bulk edit for hosts seems to contain checkbox state when it should not
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2016-04-18 14:38:33
 Targetversion: 1.2.8
-Class: bug
 
 Wenn man mehrere Hosts für einen bulk edit markiert hatte und die Änderungen
 mit „Save & Finish“ übernommen hat und dann andere Hosts markiert
@@ -29,3 +29,6 @@ index 31a6deb..0d0d10f 100644
      # Helper function for showing bulk actions. This is needed at the bottom
      # of the table of hosts and - if there are more than just a few - also
      # at the top of the table.
+
+2017-02-16 16:23:57: changed state open -> done
+Can not reproduce this with current version. Seems to be fixed now.

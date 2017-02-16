@@ -2,7 +2,7 @@ Title: Unicode characters in HTTP variables crash the GUI in different places
 Component: multisite
 State: open
 Date: 2016-08-03 17:14:34
-Targetversion: 1.2.8
+Targetversion: 1.5.0
 Class: bug
 
 When a unicode character is added to URL variables read with html.vars() and this
@@ -11,3 +11,8 @@ is added to the HTML output which may already be unicode, this results into an e
 For example this URL: http://localhost/stable/check_mk/view.py?asdx=asd&view_name=allhosts%F0%9F%98%B4
 
 We should solve this in a general place, for example html.var().
+
+---
+
+Solution: Cleanup html.var() to always return Unicode strings instead of byte strings.
+In this stept html.var_utf8() and html.get_unicode_input() can be replaced.

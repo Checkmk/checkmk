@@ -1,11 +1,14 @@
 Title: Hosts without site attribute are monitored by all sites
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2016-08-03 11:10:47
 Targetversion: 1.2.8
-Class: bug
 
 When creating a host manually or with "hole" script, these hosts have no site attribute set. When this is synced
 to a slave site, the host is monitored by both sites.
 
 We should detect that and only monitor those hosts on standalone sites or WATO master sites.
+
+2017-02-16 16:16:35: changed state open -> done
+This should be fixed in current versions.

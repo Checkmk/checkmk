@@ -1,9 +1,9 @@
 Title: Migration from Ubuntu to RedHat with omd backup failed
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2016-08-17 13:54:17
 Targetversion: 1.2.8
-Class: bug
 
 If you create a backup of an existing site with omd backup on a Ubuntu server and do a restore
 on a RedHat machine with omd restore, then the site will not be startet. Apache configuration is
@@ -11,3 +11,8 @@ wrong, because during the restore the lokale Apache configuration is not reset t
 
 Workaround:
 Replace the include section of modules with default section of another site.
+
+2017-02-16 17:26:31: changed state open -> done
+This has been fixed with current versions. The files have been made
+more portable so that you don't need to change the module paths
+anymore.

@@ -143,7 +143,11 @@ function run_cached () {
     local CMDLINE="$section$@"
 
     if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
-    CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
+    if [ "$mrpe" = 1 ] ; then
+        CACHEFILE="$MK_VARDIR/cache/mrpe_$NAME.cache"
+    else
+        CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
+    fi
 
     # Check if the creation of the cache takes suspiciously long and kill the
     # process if the age (access time) of $CACHEFILE.new is twice the MAXAGE.

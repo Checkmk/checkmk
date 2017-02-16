@@ -1,0 +1,10 @@
+Title: Timeperiods: Fixed broken import of iCal files
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.5.0i1
+Date: 1487266167
+
+

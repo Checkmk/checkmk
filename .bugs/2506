@@ -1,12 +1,16 @@
 Title: Rule Disabled Services only work with positive result
 Component: wato
-State: open
+Class: bug
+State: works4me
 Date: 2016-08-03 13:19:26
 Targetversion: 1.2.8
-Class: bug
 
 You want to disable all Services like MSSQL.* and use one rule with a positive outcome.
 All services will be disabled.
 After that rule you add another one and try to get explizit services again like MSSQL Production$.
 That shoudl work with a negative outcome. It will not work. All combinations do not get the result,
 that was wished. Disable all services and include only some of them.
+
+2017-02-16 17:06:32: changed state open -> works4me
+Works as expected. The first rule needs to be the "include" rule and the second one
+the "exclude" rule.

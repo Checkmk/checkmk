@@ -1,9 +1,9 @@
 Title: clustered services does not filter by hostname
 Component: wato
-State: open
+Class: bug
+State: works4me
 Date: 2016-08-10 13:13:00
 Targetversion: 1.2.8
-Class: bug
 
 Wenn in "Clustered services" eine Regel erstellt wird, welche nur nach einem bestimmten Service auf einem bestimmten Host matchen sollte, greift diese dennoch auf allen Hosts, welche im Cluster sind und den genannten Service haben. Bsp:
 Host A hat den Service 1
@@ -18,3 +18,7 @@ Die erste Regel fügt den Inhalt der Services 1 von beiden Hosts zu einem Servic
 Die zweite Regel tut was sie soll, da auf Host A der Service nicht zur Verfügung steht.
 
 Der Service des Host B wird allerdings weiterhin als Host B zugeordnet angezeigt und der Service von Host A wird korrekt als "Already configured clustered services" definiert.
+
+2017-02-16 17:24:48: changed state open -> works4me
+Can not reproduce, works as expected. Please let me know how to reproduce in case
+this is still an issue.

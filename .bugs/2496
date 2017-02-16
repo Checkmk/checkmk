@@ -1,11 +1,14 @@
 Title: Folders snaping -> some subfolder -> dashboards -> Globestatistik -> Link in number wrong
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2016-06-27 11:53:50
 Targetversion: 1.2.8
-Class: bug
 
 On a dashboards that shows just a subfolder of WATO the statistics in the
 globes print the correct numbers. But a click on such a number seems to
 drop the WATO folder filter so the resulting view is global - not for 
 the selected folder.
+
+2017-02-16 16:36:44: changed state open -> done
+Fixed.

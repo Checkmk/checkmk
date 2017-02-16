@@ -2,7 +2,7 @@ Title: WATO-Snapshots should warn if data in local/ is too much
 Component: wato
 State: open
 Date: 2016-07-06 11:43:10
-Targetversion: 1.2.8
+Targetversion: 1.5.0
 Class: bug
 
 We had the case that a user pu approx 4GB of tmp data below local/.
@@ -11,3 +11,9 @@ took very long and lead to a Apache timeout (proxy error...).
 
 We need to validate the data in local/ somehow. Maybe make size
 limit? Or positively check all directories?
+
+----
+
+Solution: We are planning to create some "todo / config and performance hints" 
+page that shows a list of things to tune to have a good setup. This page could
+make such a local/ directory size check.

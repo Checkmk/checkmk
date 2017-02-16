@@ -182,7 +182,7 @@ def write_precompiled_werks(path, werks):
 
 # Writhe the given werks to a file object. This is used for creating a textual
 # change log for the released versions and the announcement mails
-def write_as_text(werks, f):
+def write_as_text(werks, f, write_version=True):
     version, component = None, None
     for werk in sort_by_version_and_component(werks.values()):
         if version != werk["version"]:
@@ -191,7 +191,8 @@ def write_as_text(werks, f):
 
             version, component = werk["version"], None
 
-            f.write("%s:\n" % werk["version"])
+            if write_version:
+                f.write("%s:\n" % werk["version"])
 
         if component != werk["component"]:
             if component is not None:

@@ -1,0 +1,9 @@
+Title: Fixed broken host edit page on distributed WATO slave sites (when WATO is enabled)
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0b3
+Date: 1487253287
+Class: fix
+
+

@@ -42,7 +42,11 @@ builtin_dashboards["main"] = {
             "position"     : (1, 1),
             "refresh"      : 60,
             "show_title"   : True,
-            "context"      : {},
+            'context'      : {
+                'wato_folder': {
+                    'wato_folder': '',
+                }
+            },
             'single_infos' : [],
         },
         {
@@ -51,7 +55,11 @@ builtin_dashboards["main"] = {
             "position"   : (31, 1),
             "refresh"    : 60,
             "show_title" : True,
-            "context"    : {},
+            'context'    : {
+                'wato_folder': {
+                    'wato_folder': '',
+                }
+            },
             'single_infos' : [],
         },
         {

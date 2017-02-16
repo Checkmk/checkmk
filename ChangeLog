@@ -7,6 +7,7 @@
 
     Multisite:
     * 4365 FIX: Service availability: Host down could not be rewritten to other states like CRIT
+    * 4371 FIX: Dashboards: Folder filtered globe dashlets now link to filtered views
 
 
 1.2.8p17:

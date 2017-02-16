@@ -1,0 +1,10 @@
+Title: Distributed WATO: Remote site properties "WATO enabled" and "Automatic sync" were not applied on slaves
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.5.0i1
+Date: 1487254080
+
+

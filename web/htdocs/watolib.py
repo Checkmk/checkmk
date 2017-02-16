@@ -3197,9 +3197,9 @@ def save_global_settings(vars, site_specific=False):
     # The global setting wato_enabled is not registered in the configuration domains
     # since the user must not change it directly. It is set by D-WATO on slave sites.
     if "wato_enabled" in vars:
-        per_domain.setdefault("multisite", {})["wato_enabled"] = vars["wato_enabled"]
+        per_domain.setdefault(ConfigDomainGUI, {})["wato_enabled"] = vars["wato_enabled"]
     if "userdb_automatic_sync" in vars:
-        per_domain.setdefault("multisite", {})["userdb_automatic_sync"] = vars["userdb_automatic_sync"]
+        per_domain.setdefault(ConfigDomainGUI, {})["userdb_automatic_sync"] = vars["userdb_automatic_sync"]
 
     for domain in ConfigDomain.enabled_domains():
         if site_specific:

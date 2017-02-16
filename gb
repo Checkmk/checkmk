@@ -107,7 +107,7 @@ def check_modified():
     global g_modified
     g_modified = set([])
     for line in os.popen("git status --porcelain"):
-        if line[0] in "AM" and ".bugs/" in line:
+        if line.lstrip()[0] in "AM" and ".bugs/" in line:
             try:
                 id = line.rsplit("/", 1)[-1].strip()
                 g_modified.add(int(id))

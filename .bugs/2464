@@ -1,10 +1,13 @@
 Title: Hosts configured for a multisite only site are monitored on master
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2016-08-03 11:12:16
 Targetversion: 1.2.8
-Class: bug
 
 When having the master site connected with another site only in the status world, without
 distributed WATO and assigning a host to that site, the host is still monitored by the
 master site. The host should simply not be monitored instead.
+
+2017-02-16 17:48:39: changed state open -> done
+has already been fixed.

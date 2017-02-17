@@ -3815,9 +3815,13 @@ class Password(TextAscii):
             kwargs["autocomplete"] = "new-password"
 
         html.password_input(varprefix, str(value), **kwargs)
+
+
+    def password_plaintext_warning(self):
         if self._is_stored_plain:
-            html.span(_("<br>Please note that this password needs to be<br>"
-                        "stored in plain text on the Check_MK server."))
+            html.span(_("<br>Please note that Check_MK needs this password in clear"
+                        "<br>text during normal operation and thus stores it unencrypted"
+                        "<br>on the Check_MK server."))
 
 
     def value_to_text(self, value):
@@ -3845,9 +3849,8 @@ class PasswordSpec(Password):
         if self._hidden:
             html.icon_button("#", _(u"Show/Hide password"), "showhide",
                              onclick="vs_toggle_hidden(this);")
-        if self._is_stored_plain:
-            html.span(_("<br>Please note that this password needs to be<br>"
-                        "stored in plain text on the Check_MK server."))
+
+        self.password_plaintext_warning()
 
 
 

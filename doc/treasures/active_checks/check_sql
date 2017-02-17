@@ -216,6 +216,7 @@ try:
             sys.stderr.write("Input Values: %s\n" % opt_input)
         else:
             sys.stderr.write("SQL Statement: %s\n" % opt_sql)
+
     if opt_procedure:
         outvar = cursor.var(cx_Oracle.STRING)
         #opt_input.append("outvar")
@@ -242,7 +243,7 @@ except Exception, e:
 
 
 if opt_verbose:
-    sys.stderr.write("SQL Result:\n %s\n" % " ".join(result))
+    sys.stderr.write("SQL Result:\n %r\n" % result)
 
 
 try:

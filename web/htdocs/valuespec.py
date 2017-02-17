@@ -3816,8 +3816,8 @@ class Password(TextAscii):
 
         html.password_input(varprefix, str(value), **kwargs)
         if self._is_stored_plain:
-            html.write("&nbsp;<span>%s</span>" % _("Please note that this password is stored in plain "
-                                             "text."))
+            html.span(_("<br>Please note that this password needs to be<br>"
+                        "stored in plain text on the Check_MK server."))
 
 
     def value_to_text(self, value):
@@ -3846,7 +3846,8 @@ class PasswordSpec(Password):
             html.icon_button("#", _(u"Show/Hide password"), "showhide",
                              onclick="vs_toggle_hidden(this);")
         if self._is_stored_plain:
-            html.span(_("Please note that this password is stored in plain text."))
+            html.span(_("<br>Please note that this password needs to be<br>"
+                        "stored in plain text on the Check_MK server."))
 
 
 

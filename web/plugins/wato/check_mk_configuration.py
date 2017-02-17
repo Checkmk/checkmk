@@ -2258,7 +2258,7 @@ register_rule(group,
     Dictionary(
         elements = [
             ( "passphrase", PasswordSpec(title = _("Encryption secret"), allow_empty = False, hidden = True) ),
-            ( "use_regular", RadioChoice(title = _("Encryption for Agent"),
+            ( "use_regular", DropdownChoice(title = _("Encryption for Agent"),
                     help = _("Choose if the agent agents encrypt packages. This controls whether "
                              "baked agents encrypt their output and whether check_mk expects "
                              "encrypted output. "
@@ -2273,7 +2273,7 @@ register_rule(group,
                         ( "disable", _("Disable (drop encrypted data)") )
                     ])
             ),
-            ( "use_realtime", RadioChoice(title = _("Encryption for Realtime Updates"),
+            ( "use_realtime", DropdownChoice(title = _("Encryption for Realtime Updates"),
                     help = _("Choose if realtime updates are sent/expected encrypted"),
                     default_value = "enforce",
                     choices = [

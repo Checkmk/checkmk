@@ -13,6 +13,7 @@
 
     WATO:
     * 4373 FIX: Timeperiods: iCal events with multiple days can now be imported
+    * 4376 FIX: WATO Web-API: Is now disabled when WATO is disabled on a site (e.g. slave sites)
 
 
 1.2.8p17:

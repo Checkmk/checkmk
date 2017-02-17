@@ -72,6 +72,9 @@ def page_api():
         config.need_permission("wato.use")
         config.need_permission("wato.api_allowed")
 
+        if not config.wato_enabled:
+            raise MKUserError(None, _("WATO is disabled on this site."))
+
         action = html.var('action')
         if action not in api_actions:
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))

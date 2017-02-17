@@ -1,7 +1,10 @@
 Title: BI fetching of parents not working? See get_status_info_filtered()
 Component: bi
-State: open
+Class: bug
+State: done
 Date: 2016-09-28 09:03:40
 Targetversion: 1.2.8
-Class: bug
 
+
+2017-02-17 12:06:02: changed state open -> done
+Has now been fixed

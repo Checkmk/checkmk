@@ -1,4 +1,4 @@
-Title: linux and windows agent can now be configured to directly encrypt their output. For real-time updates encryption is now optional (but active per default)
+Title: Linux and Windows agent can now encrypt their output
 Level: 2
 Component: core
 Compatible: compat
@@ -6,18 +6,24 @@ Version: 1.4.0i1
 Date: 1459867428
 Class: feature
 
-This feature can be configured through Host&Service Parameters -> Access to agents -> Encryption.
-When "Encryption for Agents" is set to "enforce" or "enable", two things will happen:
-a) Baked windows or linux agents will be configured to encrypt their output
-b) check_mk will be configured to try to decrypt output from agents. In case of "enable" it will
-also accept unencrypted output, in case of "enforce" it won't.
+This feature can be configured through
+{{Host & Service Parameters|Access to agents|Encryption}}.
+When {{Encryption for Agents}} is set to {{enforce}}
+or {{enable}}, two things will happen:
+
+LI:Baked Windows or Linux agents will be configured to encrypt their output
+LI:Check_mk will be configured to try to decrypt output from agents.
+
+In case of {{enable}} it will also accept
+unencrypted output, in case of {{enforce}} it won't.
 
 This change also affects real-time updates as these were already encrypted.
-The passphrase configured for real-time updates will now only serve as a default, agents with
-"Encryption" configured will use the same passphrase for rt and regular updates.
-Finally, it is now also possible to configure real-time updates to be unencrypted.
+The passphrase configured for real-time updates will now only serve as a
+default, agents with "Encryption" configured will use the same passphrase
+for rt and regular updates.  Finally, it is now also possible to configure
+real-time updates to be unencrypted.
 
-All encryption happens with AES using 256bit keys and cbc.
+All encryption happens with AES using 256 bit keys and CBC.
 
-The above is completely optional, the default behaviour for everything (including real-time updates)
-is compatible with previous versions.
+The new encryption feature is completely optional, the default behaviour for
+everything (including real-time updates) is compatible with previous versions.

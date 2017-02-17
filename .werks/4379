@@ -1,0 +1,10 @@
+Title: Don't show delete event icon in event history views
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.4.0b3
+Date: 1487342019
+Class: fix
+
+This icon makes only sense in regular Event Console views to delete
+an open event.

@@ -41,7 +41,7 @@ test-bandit:
 
 test-bandit-ci:
 	OUTPUT_ARGS="-f xml -o \"$$WORKDIR/bandit_results.xml\"" \
-	    $(MAKE) test-bandit
+	    $(MAKE) test-bandit || true
 
 
 setup:

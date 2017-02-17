@@ -13327,6 +13327,7 @@ class ModeEditRule(WatoMode):
         if valuespec:
             forms.header(valuespec.title() or _("Value"))
             forms.section()
+            html.prevent_password_auto_completion()
             try:
                 valuespec.validate_datatype(self._rule.value, "ve")
                 valuespec.render_input("ve", self._rule.value)

@@ -1,0 +1,11 @@
+Title: check_sql: Fixed reporting configuration issues to monitoring core
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.5.0i1
+Date: 1487320186
+Class: fix
+
+The plugin was writing it's textual output to stderr in case of errors or
+configuration problems which is not processed by the core. So the plugin
+output could be empty.

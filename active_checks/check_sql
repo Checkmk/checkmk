@@ -77,6 +77,12 @@ def saverfloat(f):
         return float(f)
 
 
+def bail_out(exit_code, output):
+    state_txt = [ "OK", "WARN", "CRIT", "UNKNOWN" ][exit_code]
+    sys.stdout.write("%s - %s\n" % (state_txt, output))
+    sys.exit(exit_code)
+
+
 short_options = 'hou:i:p:d:n:H:P:w:c:v'
 long_options  = [
     'help', 'user=', 'password=', 'dbms=', 'name=', 'warning=', 'critical=', 'hostname=',
@@ -85,10 +91,8 @@ long_options  = [
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
-
 except getopt.GetoptError, e:
-    sys.stderr.write("UNKOWN - Error in command options: %s\n" % e)
-    sys.exit(3)
+    bail_out("Error in command options: %s" % e)
 
 
 opt_debug         = False
@@ -140,14 +144,12 @@ try:
         opt_sql_tmp = ' '.join(map(str,args))
         opt_sql = opt_sql_tmp.replace(r"\n", "\n").replace('\;', ";")
     else:
-        sys.stderr.write("UNKNOWN - no query or SQL statement/procedure name given\n")
-        sys.exit(3)
+        bail_out(3, "No query or SQL statement/procedure name given")
 
 except Exception, e:
     if opt_debug:
         raise
-    sys.stderr.write("UNKNOWN - Error while processing input: %s\n" % e)
-    sys.exit(3)
+    bail_out(3, "Error while processing input: %s" % e)
 
 
 try:
@@ -202,19 +204,18 @@ try:
         db_connection = ibm_db_dbi.Connection(ibm_db_conn)
 
     else:
-        sys.stderr.write("UNKNOWN - dbms not found\n")
-        sys.exit(3)
+        bail_out(3, "DBMS '%s' not supported" % opt_dbms)
 
     cursor = db_connection.cursor()
 
 except Exception, e:
     if opt_debug:
         raise
+
     if len(e.args) > 1:
-        sys.stderr.write("UNKNOWN - Error while connecting to database: [%d] %s\n" % (e.args[0], e.args[1]))
+        bail_out(3, "Error while connecting to database: [%d] %s" % (e.args[0], e.args[1]))
     else:
-        sys.stderr.write("UNKNOWN - Error while connecting to database: %s\n" % e)
-    sys.exit(3)
+        bail_out(3, "Error while connecting to database: %s" % e)
 
 
 try:
@@ -243,11 +244,12 @@ try:
 except Exception, e:
     if opt_debug:
         raise
+
     if len(e.args) > 1:
-        sys.stderr.write("UNKNOWN - Error while executing SQL statement/procedure: [%d] %s\n" % (e.args[0], e.args[1]))
+        bail_out(3, "Error while executing SQL statement/procedure: [%d] %s" %
+                                                        (e.args[0], e.args[1]))
     else:
-        sys.stderr.write("UNKNOWN - Error while executing SQL statement/procedure: %s\n" % e)
-    sys.exit(3)
+        bail_out(3, "Error while executing SQL statement/procedure: %s" % e)
 
 
 if opt_verbose:
@@ -255,12 +257,8 @@ if opt_verbose:
 
 
 try:
-    #if len(result) > 1:
-    #    sys.stderr.write("UNKNOWN - SQL statement/procedure returned more than one line\n")
-    #    sys.exit(3)
     if result == None or len(result) == 0:
-        sys.stderr.write("UNKNOWN - SQL statement/procedure returned no data\n")
-        sys.exit(3)
+        bail_out(3, "SQL statement/procedure returned no data")
 
     number = float(result[0])
 
@@ -289,16 +287,12 @@ try:
         if number in [ 0, 1, 2, 3 ]:
             state = int(number)
         else:
-            sys.stderr.write("UNKNOWN - <%s> is not a state, and no levels given\n" % str(number))
-            sys.exit(3)
+            bail_out(3, "<%d> is not a state, and no levels given" % number)
 
 except Exception, e:
     if opt_debug:
         raise
-    sys.stderr.write("UNKNOWN - Error while processing result of SQL statement: %s\n" % e)
-    sys.exit(3)
 
+    bail_out(3, "Error while processing result of SQL statement: %s" % e)
 
-state_readable = ["OK", "WARN", "CRIT", "UNKNOWN" ][state]
-sys.stdout.write("%s - %s%s\n" % (state_readable, text, perf))
-sys.exit(state)
+bail_out(state, "%s%s" % (text, perf))

@@ -1,12 +1,15 @@
 Title: Import of ical files into timeperiod does not honor multiday events correctly
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2016-12-14 09:31:57
 Targetversion: 1.2.8
-Class: bug
 
 Wenn für Time Periods eine iCal-Datei mit einem Mehrtagestermin
 importiert wird (also z.B. DTSTART=20161212T000000 und
 DTEND=20161215T235959) dann wird nur der erste Tag als Eintrag in der
 Time Period generiert. Hier sollten analog zu Wiederholungsterminen
 mehrere Tage in der Time Period angelegt werden.
+
+2017-02-17 08:48:56: changed state open -> done
+Just fixed that.

@@ -1,0 +1,9 @@
+Title: check_sql: Fixed exception in verbose mode when querying MSSQL
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.5.0i1
+Date: 1487319719
+Class: fix
+
+The check raised a "TypeError: sequence item 0: expected string, int found" exception.

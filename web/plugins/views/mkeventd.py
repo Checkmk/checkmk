@@ -279,6 +279,7 @@ if mkeventd_enabled:
 
     def render_event_phase_icons(row):
         phase = row["event_phase"]
+
         if phase == "ack":
             title = _("This event has been acknowledged.")
         elif phase == "counting":
@@ -287,6 +288,7 @@ if mkeventd_enabled:
             title = _("The action of this event is still delayed in the hope of a cancelling event.")
         else:
             return ''
+
         return html.render_icon(phase, help=title)
 
     def render_delete_event_icons(row):
@@ -330,9 +332,12 @@ if mkeventd_enabled:
         else:
             return ''
 
-    def paint_event_icons(row):
-        htmlcode =  render_event_phase_icons(row)
-        htmlcode += render_delete_event_icons(row)
+    def paint_event_icons(row, history=False):
+        htmlcode = render_event_phase_icons(row)
+
+        if not history:
+            htmlcode += render_delete_event_icons(row)
+
         if htmlcode:
             return "icons", htmlcode
         else:
@@ -344,6 +349,15 @@ if mkeventd_enabled:
         "printable" : False,
         "columns" : [ "event_phase" ],
         "paint"   : paint_event_icons,
+    }
+
+
+    multisite_painters["event_history_icons"] = {
+        "title"   : _("Event Icons"),
+        "short"   : _("Icons"),
+        "printable" : False,
+        "columns" : [ "event_phase" ],
+        "paint"   : lambda row: paint_event_icons(row, history=True),
     }
 
 
@@ -878,7 +892,7 @@ if mkeventd_enabled:
             ('event_id',     'ec_historyentry', ''),
             ('history_who',  None, ''),
             ('history_what', None, ''),
-            ('event_icons', None, ''),
+            ('event_history_icons', None, ''),
             ('event_state',   None, ''),
             ('event_phase',   None, ''),
             ('event_sl',      None, ''),
@@ -953,7 +967,7 @@ if mkeventd_enabled:
             ('event_first', None, ''),
             ('event_last', None, ''),
             ('event_id', 'ec_history_of_event', ''),
-            ('event_icons', None, ''),
+            ('event_history_icons', None, ''),
             ('event_count', None, ''),
             ('event_sl', None, ''),
             ('event_contact', None, ''),

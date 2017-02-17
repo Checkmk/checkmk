@@ -2571,7 +2571,7 @@ def get_status_info(required_hosts):
 # This variant of the function is configured not with a list of
 # hosts but with a livestatus filter header and a list of columns
 # that need to be fetched in any case
-def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetch_parents = True, bygroup=False):
+def get_status_info_filtered(filter_header, only_sites, limit, add_columns, precompile_on_demand, bygroup):
     columns = [ "name", "host_name", "state", "hard_state", "plugin_output", "scheduled_downtime_depth",
                 "host_in_service_period", "acknowledged", "services_with_fullstate", "parents" ] + add_columns
 
@@ -2596,15 +2596,16 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
     # on demand compile: if parents have been found, also fetch data of the parents.
     # This is needed to allow cluster hosts (which have the nodes as parents) in the
     # host_aggregation construct.
-    if fetch_parents:
-        # TODO: WTF? This code is not working as intended. parent_filter_txt is not used!
+    if precompile_on_demand:
         parent_filter = []
         for row in rows:
-            parent_filter += [ 'Filter: name = %s\n' % p for p in row["services_with_fullstate"] ]
-        parent_filter_txt = ''.join(parent_filter)
+            parent_filter += [ 'Filter: host_name = %s\n' % p for p in row["parents"] ]
+
+        parent_filter_txt  = ''.join(parent_filter)
         parent_filter_txt += 'Or: %d\n' % len(parent_filter)
 
-        for row in  get_status_info_filtered(filter_header, only_sites, limit, add_columns, False, bygroup):
+        for row in get_status_info_filtered(parent_filter_txt, only_sites,
+                                            limit, add_columns, False, bygroup):
             if row['name'] not in hostnames:
                 rows.append(row)
 

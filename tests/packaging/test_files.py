@@ -25,9 +25,9 @@ def _get_package_paths(version_path, what):
 
 # In case packages grow/shrink this check has to be changed.
 @pytest.mark.parametrize("what,min_size,max_size", [
-    ("rpm", 95*1024*1024, 160*1024*1024),
-    ("deb", 80*1024*1024, 160*1024*1024),
-    ("cma", 150*1024*1024, 160*1024*1024),
+    ("rpm", 95*1024*1024, 160*1024*1024),   # all: 24MB - 153MB
+    ("deb", 80*1024*1024, 160*1024*1024),   # all: 22MB - 146MB
+    ("cma", 150*1024*1024, 180*1024*1024),  # all: 46MB - 166MB
 ])
 def test_package_sizes(version_path, what, min_size, max_size):
     for pkg in _get_package_paths(version_path, what):

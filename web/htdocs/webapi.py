@@ -71,6 +71,9 @@ def page_api():
         if not config.user.get_attribute("automation_secret"):
             raise MKAuthException("The WATO API is only available for automation users")
 
+        if not config.wato_enabled:
+            raise MKUserError(None, _("WATO is disabled on this site."))
+
         config.user.need_permission("wato.use")
         config.user.need_permission("wato.api_allowed")
 

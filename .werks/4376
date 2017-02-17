@@ -1,0 +1,10 @@
+Title: WATO Web-API: Is now disabled when WATO is disabled on a site (e.g. slave sites)
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.5.0i1
+Date: 1487325643
+
+

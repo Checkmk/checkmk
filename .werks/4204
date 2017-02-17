@@ -1,0 +1,16 @@
+Title: Prevent password completion for all WATO rule where passwords are being specified
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.5.0i1
+Date: 1487326105
+
+Most browsers try to autofill password input fields in forms.
+While this is useful in most times it is very nasty in WATO
+rules where passwords are being configured. This not only
+destroys existing passwords when loading and saving a rule. It
+also renders the {{view in plaintext}} button useless.
+
+This has been fixed for all browsers.

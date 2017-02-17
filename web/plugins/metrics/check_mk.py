@@ -2421,6 +2421,18 @@ metric_info["backup_duration"] = {
     "color" : "33/a",
 }
 
+metric_info["readsize"] = {
+    "title" : _("Readsize"),
+    "unit"  : "bytes",
+    "color" : "12/a",
+}
+
+metric_info["transferredsize"] = {
+    "title" : _("Transferredsize"),
+    "unit"  : "bytes",
+    "color" : "12/a",
+}
+
 metric_info["job_duration"] = {
     "title" : _("Job duration"),
     "unit"  : "s",

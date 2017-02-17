@@ -824,6 +824,10 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
         if len(output) == 0: # may be caused by xinetd not allowing our address
             raise MKAgentError("Empty output from agent at TCP port %d" % port)
 
+        if encryption_settings["use_regular"] == "enforce" and \
+            output.startswith("<<<check_mk>>>"):
+            raise MKGeneralException("Agent output is plaintext but encryption is enforced by configuration")
+
         if encryption_settings["use_regular"] != "disabled":
             try:
                 # currently ignoring version and timestamp

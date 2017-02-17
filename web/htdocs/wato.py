@@ -8586,6 +8586,8 @@ def validate_ical_file(value, varprefix):
 # Relevant format specifications:
 #   http://tools.ietf.org/html/rfc2445
 #   http://tools.ietf.org/html/rfc5545
+# TODO: Let's use some sort of standard module in the future. Maybe we can then also handle
+# times instead of only full day events.
 def parse_ical(ical_blob, horizon=10, times=(None, None, None)):
     ical = {'raw_events': []}
 
@@ -8660,6 +8662,30 @@ def parse_ical(ical_blob, horizon=10, times=(None, None, None)):
             raise Exception('The frequency "%s" is currently not supported' % freq)
         return t
 
+
+    def resolve_multiple_days(event, cur_start_time):
+        if time.strftime('%Y-%m-%d', cur_start_time) \
+            == time.strftime('%Y-%m-%d', event["end"]):
+            # Simple case: a single day event
+            return [{
+                'name'  : event['name'],
+                'date'  : time.strftime('%Y-%m-%d', cur_start_time),
+            }]
+
+        # Resolve multiple days
+        resolved, cur_timestamp, day = [], time.mktime(cur_start_time), 1
+        # day < 100 is just some plausibilty check. In case such an event
+        # is needed eventually remove this
+        while cur_timestamp < time.mktime(event["end"]) and day < 100:
+            resolved.append({
+                "name" : "%s %s" % (event["name"], _(" (day %d)") % day),
+                "date" : time.strftime("%Y-%m-%d", time.localtime(cur_timestamp)),
+            })
+            cur_timestamp += 86400
+            day += 1
+
+        return resolved
+
     # Now resolve recurring events starting from 01.01 of current year
     # Non-recurring events are simply copied
     resolved = []
@@ -8674,15 +8700,9 @@ def parse_ical(ical_blob, horizon=10, times=(None, None, None)):
             cur      = now
             while cur < last:
                 cur = next_occurrence(event['start'], cur, freq)
-                resolved.append({
-                    'name'  : event['name'],
-                    'date'  : time.strftime('%Y-%m-%d', cur),
-                })
+                resolved += resolve_multiple_days(event, cur)
         else:
-            resolved.append({
-                'name' : event['name'],
-                'date' : time.strftime('%Y-%m-%d', event['start'])
-            })
+            resolved += resolve_multiple_days(event, event["start"])
 
     ical['events'] = sorted(resolved)
 

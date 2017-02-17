@@ -90,7 +90,7 @@ long_options  = [
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError, e:
-    bail_out("Error in command options: %s" % e)
+    bail_out(3, "Error in command options: %s" % e)
 
 
 opt_debug         = False

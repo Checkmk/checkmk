@@ -147,7 +147,11 @@ def handler(mod_python_req, fields = None, is_profiling = False):
         response_code = apache.OK
 
     finally:
-        finalize_request()
+        try:
+            finalize_request()
+        except:
+            log_exception()
+            raise
 
     return response_code
 

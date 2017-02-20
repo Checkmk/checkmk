@@ -5,6 +5,15 @@ Date: 2016-05-04 09:24:02
 Targetversion: 1.2.9
 Class: bug
 
-Currently, the user can set the MK_CONFDIR through the agent bakery, but this will only affect the agent itself and the plugins started by it.
-Other tools that require this path, i.e. the cmk_update-agent when run directly (for registration) will use the fallback path. We need to provide a way for such scripts to use the correct MK_CONFDIR value.
-One solution could be to change the agent in such a way that it can be "source"d without executing any of its logic. This way a script can source the agent to get all the parameters as used by the agent. Alternatively the agent could accept a parameter "--variables" that make it output such variables and then quit. Tools would then have to parse that output, but it would be easier to use in non-bash languages.
+Currently, the user can set the MK_CONFDIR through the agent bakery, but this
+will only affect the agent itself and the plugins started by it.  Other tools
+that require this path, i.e. the cmk_update-agent when run directly (for
+registration) will use the fallback path. We need to provide a way for such
+scripts to use the correct MK_CONFDIR value.
+
+One solution could be to change the agent in such a way that it can be
+"source"d without executing any of its logic. This way a script can source the
+agent to get all the parameters as used by the agent. Alternatively the agent
+could accept a parameter "--variables" that make it output such variables and
+then quit. Tools would then have to parse that output, but it would be easier
+to use in non-bash languages.

@@ -2135,8 +2135,6 @@ def prepare_paint(p, row):
     if tdclass == "" and content == "":
         return tdclass, content
 
-    content = html.utf8_to_entities(content)
-
     # Create contextlink to other view
     if content and linkview:
         content = link_to_view(content, row, linkview)
@@ -2144,8 +2142,7 @@ def prepare_paint(p, row):
     # Tooltip
     if content != '' and tooltip:
         cla, txt = multisite_painters[tooltip]["paint"](row)
-        tooltiptext = html.utf8_to_entities(html.strip_tags(txt))
-        content = '<span title="%s">%s</span>' % (tooltiptext, content)
+        content = '<span title="%s">%s</span>' % (txt, content)
     return tdclass, content
 
 def url_to_view(row, view_name):

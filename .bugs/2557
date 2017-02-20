@@ -1,0 +1,13 @@
+Title: Notification setting for event console events
+Component: notification
+State: open
+Date: 2017-02-20 12:22:24
+Targetversion: 1.2.8
+Class: bug
+
+The setting Event Console alerts in the notification rules is not used as expected.
+If you select this option, it shows the option Do not match Event Console alerts.
+That should be the system standard.
+Unfortunately we accept all events from Event Console as standard.
+We have to specify it explicit to ignore those messages.
+We should add a new option to tell the user, All Event Console alerts will be processed.

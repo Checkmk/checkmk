@@ -7565,8 +7565,16 @@ def unlock_exclusive():
 
 def git_command(args):
     command = [ "git" ] + [ a.encode("utf-8") for a in args ]
-    p = subprocess.Popen(command, cwd=cmk.paths.default_config_dir,
+    try:
+        p = subprocess.Popen(command, cwd=cmk.paths.default_config_dir,
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    except OSError, e:
+        if e.errno == 2:
+            raise MKGeneralException(_("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
+                    (subprocess.list2cmdline(command), e))
+        else:
+            raise
+
     status = p.wait()
     if status != 0:
         raise MKGeneralException(_("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
@@ -7615,9 +7623,15 @@ def git_add_files():
 
 
 def git_has_pending_changes():
-    return subprocess.Popen(["git", "status", "--porcelain"],
+    try:
+        return subprocess.Popen(["git", "status", "--porcelain"],
                             cwd=cmk.paths.default_config_dir,
                             stdout=subprocess.PIPE).stdout.read() != ""
+    except OSError, e:
+        if e.errno == 2:
+            return False # ignore missing git command
+        else:
+            raise
 
 
 # Make sure that .gitignore-files are present and uptodate. Only files below the "wato" directories

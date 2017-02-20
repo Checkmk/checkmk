@@ -135,7 +135,6 @@ def handler(mod_python_req, fields = None, is_profiling = False):
     except (apache.SERVER_RETURN,
             (apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED),
             (apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY)):
-        finalize_request(is_error=True)
         raise
 
     except Exception, e:
@@ -147,7 +146,9 @@ def handler(mod_python_req, fields = None, is_profiling = False):
             modules.get_handler("gui_crash")()
         response_code = apache.OK
 
-    finalize_request()
+    finally:
+        finalize_request()
+
     return response_code
 
 
@@ -194,11 +195,10 @@ def ensure_general_access():
     raise MKAuthException(" ".join(reason))
 
 
-def finalize_request(is_error=False):
+def finalize_request():
     release_all_locks()
     userdb.finalize()
     sites.disconnect()
-    html.finalize(is_error=is_error)
 
 
 # Ajax-Functions want no HTML output in case of an error but

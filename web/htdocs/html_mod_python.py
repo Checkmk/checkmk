@@ -160,7 +160,7 @@ class html_mod_python(htmllib.html):
 
 
     # Finish the HTTP request short before handing over to mod_python
-    def finalize(self, is_error=False):
+    def finalize(self):
         self.disable_request_timeout()
         #self.finalize_guitests()
 

@@ -1,0 +1,11 @@
+Title: Fixed exception when WATO ruleset without main group definition exists
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.5.0i1
+Date: 1487587493
+Class: fix
+
+An exception "AttributeError ('NoneType' object has no attribute 'title')" could occur on
+WATO ruleset list pages when a custom Check_MK ruleset definition exists without previous
+register_rulegroup() call for the main group.

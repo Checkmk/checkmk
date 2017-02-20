@@ -36,18 +36,18 @@ def page_index():
     # Prevent redirecting to absolute URL which could be used to redirect
     # users to compromised pages.
     # Also prevent using of "javascript:" URLs which could used to inject code
-    parsed = urlparse.urlparse(start_url)
+    parsed = tuple(urlparse.urlparse(start_url))
 
     # Don't allow the user to set a URL scheme
-    if parsed.scheme != "":
+    if parsed[0] != "":
         start_url = default_start_url
 
     # Don't allow the user to set a network location
-    if parsed.netloc != "":
+    if parsed[1] != "":
         start_url = default_start_url
 
     # Don't allow bad characters in path
-    if not re.match("[/a-z0-9_\.-]*$", parsed.path):
+    if not re.match("[/a-z0-9_\.-]*$", parsed[2]):
         start_url = default_start_url
 
     if "%s" in config.page_heading:

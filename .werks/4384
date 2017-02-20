@@ -1,0 +1,11 @@
+Title: Fixed exception on start page when using Python < 2.5
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p18
+Date: 1487592485
+Class: fix
+
+Fixed exception "AttributeError ('tuple' object has no attribute 'scheme')" which was introduced
+with werk 3970 (1.2.8p14) which could occur with Python versions older than 2.5.
+

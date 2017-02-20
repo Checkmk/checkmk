@@ -257,8 +257,8 @@ cmc-$(VERSION).tar.gz: config.h enterprise/.werks/werks enterprise/ChangeLog
 	rm -rf cmc-$(VERSION)
 
 build: config.h
-	LANG=C $(MAKE) -C livestatus -j2
-	LANG=C $(MAKE) -C enterprise/core -j2
+	LANG=C $(MAKE) -C livestatus -j3
+	LANG=C $(MAKE) -C enterprise/core -j3
 	$(MAKE) -C enterprise/locale all
 
 install:

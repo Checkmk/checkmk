@@ -1,0 +1,10 @@
+Title: Raw Edition: Fixed broken views that contain graphs
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.5.0i1
+Date: 1487586401
+Class: fix
+
+An error message "KeyError ('graph_render_options')" was displayed
+on all views that are used to display graphs.

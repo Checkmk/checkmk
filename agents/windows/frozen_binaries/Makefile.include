@@ -1,0 +1,42 @@
+
+PYTHON_VERSION = 2.7.13
+
+clean:
+	[ -d build ] && rm -rf build || true
+
+src/virtual-wine:
+	cd src ; git clone https://github.com/htgoebel/virtual-wine.git
+
+src/python-$(PYTHON_VERSION).msi:
+	cd src ; wget https://www.python.org/ftp/python/$(PYTHON_VERSION)/python-$(PYTHON_VERSION).msi
+
+src/get-pip.py:
+	cd src ; wget https://bootstrap.pypa.io/get-pip.py
+
+src/pyinstaller:
+	cd src ; git clone git://github.com/pyinstaller/pyinstaller.git
+
+prepare-build-env: src/virtual-wine
+	mkdir build
+	cd build ; \
+	    cp -pr ../src/virtual-wine . ; \
+	    sed -i '/winecfg$$/d' ./virtual-wine/vwine-setup ; \
+	    ./virtual-wine/vwine-setup venv_wine
+
+prepare-python: src/python-$(PYTHON_VERSION).msi src/get-pip.py src/pyinstaller
+	cd build ; \
+	    . venv_wine/bin/activate ; \
+	    wine msiexec /qn /i ../src/python-$(PYTHON_VERSION).msi ; \
+	    cp ../src/get-pip.py venv_wine/drive_c/ ; \
+	    cp -pr ../src/pyinstaller venv_wine/drive_c/pyinstaller ; \
+	    wine c:\\Python27\\python c:\\get-pip.py ; \
+	    cd venv_wine/drive_c/pyinstaller ; \
+		wine c:\\Python27\\python c:\\Python27\\Scripts\\pip.exe install . ; \
+		cd ../../.. ; \
+	    wine c:\\Python27\\python c:\\Python27\\Scripts\\pip.exe install pypiwin32 ; \
+	    wine c:\\Python27\\python c:\\Python27\\Scripts\\pip.exe install pyopenssl ; \
+	    wine c:\\Python27\\python c:\\Python27\\Scripts\\pip.exe install requests ; \
+	    wine c:\\Python27\\python c:\\Python27\\Scripts\\pip.exe install psutil
+
+setup:
+	sudo apt-get install scons upx-ucl wine

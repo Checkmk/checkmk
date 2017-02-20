@@ -13,6 +13,7 @@
     * 4382 FIX: Views: Silently ignore configured but not existing view filters
     * 4383 FIX: Fixed broken "tiled" host view with German localized GUI
     * 4384 FIX: Fixed exception on start page when using Python < 2.5...
+    * 4386 FIX: Fixed exception when creating links from service views to service group views...
 
     WATO:
     * 4373 FIX: Timeperiods: iCal events with multiple days can now be imported

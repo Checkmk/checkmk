@@ -2169,8 +2169,15 @@ def url_to_view(row, view_name):
         # See get_link_filter_names() comment for details
         for src_key, dst_key in visuals.get_link_filter_names(view, datasource['infos'],
                                                 datasource.get('link_filters', {})):
-            url_vars += visuals.get_filter(src_key).variable_settings(row)
-            url_vars += visuals.get_filter(dst_key).variable_settings(row)
+            try:
+                url_vars += visuals.get_filter(src_key).variable_settings(row)
+            except KeyError:
+                pass
+
+            try:
+                url_vars += visuals.get_filter(dst_key).variable_settings(row)
+            except KeyError:
+                pass
 
         # Some special handling for the site filter which is meant as optional hint
         # Always add the site filter var when some useful information is available

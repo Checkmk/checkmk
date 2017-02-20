@@ -1,13 +1,10 @@
-Title: Notification setting for event console events
-Component: notification
+Title: Need host alias as name for availibilty reports
+Component: multisite
 State: open
-Date: 2017-02-20 12:22:24
+Date: 2017-02-20 12:24:36
 Targetversion: 1.2.8
-Class: bug
+Class: todo
 
-The setting Event Console alerts in the notification rules is not used as expected.
-If you select this option, it shows the option Do not match Event Console alerts.
-That should be the system standard.
-Unfortunately we accept all events from Event Console as standard.
-We have to specify it explicit to ignore those messages.
-We should add a new option to tell the user, All Event Console alerts will be processed.
+In the availibility table only the hostname can be used. The customer can
+not configure with column to show instead of it. It will be helpful
+to get the host alias available for the selection.

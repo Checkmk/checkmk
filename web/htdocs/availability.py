@@ -1367,7 +1367,6 @@ def get_bi_spans(tree, aggr_group, avoptions, timewarp):
     data = html.live.query(query)
     if not data:
         return [], None
-        # raise MKGeneralException(_("No historical data available for this aggregation. Query was: <pre>%s</pre>") % query)
 
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)

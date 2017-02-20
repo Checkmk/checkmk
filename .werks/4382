@@ -1,0 +1,9 @@
+Title: Views: Silently ignore configured but not existing view filters
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0b3
+Date: 1487588005
+Class: fix
+
+

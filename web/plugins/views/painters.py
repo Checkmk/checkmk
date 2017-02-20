@@ -1061,7 +1061,7 @@ def paint_time_graph_pnp(row):
 multisite_painters["svc_pnpgraph" ] = {
     "title"   : _("Service Graphs"),
     "columns" : [ "host_name", "service_description", "service_perf_data", "service_metrics", "service_check_command" ],
-    "options" : [ "pnp_timerange", "graph_render_options", ],
+    "options" : [ "pnp_timerange" ],
     "paint"   : paint_time_graph,
     "printable" : "time_graph",
     "params"  : time_graph_params,

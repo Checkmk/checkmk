@@ -2441,7 +2441,7 @@ def get_tag_group(tgid):
         for entry in config.wato_host_tags:
             g_taggroups_by_id[entry[0]] = (entry[1], entry[2])
 
-    return g_taggroups_by_id.get(tgid)
+    return g_taggroups_by_id.get(tgid, (_("N/A"), []))
 
 def get_custom_var(row, key):
     for name, val in zip(row["custom_variable_names"],

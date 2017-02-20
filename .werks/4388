@@ -1,0 +1,9 @@
+Title: Views: Fixed exception with host tag columns which tag has been deleted
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p18
+Date: 1487600861
+Class: fix
+
+This fixes a possible exception "TypeError ('NoneType' object is unsubscriptable)".

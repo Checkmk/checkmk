@@ -5913,7 +5913,11 @@ class Rulespecs(object):
         choices = []
 
         for main_group_name in self.get_main_groups():
-            main_group_title = g_rulegroups.get(main_group_name).title
+            main_group = g_rulegroups.get(main_group_name)
+            if main_group:
+                main_group_title = main_group.title
+            else:
+                main_group_title = main_group_name
 
             if mode == "static_checks" and main_group_name != "static":
                 continue

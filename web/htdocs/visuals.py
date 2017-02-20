@@ -976,10 +976,14 @@ def filters_of_visual(visual, info_keys, show_all=False, link_filters=[]):
         if info_key in visual['single_infos']:
             for key in info_params(info_key):
                 filters.append(get_filter(key))
+
         elif not show_all:
             for key, val in visual['context'].items():
                 if type(val) == dict: # this is a real filter
-                    filters.append(get_filter(key))
+                    try:
+                        filters.append(get_filter(key))
+                    except KeyError:
+                        pass # Silently ignore not existing filters
 
     # See get_link_filter_names() comment for details
     for key, dst_key in get_link_filter_names(visual, info_keys, link_filters):
@@ -992,6 +996,7 @@ def filters_of_visual(visual, info_keys, show_all=False, link_filters=[]):
     for fn in ubiquitary_filters:
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
         filter = get_filter(fn)
+
         if fn == "wato_folder" and (not filter.available() or 'host' in visual['single_infos']):
             continue
         if not filter.info or filter.info in info_keys:
@@ -1246,9 +1251,16 @@ def visual_title(what, visual):
     # the value of the context variable(s) is None. In order to avoid exceptions,
     # we simply drop these here.
     extra_titles = [ v for k, v in get_singlecontext_html_vars(visual).items() if v != None ]
+
     # FIXME: Is this really only needed for visuals without single infos?
     if not visual['single_infos']:
-        used_filters = [ multisite_filters[fn] for fn in visual["context"].keys() ]
+        used_filters = []
+        for fn in visual["context"].keys():
+            try:
+                used_filters.append(get_filter(fn))
+            except KeyError:
+                pass # silently ignore not existing filters
+
         for filt in used_filters:
             heading = filt.heading_info()
             if heading:
@@ -1262,6 +1274,7 @@ def visual_title(what, visual):
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
         if fn == "wato_folder" and (not config.wato_enabled or 'host' in visual['single_infos']):
             continue
+
         heading = get_filter(fn).heading_info()
         if heading:
             title = heading + " - " + title

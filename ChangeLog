@@ -10,6 +10,7 @@
     Multisite:
     * 4365 FIX: Service availability: Host down could not be rewritten to other states like CRIT
     * 4371 FIX: Dashboards: Folder filtered globe dashlets now link to filtered views
+    * 4382 FIX: Views: Silently ignore configured but not existing view filters
 
     WATO:
     * 4373 FIX: Timeperiods: iCal events with multiple days can now be imported

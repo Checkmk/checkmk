@@ -1,0 +1,20 @@
+Title: mk_logwatch: plugin now also supports windows
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.5.0i1
+Date: 1487595108
+Class: feature
+
+The mk_logwatch plugin is no longer restricted to windows.
+It now runs as a frozen python binary under windows, which requires no extra python installation.
+
+The plugin reads its configuration from the config/logwatch.cfg file.
+The syntax of the windows and linux logwatch.cfg is identical.
+
+The plugin may be configured through the WATO agent bakery with the rule "Text logfiles (Linux, Windows)".
+The former rule "Text logfiles (Windows)" still works, but is considered as deprecated.
+
+Keep in mind, there is difference in regex pattern matching.
+The legacy windows logwatch always did a case insenstive match.
+The new mk_logwatch.exe now also checks case sensitive, just like the linux plugin.

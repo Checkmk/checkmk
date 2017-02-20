@@ -28,6 +28,90 @@
 
 import sys, os, re, time, glob
 
+
+#   .--MEI-Cleanup---------------------------------------------------------.
+#   |     __  __ _____ ___       ____ _                                    |
+#   |    |  \/  | ____|_ _|     / ___| | ___  __ _ _ __  _   _ _ __        |
+#   |    | |\/| |  _|  | |_____| |   | |/ _ \/ _` | '_ \| | | | '_ \       |
+#   |    | |  | | |___ | |_____| |___| |  __/ (_| | | | | |_| | |_) |      |
+#   |    |_|  |_|_____|___|     \____|_|\___|\__,_|_| |_|\__,_| .__/       |
+#   |                                                         |_|          |
+#   +----------------------------------------------------------------------+
+# In case the program crashes or is killed in a hard way, the frozen binary .exe
+# may leave temporary directories named "_MEI..." in the temporary path. Clean them
+# up to prevent eating disk space over time.
+
+########################################################################
+############## DUPLICATE CODE WARNING ##################################
+### This code is also used in the cmk-update-agent frozen binary #######
+### Any changes to this class should also be made in cmk-update-agent ##
+### In the bright future we will move this code into a library #########
+########################################################################
+
+class MEIFolderCleaner(object):
+    def pid_running(self, pid):
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        SYNCHRONIZE = 0x100000
+
+        process = kernel32.OpenProcess(SYNCHRONIZE, 0, pid)
+
+        if process != 0:
+            kernel32.CloseHandle(process)
+            return True
+        else:
+            return False
+
+
+    def find_and_remove_leftover_folders(self, hint_filenames):
+        if not hasattr(sys, "frozen"):
+            return
+
+        import win32file
+        import tempfile
+        base_path = tempfile.gettempdir()
+        for f in os.listdir(base_path):
+            try:
+                path = os.path.join(base_path, f)
+
+                if not os.path.isdir(path):
+                    continue
+
+                # Only care about directories related to our program
+                invalid_dir = False
+                for hint_filename in hint_filenames:
+                    if not os.path.exists(os.path.join(path, hint_filename)):
+                        invalid_dir = True
+                        break
+                if invalid_dir:
+                    continue
+
+                pyinstaller_tmp_path = win32file.GetLongPathName(sys._MEIPASS).lower() # pylint: disable=no-member
+                if pyinstaller_tmp_path == path.lower():
+                    continue # Skip our own directory
+
+                # Extract the process id from the directory and check whether or not it is still
+                # running. Don't delete directories of running processes!
+                # The name of the temporary directories is "_MEI<PID><NR>". We try to extract the PID
+                # by stripping of a single digit from the right. In the hope the NR is a single digit
+                # in all relevant cases.
+                pid = int(f[4:-1])
+                if self.pid_running(pid):
+                    continue
+
+                shutil.rmtree(path)
+            except Exception, e:
+                # TODO: introduce verbose mode for mk_logwatch
+                pass
+
+
+os_type = "linux"
+try:
+    import platform
+    os_type = platform.system().lower()
+except:
+    pass
+
 if '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]:
     tty_red     = '\033[1;31m'
     tty_green   = '\033[1;32m'
@@ -192,13 +276,30 @@ def next_line(file_handle):
             line = file_handle.next()
             # Avoid parsing of (yet) incomplete lines (when acutal application
             # is just in the process of writing)
-            if not line.endswith(os.linesep):
+            # Just check if the line ends with a \n. This handles \n and \r\n
+            if not line.endswith("\n"):
                 begin_of_line_offset = file_handle.tell() - len(line)
                 os.lseek(file_handle.fileno(), begin_of_line_offset, 0)
                 return None
             return line
         except:
             return None
+
+
+def is_inode_cabable(path):
+    if "linux" in os_type:
+        return True
+    elif "windows" in os_type:
+        volume_name = "%s:\\\\" % path.split(":", 1)[0]
+        import win32api
+        volume_info = win32api.GetVolumeInformation(volume_name)
+        volume_type = volume_info[-1]
+        if "ntfs" in volume_type.lower():
+            return True
+        else:
+            return False
+    else:
+        return False
 
 
 def process_logfile(logfile, patterns):
@@ -210,7 +311,10 @@ def process_logfile(logfile, patterns):
     offset, prev_inode = status.get(logfile, (-1, -1))
     try:
         file_desc = os.open(logfile, os.O_RDONLY)
-        inode = os.fstat(file_desc)[1] # 1 = st_ino
+        if not is_inode_cabable(logfile):
+            inode = 1 # Create a dummy inode
+        else:
+            inode = os.fstat(file_desc)[1] # 1 = st_ino
     except:
         if debug:
             raise
@@ -227,10 +331,10 @@ def process_logfile(logfile, patterns):
     # current pointer to the file end. We do not want to make
     # a fuss about ancient log messages...
     if offset == -1:
-	if not debug:
+        if not debug:
             return
-    	else:
-	    offset = 0
+        else:
+            offset = 0
 
 
     # If the inode of the logfile has changed it has appearently
@@ -254,7 +358,23 @@ def process_logfile(logfile, patterns):
 
     # now seek to offset where interesting data begins
     os.lseek(file_desc, offset, 0) # os.SEEK_SET not available in Python 2.4
-    file_handle = os.fdopen(file_desc)
+    if os_type == "windows":
+        import io # Available with python 2.6
+        import codecs
+        # Some windows files are encoded in utf_16
+        # Peak the first two bytes to determine the encoding...
+        peak_handle = os.fdopen(file_desc, "rb")
+        first_two_bytes = peak_handle.read(2)
+        use_encoding = None
+        if first_two_bytes == "\xFF\xFE":
+            use_encoding = "utf_16"
+        elif first_two_bytes == "\xFE\xFF":
+            use_encoding = "utf_16_be"
+
+        os.lseek(file_desc, offset, 0) # os.SEEK_SET not available in Python 2.4
+        file_handle = io.open(file_desc, encoding = use_encoding)
+    else:
+        file_handle = os.fdopen(file_desc)
     worst = -1
     outputtxt = ""
     lines_parsed = 0
@@ -346,6 +466,13 @@ def process_logfile(logfile, patterns):
         sys.stdout.write("%sW Maximum allowed logfile size (%d bytes) exceeded for the %dth time.%s\n" %
                   (tty_yellow, opt_maxfilesize, new_offset / opt_maxfilesize, tty_normal))
 
+try:
+    # This removes leftover folders which may be generated by crashing frozen binaries
+    folder_cleaner = MEIFolderCleaner()
+    folder_cleaner.find_and_remove_leftover_folders(hint_filenames = ["mk_logwatch.exe.manifest"])
+except Exception, e:
+    sys.stdout.write("ERROR WHILE DOING FOLDER: %s\n" % e)
+    sys.exit(1)
 
 try:
     config = read_config()

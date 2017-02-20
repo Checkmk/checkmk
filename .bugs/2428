@@ -1,11 +1,14 @@
 Title: Make a clean install of the agents/ directory
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2016-03-09 10:58:31
 Targetversion: 1.2.9
-Class: bug
 
 The contents of the source code direcgory agents/ in the GIT cannot shipped 1:1
 into the Check_MK site anylonger. We need an installation script of the like that
 e.g. tars the source codes into nice tarballs, skips internal files and presents
 a nice list of files for download on the Agents page in WATO.
+
+2017-02-20 10:32:44: changed state open -> done
+Cleaned up the shipped files a bit

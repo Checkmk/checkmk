@@ -1877,6 +1877,16 @@ metric_info["if_out_non_unicast_octets"] = {
     "color" : "#0080c0",
 }
 
+
+# “Output Queue Length is the length of the output packet queue (in
+# packets). If this is longer than two, there are delays and the bottleneck
+# should be found and eliminated, if possible.
+metric_info["outqlen"] = {
+    "title" : _("Length of output queue"),
+    "unit"  : "count",
+    "color" : "25/a",
+}
+
 metric_info["wlan_physical_errors"] = {
     "title"     : "WLAN physical errors",
     "unit"      : "1/s",

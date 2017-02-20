@@ -182,9 +182,14 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 		--exclude "*.unversioned.exe" \
 		--exclude "*.res" \
 		--exclude "*~" \
+		--exclude "*.c" \
 		--exclude "Makefile" \
-		--exclude "crash.exe" \
-		--exclude "openhardwaremonitor" \
+		--exclude "windows/README" \
+		--exclude "windows/crash.exe" \
+		--exclude "windows/*.cc" \
+		--exclude "windows/*.h" \
+		--exclude "windows/openhardwaremonitor" \
+		--exclude "windows/sections" \
 		--exclude .f12 $$(cd agents ; ls)
 	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)

@@ -755,9 +755,6 @@ class Cell(object):
         if tdclass == "" and content == "":
             return "", ""
 
-        # Removed this here. Belive this is the wrong place for such an action
-        #content = html.utf8_to_entities(content)
-
         # Add the optional link to another view
         if content and self._has_link():
             content = link_to_view(content, row, self._link_view_name)
@@ -767,7 +764,6 @@ class Cell(object):
             tooltip_cell = Cell(self._view, (self.tooltip_painter_name(), None))
             tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             tooltip_text = html.strip_tags(tooltip_content)
-            #tooltiptext = html.utf8_to_entities(html.strip_tags(txt))
             content = '<span title="%s">%s</span>' % (tooltip_text, content)
 
         return tdclass, content

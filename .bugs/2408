@@ -1,9 +1,9 @@
 Title: linux agent: make MK_CONFDIR available to outside tools
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2016-05-04 09:24:02
 Targetversion: 1.2.9
-Class: bug
 
 Currently, the user can set the MK_CONFDIR through the agent bakery, but this
 will only affect the agent itself and the plugins started by it.  Other tools
@@ -17,3 +17,6 @@ agent to get all the parameters as used by the agent. Alternatively the agent
 could accept a parameter "--variables" that make it output such variables and
 then quit. Tools would then have to parse that output, but it would be easier
 to use in non-bash languages.
+
+2017-02-20 10:31:42: changed state open -> done
+Has been fixed now by dynamically replacing it during baking.

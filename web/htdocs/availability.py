@@ -1581,7 +1581,6 @@ def get_bi_leaf_history(tree, aggr_group, time_range, countdown_logrow_limit):
     data = sites.live().query(query)
     if not data:
         return [], None
-        # raise MKGeneralException(_("No historical data available for this aggregation. Query was: <pre>%s</pre>") % query)
 
     sites.live().set_prepend_site(False)
     sites.live().set_only_sites(None)

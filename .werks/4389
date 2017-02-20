@@ -1,0 +1,11 @@
+Title: Views: Fixed "Cached" column when cache interval is reported to be 0
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.5.0i1
+Date: 1487603291
+
+A "ZeroDivisionError (float division by zero)" exception could occur in views
+containing the "Cached agent data" painter.

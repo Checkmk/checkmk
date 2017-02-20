@@ -1884,8 +1884,9 @@ def render_view(view, rows, datasource, group_painters, painters,
     if config.show_livestatus_errors \
        and display_options.enabled(display_options.W) \
        and (html.output_format == "html" or not config.is_multisite()):
-        for sitename, info in sites.live().deadsites.items():
-            html.show_error("<b>%s - %s</b><br>%s" % (info["site"]["alias"], _('Livestatus error'), info["exception"]))
+        for sitename, info in sites.live().dead_sites().items():
+            html.show_error("<b>%s - %s</b><br>%s" %
+                (info["site"]["alias"], _('Livestatus error'), info["exception"]))
 
     # FIXME: Sauberer waere noch die Status Icons hier mit aufzunehmen
     if display_options.enabled(display_options.R):

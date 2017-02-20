@@ -1,0 +1,11 @@
+Title: Fixed exception when creating links from service views to service group views
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.5.0i1
+Date: 1487597151
+
+When adding a service group column together with a link to the service group list view,
+an exception occured while rendering the service group painter.

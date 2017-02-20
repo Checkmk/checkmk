@@ -1860,7 +1860,7 @@ metric_info["if_out_unicast"] = {
 }
 
 metric_info["if_out_unicast_octets"] = {
-    "title" : _("Output unicast oackets"),
+    "title" : _("Output unicast octets"),
     "unit"  : "bytes/s",
     "color" : "#00c0ff",
 }

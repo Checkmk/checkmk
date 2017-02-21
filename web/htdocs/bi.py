@@ -2601,13 +2601,14 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, prec
         for row in rows:
             parent_filter += [ 'Filter: host_name = %s\n' % p for p in row["parents"] ]
 
-        parent_filter_txt  = ''.join(parent_filter)
-        parent_filter_txt += 'Or: %d\n' % len(parent_filter)
+        if parent_filter:
+            parent_filter_txt  = ''.join(parent_filter)
+            parent_filter_txt += 'Or: %d\n' % len(parent_filter)
 
-        for row in get_status_info_filtered(parent_filter_txt, only_sites,
-                                            limit, add_columns, False, bygroup):
-            if row['name'] not in hostnames:
-                rows.append(row)
+            for row in get_status_info_filtered(parent_filter_txt, only_sites,
+                                                limit, add_columns, False, bygroup):
+                if row['name'] not in hostnames:
+                    rows.append(row)
 
     return rows
 

@@ -28,6 +28,12 @@ else
 ENTERPRISE         := no
 endif
 
+ifneq (,$(wildcard managed))
+MANAGED            := yes
+else
+MANAGED            := no
+endif
+
 SHELL              := /bin/bash
 VERSION            := 1.4.0b3
 NAME               := check_mk
@@ -72,7 +78,9 @@ HEAL_SPACES_IN     := checkman/* modules/* checks/* notifications/* inventory/* 
                       $(wildcard enterprise/cmk_base/cee/*.py \
                                  enterprise/modules/*.py \
                                  enterprise/web/htdocs/*.py \
-                                 enterprise/web/plugins/*/*/*.py)
+                                 enterprise/web/plugins/*/*/*.py) \
+                      $(wildcard managed/web/htdocs/*.py \
+                                 managed/web/plugins/*/*/*.py)
 
 FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix agents/windows/,*.cc *.c *.h)) \
@@ -85,10 +93,10 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
 WERKS              := $(wildcard .werks/[0-9]*)
 ENTERPRISE_WERKS   := $(wildcard enterprise/.werks/[0-9]*)
 
-JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/js/*.js,. enterprise)))
+JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/js/*.js,. enterprise managed)))
 JAVASCRIPT_MINI    := $(patsubst %.js,%_min.js,$(JAVASCRIPT_SOURCES))
 
-PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons))
+PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
 
 
 .PHONY: all analyze build check check-binaries check-permissions check-spaces \
@@ -203,7 +211,7 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	@echo "=============================================================================="
 
 .werks/werks: $(WERKS)
-	PYTHONPATH=. python scripts/precompile-werks.py .werks .werks/werks
+	PYTHONPATH=. python scripts/precompile-werks.py .werks .werks/werks cre
 
 ChangeLog: .werks/werks
 	PYTHONPATH=. python scripts/create-changelog.py ChangeLog .werks/werks
@@ -222,7 +230,7 @@ mk-livestatus-$(VERSION).tar.gz:
 ifeq ($(ENTERPRISE),yes)
 
 enterprise/.werks/werks: $(ENTERPRISE_WERKS)
-	PYTHONPATH=. python scripts/precompile-werks.py enterprise/.werks enterprise/.werks/werks
+	PYTHONPATH=. python scripts/precompile-werks.py enterprise/.werks enterprise/.werks/werks cee
 
 enterprise/ChangeLog: enterprise/.werks/werks
 	PYTHONPATH=. python scripts/create-changelog.py enterprise/ChangeLog enterprise/.werks/werks
@@ -305,6 +313,37 @@ install:
 	install -m 644 werks $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks/werks-cmc
 endif
 
+ifeq ($(MANAGED),yes)
+
+.werks/cme-werks: $(WERKS)
+	PYTHONPATH=. python scripts/precompile-werks.py .werks .werks/cme-werks cme
+
+managed/ChangeLog: .werks/cme-werks
+	PYTHONPATH=. python scripts/create-changelog.py managed/ChangeLog .werks/cme-werks
+
+dist: cme-$(VERSION).tar.gz
+
+cme-$(VERSION).tar.gz: .werks/cme-werks managed/ChangeLog
+	rm -rf cme-$(VERSION)
+	mkdir cme-$(VERSION)
+	tar cf - $(TAROPTS) \
+          managed \
+          | tar xf - -C cme-$(VERSION)
+	mv cme-$(VERSION)/managed/skel{,.permissions} cme-$(VERSION)
+	cp .werks/cme-werks cme-$(VERSION)/werks
+	cp managed/ChangeLog cme-$(VERSION)/ChangeLog-cme
+	sed -i '1 i\include ../../Makefile.omd' cme-$(VERSION)/Makefile
+	rm -rf cme-$(VERSION)
+
+install:
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
+	cp -rv managed/web/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_managed
+	install -m 644 ChangeLog-cme $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_managed/ChangeLog
+	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
+	install -m 644 werks $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks/werks-cme
+endif
+
 packages:
 	$(MAKE) -C agents packages
 
@@ -379,9 +418,11 @@ clean:
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
 	       .werks/werks \
+	       .werks/cme-werks \
 	       enterprise/.werks/werks \
 	       ChangeLog \
-	       enterprise/ChangeLog
+	       enterprise/ChangeLog \
+	       managed/ChangeLog
 	find -name "*~" | xargs rm -f
 
 mrproper:

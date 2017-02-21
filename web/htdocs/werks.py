@@ -450,12 +450,8 @@ def render_werk_compatibility(werk):
     return cmk.werks.werk_compatibilities()[werk["compatible"]]
 
 def render_werk_component(werk):
-    if werk["component"] not in cmk.werks.werk_components():
-        html.li(_("Invalid component %s in werk %s")\
-                    % (werk["component"], render_werk_id(werk, with_link=True)))
-        return werk["component"]
-    else:
-        return cmk.werks.werk_components()[werk["component"]]
+    return cmk.werks.werk_components().get(werk["component"], werk["component"])
+
 
 def render_werk_title(werk):
     title = werk["title"]

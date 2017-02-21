@@ -53,7 +53,10 @@ def page_version():
 def handle_acknowledgement():
     if html.var("_werk_ack") and html.check_transaction():
         werk_id = html.get_integer_input("_werk_ack")
+        if werk_id not in g_werks:
+            raise MKUserError("werk", _("This werk does not exist."))
         werk = g_werks[werk_id]
+
         if werk["compatible"] == "incomp_unack":
             acknowledge_werk(werk)
             html.message(HTML(_("Werk %s - %s has been acknowledged.") % (render_werk_id(werk, with_link=True), render_werk_title(werk))))
@@ -74,6 +77,8 @@ def handle_acknowledgement():
 def page_werk():
     load_werks()
     werk_id = html.get_integer_input("werk")
+    if werk_id not in g_werks:
+        raise MKUserError("werk", _("This werk does not exist."))
     werk = g_werks[werk_id]
 
     html.header(("%s %s - %s") % (_("Werk"), render_werk_id(werk, with_link=False), werk["title"]), stylesheets = werks_stylesheets)

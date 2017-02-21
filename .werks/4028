@@ -1,0 +1,10 @@
+Title: Windows Agent: now also sets the environment variable REMOTE for compatibility reasons
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.4.0b3
+Date: 1487678028
+
+

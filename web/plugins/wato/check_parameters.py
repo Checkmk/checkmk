@@ -11416,6 +11416,8 @@ register_check_parameters(
                     Integer(title = _("critical at"), unit = u"rpm", default_value = 8400),
                 ]),
             ),
+            ( "output_metrics", Checkbox(title = _("Performance data"),
+                                         label = _("Enable performance data"))),
         ],
         optional_keys = ["upper"],
     ),

@@ -204,33 +204,12 @@ check_info['openbsd_sensors'] = {
 factory_settings['openbsd_sensors_fan_default_levels'] = {
         'lower' : (500, 300),
         'upper' : (8000, 8400),
+        'output_metrics' : True,
 }
 
 def check_openbsd_sensors_fan(item, params, parsed):
     if item in parsed:
-        fanvalue = parsed[item]['value']
-        fanunit = parsed[item]['unit']
-        infotext = "Speed: %d %s" % (fanvalue, fanunit)
-
-        lowerwarn, lowercrit = params['lower']
-        upperwarn, uppercrit = params['upper']
-
-        if fanvalue > uppercrit or fanvalue < lowercrit:
-            state = 2
-            if fanvalue > uppercrit:
-                infotext += " (warn/crit at %d/%d)" % (upperwarn, uppercrit)
-            else:
-                infotext += " (warn/crit below %d/%d)" % (lowerwarn, lowercrit)
-        elif fanvalue > upperwarn or fanvalue < lowerwarn:
-            state = 1
-            if fanvalue > upperwarn:
-                infotext += " (warn/crit at %d/%d)" % (upperwarn, uppercrit)
-            else:
-                infotext += " (warn/crit below %d/%d)" % (lowerwarn, lowercrit)
-        else:
-            state = 0
-
-    return (state, infotext, [ ('rpm', fanvalue, upperwarn, uppercrit, 0, uppercrit) ])
+        return check_fan(parsed[item]['value'], params)
 
 
 check_info['openbsd_sensors.fan'] = {
@@ -239,7 +218,8 @@ check_info['openbsd_sensors.fan'] = {
     'service_description'       : 'Fan %s',
     'has_perfdata'              : True,
     'default_levels_variable'   : 'openbsd_sensors_fan_default_levels',
-    'group'                     : 'hw_fans'
+    'group'                     : 'hw_fans',
+    'includes'                  : [ 'fan.include' ],
 }
 #.
 #   .--voltage-------------------------------------------------------------.

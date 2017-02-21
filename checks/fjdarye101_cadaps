@@ -26,7 +26,7 @@
 
 check_info["fjdarye101_cadaps"] = {
     'check_function'        : check_fjdarye_item,
-    'include'               : "fjdarye.include",
+    'includes'              : "fjdarye.include",
     'inventory_function'    : inventory_fjdarye_item,
     'service_description'   : 'Channel Adapter %s',
     # 1: fjdaryCaIndex, 3: fjdaryCaStatus

@@ -1,0 +1,14 @@
+Title: Fixed some invalid keyword arguments in check_info declarations
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p18
+Date: 1487687078
+Class: fix
+
+The following check plugins had some typos in their check_info:
+casa_cpu_temp, checkpoint_temp, eltek_outdoor_temp, fjdarye100_sum,
+fjdarye101_cadaps, fjdarye101_cmods, fjdarye101_cmods_mem, fjdarye101_conencs,
+fjdarye101_sum, ibm_imm_voltage, innovaphone_channels, innovaphone_mem,
+innovaphone_temp
+

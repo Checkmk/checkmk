@@ -1,0 +1,11 @@
+Title: BI Aggregations: fixed compilation problem with BI aggregations when using sites without hosts
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.5.0i1
+Date: 1487677398
+
+BI aggregations did not compile correctly for sites without hosts.
+Happens when there was an empty viewer site with several connected real sites.

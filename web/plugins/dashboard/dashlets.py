@@ -389,7 +389,7 @@ def dashlet_graph_reload_js(nr, dashlet):
     # configured. So we assume the default timerange here by default.
     timerange = dashlet.get('timerange', '1')
 
-    graph_specification = ("template", {
+    graph_identification = ("template", {
         "site"                : site,
         "host_name"           : host,
         "service_description" : service,
@@ -401,7 +401,7 @@ def dashlet_graph_reload_js(nr, dashlet):
     }
 
     return "dashboard_render_graph(%d, %s, %s, '%s')" % \
-            (nr, json.dumps(graph_specification), json.dumps(graph_render_options), timerange)
+            (nr, json.dumps(graph_identification), json.dumps(graph_render_options), timerange)
 
 
 dashlet_types["pnpgraph"] = {
@@ -466,14 +466,14 @@ dashlet_types["pnpgraph"] = {
     "on_refresh"   : dashlet_graph_reload_js,
     "script": """
 var dashlet_offsets = {};
-function dashboard_render_graph(nr, graph_specification, graph_render_options, timerange)
+function dashboard_render_graph(nr, graph_identification, graph_render_options, timerange)
 {
     // Get the target size for the graph from the inner dashlet container
     var inner = document.getElementById('dashlet_inner_' + nr);
     var c_w = inner.clientWidth;
     var c_h = inner.clientHeight;
 
-    var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_specification))
+    var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_identification))
                   + "&render=" + encodeURIComponent(JSON.stringify(graph_render_options))
                   + "&timerange=" + encodeURIComponent(timerange)
                   + "&width=" + c_w

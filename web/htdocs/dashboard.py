@@ -1298,21 +1298,21 @@ def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
         return
 
     if dashlet_type == "pnpgraph":
-        # Context will always be None here, but the graph_specification (in params)
+        # Context will always be None here, but the graph_identification (in params)
         # will contain it. Transform the data to the format needed by the dashlets.
 
         # Example:
         # params = [ 'template', {'service_description': 'CPU load', 'site': 'mysite',
         #                         'graph_index': 0, 'host_name': 'server123'}])
-        graph_specification = params[1]
+        graph_identification = params[1]
         if params[0] == "template":
             context = {
-                "host" : graph_specification["host_name"]
+                "host" : graph_identification["host_name"]
             }
-            if graph_specification.get("service_description") != "_HOST_":
-                context["service"] = graph_specification["service_description"]
+            if graph_identification.get("service_description") != "_HOST_":
+                context["service"] = graph_identification["service_description"]
             params = {
-                "source" : graph_specification["graph_index"] + 1
+                "source" : graph_identification["graph_index"] + 1
             }
 
         elif params[0] == "custom":

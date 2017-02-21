@@ -63,7 +63,7 @@ private:
 
     void outputProcess(std::ostream &out, ULONGLONG virtual_size,
                        ULONGLONG working_set_size, ULONGLONG pagefile_usage,
-                       ULONGLONG usermode_time, ULONGLONG kernelmode_time,
+                       ULONGLONG uptime, ULONGLONG usermode_time, ULONGLONG kernelmode_time,
                        DWORD process_id, DWORD process_handle_count,
                        DWORD thread_count, const std::string &user,
                        LPCSTR exe_file);

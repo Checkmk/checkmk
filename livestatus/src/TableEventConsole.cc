@@ -112,25 +112,56 @@ void TableEventConsole::answerQuery(Query *query) {
     }
 }
 
-// TODO(sp) Remove evil casts below.
 bool TableEventConsole::isAuthorizedForEvent(contact *ctc, void *data) {
-    if (MonitoringCore::Host *hst = static_cast<Row *>(data)->_host) {
-        return _core->host_has_contact(
-            hst, reinterpret_cast<MonitoringCore::Contact *>(ctc));
+    // TODO(sp) Remove evil casts below.
+    auto c = reinterpret_cast<MonitoringCore::Contact *>(ctc);
+    auto r = static_cast<Row *>(data);
+    // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
+    bool result = true;
+    auto precedence = static_pointer_cast<StringEventConsoleColumn>(
+                          column("event_contact_groups_precedence"))
+                          ->getValue(data);
+    if (precedence == "rule") {
+        isAuthorizedForEventViaContactGroups(c, r, result) ||
+            isAuthorizedForEventViaHost(c, r, result);
+        Error(_core->loggerLivestatus()) << "RULE " << result << "   " << ctc;
+    } else if (precedence == "host") {
+        isAuthorizedForEventViaHost(c, r, result) ||
+            isAuthorizedForEventViaContactGroups(c, r, result);
+        Error(_core->loggerLivestatus()) << "HOST " << result << "   " << ctc;
+    } else {
+        Error(_core->loggerLivestatus()) << "unknown precedence '" << precedence
+                                         << "' in table " << name();
+        result = false;
     }
+    return result;
+}
 
+bool TableEventConsole::isAuthorizedForEventViaContactGroups(
+    MonitoringCore::Contact *ctc, Row *row, bool &result) {
     auto col = static_pointer_cast<ListEventConsoleColumn>(
         column("event_contact_groups"));
-    if (col->isNone(data)) {
-        return true;
+    if (col->isNone(row)) {
+        Error(_core->loggerLivestatus()) << "isAuthorizedForEventViaContactGroups 1";
+        return false;
     }
-
-    for (const auto &name : col->getValue(data)) {
+    for (const auto &name : col->getValue(row)) {
         if (_core->is_contact_member_of_contactgroup(
-                _core->find_contactgroup(name),
-                reinterpret_cast<MonitoringCore::Contact *>(ctc))) {
-            return true;
+                _core->find_contactgroup(name), ctc)) {
+            Error(_core->loggerLivestatus()) << "isAuthorizedForEventViaContactGroups 2";
+            return (result = true, true);
         }
     }
+    Error(_core->loggerLivestatus()) << "isAuthorizedForEventViaContactGroups 3";
+    return (result = false, true);
+}
+
+bool TableEventConsole::isAuthorizedForEventViaHost(
+    MonitoringCore::Contact *ctc, Row *row, bool &result) {
+    if (MonitoringCore::Host *hst = row->_host) {
+        Error(_core->loggerLivestatus()) << "isAuthorizedForEventViaHost 1";
+        return (result = _core->host_has_contact(hst, ctc), true);
+    }
+    Error(_core->loggerLivestatus()) << "isAuthorizedForEventViaHost 2";
     return false;
 }

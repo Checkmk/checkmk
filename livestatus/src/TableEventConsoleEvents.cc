@@ -27,7 +27,6 @@
 #include "TableEventConsoleEvents.h"
 #include <memory>
 #include "Column.h"
-#include "MonitoringCore.h"
 #include "Table.h"
 #include "TableHosts.h"
 
@@ -129,26 +128,6 @@ string TableEventConsoleEvents::namePrefix() const {
     return "eventconsoleevents_";
 }
 
-// TODO(sp) This is copy-n-pasted in TableEventConsoleHistory.
-// TODO(sp) Remove evil casts below.
 bool TableEventConsoleEvents::isAuthorized(contact *ctc, void *data) {
-    if (MonitoringCore::Host *hst = static_cast<Row *>(data)->_host) {
-        return _core->host_has_contact(
-            hst, reinterpret_cast<MonitoringCore::Contact *>(ctc));
-    }
-
-    auto col = static_pointer_cast<ListEventConsoleColumn>(
-        column("event_contact_groups"));
-    if (col->isNone(data)) {
-        return true;
-    }
-
-    for (const auto &name : col->getValue(data)) {
-        if (_core->is_contact_member_of_contactgroup(
-                _core->find_contactgroup(name),
-                reinterpret_cast<MonitoringCore::Contact *>(ctc))) {
-            return true;
-        }
-    }
-    return false;
+    return isAuthorizedForEvent(ctc, data);
 }

@@ -700,6 +700,11 @@ class BISitedataManager(object):
                 cleanup_orphaned_files = True
                 only_sites = [x[0] for x in missing_sites]
                 new_data   = self._query_data(only_sites)
+
+                sites_with_no_data = set(map(lambda x: x[0], missing_sites)) - set(new_data.keys())
+                for site in sites_with_no_data:
+                    new_data[site] = {}
+
                 for site, sitedata in new_data.items():
                     # Write data to disk
                     siteinfo          = (site, dict(missing_sites).get(site))

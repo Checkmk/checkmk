@@ -55,41 +55,42 @@ def werk_classes():
 def werk_components():
     return {
         # CRE
-        "core" :          _("Core & Setup"),
-        "checks" :        _("Checks & Agents"),
-        "multisite" :     _("User Interface"),
+        "core" :          _("Core & setup"),
+        "checks" :        _("Checks & agents"),
+        "multisite" :     _("User interface"),
         "wato" :          _("WATO"),
         "notifications" : _("Notifications"),
         "bi" :            _("BI"),
-        "reporting" :     _("Reporting & Availability"),
-        "ec" :            _("Event Console"),
+        "reporting" :     _("Reporting & availability"),
+        "ec" :            _("Event console"),
         "livestatus" :    _("Livestatus"),
-        "liveproxy" :     _("Livestatus-Proxy"),
-        "inv" :           _("HW/SW-Inventory"),
+        "liveproxy" :     _("Livestatus proxy"),
+        "inv" :           _("HW/SW inventory"),
 
         # CEE
-        "cmc" :           _("The Check_MK Micro Core"),
-        "setup" :         _("Setup, Site Management"),
+        "cmc" :           _("The Check_MK micro core"),
+        "setup" :         _("Setup, site management"),
         "config" :        _("Configuration generation"),
         "inline-snmp" :   _("Inline SNMP"),
-        "agents" :        _("Agent Bakery"),
-        "metrics" :       _("Metrics System"),
+        "agents" :        _("Agent bakery"),
+        "metrics" :       _("Metrics system"),
+        "alerts":         _("Alert handlers"),
 
         # CMK-OMD
-        "omd":            _("Site Management"),
-        "rpm":            _("RPM Packaging"),
-        "deb":            _("DEB Packaging"),
+        "omd":            _("Site management"),
+        "rpm":            _("RPM packaging"),
+        "deb":            _("DEB packaging"),
         "nagvis":         _("NagVis"),
-        "packages":       _("Other Components"),
-        "distros":        _("Linux Distributions"),
+        "packages":       _("Other components"),
+        "distros":        _("Linux distributions"),
     }
 
 
 def werk_levels():
     return {
-        1 : _("Trivial Change"),
-        2 : _("Prominent Change"),
-        3 : _("Major Feature"),
+        1 : _("Trivial change"),
+        2 : _("Prominent change"),
+        3 : _("Major change"),
     }
 
 

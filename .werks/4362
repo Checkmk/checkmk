@@ -1,0 +1,12 @@
+Title: fileinfo.groups, logwatch.groups: now group pattern matching is allowed in service description
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.5.0i1
+Date: 1487667231
+Class: feature
+
+The service description may contain one or more occurances of %s. If you do this,
+then the pattern must be a regular expression and be prefixed with ~. For each %s
+in the description, the expression has to contain one "group". A group is a
+subexpression enclosed in brackets, for example (.*) or ([a-zA-Z]+) or (...).

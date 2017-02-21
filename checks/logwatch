@@ -94,18 +94,6 @@ def logwatch_select_forwarded(info):
     return forwarded_logs, not_forwarded_logs
 
 
-def inventory_logwatch(info):
-    forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
-    inventory = []
-    for logfile in not_forwarded_logs:
-        groups = logwatch_groups_of_logfile(logfile)
-        if groups:
-            continue
-        else:
-            inventory.append((logfile, None))
-    return inventory
-
-
 # logwatch_patterns = {
 #    'System': [
 #    ( 'W', 'sshd' ),
@@ -164,10 +152,8 @@ def logwatch_level_worst(worst, level):
 
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of pairs: [ ('W', 'crash.exe'), ('C', 'sshd.*test') ]
-def logwatch_precompile(hostname, item, _unused):
-    # Initialize the patterns list with the logwatch_rules
+def logwatch_precompile(hostname, item, params):
     params = {"reclassify_patterns": [], "reclassify_states": {}}
-    description = check_info['logwatch']['service_description'] % item
 
     # This is the new (-> WATO controlled) variable
     rules = service_extra_conf(hostname, item, logwatch_rules)
@@ -248,6 +234,26 @@ def logwatch_parse_line(line):
     return level, text
 
 
+def inventory_logwatch_common(info, case):
+    forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
+    inventory_groups = host_extra_conf(g_hostname, logwatch_groups)
+    inventory        = []
+
+    for logfile in not_forwarded_logs:
+        found_groups = {}
+        for group_patterns in inventory_groups:
+            found_groups.update(logwatch_groups_of_logfile(group_patterns, logfile))
+
+        if not found_groups and case == "single":
+            inventory.append((logfile, None))
+
+        elif found_groups  and case == "group":
+            for group_name, patterns in found_groups.items():
+                inventory.append((group_name, {"group_patterns" : patterns}))
+
+    return inventory
+
+
 #.
 #   .--Logwatch------------------------------------------------------------.
 #   |              _                           _       _                   |
@@ -259,6 +265,10 @@ def logwatch_parse_line(line):
 #   +----------------------------------------------------------------------+
 #   |  Normal logwatch check                                               |
 #   '----------------------------------------------------------------------'
+
+
+def inventory_logwatch(info):
+    return inventory_logwatch_common(info, "single")
 
 
 # In case of a precompiled check, params contains the precompiled
@@ -318,6 +328,7 @@ check_info['logwatch'] = {
 precompile_params['logwatch'] = logwatch_precompile
 
 
+#.
 #   .--lw.groups-----------------------------------------------------------.
 #   |              _                                                       |
 #   |             | |_      ____ _ _ __ ___  _   _ _ __  ___               |
@@ -330,59 +341,82 @@ precompile_params['logwatch'] = logwatch_precompile
 #   '----------------------------------------------------------------------'
 
 
-def logwatch_group_precompile(hostname, item, _unused):
-    return logwatch_precompile(hostname, item, None), host_extra_conf(hostname, logwatch_groups)
+def logwatch_group_precompile(hostname, item, params):
+    patterns = []
+    for line in host_extra_conf(hostname, logwatch_groups):
+        for group_name_pattern, pattern in line:
+            if group_name_pattern == item:
+                patterns.append(pattern)
 
-
-def logwatch_groups_of_logfile(filename, params=False):
-    groups = []
-    if not params:
-        params = host_extra_conf(g_hostname, logwatch_groups)
+    if params is None:
+        precomped = {}
     else:
-        params = params[1]
+        precomped = params.copy()
+    precomped["pre_comp_group_patterns"] = patterns
+    precomped.update(logwatch_precompile(hostname, item, None))
+    return precomped
 
-    for line in params:
-        for group_name, pattern in line:
-            inclusion, exclusion = pattern
 
-            inclusion_is_regex = False
-            exclusion_is_regex = False
-            if inclusion.startswith("~"):
-                inclusion_is_regex = True
-                inclusion = inclusion[1:]
-            if exclusion.startswith("~"):
-                exclusion_is_regex = True
-                exclusion = exclusion[1:]
+def logwatch_groups_of_logfile(group_patterns, filename):
+    found_these_groups = {}
+    for group_name, pattern in group_patterns:
+        inclusion, exclusion = pattern
+        inclusion_is_regex   = False
+        exclusion_is_regex   = False
 
-            if inclusion_is_regex:
-                reg = regex(inclusion)
-                incl_match = reg.match( filename )
+        if inclusion.startswith("~"):
+            inclusion_is_regex = True
+            inclusion = inclusion[1:]
+        if exclusion.startswith("~"):
+            exclusion_is_regex = True
+            exclusion = exclusion[1:]
+
+        matches    = []
+        num_perc_s = 0
+        if inclusion_is_regex:
+            reg        = regex(inclusion)
+            incl_match = reg.match(filename)
+            if incl_match:
+                num_perc_s = group_name.count("%s")
+                matches    = [ g and g or "" for g in incl_match.groups() ]
+        else:
+            incl_match = fnmatch.fnmatch( filename, inclusion )
+
+        if exclusion_is_regex:
+            reg        = regex(exclusion)
+            excl_match = reg.match(filename)
+        else:
+            excl_match = fnmatch.fnmatch( filename, exclusion )
+
+        if len(matches) < num_perc_s:
+            raise MKGeneralException("Invalid entry in inventory_logwatch_groups: "
+                  "group name '%s' contains %d times '%%s', but regular expression "
+                  "'%s' contains only %d subexpression(s)." % \
+                  (group_name, num_perc_s, inclusion, len(matches)))
+
+        this_group_name = None
+        if incl_match and not excl_match:
+            if matches:
+                for nr, group in enumerate(matches):
+                    inclusion  = instantiate_regex_pattern_once(inclusion, group)
+                    group_name = group_name.replace("%%%d" % (nr+1), group)
+
+                this_group_name = group_name % tuple(matches[:num_perc_s])
+                this_pattern    = ("~%s" % inclusion, exclusion)
+
             else:
-                incl_match = fnmatch.fnmatch( filename, inclusion )
+                this_group_name = group_name
+                this_pattern    = pattern
 
-            if exclusion_is_regex:
-                reg = regex(exclusion)
-                excl_match = reg.match( filename )
-            else:
-                excl_match = fnmatch.fnmatch( filename, exclusion )
+        if this_group_name is not None:
+            found_these_groups.setdefault(this_group_name, set())
+            found_these_groups[this_group_name].add(this_pattern)
 
-            if incl_match and not excl_match:
-                groups.append(group_name)
-
-    return groups
+    return found_these_groups
 
 
 def inventory_logwatch_groups(info):
-    forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
-    added_groups = []
-    inventory = []
-    for logfile in not_forwarded_logs:
-        groups = logwatch_groups_of_logfile(logfile)
-        for group in groups:
-            if group not in added_groups:
-                added_groups.append(group)
-                inventory.append((group, None))
-    return inventory
+    return inventory_logwatch_common(info, "group")
 
 
 def check_logwatch_groups(item, params, info):
@@ -391,23 +425,45 @@ def check_logwatch_groups(item, params, info):
         if line.startswith("CANNOT READ CONFIG FILE"):
             return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
 
-    found = False
-    logfile_found = False
-    loglines = []
+    group_patterns = set(params.get("pre_comp_group_patterns", []))
+    for entry in params.get('group_patterns', []):
+        group_patterns.add(entry)
+
+    logfile  = None
+    logfiles = []
     for l in info:
         # node info ignored (only used in regular logwatch check)
         line = " ".join(l[1:])
-        if logfile_found == True and not line.startswith('[[['):
-            loglines.append(line)
         if line.startswith('[[['):
             logfile = line[3:-3]
-            if item in logwatch_groups_of_logfile(logfile, params):
-                found = True
-                logfile_found = True
-            else:
-                logfile_found = False
-            continue
-    return check_logwatch_generic(item, params, loglines, found, True)
+
+        elif logfile is not None:
+            for pattern in group_patterns:
+                inclusion, exclusion = pattern
+                inclusion_is_regex   = False
+                exclusion_is_regex   = False
+
+                if inclusion.startswith("~"):
+                    inclusion_is_regex = True
+                    inclusion = inclusion[1:]
+                if exclusion.startswith("~"):
+                    exclusion_is_regex = True
+                    exclusion = exclusion[1:]
+
+                if inclusion_is_regex:
+                    incl_match = regex(inclusion).match(logfile)
+                else:
+                    incl_match = fnmatch.fnmatch(logfile, inclusion)
+
+                if exclusion_is_regex:
+                    excl_match = regex(exclusion).match(logfile)
+                else:
+                    excl_match = fnmatch.fnmatch(logfile, exclusion)
+
+                if incl_match and not excl_match:
+                    logfiles.append(line)
+
+    return check_logwatch_generic(item, params, logfiles, True, True)
 
 
 check_info['logwatch.groups'] = {
@@ -416,6 +472,7 @@ check_info['logwatch.groups'] = {
     'service_description' : "Log %s",
     'node_info'           : True,
     'group'               : 'logwatch',
+    'includes'            : [ 'ps.include' ]
 }
 
 
@@ -469,7 +526,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     # and the grouping patterns on the second position
     if params not in ('', None):
         if groups:
-            patterns = params[0]
+            patterns = params
         else:
             patterns = params # patterns already precompiled
     else:

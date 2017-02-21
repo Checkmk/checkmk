@@ -170,8 +170,10 @@ def _load_werk(path):
             werk[key.lower()] = value
         else:
             werk["body"].append(line)
-    if "compatible" not in werk: # missing in some legacy werks
-        werk["compatible"] = "compat"
+
+    werk.setdefault("compatible", "compat")
+    werk.setdefault("edition", "cre")
+
     return werk
 
 

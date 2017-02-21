@@ -203,6 +203,7 @@ def finalize_request():
     release_all_locks()
     userdb.finalize()
     sites.disconnect()
+    html.finalize()
 
 
 # Ajax-Functions want no HTML output in case of an error but

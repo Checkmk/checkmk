@@ -197,6 +197,11 @@ protected:
 
 private:
     MonitoringCore *_core;
+
+    bool isAuthorizedForEventViaContactGroups(MonitoringCore::Contact *ctc,
+                                              Row *row, bool &result);
+    bool isAuthorizedForEventViaHost(MonitoringCore::Contact *ctc, Row *row,
+                                     bool &result);
 };
 
 #endif  // TableEventConsole_h

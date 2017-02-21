@@ -5813,7 +5813,7 @@ perfometer_info.append({
 # It determines the order of graphs of a service, which in turn is used by
 # the report definitions to determine which graph to include.
 
-# Order of metrics in graph definitions important if you use only 'area':
+# Order of metrics in graph recipes important if you use only 'area':
 # The first one must be the bigger one, then descending.
 # Example: ('tablespace_size', 'area'),
 #          ('tablespace_used', 'area')

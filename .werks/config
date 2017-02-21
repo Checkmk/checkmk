@@ -1,6 +1,12 @@
+editions = [
+    ( "cre",          "Raw Edition" ),
+    ( "cee",          "Enterprise Edition" ),
+    ( "cme",          "Managed Service Edition" ),
+]
+
 components = [
-   ( "core",          "Core & Setup" ),
-   ( "checks",        "Checks & Agents" ),
+   ( "core",          "Core & setup" ),
+   ( "checks",        "Checks & agents" ),
    ( "multisite",     "Multisite" ),
    ( "wato",          "WATO" ),
    ( "notifications", "Notifications" ),
@@ -8,20 +14,32 @@ components = [
    ( "reporting",     "Reporting & Availability" ),
    ( "ec",            "Event Console" ),
    ( "livestatus",    "Livestatus" ),
-   ( "liveproxy",     "Livestatus-Proxy" ),
-   ( "inv",           "HW/SW-Inventory" ),
+   ( "liveproxy",     "Livestatus Proxy" ),
+   ( "inv",           "HW/SW Inventory" ),
 ]
 
+edition_components = {
+    "cee": [
+        ( "cmc",           "The Check_MK Micro Core" ),
+        ( "setup",         "Setup, site management" ),
+        ( "config",        "Configuration generation" ),
+        ( "inline-snmp",   "Inline SNMP" ),
+        ( "agents",        "Agent bakery" ),
+        ( "metrics",       "Metrics system" ),
+        ( "alerts",        "Alert handlers" ),
+    ],
+}
+
 classes = [
-  ( "feature",      "New Feature",          "" ),
-  ( "fix",          "Bug Fix",              "FIX" ),
-  ( "security",     "Security Fix",         "SEC" ),
+  ( "feature",      "New feature",          "" ),
+  ( "fix",          "Bug fix",              "FIX" ),
+  ( "security",     "Security fix",         "SEC" ),
 ]
 
 levels = [
-  ( '1',              "Trivial Change" ),
-  ( '2',              "Non-Trivial Change" ),
-  ( '3',              "Major New Feature" ),
+  ( '1',              "Trivial change" ),
+  ( '2',              "Prominent change" ),
+  ( '3',              "Major change" ),
 ]
 
 compatible = [

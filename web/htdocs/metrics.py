@@ -1487,9 +1487,9 @@ def host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_opti
     # When the legend is enabled, we need to reduce the height by the height of the legend to
     # make the graph fit into the dashlet area.
     if graph_render_options["show_legend"]:
-        # TODO FIXME: This abstract graph is calulated twice. Once here and once in render_graphs_from_specification_html()
-        abstract_graph = compute_abstract_graph(graph_definition, graph_data_range, graph_render_options)
-        graph_render_options["size"] = (size[0], size[1] - graph_legend_height_ex(graph_render_options, abstract_graph))
+        # TODO FIXME: This graph artwork is calulated twice. Once here and once in render_graphs_from_specification_html()
+        graph_artwork = compute_graph_artwork(graph_definition, graph_data_range, graph_render_options)
+        graph_render_options["size"] = (size[0], size[1] - graph_legend_height_ex(graph_render_options, graph_artwork))
 
     html_code = render_graphs_from_definitions([graph_definition], graph_data_range, graph_render_options)
     html.write(html_code)

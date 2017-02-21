@@ -8,8 +8,8 @@ Targetversion: 1.2.8
 2016-03-18 14:32:52 [3] [19625] Ajax call ajax_graph.py failed: list index out of range
 Traceback (most recent call last):
   File "/omd/sites/stable/share/check_mk/web/plugins/metrics/graphs.py", line 1659, in ajax_graph
-    abstract_graph = compute_abstract_graph(graph_definition, graph_data_range, graph_render_options)
-  File "/omd/sites/stable/share/check_mk/web/plugins/metrics/graphs.py", line 407, in compute_abstract_graph
+    graph_artwork = compute_graph_artwork(graph_definition, graph_data_range, graph_render_options)
+  File "/omd/sites/stable/share/check_mk/web/plugins/metrics/graphs.py", line 407, in compute_graph_artwork
     elif chop_last_empty_step(graph_data_range, step, rrd_data):
   File "/omd/sites/stable/share/check_mk/web/plugins/metrics/graphs.py", line 592, in chop_last_empty_step
     if data[-1] != None:

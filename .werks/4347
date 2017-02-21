@@ -1,0 +1,9 @@
+Title: packeteer_{fan,ps}_status: Two checks for Blue Coat Packet Shaper devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0b3
+Date: 1487674799
+Class: feature
+
+

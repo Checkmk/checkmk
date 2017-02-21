@@ -3894,6 +3894,14 @@ check_metrics["check_mk-citrix_serverload"] = {
     "perf" : { "name" : "citrix_load", "scale" : 0.01 }
 }
 
+check_metrics["check_mk-genau_fan"] = {
+    "rpm" : { "name" : "fan" }
+}
+
+check_metrics["check_mk-openbsd_sensors"] = {
+    "rpm" : { "name" : "fan" }
+}
+
 check_metrics["check_mk-postfix_mailq"] = {
     "length"                : { "name" : "mail_queue_deferred_length" },
     "size"                  : { "name" : "mail_queue_deferred_size" },

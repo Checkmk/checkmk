@@ -62,12 +62,6 @@ factory_settings['openhardwaremonitor_temperature_default_levels'] = {
 }
 
 
-factory_settings['openhardwaremonitor_fan_default_levels'] = {
-    'lower' : (None, None),
-    'upper' : (None, None),
-}
-
-
 def parse_openhardwaremonitor(info):
     def dict_replace(input, replacements):
         pattern = regex(r'\b(' + '|'.join(replacements.keys()) + r')\b')
@@ -183,13 +177,25 @@ check_info['openhardwaremonitor.power'] = {
 }
 
 
+factory_settings['openhardwaremonitor_fan_default_levels'] = {
+    'lower' : (None, None),
+    'upper' : (None, None),
+}
+
+
+def check_openhardwaremonitor_fan(item, params, parsed):
+    if item in parsed.get("Fan", {}):
+        return check_fan(parsed["Fan"][item], params)
+
+
 check_info['openhardwaremonitor.fan'] = {
     'inventory_function'      : lambda parsed: inventory_openhardwaremonitor('Fan', parsed),
-    'check_function'          : lambda item, params, parsed: check_openhardwaremonitor('Fan', item, params, parsed),
+    'check_function'          : check_openhardwaremonitor_fan,
     'has_perfdata'            : True,
     'service_description'     : "Fan %s",
     'default_levels_variable' : 'openhardwaremonitor_fan_default_levels',
     'group'                   : 'hw_fans',
+    'includes'                : [ 'fan.include' ],
 }
 
 

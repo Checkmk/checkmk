@@ -36,7 +36,9 @@ def check_fan(rpm, params):
         levelstext = levelstext[:-1] + \
             " and at or above %s/%s RPM)" % (warn_upper, crit_upper)
 
-    perfdata = [ ("fan", rpm, warn, crit, warn_upper, crit_upper)]
+    perfdata = []
+    if params.get("output_metrics"):
+        perfdata = [ ("fan", rpm, warn, crit, warn_upper, crit_upper)]
 
     # Note that None < int
     if rpm < crit or crit_upper != None and rpm >= crit_upper:

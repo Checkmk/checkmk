@@ -315,22 +315,20 @@ install:
 endif
 
 ifeq ($(MANAGED),yes)
+managed/werks: $(WERKS)
+	PYTHONPATH=. python scripts/precompile-werks.py .werks managed/werks cme
 
-.werks/cme-werks: $(WERKS)
-	PYTHONPATH=. python scripts/precompile-werks.py .werks .werks/cme-werks cme
-
-managed/ChangeLog: .werks/cme-werks
-	PYTHONPATH=. python scripts/create-changelog.py managed/ChangeLog .werks/cme-werks
+managed/ChangeLog: managed/werks
+	PYTHONPATH=. python scripts/create-changelog.py managed/ChangeLog managed/werks
 
 dist: cme-$(VERSION).tar.gz
 
-cme-$(VERSION).tar.gz: .werks/cme-werks managed/ChangeLog
+cme-$(VERSION).tar.gz: managed/werks managed/ChangeLog
 	rm -rf cme-$(VERSION)
 	mkdir cme-$(VERSION)
 	cp -pr managed cme-$(VERSION)/managed
 	mv cme-$(VERSION)/managed/ChangeLog cme-$(VERSION)/ChangeLog-cme
 	mv cme-$(VERSION)/managed/Makefile.omd cme-$(VERSION)/Makefile
-	cp .werks/cme-werks cme-$(VERSION)/werks
 	
 	cd cme-$(VERSION) \
 	    && tar czf ../cme-$(VERSION).tar.gz $(TAROPTS) *

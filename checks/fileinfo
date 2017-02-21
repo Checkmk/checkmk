@@ -42,77 +42,105 @@
 # "maxage"  : ( 6000, 12000 ), in seconds
 fileinfo_groups = []
 
-def inventory_fileinfo(info, case):
+
+def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
+    found_these_groups = {}
+    for group_name, pattern in group_patterns:
+        if type(pattern) == str: # support old format
+            pattern = ( pattern, '' )
+
+        inclusion, exclusion = pattern
+        inclusion_is_regex   = False
+        exclusion_is_regex   = False
+
+        if inclusion.startswith("~"):
+            inclusion_is_regex = True
+            inclusion = inclusion[1:]
+        if exclusion.startswith("~"):
+            exclusion_is_regex = True
+            exclusion = exclusion[1:]
+
+        inclusion_tmp = fileinfo_process_date(inclusion, reftime)
+        if inclusion != inclusion_tmp:
+            inclusion = inclusion_tmp
+
+        matches    = []
+        num_perc_s = 0
+        if inclusion_is_regex:
+            incl_match = regex(inclusion).match(filename)
+            if incl_match:
+                num_perc_s = group_name.count("%s")
+                matches    = [ g and g or "" for g in incl_match.groups() ]
+        else:
+            incl_match = fnmatch.fnmatch( filename, inclusion )
+
+        if exclusion_is_regex:
+            excl_match = regex(exclusion).match(filename)
+        else:
+            excl_match = fnmatch.fnmatch( filename, exclusion )
+
+        if len(matches) < num_perc_s:
+            raise MKGeneralException("Invalid entry in inventory_fileinfo_groups: "
+                  "group name '%s' contains %d times '%%s', but regular expression "
+                  "'%s' contains only %d subexpression(s)." % \
+                  (group_name, num_perc_s, inclusion, len(matches)))
+
+        this_group_name = None
+        if incl_match and not excl_match:
+            if matches:
+                for nr, group in enumerate(matches):
+                    inclusion  = instantiate_regex_pattern_once(inclusion, group)
+                    group_name = group_name.replace("%%%d" % (nr+1), group)
+
+                this_group_name = group_name % tuple(matches[:num_perc_s])
+                this_pattern    = ("~%s" % inclusion, exclusion)
+
+            else:
+                this_group_name = group_name
+                this_pattern    = pattern
+
+        if this_group_name is not None:
+            found_these_groups.setdefault(this_group_name, set())
+            found_these_groups[this_group_name].add(this_pattern)
+
+    return found_these_groups
+
+
+def inventory_fileinfo_common(info, case):
     inventory = []
-    added_groups = []
     if info:
         reftime = int(info[0][0])
+
+    inventory_groups = host_extra_conf(g_hostname, fileinfo_groups)
+
     for line in info:
         if len(line) >= 3:
-            groups = fileinfo_groups_of_file(line[0], reftime)
-            if case == 'single' and not groups and line[1] != 'missing':
+            found_groups = {}
+            for group_patterns in inventory_groups:
+                found_groups.update(fileinfo_groups_get_group_name(group_patterns,
+                                    line[0], reftime))
+
+            if not found_groups and case == 'single' and line[1] != 'missing':
                 inventory.append((line[0], {}));
 
-            if case == 'group' and groups:
-                for group in groups:
-                    if group not in added_groups:
-                        added_groups.append(group)
-                        inventory.append((group, {}))
+            elif found_groups and case == 'group':
+                for group_name, patterns in found_groups.items():
+                    inventory.append((group_name, {"group_patterns" : patterns}))
+
     return inventory
 
 
 def fileinfo_process_date(pattern, reftime):
     for what, the_time in [ ("DATE", reftime), ("YESTERDAY", reftime - 86400) ]:
         the_regex = '((?:/|[A-Za-z]).*)\$%s:((?:%%\w.?){1,})\$(.*)' % what
-        disect = re.match(the_regex, pattern)
+        disect    = re.match(the_regex, pattern)
         if disect:
-            prefix = disect.group(1)
+            prefix      = disect.group(1)
             datepattern = time.strftime(disect.group(2),time.localtime(the_time))
-            postfix = disect.group(3)
-            pattern = prefix+datepattern+postfix
+            postfix     = disect.group(3)
+            pattern     = prefix+datepattern+postfix
             return pattern
-
     return pattern
-
-
-def fileinfo_groups_of_file(check_filename, reftime):
-    groups = []
-    for line in host_extra_conf(g_hostname, fileinfo_groups):
-        for group_name, pattern in line:
-            if type(pattern) == str: # support old format
-                pattern = ( pattern, '' )
-
-            inclusion, exclusion = pattern
-
-            inclusion_is_regex = False
-            exclusion_is_regex = False
-            if inclusion.startswith("~"):
-                inclusion_is_regex = True
-                inclusion = inclusion[1:]
-            if exclusion.startswith("~"):
-                exclusion_is_regex = True
-                exclusion = exclusion[1:]
-
-            inclusion_tmp = fileinfo_process_date(inclusion, reftime)
-            if inclusion != inclusion_tmp:
-                inclusion = inclusion_tmp
-
-            if inclusion_is_regex:
-                reg = regex(inclusion)
-                incl_match = reg.match( check_filename )
-            else:
-                incl_match = fnmatch.fnmatch( check_filename, inclusion )
-
-            if exclusion_is_regex:
-                reg = regex(exclusion)
-                excl_match = reg.match( check_filename )
-            else:
-                excl_match = fnmatch.fnmatch( check_filename, exclusion )
-
-            if incl_match and not excl_match:
-                groups.append(group_name)
-
-    return groups
 
 
 def fileinfo_check_timeranges(params):
@@ -129,8 +157,8 @@ def fileinfo_check_timeranges(params):
 
 def fileinfo_in_timerange(now, range_from, range_to):
     minutes_from = range_from[0] * 60 + range_from[1]
-    minutes_to = range_to[0] * 60 + range_to[1]
-    minutes_now = now.tm_hour * 60 + now.tm_min
+    minutes_to   = range_to[0] * 60 + range_to[1]
+    minutes_now  = now.tm_hour * 60 + now.tm_min
     return minutes_now >= minutes_from and minutes_now < minutes_to
 
 
@@ -165,15 +193,15 @@ def check_fileinfo(item, params, info):
     return fileinfo_check_function(check_definition, params, outof_range_txt)
 
 
+# FIXME the following does not apply anymore, because "%s" is allowed in group_name
+# WHAT TO DO WITH precompile?
 # Extracts patterns that are relevant for the current host and item.
 # Constructs simple list of patterns and makes them available for the check
 def fileinfo_groups_precompile(hostname, item, params):
     patterns = []
     for line in host_extra_conf(hostname, fileinfo_groups):
-        for group_name, pattern in line:
-            if group_name == item:
-                if type(pattern) == str: # support old format
-                    pattern = (pattern, '')
+        for group_name_pattern, pattern in line:
+            if group_name_pattern == item:
                 patterns.append(pattern)
 
     precomped = params.copy()
@@ -186,32 +214,39 @@ def check_fileinfo_groups(item, params, info):
         return 3, "No information sent by agent"
 
     outof_range_txt = fileinfo_check_timeranges(params)
+    reftime         = None
+    count_all       = 0
+    age_oldest      = None
+    age_newest      = 0
+    size_all        = 0
+    size_smallest   = None
+    size_largest    = 0
+    date_inclusion  = ""
 
-    reftime = None
-
-    count_all = 0
-    age_oldest = None
-    age_newest = 0
-    size_all = 0
-    size_smallest = None
-    size_largest  = 0
-    date_inclusion = ""
     # Start counting values on all files
     for line in info:
         if len(line) == 1:
             reftime = int(line[0])
             continue
 
-        for pattern in params['precompiled_patterns']:
+        # Old format does not support '%s' in group name
+        group_patterns = set(params.get('precompiled_patterns', []))
+        for entry in params.get('group_patterns', []):
+            group_patterns.add(entry)
+
+        for pattern in group_patterns:
             # endswith("No such file...") is needed to
             # support the solaris perl based version of fileinfo
             if line[0].endswith("No such file or directory"):
                 continue
 
-            inclusion, exclusion = pattern
+            if type(pattern) == str: # support old format
+                pattern = ( pattern, '' )
 
-            inclusion_is_regex = False
-            exclusion_is_regex = False
+            inclusion, exclusion = pattern
+            inclusion_is_regex   = False
+            exclusion_is_regex   = False
+
             if inclusion.startswith("~"):
                 inclusion_is_regex = True
                 inclusion = inclusion[1:]
@@ -222,19 +257,16 @@ def check_fileinfo_groups(item, params, info):
             inclusion_tmp = fileinfo_process_date(inclusion, reftime)
             if inclusion != inclusion_tmp:
                 inclusion = inclusion_tmp
-                date_inclusion = inclusion_tmp
 
             if inclusion_is_regex:
-                reg = regex(inclusion)
-                incl_match = reg.match( line[0] )
+                incl_match = regex(inclusion).match(line[0])
             else:
-                incl_match = fnmatch.fnmatch( line[0], inclusion )
+                incl_match = fnmatch.fnmatch(line[0], inclusion)
 
             if exclusion_is_regex:
-                reg = regex(exclusion)
-                excl_match = reg.match( line[0] )
+                excl_match = regex(exclusion).match(line[0])
             else:
-                excl_match = fnmatch.fnmatch( line[0], exclusion )
+                excl_match = fnmatch.fnmatch(line[0], exclusion)
 
             if str(line[1]) not in [ 'missing', '' ] and \
                incl_match and not excl_match:
@@ -267,9 +299,11 @@ def check_fileinfo_groups(item, params, info):
     ]
 
     if size_smallest is not None:
-        check_definition.append(("Smallest size", "size_smallest", size_smallest, get_filesize_human_readable))
+        check_definition.append(("Smallest size", "size_smallest",
+                                 size_smallest, get_filesize_human_readable))
     if size_largest != 0:
-        check_definition.append(("Largest size", "size_largest",  size_largest,  get_filesize_human_readable))
+        check_definition.append(("Largest size", "size_largest",
+                                 size_largest,  get_filesize_human_readable))
     if date_inclusion:
         check_definition.append(("Date pattern", "date pattern",  date_inclusion, str ))
 
@@ -306,21 +340,30 @@ def fileinfo_check_function(check_definition, params, outof_range_txt):
     return (state, infotext, perfdata)
 
 
+def inventory_fileinfo(info):
+    return inventory_fileinfo_common(info, "single")
+
+
 check_info["fileinfo"] = {
     "check_function"          : check_fileinfo,
-    "inventory_function"      : lambda info: inventory_fileinfo(info, 'single'),
+    "inventory_function"      : inventory_fileinfo,
     "service_description"     : "File %s",
     "has_perfdata"            : True,
     "group"                   : "fileinfo",
 }
 
 
+def inventory_fileinfo_groups(info):
+    return inventory_fileinfo_common(info, "group")
+
+
 check_info['fileinfo.groups'] = {
     "check_function"          : check_fileinfo_groups,
-    "inventory_function"      : lambda info: inventory_fileinfo(info, 'group'),
+    "inventory_function"      : inventory_fileinfo_groups,
     "service_description"     : "File group %s",
     "has_perfdata"            : True,
     "group"                   : "fileinfo-groups",
+    "includes"                : [ "ps.include" ],
 }
 
 precompile_params['fileinfo.groups'] = fileinfo_groups_precompile

@@ -204,7 +204,6 @@ check_info['openbsd_sensors'] = {
 factory_settings['openbsd_sensors_fan_default_levels'] = {
         'lower' : (500, 300),
         'upper' : (8000, 8400),
-        'output_metrics' : True,
 }
 
 def check_openbsd_sensors_fan(item, params, parsed):

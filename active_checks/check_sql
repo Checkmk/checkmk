@@ -253,7 +253,7 @@ except Exception, e:
 
 
 if opt_verbose:
-    sys.stderr.write("SQL Result:\n %r\n" % result)
+    sys.stderr.write("SQL Result:\n %r\n" % (result,))
 
 
 try:

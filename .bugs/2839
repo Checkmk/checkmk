@@ -61,15 +61,15 @@ details:
     show_timeranges)
 
   File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 1760, in render_graphs_from_specification_html
-    graph_definitions = create_graph_definitions_from_specification(graph_specification)
+    graph_recipes = create_graph_recipes_from_specification(graph_specification)
 
-  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 145, in create_graph_definitions_from_specification
+  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 145, in create_graph_recipes_from_specification
     return func(spec_info)
 
-  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 189, in create_graph_definitions_from_template
-    graph_definition = create_graph_definition_from_template(graph_template, translated_metrics, site, host_name, service_description)
+  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 189, in create_graph_recipes_from_template
+    graph_recipe = create_graph_recipe_from_template(graph_template, translated_metrics, site, host_name, service_description)
 
-  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 211, in create_graph_definition_from_template
+  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 211, in create_graph_recipe_from_template
     metric = parse_template_metric(site, host_name, service_description, metric_definition, translated_metrics)
 
   File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 283, in parse_template_metric

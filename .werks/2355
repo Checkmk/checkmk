@@ -1,4 +1,4 @@
-Title: docsis_channels_upstream: Fix graph definitions
+Title: docsis_channels_upstream: Fix graph templates
 Level: 1
 Component: checks
 Compatible: compat

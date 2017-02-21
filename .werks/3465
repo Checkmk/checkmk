@@ -7,6 +7,6 @@ State: unknown
 Version: 1.4.0i1
 Date: 1461597698
 
-The graph definition had an explicit vertical range of <tt>(0, 0)</tt>. That
+The graph recipe had an explicit vertical range of <tt>(0, 0)</tt>. That
 effectively had set the displayed range to 0..1 Bytes/day - which led to an
 always empty or near useless graph. This has been fixed.

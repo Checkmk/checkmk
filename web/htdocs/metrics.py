@@ -445,7 +445,7 @@ def translate_metrics(perf_data, check_command):
         new_entry = {
             "value"      : value * translation_entry["scale"],
             "orig_name"  : varname,
-            "scale"      : translation_entry["scale"], # needed for graph definitions
+            "scale"      : translation_entry["scale"], # needed for graph recipes
             "scalar"     : {},
         }
 
@@ -1332,7 +1332,7 @@ def browser_supports_canvas():
         return True
 
 
-# CLEANUP: Make this function being used only by create_graph_definition_from_template.
+# CLEANUP: Make this function being used only by create_graph_recipe_from_template.
 # Then rename it and move it over there.
 def get_graph_data_from_livestatus(site, host_name, service):
     if service == "_HOST_":
@@ -1475,11 +1475,11 @@ def host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_opti
                                                             graph_render_options)
 
     try:
-        graph_definitions = create_graph_definitions_from_specification(graph_specification)
-        if graph_definitions:
-            graph_definition = graph_definitions[0]
+        graph_recipes = create_graph_recipes_from_specification(graph_specification)
+        if graph_recipes:
+            graph_recipe = graph_recipes[0]
         else:
-            raise MKGeneralException(_("Failed to calculate a graph definition."))
+            raise MKGeneralException(_("Failed to calculate a graph recipe."))
     except MKLivestatusNotFoundError:
         html.write("<div class=error>%s</div>" % html.attrencode(_("Cannot render graphs: cannot fetch data via Livestatus")))
         return
@@ -1488,10 +1488,10 @@ def host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_opti
     # make the graph fit into the dashlet area.
     if graph_render_options["show_legend"]:
         # TODO FIXME: This graph artwork is calulated twice. Once here and once in render_graphs_from_specification_html()
-        graph_artwork = compute_graph_artwork(graph_definition, graph_data_range, graph_render_options)
+        graph_artwork = compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options)
         graph_render_options["size"] = (size[0], size[1] - graph_legend_height_ex(graph_render_options, graph_artwork))
 
-    html_code = render_graphs_from_definitions([graph_definition], graph_data_range, graph_render_options)
+    html_code = render_graphs_from_definitions([graph_recipe], graph_data_range, graph_render_options)
     html.write(html_code)
 
 

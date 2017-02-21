@@ -1,0 +1,16 @@
+Title: Virtual host trees are now identified by manually set IDs
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.4.0b3
+Date: 1487666075
+Class: fix
+
+In the past it was possible to delete virtual host trees by accident,
+because the virtual host trees were identified by their number in the
+list of trees.
+
+The users were also referencing the trees by these IDs. When the trees
+were re-sorted, the users suddenly had the wrong trees activated.
+
+Now you have to provide a unique ID for each virtual host tree

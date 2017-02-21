@@ -623,12 +623,22 @@ def ajax_switch_masterstate():
         html.write(_("Command %s/%d not found") % (html.attrencode(column), state))
 
 def ajax_tag_tree():
-    newconf = int(html.var("conf"))
+    new_tree = html.var("conf")
+
     tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+
     if type(tree_conf) == int:
         tree_conf = {"cwd":{}} # convert from old style
-    tree_conf["tree"] = newconf
+
+    trees = dict([ (tree["id"], tree) for tree in
+                    wato.transform_virtual_host_trees(config.virtual_host_trees) ])
+
+    if new_tree not in trees:
+        raise MKUserError("conf", _("This virtual host tree does not exist."))
+
+    tree_conf["tree"] = new_tree
     config.user.save_file("virtual_host_tree", tree_conf)
+    html.write("OK")
 
 def ajax_tag_tree_enter():
     path = html.var("path") and html.var("path").split("|") or []

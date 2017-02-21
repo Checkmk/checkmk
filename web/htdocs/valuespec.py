@@ -2118,7 +2118,7 @@ class DualListChoice(ListChoice):
             self._autoheight = False
         else:
             self._rows = 5
-        self._size = kwargs.get("size") # Total with in ex
+        self._size = kwargs.get("size") # Total width in ex
 
 
     def render_input(self, varprefix, value):

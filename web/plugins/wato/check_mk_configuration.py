@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import re
+
 import cmk.paths
 
 #   .--Global Settings-----------------------------------------------------.
@@ -333,29 +335,62 @@ def virtual_host_tree_choices():
             for l in range(1, 7)
         ]
 
+def transform_virtual_host_trees(trees):
+    def id_from_title(title):
+        return re.sub("[^-a-zA-Z0-9_]+", "", title.lower())
+
+    for index, tree in enumerate(trees):
+        if type(tree) == tuple:
+            trees[index] = {
+                "id"         : id_from_title(tree[0]),
+                "title"      : tree[0],
+                "tag_groups" : tree[1],
+            }
+
+    return sorted(trees, key = lambda x: x["title"])
+
+
+def validate_virtual_host_trees(value, varprefix):
+    tree_ids = set()
+    for tree in value:
+        if tree["id"] in tree_ids:
+            raise MKUserError(varprefix, _("The ID needs to be unique."))
+        tree_ids.add(tree["id"])
+
 
 register_configvar(group,
     "virtual_host_trees",
-    ListOf(
-        Tuple(
-            elements = [
-                TextUnicode(
-                    title = _("Title of the tree"),
-                    allow_empty = False,
-                ),
-                DualListChoice(
-                    allow_empty = False,
-                    custom_order = True,
-                    choices = virtual_host_tree_choices,
-                    rows = 10,
-                )
-            ]
+    Transform(
+        ListOf(
+            Dictionary(
+                elements = [
+                    ("id", ID(
+                        title = _("ID"),
+                        allow_empty = False,
+                    )),
+                    ("title", TextUnicode(
+                        title = _("Title of the tree"),
+                        allow_empty = False,
+                    )),
+                    ("tag_groups", DualListChoice(
+                        allow_empty = False,
+                        custom_order = True,
+                        choices = virtual_host_tree_choices,
+                        rows = 10,
+                        size = 80,
+                    )),
+                ],
+                optional_keys = [],
+            ),
+            add_label = _("Create new virtual host tree configuration"),
+            title = _("Virtual Host Trees"),
+            help = _("Here you can define tree configurations for the snapin <i>Virtual Host-Trees</i>. "
+                     "These trees organize your hosts based on their values in certain host tag groups. "
+                     "Each host tag group you select will create one level in the tree."),
+            validate = validate_virtual_host_trees,
+            movable = False,
         ),
-        add_label = _("Create new virtual host tree configuration"),
-        title = _("Virtual Host Trees"),
-        help = _("Here you can define tree configurations for the snapin <i>Virtual Host-Trees</i>. "
-                 "These trees organize your hosts based on their values in certain host tag groups. "
-                 "Each host tag group you select will create one level in the tree."),
+        forth = transform_virtual_host_trees,
     ),
     domain = "multisite",
 )

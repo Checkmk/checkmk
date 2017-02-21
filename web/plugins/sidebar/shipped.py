@@ -1805,11 +1805,14 @@ sidebar_snapins["wiki"] = {
 #   '----------------------------------------------------------------------'
 
 def compute_tag_tree(taglist):
-    sites.live().set_prepend_site(True)
-    query = "GET hosts\n" \
-            "Columns: host_name filename state num_services_ok num_services_warn num_services_crit num_services_unknown custom_variables"
-    hosts = sites.live().query(query)
-    sites.live().set_prepend_site(False)
+    try:
+        sites.live().set_prepend_site(True)
+        query = "GET hosts\n" \
+                "Columns: host_name filename state num_services_ok num_services_warn num_services_crit num_services_unknown custom_variables"
+        hosts = sites.live().query(query)
+    finally:
+        sites.live().set_prepend_site(False)
+
     hosts.sort()
 
     def get_tag_group_value(groupentries, tags):
@@ -2077,7 +2080,12 @@ def render_tag_tree():
     if type(tree_conf) == int:
         tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
 
-    choices = [ (str(i), v[0]) for i, v in enumerate(config.virtual_host_trees)]
+    trees = dict([ (tree["id"], tree) for tree in
+                    wato.transform_virtual_host_trees(config.virtual_host_trees) ])
+
+    choices = sorted([ (tree["id"], tree["title"]) for tree in trees.values() ],
+                     key=lambda x: x[1])
+
     html.begin_form("vtree")
 
     # Give chance to change one level up, if we are in a subtree
@@ -2086,19 +2094,19 @@ def render_tag_tree():
         upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(cwd[:-1])
         html.icon_button(upurl, _("Go up one tree level"), "back")
 
-    html.select("vtree", choices, str(tree_conf["tree"]), onchange='virtual_host_tree_changed(this)')
+    html.select("vtree", choices, "%s" % tree_conf["tree"], onchange='virtual_host_tree_changed(this)')
     html.br()
     html.end_form()
     html.final_javascript(virtual_host_tree_js)
 
     try:
-        title, taggroups = config.virtual_host_trees[tree_conf["tree"]]
-    except IndexError:
+        tag_groups = trees[tree_conf["tree"]]["tag_groups"]
+    except KeyError:
         # Fallback to first host tree in case the wanted does not exist (anymore)
-        title, taggroups = config.virtual_host_trees[0]
+        tag_groups = trees[choices[0][0]]["tag_groups"]
 
-    tree = compute_tag_tree(taggroups)
-    render_tag_tree_level(taggroups, [], cwd, _("Virtual Host Tree"), tree)
+    tree = compute_tag_tree(tag_groups)
+    render_tag_tree_level(tag_groups, [], cwd, _("Virtual Host Tree"), tree)
 
 sidebar_snapins["tag_tree"] = {
     "title" : _("Virtual Host Tree"),

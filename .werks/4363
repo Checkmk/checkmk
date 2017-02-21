@@ -1,0 +1,9 @@
+Title: netgear_fans: fixed typo in group
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0b3
+Date: 1487669000
+Class: fix
+
+

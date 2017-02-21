@@ -622,6 +622,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                 if (current_socket != INVALID_SOCKET) {
                     // send data
                     SetEnvironmentVariable("REMOTE_HOST", current_ip.c_str());
+                    SetEnvironmentVariable("REMOTE", current_ip.c_str());
                     char timestamp[11];
                     snprintf(timestamp, 11, "%" PRIdtime, time(NULL));
 
@@ -713,6 +714,7 @@ void do_adhoc(const Environment &env) {
             }
 
             SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
+            SetEnvironmentVariable("REMOTE", ip_hr.c_str());
             try {
                 output_data(*out, env, false, *g_config->section_flush);
             } catch (const std::exception &e) {

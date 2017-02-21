@@ -1,0 +1,9 @@
+Title: agent_jolokia: Fix nonfunctional special agent
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0b3
+Date: 1487684650
+Class: fix
+
+

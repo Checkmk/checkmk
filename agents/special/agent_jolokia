@@ -147,7 +147,7 @@ def fetch_var(protocol, server, port, path, suburi, cert_path, itemspec):
         sys.stderr.write("Fetching: %s\n" % url)
     try:
         conn = urllib2.urlopen(url)
-        data = conn.read()
+        json_data = conn.read()
 
         if opt_verbose:
             sys.stderr.write("Result: %s\n\n" % data)

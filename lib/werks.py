@@ -46,9 +46,9 @@ except NameError:
 
 def werk_classes():
     return {
-        "feature"  : _("New Feature"),
-        "fix"      : _("Bug Fix"),
-        "security" : _("Security Fix"),
+        "feature"  : _("New feature"),
+        "fix"      : _("Bug fix"),
+        "security" : _("Security fix"),
     }
 
 
@@ -68,7 +68,7 @@ def werk_components():
         "inv" :           _("HW/SW inventory"),
 
         # CEE
-        "cmc" :           _("The Check_MK micro core"),
+        "cmc" :           _("The Check_MK Micro Core"),
         "setup" :         _("Setup, site management"),
         "config" :        _("Configuration generation"),
         "inline-snmp" :   _("Inline SNMP"),

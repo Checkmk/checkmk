@@ -114,15 +114,6 @@ def load_current_version():
     bail_out("Failed to read VERSION  from Makefile")
 
 
-def component_sort_key(comp):
-    for nr, component in enumerate(components):
-        if comp == component[0]:
-            return nr
-    return len(components)
-
-
-
-
 def check_modified():
     global g_modified
     g_modified = set([])
@@ -145,6 +136,7 @@ def load_werk(werkid):
         "title"          : "unknown",
         "component"      : "general",
         "compatible"     : "compat",
+        "edition"        : "cre",
     }
 
     f = file(str(werkid))
@@ -278,10 +270,11 @@ def list_werk(werk):
         bold = ""
     lines, cols = get_tty_size()
     title = werk["title"][:cols - 45]
-    sys.stdout.write("#%04d %-9s %s %-13s %-6s %s%s%s %-8s %s%s%s\n" %
+    sys.stdout.write("#%04d %-9s %s %3s %-13s %-6s %s%s%s %-8s %s%s%s\n" %
             (int(werk["id"]),
              time.strftime("%F", time.localtime(int(werk["date"]))),
              colored_class(werk["class"], 8),
+             werk["edition"],
              werk["component"],
              werk["compatible"],
              tty_bold, werk["level"], tty_normal,
@@ -315,6 +308,7 @@ def main_list(args, format):
 
         hit = False
         for tp, values in [
+          ( "edition",        editions ),
           ( "component",      components ),
           ( "level",          levels ),
           ( "class",          classes ),
@@ -333,7 +327,7 @@ def main_list(args, format):
             if hit:
                 break
         if not hit:
-            bail_out("No such component, state, class or target version: %s" % a)
+            bail_out("No such edition, component, state, class or target version: %s" % a)
 
     # Filter
     newwerks = []
@@ -473,6 +467,11 @@ def input_choice(what, choices):
         else:
             sys.stdout.write("\n")
 
+
+def get_edition_components(edition):
+    return components + edition_components.get(edition, [])
+
+
 def main_new(args):
     werk = {}
     werk["id"]      = next_werk_id()
@@ -483,7 +482,8 @@ def main_new(args):
         sys.stderr.write("Cancelled.\n")
         sys.exit(0)
     werk["class"]         = input_choice("Class",        classes)
-    werk["component"]     = input_choice("Component",    components)
+    werk["edition"]       = input_choice("Edition",      editions)
+    werk["component"]     = input_choice("Component",    get_edition_components(werk["edition"]))
     werk["level"]         = input_choice("Level",        levels)
     werk["compatible"]    = input_choice("Compatible",   compatible)
     werk["description"]   = u"\n"
@@ -760,6 +760,15 @@ def main_fetch_ids(args):
 #   | | | | | | (_| | | | | |
 #   |_| |_| |_|\__,_|_|_| |_|
 #
+
+# default config
+editions           = []
+components         = []
+edition_components = {}
+classes            = []
+levels             = []
+compatible         = []
+online_url         = None
 
 versions = set([])
 goto_werksdir()

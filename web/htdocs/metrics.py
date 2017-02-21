@@ -1427,7 +1427,7 @@ def page_graph_dashlet():
     spec = html.var("spec")
     if not spec:
         raise MKUserError("spec", _("Missing spec parameter"))
-    graph_specification = json.loads(html.var("spec"))
+    graph_identification = json.loads(html.var("spec"))
 
     render = html.var("render")
     if not render:
@@ -1435,14 +1435,14 @@ def page_graph_dashlet():
     custom_graph_render_options = json.loads(html.var("render"))
 
     if cmk_graphs_possible():
-        host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_options)
-    elif graph_specification[0] == "template":
-        host_service_graph_dashlet_pnp(graph_specification)
+        host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options)
+    elif graph_identification[0] == "template":
+        host_service_graph_dashlet_pnp(graph_identification)
     else:
         html.write(_("This graph can not be rendered."))
 
 
-def host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_options):
+def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_options):
     size = (int(((float(html.var("width")) - 49 - 5)/html_size_per_ex)),
             int((float(html.var("height")) - 23)/html_size_per_ex))
 
@@ -1475,7 +1475,7 @@ def host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_opti
                                                             graph_render_options)
 
     try:
-        graph_recipes = create_graph_recipes_from_specification(graph_specification)
+        graph_recipes = create_graph_recipes_from_specification(graph_identification)
         if graph_recipes:
             graph_recipe = graph_recipes[0]
         else:
@@ -1495,12 +1495,12 @@ def host_service_graph_dashlet_cmk(graph_specification, custom_graph_render_opti
     html.write(html_code)
 
 
-def host_service_graph_dashlet_pnp(graph_specification):
-    site = graph_specification[1]["site"]
-    source = int(graph_specification[1]["graph_index"])
+def host_service_graph_dashlet_pnp(graph_identification):
+    site = graph_identification[1]["site"]
+    source = int(graph_identification[1]["graph_index"])
 
-    pnp_host   = pnp_cleanup(graph_specification[1]["host_name"])
-    pnp_svc    = pnp_cleanup(graph_specification[1]["service_description"])
+    pnp_host   = pnp_cleanup(graph_identification[1]["host_name"])
+    pnp_svc    = pnp_cleanup(graph_identification[1]["service_description"])
     url_prefix = config.site(site)["url_prefix"]
 
     html.write(url_prefix + "pnp4nagios/index.php/image?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \

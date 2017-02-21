@@ -987,7 +987,7 @@ def time_graph_params():
 
 
 def paint_time_graph_cmk(row, cell, show_timeranges=False):
-    graph_specification = (
+    graph_identification = (
         "template", {
             "site"                : row["site"],
             "host_name"           : row["host_name"],
@@ -1023,7 +1023,7 @@ def paint_time_graph_cmk(row, cell, show_timeranges=False):
                      "Maybe performance data processing is disabled.")
 
     return "", metrics.render_graphs_from_specification_html(
-            graph_specification,
+            graph_identification,
             graph_data_range,
             graph_render_options,
             show_timeranges)

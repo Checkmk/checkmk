@@ -61,7 +61,7 @@ details:
     show_timeranges)
 
   File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 1760, in render_graphs_from_specification_html
-    graph_recipes = create_graph_recipes_from_specification(graph_specification)
+    graph_recipes = create_graph_recipes_from_specification(graph_identification)
 
   File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 145, in create_graph_recipes_from_specification
     return func(spec_info)

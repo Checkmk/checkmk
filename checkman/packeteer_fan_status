@@ -1,0 +1,10 @@
+title: Blue Coat Packet Shaper: Fan Status
+agents: snmp
+catalog: hw/network/bluecoat
+license: GPL
+distribution: check_mk
+description:
+ Checks the status of fans as described in the Packeteer MIB.
+
+inventory:
+ One check for each fan will be created.

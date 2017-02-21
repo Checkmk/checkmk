@@ -1,0 +1,11 @@
+Title: df: fixed handling of paths including spaces
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b3
+Date: 1487688209
+
+

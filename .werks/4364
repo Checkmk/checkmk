@@ -1,0 +1,10 @@
+Title: fan.include: now performance data can be enabled
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.4.0b3
+Date: 1487671496
+Class: fix
+
+Default setting of performance data is disabled for all fan check
+plugins except genau_fan and openbsd_sensors.

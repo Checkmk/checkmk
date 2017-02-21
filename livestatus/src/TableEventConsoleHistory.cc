@@ -30,7 +30,6 @@
 #include "TableEventConsoleEvents.h"
 
 using std::make_unique;
-using std::static_pointer_cast;
 using std::string;
 
 #ifdef CMC

@@ -82,9 +82,9 @@ class CMKVersion(object):
         if version in [ CMKVersion.DAILY, CMKVersion.GIT ]:
             date_part = time.strftime("%Y.%m.%d")
             if branch != "master":
-                return "%s-%s" % (branch, date_part)
+                self.version = "%s-%s" % (branch, date_part)
             else:
-                return date_part
+                self.version = date_part
 
         elif version == CMKVersion.DEFAULT:
             self.version = self.get_default_version()

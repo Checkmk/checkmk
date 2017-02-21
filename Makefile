@@ -266,7 +266,8 @@ cmc-$(VERSION).tar.gz: config.h enterprise/.werks/werks enterprise/ChangeLog
 	cp enterprise/.werks/werks cmc-$(VERSION)/werks
 	cp enterprise/ChangeLog cmc-$(VERSION)/ChangeLog-cmc
 	sed -i '1 i\include ../../Makefile.omd' cmc-$(VERSION)/Makefile
-	cd cmc-$(VERSION) && tar czf ../cmc-$(VERSION).tar.gz $(TAROPTS) .bugs *
+	cd cmc-$(VERSION) \
+	    && tar czf ../cmc-$(VERSION).tar.gz $(TAROPTS) .bugs *
 	rm -rf cmc-$(VERSION)
 
 build: config.h
@@ -326,22 +327,15 @@ dist: cme-$(VERSION).tar.gz
 cme-$(VERSION).tar.gz: .werks/cme-werks managed/ChangeLog
 	rm -rf cme-$(VERSION)
 	mkdir cme-$(VERSION)
-	tar cf - $(TAROPTS) \
-          managed \
-          | tar xf - -C cme-$(VERSION)
-	mv cme-$(VERSION)/managed/skel{,.permissions} cme-$(VERSION)
+	cp -pr managed cme-$(VERSION)/managed
+	mv cme-$(VERSION)/managed/ChangeLog cme-$(VERSION)/ChangeLog-cme
+	mv cme-$(VERSION)/managed/Makefile.omd cme-$(VERSION)/Makefile
 	cp .werks/cme-werks cme-$(VERSION)/werks
-	cp managed/ChangeLog cme-$(VERSION)/ChangeLog-cme
-	sed -i '1 i\include ../../Makefile.omd' cme-$(VERSION)/Makefile
+	
+	cd cme-$(VERSION) \
+	    && tar czf ../cme-$(VERSION).tar.gz $(TAROPTS) *
 	rm -rf cme-$(VERSION)
 
-install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
-	cp -rv managed/web/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_managed
-	install -m 644 ChangeLog-cme $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_managed/ChangeLog
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
-	install -m 644 werks $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks/werks-cme
 endif
 
 packages:

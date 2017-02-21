@@ -376,6 +376,20 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                         # even more data: processId, pagefile_usage, usermodetime, kernelmodetime, threadCount, openHandles
                         pid, pagefile_usage, user_c, kernel_c, handle_c = map(saveint, process_info[4:9])
 
+                        # Info may include creation time
+                        if len(process_info) >= 11:
+                            uptime_secs = int(process_info[10])
+                            creation_time_unix = int(now - uptime_secs)
+                            if creation_time_unix != 0:
+                                process.append(("creation time", (get_timestamp_human_readable(creation_time_unix), "")))
+
+                            elapsed = now - creation_time_unix
+                            max_elapsed = max(max_elapsed, elapsed)
+                            if min_elapsed == None:
+                                min_elapsed = elapsed
+                            else:
+                                min_elapsed = min(min_elapsed, elapsed)
+
                         process.append(("pagefile usage", (pagefile_usage, "")))
                         process.append(("handle count",   (handle_c, "")))
 
@@ -552,7 +566,7 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
         if max_elapsed >= crit_age:
             state = 2
             infotext += "(!!)"
-        elif max_elapsed >= crit_age:
+        elif max_elapsed >= warn_age:
             state = max(state, 1)
             infotext += "(!)"
 

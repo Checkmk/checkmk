@@ -29,6 +29,12 @@
 #include "../logging.h"
 #include <windows.h>
 #include <tlhelp32.h>
+#include <iomanip>
+
+
+extern double file_time(const FILETIME *filetime);
+extern double current_time();
+
 
 SectionPS::SectionPS(Configuration &config)
     : Section("ps")
@@ -146,7 +152,7 @@ bool SectionPS::produceOutputInner(std::ostream &out, const Environment&) {
 
 void SectionPS::outputProcess(std::ostream &out, ULONGLONG virtual_size,
                               ULONGLONG working_set_size,
-                              ULONGLONG pagefile_usage, ULONGLONG usermode_time,
+                              ULONGLONG pagefile_usage, ULONGLONG uptime, ULONGLONG usermode_time,
                               ULONGLONG kernelmode_time, DWORD process_id,
                               DWORD process_handle_count, DWORD thread_count,
                               const std::string &user, LPCSTR exe_file) {
@@ -156,7 +162,7 @@ void SectionPS::outputProcess(std::ostream &out, ULONGLONG virtual_size,
         << working_set_size / 1024 << ",0"
         << "," << process_id << "," << pagefile_usage / 1024 << ","
         << usermode_time << "," << kernelmode_time << ","
-        << process_handle_count << "," << thread_count << ")\t" << exe_file
+        << process_handle_count << "," << thread_count << "," << uptime << ")\t" << exe_file
         << "\n";
 }
 
@@ -195,10 +201,18 @@ bool SectionPS::outputWMI(std::ostream &out) {
                 LocalFree(argv);
             }
 
+            auto creation_date = result.get<std::wstring>(L"CreationDate");
+            std::wistringstream ss(creation_date);
+            std::tm t;
+            ss >> std::get_time(&t, L"%Y%m%d%H%M%S");
+            time_t creation_time = mktime(&t);
+            auto uptime = (ULONGLONG)((time_t)current_time() - creation_time);
+
             outputProcess(
                 out, std::stoull(result.get<std::string>(L"VirtualSize")),
                 std::stoull(result.get<std::string>(L"WorkingSetSize")),
                 result.get<int>(L"PagefileUsage"),
+                uptime,
                 std::stoull(result.get<std::wstring>(L"UserModeTime")),
                 std::stoull(result.get<std::wstring>(L"KernelModeTime")),
                 processId, result.get<int>(L"HandleCount"),
@@ -288,10 +302,14 @@ bool SectionPS::outputNative(std::ostream &out) {
                 pagefile_usage = it_perf->second.pagefile_usage;
             }
 
+            // Uptime
+            double ft = file_time(&createTime);
+            ULONGLONG uptime = (ULONGLONG)(current_time() - ft);
+
             // Note: CPU utilization is determined out of usermodetime and
             // kernelmodetime
             outputProcess(out, virtual_size, working_set_size, pagefile_usage,
-                          usermodetime.QuadPart, kernelmodetime.QuadPart,
+                          uptime, usermodetime.QuadPart, kernelmodetime.QuadPart,
                           pe32.th32ProcessID, processHandleCount,
                           pe32.cntThreads, user, pe32.szExeFile);
         }
@@ -304,7 +322,7 @@ bool SectionPS::outputNative(std::ostream &out) {
     // We simply fake this entry..
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
-    outputProcess(out, 0, 0, 0, 0, 0, 0, 0, sysinfo.dwNumberOfProcessors,
+    outputProcess(out, 0, 0, 0, 0, 0, 0, 0, 0, sysinfo.dwNumberOfProcessors,
                   "SYSTEM", "System Idle Process");
     return true;
 }

@@ -60,8 +60,8 @@ class CMKVersion(object):
     CEE   = "cee"
     CRE   = "cre"
 
-    def __init__(self, version, edition):
-        self.set_version(version)
+    def __init__(self, version, edition, branch):
+        self.set_version(version, branch)
 
         if len(edition) != 3:
             raise Exception("Invalid edition: %s. Must be short notation (cee, cre, ...)")
@@ -78,9 +78,13 @@ class CMKVersion(object):
         return os.path.split(path)[-1].rsplit(".", 1)[0]
 
 
-    def set_version(self, version):
+    def set_version(self, version, branch):
         if version in [ CMKVersion.DAILY, CMKVersion.GIT ]:
-            self.version = time.strftime("%Y.%m.%d")
+            date_part = time.strftime("%Y.%m.%d")
+            if branch != "master":
+                return "%s-%s" % (branch, date_part)
+            else:
+                return date_part
 
         elif version == CMKVersion.DEFAULT:
             self.version = self.get_default_version()
@@ -145,11 +149,11 @@ class CMKVersion(object):
 
 class Site(object):
     def __init__(self, site_id, reuse=True, version=CMKVersion.DEFAULT,
-                 edition=CMKVersion.CEE):
+                 edition=CMKVersion.CEE, branch="master"):
         assert site_id
         self.id      = site_id
         self.root    = "/omd/sites/%s" % self.id
-        self.version = CMKVersion(version, edition)
+        self.version = CMKVersion(version, edition, branch)
 
         self.update_with_git = version == CMKVersion.GIT
 

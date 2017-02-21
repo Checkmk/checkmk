@@ -188,7 +188,7 @@ def test_get_graph(web, site):
         # No graph yet...
         with pytest.raises(APIError) as e:
             data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0, expect_error=True)
-            assert "Cannot calculate graph definitions" in "%s" % e
+            assert "Cannot calculate graph recipes" in "%s" % e
 
         # Now add the host
         web.add_host("test-host-get-graph", attributes={

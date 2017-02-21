@@ -1,4 +1,4 @@
-Title: packeteer_fan_status, packeteer_ps_status: Two checks for Blue Coat Packet Shaper devices
+Title: packeteer_fan_status packeteer_ps_status: Two checks for Blue Coat Packet Shaper devices
 Level: 1
 Component: checks
 Class: feature

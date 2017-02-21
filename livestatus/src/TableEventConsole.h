@@ -193,7 +193,9 @@ protected:
         }
     };
 
-protected:
+    bool isAuthorizedForEvent(contact *ctc, void *data);
+
+private:
     MonitoringCore *_core;
 };
 

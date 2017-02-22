@@ -550,7 +550,7 @@ class WebSession(requests.Session):
 
     def _request(self, method, path, proto="http", expected_code=200, expect_redirect=None,
                  allow_errors=False, add_transid=False, allow_redirect_to_login=False,
-                 **kwargs):
+                 allow_retry=True, **kwargs):
         url = self.url(proto, path)
 
 	if add_transid:
@@ -561,9 +561,23 @@ class WebSession(requests.Session):
             kwargs["allow_redirects"] = False
 
         if method == "post":
-            response = super(WebSession, self).post(url, **kwargs)
+            func = super(WebSession, self).post
         else:
-            response = super(WebSession, self).get(url, **kwargs)
+            func = super(WebSession, self).get
+
+        # May raise "requests.exceptions.ConnectionError: ('Connection aborted.', BadStatusLine("''",))"
+        # suddenly without known reason. This may be related to some
+        # apache or HTTP/1.1 issue when working with keepalive connections. See
+        #   https://www.google.de/search?q=connection+aborted+Connection+aborted+bad+status+line
+        #   https://github.com/mikem23/keepalive-race
+        # Trying to workaround this by trying the problematic request a second time.
+        try:
+            response = func(url, **kwargs)
+        except requests.ConnectionError, e:
+            if allow_retry and "Connection aborted" in "%s" % e:
+                response = func(url, **kwargs)
+            else:
+                raise
 
         self._handle_http_response(response, expected_code, allow_errors,
                                    expect_redirect, allow_redirect_to_login)

@@ -1,3 +1,6 @@
+# Note: graph_info is not compatible with 1.4.0 anymore
+# since it is now an OrderedDict.
+
 metric_info["rusage_user"] = {
     "title" : _("User CPU time used"),
     "unit"  : "",
@@ -10,13 +13,13 @@ metric_info["rusage_system"] = {
     "color" : "41/a",
 }
 
-graph_info.append({
-    "title"   : _("CPU usage"),
-    "metrics" : [
-        ( "rusage_user", "area" ),
-        ( "rusage_system", "stack" ),
-    ],
-})
+# graph_info.append({
+#     "title"   : _("CPU usage"),
+#     "metrics" : [
+#         ( "rusage_user", "area" ),
+#         ( "rusage_system", "stack" ),
+#     ],
+# })
 
 
 metric_info["auth_cmds"] = {
@@ -31,13 +34,13 @@ metric_info["auth_errors"] = {
     "color" : "13/a",
 }
 
-graph_info.append({
-    "title"   : _("Authorizations"),
-    "metrics" : [
-        ( "auth_cmds", "area" ),
-        ( "auth_errors", "line" ),
-    ],
-})
+# graph_info.append({
+#     "title"   : _("Authorizations"),
+#     "metrics" : [
+#         ( "auth_cmds", "area" ),
+#         ( "auth_errors", "line" ),
+#     ],
+# })
 
 
 metric_info["bytes_read"] = {
@@ -52,13 +55,13 @@ metric_info["bytes_written"] = {
     "color" : "41/a"
 }
 
-graph_info.append({
-    "title"   : _("Read and written"),
-    "metrics" : [
-        ( "bytes_read", "area" ),
-        ( "bytes_written", "-area" ),
-    ],
-})
+# graph_info.append({
+#     "title"   : _("Read and written"),
+#     "metrics" : [
+#         ( "bytes_read", "area" ),
+#         ( "bytes_written", "-area" ),
+#     ],
+# })
 
 
 metric_info["get_hits"] = {
@@ -79,14 +82,14 @@ metric_info["cmd_get"] = {
     "color" : "23/a"
 }
 
-graph_info.append({
-    "title"   : _("GET"),
-    "metrics" : [
-        ( "get_hits", "area" ),
-        ( "get_misses", "stack" ),
-        ( "cmd_get", "line" ),
-    ],
-})
+# graph_info.append({
+#     "title"   : _("GET"),
+#     "metrics" : [
+#         ( "get_hits", "area" ),
+#         ( "get_misses", "stack" ),
+#         ( "cmd_get", "line" ),
+#     ],
+# })
 
 metric_info["cmd_set"] = {
     "title" : _("SET Commands"),
@@ -101,14 +104,14 @@ metric_info["cmd_flush"] = {
 }
 
 
-graph_info.append({
-    "title"   : _("Commands"),
-    "metrics" : [
-        ( "cmd_get", "area" ),
-        ( "cmd_set", "stack" ),
-        ( "cmd_flush", "stack" ),
-    ],
-})
+# graph_info.append({
+#     "title"   : _("Commands"),
+#     "metrics" : [
+#         ( "cmd_get", "area" ),
+#         ( "cmd_set", "stack" ),
+#         ( "cmd_flush", "stack" ),
+#     ],
+# })
 
 
 metric_info["cas_hits"] = {
@@ -129,14 +132,14 @@ metric_info["cas_badval"] = {
     "color" : "12/a"
 }
 
-graph_info.append({
-    "title"   : _("CAS"),
-    "metrics" : [
-        ( "cas_hits", "area" ),
-        ( "cas_misses", "stack" ),
-        ( "cas_badval", "line" ),
-    ],
-})
+# graph_info.append({
+#     "title"   : _("CAS"),
+#     "metrics" : [
+#         ( "cas_hits", "area" ),
+#         ( "cas_misses", "stack" ),
+#         ( "cas_badval", "line" ),
+#     ],
+# })
 
 
 metric_info["incr_hits"] = {
@@ -163,15 +166,15 @@ metric_info["decr_misses"] = {
     "color" : "15/a"
 }
 
-graph_info.append({
-    "title"   : _("Increase/Decrease"),
-    "metrics" : [
-        ( "incr_hits", "area" ),
-        ( "incr_misses", "stack" ),
-        ( "decr_hits", "-area" ),
-        ( "decr_misses", "-stack" ),
-    ],
-})
+# graph_info.append({
+#     "title"   : _("Increase/Decrease"),
+#     "metrics" : [
+#         ( "incr_hits", "area" ),
+#         ( "incr_misses", "stack" ),
+#         ( "decr_hits", "-area" ),
+#         ( "decr_misses", "-stack" ),
+#     ],
+# })
 
 metric_info["delete_hits"] = {
     "title" : _("Delete Hits"),
@@ -185,13 +188,13 @@ metric_info["delete_misses"] = {
     "color" : "13/a"
 }
 
-graph_info.append({
-    "title"   : _("Deletions"),
-    "metrics" : [
-        ( "delete_hits", "area" ),
-        ( "delete_misses", "stack" ),
-    ],
-})
+# graph_info.append({
+#     "title"   : _("Deletions"),
+#     "metrics" : [
+#         ( "delete_hits", "area" ),
+#         ( "delete_misses", "stack" ),
+#     ],
+# })
 
 
 metric_info["total_connections"] = {
@@ -266,12 +269,12 @@ metric_info["eviction"] = {
     "color" : "21/a"
 }
 
-graph_info.append({
-    "title"   : _("Items"),
-    "metrics" : [
-        ( "total_items", "area" ),
-        ( "curr_items", "line" ),
-    ],
-})
+# graph_info.append({
+#     "title"   : _("Items"),
+#     "metrics" : [
+#         ( "total_items", "area" ),
+#         ( "curr_items", "line" ),
+#     ],
+# })
 
 

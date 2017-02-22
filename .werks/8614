@@ -1,0 +1,10 @@
+Title: cmk-update-agent: fix exception with invalid sigantures on Ubuntu precise
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i1
+Date: 1469541766
+Class: fix
+
+

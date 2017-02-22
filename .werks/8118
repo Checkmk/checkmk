@@ -1,0 +1,22 @@
+Title: Smartping: Fixed "no buffer space available" error when having a lot of hosts configured
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1418723315
+Targetversion: future
+
+We already changed the way smartping was operating some time ago, this solved the
+"no buffer space available" problem for many systems and increased the possible
+number of hosts to be pinged dramatically.
+
+This did not fix the problem for all systems. Some systems with maybe slower network
+cards or drivers still had the problem that the message "no buffer space available"
+appeared from time to time in the cmc.log. This occured when the cmc was asking for
+ping requests faster than the kernel / NIC could process them. The send queue of the
+single raw socket was filling up to the maximum and then resulting in this error message.
+
+The icmpsender now opens 8 sockets instead of 1 for sending the ICMP requests.
+Additionally the socktes now get a larger send buffer to make it less likely to fill up.

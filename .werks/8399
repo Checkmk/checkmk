@@ -1,0 +1,13 @@
+Title: Fixed timeranges of instant reports from log and event views
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1455618972
+
+The time range would be one day too large (the end time). This was not visible
+for the user in most time since there are never events in the future. But the
+title with the time range in textual form was invalid.

@@ -1,0 +1,13 @@
+Title: cmk-update-agent: Fix 'TypeError: must be string without null bytes, not str'
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1472808893
+
+Problem is that pyOpenSSL version 0.12 has a bug so that it cannot correctly
+deal with 0-bytes (which are totally allowed) in keys. This fix falls back
+to the command line tool <tt>openssl</tt> when it detects that broken version.

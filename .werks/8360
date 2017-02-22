@@ -1,0 +1,14 @@
+Title: Recurring downtimes now for nth day of month and xth weekday from beginning and end
+Level: 2
+Edition: cee
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450723435
+Class: feature
+
+The recurring scheduled downtimes can now be set to appear always on the
+same day of the month, e.g. always on the first of the month. Also you
+can choose them to happen on each first, second, third or fourth Monday,
+Tuesday, etc. Also couting from the end of the month is possible, e.g. each
+last friday in the month.

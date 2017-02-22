@@ -1,0 +1,13 @@
+Title: Process Performance data on passive check results
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i5
+Date: 1404893463
+Targetversion: future
+
+When sending passive check results via the legacy command pipe
+then performance data was not correctly processed but interpreted
+as check output. This has been fixed.

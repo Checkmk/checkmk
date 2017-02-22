@@ -1,0 +1,20 @@
+Title: Avoid SmartPING timeouts in situation of high disk I/O
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i5
+Date: 1404994907
+Targetversion: future
+
+In situations where the operating system in in high disk I/O and
+many processes run into disk wait, the micro core seemed sometimes
+to register PING timeouts. That was simply due to the fact that
+the core itself was delayed and thought the PING packages didn't
+arrive in time.
+
+This has now been fixed, by assuming that when checking the
+PING timeout taking into account the time since the last check:
+CMC assumes now that all PING must have arrived directly at
+the beginning of the current interval, not at the end.

@@ -1,0 +1,9 @@
+Title: Report scheduler: fix instant emailing of report in case period is not daily
+Level: 2
+Edition: cee
+Component: reporting
+Version: 1.2.6b1
+Date: 1418029336
+Class: fix
+
+

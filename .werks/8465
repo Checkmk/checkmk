@@ -1,0 +1,11 @@
+Title: Improved error handling of exceptions caused in graphs
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1459419110
+
+

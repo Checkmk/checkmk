@@ -1,0 +1,11 @@
+Title: fixed crash in agent backery when using mrpe rule
+Level: 1
+Edition: cee
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1464774609
+
+

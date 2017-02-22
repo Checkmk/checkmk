@@ -1,0 +1,13 @@
+Title: Disable SSL level autonegotionaion in Linux agent update plugin
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1461155743
+
+This fixes a problem on certain distributions where that feature is not currently
+working in <tt>curl</tt>. The option <tt>-1</tt> forces TLS - which is the only
+safe protocol in our days, anyway.

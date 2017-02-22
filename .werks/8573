@@ -1,0 +1,17 @@
+Title: Handle large regular expressions more gracefully
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476432353
+Class: fix
+
+Livestatus queries with large regular expressions in their filters could
+lead to a stack overflow and consequently to a termination of the micro
+core.  To handle this in a more robust way, we set a limit on the size and
+complexity of a regular expression, and bump the stack sizes of the
+Livestatus threads from 64kB to 256kB.  The net result is that we can
+correctly handle regular expression patters of up to roughly 2k characters,
+the exact value depends on the regex features used.  For larger expressions
+we return a failure status in a clean way.

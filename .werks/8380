@@ -1,0 +1,12 @@
+Title: Removed the CMC Rush Ahead Daemon (cmcrushd)
+Level: 1
+Edition: cee
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455119806
+Class: fix
+
+This daemon was meant to shorten the time needed for config changes and activating them in WATO.
+But it was nearly useless and caused troubles in different situations. So we decided to drop
+it completely.

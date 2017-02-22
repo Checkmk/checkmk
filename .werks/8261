@@ -1,0 +1,17 @@
+Title: Fixed using cached agent data during regular checks
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.7i3
+Date: 1435928245
+Class: fix
+
+During runtime of the CMC it might happen that the data gathered
+by the Check_MK Helpers is not up-to-date since they were using
+cached data during checks. This only happened when having the
+"Check_MK Discovery" service activated which regularly checks for
+new services to be monitored.
+
+Once the "Check_MK Discovery" services was executed for one host
+in a helper process, this problem occured for all further checks
+being performed by this helper.

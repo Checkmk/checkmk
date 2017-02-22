@@ -1,0 +1,14 @@
+Title: Preventing deletion of reports which are used by other reports
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424427475
+
+Previously it was possible to delete any report. When deleting a report
+where another report is based on, this succeeded, but resulted in different
+exceptions when trying to access the list of reports or the report which
+is based on a non existant report.

@@ -1,0 +1,10 @@
+Title: cmc now sets the HOSTNOTES and SERVICENOTES attributes for notification plugins
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i1
+Date: 1462283773
+Class: feature
+
+

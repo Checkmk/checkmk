@@ -1,0 +1,10 @@
+Title: Implement external commands DISABLE/ENABLE_HOST_SVC_NOTIFICATIONS
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.5i6
+Date: 1413274848
+Class: feature
+
+These commands are compatible with the Nagios monitoring core and allow to
+enabled or disable the notifications on all services of a certain host.

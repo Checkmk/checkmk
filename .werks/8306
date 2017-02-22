@@ -1,0 +1,10 @@
+Title: Log stack trace in case of crash of CMC
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444228349
+Class: feature
+
+This helps finding the exact reason for a (hopefully rare) crash of the CMC.

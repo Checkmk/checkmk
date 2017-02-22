@@ -1,0 +1,12 @@
+Title: New table layout for reporting
+Level: 2
+Edition: cee
+Component: reporting
+Version: 1.2.7i1
+Date: 1424011366
+Class: feature
+
+Tables in the reporting are new per default painted in alternative
+background shadings for odd and even rows. This is similar to the styling
+on the screen. This is just a new default. You can change this back to the
+previous behaviour in the global settings, if you like.

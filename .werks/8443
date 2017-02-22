@@ -1,0 +1,13 @@
+Title: Make history file parsing more robust
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1457093108
+
+Make sure that the core doesn't crash while reading malformed history files,
+log the invalid lines instead.
+

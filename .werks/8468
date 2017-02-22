@@ -1,0 +1,11 @@
+Title: Graphs in collections now always show the host/service in the title
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1459759316
+
+

@@ -1,0 +1,13 @@
+Title: Fix Livestatus query for column fixed in table downtimes for newly created downtimes
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i2
+Date: 1433923903
+Targetversion: future
+
+This column would show large random integer values instead of 0 and 1. After a core restart
+the value was correct. This was due to a type mismatch (int vs. bool) in the implementation
+und probably due to a compiler optimization.

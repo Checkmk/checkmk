@@ -1,0 +1,11 @@
+Title: Speedup Livestatus queries of hosts/services by using indices
+Level: 1
+Edition: cee
+Component: livestatus
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387354820
+Targetversion: future
+
+

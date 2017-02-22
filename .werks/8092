@@ -1,0 +1,18 @@
+Title: Bake generic and vanilla agent
+Level: 2
+Edition: cee
+Component: agents
+Version: 1.2.6b1
+Date: 1415783178
+Class: feature
+
+The agent bakery used to always create a so called <i>Generic agent</i>. That was
+an agent with a default configuration.
+
+Now the bakery per default creates two - possible identical - agents: The <i>Vanilla</i>-agent is
+what had been the generic agent. It is an agent without any plugins and with the default
+configuration. The <i>Generic</i> agent is an agent with all rulesets being applied that do
+not have any positive restrictions. It is the agent for a generic host, i.e. a host that
+has no tags and no name. All rules that do not require certain tags to be <i>set</i> or
+do require the host to have a certain name are being used. This allows you to create a proper
+agent without creating any host at the first place.

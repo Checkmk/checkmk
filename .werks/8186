@@ -1,0 +1,9 @@
+Title: The cmc now also sets the HOSTNOTESURL and SERVICENOTESURL attributes for notification plugins
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.7i1
+Date: 1426853680
+Class: feature
+
+

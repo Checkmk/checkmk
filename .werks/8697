@@ -1,0 +1,23 @@
+Title: New report element "Multiple graphs"
+Level: 2
+Edition: cee
+Component: reporting
+Compatible: compat
+Version: 1.4.0b1
+Date: 1485423142
+Class: feature
+
+In case you want to add graphs of a dynamic collection
+of services, for example all "CPU load" graphs of all hosts
+that are tagged as productive hosts, you could only create
+a "view" report element, specify the filters and add a single
+painter showing the graphs of the service to the view. This
+was working for some cases, but produced strange layout issues
+in some cases. You could also not filter the single graphs of
+the servvices. It was always showing all graphs of the services.
+
+Now you can use the "Multiple graphs" report element to select
+a collection of hosts/services to show the graphs. You can
+configure this element to show only the N'th graphs of the
+hosts/services. And you have many options to configure the
+graph rendering to fit your needs now.

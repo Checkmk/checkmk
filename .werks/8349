@@ -1,0 +1,18 @@
+Title: MRPE checks can now be configured via agent bakery
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450089964
+Class: feature
+
+The <tt>mrpe.cfg</tt> for linux and <tt>[mrpe]</tt> section for windows agents
+can now be configured via the agent bakery using the <i>Execute MRPE checks</i>
+ruleset.
+
+The only limitation is that the executed plugins are not automatically deployed
+when configuring this rule. You will have to either deploy them on your own or
+use the ruleset "Deploy custom files with agent" to deploy the nagios plugins
+needed for your MRPE checks with the bakery. Please note that custom files can
+currently only be deployed on windows systems.

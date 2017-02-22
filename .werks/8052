@@ -1,0 +1,48 @@
+Title: Speedup availability queries by new caching (disabled per default)
+Level: 3
+Edition: cee
+Component: livestatus
+Version: 1.2.5i4
+Date: 1401867265
+Class: feature
+
+The Check_MK Micro Core now has an alternative implementation of the
+Livestatus table <tt>statehist</tt>. This table is the basis for all
+availability computations. In the current implementation, which is still
+the only when using the Nagios core, for each query all historic logfiles
+that cover the query range have to be evaluated. Despite caching this can
+mean an intense effort in CPU and IO usage. If you have a larger number of
+hosts and services then a query for a larger time frame could last for minutes.
+
+The new implementation needs to be enabled in the global settings
+for the Check_MK Micro Core: <i>In-memory cache for availability data
+(experimental)</i>. You also have to configure a time range. This limits how
+long into the past you can do availability queries. The default setting is
+two years.
+
+During the start of The Core all historic log files for that time ranged are
+parsed into a very efficient in-memory database so that future availability
+queries do not need any disk IO or logfile parsing. The cache is automatically
+updated when new alerts happen. Please also note that The Core is not
+restarted during normal operation and activation of changes, so the cache
+is just invalidated when you reboot your server or do a software update
+of Check_MK.
+
+The parser can process 500.000 messages per second and more, so if your disk
+IO is fast enough even parsing a large history does not take longer than
+a couple of minutes. This is done in the background and does not prevent
+The Core from working or queries from being answered. Even availability
+queries are being answered while the cache is still being built up. If the
+queried time range is already in the cache then the query can immediately
+be processed. Otherwise it waits for the cache to be ready.
+
+When it comes to timeperiod definitions the new implementation has a
+different behaviour: It reflects later changes in the definitions of your
+timeperiods.  This is conveniant when you want to work with service periods
+for your availability queries. The classical implementation evaluates the
+<tt>TIMEPERIOD TRANSITION</tt> entries in your logfiles. The new one directly
+takes the current definitions into account and computes them for the time
+range in the past.
+
+<b>Note:</b> As of today this implemention is still highly <i>experimental</i>
+and might not only produce wrong results, but might crash your core.

@@ -1,0 +1,12 @@
+Title: MKP Manager: Fixed possible HTML/JS injection from installed MKPs
+Level: 1
+Edition: cee
+Component: wato
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458747184
+
+The meta information of installed MKPs which is displayed on the MKP Manager page
+could inject HTML/JS code to users which open up the page.

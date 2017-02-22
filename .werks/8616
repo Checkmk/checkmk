@@ -1,0 +1,13 @@
+Title: Fix exception in Agent Bakery when deploying agent updater on Windows
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2
+Date: 1475593789
+
+This just happens in occasions, where you do not have any other configuration
+option for the Windows agent then the agent updater. The bug was introduced
+recently.

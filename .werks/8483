@@ -1,0 +1,11 @@
+Title: Fix exception about dist_function missing when zooming out over 10 or more years
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458561738
+
+

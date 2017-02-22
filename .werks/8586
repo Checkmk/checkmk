@@ -1,0 +1,11 @@
+Title: Fix invalid PDF (not shown be acroread) in views where graphs create page breaks
+Level: 2
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1464940682
+
+

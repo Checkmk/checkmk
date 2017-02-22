@@ -1,0 +1,13 @@
+Title: Avoid host down via SmartPING out of check period
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i4
+Date: 1403277718
+Targetversion: future
+
+If a host was not in its check period and SmartPING was used
+as host check then the host would be marked as down nevertheless.
+This has been fixed.

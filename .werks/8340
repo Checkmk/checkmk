@@ -1,0 +1,11 @@
+Title: Fixed scaling of rtmin/rtmax values in ping graphs
+Level: 1
+Edition: cee
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1445604908
+
+

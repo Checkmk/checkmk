@@ -1,0 +1,11 @@
+Title: Graph collection: PDF exports respect the choosen time range now
+Level: 1
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480319206
+Class: fix
+
+In previous versions the PDF exports of graph collections did always output
+PDFs with a 4 hour time range.

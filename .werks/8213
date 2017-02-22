@@ -1,0 +1,11 @@
+Title: crash_debug: Fix agent bakery for crash_debug option in Windows agent
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1426005747
+Targetversion: future
+
+The rule simply had no effect. This has been fixed.

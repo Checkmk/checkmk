@@ -1,0 +1,10 @@
+Title: cmk-update-agent: Added -V / --version to output the version of the plugin
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481193799
+Class: feature
+
+

@@ -1,0 +1,11 @@
+Title: Fixed broken "edit host" link found on agent bakery hosts agent page
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1456823957
+
+

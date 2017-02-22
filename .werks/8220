@@ -1,0 +1,17 @@
+Title: Graph Collections: create collections of graphs, accessible via the sidebar
+Level: 2
+Edition: cee
+Component: metrics
+Version: 1.2.7i1
+Date: 1430315755
+Class: feature
+
+The new graphing system has a new thing called <i>Graph Collections</i>. Such a collection
+contains a list of specific host and service graphs. Each user can create an arbitrary
+number of own collections. Collections can by published to be visible to other users
+- just like views. And they become visible in the <i>Views</i> sidebar snapin within
+the topic <i>Metrics</i>.
+
+Adding a graph to a collection is done by simply clicking on a new icon right
+within the graph. It opens a popup menu where you can select one of your
+collections to add to.

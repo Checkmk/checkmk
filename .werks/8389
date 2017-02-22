@@ -1,0 +1,18 @@
+Title: Zooming/panning graphs pauses page updates now
+Level: 2
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1456932979
+
+To prevent issues with the graphs during view / dashlet data updates the updates
+are paused for 60 seconds. If you don't modify the graph in this time, the whole
+page will be reloaded and the graph is reset to it's original time and vertical
+scaling.
+
+The paused update is visualized with a large pause overlay on the top/right of
+the screen. This overlay shows a countdown of seconds left until the page update
+is continued by reloading the whole page. 

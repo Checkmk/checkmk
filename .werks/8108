@@ -1,0 +1,12 @@
+Title: Slight change in SMART Ping packages, should increase compatibility with routers
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417548517
+Class: fix
+
+The SMART ping ICMP echo request packages now use a new unique ICMP Identifier
+for each packet and always use sequence ID 0. The previous version used
+a fixed identifier and a ever changing sequence ID. We hope that the new
+approach is more suitable for firewalls.

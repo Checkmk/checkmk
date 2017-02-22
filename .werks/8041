@@ -1,0 +1,15 @@
+Title: Added option to profile the efficiency of inline SNMP
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.5i4
+Date: 1401884328
+Class: fix
+
+With this mechanism, the usage of the fetched SNMP vars can now be recorded
+and later analyzed. Hopefully we can increase the efficiency of inline SNMP
+a bit more.
+
+This feature can be enabled using the WATO option <tt>Record statistics of Inline SNMP</tt>.
+But only enable this for a short period, because this might affect the performance
+of your monitoring.

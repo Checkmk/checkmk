@@ -1,0 +1,14 @@
+Title: Fixed segfaults and incorrect Livestatus replies when history file is missing
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i3
+Date: 1479392637
+Class: fix
+
+When the history file is missing at cmc startup time, the next "GET log"
+query will cause a segfault.  After the automatic restart, further similar
+queries will just return an empty reply until the next log rotation,
+although the core has created a history by then.
+

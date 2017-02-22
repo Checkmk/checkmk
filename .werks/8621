@@ -1,0 +1,12 @@
+Title: Graph designer: Host names are now auto completed
+Level: 1
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.4.0i2
+Date: 1475267910
+Class: feature
+
+When entering host names into the graph designer host fields,
+the available names are completed using a drop down menu you
+can choose the final host name from.

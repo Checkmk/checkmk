@@ -1,0 +1,10 @@
+Title: Check_MK graphs can now be rendered on mobile interface
+Level: 1
+Edition: cee
+Component: multisite
+Compatible: compat
+Version: 1.2.8p6
+Date: 1469458236
+Class: fix
+
+

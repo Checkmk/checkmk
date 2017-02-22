@@ -1,0 +1,21 @@
+Title: Implemented limiting of fetched OIDs for if/if64 checks
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.6b1
+Date: 1415631225
+Class: feature
+
+It is now possible to configure a rule in WATO which limits the number of
+OIDs fetched by a check, for example the if/if64 check, which might then
+only fetch the information for some interfaces instead of all interfaces.
+
+This is a performance optimisation feature which is only useful for special
+use cases. The OID ranges to fetch need to be specified manually and can
+only be configured for a small subset of checks where it makes sense to
+configure it. It applies only when using bulk walks with Inline-SNMP.
+
+In case of the interface checks this rule might be useful when you have
+e.g. a network switch with several hundrets of interfaces and only want
+to monitor a small amount of the network interfaces, for example the
+first 10 interfaces.

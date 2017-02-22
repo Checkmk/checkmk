@@ -1,0 +1,14 @@
+Title: Graph collections can now be added to reports
+Level: 1
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.4.0b1
+Date: 1484851648
+Class: feature
+
+You can create you own custom collection of graphs in the GUI. These graph
+collections can now be added to the PDF reports. Once you added a collection
+to a report, it will always show the current graphs of the collection. This
+means if you add new graphs to the collection, they will be added to the
+PDF reports too.

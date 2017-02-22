@@ -1,0 +1,12 @@
+Title: Fix invalid number of Alert statistics view when exported as PDF
+Level: 2
+Edition: cee
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1418734019
+Targetversion: future
+
+The reason was that internally a limit on the number of raw lines from
+the log query was imposed. This has been fixed.

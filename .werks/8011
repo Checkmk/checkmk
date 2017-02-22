@@ -1,0 +1,13 @@
+Title: Complete German translation of GUI
+Level: 3
+Edition: cee
+Component: wato
+Class: feature
+State: unknown
+Version: 1.2.5i1
+Date: 1389177657
+Targetversion: future
+
+The complete user interface of Multisite and WATO is now available in German language.
+Every user can select either English or German as language. In a global setting you
+can specify the default language.

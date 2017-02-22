@@ -1,0 +1,10 @@
+Title: inline snmp: now supports authentification level noAuthNoPriv
+Level: 1
+Edition: cee
+Component: inline-snmp
+Compatible: compat
+Version: 1.4.0i1
+Date: 1467625356
+Class: fix
+
+

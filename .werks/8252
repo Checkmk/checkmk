@@ -1,0 +1,16 @@
+Title: Fixed invalid data returned by SNMP GET requests executed after the bulkwalks
+Level: 1
+Edition: cee
+Component: inline-snmp
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1431693583
+
+After all bulkwalks which return an empty set of data without having an error situation,
+an SNMP GET is performed to verify that there really is no data at the requested OID.
+
+The inline SNMP code was treating some error situations like NOSUCHOBJECT or NOSUCHINSTANCE
+which occur when a device does not know the requested OID wrong. It returned an empty string
+instead of no data which might confuse our SNMP engine or checks.

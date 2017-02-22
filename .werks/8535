@@ -1,0 +1,17 @@
+Title: cmk-update-agent: Fixed not using configured CA certificates]
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1467888662
+
+cmk-update-agent could fail when using HTTPs with configured CA certificates.
+The error message was:
+
+Exception: Cannot fetch deployment URL via curl: Peer certificate cannot be authenticated with known CA certificates
+
+This was caused by missing links in /var/lib/check_mk_agent/cas which can be
+created with "c_hash /var/lib/check_mk_agent/cas".

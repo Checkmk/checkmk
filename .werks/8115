@@ -1,0 +1,11 @@
+Title: Suggesting "time" package, used for mk-job, in debian packages
+Level: 1
+Edition: cee
+Component: agents
+Version: 1.2.6b1
+Date: 1417619407
+Class: fix
+
+When not present, mkjob simply does not work. So if you like to use
+mk-job, you need to have the "time" command available, which is
+packaged in the "time" package on debain systems.

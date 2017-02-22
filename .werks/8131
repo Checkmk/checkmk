@@ -1,0 +1,15 @@
+Title: Log errors of the RRD creation process into the cmc.log
+Level: 1
+Edition: cee
+Component: cmc
+Class: feature
+State: unknown
+Version: 1.2.7i1
+Date: 1421411799
+Targetversion: future
+
+Previously this was optionally logged into an own logfile - and
+errors would only be logged if logging was enabled. Now errors
+are always present in <tt>cmc.log</tt>. Also the logging of the
+RRD creations will be visible in this logfile and not any longer
+in a separate log file.

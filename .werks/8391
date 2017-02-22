@@ -1,0 +1,13 @@
+Title: Better column width layout for availability reports with more groups
+Level: 1
+Edition: cee
+Component: reporting
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450779445
+Class: feature
+
+When you create a report containing an availability table and that table has
+more than one group then the column widths of each group would be different.
+This was not very beautiful. Now all numeric columns get a minimum width und
+thus the layout will be the same for all groups.

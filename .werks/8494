@@ -1,0 +1,11 @@
+Title: Agent update does not longer fail when replacing RPM with file with same name
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1461138308
+
+

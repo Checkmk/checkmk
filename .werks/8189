@@ -1,0 +1,11 @@
+Title: bakelet win_eventlog: fixed non-working configuration when nocontext setting was used
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1431949967
+Targetversion: future
+
+

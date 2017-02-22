@@ -1,0 +1,11 @@
+Title: Fix bogus Nagios has rotated logfiles. Rebuilding logfile index
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417525604
+Class: fix
+
+Due to a mismatch of internal timestamp formats the Livestatus table log in
+the Micro Core sometimes thought that a logfile rotation would have taken
+place and dropped the log cache without need.

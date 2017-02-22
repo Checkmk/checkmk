@@ -1,0 +1,12 @@
+Title: Fix column last_hard_state: show same value as soft state
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1393403321
+Targetversion: future
+
+The livestatus implementation of the Micro Core did output the current state instead
+of the last hard state in the column last_hard_state. This has been fixed.

@@ -1,0 +1,12 @@
+Title: When adding views to reports the currently selected filters are now honored
+Level: 2
+Edition: cee
+Component: reporting
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454956397
+Class: fix
+
+This means that if you have modified some filters in a view and add that view
+to a report these filters are now being saved in the report as well. So the
+view in the report has exactly the same object selection.

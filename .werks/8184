@@ -1,0 +1,12 @@
+Title: agent bakery: fixed missing configuration data in check_mk.ini
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423663530
+
+The data of the check_mk.ini file is now written to disk
+before the file is put into the msi package.

@@ -1,0 +1,14 @@
+Title: When SNMPv1 was used to fetch the last OIDs from devices OIDs were not fetched
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.7i3
+Date: 1441026990
+Class: fix
+
+When a host is being monitored via SNMPv1, inline SNMP is enabled AND one check needs
+OIDs which reach the end of the OID table, the data was dropped by the SNMP engine
+and never reached the check. With SNMPv2 this works without problem.
+
+The problem is that SNMP is handled differently here between v1 and v2. We have changed
+our code to equalize this situation. SNMPv1 should work as v2 now.

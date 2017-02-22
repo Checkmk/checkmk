@@ -1,0 +1,11 @@
+Title: Now able to load bakelets from local directory
+Level: 1
+Edition: cee
+Component: agents
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1436449489
+
+

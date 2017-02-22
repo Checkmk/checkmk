@@ -1,0 +1,13 @@
+Title: Fixed segfaults on check timeout when using Inline-SNMP
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.6b1
+Date: 1416815265
+Class: fix
+
+When the Inline-SNMP code was currently executing Net-SNMP library
+code while a check timeout (SIGALRM) occured, this resulted in
+a segmentation fault which leads to an unexpected situation. This
+resulted in totally terminated checks or broken WATO service
+discovery pages. This issue has been fixed now.

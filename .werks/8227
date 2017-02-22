@@ -1,0 +1,11 @@
+Title: Agent Bakery: Fixed baking of mk_jolokia in case of multipe instances
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.7i2
+Date: 1436434231
+Targetversion: future
+
+

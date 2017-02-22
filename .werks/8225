@@ -1,0 +1,11 @@
+Title: agent_bakery: Fixed handling of nocontext option in mk_logwatch
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1430753014
+Targetversion: future
+
+Even if set in Wato, the option was ignored before.

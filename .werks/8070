@@ -1,0 +1,13 @@
+Title: Fix notification type for the end of downtimes
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.5i6
+Date: 1409233854
+Class: fix
+
+When a downtime ends the CMC used to set the NOTIFICATION_TYPE to
+<tt>DOWNTIMESTOPPED</tt>, while Nagios uses <tt>DOWNTIMEEND</tt>. This
+leads to an invalid notification classification in the rule based
+notification, so that instead of the type <i>Downtime Start or End</i>
+a normal altert type was being assumed. That has been fixed now.

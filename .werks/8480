@@ -1,0 +1,12 @@
+Title: Agent Updater: Fixed handling of garbled updater state file
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1461079037
+
+Instead of just crashing the agent updater will fall back to "unregistered"
+and report it's state to the monitoring host.

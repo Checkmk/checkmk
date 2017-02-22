@@ -1,0 +1,13 @@
+Title: Fixed crashing of core when rendering a lot of performance graphs in a short time
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1435667836
+Targetversion: future
+
+The core could crash when a single user or multiple users were requesting a lot
+of performance graphs in a short time. This was caused by a non thread safe
+code in the used rrdtool library which made the core crash.

@@ -1,0 +1,11 @@
+Title: liveproxyd: a channel is now closed and reinitialized on a client timeout
+Level: 1
+Edition: cee
+Component: livestatus
+Compatible: compat
+Version: 1.4.0i1
+Date: 1468575535
+Class: fix
+
+Channels kept the state <i>busy</i> when total query timeout for a client was reached.
+This change removes the channel from the sites channel list. A new one gets automatically created later on.

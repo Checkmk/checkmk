@@ -1,0 +1,62 @@
+Title: Recurring Scheduled Downtimes - adhoc via command and also via rule set
+Level: 3
+Edition: cee
+Component: cmc
+Version: 1.2.7i2
+Date: 1434094213
+Class: feature
+
+Check_MK now supports <i>recurring scheduled downtimes</i> (or simply
+<i>recurring downtimes</i>).  Let's assume that you have a couple of servers
+that are rebooted once a week always at the same time.  You surely do not
+want any notifications about that, you also do not want to have these hosts
+displayed as "problems" in the problem views.
+
+Up to now the only useful tool in such situations was the notification
+period. But that way you can just suppress notifications - not the problem
+display. Also setting up notification periods requires configuration
+permissions (WATO).
+
+The new recurring downtimes create normal scheduled downtimes for you on
+a regular base. This is a direct enhancement of the downtimes that already
+exist. They now have a new field where you can specify an interval in which
+the downtime should be repeated. Everything is then handled by the monitoring
+core (CMC) and no external cron job is involved. This has a few advantages:
+
+LI:No cron job is needed
+LI:The recurring downtimes are visible in the <i>Downtimes</i> view - even if they are currently not active
+LI:Recurring downtimes can be set and removed by using the existing downtime commands
+
+You can create recurring downtimes in two ways:
+
+H2:Using commands
+
+The easiest way is to just use the same commands as for creating one-time
+downtimes. The command box now has a new option <i>Repeat this downtime
+on a regular base every ____</i>.  You can choose between <i>hourly</i>,
+<i>daily</i> and <i>weekly</i>. If you e.g.  create a downtime for 12:34 on
+Monday and select <i>weekly</i> then this downtime will be repeated on every
+Monday from now on. Changes in the daylight saving time are compensated,
+so the time of day (12:34) will be valid in and out of DST.
+
+Such downtimes behave exactly like one-time downtimes - with the single
+difference that they are not being deleted when they end but shifted to the
+next interval instead.
+
+
+U2:Using rule sets
+
+There is a second way to create recurring downtimes: two new WATO rule sets
+called <i>Recurring downtimes for hosts</i> and <i>Recurring downtimes for
+services</i>. Using these you can base the downtimes on WATO folders and host
+tags. While this could also by done by selecting host and services via the GUI
+and applying commands - it still has one advantage: You can specify downtimes
+for objects that <i>still do not exist</i>. If you create a recurring downtime
+for all servers with the tag <i>Windows</i> then also Windows hosts that
+will be added at a later time will automatically get that recurring downtime.
+
+Recurring downtimes that have been created via a rule can not be deleted by
+the operator via a command, of course. All downtime views have a new column
+<i>Origin</i> that shows you wether a downtime exists due to a <i>command</i>
+or due to <i>configuration</i>.
+

@@ -1,0 +1,11 @@
+Title: Improved error reporting when trying to edit not existing report elements
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1480942193
+
+

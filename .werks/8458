@@ -1,0 +1,11 @@
+Title: Fixed links from host detail page to host graph page
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458223471
+
+

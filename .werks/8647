@@ -1,0 +1,18 @@
+Title: cmk-update-agent: Fixed certificate verification issues in case openssl tools are not available
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481787832
+Class: fix
+
+When communicating via HTTPS with the update server, the cmk-update-agent script needs to verify
+the certificates of the server. The allowed certificates are stored at <tt>/var/lib/check_mk_agent/cas</tt>.
+
+In this directory there need to be the certificates (.pem files) and symlinks named with the "subject hashes"
+of the certificates. In previous versions these symlinks were created by the <tt>c_rehash</tt> command
+which is not available on all plaftforms.
+
+We have changed that now to use the python OpenSSL bindings (if available) and fallback to the c_rehash
+command only in case they are not available.

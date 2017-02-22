@@ -1,0 +1,13 @@
+Title: Made scheduling of check helpers more robust
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1473407046
+
+Under very rare circumstances the monitoring core miscounted the number of
+idle helpers, leading to an endless loop with 100% CPU load.
+

@@ -1,0 +1,13 @@
+Title: Times and comments of downtimes can now be edited
+Level: 1
+Edition: cee
+Component: multisite
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453714934
+Class: feature
+
+When using the Microcore it is now possible to edit specific attributes
+of existing downtimes. Then start and end time and the downtime comment
+can be changed now. This can be done only in the "Downtimes" view using
+the action "Edit Downtimes".

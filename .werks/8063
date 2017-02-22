@@ -1,0 +1,12 @@
+Title: Recover broken RRD files after disk-full situation
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417425835
+Class: fix
+
+In a situation where you are ouf of disk space RRDTool will create
+empty <tt>*.rrd</tt> files. The CMC considered these later as existing
+and would not attempt to recreate them. This has been fixed and
+zero-sized RRD files are considered to be non-existant now.

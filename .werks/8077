@@ -1,0 +1,77 @@
+Title: New option --split-rrds for --rrd-convert, converts PNP storage type
+Level: 2
+Edition: cee
+Component: config
+Version: 1.2.5i6
+Date: 1413380123
+Class: feature
+
+Check_MK has now a new builtin function for converting legacy-style PNP RRDs
+from storage type <tt>SINGLE</tt>, which had been the default for many years,
+to <tt>MULTIPLE</tt>, which is the current default since about three years.
+<tt>SINGLE</tt> means that all metrics of one host or service are stored
+in a single round robin database, whereas with <tt>MULTIPLE</tt> each RRD
+does contain only one single datasource.
+
+Performance tests have revealed that - other then one might guess -
+<tt>MULTIPLE</tt> is not significantly slower. But it has the advantage
+that new datasources can be added on the fly. This is often needed when new
+versions of Check_MK introduce new metrics. For that reason Check_MK only
+fully supports storage type <tt>MULTIPLE</tt>.  When using the Check_MK
+Micro Core then you <b>have</b> to convert to <tt>MULTIPLE</tt>, if you do
+not want to loose your historic metrics, because the CMC does not support
+<tt>SINGLE</tt> at all.
+
+Converting RRDs - essentially splitting them up - can be done with PNP4Nagios'
+shipped utility <tt>lib/pnp4nagios/rrd_convert.pl</tt>, but that is a bit
+clumsy to use and very slow. If you have thousands of hosts the conversion
+can take many days.
+
+For that reason Check_MK now can do the splitting into multiple RRDs during the
+process of the RRD conversion. This is not only simpler for you. It is also
+much faster because it uses the native C code of the recent RRDTool. This
+is how to do the conversion. We assume that you are using Nagios as your
+monitoring core:
+
+<ol>
+<li>Make a backup of the directory <tt>var/pnp4nagios/perfdata</tt>.</li>
+<li>Stop the <tt>npcd</tt>. This avoids RRD updates while the conversion is in progress:
+C+:
+OM:omd stop npcd
+C-:
+</li>
+<li>Start the conversion. The option <tt>-v</tt> selects verbose output:
+C+:
+OM:cmk -v --convert-rrds --split-rrds
+C-:
+</li>
+<li>Edit the file <tt>etc/pnp4nagios/process_perfdata.cfg</tt> and
+change the storage type:
+F+:etc/pnp4nagios/process_perfdata.cfg
+RRD_STORAGE_TYPE = MULTIPLE
+F-:
+</li>
+<li>Start the <tt>npcd</tt> again:
+C+:
+OM:omd start npcd
+C-:
+</li>
+</ol>
+
+<b>Notes:</b>
+
+<ul>
+<li>You can specify host names as arguments to <tt>cmk --convert-rrds</tt>. The conversion
+will then only be done for these hosts. But when you start <tt>ncpd</tt> again and only
+some of the hosts are being converted, then hosts that do not match the storage type
+in <tt>process_perfdata.cfg</tt> will loose their RRD data.</li>
+<li>The splitting and the conversion to the RRD configuration that is setup via WATO
+with the rulesets <i>Configuration of RRD databases of hosts</i> and
+<i>Configuration of RRD databases of services</i> will be done at the same time. There
+is no way to just split. But the <i>Default</i> configuration of PNP4Nagios and of
+WATO for the RRDs is the same, so if you have changed neither, you essentiall will
+just split.</li>
+<li>Check_MK will <b>not create any backups of any files!</b> Failed modifications, unlucky RRD
+configuration and software bugs can lead to data loss. Make sure you have a backup.</li>
+</ul>
+

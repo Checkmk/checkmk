@@ -1,0 +1,11 @@
+Title: Custom file choices are now available immediately in the configuration GUI
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450081700
+Class: fix
+
+In previous versions the web server of the site had to be restarted to make new/deleted
+file packs visible in the GUI.

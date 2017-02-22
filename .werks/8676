@@ -1,0 +1,18 @@
+Title: Fixed edge cases for various Livestatus columns.
+Level: 1
+Edition: cee
+Component: livestatus
+Compatible: compat
+Version: 1.4.0b1
+Date: 1483094069
+Class: fix
+
+All host/service-related tables had some issues with various columns:
+
+   * The columns "comments", "comments_with_info", "downtimes" and
+     "downtimes_with_info" could miss some data.
+    
+   * The "metrics" column did not always contain a list.
+
+The bugs only manifested for some rare edge cases, and only CMC was
+affected.

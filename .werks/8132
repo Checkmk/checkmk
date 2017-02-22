@@ -1,0 +1,16 @@
+Title: New tuning of SMART ping - throttling of PING rate
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.7i1
+Date: 1421925418
+Class: feature
+
+The Smart PING engine in the Check_MK Micro Core has now an option
+of throttling the maximum rate of PINGs. This helps in situtations
+where a firewall is not able to process e.g. 1000 ICMP echo requests
+in one millisecond. Throttling is disabled per default.
+
+Note: The setting for omitting the ICMP payload has moved to the
+new setting. If you have used this setting you need to enable it
+again.

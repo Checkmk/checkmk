@@ -1,0 +1,12 @@
+Title: Fixed C-style mangling of performance variable names in Graphite/InfluxDB connections
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480604180
+Class: fix
+
+Previously, the performance variable names were not mangled in a reversible
+manner, even when C-style mangling was requested.
+

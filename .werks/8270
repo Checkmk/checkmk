@@ -1,0 +1,12 @@
+Title: Fixed error handling case during service discovery leading to SNMP timeouts
+Level: 1
+Edition: cee
+Component: inline-snmp
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1443610284
+Targetversion: future
+
+The service discovery results in timeouts on some devices which were caused in
+different behaviour of Inline-SNMP compared to the classic SNMP implementation.

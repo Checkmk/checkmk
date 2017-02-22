@@ -1,0 +1,12 @@
+Title: Regression in agent bakery not processing configured rulesets
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1459349615
+
+The Werk #8482 (included in 1.2.8b8) broke the agent bakery. The bakery was not
+respecting the host individual rules anymore.

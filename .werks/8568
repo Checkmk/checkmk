@@ -1,0 +1,17 @@
+Title: Make sending data to Carbon/Graphite more robust.
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1467796215
+
+When the connection to Carbon/Graphite is slow and/or the kernel on the
+monitoring server is very busy, it could happen that we sent a partial line
+only, so the net result could look like the core is stuttering.  With this
+fix, we introduce a small timeout for each write before giving up, and we
+make sure to close the connection in that case.  It will be re-opened later
+automatically.
+

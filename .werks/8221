@@ -1,0 +1,12 @@
+Title: Fix exception in report scheduler, about missing 'single_infos'
+Level: 2
+Edition: cee
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1430385627
+Targetversion: future
+
+This exception happend in the preview and also in the actual reports.
+Both places have been fixed.

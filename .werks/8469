@@ -1,0 +1,10 @@
+Title: Graph dashlets now have the host/service name in title by default
+Level: 1
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.4.0i1
+Date: 1459759729
+Class: fix
+
+

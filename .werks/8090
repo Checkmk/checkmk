@@ -1,0 +1,20 @@
+Title: Report scheduler - automatically email reports on a regular base
+Level: 3
+Edition: cee
+Component: reporting
+Version: 1.2.6b1
+Date: 1415699307
+Class: feature
+
+The new reporting scheduler allows users to have reports emailed at
+regular intervals. The scheduler is available for admins and normal
+users. Normal users can only mail reports to themselves.
+
+Currently the schedule can be daily, weekly or monthly, where you
+can configure the time of day and the relative day in the week
+or month.
+
+The scheduler allows to specify contexts for reports that need
+a context. For example you can use the shipped example report
+<i>Report of host</i> and specify the host to report about
+directly in the scheduler.

@@ -1,0 +1,14 @@
+Title: Fixed Livestatus queries for custom_variable_names columns.
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: incomp
+Version: 1.4.0i3
+Date: 1479799417
+Class: fix
+
+Previously, Livestatus queries for custom_variable_names columns had to
+prepend an underscore to a variable name to find a given variable.  This was
+an implementation detail which should not shine through, and it was highly
+inconsistent with the handling of custom_variables columns.  This has been
+fixed, so no spurious underscore is needed anymore.

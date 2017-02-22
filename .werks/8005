@@ -1,0 +1,12 @@
+Title: Fix encoding of &, > and < in PNP metainformation
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i4
+Date: 1403269108
+Targetversion: future
+
+This fixes the bug that graphs from services that contain these characters
+would break with an exception.

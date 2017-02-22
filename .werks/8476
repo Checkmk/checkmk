@@ -1,0 +1,13 @@
+Title: Sending metrics to Graphite/InfluxDB can now be disabled for services
+Level: 2
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i1
+Date: 1460552393
+Class: feature
+
+When sending metrics to Graphite/InfluxDB is enabled it was not possible to
+disable the export for specific services. We have now added the ruleset
+<i>Enable/disable sending Graphite/InfluxDB metrics</i> to configure this
+for services individually. By default all metrics are sent as before.

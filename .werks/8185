@@ -1,0 +1,11 @@
+Title: agent bakery: fixed missing check_mk.ini parameters for crash_debug, only_from and script execution
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423663828
+
+The scripts crash_debug, only_from and win_script_async had an incorrect path specified.

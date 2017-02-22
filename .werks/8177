@@ -1,0 +1,13 @@
+Title: Acknowledgement notifications are now suppressed when notifications are disabled
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424867953
+
+Previous versions sent out notifications when acknowledging problems, even when the
+notifications were disabled for an object, for example by disabling all notifications
+globally.

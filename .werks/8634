@@ -1,0 +1,13 @@
+Title: Fixed broken config when configuring "Parameters for linux_remote" ruleset
+Level: 2
+Edition: cee
+Component: alerts
+Compatible: compat
+Version: 1.4.0i2
+Date: 1477655485
+Class: fix
+
+This fixes this error after configuring a rule for this ruleset when executing
+Check_MK commands:
+
+  Cannot read in configuration file /omd/sites/heute/etc/check_mk/conf.d/wato/rules.mk: name 'alert_handler_parameters' is not defined

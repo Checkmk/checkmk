@@ -1,0 +1,12 @@
+Title: Fixed broken initial loading of graphs in IE (graphs loaded only on page reload)
+Level: 2
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1457008091
+
+The new style graphs were only loaded during page reloads in the IE. This made the
+graphs appear e.g. after 30 seconds having a page opened.

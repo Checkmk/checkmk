@@ -1,0 +1,11 @@
+Title: Notifications/Alerts: New environment variables MAXSERVICEATTEMPTS, MAXHOSTATTEMPTS
+Level: 1
+Edition: cee
+Component: notifications
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450715768
+Class: feature
+
+These parameters are now available in notification and alert handler scripts.
+

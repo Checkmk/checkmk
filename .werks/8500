@@ -1,0 +1,13 @@
+Title: Fix placement of inline metric graphs in reports
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1463133477
+
+When creating a PDF from a view that contains graphs that are not
+at the first position in the table then they were rendered at the
+wrong place. this has been fixed.

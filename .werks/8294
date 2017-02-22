@@ -1,0 +1,16 @@
+Title: Errors in WATO configuration do not prevent the core from being restarted anymore
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.7i3
+Date: 1438000304
+Class: feature
+
+When you had an error in your monitoring configuration like duplicate hosts
+or services, missing timeperiods, invalid cluster nodes or parents or various
+other situations then Check_MK could not create a valid configuration for the core
+and thus you could not activate any changes.
+
+This has been changed. All these errors are now only warnings. A working
+configuration for the core is now always being created. WATO will display
+the warnings in the <i>Activate Changes</i> page.

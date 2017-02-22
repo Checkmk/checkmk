@@ -1,0 +1,13 @@
+Title: Make graph data resolution visible in the graphs
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1469108446
+
+It was not transparent to the users which data resolution the graphs are calculated and rendered with.
+The step of the graphs is now rendered to the top right of the graphs, next to the time specification
+to make this transparent.

@@ -1,0 +1,23 @@
+Title: Fixed PDF export of availability views (e.g. all hosts + one week timerange)
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1452777297
+
+This kind of exception has been fixed:
+
+Traceback (most recent call last):
+  File "/omd/sites/stable/share/check_mk/web/htdocs/index.py", line 254, in handler
+    handler()
+  File "/omd/sites/stable/share/check_mk/web/htdocs/reporting.py", line 1719, in page_instant
+    render_report("instant", instant_report, rangespec=rangespec)
+  File "/omd/sites/stable/share/check_mk/web/htdocs/reporting.py", line 1777, in render_report
+    from_until, range_title = Timerange().compute_range(rangespec)
+  File "/omd/sites/stable/share/check_mk/web/htdocs/valuespec.py", line 2238, in compute_range
+    until_time = from_time
+UnboundLocalError: local variable 'from_time' referenced before assignment
+

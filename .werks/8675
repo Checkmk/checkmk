@@ -1,0 +1,13 @@
+Title: Fixed filtering on custom_variable_values columns.
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0b1
+Date: 1482841855
+Class: fix
+
+Previously even internal key/value pairs were considered when filtering on
+custom_variable_values, which is wrong and inconsistent with other
+operations on custom variable columns. This has been fixed.
+

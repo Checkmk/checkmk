@@ -1,0 +1,10 @@
+Title: cmcdump: removed superfluous command line option -i
+Level: 1
+Edition: cee
+Component: config
+Compatible: compat
+Version: 1.4.0i2
+Date: 1477320321
+Class: fix
+
+

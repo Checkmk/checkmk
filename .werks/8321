@@ -1,0 +1,11 @@
+Title: plugin/local parameters timeout, retry_count, execution and cache_age bakeable
+Level: 1
+Edition: cee
+Component: agents
+Version: 1.2.7i3
+Date: 1442324243
+Class: feature
+
+This adds new wato rules to allow the parameters "timeout", "retry_count", "execution" and
+"cache_age" to be configured for baked windows clients. These parameters can be set on plugins and
+locals using pattern-matching on their file names.

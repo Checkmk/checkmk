@@ -1,0 +1,19 @@
+Title: Removed space leaks related to dynamic columns.
+Level: 1
+Edition: cee
+Component: livestatus
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480928352
+Class: fix
+
+When some special columns were queried via Livestatus, the monitoring core
+leaked memory. This affected the following columns:
+
+<ul>
+<li><tt>mk_logwatch_file</tt> in table <tt>hosts</tt></li>
+<li><tt>value</tt> in table <tt>eventconsolereplication</tt></li>
+<li><tt>rrddata</tt> in tables <tt>hosts</tt> and <tt>services</tt></li>
+</ul>
+
+

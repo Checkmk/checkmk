@@ -1,0 +1,13 @@
+Title: Notification spooler: handle incoming connections even in situation with large spool directories
+Level: 2
+Edition: cee
+Component: notifications
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447407003
+Class: fix
+
+In situations where a large bulk of notification came in from a slave the mknotify
+would happily handle all those notifications while at the same time forgetting
+to handle all the connections. They would run into timeouts that way. No the
+processing of notifications is limited to 3 seconds for each turn.

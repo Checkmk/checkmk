@@ -1,0 +1,15 @@
+Title: Fixed possible mixup of check results resulted by a timeout in a check helper
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1463127939
+
+When the check of a host resulted in a timeout, it could happen that the check
+helper which handled the time out was left in an unintended state making the next
+check timeout too early. This could result in the check helper / core communication
+being mixed up. As result one host could get the check results of another reported
+which mostly lead to an error message "ignoring check result for [host] / [service]: no such service".

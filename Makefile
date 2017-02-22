@@ -328,7 +328,6 @@ cme-$(VERSION).tar.gz: managed/werks managed/ChangeLog
 	cp -pr managed cme-$(VERSION)/managed
 	mv cme-$(VERSION)/managed/ChangeLog cme-$(VERSION)/ChangeLog-cme
 	mv cme-$(VERSION)/managed/Makefile.omd cme-$(VERSION)/Makefile
-	
 	cd cme-$(VERSION) \
 	    && tar czf ../cme-$(VERSION).tar.gz $(TAROPTS) *
 	rm -rf cme-$(VERSION)
@@ -421,11 +420,7 @@ mrproper:
             --exclude='\.bugs/.last' \
             --exclude='\.bugs/.my_ids' \
             --exclude='\.werks/.last' \
-            --exclude='\.werks/.my_ids' \
-            --exclude='enterprise/\.bugs/.last' \
-            --exclude='enterprise/\.bugs/.my_ids' \
-            --exclude='enterprise/\.werks/.last' \
-            --exclude='enterprise/\.werks/.my_ids'
+            --exclude='\.werks/.my_ids'
 
 setup:
 	sudo apt-get install \

@@ -27,7 +27,7 @@
 ntp_default_levels = (10, 200.0, 500.0) # stratum, ms offset
 
 factory_settings["ntp_time_default_levels"] = {
-    "ntp_levels" : ntp_default_levels,
+    "ntp_levels"  : ntp_default_levels,
     "alert_delay" : (300, 3600),
 }
 
@@ -183,15 +183,12 @@ def check_ntp_summary(_no_item, params, info):
     yield last_state, infotext
 
     warn_time, crit_time = params["alert_delay"]
+    levelstext = "(levels at %s/%s)" % (get_age_human_readable(warn_time),
+                                        get_age_human_readable(crit_time))
     if time_since_sync >= crit_time:
-        status = 2
+        yield 2, levelstext
     elif time_since_sync >= warn_time:
-        status = 1
-    else:
-        status = 0
-
-    if status:
-        yield status, "(levels at %s/%s)" % (get_age_human_readable(warn_time), get_age_human_readable(crit_time))
+        yield 1, levelstext
 
 
 

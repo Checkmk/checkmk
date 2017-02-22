@@ -1,0 +1,9 @@
+Title: oracle_rman: fixed UnboundLocalError if sid level 0 is empty
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p18
+Date: 1487768837
+Class: fix
+
+

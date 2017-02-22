@@ -1,0 +1,9 @@
+Title: Services: Fixed broken link for services having no WATO configurable check parameters
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.4.0b3
+Date: 1487752620
+Class: fix
+
+

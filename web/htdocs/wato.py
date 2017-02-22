@@ -3209,8 +3209,12 @@ class ModeDiscovery(WatoMode):
                 _("View and edit the parameters for this service"), "rulesets")
 
         def check_parameters_button():
+            ruleset_name = self._get_ruleset_name(check_source, check_type, checkgroup)
+            if ruleset_name is None:
+                return
+
             url = folder_preserving_link([("mode", "edit_ruleset"),
-                             ("varname", self._get_ruleset_name(check_source, check_type, checkgroup)),
+                             ("varname", ruleset_name),
                              ("host", self._host_name),
                              ("item", mk_repr(item))])
             html.icon_button(url,

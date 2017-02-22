@@ -29,13 +29,16 @@
 # <<<uptime>>>
 # 15876.96 187476.72
 
+
 def inventory_uptime(info):
     if info:
         return [ (None, {}) ]
 
+
 def check_uptime(_no_item, params, info):
-    uptime_sec = float(info[0][0])
-    return check_uptime_seconds(params, uptime_sec)
+    if info:
+        uptime_sec = float(info[0][0])
+        return check_uptime_seconds(params, uptime_sec)
 
 
 check_info["uptime"] = {

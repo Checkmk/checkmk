@@ -1,0 +1,14 @@
+Title: smart agent plugin: disable megacli logging output
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p21
+Date: 1487778525
+
+MegaCLI by default writes output to MegaSAS.log in the same directory.
+With the smart plugin being called every 60 seconds this file can become
+several GiB large. Disable logging similar to what is done in the main
+agent.

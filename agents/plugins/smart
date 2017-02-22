@@ -34,9 +34,9 @@ megaraid_info()
 
     #PDINFO=$(MegaCli -PDlist -a0)
     if [ -z "$1" ]; then
-		PDINFO=$(megacli -PDlist -a0)
+		PDINFO=$(megacli -PDlist -a0 -NoLog)
     else
-		PDINFO=$($1 -PDlist -a0)
+		PDINFO=$($1 -PDlist -a0 -NoLog)
     fi
 
     echo "$PDINFO" | \

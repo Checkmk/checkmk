@@ -2,7 +2,7 @@ Title: Old host rrd directory is created even when using new one
 Component: core
 State: open
 Date: 2016-04-05 17:04:56
-Targetversion: 1.2.8
+Targetversion: 1.4.0
 Class: bug
 
 Unsure where the issue is located, but what happens is:
@@ -14,3 +14,8 @@ Unsure where the issue is located, but what happens is:
 
 This is done even when var/check_mk/rrd/[hostname] is used
 for storing the RRD files.
+
+----
+
+This is done by Perfdatabase::getPNPBase() which class makeDirectory(base).
+TODO(sp): Please investigate and clean this up.

@@ -185,7 +185,7 @@ def check_cisco_qos(item, params, info):
     # Gather the interface id by class_name
     if_id = None
     for iid, iid2 in ifs.iteritems():
-        if if_name == if_names[iid2]:
+        if if_name == if_names.get(iid2):
             if_id = iid2
             break
 

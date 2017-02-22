@@ -1,0 +1,10 @@
+Title: cisco_qos: Fix crashing check for some cases where the QoS class cannot be found
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.5.0i1
+Date: 1487757577
+
+The check will still return Unknown, but no longer crash.

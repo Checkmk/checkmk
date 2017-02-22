@@ -60,7 +60,6 @@ def inventory_oracle_rman(info):
     return inventory
 
 def check_oracle_rman(item, params, info):
-
     sid_level0 = ''
     backupage_level0 = 0
     item_found = False
@@ -75,8 +74,7 @@ def check_oracle_rman(item, params, info):
         if len(line) == 6:
             sid, status, start, end, backuptype, backupage = line
 
-        if len(line) == 8:
-
+        elif len(line) == 8:
             sid, status, not_used_1, end, backuptype, backuplevel, backupage, backupscn = line
             if backupscn == '':
                 backupscn = -1
@@ -112,14 +110,12 @@ def check_oracle_rman(item, params, info):
         if item[:-1] == "%s.DB_INCR_" % item[:item.find('.')]:
             # we are on sid.DB_INCR_
 
-            if item[-1]  == '0':
-
+            if item[-1]  == '0' and sid_level0:
                 # we are on a DB_INCR_0
                 # we could have invalid data from for item loop due to 'continue' at backuplevel==0
                 sid, end, backupage = sid_level0, end_level0, backupage_level0
 
             else:
-
                 if item == "%s.%s_%s" % (sid,  backuptype, backuplevel):
                     # we got a line from agent
                     # => use the data from agent

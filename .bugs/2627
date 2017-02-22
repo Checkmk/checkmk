@@ -1,0 +1,49 @@
+Title: Archivierte historische Events werden in der GUI nicht sichtbar
+Component: core
+State: done
+Date: 2013-09-02 08:50:36
+Targetversion: next
+Class: bug
+
+Auf dem Eiger gerade beobachtet: Heute ist der 02.09., in der GUI sehe ich aber nur Events vom
+29.08. oder davor. Auf Dateiebene sind die Logeinträge sauber rotiert. Nur in der GUI
+bekommt man die Daten nicht angezeigt.
+
+Nach dem Reload via WATO sind die Daten dann aktuell gewesen.
+
+MK: Kann das nicht nachvollziehen, obwohl ich auch das Gefühl hatte, dass
+einmal nicht alle Meldungen gezeigt wurden. Beim genaueren Schauen waren
+aber alle da - ohne zwischenliegenden Reload.
+
+Wenn der Fehler wieder auftritt, dann sollte man direkt man mit
+lq "GET log\nColumns: time\nLimit: 500" schauen, ob per Livestatus
+alle Meldungen da sind, oder nicht. 
+
+12.11.2013: Bug ist wieder aufgetaucht. Auf Eiger. In der 
+Availability (statehist) fehlen alle Zeiträume, die aus dem aktuellen
+Logfile kommen, komplett. Wenn man z.B. letzte Woche anzeigt, dann kommen
+wieder Daten. *ABER*: In Search Global Logfile sind auch Daten vom
+aktuellen Logfile sichtbar. Also kann es *nicht* am Logfilecache liegen.
+Es muss was direkt in der State-Hist-Tabelle sein.
+
+Wenn man den Core mit 'omd restart cmc' neu startet, ist das Problem
+weg.
+
+Dann habe ich das aktuelle Logfile nochmal auf den Stand vor dem Restart
+gebracht, weil ich dachte, das Problem wird nicht durch den Neustart
+repariert, sondern durch die neuen INITIAL STATE Einträge. Dem war aber
+nicht so.
+
+Außerdem beobachtet habe ich: Der Zeitstempel des letzten Eintrags
+im letzten rotierten File ganz unten ist gleich dem ersten im neuen
+Logfile. Die Rotation geschah halt innerhalb einer Sekunde. Ich
+konnte das Problem damit aber nicht festnageln, weil es ja nach
+eimem Restart immer geht.
+
+Es scheint sich also trotz allem um einen sporadischen Fehler zu
+handeln, der aber evtl. schon mit der Überlappung der Zeiten in den
+beiden Logfiles zusammenhängt.
+
+
+2013-12-17 17:21:59: changed state open -> done
+Sollte behoben sein. Hatte mit statehist zu tun.

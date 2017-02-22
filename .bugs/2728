@@ -1,0 +1,7 @@
+Title: init script for cmc should complain with a meaningfull messsage when cmc config file is not there
+Component: core
+State: open
+Date: 2015-03-06 15:48:13
+Targetversion: 1.2.6
+Class: nastiness
+

@@ -1,0 +1,14 @@
+Title: Notifizierung in Event Console geht nicht
+Component: config
+Class: bug
+State: done
+Date: 2013-09-26 10:27:06
+Targetversion: next
+
+Dieses Feature erzeugt aktuell nur eine Nagios-Konfigurationsdatei.
+Im Falle des CMC müssen wir das hier natürlich anders machen.
+Lösung noch unklar. Wir bräuchten die Einstellung im Check_MK (main.mk).
+Aktuell ist das komischerweis in multisite.mk.
+
+2013-10-01 23:17:39: changed state open -> done
+Gelöst über ein eigenes Plugin.

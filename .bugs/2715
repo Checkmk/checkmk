@@ -1,0 +1,19 @@
+Title: Nagios has rotated logfiles at random times
+Component: core
+Class: nastiness
+State: done
+Date: 2014-10-01 11:22:19
+Targetversion: next
+
+2014-10-01 11:19:44 [5] Executing external command: LOG;SERVICE NOTIFICATION: mk;localhost;Check_MK;OK;mail;Manually
+2014-10-01 11:20:13 [5] Nagios has rotated logfiles. Rebuilding logfile index
+2014-10-01 11:21:44 [5] Nagios has rotated logfiles. Rebuilding logfile index
+2014-10-01 11:23:14 [5] Nagios has rotated logfiles. Rebuilding logfile index
+2014-10-01 11:24:44 [5] Nagios has rotated logfiles. Rebuilding logfile index
+2014-10-01 11:26:14 [5] Nagios has rotated logfiles. Rebuilding logfile index
+2014-10-01 11:27:44 [5] Nagios has rotated logfiles. Rebuilding logfile index
+
+Strange: even after only one LOG command, the rotation is detected several
+times...
+
+2014-12-02 14:06:40: changed state open -> done

@@ -1,0 +1,10 @@
+Title: Cleanup logging config of cmc and helpers
+Component: core
+State: open
+Date: 2015-06-26 11:03:02
+Targetversion: master
+Class: cleanup
+
+There are different dedicated options for the CMC log level and for the single
+helper types. This should be cleaned up to another mechanism, where the user
+can choose the logging details based on the component.

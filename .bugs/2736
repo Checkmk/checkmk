@@ -1,0 +1,16 @@
+Title: Packen der Config klappt nicht zuverlässig
+Component: core
+Class: bug
+State: done
+Date: 2015-01-22 17:21:50
+Targetversion: next
+
+Mehrfach passiert: Mit dem hole-Skript einen Rechner neu reinholen. Dieses
+macht -I, generiert die Config, lädt den Core neu. Dieser zeigt den 
+Service auch an. Der bleibt aber immer Pending. ein cmk -v auf der
+Kommandozeile schiebt einen gültigen Wert rein. Sieht also aus,
+als hätter der Check-Helper den Reload nicht mitbekommen oder arbeitet
+aus einem anderen Grund noch mit der alten Config.
+
+2015-02-06 12:08:20: changed state open -> done
+Scheint jetzt zu funktionieren. Wenn nicht, dann untersuchen.

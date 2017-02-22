@@ -1,0 +1,13 @@
+Title: Huge time ranges crash graph ranges (overflow of unix time)
+Component: metrics
+Class: bug
+State: done
+Date: 2016-03-18 15:17:37
+Targetversion: 1.2.8
+
+When producing a graph which exceeds the unix time range this produces a graph which
+begins e.g. in 2011 and ends in 1996. This situation is not handled correctly. There
+should be error handlings for negative (invalid) time ranges.
+
+2016-03-21 13:55:31: changed state open -> done
+Fixed in Javascript by detecting overflow

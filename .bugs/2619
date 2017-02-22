@@ -1,0 +1,11 @@
+Title: Doku: Hinweis, dass legacy_checks nicht gehen
+Component: docu
+Class: bug
+State: done
+Date: 2013-07-12 14:27:13
+Targetversion: next
+
+Man muss stattdessen active checks machen.
+
+2013-09-17 17:54:26: changed state open -> done
+Doku ist angepasst.

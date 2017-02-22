@@ -1,0 +1,12 @@
+Title: Symlinks von Hosts, die es nicht mehr gibt entfernen
+Component: agents
+Class: nastiness
+State: done
+Date: 2014-12-09 16:46:47
+Targetversion: next
+
+Wenn man einen Host aus dem Monitoring rauswirft, bleibt der Symlink auf
+die (dann nicht mehr vorhandenen) Agenten übrig. Daher brauchen wir
+einen Aufraumlauf, der dängling Links entfernt.
+
+2015-01-30 10:09:57: changed state open -> done

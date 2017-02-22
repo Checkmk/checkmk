@@ -1,0 +1,33 @@
+Title: Passive Checkdaten kommen durcheinander
+Component: core
+Class: bug
+State: done
+Date: 2013-08-27 15:33:56
+Targetversion: next
+
+Hallo Mathias,
+
+CMC musste ich bei Wacom wieder abschalten.
+Es gab folgende Probleme dir nur mit dem CMC aufgetreten sind:
+
+1) Bei *Reload* war es wiederholt so das bei 2 Rechnern mit vielen
+vielen Services kurz Teile des Agent Outputs fehlten (Checks meldeten
+fehlende Ausgabe)
+
+2) Bei ein paar der Hosts hatte der Check_MK Service (nur mit dem cmc)
+falsche Daten im Output. Anstelle der Version und der Ausführtzeit
+standen da z.B. Performance-Daten. Das betraf nur den aktiven Check-MK-Checks
+selbst. Die passiven Checks wurden alle korrekt aktualisiert. Die Vermischung
+war innerhalb des Check_MK-Services.
+
+Beim Flughafen hier trau ich mich also erst einmal nicht den CMC zu
+nehmen. Dazu brauch ich erst wieder einen 5 Tages Kunden. Die letzten
+waren alle so 2/3 Tage...
+
+Grüße aus dem Hotelzimmer.
+
+(von Bastian)
+
+2013-09-14 11:50:09: changed state open -> done
+2) sollte repariert sein. 1) unklar. Agent output wird ja nicht
+von CMC geholt oder verarbeitet.

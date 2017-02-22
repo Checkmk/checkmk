@@ -1,0 +1,14 @@
+Title: Neues Kriterium zur history-Rotation: Dateigröße
+Component: core
+Class: bug
+State: done
+Date: 2015-01-19 11:46:48
+Targetversion: next
+
+Aktuell kann das history-File einfach zu groß werden. Dann werden nicht
+mehr zwangsläufig alle Einträge gelesen. d.h. die Views zeigen unvollständige
+Daten an.
+
+Ist als Bug anzusehen, da die Logs echt groß werden können. Das führt zu Problemen!
+
+2015-02-06 09:55:12: changed state open -> done

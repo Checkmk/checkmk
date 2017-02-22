@@ -1,0 +1,49 @@
+Title: Logfiledaten werden nicht angezeigt
+Component: core
+Class: bug
+State: done
+Date: 2013-09-25 18:15:20
+Targetversion: next
+
+Das Verhalten war waehrend der Schulung mit der Version vom 21.9. so:
+Bei Zugriff auf das Availability-Reporting kamen keine Daten,
+wenn man als Zeitraum "heute" hatte. Egal, ob man auf die Hosts
+oder Services geklickt hat. Wenn man einen frueheren Zeitraum eingestellt
+hatte, war es kein Problem.
+
+Nach einem Neustart des Rechners war das Problem weg.
+
+Komisch: Hier ist der Anfang des CMC-Logs:
+2013-09-25 00:00:01 [5] Reopened logfile.
+2013-09-25 14:28:50 [5] Processed statehist logentries: 0
+2013-09-25 14:28:50 [5] Total calls 0 saved: 0
+2013-09-25 14:28:50 [5] Objects: 0, Blacklisted: 0
+2013-09-25 14:28:59 [5] Processed statehist logentries: 0
+2013-09-25 14:28:59 [5] Total calls 0 saved: 0
+2013-09-25 14:28:59 [5] Objects: 0, Blacklisted: 0
+2013-09-25 14:29:10 [5] Processed statehist logentries: 0
+2013-09-25 14:29:10 [5] Total calls 0 saved: 0
+2013-09-25 14:29:10 [5] Objects: 0, Blacklisted: 0
+2013-09-25 14:29:32 [5] Processed statehist logentries: 0
+2013-09-25 14:29:32 [5] Total calls 0 saved: 0
+2013-09-25 14:29:32 [5] Objects: 0, Blacklisted: 0
+2013-09-25 14:29:39 [5] Processed statehist logentries: 0
+2013-09-25 14:29:39 [5] Total calls 0 saved: 0
+
+Diese Eintraege kommen von Livestatus und muessen natuerlich
+raus. Aber die zeigen, dass die statehist-Tabelle mit 0 Objects
+aufgerufen wurde.
+
+Komisch ist dieser Eintrag mit 00:00:00. Bin mir nicht sicher,
+ob der Teilnehmer den Microcore schon am Vortag aktiviert hatte
+und ueber Nacht laufen liess, so dass logrotate zuschlug.
+
+Eventuell passiert das ganze beim Logfile rotieren. Evtl.
+gibt es hier eine Race-Condition. Ist das Logfile nach der
+Rotation evtl. kurz weg und der Index vom Livestatus erfasst
+das nicht? Was passiert eigentlich, wenn das File nicht
+da ist, während eine Log-Anfrage kommt? Wird sichergestellt,
+dass der Index aktualisiert wird, sobald es wieder erscheint?
+
+2013-10-25 13:55:42: changed state open -> done
+Should be fixed now.

@@ -1,0 +1,12 @@
+Title: Check_MK service not checked imediately after adding
+Component: core
+Class: bug
+State: works4me
+Date: 2015-04-14 15:49:49
+Targetversion: 1.2.8
+
+LM: After doing omd-vonheute, the host/service "heute" is added, but
+the Check_MK service is not checked imediately. Instead it waits one
+check interval to perform the check.
+
+2016-02-09 16:58:01: changed state open -> works4me

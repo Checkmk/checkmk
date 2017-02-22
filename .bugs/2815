@@ -1,0 +1,15 @@
+Title: Graph zoom/pan is badly slow when using localized GUI
+Component: metrics
+Class: bug
+State: done
+Date: 2016-03-18 16:28:50
+Targetversion: 1.2.8
+
+The current Check_MK GUI code initially loads all plugins on each request with "current_language" set to None.
+This makes all plugins be loaded in english language. After the user auth checking the user language is known,
+so the plugins are reloaded when the users have another language.
+
+This not only decreases performance for localized GUI users but also for non localized users because the
+apache processes need to re-initialize the plugins often.
+
+2016-03-21 15:10:13: changed state open -> done

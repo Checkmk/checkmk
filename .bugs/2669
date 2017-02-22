@@ -1,0 +1,11 @@
+Title: Too much load on reload/restart due to helper initialization
+Component: core
+State: open
+Date: 2014-12-12 09:08:17
+Targetversion: next
+Class: nastiness
+
+During reload or start of the core all helper processes are initialized.
+This leads to a lot of load, scaling with the number of helpers. This should
+be optimized, for example by removing the initialization during reload or not
+initializing all workers at once (initialize in groups of X processes at once)

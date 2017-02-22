@@ -1,0 +1,13 @@
+Title: Default PING should not create perfdata
+Component: config
+Class: nastiness
+State: done
+Date: 2013-06-04 09:37:57
+Targetversion: next
+
+The PING that is created of no other service is there, should
+not enable performance data, because that data is already 
+present at the host.
+
+2013-06-14 08:17:24: changed state open -> done
+Smart PING does not create any anyway now.

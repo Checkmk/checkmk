@@ -1,0 +1,11 @@
+Title: Triggern von Notification enabled
+Component: core
+Class: bug
+State: done
+Date: 2014-09-24 13:26:38
+Targetversion: next
+
+Wenn man ueber Various Commads die Notifications Disabled, und dann eine Regel in Wato erstellt welche
+die Notifications Disabled, sind die Notifications anschliessend enabled für die Services. Aus minus und minus wird plus.
+
+2014-12-02 10:47:12: changed state open -> done

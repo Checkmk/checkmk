@@ -1,0 +1,15 @@
+Title: Some texts in reports are not localizable
+Component: reporting
+Class: bug
+State: done
+Date: 2015-02-27 10:02:50
+Targetversion: 1.2.8
+
+Some static texts like
+
+"Report created: ..."
+"Timerange: "
+
+are not localizable at the moment.
+
+2016-02-09 10:44:10: changed state open -> done

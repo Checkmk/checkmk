@@ -1,0 +1,10 @@
+Title: UP in PDF exports is not green like OK
+Component: reporting
+Class: bug
+State: done
+Date: 2015-02-06 12:39:30
+Targetversion: 1.2.6
+
+
+2015-02-06 14:16:25: changed state open -> done
+Host states are now represented

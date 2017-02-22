@@ -1,0 +1,8 @@
+Title: cmk-update-agent: Process output (error messages) of curl calls
+Component: agents
+State: open
+Date: 2017-01-16 08:48:37
+Targetversion: 1.2.9
+Class: nastiness
+
+Should really be done for easier debugging. curl outputs useful messages in case of errors.

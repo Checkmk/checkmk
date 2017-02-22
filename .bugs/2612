@@ -1,0 +1,17 @@
+Title: Acknowledgement is not removed, if service goes to OK state
+Component: core
+Class: bug
+State: done
+Date: 2013-07-01 11:59:41
+Targetversion: next
+
+service is in a non-OK state
+state is being acknowledged by some user
+admin fixes problem and service goes to OK again
+The acknowledged flag is not removed!!
+
+This leads to situations, where nobody cares about a problem because everyone thinks
+there is already someone working on, if the service at some later time gets some problem again.
+
+2013-07-05 17:16:52: changed state open -> done
+Fixed. Sollte jetzt genau wie in Nagios funktionieren.

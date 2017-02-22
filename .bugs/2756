@@ -1,0 +1,12 @@
+Title: Make cmk --snmpwalk also use Inline-SNMP
+Component: core
+State: open
+Date: 2015-07-27 15:31:43
+Targetversion: master
+Class: cleanup
+
+To have a consistent usage of Inline-SNMP we should make cmk --snmpwalk also
+use Inline-SNMP code. This is problematic, because this mode saves the values
+which come from the command line tools as hex strings in hex format. Inline-SNMP
+does not user such hex coded strings so we need to either encode it on our own
+or try to deal with this in another way.

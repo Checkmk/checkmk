@@ -1,0 +1,9 @@
+Title: Test return code of fork()
+Component: core
+State: open
+Date: 2015-09-11 13:06:56
+Targetversion: master
+Class: nastiness
+
+In situations with low memory fork() fails. We do not handle this
+and always assume that it works. Better would be a real error message.

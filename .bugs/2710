@@ -1,0 +1,21 @@
+Title: initial-states bei Core-Reload nicht loggen
+Component: core
+State: open
+Date: 2014-06-02 16:19:00
+Targetversion: future
+Class: feature
+
+Immer wenn der Core neu lädt (cmk -O) werden *alle* initial states wieder
+geloggt. Das bläht das Logfile unheimlich auf. Bei einem reinen Reload kann
+sich ja am Zustand der Services nix ändern. Allerdings müssen wir erkennen,
+wenn ein Host/Service wegfällt oder dazukommt.
+
+Daher sollten wir:
+
+- Beim Reload eine spezielle Zeile loggen, damit der Histcache Bescheid weiß
+- Für Services, die wegfallen eine spezielle Zeile loggen
+- Für Services, die dazukommen, einfach einen initial state loggen
+
+Das ganze muss dann so kompatibel mit dem alten Livestatus sein, so dass dieser
+- wenn er verwundene Services nicht sauber erkennt - so doch zumindest
+  prinzipiell funktioniert.

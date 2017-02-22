@@ -1,0 +1,15 @@
+Title: Error message "Ignoring command SCHEDULE_FORCED_SVC_CHECK..." when adding host
+Component: core
+State: open
+Date: 2015-07-06 09:42:44
+Targetversion: 1.2.6
+Class: nastiness
+
+When adding a host via WATO and performing a discovery while the host is not
+added to the core yet, this results in an ugly error message in the cmc.log:
+
+2015-07-06 07:37:56 [5] Executing external command: SCHEDULE_FORCED_SVC_CHECK;localhost;Check_MK Discovery;1436168276
+2015-07-06 07:37:56 [4] Ignoring command SCHEDULE_FORCED_SVC_CHECK;localhost;Check_MK Discovery;1436168276: invalid parameters
+
+This log line should be somehow suppressed. either in WATO discovery or
+in the core.

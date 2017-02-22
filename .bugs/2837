@@ -1,0 +1,14 @@
+Title: Mixture of report context types due to importing templates creates problems
+Component: reporting
+State: open
+Date: 2016-02-26 16:11:54
+Targetversion: 1.2.9
+Class: bug
+
+Create a report with context type "one single host". This automatically inherits
+the default template (which has no context). Now add a PNP Graph to the default
+template (this is possible). This now results in a strange error, where
+{ "host" : "myhost" } is interpreted as host name (the complete dict).
+Needs to be investigated. We cannot disallow importing non-context templates
+into reports with context. We cannot disallow added elements that have a single
+context into contextless reports either.

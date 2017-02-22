@@ -1,0 +1,10 @@
+Title: Fix handling of other core versions config files
+Component: core
+State: open
+Date: 2015-06-25 14:52:39
+Targetversion: future
+Class: nastiness
+
+The core need to print a user friendly error message when the user
+tries to start the core with a config file which has been created
+with another version of the core.

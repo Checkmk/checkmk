@@ -1,0 +1,22 @@
+Title: Core segfaults on start after disk full
+Component: core
+Class: bug
+State: done
+Date: 2014-09-26 09:12:00
+Targetversion: next
+
+It seems to be the case that in conditions of a full disk the core
+will not start anymore due to an incomplete status file. We
+should check the status of the write commands when writing the
+status file (or check its size of whatever), so that we move
+it in place only when successfully written!
+
+If the status file is incomplete a crash as inevitable.
+
+A further idea: We could put an end marker at the file:
+We simply append a magic number of the size of the file
+as a uint32. When loading, we first seek to the end
+and check for that marker. Only if present and correct
+we read the file.
+
+2014-12-02 12:47:43: changed state open -> done

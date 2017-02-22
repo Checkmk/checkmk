@@ -1,0 +1,20 @@
+Title: Addding a host's AV-table or host's view behave differently
+Component: reporting
+Class: bug
+State: done
+Date: 2016-02-26 16:14:52
+Targetversion: 1.2.8
+
+If you add the availability table of a host to a report via the context menu,
+then the selected host is *not* added to the report element as context value.
+
+If you add a view of a host on the other hand the selected host is
+added and hardcoded into the element.
+
+We need to decide how this should be done in general.
+
+If are at a host and add something to a report with a host context, then
+IMHO the host should not be hard coded. If you add it to a global report
+the it should. If this is too complicated then it always should be added.
+
+2016-03-21 16:45:46: changed state open -> done

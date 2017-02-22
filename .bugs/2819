@@ -1,0 +1,10 @@
+Title: Agent bakery: Possible broken agent deployment status files
+Component: agents
+State: open
+Date: 2016-04-19 17:28:35
+Targetversion: 1.2.8
+Class: bug
+
+htdocs/agent_bakery.py save_agent_deployment_status() is using locking.
+Possible race condition which can e.g. result in a somehow corrupted or
+empty file. Add locking.

@@ -1,0 +1,16 @@
+Title: CMC confuses old and new RRD paths leading to empty graphs
+Component: core
+Class: bug
+State: wontfix
+Date: 2016-03-29 15:14:08
+Targetversion: 1.2.8
+
+When having RRD data in the PNP path var/pnp4nagios/perfdata and a .xml file
+is removed and the core is restarted, the existing RRD file in the var/pnp4nagios/perfdata
+path is not be used for displaying the graph anymore. Instead a new rrd file
+below var/check_mk/rrd is created.
+
+Is this really intended?
+
+2016-04-19 15:17:37: changed state open -> wontfix
+Is intended that way.

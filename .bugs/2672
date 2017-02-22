@@ -1,0 +1,29 @@
+Title: Check_MK Helper Usage ist negativ!
+Component: core
+State: done
+Date: 2013-10-10 22:45:30
+Targetversion: next
+Class: bug
+
+Gesehen bei T2Games. Wert z.B. -359%.
+Einmal auf -6Millionen,irgendwas.
+
+2013-10-13 19:19:34: changed state open -> done
+Sollte jetzt gehen. Habe ein paar Abfragen eingebaut. Könnte
+auch wegen eines kleinen negativen Zeitsprungs passiert sein.
+
+2013-10-18 09:30:04 [4] Check helper usage is -0.200, pool size: 20, num idle: 24
+2013-10-18 09:30:05 [4] Check helper usage is -0.200, pool size: 20, num idle: 24
+2013-10-18 09:30:06 [4] Check helper usage is -0.150, pool size: 20, num idle: 23
+2013-10-18 09:30:06 [2] Garbled response from check helper [18426]: '[None, '(root'
+2013-10-18 09:30:06 [3] check helper [18426] exited with status 1
+2013-10-18 09:30:06 [4] Restarting dead check helper [18426] of type cmk
+2013-10-18 09:30:07 [4] Check helper usage is -0.250, pool size: 20, num idle: 25
+2013-10-18 09:30:08 [4] Check helper usage is -0.250, pool size: 20, num idle: 25
+2013-10-18 09:30:09 [4] Check helper usage is -0.250, pool size: 20, num idle: 25
+
+Ursache hier: Debug-Ausgaben in einem Check-Plugin. Beim Restarten geht scheinbar
+der Count kaputt.
+
+2013-10-18 11:09:09: changed state open -> done
+Fixed.

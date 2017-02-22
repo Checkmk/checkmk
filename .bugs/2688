@@ -1,0 +1,30 @@
+Title: Service notifications may happen while host is down
+Component: core
+Class: bug
+State: done
+Date: 2014-04-16 15:36:52
+Targetversion: next
+
+The reason is not yet clear. Here is one incident from our own monitoring:
+
+Check_MK: Fritzbox-1und1 - PROBLEM
+Object Information
+Name     Fritzbox-1und1 (Fritzbox-1und1)
+Address     10.1.1.6
+State
+State     UP → DOWN (PROBLEM) since 0d 00:00:01
+Output     No IP packet received for 15.518 sec (dead line is 15.000 sec)
+
+During that phase service notifications appeared.
+
+Also: When:
+
+Host -> DOWN
+Service -> CRIT
+Host -> UP
+
+-> Now a service notification is immediately being sent out. But we need to wait for
+at least one service check.
+
+2014-12-01 16:39:18: changed state open -> done
+Denke, das war ein doppeltes von #68 und sollte jetzt behoben sein.

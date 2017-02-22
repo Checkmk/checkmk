@@ -1,0 +1,10 @@
+Title: Adding an existing view to a report does not work
+Component: web
+Class: bug
+State: works4me
+Date: 2015-01-19 16:03:26
+Targetversion: next
+
+The view editor seems to start with an empty view (no title, columns, filters).
+
+2015-02-06 14:26:34: changed state open -> works4me

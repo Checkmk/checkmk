@@ -1,0 +1,16 @@
+Title: cmc crashes if config includes parents not defined as host on this site
+Component: core
+Class: bug
+State: done
+Date: 2013-09-16 15:49:40
+Targetversion: next
+
+when loading a configuration where a parent of a host is not defined as host on
+this site, the cmc crashes
+
+this can happen if you move a folder to another site, but not the parent for
+hosts in this folder
+in this case no warning is displayed in mulitsite GUI
+
+2013-09-17 13:02:21: changed state open -> done
+Das wird jetzt korrekt abgefangen.

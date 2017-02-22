@@ -1,0 +1,39 @@
+Title: Logeintraege werden in GUI falsch angezeigt
+Component: core
+Class: bug
+State: done
+Date: 2013-09-19 13:46:41
+Targetversion: next
+
+Hier aus dem Log von einer Ack-Notification:
+
+
+[1379590088] SERVICE NOTIFICATION: Riedel;sxf175.bbf.local;Events;check-mk-notify;ACKNOWLEDGEMENT (WARNING) (WARNING);Rauch
+[1379590088] SERVICE NOTIFICATION: Marks;sxf175.bbf.local;Events;check-mk-notify;ACKNOWLEDGEMENT (WARNING) (WARNING);Rauch
+[1379590088] SERVICE NOTIFICATION: Jahn;sxf175.bbf.local;Events;check-mk-notify;ACKNOWLEDGEMENT (WARNING) (WARNING);Rauch
+
+
+In  der GUI steht dann aber z.b.
+
+
+Time
+
+Contact
+
+Event
+
+Host
+
+Service
+
+State
+
+Check output
+
+1379590088 Jahn SERVICE NOTIFICATION sxf175.bbf.local Events  Rauch 
+1379590088 Marks SERVICE NOTIFICATION sxf175.bbf.local Events  Rauch
+
+Der Status ist also Leer und der Nutzer "Rauch" steht unter "Check output".
+
+2013-10-01 12:19:14: changed state open -> done
+Sollte jetzt passen.

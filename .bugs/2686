@@ -1,0 +1,13 @@
+Title: Delay service notification when host comes up
+Component: core
+Class: bug
+State: done
+Date: 2014-04-14 09:30:43
+Targetversion: next
+
+When a host is DOWN and then a service goes CRIT, the corresponding notification
+is put on hold. As soon as the host goes up again the notification seems to be
+sent out. But we rather must wait for the next check of the service, in order to
+give it a chance to become OK again, after the host is reachable.
+
+2014-12-01 16:33:27: changed state open -> done

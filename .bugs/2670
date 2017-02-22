@@ -1,0 +1,14 @@
+Title: Halbfertige Konfiguration von Rushd abwarten
+Component: config
+Class: feature
+State: done
+Date: 2013-09-21 16:11:54
+Targetversion: next
+
+Wenn der cmcrushd bereits begonnen hat, eine Konfiguration zu erstellen,
+und man drück in dem Moment auf Änderungen aktivieren, dann sollte man
+einfach das abwarten, anstelle dass man das verwirft und parallel neu
+erzeugt.
+
+2013-10-06 21:27:28: changed state open -> done
+Sollte jetzt gehen.

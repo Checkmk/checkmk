@@ -1,0 +1,16 @@
+Title: inlne SNMP can not handle opaque float values
+Component: config
+Class: bug
+State: done
+Date: 2013-11-25 12:59:47
+Targetversion: next
+
+OMD[ucore]:~$ snmpwalk -v2c -c public localhost .1.3.6.1.4.1.2021.10.1.6.1
+SNMPv2-SMI::enterprises.2021.10.1.6.1 = Opaque: Float: 0.000000
+
+These values can not be decoded by net-snmp. Results in this error:
+
+Executing SNMP GET of .1.3.6.1.4.1.2021.10.1.6.1 on snmphost
+translate_asn_type: unhandled asn type (120)
+
+2013-11-25 14:30:28: changed state open -> done

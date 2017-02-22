@@ -1,0 +1,11 @@
+Title: Command synchronization: use no DGRAM
+Component: core
+Class: bug
+State: done
+Date: 2013-07-05 13:22:15
+Targetversion: next
+
+Vielleicht besser eine Pipe und pro Komando genau ein Stern.
+
+2013-07-05 16:12:51: changed state open -> done
+Umgestellt auf Pipe. Sollte jetzt gehen.

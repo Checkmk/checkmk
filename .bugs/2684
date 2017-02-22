@@ -1,0 +1,18 @@
+Title: cmk --keepalive still uses old config after reload
+Component: config
+Class: bug
+State: done
+Date: 2013-10-25 16:29:31
+Targetversion: next
+
+I've added some service with WATO and reloaded. The new
+services are appearing in the web GUI but keep stale because
+the cmk --keepalive apearantly still uses the old configuration.
+A second omd reload cmc helped.
+
+MK: I cannot reproduce this though I've seen it once. Any
+help for reproducing it is appreciated.
+
+2014-12-01 15:29:46: changed state open -> done
+Ursache war wohl rushahead. Jetzt wird dieser immer dann ignoriert
+wenn man auf der Kommandozeile -O macht.

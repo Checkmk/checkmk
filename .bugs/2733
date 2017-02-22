@@ -1,0 +1,22 @@
+Title: Wieder storage type SINGLE einführen?
+Component: core
+State: open
+Date: 2014-11-26 09:01:43
+Targetversion: next
+Class: feature
+
+Da anscheinend SINGLE doch (deutlich?) schneller ist als MULTIPLE, könnte man
+die RRDs wieder auf SINGLE umstellen. Und zwar wie folgt:
+
+1. Der CMC erkennt beim Verarbeiten von Perfdaten, ob sich die Liste der Variablennamen
+seit dem letzten Check geändert hat. Die Perfdaten sind ja Teil des Status. Folglich
+kann man beim Verarbeiten eines Checks das auch erkennen und in einem flüchtigen Status-Bit
+speichern.
+
+2. Der PerfdataHelper reagiert auf dieses Bit und baut das RRD-file automatisch um,
+so dass es wieder passt. Frage ist natürlich hier, ob nur *neue* Werte dazukommen
+dürfen oder auch alte wegfallen. Letzteres ist gefährlich. Dann baut er das RRD-File
+automatisch um.
+
+3. Eine asynchrone Bereinigung sorgt dafür, dass Datenreihen, die länger als X
+Tage nicht aktualisiert wurden, wieder entfernt werden.

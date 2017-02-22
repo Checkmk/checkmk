@@ -1,0 +1,38 @@
+Title: export pdf mit aktivierten joined columns schlagen fehl
+Component: reporting
+Class: bug
+State: done
+Date: 2016-08-05 14:40:33
+Targetversion: 1.2.8
+
+"Als PDF exportieren" schlägt fehl, wenn die Ansicht verknüpfte Spalten (joined columns) enthält. Das Verhalten ist unabhängig den gewählten Services, wie diese ausgegeben werden oder ob sie bei allen/nur einigen Hosts vorkommen (Leere Felder).
+
+anbei ein Beispiel zu einem Errorlog der Fehlermeldung:
+
+Error while rendering element type 'A Multisite view'
+Traceback (most recent call last):
+File "/omd/sites/heute/share/check_mk/web/htdocs/reporting.py", line 2074, in render_report_element
+element_type["render"](element, instance)
+File "/omd/sites/heute/share/check_mk/web/plugins/reporting/views.py", line 83, in render_element_view
+only_count=False, all_filters_active=True, limit=limit)
+File "/omd/sites/heute/share/check_mk/web/htdocs/views.py", line 1206, in show_view
+browser_reload)
+File "/omd/sites/heute/share/check_mk/web/plugins/reporting/views.py", line 76, in <lambda>
+return lambda *args: report_render_view_table(instance, *args)
+File "/omd/sites/heute/share/check_mk/web/plugins/reporting/views.py", line 133, in report_render_view_table
+layout_function(rows, group_painters, painters, table_layout, num_columns, instance["range"])
+File "/omd/sites/heute/share/check_mk/web/plugins/reporting/views.py", line 144, in render_view_table
+cell_content = prepare_pdf_paint(p, row, time_range)
+File "/omd/sites/heute/share/check_mk/web/plugins/reporting/views.py", line 268, in prepare_pdf_paint
+(painter[0]['name'], traceback.format_exc()))
+MKGeneralException: Failed to paint "service_state": Traceback (most recent call last):
+File "/omd/sites/heute/share/check_mk/web/plugins/reporting/views.py", line 245, in prepare_pdf_paint
+css_classes, txt = views.paint_painter(painter[0], row)
+File "/omd/sites/heute/share/check_mk/web/htdocs/views.py", line 2169, in paint_painter
+return painter["paint"](row)
+File "/omd/sites/heute/share/check_mk/web/plugins/views/painters.py", line 523, in paint_service_state_short
+if row["service_has_been_checked"] == 1:
+KeyError: 'service_has_been_checked'
+
+2017-02-16 17:30:12: changed state open -> done
+Already solved

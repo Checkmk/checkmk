@@ -1,0 +1,21 @@
+Title: When pnp4nagios is disabled, the cmc.log are flooted:
+Component: core
+State: open
+Date: 2015-02-03 15:07:04
+Targetversion: master
+Class: nastiness
+
+2015-02-03 15:03:19 [1] Cannot connect to rrdcached at No such file or directory: /omd/sites/heute/tmp/run/rrdcached.sock
+2015-02-03 15:03:27 [4] icmpsender: PING to IP 127.0.0.1 lost, sending PINGs too slow
+2015-02-03 15:03:34 [1] Cannot connect to rrdcached at No such file or directory: /omd/sites/heute/tmp/run/rrdcached.sock
+2015-02-03 15:03:39 [4] icmpsender: PING to IP 127.0.0.1 lost, sending PINGs too slow
+2015-02-03 15:03:50 [1] Cannot connect to rrdcached at No such file or directory: /omd/sites/heute/tmp/run/rrdcached.sock
+2015-02-03 15:03:51 [4] icmpsender: PING to IP 127.0.0.1 lost, sending PINGs too slow
+2015-02-03 15:04:03 [4] icmpsender: PING to IP 127.0.0.1 lost, sending PINGs too slow
+2015-02-03 15:04:06 [1] Cannot connect to rrdcached at No such file or directory: /omd/sites/heute/tmp/run/rrdcached.sock
+2015-02-03 15:04:15 [4] icmpsender: PING to IP 127.0.0.1 lost, sending PINGs too slow
+2015-02-03 15:04:22 [1] Cannot connect to rrdcached at No such file or directory: /omd/sites/heute/tmp/run/rrdcached.sock
+2015-02-03 15:04:27 [4] icmpsender: PING to IP 127.0.0.1 lost, sending PINGs too slow
+2015-02-03 15:04:38 [1] Cannot connect to rrdcached at No such file or directory: /omd/sites/heute/tmp/run/rrdcached.sock
+2015-02-03 15:04:39 [4] icmpsender: PING to IP 127.0.0.1 lost, sending PINGs too slow
+2015-02-03 15:04:51 [4] icmpsender: PING to IP 127.0.0.1 lost, sending PINGs too slow

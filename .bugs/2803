@@ -1,0 +1,133 @@
+Title: Valgrind found some problems, fix them
+Component: core
+State: worksforme
+Date: 2015-09-09 12:44:33
+Targetversion: future
+Class: bug
+
+==22319== Memcheck, a memory error detector
+==22319== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==22319== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==22319== Command: cmc -g var/check_mk/core/config
+==22319== Parent PID: 14272
+==22319==
+==22319== Thread 8:
+==22319== Conditional jump or move depends on uninitialised value(s)
+==22319==    at 0x4E3C904: sem_wait (in /lib64/libpthread-2.12.so)
+==22319==    by 0x4246C7: thread_run(void*) (LivestatusThread.cc:100)
+==22319==    by 0x4E369D0: start_thread (in /lib64/libpthread-2.12.so)
+==22319==    by 0x5B288FC: clone (in /lib64/libc-2.12.so)
+==22319==
+==22319== Syscall param futex(op) contains uninitialised byte(s)
+==22319==    at 0x4E3C930: sem_wait (in /lib64/libpthread-2.12.so)
+==22319==    by 0x4246C7: thread_run(void*) (LivestatusThread.cc:100)
+==22319==    by 0x4E369D0: start_thread (in /lib64/libpthread-2.12.so)
+==22319==    by 0x5B288FC: clone (in /lib64/libc-2.12.so)
+==22319==
+==22589==    Use --log-fd=<number> to select an alternative log fd.
+==22319== Syscall param futex(futex) points to uninitialised byte(s)
+==22319==    at 0x4E3C930: sem_wait (in /lib64/libpthread-2.12.so)
+==22319==    by 0x4246C7: thread_run(void*) (LivestatusThread.cc:100)
+==22319==    by 0x4E369D0: start_thread (in /lib64/libpthread-2.12.so)
+==22319==    by 0x5B288FC: clone (in /lib64/libc-2.12.so)
+==22319==  Address 0xee430d0 is 16 bytes inside a block of size 65,768 alloc'd
+==22319==    at 0x4C285FC: operator new(unsigned long) (vg_replace_malloc.c:298)
+==22319==    by 0x423491: Livestatus::Livestatus() (Livestatus.cc:65)
+==22319==    by 0x415C72: Core::run() (Core.cc:1215)
+==22319==    by 0x460686: main (main.cc:127)
+==22319==
+==22654==    Use --log-fd=<number> to select an alternative log fd.
+==22319== Thread 1:
+==22319== Conditional jump or move depends on uninitialised value(s)
+==22319==    at 0x4E3CBA7: sem_post (in /lib64/libpthread-2.12.so)
+==22319==    by 0x4241CE: LivestatusThread::acceptClient(int) (LivestatusThread.cc:88)
+==22319==    by 0x415AFD: Core::mainLoop() (Core.cc:1408)
+==22319==    by 0x415D5F: Core::run() (Core.cc:1231)
+==22319==    by 0x460686: main (main.cc:127)
+==22319==
+==22319== Conditional jump or move depends on uninitialised value(s)
+==22319==    at 0x4E3CBB0: sem_post (in /lib64/libpthread-2.12.so)
+==22319==    by 0x4241CE: LivestatusThread::acceptClient(int) (LivestatusThread.cc:88)
+==22319==    by 0x415AFD: Core::mainLoop() (Core.cc:1408)
+==22319==    by 0x415D5F: Core::run() (Core.cc:1231)
+==22319==    by 0x460686: main (main.cc:127)
+==22319==
+==22319== Conditional jump or move depends on uninitialised value(s)
+==22319==    at 0x4E3CBB7: sem_post (in /lib64/libpthread-2.12.so)
+==22319==    by 0x4241CE: LivestatusThread::acceptClient(int) (LivestatusThread.cc:88)
+==22319==    by 0x415AFD: Core::mainLoop() (Core.cc:1408)
+==22319==    by 0x415D5F: Core::run() (Core.cc:1231)
+==22319==    by 0x460686: main (main.cc:127)
+==22319==
+==22319== Syscall param futex(op) contains uninitialised byte(s)
+==22319==    at 0x4E3CBCD: sem_post (in /lib64/libpthread-2.12.so)
+==22319==    by 0x4241CE: LivestatusThread::acceptClient(int) (LivestatusThread.cc:88)
+==22319==    by 0x415AFD: Core::mainLoop() (Core.cc:1408)
+==22319==    by 0x415D5F: Core::run() (Core.cc:1231)
+==22319==    by 0x460686: main (main.cc:127)
+==22319==
+==22319== Thread 2:
+==22319== Mismatched free() / delete / delete []
+==22319==    at 0x4C27016: operator delete(void*) (vg_replace_malloc.c:480)
+==22319==    by 0x46DCEF: Query::finish() (Query.cc:977)
+==22319==    by 0x43B114: Store::answerGetRequest(InputBuffer*, OutputBuffer*, char const*) (Store.cc:157)
+==22319==    by 0x4243EE: LivestatusThread::answerRequest(InputBuffer*, OutputBuffer*) (LivestatusThread.cc:151)
+==22319==    by 0x4246F5: thread_run(void*) (LivestatusThread.cc:116)
+==22319==    by 0x4E369D0: start_thread (in /lib64/libpthread-2.12.so)
+==22319==    by 0x5B288FC: clone (in /lib64/libc-2.12.so)
+==22319==  Address 0x1433e750 is 0 bytes inside a block of size 24 alloc'd
+==22319==    at 0x4C28192: operator new[](unsigned long) (vg_replace_malloc.c:363)
+==22319==    by 0x46D2F0: Query::start() (Query.cc:805)
+==22319==    by 0x43B0F3: Store::answerGetRequest(InputBuffer*, OutputBuffer*, char const*) (Store.cc:154)
+==22319==    by 0x4243EE: LivestatusThread::answerRequest(InputBuffer*, OutputBuffer*) (LivestatusThread.cc:151)
+==22319==    by 0x4246F5: thread_run(void*) (LivestatusThread.cc:116)
+==22319==    by 0x4E369D0: start_thread (in /lib64/libpthread-2.12.so)
+==22319==    by 0x5B288FC: clone (in /lib64/libc-2.12.so)
+==22319==
+==22319== Conditional jump or move depends on uninitialised value(s)
+==22319==    at 0x424F1D: MetricsColumn::output(void*, Query*) (MetricsColumn.cc:41)
+==22319==    by 0x46D8DD: Query::processDataset(void*) (Query.cc:916)
+==22319==    by 0x4516D5: TableServices::answerQuery(Query*) (TableServices.cc:160)
+==22319==    by 0x43B100: Store::answerGetRequest(InputBuffer*, OutputBuffer*, char const*) (Store.cc:155)
+==22319==    by 0x4243EE: LivestatusThread::answerRequest(InputBuffer*, OutputBuffer*) (LivestatusThread.cc:151)
+==22319==    by 0x4246F5: thread_run(void*) (LivestatusThread.cc:116)
+==22319==    by 0x4E369D0: start_thread (in /lib64/libpthread-2.12.so)
+==22319==    by 0x5B288FC: clone (in /lib64/libc-2.12.so)
+==22319==
+==22319== Mismatched free() / delete / delete []
+==22319==    at 0x4C27016: operator delete(void*) (vg_replace_malloc.c:480)
+==22319==    by 0x46DB75: Query::finish() (Query.cc:962)
+==22319==    by 0x43B114: Store::answerGetRequest(InputBuffer*, OutputBuffer*, char const*) (Store.cc:157)
+==22319==    by 0x4243EE: LivestatusThread::answerRequest(InputBuffer*, OutputBuffer*) (LivestatusThread.cc:151)
+==22319==    by 0x4246F5: thread_run(void*) (LivestatusThread.cc:116)
+==22319==    by 0x4E369D0: start_thread (in /lib64/libpthread-2.12.so)
+==22319==    by 0x5B288FC: clone (in /lib64/libc-2.12.so)
+==22319==  Address 0x232c05e0 is 0 bytes inside a block of size 8 alloc'd
+==22319==    at 0x4C28192: operator new[](unsigned long) (vg_replace_malloc.c:363)
+==22319==    by 0x46EA2C: Query::getStatsGroup(std::vector<std::string, std::allocator<std::string> >&) (Query.cc:1286)
+==22319==    by 0x46D765: Query::processDataset(void*) (Query.cc:889)
+==22319==    by 0x44CC1B: TableHosts::answerQuery(Query*) (TableHosts.cc:231)
+==22319==    by 0x43B100: Store::answerGetRequest(InputBuffer*, OutputBuffer*, char const*) (Store.cc:155)
+==22319==    by 0x4243EE: LivestatusThread::answerRequest(InputBuffer*, OutputBuffer*) (LivestatusThread.cc:151)
+==22319==    by 0x4246F5: thread_run(void*) (LivestatusThread.cc:116)
+==22319==    by 0x4E369D0: start_thread (in /lib64/libpthread-2.12.so)
+==22319==    by 0x5B288FC: clone (in /lib64/libc-2.12.so)
+==22319==
+==22319== Conditional jump or move depends on uninitialised value(s)
+==22319==    at 0x468391: Logfile::updateReferences() (Logfile.cc:263)
+==22319==    by 0x46825E: Logfile::answerQueryReverse(Query*, LogCache*, long, long, unsigned int) (Logfile.cc:236)
+==22319==    by 0x47997B: TableLog::answerQuery(Query*) (TableLog.cc:158)
+==22319==    by 0x43B100: Store::answerGetRequest(InputBuffer*, OutputBuffer*, char const*) (Store.cc:155)
+==22319==    by 0x4243EE: LivestatusThread::answerRequest(InputBuffer*, OutputBuffer*) (LivestatusThread.cc:151)
+==22319==    by 0x4246F5: thread_run(void*) (LivestatusThread.cc:116)
+==22319==    by 0x4E369D0: start_thread (in /lib64/libpthread-2.12.so)
+==22319==    by 0x5B288FC: clone (in /lib64/libc-2.12.so)
+==22319==
+==22319== Thread 1:
+==22319== Conditional jump or move depends on uninitialised value(s)
+==22319==    at 0x4E3CBB7: sem_post (in /lib64/libpthread-2.12.so)
+==22319==    by 0x424763: LivestatusThread::~LivestatusThread() (LivestatusThread.cc:74)
+==22319==    by 0x423330: Livestatus::~Livestatus() (Livestatus.cc:81)
+==22319==    by 0x415DD4: Core::run() (Core.cc:1247)
+==22319==    by 0x460686: main (main.cc:127)
+==22319==

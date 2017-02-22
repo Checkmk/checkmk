@@ -1,0 +1,12 @@
+Title: Deadlock im Notification Helper
+Component: core
+Class: bug
+State: done
+Date: 2013-07-02 11:07:17
+Targetversion: next
+
+Wenn eine Notifikation eine Livestatusanfrage macht, kann es 
+zu einem Deadlock kommen.
+
+2013-07-05 10:08:58: changed state open -> done
+Sollte jetzt passen.

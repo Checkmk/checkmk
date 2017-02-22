@@ -1,0 +1,14 @@
+Title: id von icmp Paketen des icmphelpers bleibt immer gleich
+Component: core
+Class: nastiness
+State: done
+Date: 2014-11-17 11:26:58
+Targetversion: future
+
+Die ICMP ID der ICMP Pakete des icmphelpers bleibt immer gleich. 
+Firewalls und Router verwenden die ID, um eine State zu bestimmen, 
+zum Beispiel fürs connection tracking eines Paketfilters, oder auch
+für den Routing Cache. Deswegen kann es ev. zu Problemen kommen, z.B.
+wenn die Routing Tabelle sich ändert. Es wäre besser, die ID bei jedem Paket auszuwürfeln.
+
+2014-12-02 20:28:36: changed state open -> done

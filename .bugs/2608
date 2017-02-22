@@ -1,0 +1,18 @@
+Title: {check,icmp}helper mit diet kompilieren
+Component: core
+State: wontfix
+Date: 2013-06-29 11:39:16
+Targetversion: next
+Class: feature
+
+Mal kontrollieren, ob das bei allen Distros korrekt funktioniert.
+Vor allem der checkhelper sollte mit dietc laufen, damit er kleiner
+ist.
+
+2013-06-30 13:55:09: changed state open -> done
+checkhelper müsste gehen, icmphelper braucht C++ und geht nicht.
+
+2016-06-03 08:59:57: changed state done -> wontfix
+Using diet is actually counterproductive on desktop/server systems.
+Furthermore, the library has some annoying limitations and doesn't
+behave in a 100% C99-compliant way.

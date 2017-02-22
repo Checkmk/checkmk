@@ -1,0 +1,9 @@
+Title: cmc livestatus: missing data in check_command_expanded
+Component: core
+Class: bug
+State: done
+Date: 2014-08-29 13:36:58
+Targetversion: next
+
+
+2014-12-01 09:02:48: changed state open -> done

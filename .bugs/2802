@@ -1,0 +1,31 @@
+Title: Removing downtimes in host group view fails
+Component: core
+Class: bug
+State: done
+Date: 2015-09-02 10:49:12
+Targetversion: 1.2.8
+
+Sehr geehrte Damen und Herren,
+
+ich habe eine Anfrage von einem unserer Mitarbeiter erhalten (siehe unten),
+welcher regelmäßig eine größere Aktualisierung von Software vornehmen
+muss und dafür eine Gruppe von Hosts auf "Schedules Downtime" setzt. Wenn
+die Arbeiten beendet sind kann er aber nichtmehr (das hat schon mal in
+einer älteren Version von Check_MK funktioniert) für alle Host in einem
+Rutsch die Downtimes beenden. Er muss das im Moment für jeden Host einzeln
+machen. Das kostet relativ viel Zeit.
+
+Ich konnte dieses Verhalten mit meinem Check_MK-User und auch mit anderen
+Hostgroups nachstellen, somit kann es eigentlich nicht an den Berechtigungen
+des Kollegen liegen.
+
+Wo könnte das Problem zu finden sein bzw. ist das jetzt so beabsichtigt?
+
+Den Button "Remove all" gibt es immerhin noch - funktioniert bei uns nur
+leider nicht mehr.
+
+Andreas hat das nachstellen können und es tritt nur mit CMC auf.
+
+2016-02-09 11:07:39: changed state open -> done
+Ich glaube, dass das schon seit längerem behoben war. Alle meine Tests
+waren durchwegs unauffällig.

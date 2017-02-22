@@ -1,0 +1,12 @@
+Title: checkhelper ohne SETUID root installieren
+Component: core
+Class: bug
+State: done
+Date: 2013-06-29 11:40:31
+Targetversion: next
+
+Ich denke, in cmk-omd ist das schon repariert. Aber .f12 könnte
+hier noch falsch sein.
+
+2013-07-05 19:29:48: changed state open -> done
+Ist inzwischen repariert.

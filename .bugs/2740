@@ -1,0 +1,7 @@
+Title: create-rrd-helper should log to to core (cmc.log) like other helpers
+Component: core
+State: open
+Date: 2014-12-12 11:33:35
+Targetversion: next
+Class: nastiness
+

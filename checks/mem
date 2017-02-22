@@ -242,6 +242,9 @@ def check_mem_levels(title, used, total, levels, of_what=None, of_value=None, sh
 
 def check_mem_linux(_no_item, params, info):
     meminfo = parse_proc_meminfo_bytes(info)
+    if not meminfo:
+        yield 3, "Data not found in agent output"
+        return
 
     # SReclaimable is not available for older kernels
     if "SReclaimable" not in meminfo:

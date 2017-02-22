@@ -75,10 +75,17 @@ def load_plugins(force):
     load_web_plugins("metrics", globals())
     loaded_with_language = current_language
 
-    fixup_unit_into()
+    fixup_graph_info()
+    fixup_unit_info()
 
 
-def fixup_unit_into():
+def fixup_graph_info():
+    # create back link from each graph to its id.
+    for graph_id, graph in graph_info.items():
+        graph["id"] = graph_id
+
+
+def fixup_unit_info():
     # create back link from each unit to its id.
     for unit_id, unit in unit_info.items():
         unit["id"] = unit_id
@@ -920,7 +927,7 @@ def build_perfometer(perfometer, translated_metrics):
 #   +----------------------------------------------------------------------+
 #   |  Implementation of time graphs - basic code, not the rendering       |
 #   |  Rendering of the graphs is done by PNP4Nagios, we just create PHP   |
-#   |  templates for PNP here.
+#   |  templates for PNP here.                                             |
 #   '----------------------------------------------------------------------'
 
 def get_graph_templates(translated_metrics):
@@ -1027,6 +1034,7 @@ def add_fake_metrics(translated_metrics, metric_names):
 
 def generic_graph_template(metric_name):
     return {
+        "id" : "METRIC_" + metric_name,
         "metrics" : [
             ( metric_name, "area" ),
         ],

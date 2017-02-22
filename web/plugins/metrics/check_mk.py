@@ -6032,7 +6032,7 @@ graph_info["used_cpu_time"] = {
 }
 
 
-graph_info["time_usage_by_phase"] = {
+graph_info["cmk_cpu_time_by_phase"] = {
     "title" : _("Time usage by phase"),
     "metrics" : [
         ( "user_time,children_user_time,+",     "stack", _("CPU time in user space") ),
@@ -6973,7 +6973,7 @@ graph_info["handled_requests"] = {
     "omit_zero_metrics" : True,
 }
 
-graph_info["time_spent_for_various_page_types"] = {
+graph_info["cmk_http_pagetimes"] = {
     "title" : _("Time spent for various page types"),
     "metrics" : [
         ("secs_cmk_views",      "stack"),
@@ -6993,7 +6993,7 @@ graph_info["time_spent_for_various_page_types"] = {
     "omit_zero_metrics" : True,
 }
 
-graph_info["bytes_sent"] = {
+graph_info["cmk_http_traffic"] = {
     "title" : _("Bytes sent"),
     "metrics" : [
         ("bytes_cmk_views",      "stack"),

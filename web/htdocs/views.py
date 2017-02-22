@@ -1792,13 +1792,15 @@ def render_view(view, rows, datasource, group_painters, painters,
     can_display_checkboxes = layout.get('checkboxes', False)
 
     if show_buttons:
-        show_context_links(view, show_filters,
+        show_context_links(view, datasource, show_filters,
                        # Take into account: permissions, display_options
                        row_count > 0 and command_form,
                        # Take into account: layout capabilities
                        can_display_checkboxes and not view.get("force_checkboxes"), show_checkboxes,
                        # Show link to availability
-                       datasource["table"] in [ "hosts", "services" ] or "aggr" in datasource["infos"])
+                       datasource["table"] in [ "hosts", "services" ] or "aggr" in datasource["infos"],
+                       # Show link to combined graphs
+                       "service" in datasource["infos"])
 
     # User errors in filters
     html.show_user_errors()
@@ -2057,9 +2059,9 @@ def ajax_set_viewoption():
     po.save_to_config()
 
 
-def show_context_links(thisview, show_filters,
+def show_context_links(thisview, datasource, show_filters,
                        enable_commands, enable_checkboxes, show_checkboxes,
-                       show_availability):
+                       show_availability, show_combined_graphs):
     # html.begin_context_buttons() called automatically by html.context_button()
     # That way if no button is painted we avoid the empty container
     if display_options.enabled(display_options.B):
@@ -2140,8 +2142,17 @@ def show_context_links(thisview, show_filters,
                   (thisview["owner"], thisview["name"], backurl)
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show)
 
-    if display_options.enabled(display_options.E) and show_availability:
-        html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
+    if display_options.enabled(display_options.E):
+        if show_availability:
+            html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
+        if show_combined_graphs and config.combined_graphs_available():
+            html.context_button(_("Combined graphs"),
+                                html.makeuri([
+                                    ("single_infos", ",".join(thisview["single_infos"])),
+                                    ("datasource", thisview["datasource"]),
+                                ],
+                                filename="combined_graphs.py"), "pnp")
+
 
     if display_options.enabled(display_options.B):
         execute_hooks('buttons-end')

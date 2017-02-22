@@ -1,0 +1,9 @@
+Title: checkpoint_packets: fixed parameters handling if none are set
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p18
+Date: 1487775888
+Class: fix
+
+

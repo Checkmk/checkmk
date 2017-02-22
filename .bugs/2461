@@ -2,7 +2,7 @@ Title: Predictive icon for Interface outbound traffic missing
 Component: multisite
 State: open
 Date: 2016-04-05 16:25:10
-Targetversion: 1.2.8p1
+Targetversion: 1.4.0
 Class: bug
 
 There is only one icon created by the icon plugin for the first

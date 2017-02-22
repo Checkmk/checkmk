@@ -8505,7 +8505,7 @@ register_check_parameters(
        forth = lambda params: type(params) == tuple and { "ntp_levels" : params } or params
     ),
     None,
-    "first"
+    "dict"
 )
 
 register_check_parameters(

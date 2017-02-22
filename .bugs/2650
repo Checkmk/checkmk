@@ -1,0 +1,48 @@
+Title: Livestatus Log-Cache bei Reload nicht invalidieren
+Component: core
+Class: nastiness
+State: done
+Date: 2013-09-16 15:28:54
+Targetversion: next
+
+Beim 
+bool LogCache::logCachePreChecks()
+{
+#ifdef CMC
+    if (g_live_world != _my_world) {
+        forgetLogfiles();
+        updateLogfileIndex();
+    }
+dauert das forgetLogfiles Ewigkeiten - 170000 entries/s
+
+Loesung: 
+wenn sich die world aendert, jedes logfile als invalid flaggen 
+und erst nach bedarf neu laden
+
+Oder: Man könnte versuchen, die Objektreferenzen zu aktualisieren.
+Dazu könnte man bei der bisher geladenen Welt in allen Object-Objekten
+ein Flag anlegen, das _deleted heißt. Dieses setzt man beim Laden
+der neuen Welt auf true. Anstelle eines Invalidierens geht man
+jetzt den cache durch und setzt alle Objekt-Zeiger auf 0, die
+auf ein gelöschtes Objekt zeigen. Gleichzeitig könnte man gucken,
+ob man fehlende Zeiger wieder füllen kann.
+
+Ist das nicht zu aufwendig?
+
+Vor allem klappt es nicht, weil ja alle Objekte der alten Welt
+sowieso gelöscht werden. Man muss also *alle* Referenzen neu
+berechnen. Eigentlich müsste man nur den Teil:
+
+        if (_host_name)
+            _host = find_host(_host_name);
+        if (_svc_desc)
+            _service = find_service(_host_name, _svc_desc);
+        if (_contact_name)
+            _contact = find_contact(_contact_name);
+        if (_command_name)
+            _command = find_command(_command_name);
+
+nochmal ausführen. 
+
+2013-10-05 17:19:51: changed state open -> done
+Umgesetzt, beschrieben in doc/.

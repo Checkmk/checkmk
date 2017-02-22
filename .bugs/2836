@@ -1,0 +1,10 @@
+Title: Missing useful macros in reporting
+Component: reporting
+State: open
+Date: 2016-02-26 16:10:46
+Targetversion: 1.2.8
+Class: nastiness
+
+In a report with single context (e.g. host) there should be a list of
+macros available. At least $HOSTNAME$. Otherwise it is impossible to
+put the name of the host int the title of the report.

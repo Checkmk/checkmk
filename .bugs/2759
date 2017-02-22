@@ -1,0 +1,8 @@
+Title: Broken graph basket when adding view to graph collection
+Component: web
+State: done
+Date: 2015-10-20 16:02:21
+Targetversion: 1.2.8
+Class: bug
+
+Adding of these kind of elements should not be possible to graph baskets.

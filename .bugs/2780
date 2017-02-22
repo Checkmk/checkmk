@@ -1,0 +1,8 @@
+Title: Wenn die config-Datei fehlt, sollte der Core einen Fehler ausgeben
+Component: core
+State: open
+Date: 2015-03-03 10:03:30
+Targetversion: master
+Class: nastiness
+
+Aktuell macht der core einfach exit 1 und man bekommt nix mit.

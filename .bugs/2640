@@ -1,0 +1,28 @@
+Title: field UNIT for PNP4Nagios is not filled by CMC
+Component: core
+Class: bug
+State: done
+Date: 2013-09-16 11:29:47
+Targetversion: next
+
+when using CMC, the field UNIT in the PNP xml file is not filled but
+some PNP templates use it. They do not work correctly then.
+
+cat ~/var/pnp4nagios/perfdata/ipmi/IPMI_Sensor_Power_Meter.xml 
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<NAGIOS>
+   <DATASOURCE>
+[...]
+     <UNIT></UNIT>
+[...]
+
+if using Nagios as core:
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<NAGIOS>
+  <DATASOURCE>
+[...]
+    <UNIT>Watts</UNIT>
+[...]
+
+2013-09-17 12:43:47: changed state open -> done
+Sollte jetzt passen.

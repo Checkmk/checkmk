@@ -1,0 +1,11 @@
+Title: Logrotate-Konfiguration fehlt
+Component: config
+Class: bug
+State: done
+Date: 2013-09-02 08:49:52
+Targetversion: next
+
+Bisher gibt es im OMD noch keine Regeln für die Logrotation, z.b. vom cmc.log.
+
+2013-09-17 14:06:18: changed state open -> done
+Ist jetzt gemacht für drei Logfiles.

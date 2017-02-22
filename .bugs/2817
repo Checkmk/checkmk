@@ -1,0 +1,19 @@
+Title: Adding a host causes a WARNING log entry in cmc.log
+Component: core
+Class: bug
+State: done
+Date: 2016-03-29 17:01:41
+Targetversion: 1.2.8
+
+When adding a host and discover the services via WATO a warning message is
+written to the CMC log:
+
+ [Analyze this line] 2016-03-29 15:00:44 [5] Executing external command: SCHEDULE_FORCED_SVC_CHECK;localhost;Check_MK Discovery;1459263644
+
+ [Analyze this line] 2016-03-29 15:00:44 [4] Ignoring command SCHEDULE_FORCED_SVC_CHECK;localhost;Check_MK Discovery;1459263644: invalid parameters
+
+This is bad because this log is monitored on the Check_MK appliance by default
+and causing a WARNING state.
+
+2016-04-19 16:47:07: changed state open -> done
+Fixed.

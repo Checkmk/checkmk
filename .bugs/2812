@@ -1,0 +1,15 @@
+Title: Graph exception when zooming far out of graph
+Component: metrics
+Class: bug
+State: done
+Date: 2016-03-18 15:01:25
+Targetversion: 1.2.8
+
+When zooming out of the graph to see several years (more than 10) An exception occurs
+in the frontend: ERROR: local variable 'dist_function' referenced before assignment.
+
+We should either implement a hard limit for a maximum time range or create a create
+a senseful dist function.
+
+2016-03-21 13:54:57: changed state open -> done
+Fixed overflow in Javascript.

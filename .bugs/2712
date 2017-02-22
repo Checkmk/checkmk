@@ -1,0 +1,9 @@
+Title: Do not show services as stale when they are out of their check period
+Component: core
+Class: nastiness
+State: done
+Date: 2014-09-11 15:58:59
+Targetversion: next
+
+
+2014-12-02 12:06:18: changed state open -> done

@@ -1,0 +1,33 @@
+Title: reporting: tracebacks bei 'export as PDF' in der EC
+Component: web
+Class: bug
+State: done
+Date: 2014-11-05 20:50:42
+Targetversion: next
+
+Tracebacks gibts, wenn man in der EC auf 'export as PDF' klickt:
+
+Internal error: 'int' object has no attribute 'strip'
+
+Traceback (most recent call last):
+  File "/omd/sites/heute/share/check_mk/web/htdocs/index.py", line 241, in handler
+    handler()
+  File "/omd/sites/heute/share/check_mk/web/htdocs/reporting.py", line 986, in page_instant
+    render_report("instant", instant_report)
+  File "/omd/sites/heute/share/check_mk/web/htdocs/reporting.py", line 1060, in render_report
+    render_report_elements(report, instance, report.get("elements", []))
+  File "/omd/sites/heute/share/check_mk/web/htdocs/reporting.py", line 1219, in render_report_elements
+    render_report_element(report, instance, element)
+  File "/omd/sites/heute/share/check_mk/web/htdocs/reporting.py", line 1238, in render_report_element
+    element_type["render"](element, instance)
+  File "/omd/sites/heute/share/check_mk/web/plugins/reporting/views.py", line 72, in render_element_view
+    only_count=False, all_filters_active=True, limit=limit)
+  File "/omd/sites/heute/share/check_mk/web/htdocs/views.py", line 1042, in show_view
+    browser_reload)
+  File "/omd/sites/heute/share/check_mk/web/plugins/reporting/views.py", line 67, in <lambda>
+    return lambda *args: report_render_view_table(instance, *args)
+  File "/omd/sites/heute/share/check_mk/web/plugins/reporting/views.py", line 114, in report_render_view_table
+    txt = txt.strip()
+AttributeError: 'int' object has no attribute 'strip'
+
+2014-12-02 18:50:35: changed state open -> done

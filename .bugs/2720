@@ -1,0 +1,16 @@
+Title: Reporting: Keine Reports auf div. Kontextbuttons
+Component: web
+Class: bug
+State: done
+Date: 2014-11-05 20:27:10
+Targetversion: next
+
+In folgenden Situation gibt es leere Reports, obwohl man eigentlich einen
+erwarten würde:
+- wenn man in einer BI Aggregation auf 'BI availability' klickt
+
+Wenn man hingegen im View von 'all Services' auf 'BI availability' klickt,
+kriegt man einen Report, ebenso, wenn man auf dasselbe im Sidebar klickt,
+
+2014-12-02 18:24:23: changed state open -> done
+Geht jetzt.

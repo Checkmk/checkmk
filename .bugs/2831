@@ -1,0 +1,19 @@
+Title: Instant reports must not used default report time ranges but those from filters
+Component: reporting
+Class: bug
+State: done
+Date: 2015-12-02 12:00:05
+Targetversion: 1.2.8
+
+The "Export as PDF" instant reports currently use the default time range
+for reports.  But the user expects for time based views like "Events of
+Host/Service" that the filters in that view are being used and the same
+output as on the screen is put into the PDF.
+
+So for instant reports we need to be able to work without any time range
+or set some flag that the report time range should not be enforced but just
+used as a default in situations where no other time range is available.
+
+2016-02-16 11:36:07: changed state open -> done
+This was already fixed, but still had a bug (misscomputation by one day).
+Fixed.

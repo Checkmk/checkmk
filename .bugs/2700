@@ -1,0 +1,16 @@
+Title: CMC kann mit bestimten Performance Daten nicht umgehen
+Component: core
+Class: bug
+State: done
+Date: 2014-01-20 11:58:05
+Targetversion: next
+
+<<<mrpe>>>
+(check_jmx4perl) ABC-JobsCount-Test 0 OK - OK ABC_JobsCount aktueller Wert:
+0 | [abcd.abc:service#ABCMetrics,JobsCount]=0;15000;15000 
+
+Die Perfdaten dieses MRPE Checks werden zwar in Multisite angezeigt, jedoch
+nicht in die RRD geschrieben.  Gleiches Spiel wenn man die gleiche Variable
+in einem Local Check zurück gibt.
+
+2014-12-01 17:41:46: changed state open -> done

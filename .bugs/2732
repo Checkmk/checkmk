@@ -1,0 +1,13 @@
+Title: Reject configuration on missing timeperiod
+Component: config
+Class: bug
+State: done
+Date: 2014-11-17 11:11:51
+Targetversion: next
+
+If a host or service has been assigned a missing timeperiod
+then the core segfaults when this timeperiod is being queried.
+The configuration enginge must make sure that all referred-to
+timeperiods are defined.
+
+2014-12-01 18:26:46: changed state open -> done

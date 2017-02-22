@@ -1,0 +1,67 @@
+Title: Agent-Bakery für Windows komplettieren
+Component: agents
+State: open
+Date: 2015-03-10 17:48:07
+Targetversion: master
+Class: todo
+
+#####################
+### BAKERY ##########
+#####################
+arcserve_backup.ps1
+   Hat einige "Please adapt" Kommentare, kann man weitestgehend ignorieren
+   Müsste man nur bei einer Sprachumstellung anpassen
+   ### BAKERY KONFIGURATION ###
+   Im Main Block muss der Server konfigurierbar sein
+   # Make a connection with the SQL-server
+   # Please adapt Server and Database name
+   $sqlServer = "SATURN\ARCSERVE_DB"
+   megaraid.bat
+   ### BAKERY KONFIGURATION ###
+   Pfade müssen über Bakery konfigurierbar sein
+   SET "MegaCli=C:\Program Files\LSI Corporation\MegaCLI\MegaCli.exe"
+   SET "TEMP=C:\temp"
+   mk_inventory.ps1
+   Nutzt für die timestamp.{remote_host} Dateien noch das Agent Dir
+   Vielleicht sollten wir für solche Skripte noch ein tmp dir anlegen?
+   ### BAKERY KONFIGURATION ###
+   Pfad der "Search exes" ist mit einem Pfad hardkodiert
+   Das sollte man über die Bakery konfigurierbar machen
+   Über alle Platten und Programm Files / Programm Files (x86) zu
+   suchen ist nicht flexibel genug
+   mk_oracle.bat
+mk_oracle.ps1
+   Sieht aus als ob mk_oracle.bat durch mk_oracle.ps1 obsolet ist
+   Im mk_oracle.ps1 muss der Config Pfad noch angepasst werden
+   ### BAKERY KONFIGURATION ###
+   Das sind einige Werte. Kann man im Figheader-Block "Config" einsehen
+   sansymphony.ps1
+   ### BAKERY KONFIGURATION ###
+   Credentials, Hostname und Pfad zum Cmdlet
+   $ssvusername="Username"
+   $ssvpassword="Password"
+   $ssvhostname="Hostname"
+   Import-Module "C:\Program Files\DataCore\SANsymphony\DataCore.Executive.Cmdlets.dll" -DisableNameChecking -ErrorAction Stop;
+ 
+tsm_checks.bat
+   ### BAKERY KONFIGURATION ###
+   Pfad zum dsmadmc Binary muss konfigurierbar sein. tsm (Tivoli Storage Manager)
+   cd C:\Progra~1\Tivoli\TSM\baclient\
+
+Sonderfall windows_updates.vbs
+   Vielleicht sollte dieses Skript per default als ASYNC + Cached ausgeführt werden.
+   Hier müsste man also einen Eintrag in der check_mk.ini [plugins] anlegen.
+
+
+#####################
+### SONSTIGES #######
+#####################
+veeam_backup_status.bat
+   Wird benötigt um mit einem 32 Bit Agent ein 64 Bit powershell Script aufzurufen
+   Enthält hardkodierten Pfad
+   Sollte langsam in die deprecated Ecke wandern
+veeam_backup_status.ps1_
+   Sollte man in ps1 umbenennen
+wmic_if.bat
+wmic_if.ps1
+   Die ps1 Version ist zuverlässiger als die bat Version -> bat wird deprecated

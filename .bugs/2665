@@ -1,0 +1,16 @@
+Title: cmc.log produces unnecessary crit messages
+Component: core
+State: done
+Date: 2014-10-16 17:44:13
+Targetversion: next
+Class: bug
+
+However the check helpers throw error code 1
+when the microcore is restarted (for example with omd restart). Probably
+the restart procedure of the mircocore and its helpers should be improved.
+
+2014-12-01 10:34:40: changed state open -> done
+Sieht aus, als wäre das schon länger gefixt.
+
+2014-12-01 10:57:58: changed state done -> done
+Jetzt tatsächlich gefixt.

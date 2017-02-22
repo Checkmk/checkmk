@@ -1,0 +1,21 @@
+Title: PDF-Export von Gruppen-Listen funktioniert nicht
+Component: web
+Class: bug
+State: done
+Date: 2014-12-17 11:24:53
+Targetversion: next
+
+Wenn man die View "Host Groups (Summary)" auf macht und dann auf "Export as PDF"
+klickt, kommt im PDF der Fehler:
+
+Error while rendering element type 'A Multisite view'
+This view needs a host/service group to be specified. We are missing the URL variable <tt>hostgroup</tt>. Traceback
+(most recent call last): File "/omd/sites/heute/share/check_mk/web/htdocs/reporting.py", line 1888, in
+render_report_element element_type["render"](element, instance) File
+"/omd/sites/heute/share/check_mk/web/plugins/reporting/views.py", line 75, in render_element_view only_count=False,
+all_filters_active=True, limit=limit) File "/omd/sites/heute/share/check_mk/web/htdocs/views.py", line 962, in show_view
+header = filt.filter(tablename) File "/omd/sites/heute/share/check_mk/web/plugins/visuals/filters.py", line 264, in filter
+self.htmlvars[0])) MKGeneralException: This view needs a host/service group to be specified. We are missing the URL
+variable <tt>hostgroup</tt>.
+
+2015-02-06 12:40:04: changed state open -> done

@@ -1,0 +1,12 @@
+Title: PDF export of service detail view is not layouted
+Component: web
+Class: todo
+State: done
+Date: 2014-12-03 12:25:26
+Targetversion: next
+
+When clicking on the "Export as PDF" button, it produces a PDF with
+a broken layout with overlapping text. This should either be layouted
+or an error message should be displayed instead of the brokn PDF.
+
+2015-01-30 10:06:55: changed state open -> done

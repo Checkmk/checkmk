@@ -1,0 +1,24 @@
+Title: Process error messages of helper processes
+Component: core
+Class: todo
+State: done
+Date: 2014-11-25 10:02:47
+Targetversion: next
+
+The errors produced by helpers, especially check helpers, needs
+to be processed to make the diagnose of problems easiert.
+
+fd 2 should be used as channel from the helper to cmc for transporting
+the errors. The helper can then simply output errors on stderr and
+eventuall also change stdout to write to stderr to get all information
+into the core.
+
+The cmc should then log the produced outputs. This should be disabled
+by default and configurable by WATO using a single rule to configure
+a dict of options
+
+a) Write helper errors to core log
+b) Execute helpers in verbose mode
+c) Execute helpers in debug mode
+
+2014-12-01 14:40:23: changed state open -> done

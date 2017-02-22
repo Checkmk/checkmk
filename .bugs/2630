@@ -1,0 +1,26 @@
+Title: Logmeldungen sind nicht atomar
+Component: core
+Class: bug
+State: done
+Date: 2013-09-11 09:24:23
+Targetversion: next
+
+013-09-11 06:21:15 [5] Idle timeout of 300000 ms exceeded. Going to close connection.
+2013-09-11 06:21:15 [5] error: Client connection terminated while request still incomplete
+2013-09-11 06:26:16 [5] Idle timeout of 300000 ms exceeded. Going to close connection.
+2013-09-11 06:26:16 2013-09-11 06:26:16 [5] [5] Idle timeout of 300000 ms exceeded. Going to close connection.
+error: Client connection terminated while request still incomplete2013-09-11 06:26:16 
+[5] error: Client connection terminated while request still incomplete
+2013-09-11 06:26:16 [5] Idle timeout of 300000 ms exceeded. Going to close connection.
+2013-09-11 06:26:16 [5] error: Client connection terminated while request still incomplete
+2013-09-11 06:31:17 [5] Idle timeout of 300000 ms exceeded. Going to close connection.
+2013-09-11 06:31:17 [5] Idle timeout of 300000 ms exceeded. Going to close connection.
+2013-09-11 06:31:17 [5] error: Client connection terminated while request still incomplete
+2013-09-11 06:31:17 [5] error: Client connection terminated while request still incomplete
+2013-09-11 06:31:17 [5] Idle timeout of 300000 ms exceeded. Going to close connection.
+
+Wenn zwei Meldungen genau gleich kommen, können sie sich überlappen. Hier brauchen
+wir wohl ein Locking.
+
+2013-09-17 17:34:46: changed state open -> done
+Fixed. Mit einem Lock.

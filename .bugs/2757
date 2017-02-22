@@ -1,0 +1,11 @@
+Title: Fix confusing RRD error messages when accessing Filesystem graphs
+Component: core
+State: worksforme
+Date: 2015-07-30 10:07:51
+Targetversion: future
+Class: bug
+
+When accessing filesystem graphs e.g. in the GUI, this works but causes
+error messages like this one in the cmc.log:
+
+Could not find RRD database for host heute, service fs_/, variable MAX

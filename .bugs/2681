@@ -1,0 +1,23 @@
+Title: Macros aus ressource.cfg gehen nicht
+Component: core
+Class: nastiness
+State: done
+Date: 2013-09-30 14:18:40
+Targetversion: next
+
+Das $USER1$ und $USER2$ könnte man hart ein bauen,
+auch $USER3$ und $USER4$. Die benutzerdefinierbaren
+Makro funktionieren aber nicht.
+
+Möglich:
+
+a) ressource.cfg auslesen. Nicht so hübsch. Aber möglich.
+b) Diese Variablen per WATO konfigurierbar machen. Evtl.
+   kann WATO daraus sogar die ressource.cfg mit schreiben,
+   damit man mit Nagios so kompatibel bleibt, wie möglich.
+
+
+2013-10-01 14:13:17: changed state open -> done
+Variante a wird verfolgt. Das wird eh außerhalb des Cores
+gelöst, kann also später leicht geändert werden. Erstmal
+funktionierts auf jeden Fall.

@@ -1,0 +1,90 @@
+Title: Crash when metric names are garbled
+Component: core
+Class: bug
+State: done
+Date: 2016-03-07 14:58:30
+Targetversion: 1.2.8
+
+Here is the history of the problem and how to reproduce it:
+
+1. Create an active check of type "SMTP".
+2. Modify checks/check_smtp in a way that the command line of the command is
+   broken and the usage of lib/nagios/plugins/check_smtp appears
+
+This usage contains a vertical bar:
+
+OMD[heute]:~$ lib/nagios/plugins/check_smtp -6 127.0.0.1
+check_smtp: Ungültige(r) Hostname/Adresse - 127.0.0.1
+Usage:
+check_smtp -H host [-p port] [-4|-6] [-e expect] [-C command] [-R response] [-f from addr]
+[-A authtype -U authuser -P authpass] [-w warn] [-c crit] [-t timeout] [-q]
+[-F fqdn] [-S] [-D warn days cert expire[,crit days cert expire]] [-v] 
+
+That results in being this like 'expire]]' being interpreted as metric name. This
+seems to be the first bug IMHO. We need to enforce an '=' being part of a string in
+order to be recognized as perf-data.
+
+The this list of metrics will be put into RRDs.
+
+Now fix the SMTP call so that these garbled metrics will not appear in the *current*
+metrics. This will trigger an exception in the GUI when you go to the service
+details:
+
+  File "/omd/sites/heute/share/check_mk/web/htdocs/index.py", line 135, in handler
+    handler()
+
+  File "/omd/sites/heute/share/check_mk/web/htdocs/views.py", line 793, in page_view
+    show_view(view, True, True, True)
+
+  File "/omd/sites/heute/share/check_mk/web/htdocs/views.py", line 1157, in show_view
+    browser_reload)
+
+  File "/omd/sites/heute/share/check_mk/web/htdocs/views.py", line 1258, in render_view
+    show_checkboxes and not html.do_actions())
+
+  File "/omd/sites/heute/share/check_mk/web/plugins/views/layouts.py", line 95, in render_single_dataset
+    paint(p, row)
+
+  File "/omd/sites/heute/share/check_mk/web/htdocs/views.py", line 2076, in paint
+    tdclass, content = prepare_paint(p, row)
+
+  File "/omd/sites/heute/share/check_mk/web/htdocs/views.py", line 2113, in prepare_paint
+    tdclass, content = paint_painter(painter, row)
+
+  File "/omd/sites/heute/share/check_mk/web/htdocs/views.py", line 2098, in paint_painter
+    return painter["paint"](row)
+
+  File "/omd/sites/heute/share/check_mk/web/plugins/views/painters.py", line 936, in paint_time_graph
+    return paint_time_graph_cmk(row)
+
+  File "/omd/sites/heute/share/check_mk/web/plugins/views/painters.py", line 955, in paint_time_graph_cmk
+    show_timeranges)
+
+  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 1760, in render_graphs_from_specification_html
+    graph_definitions = create_graph_definitions_from_specification(graph_specification)
+
+  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 145, in create_graph_definitions_from_specification
+    return func(spec_info)
+
+  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 189, in create_graph_definitions_from_template
+    graph_definition = create_graph_definition_from_template(graph_template, translated_metrics, site, host_name, service_description)
+
+  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 211, in create_graph_definition_from_template
+    metric = parse_template_metric(site, host_name, service_description, metric_definition, translated_metrics)
+
+  File "/omd/sites/heute/share/check_mk/web/plugins/metrics/graphs.py", line 283, in parse_template_metric
+    value, unit, color = evaluate(expression, translated_metrics)
+
+  File "/omd/sites/heute/share/check_mk/web/htdocs/metrics.py", line 476, in evaluate
+    value, unit, color = evaluate_rpn(expression, translated_metrics)
+
+  File "/omd/sites/heute/share/check_mk/web/htdocs/metrics.py", line 555, in evaluate_rpn
+    stack.append(evaluate_literal(operator_name, translated_metrics))
+
+  File "/omd/sites/heute/share/check_mk/web/htdocs/metrics.py", line 593, in evaluate_literal
+    value = translated_metrics[varname]["value"]
+
+This problem seems a separate one and probably always occurs if the current list of
+metrics is missing some historic variable.
+
+2016-03-21 16:35:45: changed state open -> done

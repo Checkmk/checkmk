@@ -1,0 +1,12 @@
+Title: Offer normal PING host check in WATO
+Component: config
+Class: feature
+State: done
+Date: 2013-09-26 10:43:16
+Targetversion: next
+
+Man sollte den klassichen Hostcheck via PING explizit
+anbieten. Und SMART-Ping als extra (Default-) option
+
+2013-10-01 16:36:24: changed state open -> done
+Kann man jetzt einstellen.

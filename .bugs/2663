@@ -1,0 +1,12 @@
+Title: rrd.py should test wether or not rrd have been initialized correctly
+Component: core
+Class: cleanup
+State: done
+Date: 2013-11-11 13:56:46
+Targetversion: future
+
+It might happen that the rrds are initialized with a size of 0 bytes.
+Maybe, when the disk is full. This could easily be detected and the empty
+file could be removed.
+
+2014-12-01 10:23:51: changed state open -> done

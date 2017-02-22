@@ -1,0 +1,13 @@
+Title: 6 secs default für host check only for Smart-PING
+Component: config
+Class: cleanup
+State: done
+Date: 2014-03-02 11:36:30
+Targetversion: next
+
+We could change the default for a 6 second interval for
+the host check back to 1 min in the case that SmartPING
+is not being used.
+
+2014-03-17 14:25:32: changed state open -> done
+Done.

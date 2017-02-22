@@ -1,0 +1,13 @@
+Title: New graphing system ignores render_scale attribute
+Component: web
+Class: bug
+State: done
+Date: 2015-11-04 14:42:36
+Targetversion: 1.2.8
+
+The render_scale attribute is supposed to be applied to the measure whenever
+the value is displayed to the user. This works in the pnp graphs but not in the
+new graphing system.  The attribute is currently only used in the "ratio" unit.
+
+2016-02-16 11:15:00: changed state open -> done
+render_scale has now completely been abandoned

@@ -1,0 +1,17 @@
+Title: Empty contact groups are not created -> RBN contact selection fails
+Component: config
+Class: bug
+State: done
+Date: 2014-10-23 17:56:39
+Targetversion: next
+
+If you have a contact group with a number of users but with *no* host
+or service, then this contact group will not be created in the monitoring
+configuration. This makes problems with the RBN.
+
+If a RBN rule selects a contact group as a contact selection and that
+group does not exist then no notifications will be sent.
+
+Solution: also create empty contact groups.
+
+2014-12-02 15:56:41: changed state open -> done

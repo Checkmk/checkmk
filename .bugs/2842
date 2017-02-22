@@ -1,0 +1,12 @@
+Title: Agent updater: better logging in case of a registration problem
+Component: agents
+State: open
+Date: 2016-09-30 21:05:25
+Targetversion: 1.2.8
+Class: nastiness
+
+When in the Windows agent updater there is some problem during
+registrtation you can just see the error message for a couple
+of milliseconds and then the window closes. Also the log file of
+the updater contains *nothing*. That way it is almost impossible
+to find the problem.

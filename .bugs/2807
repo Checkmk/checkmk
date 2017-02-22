@@ -1,0 +1,12 @@
+Title: CMC crashed when RRD creation helper cannot start
+Component: core
+Class: bug
+State: works4me
+Date: 2015-10-05 11:40:34
+Targetversion: future
+
+Situation: cmk --keepalive --create-rrd existed with an error about a duplicate
+host and exit code 3. This cannot happen anymore but maybe a similar situation.
+The CMC than crashed with signal 6 because of a buffer overflow.
+
+2016-02-04 10:41:41: changed state open -> works4me

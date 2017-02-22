@@ -1,0 +1,15 @@
+Title: RedHat: inline ICMP funktioniert nicht
+Component: core
+Class: bug
+State: done
+Date: 2013-08-26 14:59:44
+Targetversion: next
+
+Bei RedHat 6.4 geht das nicht. Angeblich gehen Pakete raus, aber
+es kommen keine Antworten. Könnte am selinux liegen. Untersuchen
+z.B. bei Flughafen Baden Airpark.
+
+Götz untersucht das...
+
+2013-09-16 09:49:33: changed state open -> done
+Sollte jetzt gehtn.

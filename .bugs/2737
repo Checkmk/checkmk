@@ -1,0 +1,11 @@
+Title: sending PINGs too slow: kommt auch bei doppelten IP-Adressen
+Component: core
+State: open
+Date: 2015-02-01 16:24:14
+Targetversion: future
+Class: bug
+
+Wenn man mehrere Hosts mit einer gleichen IP-Adresse hat, dann sendet
+Smart-PING hierfür auch mehrere PING-Pakete. Dies ist erstens nicht notwendig
+und führt zweitens zu einer irreführenden Fehlermeldung, der zu Folge ein
+bestimmtes Paket noch nicht vesendet wurde.

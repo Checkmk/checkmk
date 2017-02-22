@@ -1,0 +1,12 @@
+Title: Flapping, but sending RECOVERY anyway
+Component: core
+Class: bug
+State: done
+Date: 2013-06-12 08:29:32
+Targetversion: next
+
+HTTP omdistro.org was flapping, but got sent a RECOVERY notification
+anyway.
+
+2013-06-28 12:46:37: changed state open -> done
+Should work now.

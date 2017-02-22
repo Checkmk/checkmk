@@ -1,0 +1,11 @@
+Title: icmphelper erbt Filedescriptoren, die er nicht braucht
+Component: core
+Class: nastiness
+State: done
+Date: 2013-09-11 14:49:58
+Targetversion: next
+
+z.B. cmc.log und core/history. lsof -p zeigts...
+
+2013-09-17 14:12:28: changed state open -> done
+Sind jetzt alle schön zu.

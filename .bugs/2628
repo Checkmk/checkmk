@@ -1,0 +1,14 @@
+Title: DNS muss beschleunigt werden
+Component: config
+Class: bug
+State: wontfix
+Date: 2013-09-09 09:21:13
+Targetversion: next
+
+Die Erzeugung der Konfiguraition dauert in der Praxis immer noch
+lange. Das liegt jetzt aber am DNS-Lookup der - zumindest von
+Python aus - unerklärlich langsam ist. Daher am besten die
+IP-Adressen in einer Date var/check_mk/ipaddresses cachen.
+
+2013-09-11 13:05:05: changed state open -> wontfix
+Siehe #22.

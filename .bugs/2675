@@ -1,0 +1,17 @@
+Title: Reschedulen von Checks, wenn deren check_period sich ändert
+Component: core
+Class: bug
+State: done
+Date: 2013-12-17 18:38:07
+Targetversion: next
+
+Wenn ein Check als next scheduled check eine Zeit innerhalb einer
+gültigen Zeitperiode hat und man ändert diese, so dass sie außerhalb
+liegt, dann sollte bei dem folgenden Reload der Check umgescheduled
+werden, so dass er wieder innerhalb liegt.
+
+Man kann es so machen: nach jedem Konfigreload guckt man alle Checks
+an. Wenn deren nächster gültiger Zeitpunkt außerhalb der Period liegt,
+dann werden diese neu geschedult.
+
+2013-12-17 19:24:01: changed state open -> done

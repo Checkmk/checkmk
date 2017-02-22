@@ -1,0 +1,8 @@
+Title: add support for bakery rule "Set cache age for plugins and local checks" on linux
+Component: agents
+State: open
+Date: 2016-04-25 10:36:26
+Targetversion: future
+Class: feature
+
+Currently the bakery only allows plugin caching for the windows agent. It would make sense for this to also work on linux.

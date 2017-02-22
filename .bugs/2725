@@ -1,0 +1,26 @@
+Title: icmpsender/receiver problems with omd version 2014-12-18
+Component: core
+State: worksforme
+Date: 2014-12-22 10:17:11
+Targetversion: future
+Class: bug
+
+When starting omd 2014-12-18 with the microcore, the icmpsender becomes
+a zombie:
+root     27447  0.0  0.0      0     0 ?        Z    10:20   0:00 [icmpsender] <defunct>
+root     27448  0.0  0.0   5228  3056 ?        S    10:20   0:00 icmpreceiver
+and the cmc.log gets crowded with the following messages:
+2014-12-22 10:21:46 [4] Cannot send IP addresses to icmpsender: Broken pipe
+2014-12-22 10:21:46 [4] Cannot send IP addresses to icmpsender: Broken pipe
+(about 100 messages per second, until the disk is full)
+
+This might be the reason
+2014-12-20 13:41:28 [4] icmpsender: Cannot set send buffer (forced) to 2097152: Operation not permitted
+
+The problem was observed on Strato VServers. It may well occur only on these servers.
+
+Sieht aus, als hat man in einem VServer keine Rechte, ein Raw-Socket aufzumachen.
+Da können wir nix machen, außer langsamer loggen, damit das Logfile nicht so schnell
+zuläuft.
+
+Verschieben wir in den master.

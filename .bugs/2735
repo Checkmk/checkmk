@@ -1,0 +1,20 @@
+Title: Core crashes with SIGABRT in case of syntax error in check file
+Component: core
+State: open
+Date: 2015-01-19 17:37:14
+Targetversion: next
+Class: nastiness
+
+If you have a syntax error in a check file then all check helpers and
+also the RRD creator exist with exit code 5. The core detects the
+dead RRD creator and a dead check helper and then crashes with signal
+6.
+2015-01-19 16:52:12 [4] check helper[6741]: Error in plugin file /omd/sites/heute/share/check_mk/checks/temperature.include: invalid syntax (temperature.include, line 45)
+2015-01-19 16:52:12 [2] Cannot read response from check helper [6741]: Connection reset by peer.
+2015-01-19 16:52:12 [3] Check helper [6741] exited with status 5
+2015-01-19 16:52:12 [4] Restarting dead check helper [6741] of type cmk
+2015-01-19 16:52:12 [4] RRD creator: Error in plugin file /omd/sites/heute/share/check_mk/checks/temperature.include: invalid syntax (temperature.include, line 45)
+2015-01-19 16:52:12 [4] RRD creator closed error pipe. Terminating process.
+2015-01-19 16:52:12 [3] RRD creation helper[6732] exited with status 5
+2015-01-19 16:52:12 [4] check helper[6742]: Error in plugin file /omd/sites/heute/share/check_mk/checks/temperature.include: invalid syntax (temperature.include, line 45)
+2015-01-19 16:52:12 [0] Terminated due to unexpected signal 6. Restarting.

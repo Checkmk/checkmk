@@ -1,0 +1,13 @@
+Title: omd config set CORE cmc zeigt keine Fehler
+Component: core
+Class: bug
+State: done
+Date: 2013-07-12 14:50:46
+Targetversion: next
+
+Wenn hier ein Fehler aufftritt (z.B. wegen legacy_checks),
+muss der Core das anzeigen. Auch sollte man die Meldung
+besser machen.
+
+2013-07-29 13:55:22: changed state open -> done
+Fehler werden jetzt korrekt angezeigt.

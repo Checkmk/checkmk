@@ -1,0 +1,22 @@
+Title: very verbose logging if a host is down
+Component: core
+Class: bug
+State: done
+Date: 2013-07-01 15:04:50
+Targetversion: next
+
+Very verbose logging, if a host is down: 2 lines per second
+
+2013-07-01 15:04:15 [5] Checking notification for localhost_parent;Check_MK
+2013-07-01 15:04:15 [5]  Skipping: host localhost_parent is not up but DOWN (1)
+2013-07-01 15:04:16 [5] Checking notification for localhost_parent;Check_MK
+2013-07-01 15:04:16 [5]  Skipping: host localhost_parent is not up but DOWN (1)
+2013-07-01 15:04:17 [5] Checking notification for localhost_parent;Check_MK
+2013-07-01 15:04:17 [5]  Skipping: host localhost_parent is not up but DOWN (1)
+2013-07-01 15:04:18 [5] Checking notification for localhost_parent;Check_MK
+2013-07-01 15:04:18 [5]  Skipping: host localhost_parent is not up but DOWN (1)
+
+@Bernd: Auch das sollte nur kommen, wenn das Notifikation-Debugging an ist.
+
+2013-07-03 15:39:10: changed state open -> done
+Passt so.

@@ -1,0 +1,10 @@
+Title: Synchronise graphs after resize
+Component: web
+State: open
+Date: 2015-11-02 13:59:19
+Targetversion: master
+Class: todo
+
+The graphs zoom and timerange is synchronized on pages with multiple graphs. This should
+be done for the graph size too.
+Except for graphs in dashlets.

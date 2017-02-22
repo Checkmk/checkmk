@@ -1,0 +1,9 @@
+Title: Remove dangling symlinks from removed hosts during baking
+Component: agents
+State: open
+Date: 2015-10-14 14:32:18
+Targetversion: master
+Class: nastiness
+
+cmk -A should remove symbolic links from non-existing hosts. They probably
+point to non-existing agents.

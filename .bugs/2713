@@ -1,0 +1,12 @@
+Title: In OMD home directory remains a directory msi-update.XXXXXX
+Component: agents
+Class: bug
+State: done
+Date: 2014-09-22 14:54:13
+Targetversion: next
+
+The agent bakery seems not to cleanup this correctly. The site has freshly
+been installed.
+
+2014-12-02 12:15:11: changed state open -> done
+Sollte schon gefixt sein.

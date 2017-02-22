@@ -1,0 +1,22 @@
+Title: cmc-Logrotate funktioniert nicht
+Component: core
+Class: bug
+State: done
+Date: 2013-10-15 13:28:44
+Targetversion: next
+
+In Berlin war das Problem, dass das cmc.log nicht rotiert wurde. Der Cronjob-Eintrag war da.
+Das Problem liegt bei der Konfiguration "olddir cmc".
+Es wird sichtbar beim manuellen Aufruf des Logrotate:
+
+OMD[ber]:~/etc/logrotate.d$  /usr/sbin/logrotate -s $OMD_ROOT/tmp/run/logrotate.state $OMD_ROOT/etc/logrotate.conf
+error: cmc:12 error verifying olddir path /omd/sites/ber/var/log/cmc: Datei oder Verzeichnis nicht gefunden
+error: found error in file cmc, skipping
+
+Das Verzeichnis existiert tatsächlich nicht. Im Git ist es zwar vorhanden, auf dem Zielsystem aber nicht.
+
+Version: 2013-10-14
+
+2013-10-18 11:13:52: changed state open -> done
+Sollte jetzt gehen. Verzichte einfach auf Unterverzeichnis. Schuld war wahrscheinlich
+der spezielle Build-Prozess.

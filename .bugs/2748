@@ -1,0 +1,13 @@
+Title: Performance Graphs of remote sites can not be embedded into PDF reports
+Component: reporting
+Class: bug
+State: done
+Date: 2015-02-25 14:49:46
+Targetversion: 1.2.8
+
+At the moment you can only access locally available graphs when drawing a PDF
+report. If you like to create a PDF report of a host in a remote site including
+graphs, you might solve this by creating the report on your remote site.
+
+2016-02-08 23:17:37: changed state open -> done
+Now with the new graphing system this is no problem anymore

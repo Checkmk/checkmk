@@ -1,0 +1,16 @@
+Title: max_attempts anpassen, wenn hard state
+Component: core
+Class: nastiness
+State: done
+Date: 2013-07-01 12:50:48
+Targetversion: next
+
+Wenn durch ein Konfigreload die max_check_attempts geändert wurden
+und ein Objekt gerade in einem hard-state ist, sollten die attempts
+immer auf die max_attempts gesetzt werden, da es sonst evtl.
+zu Anomalien kommen kann. Nagios macht das auch so. Einfach nach/beim
+Laden der Zustände die Attempts auf max setzen, wenn der Zustandstyp
+hard ist und nicht-OK.
+
+2013-07-05 19:29:09: changed state open -> done
+Ist jetzt genau so umgesetzt und sollte alles passen.

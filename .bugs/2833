@@ -1,0 +1,24 @@
+Title: Acknowledge disappears because of spurios hard state changes
+Component: core
+Class: bug
+State: works4me
+Date: 2016-02-26 09:14:02
+Targetversion: 1.2.8
+
+Kunden fällt auf dass er den Check_MK Service eines Hosts nicht acknowledgen
+kann. Wenn man es tut, ist das Acknowledge nach einer Minute wieder weg. In der
+Log zum Service sieht man ständig den "Statuswechsel" nach HARD state CRIT
+(Minutentakt), ohne das es aber dazwischen ein anderen state gegeben hätte.
+
+Core wurde in der Zeit, in der man die Logeinträge sieht auch mehrfach
+durchgestartet. Problem hat dann aber ohne erkennbaren Grund wieder aufgehört
+(außer das mehrfach ein Acknowledge versucht wurde).
+
+Besonderheit zum Service: Er hatte Check Attemps auf 3, und hat eine Datasource
+(SSH) verwendet.  Der Host selbst ist Node eines Clusters und gleichzeitig
+der Parent eines anderen Hosts gewesen.
+
+
+
+2016-03-21 16:24:50: changed state open -> works4me
+Ich kann das nicht nachstellen. Sieht alles sauber aus.

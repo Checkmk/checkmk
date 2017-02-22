@@ -1,0 +1,12 @@
+Title: explicit vertical range of custom graphs is not working
+Component: web
+Class: bug
+State: done
+Date: 2016-03-11 10:40:55
+Targetversion: 1.2.8
+
+Mist. Dann mach bitte einen GB auf, dass die explizite vertical range
+nicht funktioniert. Zumindest nicht bei Custom-Graphen. Ich guck mir
+das dann später mal an. 
+
+2016-03-21 16:04:17: changed state open -> done

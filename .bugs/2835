@@ -1,0 +1,14 @@
+Title: Preview of report not refreshed when imported templates change
+Component: reporting
+State: open
+Date: 2016-02-26 11:38:56
+Targetversion: future
+Class: nastiness
+
+When you edit something in the default template, which is included by alle
+reports, then the previews of those reports are not marked "dirty". That
+way you do not get a valid preview thumbnail unless you force some change
+on the report itself.
+
+I guess this also happens when changing global settings. Solution could be
+some work.

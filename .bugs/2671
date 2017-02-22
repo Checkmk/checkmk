@@ -1,0 +1,13 @@
+Title: Speed-O-Meter falsch wegen Hostchecks
+Component: core
+Class: nastiness
+State: done
+Date: 2013-10-10 22:44:37
+Targetversion: next
+
+Problem ist: durch das SMART-Ping mit TCP-Erkennung bekommen
+wir mehr Host-Checks als konfiguriert. Dadurch zeigt das Speed-O-Meter
+zuviel an. Können wir das im Core reparieren?
+
+2013-10-13 18:44:49: changed state open -> done
+Wir zeigen jetzt nur noch Service-Checks an.

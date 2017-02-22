@@ -1,0 +1,13 @@
+Title: cmc should provide custom macro names for the WATO classical active and passive checks (like _HOST<macroname>)
+Component: core
+State: done
+Date: 2015-03-30 14:39:45
+Targetversion: future
+Class: bug
+
+custom macros are known in the notification context, but not for classical
+active and passive checks configures in WATO Since this works with the Nagios
+core, and "everything which works with WATO should be working with the CMC,
+this is a bug and should be fixed.
+
+Ticket CompuGroup Medical AG #2 "OMD Apache Problem"

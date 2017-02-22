@@ -1,0 +1,12 @@
+Title: Hostcheck, der Status von Service übernimmt
+Component: core
+Class: todo
+State: done
+Date: 2013-09-11 13:15:44
+Targetversion: next
+
+Für WACOM brauchen wir das, was über die WATO-Regel heute eh
+schon einstellbar ist, aber noch nicht funktioniert.
+
+2013-09-18 10:41:45: changed state open -> done
+Funktioniert einfach über ein externes Plugin check_lql_service.

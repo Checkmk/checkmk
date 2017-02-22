@@ -1,0 +1,12 @@
+Title: Fix exception when zooming too much in graphs
+Level: 2
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458565573
+
+This happened at the end of the graph (at the presence). Also avoid zooming
+more in when only 10 data point are visisble.

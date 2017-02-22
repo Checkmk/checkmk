@@ -1,0 +1,12 @@
+Title: cmk-update-agent.exe: Cleaning up abandoned _MEI<ID> directories from %TEMP%
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0b1
+Date: 1486987757
+Class: fix
+
+When the agent updater process crashes it may leave some directories named "_MEI<ID>"
+in the %TEMP% path. These directories are now cleaned up automatically on subsequent
+executions of the agent updater.

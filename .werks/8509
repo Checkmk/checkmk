@@ -1,0 +1,11 @@
+Title: Agent Bakery: now able to configure disabled_sections for windows agent
+Level: 1
+Edition: cee
+Component: agents
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1478512763
+
+

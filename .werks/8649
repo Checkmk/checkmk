@@ -1,0 +1,17 @@
+Title: cmk-update-agent: Prevent using proxy for HTTP calls
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0b1
+Date: 1482482022
+Class: fix
+
+On systems where <tt>curl</tt> is installed, the agent updater
+is using this command to communicate with it's update server.
+
+By default curl is using proxies configured via environment
+variables http_proxy, https_proxy, etc.. Since the update server
+is usually an internal host which is directly reachable and not
+via proxy, we suppress the use of a proxy with the curl
+--noproxy option.

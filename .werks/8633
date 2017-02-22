@@ -1,0 +1,11 @@
+Title: Fixed failing agent baking when trying to use "linux remote alert handlers"
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i2
+Date: 1477639762
+Class: fix
+
+The program "mk-remote-alert-handler" was not installed correctly, so the agents
+could not be backed anymore when the "linux remote alert handlers" are configured.

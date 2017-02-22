@@ -1,0 +1,10 @@
+Title: cmk-update-agent: Improved error handling of HTTP errors (status != 200)
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0b1
+Date: 1486469575
+Class: fix
+
+

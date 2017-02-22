@@ -1,0 +1,9 @@
+Title: Adapted walk behaviour  of snmp command to fix issue with missing OIDs
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.5i3
+Date: 1401785131
+Class: fix
+
+For details take a look at werk #8038.

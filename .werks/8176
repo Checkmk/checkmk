@@ -1,0 +1,11 @@
+Title: Fixed rendering of views with icon columns in PDF exports
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424860661
+
+

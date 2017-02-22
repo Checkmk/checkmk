@@ -1,0 +1,23 @@
+Title: Make PROCESS_HOST_CHECK_RESULT's behavior more Nagios-like
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1469437691
+
+The Nagios documentation for the external command PROCESS_HOST_CHECK_RESULT
+explicitly states that the return code in the commandline is already the
+host state, not the result code of a check result (which was the core's
+previous interpretation).  We follow Nagios now more closely and map the
+return code in the commandline as follows:
+
+   0 => UP
+   1 => DOWN/UNREACHABLE   (previously this meant UP, too)
+   2 => DOWN/UNREACHABLE
+
+We still deviate a bit from Nagios, because the actual decision if a host is
+DOWN or UNREACHABLE is done by the core and can't be overridden from the
+outside.

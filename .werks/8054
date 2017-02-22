@@ -1,0 +1,13 @@
+Title: Reschedule checks if next check would be too far in future after config change
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i5
+Date: 1403610587
+Targetversion: future
+
+If due to a configuration change (in the check period or in the check interval) the
+next scheduled check of a host or service would be too far in the future, then it
+is now being rescheduled to be at correctly expected time.

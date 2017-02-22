@@ -1,0 +1,10 @@
+Title: Instant reports now print the timerange specified in view filters
+Level: 2
+Edition: cee
+Component: reporting
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450436212
+Class: fix
+
+

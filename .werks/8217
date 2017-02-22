@@ -1,0 +1,15 @@
+Title: Replace custom host macros in call of active checks
+Level: 1
+Edition: cee
+Component: config
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1427793737
+Targetversion: future
+
+When you have defined custom host macros like <tt>_FOO</tt> via
+<tt>extra_host_conf</tt> in <tt>main.mk</tt> or other configuration
+files, these macros are now known and will be replaced on the command line
+of active check plugins. The macro in the example will be specified
+with <tt>$HOST_FOO</tt>.

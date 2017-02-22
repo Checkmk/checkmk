@@ -1,0 +1,12 @@
+Title: Fixed exception when editing availability report elements
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424421220
+
+Latest releases introduced an exception "ViewOptions() takes exactly 1 non-keyword argument"
+which has been fixed now.

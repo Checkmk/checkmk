@@ -1,0 +1,16 @@
+Title: Fixed problems with SNMP GET where non requested OIDs were answered
+Level: 1
+Edition: cee
+Component: inline-snmp
+Class: fix
+State: unknown
+Version: 1.2.5i5
+Date: 1404819328
+Targetversion: future
+
+Some devices do not really care about the requested SNMP OID when they do
+not know this OID. It happened here that a device simply answered with the
+next known OID. This confused several of our checks.
+
+The SNMP GET does now verify the OID provided with the response against
+the requested OID and ignores non matching responses.

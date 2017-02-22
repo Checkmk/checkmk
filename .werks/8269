@@ -1,0 +1,15 @@
+Title: Improved error handling of edge cases in SNMP bulk walk processing
+Level: 1
+Edition: cee
+Component: inline-snmp
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1443599236
+Targetversion: future
+
+In some cases SNMP based check could cause exceptions like "'NoneType' object has no attribute 'startswith'".
+which might be caused by an invalid/incomplete SNMP answer provided by the used NetSNMP libraries.
+
+Check_MK is now handling this result a little more robust by dropping the single result and keeping
+the other ones.

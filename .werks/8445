@@ -1,0 +1,14 @@
+Title: Fixed calculation of unreachable hosts
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458306007
+
+Previously, some hosts which had only (grand-)parents which were down were
+considered down, too, although they were in fact unreachable. This has been
+fixed.
+

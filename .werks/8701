@@ -1,0 +1,10 @@
+Title: Fixed broken PDF export of BI aggregation group view
+Level: 1
+Edition: cee
+Component: multisite
+Compatible: compat
+Version: 1.4.0b1
+Date: 1486463563
+Class: fix
+
+

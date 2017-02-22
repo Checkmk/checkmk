@@ -1,0 +1,16 @@
+Title: Fixed problem where objects stayed in downtime even if downtimes where removed
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1438330976
+Targetversion: future
+
+Due to a bug while saving the state of current downtimes it could happen that removing
+a downtime would not reset the host/service in the state "not in downtime". The blue
+moon icon stayed at the host - even if there was no downtime left. This has been fixed.
+
+The fix can only fix new downtimes automaticall, however. If you still have sticky
+blue moons then please set and remove downtimes for those. The moon will then vanish.

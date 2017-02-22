@@ -1,0 +1,10 @@
+Title: cmk-update-agent: Fixed exception at end of registration when using auth secret
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i1
+Date: 1469440971
+Class: fix
+
+

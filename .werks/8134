@@ -1,0 +1,17 @@
+Title: Avoiding falsely reported packet loss by PING service
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1422347424
+Targetversion: future
+
+The PING services, which is being created for hosts which are not monitored
+via SNMP or agent, sometimes reported packet loss of x% while the host check
+of the microcore reported that the host is reachable without problems.
+
+This issue was caused by the way the Micro Core icmpsender generated the ICMP
+packages. These packages seemed to confuse the check_icmp plugin which is
+executed by the PING service.

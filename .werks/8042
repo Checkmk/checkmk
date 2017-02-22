@@ -1,0 +1,15 @@
+Title: Fixed service descriptions of hr_fs when using Inline-SNMP with windows hosts
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.5i4
+Date: 1402051803
+Class: fix
+
+hr_fs found different services when on windows hosts when inline SNMP is either
+enabled or disabled. For example C:\\ when disabled and C:\ when enabled. This
+has been cleaned up. The service descriptions with inline-SNMP are now equal to
+the classic ones.
+
+This might also affect other services and also values of checks when Inline SNMP
+is enabled, because a genric part of the SNMP value parsing code has been modified.

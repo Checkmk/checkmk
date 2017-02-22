@@ -1,0 +1,12 @@
+Title: Fix missing first character of downtime comments in logfiles
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.5i6
+Date: 1412081268
+Class: fix
+
+The first character of downtime comments where missing when parsing
+the monitoring logfiles. This was an ancient bug in Livestatus, which
+never has shown up since Nagios does not log anything useful in the
+comment field a downtime entries.

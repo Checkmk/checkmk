@@ -1,0 +1,12 @@
+Title: Fix error in agent bakery page if no agent for a certain has is existing
+Level: 1
+Edition: cee
+Component: wato
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444825819
+Class: fix
+
+In case of an unclean state in the agents directory there are symbolic links
+to non-existing agent configurations. This is e.g. the case if hosts had
+been removed in certain Check_MK versions. This has been fixed.

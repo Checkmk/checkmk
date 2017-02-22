@@ -1,0 +1,13 @@
+Title: Also bake agents for hosts that are monitored on remote systems
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1424873512
+Targetversion: future
+
+If you are using the agent bakery in a distributed environment then the
+bakery would ony create agents for hosts monitored on the site where
+the baking is being done. Now alwas all agents are being created.

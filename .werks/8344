@@ -1,0 +1,19 @@
+Title: Users can now add a pin to graphs to get specific values
+Level: 2
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447419560
+Class: feature
+
+By clicking on a graph, users can mark a specific position (time) in
+their graphs.
+
+This makes the graphs show the values of the marked time in the
+legend below the graph. The values of the graphs at the current
+marked time are shown in the column "pin".
+
+The time is saved per user. When the saved time of the current pin 
+is in the range of a graph, the pin is shown and the values are
+displayed in the table.

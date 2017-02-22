@@ -1,0 +1,27 @@
+Title: New graphical frontend for metrics time graphs
+Level: 3
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.2.7i3
+Date: 1443793342
+Class: feature
+
+The Check_MK Enterprise Edition has now a new graphical user frontend for
+displaying metrics time graphs. Instead of using pixeled PNG images it makes
+use of interactive vector graphics using HTML 5. These graphs do not only
+look better. They allow you to:
+
+LI:Zoom horitontally using your mouse wheel
+LI:Zoom vertically by dragging points up and down
+LI:Scroll horizontally (into past and future) by dragging points left and right
+LI:Resize a graph using the right bottom corner
+
+If more than one graph is being displayed on the same HTML page then any zoom
+or shift in time will be synchronzed to <b>all</b> graphs on the same page.
+Also the reporting uses the new graphing engine and replaces the embedded
+pixel images by real vector graphics.
+
+A further advantage of the new system is, that in distributed setups no
+reverse HTTP proxy is needed any longer.  The data is being fetched via
+Livestatus (up-to-date core is neccessary).

@@ -1,0 +1,15 @@
+Title: Now able to deploy custom files with the agent (Windows only)
+Level: 2
+Edition: cee
+Component: agents
+Version: 1.2.7i3
+Date: 1440161390
+Class: feature
+
+You can now configure via a WATO rule that additional files can be deployed
+with the windows agent.  All you have to do is to put these files/folders in
+the directory <i>~/local/share/check_mk/agents/custom</i> and configure the
+WATO rule accordingly. For further details have a look at the description
+of the rule "Deploy custom files with agent".  These custom files will
+be included in the MSI package and are automatically installed during the
+Check_MK installation / update.

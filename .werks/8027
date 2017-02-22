@@ -1,0 +1,15 @@
+Title: CMC now allows spaces in the names of performance variables
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1392196723
+Targetversion: future
+
+This makes the Micro Core compatible to the different variants that
+Nagios allows for performance data variables. Now it is allowed to
+specify <tt>"foo bar test"=18</tt> or <tt>'foo bar test'=18</tt>
+as performance data. This means that the name of the variable 
+may be quoted with either single or double quotes.

@@ -1,0 +1,14 @@
+Title: Speedup interactive graph zooming/panning in case of multi-language environment
+Level: 2
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458569284
+
+If you have users with different language settings (like German and English mixed) then
+interactive work with the graphs could be very slow. This has been improved by avoiding
+loading all module plugins when doing graph actions, but only loading the <tt>metrics</tt>
+module.

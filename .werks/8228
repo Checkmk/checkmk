@@ -1,0 +1,10 @@
+Title: emc_isilon_quota: OID Range for SNMP Walk can now be limited.
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.7i3
+Date: 1442844950
+Class: feature
+
+This prevents timeouts if you have thousands of quotas.
+You can configure that in the WATO rule: "Limit SNMP OID Ranges for Bulkwalks".

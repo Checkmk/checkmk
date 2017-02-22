@@ -1,0 +1,19 @@
+Title: mknotifyd: various optimizations for avoiding duplicate notifications
+Level: 1
+Edition: cee
+Component: notifications
+Version: 1.2.7i2
+Date: 1433253634
+Class: fix
+
+The notification spooler has been changed in a few places in order to avoid
+duplicate notifiations in situations with bad network connections:
+
+LI:The time a connection has needed to build up is being output in the check
+LI:When no connection is establish, logging about spool files is more quiet
+LI:Heartbeat checking now considers <i>any</i> received data as heartbeat
+LI:Heartbeat checking now accounts for the internal computation time
+LI:Logging about duplicate acknowledgements has been repaired.
+
+The latter two topics try to avoid heartbeat alarms in situations where a
+connection is still valid.

@@ -1,0 +1,53 @@
+Title: Alert handlers: optionally process every single check execution, inline alert handlers
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.7i3
+Date: 1437567777
+Class: feature
+
+The new alert handlers can now optionally be called at every check
+execution. This is a possible way to bring check results into some external
+system (like a database). Please note that this can cost many CPU ressources
+and slow down the monitoring if the alert handler cannot process the data
+fast enough.
+
+In order to implement more performance alert handlers, these can now optionally
+be written as Python functions that are being called without creating a new
+process. Such an inline alert handler has the following structure:
+
+F+:/omd/sites/mysite/local/share/check_mk/alert_handlers/foo
+#!/usr/bin/python
+# Inline: yes
+
+# Do some basic initialization (optional)
+def handle_init():
+    log("INIT")
+
+# Called at shutdown (optional)
+def handle_shutdown():
+    log("SHUTDOWN")
+
+# Called at every alert (mandatory)
+def handle_alert(context):
+    log("ALERT: %s" % context)
+F-:
+
+You need to define at least <tt>handle_alert</tt>. The argument <tt>context</tt> is a dictionary
+with keys like <tt>"HOSTNAME"</tt>. You can use the function <tt>log(...)</tt>, which will write
+some diagnostic text into <tt>var/log/alerts.log</tt> - marked with the name of you alert handler.
+
+The two global variables <tt>omd_root</tt> and <tt>omd_site</tt> are set to the home directory
+and to the name of the OMD site.
+
+It is allowed to use <tt>import</tt> commands in your handler.
+
+Note that in the second line you need to put <tt># Inline: yes</tt>. That way Check_MK nows
+that the alert handler should be loaded as inline Python function and not run as a script.
+
+Note also that after each change to an inline alert handler you need to restart the
+CMC:
+
+C+:
+OM:omd restart cmc
+C-:

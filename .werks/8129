@@ -1,0 +1,18 @@
+Title: Create log entries for acknowledgements in monitoring log
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.7i1
+Date: 1420819322
+Class: feature
+
+When an acknowledgement is being created or removed or an acknowledgement
+ends because of a state change or expires then now an entry in made in
+the monitoring log. Example:
+
+F+:var/check_mk/core/history
+[1420818703] HOST ACKNOWLEDGE ALERT: xyserver12;STARTED;omdadmin;Some comment...
+F-:
+
+These entries are visiable via Multisite and via Livestatus. This only works
+with the CMC.

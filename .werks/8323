@@ -1,0 +1,13 @@
+Title: Optional OpenHardwareMonitor package is now bakeable
+Level: 1
+Edition: cee
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453210383
+Class: feature
+
+OpenHardwareMonitor will be supported for monitoring of hardware sensors in the windows agent
+in future versions. New omd versions will include a stripped down version of ohm without
+user interface that the agent can control.
+This werk adds the ability to include that stripped down ohm with agent packages.

@@ -1,0 +1,14 @@
+Title: Closing SNMP socket file handles during bulk actions
+Level: 1
+Edition: cee
+Component: inline-snmp
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446216538
+Class: fix
+
+e.g. when doing "cmk -II" for a larger number of hosts, it could happen
+that the process runs out of file descriptors when having a lot of SNMP
+devices. This was caused by the fact that all SNMP sessions were kept
+open during this bulk actions. The sessions are closed now after each
+host during most common bulk actions (inventory, discovery, snmpwalk).

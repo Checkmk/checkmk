@@ -1,0 +1,13 @@
+Title: Fix configuration of baked GENERIC agent
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458561117
+
+This agent now correctly gets all those rules applied that do not require any specific
+host or tags. Rule with host or tags exclusions are thus applied - but now those with
+positive references to any specific tag or host name.

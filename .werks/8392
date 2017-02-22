@@ -1,0 +1,14 @@
+Title: Allow to add images to the normal element flow of a report
+Level: 1
+Edition: cee
+Component: reporting
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453118600
+Class: feature
+
+Up to now images could only be added as fixed page elements (useful
+for logos, etc.). Now you can put an image into the normal flow of
+elements. This allows you e.g. to embedd data from a third party application
+by creating some automated export into an image and placing that image under
+<tt>/omd/sites/mysite/local/share/check_mk/reporting/images/</tt>.

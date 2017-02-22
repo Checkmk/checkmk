@@ -1,0 +1,13 @@
+Title: New livestatus column services_with_fullstate for hosts table
+Level: 1
+Edition: cee
+Component: livestatus
+Version: 1.2.5i1
+Date: 1394450890
+Class: feature
+
+The Livestatus implementation in the Micro Core got a new column with the
+detailed state of a service in the table hosts. This is the same feature
+as in the upstream version. The new column is being used by Check_MK BI in
+order to optionally base a BI aggregate on soft rather than hard states and
+to reflect the downtime and acknowledgment state in BI.

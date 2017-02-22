@@ -1,0 +1,15 @@
+Title: Fix notification delay if delay is greater than 2147 seconds
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1422290499
+Targetversion: future
+
+If you configured a notification delay of more than 2147 seconds (approx 35
+minutes, precisely 2^31 micro seconds) then due to an internal range overflow
+the actual delay would be somewhere between -2147 and +2147 seconds. So in
+some cases the delay was just too short, in other it was negative and that
+way totally ineffective. This has been fixed.

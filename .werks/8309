@@ -1,0 +1,24 @@
+Title: Fix authorization settings for seeing service in the user interface
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.2.7i4
+Date: 1445522746
+
+The behaviour of the authorization setting <i>loose</i> for hosts has been
+changed to be compatible with the behaviour Nagios has. If host authorization
+is set to <i>loose</i> in the global settings of the Check_MK Micro Core, then
+it is now suffient to be the contact of a host for seeing all of its service
+- even if those services do have explicit <i>contacts</i> assigned. Formery
+you needed to be an explicit contact if one had been set. In the case that
+you just have contacts assigned to hosts nothing has changed.
+
+The behaviour of the authorization setting <i>strict</i> has also changed.
+If you are the explicit contact of service, but not of the host, then you
+are allowed to see the service.
+
+<b>Note</b>: This all has <b>no</b> impact on notifications. Nothing has
+changed there.

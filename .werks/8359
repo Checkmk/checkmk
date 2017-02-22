@@ -1,0 +1,13 @@
+Title: Manage Extension Packages (MKPs) via WATO
+Level: 3
+Edition: cee
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450441190
+Class: feature
+
+WATO now has a new module for managing Check_MK Extension Packages (MKPs) via WATO.
+The new module helps you to create MKPs and also allows you to install MKPs (e.g.
+from <a href="http://exchange.check-mk.org">The Check_MK Exchange</a>. MKPs can also
+be distributed to your slave sites.

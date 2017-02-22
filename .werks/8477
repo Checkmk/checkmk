@@ -1,0 +1,11 @@
+Title: Orphan historic metrics are now also cleaned up by diskspace cleanup
+Level: 1
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.4.0i1
+Date: 1461052426
+Class: fix
+
+The historic events (state changes, downtimes etc.) of your hosts and services is stored in the monitoring history as plain text log files. One history log file contains the monitoring history of a given time period of all hosts and services. The files which are older than the configured time will be removed on the next execution of the diskspace cleanup.
+The historic metrics are stored in files for each host and service individually. When a host or service is removed from the monitoring, it's metric files remain untouched on your disk until the files last update (modification time) is longer ago than the configure age.

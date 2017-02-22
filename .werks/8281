@@ -1,0 +1,12 @@
+Title: Fixed error in Micro Core Statistics SnapIn when used without cmc
+Level: 1
+Edition: cee
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.7i2
+Date: 1434176253
+Targetversion: future
+
+Fix the output of the SnapIn when not used with cmc. There are only a
+subset of values available if another core is used.

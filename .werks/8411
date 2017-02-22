@@ -1,0 +1,14 @@
+Title: Added global setting for ignoring TCP RST packets
+Level: 1
+Edition: cee
+Component: cmc
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1455627408
+
+Some routers/firewalls send a TCP RST for a host which is known to be down,
+using the source IP of the host in question.  Enabling the new "Ignore TCP
+Reset Packets" flag under "Global Settings/Monitoring Core/Tuning of Smart
+PING" prevents Smart PING from considering such a host as being up.

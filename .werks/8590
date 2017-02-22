@@ -1,0 +1,11 @@
+Title: Fix mismatch of displayed numbers of hosts in various deployment states with according views
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1466086808
+
+

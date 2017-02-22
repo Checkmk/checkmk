@@ -1,0 +1,12 @@
+Title: All Linux agent plugins now supported by agent bakery - except ORACLE
+Level: 3
+Edition: cee
+Component: agents
+Version: 1.2.5i6
+Date: 1408910531
+Class: feature
+
+The new agent bakery now supports all official Check_MK agent plugins
+for the Linux agent - in the variants RPM and DEB. The only exception
+are the ORACLE agent plugins since these are currently being rewritten.
+As soon as they are finished, they also will be supported.

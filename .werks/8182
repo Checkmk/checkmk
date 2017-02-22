@@ -1,0 +1,12 @@
+Title: Fixed not working filtering of views elements in reports
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1426172660
+
+e.g. the views "history of *" in the "service availability" report was not
+filtered by the services hosts. Instead the views was totally unfiltered.

@@ -1,0 +1,16 @@
+Title: New option for adding host name or alias to graph title in reports
+Level: 1
+Edition: cee
+Component: reporting
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458210493
+
+When embedding time series graphs into reports then it can sometimes be neccessary to
+add an information about the host that graph belongs to. This is especially true for
+reports that cover more than just one host. The new option is called {{Format of graph title}}
+and part of the option {{Graph layout}}. This option can be set in the {{Global settings}},
+in the report or one of its inherited templates and also directly in the graph itself.
+

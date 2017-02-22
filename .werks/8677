@@ -1,0 +1,16 @@
+Title: Fixed persistent recurring downtimes during cofiguration reload
+Level: 2
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0b1
+Date: 1483365281
+Class: fix
+
+The Check_MK Micro Core did not handle persistent recurring downtimes
+correctly during configuration reloads: Already existing ones were removed
+and re-added, but there was a small time window where the downtime was not
+actually active (between the reload and the next time all downtimes are
+handled, i.e. up to 3 seconds).  This could lead to notifications during
+downtimes, e.g.  when a host or service was in a non-OK state during the
+reload.

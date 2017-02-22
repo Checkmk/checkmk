@@ -1,0 +1,16 @@
+Title: Improved handling of baking errors in Agent Bakery
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435913565
+Targetversion: future
+
+When baking of one agent failed for any reason, the following agents were
+not baked anymore. This has been changed now. The error message is printed
+out to the user and the bakery continues to build the other agents.
+
+Improved handling of unbacked agents for hosts.

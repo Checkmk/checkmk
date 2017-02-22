@@ -1,0 +1,16 @@
+Title: Fixed crash of monitoring core with duplicate hosts
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481102640
+Class: fix
+
+When host names were not unique, the Check_MK micro core crashed when the
+"hostgroups" or "servicegroups" table was queried via Livestatus.  This has
+been fixed now.
+
+Note that such a configuration is invalid, but due to another bug (in cmk),
+it was possible to generate it nevertheless.
+

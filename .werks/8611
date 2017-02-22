@@ -1,0 +1,16 @@
+Title: Alert handlers now log success or failure to monitoring history
+Level: 2
+Edition: cee
+Component: alerts
+Compatible: compat
+Version: 1.4.0i1
+Date: 1469099372
+Class: feature
+
+Alert handlers to send feedback to the monitoring core. The history of the
+affected host or service now gets two log entries: one for the launch of
+the handler, one for the termination.
+
+Also two identical alert handlers will not be allowed any longer to run
+in parallel. This will avoid flooding processes in case of hanging handlers.
+

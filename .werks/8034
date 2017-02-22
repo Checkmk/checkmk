@@ -1,0 +1,16 @@
+Title: Automatically packages RPM and DEB agents for Linux
+Level: 3
+Edition: cee
+Component: agents
+Version: 1.2.5i3
+Date: 1398156077
+Class: feature
+
+Check_MK now creates RPM and DEB packages for your Linux agents via WATO.
+Via rules in the new section <i>Monitoring Agents</i> you can configure
+settings and plugins for the agent. The new WATO module <i>Monitoring Agents</i>
+allows you to download the RPM or DEB packages of the various configurations.
+
+<b>Note</b>: This feature is not finished yet and still experimental. Most
+of the according WATO rules are still missing. There is no documentation
+yet. <b>Use at your own risk!</b>.

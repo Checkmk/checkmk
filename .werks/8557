@@ -1,0 +1,13 @@
+Title: Alert handling: Fixed repeating error "OSError: [Errno 9] Bad file descriptor"
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2
+Date: 1476859974
+
+This error occured when a helper was terminated or not really started and persisted
+until the alert helper was restarted (e.g. with cmk -R) and prevented othr event handlers
+from working correctly.

@@ -1,0 +1,17 @@
+Title: Views: Time graphs can now be configured not to have a legend or controls
+Level: 1
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.4.0i1
+Date: 1472727592
+Class: feature
+
+The graph painters in the views can now be configured to either have
+no legend or no controls. Further graph render options might follow.
+
+You can simply edit the view of your choice, scroll to the painter
+and set the new option.
+
+Additionally you or your users can customize the rendering per view
+individually using the display options (blue display icon on top of view).

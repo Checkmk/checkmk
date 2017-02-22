@@ -1,0 +1,12 @@
+Title: Fixed exception on agent bakery page when single agent configs are broken
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435904487
+Targetversion: future
+
+

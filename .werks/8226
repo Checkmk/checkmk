@@ -1,0 +1,11 @@
+Title: AgentBakery: Not longer require rpmlib(FileDigests) if rpm is build with newer rpm libs
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1431345378
+Targetversion: future
+
+

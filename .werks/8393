@@ -1,0 +1,10 @@
+Title: Allow to embed dynamic text that is fetched via an URL into a report
+Level: 2
+Edition: cee
+Component: reporting
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453126410
+Class: feature
+
+

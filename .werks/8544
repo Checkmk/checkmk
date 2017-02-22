@@ -1,0 +1,14 @@
+Title: Fixed broken "default grahs" having negative values
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1470214633
+
+Graph values which have no value specification and thus are rendered
+with the default rendering method without unit etc. lead to broken
+graphs when the values were negative. This fixes a regression introduced
+with 1.2.8p6.

@@ -1,0 +1,13 @@
+Title: New style graphs are now possible to be used in dashlets
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1445434411
+
+All existing graph dashlets will be in new style graphs if it
+is possible to render the graphs with the new mechanism. It
+is now possible to add new style graphs to dashboards.

@@ -1,0 +1,12 @@
+Title: windows agent: added missing sections to list of toggles in agent bakery
+Level: 1
+Edition: cee
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1456143105
+
+Several recently-introduced sections couldn't be selected in the "Agent sections to be executed"
+rule.

@@ -1,0 +1,12 @@
+Title: Fix exception due to reporting module for RedHat 5.X
+Level: 2
+Edition: cee
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1418387087
+Targetversion: future
+
+Problem was a Python syntax of <tt>class Document():</tt> that is
+not allowed in Python 2.4.

@@ -1,0 +1,13 @@
+Title: group_authorization AUTH_STRICT: no longer returns unexpected results
+Level: 1
+Edition: cee
+Component: livestatus
+Version: 1.2.5i5
+Date: 1405082578
+Class: fix
+
+When the group_authorization was set to AUTH_STRICT the following problem happened:<br>
+If an auth_user was the contact of every element in the group no data was from this group
+was returned.<br>
+This error could be observed in the multisite views <tt>Hostgroups (Summary)</tt> or
+<tt>Servicegroups (Summary)</tt>

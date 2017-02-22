@@ -1,0 +1,11 @@
+Title: Host check command "use status of service" no longer fails on sles11
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.5i1
+Date: 1392901283
+Class: fix
+
+The plugin check_lql_service had troubles using the IFS /x01 while reading the livestatus answer.<br>
+This has been observed for sles11sp2-64.<br>
+The IFS has been changed to /x02.

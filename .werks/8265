@@ -1,0 +1,11 @@
+Title: Inline-SNMP is also used when running "cmk --snmpwalk"
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.7i3
+Date: 1439291985
+Class: feature
+
+In previous versions Check_MK still used the command line <tt>snmpwalk</tt>
+or <tt>snmpbulkwalk</tt> for gathering SNMP data when running <tt>cmk --snmpwalk</tt>.
+This has now been changed also to use Inline-SNMP for consistency.

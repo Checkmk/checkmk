@@ -1,0 +1,16 @@
+Title: It's now possible to limit SNMP walks to middle ranges of tables
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.7i3
+Date: 1436770980
+Class: feature
+
+The rule "Limit SNMP OID Ranges for Bulkwalks" is available in Check_MK since some time,
+but it was only possible to define OID ranges from the start and end of the SNMP tables.
+Now it is possible to define ranges starting at a specified offset.
+
+This rule can be used to not fetch whole SNMP tables which might be useful to save prevent
+Check_MK from fetching large SNMP tables. This is used to reduce overhead and improve the
+performance of SNMP communication. Normally this is useful when monitoring network switches
+having a large number of interfaces.

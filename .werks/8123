@@ -1,0 +1,11 @@
+Title: Fix broken layout of host/service detail pages, add host details to example report
+Level: 2
+Edition: cee
+Component: reporting
+Class: feature
+State: unknown
+Version: 1.2.7i1
+Date: 1418588007
+Targetversion: future
+
+

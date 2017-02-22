@@ -1,0 +1,12 @@
+Title: Inline-SNMP did not use bulkwalk for SNMPv3 hosts
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.7i1
+Date: 1429607023
+Class: fix
+
+Inline-SNMP was using normal SNMP walks which are way less
+performant than bulkwalks when just SNMPv3 was configured
+without marking the hosts as bulkwalk hosts. But we intended
+to make ALL SNMPv3 hosts use bulkwalk.

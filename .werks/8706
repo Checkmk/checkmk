@@ -1,0 +1,15 @@
+Title: cmk-update-agent: Interactive call now works correctly with changed config path
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i3
+Date: 1487582879
+Class: fix
+
+The agent updater needs access to the Check_MK agent configuration directory, e.g. to
+read it's own config. When this directory is changed from /etc/check_mk using the
+WATO ruleset "Installation paths for agent files (Linux, UNIX)", the interactive call
+of the agent updater was not able to find it's configuration anymore. When the program
+is installed via the bakery packed packages, the updater now knows about the custom
+path and finds it's configuration correctly.

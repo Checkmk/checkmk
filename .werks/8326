@@ -1,0 +1,11 @@
+Title: fixed failure to register agent updater if host name contains a minus
+Level: 1
+Edition: cee
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1457450314
+
+

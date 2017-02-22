@@ -1,0 +1,13 @@
+Title: Fix exception in report when a host tag column has been added to the view
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1426500803
+Targetversion: future
+
+If you have added a column showing the actual value of a host tag group then
+a reporting showing this view would run into an exception <tt>paint_host_tag()
+takes exactly 2 arguments (1 given)</tt>.  This has been fixed.

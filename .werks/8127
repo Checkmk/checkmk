@@ -1,0 +1,13 @@
+Title: Agent bakery now allows to configure non-root user for agent
+Level: 1
+Edition: cee
+Component: agents
+Class: feature
+State: unknown
+Version: 1.2.7i1
+Date: 1418744993
+Targetversion: future
+
+The configured user is put into <tt>xinetd.conf</tt>. Please note that some
+commands and plugins need root priviledges. If run as non-root some agent
+sections will be empty.

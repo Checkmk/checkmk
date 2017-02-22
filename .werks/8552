@@ -1,0 +1,17 @@
+Title: Notification spooling: Fixed "Corrupted spoolfile" in case spool files are created
+Level: 1
+Edition: cee
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1474371341
+
+Fixed a race condition between the producing side (the notification module which creates
+the spool file) and the consuming side (the mknotifyd which processes the spool files)
+that made the mknotifyd process incompletely written files.
+
+This could cause "corrupted spoolfile" error messages in the var/log/mknotifyd.log and
+resulted in spool files being moved to the directory var/check_mk/notify/corrupted. The
+notifications are not sent out in this situation.

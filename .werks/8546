@@ -1,0 +1,11 @@
+Title: Services with umlauts in names could not be selected in graph designer
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1472020368
+
+

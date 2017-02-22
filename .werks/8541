@@ -1,0 +1,15 @@
+Title: Service check timeouts can now be configured individually for services
+Level: 2
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i1
+Date: 1469451015
+Class: feature
+
+It is a good idea to keep the service check timeout values as low as possible. All past versions
+could only configure this option globally. So if you had only some services needing a higher
+execution time, you had to increase this global value for all your services.
+
+Now you can use the rule set "Service check timeout (Microcore)" to control this timeout per
+service. It will override the globally configured option for all matching services.

@@ -1,0 +1,11 @@
+Title: HTML mails are now using the Check_MK graphs when using the Microcore
+Level: 2
+Edition: cee
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458222210
+
+

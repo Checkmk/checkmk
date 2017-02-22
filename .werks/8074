@@ -1,0 +1,14 @@
+Title: Avoid delaying notifications for WARN/CRIT changes during periodic notifications
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.5i6
+Date: 1412167042
+Class: fix
+
+When you use period notifications and have a hard state change e.g. from WARN to CRIT
+then the notification for this state change would be delayed until the next periodic
+notification.
+
+This has been fixed. Any non-OK state change will now immediately be notified.
+Furthermore any first notification delay will <b>not</b> be applied in that case.

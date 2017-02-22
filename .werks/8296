@@ -1,0 +1,12 @@
+Title: More precise availability handling of removed and readded objects
+Level: 2
+Edition: cee
+Component: reporting
+Version: 1.2.7i3
+Date: 1438177226
+Class: feature
+
+The CMC now better detects objects that have been removed and readded later on to
+the monitoring. It does this by logging messages of the type <tt>VANISHED HOST</tt>
+or <tt>VANISHED SERVICE</tt> to the monitoring history file and processing these
+messages when computing the availability timelines.

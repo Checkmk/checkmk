@@ -1,0 +1,13 @@
+Title: Fixed some race conditions durion CMC startup/reload
+Level: 2
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0b1
+Date: 1483370475
+Class: fix
+
+A few race conditions have been fixed in the Check_MK Micro Core which could
+lead to e.g. spurious notifications during startup and/or configuration
+reload.
+

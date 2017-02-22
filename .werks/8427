@@ -1,0 +1,11 @@
+Title: Agent updater now installs RPMs with --oldpackage - preventing installation errors
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1456763143
+
+

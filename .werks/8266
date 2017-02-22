@@ -1,0 +1,10 @@
+Title: Added download page for the builtin agents/plugins to agent bakery page
+Level: 2
+Edition: cee
+Component: agents
+Version: 1.2.7i3
+Date: 1440669818
+Class: feature
+
+The default agents and plugins can now be downloaded directly from the agent bakery page.
+Use the button "Builtin Agents" to navigate to these files.

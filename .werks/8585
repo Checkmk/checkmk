@@ -1,0 +1,13 @@
+Title: Fix permission: normal users were allowed to manage MKPs - not anymore
+Level: 2
+Edition: cee
+Component: wato
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1464765783
+
+The new MKP manager module in WATO was preconfigured in a way that a normal
+monitoring user could manage MKP packages. This is considered as a bug and
+now only the <tt>admin</tt> role is allowed to manage packages.

@@ -1,0 +1,15 @@
+Title: Avoid possible dead lock in core when many RRD creations take place
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1428418931
+Targetversion: future
+
+This fix addresses a possible situtation where many RRD creation commands
+are issued at the same time as the RRD creation helper sends back error
+or diagnostic messages. In rare situations that could have lead to the
+core waiting for the helper and vice versa. This has been fix (though
+only rarely happening at all).

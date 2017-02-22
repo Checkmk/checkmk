@@ -1,0 +1,11 @@
+Title: Fix small memory leak when deleting downtimes, add validation for downtime depth
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1437399745
+Targetversion: future
+
+

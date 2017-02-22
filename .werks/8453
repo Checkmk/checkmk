@@ -1,0 +1,13 @@
+Title: Dashboard: Graph dashlets can now display the graph legend
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1457354393
+
+The graph legend (table with values below the graph) can now be shown in
+dashboard dashlets optionally. This can be configured via the dashlet
+settings.

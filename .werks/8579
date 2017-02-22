@@ -1,0 +1,26 @@
+Title: Generalize Livestatus filter operators
+Level: 1
+Edition: cee
+Component: livestatus
+Compatible: compat
+Version: 1.4.0i3
+Date: 1480669816
+Class: feature
+
+Previously, some filter operator did not work for numbers or had only a special
+meaning with certain columns. This has been generalized in a uniform way, so all
+operators work for numbers now, too.
+
+The operators <tt>~</tt>, <tt>=~</tt>, and <tt>~~</tt> interpret numbers as bit
+sets, and have the following meaning:
+
+<ul>
+<li><tt>x ~ y</tt> means: <tt>x</tt> is a superset of <tt>y</tt></li>
+<li><tt>x =~ y</tt> means: <tt>x</tt> is a subset of <tt>y</tt></li>
+<li><tt>x ~~ y</tt> means: <tt>x</tt> contains at least one element of <tt>y</tt></li>
+</ul>
+
+This is consistent with the way attribute list columns work and makes the
+Livestatus semantics more regular.
+
+

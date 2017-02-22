@@ -1,0 +1,11 @@
+Title: Fixed 100% CPU load of cmc when the real time port could not be bound
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1467193089
+
+

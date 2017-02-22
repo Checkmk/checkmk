@@ -1,0 +1,12 @@
+Title: netstat: Bakery plugin now also works for Windows agent
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2
+Date: 1477298105
+
+Previously, the bakery would only deploy the plugin for AIX and Linux,
+despite the Windows plugin and check being functionally equivalent.

@@ -1,0 +1,13 @@
+Title: Timeouts are now handled like classic SNMP implementation
+Level: 2
+Edition: cee
+Component: inline-snmp
+Version: 1.2.6b1
+Date: 1417516153
+Class: fix
+
+Timeouts of walks/bulkwalks of Inline-SNMP are now handled equal
+to classic SNMP implementation. When a timeout occurs for the
+configured X SNMP retries after Y SNMP timeouts (configured via
+SNMP Timing Options), the whole "Check_MK" service is terminated
+assuming that the host is not available.

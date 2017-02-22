@@ -1,0 +1,15 @@
+Title: Dashboard: Fixed new style graph rendering glitches
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446454264
+
+When moving new style graphs on the dashboard, they were scaled in a strange
+way during movement. Only trying to resize the dashlet after move fixed this.
+
+When having multiple new style graphs on a single dashboard, the contents
+of single dashlets could be destroyed by interacting with another dashlet.

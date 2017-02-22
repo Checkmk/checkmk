@@ -1,0 +1,36 @@
+Title: Automatically create backup of state file if state shrinks by more than 5% in size
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.7i3
+Date: 1438004870
+Class: feature
+
+If you do some unlucky misconfiguration (like setting disabled services for
+all services instead of just a few) then you will loose the current state and
+downtimes of all affected objects - even if you recreate them later again.
+That is because from the point of view of the core vanished objects are
+expected to be gone forever and their state is being dropped.
+
+In such situations the CMC now automatically creates a copy <tt>state.1</tt>
+of you state file before creating a new one in its place. Previous backups
+are shifted to <tt>state.2</tt>, <tt>state.3</tt> and so an. Up to 30 backups
+are being kept. These backup are <i>never</i> being restored automatically
+at any time. If you like to get back to your old state, you can copy these
+files manually:
+
+C+:
+OM:omd stop cmc
+OM:cd var/check_mk/core
+OM:mv state state.away
+OM:cp state.1 state
+OM:omd start cmc
+C-:
+
+This backup always happens if the size of the new state file is by at least 5%
+smaller then the old one.
+
+Note: The state in this file contains the current OK/WARN/CRIT, the plugin
+output, the next scheduled check execution, notification, downtimes, comments
+and stuff like that. It does <i>not</i> contain historic performance data
+or events. But these do not get lost in the cases mentioned above.

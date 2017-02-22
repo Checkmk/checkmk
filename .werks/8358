@@ -1,0 +1,28 @@
+Title: Automatic Check_MK Agent updates for Linux
+Level: 3
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.2.7i4
+Date: 1448868674
+Class: feature
+
+The Check_MK Agent Bakery now allows for automatically updating Check_MK
+Agents via HTTP/HTTPS. This is realized by a new agent plugin called
+<tt>cmk-update-agent</tt>, that is currently only available for Linux,
+but a Windows version will follow soon. The steps for setting up the
+automatic updates is:
+
+1. Go to the new page for the Agent Deployment. You find a new button
+for this in the Agent Bakery page.
+
+2. Fullfil all of the prerequisites that are shown on that new pages.
+This involves creating agents that contain the new plugin with a
+valid configuration and enabling the deployment.
+
+3. Install the new prepared agents on the target hosts of your choice.
+
+4. Call <tt>cmk-update-agent register</tt> on these systems in order
+to register the agents for updates.
+
+5. Don't forget to enable the agent deployment's master switch!

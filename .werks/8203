@@ -1,0 +1,11 @@
+Title: error when baking the agent with mk_oracle plugin and "Monitor all instances" selected explicitly
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423680150
+
+

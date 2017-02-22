@@ -1,0 +1,9 @@
+Title: Agent bakery now can configure winperf section of check_mk.ini
+Level: 1
+Edition: cee
+Component: checks
+Version: 1.2.7i1
+Date: 1426005916
+Class: feature
+
+

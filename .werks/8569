@@ -1,0 +1,11 @@
+Title: Fixed 'persistent' and 'source' columns in 'comments' table.
+Level: 1
+Edition: cee
+Component: livestatus
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1469112294
+
+

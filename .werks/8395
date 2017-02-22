@@ -1,0 +1,17 @@
+Title: Use one RRD file per service as default now for new installations
+Level: 2
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454506850
+Class: feature
+
+If you create a new site then per default now two rules are created that
+switch to the new RRD format per default. Only one RRD file per service will
+be created. This save IO operations and bandwidth.
+
+Existing sites are not affected. You can switch to single RRDs by creating
+rules in <i>Configuration of RRD databases of hosts</i> and <i>Configuration
+of RRD databases of services</i> for that purpose. After that run <tt>cmk
+--convert-rrds</tt> for migrating existing RRDs.

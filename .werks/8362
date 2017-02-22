@@ -1,0 +1,22 @@
+Title: Improved error handling in case of upgrades/downgrades
+Level: 2
+Edition: cee
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1448619009
+
+CMC stores its current state in versioned state files, which are only
+downwards-compatible. When an incompatible state file is found, we
+immediately terminate the monitoring core during startup.
+
+<ul>
+<li>When the state file version is older than the current one (e.g. after
+an upgrade), convert it on the fly (as previously), but keep a backup of the
+previous version in "state-version-XY".</li>
+<li>When the state file version is newer than the current one (e.g. after a
+downgrade), emit an error message, hinting at the backup version if there is
+one.</li>
+</ul>

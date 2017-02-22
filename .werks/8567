@@ -1,0 +1,16 @@
+Title: Invertible Graphite mangling
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i1
+Date: 1467376818
+Class: feature
+
+When sending performance data to Graphite, the host/service/variable part needs
+to be mangled. The result of the default mangling is more readable (it simply
+replaces special characters with an underscore), but it is not invertible. This
+change adds C-style mangling using the standard octal escapes ('\\ooo'), so you
+can reconstruct the various parts from the data sent to Graphite.
+
+

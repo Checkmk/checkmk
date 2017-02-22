@@ -1,0 +1,11 @@
+Title: Implement service freshness checking
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.5i1
+Date: 1394462944
+Class: feature
+
+The CMC now supports freshness checking for passive services. This means
+that the WATO option <i>Check freshness</i> in the rule set <i>Classical
+active and passive Nagios checks</i> now also works for the CMC.

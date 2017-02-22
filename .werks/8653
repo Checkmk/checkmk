@@ -1,0 +1,13 @@
+Title: Fix output of log verbosity in mknotifyd.log
+Level: 1
+Edition: cee
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1479133776
+
+The logfile always told <tt>Log verbosity 0</tt>, regardless of the
+actual setting. This was because the message was output before the
+actual log file has been read. This is fixed now.

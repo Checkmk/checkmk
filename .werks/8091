@@ -1,0 +1,12 @@
+Title: Make baked agents and configuration files unreadable for the world
+Level: 1
+Edition: cee
+Component: agents
+Version: 1.2.6b1
+Date: 1415783069
+Class: fix
+
+This is just for security. Agents and configuration files <b>might</b> contain
+passwords. So read access to the agents on the monitoring server is now only
+allowed for the OMD site user. Read access to any configuration file on the
+agent itself in <tt>/etc/check_mk</tt> (Linux) is denied for the others.

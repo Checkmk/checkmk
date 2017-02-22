@@ -1,0 +1,13 @@
+Title: deb-packages: Do not remove /var/lib/check_mk_agent on package update
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1465799884
+
+The Debian packages created by the agent bakery now no longer delete the directory
+<tt>/var/lib/check_mk_agent</tt> when the package is <i>updated</i>. It is still
+removed when the package is finally uninstalled.

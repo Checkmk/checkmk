@@ -1,0 +1,10 @@
+Title: cmk-update-agent: Fixed broken installation on RPM based platforms
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i1
+Date: 1455703480
+Class: fix
+
+

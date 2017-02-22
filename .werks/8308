@@ -1,0 +1,14 @@
+Title: CMC can now handle multiple connections to Carbon or InfluxDB
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.2.7i4
+Date: 1445505248
+Class: feature
+
+You can now let CMC send check metrics to more than one Carbon (Graphite)
+database at the same time. By the way: InfluxDB can provide a socket that
+is compatible to Carbon, so you now can have CMC send metrics to Carbon and
+InfluxDB at the same time. All this is in addition to writing the data to
+the RRDs needed for the Check_MK GUI, of course.

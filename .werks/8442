@@ -1,0 +1,12 @@
+Title: Fixed expiry of aknowledgements
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1456754195
+
+Aknowledgement expiry was off by a factor of 1000000, this has been fixed.
+

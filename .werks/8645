@@ -1,0 +1,10 @@
+Title: Configuration validation: Taking shadow_hosts into account when checking for duplicate hosts
+Level: 1
+Edition: cee
+Component: config
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481103463
+Class: fix
+
+

@@ -1,0 +1,12 @@
+Title: Fix missing service level macro in Check_MK Micro Core
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446466216
+
+This was due to the service level being stored as an integer, but
+in the macros we need strings for string replace.

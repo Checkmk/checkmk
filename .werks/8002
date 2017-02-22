@@ -1,0 +1,13 @@
+Title: Fix config generation problems with non-Ascii service names
+Level: 1
+Edition: cee
+Component: config
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387356141
+Targetversion: future
+
+In same rare situations the configuration generation for CMC would
+fail if service names contain non-ASCII characters (e.g. inventorized
+printers with Resttonerbehälter). This has been fixed now.

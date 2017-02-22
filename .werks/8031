@@ -1,0 +1,26 @@
+Title: Allow to limit number of hosts and service via config
+Level: 1
+Edition: cee
+Component: config
+Version: 1.2.5i1
+Date: 1395407918
+Class: feature
+
+There are now two new global settings for <tt>main.mk</tt> that allow limiting
+the number of monitored hosts and/or services. This option only works when
+using the Check_MK Micro Core. Example:
+
+F+:main.mk
+cmc_host_limit = 100
+cmc_service_limit = 3000
+F-:
+
+If you now try to activate a configuration with more than 100 hosts or more
+then 3000 services you will run into an error and the old configuration is
+being kept. It is also possible to just set a limit on hosts <i>or</i>
+services. Setting the according variable to <tt>None</tt> deactivates the
+limit. This is the default.
+
+This setting can <b>not</b> be changed via WATO. It can be useful in situations
+where you give access to a user or customer via WATO but want to restrict
+the amount of objects that he/she can monitor.

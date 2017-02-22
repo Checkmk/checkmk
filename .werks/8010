@@ -1,0 +1,15 @@
+Title: New option for sending performance data to graphite
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.5i1
+Date: 1387545285
+Class: feature
+
+The Micro Core has now a new option (to be configured in the global
+settings via WATO) for sending the performance data (in addition) to an
+already existing Graphite installation. Simple enter hostname/IP-addresse
+and port number of your Graphite carbon line receiver (usually port 2003)
+and activate your changes. Optionally you can specify a prefix to be added
+to the variable names in graphite. That way you can put all of your graphs
+into a subfolder in Graphite.

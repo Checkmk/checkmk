@@ -1,0 +1,12 @@
+Title: Fixed exception when too many rows were used within a report (row limit reached)
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1438092833
+
+An exception occured when a datasource reported too much information. The reporting module
+was unable to cut the data at the configured row limit.

@@ -1,0 +1,13 @@
+Title: Add information about previous hard state of hosts and services
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1396610461
+Targetversion: future
+
+This is needed to provide the rule based notifications with information
+about the original state of an object, when an alert happens and the
+object has more than one check attempt.

@@ -1,0 +1,9 @@
+Title: Agent bakery now correctly cleans up unused baked agents and temporary files
+Level: 2
+Edition: cee
+Component: agents
+Version: 1.2.6b1
+Date: 1417423857
+Class: fix
+
+

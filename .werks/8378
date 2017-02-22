@@ -1,0 +1,12 @@
+Title: Added graph overview page with time range selection for graphs of hosts/services
+Level: 2
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.2.7i4
+Date: 1453735168
+Class: feature
+
+A new view has been added for getting an overview on all graphs of a service. This
+replaces the graph page of PNP4Nagios and completes integration of the new graphing
+system.

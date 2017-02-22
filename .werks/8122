@@ -1,0 +1,16 @@
+Title: Disabling host checks is now working correctly
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423226984
+
+In previous versions, when the user disabled the host checks,
+it only stopped sending out ICMP requests. Processing incoming
+ICMP packets and marking host as down in case of too long time
+without answer still resulted in hosts getting marked as critical.
+This has been fixed now. The host state won't change anymore when
+disabled.

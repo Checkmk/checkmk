@@ -1,0 +1,11 @@
+Title: Fixed exception about "TypeError: a float is required" in reporting
+Level: 2
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1447666296
+
+This occurred when selecting time ranges of the form <i>The last ...</i>.

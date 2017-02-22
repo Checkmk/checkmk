@@ -1,0 +1,10 @@
+Title: Correctly handle performance data variables with square brackets in their names
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417452107
+Class: fix
+
+JMX4Perl uses such questionable variable names, for example (not the officially shipped
+Check_MK checks but the legacy active checks).

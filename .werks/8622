@@ -1,0 +1,14 @@
+Title: Agent Bakery: Fix broken deployment of automatic agent updater for Windows
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.4.0i2
+Date: 1476864670
+
+This bug affected builds of the 1.2.8 branch after 2016-09-14, including the
+releases 1.2.8p11 and 1.2.8p12. Agents deployed with the agent bakery
+of these versions do not update automatically. Redeployment to affected hosts
+is required.

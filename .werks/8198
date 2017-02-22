@@ -1,0 +1,11 @@
+Title: Reporting: No longer raises an exception when trying to add an availability element to the report
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446457394
+
+

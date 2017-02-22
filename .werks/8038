@@ -1,0 +1,13 @@
+Title: Adapted bulkwalk behaviour of snmp command to fix issue with missing OID
+Level: 2
+Edition: cee
+Component: inline-snmp
+Version: 1.2.5i1
+Date: 1395905797
+Class: fix
+
+The previous implementation of the bulkwalk in our inline SNMP code was not
+working as e.g. the snmpbulkwalk command of net-snmp. The bulkwalk command
+asks for an OID via bulkwalk, processes the response and when none of the
+responded OIDs matches this OID, the command performs an explicit SNMP GET
+on the requested OID to get that single value. This has now been added.

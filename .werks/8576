@@ -1,0 +1,12 @@
+Title: Fixed segfaults in cmc when Stats{And,Or,Negate} was used for EC tables
+Level: 1
+Edition: cee
+Component: livestatus
+Compatible: compat
+Version: 1.4.0i3
+Date: 1479477233
+Class: fix
+
+Livestatus queries caused a segfault when Stats: lines were combined with
+operators when querying eventconsole tables.
+

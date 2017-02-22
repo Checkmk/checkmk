@@ -1,0 +1,14 @@
+Title: Flapping notifiations for services are no longer sent if switched off
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1393507180
+
+The users global notification option "Service" - "Start or end of flapping state" 
+was not processed correctly by the core, so the user received flapping alert
+notifications even if this option was disabled.
+
+

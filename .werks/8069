@@ -1,0 +1,10 @@
+Title: Support $HOSTALIAS$ in definition of active checks
+Level: 1
+Edition: cee
+Component: config
+Version: 1.2.5i5
+Date: 1406023252
+Class: feature
+
+The macro <tt>$HOSTALIAS$</tt> is now supported in all places in the
+configuration where also <tt>$HOSTNAME$</tt> is allowed.

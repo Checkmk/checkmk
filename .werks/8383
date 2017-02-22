@@ -1,0 +1,13 @@
+Title: cmk-update-agent: Is now compatible to systems with older pyOpenSSL versions
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i1
+Date: 1455702945
+Class: fix
+
+The dependency on up-to-date pyOpenSSL versions on the clients has now been resolved
+by adding a compatibility function for verifying the agent package signatures.
+
+cmk-update-agent should now work on all supported platforms.

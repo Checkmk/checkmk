@@ -1,0 +1,15 @@
+Title: Fixed issue where wrong checks were discovered for SNMP devices
+Level: 2
+Edition: cee
+Component: inline-snmp
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435827796
+Targetversion: future
+
+This issue could lead to wrong services being discovered which then result
+in services having UNKNOWN states or crashing checks.
+
+You will need to reinventorize affected hosts after updating.

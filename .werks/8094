@@ -1,0 +1,11 @@
+Title: Fix owner ship of files in baked agent RPM: set now correctly to root:root
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.6b1
+Date: 1417016815
+Targetversion: future
+
+

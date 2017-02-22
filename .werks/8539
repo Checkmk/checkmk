@@ -1,0 +1,35 @@
+Title: Made consolidation of values transparent to the user
+Level: 2
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1469115034
+
+When showing graphs of larger time ranges, the graphs are normally based on
+aggregated values, which means multiple measured values are consolidated to
+a single value.
+
+For example, when a graph is based on the "max" aggregation function, like
+nearly all graphs are by default, the values in the Average column are not
+the real average values of the shown time, but the average values of the
+max values in the step of the graph. The step of the graph is now shown on
+the top right of the graph.
+
+To clarify this: If you look at a 7 day graph, you have a step of 30 minutes.
+If the service is being checked in a 1 minute interval, the graph is based on
+the maximum of 30 single values of each 30 minutes step.
+So your average values are the 7 day average of the 30 minute maximum values.
+
+This is obviously not what most users would expect, but we would have to fetch
+3 times more data per graph to get the real average and the real min values
+for each graph. The graphs are already producing a lot of load and we try
+to keep the impact low, so we decided to make the calculation transparent and
+changable by the user.
+
+If you have a max graph, the min and average columns are slightly grayed out
+to visualize the situation. If you hover on the titles, you get a description
+about it. Now you can click on the columns titles to change the aggregation
+function the graph is based on.

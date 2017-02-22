@@ -1,0 +1,10 @@
+Title: Fix exceptions in reports that contain Event Console views
+Level: 2
+Edition: cee
+Component: reporting
+Version: 1.2.6b1
+Date: 1417542640
+Class: fix
+
+The problem were columns that contained numbers that were not converted
+to strings correctly.

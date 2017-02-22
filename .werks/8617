@@ -1,0 +1,11 @@
+Title: Alarmspooler: log successfull TCP connects
+Level: 1
+Edition: cee
+Component: notifications
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.4.0i2
+Date: 1475594269
+
+This helps diagnostics a bit.

@@ -1,0 +1,12 @@
+Title: Scalars (warn, crit, min, max) of perfdata can now be added to custom graphs
+Level: 1
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.4.0b1
+Date: 1484555757
+Class: feature
+
+You can now use the scalars (warn, crit, min, max) of the perfdata as lines or areas
+in custom graphs. You can even calculate with them, for example to calculate percentage
+usages of an interface.

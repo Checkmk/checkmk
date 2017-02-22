@@ -43,7 +43,7 @@ def test_write_precompiled_werks(tmpdir, site, monkeypatch):
     cmc_werks = dict([ (w["id"], w) for w in all_werks.values() if w["edition"] == "cee" ])
 
     assert len(cmk_werks) > 1000
-    assert [ w for w in cmk_werks.keys() if w >= 7500 ] == []
+    assert [ w for w in cmk_werks.keys() if w >= 9000 ] == []
 
     cmk.werks.write_precompiled_werks(os.path.join(tmp_dir, "werks"), cmk_werks)
 

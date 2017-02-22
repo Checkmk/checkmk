@@ -142,26 +142,23 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
     auto col = static_pointer_cast<ListEventConsoleColumn>(
         column("event_contact_groups"));
     if (col->isNone(row)) {
-        Error(_core->loggerLivestatus()) << "isAuthorizedForEventViaContactGroups 1";
         return false;
     }
     for (const auto &name : col->getValue(row)) {
         if (_core->is_contact_member_of_contactgroup(
                 _core->find_contactgroup(name), ctc)) {
-            Error(_core->loggerLivestatus()) << "isAuthorizedForEventViaContactGroups 2";
             return (result = true, true);
         }
     }
-    Error(_core->loggerLivestatus()) << "isAuthorizedForEventViaContactGroups 3";
+    Error(_core->loggerLivestatus())
+        << "isAuthorizedForEventViaContactGroups 3";
     return (result = false, true);
 }
 
 bool TableEventConsole::isAuthorizedForEventViaHost(
     MonitoringCore::Contact *ctc, Row *row, bool &result) {
     if (MonitoringCore::Host *hst = row->_host) {
-        Error(_core->loggerLivestatus()) << "isAuthorizedForEventViaHost 1";
         return (result = _core->host_has_contact(hst, ctc), true);
     }
-    Error(_core->loggerLivestatus()) << "isAuthorizedForEventViaHost 2";
     return false;
 }

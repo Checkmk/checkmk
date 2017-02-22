@@ -1,0 +1,14 @@
+Title: cmk-update-agent: fixed two bugs related to curl download and certificate validation
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0b3
+Date: 1487772143
+
+Agent files greater than 65kb could not get downloaded by curl. The agent got stuck.
+
+Some older distributions had problems in the python requests module, when verifying
+SSL certificates.

@@ -1,0 +1,9 @@
+Title: Translation of "Line" is problematic
+Component: web
+State: open
+Date: 2017-02-21 10:33:50
+Targetversion: 1.2.8
+Class: bug
+
+"Line" needs to be translated into "Zeile" and into "Linie" (Graphing)
+at the same time. Find some solution with gettext.

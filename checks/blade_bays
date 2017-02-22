@@ -53,20 +53,19 @@ def parse_blade_bays(info):
             power = 0
 
         parsed.setdefault(itemname, {
-            "_type_"         : ty.split("(")[0],
-            "_id_"           : identifier,
-            "_power_max_"    : power_max,
-            "_device_state_" : map_states.get(state, (3, "unhandled[%s]" % state)),
-            "power"          : power,
+            "type"         : ty.split("(")[0],
+            "id"           : identifier,
+            "power_max"    : power_max,
+            "device_state" : map_states.get(state, (3, "unhandled[%s]" % state)),
+            "power"        : power,
         })
 
-    pprint.pprint(parsed)
     return parsed
 
 
 def inventory_blade_bays(parsed):
     for entry, attrs in parsed.items():
-        if attrs["_device_state_"][1] in [ "standby", "on" ]:
+        if attrs["device_state"][1] in [ "standby", "on" ]:
             yield entry, {}
 
 
@@ -76,14 +75,14 @@ def check_blade_bays(item, params, parsed):
         return
 
     data = parsed[item]
-    state, state_readable = data["_device_state_"]
+    state, state_readable = data["device_state"]
     yield state, "Status: %s" % state_readable
 
     for res in check_elphase(item, params, parsed):
         yield res
 
     yield 0, "Max. power: %s W, Type: %s, ID: %s" % \
-          (data["_power_max_"], data["_type_"], data["_id_"])
+          (data["power_max"], data["type"], data["id"])
 
 
 check_info["blade_bays"] = {

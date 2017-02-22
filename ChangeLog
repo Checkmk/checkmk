@@ -10,6 +10,7 @@
     * 4408 FIX: checkpoint_temp, checkpoint_fan, checkpoint_voltage: fixed status and value handling
     * 4349 FIX: cisco_qos: Fix crashing check for some cases where the QoS class cannot be found...
     * 4409 FIX: uptime: fixed missing info handling
+    * 4410 FIX: brocade_fcport: fixed missing info handling
 
     Multisite:
     * 4365 FIX: Service availability: Host down could not be rewritten to other states like CRIT

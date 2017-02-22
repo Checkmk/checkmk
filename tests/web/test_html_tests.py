@@ -37,7 +37,7 @@ import tools
 from tools import get_attributes
 import htmllib
 from htmllib import HTML
-from classes import HTMLOrigTester, HTMLCheck_MKTester
+from classes import HTMLOrigTester, Refactored_htmlTester
 
 from html_tests import HtmlTest, build_html_test, save_html_test, load_html_test
 

@@ -9,34 +9,13 @@ from bs4 import BeautifulSoup as bs
 # internal imports
 from htmllib import html
 import __builtin__
-from htmllib import HTMLGenerator, HTMLCheck_MK
+from htmllib import HTMLGenerator, html
 from tools import compare_html , gentest, compare_and_empty
-from classes import DeprecatedRenderer
+from classes import DeprecatedRenderer, TableTester
 
 
-import traceback
 def save_user_mock(name, data, user, unlock=False):
     pass
-
-class TableTest(html):
-
-    written_text = ''
-    tag_counter  = 0
-
-    def __init__(self):
-        super(TableTest, self).__init__()
-        self.myfile = "testfile"
-
-    def lowlevel_write(self, text):
-
-        if re.match(r'.*\.close_\w+[(][)]', '\n'.join(traceback.format_stack()), re.DOTALL):
-            self.tag_counter -= 1 if self.tag_counter > 0 else 0
-            self.written_text += " " * 4 * self.tag_counter + text
-        elif re.match(r'.*\.open_\w+[(]', '\n'.join(traceback.format_stack()), re.DOTALL):
-            self.written_text += " " * 4 * self.tag_counter + text
-            self.tag_counter += 1
-        else:
-            self.written_text += " " * 4 * self.tag_counter + text + ''
 
 
 def test_table(monkeypatch, tmpdir):
@@ -90,10 +69,13 @@ def read_out_csv(text, separator):
     return data
 
 
+
+
+
 def table_test_cubical(sortable, searchable, limit, output_format, tmpdir):
     import table
 
-    html = TableTest()
+    html = TableTester()
     __builtin__.html = html
 
     table_id = 0
@@ -146,7 +128,7 @@ def table_test_cubical(sortable, searchable, limit, output_format, tmpdir):
 def test_context():
     import table
 
-    html = TableTest()
+    html = TableTester()
     __builtin__.html = html
 
     table_id = 0
@@ -169,7 +151,7 @@ def test_context():
 #def test_nested_context():
 #    import table
 #
-#    html = TableTest()
+#    html = TableTester()
 #    __builtin__.html = html
 #
 #    table_id = 0

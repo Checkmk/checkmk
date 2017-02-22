@@ -20,9 +20,9 @@ import copy
 
 # internal imports
 from htmllib import html
-from htmllib import HTMLGenerator, HTMLCheck_MK
+from htmllib import HTMLGenerator
 from tools import compare_html, gentest, compare_and_empty, get_attributes, compare_attributes
-from classes import HTMLOrigTester, HTMLCheck_MKTester, DeprecatedRenderer
+from classes import HTMLOrigTester, Refactored_htmlTester, DeprecatedRenderer
 import html_tests
 from html_tests import build_orig_test, build_cmk_test, save_html_test, load_html_test, HtmlTest, set_html_state, get_cartesian_product
 

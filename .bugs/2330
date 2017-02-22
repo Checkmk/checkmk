@@ -2,7 +2,7 @@ Title: Cluster should always have only it's nodes as parents
 Component: core
 State: open
 Date: 2016-02-16 13:42:50
-Targetversion: 1.2.9
+Targetversion: 1.4.0
 Class: bug
 
 bin mir nicht 100% sicher ob es als Bug definiert werden sollte, evtl. übersehe ich einen Use-Case.

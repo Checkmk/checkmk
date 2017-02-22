@@ -2,7 +2,7 @@ Title: Mixture of report context types due to importing templates creates proble
 Component: reporting
 State: open
 Date: 2016-02-26 16:11:54
-Targetversion: 1.2.9
+Targetversion: 1.4.0
 Class: bug
 
 Create a report with context type "one single host". This automatically inherits

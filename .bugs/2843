@@ -2,7 +2,7 @@ Title: SSH private key of linux remote handler visible in agent package
 Component: agents
 State: open
 Date: 2017-02-14 15:05:49
-Targetversion: 1.2.9
+Targetversion: 1.4.0
 Class: bug
 
 The private SSH key for remote login and execution of remote alert handlers

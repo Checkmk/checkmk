@@ -50,9 +50,9 @@ def inventory_haproxy_frontend(info):
 def check_haproxy_frontend(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            now = time.time()
-            status = line[17]
-            stot = int(line[7])
+            now          = time.time()
+            status       = line[17]
+            stot         = int(line[7])
             session_rate = get_rate("sessions.%s" % item, now, stot)
 
             infotext = "%s, Session Rate: %.2f/s" % (status, session_rate)
@@ -83,25 +83,29 @@ def inventory_haproxy_server(info):
 def check_haproxy_server(item, _no_params, info):
     for line in info:
         if "%s/%s" % (line[0], line[1]) == item:
-            status = line[17]
-            uptime = get_age_human_readable(int(line[23]))
+            status      = line[17]
+            uptime_str  = line[23]
             layer_check = line[36]
-            active = int(line[19])
-            backup = int(line[20])
+            active      = int(line[19])
+            backup      = int(line[20])
+
+            infotext = "Status: %s" % status
+            if uptime_str:
+                infotext += " since %s" % get_age_human_readable(int(uptime_str))
 
             if status == "UP" and (active or backup):
                 state = 0
             else:
                 state = 2
 
-            infotext = "%s since %s, Layer Check: %s" % \
-                        (status, uptime, layer_check)
+            infotext += ", Layer Check: %s" % layer_check
             if active:
                 infotext += ", active"
             elif backup:
                 infotext += ", backup"
             else:
                 infotext += ", neither active nor backup (!!)"
+
             return state, infotext
 
 

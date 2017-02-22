@@ -759,6 +759,252 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
 #.
+class RequestHandler(object):
+
+    def __init__(self):
+        super(RequestHandler, self).__init__()
+
+        # Variable management
+        self.vars      = {}
+        self.listvars  = {} # for variables with more than one occurrance
+        self.uploads   = {}
+        self.var_stash = []
+
+        # Transaction IDs
+        self.new_transids = []
+        self.ignore_transids = False
+        self.current_transid = None
+        self.auto_id = 0
+
+
+
+    # TODO: Can this please be dropped?
+    def some_id(self):
+        self.auto_id += 1
+        return "id_%d" % self.auto_id
+
+
+
+    #
+    # Request Processing
+    #
+
+
+    def var(self, varname, deflt = None):
+        return self.vars.get(varname, deflt)
+
+
+    def has_var(self, varname):
+        return varname in self.vars
+
+
+    # Checks if a variable with a given prefix is present
+    def has_var_prefix(self, prefix):
+        for varname in self.vars:
+            if varname.startswith(prefix):
+                return True
+        return False
+
+
+    def var_utf8(self, varname, deflt = None):
+        val = self.vars.get(varname, deflt)
+        if type(val) == str:
+            return val.decode("utf-8")
+        else:
+            return val
+
+
+    def all_vars(self):
+        return self.vars
+
+
+    def all_varnames_with_prefix(self, prefix):
+        for varname in self.vars.keys():
+            if varname.startswith(prefix):
+                yield varname
+
+
+    # Return all values of a variable that possible occurs more
+    # than once in the URL. note: self.listvars does contain those
+    # variable only, if the really occur more than once.
+    def list_var(self, varname):
+        if varname in self.listvars:
+            return self.listvars[varname]
+        elif varname in self.vars:
+            return [self.vars[varname]]
+        else:
+            return []
+
+
+    # Adds a variable to listvars and also set it
+    def add_var(self, varname, value):
+        self.listvars.setdefault(varname, [])
+        self.listvars[varname].append(value)
+        self.vars[varname] = value
+
+
+    def set_var(self, varname, value):
+        if value is None:
+            self.del_var(varname)
+
+        elif type(value) in [ str, unicode ]:
+            self.vars[varname] = value
+
+        else:
+            # crash report please
+            raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
+
+
+    def del_var(self, varname):
+        if varname in self.vars:
+            del self.vars[varname]
+        if varname in self.listvars:
+            del self.listvars[varname]
+
+
+    def del_all_vars(self, prefix = None):
+        if not prefix:
+            self.vars = {}
+            self.listvars = {}
+        else:
+            self.vars = dict([(k,v) for (k,v) in self.vars.iteritems()
+                                            if not k.startswith(prefix)])
+            self.listvars = dict([(k,v) for (k,v) in self.listvars.iteritems()
+                                            if not k.startswith(prefix)])
+
+
+    def stash_vars(self):
+        self.var_stash.append(self.vars.copy())
+
+
+    def unstash_vars(self):
+        self.vars = self.var_stash.pop()
+
+
+    def uploaded_file(self, varname, default = None):
+        return self.uploads.get(varname, default)
+
+
+    #
+    # Transaction IDs
+    #
+
+    def set_ignore_transids(self):
+        self.ignore_transids = True
+
+
+    # Compute a (hopefully) unique transaction id. This is generated during rendering
+    # of a form or an action link, stored in a user specific file for later validation,
+    # sent to the users browser via HTML code, then submitted by the user together
+    # with the action (link / form) and then validated if it is a known transid. When
+    # it is a known transid, it will be used and invalidated. If the id is not known,
+    # the action will not be processed.
+    def fresh_transid(self):
+        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
+        self.new_transids.append(transid)
+        return transid
+
+
+    def get_transid(self):
+        if not self.current_transid:
+            self.current_transid = self.fresh_transid()
+        return self.current_transid
+
+
+    # All generated transids are saved per user. They are stored in the transids.mk.
+    # Per user only up to 20 transids of the already existing ones are kept. The transids
+    # generated on the current page are all kept. IDs older than one day are deleted.
+    def store_new_transids(self):
+        if self.new_transids:
+            valid_ids = self.load_transids(lock = True)
+            cleared_ids = []
+            now = time.time()
+            for valid_id in valid_ids:
+                timestamp = valid_id.split("/")[0]
+                if now - int(timestamp) < 86400: # one day
+                    cleared_ids.append(valid_id)
+            self.save_transids((cleared_ids[-20:] + self.new_transids))
+
+
+    # Remove the used transid from the list of valid ones
+    def invalidate_transid(self, used_id):
+        valid_ids = self.load_transids(lock = True)
+        try:
+            valid_ids.remove(used_id)
+        except ValueError:
+            return
+        self.save_transids(valid_ids)
+
+
+    # Checks, if the current transaction is valid, i.e. in case of
+    # browser reload a browser reload, the form submit should not
+    # be handled  a second time.. The HTML variable _transid must be present.
+    #
+    # In case of automation users (authed by _secret in URL): If it is empty
+    # or -1, then it's always valid (this is used for webservice calls).
+    # This was also possible for normal users, but has been removed to preven
+    # security related issues.
+    def transaction_valid(self):
+        if not self.has_var("_transid"):
+            return False
+
+        id = self.var("_transid")
+        if self.ignore_transids and (not id or id == '-1'):
+            return True # automation
+
+        if '/' not in id:
+            return False
+
+        # Normal user/password auth user handling
+        timestamp = id.split("/", 1)[0]
+
+        # If age is too old (one week), it is always
+        # invalid:
+        now = time.time()
+        if now - int(timestamp) >= 604800: # 7 * 24 hours
+            return False
+
+        # Now check, if this id is a valid one
+        if id in self.load_transids():
+            #self.guitest_set_transid_valid()
+            return True
+        else:
+            return False
+
+    # Checks, if the current page is a transation, i.e. something
+    # that is secured by a transid (such as a submitted form)
+    def is_transaction(self):
+        return self.has_var("_transid")
+
+
+    # called by page functions in order to check, if this was
+    # a reload or the original form submission. Increases the
+    # transid of the user, if the latter was the case.
+    # There are three return codes:
+    # True:  -> positive confirmation by the user
+    # False: -> not yet confirmed, question is being shown
+    # None:  -> a browser reload or a negative confirmation
+    def check_transaction(self):
+        if self.transaction_valid():
+            id = self.var("_transid")
+            if id and id != "-1":
+                self.invalidate_transid(id)
+            return True
+        else:
+            return False
+
+
+    def load_transids(self, lock=False):
+        raise NotImplementedError()
+
+
+    def save_transids(self, used_ids):
+        raise NotImplementedError()
+
+
+
+
+#.
 #   .--HTML Check_MK-------------------------------------------------------.
 #   |                      _   _ _____ __  __ _                            |
 #   |                     | | | |_   _|  \/  | |                           |
@@ -1242,6 +1488,7 @@ class HTMLCheck_MK(HTMLGenerator):
         self.close_div()
 
 
+
 #.
 
 
@@ -1259,253 +1506,6 @@ class DeprecationWrapper(HTMLCheck_MK):
     # with %s.
     def attrencode(self, value):
         return self._escape_attribute(value)
-
-
-
-#.
-class RequestHandler(object):
-
-    def __init__(self):
-        super(RequestHandler, self).__init__()
-
-        # Variable management
-        self.vars      = {}
-        self.listvars  = {} # for variables with more than one occurrance
-        self.uploads   = {}
-        self.var_stash = []
-
-        # Transaction IDs
-        self.new_transids = []
-        self.ignore_transids = False
-        self.current_transid = None
-        self.auto_id = 0
-
-
-
-    # TODO: Can this please be dropped?
-    def some_id(self):
-        self.auto_id += 1
-        return "id_%d" % self.auto_id
-
-
-
-    #
-    # Request Processing
-    #
-
-
-    def var(self, varname, deflt = None):
-        return self.vars.get(varname, deflt)
-
-
-    def has_var(self, varname):
-        return varname in self.vars
-
-
-    # Checks if a variable with a given prefix is present
-    def has_var_prefix(self, prefix):
-        for varname in self.vars:
-            if varname.startswith(prefix):
-                return True
-        return False
-
-
-    def var_utf8(self, varname, deflt = None):
-        val = self.vars.get(varname, deflt)
-        if type(val) == str:
-            return val.decode("utf-8")
-        else:
-            return val
-
-
-    def all_vars(self):
-        return self.vars
-
-
-    def all_varnames_with_prefix(self, prefix):
-        for varname in self.vars.keys():
-            if varname.startswith(prefix):
-                yield varname
-
-
-    # Return all values of a variable that possible occurs more
-    # than once in the URL. note: self.listvars does contain those
-    # variable only, if the really occur more than once.
-    def list_var(self, varname):
-        if varname in self.listvars:
-            return self.listvars[varname]
-        elif varname in self.vars:
-            return [self.vars[varname]]
-        else:
-            return []
-
-
-    # Adds a variable to listvars and also set it
-    def add_var(self, varname, value):
-        self.listvars.setdefault(varname, [])
-        self.listvars[varname].append(value)
-        self.vars[varname] = value
-
-
-    def set_var(self, varname, value):
-        if value is None:
-            self.del_var(varname)
-
-        elif type(value) in [ str, unicode ]:
-            self.vars[varname] = value
-
-        else:
-            # crash report please
-            raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
-
-
-    def del_var(self, varname):
-        if varname in self.vars:
-            del self.vars[varname]
-        if varname in self.listvars:
-            del self.listvars[varname]
-
-
-    def del_all_vars(self, prefix = None):
-        if not prefix:
-            self.vars = {}
-            self.listvars = {}
-        else:
-            self.vars = dict([(k,v) for (k,v) in self.vars.iteritems()
-                                            if not k.startswith(prefix)])
-            self.listvars = dict([(k,v) for (k,v) in self.listvars.iteritems()
-                                            if not k.startswith(prefix)])
-
-
-    def stash_vars(self):
-        self.var_stash.append(self.vars.copy())
-
-
-    def unstash_vars(self):
-        self.vars = self.var_stash.pop()
-
-
-    def uploaded_file(self, varname, default = None):
-        return self.uploads.get(varname, default)
-
-
-    #
-    # Transaction IDs
-    #
-
-    def set_ignore_transids(self):
-        self.ignore_transids = True
-
-
-    # Compute a (hopefully) unique transaction id. This is generated during rendering
-    # of a form or an action link, stored in a user specific file for later validation,
-    # sent to the users browser via HTML code, then submitted by the user together
-    # with the action (link / form) and then validated if it is a known transid. When
-    # it is a known transid, it will be used and invalidated. If the id is not known,
-    # the action will not be processed.
-    def fresh_transid(self):
-        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
-        self.new_transids.append(transid)
-        return transid
-
-
-    def get_transid(self):
-        if not self.current_transid:
-            self.current_transid = self.fresh_transid()
-        return self.current_transid
-
-
-    # All generated transids are saved per user. They are stored in the transids.mk.
-    # Per user only up to 20 transids of the already existing ones are kept. The transids
-    # generated on the current page are all kept. IDs older than one day are deleted.
-    def store_new_transids(self):
-        if self.new_transids:
-            valid_ids = self.load_transids(lock = True)
-            cleared_ids = []
-            now = time.time()
-            for valid_id in valid_ids:
-                timestamp = valid_id.split("/")[0]
-                if now - int(timestamp) < 86400: # one day
-                    cleared_ids.append(valid_id)
-            self.save_transids((cleared_ids[-20:] + self.new_transids))
-
-
-    # Remove the used transid from the list of valid ones
-    def invalidate_transid(self, used_id):
-        valid_ids = self.load_transids(lock = True)
-        try:
-            valid_ids.remove(used_id)
-        except ValueError:
-            return
-        self.save_transids(valid_ids)
-
-
-    # Checks, if the current transaction is valid, i.e. in case of
-    # browser reload a browser reload, the form submit should not
-    # be handled  a second time.. The HTML variable _transid must be present.
-    #
-    # In case of automation users (authed by _secret in URL): If it is empty
-    # or -1, then it's always valid (this is used for webservice calls).
-    # This was also possible for normal users, but has been removed to preven
-    # security related issues.
-    def transaction_valid(self):
-        if not self.has_var("_transid"):
-            return False
-
-        id = self.var("_transid")
-        if self.ignore_transids and (not id or id == '-1'):
-            return True # automation
-
-        if '/' not in id:
-            return False
-
-        # Normal user/password auth user handling
-        timestamp = id.split("/", 1)[0]
-
-        # If age is too old (one week), it is always
-        # invalid:
-        now = time.time()
-        if now - int(timestamp) >= 604800: # 7 * 24 hours
-            return False
-
-        # Now check, if this id is a valid one
-        if id in self.load_transids():
-            #self.guitest_set_transid_valid()
-            return True
-        else:
-            return False
-
-    # Checks, if the current page is a transation, i.e. something
-    # that is secured by a transid (such as a submitted form)
-    def is_transaction(self):
-        return self.has_var("_transid")
-
-
-    # called by page functions in order to check, if this was
-    # a reload or the original form submission. Increases the
-    # transid of the user, if the latter was the case.
-    # There are three return codes:
-    # True:  -> positive confirmation by the user
-    # False: -> not yet confirmed, question is being shown
-    # None:  -> a browser reload or a negative confirmation
-    def check_transaction(self):
-        if self.transaction_valid():
-            id = self.var("_transid")
-            if id and id != "-1":
-                self.invalidate_transid(id)
-            return True
-        else:
-            return False
-
-
-    def load_transids(self, lock=False):
-        raise NotImplementedError()
-
-
-    def save_transids(self, used_ids):
-        raise NotImplementedError()
-
-
 
 
 #.

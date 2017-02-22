@@ -1,0 +1,10 @@
+Title: blade_blades: fixed out of range state
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.5.0i1
+Date: 1487762152
+Class: fix
+
+The check will not crash anymore if a state reported by a bladecenter is
+our of range. Instead the failed part of this service will change to UNKNOWN.

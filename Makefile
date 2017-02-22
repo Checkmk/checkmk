@@ -237,7 +237,7 @@ enterprise/ChangeLog: enterprise/werks
 dist: cmc-$(VERSION).tar.gz
 
 # We currently fake a package for cmc. Ugly...
-cmc-$(VERSION).tar.gz: config.h enterprise/.werks/werks enterprise/ChangeLog
+cmc-$(VERSION).tar.gz: config.h enterprise/werks enterprise/ChangeLog
 	$(MAKE) -C livestatus distclean
 	$(MAKE) -C enterprise/core distclean
 	rm -rf cmc-$(VERSION)
@@ -262,7 +262,7 @@ cmc-$(VERSION).tar.gz: config.h enterprise/.werks/werks enterprise/ChangeLog
           m4 | tar xf - -C cmc-$(VERSION)
 	mv cmc-$(VERSION)/enterprise/skel{,.permissions} cmc-$(VERSION)
 	mv cmc-$(VERSION)/enterprise/LIVEPROXYD.hook cmc-$(VERSION)
-	cp enterprise/.werks/werks cmc-$(VERSION)/werks
+	cp enterprise/werks cmc-$(VERSION)/werks
 	cp enterprise/ChangeLog cmc-$(VERSION)/ChangeLog-cmc
 	sed -i '1 i\include ../../Makefile.omd' cmc-$(VERSION)/Makefile
 	cd cmc-$(VERSION) \

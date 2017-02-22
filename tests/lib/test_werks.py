@@ -38,14 +38,16 @@ def test_enterprise_werks(site):
 def test_write_precompiled_werks(tmpdir, site, monkeypatch):
     tmp_dir = "%s" % tmpdir
 
-    cmk_werks = cmk.werks.load_raw_files(os.path.join(testlib.cmk_path(), ".werks"))
+    all_werks = cmk.werks.load_raw_files(os.path.join(testlib.cmk_path(), ".werks"))
+    cmk_werks = dict([ (w["id"], w) for w in all_werks.values() if w["edition"] == "cre" ])
+    cmc_werks = dict([ (w["id"], w) for w in all_werks.values() if w["edition"] == "cee" ])
+
     assert len(cmk_werks) > 1000
     assert [ w for w in cmk_werks.keys() if w >= 7500 ] == []
 
     cmk.werks.write_precompiled_werks(os.path.join(tmp_dir, "werks"), cmk_werks)
 
     if site.version.edition() == "raw":
-        cmc_werks = cmk.werks.load_raw_files(os.path.join(testlib.cmc_path(), ".werks"))
         assert len(cmc_werks) > 1000
         assert [ w for w in cmc_werks.keys() if  w < 8000 ] == []
 

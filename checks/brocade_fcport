@@ -164,6 +164,8 @@ def check_brocade_fcport(item, params, info):
     # Accept item, even if port name or ISL state has changed
     item_index       = int(item.split()[0])
     portinfo         = [ line for line in if_info if int(line[0]) == item_index + 1]
+    if portinfo == []:
+        return 3, "No data found in SNMP output"
 
     # Since FW v8.0.1b [rx/tx]words are no longer available
     fcmgmt_portstats = []

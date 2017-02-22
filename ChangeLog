@@ -13,6 +13,7 @@
     * 4409 FIX: uptime: fixed missing info handling
     * 4410 FIX: brocade_fcport: fixed missing info handling
     * 4412 FIX: haproxy.server: fixed empty uptime info handling
+    * 4413 FIX: mem.linux: handle empty info
 
     Multisite:
     * 4365 FIX: Service availability: Host down could not be rewritten to other states like CRIT

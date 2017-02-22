@@ -245,6 +245,7 @@ def werk_table_option_entries():
                title = _("Edition"),
                choices = [
                    ( None, _("All editions") ),
+                   ( "cme", _("Werks only concerning the Managed Service Edition") ),
                    ( "cee", _("Werks only concerning the Enterprise Edition") ),
                    ( "cre", _("Werks also concerning the Raw Edition") ),
                 ],
@@ -371,11 +372,8 @@ def werk_matches_options(werk, werk_table_options):
         return False
 
 
-    if werk_table_options["edition"]:
-        if werk_table_options["edition"] == "cre" and werk["id"] >= 8000:
-            return False
-        if werk_table_options["edition"] == "cee" and werk["id"] < 8000:
-            return False
+    if werk_table_options["edition"] and werk["edition"] != werk_table_options["edition"]:
+        return False
 
     from_version, to_version = werk_table_options["version"]
     if from_version and cmp_version(werk["version"], from_version) < 0:

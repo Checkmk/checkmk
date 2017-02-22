@@ -42,11 +42,17 @@ def inventory_checkpoint_temp(info):
 def check_checkpoint_temp(item, params, info):
     for name, value, unit, dev_status in info:
         if format_item_checkpoint_temp(name) == item:
-            unit = unit.replace("degree", "").strip().lower()
+            unit  = unit.replace("degree", "").strip().lower()
+            state, state_readable = checkpoint_sensorstatus_to_nagios[dev_status]
+
+            if value == "":
+                return state, "Status: %s" % state_readable
+
             return check_temperature(float(value), params,
                                      "checkpoint_temp_%s" % item,
                                      dev_unit=unit,
-                                     dev_status=checkpoint_sensorstatus_to_nagios[dev_status])
+                                     dev_status=state,
+                                     dev_status_name=state_readable)
 
 
 check_info['checkpoint_temp'] = {

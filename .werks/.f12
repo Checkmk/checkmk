@@ -4,4 +4,8 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 sudo mkdir -p /omd/sites/$SITE/share/check_mk/werks/
 make -C .. .werks/werks
 sudo install -m 644 -g $SITE -o $SITE werks /omd/sites/$SITE/share/check_mk/werks/werks
+make -C .. enterprise/werks
+sudo install -m 644 -g $SITE -o $SITE ../enterprise/werks /omd/sites/$SITE/share/check_mk/werks/werks-cmc
+make -C .. managed/werks
+sudo install -m 644 -g $SITE -o $SITE ../managed/werks /omd/sites/$SITE/share/check_mk/werks/werks-cme
 sudo omd restart $SITE apache

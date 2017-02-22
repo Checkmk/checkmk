@@ -91,7 +91,6 @@ FILES_TO_FORMAT    := $(wildcard $(addprefix agents/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/checkhelper/,*.cc *.h))
 
 WERKS              := $(wildcard .werks/[0-9]*)
-ENTERPRISE_WERKS   := $(wildcard enterprise/.werks/[0-9]*)
 
 JAVASCRIPT_SOURCES := $(filter-out %_min.js,$(wildcard $(addsuffix /web/htdocs/js/*.js,. enterprise managed)))
 JAVASCRIPT_MINI    := $(patsubst %.js,%_min.js,$(JAVASCRIPT_SOURCES))
@@ -229,11 +228,11 @@ mk-livestatus-$(VERSION).tar.gz:
 
 ifeq ($(ENTERPRISE),yes)
 
-enterprise/.werks/werks: $(ENTERPRISE_WERKS)
-	PYTHONPATH=. python scripts/precompile-werks.py enterprise/.werks enterprise/.werks/werks cee
+enterprise/werks: $(WERKS)
+	PYTHONPATH=. python scripts/precompile-werks.py .werks enterprise/werks cee
 
-enterprise/ChangeLog: enterprise/.werks/werks
-	PYTHONPATH=. python scripts/create-changelog.py enterprise/ChangeLog enterprise/.werks/werks
+enterprise/ChangeLog: enterprise/werks
+	PYTHONPATH=. python scripts/create-changelog.py enterprise/ChangeLog enterprise/werks
 
 dist: cmc-$(VERSION).tar.gz
 

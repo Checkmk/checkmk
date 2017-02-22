@@ -1,0 +1,20 @@
+Title: New graph designer for creating custom graphs
+Level: 3
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.2.7i4
+Date: 1454428929
+Class: feature
+
+With the new custom graphs you can now create performance graphs with arbitrary
+metrics from arbitrary hosts and services. That way you can e.g. create a graph
+for showing HTTP response times from three different servers in one graph.
+
+The new custom graphs can be added to reports, graph collections and dashboards.
+
+There are several paths to the graph designer:
+
+LI:Click on the context menu of an existing graph and select <i>Add all metrics of this graph to: new custom graph</i>
+LI:Go to a host or service detail, there to <i>Service Metrics</i>, use the small icon of one metric and select <i>Add this metric to custom graph...</i>
+LI:Press <i>EDIT</i> in the Views, Bookmarks or Reports-Snapin and click the new button <i>Custom Graphs</i> at the top

@@ -1,0 +1,14 @@
+Title: RPM packages created on SLES11SP3 should now work on CentOS 6
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.7i2
+Date: 1435136498
+Targetversion: future
+
+When you create RPM packages with the agent bakery on a more modern RPM based
+system for an older RPM based system then the compression algorithm in the
+created RPMs would not always by compatible with older RPM versions. This
+has been fixed by forcing the compression to be Gzip.

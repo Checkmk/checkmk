@@ -1,0 +1,12 @@
+Title: Avoid exception in Agent Bakery if orphaned hosts are lying around
+Level: 1
+Edition: cee
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458661458
+
+The can happen after an update from an older version and fixes and exception
+with <tt>No such file or directory</tt>.

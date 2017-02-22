@@ -1,0 +1,11 @@
+Title: Fixed SEGFAULT when querying custom vars via livestatus
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423478923
+
+

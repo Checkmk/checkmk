@@ -1,0 +1,15 @@
+Title: Fixed separator for modified_attributes_list columns
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: incomp
+Version: 1.4.0i1
+Date: 1462792184
+Class: fix
+
+Previously, the character used to separate individual values in the
+modified_attributes_list columns for hosts and services was wrong when the
+output format was CSV: It defaulted to "|", but it is now ",", which is
+consistent with the rest of list-valued columns. Note that the actual
+characters can be changed via a "Separators:" headers, just like before.
+

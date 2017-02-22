@@ -1,0 +1,18 @@
+Title: Remove bogus error messages in cmc.log when core restarts
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417427911
+Class: fix
+
+When you restart the core and there are currently running Check_MK checks
+that have to be aborted then the CMC logfile prints a line:
+
+F+:cmc.log
+2014-12-01 10:57:26 [5] Check helper [24933] exited with status 1
+F-:
+
+This line has been reclassified from error (<tt>[3]</tt>) to notice
+(<tt>[5]</tt>). This will avoid bogus error message in the logfile monitoring
+of the Check_MK appliances.

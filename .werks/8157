@@ -1,0 +1,11 @@
+Title: Some Perf-O-Meters can now be rendered in the reporting
+Level: 1
+Edition: cee
+Component: reporting
+Version: 1.2.7i1
+Date: 1424011261
+Class: feature
+
+The Reporting can now show all Perf-O-Meter that already have been
+converted to the new style of defining metrics. We will convert
+all existing Perf-O-Meter to this new style in future.

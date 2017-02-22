@@ -1,0 +1,22 @@
+Title: Change authorization method for host/service groups to loose
+Level: 2
+Edition: cee
+Component: config
+Version: 1.2.5i5
+Date: 1403877191
+Class: incomp
+
+Up to now the CMC adopted the behaviour of Nagios when it came to the
+authorization of seeing host and service groups. Nagios lets a user see a
+host group only if he is contact for <b>every</b> host in that group. That
+leads to anomalies, however. Because in the details of a host you can see
+the group nevertheless and some of the views kind of display a host group,
+just by printing out the host plus the group it is contained in.
+
+Both in normal Livestatus and with the CMC you can change the behaviour.
+In CMC this is done with <i>Authorization settings</i> in the global
+settings.
+
+<b>Note:</b> the new default setting is now <i>loose</i>. If you want
+back the previous behaviour, please change it back in the global
+settings.

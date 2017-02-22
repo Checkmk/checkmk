@@ -1,0 +1,13 @@
+Title: Fix problem with Smart PING packets not being sent (Out of Buffer Space)
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.5i6
+Date: 1414143341
+Class: fix
+
+This problem has been fixed by splitting up the <tt>icmphelper</tt> into
+a <tt>icmpsender</tt> and a <tt>icmpreceiver</tt>. Both processes now do
+not need to do any <tt>select()</tt>. The pcap-library can thus be used
+in a standard way. Previously it could happen that it did not see all
+packets.

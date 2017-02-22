@@ -1,0 +1,18 @@
+Title: Do not longer put baked agents and agent update status into WATO snapshots
+Level: 2
+Edition: cee
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1465221347
+
+The snapshots that WATO automatically creates on {{Activate changes}} do no longer
+contain the baked agents and information about the agent update status. This was
+considered a bug, since a replay of a WATO snapshot would also reset the update
+status. And the baked agent can be very large and produce large snapshots. This
+made {{Activate changes}} quite slow in some situations.
+
+<b>Note</b>: The WATO snapshots are considered to be <i>configuration</i>
+snapshots - not a replacement for a real backup!

@@ -1,0 +1,11 @@
+Title: Printing an error message when starting the Microcore when the config is missing
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435236566
+
+

@@ -1,0 +1,16 @@
+Title: Processing SNMP values unmodified to checks (might break some SNMP checks)
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.7i1
+Date: 1424961855
+Class: fix
+
+Previous versions of the Inline-SNMP code were replacing and
+stripping different characters from the values reported by
+SNMP. This has been done to be compatible to the classic SNMP
+behaviour and to fix different cases of strange characters in
+the SNMP data.
+We decided to clean this totally up that the single checks get
+the real unmodified SNMP values which then need to be handled
+by the SNMP checks individually.

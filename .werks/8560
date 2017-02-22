@@ -1,0 +1,22 @@
+Title: Check_MK helpers: Output warning message to cmc.log when detecting new open file descriptors after running checks
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i2
+Date: 1477405117
+Class: feature
+
+In case a helper detects that it has new open file descriptors after performing checks, it writes
+lines like these to the cmc.log:
+
+2016-10-25 16:15:59 [4] [Check_MK helper 11344] >> Open file descriptors changed after %d cycles. Currently open:
+2016-10-25 16:15:59 [4] [Check_MK helper 11344] >>   0 -> socket:[1030046]
+2016-10-25 16:15:59 [4] [Check_MK helper 11344] >>   1 -> pipe:[1030047]
+2016-10-25 16:15:59 [4] [Check_MK helper 11344] >>   2 -> pipe:[1030047]
+2016-10-25 16:15:59 [4] [Check_MK helper 11344] >>   3 -> socket:[1030046]
+2016-10-25 16:15:59 [4] [Check_MK helper 11344] >>   4 -> /tmp/x
+2016-10-25 16:15:59 [4] [Check_MK helper 11344] >>   5 -> UNKNOWN
+2016-10-25 16:15:59 [4] [Check_MK helper 11344] >>   6 -> /dev/urandom
+
+This may help detect and debug file descriptor leaks.

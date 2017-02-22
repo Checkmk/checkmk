@@ -1,0 +1,10 @@
+Title: Fixed bad error handling when creating scheduled report from already deleted report definition
+Level: 1
+Edition: cee
+Component: reporting
+Compatible: compat
+Version: 1.4.0i3
+Date: 1487601734
+Class: fix
+
+

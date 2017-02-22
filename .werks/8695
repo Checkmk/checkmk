@@ -1,0 +1,12 @@
+Title: mknotifyd: Process spooled notifications in order of occurance
+Level: 1
+Edition: cee
+Component: notifications
+Compatible: compat
+Version: 1.4.0b1
+Date: 1484570511
+Class: fix
+
+In previous versions the spooled notifications were sent randomly. This
+was especially noticeable in case there was a backlog of notifications or
+a long list of deferred mails.

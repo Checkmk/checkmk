@@ -1,0 +1,17 @@
+Title: hostgroups servicegroups: fixed host / service visible when using group_authorization AUTH_STRICT
+Level: 1
+Edition: cee
+Component: livestatus
+Version: 1.2.5i5
+Date: 1404994374
+Class: fix
+
+This only applies with the setting group_authorization = AUTH_STRICT.
+
+When an auth user was given the livestatus tables hostgroups and servicegroups did not
+check if the auth user had permissions to all objects of the group.
+As a result the user was able to view host- and servicegroups, even if he was not a contact
+for every object in it. However, the "forbidden" object itself was not returned, just a subset
+of the group. This was incorrect. The user needs to be contact of every element in this group.
+Otherwise he should not see the group at all..
+

@@ -1,0 +1,18 @@
+Title: Do not hang core if Carbon server is not resonding
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417450641
+Class: fix
+
+If you connected the Check_MK Micro Core to Carbon (Graphite) and the
+carbon server was down then the core would hang after a while in a
+very nasty long TCP timeout. This is been fixed. If carbon is too slow
+to handle all the data or if the server is hanging then Check_MK uses
+the available TCP buffer space for queing graph updates and skips then
+any further updates, while logging a message into <tt>cmc.log</tt>:
+
+F+:var/log/cmc.log
+2014-12-01 17:16:47 [4] Carbon is too slow. Skipping update of xysrv123;Check_MK;system_time
+F-:

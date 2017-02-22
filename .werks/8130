@@ -1,0 +1,11 @@
+Title: Omit output of path information in agent bakery if paths are at default settings
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1421150857
+Targetversion: future
+
+

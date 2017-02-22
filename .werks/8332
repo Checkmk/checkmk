@@ -1,0 +1,10 @@
+Title: active checks: Fixed translation of $HOSTNAME$ in command lines
+Level: 1
+Edition: cee
+Component: config
+Compatible: compat
+Version: 1.2.7i3
+Date: 1444892897
+Class: fix
+
+

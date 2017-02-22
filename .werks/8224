@@ -1,0 +1,10 @@
+Title: Agent Bakery: Fixed downloading of agent by Hostname
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1427192630
+Targetversion: future
+

@@ -1,0 +1,13 @@
+Title: Editing view elements with single info context was loosing them during saving
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1423231419
+
+When editing a report element of type service which has a single object context, for
+example is related to a single host, just loading and saving the element resulted
+in the view loosing the single object context.

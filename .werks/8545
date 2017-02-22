@@ -1,0 +1,16 @@
+Title: Improved error handling in case of Microcore to Check_MK helper communication error
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1470234601
+
+In case the communication protocol between the Microcore and the Check_MK helpers leads
+into an exception while the helper is reading a command from the Microcore, the helper
+could become unusable in a way where it starts mixing check results of hosts.
+
+In case of such an error the helper is now terminating itself. The Microcore will then
+restart the helper afterwards.

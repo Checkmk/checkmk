@@ -1,0 +1,13 @@
+Title: View PDF exports now have context infos in title
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1422613696
+
+The title of the PDF was showing the original view title
+without user localization or context related information like
+the name of the host.

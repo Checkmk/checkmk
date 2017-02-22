@@ -1,0 +1,10 @@
+Title: Check_MK Discovery retry interval default value equals to the normal check interval
+Level: 1
+Edition: cee
+Component: config
+Version: 1.2.6b1
+Date: 1418291675
+Class: fix
+
+Before the retry interval always defaulted to 60 seconds when using the microcore which
+could lead into unintended load when many discovery services are in a problematic state.

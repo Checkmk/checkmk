@@ -1,0 +1,14 @@
+Title: Fix exception in report schedule in case of reports with special contexts
+Level: 2
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1446204042
+
+If you have a report of context type "single Event Console Event" and then in the
+scheduler add an event id to the context of the report you would run into an
+exception saying <tt>object of type 'int' has no len()</tt>. This has been fixed.
+

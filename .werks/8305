@@ -1,0 +1,13 @@
+Title: Fixed segmentation fault of core in case of vanished object while check is running
+Level: 1
+Edition: cee
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1443796261
+
+In case you removed a host or service from the monitoring while a check was still
+running the CMC would crash. This has been fixed. This bug had been introduced in
+February.

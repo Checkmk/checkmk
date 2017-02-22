@@ -1,0 +1,13 @@
+Title: Do not draw lines beyond canvas of graphs, do correct clipping
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1461596911
+
+When in PDF documents you have graphs with lines that do not fit into the
+selected vertical range then lines would be painted all over the paper -
+way beyond the graph. This has now been fixed by introducing a correct clipping.

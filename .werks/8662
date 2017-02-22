@@ -1,0 +1,13 @@
+Title: fixed encryption.cfg in bakecd Linux agents
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1478538633
+
+The file /etc/check_mk/encryption.cfg, created by baked Linux agents, could not get sourced by the agent.
+This has been fixed now.
+

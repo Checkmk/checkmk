@@ -1,0 +1,10 @@
+Title: Fix vanished service matching criteria in alert handler rules
+Level: 2
+Edition: cee
+Component: alerts
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476966656
+Class: fix
+
+

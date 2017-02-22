@@ -1,0 +1,20 @@
+Title: Avoid exception in case of missing agent configuration
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i4
+Date: 1448868190
+
+This fixes the following Exception:
+
+F+:
+Failed to process configuration:
+Traceback (most recent call last):
+File "/omd/sites/urz/share/check_mk/web/plugins/wato/agent_bakery.py", line 1574, in mode_agents
+html.write(describe_agent_configuration(aghash))
+File "/omd/sites/urz/share/check_mk/web/plugins/wato/agent_bakery.py", line 1612, in describe_agent_configuration
+conf = eval(file(defaults.var_dir + "/agents/linux_rpm/_PACKAGES/%s.conf" % aghash).read())
+F-:

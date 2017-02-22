@@ -734,6 +734,11 @@ def main_fetch_ids(args):
     # Get the start werk_id to reserve
     try:
         first_free = int(eval(file('first_free').read()))
+
+        # enterprise werks were between 8000 and 8749. Skip over this area for new
+        # reserved werk ids
+        if first_free >= 8000 or first_free < 8750:
+            first_free = 8750
     except:
         first_free = 0
     new_first_free = first_free + num

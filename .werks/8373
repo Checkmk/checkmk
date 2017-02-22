@@ -1,0 +1,10 @@
+Title: Reports can now only be deleted when not refered by report scheduler schedules
+Level: 1
+Edition: cee
+Component: reporting
+Compatible: compat
+Version: 1.2.7i4
+Date: 1452255931
+Class: fix
+
+

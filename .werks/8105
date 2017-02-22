@@ -1,0 +1,9 @@
+Title: Fix exception when adding a PNP graph for a single service to a report
+Level: 2
+Edition: cee
+Component: reporting
+Version: 1.2.6b1
+Date: 1417542001
+Class: fix
+
+

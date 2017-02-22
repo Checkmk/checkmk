@@ -1,0 +1,9 @@
+Title: Recurring downtimes: Fixed warning in activate changes when using recurring downtimes
+Level: 1
+Edition: cee
+Component: wato
+Version: 1.2.7i3
+Date: 1443599259
+Class: fix
+
+This only applies if your omd uses a python version < 2.7

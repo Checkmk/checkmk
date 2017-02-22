@@ -1,0 +1,27 @@
+Title: Fix disabling of notifications when done both via rule and command
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417513634
+Class: fix
+
+When you have disabled the notifications of a service (or host) via a
+command and later disabled the notifications of the same service via a rule,
+then in effect the notification became enabled again! This was due to the
+internally stored information about which setting has been modified. This
+has now been fixed. The core now correctly keeps track of which enabling
+(notifications, active and passive checks) has been modified and which is
+the new manual setting. The manual setting will override any configuration
+setting until it is cleared.
+
+Clearing manual settings can be done with the command <i>Clear modified
+attributes</i> in Multisite (which internall calls <tt>CHANGE_HOST_MODATTR</tt>
+or <tt>CHANGE_SVC_MODATTR</tt>.
+
+<b>Note</b>: The Nagios core behaves different here. Clearing the modified
+attributes just removes the information that they have been modified -
+not their actual setting! There is no way to generally remove manual settings
+here other then manually set all back to their configuration settings and
+<b>afterwards</b> again issue <i>Clear modified attributes</i>. The CMC
+decided to not mimick this strange behaviour.

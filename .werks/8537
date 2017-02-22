@@ -1,0 +1,11 @@
+Title: Fixed possible exception when deleting a host via WATO
+Level: 1
+Edition: cee
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1469098798
+
+This could happen when the agent bakerys agent directory is not existant.

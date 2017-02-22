@@ -1,0 +1,14 @@
+Title: Suppressing unwanted error messages
+Level: 1
+Edition: cee
+Component: inline-snmp
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1392627111
+Targetversion: future
+
+In some cases, the netsnmp library directly outputs error messages
+to stdout. This can be disabled by setting the verbose option
+of the netsnmp module to 0, which is set to 1 by default. Hopefully
+this does not suppress too many helpful error messages.

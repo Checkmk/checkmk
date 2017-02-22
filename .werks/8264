@@ -1,0 +1,16 @@
+Title: Fixed exception when configuring special paths for the unix agents
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1437038258
+
+Fixed exception when configuring e.g. these paths for the linux/unix agents:
+
+/usr/local/check_mk/bin
+/usr/local/check_mk/etc
+/usr/local/check_mk
+/usr/local/check_mk/var

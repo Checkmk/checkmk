@@ -1,0 +1,27 @@
+Title: Handle and display information about cached agent data in GUI
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.7i1
+Date: 1431431105
+Class: feature
+
+Check_MK now keeps track of the original age of information sent by the
+monitoring agents. This is useful if certain agent sections are not generated
+anew each time the agent is called but that are cached either locally on the
+agent or on the Check_MK server (using the <tt>persist</tt> section option).
+
+The sections in question need to declare the age
+and lifetime of the cached data in the section header,
+e.g. <tt>&lt;&lt;&lt;foobar:cached(1431431239:86400)&gt;&gt;&gt;</tt>.
+Check_MK parses this information and hands it over to the Check_MK Micro Core.
+The core uses that for a precise computation of the staleness and also makes
+it available for the Multisite GUI.
+
+The GUI in turn uses the point of time where the cached information has been
+created as the time of the <i>last check</i> instead of the last execution of
+Check_MK. In the details of a service you can see both the age and lifetime
+of the cached data.
+
+When using Nagios or another core the new information from the agents
+is simply being ignored an nothing changes.

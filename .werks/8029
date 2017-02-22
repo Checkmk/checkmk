@@ -1,0 +1,12 @@
+Title: New external command for creating log entries
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.5i1
+Date: 1394180978
+Class: feature
+
+The core has now the new external command LOG. This creates entries in
+the monitoring history. It is currently being used by the overhauled Check_MK
+notification system in order to log the notifications that are actually
+be sent out after condideration of notification rules.

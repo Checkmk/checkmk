@@ -1,0 +1,18 @@
+Title: New option for expiration of acknowledgements
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1415980759
+Class: feature
+
+Acknowledgements can now optionally expire. Multisite has been extended
+by an option to set a timespan when acknowledging problems. At the end
+of this timespan the acknowledgement is automatically removed and
+a log entry created in <tt>cmc.log</tt>. You can see an expiration in the
+details views about the comments of a host or service.
+
+Expiration of acknowledgements mean something like "This should be
+repaired within time X". In combination with periodic notifications
+these acknowledgements will in effect stop the notifications for the
+configured while.

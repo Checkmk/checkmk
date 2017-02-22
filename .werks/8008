@@ -1,0 +1,11 @@
+Title: Process performance data in long plugin output correctly
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.5i6
+Date: 1408438115
+Class: fix
+
+Some legacy check plugins output performance data in additional
+plugin output lines. This data had been ignored by the CMC and
+instead appeared in the long plugin output. This has been fixed.

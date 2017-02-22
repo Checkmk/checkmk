@@ -1,0 +1,10 @@
+Title: Fix conflict with legacy check_mk-agent-logwatch package in baked RPM packages
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+State: unknown
+Version: 1.2.7i2
+Date: 1434549844
+Targetversion: future
+

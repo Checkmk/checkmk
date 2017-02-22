@@ -1,0 +1,13 @@
+Title: Inline-SNMP bulk walk now handles timeout errors like the classic SNMP code
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.5i1
+Date: 1395738505
+Class: fix
+
+Previous versions produced error messages like "Empty response to SNMP query for ..."
+in case of a timeout when doing a bulk walk with inline SNMP. This was a different
+handling to non bulk walk queries and SNMPv1, which resulted in strange error
+behavious. This has now been consolidated and fixed. These timeouts are now mostly
+suppressed and are only visible when using the <tt>-v</tt> flag with <tt>check_mk</tt>.

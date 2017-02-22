@@ -1,0 +1,12 @@
+Title: Livestatus proxy: Can now connect via unix socket to the local site
+Level: 1
+Edition: cee
+Component: livestatus
+Compatible: compat
+Version: 1.4.0b1
+Date: 1486636741
+Class: feature
+
+The livestatus proxy daemon can now be configured also for the local site.
+Even when this is the local site, this makes sense, because the proxy daemon
+can now also multiplex connections and cache queries for the local site.

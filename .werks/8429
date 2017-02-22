@@ -1,0 +1,13 @@
+Title: Fix exception 'format' on RRD creation of you have created RRD rules with the previous version
+Level: 2
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1457422151
+
+If you had created some rules for RRD configuration of hosts or services
+then you would run into an exception with missing <tt>'format'</tt>. This
+has been fixed.

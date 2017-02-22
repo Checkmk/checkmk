@@ -1,0 +1,11 @@
+Title: Fixed possible issue loading librrd_th.so.2 when starting cmc (seen on CentOS 5.5)
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476971280
+Class: fix
+
+The core was linked against the wrong version of rrdtool. This has now been changed to link
+against the shipped rrdtool library.

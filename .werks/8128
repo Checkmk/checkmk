@@ -1,0 +1,11 @@
+Title: Fix filedescriptor leak in CMC due to new error handling of check helpers
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1418812991
+Targetversion: future
+
+

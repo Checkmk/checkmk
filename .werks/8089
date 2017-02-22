@@ -1,0 +1,12 @@
+Title: Fix instant reports in views with a context (e.g. one Services of one Host)
+Level: 2
+Edition: cee
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.6b1
+Date: 1414765793
+Targetversion: future
+
+In non-global views the instant reports showed always empty tables. This was
+due to an invalid set single-context and is now fixed.

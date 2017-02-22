@@ -1,0 +1,12 @@
+Title: Agent configs containing a customized "agent path" were not visible in the GUI
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435222132
+
+None of the baked agents which used the rule "Installation paths for agent files (Linux, UNIX)"
+were baked correctly and available on the filesystem, but not shown in the GUI.

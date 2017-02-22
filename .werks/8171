@@ -1,0 +1,20 @@
+Title: Agents are not baked automatically anymore
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1424687382
+
+Previously the agent bakery was baking all needed agents during each reload/restart etc.
+by default. This has been disabled now. You might re-enable it by setting the global
+configuration option <i>Automatically create monitoring agents</i> again if you really
+need it.
+
+For all other users: When you open up the WATO Monitoring Agents page, there is a new
+button <i>Bake Agents</i> now, which you can click to let the bakery update all needed
+agents. Each WATO change or Check_MK update makes the button be highlighted to let you
+know there might be changes affecting the baked agents. Once clicked on the button,
+all needed agents are baked and the highlighting is removed.

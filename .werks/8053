@@ -1,0 +1,13 @@
+Title: Fix sporadic invalid OK status for active checks
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i4
+Date: 1403523679
+Targetversion: future
+
+In some very rare cases the CMC misinterpreted the check result status of active
+checks as OK, even if the status would be WARN, CRIT or UNKNOWN. This was due
+to an invalid byte offset. This has been fixed.

@@ -1,0 +1,13 @@
+Title: Fix deadlock in CMC when creating lots of RRDs at once
+Level: 2
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1456133810
+
+This could e.g. happen if you add many hosts and services to the monitoring
+at once. The CMC would then stuck in a dead lock with the RRD creation
+helper process. This has been fixed.

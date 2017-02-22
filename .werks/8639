@@ -1,0 +1,10 @@
+Title: Fixed broken agent update status view
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i3
+Date: 1478869084
+Class: fix
+
+The agent update status view was unusable (Failed with the error "TypeError (%d format: a number is required, not NoneType)").

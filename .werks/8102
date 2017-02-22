@@ -1,0 +1,13 @@
+Title: The Micro Core now safely detects corrupted state files
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417520887
+Class: fix
+
+If due to a disk-full situation or other reasons the file
+<tt>var/check_mk/core/state</tt> was empty, corrupted or incomplete the CMC
+would crash with a segmentation fault in many cases. This has been fixed by
+savely checking the already existing end-of-file magic marker <i>before</i>
+processing the file.

@@ -1,0 +1,32 @@
+Title: Reworked logging configuration of the Check_MK Microcore
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: incomp
+Version: 1.4.0i3
+Date: 1480593373
+Class: feature
+
+The logging configuration of the Check_MK Microcore has been reworked to be
+configured in a single setting. The log levels have been unified for all these
+log domains.
+
+Thes configuration options have been deprecated:
+
+<ul>
+<li><tt>cmc_log_level</tt>: Logging</li>
+<li><tt>cmc_livestatus_debug</tt>: Logging of Livestatus queries</li>
+<li><tt>cmc_debug_alerts</tt>: Logging of the alert processing in the core</li>
+</ul>
+
+The attribute <tt>log_level</tt> has been removed from <tt>cmc_log_cmk_helpers</tt>
+which is now only used to toggle the debug mode of the Check_MK helpers.
+
+The new option is <tt>cmc_log_levels</tt> (Logging of the core).
+
+The incompatibility is that, if you have configured custom log leves with the
+options mentioned above before, they are not effective anymore. You will have
+to set the log levels again using the new option.
+
+In most cases it should be no problem that the log levels are reset, because
+they are mostly only used for a short time during debugging actions.

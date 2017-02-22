@@ -1,0 +1,12 @@
+Title: mk_oracle: force section "instance" to be always the first one when baking agent
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1456823087
+
+This is neccessary, because in this section the version of the database is detected.
+Otherwise the plugin fails to execute the queries correctly.

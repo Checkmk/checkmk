@@ -1,0 +1,81 @@
+Title: Support for new RRD format with more efficient Disk IO
+Level: 2
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.2.7i4
+Date: 1447331088
+Class: feature
+
+The Check_MK Micro Core now supports a new format when creating
+RRD files. Here:
+
+LI:RRD files are kept below the new directory <tt>~/var/check_mk/rrd</tt>.
+LI:All metrics of one service are kept in one RRD
+
+Because now all metrics of a service are stored together in one RRD less
+disk blocks need to be updated when a new value is entered. This saves
+Disk IO. This is possible because the RRDTool version 1.5 now supports
+changing existing RRDs. That way if a check outputs new metrics these can
+be added to an existing RRD.
+
+H2:Switch to the new format
+
+The new CMC format is not used automatically - neither for existing nor
+for new sites. The default for new sites might be changed in future, though.
+Switching your site to the new CMC format is done in the following steps:
+
+1. Make a backup of your current RRDs (<tt>~/var/pnp4nagios/perfdata</tt>). You might
+be tended to skip this step as the amount of data can be large. But you have
+been warned.
+
+2. Go to the ruleset <i>Configuration of RRD databases of services</i> (and
+<i>hosts</i> resp.)
+
+3. Create a rule for some (or all) hosts with the setting
+<i> RRD storage format: One RRD per host/service (saves disk IO, only with CMC)</i>
+
+4. Activate Changes -  And now your system is in a state where <b>new</b> 
+RRDs will automatically be created
+in the new format in <tt>~/var/check_mk/rrd</tt>.
+
+5. In order to migrate the existing RRDs use the following command:
+
+C+:
+OM:cmk --convert-rrds -v
+C-:
+
+It is also possible to specify a list of hosts and limit the conversion
+to these:
+
+C+:
+OM:cmk --convert-rrds -v server01 server02
+C-:
+
+Note: This keeps the existing RRDs present in <tt>~/var/pnp4nagios/perfdata</tt>
+and needs lots of diskspace. If you low in diskspace and are bold or if you
+have a backup (even better) you can directly delete the PNP format RRDs:
+
+C+:
+OM:cmk --convert-rrds --delete-rrds -v
+C-:
+
+If you decided not to delete the old RRDs in the first place you can run
+the command with the option <tt>--delete-rrds</tt> at any time later.
+
+Since all of you zigs of gigabytes of RRDs needs to be transformed this
+can take a long time. The good news: you do not need a downtime on your
+monitoring during this period. New RRDs are being used for storing current
+data as soon as they exist so with a bit luck and good disk performance you
+will not loose data points.
+
+H2:Old PNP SINGLE format
+
+Note: The new RRD format is almost identical with the format <tt>SINGLE</tt> that
+was default in PNP4Nagios a long time ago. PNP was not able to alter the
+list of metrics that a service did output - however. So whenever the list of
+performance data of a check changed the graphs ended at that point of time.
+There is currently no direct migration from PNP's <tt>SINGLE</tt> format
+to the new CMC format. But you can go the intermediate step with
+<tt>cmk --convert-rrds --split</tt>.
+

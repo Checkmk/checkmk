@@ -1,0 +1,11 @@
+Title: Fixed missing performance data when cmk -v is called without -n
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1422614041
+Targetversion: future
+
+

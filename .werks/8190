@@ -1,0 +1,14 @@
+Title: agent_bakery / WATO: fixed invalid configuration overview for some bakelets
+Level: 1
+Edition: cee
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.7i2
+Date: 1434721947
+Targetversion: future
+
+Some agent plugin configurations always got included into the configuration overview.
+For example, the rule <i>Count, size and age of files (Linux, Windows)</i> was displayed
+for any baked agent configuration, even if this rule was never used by the agent.
+This has been fixed.

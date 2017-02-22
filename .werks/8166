@@ -1,0 +1,24 @@
+Title: Limit SNMP OID Ranges now supporting ranges from the end of the table
+Level: 1
+Edition: cee
+Component: inline-snmp
+Version: 1.2.7i1
+Date: 1423476069
+Class: feature
+
+When performing walks on an OID during checking, Check_MK fetches all sub OIDs regardless
+whether these values are needed or not. For example, if you monitor a single
+network interface of a switch with hundrets of ports, the check will fetch the
+information for all the interfaces, while only one is used.
+
+The OID range limiting can be used to reduce the amount of fetched OIDs, but please note,
+this is only useful for special cases like the example above and only used when you
+perform bulkwalks.
+
+Previous versions did only support ranges starting from the start of an SNMP table. With
+this change it is also possible to specify OID ranges of N entries from the end of the
+SNMP table.
+
+When such an "end limit" is configured, the first column of a table is fetched in total,
+while only keeping the requested OIDs but also saving the needed indexes of this table.
+For all additional columns of this table only the requested OIDs are fetched.

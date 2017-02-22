@@ -1,0 +1,14 @@
+Title: Added support for warn/crit/min/max values via Carbon/InfluxDB connections
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476962384
+Class: feature
+
+In addition to the value of a metric itself, it is now possible to send the
+warn/crit/min/max values of a metric to Carbon/InfluxDB, too.  This is
+configurable per service via rules (previously it was just configurable if
+the metric value should be sent or not).
+

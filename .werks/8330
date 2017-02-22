@@ -1,0 +1,21 @@
+Title: mknotifyd: now supports concurrent delivery of notifications and passes completion results back to the core
+Level: 1
+Edition: cee
+Component: notifications
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465386509
+Class: feature
+
+The notification spooler will now use multiple queues of notifications, at least one per
+notification plugin type. This means that, for example, a slow sms notification can not
+stall delivery of mail notifications.
+Via global settings it is also possible to increase the number of concurrent messages being
+sent per plugin type, but caution is advised as we can't guarantee that the specific
+notification script is actually capable of handling parallel messages.
+
+Another change is that output of the notification scripts will be passed back through the
+notification daemon to the history log of the core. Ideally this means the "Host- and Service
+notifications" view will include confirmation that a notification has actually been delivered or an
+error if it wasn't.
+We also plan to add a more visible warning when notifications are failing.

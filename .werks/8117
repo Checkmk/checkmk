@@ -1,0 +1,18 @@
+Title: The "Check_MK Discovery" service is executed in a much more performant way
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1418371063
+Targetversion: future
+
+The "Check_MK Discovery" check was executed as active check, initializing the whole
+python interpreter, check_mk and the whole check_mk configuration for each check,
+just to perform an inventory check for a single host.
+
+Now the "Check_MK Discovery" service also uses the permanently running Check_MK
+Helper processes just like the regular Check_MK service which results in a big
+performanc boosts for environments with a large number of hosts using the
+"Check_MK Discovery" service.

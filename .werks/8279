@@ -1,0 +1,15 @@
+Title: Do not delete but postpone notification while host/service is out of it notification period
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1435232552
+Targetversion: future
+
+Previously notifications would be totally dropped if the object in question
+was out of its notification period. Note: a contact who is out of notification
+period will still not get the notification later. Also when a timeperiod is
+being used as a condition in a notification rule then the notification will
+not be postponed but the rule will simply fail to match.

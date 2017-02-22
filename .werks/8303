@@ -1,0 +1,21 @@
+Title: Added new utility logdate, directly callable without path
+Level: 1
+Edition: cee
+Component: setup
+Version: 1.2.7i3
+Date: 1443686109
+Class: feature
+
+C+:
+OM:logdate --help
+Usage: logdate [-h|--help] [FILE1 FILE2 ...]
+
+Reads log lines from stdin or from specified files and searches for
+timestamps in the form [1443685694] (Unix epoch timestamp). Writes the
+lines to standard output while replacing the timestamps by local times
+in the format [2015-10-01 09:48:14].
+
+Example:
+
+logdate var/check_mk/core/history
+C-:

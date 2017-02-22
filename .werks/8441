@@ -1,0 +1,12 @@
+Title: Fixed configuration generation for "Ignore TCP Reset Packets" option
+Level: 1
+Edition: cee
+Component: config
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1456127500
+
+When upgrading a site with non-default Smart PING options from a pre-1.2.8b2
+version, "cmk --update" failed. This has been fixed.

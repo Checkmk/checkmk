@@ -1,0 +1,66 @@
+Title: Alert Handlers - execute automatic actions upon state changes of hosts and services
+Level: 3
+Edition: cee
+Component: cmc
+Version: 1.2.7i2
+Date: 1434463225
+Class: feature
+
+Check_MK now supports automatic actions (scripts) to be executed upon the
+state change of a host or service. This is similar to Nagios "Event Handlers"
+but has a much more flexible configuration and other advantages.
+
+At the beginning there is a state change of a host or service. It does not
+matter whether this change is "soft" - because the maximum number of check
+attempts has not been reached. It simply matters that the state has changed
+from one of OK/WARN/CRIT/UNKNOWN to another.
+
+Whenever this happens a new global rule chain of <i>Alert Handler Rules</i>
+is being processed. Each rule that matches calls an external script of
+your choice. Most times people want to restart services, trigger garbage
+collections of Java machines or do similar stuff.
+
+Please note that some folks insist that monitoring should not try to repair
+things or by any other means actively <i>change</i> things. Whether you share
+this opinion or not is your own decision.  Alert handlers do not limit you
+in what you exactly do with them. But you have been warned.
+
+When you compare alert handlers with the Rule Based Notifications (RBN) then
+here are some important differences:
+
+LI:Notifications are being suppressed during downtimes, outside of the notification period, when the host is down and other situations. Alerts are never suppressed.
+LI:Notifications cannot be triggered at soft state changes.
+LI:Alert handlers only work with the Check_MK Micro Core. If you need Nagios or Icinga please use the Event Handlers of those cores.
+LI:Alert handling rules do not allow cancelling. All matching rules are being executed.
+LI:As long as no alert rule is defined the alert handling mechanism is deactivated in the core.
+
+Note: this is just the first implementation of the Alert Handlers. Next steps
+will the introduction of error tracking, notifications tied to alert actions,
+even more flexible conditions, a system for secure remote execution and much
+more. Stay tuned!
+
+H2:Setting up Alert handlers
+
+For setting up alert handlers you first need to create a script that should
+be called. This can be written in any programming language - most people
+will use a simple BASH script. It must be executable and be installed in
+<tt>~/local/share/check_mk/alert_handlers</tt> and made executable.
+
+The script is provided with all information about the alert with environment
+variable that being with <tt>ALERT_</tt> - very similar to a notification
+script. A good start for testing is the following script:
+
+F+:/local/share/check_mk/alert_handlers/foo
+#!/bin/bash
+env | grep ALERT_ | sort > /tmp/alert.out
+F-:
+
+This will dump all the variable of the alert into the file <tt>/tmp/alert.out</tt>.
+When specifying this script in the alert handler rule - simply write <tt>foo</tt>
+here.
+
+Useful for debugging is to set <i>Alert handler log level</i> to <i>Full dump
+of all variables</i> and <i>Logging of the alert processing</i> to <i>on</i>
+in the global settings. You will find information it <tt>~/var/log/cmc.log</tt>
+and <tt>~/var/log/alerts.log</tt>.
+

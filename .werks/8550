@@ -1,0 +1,18 @@
+Title: RRD files below var/check_mk/rrd/*/*.rrd are handled by diskspace cleanup
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1473346587
+
+Similar to the RRD files below the legacy RRD path "var/pnp4nagios/perfdata/*/*.rrd",
+the files in "var/check_mk/rrd/*/*.rrd" are now also cleaned up by the diskspace cleanup
+mechanism.
+
+Please note: The var/check_mk/rrd/*/*.info files are not handled by the diskspace
+cleanup script because the diskspace deletes file by their last modification time and
+the files normally never change during runtime (except new perf data keys are found for
+a check).

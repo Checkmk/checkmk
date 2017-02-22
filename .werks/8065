@@ -1,0 +1,14 @@
+Title: Savely direct any verbose or diagnostic output from check_mk or checks to cmc.log
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417440804
+Class: feature
+
+If any check outputs something to stdout or stderr (which it should not do in
+production mode) or if a function in the check_mk code (such as inline SNMP)
+outputs data to stdout or stderr, then this will now savely be logged to the
+CMC log with the classification "warning". This will allow easier debugging
+and error handling. Also the logfile <tt>cmc-helper.log</tt> will no longer
+be created. Messages go into <tt>cmc.log</tt> instead.

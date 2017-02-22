@@ -1,0 +1,15 @@
+Title: Enable local asynchronous notification delivery using mknotifyd by default
+Level: 2
+Edition: cee
+Component: notifications
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476197366
+Class: feature
+
+The notification deamon can be used for local asynchronous delivery and is informing you
+about failed notification delivery since werk #8330 and is increasing the performance of
+notifications in case the delivery of notifications takes time.
+
+So the default delivery mechanism has been changed to use the local asynchronous delivery
+in the Enterprise Edition.

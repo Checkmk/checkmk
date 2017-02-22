@@ -1,0 +1,10 @@
+Title: bakery winperf_if: now uses correct plugin windows_if.ps1
+Level: 2
+Edition: cee
+Component: wato
+Version: 1.2.7i3
+Date: 1441712041
+Class: fix
+
+The agent bakery used the incorrect/deprecated file wmic_if.ps1 in the bakelet "Network Interfaces on Windows".
+It now uses the windows_if.ps1.

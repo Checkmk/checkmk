@@ -1,0 +1,11 @@
+Title: Fix exception "max() args is an empty sequence" when exporting views as PDF
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1435575241
+Targetversion: future
+
+This exception could happen in case of empty rows.

@@ -1,0 +1,11 @@
+Title: Fix problem with 100% helper usuage where helper are actually idle
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1458727596
+
+

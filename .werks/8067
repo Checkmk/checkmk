@@ -1,0 +1,14 @@
+Title: Delay service notification when host comes up
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417448010
+Class: fix
+
+When a host is DOWN and then a service of that host goes CRIT, the
+corresponding notification is put on hold. As soon as the host goes up again
+the notification would immediately be sent out. Now we rather wait for the
+next check of the service, in order to give it a chance to become OK again,
+after the host is reachable again.
+

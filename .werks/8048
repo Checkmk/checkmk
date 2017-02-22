@@ -1,0 +1,11 @@
+Title: Add LASTHOSTPROBLEMID and LASTSERVICEPROBLEMID to notifications
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.5i3
+Date: 1399022991
+Class: fix
+
+These two variables are now being added to the notification context.
+Since the CMC does not set 0 for recoveries in the HOSTPROBLEMID
+field, the LAST... fields have the same value.

@@ -1,0 +1,15 @@
+Title: New option for forcing a history logfile rotation based on its size
+Level: 2
+Edition: cee
+Component: cmc
+Class: feature
+State: unknown
+Version: 1.2.7i1
+Date: 1423212759
+Targetversion: future
+
+The Check_MK Micro Core now forces a rotation of the history logfile if its
+size exceeds a configure limit. This avoids too large logfiles in situations
+with a high logging volume. Large logfile make problems in certain Livestatus
+queries. The default is now to force a rotation at a size of 20 MB. You can
+configure this limit within the bounds of 10 KB and 1 GB.

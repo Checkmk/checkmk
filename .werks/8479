@@ -1,0 +1,11 @@
+Title: Fixed missing PDF export of graph collections
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1461071506
+
+

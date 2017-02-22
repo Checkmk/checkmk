@@ -1,0 +1,15 @@
+Title: Configurable installations paths for Linux agents
+Level: 1
+Edition: cee
+Component: agents
+Version: 1.2.6b1
+Date: 1417186227
+Class: feature
+
+The agent bakery now allows to configure the paths for the binaries
+(Default: <tt>/usr/bin</tt>), the configuration files (Default:
+<tt>/etc/check_mk</tt>) and the base directory for plugins and local checks
+(Default: <tt>/usr/lib/check_mk_agent</tt>). These paths are correctly applied
+to baked RPMs, DEBs and Tarballs. Also the environment variables that inform
+plugins about the configuration path are correctly being modified in the
+actual <tt>check_mk_agent</tt>.

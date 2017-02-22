@@ -1,0 +1,14 @@
+Title: Fix PING check on clusters without services
+Level: 1
+Edition: cee
+Component: config
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1397122393
+Targetversion: future
+
+The PING check that is created on clusters that have no other services
+always failed with <tt>check_icmp: Failed to resolve -m</tt>. This happened
+only some operating systems only (e.g. RedHat 6.5). The reason is probably
+in different versions of the <tt>getopt</tt> function. This has been fixed.

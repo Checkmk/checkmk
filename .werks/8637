@@ -1,0 +1,12 @@
+Title: Check_MK Notification Spooler is now always enabled
+Level: 2
+Edition: cee
+Component: notifications
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1478702443
+
+The notification spooller will be enabled on all sites and can not be
+disabled anymore via "omd config".

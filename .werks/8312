@@ -1,0 +1,10 @@
+Title: cmk_agent_updater: Baked Windows agents now properly respect configured interval
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i1
+Date: 1469029478
+Class: fix
+
+

@@ -1,0 +1,11 @@
+Title: Fix default configuration off RRD files in WATO rule
+Level: 1
+Edition: cee
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1390915254
+Targetversion: future
+
+

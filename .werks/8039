@@ -1,0 +1,16 @@
+Title: Fixed handling of non existant OIDs by the snmp get executed during bulkwalk
+Level: 1
+Edition: cee
+Component: inline-snmp
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1396853909
+Targetversion: future
+
+When a SNMP bulk walk on an OID does not return the requested OID, but was successful
+in general, an additional SNMP-GET is executed to try to get that explicit requested
+OID. This is implemented like it is in standard <tt>snmpbulkwalk</tt> command.
+
+There was an error handling non existant OIDs during the mentioned SNMP-GET. This
+should be fixed now.

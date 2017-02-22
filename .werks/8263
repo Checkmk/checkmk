@@ -1,0 +1,13 @@
+Title: Now support configuring custom SNMP port
+Level: 1
+Edition: cee
+Component: inline-snmp
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1436946201
+Targetversion: future
+
+Check_MK has a ruleset named "UDP port used for SNMP". It can be used
+to customize the default UDP port 161 for contacting devices via SNMP.
+This ruleset is now also supported by Inline SNMP.

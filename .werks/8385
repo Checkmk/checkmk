@@ -1,0 +1,12 @@
+Title: Fixed exception when activating config on slave site
+Level: 1
+Edition: cee
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1455713420
+
+This exception could occur when the WATO sync is handled by a non initialized
+process which has not yet loaded the plugins of all multisite modules.

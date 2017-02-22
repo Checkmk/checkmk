@@ -1,0 +1,12 @@
+Title: icinga->cmc statefile migration: fixed corrupt cmc statefile
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1436273929
+
+The statefile migration from Icinga to the Check_MK Microcore failed when the
+Icinga retention.dat had downtimes set. This has been fixed.

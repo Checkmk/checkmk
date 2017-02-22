@@ -1,0 +1,14 @@
+Title: Do no increase notification number on recovery notifications
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1397732512
+Targetversion: future
+
+When a notification of the type RECOVERY is being created then the
+notification number is not longer increased. This is neccessary.
+Otherwise RECOVERY notifications always have at least a number of 2
+which garbles possible escalations.

@@ -1,0 +1,12 @@
+Title: Install missing alert handler for remote execution on Linux
+Level: 1
+Edition: cee
+Component: setup
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1478252014
+
+The file <tt>share/check_mk/alert_handlers/linux_remote</tt> had been missing
+in the installation. This has been fixed.

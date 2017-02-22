@@ -1,0 +1,17 @@
+Title: Take check period into account when computing the staleness
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417518188
+Class: feature
+
+When it comes to check staleness then the CMC now takes the check period of
+a host/service into account. When the object is out of its check period then
+we take the beginning of that inactive phase as a reference - not the current
+time. The effect is that the staleness value is frozen at the end of the check
+period. That way checks that are out of their period are not any longer shown
+as stale - unless they already have been stale when the inactive phase started.
+
+Note: This only works when using CMC. The Nagios core has no information about
+previous timeperiod transistions so this cannot be implemented there.

@@ -1,0 +1,11 @@
+Title: Custom graphs: When using summary operator, draw line even when some metrics have no value
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1478595953
+
+

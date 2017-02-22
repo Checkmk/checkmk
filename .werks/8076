@@ -1,0 +1,44 @@
+Title: New option cmk --rrd-convert for convertig existing RRDs
+Level: 2
+Edition: cee
+Component: config
+Version: 1.2.5i6
+Date: 1413299523
+Class: feature
+
+This new commanline option for the <tt>cmk</tt> tool will change exising
+RRD databases to match the configuration that is done via the WATO rulesets
+<i>Configuration of RRD databases of hosts</i> and <i>Configuration of RRD
+databases of services</i>. Otherwise changes in these rules applied only on
+new RRDs.
+
+You can restrict the conversion to one or several hosts:
+
+C+:
+OM:cmk -v --convert-rrds myhost1 myhost2
+myhost1:
+  HOST
+    - rta....uptodate
+    - pl....uptodate
+    - rtmax....uptodate
+    - rtmin....uptodate
+  Postfix Queue
+    - length....uptodate
+    - size....uptodate
+  CPU utilization
+    - user....converted, 376 KB -> 40 KB
+    - system....converted, 376 KB -> 40 KB
+    - wait....converted, 376 KB -> 40 KB
+[...]
+C-:
+
+If you do not specify any hostname, then <b>all</b> RRDs will
+be converted.
+
+<b>Note:</b> this new option uses a completely new feature of the RRDTool,
+which has been sponsored by Mathias Kettner: RRDTool can now change the
+internal structure of RRDs on-the-fly. That way it is now for example possible
+to change the range of time or precision that data is being kept.
+
+<b>Note 2:</b> this feature uses an <b>experimental</b> version of
+RRDTool. Please make a backup of your RRDs before trying this out.

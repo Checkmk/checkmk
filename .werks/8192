@@ -1,0 +1,10 @@
+Title: Notifications: CMC now provides the SERVICEDISPLAYNAME as environment variable
+Level: 1
+Edition: cee
+Component: notifications
+Version: 1.2.7i3
+Date: 1436343519
+Class: feature
+
+You can now use the environment variable SERVICEDISPLAYNAME in your notification plugins
+when using the Check_MK Micro Core.

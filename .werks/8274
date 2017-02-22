@@ -1,0 +1,12 @@
+Title: Fix time range in "Export as PDF" from availability pages
+Level: 2
+Edition: cee
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.7i2
+Date: 1434452546
+Targetversion: future
+
+Instead of the time range that is selected in the availability options the
+time range from the sidebar snapin would be used. This is fixed.

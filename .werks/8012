@@ -1,0 +1,13 @@
+Title: Fix precision in smart ping interval
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1390560484
+Targetversion: future
+
+When using very small intervals for the host check while
+using SMART PING then due to rounding problems a 1 second
+interval could be reduced to 0. This has been fixed.

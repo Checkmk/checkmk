@@ -1,0 +1,9 @@
+Title: Fix exception when editing a report and setting "Use settings from..." to "(no report)"
+Level: 1
+Edition: cee
+Component: reporting
+Version: 1.2.6b1
+Date: 1417542869
+Class: fix
+
+

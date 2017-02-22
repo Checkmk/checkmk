@@ -1,0 +1,10 @@
+Title: Fix garbled summary line in AV reports when timeline is being shown
+Level: 1
+Edition: cee
+Component: reporting
+Compatible: compat
+Version: 1.2.7i4
+Date: 1455012893
+Class: fix
+
+

@@ -1,0 +1,13 @@
+Title: Do not swallow I/O errors when communicating to mkeventd
+Level: 1
+Edition: cee
+Component: livestatus
+Compatible: compat
+Version: 1.4.0b1
+Date: 1481902783
+Class: fix
+
+Previously, I/O errors caused by communicating with mkeventd were silently
+swallowed by the Livestatus interface, returning just an empty result.  Now
+you get an appropriate error when using the "fixed16" response header.
+

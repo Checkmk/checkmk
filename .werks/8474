@@ -1,0 +1,11 @@
+Title: Fixed exception on report scheduler page (introduced with 1.2.8b10)
+Level: 1
+Edition: cee
+Component: reporting
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1460470513
+
+

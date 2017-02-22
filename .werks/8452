@@ -1,0 +1,14 @@
+Title: Time selection graphs have been reworked to use much less space
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1457106594
+
+The graph detail page or graph basket show the small time selection graphs
+beside the main graphs. These graphs have been made more compact by removing
+their labels and spacing. These graphs do also not reposition to the bottom
+of the main graph anymore on too small screens.

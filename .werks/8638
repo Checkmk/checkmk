@@ -1,0 +1,28 @@
+Title: Fixed broken notifications when Check_MK notification spooler not enabled (regression since 1.4.0i2)
+Level: 3
+Edition: cee
+Component: notifications
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1478703179
+
+When updating an existing site to 1.4.0i2 or 1.4.0i2p2 while not having the "Check_MK notification spooler"
+enabled via "omd config", the notification system stopped sending notifications.
+
+The background is that the default notification mechanism had been changed from direct delivery to
+asynchronous delivery. And this was done even when the notification spooler, which is responsible for
+delivering the asynchronous notification, was disabled.
+
+The notifications are not lost, they have simply not been processed. In case you are affected,
+there should exist one file for each notification that has been created but was not delivered
+below <tt>var/check_mk/notify/spool/</tt>.
+
+To fix this issue just install the new version. After the update all notification will be sent out.
+In case you want to supress the stuck notifications, you can go to the directory mentioned above and
+remove the <tt>.mk</tt> files in this directory before starting the site again.
+
+To make it work for you with the existing versions, you can execute "omd config" and go to 
+"Distributed Monitoring > MKNOTIFYD" and enable this option. After starting the site again,
+all your notifications will be processed and are sent to the users.

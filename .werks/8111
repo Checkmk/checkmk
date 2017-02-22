@@ -1,0 +1,11 @@
+Title: Fix exception in agent bakery if host has been removed
+Level: 2
+Edition: cee
+Component: agents
+Version: 1.2.6b1
+Date: 1418139924
+Class: fix
+
+When a host has been removed or reclassified as having no Check_MK
+agent then the page showing all agent configuration raises
+and exception. This has been fixed.

@@ -1,0 +1,10 @@
+Title: Fix missing content of Livestatus column check_command_expanded
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.6b1
+Date: 1417420970
+Class: fix
+
+This column was always empty. This is fixed now. The column is not being
+used by Multisite, by the way.

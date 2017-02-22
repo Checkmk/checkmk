@@ -1,0 +1,14 @@
+Title: Baked agent deb package will not longer delete /etc/check_mk on uninstall
+Level: 2
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1459949381
+
+When you uninstalled a baked agent in DEB format then the directory <tt>/etc/check_mk</tt>
+was deleted. This has been changed so if you have own files lying around there they will
+not be touched. Instead <tt>/var/lib/check_mk_agent</tt> will now be correctly removed
+(unless you have changed that path in your configuration).

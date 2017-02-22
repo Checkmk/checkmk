@@ -1,0 +1,9 @@
+Title: Notifications: New notification variables set by CMC: HOSTCONTACTGROUPNAMES / SERVICECONTACTGROUPNAMES
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.5i6
+Date: 1413294732
+Class: feature
+
+Please note that these new variables are not available when using the Nagios core.

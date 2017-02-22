@@ -1,0 +1,11 @@
+Title: Fixed broken multisite links in the pnpgraph overview page
+Level: 1
+Edition: cee
+Component: cmc
+Compatible: compat
+Version: 1.2.7i4
+Date: 1449062333
+Class: fix
+
+The Check_MK Microcore wrote some incorrect data (hostalias instead of hostname) into
+the RRD xml files, which broke some multisite links on the pnpgraph page.

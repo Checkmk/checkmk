@@ -1,0 +1,9 @@
+Title: RRD xml: do pnpCleanup() for NAME parameter in DATASOURCE block
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.5i1
+Date: 1391520602
+Class: fix
+
+

@@ -1,0 +1,11 @@
+Title: fixed leaking of file handles in alert handler
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1456933641
+
+Previously the alert handler leaked one filedescriptor (a pipe) for each alert sent.

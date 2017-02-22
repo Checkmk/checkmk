@@ -1,0 +1,25 @@
+Title: Bits per second graphs now show a unified unit on the vertical axis now
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1457088535
+
+The vertical axis of the graphs is limited in it's size because it is fixed. The labels
+of the vertical graph axis can be longer than the desired area is. This makes the text
+not readable.
+
+Especially the bits per second graphs, e.g. the network interface traffic, had this problem.
+
+To fix this we changed the behaviour of these graphs to have a unified scaled unit on the
+vertical axis. For example the mixed bits, kbits and mbits labels have been removed and
+replaced by a single scaled unit, for example only kbits, depending on the values shown
+in the graph.
+
+The currently used scaled value is displayed at the top of the vertical axis.
+
+This mechanism has currently only been realized for the bits per second graphs, but might
+be used for others in the future too.

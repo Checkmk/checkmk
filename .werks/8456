@@ -1,0 +1,10 @@
+Title: Agent updater: Improved error handling when curl and python-requests are missing
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i1
+Date: 1458037646
+Class: fix
+
+

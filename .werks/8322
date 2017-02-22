@@ -1,0 +1,12 @@
+Title: fixed: graph lines were always black
+Level: 1
+Edition: cee
+Component: metrics
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1442407728
+Targetversion: future
+
+due to a bug, lines in performance graphs drawn with the new graphing system
+were always black.

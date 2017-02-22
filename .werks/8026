@@ -1,0 +1,11 @@
+Title: Change default state retention of CMC from 1 to 10 minutes
+Level: 1
+Edition: cee
+Component: cmc
+Class: feature
+State: unknown
+Version: 1.2.5i1
+Date: 1391432382
+Targetversion: future
+
+This saves disk IO.

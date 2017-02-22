@@ -1,0 +1,15 @@
+Title: CentOS/RedHat: Don't fail building agent rpms with "brp-python-bytecompile" issue
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476104058
+Class: fix
+
+The agent bakery was unable to build agent RPM packages because of the python environment
+could not be loaded properly for precompiling python files. As this is not needed for us,
+we have now disabled it for the RPMs created by the agent bakery.
+
+We were able to reproduce this issue with CentOS and RedHat 6.x but other distributions
+and versions may also be affected. The current Ubuntu is not.

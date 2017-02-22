@@ -1,0 +1,11 @@
+Title: Fix invalid total curve in CPU utilization graph
+Level: 2
+Edition: cee
+Component: metrics
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1439815477
+Targetversion: future
+
+

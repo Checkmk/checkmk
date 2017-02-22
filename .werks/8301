@@ -1,0 +1,55 @@
+Title: cmcdump: New tool for offline mirroring satellite sites into a central site
+Level: 3
+Edition: cee
+Component: cmc
+Version: 1.2.7i3
+Date: 1442925600
+Class: feature
+
+The CMC now has a new replication mechanism for mirroring the state
+of satellite monitoring sites into a central site. This is much like
+<tt>livedump</tt> for the Nagios core but is much more powerful.
+
+In order to setup this you need to call <tt>cmcdump -C > cmc.config</tt>
+on the remote site and transfer that file to the central site into
+<tt>etc/check_mk/conf.d/yourfile.mk</tt>. This will dump the configuration
+of all hosts and services. Afterwards activate the updated configuration
+with <tt>cmk -O</tt>. You need to repeat it from time to time so that
+your central site is up-to-date.
+
+In a much shorter interval (e.g. once per minute) you call <tt>cmcdump >
+cmc.state</tt> on the same remote site. This can easily be done with a cron
+job. That file you also transfer to the central site via any mechanism
+you like (scp, http, rsync, ...). Over there read it into the core with:
+
+C+:
+OM:unixcat < cmc.state tmp/run/live
+C-:
+
+This will update the core's complete state of all hosts and services that
+are contained in the dump. The transferred state will correctly reflect the
+following variables:
+
+LI:The actual state (PEND, OK, WARN, ...)
+LI:The plugin output
+LI:The long (multiline) plugin output
+LI:The performance data
+LI:Whether the object is flapping and the current level of flappiness
+LI:The time of the last check execution
+LI:The time of the last state change
+LI:The check execution time
+LI:The check latency
+LI:The number of the current check attempt
+LI:Whether the current state is hard or soft
+LI:Whether a problem has been acknowledged
+LI:Whether the object is currently in a scheduled downtime
+
+In the central site this will almost - but not entirely - be handled
+like a check execution.  One difference is that no notifications will be
+sent. But performance data is being processed graphs will be created. Also
+the monitoring log is being updated and availability data can be processed.
+Depending on our synchronization interval of the data transfer the latter
+one might not be 100% precise however.
+
+The tool <tt>cmcdump</tt> is in your path and can directly be executed.
+Call <tt>cmcdump --help</tt> for details on how to call this tool.

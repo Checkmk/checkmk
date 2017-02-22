@@ -1,0 +1,9 @@
+Title: agent bakery for windows HW/SW-Inventory now uses the new mk_inventory.vbs script
+Level: 2
+Edition: cee
+Component: inv
+Version: 1.2.7i3
+Date: 1436446418
+Class: feature
+
+and inventory baklet now has extended configuration features

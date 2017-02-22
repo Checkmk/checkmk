@@ -1,0 +1,15 @@
+Title: Changes in custom files are now detected and tell the user to rebake the agents
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.2.7i4
+Date: 1450086715
+Class: feature
+
+It is possible to include custom files with the agent bakery for deploying the files
+with the agent. This is currently only available for windows systems.
+
+Changes to these files were not detected by the agent bakery. The user had to modify
+other rules or enforce that the agents are rebuilt. This has been changed now. All
+files included with an agent are monitored for changed contents now.

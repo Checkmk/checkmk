@@ -1,0 +1,22 @@
+Title: Smart PING now uses same layout as vanilla PING
+Level: 2
+Edition: cee
+Component: cmc
+Version: 1.2.5i3
+Date: 1399364837
+Class: feature
+
+The Smart PING of the Micro Core now per defaults creates exactly the same type of
+packets that a plain command line <tt>ping</tt> does. This has the disadvantage of
+creating larger packets then neccessary - but has the advantage of being compatible
+with more firewalls. Some of those tend to regard ICMP ECHO REQUEST packets without
+payload as some bogus attack and drop them.
+
+You can reenable PING packets without payout via a new global option for
+<tt>main.mk</tt>:
+
+F+:main.mk
+cmc_smartping_omit_payload = True
+F-:
+
+This is also available via WATO in the global settings of the Micro Core.

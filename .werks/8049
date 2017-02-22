@@ -1,0 +1,12 @@
+Title: Fix exception of cmcrushd on RedHat 5.X
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1399031083
+Targetversion: future
+
+Problem is due to an alternative behaviour of Python when sys.exit
+is being called.

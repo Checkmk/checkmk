@@ -1,0 +1,11 @@
+Title: Agent bakery now creates .tar.gz files as an alternative for RPM and DEB
+Level: 2
+Edition: cee
+Component: agents
+Version: 1.2.6b1
+Date: 1417186156
+Class: feature
+
+The tarballs are not meant for direct use in the first place. But they are
+conventiant of you want to extract some of the baked files with your
+own scripts.

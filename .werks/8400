@@ -1,0 +1,12 @@
+Title: Fixed PDF export for service detail views: added missing graphs
+Level: 2
+Edition: cee
+Component: reporting
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1455632806
+
+This still works only for services with at most 2 or 3 graphs. The cell that
+is containing the graphs cannot include a page break.

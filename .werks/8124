@@ -1,0 +1,47 @@
+Title: Avoid configuration changes to be become active without activate changes
+Level: 2
+Edition: cee
+Component: config
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1418679305
+Targetversion: future
+
+The Check_MK keepalive mode, which is used for the Check_MK helpers and for the
+RRD creation helper, now uses a new method for reading the configuration from
+<tt>main.mk</tt>, the other <tt>*.mk</tt> files and the <tt>autochecks</tt>. This
+new method has two advantages:
+
+<ul>
+<li>Changes done to <tt>*.mk</tt> files can no longer become active unless they
+are activated. This even holds for core or server restarts and for crashed check
+helpers</li>
+<li>Check helpers and RRD helper do not any longer need to restart themselves
+after a configuration change but simply reload the changed configuration. This
+has a muss smaller CPU footprint when activating changes.</li>
+<li>Autochecks files are now only read for the host that is currently being
+delt with. This makes the internal check table much smaller and speeds
+configuration reloads.</li>
+</ul>
+
+The gross result is that configuration changes are now really automic and
+also faster.
+
+H2:Implementation details
+
+Whenever you create the configuration for the core (options <tt>-B</tt>, <tt>-O</tt>,
+<tt>-R</tt> or <tt>-U</tt> or <i>Activate Changes</i> via WATO) then the complete
+configuration (the result from parsing <tt>main.mk</tt> and friends) is written to
+the file <tt>var/check_mk/core/config.mk</tt>. The core then triggers the check
+helpers for configuration reload. The helpers simply re-read that file and are
+immediately up-to-date. At the same time copies (hard links) of the autochecks
+files in <tt>var/check_mk/autochecks</tt> are being created in <tt>var/check_mk/core/autochecks</tt>.
+These files are used during the monitoring.
+
+Note: The <i>Discovery</i> check (formerly known as <i>Inventory<i> check) does <i>not</i>
+use the activated configuration but still that one that is modified via WATO. That way
+after doing a service discovery the discovery check will immediately be happy - without
+a core restart. This is just as it used to be.
+
+

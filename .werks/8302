@@ -1,0 +1,17 @@
+Title: New page for downloading the baked monitoring agent of a host
+Level: 2
+Edition: cee
+Component: agents
+Version: 1.2.7i3
+Date: 1443109102
+Class: feature
+
+There is now a new page for every host where you can download it's Check_MK
+agent.  This page has one link for every supported operating system (as WATO
+cannot know which agent package type you need).
+
+Note: The download of baked monitoring agents is only possible for users
+with the Adminitrator role per default. This is because agent may contain
+confidential data such as passwords. But if you like you can allow normal
+users either downloading agents for hosts where they are a contact for or
+even for all agents.

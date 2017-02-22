@@ -1,0 +1,13 @@
+Title: Changing global setting for alert handler event types is now effective
+Level: 2
+Edition: cee
+Component: alerts
+Compatible: compat
+Version: 1.4.0b2
+Date: 1487083172
+Class: fix
+
+The bug was that changing the global setting for the handled event types
+would not be activated by {{Activate Changes}}. The configuration for the
+core was not generated newly until some other settings was changed also.
+This has been fixed.

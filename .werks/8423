@@ -1,0 +1,11 @@
+Title: Fix agent updater on ORACLE Linux (where rpm is /bin/rpm)
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1456150478
+
+

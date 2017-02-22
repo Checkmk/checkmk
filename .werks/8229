@@ -1,0 +1,10 @@
+Title: mysql: Added support to configure socket in agent bakery
+Level: 1
+Edition: cee
+Component: wato
+Compatible: compat
+Version: 1.2.7i4
+Date: 1446025413
+Class: feature
+
+

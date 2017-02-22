@@ -1,0 +1,16 @@
+Title: Use the same problem id through all notifications of a problem
+Level: 2
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1399301141
+Targetversion: future
+
+When a host or services goes from OK into a hard non-OK state, then
+a new problem ID is generated. When the state now changes between several
+different non-OK states and goes finally back to OK, then the same
+problem ID is being reused in all notifications. That way a matching of
+notifications in an external system is possible. Previously each state
+change created a new problem ID.

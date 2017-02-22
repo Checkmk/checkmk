@@ -1,0 +1,18 @@
+Title: Fix detection of inactive hosts when using Pages feature of PNP4Nagios
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+State: unknown
+Version: 1.2.7i1
+Date: 1423064420
+Targetversion: future
+
+The <i>Pages</i> feature of PNP4Nagios ignores hosts where the performance
+data is not updated anymore. It does this by looking at the modification time
+of the directory where the host's RRDs are being stored. Since the Micro
+Core simply opened the existing XML files for writing when updating them,
+this modification time never changed and PNP thought that all hosts were
+dead. This has been fixed by now by always creating a <tt>.xml.new</tt>
+file frist and then renaming this to <tt>.xml</tt>. This also avoids very
+short times where the file is empty.

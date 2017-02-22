@@ -1,0 +1,10 @@
+Title: Added agent bakery configuration for mtr plugin
+Level: 1
+Edition: cee
+Component: checks
+Compatible: compat
+Version: 1.4.0i1
+Date: 1460642325
+Class: feature
+
+

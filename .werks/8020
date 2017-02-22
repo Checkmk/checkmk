@@ -1,0 +1,9 @@
+Title: checkhelper: Reports an UNKNOWN error if the service check command exceeds the maximum size of 4096
+Level: 1
+Edition: cee
+Component: cmc
+Version: 1.2.5i4
+Date: 1403274215
+Class: fix
+
+

@@ -1,0 +1,13 @@
+Title: You can now have the timeline bar and/or the detailed timeline rendered in a report
+Level: 2
+Edition: cee
+Component: reporting
+Version: 1.2.7i1
+Date: 1431010600
+Class: feature
+
+The report element <i>Availability table</i> now allows to also show the graphical
+timeline bar and/or the detailed list of time spans (events) that make up to the
+availability of the object in question. If the table contains more than one
+object (host, service), then the timeline bars and details are repeated for every
+single object.

@@ -1,0 +1,14 @@
+Title: RPM/DEB: Verifying python version during install when shipping python plugins
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i3
+Date: 1487579291
+Class: fix
+
+The agent packages shipped by the agent bakery may contain agent plugins that need
+a python interpreter on the target system. The Debian- and RPM-packages built by
+the agent bakery are now verifying that the python interpreter is installed as
+'python' in the PATH and also verify that this python is Python 2.x. The later check
+is needed because the Python agent plugins are currently only Python 2.x compatible.

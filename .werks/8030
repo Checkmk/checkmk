@@ -1,0 +1,13 @@
+Title: Set default host check interval for non-Smart-PING hosts to 60 seconds
+Level: 1
+Edition: cee
+Component: config
+Version: 1.2.5i1
+Date: 1395062455
+Class: fix
+
+The host check interval for hosts when using the Micro Core has been 6 seconds.
+This is a good setting when using Smart-PING (which is the default). When you
+switch to an alternative command like <tt>check_tcp</tt>, then 6 seconds is
+too fast in most situations. So we changed the default interval for all
+non-Smart-PING hosts to 60 seconds.

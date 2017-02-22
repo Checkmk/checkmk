@@ -1,0 +1,10 @@
+Title: Custom icons and actions work now for Check_MK/Discovery/active checks
+Level: 1
+Edition: cee
+Component: multisite
+Compatible: compat
+Version: 1.4.0i3
+Date: 1487669773
+Class: fix
+
+

@@ -1,0 +1,10 @@
+Title: rds_licenses: Remote desktop licenses plugin is now bakeable
+Level: 1
+Edition: cee
+Component: wato
+Compatible: compat
+Version: 1.4.0i1
+Date: 1463731184
+Class: feature
+
+

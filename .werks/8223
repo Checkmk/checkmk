@@ -1,0 +1,11 @@
+Title: Logfile configuration for Windows now bakeable
+Level: 1
+Edition: cee
+Component: checks
+Class: feature
+State: unknown
+Version: 1.2.7i1
+Date: 1427107549
+Targetversion: future
+
+The Agent Bakery can now be used for configuring logfile monitoring on Windows.

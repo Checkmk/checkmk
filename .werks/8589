@@ -1,0 +1,10 @@
+Title: Automically create /var/lib/check_mk_agent/spool in baked agents
+Level: 1
+Edition: cee
+Component: agents
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465800806
+Class: feature
+
+

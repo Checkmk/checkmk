@@ -1,0 +1,13 @@
+Title: Stacked metrics draw all metrics even when one has no data now
+Level: 1
+Edition: cee
+Component: metrics
+Compatible: compat
+Version: 1.4.0b1
+Date: 1485771814
+Class: fix
+
+When having stacked several metrics and one metric in the middle has no
+data available for some time, the metrics stacked above were not rendered
+too. The metric with unavailable data is ignored now and all other metrics
+are rendered.

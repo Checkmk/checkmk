@@ -1,0 +1,12 @@
+Title: Fix CMK style graphs when special characters like - or @ are contained in the variable names
+Level: 1
+Edition: cee
+Component: cmc
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1455547581
+
+This e.g. affected storage checks on ESX where a <tt>-</tt> appears in the name of
+the storage volume.

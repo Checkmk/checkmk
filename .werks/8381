@@ -1,0 +1,11 @@
+Title: Preventing firefox from completing agent bakery signature key password
+Level: 1
+Edition: cee
+Component: agents
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1455635604
+
+

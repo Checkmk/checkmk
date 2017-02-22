@@ -1,0 +1,13 @@
+Title: Fixed different behaviour of inline SNMP and normal SNMP mode which resulted in check exceptions
+Level: 2
+Edition: cee
+Component: inline-snmp
+Class: fix
+State: unknown
+Version: 1.2.5i5
+Date: 1404739471
+Targetversion: future
+
+Fixed a bug in our inline SNMP bulk walk implementation which resulted in
+different behaviour compared to classic SNMP mode. This resulted (at least
+in our case) in exceptions during checking.

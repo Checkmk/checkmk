@@ -1,0 +1,12 @@
+Title: Fix impossible deletion of you own copy of the default report
+Level: 2
+Edition: cee
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.7i3
+Date: 1439992620
+Targetversion: future
+
+The reporting tought that other reports depend on that report, but a copy of
+it is still available as builtin report.

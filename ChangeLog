@@ -15,6 +15,7 @@
     * 4412 FIX: haproxy.server: fixed empty uptime info handling
     * 4413 FIX: mem.linux: handle empty info
     * 4414 FIX: oracle_rman: fixed UnboundLocalError if sid level 0 is empty
+    * 4415 FIX: blade_bays: fixed KeyError
 
     Multisite:
     * 4365 FIX: Service availability: Host down could not be rewritten to other states like CRIT

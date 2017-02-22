@@ -59,12 +59,14 @@ def parse_blade_bays(info):
             "_device_state_" : map_states.get(state, (3, "unhandled[%s]" % state)),
             "power"          : power,
         })
+
+    pprint.pprint(parsed)
     return parsed
 
 
 def inventory_blade_bays(parsed):
     for entry, attrs in parsed.items():
-        if attrs["device_state"][1] in [ "standby", "on" ]:
+        if attrs["_device_state_"][1] in [ "standby", "on" ]:
             yield entry, {}
 
 

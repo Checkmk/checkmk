@@ -5815,7 +5815,7 @@ perfometer_info.append({
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 
-# Beware: The order of the list elements of graph_info is actually important.
+# beware: the order of the list elements of graph_info is actually important.
 # It determines the order of graphs of a service, which in turn is used by
 # the report definitions to determine which graph to include.
 
@@ -5824,46 +5824,46 @@ perfometer_info.append({
 # Example: ('tablespace_size', 'area'),
 #          ('tablespace_used', 'area')
 
-graph_info.append({
+graph_info["fan_speed"] = {
     "title"     : _("Fan speed"),
     "metrics"   : [
         ( "fan_speed", "area" ),
     ]
-})
+}
 
-graph_info.append({
+graph_info["context_switches"] = {
     "title"   : _("Context switches"),
     "metrics" : [
         ( "vol_context_switches", "area" ),
         ( "invol_context_switches", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["busy_and_idle_workers"] = {
     "title"   : _("Busy and idle workers"),
     "metrics" : [
         ( "busy_workers", "area" ),
         ( "idle_workers", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["busy_and_idle_servers"] = {
     "title"   : _("Busy and idle servers"),
     "metrics" : [
         ( "busy_servers", "area" ),
         ( "idle_servers", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["total_and_open_slots"] = {
     "title"   : _("Total and open slots"),
     "metrics" : [
         ( "total_slots", "area" ),
         ( "open_slots", "area" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["connections"] = {
     "title"   : _("Connections"),
     "metrics" : [
         ( "connections_async_writing", "area" ),
@@ -5871,9 +5871,9 @@ graph_info.append({
         ( "connections_async_closing", "stack" ),
         ( "connections", "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["apache_status"] = {
     "title"   : _("Apache status"),
     "metrics" : [
         ( "apache_state_startingup", "area" ),
@@ -5887,42 +5887,42 @@ graph_info.append({
         ( "apache_state_finishing", "stack" ),
         ( "apache_state_keep_alive", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["battery_currents"] = {
     "title"   : _("Battery currents"),
     "metrics" : [
         ( "battery_current", "area" ),
         ( "current", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["battery_capacity"] = {
     "metrics" : [
         ( "battery_capacity", "area" ),
     ],
     "range" : (0,100),
-})
+}
 
 
-graph_info.append({
+graph_info["qos_class_traffic"] = {
     "title"   : _("QoS class traffic"),
     "metrics" : [
         ( "qos_outbound_bytes_rate,8,*@bits/s", "area", _("Qos outbound bits")),
         ( "qos_dropped_bytes_rate,8,*@bits/s", "-area", _("QoS dropped bits")),
     ],
-})
+}
 
-graph_info.append({
+graph_info["read_and_written_blocks"] = {
     "title"   : _("Read and written blocks"),
     "metrics" : [
         ( "read_blocks", "area" ),
         ( "write_blocks","-area" ),
     ],
-})
+}
 
 
-graph_info.append({
+graph_info["rmon_packets_per_second"] = {
     "title"   : _("RMON packets per second"),
     "metrics" : [
         ( "broadcast_packets", "area" ),
@@ -5934,50 +5934,50 @@ graph_info.append({
         ( "rmon_packets_1023", "stack" ),
         ( "rmon_packets_1518", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["threads"] = {
     "title"   : _("Threads"),
     "metrics" : [
         ( "threads", "area" ),
         ( "threads_daemon", "stack" ),
         ( "threads_max", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["threadpool"] = {
     "title"   : _("Threadpool"),
     "metrics" : [
         ( "threads_busy", "stack" ),
         ( "threads_idle", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["disk_latency"] = {
     "title"   : _("Disk latency"),
     "metrics" : [
         ( "read_latency", "area" ),
         ( "write_latency", "-area" )
     ],
-})
+}
 
-graph_info.append({
+graph_info["read_write_queue_length"] = {
     "title"   : _("Read / Write queue length"),
     "metrics" : [
         ( "disk_read_ql", "area" ),
         ( "disk_write_ql", "-area" )
     ],
-})
+}
 
-graph_info.append({
+graph_info["backup_time"] = {
     "title"   : _("Backup time"),
     "metrics" : [
         ( "checkpoint_age", "area" ),
         ( "backup_age", "stack" )
     ],
-})
+}
 
-graph_info.append({
+graph_info["ntp_time_offset"] = {
     "title"   : _("NTP time offset"),
     "metrics" : [
         ( "time_offset", "area" ),
@@ -5990,41 +5990,41 @@ graph_info.append({
         ( "0,time_offset:crit,-", _("Lower critical level")),
     ],
     "range" : ( "0,time_offset:crit,-", "time_offset:crit" ),
-})
+}
 
-graph_info.append({
+graph_info["total_cache_usage"] = {
     "metrics" : [ ( "total_cache_usage", "area" ) ],
     "range"   : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["zfs_meta_data"] = {
     "title"   : _("ZFS meta data"),
     "metrics" : [
         ( "zfs_metadata_max", "area" ),
         ( "zfs_metadata_used", "area" ),
         ( "zfs_metadata_limit", "line" ),
     ],
-})
+}
 
 
-graph_info.append({
+graph_info["cache_hit_ratio"] = {
     "title"     : _("Cache hit ratio"),
     "metrics"   : [
         ( "cache_hit_ratio", "area" ),
         ( "prefetch_metadata_hit_ratio", "line" ),
         ( "prefetch_data_hit_ratio", "area" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["citrix_serverload"] = {
     "title"     : _("Citrix Serverload"),
     "metrics"   : [
         ( "citrix_load",    "area" ),
     ],
     "range"     : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["used_cpu_time"] = {
     "title" : _("Used CPU Time"),
     "metrics" : [
         ( "user_time",            "area" ),
@@ -6035,10 +6035,10 @@ graph_info.append({
     ],
     "omit_zero_metrics" : True,
     "conflicting_metrics" : [ "cmk_time_agent", "cmk_time_snmp", "cmk_time_ds" ],
-})
+}
 
 
-graph_info.append({
+graph_info["time_usage_by_phase"] = {
     "title" : _("Time usage by phase"),
     "metrics" : [
         ( "user_time,children_user_time,+",     "stack", _("CPU time in user space") ),
@@ -6053,9 +6053,9 @@ graph_info.append({
         "cmk_time_snmp",
         "cmk_time_ds"
     ],
-})
+}
 
-graph_info.append({
+graph_info["cpu_time"] = {
     "title" : _("CPU Time"),
     "metrics" : [
         ( "user_time",            "area" ),
@@ -6063,9 +6063,9 @@ graph_info.append({
         ( "user_time,system_time,+", "line", _("Total") ),
     ],
     "conflicting_metrics" : [ "children_user_time" ],
-})
+}
 
-graph_info.append({
+graph_info["tapes_utilization"] = {
     "title"   : _("Tapes utilization"),
     "metrics" : [
         ( "tapes_free", "area" ),
@@ -6075,9 +6075,9 @@ graph_info.append({
         "tapes_free:warn",
         "tapes_free:crit",
     ]
-})
+}
 
-graph_info.append({
+graph_info["storage_processor_utilization"] = {
     "title"   : _("Storage Processor utilization"),
     "metrics" : [
         ( "storage_processor_util", "area" ),
@@ -6086,9 +6086,9 @@ graph_info.append({
         "storage_processor_util:warn",
         "storage_processor_util:crit",
     ]
-})
+}
 
-graph_info.append({
+graph_info["cpu_load"] = {
     "title"   : _("CPU Load - %(load1:max@count) CPU Cores"),
     "metrics" : [
         ( "load1", "area" ),
@@ -6099,9 +6099,9 @@ graph_info.append({
         "load1:crit",
     ],
     "optional_metrics" : [ "load15", ],
-})
+}
 
-graph_info.append({
+graph_info["fgpa_utilization"] = {
     "title"   : _( "FGPA utilization" ),
     "metrics" : [
         ( "fpga_util", "area" ),
@@ -6111,9 +6111,9 @@ graph_info.append({
         "fpga_util:crit",
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["util_average"] = {
     "metrics" : [
         ( "util",         "area" ),
         ( "util_average", "line" ),
@@ -6125,9 +6125,9 @@ graph_info.append({
     "range" : (0, 100),
     "optional_metrics":  [ "util_average" ],
     "conflicting_metrics" : [ "user" ],
-})
+}
 
-graph_info.append({
+graph_info["cpu_utilization_1"] = {
     "title" : _("CPU utilization (%(util:max@count) CPU Threads)"),
     "metrics" : [
         ( "util,user,-#ff6000",  "stack", _("Privileged") ),
@@ -6139,9 +6139,9 @@ graph_info.append({
         "util:crit",
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["cpu_utilization_2"] = {
     "title"   : _( "CPU utilization" ),
     "metrics" : [
         ( "util1", "area" ),
@@ -6152,9 +6152,9 @@ graph_info.append({
         "util1:crit",
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["per_core_utilization"] = {
     "title"  : _( "Per Core utilization" ),
     "metrics" : [
         ( "cpu_core_util_%d" % num, "line" )
@@ -6165,9 +6165,9 @@ graph_info.append({
         "cpu_core_util_%d" % num
         for num in range(2, MAX_CORES)
     ]
-})
+}
 
-graph_info.append({
+graph_info["fs_used"] = {
     "metrics" : [
         ( "fs_used", "area" ),
         ( "fs_size,fs_used,-#e3fff9", "stack", _("Free space") ),
@@ -6178,30 +6178,30 @@ graph_info.append({
         "fs_used:crit",
     ],
     "range" : (0, "fs_used:max"),
-})
+}
 
-graph_info.append({
+graph_info["growing"] = {
     "title" : _("Growing"),
     "metrics" : [
        ( "fs_growth.max,0,MAX",             "area",  _("Growth"), ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["shrinking"] = {
     "title" : _("Shrinking"),
     "consolidation_function": "min",
     "metrics" : [
        ( "fs_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage") ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["fs_trend"] = {
     "metrics" : [
        ( "fs_trend", "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["cpu_utilization_3"] = {
     "title"   : _("CPU utilization"),
     "metrics" : [
         ( "user",                           "area"  ),
@@ -6210,9 +6210,9 @@ graph_info.append({
         ( "nice",                           "stack" ),
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["cpu_utilization_4"] = {
     "title"   : _("CPU utilization"),
     "metrics" : [
         ( "user",                           "area"  ),
@@ -6221,9 +6221,9 @@ graph_info.append({
         ( "io_wait",                        "stack" ),
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["cpu_utilization_5"] = {
     "title"   : _("CPU utilization"),
     "metrics" : [
         ( "user",                           "area"  ),
@@ -6236,9 +6236,9 @@ graph_info.append({
         "cpu_util_steal",
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["cpu_utilization_6"] = {
     "title"   : _("CPU utilization"),
     "metrics" : [
         ( "user",                           "area"  ),
@@ -6252,9 +6252,9 @@ graph_info.append({
     ],
     "omit_zero_metrics" : True,
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["cpu_utilization_7"] = {
     "title"   : _("CPU utilization"),
     "metrics" : [
         ( "user",                           "area"  ),
@@ -6266,9 +6266,9 @@ graph_info.append({
     ],
     "omit_zero_metrics" : True,
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["cpu_utilization_8"] = {
     "title"   : _("CPU utilization"),
     "metrics" : [
         ( "user",                           "area"  ),
@@ -6276,9 +6276,9 @@ graph_info.append({
         ( "interrupt",                      "stack" ),
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["wasted_space_of_tables_and_indexes"] = {
     "title"   : _("Wasted space of tables and indexes"),
     "metrics" : [
         ( "tablespace_wasted", "area" ),
@@ -6286,9 +6286,9 @@ graph_info.append({
     ],
     "legend_scale" : MB,
     "legend_precision" : 2,
-})
+}
 
-graph_info.append({
+graph_info["firewall_connections"] = {
     "title": _("Firewall connections"),
     "metrics" : [
         ( "fw_connections_active", "stack" ),
@@ -6297,108 +6297,97 @@ graph_info.append({
         ( "fw_connections_halfclosed", "stack" ),
         ( "fw_connections_passthrough", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["time_to_connect"] = {
     "title": _("Time to connect"),
     "metrics" : [
         ( "connection_time", "area" ),
     ],
     "legend_scale" : m,
-})
+}
 
-graph_info.append({
+graph_info["number_of_total_and_running_sessions"] = {
     "title": _("Number of total and running sessions"),
     "metrics" : [
         ( "running_sessions", "line" ),
         ( "total_sessions",   "line" ),
     ],
     "legend_precision" : 0
-})
+}
 
-graph_info.append({
+graph_info["number_of_shared_and_exclusive_locks"] = {
     "title": _("Number of shared and exclusive locks"),
     "metrics" : [
         ( "shared_locks",    "area" ),
         ( "exclusive_locks", "stack" ),
     ],
     "legend_precision" : 0
-})
+}
 
 # diskstat checks
 
-graph_info.append({
+graph_info["disk_utilization"] = {
     "metrics" : [
         ( "disk_utilization",  "area" ),
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["disk_throughput"] = {
     "title" : _("Disk throughput"),
     "metrics" : [
         ( "disk_read_throughput",  "area" ),
         ( "disk_write_throughput", "-area" ),
     ],
     "legend_scale" : MB,
-})
+}
 
-graph_info.append({
+graph_info["disk_io_operations"] = {
     "title" : _("Disk I/O operations"),
     "metrics" : [
         ( "disk_read_ios",  "area" ),
         ( "disk_write_ios", "-area" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["direct_and_buffered_io_operations"] = {
     "title" : _("Direct and buffered I/O operations"),
     "metrics" : [
         ( "direct_io",  "stack" ),
         ( "buffered_io", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["average_request_size"] = {
     "title" : _("Average request size"),
     "metrics" : [
         ( "disk_average_read_request_size",  "area" ),
         ( "disk_average_write_request_size", "-area" ),
     ],
     "legend_scale" : KB,
-})
+}
 
 
-graph_info.append({
+graph_info["average_end_to_end_wait_time"] = {
     "title" : _("Average end to end wait time"),
     "metrics" : [
         ( "disk_average_read_wait",  "area" ),
         ( "disk_average_write_wait", "-area" ),
     ],
-})
+}
 
-graph_info.append({
-    "metrics" : [
-        ( "disk_latency",  "area" ),
-    ],
-})
 
-graph_info.append({
-    "metrics" : [
-        ( "disk_queue_length",  "area" ),
-    ],
-})
-
-graph_info.append({
+graph_info["spare_and_broken_disks"] = {
     "title"   : _( "Spare and broken disks"),
     "metrics" : [
         ( "disks",        "area" ),
         ( "spare_disks",  "stack" ),
         ( "failed_disks", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["database_sizes"] = {
     "title"   : _( "Database sizes" ),
     "metrics" : [
         ( "database_size",  "area" ),
@@ -6416,13 +6405,13 @@ graph_info.append({
         "unused_size",
     ],
     "legend_scale" : MB,
-})
+}
 
 # TODO: Warum ist hier überall line? Default ist Area.
 # Kann man die hit ratios nicht schön stacken? Ist
 # nicht total die Summe der anderen?
 
-graph_info.append({
+graph_info["bufferpool_hitratios"] = {
     "title" : _("Bufferpool Hitratios"),
     "metrics" : [
         ( "total_hitratio", "line" ),
@@ -6430,22 +6419,17 @@ graph_info.append({
         ( "index_hitratio", "line" ),
         ( "xda_hitratio",   "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["deadlocks_and_waits"] = {
     "metrics" : [
         ( "deadlocks",  "area" ),
         ( "lockwaits",  "stack" ),
     ],
-})
+}
 
-graph_info.append({
-    "metrics" : [
-        ( "sort_overflow",  "area" ),
-    ],
-})
 
-graph_info.append({
+graph_info["tablespace_sizes"] = {
     "title"   : _( "Tablespace sizes" ),
     "metrics" : [
         ( "tablespace_size",  "area" ),
@@ -6456,54 +6440,54 @@ graph_info.append({
         "tablespace_size:crit",
     ],
     "range"   : (0, "tablespace_max_size"),
-})
+}
 
 # Printer
 
-graph_info.append({
+graph_info["printer_queue"] = {
     "metrics" : [
          ( "printer_queue", "area" )
     ],
     "range" : (0, 10),
-})
+}
 
-graph_info.append({
+graph_info["supply_toner_cyan"] = {
     "metrics" : [
          ( "supply_toner_cyan", "area" )
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["supply_toner_magenta"] = {
     "metrics" : [
          ( "supply_toner_magenta", "area" )
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["supply_toner_yellow"] = {
     "metrics" : [
          ( "supply_toner_yellow", "area" )
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["supply_toner_black"] = {
     "metrics" : [
          ( "supply_toner_black", "area" )
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["supply_toner_other"] = {
     "metrics" : [
          ( "supply_toner_other", "area" )
     ],
     "range" : (0, 100),
-})
+}
 
 
-graph_info.append({
+graph_info["printed_pages"] = {
     "title" : _( "Printed pages" ),
     "metrics" : [
         ( "pages_color_a4", "stack" ),
@@ -6523,54 +6507,54 @@ graph_info.append({
         "pages_bw",
     ],
     "range" : (0, "pages_total:max"),
-})
+}
 
 # Networking
 
-graph_info.append({
+graph_info["bandwidth_translated"] = {
     "title" : _("Bandwidth"),
     "metrics" : [
         ( "if_in_octets,8,*@bits/s",   "area", _("Input bandwidth") ),
         ( "if_out_octets,8,*@bits/s",  "-area", _("Output bandwidth") ),
     ],
-})
+}
 
 # Same but for checks that have been translated in to bits/s
-graph_info.append({
+graph_info["bandwidth"] = {
     "title" : _("Bandwidth"),
     "metrics" : [
         ( "if_in_bps",   "area", ),
         ( "if_out_bps",  "-area", ),
     ],
-})
+}
 
 
-graph_info.append({
+graph_info["packets_2"] = {
     "title" : _("Packets"),
     "metrics" : [
         ( "if_in_pkts",  "area" ),
         ( "if_out_non_unicast", "-area" ),
         ( "if_out_unicast", "-stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["traffic"] = {
     "title" : _("Traffic"),
     "metrics" : [
         ( "if_in_octets",  "area" ),
         ( "if_out_non_unicast_octets", "-area" ),
         ( "if_out_unicast_octets", "-stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["wlan_errors"] = {
     "title" : _("WLAN errors, reset operations and transmission retries"),
     "metrics" : [
         ( "wlan_physical_errors", "area" ),
         ( "wlan_resets",          "stack" ),
         ( "wlan_retries",         "stack" ),
     ],
-})
+}
 
 
 # TODO: show this graph instead of Bandwidth if this is configured
@@ -6579,15 +6563,15 @@ graph_info.append({
 # is missing then evaluating the condition will fail. Solution
 # could be using 0 for bits and 1 for octets and making sure that
 # this value is not used anywhere.
-# graph_info.append({
+# graph_info["octets"] = {
 #     "title" : _("Octets"),
 #     "metrics" : [
 #         ( "if_in_octets",      "area" ),
 #         ( "if_out_octets",     "-area" ),
 #     ],
-# })
+# }
 
-graph_info.append({
+graph_info["packets_1"] = {
     "title" : _("Packets"),
     "metrics" : [
         ( "if_in_unicast",      "area" ),
@@ -6595,9 +6579,9 @@ graph_info.append({
         ( "if_out_unicast",     "-area" ),
         ( "if_out_non_unicast", "-stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["if_errors"] = {
     "title" : _("Errors"),
     "metrics" : [
         ( "if_in_errors",    "area" ),
@@ -6605,9 +6589,9 @@ graph_info.append({
         ( "if_out_errors",   "-area" ),
         ( "if_out_discards", "-stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["ram_swap_used"] = {
     "title" : _("RAM + Swap used"),
     "metrics" : [
         ("mem_used",  "area"),
@@ -6619,9 +6603,9 @@ graph_info.append({
         ( "mem_used:max#80ffff",                 _("Total RAM installed") ),
     ],
     "range" : (0, "swap_used:max,mem_used:max,+"),
-})
+}
 
-graph_info.append({
+graph_info["mem_used_percent"] = {
     "metrics" : [
         ("mem_used_percent",  "area"),
     ],
@@ -6630,11 +6614,11 @@ graph_info.append({
         "mem_used_percent:crit",
     ],
     "range" : (0, 100),
-})
+}
 
 # Linux memory graphs. They are a lot...
 
-graph_info.append({
+graph_info["ram_swap_overview"] = {
     "title" : _("RAM + Swap overview"),
     "metrics" : [
         ("mem_total",  "area"),
@@ -6642,18 +6626,18 @@ graph_info.append({
         ("mem_used",   "area"),
         ("swap_used",  "stack"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["swap"] = {
     "title" : _("Swap"),
     "metrics" : [
         ("swap_total",  "area"),
         ("swap_used",   "area"),
         ("swap_cached", "stack"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["caches"] = {
     "title" : _("Caches"),
     "metrics" : [
         ("mem_lnx_slab",    "stack"),
@@ -6661,9 +6645,9 @@ graph_info.append({
         ("mem_lnx_buffers", "stack"),
         ("mem_lnx_cached",  "stack"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["active_and_inactive_memory_anon"] = {
     "title" : _("Active and Inactive Memory"),
     "metrics" : [
         ("mem_lnx_inactive_anon", "stack"),
@@ -6671,23 +6655,23 @@ graph_info.append({
         ("mem_lnx_active_anon",   "stack"),
         ("mem_lnx_active_file",   "stack"),
     ],
-})
+}
 
 
 # TODO: Show this graph only, if the previous graph
 # is not possible. This cannot be done with a condition,
 # since we currently cannot state a condition on non-existing
 # metrics.
-graph_info.append({
+graph_info["active_and_inactive_memory"] = {
     "title" : _("Active and Inactive Memory"),
     "metrics" : [
         ("mem_lnx_active", "area"),
         ("mem_lnx_inactive", "area"),
     ],
     "conflicting_metrics" : [ "mem_lnx_active_anon" ],
-})
+}
 
-graph_info.append({
+graph_info["ram_used"] = {
     "title" : _("RAM used"),
     "metrics" : [
         ("mem_used", "area"),
@@ -6698,9 +6682,9 @@ graph_info.append({
         ("mem_used:crit", "Critical"),
     ],
     "range" : (0, "mem_used:max"),
-})
+}
 
-graph_info.append({
+graph_info["commit_charge"] = {
     "title" : _("Commit Charge"),
     "metrics" : [
         ("pagefile_used", "area"),
@@ -6711,9 +6695,9 @@ graph_info.append({
         ("pagefile_used:crit", "Critical"),
     ],
     "range" : (0, "pagefile_used:max"),
-})
+}
 
-graph_info.append({
+graph_info["filesystem_writeback"] = {
     "title" : _("Filesystem Writeback"),
     "metrics" : [
         ("mem_lnx_dirty", "area"),
@@ -6722,27 +6706,27 @@ graph_info.append({
         ("mem_lnx_bounce", "stack"),
         ("mem_lnx_writeback_tmp", "stack"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["memory_committing"] = {
     "title" : _("Memory committing"),
     "metrics" : [
         ("mem_lnx_total_total", "area"),
         ("mem_lnx_committed_as", "area"),
         ("mem_lnx_commit_limit", "stack"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["memory_that_cannot_be_swapped_out"] = {
     "title" : _("Memory that cannot be swapped out"),
     "metrics" : [
         ("mem_lnx_kernel_stack", "area"),
         ("mem_lnx_page_tables", "stack"),
         ("mem_lnx_mlocked", "stack"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["huge_pages"] = {
     "title" : _("Huge Pages"),
     "metrics" : [
         ("mem_lnx_huge_pages_total", "area"),
@@ -6750,28 +6734,28 @@ graph_info.append({
         ("mem_lnx_huge_pages_rsvd", "area"),
         ("mem_lnx_huge_pages_surp", "line"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["vmalloc_address_space_1"] = {
     "title" : _("VMalloc Address Space"),
     "metrics" : [
         ("mem_lnx_vmalloc_total", "area"),
         ("mem_lnx_vmalloc_used",  "area"),
         ("mem_lnx_vmalloc_chunk", "stack"),
     ],
-})
+}
 
 # TODO: Warum ohne total? Dürfte eigentlich nicht
 # vorkommen.
-graph_info.append({
+graph_info["vmalloc_address_space_2"] = {
     "title" : _("VMalloc Address Space"),
     "metrics" : [
         ("mem_lnx_vmalloc_used", "area"),
         ("mem_lnx_vmalloc_chunk", "stack"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["heap_and_non_heap_memory"] = {
     "title" : _("Heap and non-heap memory"),
     "metrics" : [
         ( "mem_heap",   "area" ),
@@ -6781,10 +6765,10 @@ graph_info.append({
         "mem_heap_committed",
         "mem_nonheap_committed",
     ],
-})
+}
 
 
-graph_info.append({
+graph_info["heap_memory_usage"] = {
     "title" : _("Heap memory usage"),
     "metrics" : [
         ( "mem_heap_committed", "area" ),
@@ -6794,9 +6778,9 @@ graph_info.append({
         "mem_heap:warn",
         "mem_heap:crit",
     ]
-})
+}
 
-graph_info.append({
+graph_info["non-heap_memory_usage"] = {
     "title" : _("Non-heap memory usage"),
     "metrics" : [
         ( "mem_nonheap_committed", "area" ),
@@ -6807,19 +6791,19 @@ graph_info.append({
         "mem_nonheap:crit",
         "mem_nonheap:max",
     ]
-})
+}
 
 
-graph_info.append({
+graph_info["private_and_shared_memory"] = {
     "title" : _("Private and shared memory"),
     "metrics" : [
         ("mem_esx_shared", "area"),
         ("mem_esx_private", "area"),
     ],
-})
+}
 
 
-graph_info.append({
+graph_info["tcp_connection_states"] = {
     "title" : _("TCP Connection States"),
     "metrics" : [
        ( "tcp_listen",      "stack"),
@@ -6837,9 +6821,9 @@ graph_info.append({
        ( "tcp_idle",        "stack"),
     ],
     "omit_zero_metrics" : True,
-})
+}
 
-graph_info.append({
+graph_info["cluster_hosts"] = {
     "title" : _("Hosts"),
     "metrics" : [
        ( "hosts_active",     "stack"),
@@ -6848,152 +6832,103 @@ graph_info.append({
        ( "hosts_offline",    "stack"),
        ( "hosts_other",      "stack"),
     ],
-})
+    "optional_metrics" : [ "hosts_active" ],
+}
 
-graph_info.append({
-    "title" : _("Hosts"),
-    "metrics" : [
-       ( "hosts_inactive",   "stack"),
-       ( "hosts_degraded",   "stack"),
-       ( "hosts_offline",    "stack"),
-       ( "hosts_other",      "stack"),
-    ],
-})
 
-graph_info.append({
+graph_info["host_and_service_checks"] = {
     "title" : _("Host and Service Checks"),
     "metrics" : [
         ( "host_check_rate",    "stack" ),
         ( "service_check_rate", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["number_of_monitored_hosts_and_services"] = {
     "title" : _("Number of Monitored Hosts and Services"),
     "metrics" : [
         ( "monitored_hosts",    "stack" ),
         ( "monitored_services", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["livestatus_connects_and_requests"] = {
     "title" : _("Livestatus Connects and Requests"),
     "metrics" : [
         ( "livestatus_request_rate", "area" ),
         ( "livestatus_connect_rate", "area" ),
     ],
-})
+}
 
 
-graph_info.append({
-    "metrics" : [
-       ( "num_open_events",  "area" ),
-    ]
-})
 
-
-graph_info.append({
+graph_info["message_processing"] = {
     "title" : _("Message processing"),
     "metrics" : [
         ( "average_message_rate",   "area" ),
         ( "average_drop_rate",      "area" ),
     ],
-})
+}
 
 
-
-graph_info.append({
+graph_info["rule_efficiency"] = {
     "title" : _("Rule efficiency"),
     "metrics" : [
         ( "average_rule_trie_rate", "area" ),
         ( "average_rule_hit_rate",  "area" ),
     ],
-})
-
-graph_info.append({
-    "metrics" : [
-       ( "average_rule_hit_ratio",  "area" ),
-    ]
-})
-
-graph_info.append({
-    "metrics" : [
-       ( "average_event_rate",     "area" ),
-    ]
-})
-
-graph_info.append({
-    "metrics" : [
-       ( "average_processing_time", "stack" ),
-    ]
-})
-
-#        ( "average_connect_rate",   "area" ),
+}
 
 
 
-# graph_info.append({
-#     "title" : _("Event Console times"),
-#     "metrics" : [
-#         ( "average_request_time",    "stack" ),
-#         ( "average_processing_time", "stack" ),
-#     ],
-# })
-
-graph_info.append({
+graph_info["livestatus_requests_per_connection"] = {
     "title" : _("Livestatus Requests per Connection"),
     "metrics" : [
         ( "livestatus_request_rate,livestatus_connect_rate,/#88aa33", "area",
           _("Average requests per connection")),
     ],
-})
+}
 
-graph_info.append({
+graph_info["livestatus_usage"] = {
     "metrics" : [
         ( "livestatus_usage", "area" ),
     ],
     "range" : (0, 100),
-})
+}
 
 
-graph_info.append({
-    "metrics" : [
-        ( "livestatus_overflows_rate", "area" ),
-    ],
-})
 
-
-graph_info.append({
+graph_info["helper_usage_cmk"] = {
     "metrics" : [
         ( "helper_usage_cmk",  "area" ),
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["helper_usage_generic"] = {
     "metrics" : [
         ( "helper_usage_generic", "area" ),
     ],
     "range" : (0, 100),
-})
+}
 
-graph_info.append({
+graph_info["average_check_latency"] = {
     "title" : _("Average check latency"),
     "metrics" : [
         ( "average_latency_cmk",     "line" ),
         ( "average_latency_generic", "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["pending_updates"] = {
     "title" : _("Pending updates"),
     "metrics" : [
         ( "normal_updates",    "stack" ),
         ( "security_updates",  "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["dhcp_leases"] = {
     "title" : _("DHCP Leases"),
     "metrics" : [
         ( "used_dhcp_leases",    "area" ),
@@ -7009,9 +6944,9 @@ graph_info.append({
     "optional_metrics" : [
         "pending_dhcp_leases"
     ]
-})
+}
 
-#graph_info.append({
+#graph_info["used_dhcp_leases"] = {
 #    "title" : _("Used DHCP Leases"),
 #    "metrics" : [
 #        ( "used_dhcp_leases",    "area" ),
@@ -7022,9 +6957,9 @@ graph_info.append({
 #        "used_dhcp_leases:crit",
 #        ("used_dhcp_leases:max#000000", _("Total number of leases")),
 #    ]
-#})
+#}
 
-graph_info.append({
+graph_info["handled_requests"] = {
     "title" : _("Handled Requests"),
     "metrics" : [
         ("requests_cmk_views",      "stack"),
@@ -7042,9 +6977,9 @@ graph_info.append({
         ("requests_other",          "stack"),
     ],
     "omit_zero_metrics" : True,
-})
+}
 
-graph_info.append({
+graph_info["time_spent_for_various_page_types"] = {
     "title" : _("Time spent for various page types"),
     "metrics" : [
         ("secs_cmk_views",      "stack"),
@@ -7062,9 +6997,9 @@ graph_info.append({
         ("secs_other",          "stack"),
     ],
     "omit_zero_metrics" : True,
-})
+}
 
-graph_info.append({
+graph_info["bytes_sent"] = {
     "title" : _("Bytes sent"),
     "metrics" : [
         ("bytes_cmk_views",      "stack"),
@@ -7082,57 +7017,57 @@ graph_info.append({
         ("bytes_other",          "stack"),
     ],
     "omit_zero_metrics" : True,
-})
+}
 
-graph_info.append({
+graph_info["amount_of_mails_in_queues"] = {
     "title" : _("Amount of mails in queues"),
     "metrics" : [
         ( "mail_queue_deferred_length", "stack" ),
         ( "mail_queue_active_length",   "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["size_of_mails_in_queues"] = {
     "title" : _("Size of mails in queues"),
     "metrics" : [
         ( "mail_queue_deferred_size", "stack" ),
         ( "mail_queue_active_size",   "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["inbound_and_outbound_messages"] = {
     "title" : _("Inbound and Outbound Messages"),
     "metrics" : [
         ( "messages_outbound", "stack" ),
         ( "messages_inbound",  "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["modems"] = {
     "title" : _("Modems"),
     "metrics" : [
         ( "active_modems",     "area" ),
         ( "registered_modems", "line" ),
         ( "total_modems",      "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["net_data_traffic"] = {
     "title" : _("Net data traffic"),
     "metrics" : [
         ( "net_data_recv",     "stack" ),
         ( "net_data_sent",     "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["number_of_processes"] = {
     "title" : _("Number of processes"),
     "metrics" : [
         ( "processes", "area" ),
     ]
-})
+}
 
-graph_info.append({
+graph_info["size_of_processes"] = {
     "title" : _("Size of processes"),
     "metrics" : [
         ( "process_resident_size", "area" ),
@@ -7141,33 +7076,33 @@ graph_info.append({
         ( "process_mapped_size", "stack" ),
     ],
     "optional_metrics": [ "process_mapped_size" ]
-})
+}
 
-graph_info.append({
+graph_info["size_per_process"] = {
     "title" : _("Size per process"),
     "metrics" : [
         ( "process_resident_size,processes,/", "area", _("Average resident size per process") ),
         ( "process_virtual_size,processes,/", "stack", _("Average virtual size per process") ),
     ]
-})
+}
 
-graph_info.append({
+graph_info["throughput"] = {
     "title" : _("Throughput"),
     "metrics" : [
         ("fc_tx_bytes", "-area"),
         ("fc_rx_bytes", "area"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["frames"] = {
     "title" : _("Frames"),
     "metrics" : [
         ("fc_tx_frames", "-area"),
         ("fc_rx_frames", "area"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["fc_errors"] = {
     "title" : _("Errors"),
     "metrics" : [
         ( "fc_crc_errors",    "area" ),
@@ -7181,9 +7116,9 @@ graph_info.append({
         "fc_encins",
         "fc_bbcredit_zero",
     ],
-})
+}
 
-graph_info.append({
+graph_info["fc_errors_detailed"] = {
     "title" : _("Errors"),
     "metrics" : [
         ( "fc_link_fails", "stack" ),
@@ -7200,7 +7135,7 @@ graph_info.append({
         ( "fc_c2_fbsy_frames", "stack" ),
         ( "fc_c2_frjt_frames", "stack" ),
     ]
-})
+}
 
 for what, text in [ ("nfs",     "NFS"),
                     ("cifs",    "CIFS"),
@@ -7210,24 +7145,24 @@ for what, text in [ ("nfs",     "NFS"),
                     ("nfsv4",   "NFSv4"),
                     ("nfsv4_1", "NFSv4.1"),
                   ]:
-    graph_info.append({
+    graph_info["%s_traffic" % what] = {
         "title" : _("%s traffic") % text,
         "metrics" : [
             ("%s_read_data" % what, "-area"),
             ("%s_write_data" % what, "area"),
         ],
-    })
+    }
 
-    graph_info.append({
+    graph_info["%s_latency" % what] = {
         "title" : _("%s latency") % text,
         "metrics" : [
             ("%s_read_latency" % what, "-area"),
             ("%s_write_latency" % what, "area"),
         ],
-    })
+    }
 
 
-graph_info.append({
+graph_info["harddrive_health_statistic"] = {
     "title" : _("Harddrive health statistic"),
     "metrics" : [
         ("harddrive_power_cycle",           "stack"),
@@ -7240,28 +7175,28 @@ graph_info.append({
         ("harddrive_uncorrectable_errors",  "stack"),
         ("harddrive_udma_crc_errors",       "stack"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["access_point_statistics"] = {
     "title" : _("Access point statistics"),
     "metrics" : [
         ( "ap_devices_total", "area"),
         ( "ap_devices_drifted", "area"),
         ( "ap_devices_not_responding", "stack"),
     ]
-})
+}
 
-graph_info.append({
+graph_info["round_trip_average"] = {
     "title" : _("Round trip average"),
     "metrics" : [
         ( "rtmax", "area" ),
         ( "rtmin", "area" ),
         ( "rta",   "line" ),
     ],
-})
+}
 
 for idx in range(1, MAX_NUMBER_HOPS):
-    graph_info.append({
+    graph_info["hop_%d_round_trip_average" % idx] = {
         "title" : _("Hop %d Round trip average") % idx,
         "metrics" : [
             ( "hop_%d_rtmax"   % idx, "area" ),
@@ -7270,13 +7205,13 @@ for idx in range(1, MAX_NUMBER_HOPS):
             ( "hop_%d_rtstddev" % idx, "line" ),
             ( "hop_%d_response_time" % idx, "line" ),
         ],
-    })
-    graph_info.append({
+    }
+    graph_info["hop_%d_packet_loss" % idx] = {
         "title" : _("Hop %d Packet loss") % idx,
         "metrics" : [
             ( "hop_%d_pl"   % idx, "area" ),
         ],
-    })
+    }
 
 
 def create_hop_response_graph():
@@ -7292,11 +7227,12 @@ def create_hop_response_graph():
         if idx > 0:
             new_graph["optional_metrics"].append( ("hop_%d_response_time" % (idx + 1)) )
 
-    graph_info.append(new_graph)
+    graph_info["hop_%e_response_time" % (idx + 1)] = new_graph
+
 
 create_hop_response_graph()
 
-graph_info.append({
+graph_info["mem_perm_used"] = {
     "metrics" : [
         ( "mem_perm_used", "area" )
     ],
@@ -7306,18 +7242,18 @@ graph_info.append({
         ("mem_perm_used:max#000000", _("Max Perm used")),
     ],
     "range" : (0, "mem_perm_used:max")
-})
+}
 
-graph_info.append({
+graph_info["palo_alto_sessions"] = {
     "title"     : _("Palo Alto Sessions"),
     "metrics"   : [ ("tcp_active_sessions", "area"),
                     ("udp_active_sessions", "stack"),
                     ("icmp_active_sessions", "stack"),
                     ("sslproxy_active_sessions", "stack"),
                 ],
-})
+}
 
-graph_info.append({
+graph_info["varnish_backend_connections"] = {
     "title"     : _("Varnish Backend Connections"),
     "metrics"   : [
         ( "varnish_backend_busy_rate",      "line" ),
@@ -7330,18 +7266,18 @@ graph_info.append({
         ( "varnish_backend_conn_rate",      "line" ),
         ( "varnish_backend_reuse_rate",     "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["varnish_cache"] = {
     "title"     : _("Varnish Cache"),
     "metrics"   : [
         ( "varnish_cache_miss_rate",    "line" ),
         ( "varnish_cache_hit_rate",     "line" ),
         ( "varnish_cache_hitpass_rate", "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["varnish_clients"] = {
     "title"     : _("Varnish Clients"),
     "metrics"   : [
         ( "varnish_client_req_rate",       "line" ),
@@ -7349,17 +7285,17 @@ graph_info.append({
         ( "varnish_client_drop_rate",      "line" ),
         ( "varnish_client_drop_late_rate", "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["varnish_esi_errors_and_warnings"] = {
     "title"     : _("Varnish ESI Errors and Warnings"),
     "metrics"   : [
         ( "varnish_esi_errors_rate",   "line" ),
         ( "varnish_esi_warnings_rate", "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["varnish_fetch"] = {
     "title"     : _("Varnish Fetch"),
     "metrics"   : [
         ( "varnish_fetch_oldhttp_rate", "line" ),
@@ -7375,18 +7311,18 @@ graph_info.append({
         ( "varnish_fetch_chunked_rate", "line" ),
         ( "varnish_fetch_204_rate",     "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["varnish_objects"] = {
     "title"     : _("Varnish Objects"),
     "metrics"   : [
         ( "varnish_objects_expired_rate",   "line"),
         ( "varnish_objects_lru_nuked_rate", "line"),
         ( "varnish_objects_lru_moved_rate", "line"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["varnish_worker"] = {
     "title"     : _("Varnish Worker"),
     "metrics"   : [
         ( "varnish_worker_lqueue_rate", "line" ),
@@ -7397,96 +7333,96 @@ graph_info.append({
         ( "varnish_worker_queued_rate", "line" ),
         ( "varnish_worker_max_rate",    "line" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["optical_signal_power"] = {
     "title" : _("Optical Signal Power"),
     "metrics" : [
         ( "rx_light", "line" ),
         ( "tx_light", "line" )
     ]
-})
+}
 
 for i in range(10):
-    graph_info.append({
+    graph_info["optical_signal_power_lane_%d" % i] = {
         "title" : _("Optical Signal Power Lane %d") % i,
         "metrics" : [
             ( "rx_light_%d" % i, "line" ),
             ( "tx_light_%d" % i, "line" )
         ]
-    })
+    }
 
-graph_info.append({
+graph_info["page_activity"] = {
     "title" : _("Page Activity"),
     "metrics" : [
         ("page_reads_sec",   "area" ),
         ("page_writes_sec",  "-area"),
     ]
-})
+}
 
-graph_info.append({
+graph_info["datafile_sizes"] = {
     "title" : _("Datafile Sizes"),
     "metrics" : [
         ("allocated_size",   "line" ),
         ("data_size", "area" )
     ]
-})
+}
 
-graph_info.append({
+graph_info["authentication_failures"] = {
     "title" : _("Authentication Failures"),
     "metrics" : [
         ("udp_failed_auth", "line"),
         ("tcp_failed_auth", "line")
     ]
-})
+}
 
-graph_info.append({
+graph_info["allocate_requests_exceeding_port_limit"] = {
     "title" : _("Allocate Requests Exceeding Port Limit"),
     "metrics" : [
         ("udp_allocate_requests_exceeding_port_limit", "line"),
         ("tcp_allocate_requests_exceeding_port_limit", "line")
     ]
-})
+}
 
-graph_info.append({
+graph_info["packets_dropped"] = {
     "title" : _("Packets Dropped"),
     "metrics" : [
         ("udp_packets_dropped", "line"),
         ("tcp_packets_dropped", "line"),
     ]
-})
+}
 
-graph_info.append({
+graph_info["active_sessions"] = {
     "title" : _("Active Sessions"),
     "metrics" : [("active_sessions_%s" % device, idx == 0 and "area" or "stack")
                  for idx, (device, name, color) in enumerate(skype_mobile_devices[::-1])]
-})
+}
 
-graph_info.append({
+graph_info["streams"] = {
     "title" : _("Streams"),
     "metrics" : [
         ("failed_inbound_streams", "area"),
         ("failed_outbound_streams", "-area")
     ]
-})
+}
 
-graph_info.append({
+graph_info["oracle_physical_io"] = {
     "title"   : _("ORACLE physical IO"),
     "metrics" : [
         ("oracle_physical_reads",  "area"),
         ("oracle_physical_writes", "-area"),
     ]
-})
+}
 
-graph_info.append({
+graph_info["oracle_db_time_statistics"] = {
     "title"   : _("ORACLE DB time statistics"),
     "metrics" : [
         ("oracle_db_cpu",  "line"),
         ("oracle_db_time", "line"),
     ]
-})
+}
 
-graph_info.append({
+graph_info["oracle_buffer_pool_statistics"] = {
     "title"   : _("ORACLE buffer pool statistics"),
     "metrics" : [
         ("oracle_db_block_gets",    "line"),
@@ -7495,17 +7431,17 @@ graph_info.append({
         ("oracle_free_buffer_wait", "line"),
         ("oracle_buffer_busy_wait", "line"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["oracle_library_cache_statistics"] = {
     "title"   : _("ORACLE library cache statistics"),
     "metrics" : [
         ("oracle_pins_sum",     "line"),
         ("oracle_pin_hits_sum", "line"),
     ],
-})
+}
 
-graph_info.append({
+graph_info["dhcp_statistics_received"] = {
     "title" : _("DHCP statistics (received messages)"),
     "metrics" : [
         ( "dhcp_discovery", "area" ),
@@ -7515,18 +7451,18 @@ graph_info.append({
         ( "dhcp_informs",   "stack" ),
         ( "dhcp_others",    "stack" ),
     ]
-})
+}
 
-graph_info.append({
+graph_info["dhcp_statistics_sent"] = {
     "title" : _("DHCP statistics (sent messages)"),
     "metrics" : [
         ( "dhcp_offers", "area" ),
         ( "dhcp_acks",   "stack" ),
         ( "dhcp_nacks",  "stack" ),
     ]
-})
+}
 
-graph_info.append({
+graph_info["dns_statistics"] = {
     "title" : _("DNS statistics"),
     "metrics" : [
         ( "dns_successes", "area" ),
@@ -7536,18 +7472,18 @@ graph_info.append({
         ( "dns_nxrrset",   "stack" ),
         ( "dns_nxdomain",  "stack" ),
     ]
-})
+}
 
-graph_info.append({
+graph_info["connection_durations"] = {
     "title" : _("Connection durations"),
     "metrics" : [
         ( "connections_duration_min", "line" ),
         ( "connections_duration_max", "line" ),
         ( "connections_duration_mean", "line" ),
     ]
-})
+}
 
-graph_info.append({
+graph_info["http_timings"] = {
     "title"   : _("HTTP Timings"),
     "metrics" : [
         ( "time_connect", "area", _("Connect") ),
@@ -7558,20 +7494,20 @@ graph_info.append({
         ( "response_time", "line", _("Roundtrip") ),
     ],
     "optional_metrics" : [ "time_ssl" ],
-})
+}
 
-graph_info.append({
+graph_info["web_gateway_statistics"] = {
     "title"   : _("Web gateway statistics"),
     "metrics" : [
         ( "infections_rate",          "stack" ),
         ( "connections_blocked_rate", "stack" ),
     ],
-})
+}
 
-graph_info.append({
+graph_info["web_gateway_miscellaneous_statistics"] = {
     "title"   : _("Web gateway miscellaneous statistics"),
     "metrics" : [
         ( "open_network_sockets", "stack" ),
         ( "connections",          "stack" ),
     ],
-})
+}

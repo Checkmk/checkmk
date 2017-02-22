@@ -42,6 +42,7 @@ from lib import *
 from valuespec import *
 from livestatus import MKLivestatusNotFoundError
 from cmk.regex import regex
+from collections import OrderedDict
 
 try:
     import simplejson as json
@@ -70,7 +71,7 @@ def load_plugins(force):
     global metric_info     ; metric_info     = {}
     global check_metrics   ; check_metrics   = {}
     global perfometer_info ; perfometer_info = []
-    global graph_info      ; graph_info      = []
+    global graph_info      ; graph_info      = OrderedDict()
     load_web_plugins("metrics", globals())
     loaded_with_language = current_language
 
@@ -934,7 +935,7 @@ def get_graph_templates(translated_metrics):
 
 def get_explicit_graph_templates(translated_metrics):
     templates = []
-    for graph_template in graph_info:
+    for graph_template in graph_info.values():
         if graph_possible(graph_template, translated_metrics):
             templates.append(graph_template)
         elif graph_possible_without_optional_metrics(graph_template, translated_metrics):

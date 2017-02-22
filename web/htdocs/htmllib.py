@@ -1356,7 +1356,7 @@ class RequestHandler(object):
 
         else:
             # crash report please
-            raise TypeError(_("Only str and unicode values are allowed, got got %s") % type(value))
+            raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
 
 
     def del_var(self, varname):

@@ -1,0 +1,31 @@
+Title: Speedup DNS-Lookups while config generation
+Component: config
+Class: feature
+State: done
+Date: 2013-07-22 18:10:05
+Targetversion: next
+
+Beim Flughafen BER dauert die Konfigerzeugung ganze 15 Sekunden. Beim Erzeugen
+eine sockets für DNS braucht Python pro Host jeweils mindestens 11ms. Dabei
+ist die Abfrage nach garnicht dabei.
+
+Bei unserer Appliance könnten wir einen DNS-Cache aufsetzen. Und ansonsten
+könnte man evtl. einen eigenen simplen Cache implementieren - in Form
+einer Python-Datei, die man mit repr() verwaltet und die ein dict auf
+Hostname/Timestamp enthält. Der Cache bringt wahrscheinlich nur was, wenn
+man das mindestens einen Tag lang aufhebt. Aber auch dann ist's nicht optimal,
+weil das Neuerzeugen dann in der Früh auch wieder lang dauert...
+
+Alternativ könnte man auch im WATO ein DNS-Lookup per Ajax machen, welches
+das IP-Adress-Feld immer ausfüllt, wenn es geht...
+
+Ich glaube wir machen es so: ein Plattengebundener DNS-Cache, der
+von Check_MK verwaltet wird. Die Einträge leben eine einstellbare
+Zeit. Der Cache kann auch ausgeschaltet werden. Der Cache wird nur
+im Konfigmodus geladen/gespeichert, nicht beim normalen Checken.
+Defaulteinstellung: Cache für unbegrenzte Zeit. Wenn sich eine IP-Adresse
+wirklich mal ändern sollte, dann kann sie der Benutzer zur Not von
+Hand im WATO eintragen.
+
+2013-09-18 12:34:51: changed state open -> done
+Ist erledigt.

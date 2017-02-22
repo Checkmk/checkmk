@@ -1,0 +1,30 @@
+Title: checkhelper with inline check_icmp not working
+Component: core
+Class: bug
+State: wontfix
+Date: 2013-06-01 18:46:10
+Targetversion: next
+
+First of all we need to install the thing with setuid root.
+Just like for livecheck. Has to be done in skel.permissions,
+hasn't it? No: look for mkeventd_open514 or check_icmp for
+examples. This has to be hacked into the main rpm.spec.in
+file and maybe at other places as well.
+
+And then it simply stops to work. Segfaults after Ctrl-C.
+
+2013-06-03 01:08:07 [20518] Invalid response from checkhelper[20542].
+2013-06-03 01:08:08 [20518] Cannot send messsage to checkhelper[20542]: Broken pipe
+2013-06-03 01:08:08 [20518] Marking checkhelper[20542] as finally dead. Please restart core.
+2013-06-03 01:08:08 [20518] Cannot send messsage to checkhelper[20543]: Broken pipe
+2013-06-03 01:08:08 [20518] Marking checkhelper[20543] as finally dead. Please restart core.
+2013-06-03 01:08:08 [20518] Invalid response from checkhelper[20542].
+2013-06-03 01:08:08 [20518] Invalid response from checkhelper[20543].
+2013-06-03 01:08:08 [20518] Cannot send messsage to checkhelper[20546]: Broken pipe
+2013-06-03 01:08:08 [20518] Marking checkhelper[20546] as finally dead. Please restart core.
+2013-06-03 01:08:08 [20518] Invalid response from checkhelper[20546].
+
+Also the core exists. Maybe due to broken pipe?
+
+2013-06-03 16:36:35: changed state open -> wontfix
+Disabled check_icmp inline for the while. I'ts seriously broken.

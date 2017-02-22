@@ -1,0 +1,19 @@
+Title: Smart PING: no buffer space available
+Component: core
+Class: bug
+State: done
+Date: 2014-07-11 09:40:09
+Targetversion: next
+
+Auf VMs kommt es bei großen Installationen manchmal zu diesem Fehler. Der liegt
+evtl. im Netzwerkkartentreiber versteckt. Evtl. brauchen wir daher im icmphelper
+eine Behandlung davon. Wenn der Fehler auftritt, warten wir ein bisschen, und
+probieren es nochmal. Problem ist allerdings, dass wir verhindern müssen, dass
+sich die Aufträge für PINGs in der Zeit, wo wir warten, zu sehr anstauen und
+am Ende der Core gebremst wird.
+
+Bei itsc ist das auf einem Blech mit ca. 1500 Hosts auch passiert.
+Wir mussten dort den Smart Ping deaktivieren.
+
+2014-12-02 11:12:28: changed state open -> done
+Sollte jetzt passen.

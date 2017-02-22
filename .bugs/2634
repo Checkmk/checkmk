@@ -1,0 +1,13 @@
+Title: Service Check Command bei aktiven Checks unvollständig
+Component: config
+Class: nastiness
+State: done
+Date: 2013-09-16 09:51:48
+Targetversion: next
+
+Wenn man active-checks konfiguriert, dann wird nur check-mk-custom
+in der GUI als Checkkommand angezeigt. Beim Nagios-Core kommen
+hier angeblich auch noch die kompletten Argumente mit. Hat keien
+Funktionale Auswirkung, ist aber unschön.
+
+2013-09-16 11:12:18: changed state open -> done

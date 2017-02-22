@@ -1,0 +1,40 @@
+Title: too much logging after state change in scheduled downtime
+Component: core
+Class: bug
+State: done
+Date: 2013-07-01 11:11:47
+Targetversion: next
+
+if a service is in a scheduled downtime and its state changes, the core
+starts logging very much: two lines every second
+
+e. g.
+2013-07-01 09:56:29 [5] Checking notification for localhost;bs_dummy_check
+2013-07-01 09:56:29 [5]  Postponing: service is currently in downtime
+2013-07-01 09:56:30 [5] Checking notification for localhost;bs_dummy_check
+2013-07-01 09:56:30 [5]  Postponing: service is currently in downtime
+2013-07-01 09:56:31 [5] Checking notification for localhost;bs_dummy_check
+2013-07-01 09:56:31 [5]  Postponing: service is currently in downtime
+2013-07-01 09:56:32 [5] Checking notification for localhost;bs_dummy_check
+2013-07-01 09:56:32 [5]  Postponing: service is currently in downtime
+2013-07-01 09:56:33 [5] Checking notification for localhost;bs_dummy_check
+2013-07-01 09:56:33 [5]  Postponing: service is currently in downtime
+2013-07-01 09:56:34 [5] Checking notification for localhost;bs_dummy_check
+2013-07-01 09:56:34 [5]  Postponing: service is currently in downtime
+2013-07-01 09:56:35 [5] Checking notification for localhost;bs_dummy_check
+2013-07-01 09:56:35 [5]  Postponing: service is currently in downtime
+2013-07-01 09:56:36 [5] Checking notification for localhost;bs_dummy_check
+2013-07-01 09:56:36 [5]  Postponing: service is currently in downtime
+2013-07-01 09:56:37 [5] Checking notification for localhost;bs_dummy_check
+2013-07-01 09:56:37 [5]  Postponing: service is currently in downtime
+probably this happens if there are notifications held back
+
+to fix: remove verbose logging output in this case
+
+(I hope it is not due to some special setting in my OMD instance)
+
+Bernd: Du hast hier das Notification-Debugging eingeschaltet. Wenn nicht,
+sollte diese Meldung nicht kommen.
+
+2013-07-03 15:38:51: changed state open -> done
+Passt so. Debugging war an.

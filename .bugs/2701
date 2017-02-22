@@ -1,0 +1,21 @@
+Title: Performance Daten Handling
+Component: core
+Class: bug
+State: works4me
+Date: 2014-02-03 17:12:27
+Targetversion: next
+
+Nach aussagen von Joerg Linge wie ich sie mal im Monitoring Portal gelesen
+habe, macht er ziemlich viel um die Unmöglichsten formen von Performance
+Daten in eine verwertbare Form zu bringen.
+
+Der CMC macht das nicht, deswegen gibt es bei Kunden unter Umständen Probleme
+das Graphen die vor CMC noch gingen nun nicht mehr gehen.
+
+Konkretes Beispiel: Hatte ein Variablen name ein : im Namen, hat pnp daraus
+ein _ gemacht (c:). Beim CMC geht der Graph dann nicht mehr
+
+2014-04-14 16:05:15: changed state open -> works4me
+Etliches Ausnahmen wurden inzwischen berücksichtigt. Wenn wir weitere
+konkrete Fälle finden, können wir das nochmal ansehen. Evtl. passt es
+inzwischen auch schon.

@@ -1,0 +1,12 @@
+Title: CMC hat keine Debugsymbole in OMD-Builds
+Component: core
+Class: nastiness
+State: done
+Date: 2013-09-25 18:20:16
+Targetversion: next
+
+Aktuell wird der CMC immer noch gestripped installiert.
+Das verhindert das Debuggen. 
+
+2013-10-01 12:19:23: changed state open -> done
+Sind jetzt drin.

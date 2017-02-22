@@ -1,0 +1,23 @@
+Title: "activate changes" produces many zombie processes
+Component: core
+State: open
+Date: 2015-01-29 19:39:29
+Targetversion: next
+Class: nastiness
+
+with every cmk -O produces serveral zombie processes like this
+
+h1        5215 15020  0 15:10 ?        00:00:00 [agent_vsphere] <defunct>
+h1        5216 15022  0 15:10 ?        00:00:00 [agent_vsphere] <defunct>
+h1        5217 15023  0 15:10 ?        00:00:00 [agent_vsphere] <defunct>
+h1        5511 15025  0 13:27 ?        00:00:00 [agent_vsphere] <defunct>
+h1        6511 15022  0 13:27 ?        00:00:00 [agent_vsphere] <defunct>
+h1        6512 15016  0 13:27 ?        00:00:00 [agent_vsphere] <defunct>
+h1       11278 15017  0 13:14 ?        00:00:00 [agent_vsphere] <defunct>
+h1       11404 15017  0 15:12 ?        00:00:00 [snmpbulkwalk] <defunct>
+h1       13990 15033  0 15:12 ?        00:00:00 [snmpbulkwalk] <defunct>
+h1       21471 15024  0 15:00 ?        00:00:00 [agent_vsphere] <defunct>
+h1       21481 15028  0 15:00 ?        00:00:00 [agent_vsphere] <defunct>
+h1       21482 15025  0 15:00 ?        00:00:00 [agent_vsphere] <defunct>
+
+they only disappear after a cmk -R

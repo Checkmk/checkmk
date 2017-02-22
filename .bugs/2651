@@ -1,0 +1,16 @@
+Title: Notification FLAPPINGSTART is sent by core even if configured off
+Component: core
+Class: bug
+State: works4me
+Date: 2014-01-30 15:44:09
+Targetversion: next
+
+Steps to reproduce
+
+1) Setup user with notifications enabled
+2) Disable global notification option "Start or end of flapping state" for host / service
+3) Trigger flapping state
+4) Observe history log: FLAPPINGSTART is sent for this user
+
+2014-12-01 08:31:14: changed state open -> works4me
+Seems to have been fixed meanwhile. Works for me.

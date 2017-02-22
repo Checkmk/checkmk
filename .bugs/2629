@@ -1,0 +1,10 @@
+Title: XML Update: lineares Suchen von Dict vermeiden
+Component: core
+Class: bug
+State: done
+Date: 2013-09-10 15:02:15
+Targetversion: next
+
+
+2013-09-17 17:38:35: changed state open -> done
+Commit von Lars ist völlig in Ordnung so.

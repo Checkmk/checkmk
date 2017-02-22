@@ -1,0 +1,15 @@
+Title: Implement dyndns_hosts
+Component: config
+Class: bug
+State: done
+Date: 2013-07-22 18:08:14
+Targetversion: next
+
+Die Dinger funktionieren aktuell nicht. Hier müssten wir bei der Konfiggenerierung
+automatisch auf check_icmp zurückschalten und einfach den $HOSTNAME$ nehmen, 
+anstelle der HOSTADDRESS. Weiterhin bei der Macroersetzung die $HOSTADDRESS$
+durch $HOSTNAME$ ersetzen bzw. das Array damit füllen. Als IP-Adresse nehmen
+wir dann 0.0.0.0.
+
+2013-07-29 12:34:59: changed state open -> done
+Ist inzwischen gemacht.

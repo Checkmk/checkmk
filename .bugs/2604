@@ -1,0 +1,12 @@
+Title: Check_MK Exit code setting does not work?
+Component: core
+Class: bug
+State: done
+Date: 2013-06-05 17:06:56
+Targetversion: next
+
+On Eiger the exit status of Check_MK should be OK on
+Standrechner and Lehrerrechner. But is CRIT.
+
+2013-06-06 16:49:44: changed state open -> done
+Was due to missing global variable cleanup in keepalive mode.

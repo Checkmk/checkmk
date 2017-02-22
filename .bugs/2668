@@ -1,0 +1,14 @@
+Title: Checks need to be spreaded more over time
+Component: core
+State: open
+Date: 2014-12-12 09:04:53
+Targetversion: future
+Class: bug
+
+A common case is when a user enables the Check_MK Discovery service or
+reschedules all of them at once. Then the services seem to be checked near
+to eachother which might result in unneccessary load peaks.  It would be
+much better to spread the checks more over time.
+
+Lösung: Im Multisite stellen wir das Formular mit den Aktionen so um,
+dass automatisch über mehr Zeit verteilt wird.

@@ -1,0 +1,12 @@
+Title: Disabling of notifications does not work
+Component: config
+Class: bug
+State: done
+Date: 2013-10-29 14:14:20
+Targetversion: next
+
+The settings for the enabling of notifications of specific
+hosts and services does not work. It is always set to True.
+
+2013-11-25 12:51:35: changed state open -> done
+has already been fixed.

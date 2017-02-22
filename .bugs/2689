@@ -1,0 +1,17 @@
+Title: Handle timeouts for graphite updates more gracefully
+Component: core
+Class: nastiness
+State: done
+Date: 2014-04-23 14:36:32
+Targetversion: next
+
+If you configure Graphite updates and the server does not respond,
+then the core runs into lenghty TCP timeouts and the complete
+monitoring hangs - including Livestatus.
+
+Either create an own thread for the carbon updates,
+or launch a proxy process as OMD script (?)
+or impose slower timeouts for connect and send to
+the socket.
+
+2014-12-01 17:17:18: changed state open -> done

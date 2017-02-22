@@ -1,0 +1,17 @@
+Title: Detection of network outages due to parents does not work anymore
+Component: core
+Class: bug
+State: done
+Date: 2016-03-08 11:29:11
+Targetversion: 1.2.8
+
+Bug auf CMC@stable: Lege dir zwei Hosts an. Nimm als IP-Adressen
+z.B. 1.2.3.4. Trag den einen als Parent vom anderen ein.
+
+Jetzt sollte einen UNREACH werden, der andere DOWN. Bei Nagios
+Core geht das. Bei CMC bleiben beide DOWN. Es hilft auch
+nichts, von Smart-PING auf normalen PING umzustellen (also
+aktiver Check). Da muss irgendwas an der Logik kaputtgegangen
+sein....
+
+2016-03-21 15:13:12: changed state open -> done

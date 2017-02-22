@@ -1,0 +1,11 @@
+Title: Smart-PING: Erwartete Antwortzeit muss retry-Intervall berücksichtigen
+Component: core
+State: open
+Date: 2015-02-25 14:22:54
+Targetversion: future
+Class: bug
+
+Ein Kunde hatte 6 sec Intervall, aber 1 Minute Retry-Interval auf dem
+Smart-PING.  Darauf hin hatte der Host immer wieder DOWN-Probleme. Grund
+evtl. Ein PING geht schief. Dann schaltet CMC auf 1 Minute Interval um. Aber
+das erwartete Antwortzeit bleibt scheinbar auf 15 Sekunden.

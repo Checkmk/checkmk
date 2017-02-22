@@ -1,0 +1,14 @@
+Title: Service check duration	1381502640.400 sec
+Component: core
+Class: bug
+State: done
+Date: 2013-10-11 16:44:19
+Targetversion: next
+
+The Check-Ausführungszeit für passive Check_MK-Checks ist seeeehr
+lang. Anscheinend wird seit der Epoche gerechnet. Welche Zeit sollen
+wir hier annehmen? Egentlich könnten wir das auf 0 setzen, sobald
+ein Resultat asynchron eintrudelt.
+
+2013-10-13 18:50:07: changed state open -> done
+Wird jetzt bei passiven Checks einfach auf 0 gesetzt.

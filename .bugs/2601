@@ -1,0 +1,13 @@
+Title: Delete state if not successfully written
+Component: core
+Class: bug
+State: done
+Date: 2013-06-01 16:16:47
+Targetversion: next
+
+If the state file cannot be successfully written,  then
+leave the old one intact. This is important in case of
+disk-full!
+
+2013-06-06 17:50:38: changed state open -> done
+Fixed.

@@ -1,0 +1,11 @@
+Title: passive Checks unterstützen
+Component: core
+Class: todo
+State: done
+Date: 2013-10-02 11:47:02
+Targetversion: next
+
+Sonst nützt auch die Pipe nix.
+
+2013-10-02 16:12:00: changed state open -> done
+Geht jetzt auch. Konfigurierbar über "Classical Active and Passive Nagios Checks"

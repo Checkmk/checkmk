@@ -1,0 +1,12 @@
+Title: Notifications werden postponed wenn "Always assume host to be up"
+Component: core
+Class: bug
+State: done
+Date: 2013-06-21 08:56:22
+Targetversion: next
+
+2013-06-21 08:55:30 [5] Checking notification for Lehrerrechner;Check_MK inventory
+2013-06-21 08:55:30 [5]  Postponing: host is up, but last check not recent enough
+
+2013-06-28 16:07:10: changed state open -> done
+Fixed.

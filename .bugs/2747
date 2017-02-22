@@ -1,0 +1,11 @@
+Title: Manually scheduling UNREACHABLE host state results in DOWN state
+Component: core
+Class: bug
+State: done
+Date: 2015-02-06 14:16:28
+Targetversion: 1.2.8
+
+The State::update() method transforms UNREACHABLE states to DOWN states
+for hosts which is not correct when a user excplicit set an UNREACHABLE state
+
+2016-03-21 12:55:35: changed state open -> done

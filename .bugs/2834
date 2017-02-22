@@ -1,0 +1,17 @@
+Title: Seit 1.2.8b2 ist core langsamer
+Component: core
+Class: bug
+State: wontfix
+Date: 2016-02-26 09:15:06
+Targetversion: 1.2.8
+
+Ansonsten hatte der Kunde gesagt die Sites (4 Stück in verschiedenen
+netzten) seien seit dem Update (von 1.2.7i3p2) langsamer. Klar die
+Aussage ist etwas unqualifiziert, die GUI hat sich aber wirklich nicht
+flott angefühlt.
+Was mir jedoch aufgefallen ist, ist das Nagvis häufiger mal blau wurde
+da der Livestatus Socket nicht mehr verfügbar war, das aber immer nur
+bis zum nächsten Refresh angehalten hat.
+
+2016-03-21 16:47:08: changed state open -> wontfix
+Zu mager, um damit was anzufangen

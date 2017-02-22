@@ -1,0 +1,18 @@
+Title: livestatus: perf_data is unquoted, breaks csv output
+Component: core
+State: wontfix
+Date: 2016-01-13 11:13:00
+Targetversion: future
+Class: bug
+
+The livestatus table "services" includes performance data. This data uses
+semi-colons as field separators, just like the CSV output of livestatus,
+yet perf_data is not quoted. This makes the CSV output un-parseable.
+
+--> Livestatus does not really support CSV, but just separates fields
+with ;. Introducing quoting would be an incompatible change. We could
+introduce a new header option for that.
+
+But: what the heck. Nobdy uses CSV for real applications. It's just
+for small shell hacks. And there the currently implementation is the
+easiest to work with.

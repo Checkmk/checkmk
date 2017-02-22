@@ -1,0 +1,16 @@
+Title: new status column for showing histcache status
+Component: core
+State: open
+Date: 2014-10-14 10:25:37
+Targetversion: next
+Class: feature
+
+This column could show information about the current histcache
+situation. In fact we could introduce several columns:
+
+- histcache_state -> 0: disabled, 1: building up, 2: ready
+  Oder:
+  0.0 -> disabled
+  0.23 -> 23% der Dateien eingelesen
+  1.0 -> fertig
+  Die Menge der Dateien müssten wir ja eigentlich wissen, oder?

@@ -1,0 +1,13 @@
+Title: Beschriftung WATO-Regel Smartping doof
+Component: web
+Class: todo
+State: works4me
+Date: 2013-09-11 15:30:08
+Targetversion: next
+
+at least one packet every 1.5 --> Hier kommt implizit 1.0 dazu
+
+2013-09-17 18:22:39: changed state open -> works4me
+Stimmt nicht. Es kommt nicht ein Interval dazu, sondern lediglich
+das Smartping-Check-Interval, was auf eine Sekunde verdrahtet ist
+und damit nicht ins Gewicht fällt.

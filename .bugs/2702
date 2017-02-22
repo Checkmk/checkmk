@@ -1,0 +1,11 @@
+Title: libpcap fehlt auf Centos6
+Component: core
+Class: bug
+State: done
+Date: 2014-05-05 13:24:34
+Targetversion: next
+
+Es fehlt die abhängigkeit zu diesem Paket unter CentOS 6 (eigentlich mehr OMD problem)
+
+2014-05-05 14:24:44: changed state open -> done
+Erledigt im CMC-Git.

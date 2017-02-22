@@ -1,0 +1,16 @@
+Title: Old host rrd directory is created even when using new one
+Component: core
+State: open
+Date: 2016-04-05 17:04:56
+Targetversion: 1.2.8
+Class: bug
+
+Unsure where the issue is located, but what happens is:
+
+- omd-vonheute
+- adding new host via WATO
+- reload config
+- var/pnp4nagios/perfdata/[hostname] is created
+
+This is done even when var/check_mk/rrd/[hostname] is used
+for storing the RRD files.

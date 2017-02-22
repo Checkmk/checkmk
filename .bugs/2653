@@ -1,0 +1,9 @@
+Title: agent bakery: cleanup baked agents of no longer existing hosts
+Component: core
+Class: nastiness
+State: done
+Date: 2014-11-18 11:22:38
+Targetversion: future
+
+
+2014-12-01 09:48:27: changed state open -> done

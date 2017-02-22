@@ -1,0 +1,23 @@
+Title: reporting: element 'performance graph' kann man nicht hinzufügen
+Component: web
+Class: bug
+State: done
+Date: 2014-11-05 20:38:36
+Targetversion: next
+
+will man zu einem report einen 'performance graph of a single service'
+hinzufügen, so geht das nicht und es gibt den traceback
+Internal error: 'datasource'
+
+Traceback (most recent call last):
+  File "/omd/sites/heute/share/check_mk/web/htdocs/index.py", line 241, in handler
+    handler()
+  File "/omd/sites/heute/share/check_mk/web/htdocs/reporting.py", line 621, in page_edit_element
+    page_edit_reportpart("elements", what_title=_("report element"), part_types=element_types)
+  File "/omd/sites/heute/share/check_mk/web/htdocs/reporting.py", line 742, in page_edit_reportpart
+    for info_name in report_context_info_handler(part):
+  File "/omd/sites/heute/share/check_mk/web/htdocs/reporting.py", line 791, in report_context_info_handler
+    return views.multisite_datasources[element["datasource"]]["infos"]
+KeyError: 'datasource'
+
+2014-12-02 18:39:59: changed state open -> done

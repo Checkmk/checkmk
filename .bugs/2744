@@ -1,0 +1,15 @@
+Title: Editing filters of views in reports does not work
+Component: web
+Class: bug
+State: done
+Date: 2015-01-19 16:02:18
+Targetversion: next
+
+Editing hard coded values of filters or removing filters from a view
+based reportlet does not work.
+
+Das Problem ist, dass der Wert beim Speichern nicht übernommen wird.
+Es geht um Views, die in einem Report eingebettet sind.
+
+2015-02-06 15:43:16: changed state open -> done
+Fixed.

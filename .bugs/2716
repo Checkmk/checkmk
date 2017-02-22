@@ -1,0 +1,26 @@
+Title: Notification while Downtime
+Component: core
+Class: bug
+State: works4me
+Date: 2014-10-13 15:31:25
+Targetversion: next
+
+We had the following sitatuion:
+
+A downtime on the services for the OMD-Builds until 8:00. But also the 
+check-period for these services starts at 8:00. Now - when the buidls
+were repaired, exactly at 8:00 these checks went from CRIT to OK
+and the Downtime ended. But we got *two* notifications.
+
+Downtime End (while OK) and CRITICAL → OK.
+
+If the alert was still during the downtime, then no notif. should
+have happend for that. But during the "Downtime End" notification,
+the status *was* already OK - as stated in the notifikcation itself.
+
+How can this happen?
+
+Version of CMC: 2014.09.03. Date:   Sun Oct 12 08:00:00 CET 2014
+
+2014-12-02 16:52:03: changed state open -> works4me
+Eigentlich passt das Verhalten so.

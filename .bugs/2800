@@ -1,0 +1,11 @@
+Title: Special handling for state change PEND -> NON-OK
+Component: core
+State: open
+Date: 2015-07-02 13:15:14
+Targetversion: master
+Class: nastiness
+
+Den Zustandsübergang PEND -> NON-OK sollten wir speziell behandeln und bei
+den Notifications bereitstellen. Somit könnte man verhindern, dass neue
+Objekte alarmiert werden. Das ist vor allem dann wichtig, wenn man seine
+Statusdatei verliert.

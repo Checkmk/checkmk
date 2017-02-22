@@ -1,0 +1,22 @@
+Title: termination of cmk --createrrd is not handled correctly
+Component: core
+Class: bug
+State: done
+Date: 2013-09-19 12:33:00
+Targetversion: next
+
+If e.g. dependency python rrdtool is not installed, the process dies
+imediately. This is not detected correctly.
+
+Ausprobieren: einfach den RRD-Helper abschießen. Der CMC merkt
+nix davon. Das fprintf im Code geht einfach ins Nirvana. Das ist
+Mist. Ich glaube, wir müssen anstelle des dummen popen doch
+ein fork() machen.
+
+Wenn der Helper abstürzt, was tun wir dann? Am besten neu starten?
+Aber nur, wenn der letzte Neustart mindestens 10 Sekunden her ist.
+
+
+2013-09-30 20:35:57: changed state open -> done
+Jetzt wird ein ordentlicher fork() gemacht, mit Fehlererkennung
+und gedrosseltem Neustart.

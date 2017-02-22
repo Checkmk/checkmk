@@ -1,0 +1,17 @@
+Title: Migrations-Doku: PING-Problematik beschreiben
+Component: docu
+Class: todo
+State: done
+Date: 2013-09-27 11:55:17
+Targetversion: next
+
+Ist ist ja so, dass einem die Performance-Daten für die Hosts
+fehlen, nach einerm Umstellungen. Darauf müssen wir hinweisen.
+Wer die PINGs doch braucht, sollte den check_icmp von Hand
+draufsetzen.
+
+Das Migrationsskript der Kommentare könnte auch die PING-Dateien
+von _hoost_ inPING umbenennen.
+
+2013-10-01 16:50:00: changed state open -> done
+Wird beschrieben.

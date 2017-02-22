@@ -1,0 +1,9 @@
+Title: core can end in endless loop if helper can't be started
+Component: core
+State: open
+Date: 2016-04-07 13:39:57
+Targetversion: 1.2.8
+Class: bug
+
+In EventHelper::flush the function EventHelper::sendNextEvent is called in a loop until a list of events has been processed. EventHelper::sendNextEvent can return before processing an event for several reasons, i.e. if the helper is not connected. In this case the core will try to re-start the helper but if that doesn't work, the core will never return from the loop in EventHelper::flush. There may be multiple other errors in the same area.
+A minor related problem is that if the helper has closed the socket, sendNextEvent will report an error message that has nothing to do with what actually happened.

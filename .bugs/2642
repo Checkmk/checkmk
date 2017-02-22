@@ -1,0 +1,32 @@
+Title: mk_livestatus does not fill columns action_url and action_url_expanded when running with cmc
+Component: core
+Class: bug
+State: works4me
+Date: 2013-10-22 15:19:30
+Targetversion: next
+
+when running OMD with Nagios Core, I can issue a
+lq "GET services\nColumns: host_name description action_url action_url_expanded\nFilter: host_name = localhost\nFilter: description = Check_MK"
+
+and it reports
+
+localhost;Check_MK;/i4/pnp4nagios/index.php/graph?host=$HOSTNAME$&srv=$SERVICEDESC$' class='tips' rel='/i4/pnp4nagios/index.php/popup?host=$HOSTNAME$&srv=$SERVICEDESC$;/i4/pnp4nagios/index.php/graph?host=localhost&srv=Check_MK' class='tips' rel='/i4/pnp4nagios/index.php/popup?host=localhost&srv=Check_MK
+
+when running with cmd and issuing the same query, I get
+
+localhost;Check_MK;;
+
+the same for the hots table
+Query:
+lq "GET hosts\nColumns: host_name action_url action_url_expanded\nFilter: host_name = localhost"
+
+Answer with Nagios core:
+localhost;/i4/pnp4nagios/index.php/graph?host=$HOSTNAME$&srv=_HOST_' class='tips' rel='/i4/pnp4nagios/index.php/popup?host=$HOSTNAME$&srv=_HOST_;/i4/pnp4nagios/index.php/graph?host=localhost&srv=_HOST_' class='tips' rel='/i4/pnp4nagios/index.php/popup?host=localhost&srv=_HOST_
+
+Answer with CMC:
+localhost;;
+
+2013-10-22 18:15:36: changed state open -> works4me
+action_url works if explicitely set. It's just the case that the action_url is not set
+to the logwatch URL when using the CMC since Multisite automatically displays the
+logwatch Icon even without the URL. And that way the URL is free for custom use.

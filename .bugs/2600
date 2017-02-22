@@ -1,0 +1,19 @@
+Title: Rushd skips sometimes due to change pending.log
+Component: web
+Class: bug
+State: done
+Date: 2013-06-01 12:25:34
+Targetversion: next
+
+2013-06-01 12:21:51.286784 Successfully daemonized with PID 16950.
+2013-06-01 12:21:51.286917 ----------------------------------------------------------
+2013-06-01 12:21:51.286935 CMC Rushing Ahead Daemon starting...
+2013-06-01 12:22:34.967386 Pre-creating configuration for monitoring core for timestamp 1370082154.97...
+2013-06-01 12:22:35.275346 Successfully updated rush ahead configuration in 0.308 sec.
+2013-06-01 12:22:38.193839 Pre-creating configuration for monitoring core for timestamp 1370082158.19...
+2013-06-01 12:22:38.193917 pending.log has changed meanwhile, skipping this update.
+
+But I simply clicked around in WATO, nothing special...
+
+2013-06-03 01:03:44: changed state open -> done
+Reimplemented using change ids. Should be OK now.

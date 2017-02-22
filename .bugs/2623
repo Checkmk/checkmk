@@ -1,0 +1,89 @@
+Title: Check helper schmiert ab, Core verkraftet das nicht
+Component: core
+Class: bug
+State: works4me
+Date: 2013-08-26 12:04:19
+Targetversion: next
+
+2013-08-23 15:00:51 [0] Invalid response from checkhelper[13788].
+2013-08-23 15:00:51 [0] Error read response from checkhelper[13788]: Connection reset by peer
+2013-08-23 15:00:52 [1] Cannot send messsage to checkhelper[13788]: Broken pipe
+2013-08-23 15:00:52 [1] Marking checkhelper[13788] as finally dead. Please restart core.
+2013-08-23 15:00:52 [4] Restarting dead check helper [13788]
+2013-08-23 15:00:52 [3] checkhelper[13788] exited with status 1
+2013-08-23 15:00:52 [1] Cannot send messsage to checkhelper[13790]: Broken pipe
+2013-08-23 15:00:52 [1] Marking checkhelper[13790] as finally dead. Please restart core.
+2013-08-23 15:00:52 [4] Restarting dead check helper [13790]
+2013-08-23 15:00:52 [3] checkhelper[13790] exited with status 1
+2013-08-23 15:00:52 [1] Cannot send messsage to checkhelper[13637]: Broken pipe
+2013-08-23 15:00:52 [1] Marking checkhelper[13637] as finally dead. Please restart core.
+2013-08-23 15:00:52 [4] Restarting dead check helper [13637]
+2013-08-23 15:00:52 [3] checkhelper[13637] exited with status 1
+2013-08-23 15:00:54 [1] Cannot send messsage to checkhelper[13791]: Broken pipe
+2013-08-23 15:00:54 [1] Marking checkhelper[13791] as finally dead. Please restart core.
+2013-08-23 15:00:54 [4] Restarting dead check helper [13791]
+2013-08-23 15:00:54 [3] checkhelper[13791] exited with status 1
+2013-08-23 15:00:54 [1] Cannot send messsage to checkhelper[13933]: Broken pipe
+2013-08-23 15:00:54 [1] Marking checkhelper[13933] as finally dead. Please restart core.
+2013-08-23 15:00:54 [4] Restarting dead check helper [13933]
+2013-08-23 15:00:54 [3] checkhelper[13933] exited with status 1
+2013-08-23 15:01:07 [1] Cannot send messsage to checkhelper[13931]: Broken pipe
+2013-08-23 15:01:07 [1] Marking checkhelper[13931] as finally dead. Please restart core.
+2013-08-23 15:01:07 [4] Restarting dead check helper [13931]
+2013-08-23 15:01:07 [3] checkhelper[13931] exited with status 1
+2013-08-23 15:01:11 [1] Cannot send messsage to checkhelper[13929]: Broken pipe
+2013-08-23 15:01:11 [1] Marking checkhelper[13929] as finally dead. Please restart core.
+2013-08-23 15:01:11 [4] Restarting dead check helper [13929]
+2013-08-23 15:01:11 [3] checkhelper[13929] exited with status 1
+2013-08-23 15:01:12 [1] Cannot send messsage to checkhelper[13932]: Broken pipe
+2013-08-23 15:01:12 [1] Marking checkhelper[13932] as finally dead. Please restart core.
+2013-08-23 15:01:12 [4] Restarting dead check helper [13932]
+2013-08-23 15:01:12 [3] checkhelper[13932] exited with status 1
+2013-08-23 15:01:13 [5] Executing external command: RELOAD_CONFIG
+2013-08-23 15:01:13 [5] Reloading configuration due to external command.
+2013-08-23 15:01:13 [5] Reloading configuration on-the-fly...
+2013-08-23 15:01:13 [5] Object DTAG_DNS2;Check_MK inventory vanished, aborting current check
+2013-08-23 15:01:13 [5] Aborting running check at check helper [26813]
+2013-08-23 15:01:13 [5] Object Interoute_DNS2;Check_MK vanished, aborting current check
+2013-08-23 15:01:13 [5] Aborting running check at check helper [16163]
+2013-08-23 15:01:13 [5] Object wbp-hv02;Check_MK vanished, aborting current check
+2013-08-23 15:01:13 [5] Aborting running check at check helper [16789]
+2013-08-23 15:01:13 [5] Object DTAG_DNS2;Check_MK vanished, aborting current check
+2013-08-23 15:01:13 [5] Aborting running check at check helper [16654]
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [2] Wrote only -1 out of 2 bytes to check helper (restart signal)
+2013-08-23 15:01:13 [5] Loaded 97 hosts and 3004 services in 7.957 ms.
+2013-08-23 15:01:13 [1] Cannot send messsage to checkhelper[26813]: Broken pipe
+2013-08-23 15:01:13 [1] Marking checkhelper[26813] as finally dead. Please restart core.
+2013-08-23 15:01:39 [5] -----------------------------------------------------------------
+2013-08-23 15:01:39 [5] Check_MK Micro Core 2013.08.23 starting
+2013-08-23 15:01:39 [5] Loaded 97 hosts and 3004 services in 6.165 ms.
+2013-08-23 15:01:39 [5] Loaded saved program state in 3.305 ms.
+2013-08-23 15:01:39 [5] Loaded 97 hosts, 2999 services, 2 comments, 0 downtimes.
+2013-08-23 15:01:39 [5] 0 host and 52 services vanished.
+2013-08-23 15:01:39 [5] Created 20 Livestatus threads in 0.489 ms
+2013-08-23 15:01:39 [5] Successfully connected to rrdcached.
+2013-08-23 15:01:39 [5] Started 5 checkhelper helpers in 1.782 ms.
+2013-08-23 15:01:39 [5] Started 20 cmk helpers in 5.797 ms.
+2013-08-23 15:01:39 [5] Started ICMP helper with PID 17062.
+2013-08-23 15:02:43 [1] Cannot send messsage to checkhelper[17056]: Broken pipe
+2013-08-23 15:02:43 [1] Marking checkhelper[17056] as finally dead. Please restart core.
+2013-08-23 15:02:43 [4] Restarting dead check helper [17056]
+2013-08-23 15:02:43 [3] checkhelper[17056] exited with status 1
+
+Könnte evtl. passiert sein, als Bastian Checks programmiert hat, die syntaktisch
+nicht korrekt waren und währenddessen ein restart/load? passiert ist.
+
+2013-09-18 13:53:11: changed state open -> works4me
+Habe verschiedene Varianten getestet. Egal wie und wann cmk --keepalive
+abschmiert - es kommt immer irgendwann wieder sauber hoch, sobald es
+repariert ist. Beobachten und erstmal nix machen.

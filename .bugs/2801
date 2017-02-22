@@ -1,0 +1,18 @@
+Title: Timeline in report brings error if core is Nagios
+Component: reporting
+Class: bug
+State: works4me
+Date: 2015-07-27 15:57:47
+Targetversion: 1.2.8
+
+Error while rendering element type 'Availability table'
+Traceback (most recent call last):
+File "/omd/sites/testsite/share/check_mk/web/htdocs/reporting.py", line 2023, in render_report_element
+element_type["render"](element, instance)
+File "/omd/sites/testsite/share/check_mk/web/plugins/reporting/availability.py", line 136, in render_element_availability
+render_availability_timeline(what, av_entry, avoptions, table_layout)
+File "/omd/sites/testsite/share/check_mk/web/plugins/reporting/availability.py", line 170, in render_availability_timeline
+( "", entry["log_output"] ),
+KeyError: 'log_output
+
+2016-02-15 09:49:56: changed state open -> works4me

@@ -1,0 +1,13 @@
+Title: Smart-PING should (optionally) use ICMP payload
+Component: core
+Class: nastiness
+State: done
+Date: 2014-04-14 16:05:46
+Targetversion: next
+
+Currently the Smart-PING packets do not contain any payload. Some firewalls
+seem to drop these packages and rather exception "conventional" 64 Byte
+payload - like the normal ping without any options. We should (optionally)
+implement that behaviour.
+
+2014-12-01 16:37:42: changed state open -> done

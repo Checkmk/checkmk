@@ -1,0 +1,13 @@
+Title: Reporting: Guest users may generate reports but cannot change timerange
+Component: web
+Class: bug
+State: works4me
+Date: 2014-10-19 12:54:31
+Targetversion: next
+
+Look at the demo system: In the sidebar snaping "Reporting" the
+demo users can select and clall reports. But the buttons for 
+changing the time ranges are missing.
+
+2014-12-01 14:54:54: changed state open -> works4me
+Is denke ich schon behoben inzwischen.

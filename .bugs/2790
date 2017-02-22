@@ -1,0 +1,12 @@
+Title: Reporting, show only info about a single hostgroups has no effect
+Component: reporting
+Class: bug
+State: done
+Date: 2015-04-17 13:41:56
+Targetversion: 1.2.8
+
+when creating a report with "Show information of a single Host Group"
+and selecting a host group, this has no effect at least on availability
+tables. Still all services of all hosts in all hostgroups are shown.
+
+2016-02-09 11:04:54: changed state open -> done

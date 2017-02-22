@@ -1,0 +1,12 @@
+Title: Kommandopipe unterstützen
+Component: core
+Class: todo
+State: done
+Date: 2013-10-02 11:24:39
+Targetversion: next
+
+Denke, dass wir das für einige Fälle doch brauchen,
+z.B. hat ein Kunde NSCA im Einsatz.
+
+2013-10-02 16:01:51: changed state open -> done
+Geht jetzt

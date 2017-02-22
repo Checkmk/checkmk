@@ -1,0 +1,23 @@
+Title: Migrationsskript für Kommentare etc.
+Component: config
+Class: feature
+State: done
+Date: 2013-09-27 11:48:25
+Targetversion: next
+
+Viele haben sich gewünscht, dass man Downtimes/Comments vom Nagios
+übernehmen kann. Das ist wichtig.
+
+Eine Lösung könnte so aussehen
+
+Mit einem Skript wie livedump (oder sogar direkt livedump) kann man
+die Daten aus Nagios rausziehen - in irgendeinem format. 
+
+Das kann man dann in den laufenden CMC einspielen. Frage ist allerdings,
+ob alle Kommandos dafür auch existieren.
+
+Nebeneffekt: Das würde dann auch für Nagios->Nagios funktionieren.
+
+2013-10-03 16:52:13: changed state open -> done
+Ist jetzt noch besser gelöst: cmk -B convertiert retention.dat
+in das state-File vom CMC. 

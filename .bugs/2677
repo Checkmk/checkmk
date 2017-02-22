@@ -1,0 +1,9 @@
+Title: Enable histcache per default, create Werk for histcache
+Component: core
+Class: todo
+State: done
+Date: 2014-10-06 10:58:59
+Targetversion: next
+
+
+2014-12-01 14:41:07: changed state open -> done

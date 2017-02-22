@@ -1,0 +1,17 @@
+Title: host down is not detected
+Component: core
+Class: bug
+State: works4me
+Date: 2013-07-01 13:26:19
+Targetversion: next
+
+A host fails completely. But the ICMP helper does not detect this: The ICMP unreachable
+packets (sent by the router in front of this host) apparently lead it to assume the
+host to be up.
+(If I drop these ICMP unreachable packet e. g. by iptables, then the host is correctly 
+recognized to be down)
+
+@Bernd: Komisch: Die Pakete müssten dann doch vom *Router* kommen, und nicht von dem 
+nicht erreichbaren Host. Hast du das mit tcpdump mal kontrolliert?
+
+2013-07-03 15:45:00: changed state open -> works4me

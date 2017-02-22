@@ -1,0 +1,12 @@
+Title: Notification delay can lead to OK notifications without prior CRIT notifications
+Component: core
+State: open
+Date: 2015-12-11 09:53:37
+Targetversion: master
+Class: nastiness
+
+If you use first notification delay and during the delay phase a service
+goes OK again then the core has no knowledge whether a notification for CRIT
+already has been sent. It always sends the OK notification. Can we fix this
+and safely determine wether CRIT was alarmed and thus needs to be mirrored
+by an OK notification? Maybe by using some timestamp?

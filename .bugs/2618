@@ -1,0 +1,12 @@
+Title: pnp *.xml werden nicht wieder angelegt
+Component: core
+Class: bug
+State: done
+Date: 2013-07-09 13:13:56
+Targetversion: next
+
+Wenn man zu einem bestehenden Host die *.xml-Dateien löscht und anschließend
+den Core neu startet, werden die xml-Dateien nicht (zeitig) wieder angelegt.
+
+2013-07-10 11:12:37: changed state open -> done
+Fehlalarm.

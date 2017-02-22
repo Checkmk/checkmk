@@ -19,7 +19,7 @@ from contextlib import contextmanager
 
 # internal imports
 from htmllib import HTML, OutputFunnel
-from classes import HTMLOrigTester, HTMLCheck_MKTester
+from classes import HTMLOrigTester, Refactored_htmlTester
 
 
 class OutputFunnelTester(OutputFunnel):

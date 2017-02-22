@@ -14,7 +14,7 @@ from os.path import isfile, join
 # internal imports
 from testlib import cmk_path
 from htmllib import HTML
-from classes import HTMLOrigTester, HTMLCheck_MKTester
+from classes import HTMLOrigTester, Refactored_htmlTester
 import tools
 
 
@@ -71,7 +71,7 @@ class HtmlTest(object):
         return self
 
 
-    # convert to json serializable object
+    # convert to dictionary
     def to_dict(self):
         # required attributes
         d = { "function_name": self.function_name, \
@@ -89,7 +89,7 @@ class HtmlTest(object):
         return d
 
 
-    # parse the json serializable object
+    # parse a dictionary
     def from_dict(self, test):
         # required attributes
         self.function_name = test["function_name"]
@@ -113,7 +113,7 @@ class HtmlTest(object):
         global eval_func, set_html_state
         construct_html = (html is None)
         if construct_html:
-            html = HTMLCheck_MKTester()
+            html = Refactored_htmlTester()
         add_html_vars(html, self.add_vars)
         set_html_state(html, self.state_in)
         return_value, html_code = eval_func(html, self.function_name, self.arguments)
@@ -121,25 +121,25 @@ class HtmlTest(object):
         try:
             assert tools.compare_html(self.return_value, return_value)
         except Exception, e:
-            print tools.bcolors.WARNING + "%s" % self
-            print tools.bcolors.WARNING + "EXPECTED: \n" + self.return_value
-            print tools.bcolors.WARNING + "RETURNED: \n" + return_value
+            print tools.bcolors.WARNING + "Test failed: the return value differs!\n%s" % self
+            print tools.bcolors.WARNING + "EXPECTED: \n%s" % self.return_value
+            print tools.bcolors.WARNING + "RETURNED: \n%s" % return_value
             raise e
 
         try:
             assert tools.compare_html(self.expected_html, html_code)
         except Exception, e:
-            print tools.bcolors.WARNING + "%s" % self
-            print tools.bcolors.WARNING + "EXPECTED: \n" + self.expected_html
-            print tools.bcolors.WARNING + "GENERATED: \n" + html_code
+            print tools.bcolors.WARNING + "Test failed: generated html code differs!\n%s" % self
+            print tools.bcolors.WARNING + "EXPECTED: \n%s" % self.expected_html
+            print tools.bcolors.WARNING + "GENERATED: \n%s" % html_code
             raise e
 
         try:
             assert tools.compare_attributes(tools.get_attributes(html), self.state_out)
         except Exception, e:
-            print tools.bcolors.WARNING + "%s" % self
-            print tools.bcolors.WARNING + "EXPECTED: \n" + self.state_out
-            print tools.bcolors.WARNING + "ATTRIBUTES: \n" + tools.get_attributes(html)
+            print tools.bcolors.WARNING + "Test failed: output attributes differ!\n%s" % self
+            print tools.bcolors.WARNING + "EXPECTED: \n%s" % pprint.pformat(self.state_out)
+            print tools.bcolors.WARNING + "ATTRIBUTES: \n%s" % pprint.pformat({key: val for key, val in tools.get_attributes(html).iteritems() if key in self.state_out})
             raise e
 
         if construct_html:
@@ -209,7 +209,7 @@ def build_orig_test(function_name, args, state_in=None, add_vars=None):
 
 # build a test using the HTMLOrigTester function
 def build_cmk_test(function_name, args, state_in=None, add_vars=None):
-    cmk = HTMLCheck_MKTester()
+    cmk = Refactored_htmlTester()
     test = build_html_test(cmk, function_name, args, state_in, add_vars)
     del cmk
     return test

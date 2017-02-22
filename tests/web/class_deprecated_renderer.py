@@ -29,32 +29,11 @@ from htmllib import OutputFunnel, RequestHandler
 #   '----------------------------------------------------------------------'
 
 
-class DeprecatedRenderer(OutputFunnel, RequestHandler):
+class DeprecatedRenderer(html):
 
 
     def __init__(self):
-        OutputFunnel.__init__(self)
-        RequestHandler.__init__(self)
-
-        self.header_sent = False
-        self._default_stylesheets = ['check_mk', 'graphs']
-        self._default_javascripts = [ "checkmk", "graphs" ]
-        self.browser_reload = 0
-        self.browser_redirect = ''
-        self.render_headfoot = True
-        self.output_format = "html"
-
-        self.enable_debug = False
-        self.screenshotmode = False
-        self.have_help = False
-        self.help_visible = False
-
-        self.body_classes = ['main']
-        self.link_target = None
-
-        self.context_buttons_open = False
-        self.keybindings_enabled = True
-        self.keybindings = []
+        super(DeprecatedRenderer, self).__init__()
 
 
     def add_keybinding(self, keylist, jscode):

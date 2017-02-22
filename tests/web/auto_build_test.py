@@ -23,7 +23,7 @@ import re
 from bs4 import BeautifulSoup as bs
 
 # internal imports
-from classes import HTMLOrigTester, HTMLCheck_MKTester
+from classes import HTMLOrigTester, Refactored_htmlTester
 from tools import compare_html, gentest, compare_and_empty
 
 title = "title"
@@ -85,7 +85,7 @@ query   = "Hallo Welt!"
 function_start = lambda x: '''
 def test_%d():
     old = HTMLOrigTester()
-    new = HTMLCheck_MKTester()
+    new = Refactored_htmlTester()
     old.plug()
     new.plug()
 \n

@@ -3,7 +3,7 @@
 # > py.test -s -k test_html_generator.py
 
 # internal imports
-from classes import HTMLCheck_MKTester
+from classes import Refactored_htmlTester
 from html_tests import load_html_test, run_all_generated_tests
 
 
@@ -57,7 +57,7 @@ def test_scripts():
 
 def test_renderers_instance():
 
-    new = HTMLCheck_MKTester()
+    new = Refactored_htmlTester()
 
     assert isinstance(new.render_icon("icon"), HTML)
     assert isinstance(new.render_icon_button("www.url.de", "help", "icon"), HTML)

@@ -144,6 +144,100 @@ class Escaper(object):
         return text
 
 
+    #
+    # Deprecated functions
+    #
+
+
+    # Encode HTML attributes: replace " with &quot;, also replace
+    # < and >. This code is slow. Works on str and unicode without
+    # changing the type. Also works on things that can be converted
+    # with %s.
+    def attrencode(self, value):
+        return self._escape_attribute(value)
+
+
+    # Only strip off some tags. We allow some simple tags like
+    # <b>, <tt>, <i> to be part of the string. This is useful
+    # for messages where we still want to have formating options.
+    def permissive_attrencode(self, obj):
+        return self._escape_text(obj)
+
+#.
+#
+# HTML encoding
+#
+
+class Encoder(object):
+
+    # This function returns a str object, never unicode!
+    # Beware: this code is crucial for the performance of Multisite!
+    # Changing from the self coded urlencode to urllib.quote
+    # is saving more then 90% of the total HTML generating time
+    # on more complex pages!
+    def urlencode_vars(self, vars):
+        output = []
+        for varname, value in sorted(vars):
+            if type(value) == int:
+                value = str(value)
+            elif type(value) == unicode:
+                value = value.encode("utf-8")
+
+            try:
+                # urllib is not able to encode non-Ascii characters. Yurks
+                output.append(varname + '=' + urllib.quote(value))
+            except:
+                output.append(varname + '=' + self.urlencode(value)) # slow but working
+
+        return '&'.join(output)
+
+
+    def urlencode(self, value):
+        if type(value) == unicode:
+            value = value.encode("utf-8")
+        elif value == None:
+            return ""
+        ret = ""
+        for c in value:
+            if c == " ":
+                c = "+"
+            elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
+                c = "%%%02x" % ord(c)
+            ret += c
+        return ret
+
+
+    # Escape a variable name so that it only uses allowed charachters for URL variables
+    def varencode(self, varname):
+        if varname == None:
+            return "None"
+        if type(varname) == int:
+            return varname
+
+        ret = ""
+        for c in varname:
+            if not c.isdigit() and not c.isalnum() and c != "_":
+                ret += "%%%02x" % ord(c)
+            else:
+                ret += c
+        return ret
+
+
+    def u8(self, c):
+        if ord(c) > 127:
+            return "&#%d;" % ord(c)
+        else:
+            return c
+
+
+    def utf8_to_entities(self, text):
+        if type(text) != unicode:
+            return text
+        else:
+            return text.encode("utf-8")
+
+
+
 #.
 #   .--HTML----------------------------------------------------------------.
 #   |                      _   _ _____ __  __ _                            |
@@ -769,20 +863,34 @@ class RequestHandler(object):
         self.listvars  = {} # for variables with more than one occurrance
         self.uploads   = {}
         self.var_stash = []
+        self.cookies   = {}
 
         # Transaction IDs
-        self.new_transids = []
+        self.new_transids    = []
         self.ignore_transids = False
         self.current_transid = None
-        self.auto_id = 0
+
+        # Timing
+        self._request_timeout = 110 # seconds
 
 
+    #
+    # Request settings
+    #
 
-    # TODO: Can this please be dropped?
-    def some_id(self):
-        self.auto_id += 1
-        return "id_%d" % self.auto_id
 
+    # The system web servers configured request timeout. This is the time
+    # before the request is terminated from the view of the client.
+    def client_request_timeout(self):
+        raise NotImplementedError()
+
+
+    def is_ssl_request(self):
+        raise NotImplementedError()
+
+
+    def request_method(self):
+        raise NotImplementedError()
 
 
     #
@@ -883,6 +991,144 @@ class RequestHandler(object):
 
     def uploaded_file(self, varname, default = None):
         return self.uploads.get(varname, default)
+
+
+    #
+    # Cookie handling
+    #
+
+    def has_cookie(self, varname):
+        return varname in self.cookies
+
+
+    def get_cookie_names(self):
+        return self.cookies.keys()
+
+
+    def cookie(self, varname, deflt):
+        try:
+            return self.cookies[varname].value
+        except:
+            return deflt
+
+
+    #
+    # Request timeout handling
+    #
+    # The system apache process will end the communication with the client after
+    # the timeout configured for the proxy connection from system apache to site
+    # apache. This is done in /omd/sites/[site]/etc/apache/proxy-port.conf file
+    # in the "timeout=x" parameter of the ProxyPass statement.
+    #
+    # The regular request timeout configured here should always be lower to make
+    # it possible to abort the page processing and send a helpful answer to the
+    # client.
+    #
+    # It is possible to disable the applications request timeout (temoporarily)
+    # or totally for specific calls, but the timeout to the client will always
+    # be applied by the system webserver. So the client will always get a error
+    # page while the site apache continues processing the request (until the
+    # first try to write anything to the client) which will result in an
+    # exception.
+    #
+
+    # The timeout of the Check_MK GUI request processing. When the timeout handling
+    # has been enabled with enable_request_timeout(), after this time an alarm signal
+    # will be raised to give the application the option to end the processing in a
+    # gentle way.
+    def request_timeout(self):
+        return self._request_timeout
+
+
+    def enable_request_timeout(self):
+        signal.signal(signal.SIGALRM, self.handle_request_timeout)
+        signal.alarm(self.request_timeout())
+
+
+    def disable_request_timeout(self):
+        signal.alarm(0)
+
+
+    def handle_request_timeout(self, signum, frame):
+        raise RequestTimeout(_("Your request timed out after %d seconds. This issue may be "
+                               "related to a local configuration problem or a request which works "
+                               "with a too large number of objects. But if you think this "
+                               "issue is a bug, please send a crash report.") %
+                                                            self.request_timeout())
+
+
+    #
+    # Request processing
+    #
+
+
+    def get_unicode_input(self, varname, deflt = None):
+        try:
+            return self.var_utf8(varname, deflt)
+        except UnicodeDecodeError:
+            raise MKUserError(varname, _("The given text is wrong encoded. "
+                                         "You need to provide a UTF-8 encoded text."))
+
+    def get_integer_input(self, varname):
+        try:
+            return int(self.var(varname))
+        except TypeError:
+            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        except ValueError:
+            raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
+
+    # Returns a dictionary containing all parameters the user handed over to this request.
+    # The concept is that the user can either provide the data in a single "request" variable,
+    # which contains the request data encoded as JSON, or provide multiple GET/POST vars which
+    # are then used as top level entries in the request object.
+    def get_request(self, exclude_vars=None):
+        if exclude_vars == None:
+            exclude_vars = []
+
+        request = json.loads(self.var("request", "{}"))
+
+        for key, val in self.all_vars().items():
+            if key not in [ "request", "output_format" ] + exclude_vars:
+                request[key] = val.decode("utf-8")
+
+        return request
+
+
+    def parse_field_storage(self, fields, handle_uploads_as_file_obj = False):
+        self.vars     = {}
+        self.listvars = {} # for variables with more than one occurrance
+        self.uploads  = {}
+
+        # TODO: Fix this regex. +-\ selects all from + to \, not +, - and \!
+        varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')
+
+        for field in fields.list:
+            varname = field.name
+
+            # To prevent variours injections, we only allow a defined set
+            # of characters to be used in variables
+            if not varname_regex.match(varname):
+                continue
+
+            # put uploaded file infos into separate storage
+            if field.filename is not None:
+                if handle_uploads_as_file_obj:
+                    value = field.file
+                else:
+                    value = field.value
+                self.uploads[varname] = (field.filename, field.type, value)
+
+            else: # normal variable
+                # Multiple occurrance of a variable? Store in extra list dict
+                if varname in self.vars:
+                    if varname in self.listvars:
+                        self.listvars[varname].append(field.value)
+                    else:
+                        self.listvars[varname] = [ self.vars[varname], field.value ]
+                # In the single-value-store the last occurrance of a variable
+                # has precedence. That makes appending variables to the current
+                # URL simpler.
+                self.vars[varname] = field.value
 
 
     #
@@ -1002,34 +1248,25 @@ class RequestHandler(object):
         raise NotImplementedError()
 
 
-
-
 #.
-#   .--HTML Check_MK-------------------------------------------------------.
-#   |                      _   _ _____ __  __ _                            |
-#   |                     | | | |_   _|  \/  | |                           |
-#   |                     | |_| | | | | |\/| | |                           |
-#   |                     |  _  | | | | |  | | |___                        |
-#   |                     |_| |_| |_| |_|  |_|_____|                       |
+#   .--html----------------------------------------------------------------.
+#   |                        _     _             _                         |
+#   |                       | |__ | |_ _ __ ___ | |                        |
+#   |                       | '_ \| __| '_ ` _ \| |                        |
+#   |                       | | | | |_| | | | | | |                        |
+#   |                       |_| |_|\__|_| |_| |_|_|                        |
 #   |                                                                      |
-#   |              ____ _               _        __  __ _  __              |
-#   |             / ___| |__   ___  ___| | __   |  \/  | |/ /              |
-#   |            | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /               |
-#   |            | |___| | | |  __/ (__|   <    | |  | | . \               |
-#   |             \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\              |
-#   |                                      |_____|                         |
 #   +----------------------------------------------------------------------+
-#   | A HTML generating class which introduces some logic of the Check_MK  |
-#   | web application.                                                     |
-#   | It also contains various settings for how the page should be built.  |
+#   | Caution! The class needs to be derived from Outputfunnel first!      |
 #   '----------------------------------------------------------------------'
 
 
-class HTMLCheck_MK(HTMLGenerator):
-
+class html(HTMLGenerator, Encoder, RequestHandler):
 
     def __init__(self):
-        super(HTMLCheck_MK, self).__init__()
+        HTMLGenerator.__init__(self)
+        Encoder.__init__(self)
+        RequestHandler.__init__(self)
 
         # rendering state
         self.html_is_open = False
@@ -1055,78 +1292,43 @@ class HTMLCheck_MK(HTMLGenerator):
         self.browser_redirect = ''
         self.link_target = None
         self.keybindings_enabled = True
+        self.myfile = None
 
+        # Browser options
+        self._user_id = None
+        self.user_errors = {}
+        self.focus_object = None
+        self.events = set([]) # currently used only for sounds
+        self.status_icons = {}
+        self.final_javascript_code = ""
+        self.caches = {}
+        self.treestates = None
+        self.page_context = {}
 
-    #
-    # HTML encoding
-    #
+        # Settings
+        self.io_error = False
+        self.mobile = False
+        self.buffering = True
+        self.keybindings_enabled = True
+        self.keybindings = []
 
+        # Forms
+        self.form_name = None
+        self.form_vars = []
 
-    # This function returns a str object, never unicode!
-    # Beware: this code is crucial for the performance of Multisite!
-    # Changing from the self coded urlencode to urllib.quote
-    # is saving more then 90% of the total HTML generating time
-    # on more complex pages!
-    def urlencode_vars(self, vars):
-        output = []
-        for varname, value in sorted(vars):
-            if type(value) == int:
-                value = str(value)
-            elif type(value) == unicode:
-                value = value.encode("utf-8")
+        # Time measurement
+        self.times            = {}
+        self.start_time       = time.time()
+        self.last_measurement = self.start_time
 
-            try:
-                # urllib is not able to encode non-Ascii characters. Yurks
-                output.append(varname + '=' + urllib.quote(value))
-            except:
-                output.append(varname + '=' + self.urlencode(value)) # slow but working
+        self.auto_id = 0
 
-        return '&'.join(output)
-
-
-    def urlencode(self, value):
-        if type(value) == unicode:
-            value = value.encode("utf-8")
-        elif value == None:
-            return ""
-        ret = ""
-        for c in value:
-            if c == " ":
-                c = "+"
-            elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
-                c = "%%%02x" % ord(c)
-            ret += c
-        return ret
-
-
-    # Escape a variable name so that it only uses allowed charachters for URL variables
-    def varencode(self, varname):
-        if varname == None:
-            return "None"
-        if type(varname) == int:
-            return varname
-
-        ret = ""
-        for c in varname:
-            if not c.isdigit() and not c.isalnum() and c != "_":
-                ret += "%%%02x" % ord(c)
-            else:
-                ret += c
-        return ret
-
-
-    def u8(self, c):
-        if ord(c) > 127:
-            return "&#%d;" % ord(c)
-        else:
-            return c
-
-
-    def utf8_to_entities(self, text):
-        if type(text) != unicode:
-            return text
-        else:
-            return text.encode("utf-8")
+    RETURN    = 13
+    SHIFT     = 16
+    CTRL      = 17
+    ALT       = 18
+    BACKSPACE = 8
+    F1        = 112
 
 
     # remove all HTML-tags
@@ -1160,6 +1362,298 @@ class HTMLCheck_MK(HTMLGenerator):
             ht = ht[0:x] + ht[y+9:]
         return ht
 
+
+    # TODO: Can this please be dropped?
+    def some_id(self):
+        self.auto_id += 1
+        return "id_%d" % self.auto_id
+
+
+    def measure_time(self, name):
+        self.times.setdefault(name, 0.0)
+        now = time.time()
+        elapsed = now - self.last_measurement
+        self.times[name] += elapsed
+        self.last_measurement = now
+
+
+    def set_user_id(self, user_id):
+        self._user_id = user_id
+
+
+    def is_mobile(self):
+        return self.mobile
+
+
+    def is_api_call(self):
+        return self.output_format != "html"
+
+
+    def get_user_agent(self):
+        raise NotImplementedError()
+
+
+    def get_referer(self):
+        raise NotImplementedError()
+
+
+    def set_page_context(self, c):
+        self.page_context = c
+
+
+    def set_buffering(self, b):
+        self.buffering = b
+
+
+    def set_output_format(self, f):
+        self.output_format = f
+        if f == "json":
+            content_type = "application/json; charset=UTF-8"
+
+        elif f == "jsonp":
+            content_type = "application/javascript; charset=UTF-8"
+
+        elif f in ("csv", "csv_export"): # Cleanup: drop one of these
+            content_type = "text/csv; charset=UTF-8"
+
+        elif f == "python":
+            content_type = "text/plain; charset=UTF-8"
+
+        elif f == "text":
+            content_type = "text/plain; charset=UTF-8"
+
+        elif f == "html":
+            content_type = "text/html; charset=UTF-8"
+
+        elif f == "xml":
+            content_type = "text/xml; charset=UTF-8"
+
+        elif f == "pdf":
+            content_type = "application/pdf"
+
+        else:
+            raise MKGeneralException(_("Unsupported context type '%s'") % f)
+        self.set_content_type(content_type)
+
+
+    def set_content_type(self, ty):
+        raise NotImplementedError()
+
+
+    def set_link_target(self, framename):
+        self.link_target = framename
+
+
+    def set_focus(self, varname):
+        self.focus_object = (self.form_name, varname)
+
+
+    def set_render_headfoot(self, render):
+        self.render_headfoot = render
+
+
+    def set_browser_reload(self, secs):
+        self.browser_reload = secs
+
+
+    def set_browser_redirect(self, secs, url):
+        self.browser_reload   = secs
+        self.browser_redirect = url
+
+
+    def immediate_browser_redirect(self, secs, url):
+        self.javascript("set_reload(%s, '%s');" % (secs, url))
+
+
+    def add_body_css_class(self, cls):
+        self.body_classes.append(cls)
+
+
+    def add_status_icon(self, img, tooltip, url = None):
+        if url:
+            self.status_icons[img] = tooltip, url
+        else:
+            self.status_icons[img] = tooltip
+
+
+    def final_javascript(self, code):
+        self.final_javascript_code += code + "\n"
+
+
+    def reload_sidebar(self):
+        if not self.has_var("_ajaxid"):
+            self.javascript("reload_sidebar()")
+
+
+    def http_redirect(self, url):
+        raise MKGeneralException("http_redirect not implemented")
+
+
+    #
+    # Tree states
+    #
+
+    def get_tree_states(self, tree):
+        self.load_tree_states()
+        return self.treestates.get(tree, {})
+
+
+    def set_tree_state(self, tree, key, val):
+        self.load_tree_states()
+
+        if tree not in self.treestates:
+            self.treestates[tree] = {}
+
+        self.treestates[tree][key] = val
+
+
+    def set_tree_states(self, tree, val):
+        self.load_tree_states()
+        self.treestates[tree] = val
+
+
+    def load_tree_states(self):
+        raise NotImplementedError()
+
+
+    def save_tree_states(self):
+        raise NotImplementedError()
+
+
+    #
+    # Messages
+    #
+
+
+    def show_info(self, msg):
+        self.message(msg, 'message')
+
+
+    def show_error(self, msg):
+        self.message(msg, 'error')
+
+
+    def show_warning(self, msg):
+        self.message(msg, 'warning')
+
+
+    # obj might be either a string (str or unicode) or an exception object
+    def message(self, obj, what='message'):
+        if what == 'message':
+            cls    = 'success'
+            prefix = _('MESSAGE')
+        elif what == 'warning':
+            cls    = 'warning'
+            prefix = _('WARNING')
+        else:
+            cls    = 'error'
+            prefix = _('ERROR')
+
+        msg = self.permissive_attrencode(obj)
+
+        if self.output_format == "html":
+            if self.mobile:
+                self.write('<center>')
+            self.write("<div class=%s>%s</div>\n" % (cls, msg))
+            if self.mobile:
+                self.write('</center>')
+        else:
+            self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
+
+        #self.guitest_record_output("message", (what, msg))
+
+
+    def show_localization_hint(self):
+        url = "wato.py?mode=edit_configvar&varname=user_localizations"
+        self.message(HTML("<sup>*</sup>" +
+            _("These texts may be localized depending on the users' "
+              "language. You can configure the localizations "
+              "<a href=\"%s\">in the global settings</a>.") % url))
+
+
+    # Embed help box, whose visibility is controlled by a global
+    # button in the page.
+
+    # TODO: Add to integration tests!!!
+
+    def render_help(self, text):
+        if text and text.strip():
+            self.have_help = True
+            c = self.render_div(
+                text.strip(),
+                class_="help",
+                style="display: %s;" % ("block" if self.help_visible else "none"))
+            # TODO: Replace with write_text???
+            return c
+        else:
+            return ""
+
+
+    def help(self, text):
+        self.write_html(self.render_help(text))
+
+
+    #
+    # URL building
+    #
+
+    # [('varname1', value1), ('varname2', value2) ]
+    def makeuri(self, addvars, remove_prefix=None, filename=None, delvars=None):
+        new_vars = [ nv[0] for nv in addvars ]
+        vars = [ (v, self.var(v))
+                 for v in self.vars
+                 if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars) ]
+        if remove_prefix != None:
+            vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
+        vars = vars + addvars
+        if filename == None:
+            filename = self.urlencode(self.myfile) + ".py"
+        if vars:
+            return filename + "?" + self.urlencode_vars(vars)
+        else:
+            return filename
+
+
+    def makeuri_contextless(self, vars, filename=None):
+        if not filename:
+            filename = self.myfile + ".py"
+        if vars:
+            return filename + "?" + self.urlencode_vars(vars)
+        else:
+            return filename
+
+
+    def makeactionuri(self, addvars, filename=None, delvars=None):
+        return self.makeuri(addvars + [("_transid", self.get_transid())],
+                            filename=filename, delvars=delvars)
+
+
+    def makeactionuri_contextless(self, addvars, filename=None):
+        return self.makeuri_contextless(addvars + [("_transid", self.get_transid())],
+                                        filename=filename)
+
+
+    #
+    # Debugging, diagnose and logging
+    #
+
+    def debug(self, *x):
+        import pprint
+        for element in x:
+            try:
+                formatted = pprint.pformat(element)
+            except UnicodeDecodeError:
+                formatted = repr(element)
+            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(formatted))
+
+
+    def log(self, *args):
+        raise NotImplementedError()
+
+
+    #
+    # HTML heading and footer rendering
+    #
 
 
     def default_html_headers(self):
@@ -1302,547 +1796,62 @@ class HTMLCheck_MK(HTMLGenerator):
             self._dump_get_vars()
 
 
-    # Embed help box, whose visibility is controlled by a global
-    # button in the page.
-
-    # TODO: Add to integration tests!!!
-
-    def render_help(self, text):
-        if text and text.strip():
-            self.have_help = True
-            c = self.render_div(
-                text.strip(),
-                class_="help",
-                style="display: %s;" % ("block" if self.help_visible else "none"))
-            # TODO: Replace with write_text???
-            return c
-        else:
-            return ""
-
-
-    def help(self, text):
-        self.write_html(self.render_help(text))
-
-    #
-    # HTML form rendering
-    #
-
-
-    def detect_icon_path(self, icon_name):
-        raise NotImplementedError()
-
-
-    # FIXME: Change order of input arguments in one: icon and render_icon!!
-    def icon(self, help, icon, **kwargs):
-
-        #TODO: Refactor
-        title = help
-        icon_name = icon
-
-        self.write_html(self.render_icon(icon_name=icon_name, help=title, **kwargs))
-
-
-    def empty_icon(self):
-        self.write_html(self.render_icon("images/trans.png"))
-
-
-    def render_icon(self, icon_name, help=None, middle=True, id=None, cssclass=None):
-
-        # TODO: Refactor
-        title    = help
-        id_      = id
-
-        attributes = {'title'   : title,
-                      'id'      : id_,
-                      'class'   : ["icon", cssclass],
-                      'align'   : 'absmiddle' if middle else None,
-                      'src'     : icon_name if "/" in icon_name else self.detect_icon_path(icon_name)}
-
-        return self._render_opening_tag('img', close_tag=True, **attributes)
-
-
-    def render_icon_button(self, url, help, icon, id=None, onclick=None,
-                           style=None, target=None, cssclass=None, ty="button"):
-
-        # TODO: Refactor
-        title    = help
-        id_      = id
-
-        # TODO: Can we clean this up and move all button_*.png to internal_icons/*.png?
-        if ty == "button":
-            icon = "images/button_" + icon + ".png"
-
-        icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
-
-        return self.render_a(icon, **{'title'   : title,
-                                      'id'      : id_,
-                                      'class'   : cssclass,
-                                      'style'   : style,
-                                      'target'  : target if target else '',
-                                      'href'    : url if not onclick else "javascript:void(0)",
-                                      'onfocus' : "if (this.blur) this.blur();",
-                                      'onclick' : onclick })
-
-
-    def icon_button(self, *args, **kwargs):
-        self.write_html(self.render_icon_button(*args, **kwargs))
-
-
-    def popup_trigger(self, *args, **kwargs):
-        self.write_html(self.render_popup_trigger(*args, **kwargs))
-
-
-    def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None,
-                             style=None, menu_content=None, cssclass=None, onclose=None):
-
-        onclick = 'toggle_popup(event, this, %s, %s, %s, %s, %s, %s);' % \
-                    ("'%s'" % ident,\
-                     "'%s'" % what if what else 'null',\
-                     json.dumps(data) if data else 'null',\
-                     "'%s'" % self.urlencode_vars(url_vars) if url_vars else 'null',\
-                     "'%s'" % menu_content if menu_content else 'null',\
-                     "'%s'" % onclose.replace("'", "\\'") if onclose else 'null')
-
-        #TODO: Check if HTML'ing content is correct and necessary!
-        atag = self.render_a(HTML(content), class_="popup_trigger",
-                                            href="javascript:void(0);",
-                                            onclick=onclick)
-
-        return self.render_div(atag, class_=["popup_trigger", cssclass],
-                                     id_="popup_trigger_%s" % ident,
-                                     style = style)
-
-
-    def element_dragger(self, dragging_tag, base_url):
-        self.write_html(self.render_element_dragger(dragging_tag, base_url))
-
-
-    # Currently only tested with tables. But with some small changes it may work with other
-    # structures too.
-    def render_element_dragger(self, dragging_tag, base_url):
-        return self.render_a(self.render_icon("drag", _("Move this entry")),
-            href="javascript:void(0)",
-            class_=["element_dragger"],
-            onmousedown="element_drag_start(event, this, %s, %s)" %
-                (json.dumps(dragging_tag.upper()), json.dumps(base_url)),
-        )
-
-
-    #
-    # Context Buttons
-    #
-
-
-    def begin_context_buttons(self):
-        if not self.context_buttons_open:
-            self.context_button_hidden = False
-            self.open_div(class_="contextlinks")
-            self.context_buttons_open = True
-
-
-    def end_context_buttons(self):
-        if self.context_buttons_open:
-            if self.context_button_hidden:
-                self.open_div(title=_("Show all buttons"), id="toggle", class_=["contextlink", "short"])
-                self.a("...", onclick='unhide_context_buttons(this);', href='#')
-                self.close_div()
-            self.div("", class_="end")
-            self.close_div()
-        self.context_buttons_open = False
-
-
-    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, fkey=None):
-        # implemented in html class for interface functionality
-        raise NotImplementedError()
-
-
-    def _context_button(self, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None):
-        title = self.attrencode(title)
-        display = "block"
-        if bestof:
-            counts = self.get_button_counts()
-            weights = counts.items()
-            weights.sort(cmp = lambda a,b: cmp(a[1],  b[1]))
-            best = dict(weights[-bestof:])
-            if id_ not in best:
-                display="none"
-                self.context_button_hidden = True
-
-        if not self.context_buttons_open:
-            self.begin_context_buttons()
-
-        self.open_div(class_=["contextlink", "hot" if hot else '', 'button' if fkey and self.keybindings_enabled else ''],\
-                      id_=id_, style="display:%s;" % display)
-
-        self.open_a(href=url, title=hover_title, onclick="count_context_button(this);" if bestof else None)
-
-        if icon:
-            self.icon('', icon, cssclass="inline", middle=False)
-
-        self.span(title)
-
-        if fkey and self.keybindings_enabled:
-            self.div("F%d" % fkey, class_="keysym")
-        self.close_a()
-
-        self.close_div()
-
-
-
-#.
-
-
-class DeprecationWrapper(HTMLCheck_MK):
-    # Only strip off some tags. We allow some simple tags like
-    # <b>, <tt>, <i> to be part of the string. This is useful
-    # for messages where we still want to have formating options.
-    def permissive_attrencode(self, obj):
-        return self._escape_text(obj)
-
-
-    # Encode HTML attributes: replace " with &quot;, also replace
-    # < and >. This code is slow. Works on str and unicode without
-    # changing the type. Also works on things that can be converted
-    # with %s.
-    def attrencode(self, value):
-        return self._escape_attribute(value)
-
-
-#.
-#   .--html----------------------------------------------------------------.
-#   |                        _     _             _                         |
-#   |                       | |__ | |_ _ __ ___ | |                        |
-#   |                       | '_ \| __| '_ ` _ \| |                        |
-#   |                       | | | | |_| | | | | | |                        |
-#   |                       |_| |_|\__|_| |_| |_|_|                        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Caution! The class needs to be derived from Outputfunnel first!      |
-#   '----------------------------------------------------------------------'
-
-
-class html(DeprecationWrapper, RequestHandler):
-
-    def __init__(self):
-        DeprecationWrapper.__init__(self)
-        RequestHandler.__init__(self)
-
-        self.myfile = None
-        self.cookies = {}
-        self._user_id = None
-        self.user_errors = {}
-        self.focus_object = None
-        self.events = set([]) # currently used only for sounds
-        self.status_icons = {}
-        self.final_javascript_code = ""
-        self.caches = {}
-        self.treestates = None
-        self.page_context = {}
-        self._request_timeout = 110 # seconds
-
-        # Settings
-        self.io_error = False
-        self.mobile = False
-        self.buffering = True
-        self.keybindings_enabled = True
-        self.keybindings = []
-
-        # Forms
-        self.form_name = None
-        self.form_vars = []
-
-        # Time measurement
-        self.times            = {}
-        self.start_time       = time.time()
-        self.last_measurement = self.start_time
-
-
-    RETURN    = 13
-    SHIFT     = 16
-    CTRL      = 17
-    ALT       = 18
-    BACKSPACE = 8
-    F1        = 112
-
-
-    def set_user_id(self, user_id):
-        self._user_id = user_id
-
-
-    def is_mobile(self):
-        return self.mobile
-
-
-    def is_api_call(self):
-        return self.output_format != "html"
-
-
-    def get_user_agent(self):
-        raise NotImplementedError()
-
-
-    def get_referer(self):
-        raise NotImplementedError()
-
-
-    # The system web servers configured request timeout. This is the time
-    # before the request is terminated from the view of the client.
-    def client_request_timeout(self):
-        raise NotImplementedError()
-
-
-    def is_ssl_request(self):
-        raise NotImplementedError()
-
-
-    def request_method(self):
-        raise NotImplementedError()
-
-
-    def set_page_context(self, c):
-        self.page_context = c
-
-
-    def set_buffering(self, b):
-        self.buffering = b
-
-
-    def set_output_format(self, f):
-        self.output_format = f
-        if f == "json":
-            content_type = "application/json; charset=UTF-8"
-
-        elif f == "jsonp":
-            content_type = "application/javascript; charset=UTF-8"
-
-        elif f in ("csv", "csv_export"): # Cleanup: drop one of these
-            content_type = "text/csv; charset=UTF-8"
-
-        elif f == "python":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "text":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "html":
-            content_type = "text/html; charset=UTF-8"
-
-        elif f == "xml":
-            content_type = "text/xml; charset=UTF-8"
-
-        elif f == "pdf":
-            content_type = "application/pdf"
-
-        else:
-            raise MKGeneralException(_("Unsupported context type '%s'") % f)
-        self.set_content_type(content_type)
-
-
-    def set_content_type(self, ty):
-        raise NotImplementedError()
-
-
-    def set_link_target(self, framename):
-        self.link_target = framename
-
-
-    def set_focus(self, varname):
-        self.focus_object = (self.form_name, varname)
-
-
-    def set_render_headfoot(self, render):
-        self.render_headfoot = render
-
-
-    def set_browser_reload(self, secs):
-        self.browser_reload = secs
-
-
-    def set_browser_redirect(self, secs, url):
-        self.browser_reload   = secs
-        self.browser_redirect = url
-
-
-    def immediate_browser_redirect(self, secs, url):
-        self.javascript("set_reload(%s, '%s');" % (secs, url))
-
-
-    def add_body_css_class(self, cls):
-        self.body_classes.append(cls)
-
-
-    def add_status_icon(self, img, tooltip, url = None):
-        if url:
-            self.status_icons[img] = tooltip, url
-        else:
-            self.status_icons[img] = tooltip
-
-
-    def final_javascript(self, code):
-        self.final_javascript_code += code + "\n"
-
-
-    def reload_sidebar(self):
-        if not self.has_var("_ajaxid"):
-            self.javascript("reload_sidebar()")
-
-
-    def http_redirect(self, url):
-        raise MKGeneralException("http_redirect not implemented")
-
-
-    #
-    # Request processing
-    #
-
-
-    def get_unicode_input(self, varname, deflt = None):
-        try:
-            return self.var_utf8(varname, deflt)
-        except UnicodeDecodeError:
-            raise MKUserError(varname, _("The given text is wrong encoded. "
-                                         "You need to provide a UTF-8 encoded text."))
-
-    def get_integer_input(self, varname):
-        try:
-            return int(self.var(varname))
-        except TypeError:
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
-        except ValueError:
-            raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
-
-    # Returns a dictionary containing all parameters the user handed over to this request.
-    # The concept is that the user can either provide the data in a single "request" variable,
-    # which contains the request data encoded as JSON, or provide multiple GET/POST vars which
-    # are then used as top level entries in the request object.
-    def get_request(self, exclude_vars=None):
-        if exclude_vars == None:
-            exclude_vars = []
-
-        request = json.loads(self.var("request", "{}"))
-
-        for key, val in self.all_vars().items():
-            if key not in [ "request", "output_format" ] + exclude_vars:
-                request[key] = val.decode("utf-8")
-
-        return request
-
-
-    def parse_field_storage(self, fields, handle_uploads_as_file_obj = False):
-        self.vars     = {}
-        self.listvars = {} # for variables with more than one occurrance
-        self.uploads  = {}
-
-        # TODO: Fix this regex. +-\ selects all from + to \, not +, - and \!
-        varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')
-
-        for field in fields.list:
-            varname = field.name
-
-            # To prevent variours injections, we only allow a defined set
-            # of characters to be used in variables
-            if not varname_regex.match(varname):
-                continue
-
-            # put uploaded file infos into separate storage
-            if field.filename is not None:
-                if handle_uploads_as_file_obj:
-                    value = field.file
-                else:
-                    value = field.value
-                self.uploads[varname] = (field.filename, field.type, value)
-
-            else: # normal variable
-                # Multiple occurrance of a variable? Store in extra list dict
-                if varname in self.vars:
-                    if varname in self.listvars:
-                        self.listvars[varname].append(field.value)
-                    else:
-                        self.listvars[varname] = [ self.vars[varname], field.value ]
-                # In the single-value-store the last occurrance of a variable
-                # has precedence. That makes appending variables to the current
-                # URL simpler.
-                self.vars[varname] = field.value
-
-
-
-    #
-    # Cookie handling
-    #
-
-    def has_cookie(self, varname):
-        return varname in self.cookies
-
-
-    def get_cookie_names(self):
-        return self.cookies.keys()
-
-
-    def cookie(self, varname, deflt):
-        try:
-            return self.cookies[varname].value
-        except:
-            return deflt
-
-
-    #
-    # URL building
-    #
-
-    # [('varname1', value1), ('varname2', value2) ]
-    def makeuri(self, addvars, remove_prefix=None, filename=None, delvars=None):
-        new_vars = [ nv[0] for nv in addvars ]
-        vars = [ (v, self.var(v))
-                 for v in self.vars
-                 if v[0] != "_" and v not in new_vars and (not delvars or v not in delvars) ]
-        if remove_prefix != None:
-            vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
-        vars = vars + addvars
-        if filename == None:
-            filename = self.urlencode(self.myfile) + ".py"
-        if vars:
-            return filename + "?" + self.urlencode_vars(vars)
-        else:
-            return filename
-
-
-    def makeuri_contextless(self, vars, filename=None):
-        if not filename:
-            filename = self.myfile + ".py"
-        if vars:
-            return filename + "?" + self.urlencode_vars(vars)
-        else:
-            return filename
-
-
-    def makeactionuri(self, addvars, filename=None, delvars=None):
-        return self.makeuri(addvars + [("_transid", self.get_transid())],
-                            filename=filename, delvars=delvars)
-
-
-    def makeactionuri_contextless(self, addvars, filename=None):
-        return self.makeuri_contextless(addvars + [("_transid", self.get_transid())],
-                                        filename=filename)
-
-
-    #
-    # Debugging, diagnose and logging
-    #
-
-    def debug(self, *x):
-        import pprint
-        for element in x:
-            try:
-                formatted = pprint.pformat(element)
-            except UnicodeDecodeError:
-                formatted = repr(element)
-            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(formatted))
-
-
-    def log(self, *args):
-        raise NotImplementedError()
-
-
+    def footer(self, show_footer=True, show_body_end=True):
+        if self.output_format == "html":
+            if show_footer:
+                self.bottom_footer()
+
+            if show_body_end:
+                self.body_end()
+
+
+    def bottom_footer(self):
+        if self.header_sent:
+            self.bottom_focuscode()
+            if self.render_headfoot:
+                self.write("<table class=footer><tr>")
+
+                self.write("<td class=left>")
+                self._write_status_icons()
+                self.write("</td>")
+
+                self.write("<td class=middle></td>"
+                           "<td class=right>")
+                self.write("<div style=\"display:%s\" id=foot_refresh>%s</div>" % (
+                        (self.browser_reload and "inline-block" or "none",
+                     _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload)))
+                self.write("</td></tr></table>")
+
+
+    def bottom_focuscode(self):
+        if self.focus_object:
+            formname, varname = self.focus_object
+            obj = formname + "." + varname
+            self.write("<script language=\"javascript\" type=\"text/javascript\">\n"
+                           "<!--\n"
+                           "if (document.%s) {"
+                           "    document.%s.focus();\n"
+                           "    document.%s.select();\n"
+                           "}\n"
+                           "// -->\n"
+                           "</script>\n" % (obj, obj, obj))
+
+
+    def body_end(self):
+        if self.have_help:
+            self.javascript("enable_help();")
+        if self.keybindings_enabled and self.keybindings:
+            self.javascript("var keybindings = %s;\n"
+                            "document.body.onkeydown = keybindings_keydown;\n"
+                            "document.body.onkeyup = keybindings_keyup;\n"
+                            "document.body.onfocus = keybindings_focus;\n" %
+                                json.dumps(self.keybindings))
+        if self.final_javascript_code:
+            self.javascript(self.final_javascript_code)
+        self.write("</body></html>\n")
+
+        # Hopefully this is the correct place to performe some "finalization" tasks.
+        self.store_new_transids()
 
 
     #
@@ -1928,6 +1937,53 @@ class html(DeprecationWrapper, RequestHandler):
         return self.render_input(name=var, type_="hidden", id_=id_, value=value, class_=class_)
 
 
+    #
+    # Form submission and variable handling
+    #
+
+    # Check if the current form is currently filled in (i.e. we display
+    # the form a second time while showing value typed in at the first
+    # time and complaining about invalid user input)
+    def form_filled_in(self, form_name = None):
+        if form_name == None:
+            form_name = self.form_name
+
+        return self.has_var("filled_in") and (
+            form_name == None or \
+            form_name in self.list_var("filled_in"))
+
+
+    def do_actions(self):
+        return self.var("_do_actions") not in [ "", None, _("No") ]
+
+
+    def form_submitted(self, form_name=None):
+        if form_name:
+            return self.var("filled_in") == form_name
+        else:
+            return self.has_var("filled_in")
+
+
+    # Get value of checkbox. Return True, False or None. None means
+    # that no form has been submitted. The problem here is the distintion
+    # between False and None. The browser does not set the variables for
+    # Checkboxes that are not checked :-(
+    def get_checkbox(self, varname, form_name = None):
+        if self.has_var(varname):
+            return not not self.var(varname)
+        elif not self.form_filled_in(form_name):
+            return None
+        else:
+            # Form filled in but variable missing -> Checkbox not checked
+            return False
+
+
+
+    #
+    # Input elements
+    #
+
+
     def button(self, varname, title, cssclass = None, style=None, help=None):
         self.write_html(self.render_button(varname, title, cssclass, style))
 
@@ -1949,14 +2005,6 @@ class html(DeprecationWrapper, RequestHandler):
                    value=text, style=style,
                    title=title, disabled=disabled,
                    onclick="location.href=\'%s\'" % href)
-
-
-    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, fkey=None):
-        # TODO: REFACTOR
-        id_ = id
-        self._context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title, fkey=fkey)
-        if fkey and self.keybindings_enabled:
-            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self._escape_attribute(url))
 
 
     # TODO: Refactor the arguments. It is only used in views/wato
@@ -2175,6 +2223,86 @@ class html(DeprecationWrapper, RequestHandler):
         self.close_select()
 
 
+    def upload_file(self, varname):
+        error = self.user_errors.get(varname)
+        if error:
+            self.write("<x class=inputerror>")
+        self.write('<input type="file" name="%s">' % varname)
+        if error:
+            self.write("</x>")
+        self.form_vars.append(varname)
+
+
+    #
+    # User errors
+    #
+
+
+    def add_user_error(self, varname, msg_or_exc):
+        if isinstance(msg_or_exc, Exception):
+            message = "%s" % msg_or_exc
+        else:
+            message = msg_or_exc
+
+        if type(varname) == list:
+            for v in varname:
+                self.add_user_error(v, message)
+        else:
+            self.user_errors[varname] = message
+
+
+    def has_user_errors(self):
+        return len(self.user_errors) > 0
+
+
+    def show_user_errors(self):
+        if self.has_user_errors():
+            self.write('<div class=error>\n')
+            self.write('<br>'.join(self.user_errors.values()))
+            self.write('</div>\n')
+
+
+    # The confirm dialog is normally not a dialog which need to be protected
+    # by a transid itselfs. It is only a intermediate step to the real action
+    # But there are use cases where the confirm dialog is used during rendering
+    # a normal page, for example when deleting a dashlet from a dashboard. In
+    # such cases, the transid must be added by the confirm dialog.
+    # add_header: A title can be given to make the confirm method render the HTML
+    #             header when showing the confirm message.
+    def confirm(self, msg, method="POST", action=None, add_transid=False, add_header=False):
+        if self.var("_do_actions") == _("No"):
+            # User has pressed "No", now invalidate the unused transid
+            self.check_transaction()
+            return # None --> "No"
+
+        if not self.has_var("_do_confirm"):
+            if add_header != False:
+                self.header(add_header)
+
+            if self.mobile:
+                self.write('<center>')
+            self.write("<div class=really>%s" % self.permissive_attrencode(msg))
+            # FIXME: When this confirms another form, use the form name from self.vars()
+            self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
+            self.hidden_fields(add_action_vars = True)
+            self.button("_do_confirm", _("Yes!"), "really")
+            self.button("_do_actions", _("No"), "")
+            self.end_form()
+            self.write("</div>")
+            if self.mobile:
+                self.write('</center>')
+
+            return False # False --> "Dialog shown, no answer yet"
+        else:
+            # Now check the transaction
+            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload of "yes" page
+
+
+    #
+    # Radio groups
+    #
+
+
     def begin_radio_group(self, horizontal=False):
         if self.mobile:
             attrs = {'data-type' : "horizontal" if horizontal else None,
@@ -2201,6 +2329,12 @@ class html(DeprecationWrapper, RequestHandler):
                    checked="" if checked else None, id_=id_)
         if label:
             self.label(label, for_=id_)
+
+
+    #
+    # Checkbox groups
+    #
+
 
     def begin_checkbox_group(self, horizonal=False):
         self.begin_radio_group(horizonal)
@@ -2258,372 +2392,9 @@ class html(DeprecationWrapper, RequestHandler):
         return HTML(code)
 
 
-    def upload_file(self, varname):
-        error = self.user_errors.get(varname)
-        if error:
-            self.write("<x class=inputerror>")
-        self.write('<input type="file" name="%s">' % varname)
-        if error:
-            self.write("</x>")
-        self.form_vars.append(varname)
-
-
-    def show_user_errors(self):
-        if self.has_user_errors():
-            self.write('<div class=error>\n')
-            self.write('<br>'.join(self.user_errors.values()))
-            self.write('</div>\n')
-
-
-    # The confirm dialog is normally not a dialog which need to be protected
-    # by a transid itselfs. It is only a intermediate step to the real action
-    # But there are use cases where the confirm dialog is used during rendering
-    # a normal page, for example when deleting a dashlet from a dashboard. In
-    # such cases, the transid must be added by the confirm dialog.
-    # add_header: A title can be given to make the confirm method render the HTML
-    #             header when showing the confirm message.
-    def confirm(self, msg, method="POST", action=None, add_transid=False, add_header=False):
-        if self.var("_do_actions") == _("No"):
-            # User has pressed "No", now invalidate the unused transid
-            self.check_transaction()
-            return # None --> "No"
-
-        if not self.has_var("_do_confirm"):
-            if add_header != False:
-                self.header(add_header)
-
-            if self.mobile:
-                self.write('<center>')
-            self.write("<div class=really>%s" % self.permissive_attrencode(msg))
-            # FIXME: When this confirms another form, use the form name from self.vars()
-            self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
-            self.hidden_fields(add_action_vars = True)
-            self.button("_do_confirm", _("Yes!"), "really")
-            self.button("_do_actions", _("No"), "")
-            self.end_form()
-            self.write("</div>")
-            if self.mobile:
-                self.write('</center>')
-
-            return False # False --> "Dialog shown, no answer yet"
-        else:
-            # Now check the transaction
-            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload of "yes" page
-
     #
-    # Form submission and variable handling
+    # Foldable context
     #
-
-    # Check if the current form is currently filled in (i.e. we display
-    # the form a second time while showing value typed in at the first
-    # time and complaining about invalid user input)
-    def form_filled_in(self, form_name = None):
-        if form_name == None:
-            form_name = self.form_name
-
-        return self.has_var("filled_in") and (
-            form_name == None or \
-            form_name in self.list_var("filled_in"))
-
-
-    def do_actions(self):
-        return self.var("_do_actions") not in [ "", None, _("No") ]
-
-
-    def form_submitted(self, form_name=None):
-        if form_name:
-            return self.var("filled_in") == form_name
-        else:
-            return self.has_var("filled_in")
-
-
-    def add_user_error(self, varname, msg_or_exc):
-        if isinstance(msg_or_exc, Exception):
-            message = "%s" % msg_or_exc
-        else:
-            message = msg_or_exc
-
-        if type(varname) == list:
-            for v in varname:
-                self.add_user_error(v, message)
-        else:
-            self.user_errors[varname] = message
-
-
-    def has_user_errors(self):
-        return len(self.user_errors) > 0
-
-
-    # Get value of checkbox. Return True, False or None. None means
-    # that no form has been submitted. The problem here is the distintion
-    # between False and None. The browser does not set the variables for
-    # Checkboxes that are not checked :-(
-    def get_checkbox(self, varname, form_name = None):
-        if self.has_var(varname):
-            return not not self.var(varname)
-        elif not self.form_filled_in(form_name):
-            return None
-        else:
-            # Form filled in but variable missing -> Checkbox not checked
-            return False
-
-
-    # TODO: Remove this specific legacy function. Change code using this to valuespecs
-    def datetime_input(self, varname, default_value, submit=None):
-        try:
-            t = self.get_datetime_input(varname)
-        except:
-            t = default_value
-
-        if varname in self.user_errors:
-            self.add_user_error(varname + "_date", self.user_errors[varname])
-            self.add_user_error(varname + "_time", self.user_errors[varname])
-            self.set_focus(varname + "_date")
-
-        br = time.localtime(t)
-        self.date_input(varname + "_date", br.tm_year, br.tm_mon, br.tm_mday, submit=submit)
-        self.write(" ")
-        self.time_input(varname + "_time", br.tm_hour, br.tm_min, submit=submit)
-        self.form_vars.append(varname + "_date")
-        self.form_vars.append(varname + "_time")
-
-
-    # TODO: Remove this specific legacy function. Change code using this to valuespecs
-    def time_input(self, varname, hours, mins, submit=None):
-        self.text_input(varname, "%02d:%02d" % (hours, mins), cssclass="time", size=5,
-                        submit=submit, omit_css_width = True)
-
-
-    # TODO: Remove this specific legacy function. Change code using this to valuespecs
-    def date_input(self, varname, year, month, day, submit=None):
-        self.text_input(varname, "%04d-%02d-%02d" % (year, month, day),
-                        cssclass="date", size=10, submit=submit, omit_css_width = True)
-
-
-    # TODO: Remove this specific legacy function. Change code using this to valuespecs
-    def get_datetime_input(self, varname):
-        t = self.var(varname + "_time")
-        d = self.var(varname + "_date")
-        if not t or not d:
-            raise MKUserError([varname + "_date", varname + "_time"],
-                              _("Please specify a date and time."))
-
-        try:
-            br = time.strptime(d + " " + t, "%Y-%m-%d %H:%M")
-        except:
-            raise MKUserError([varname + "_date", varname + "_time"],
-                              _("Please enter the date/time in the format YYYY-MM-DD HH:MM."))
-        return int(time.mktime(br))
-
-
-    # TODO: Remove this specific legacy function. Change code using this to valuespecs
-    def get_time_input(self, varname, what):
-        t = self.var(varname)
-        if not t:
-            raise MKUserError(varname, _("Please specify %s.") % what)
-
-        try:
-            h, m = t.split(":")
-            m = int(m)
-            h = int(h)
-            if m < 0 or m > 59 or h < 0:
-                raise Exception()
-        except:
-            raise MKUserError(varname, _("Please enter the time in the format HH:MM."))
-        return m * 60 + h * 3600
-
-
-    #
-    # HTML - All the common and more complex HTML rendering methods
-    #
-
-    def show_info(self, msg):
-        self.message(msg, 'message')
-
-
-    def show_error(self, msg):
-        self.message(msg, 'error')
-
-
-    def show_warning(self, msg):
-        self.message(msg, 'warning')
-
-
-    # obj might be either a string (str or unicode) or an exception object
-    def message(self, obj, what='message'):
-        if what == 'message':
-            cls    = 'success'
-            prefix = _('MESSAGE')
-        elif what == 'warning':
-            cls    = 'warning'
-            prefix = _('WARNING')
-        else:
-            cls    = 'error'
-            prefix = _('ERROR')
-
-        msg = self.permissive_attrencode(obj)
-
-        if self.output_format == "html":
-            if self.mobile:
-                self.write('<center>')
-            self.write("<div class=%s>%s</div>\n" % (cls, msg))
-            if self.mobile:
-                self.write('</center>')
-        else:
-            self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
-
-        #self.guitest_record_output("message", (what, msg))
-
-
-    def show_localization_hint(self):
-        url = "wato.py?mode=edit_configvar&varname=user_localizations"
-        self.message(HTML("<sup>*</sup>" +
-            _("These texts may be localized depending on the users' "
-              "language. You can configure the localizations "
-              "<a href=\"%s\">in the global settings</a>.") % url))
-
-
-    def _dump_get_vars(self):
-        self.begin_foldable_container("html", "debug_vars", True, _("GET/POST variables of this page"))
-        self.debug_vars(hide_with_mouse = False)
-        self.end_foldable_container()
-
-
-    def footer(self, show_footer=True, show_body_end=True):
-        if self.output_format == "html":
-            if show_footer:
-                self.bottom_footer()
-
-            if show_body_end:
-                self.body_end()
-
-
-    def bottom_footer(self):
-        if self.header_sent:
-            self.bottom_focuscode()
-            if self.render_headfoot:
-                self.write("<table class=footer><tr>")
-
-                self.write("<td class=left>")
-                self._write_status_icons()
-                self.write("</td>")
-
-                self.write("<td class=middle></td>"
-                           "<td class=right>")
-                self.write("<div style=\"display:%s\" id=foot_refresh>%s</div>" % (
-                        (self.browser_reload and "inline-block" or "none",
-                     _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload)))
-                self.write("</td></tr></table>")
-
-
-    def bottom_focuscode(self):
-        if self.focus_object:
-            formname, varname = self.focus_object
-            obj = formname + "." + varname
-            self.write("<script language=\"javascript\" type=\"text/javascript\">\n"
-                           "<!--\n"
-                           "if (document.%s) {"
-                           "    document.%s.focus();\n"
-                           "    document.%s.select();\n"
-                           "}\n"
-                           "// -->\n"
-                           "</script>\n" % (obj, obj, obj))
-
-
-    def body_end(self):
-        if self.have_help:
-            self.javascript("enable_help();")
-        if self.keybindings_enabled and self.keybindings:
-            self.javascript("var keybindings = %s;\n"
-                            "document.body.onkeydown = keybindings_keydown;\n"
-                            "document.body.onkeyup = keybindings_keyup;\n"
-                            "document.body.onfocus = keybindings_focus;\n" %
-                                json.dumps(self.keybindings))
-        if self.final_javascript_code:
-            self.javascript(self.final_javascript_code)
-        self.write("</body></html>\n")
-
-        # Hopefully this is the correct place to performe some "finalization" tasks.
-        self.store_new_transids()
-
-
-    # TODO: Rename the status_icons because they are not only showing states. There are also actions.
-    # Something like footer icons or similar seems to be better
-    def _write_status_icons(self):
-        self.icon_button(self.makeuri([]), _("URL to this frame"),
-                         "frameurl", target="_top", cssclass="inline")
-        self.icon_button("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]),
-                         _("URL to this page including sidebar"),
-                         "pageurl", target="_top", cssclass="inline")
-
-        # TODO: Move this away from here. Make a context button. The view should handle this
-        if self.myfile == "view" and self.var('mode') != 'availability':
-            self.icon_button(self.makeuri([("output_format", "csv_export")]),
-                             _("Export as CSV"),
-                             "download_csv", target="_top", cssclass="inline")
-
-        # TODO: This needs to be realized as plugin mechanism
-        if self.myfile == "view":
-            mode_name = self.var('mode') == "availability" and "availability" or "view"
-
-            encoded_vars = {}
-            for k, v in self.page_context.items():
-                if v == None:
-                    v = ''
-                elif type(v) == unicode:
-                    v = v.encode('utf-8')
-                encoded_vars[k] = v
-
-            self.popup_trigger(
-                self.render_icon("menu", _("Add this view to..."), cssclass="iconbutton inline"),
-                'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}],
-                url_vars=[("add_type", "view")])
-
-        # TODO: This should be handled by pagetypes.py
-        elif self.myfile == "graph_collection":
-
-            self.popup_trigger(
-                self.render_icon("menu", _("Add this graph collection to..."),
-                                 cssclass="iconbutton inline"),
-                'add_visual', 'add_visual', data=["graph_collection", {}, {'name': self.var('name')}],
-                url_vars=[("add_type", "graph_collection")])
-
-
-        for img, tooltip in self.status_icons.items():
-            if type(tooltip) == tuple:
-                tooltip, url = tooltip
-                self.icon_button(url, tooltip, img, cssclass="inline")
-            else:
-                self.icon(tooltip, img, cssclass="inline")
-
-        if self.times:
-            self.measure_time('body')
-            self.write('<div class=execution_times>')
-            entries = self.times.items()
-            entries.sort()
-            for name, duration in entries:
-                self.write("<div>%s: %.1fms</div>" % (name, duration * 1000))
-            self.write('</div>')
-
-
-    def debug_vars(self, prefix=None, hide_with_mouse=True, vars=None):
-        if not vars:
-            vars = self.vars
-
-        if hide_with_mouse:
-            hover = ' onmouseover="this.style.display=\'none\';"'
-        else:
-            hover = ""
-
-        self.write('<table %s class=debug_vars>' % hover)
-        self.write("<tr><th colspan=2>"+_("POST / GET Variables")+"</th></tr>")
-        for name, value in sorted(vars.items()):
-            if name in [ "_password", "password" ]:
-                value = "***"
-            if not prefix or name.startswith(prefix):
-                self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
-                    (self.attrencode(name), self.attrencode(value)))
-        self.write("</table>")
 
 
     def begin_foldable_container(self, treename, id, isopen, title, indent=True,
@@ -2690,57 +2461,268 @@ class html(DeprecationWrapper, RequestHandler):
 
 
     #
-    # Tree states
+    # Context Buttons
     #
 
-    def get_tree_states(self, tree):
-        self.load_tree_states()
-        return self.treestates.get(tree, {})
+
+    def begin_context_buttons(self):
+        if not self.context_buttons_open:
+            self.context_button_hidden = False
+            self.open_div(class_="contextlinks")
+            self.context_buttons_open = True
 
 
-    def set_tree_state(self, tree, key, val):
-        self.load_tree_states()
-
-        if tree not in self.treestates:
-            self.treestates[tree] = {}
-
-        self.treestates[tree][key] = val
-
-
-    def set_tree_states(self, tree, val):
-        self.load_tree_states()
-        self.treestates[tree] = val
+    def end_context_buttons(self):
+        if self.context_buttons_open:
+            if self.context_button_hidden:
+                self.open_div(title=_("Show all buttons"), id="toggle", class_=["contextlink", "short"])
+                self.a("...", onclick='unhide_context_buttons(this);', href='#')
+                self.close_div()
+            self.div("", class_="end")
+            self.close_div()
+        self.context_buttons_open = False
 
 
-    def load_tree_states(self):
+    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, fkey=None):
+        # TODO: REFACTOR
+        id_ = id
+        self._context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title, fkey=fkey)
+        if fkey and self.keybindings_enabled:
+            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self._escape_attribute(url))
+
+
+    def _context_button(self, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None):
+        title = self.attrencode(title)
+        display = "block"
+        if bestof:
+            counts = self.get_button_counts()
+            weights = counts.items()
+            weights.sort(cmp = lambda a,b: cmp(a[1],  b[1]))
+            best = dict(weights[-bestof:])
+            if id_ not in best:
+                display="none"
+                self.context_button_hidden = True
+
+        if not self.context_buttons_open:
+            self.begin_context_buttons()
+
+        self.open_div(class_=["contextlink", "hot" if hot else '', 'button' if fkey and self.keybindings_enabled else ''],\
+                      id_=id_, style="display:%s;" % display)
+
+        self.open_a(href=url, title=hover_title, onclick="count_context_button(this);" if bestof else None)
+
+        if icon:
+            self.icon('', icon, cssclass="inline", middle=False)
+
+        self.span(title)
+
+        if fkey and self.keybindings_enabled:
+            self.div("F%d" % fkey, class_="keysym")
+        self.close_a()
+
+        self.close_div()
+
+
+    #
+    # HTML icon rendering
+    #
+
+
+    def detect_icon_path(self, icon_name):
         raise NotImplementedError()
 
 
-    def save_tree_states(self):
-        raise NotImplementedError()
+    # FIXME: Change order of input arguments in one: icon and render_icon!!
+    def icon(self, help, icon, **kwargs):
 
+        #TODO: Refactor
+        title = help
+        icon_name = icon
+
+        self.write_html(self.render_icon(icon_name=icon_name, help=title, **kwargs))
+
+
+    def empty_icon(self):
+        self.write_html(self.render_icon("images/trans.png"))
+
+
+    def render_icon(self, icon_name, help=None, middle=True, id=None, cssclass=None):
+
+        # TODO: Refactor
+        title    = help
+        id_      = id
+
+        attributes = {'title'   : title,
+                      'id'      : id_,
+                      'class'   : ["icon", cssclass],
+                      'align'   : 'absmiddle' if middle else None,
+                      'src'     : icon_name if "/" in icon_name else self.detect_icon_path(icon_name)}
+
+        return self._render_opening_tag('img', close_tag=True, **attributes)
+
+
+    def render_icon_button(self, url, help, icon, id=None, onclick=None,
+                           style=None, target=None, cssclass=None, ty="button"):
+
+        # TODO: Refactor
+        title    = help
+        id_      = id
+
+        # TODO: Can we clean this up and move all button_*.png to internal_icons/*.png?
+        if ty == "button":
+            icon = "images/button_" + icon + ".png"
+
+        icon = HTML(self.render_icon(icon, cssclass="iconbutton"))
+
+        return self.render_a(icon, **{'title'   : title,
+                                      'id'      : id_,
+                                      'class'   : cssclass,
+                                      'style'   : style,
+                                      'target'  : target if target else '',
+                                      'href'    : url if not onclick else "javascript:void(0)",
+                                      'onfocus' : "if (this.blur) this.blur();",
+                                      'onclick' : onclick })
+
+
+    def icon_button(self, *args, **kwargs):
+        self.write_html(self.render_icon_button(*args, **kwargs))
+
+
+    def popup_trigger(self, *args, **kwargs):
+        self.write_html(self.render_popup_trigger(*args, **kwargs))
+
+
+    def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None,
+                             style=None, menu_content=None, cssclass=None, onclose=None):
+
+        onclick = 'toggle_popup(event, this, %s, %s, %s, %s, %s, %s);' % \
+                    ("'%s'" % ident,\
+                     "'%s'" % what if what else 'null',\
+                     json.dumps(data) if data else 'null',\
+                     "'%s'" % self.urlencode_vars(url_vars) if url_vars else 'null',\
+                     "'%s'" % menu_content if menu_content else 'null',\
+                     "'%s'" % onclose.replace("'", "\\'") if onclose else 'null')
+
+        #TODO: Check if HTML'ing content is correct and necessary!
+        atag = self.render_a(HTML(content), class_="popup_trigger",
+                                            href="javascript:void(0);",
+                                            onclick=onclick)
+
+        return self.render_div(atag, class_=["popup_trigger", cssclass],
+                                     id_="popup_trigger_%s" % ident,
+                                     style = style)
+
+
+    def element_dragger(self, dragging_tag, base_url):
+        self.write_html(self.render_element_dragger(dragging_tag, base_url))
+
+
+    # Currently only tested with tables. But with some small changes it may work with other
+    # structures too.
+    def render_element_dragger(self, dragging_tag, base_url):
+        return self.render_a(self.render_icon("drag", _("Move this entry")),
+            href="javascript:void(0)",
+            class_=["element_dragger"],
+            onmousedown="element_drag_start(event, this, %s, %s)" %
+                (json.dumps(dragging_tag.upper()), json.dumps(base_url)),
+        )
 
 
     #
-    # Keyboard control
-    # TODO: Can we move this specific feature to AQ?
+    # HTML - All the common and more complex HTML rendering methods
     #
 
-    def add_keybinding(self, keylist, jscode):
-        self.keybindings.append([keylist, jscode])
+
+    def _dump_get_vars(self):
+        self.begin_foldable_container("html", "debug_vars", True, _("GET/POST variables of this page"))
+        self.debug_vars(hide_with_mouse = False)
+        self.end_foldable_container()
 
 
-    def add_keybindings(self, bindings):
-        self.keybindings += bindings
+    def debug_vars(self, prefix=None, hide_with_mouse=True, vars=None):
+        if not vars:
+            vars = self.vars
+
+        if hide_with_mouse:
+            hover = ' onmouseover="this.style.display=\'none\';"'
+        else:
+            hover = ""
+
+        self.write('<table %s class=debug_vars>' % hover)
+        self.write("<tr><th colspan=2>"+_("POST / GET Variables")+"</th></tr>")
+        for name, value in sorted(vars.items()):
+            if name in [ "_password", "password" ]:
+                value = "***"
+            if not prefix or name.startswith(prefix):
+                self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
+                    (self.attrencode(name), self.attrencode(value)))
+        self.write("</table>")
 
 
-    def disable_keybindings(self):
-        self.keybindings_enabled = False
+
+    # TODO: Rename the status_icons because they are not only showing states. There are also actions.
+    # Something like footer icons or similar seems to be better
+    def _write_status_icons(self):
+        self.icon_button(self.makeuri([]), _("URL to this frame"),
+                         "frameurl", target="_top", cssclass="inline")
+        self.icon_button("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]),
+                         _("URL to this page including sidebar"),
+                         "pageurl", target="_top", cssclass="inline")
+
+        # TODO: Move this away from here. Make a context button. The view should handle this
+        if self.myfile == "view" and self.var('mode') != 'availability':
+            self.icon_button(self.makeuri([("output_format", "csv_export")]),
+                             _("Export as CSV"),
+                             "download_csv", target="_top", cssclass="inline")
+
+        # TODO: This needs to be realized as plugin mechanism
+        if self.myfile == "view":
+            mode_name = self.var('mode') == "availability" and "availability" or "view"
+
+            encoded_vars = {}
+            for k, v in self.page_context.items():
+                if v == None:
+                    v = ''
+                elif type(v) == unicode:
+                    v = v.encode('utf-8')
+                encoded_vars[k] = v
+
+            self.popup_trigger(
+                self.render_icon("menu", _("Add this view to..."), cssclass="iconbutton inline"),
+                'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}],
+                url_vars=[("add_type", "view")])
+
+        # TODO: This should be handled by pagetypes.py
+        elif self.myfile == "graph_collection":
+
+            self.popup_trigger(
+                self.render_icon("menu", _("Add this graph collection to..."),
+                                 cssclass="iconbutton inline"),
+                'add_visual', 'add_visual', data=["graph_collection", {}, {'name': self.var('name')}],
+                url_vars=[("add_type", "graph_collection")])
+
+
+        for img, tooltip in self.status_icons.items():
+            if type(tooltip) == tuple:
+                tooltip, url = tooltip
+                self.icon_button(url, tooltip, img, cssclass="inline")
+            else:
+                self.icon(tooltip, img, cssclass="inline")
+
+        if self.times:
+            self.measure_time('body')
+            self.write('<div class=execution_times>')
+            entries = self.times.items()
+            entries.sort()
+            for name, duration in entries:
+                self.write("<div>%s: %.1fms</div>" % (name, duration * 1000))
+            self.write('</div>')
 
 
     #
     # Per request caching
     #
+
 
     def set_cache(self, name, value):
         self.caches[name] = value
@@ -2767,54 +2749,92 @@ class html(DeprecationWrapper, RequestHandler):
             del self.caches[name]
 
 
-    def measure_time(self, name):
-        self.times.setdefault(name, 0.0)
-        now = time.time()
-        elapsed = now - self.last_measurement
-        self.times[name] += elapsed
-        self.last_measurement = now
+    #
+    # Keyboard control
+    # TODO: Can we move this specific feature to AQ?
+    #
+
+    def add_keybinding(self, keylist, jscode):
+        self.keybindings.append([keylist, jscode])
+
+
+    def add_keybindings(self, bindings):
+        self.keybindings += bindings
+
+
+    def disable_keybindings(self):
+        self.keybindings_enabled = False
 
 
     #
-    # Request timeout handling
-    #
-    # The system apache process will end the communication with the client after
-    # the timeout configured for the proxy connection from system apache to site
-    # apache. This is done in /omd/sites/[site]/etc/apache/proxy-port.conf file
-    # in the "timeout=x" parameter of the ProxyPass statement.
-    #
-    # The regular request timeout configured here should always be lower to make
-    # it possible to abort the page processing and send a helpful answer to the
-    # client.
-    #
-    # It is possible to disable the applications request timeout (temoporarily)
-    # or totally for specific calls, but the timeout to the client will always
-    # be applied by the system webserver. So the client will always get a error
-    # page while the site apache continues processing the request (until the
-    # first try to write anything to the client) which will result in an
-    # exception.
+    # Legacy functions
     #
 
-    # The timeout of the Check_MK GUI request processing. When the timeout handling
-    # has been enabled with enable_request_timeout(), after this time an alarm signal
-    # will be raised to give the application the option to end the processing in a
-    # gentle way.
-    def request_timeout(self):
-        return self._request_timeout
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
+    def datetime_input(self, varname, default_value, submit=None):
+        try:
+            t = self.get_datetime_input(varname)
+        except:
+            t = default_value
+
+        if varname in self.user_errors:
+            self.add_user_error(varname + "_date", self.user_errors[varname])
+            self.add_user_error(varname + "_time", self.user_errors[varname])
+            self.set_focus(varname + "_date")
+
+        br = time.localtime(t)
+        self.date_input(varname + "_date", br.tm_year, br.tm_mon, br.tm_mday, submit=submit)
+        self.write(" ")
+        self.time_input(varname + "_time", br.tm_hour, br.tm_min, submit=submit)
+        self.form_vars.append(varname + "_date")
+        self.form_vars.append(varname + "_time")
 
 
-    def enable_request_timeout(self):
-        signal.signal(signal.SIGALRM, self.handle_request_timeout)
-        signal.alarm(self.request_timeout())
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
+    def time_input(self, varname, hours, mins, submit=None):
+        self.text_input(varname, "%02d:%02d" % (hours, mins), cssclass="time", size=5,
+                        submit=submit, omit_css_width = True)
 
 
-    def disable_request_timeout(self):
-        signal.alarm(0)
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
+    def date_input(self, varname, year, month, day, submit=None):
+        self.text_input(varname, "%04d-%02d-%02d" % (year, month, day),
+                        cssclass="date", size=10, submit=submit, omit_css_width = True)
 
 
-    def handle_request_timeout(self, signum, frame):
-        raise RequestTimeout(_("Your request timed out after %d seconds. This issue may be "
-                               "related to a local configuration problem or a request which works "
-                               "with a too large number of objects. But if you think this "
-                               "issue is a bug, please send a crash report.") %
-                                                            self.request_timeout())
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
+    def get_datetime_input(self, varname):
+        t = self.var(varname + "_time")
+        d = self.var(varname + "_date")
+        if not t or not d:
+            raise MKUserError([varname + "_date", varname + "_time"],
+                              _("Please specify a date and time."))
+
+        try:
+            br = time.strptime(d + " " + t, "%Y-%m-%d %H:%M")
+        except:
+            raise MKUserError([varname + "_date", varname + "_time"],
+                              _("Please enter the date/time in the format YYYY-MM-DD HH:MM."))
+        return int(time.mktime(br))
+
+
+    # TODO: Remove this specific legacy function. Change code using this to valuespecs
+    def get_time_input(self, varname, what):
+        t = self.var(varname)
+        if not t:
+            raise MKUserError(varname, _("Please specify %s.") % what)
+
+        try:
+            h, m = t.split(":")
+            m = int(m)
+            h = int(h)
+            if m < 0 or m > 59 or h < 0:
+                raise Exception()
+        except:
+            raise MKUserError(varname, _("Please enter the time in the format HH:MM."))
+        return m * 60 + h * 3600
+
+
+
+
+

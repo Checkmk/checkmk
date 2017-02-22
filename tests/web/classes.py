@@ -5,10 +5,11 @@
 # external imports
 import re
 import json
+import traceback
 
 # internal imports
 from htmllib import html, RequestHandler
-from htmllib import HTMLGenerator, HTMLCheck_MK, OutputFunnel
+from htmllib import HTMLGenerator, OutputFunnel
 from class_deprecated_renderer import DeprecatedRenderer
 
 #   .--Deprecated Renderer-------------------------------------------------.
@@ -32,6 +33,11 @@ from class_deprecated_renderer import DeprecatedRenderer
 
 class RequestHandlerTester(RequestHandler):
 
+
+    def get_unicode_input(self, varname, deflt):
+        return self.var(varname, deflt)
+
+
     # Nonrandom transid generator
     def fresh_transid(self):
         transid = "%d/%d" % (1, 32)
@@ -48,45 +54,18 @@ class RequestHandlerTester(RequestHandler):
         pass
     #    raise NotImplementedError()
 
-#
+
+#.
 # A Class which can be used to simulate HTML generation in varios tests in tests/web/
 class HTMLTester(RequestHandlerTester):
 
     def __init__(self):
         super(HTMLTester, self).__init__()
-        self.form_vars = []
-        self.user_errors = {"error1": "error_message <a href = www.beispiel.de></a>"}
-        self.mobile = False
-        self.final_javascript_code = ""
-        self.focus_object = None
-        self.form_name = "form"
-
-        # rendering state
-        self.html_is_open = False
-        self.header_sent = False
-        self.context_buttons_open = False
-        self.context_buttons_hidden = False
-
-        # style options
-        self.body_classes = ['main']
-        self._default_stylesheets = [ "check_mk", "graphs" ]
-        self._default_javascripts = [ "checkmk", "graphs" ]
-
-        # behaviour options
-        self.render_headfoot = True
-        self.enable_debug = False
-        self.screenshotmode = False
-        self.have_help = False
-        self.help_visible = False
-
-        # browser options
-        self.output_format = "html"
-        self.browser_reload = 0
-        self.browser_redirect = ''
-        self.link_target = None
-        self.keybindings_enabled = True
-
         self.written_text = ""
+
+
+    def lowlevel_write(self, text):
+        self.written_text += "%s" % text
 
 
     def context_button_test(obj, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None, id_in_best=False):
@@ -110,6 +89,7 @@ class HTMLTester(RequestHandlerTester):
         self.write("</html>")
         return True
 
+
     # only for test purposes
     def radiobuttons(self, **args):
         horizontal = args.pop("horizontal", False)
@@ -126,19 +106,11 @@ class HTMLTester(RequestHandlerTester):
     def set_focus(self, varname):
         self.focus_object = (self.form_name, varname)
 
-    def get_unicode_input(self, varname, deflt):
-        return self.var(varname, deflt)
-
 
     # Needed if input elements are put into forms without the helper
     # functions of us. TODO: Should really be removed and cleaned up!
     def add_form_var(self, varname):
         self.form_vars.append(varname)
-
-
-
-    def lowlevel_write(self, text):
-        self.written_text += "%s" % text
 
 
     def final_javascript(self, code):
@@ -153,6 +125,7 @@ class HTMLTester(RequestHandlerTester):
     def css_filename_for_browser(self, css):
         #raise NotImplementedError()
         return "file/name/css_%s" % css
+
 
     def top_heading(self, title):
         self.top_heading_left(title)
@@ -171,7 +144,7 @@ class HTMLTester(RequestHandlerTester):
         return {"1": 1, "2": 2, "3": 3,}
 
 
-class HTMLCheck_MKTester(HTMLTester, html):
+class Refactored_htmlTester(HTMLTester, html):
 
     def javascript_filename_for_browser(self, jsname):
         #raise NotImplementedError()
@@ -182,10 +155,28 @@ class HTMLOrigTester(HTMLTester, DeprecatedRenderer):
 
     def javascript_filename_for_browser(self, jsname):
         #raise NotImplementedError()
-        return "file/name/js_%s" % jsname 
+        return "file/name/js_%s" % jsname
 
 
+class TableTester(Refactored_htmlTester):
 
+    written_text = ''
+    tag_counter  = 0
+
+    def __init__(self):
+        super(TableTester, self).__init__()
+        self.myfile = "testfile"
+
+    def lowlevel_write(self, text):
+
+        if re.match(r'.*\.close_\w+[(][)]', '\n'.join(traceback.format_stack()), re.DOTALL):
+            self.tag_counter -= 1 if self.tag_counter > 0 else 0
+            self.written_text += " " * 4 * self.tag_counter + text
+        elif re.match(r'.*\.open_\w+[(]', '\n'.join(traceback.format_stack()), re.DOTALL):
+            self.written_text += " " * 4 * self.tag_counter + text
+            self.tag_counter += 1
+        else:
+            self.written_text += " " * 4 * self.tag_counter + text + ''
 
 
 

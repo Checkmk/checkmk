@@ -14,6 +14,7 @@
     * 4410 FIX: brocade_fcport: fixed missing info handling
     * 4412 FIX: haproxy.server: fixed empty uptime info handling
     * 4413 FIX: mem.linux: handle empty info
+    * 4414 FIX: oracle_rman: fixed UnboundLocalError if sid level 0 is empty
 
     Multisite:
     * 4365 FIX: Service availability: Host down could not be rewritten to other states like CRIT

@@ -31,6 +31,8 @@
     WATO:
     * 4373 FIX: Timeperiods: iCal events with multiple days can now be imported
     * 4376 FIX: WATO Web-API: Is now disabled when WATO is disabled on a site (e.g. slave sites)
+    * 4031 FIX: LVM Volume Groups: fixed broken WATO configuration...
+            NOTE: Please refer to the migration notes!
 
 
 1.2.8p17:

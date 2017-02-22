@@ -1,0 +1,12 @@
+Title: LVM Volume Groups: fixed broken WATO configuration
+Level: 1
+Component: wato
+Compatible: incomp
+Version: 1.2.8p18
+Date: 1487776356
+Class: fix
+
+The WATO rule "Volume Groups (LVM)" created incorrect levels, which never applied.
+This has been fixed. You need to reconfigure all LVM Volume Groups rules from scratch, because
+their format has changed.
+

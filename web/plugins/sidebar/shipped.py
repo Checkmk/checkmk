@@ -635,9 +635,12 @@ def get_tactical_overview_data(extra_filter_headers):
                         extra_headers=extra_filter_headers)
 
         try:
+            sites.live().set_auth_domain("ec")
             event_data = sites.live().query_summed_stats(event_query)
         except livestatus.MKLivestatusNotFoundError:
             event_data = [0, 0, 0]
+        finally:
+            sites.live().set_auth_domain("read")
 
     except livestatus.MKLivestatusNotFoundError:
         return None, None, None, None

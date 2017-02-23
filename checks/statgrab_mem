@@ -30,8 +30,8 @@ def parse_statgrab_mem(info):
     for var, value in info:
         if var == 'mem.used':     memused_kb   = int(value) / 1024
         elif var == 'mem.total':  totalmem_kb  = int(value) / 1024
-        elif var == 'swap.used':  swapused_kb  = int(value) / 1024 / 4 # BUG in statgrab und Solaris?
-        elif var == 'swap.total': totalswap_kb = int(value) / 1024 / 4
+        elif var == 'swap.used':  swapused_kb  = int(value) / 1024
+        elif var == 'swap.total': totalswap_kb = int(value) / 1024
         elif var == 'mem.cache':  caches_kb    = int(value) / 1024
 
     return {

@@ -23,12 +23,12 @@
 [4] Titel der Graphen selbst
 
 
-[5] Titel der einzelnen Metriken. Hierbei berücksichtigen,
-    ob alle Kurven vom gleichen Host oder Service kommen.
-    Frage klären, ob eventuell sogar der Name der Metrik
-    auch weggealssen wird - z.B. wenn der Graph nur eine
-    einzige Metrik zeigt und diese schon im Graph-Titel
-    zu sehen ist.
+[5] au:Titel der einzelnen Metriken. Hierbei berücksichtigen,
+    au:ob alle Kurven vom gleichen Host oder Service kommen.
+    au:Frage klären, ob eventuell sogar der Name der Metrik
+    au:auch weggealssen wird - z.B. wenn der Graph nur eine
+    au:einzige Metrik zeigt und diese schon im Graph-Titel
+    au:zu sehen ist.
 
 
 [6] Graph zu Dashboard hinzufügen.
@@ -44,39 +44,35 @@
 
 
 [10] Graphen mit mehreren Areas, saubere Stacks bilden.
-   Wenn die erste metrik line oder area ist, nimmt man area,
-   sonst stacked.
+     Wenn die erste metrik line oder area ist, nimmt man area,
+     sonst stacked.
 
 
 [11] Erkennung ob combined_graphs möglich sind (web/htdocs/config.py)
-  sauber machen.
+     sauber machen.
 
 
 [12] Limit auf Menge der dargestellten Objekte.
 
 
 [13] Graphen von Hosts. Dazu den Hostcheck auf "PING" ändern, echte
-    Metriken sammeln.
+     Metriken sammeln.
 
 
 [14] Import views und visuals irgendwie aufrüamen
 
 
 [15] Seite der Combined graphs: Hier muss der Titel der View irgendwie noch
-   sauber rein. Eventuell einfach den Titel in einer URL-Variable mitschleifen.
-   Auch die Art der Darstellung (Summe, etc.) muss im Titel stehen.
+     sauber rein. Eventuell einfach den Titel in einer URL-Variable mitschleifen.
+     Auch die Art der Darstellung (Summe, etc.) muss im Titel stehen.
 
 
 [16] Prüfung auf eine einheitliche Unit? Brauchen wir das? Im Originalcode ist
-  von den normalen Templates.
+     von den normalen Templates.
 
 
 [17] Explizite Reihenfolge der Knöpfe festlegen.
 
 
 [18] Default festlegen, wenn man auf die Seite kommt. Sollen wir einfach "Summe"
-    nehmen?
-
-
-[19] Implizite Schablonenen ala "METRIC_..." umsetzen.
-
+     nehmen?

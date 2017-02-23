@@ -1044,6 +1044,14 @@ def generic_graph_template(metric_name):
         ]
     }
 
+def get_graph_template(template_id):
+    if template_id.startswith("METRIC_"):
+        return generic_graph_template(template_id[7:])
+    elif template_id in graph_info:
+        return graph_info[template_id]
+    else:
+        raise MKGeneralException(_("There is no graph template with the id '%d'") % template_id)
+
 
 def get_graph_range(graph_template, translated_metrics):
     if "range" not in graph_template:

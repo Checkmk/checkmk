@@ -1,0 +1,82 @@
+[1] Farbabstufungen "stacked".
+    "stacked": Pro Farbe zwei Schattierungen. Bei den hellen
+    Farben eine dunklere. Bei den dunklen Farben eine hellere.
+    Es gibt schon Funktionen, um eine Farbe dunkler bzw. heller
+    zu machen.
+
+
+[2] Farbabstufungen für "lines":
+    Hier einfach auf die Originalfarben ganz verzichten und
+    Palettenfarben verwenden. Dazu den Code angucken, wo wir
+    die Palatte definieren ("21/a", "22/a", ....). Daraus einen
+    Kreis bauen. Dann die Anzahl der Punkte im Kreis durch die
+    Anzahl der Kurven teilen und die Abstände dadurch so groß
+    wie möglich machen. Wenn wir mehr Kurven als Farben haben,
+    müssen wir mehrfach im Kreis "rumfahren".
+
+
+[3] Implementierung von "Average": einfach die kleine Funktion
+    schreiben, die auch None korrekt berücksichtig. Dann
+    im Graphdesigner das Average auch einbauen.
+
+
+[4] Titel der Graphen selbst
+
+
+[5] Titel der einzelnen Metriken. Hierbei berücksichtigen,
+    ob alle Kurven vom gleichen Host oder Service kommen.
+    Frage klären, ob eventuell sogar der Name der Metrik
+    auch weggealssen wird - z.B. wenn der Graph nur eine
+    einzige Metrik zeigt und diese schon im Graph-Titel
+    zu sehen ist.
+
+
+[6] Graph zu Dashboard hinzufügen.
+
+
+[7] Graph zu Report hinzufügen.
+
+
+[8] Graph zu "GraphCollections" hinzufügen.
+
+
+[9] Fall, dass ein Graph negative Metrik hat ("-line", "-area", "-stacked")
+
+
+[10] Graphen mit mehreren Areas, saubere Stacks bilden.
+   Wenn die erste metrik line oder area ist, nimmt man area,
+   sonst stacked.
+
+
+[11] Erkennung ob combined_graphs möglich sind (web/htdocs/config.py)
+  sauber machen.
+
+
+[12] Limit auf Menge der dargestellten Objekte.
+
+
+[13] Graphen von Hosts. Dazu den Hostcheck auf "PING" ändern, echte
+    Metriken sammeln.
+
+
+[14] Import views und visuals irgendwie aufrüamen
+
+
+[15] Seite der Combined graphs: Hier muss der Titel der View irgendwie noch
+   sauber rein. Eventuell einfach den Titel in einer URL-Variable mitschleifen.
+   Auch die Art der Darstellung (Summe, etc.) muss im Titel stehen.
+
+
+[16] Prüfung auf eine einheitliche Unit? Brauchen wir das? Im Originalcode ist
+  von den normalen Templates.
+
+
+[17] Explizite Reihenfolge der Knöpfe festlegen.
+
+
+[18] Default festlegen, wenn man auf die Seite kommt. Sollen wir einfach "Summe"
+    nehmen?
+
+
+[19] Implizite Schablonenen ala "METRIC_..." umsetzen.
+

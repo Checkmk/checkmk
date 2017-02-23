@@ -64,6 +64,7 @@ OPTIONS:
   -c RANGE, --critical RANGE    lower and upper level for the critical state, separated by a colon
   -o, --procedure               treat the main argument as a procedure instead of an SQL-Statement
   -i CSV,   --inputvars CSV     values of input variables if required by the procedure; csv-list
+  -m, --metrics                 Add performance data to the output
   --debug                       Debug mode: let Python exceptions come through
   -v, --verbose                 Verbose mode: print SQL statement and levels
 
@@ -83,10 +84,10 @@ def bail_out(exit_code, output):
     sys.exit(exit_code)
 
 
-short_options = 'hou:i:p:d:n:H:P:w:c:v'
+short_options = 'hou:i:p:d:n:H:P:w:c:v:m'
 long_options  = [
     'help', 'user=', 'password=', 'dbms=', 'name=', 'warning=', 'critical=', 'hostname=',
-    'port=', 'debug', 'verbose', 'procedure', 'inputvars=']
+    'port=', 'debug', 'verbose', 'procedure', 'inputvars=', 'metrics']
 
 
 try:
@@ -106,8 +107,10 @@ opt_port          = None
 opt_sql           = None
 opt_input         = []
 opt_procedure     = False
+opt_metrics       = False
 warn              = [ None, None ]
 crit              = [ None, None ]
+
 
 
 try:
@@ -134,6 +137,8 @@ try:
             crit = map(saverfloat,a.split(":",2))
         elif o in [ '-o', '--procedure' ]:
             opt_procedure = True
+        elif o in [ '-m', '--metrics' ]:
+            opt_metrics = True
         elif o in [ '-i', '--inputvars' ]:
             opt_input = a.split(",")
         elif o in [ '-h', '--help' ]:
@@ -268,12 +273,13 @@ try:
     else:
         text = "%s" % result[1]
 
-    try:
-        perf = " | performance_data=%s" % str(result[2])
-    except IndexError:
-        if opt_debug:
-            raise
-        perf = ""
+    if opt_metrics:
+        try:
+            perf = " | performance_data=%s" % str(result[2])
+        except IndexError:
+            if opt_debug:
+                raise
+            perf = ""
 
     state = 0
     if warn != [ None, None ] or crit != [ None, None ]:
@@ -283,6 +289,7 @@ try:
         if (crit[0] != None and crit[0] > number) or \
            (crit[1] != None and crit[1] < number):
             state = 2
+        text += ": %s" % number
     else:
         if number in [ 0, 1, 2, 3 ]:
             state = int(number)
@@ -295,4 +302,7 @@ except Exception, e:
 
     bail_out(3, "Error while processing result of SQL statement: %s" % e)
 
-bail_out(state, "%s%s" % (text, perf))
+if opt_metrics:
+    bail_out(state, "%s%s" % (text, perf))
+else:
+    bail_out(state, "%s" % text)

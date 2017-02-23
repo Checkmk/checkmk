@@ -1,0 +1,13 @@
+Title: check_sql: fixed thresholds and added missing options
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1487842750
+Class: fix
+
+Thresholds are now actually used when the options are activated and the
+number is added to the output if Thresholds are set. Additionally the option
+"Performance Data" is now actually used. If not activated no performance
+data will be added, even if it is given by the result of the SQL statement.

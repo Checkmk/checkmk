@@ -163,7 +163,7 @@ For i = LBound(value_names) To UBound(value_names)
     Set service = WMI.ExecQuery("SELECT State FROM Win32_Service " & _
                           "WHERE Name = 'MSSQL$" & instance_id & "' AND State = 'Running'")
     If Not IsNull(service) Then
-        instances.add instance_id, ""
+        instances.add instance_id, cluster_name
     End If
 Next
 
@@ -183,6 +183,8 @@ CONN.ConnectionTimeout = 2
 ' Loop all found server instances and connect to them
 ' In my tests only the connect using the "named instance" string worked
 For Each instance_id In instances.Keys: Do ' Continue trick
+    ' Is empty on standalone instances, and holds the name of the cluster on nodes
+    cluster_name = instances(instance_id)
 
     ' Use either an instance specific config file named mssql_<instance-id>.ini
     ' or the default mysql.ini file.
@@ -331,14 +333,36 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Loop all databases to get the date of the last backup. Only show databases
     ' which have at least one backup
-    Dim lastBackupDate, backup_type
+    Dim lastBackupDate, backup_type, is_primary_replica, replica_id, backup_machine_name
     addOutput(sections("backup"))
     For Each dbName in dbNames.Keys
-        RS.open "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date," & _
-                "type " & _
-                "FROM msdb.dbo.backupset " & _
-                "WHERE database_name = '" & dbName & "'" & _
-                "GROUP BY type", CONN
+        RS.Open "USE [" & dbName & "]", CONN
+        RS.open "IF EXISTS (select 1 from sys.sysobjects where name = 'dm_hadr_database_replica_states') " & _
+                "BEGIN " & _
+                  "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(b.backup_finish_date)), '19700101'), 120) AS last_backup_date, " & _
+                  "b.type, b.machine_name, " & _
+                  "isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '') AS replica_id " & _
+                  "FROM msdb.dbo.backupset b " & _
+                  "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name " & _
+                  "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id " & _
+                  "WHERE database_name = '" & dbName & "' " & _
+				  "AND b.machine_name = '" & hostname & "' " & _
+				  "AND (rep.is_local is null or rep.is_local = 1) " & _
+				  "AND (rep.is_primary_replica is null or rep.is_primary_replica = 1) " & _
+                  "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health " & _
+                "END " & _
+                "ELSE " & _
+                 "BEGIN " & _
+                  "SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, '19700101', MAX(backup_finish_date)), '19700101'), 120) AS last_backup_date," & _
+                  "type, machine_name, " & _
+                                                 "'1' as is_primary_replica, " &_
+                                                 "'1' as is_local, " & _
+                                                 "'' as replica_id " & _
+                  "FROM msdb.dbo.backupset " & _
+                  "WHERE database_name = '" & dbName & "' " & _
+                  "GROUP BY type, machine_name " & _
+                "END", CONN
+
         Do While Not RS.Eof
             lastBackupDate = Trim(RS("last_backup_date"))
 
@@ -347,7 +371,11 @@ For Each instance_id In instances.Keys: Do ' Continue trick
                 backup_type = "-"
             End If
 
-            If lastBackupDate <> "" Then
+            replica_id = Trim(RS("replica_id"))
+            is_primary_replica = Trim(RS("is_primary_replica"))
+            backup_machine_name = Trim(RS("machine_name"))
+
+            If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "1") AND hostname = backup_machine_name Then
                 addOutput("MSSQL_" & instance_id & " " & Replace(dbName, " ", "_") & _
                           " " & lastBackupDate & " " & backup_type)
             End If

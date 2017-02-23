@@ -1,0 +1,13 @@
+Title: mssql_backup: Backups of availability group databases are now handled correctly
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1487847745
+Class: fix
+
+In previous versions the backups of availability group cluster slave hosts (were no backup is
+executed) was handled as last backup age. Now we exclude those backups from the monitoring and
+only handle the backups of the primary replica.
+

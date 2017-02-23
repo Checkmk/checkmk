@@ -1,0 +1,12 @@
+Title: Fixed possible broken agent deployment status data
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1487833072
+Class: fix
+
+The agent deployment status of hosts, stored on the Check_MK
+server, could corrupt or be reset in case of parallel write
+operations to the file storing this information.

@@ -1,0 +1,13 @@
+Title: The permissions on events were not always handled correctly
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1487835927
+
+When rulesets have "contact group" permissions configured and set the
+rulset config to have precedence, this was not handled correctly, making
+users don't see event that they should see.

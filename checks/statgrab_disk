@@ -40,15 +40,16 @@
 
 def parse_statgrab_disk(info):
     parsed = {}
+    now    = time.time()
     for line in info:
         disk_name = line[0].split(".")[0]
         parsed.setdefault(disk_name, {})
 
         if line[0].endswith('read_bytes'):
-            parsed[disk_name]["read_bytes"] = int(line[1])
+            parsed[disk_name]["read_throughput"] = get_rate("statgrab_disk.read.%s" % disk_name, now, int(line[1]))
 
         elif line[0].endswith('write_bytes'):
-            parsed[disk_name]["write_bytes"] = int(line[1])
+            parsed[disk_name]["write_throughput"] = get_rate("statgrab_disk.write.%s" % disk_name, now, int(line[1]))
 
         elif line[0].endswith("systime"):
             parsed[disk_name]["systime"] = int(line[1])
@@ -61,15 +62,7 @@ def inventory_statgrab_disk(parsed):
 
 
 def check_statgrab_disk(item, params, parsed):
-    now   = time.time()
-    disks = {}
-    for disk_name, attrs in parsed.items():
-        disks[disk_name] = {
-            "read_throughput"  : get_rate("statgrab_disk.read.%s" % item, now, attrs["read_bytes"]),
-            "write_throughput" : get_rate("statgrab_disk.write.%s" % item, now, attrs["write_bytes"]),
-        }
-
-    return check_diskstat_dict(item, params, disks)
+    return check_diskstat_dict(item, params, parsed)
 
 
 check_info["statgrab_disk"] = {

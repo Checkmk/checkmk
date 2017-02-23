@@ -1,0 +1,8 @@
+Title: local active checks
+Component: checks
+State: open
+Date: 2017-02-23 13:11:32
+Targetversion: 1.4.0
+Class: bug
+
+The GUI is only using the active checks under ~/lib/nagios/plugins and not local ones (~/local/lib/nagios/plugins). 

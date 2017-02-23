@@ -163,6 +163,7 @@ class Escaper(object):
     def permissive_attrencode(self, obj):
         return self._escape_text(obj)
 
+
 #.
 #
 # HTML encoding
@@ -496,6 +497,7 @@ class OutputFunnel(object):
     def unplug_all(self):
         while(self.is_plugged()):
             self.unplug()
+
 
 #.
 #   .--HTML Generator------------------------------------------------------.
@@ -851,8 +853,19 @@ class HTMLGenerator(Escaper, OutputFunnel):
         self.write_html(self.render_nbsp())
 
 
-
 #.
+#   .--RequestHandler----------------------------------------------------------------.
+#   |    ____                            _   _   _                 _ _               |
+#   |   |  _ \ ___  __ _ _   _  ___  ___| |_| | | | __ _ _ __   __| | | ___ _ __     |
+#   |   | |_) / _ \/ _` | | | |/ _ \/ __| __| |_| |/ _` | '_ \ / _` | |/ _ \ '__|    |
+#   |   |  _ <  __/ (_| | |_| |  __/\__ \ |_|  _  | (_| | | | | (_| | |  __/ |       |
+#   |   |_| \_\___|\__, |\__,_|\___||___/\__|_| |_|\__,_|_| |_|\__,_|_|\___|_|       |
+#   |                 |_|                                                            |
+#   +--------------------------------------------------------------------------------+
+#   |                                                                                |
+#   '--------------------------------------------------------------------------------'
+
+
 class RequestHandler(object):
 
     def __init__(self):
@@ -2813,5 +2826,8 @@ class html(HTMLGenerator, Encoder, RequestHandler):
             raise MKUserError(varname, _("Please enter the time in the format HH:MM."))
         return m * 60 + h * 3600
 
+
+
+#.
 
 

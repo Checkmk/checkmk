@@ -893,6 +893,18 @@ class RequestHandler(object):
         raise NotImplementedError()
 
 
+    def get_user_agent(self):
+        raise NotImplementedError()
+
+
+    def get_referer(self):
+        raise NotImplementedError()
+
+
+    def http_redirect(self, url):
+        raise MKGeneralException("http_redirect not implemented")
+
+
     #
     # Request Processing
     #
@@ -1132,6 +1144,50 @@ class RequestHandler(object):
 
 
     #
+    # Content Type
+    #
+
+
+    def set_output_format(self, f):
+        self.output_format = f
+        if f == "json":
+            content_type = "application/json; charset=UTF-8"
+
+        elif f == "jsonp":
+            content_type = "application/javascript; charset=UTF-8"
+
+        elif f in ("csv", "csv_export"): # Cleanup: drop one of these
+            content_type = "text/csv; charset=UTF-8"
+
+        elif f == "python":
+            content_type = "text/plain; charset=UTF-8"
+
+        elif f == "text":
+            content_type = "text/plain; charset=UTF-8"
+
+        elif f == "html":
+            content_type = "text/html; charset=UTF-8"
+
+        elif f == "xml":
+            content_type = "text/xml; charset=UTF-8"
+
+        elif f == "pdf":
+            content_type = "application/pdf"
+
+        else:
+            raise MKGeneralException(_("Unsupported context type '%s'") % f)
+        self.set_content_type(content_type)
+
+
+    def set_content_type(self, ty):
+        raise NotImplementedError()
+
+
+    def is_api_call(self):
+        return self.output_format != "html"
+
+
+    #
     # Transaction IDs
     #
 
@@ -1321,6 +1377,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         self.start_time       = time.time()
         self.last_measurement = self.start_time
 
+        # FIXME: Drop this
         self.auto_id = 0
 
     RETURN    = 13
@@ -1385,59 +1442,12 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         return self.mobile
 
 
-    def is_api_call(self):
-        return self.output_format != "html"
-
-
-    def get_user_agent(self):
-        raise NotImplementedError()
-
-
-    def get_referer(self):
-        raise NotImplementedError()
-
-
     def set_page_context(self, c):
         self.page_context = c
 
 
     def set_buffering(self, b):
         self.buffering = b
-
-
-    def set_output_format(self, f):
-        self.output_format = f
-        if f == "json":
-            content_type = "application/json; charset=UTF-8"
-
-        elif f == "jsonp":
-            content_type = "application/javascript; charset=UTF-8"
-
-        elif f in ("csv", "csv_export"): # Cleanup: drop one of these
-            content_type = "text/csv; charset=UTF-8"
-
-        elif f == "python":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "text":
-            content_type = "text/plain; charset=UTF-8"
-
-        elif f == "html":
-            content_type = "text/html; charset=UTF-8"
-
-        elif f == "xml":
-            content_type = "text/xml; charset=UTF-8"
-
-        elif f == "pdf":
-            content_type = "application/pdf"
-
-        else:
-            raise MKGeneralException(_("Unsupported context type '%s'") % f)
-        self.set_content_type(content_type)
-
-
-    def set_content_type(self, ty):
-        raise NotImplementedError()
 
 
     def set_link_target(self, framename):
@@ -1483,10 +1493,6 @@ class html(HTMLGenerator, Encoder, RequestHandler):
     def reload_sidebar(self):
         if not self.has_var("_ajaxid"):
             self.javascript("reload_sidebar()")
-
-
-    def http_redirect(self, url):
-        raise MKGeneralException("http_redirect not implemented")
 
 
     #
@@ -1571,11 +1577,11 @@ class html(HTMLGenerator, Encoder, RequestHandler):
               "<a href=\"%s\">in the global settings</a>.") % url))
 
 
-    # Embed help box, whose visibility is controlled by a global
-    # button in the page.
+    def help(self, text):
+        self.write_html(self.render_help(text))
 
-    # TODO: Add to integration tests!!!
 
+    # Embed help box, whose visibility is controlled by a global button in the page.
     def render_help(self, text):
         if text and text.strip():
             self.have_help = True
@@ -1589,8 +1595,22 @@ class html(HTMLGenerator, Encoder, RequestHandler):
             return ""
 
 
-    def help(self, text):
-        self.write_html(self.render_help(text))
+    #
+    # Debugging, diagnose and logging
+    #
+
+    def debug(self, *x):
+        import pprint
+        for element in x:
+            try:
+                formatted = pprint.pformat(element)
+            except UnicodeDecodeError:
+                formatted = repr(element)
+            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(formatted))
+
+
+    def log(self, *args):
+        raise NotImplementedError()
 
 
     #
@@ -1631,24 +1651,6 @@ class html(HTMLGenerator, Encoder, RequestHandler):
     def makeactionuri_contextless(self, addvars, filename=None):
         return self.makeuri_contextless(addvars + [("_transid", self.get_transid())],
                                         filename=filename)
-
-
-    #
-    # Debugging, diagnose and logging
-    #
-
-    def debug(self, *x):
-        import pprint
-        for element in x:
-            try:
-                formatted = pprint.pformat(element)
-            except UnicodeDecodeError:
-                formatted = repr(element)
-            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(formatted))
-
-
-    def log(self, *args):
-        raise NotImplementedError()
 
 
     #
@@ -1978,9 +1980,8 @@ class html(HTMLGenerator, Encoder, RequestHandler):
             return False
 
 
-
     #
-    # Input elements
+    # Button elements
     #
 
 
@@ -2063,6 +2064,35 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         self.write("<input type=button name=%s id=%s autocomplete=\"off\" onclick=\"%s\" "
                    "class=\"button%s\"%s value=\"%s\" />" % (varname, varname, self.attrencode(onclick), cssclass, style, text))
 
+    #
+    # Other input elements
+    #
+
+
+    # user errors are used by input elements to show invalid input
+    def add_user_error(self, varname, msg_or_exc):
+        if isinstance(msg_or_exc, Exception):
+            message = "%s" % msg_or_exc
+        else:
+            message = msg_or_exc
+
+        if type(varname) == list:
+            for v in varname:
+                self.add_user_error(v, message)
+        else:
+            self.user_errors[varname] = message
+
+
+    def has_user_errors(self):
+        return len(self.user_errors) > 0
+
+
+    def show_user_errors(self):
+        if self.has_user_errors():
+            self.write('<div class=error>\n')
+            self.write('<br>'.join(self.user_errors.values()))
+            self.write('</div>\n')
+
 
     def text_input(self, varname, default_value = "", cssclass = "text", label = None, id_ = None,
                    submit = None, attrs = None, **args):
@@ -2104,11 +2134,6 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
         onkeydown = None if not submit else\
                     HTML('function(e) { if (!e) e = window.event; textinput_enter_submit(e, \'%s\'); };' % submit)
-        # TODO: REPLACE?
-#        if submit is not None:
-#            self.final_javascript('document.getElementById("%s").onkeydown = '
-#                             'function(e) { if (!e) e = window.event; textinput_enter_submit(e, "%s"); };'
-#                             % (id_, submit))
 
         attributes = {"class"        : cssclass,
                       "id"           : id_,
@@ -2231,35 +2256,6 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         if error:
             self.write("</x>")
         self.form_vars.append(varname)
-
-
-    #
-    # User errors
-    #
-
-
-    def add_user_error(self, varname, msg_or_exc):
-        if isinstance(msg_or_exc, Exception):
-            message = "%s" % msg_or_exc
-        else:
-            message = msg_or_exc
-
-        if type(varname) == list:
-            for v in varname:
-                self.add_user_error(v, message)
-        else:
-            self.user_errors[varname] = message
-
-
-    def has_user_errors(self):
-        return len(self.user_errors) > 0
-
-
-    def show_user_errors(self):
-        if self.has_user_errors():
-            self.write('<div class=error>\n')
-            self.write('<br>'.join(self.user_errors.values()))
-            self.write('</div>\n')
 
 
     # The confirm dialog is normally not a dialog which need to be protected
@@ -2750,24 +2746,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
 
     #
-    # Keyboard control
-    # TODO: Can we move this specific feature to AQ?
-    #
-
-    def add_keybinding(self, keylist, jscode):
-        self.keybindings.append([keylist, jscode])
-
-
-    def add_keybindings(self, bindings):
-        self.keybindings += bindings
-
-
-    def disable_keybindings(self):
-        self.keybindings_enabled = False
-
-
-    #
-    # Legacy functions
+    # FIXME: Legacy functions
     #
 
     # TODO: Remove this specific legacy function. Change code using this to valuespecs
@@ -2833,8 +2812,6 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         except:
             raise MKUserError(varname, _("Please enter the time in the format HH:MM."))
         return m * 60 + h * 3600
-
-
 
 
 

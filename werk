@@ -737,8 +737,8 @@ def main_fetch_ids(args):
 
         # enterprise werks were between 8000 and 8749. Skip over this area for new
         # reserved werk ids
-        if first_free >= 8000 or first_free < 8750:
-            first_free = 8750
+        if first_free >= 8000 and first_free < 8780:
+            first_free = 8780
     except:
         first_free = 0
     new_first_free = first_free + num

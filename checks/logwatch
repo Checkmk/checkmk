@@ -704,7 +704,8 @@ def check_logwatch_ec(item, params, info):
     if len(info) == 1:
         line = " ".join(info[0][1:])
         if line.startswith("CANNOT READ CONFIG FILE"):
-            return 3, "Error in agent configuration: %s" % " ".join(info[0][5:])
+            yield 3, "Error in agent configuration: %s" % " ".join(info[0][5:])
+            return
 
     # 1. Parse lines in info and separate by logfile
     logs = {}
@@ -738,12 +739,10 @@ def check_logwatch_ec(item, params, info):
             logs = single_logs
 
     # Check if the number of expected files matches the actual one
-    status = 0
-    infotexts = []
     if params.get('monitor_logfilelist'):
         if 'expected_logfiles' not in params:
-            infotexts.append("You enabled monitoring the list of forwarded logfiles. You need to redo service discovery.")
-            status = 1
+            yield 1, "You enabled monitoring the list of forwarded logfiles. " \
+                     "You need to redo service discovery."
         else:
             expected = params['expected_logfiles']
             missing = []
@@ -751,16 +750,14 @@ def check_logwatch_ec(item, params, info):
                 if f not in logs:
                     missing.append(f)
             if missing:
-                infotexts.append("Missing logfiles: %s" % (", ".join(missing)))
-                status = 1
+                yield 1, "Missing logfiles: %s" % (", ".join(missing))
 
             exceeding = []
             for f in logs:
                 if f not in expected:
                     exceeding.append(f)
             if exceeding:
-                infotexts.append("Newly appeared logfiles: %s" % (", ".join(exceeding)))
-                status = 1
+                yield 1, "Newly appeared logfiles: %s" % (", ".join(exceeding))
 
     # 3. create syslog message of each line
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasdad as
@@ -878,15 +875,17 @@ def check_logwatch_ec(item, params, info):
         else:
             logfile_info = ""
 
-        infotexts.append('Forwarded %d messages%s to event console' % (num_messages, logfile_info))
-        if rclfd_total:
-            infotexts.append('Reclassified %d messages through logwatch patterns (%d to IGNORE)' %
-                             (rclfd_total, rclfd_to_ignore))
-        return (status, ", ".join(infotexts), [('messages', num_messages)])
+        yield 0, 'Forwarded %d messages%s to event console' % (num_messages, logfile_info), \
+                                            [('messages', num_messages)]
 
     except Exception, e:
-        return (2, 'Unable to forward messages to event console (%s). Lost %d messages.' %
+        yield (2, 'Unable to forward messages to event console (%s). Lost %d messages.' %
                 (e, num_messages))
+
+
+    if rclfd_total:
+        yield 0, 'Reclassified %d messages through logwatch patterns (%d to IGNORE)' % \
+                             (rclfd_total, rclfd_to_ignore)
 
 
 def logwatch_ec_precompile(hostname, item, params):

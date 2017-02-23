@@ -51,7 +51,7 @@ def check_uptime_seconds(params, uptime_sec):
     since    = time.strftime("%c", time.localtime(time.time() - uptime_sec))
 
     state    = 0
-    infotext = "up since %s (%dd %02d:%02d:%02d)" % \
+    infotext = "Up since %s (%dd %02d:%02d:%02d)" % \
                 (since, days, hours, minutes, seconds)
 
     if params == None: # legacy: support older versions of parameters

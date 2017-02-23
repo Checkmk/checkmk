@@ -1,5 +1,6 @@
 1.2.8p19:
     Checks & Agents:
+    * 4438 FIX: statgrab_mem: Fixed wrong calculation of swap...
     * 4479 FIX: Fixed wrong scaling of check-mk-host-service host check command
     * 8664 FIX: prefer ucd_mem over hr_mem in case of pfSense monitoring...
             NOTE: Please refer to the migration notes!

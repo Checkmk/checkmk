@@ -939,7 +939,7 @@ function reschedule_check_response_handler(img, code) {
 }
 
 function reschedule_check(oLink, site, host, service, wait_svc) {
-    var img = oLink.childNodes[0];
+    var img = oLink.getElementsByTagName("IMG")[0];
     remove_class(img, "reload_failed");
     add_class(img, "reloading");
 

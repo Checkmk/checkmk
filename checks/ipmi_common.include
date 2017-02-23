@@ -49,6 +49,26 @@ def check_ipmi_common(item, params, parsed, what, status_txt_mapping):
         return check_ipmi_common_detailed(item, params, parsed[item], what, status_txt_mapping)
 
 
+def ipmi_common_check_levels(sensorname, val, params):
+    warn_texts, crit_texts = [], []
+    for this_sensorname, levels in params.get("numerical_sensor_levels", []):
+        if this_sensorname == sensorname and levels and val is not None:
+            if levels.get("lower"):
+                warn, crit = levels["lower"]
+                if val < crit:
+                    crit_texts.append("%s %s (warn/crit below %s/%s)" % (sensorname, val, warn, crit))
+                elif val < warn:
+                    warn_texts.append("%s %s (warn/crit below %s/%s)" % (sensorname, val, warn, crit))
+            if levels.get("upper"):
+                warn, crit = levels["upper"]
+                if val >= crit:
+                    crit_texts.append("%s %s (warn/crit at %s/%s)" % (sensorname, val, warn, crit))
+                elif val >= warn:
+                    warn_texts.append("%s %s (warn/crit at %s/%s)" % (sensorname, val, warn, crit))
+            break
+    return warn_texts, crit_texts
+
+
 def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
     val        = data["value"]
     unit       = data["unit"]
@@ -80,37 +100,42 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
             # much data and is - in my opinion - useless.
             perfdata = [ ("value", val, None, crit_high) ]
 
-    state = status_txt_mapping(status_txt)
+    warn_texts = []
+    crit_texts = []
+    state      = status_txt_mapping(status_txt)
+    if state:
+        for ty, warn, crit in [
+            ("below", warn_low,  crit_low),
+            ("at",    warn_high, crit_high) ]:
+            if warn is not None and crit is None:
+                warn_texts.append("warn %s %s" % (ty, warn))
+            elif warn is not None and crit is not None:
+                crit_texts.append("warn/crit %s %s/%s" % (ty, warn, crit))
+            elif warn is None and crit is not None:
+                crit_texts.append("crit %s %s" % (ty, crit))
+
     for wato_status_txt, wato_status in params.get("sensor_states", []):
         if status_txt.startswith(wato_status_txt):
             state = wato_status
             break
 
-    lvlstxts = []
-    for ty, warn, crit in [
-        ("at",    warn_low,  crit_low),
-        ("below", warn_high, crit_high) ]:
-        lvlstxt = ""
-        if warn is not None and crit is None:
-            lvlstxt = "warn %s %s" % (ty, warn)
-        elif warn is not None and crit is not None:
-            lvlstxt = "warn/crit %s %s/%s" % (ty, warn, crit)
-        elif warn is None and crit is not None:
-            lvlstxt = "crit %s %s" % (ty, crit)
-        if lvlstxt:
-            if unit is not None:
-                lvlstxt += " %s" % unit
-            lvlstxts.append(lvlstxt)
+    these_warn_texts, these_crit_texts = ipmi_common_check_levels(item, val, params)
+    warn_texts += these_warn_texts
+    crit_texts += these_crit_texts
 
     levelsinfo = ""
-    if state and lvlstxts:
-        levelsinfo = " (%s)" % ", ".join(lvlstxts)
+    if crit_texts:
+        state = 2
+        levelsinfo = " (%s)" % ", ".join(crit_texts)
+    elif warn_texts:
+        state = 1
+        levelsinfo = " (%s)" % ", ".join(warn_texts)
 
     return state, "Status: %s%s" % (infotext, levelsinfo), perfdata
 
 
 def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
-    worst_state   = 0
+    states        = [0]
     warn_texts    = []
     crit_texts    = []
     ok_texts      = []
@@ -139,6 +164,10 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
                 sensorstate = wato_status
                 break
 
+        these_warn_texts, these_crit_texts = ipmi_common_check_levels(sensorname, val, params)
+        warn_texts += these_warn_texts
+        crit_texts += these_crit_texts
+
         infotext = "%s (%s)" % (sensorname, status_txt)
         if sensorstate == 1:
             warn_texts.append(infotext)
@@ -147,7 +176,7 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
         else:
             ok_texts.append(infotext)
 
-        worst_state = max(worst_state, sensorstate)
+        states.append(sensorstate)
 
         if "amb" in sensorname or "Ambient" in sensorname:
             try:
@@ -162,10 +191,11 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
         perfdata = []
 
     infotexts  = [ "%d sensors" % len(parsed) ]
-    for title, texts, extrainfo in [
-        ("OK",   ok_texts,   ""),     ("WARN",    warn_texts,    "(!)"),
-        ("CRIT", crit_texts, "(!!)"), ("skipped", skipped_texts, "") ]:
+    for title, texts, extrainfo, text_state in [
+        ("OK",   ok_texts,   "",     0), ("WARN",    warn_texts,    "(!)", 1),
+        ("CRIT", crit_texts, "(!!)", 2), ("skipped", skipped_texts, "",    0) ]:
         if len(parsed) == len(texts):
+            # Everything OK
             infotext = "%d sensors %s" % (len(parsed), title)
             if extrainfo:
                 infotext += ": %s%s" % (", ".join(texts), extrainfo)
@@ -178,4 +208,7 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
                 infotext += ": %s%s" % (", ".join(texts), extrainfo)
             infotexts.append( infotext )
 
-    return worst_state, ' - '.join(infotexts), perfdata
+        if text_state:
+            states.append(text_state)
+
+    return max(states), ' - '.join(infotexts), perfdata

@@ -2759,6 +2759,23 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
 
     #
+    # Keyboard control
+    # TODO: Can we move this specific feature to AQ?
+    #
+
+    def add_keybinding(self, keylist, jscode):
+        self.keybindings.append([keylist, jscode])
+
+
+    def add_keybindings(self, bindings):
+        self.keybindings += bindings
+
+
+    def disable_keybindings(self):
+        self.keybindings_enabled = False
+
+
+    #
     # FIXME: Legacy functions
     #
 

@@ -1,0 +1,10 @@
+Title: qlogic_fcport: added compatibility for HP StorageWorks Fibre Channel Switch
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1487859833
+Class: feature
+
+The checkplugin is now able to use information of HP StorageWorks Switches.

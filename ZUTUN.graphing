@@ -15,9 +15,9 @@
     müssen wir mehrfach im Kreis "rumfahren".
 
 
-[3] Implementierung von "Average": einfach die kleine Funktion
-    schreiben, die auch None korrekt berücksichtig. Dann
-    im Graphdesigner das Average auch einbauen.
+[3] au: Implementierung von "Average": einfach die kleine Funktion
+    au: schreiben, die auch None korrekt berücksichtig. Dann
+    au: im Graphdesigner das Average auch einbauen.
 
 
 [4] Titel der Graphen selbst

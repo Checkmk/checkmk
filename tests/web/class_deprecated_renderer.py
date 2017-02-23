@@ -302,6 +302,47 @@ class DeprecatedRenderer(html):
         return '<img src="%s" class="icon%s"%s%s%s />' % (icon_path, cssclass, align, title, id_)
 
 
+    def render_checkbox(self, varname, deflt=False, cssclass = '', onclick = None, label=None,
+                        id=None, add_attr = None):
+        if add_attr == None:
+            add_attr = [] # do not use [] as default element, it will be a global variable!
+        code = HTML()
+        error = self.user_errors.get(varname)
+
+        code += "<span class=checkbox>"
+        # Problem with checkboxes: The browser will add the variable
+        # only to the URL if the box is checked. So in order to detect
+        # whether we should add the default value, we need to detect
+        # if the form is printed for the first time. This is the
+        # case if "filled_in" is not set.
+        value = self.get_checkbox(varname)
+        if value == None: # form not yet filled in
+            value = deflt
+
+        checked = value and " CHECKED " or ""
+        if cssclass:
+            cssclass = ' class="%s"' % cssclass
+        onclick_code = onclick and " onclick=\"%s\"" % (onclick) or ""
+
+        if not id:
+            id = "cb_" + varname
+
+        add_attr.append('id="%s"' % id)
+
+        add_attr_code = ''
+        if add_attr:
+            add_attr_code = ' ' + ' '.join(add_attr)
+
+        code += "<input type=checkbox name=\"%s\"%s%s%s%s>\n" % \
+                        (varname, checked, cssclass, onclick_code, add_attr_code)
+        self.form_vars.append(varname)
+        code += '<label for="%s">%s</label>\n' % (id, label or "")
+        code += "</span>"
+        if error:
+            code = self.render_x(code, class_="inputerror")
+
+        return HTML(code)
+
 
     def render_icon_button(self, url, help, icon, id="", onclick="",
                            style="", target="", cssclass="", ty="button"):

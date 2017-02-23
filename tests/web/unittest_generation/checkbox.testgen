@@ -1,0 +1,13 @@
+{
+    "name" : "checkbox",
+    "arguments" : {"varname" : ["vname"],
+                         "deflt"   : [True, False],
+                         "cssclass": ["test"],
+                         "onclick" : ["javascript:void();"],
+                         "label"   : ["label_text", ''],
+                         "id"      : [None, "id"],
+                         "add_attr": [None, ["title=\"Title\" tags=\"TAG\""]]},                     
+    "attributes" : { "help_visible": [True, False] },
+    "variables"  : { "_vname": ['', "_vname"] }
+}
+

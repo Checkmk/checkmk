@@ -62,11 +62,6 @@
 [14] Import views und visuals irgendwie aufrüamen
 
 
-[15] Seite der Combined graphs: Hier muss der Titel der View irgendwie noch
-     sauber rein. Eventuell einfach den Titel in einer URL-Variable mitschleifen.
-     Auch die Art der Darstellung (Summe, etc.) muss im Titel stehen.
-
-
 [16] Prüfung auf eine einheitliche Unit? Brauchen wir das? Im Originalcode ist
      von den normalen Templates.
 

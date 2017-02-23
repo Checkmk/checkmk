@@ -2151,6 +2151,7 @@ def show_context_links(thisview, datasource, show_filters,
                                 html.makeuri([
                                     ("single_infos", ",".join(thisview["single_infos"])),
                                     ("datasource", thisview["datasource"]),
+                                    ("view_title", view_title(thisview)),
                                 ],
                                 filename="combined_graphs.py"), "pnp")
 

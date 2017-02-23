@@ -1,0 +1,12 @@
+Title: Quicksearch: Now cycles through the filters h:/ad:/al:/s: when no specific filters are set
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0b3
+Date: 1487840420
+Class: feature
+
+Once a match is found the data is shown. So if the address matches,
+the query won't issue an al: or s: query.
+

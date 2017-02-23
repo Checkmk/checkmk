@@ -5,14 +5,14 @@
     zu machen.
 
 
-[2] Farbabstufungen für "lines":
-    Hier einfach auf die Originalfarben ganz verzichten und
-    Palettenfarben verwenden. Dazu den Code angucken, wo wir
-    die Palatte definieren ("21/a", "22/a", ....). Daraus einen
-    Kreis bauen. Dann die Anzahl der Punkte im Kreis durch die
-    Anzahl der Kurven teilen und die Abstände dadurch so groß
-    wie möglich machen. Wenn wir mehr Kurven als Farben haben,
-    müssen wir mehrfach im Kreis "rumfahren".
+[2] mk: Farbabstufungen für "lines":
+    mk: Hier einfach auf die Originalfarben ganz verzichten und
+    mk: Palettenfarben verwenden. Dazu den Code angucken, wo wir
+    mk: die Palatte definieren ("21/a", "22/a", ....). Daraus einen
+    mk: Kreis bauen. Dann die Anzahl der Punkte im Kreis durch die
+    mk: Anzahl der Kurven teilen und die Abstände dadurch so groß
+    mk: wie möglich machen. Wenn wir mehr Kurven als Farben haben,
+    mk: müssen wir mehrfach im Kreis "rumfahren".
 
 
 [3] au: Implementierung von "Average": einfach die kleine Funktion
@@ -23,12 +23,12 @@
 [4] Titel der Graphen selbst
 
 
-[5] au:Titel der einzelnen Metriken. Hierbei berücksichtigen,
-    au:ob alle Kurven vom gleichen Host oder Service kommen.
-    au:Frage klären, ob eventuell sogar der Name der Metrik
-    au:auch weggealssen wird - z.B. wenn der Graph nur eine
-    au:einzige Metrik zeigt und diese schon im Graph-Titel
-    au:zu sehen ist.
+[5] au: Titel der einzelnen Metriken. Hierbei berücksichtigen,
+    au: ob alle Kurven vom gleichen Host oder Service kommen.
+    au: Frage klären, ob eventuell sogar der Name der Metrik
+    au: auch weggealssen wird - z.B. wenn der Graph nur eine
+    au: einzige Metrik zeigt und diese schon im Graph-Titel
+    au: zu sehen ist.
 
 
 [6] Graph zu Dashboard hinzufügen.
@@ -71,3 +71,7 @@
 
 [18] Default festlegen, wenn man auf die Seite kommt. Sollen wir einfach "Summe"
      nehmen?
+
+
+[19] Umswitchen der Darstellungsarten über die Knöpfe soll den gewählten Zeitbereich beibehalten.
+     Geht das überhaupt?

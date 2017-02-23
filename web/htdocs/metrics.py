@@ -220,6 +220,48 @@ def get_palette_color_by_index(i, shading='a'):
     return "%s/%s" % (color_key, shading)
 
 
+# Return a list of colors that are as different as possible (visually)
+# by distributing them on the HSV color wheel.
+def get_n_different_colors(n):
+    total_weight = sum([x[1] for x in hsv_color_distribution])
+
+    colors = []
+    while len(colors) < n:
+        weight_index = len(colors) * total_weight / n
+        hue = get_hue_by_weight_index(weight_index)
+        colors.append(hsv_to_hexrgb((hue, 1, 1)))
+    return colors
+
+
+def get_hue_by_weight_index(weight_index):
+    section_begin = 0.0
+    for section_end, section_weight in hsv_color_distribution:
+        if weight_index < section_weight:
+            section_size = section_end - section_begin
+            hue = section_begin + ((weight_index / section_weight) * section_size)
+            return hue
+        weight_index -= section_weight
+        section_begin = section_end
+
+
+
+# Try to distribute colors in a whay that the psychological
+# colors distance is distributed evenly.
+hsv_color_distribution = [
+  (0.1, 10.0), # orange ... red
+  (0.2, 10.0), # orange ... yellow(-greenish)
+  (0.3, 5.0), # green-yellow
+  (0.4, 2.0), # green
+  (0.5, 5.0), # green .... cyan
+  (0.6, 20.0), # cyan ... seablue
+  (0.7, 10.0), # seablue ... dark blue
+  (0.8, 20.0), # dark blue ... violet
+  (0.9, 10.0), # violet .. magenta
+  (1.0, 20.0), # magenta .. red
+]
+
+
+
 def get_next_random_palette_color():
     keys = cmk_color_palette.keys()
     if html.is_cached("random_color_index"):
@@ -277,11 +319,13 @@ def render_color(color_rgb):
        int(color_rgb[1] * 255),
        int(color_rgb[2] * 255),)
 
+
 # Make a color darker. v ranges from 0 (not darker) to 1 (black)
 def darken_color(rgb, v):
     def darken(x, v):
         return x * (1.0 - v)
     return tuple([ darken(x, v) for x in rgb ])
+
 
 # Make a color lighter. v ranges from 0 (not lighter) to 1 (white)
 def lighten_color(rgb, v):
@@ -289,12 +333,14 @@ def lighten_color(rgb, v):
         return x + ((1.0 - x) * v)
     return tuple([ lighten(x, v) for x in rgb ])
 
+
 def mix_colors(a, b):
     return tuple([
        (ca + cb) / 2.0
        for (ca, cb)
        in zip(a, b)
     ])
+
 
 def render_color_icon(color):
     return "<div class=color style=\"background-color: %s\"></div>" % color

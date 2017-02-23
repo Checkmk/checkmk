@@ -1,0 +1,12 @@
+Title: Fixed PID file locking
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1487837114
+Class: fix
+
+Previously it was possible to start the Check_MK Micro Core multiple times,
+which resulted in totally erratic behavior.  This has been fixed by
+correctly locking the core's PID file.

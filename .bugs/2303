@@ -1,6 +1,6 @@
 Title: heartbeat_crm: parse old output, get at least in warning if unmanaged
 Component: checks
-State: open
+State: closed
 Date: 2015-02-20 15:29:17
 Targetversion: future
 Class: bug
@@ -8,3 +8,8 @@ Class: bug
 There are three example outputs in server-linux-heartbeat-{1,2,3} in our
 (MK's) archive.  in server-linux-heartbeat-2 there are some unmanaged
 nodes. Someone who understands this output needs to have a look.
+
+2017-02-23 08:04:08: changed state open -> closed
+
+2017-02-23 08:04:20: changed state closed -> closed
+Works.

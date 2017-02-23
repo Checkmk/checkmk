@@ -609,7 +609,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
     def write_html(self, content):
         """ Write HTML code directly, without escaping. """
-        self.write(content + "\n")
+        self.write(content)
 
 
     def comment(self, comment_text):

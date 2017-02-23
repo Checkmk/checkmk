@@ -1922,8 +1922,8 @@ function valuespec_toggle_dropdownn(oDropdown, divid) {
    input field as soon as the user focusses the last field. */
 function list_of_strings_init(divid) {
     var oContainer = document.getElementById(divid);
-    var numChilds = oContainer.childNodes.length;
-    var oLastChild = oContainer.childNodes[numChilds-1];
+    var oDivChildren = oContainer.getElementsByTagName("div")
+    var oLastChild = oDivChildren[oDivChildren.length-1];
     list_of_strings_add_focus(oLastChild);
 }
 

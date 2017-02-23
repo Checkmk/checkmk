@@ -203,8 +203,7 @@ function get_zfs_arc_cache_data () {
     then
         echo "::arc" | mdb -k
     else
-        kstat -p zfs:0:arcstats | sed -e 's/.*arcstats://g' | \
-            /usr/gnu/bin/sed -e 's/[ \t][ \t]*/ = /g'
+        kstat -p zfs:0:arcstats | sed -e 's/.*arcstats://g' | awk '{printf "%s = %s\n", $1, $2;}'
     fi
 }
 

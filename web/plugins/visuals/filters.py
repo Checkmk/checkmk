@@ -49,7 +49,7 @@ class FilterText(Filter):
         html.text_input(self.htmlvars[0], current_value, self.negateable and 'neg' or '')
         if self.negateable:
             html.open_nobr()
-            html.checkbox(self.htmlvars[1], label=_("negate"))
+            html.checkbox(self.htmlvars[1], False, label=_("negate"))
             html.close_nobr()
 
     def filter(self, infoname):
@@ -296,7 +296,7 @@ class FilterMultigroup(Filter):
         self.valuespec().render_input(self.htmlvar, self.selection())
         if self.negateable:
             html.open_nobr()
-            html.checkbox(self.htmlvars[1], label=_("negate"))
+            html.checkbox(self.htmlvars[1], False, label=_("negate"))
             html.close_nobr()
         html.close_div()
 
@@ -344,7 +344,7 @@ class FilterGroupCombo(Filter):
         html.sorted_select(self.htmlvars[0], choices)
         if not self.enforce:
             html.open_nobr()
-            html.checkbox(self.htmlvars[1], label=_("negate"))
+            html.checkbox(self.htmlvars[1], False, label=_("negate"))
             html.close_nobr()
 
     def current_value(self):

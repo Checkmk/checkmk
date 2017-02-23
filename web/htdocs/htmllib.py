@@ -563,7 +563,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
                           'div', 'p', 'span', 'canvas', 'strong', 'sub', 'tt', 'u', 'i', 'b', 'x', 'option'])
 
     # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
-    _tag_names = set(['html', 'head', 'body', 'header', 'footer', 'a', 'b',\
+    _tag_names = set(['html', 'head', 'body', 'header', 'footer', 'a', 'b', 'sup',\
                               'script', 'form', 'button', 'p', 'select', 'fieldset',\
                               'table', 'tbody', 'row', 'ul', 'li', 'br', 'nobr', 'input', 'span'])
 
@@ -596,10 +596,31 @@ class HTMLGenerator(Escaper, OutputFunnel):
                     'align', 'valign', 'style', 'width', 'height', 'colspan', 'data-type', 'data-role','selected',\
                     'cellspacing', 'cellpadding', 'border', 'allowTransparency', 'frameborder'], key
 
+        # make class attribute foolproof
+        css = []
+        for k in ["class_", "css", "cssclass", "class"]:
+            if k in attrs:
+                if isinstance(attrs[k], list):
+                    css.extend(attrs.pop(k))
+                elif attrs[k] is not None:
+                    css.append(attrs.pop(k))
+        if css:
+            attrs["class"] = css
+
+        # options such as 'selected' and 'checked' dont have a value in html tags
+        options = []
+
+        # render all attributes
         for k, v in attrs.iteritems():
 
-            if v is None: continue
-            k = k.rstrip('_')
+            if v is None:
+                continue
+
+            k = self._escape_attribute(k.rstrip('_'))
+
+            if v == '':
+                options.append(k)
+                continue
 
             if not isinstance(v, list):
                 v = self._escape_attribute(v)
@@ -617,6 +638,9 @@ class HTMLGenerator(Escaper, OutputFunnel):
                     v = re.sub(';+', ';', v)
 
             yield ' %s=\"%s\"' %(k, v)
+
+        for k in options:
+            yield " %s" % k
 
 
     # applies attribute encoding to prevent code injections.
@@ -1572,10 +1596,12 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
         if self.output_format == "html":
             if self.mobile:
-                self.write('<center>')
-            self.write("<div class=%s>%s</div>\n" % (cls, msg))
+                self.open_center()
+            self.open_div(class_=cls)
+            self.write(msg)
+            self.close_div()
             if self.mobile:
-                self.write('</center>')
+                self.close_center()
         else:
             self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
 
@@ -1584,10 +1610,10 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
     def show_localization_hint(self):
         url = "wato.py?mode=edit_configvar&varname=user_localizations"
-        self.message(HTML("<sup>*</sup>" +
-            _("These texts may be localized depending on the users' "
-              "language. You can configure the localizations "
-              "<a href=\"%s\">in the global settings</a>.") % url))
+        self.message(self.render_sup("*") +
+                     _("These texts may be localized depending on the users' "
+                       "language. You can configure the localizations %s.")
+                        % self.render_a("in the global settings", href=url))
 
 
     def help(self, text):
@@ -1619,7 +1645,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
                 formatted = pprint.pformat(element)
             except UnicodeDecodeError:
                 formatted = repr(element)
-            self.lowlevel_write("<pre>%s</pre>\n" % self.attrencode(formatted))
+            self.lowlevel_write(self.render_pre(formatted))
 
 
     def log(self, *args):
@@ -1702,9 +1728,9 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         # write css for internet explorer
         fname = self.css_filename_for_browser("ie")
         if fname is not None:
-            self.write("<!--[if IE]>\n")
+            self.write_html("<!--[if IE]>\n")
             self.stylesheet(fname)
-            self.write("<![endif]-->\n")
+            self.write_html("<![endif]-->\n")
 
         self.add_custom_style_sheet()
 
@@ -1733,7 +1759,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
             self.header_sent = False
 
         if not self.header_sent:
-            self.write('<!DOCTYPE HTML>\n')
+            self.write_html('<!DOCTYPE HTML>\n')
             self.open_html()
             self._head(title, javascripts, stylesheets)
             self.header_sent = True
@@ -1824,32 +1850,36 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         if self.header_sent:
             self.bottom_focuscode()
             if self.render_headfoot:
-                self.write("<table class=footer><tr>")
+                self.open_table(class_="footer")
+                self.open_tr()
 
-                self.write("<td class=left>")
+                self.open_td(class_="left")
                 self._write_status_icons()
-                self.write("</td>")
+                self.close_td()
 
-                self.write("<td class=middle></td>"
-                           "<td class=right>")
-                self.write("<div style=\"display:%s\" id=foot_refresh>%s</div>" % (
-                        (self.browser_reload and "inline-block" or "none",
-                     _("refresh: <div id=foot_refresh_time>%s</div> secs") % self.browser_reload)))
-                self.write("</td></tr></table>")
+                self.td('', class_="middle")
+
+                self.open_td(class_="right")
+                content = _("refresh: %s secs") % self.render_div(self.browser_reload, id_="foot_refresh_time")
+                style = "display:inline-block;" if self.browser_reload else "display:none;"
+                self.div(HTML(content), id_="foot_refresh", style=style)
+                self.close_td()
+
+                self.close_tr()
+                self.close_table()
 
 
     def bottom_focuscode(self):
         if self.focus_object:
             formname, varname = self.focus_object
             obj = formname + "." + varname
-            self.write("<script language=\"javascript\" type=\"text/javascript\">\n"
-                           "<!--\n"
-                           "if (document.%s) {"
-                           "    document.%s.focus();\n"
-                           "    document.%s.select();\n"
-                           "}\n"
-                           "// -->\n"
-                           "</script>\n" % (obj, obj, obj))
+            js_code = "<!--\n"\
+                      "if (document.%s) {"\
+                      "    document.%s.focus();\n"\
+                      "    document.%s.select();\n"\
+                      "}\n"\
+                      "// -->\n" % (obj, obj, obj)
+            self.javascript(js_code)
 
 
     def body_end(self):
@@ -1863,7 +1893,8 @@ class html(HTMLGenerator, Encoder, RequestHandler):
                                 json.dumps(self.keybindings))
         if self.final_javascript_code:
             self.javascript(self.final_javascript_code)
-        self.write("</body></html>\n")
+        self.close_body()
+        self.close_html()
 
         # Hopefully this is the correct place to performe some "finalization" tasks.
         self.store_new_transids()
@@ -1879,18 +1910,9 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         if action == None:
             action = self.myfile + ".py"
         self.current_form = name
-        if method.lower() == "post":
-            enctype = ' enctype="multipart/form-data"'
-        else:
-            enctype = ''
-        if onsubmit:
-            onsubmit = ' onsubmit="%s"' % self.attrencode(onsubmit)
-        else:
-            onsubmit = ''
-        enc_name = self.attrencode(name)
-        self.write('<form id="form_%s" name="%s" class="%s" action="%s" method="%s"%s%s>\n' %
-                   (enc_name, enc_name, enc_name, self.attrencode(action), self.attrencode(method),
-                    enctype, onsubmit))
+        self.open_form(id_="form_%s" % name, name=name, class_=name,
+                       action=action, method=method, onsubmit=onsubmit,
+                       enctype="multipart/form-data" if method.lower() == "post" else None)
         self.hidden_field("filled_in", name, add_var=True)
         if add_transid:
             self.hidden_field("_transid", str(self.get_transid()))
@@ -1898,7 +1920,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
 
     def end_form(self):
-        self.write("</form>\n")
+        self.close_form()
         self.form_name = None
 
 
@@ -1910,8 +1932,8 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         # These fields are not really used by the form. They are used to prevent the browsers
         # from filling the default password and previous input fields in the form
         # with password which are eventually saved in the browsers password store.
-        self.write("<input type=\"text\" style=\"display:none;\">")
-        self.write("<input style=\"display:none\" type=\"password\">")
+        self.input(name=None, type_="text", style="display:none;")
+        self.input(name=None, type_="password", style="display:none;")
 
 
     # Needed if input elements are put into forms without the helper
@@ -2066,16 +2088,11 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
     # TODO: Cleanup to use standard attributes etc.
     def jsbutton(self, varname, text, onclick, style='', cssclass=""):
-        if style:
-            style = ' style="%s"' % style
-
-        if cssclass:
-            cssclass = " %s" % cssclass
-
         # autocomplete="off": Is needed for firefox not to set "disabled="disabled" during page reload
         # when it has been set on a page via javascript before. Needed for WATO activate changes page.
-        self.write("<input type=button name=%s id=%s autocomplete=\"off\" onclick=\"%s\" "
-                   "class=\"button%s\"%s value=\"%s\" />" % (varname, varname, self.attrencode(onclick), cssclass, style, text))
+        self.input(name=varname, type_="button", id_=varname, class_=["button", cssclass],
+                   autocomplete="off", onclick=onclick, style=style, value=text)
+
 
     #
     # Other input elements
@@ -2102,9 +2119,9 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
     def show_user_errors(self):
         if self.has_user_errors():
-            self.write('<div class=error>\n')
+            self.open_div(class_="error")
             self.write('<br>'.join(self.user_errors.values()))
-            self.write('</div>\n')
+            self.close_div()
 
 
     def text_input(self, varname, default_value = "", cssclass = "text", label = None, id_ = None,
@@ -2168,7 +2185,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
         if label:
             self.label(label, for_=id_)
-        self.write(self.render_input(varname, type_=args.get("type", "text"), **attributes))
+        self.write_html(self.render_input(varname, type_=args.get("type", "text"), **attributes))
 
         if error:
             self.close_x()
@@ -2207,7 +2224,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
         if error:
             self.open_x(class_="inputerror")
-        self.write(self._render_content_tag("textarea", value, **attrs))
+        self.write_html(self._render_content_tag("textarea", value, **attrs))
         if error:
             self.close_x()
 
@@ -2264,10 +2281,10 @@ class html(HTMLGenerator, Encoder, RequestHandler):
     def upload_file(self, varname):
         error = self.user_errors.get(varname)
         if error:
-            self.write("<x class=inputerror>")
-        self.write('<input type="file" name="%s">' % varname)
+            self.open_x(class_="inputerror")
+        self.input(name=varname, type_="file")
         if error:
-            self.write("</x>")
+            self.close_x()
         self.form_vars.append(varname)
 
 
@@ -2289,17 +2306,18 @@ class html(HTMLGenerator, Encoder, RequestHandler):
                 self.header(add_header)
 
             if self.mobile:
-                self.write('<center>')
-            self.write("<div class=really>%s" % self.permissive_attrencode(msg))
+                self.open_center()
+            self.open_div(class_="really")
+            self.write_text(msg)
             # FIXME: When this confirms another form, use the form name from self.vars()
             self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")
             self.button("_do_actions", _("No"), "")
             self.end_form()
-            self.write("</div>")
+            self.close_div()
             if self.mobile:
-                self.write('</center>')
+                self.close_center()
 
             return False # False --> "Dialog shown, no answer yet"
         else:
@@ -2357,48 +2375,33 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         self.write(self.render_checkbox(*args, **kwargs))
 
 
-    def render_checkbox(self, varname, deflt=False, cssclass = '', onclick = None, label=None,
-                        id=None, add_attr = None):
-        if add_attr == None:
-            add_attr = [] # do not use [] as default element, it will be a global variable!
-        code = ""
-        error = self.user_errors.get(varname)
-        if error:
-            code += "<x class=inputerror>"
+    def render_checkbox(self, varname, deflt = False, label = '', id = None, **add_attr):
 
-        code += "<span class=checkbox>"
         # Problem with checkboxes: The browser will add the variable
         # only to the URL if the box is checked. So in order to detect
         # whether we should add the default value, we need to detect
         # if the form is printed for the first time. This is the
         # case if "filled_in" is not set.
         value = self.get_checkbox(varname)
-        if value == None: # form not yet filled in
+        if value is None: # form not yet filled in
             value = deflt
 
-        checked = value and " CHECKED " or ""
-        if cssclass:
-            cssclass = ' class="%s"' % cssclass
-        onclick_code = onclick and " onclick=\"%s\"" % (onclick) or ""
+        error = self.user_errors.get(varname)
+        if id is None:
+            id = "cb_%s" % varname
 
-        if not id:
-            id = "cb_" + varname
+        add_attr["id"] = id
+        add_attr["CHECKED"] = '' if value else None
 
-        add_attr.append('id="%s"' % id)
+        code = self.render_input(name=varname, type_="checkbox", **add_attr)\
+             + self.render_label(label, for_=id)
+        code = self.render_span(code, class_="checkbox")
 
-        add_attr_code = ''
-        if add_attr:
-            add_attr_code = ' ' + ' '.join(add_attr)
-
-        code += "<input type=checkbox name=\"%s\"%s%s%s%s>\n" % \
-                        (varname, checked, cssclass, onclick_code, add_attr_code)
-        self.form_vars.append(varname)
-        code += '<label for="%s">%s</label>\n' % (id, label or "")
-        code += "</span>"
         if error:
-            code += "</x>"
+            code = self.render_x(code, class_="inputerror")
 
-        return HTML(code)
+        self.form_vars.append(varname)
+        return code
 
 
     #
@@ -2414,42 +2417,48 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         if self._user_id:
             isopen = self.foldable_container_is_open(treename, id, isopen)
 
-        onclick = ' onclick="toggle_foldable_container(\'%s\', \'%s\', \'%s\')"' % (
-               treename, id, fetch_url and fetch_url or '')
+        onclick = "toggle_foldable_container(\'%s\', \'%s\', \'%s\')"\
+                    % (treename, id, fetch_url if fetch_url else '')
 
         if indent == "nform":
-            self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' % (treename, id, onclick))
+            self.open_tr(class_="heading")
+            self.open_td(id_="nform.%s.%s" % (treename, id), onclick=onclick, colspan="2")
             if icon:
-                self.write('<img class="treeangle title" src="images/icon_%s.png">' % self.attrencode(icon))
+                self.img(class_=["treeangle", "title"], src="images/icon_%s.png" % icon)
             else:
-                self.write('<img align=absbottom class="treeangle nform %s" src="images/%s_closed.png">' %
-                                                ("open" if isopen else "closed", tree_img))
-            self.write('%s</td></tr>' % self.attrencode(title))
+                self.img(class_=["treeangle", "nform", "open" if isopen else "closed"],
+                         src="images/%s_closed.png" % tree_img, align="absbottom")
+            self.write_text(title)
+            self.close_td()
+            self.close_tr()
         else:
             if not icon:
-                self.write('<img align=absbottom class="treeangle %s" id="treeimg.%s.%s" '
-                           'src="images/%s_closed.png" %s>' %
-                        ("open" if isopen else "closed", treename, id, tree_img, onclick))
+                self.img(id_="treeimg.%s.%s" % (treename, id),
+                         class_=["treeangle", "open" if isopen else "closed"],
+                         src="images/%s_closed.png" % tree_img, align="absbottom", onclick=onclick)
             if isinstance(title, HTML): # custom HTML code
-                self.write(self.attrencode(title))
+                self.write_text(title)
                 if indent != "form":
-                    self.write("<br>")
+                    self.br()
             else:
-                self.write('<b class="treeangle title" %s>' % (not title_url and onclick or ""))
+                self.open_b(class_=["treeangle", "title"], onclick=None if title_url else onclick)
                 if icon:
-                    self.write('<img class="treeangle title" src="images/icon_%s.png">' % self.attrencode(icon))
+                    self.img(class_=["treeangle", "title"], src="images/icon_%s.png" % icon)
                 if title_url:
-                    self.write('<a href="%s">%s</a>' % (self.attrencode(title_url), self.attrencode(title)))
+                    self.a(title, href=title_url)
                 else:
-                    self.write(self.attrencode(title))
-                self.write('</b><br>')
+                    self.write_text(title)
+                self.close_b()
+                self.br()
 
             indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)
             if indent == "form":
-                self.write("</td></tr></table>")
+                self.close_td()
+                self.close_tr()
+                self.close_table()
                 indent_style += "margin: 0; "
-            self.write('<ul class="treeangle %s" style="%s" id="tree.%s.%s">' %
-                 (isopen and "open" or "closed", indent_style,  treename, id))
+            self.open_ul(id_="tree.%s.%s" % (treename, id),
+                         class_=["treeangle", "open" if isopen else "closed"], style=indent_style)
 
         # give caller information about current toggling state (needed for nform)
         return isopen
@@ -2457,7 +2466,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
     def end_foldable_container(self):
         if self.folding_indent != "nform":
-            self.write("</ul>")
+            self.close_ul()
 
 
     def foldable_container_is_open(self, treename, id, isopen):
@@ -2497,7 +2506,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         id_ = id
         self._context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title, fkey=fkey, class_=class_)
         if fkey and self.keybindings_enabled:
-            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self._escape_attribute(url))
+            self.add_keybinding([self.F1 + (fkey - 1)], "document.location='%s';" % self._escape_attribute(url))
 
 
     def _context_button(self, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None, class_=None):
@@ -2661,21 +2670,15 @@ class html(HTMLGenerator, Encoder, RequestHandler):
     def debug_vars(self, prefix=None, hide_with_mouse=True, vars=None):
         if not vars:
             vars = self.vars
-
-        if hide_with_mouse:
-            hover = ' onmouseover="this.style.display=\'none\';"'
-        else:
-            hover = ""
-
-        self.write('<table %s class=debug_vars>' % hover)
-        self.write("<tr><th colspan=2>"+_("POST / GET Variables")+"</th></tr>")
+        hover = "this.style.display=\'none\';"
+        self.open_table(class_=["debug_vars"], onmouseover=hover if hide_with_mouse else None)
+        self.tr(self.render_th(_("POST / GET Variables"), colspan="2"))
         for name, value in sorted(vars.items()):
             if name in [ "_password", "password" ]:
                 value = "***"
             if not prefix or name.startswith(prefix):
-                self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
-                    (self.attrencode(name), self.attrencode(value)))
-        self.write("</table>")
+                self.tr(self.render_td(name, class_="left") + self.render_td(value, class_="right"))
+        self.close_table()
 
 
 
@@ -2730,12 +2733,12 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
         if self.times:
             self.measure_time('body')
-            self.write('<div class=execution_times>')
+            self.open_div(class_=["execution_times"])
             entries = self.times.items()
             entries.sort()
             for name, duration in entries:
-                self.write("<div>%s: %.1fms</div>" % (name, duration * 1000))
-            self.write('</div>')
+                self.div("%s: %.1fms" % (name, duration * 1000))
+            self.close_div()
 
 
     #
@@ -2803,7 +2806,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
 
         br = time.localtime(t)
         self.date_input(varname + "_date", br.tm_year, br.tm_mon, br.tm_mday, submit=submit)
-        self.write(" ")
+        self.write_text(" ")
         self.time_input(varname + "_time", br.tm_hour, br.tm_min, submit=submit)
         self.form_vars.append(varname + "_date")
         self.form_vars.append(varname + "_time")

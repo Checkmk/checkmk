@@ -450,14 +450,11 @@ multisite_commands.append({
         html.button("_acknowledge", _("Acknowledge")) == \
         html.button("_remove_ack", _("Remove Acknowledgement")) == \
         html.hr() == \
-        html.checkbox("_ack_sticky",
-                      config.view_action_defaults["ack_sticky"],
+        html.checkbox("_ack_sticky", config.view_action_defaults["ack_sticky"],
                       label=_("sticky")) == \
-        html.checkbox("_ack_notify",
-                      config.view_action_defaults["ack_notify"],
+        html.checkbox("_ack_notify", config.view_action_defaults["ack_notify"],
                       label=_("send notification")) == \
-        html.checkbox("_ack_persistent",
-                      config.view_action_defaults["ack_persistent"],
+        html.checkbox("_ack_persistent", config.view_action_defaults["ack_persistent"],
                       label=_('persistent comment')) == \
         html.hr() == \
         Age(display=["days", "hours", "minutes"], label=_("Expire acknowledgement after")).render_input("_ack_expire", 0) == \
@@ -732,7 +729,7 @@ def paint_downtime_buttons(what):
     html.write("&nbsp; "+_('to')+" &nbsp;")
     html.datetime_input("_down_to", time.time() + 7200, submit="_down_custom")
     html.hr()
-    html.checkbox("_down_flexible", False, label=_('flexible with max. duration')+" ")
+    html.checkbox("_down_flexible", False, label="%s " % _('flexible with max. duration'))
     html.time_input("_down_duration", 2, 0)
     html.write_text(" "+_('(HH:MM)'))
     if what == "host":

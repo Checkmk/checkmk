@@ -2775,8 +2775,8 @@ class HostTagAttribute(Attribute):
                 value = value + "|" + "|".join(secondary_tags)
 
         if len(choices) == 1:
-            html.checkbox(varname, value != "", cssclass = '', onclick='wato_fix_visibility();',
-                          add_attr = ["tags=%s"%choices[0][0]], label = choices[0][1])
+            html.checkbox(varname, value != "", label = choices[0][1],
+                          onclick='wato_fix_visibility();', tags=choices[0][0])
         else:
             html.select(varname, choices, value, onchange='wato_fix_visibility();')
 
@@ -2943,17 +2943,17 @@ class ContactGroupsAttribute(Attribute):
 
         if is_host:
             html.checkbox(varprefix + self._name + "_use", value["use"],
-                label = _("Add these contact groups to the host"))
+                          label = _("Add these contact groups to the host"))
 
         elif not is_search:
             html.checkbox(varprefix + self._name + "_recurse_perms", value["recurse_perms"],
-                label = _("Give these groups also <b>permission on all subfolders</b>"))
+                          label = _("Give these groups also <b>permission on all subfolders</b>"))
             html.hr()
             html.checkbox(varprefix + self._name + "_use", value["use"],
-                label = _("Add these groups as <b>contacts</b> to all hosts in this folder"))
+                          label = _("Add these groups as <b>contacts</b> to all hosts in this folder"))
             html.br()
             html.checkbox(varprefix + self._name + "_recurse_use", value["recurse_use"],
-                label = _("Add these groups as <b>contacts in all subfolders</b>"))
+                          label = _("Add these groups as <b>contacts in all subfolders</b>"))
 
         html.hr()
         html.help(_("With this option contact groups that are added to hosts are always "
@@ -2962,7 +2962,7 @@ class ContactGroupsAttribute(Attribute):
                "As long as you do not have any such rule a service always inherits all contact groups "
                "from its host."))
         html.checkbox(varprefix + self._name + "_use_for_services", value.get("use_for_services", False),
-            label = _("Always add host contact groups also to its services"))
+                      label = _("Always add host contact groups also to its services"))
 
 
     def load_data(self):

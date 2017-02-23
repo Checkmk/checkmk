@@ -184,10 +184,10 @@ def eval_func(html, function_name, arguments):
 
 # take a html object, set the state, add variables, run the function and create a test
 def build_html_test(html, function_name, arguments, state_in=None, add_vars=None):
-        add_html_vars(html, add_vars)
-        set_html_state(html, state_in)
+        add_html_vars(html, copy.deepcopy(add_vars))
+        set_html_state(html, copy.deepcopy(state_in))
         orig_attrs    = copy.deepcopy(tools.get_attributes(html))
-        return_value, expected_html = eval_func(html, function_name, arguments)
+        return_value, expected_html = eval_func(html, function_name, copy.deepcopy(arguments))
         changed_attrs = {key: val for key, val in tools.get_attributes(html).iteritems()\
                                       if key not in orig_attrs or val != orig_attrs[key]}
         return HtmlTest().create(function_name,
@@ -311,74 +311,33 @@ def get_tests_args(function_name, arguments, state_in=None):
 #######################################################################################
 
 
-# scans a text for the opening and closing {} braces.
-# returns the intermediate text and the end index of the finding
-def readout_next_dict(text, start_index = 0):
-    begindex     = start_index
-    index        = start_index
-    bracecounter = 0
-    while index < len(text) - 1:
-        if text[index] == '{':
-            if bracecounter == 0:
-                begindex = index
-            bracecounter += 1
-        elif text[index] == '}':
-            bracecounter -= 1
-            if bracecounter == 0:
-                return text[begindex:(index+1)], index + 1
-        index += 1
-    return text, len(text)
+# cmk_version in ["running", "old"]
+def load_gentest_file(test_name, cmk_version = "running"):
+    assert test_name, "Specify a test file using the '--testfile $name' option!"
+    genpath = cmk_path() + "/tests/web/unittest_generation/"
+    ending  = ".testgen"
+    filename = "%s/%s.%s" % (genpath.rstrip('/'), test_name, ending.lstrip('.'))
+    try:
+        with open(filename, "r") as tfile:
+            test = ast.literal_eval(tfile.read())
+    except Exception, e:
+        print tools.bcolors.WARNING + "\nERROR: No gentest file for test '%s'.\n" % test_name \
+               + "Generate a test file first (see README for more details!)\n"
+        raise e
 
+    function_name  = test.get("function_name", test_name)
+    arguments  = test.get("arguments", {})
+    states_in  = test.get("attributes", {})
+    add_vars   = test.get("variables", {})
 
-def readout_gentest_file(filename):
-    text = ''
-    # read filename
-    with open(filename, "r") as f:
-        function_name = ast.literal_eval(f.readline().split('=')[1].strip())
-        text = f.read().lstrip()
-    # read arguments and states
-    arguments, start_index = readout_next_dict(text)
-    states_in, start_index = readout_next_dict(text, start_index)
-    return function_name, arguments, states_in
-
-
-def create_tests_from_file(filename):
-    function_name, arguments, states_in = readout_gentest_file(filename)
-    # evaluate dictionaries
-    print states_in
-    arguments = ast.literal_eval(arguments)
-    states_in = ast.literal_eval(states_in)
-    assert isinstance(arguments, dict)
-    assert isinstance(states_in, dict)
-    # build cartesian products if necessary
-    arguments = get_cartesian_product(arguments)\
-                if all(isinstance(val, list) for val in arguments.values())\
-                else [arguments]
-    states_in = get_cartesian_product(states_in)\
-                if all(isinstance(val, list) for val in states_in.values())\
-                else [states_in]
-    # build tests
-    tests = [build_cmk_test(function_name, args, s_in) for args in arguments for s_in in states_in]
+    tests = []
+    build_test = build_orig_test if cmk_version == "old" else build_cmk_test
+    for args in get_cartesian_product(arguments):
+        for s_in in get_cartesian_product(states_in):
+            for vars in get_cartesian_product(add_vars):
+                tests.append(build_test(function_name, args, s_in, vars))
     # save the tests to file and write out
     testfile = save_html_test(filename.split('/')[-1].split('.')[0], tests)
-    assert testfile
-    print tools.bcolors.HEADER + tools.bcolors.BOLD\
-            + "\nSUCCESS: Unittestfile %s successfully generated!\n" % testfile\
-            + tools.bcolors.ENDC
-
-
-def generate_tests(filepath = "all", file_ending = ".testgen"):
-    assert filepath, "Specify a test file using the '--testfile $name' option!"
-
-    if filepath.endswith(file_ending):
-        create_tests_from_file(filepath)
-    elif filepath == "all":
-        genpath = cmk_path() + "/tests/web/unittest_generation/"
-        onlyfiles = [f for f in listdir(genpath) if f.endswith(".testgen") and isfile(join(genpath, f))]
-        for testfile in onlyfiles:
-            create_tests_from_file(genpath + testfile)
-    else:
-        assert filepath == "all" or filepath.endswith(file_ending)
 
 
 def run_all_generated_tests(file_ending = ".testgen"):
@@ -388,3 +347,5 @@ def run_all_generated_tests(file_ending = ".testgen"):
         tests = load_html_test(test_name.rstrip(file_ending), test_files_dir = "%s/tests/web/unittest_files" % cmk_path())
         for test in tests:
             test.run()
+
+

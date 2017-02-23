@@ -1539,7 +1539,7 @@ class Checkbox(ValueSpec):
 
     def render_input(self, varprefix, value):
         self.classtype_info()
-        html.checkbox(varprefix, value, label = self._label, onclick=self._onclick)
+        html.checkbox(varprefix, value, label=self._label, onclick=self._onclick)
 
     def value_to_text(self, value):
         return self._true_label if value else self._false_label
@@ -2015,7 +2015,7 @@ class ListChoice(ValueSpec):
                     html.close_tr()
                 html.open_tr()
             html.open_td()
-            html.checkbox("%s_%d" % (varprefix, nr), key in value, label = title)
+            html.checkbox("%s_%d" % (varprefix, nr), key in value, label=title)
             html.close_td()
         html.close_tr()
         html.close_table()
@@ -2934,10 +2934,9 @@ class Optional(ValueSpec):
         else:
             label = _(" Activate this option")
 
-        html.checkbox(varprefix + "_use" , checked,
+        html.checkbox("%s_use" % varprefix, checked, label=label,
                       onclick="valuespec_toggle_option(this, %r, %r)" %
-                         (div_id, 1 if self._negate else 0),
-                      label = label)
+                         (div_id, 1 if self._negate else 0))
 
         if self._sameline:
             html.nbsp()
@@ -3010,11 +3009,10 @@ class OptionalEdit(Optional):
         else:
             label = _(" Activate this option")
 
-        html.checkbox(varprefix + "_use" , checked,
+        html.checkbox("%s_use" % varprefix, checked, label=label,
                       onclick="valuespec_toggle_option(this, %r, %r);valuespec_toggle_option(this, %r, %r)" %
                          (div_id + '_on', 1 if self._negate else 0,
-                          div_id + '_off', 0 if self._negate else 1),
-                      label = label)
+                          div_id + '_off', 0 if self._negate else 1))
 
         html.nbsp()
         html.close_span()
@@ -3387,9 +3385,8 @@ class Dictionary(ValueSpec):
                 if self._columns == 2:
                     label += ":"
                     colon_printed = True
-                html.checkbox(vp + "_USE", param in value,
-                              onclick="valuespec_toggle_option(this, %r)" % div_id,
-                              label=label)
+                html.checkbox("%s_USE" % vp, param in value, label=label,
+                              onclick="valuespec_toggle_option(this, %r)" % div_id)
             else:
                 visible = True
                 if vs.title():

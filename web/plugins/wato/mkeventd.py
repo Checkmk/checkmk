@@ -1932,7 +1932,7 @@ def show_mib_table(path, title):
             table.cell("<input type=button class=checkgroup name=_toggle_group"
                        " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'),
                        sortable=False, css="buttons")
-            html.checkbox("_c_mib_%s" % filename)
+            html.checkbox("_c_mib_%s" % filename, deflt=False)
 
         table.cell(_("Actions"), css="buttons")
         if is_custom_dir:

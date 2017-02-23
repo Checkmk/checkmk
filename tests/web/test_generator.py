@@ -39,6 +39,10 @@ def test_HTMLGenerator():
         html.close_table()
         assert tools.compare_html(html.drain(), "<table><tr><td>1</td><td>2</td></tr></table>")
 
+    with html.plugged():
+        html.div("test", **{"</div>malicious_code<div>": "trends"})
+        assert tools.compare_html(html.drain(), "<div &lt;/div&gt;malicious_code&lt;div&gt;=trends>test</div>")
+
     a = u"\u2665"
     with html.plugged():
         assert html.render_a("test", href="www.test.case")
@@ -50,6 +54,15 @@ def test_HTMLGenerator():
         except Exception, e:
             print traceback.print_exc()
             print e
+
+
+def test_multiclass_call():
+    html = HTMLGenerator()
+    html.plug()
+
+    with html.plugged():
+        html.div('', class_="1", css="3", cssclass = "4", **{"class": "2"})
+        assert tools.compare_html(html.drain(), "<div class=\"1 3 4 2\"></div>")
 
 
 def test_exception_handling():

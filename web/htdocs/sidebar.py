@@ -807,10 +807,14 @@ class LivestatusQuicksearch(object):
         self._determine_used_filters()
         self._execute_livestatus_command()
 
-        # If no rows were found with the given (filterless) query, issue a service query
+        # If no rows were found with the given (filterless) query, issue
+        # -> Hostaddress -> Hostalias -> Service description
         if not self._rows and self._no_filters_set:
-            self._used_filters = {"s": [self._query]}
-            self._execute_livestatus_command()
+            for try_filter in ["ad", "al", "s"]:
+                self._used_filters = {try_filter: [self._query]}
+                self._execute_livestatus_command()
+                if self._rows:
+                    break
 
 
     def _determine_used_filters(self):

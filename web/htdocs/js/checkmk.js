@@ -2684,7 +2684,7 @@ function view_dial_option(oDiv, viewname, option, choices) {
 // way ranges from -10 to 10 means centered (normal place)
 function turn_dial(option, text, way, direction)
 {
-    var oDiv = document.getElementById("optiondial_" + option).firstChild;
+    var oDiv = document.getElementById("optiondial_" + option).getElementsByTagName("DIV")[0];
     if (text && oDiv.innerHTML != text)
         oDiv.innerHTML = text;
     oDiv.style.top = (way * 1.3 * direction) + "px";

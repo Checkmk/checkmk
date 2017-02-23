@@ -1,0 +1,12 @@
+Title: statgrab_mem: Fixed wrong calculation of swap
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1487861468
+Class: fix
+
+In the past there has been a bug in statgrab which led into a wrong calculation
+of swap. This bug is solved in statgrab since version 0.14. If you have
+problems consider updating your statgrab.

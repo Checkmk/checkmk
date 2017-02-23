@@ -1,0 +1,25 @@
+Title: check_mk_agent.aix, check_mk_agent.linux, check_mk_agent.solaris: Agents use either default MK_[LIB/CONF/VAR]DIR variables or environmental variables if configured
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488966063
+
+
+On AIX the default variables are
+MK_LIBDIR  /usr/check_mk/lib
+MK_CONFDIR /usr/check_mk/conf
+MK_VARDIR  /tmp/check_mk
+
+On Linux the default variables are
+MK_LIBDIR  /usr/lib/check_mk_agent
+MK_CONFDIR /etc/check_mk
+MK_VARDIR  /var/lib/check_mk_agent
+
+On Solaris the default variables are
+MK_LIBDIR  /usr/lib/check_mk_agent"
+MK_CONFDIR /etc/check_mk"
+MK_VARDIR  /var/lib/check_mk_agent"

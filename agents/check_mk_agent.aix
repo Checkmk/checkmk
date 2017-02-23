@@ -34,9 +34,9 @@ fi
 export LC_ALL=C
 unset LANG
 
-export MK_LIBDIR="/usr/check_mk/lib"
-export MK_CONFDIR="/usr/check_mk/conf"
-export MK_VARDIR="/tmp/check_mk"
+export MK_LIBDIR=${MK_LIBDIR-/usr/check_mk/lib}
+export MK_CONFDIR=${MK_CONFDIR-/usr/check_mk/conf}
+export MK_VARDIR=${MK_VARDIR-/tmp/check_mk}
 
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own

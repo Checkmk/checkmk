@@ -3467,6 +3467,28 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "netapp_systemtime",
+    _("Netapp systemtime"),
+    Dictionary(
+        elements = [
+            ( "levels", Tuple(
+                title    = _("Set upper levels for the time difference"),
+                help     = _("Here you can Set upper levels for the time difference "
+                             "between agent and system time."),
+                elements = [
+                    Age(title = _("Warning if at")),
+                    Age(title = _("Critical if at")),
+            ])),
+    ]),
+    TextAscii(
+        title = _("Name of the node"),
+        allow_empty = False,
+    ),
+    match_type = "dict",
+)
+
+register_check_parameters(
    subgroup_applications,
     "jvm_sessions",
     _("JVM session count"),

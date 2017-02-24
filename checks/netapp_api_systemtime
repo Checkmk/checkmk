@@ -1,0 +1,75 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# 7 mode
+# <<<netapp_api_systemtime:sep(9)>>>
+# name 76123    123
+
+# Cluster mode
+# <<<netapp_api_systemtime:sep(9)>>>
+# node1 76123   123123
+# node2 7612311 123123
+
+
+def inventory_netapp_api_systemtime(info):
+    for line in info:
+        yield line[0], {}
+
+
+def check_netapp_api_systemtime(item, params, info):
+    for line in info:
+        if line[0] == item:
+            agent_time  = int(line[1])
+            system_time = int(line[2])
+            timediff    = agent_time - system_time
+            warn, crit  = params.get("levels", (None, None))
+
+            if crit is not None and timediff >= crit:
+                state = 2
+            elif warn is not None and timediff >= warn:
+                state = 1
+            else:
+                state = 0
+
+            infotext = "System time: %s, Time difference: %s" % \
+                       (get_timestamp_human_readable(system_time),
+                        get_age_human_readable(timediff))
+
+            if state > 0:
+                infotext += " (warn/crit at %s/%s)" % (
+                            get_age_human_readable(warn),
+                            get_age_human_readable(crit))
+
+            return state, infotext
+
+
+check_info['netapp_api_systemtime'] = {
+    'inventory_function'    : inventory_netapp_api_systemtime,
+    'check_function'        : check_netapp_api_systemtime,
+    'service_description'   : 'Systemtime %s',
+    'group'                 : 'netapp_systemtime'
+}

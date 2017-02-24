@@ -35,7 +35,9 @@ def scan_didactum(oid):
 def parse_didactum_sensors(info):
     map_states = {
         "alarm"         : 2,
+        "high alarm"    : 2,
         "warning"       : 1,
+        "high warning"  : 1,
         "normal"        : 0,
         "not connected" : 3,
         "on"            : 0,
@@ -55,9 +57,16 @@ def parse_didactum_sensors(info):
             except:
                 value = value_str
 
+        if status in map_states:
+            state = map_states[status]
+            state_readable = status
+        else:
+            state = 3
+            state_readable = "unknown[%s]" % status
+
         parsed[ty].setdefault(name, {
-            "state"          : map_states.get(status, 3),
-            "state_readable" : status,
+            "state"          : state,
+            "state_readable" : state_readable,
             "value"          : value,
         })
 

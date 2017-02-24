@@ -1,0 +1,12 @@
+Title: Views: Fixed datasource KeyError exception
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p18
+Date: 1487928038
+Class: fix
+
+When e.g. a Event Console related view was added to a dashboard and
+then the Event Console was disabled or that site, this could lead
+into a KeyError exception when rendering the dashboard, because the
+datasource was not existant anymore.

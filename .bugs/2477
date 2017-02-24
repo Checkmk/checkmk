@@ -1,0 +1,13 @@
+Title: Drop the "site icons" feature
+Component: multisite
+State: open
+Date: 2017-02-24 10:03:00
+Targetversion: 1.5.0
+Class: nastiness
+
+There is a annicient and now hidden feature "site icons". The user can set the option
+use_siteicons = True in the multisite.mk and put an icon named like this into the
+images/icons directory: icons/site-%s-24.png.
+
+This can currently not be configured via WATO. Remove this feature, because this can
+be configured using the custom host/service icon feature these days via WATO.

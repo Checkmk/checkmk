@@ -162,8 +162,11 @@ def reporting_available():
 
 
 def combined_graphs_available():
-    # HIRN: Really detect
-    return True
+    try:
+        have_combined_graphs
+        return True
+    except:
+        return False
 
 
 def hide_language(lang):

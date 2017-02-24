@@ -23,10 +23,6 @@
      sonst stacked.
 
 
-[11] Erkennung ob combined_graphs möglich sind (web/htdocs/config.py)
-     sauber machen.
-
-
 [12] Limit auf Menge der dargestellten Objekte.
 
 
@@ -44,9 +40,15 @@
 [17] au: Explizite Reihenfolge der Knöpfe festlegen.
 
 
-[18] Default festlegen, wenn man auf die Seite kommt. Sollen wir einfach "Summe"
-     nehmen?
+[18] au: Default festlegen, wenn man auf die Seite kommt. Wenn die Variable
+     "presentation" nicht da ist, soll er einfache "Summe" nehmen. Bei
+     den Links von den Views dann "presentation" weglassen.
 
 
-[19] Umswitchen der Darstellungsarten über die Knöpfe soll den gewählten Zeitbereich beibehalten.
-     Geht das überhaupt?
+[19] Umswitchen der Darstellungsarten über die Knöpfe soll den gewählten
+     Zeitbereich beibehalten.  Geht das überhaupt?
+
+
+[20] Test CEE mit Nagios als Kern
+
+[21] Test CRE (Knopf darf nicht kommen)

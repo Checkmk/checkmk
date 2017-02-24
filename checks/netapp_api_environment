@@ -1,0 +1,56 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<netapp_api_environment:sep(9)>>>
+# sensor-name PSU1 FAULT  sensor-type discrete    node-name BIN-CL1-N1    discrete-sensor-value OK    discrete-sensor-state normal    threshold-sensor-state normal
+
+def inventory_netapp_api_environment(parsed):
+    for key, values in parsed.items():
+        # Let's hope this simple match catches all PSU FAULTs..
+        if "FAULT" in key:
+            item_name = "%s / %s" % (values.get("node-name"), values.get("sensor-name").replace(" FAULT", ""))
+            yield item_name, None
+
+def check_netapp_api_environment(item, _no_params, parsed):
+    psu = parsed.get("%s.%s" % tuple(item.split(" / ")))
+    if not psu:
+        return
+
+    state = 0
+    if psu.get("discrete-sensor-state") != "normal":
+        state = 2
+
+    yield state, "Sensor state: %s, Sensor value: %s" % \
+            (psu["discrete-sensor-state"], psu["discrete-sensor-value"])
+
+
+check_info["netapp_api_environment"] = {
+    'check_function'      : check_netapp_api_environment,
+    'inventory_function'  : inventory_netapp_api_environment,
+    'parse_function'      : lambda info: netapp_api_parse_lines(info, custom_keys = ["node-name", "sensor-name"]),
+    'service_description' : 'PSU Controller %s',
+    'includes'            : ["netapp_api.include"]
+}

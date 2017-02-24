@@ -38,6 +38,7 @@ void char_replace(char what, char into, char *in) {
 SectionDF::SectionDF()
     : Section("df")
 {
+    withSeparator('\t');
 }
 
 void SectionDF::output_filesystem(std::ostream &out, char *volid) {
@@ -65,12 +66,12 @@ void SectionDF::output_filesystem(std::ostream &out, char *volid) {
         else
             strncpy(volume, volid, sizeof(volume));
 
-        out << volume << " "
-            << fsname << " "
-            << (total.QuadPart / KiloByte) << " "
-            << (total.QuadPart - free_avail.QuadPart) / KiloByte << " "
-            << (free_avail.QuadPart / KiloByte) << " "
-            << std::fixed << std::setprecision(0) << perc_used << " "
+        out << volume << "\t"
+            << fsname << "\t"
+            << (total.QuadPart / KiloByte) << "\t"
+            << (total.QuadPart - free_avail.QuadPart) / KiloByte << "\t"
+            << (free_avail.QuadPart / KiloByte) << "\t"
+            << std::fixed << std::setprecision(0) << perc_used << "\t"
             << volid
             << "\n";
     }

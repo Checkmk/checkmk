@@ -1,0 +1,13 @@
+Title: Windows agent fileinfo monitoring: Now able to configure globbing patterns for subdirectories
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1487927566
+Class: feature
+
+Previously you could only configure globbing patterns on the filename level. E.g. C:\test\mylog2017*.txt.
+
+
+This new feature enables globbing patterns for paths, too. E.g. C:\test\archive-2017-*\summary?.log.

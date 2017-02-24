@@ -1,0 +1,11 @@
+Title: Fixed broken GUI when deleting local/share/check_mk/web/plugins dir
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1487929499
+
+An exception "OSError ([Errno 2] No such file or directory: '/omd/sites/shl/local/share/check_mk/web/plugins/')" prevented use of the GUI at all when deleting the directory.

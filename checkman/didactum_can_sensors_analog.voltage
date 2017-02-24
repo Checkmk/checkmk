@@ -1,0 +1,17 @@
+title: Didactum devices: Voltage
+agents: snmp
+catalog: hw/environment/didactum
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the voltage of CAN sensors of Didactum devices
+ which support the DIDACTUM-SYSTEM-MIB.
+
+ The device sends its own state. Lower levels are
+ configurable.
+
+item:
+ The sensor identifier.
+
+inventory:
+ One service per sensor is created.

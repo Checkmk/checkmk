@@ -3,9 +3,6 @@
     au: im Graphdesigner das Average auch einbauen.
 
 
-[4] Titel der Graphen selbst
-
-
 [6] Graph zu Dashboard hinzufügen.
 
 
@@ -19,8 +16,10 @@
 
 
 [10] Graphen mit mehreren Areas, saubere Stacks bilden.
-     Wenn die erste metrik line oder area ist, nimmt man area,
-     sonst stacked.
+     Wenn die erste Metrik line oder area ist, nimmt man area,
+     sonst stacked. Beispiel zum Testen: Filesystem-Graph. Bei Sum kommt
+     aktuell nur die Hälfte raus wie bei Stacked - sollte aber ja das
+     gleiche Ergebnis zeigen.
 
 
 [12] Limit auf Menge der dargestellten Objekte.

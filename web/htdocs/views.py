@@ -1466,7 +1466,18 @@ def show_view(view, show_heading = False, show_buttons = True,
     show_checkboxes = force_checkboxes or html.var('show_checkboxes', '0') == '1'
 
     # Get the datasource (i.e. the logical table)
-    datasource = multisite_datasources[view["datasource"]]
+    try:
+        datasource = multisite_datasources[view["datasource"]]
+    except KeyError:
+        if view["datasource"].startswith("mkeventd_"):
+            raise MKUserError(None,
+                _("The Event Console view '%s' can not be rendered. The Event Console is possibly "
+                  "disabled.") % view["name"])
+        else:
+            raise MKUserError(None,
+                _("The view '%s' using the datasource '%s' can not be rendered "
+                  "because the datasource does not exist.") % (view["name"], view["datasource"]))
+
     tablename = datasource["table"]
 
     # Filters to use in the view

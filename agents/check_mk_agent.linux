@@ -203,7 +203,7 @@ function run_real_time_checks()
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.8p18
+echo Version: 1.2.8p19
 echo AgentOS: linux
 echo Hostname: $HOSTNAME
 echo AgentDirectory: $MK_CONFDIR

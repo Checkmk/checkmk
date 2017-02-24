@@ -489,13 +489,13 @@ multisite_painters["host_icons"] = {
 #   '----------------------------------------------------------------------'
 
 def paint_site_icon(row):
-    if row["site"] and config.use_siteicons:
+    if row.get("site") and config.use_siteicons:
         return None, "<img class=siteicon src=\"icons/site-%s-24.png\">" % row["site"]
     else:
         return None, ""
 
 multisite_painters["site_icon"] = {
-    "title"   : _("Icon showing the site"),
+    "title"   : _("Site icon"),
     "short"   : "",
     "columns" : ["site"],
     "paint"   : paint_site_icon,

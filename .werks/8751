@@ -1,0 +1,10 @@
+Title: netapp_api_system_time: new check which monitors the age of Netapp devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1487835373
+Class: feature
+
+

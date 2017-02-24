@@ -1,0 +1,16 @@
+Title: Fixed exception in BI views when using site icons
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1487927077
+
+There is a annicient and now hidden feature "site icons". The user can set the option
+use_siteicons = True in the multisite.mk and put an icon named like this into the
+images/icons directory: icons/site-%s-24.png.
+
+When this is enabled and the sites icon painter is added to a BI view, this leads
+to an exception. That the "site" key is not available.

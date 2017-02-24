@@ -38,6 +38,7 @@
 
     HW/SW-Inventory:
     * 3918 FIX: Inventory history: Fixed possible exception when renedering history tables...
+    * 4395 FIX: Inventory filters: Fixed error handling when entering invalid regexes
 
 
 1.2.8p17:

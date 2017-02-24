@@ -36,8 +36,10 @@ def parse_didactum_sensors(info):
     map_states = {
         "alarm"         : 2,
         "high alarm"    : 2,
+        "low alarm"     : 2,
         "warning"       : 1,
         "high warning"  : 1,
+        "low warning"   : 1,
         "normal"        : 0,
         "not connected" : 3,
         "on"            : 0,
@@ -83,3 +85,23 @@ def parse_didactum_sensors(info):
 def inventory_didactum_sensors(parsed, what):
     return [ (sensorname, {}) for sensorname, attrs in parsed.get(what, {}).items()
              if attrs["state_readable"] not in [ "off", "not connected" ] ]
+
+
+def check_didactum_sensors_temp(item, params, parsed):
+    if item in parsed["temperature"]:
+        data = parsed["temperature"][item]
+        return check_temperature(data["value"], params, "didactum_can_sensors_analog_temp.%s" % item,
+               dev_levels = data["levels"], dev_levels_lower = data["levels_lower"],
+               dev_status = data["state"],  dev_status_name  = data["state_readable"])
+
+
+def check_didactum_sensors_humidity(item, params, parsed):
+    if item in parsed["humidity"]:
+        return check_humidity(parsed["humidity"][item]["value"], params)
+
+
+def check_didactum_sensors_voltage(item, params, parsed):
+    if item in parsed["voltage"]:
+        data = parsed["voltage"][item]
+        return check_elphase(item, params, {
+            item : { "voltage" : (data["value"], (data["state"], data["state_readable"])) }})

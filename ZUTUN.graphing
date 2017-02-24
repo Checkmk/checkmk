@@ -5,16 +5,6 @@
     zu machen.
 
 
-[2] mk: Farbabstufungen für "lines":
-    mk: Hier einfach auf die Originalfarben ganz verzichten und
-    mk: Palettenfarben verwenden. Dazu den Code angucken, wo wir
-    mk: die Palatte definieren ("21/a", "22/a", ....). Daraus einen
-    mk: Kreis bauen. Dann die Anzahl der Punkte im Kreis durch die
-    mk: Anzahl der Kurven teilen und die Abstände dadurch so groß
-    mk: wie möglich machen. Wenn wir mehr Kurven als Farben haben,
-    mk: müssen wir mehrfach im Kreis "rumfahren".
-
-
 [3] au: Implementierung von "Average": einfach die kleine Funktion
     au: schreiben, die auch None korrekt berücksichtig. Dann
     au: im Graphdesigner das Average auch einbauen.

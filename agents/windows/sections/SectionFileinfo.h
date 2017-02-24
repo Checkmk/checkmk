@@ -44,9 +44,15 @@ protected:
     virtual bool produceOutputInner(std::ostream &out,
                                     const Environment &env) override;
 private:
+    std::vector<std::string> _found_files;
+    std::vector<std::string> _temp_files;
+    void get_directories(const std::string base_path);
+    void determine_filepaths(const std::string search_pattern);
+    void determine_filepaths_full_search(const std::string base_path, const std::string search_pattern);
+    void determine_filepaths_simple_search(const std::string base_path, const std::string search_pattern);
+
     void outputFileinfos(std::ostream &out, const char *path);
-    bool outputFileinfo(std::ostream &out, const char *basename,
-                     WIN32_FIND_DATA *data);
+    bool outputFileinfo(std::ostream &out, const std::string filename);
 };
 
 #endif  // SectionFileinfo_h

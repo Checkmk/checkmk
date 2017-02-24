@@ -334,6 +334,19 @@ def lighten_color(rgb, v):
     return tuple([ lighten(x, v) for x in rgb ])
 
 
+def fade_color(rgb, v):
+    gray = rgb_to_gray(rgb)
+    if gray > 0.5:
+        return darken_color(rgb, v)
+    else:
+        return lighten_color(rgb, v)
+
+
+def rgb_to_gray(rgb):
+    r, g, b = rgb
+    return 0.21 * r + 0.72 * g + 0.07  * b
+
+
 def mix_colors(a, b):
     return tuple([
        (ca + cb) / 2.0

@@ -36,6 +36,9 @@
     * 4031 FIX: LVM Volume Groups: fixed broken WATO configuration...
             NOTE: Please refer to the migration notes!
 
+    BI:
+    * 4396 FIX: Fixed exception in BI views when using site icons...
+
     HW/SW-Inventory:
     * 3918 FIX: Inventory history: Fixed possible exception when renedering history tables...
     * 4395 FIX: Inventory filters: Fixed error handling when entering invalid regexes

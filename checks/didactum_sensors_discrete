@@ -43,7 +43,11 @@
 # .1.3.6.1.4.1.46501.5.1.1.7.101004 0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretValue.101004
 
 
-def check_didactum_sensors_discrete(item, params, parsed):
+def inventory_didactum_sensors_discrete_dry(parsed):
+    return inventory_didactum_sensors(parsed, "dry")
+
+
+def check_didactum_sensors_discrete_dry(item, params, parsed):
     if item in parsed.get("dry", {}):
         data = parsed["dry"][item]
         return data["state"], "Status: %s" % data["state_readable"]
@@ -51,8 +55,8 @@ def check_didactum_sensors_discrete(item, params, parsed):
 
 check_info['didactum_sensors_discrete'] = {
     'parse_function'        : parse_didactum_sensors,
-    'inventory_function'    : lambda parsed: inventory_didactum_sensors(parsed, "dry"),
-    'check_function'        : check_didactum_sensors_discrete,
+    'inventory_function'    : inventory_didactum_sensors_discrete_dry,
+    'check_function'        : check_didactum_sensors_discrete_dry,
     'service_description'   : 'Discrete sensor %s',
     'snmp_info'             : ('.1.3.6.1.4.1.46501.5.1.1', [
                                     "4",    # DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretType

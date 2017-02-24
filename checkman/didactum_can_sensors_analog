@@ -1,0 +1,17 @@
+title: Didactum devices: Temperature
+agents: snmp
+catalog: hw/environment/didactum
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature CAN sensors of Didactum devices
+ which support the DIDACTUM-SYSTEM-MIB.
+
+ The device sends its own upper and lower levels. These are
+ configurable.
+
+item:
+ The temperature sensor identifier.
+
+inventory:
+ One service per sensor is created.

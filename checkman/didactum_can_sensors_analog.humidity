@@ -1,0 +1,16 @@
+title: Didactum devices: Humidity
+agents: snmp
+catalog: hw/environment/didactum
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the humidity CAN sensors of Didactum devices
+ which support the DIDACTUM-SYSTEM-MIB.
+
+ No default levels are set. Upper and lower levels are configurable.
+
+item:
+ The humidity sensor identifier.
+
+inventory:
+ One service per sensor is created.

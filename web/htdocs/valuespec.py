@@ -1318,7 +1318,7 @@ class ListOf(ValueSpec):
 
 
     def get_indexes(self, varprefix):
-        count = int(html.var(varprefix + "_count"))
+        count = int(html.var(varprefix + "_count", 0))
         n = 1
         indexes = {}
         while n <= count:

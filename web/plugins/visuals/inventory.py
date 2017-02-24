@@ -54,7 +54,13 @@ class FilterInvtableText(Filter):
         if not filtertext:
             return rows
 
-        regex = re.compile(filtertext, re.IGNORECASE)
+        try:
+            regex = re.compile(filtertext, re.IGNORECASE)
+        except re.error:
+            raise MKUserError(htmlvar,
+              _('You search statement is not valid. You need to provide a regular '
+                'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
+                'if you like to search for a single backslash.'))
 
         newrows = []
         for row in rows:
@@ -332,7 +338,13 @@ class FilterInvText(Filter):
         if not filtertext:
             return rows
 
-        regex = re.compile(filtertext, re.IGNORECASE)
+        try:
+            regex = re.compile(filtertext, re.IGNORECASE)
+        except re.error:
+            raise MKUserError(htmlvar,
+              _('You search statement is not valid. You need to provide a regular '
+                'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
+                'if you like to search for a single backslash.'))
 
         newrows = []
         for row in rows:
@@ -487,7 +499,13 @@ class FilterInvHasSoftwarePackage(Filter):
         negate       = html.get_checkbox(self._varprefix + "negate")
         match        = html.var(self._varprefix + "match")
         if match == "regex":
-            name = re.compile(name)
+            try:
+                name = re.compile(name)
+            except re.error:
+                raise MKUserError(self._varprefix + "name",
+                  _('You search statement is not valid. You need to provide a regular '
+                    'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
+                    'if you like to search for a single backslash.'))
 
         new_rows = []
         for row in rows:

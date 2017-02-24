@@ -1,0 +1,11 @@
+Title: new check netapp_api_environment (cluster mode only): allows monitoring of PSU faults
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b3
+Date: 1487939170
+
+

@@ -1133,6 +1133,14 @@ try:
                 if node in ha_partners:
                     processed_nodes.append(ha_partners[node])
 
+
+        # Controller Status
+        enviroment = query("environment-sensors-get-iter")
+        if enviroment:
+            print "<<<netapp_api_enviroment>>>"
+            print format_config(enviroment, "sensor-name", "sensor-name")
+
+
         # Qtree quota usage
         quota_info = query("quota-report-iter")
         if quota_info:

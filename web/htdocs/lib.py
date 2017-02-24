@@ -239,7 +239,16 @@ def find_local_web_plugins():
         return
 
     basedir = defaults.omd_root + "/local/share/check_mk/web/plugins/"
-    for plugins_dir in os.listdir(basedir):
+
+    try:
+        plugin_dirs = os.listdir(basedir)
+    except OSError, e:
+        if e.errno == 2:
+            return
+        else:
+            raise
+
+    for plugins_dir in plugin_dirs:
         dir_path = basedir + plugins_dir
         yield dir_path # Changes in the directory like deletion of files!
         if os.path.isdir(dir_path):

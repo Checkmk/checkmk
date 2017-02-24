@@ -1,0 +1,10 @@
+Title: Inventory filters: Fixed error handling when entering invalid regexes
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.4.0b3
+Date: 1487924766
+Class: fix
+
+

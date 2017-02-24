@@ -6,14 +6,6 @@
 [4] Titel der Graphen selbst
 
 
-[5] au: Titel der einzelnen Metriken. Hierbei berücksichtigen,
-    au: ob alle Kurven vom gleichen Host oder Service kommen.
-    au: Frage klären, ob eventuell sogar der Name der Metrik
-    au: auch weggealssen wird - z.B. wenn der Graph nur eine
-    au: einzige Metrik zeigt und diese schon im Graph-Titel
-    au: zu sehen ist.
-
-
 [6] Graph zu Dashboard hinzufügen.
 
 

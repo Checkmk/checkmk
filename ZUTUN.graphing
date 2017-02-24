@@ -1,10 +1,3 @@
-[1] Farbabstufungen "stacked".
-    "stacked": Pro Farbe zwei Schattierungen. Bei den hellen
-    Farben eine dunklere. Bei den dunklen Farben eine hellere.
-    Es gibt schon Funktionen, um eine Farbe dunkler bzw. heller
-    zu machen.
-
-
 [3] au: Implementierung von "Average": einfach die kleine Funktion
     au: schreiben, die auch None korrekt berücksichtig. Dann
     au: im Graphdesigner das Average auch einbauen.

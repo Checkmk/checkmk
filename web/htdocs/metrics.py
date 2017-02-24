@@ -348,7 +348,7 @@ def parse_perf_data(perf_data_string, check_command=None):
             while len(value_parts) < 5:
                 value_parts.append(None)
             value_text, warn, crit, min, max = value_parts[0:5]
-            if value_text == "":
+            if value_text.strip() == "":
                 continue # ignore useless empty variable
 
             # separate value from unit
@@ -358,6 +358,8 @@ def parse_perf_data(perf_data_string, check_command=None):
                 i += 1
 
             unit_name = value_text[i:]
+            if value_text[:i] == "":
+                continue
             value = float_or_int(value_text[:i])
 
             perf_data.append((varname, value, unit_name, warn, crit, min, max))

@@ -1,0 +1,12 @@
+Title: Views: Fixed graph showing views of services with invalid perfdata
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p18
+Date: 1487930278
+Class: fix
+
+Some checks that produced invalid perfdata like 'key=" "' were causing the
+metric parsing to crash with a "IndexError (list index out of range)" error.
+
+The metric parsing is now skipping those invalid values.

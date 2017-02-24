@@ -137,6 +137,13 @@ class CMKVersion(object):
             raise Exception("Failed to load package: %s" % self.package_url())
         file(temp_package_path, "w").write(response.content)
 
+        # The following gdebi call will fail in case there is another package
+        # manager task being active. Try to wait for other task to finish. Sure
+        # this is not race free, but hope it's sufficient.
+        while os.system("sudo fuser /var/lib/dpkg/lock >/dev/null 2>&1") >> 8 == 0:
+            print("Waiting for other dpkg process to complete...\n")
+            time.sleep(1)
+
         cmd = "sudo /usr/bin/gdebi --non-interactive %s" % temp_package_path
         print(cmd)
         sys.stdout.flush()

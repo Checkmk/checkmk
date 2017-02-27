@@ -55,47 +55,41 @@
 # }
 
 def parse_juniper_trpz_aps_sessions(info):
+    access_points, radios = info
     parsed = {}
-    count = 0
-    for node in range(len(info)/2):
-        # This is needed cause of node_info
-        access_points = info[node+count][1:]
-        radios        = info[node+count+1][1:]
-        count += 1
-        for end_oid, status, name in access_points:
-            # 10 means that that accesspoint is located on the
-            # other cluster part. Use custered_services to see all APs
-            if int(status) != 10:
-                name = name.replace('AP-','')
-                parsed[name] = {
-                    'end_oid'    : end_oid,
-                    'status'     : int(status),
-                    'radios'     : {},
-                }
+    for node, end_oid, status, name in access_points:
+        # 10 means that that accesspoint is located on the
+        # other cluster part. Use custered_services to see all APs
+        if int(status) != 10:
+            name = name.replace('AP-','')
+            parsed[name] = {
+                'node_info' : node,
+                'end_oid'   : end_oid,
+                'status'    : int(status),
+                'radios'    : {},
+            }
 
-        for data in radios:
-            radio_oid, radio_number = data[0].rsplit('.', 1)
-            for ap_name, ap_data in parsed.items():
-                if radio_oid == parsed[ap_name]['end_oid']:
-                    ap_data['radios'][radio_number] = {
-                        'counters'    : map(int, data[1:-2]),
-                        'sessions'    : int(data[-2]),
-                        'noise_floor' : int(data[-1]),
-                    }
+    for data in radios:
+        radio_oid, radio_number = data[1].rsplit('.', 1)
+        for ap_name, ap_data in parsed.items():
+            if radio_oid == parsed[ap_name]['end_oid']:
+                ap_data['radios'][radio_number] = {
+                    'counters'    : map(int, data[2:-2]),
+                    'sessions'    : int(data[-2]),
+                    'noise_floor' : int(data[-1]),
+                }
 
     return parsed
 
 
-def inventory_juniper_trpz_aps_sessions(info):
-    parsed = parse_juniper_trpz_aps_sessions(info)
+def inventory_juniper_trpz_aps_sessions(parsed):
     # A failover condition occurs when a primary controller goes down or fails for any reason.
     # Then, a second controller takes over the operation.
     # Failover is also called controller redundancy.
     return [ (key, None) for key in parsed ]
 
 
-def check_juniper_trpz_aps_sessions(item, _no_params, info):
-    parsed = parse_juniper_trpz_aps_sessions(info)
+def check_juniper_trpz_aps_sessions(item, _no_params, parsed):
     if item in parsed:
         ap_states = {
             1  : (2, "cleared"),
@@ -110,7 +104,11 @@ def check_juniper_trpz_aps_sessions(item, _no_params, info):
         }
         state, ap_status = ap_states[parsed[item]['status']]
 
-        yield state, "Status: %s" % ap_status
+        if parsed[item]["node_info"] is not None:
+            node_info = " (on node %s)" % parsed[item]["node_info"]
+        else:
+            node_info = ""
+        yield state, "Status: %s%s" % (ap_status, node_info)
 
         now = time.time()
         ap_rates    = [0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -156,7 +154,7 @@ def check_juniper_trpz_aps_sessions(item, _no_params, info):
 
 
 check_info["juniper_trpz_aps_sessions"] = {
-    #"parse_function"            : parse_juniper_trpz_aps_sessions, #seams to conflicts with node_info
+    "parse_function"            : parse_juniper_trpz_aps_sessions,
     "inventory_function"        : inventory_juniper_trpz_aps_sessions,
     "check_function"            : check_juniper_trpz_aps_sessions,
     "service_description"       : "Access Point %s",

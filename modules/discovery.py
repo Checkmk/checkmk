@@ -1251,10 +1251,16 @@ def read_autochecks_of(hostname, world="config"):
         if len(entry) == 4: # old format where hostname is at the first place
             entry = entry[1:]
         check_type, item, parameters = entry
+
         # With Check_MK 1.2.7i3 items are now defined to be unicode strings. Convert
         # items from existing autocheck files for compatibility. TODO remove this one day
         if type(item) == str:
             item = decode_incoming_string(item)
+
+        if type(check_type) not in (str, unicode):
+            raise MKGeneralException("Invalid entry '%r' in check table of host '%s': "
+                                     "The check type must be a string." % (entry, hostname))
+
         autochecks.append((check_type, item, compute_check_parameters(hostname, check_type, item, parameters)))
     return autochecks
 

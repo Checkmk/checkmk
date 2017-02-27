@@ -7,24 +7,22 @@
 [8] Graph zu "GraphCollections" hinzufügen.
 
 
-[9] Fall, dass ein Graph negative Metrik hat ("-line", "-area", "-stacked")
+[9] au: Fall, dass ein Graph negative Metrik hat ("-line", "-area", "-stacked")
 
 
-[10] Graphen mit mehreren Areas, saubere Stacks bilden.
-     Wenn die erste Metrik line oder area ist, nimmt man area,
-     sonst stacked. Beispiel zum Testen: Filesystem-Graph. Bei Sum kommt
-     aktuell nur die Hälfte raus wie bei Stacked - sollte aber ja das
-     gleiche Ergebnis zeigen.
+[10] au: Graphen mit mehreren Areas, saubere Stacks bilden.
+     au: Wenn die erste Metrik line oder area ist, nimmt man area,
+     au: sonst stacked. Beispiel zum Testen: Filesystem-Graph. Bei Sum kommt
+     au: aktuell nur die Hälfte raus wie bei Stacked - sollte aber ja das
+     au: gleiche Ergebnis zeigen.
      au: Aktueller Status: Umgesetzt fuer "area"
+     au: Linie bei stacked: hier verwenden wir die Summe. Allerdings muss
+     au: man das auch in der Beschriftung der Linie dann korrekt machen.
 
 [12] Limit auf Menge der dargestellten Objekte.
 
 
 [14] Import views und visuals irgendwie aufrüamen
-
-
-[16] Prüfung auf eine einheitliche Unit? Brauchen wir das? Im Originalcode ist
-     von den normalen Templates.
 
 
 [18] au: Default festlegen, wenn man auf die Seite kommt. Wenn die Variable

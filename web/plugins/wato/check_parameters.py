@@ -9212,6 +9212,7 @@ register_check_parameters(
     "dict"
 )
 
+
 register_check_parameters(
     subgroup_applications,
     "f5_connections",
@@ -9230,6 +9231,19 @@ register_check_parameters(
                      title = _("Max. number of SSL connections"),
                      default_value = None,
                      default_levels = (25000, 30000)
+                )
+            ),
+            ( "connections_rate",
+                Levels(
+                     title = _("Maximum connections per second"),
+                     default_value = None,
+                     default_levels = (500, 1000)
+                )
+            ),
+            ( "connections_rate_lower",
+                Levels(
+                     title = _("Minimum connections per second"),
+                     default_value = None,
                 )
             ),
         ]),

@@ -6,7 +6,8 @@ distribution: check_mk
 description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers)
  for the number of current connections {sysStatClientCurConns} and the number of current
- ssl connections {sysClientsslStatCurConns}.
+ ssl connections {sysClientsslStatCurConns} as well as the cumulative connection rate
+ of {sysClientSslStatTotNativeConns} and {sysClientSslStatTotCompatConns}.
  Warning and critical limits can be given for both types of data.
 
  It supports devices running the 9.0 and above releases of the F5 OS. It's tested against 9.3

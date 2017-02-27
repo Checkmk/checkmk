@@ -36,7 +36,11 @@
 def check_sql_arguments(params):
     args = []
 
-    args += [ "--hostname=$HOSTADDRESS$" ]
+    if "host" in params:
+        args += [ "--hostname=%s" % params["host"] ]
+    else:
+        args += [ "--hostname=$HOSTADDRESS$" ]
+
     args += [ "--dbms=%s" % params["dbms"] ]
     args += [ "--name=%s" % params["name"] ]
     args += [ "--user=%s" % params["user"] ]

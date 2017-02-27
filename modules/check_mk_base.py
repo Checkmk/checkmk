@@ -247,13 +247,27 @@ def get_info_for_check(hostname, ipaddress, section_name, max_cachefile_age=None
 # checks usually use existing cache files, if check_mk is not misconfigured,
 # and thus do no network activity at all...
 
+
+def add_nodeinfo(info, nodename):
+    new_info = []
+    for line in info:
+        if len(line) > 0 and type(line[0]) == list:
+            new_entry = []
+            for entry in line:
+                new_entry.append([ nodename ] + entry)
+            new_info.append(new_entry)
+        else:
+            new_info.append([ nodename ] + line)
+    return new_info
+
+
 def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore_check_interval=False):
     # If the check want's the node info, we add an additional
     # column (as the first column) with the name of the node
     # or None (in case of non-clustered nodes). On problem arises,
     # if we deal with subchecks. We assume that all subchecks
     # have the same setting here. If not, let's raise an exception.
-    add_nodeinfo = check_info.get(checkname, {}).get("node_info", False)
+    has_nodeinfo = check_info.get(checkname, {}).get("node_info", False)
 
     nodes = nodes_of(hostname)
     if nodes != None:
@@ -274,8 +288,9 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
                                max_cachefile_age == None and cluster_max_cachefile_age or max_cachefile_age,
                                ignore_check_interval=True)
                 if new_info != None:
-                    if add_nodeinfo:
-                        new_info = [ [node] + line for line in new_info ]
+                    if has_nodeinfo:
+                        new_info = add_nodeinfo(new_info, None)
+
                     info += new_info
                     at_least_one_without_exception = True
             except MKSkipCheck:
@@ -299,12 +314,12 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
         info = get_realhost_info(hostname, ipaddress, checkname,
                       max_cachefile_age == None and check_max_cachefile_age or max_cachefile_age,
                       ignore_check_interval)
-        if info != None and add_nodeinfo:
+        if info != None and has_nodeinfo:
             if clusters_of(hostname):
                 add_host = hostname
             else:
                 add_host = None
-            info = [ [add_host] + line for line in info ]
+            info = add_nodeinfo(info, add_host)
 
     return info
 

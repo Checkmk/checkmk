@@ -1,0 +1,11 @@
+Title: Quicksearch: fixed "name name" results with distributed monitoring
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1488209431
+
+

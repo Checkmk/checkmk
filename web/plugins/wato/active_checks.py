@@ -428,7 +428,7 @@ register_rule(group,
                  "as the state of the check.  If a procedure is used, input parameters of the "
                  "procedures may by given as comma separated list. "
                  "This check uses the active check <tt>check_sql</tt>."),
-        optional_keys = [ "levels", "levels_low", "perfdata", "port", "procedure" ],
+        optional_keys = [ "levels", "levels_low", "perfdata", "port", "procedure", "host" ],
         elements = [
             ( "description",
                 TextUnicode(
@@ -550,8 +550,14 @@ register_rule(group,
                     title  = _("Performance Data"),
                     totext =_("Store output value into RRD database"),
                     value  = True,
-                ),
-            )
+                )
+            ),
+            ( "host",
+                TextAscii(
+                    title = _("Host to connect to"),
+                    help = _("This defaults to the host for which the active check is configured."),
+                )
+            ),
         ]
     ),
     match = 'all'

@@ -1,9 +1,9 @@
 Title: Adding a view to a report ships unneccessary filters
 Component: reporting
-State: open
+Class: bug
+State: done
 Date: 2015-09-16 12:05:09
 Targetversion: future
-Class: bug
 
 Try this: go to the view "host" of some host. Add this to a report using
 the small button at the bottom of the page.
@@ -11,3 +11,6 @@ the small button at the bottom of the page.
 This view will now be added including the two context filters "Service"
 and "Service State". Both are inactive and unncessary, however. Only
 active filters should be added.
+
+2017-02-27 08:33:11: changed state open -> done
+This has already been fixed.

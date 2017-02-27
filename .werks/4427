@@ -1,0 +1,15 @@
+Title: Fixed temporal spreading of pnp4nagios' XML file updates.
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0b4
+Date: 1488209173
+
+If you use the old pnp4nagios format with one metric per RRD, the core needs
+to create/update an XML description for each RRD from time to time.  To
+avoid creation/update storms after e.g. reloads or mass imports of new
+hosts, this work should be spread over several (currently 10) minutes.  Due
+to a bug this spreading didn't work, which has been fixed.

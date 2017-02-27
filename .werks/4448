@@ -1,0 +1,11 @@
+Title: agent_netapp: now provides systemtime info for 7mode/CM. check will follow soon
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1488198556
+
+

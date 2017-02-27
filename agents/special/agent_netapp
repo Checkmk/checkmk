@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import sys, getopt
+import sys, getopt, time
 
 # This suppress deprecated warning on older python versions
 import warnings
@@ -992,6 +992,14 @@ try:
                         ha_partners[node] = partner_name
                     print format_config(container, "cluster", node.split(".",1)[1])
 
+                # Systemtime for each node
+                current_time = int(time.time())
+                print "<<<netapp_api_systemtime:sep(9)>>>"
+                for node, entry in cluster_status.items():
+                    node_current_time = entry.child_get_string("current-time")
+                    print "%s\t%s\t%s" % (node[10:], current_time, node_current_time)
+
+
         # Disk
         disks = query("storage-disk-get-iter")
         if disks:
@@ -1257,13 +1265,6 @@ try:
             print "<<<netapp_api_status>>>"
             print format_config(diag_status, "status", "status")
 
-        # 7Mode Cluster info
-        if "cf" not in licenses["v1_disabled"]:
-            cluster_status = query("cf-status", return_toplevel_node = True)
-            if cluster_status:
-                print "<<<netapp_api_cluster:sep(9)>>>"
-                print format_as_key_value(cluster_status)
-
 
         # Disks
         disk_info = query("disk-list-info")
@@ -1333,6 +1334,22 @@ try:
             print "<<<netapp_api_info:sep(9)>>>"
             print format_as_key_value(system_info)
             print format_as_key_value(system_version)
+
+
+        # 7Mode Cluster info
+        if "cf" not in licenses["v1_disabled"]:
+            cluster_status = query("cf-status", return_toplevel_node = True)
+            if cluster_status:
+                print "<<<netapp_api_cluster:sep(9)>>>"
+                print format_as_key_value(cluster_status)
+
+                if system_info:
+                    system_name = system_info.child_get_string("system-name")
+                    print "<<<netapp_api_systemtime:sep(9)>>>"
+                    node_current_time = cluster_status.child_get_string("current-time")
+                    current_time = int(time.time())
+                    print "%s\t%s\t%s" % (system_name, current_time, node_current_time)
+
 
         # Sensors: Temp, Fan, PSU
         # Definition: all sensors are always monitored by one of the filers

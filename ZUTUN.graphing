@@ -1,8 +1,3 @@
-[3] au: Implementierung von "Average": einfach die kleine Funktion
-    au: schreiben, die auch None korrekt berücksichtig. Dann
-    au: im Graphdesigner das Average auch einbauen.
-
-
 [6] Graph zu Dashboard hinzufügen.
 
 
@@ -20,7 +15,7 @@
      sonst stacked. Beispiel zum Testen: Filesystem-Graph. Bei Sum kommt
      aktuell nur die Hälfte raus wie bei Stacked - sollte aber ja das
      gleiche Ergebnis zeigen.
-
+     au: Aktueller Status: Umgesetzt fuer "area"
 
 [12] Limit auf Menge der dargestellten Objekte.
 

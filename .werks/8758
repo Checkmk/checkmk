@@ -1,0 +1,18 @@
+Title: SNMP checks: Fixed cluster node handling
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488195310
+
+Clusteraware snmp check plugins with 'node_info' set to 'True' and
+len(snmp_info) > 1 now handle node info as agent check plugins.
+
+External check plugins with above requirements might exist. In this
+case please contact the programmer of these check plugins.
+
+Also fixed the check plugins cisco_wlc and juniper_trpz_aps_sessions
+which are adapted to above handling of node info.

@@ -569,9 +569,9 @@ def service_ignored(hostname, check_type, service_description):
 
 
 def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
-    def add_nodeinfo(info, s):
+    def add_nodeinfo_during_discovery(info, s):
         if s in check_info and check_info[s]["node_info"]:
-            return [ [ None ] + l for l in info ]
+            return add_nodeinfo(info, None)
         else:
             return info
 
@@ -580,7 +580,8 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
                                 ignore_check_interval=True, use_snmpwalk_cache=False)
 
     if rh_info != None:
-        info = apply_parse_function(add_nodeinfo(rh_info, section_name), section_name)
+        with_node_info = add_nodeinfo_during_discovery(rh_info, section_name)
+        info = apply_parse_function(with_node_info, section_name)
     else:
         info = None
 
@@ -590,7 +591,7 @@ def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
             try:
                 bare_info = get_realhost_info(hostname, ipaddress, es, max_cachefile_age,
                                               ignore_check_interval=True, use_snmpwalk_cache=False)
-                with_node_info = add_nodeinfo(bare_info, es)
+                with_node_info = add_nodeinfo_during_discovery(bare_info, es)
                 parsed = apply_parse_function(with_node_info, es)
                 info.append(parsed)
 

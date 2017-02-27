@@ -31,7 +31,10 @@
 #include <cstdlib>
 #include <ctime>
 #include <iomanip>
+#include <ratio>
 #include <string>
+
+using minutes_d = std::chrono::duration<double, std::ratio<60>>;
 
 inline double elapsed_ms_since(std::chrono::system_clock::time_point then) {
     using namespace std::chrono;

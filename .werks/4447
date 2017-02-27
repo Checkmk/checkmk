@@ -1,0 +1,13 @@
+Title: f5_bigip_conns: Now also monitors the connection rate per seconds
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1488186222
+
+This check now also determines the rate for the sum of sysClientSslStatTotCompatConns and sysClientSslStatTotNativeConns.
+
+

@@ -449,8 +449,16 @@ def have_lock(path):
 
 def release_all_locks():
     global g_aquired_locks, g_locked_paths
+
     for path, fd in g_aquired_locks:
-        os.close(fd)
+        try:
+            os.close(fd)
+        except OSError, e:
+            if e.errno == 9: # OSError: [Errno 9] Bad file descriptor
+                pass
+            else:
+                raise
+
     g_aquired_locks = []
     g_locked_paths = []
 

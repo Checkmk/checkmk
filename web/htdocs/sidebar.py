@@ -807,6 +807,7 @@ class LivestatusQuicksearch(object):
         self._determine_used_filters()
         self._execute_livestatus_command()
 
+
         # If no rows were found with the given (filterless) query, issue
         # -> Hostaddress -> Hostalias -> Service description
         if not self._rows and self._no_filters_set:
@@ -863,10 +864,9 @@ class LivestatusQuicksearch(object):
             return
 
         # TODO: fix bug in livestatus, livestatus does not report "site" in the headers
-        headers = results[0]
-        headers[0] = "site"
+        headers =  ["site"] + self._queried_livestatus_columns
 
-        self._rows = map(lambda x: dict(zip(headers, x)), results[1:])
+        self._rows = map(lambda x: dict(zip(headers, x)), results)
 
         limit = config.quicksearch_dropdown_limit
         if len(self._rows) > limit:
@@ -900,13 +900,14 @@ class LivestatusQuicksearch(object):
         if len(livestatus_filters) > 1:
             livestatus_filters.append("And: %d" % len(livestatus_filters))
 
-        self._livestatus_command = "GET %s\nColumns: %s\n%s\n" % (self._livestatus_table,
-                                              " ".join(set(columns_to_query)),
+        self._queried_livestatus_columns = list(columns_to_query)
+        self._livestatus_command         = "GET %s\nColumns: %s\n%s\n" % (self._livestatus_table,
+                                              " ".join(self._queried_livestatus_columns),
                                               "\n".join(livestatus_filters))
 
         # Limit number of results
         limit = config.quicksearch_dropdown_limit
-        self._livestatus_command += "Cache: reload\nLimit: %d\nColumnHeaders: on" % (limit + 1)
+        self._livestatus_command += "Cache: reload\nLimit: %d\nColumnHeaders: off" % (limit + 1)
 
 
     # Returns the livestatus table fitting the given filters

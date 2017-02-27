@@ -1,0 +1,13 @@
+Title: Fixed possible random "OSError: [Errno 9] Bad file descriptor" in GUI
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488182205
+
+During rendering of any page in the GUI this error could occur. Restarting the
+apache of the site should be a workaround the issue for some time unitl applying
+the fix shipped with this change.

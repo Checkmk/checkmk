@@ -151,6 +151,7 @@ def get_crash_info(tardata):
 def fetch_file_from_tar(tardata, filename):
     p = subprocess.Popen(['tar', 'xzf', '-', '--to-stdout', filename],
                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=open(os.devnull, "w"),
                          close_fds=True)
     result = p.communicate(tardata)
     return result[0]

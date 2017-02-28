@@ -4,17 +4,17 @@
 [7] Graph zu Report hinzufügen.
 
 
-[9] au: Fall, dass ein Graph negative Metrik hat ("-line", "-area", "-stacked")
+DONE: [9] au: Fall, dass ein Graph negative Metrik hat ("-line", "-area", "-stacked")
 
 
-[10] au: Graphen mit mehreren Areas, saubere Stacks bilden.
-     au: Wenn die erste Metrik line oder area ist, nimmt man area,
-     au: sonst stacked. Beispiel zum Testen: Filesystem-Graph. Bei Sum kommt
-     au: aktuell nur die Hälfte raus wie bei Stacked - sollte aber ja das
-     au: gleiche Ergebnis zeigen.
-     au: Aktueller Status: Umgesetzt fuer "area"
-     au: Linie bei stacked: hier verwenden wir die Summe. Allerdings muss
-     au: man das auch in der Beschriftung der Linie dann korrekt machen.
+DONE: [10] au: Graphen mit mehreren Areas, saubere Stacks bilden.
+           au: Wenn die erste Metrik line oder area ist, nimmt man area,
+           au: sonst stacked. Beispiel zum Testen: Filesystem-Graph. Bei Sum kommt
+           au: aktuell nur die Hälfte raus wie bei Stacked - sollte aber ja das
+           au: gleiche Ergebnis zeigen.
+           au: Aktueller Status: Umgesetzt fuer "area"
+           au: Linie bei stacked: hier verwenden wir die Summe. Allerdings muss
+           au: man das auch in der Beschriftung der Linie dann korrekt machen.
 
 [12] Limit auf Menge der dargestellten Objekte.
 

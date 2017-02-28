@@ -23,9 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "LogCache.h"
-#include <dirent.h>
-#include <cerrno>
-#include <ostream>
+#include <sstream>
 #include <string>
 #include <utility>
 #include "Logfile.h"
@@ -97,34 +95,17 @@ void LogCache::updateLogfileIndex() {
     scanLogfile(log_file, true);
 
     // TODO(sp) Avoid global variable
-    string dirpath = log_archive_path;
-    DIR *dir = opendir(dirpath.c_str());
-    if (dir == nullptr) {
-        generic_error ge("cannot open log archive " + dirpath);
-        Informational(_logger) << ge;
-        return;
-    }
-
-    while (true) {
-        errno = 0;
-        dirent *ent = readdir(dir);
-        if (ent == nullptr) {
-            if (errno != 0) {
-                generic_error ge("cannot read directory entry from " + dirpath);
-                Warning(_logger) << ge;
-            }
-            break;
+    fs::path dirpath = log_archive_path;
+    try {
+        for (const auto &entry : fs::directory_iterator(dirpath)) {
+            scanLogfile(dirpath / entry.path(), false);
         }
-        string name = ent->d_name;
-        if (name != "." && name != "..") {
-            scanLogfile(dirpath + "/" + ent->d_name, false);
-        }
+    } catch (const fs::filesystem_error &e) {
+        Warning(_logger) << "error while iterating directory: " << e.what();
     }
-
-    closedir(dir);
 }
 
-void LogCache::scanLogfile(const string &path, bool watch) {
+void LogCache::scanLogfile(const fs::path &path, bool watch) {
     auto logfile = new Logfile(_logger, _commands_holder, path, watch);
     time_t since = logfile->since();
     if (since != 0) {

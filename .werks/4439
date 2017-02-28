@@ -1,0 +1,12 @@
+Title: statgrab: added uptime into plugin
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1488270599
+Class: feature
+
+Added uptime section to statgrab plugin so HP-UX Hosts are now reporting
+this section. You need to have the hpux_statgrab plugin installed to profit
+from this update.

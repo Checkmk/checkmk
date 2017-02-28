@@ -1,0 +1,11 @@
+Title: BI Aggregations: fixed redundant read of cached data, slowing down GUI
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1488294834
+
+

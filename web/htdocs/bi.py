@@ -492,6 +492,8 @@ class BICacheFile(object):
     def __init__(self, **kwargs):
         self._filepath            = kwargs.get("filepath")
         self._cached_data         = None
+
+        # Timestamp of the last/read write operation
         self._filetime            = None
 
         try:
@@ -505,7 +507,7 @@ class BICacheFile(object):
     def clear_cache(self):
         log("Clearing caches %s" % self._filepath)
         self._cached_data = None
-        self._filetime    = None
+
 
     def get_filepath(self):
         return self._filepath

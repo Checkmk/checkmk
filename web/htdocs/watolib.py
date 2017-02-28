@@ -3533,7 +3533,7 @@ def sync_changes_before_remote_automation(site_id):
         timeout -= 0.5
 
     state = manager.get_site_state(site_id)
-    if state["_state"] != "success":
+    if state and state["_state"] != "success":
         logger.error(_("Remote automation tried to sync pending changes but failed: %s") %
                          state.get("_status_details"))
 

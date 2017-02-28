@@ -26,8 +26,7 @@
 #include <cstddef>
 #ifdef CMC
 #include <sys/stat.h>
-#endif
-#ifndef CMC
+#else
 #include <unistd.h>
 #endif
 
@@ -69,8 +68,8 @@ int pnpgraph_present(const string& host, const string& service) {
 #endif
 
 #ifdef CMC
-string rrd_path(const string& host, const string& service,
-                const string& varname) {
+fs::path rrd_path(const string& host, const string& service,
+                  const string& varname) {
     string pnp_path(g_pnp_path);
     if (pnp_path.empty()) {
         return "";

@@ -554,13 +554,11 @@ class HTMLGenerator(Escaper, OutputFunnel):
           - All attributes will be escaped, i.e. the characters '&', '<', '>', '"' will be replaced by
             non HtML relevant signs '&amp;', '&lt;', '&gt;' and '&quot;'. """
 
-
     # TODO: Replace u, i, b with underline, italic, bold, usw.
 
-
     # these tags can be called by their tag names, e.g. 'self.title(content)'
-    _shortcut_tags = set(['title', 'h1', 'h2', 'h3', 'th', 'tr', 'td', 'center', 'pre', 'style', 'iframe',\
-                          'div', 'p', 'span', 'canvas', 'strong', 'sub', 'tt', 'u', 'i', 'b', 'x', 'option'])
+    _shortcut_tags = set(["title", "h1", "h2", "h3", "h4", "th", "tr", "td", "center", "pre", "style", "iframe",\
+                          "div", "p", "span", "canvas", "strong", "sub", "tt", "u", "i", "b", "x", "option"])
 
     # these tags can be called by open_name(), close_name() and render_name(), e.g. 'self.open_html()'
     _tag_names = set(['html', 'head', 'body', 'header', 'footer', 'a', 'b', 'sup',\
@@ -1624,6 +1622,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
     def render_help(self, text):
         if text and text.strip():
             self.have_help = True
+            # TODO: Check escaping
             c = self.render_div(
                 text.strip(),
                 class_="help",
@@ -2097,6 +2096,14 @@ class html(HTMLGenerator, Encoder, RequestHandler):
     #
     # Other input elements
     #
+
+
+    def user_error(self, e):
+        assert isinstance(e, MKUserError), "ERROR: This exception is not a user error!"
+        self.open_div(class_="error")
+        self.write("%s" % e.message)
+        self.close_div()
+        self.add_user_error(e.varname, e)
 
 
     # user errors are used by input elements to show invalid input

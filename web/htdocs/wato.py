@@ -818,15 +818,15 @@ def show_hosts(folder):
             msg = _("Warning: This host has an invalid configuration: ")
             msg += ", ".join(errors)
             html.icon(msg, "validation_error")
-            html.write("&nbsp;")
+            html.nbsp()
 
         if host.is_offline():
             html.icon(_("This host is disabled"), "disabled")
-            html.write("&nbsp;")
+            html.nbsp()
 
         if host.is_cluster():
             html.icon(_("This host is a cluster of %s") % ", ".join(host.cluster_nodes()), "cluster")
-            html.write("&nbsp;")
+            html.nbsp()
 
         html.a(hostname, href=host.edit_url())
 

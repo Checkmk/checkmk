@@ -194,7 +194,7 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
                 render_group_checkbox_th()
             for cell in cells:
                 cell.paint_as_header()
-                html.write("\n")
+                html.write_text("\n")
             html.close_tr()
 
         column_headers = view.get("column_headers")
@@ -280,7 +280,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
                  onclick="toggle_grouped_rows('grouped_rows', '%s', this, %d)" % (index, num_rows))
 
     html.img("images/tree_black_closed.png", align="absbottom", class_=["treeangle", "nform", "open" if is_open else "closed"])
-    html.write("%s (%d)" % (html.attrencode(group_spec["title"]), num_rows))
+    html.write_text("%s (%d)" % (group_spec["title"], num_rows))
 
     html.close_td()
     html.close_tr()
@@ -840,7 +840,7 @@ def csv_export_matrix(rows, view, group_cells, cells):
                 for cell_nr, cell in enumerate(cells[1:]):
                     tdclass, content = cell.render(cell_row)
                     if cell_nr:
-                        html.write(",")
+                        html.write_text(",")
                     html.write(content)
 
     table.end()

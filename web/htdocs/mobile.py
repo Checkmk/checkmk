@@ -54,7 +54,7 @@ def mobile_html_head(title, ready_code=""):
     if metrics.cmk_graphs_possible():
         html.stylesheet(href="graphs.css")
 
-    html.write("""<link rel="apple-touch-icon" href="images/ios_logo.png"/>""")
+    html.write(html._render_opening_tag("link", rel="apple-touch-icon", href="images/ios_logo.png", close_tag=True))
     html.javascript_file(src='jquery/jquery-1.6.4.min.js')
     html.javascript_file(src='js/mobile.js')
     html.javascript_file(src='jquery/jquery.mobile-1.0.min.js')
@@ -102,7 +102,9 @@ def jqm_page_footer(content=""):
     html.close_div() # close content-div
     html.close_div()
     html.open_div(**{"data-role":"footer"})
-    html.write("<h4>%s</h4>" % content)
+    html.open_h4()
+    html.write(content)
+    html.close_h4()
     html.close_div()
     html.close_div() # close page-div
 

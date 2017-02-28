@@ -790,28 +790,26 @@ def dashlet_snapin(nr, dashlet):
 
     html.set_browser_reload(dashlet_type['refresh'])
     html.html_head(_('Snapin Dashlet'), javascripts=['sidebar'], stylesheets=['sidebar', 'status'])
-    html.write('''<style>
-#side_content {
-    height: auto;
-    top: 0;
-    padding-top: 4px;
-    padding-left: 4px;
-}
-div.snapin:last-child {
-    margin-bottom: 0;
-}
-div.snapin div.content {
-    background-image: none;
-    background-color: #508AA1;
-}
-div.snapin {
-    margin: 0;
-    padding: 0;
-}
-body.side {
-    %s
-}
-</style>''' % overflow)
+    html.style(''' #side_content {
+                        height: auto;
+                        top: 0;
+                        padding-top: 4px;
+                        padding-left: 4px;
+                    }
+                    div.snapin:last-child {
+                        margin-bottom: 0;
+                    }
+                    div.snapin div.content {
+                        background-image: none;
+                        background-color: #508AA1;
+                    }
+                    div.snapin {
+                        margin: 0;
+                        padding: 0;
+                    }
+                    body.side {
+                        %s
+                    }''' % overflow)
     html.open_body(class_="side")
     html.open_div(id_="check_mk_sidebar")
     html.open_div(id_="side_content")

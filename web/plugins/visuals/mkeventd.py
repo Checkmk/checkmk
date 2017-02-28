@@ -99,9 +99,9 @@ if mkeventd_enabled:
             self._name = name
 
         def display(self):
-            html.write("from: ")
+            html.write_text("from: ")
             html.number_input(self._name + "_from", "")
-            html.write(" to: ")
+            html.write_text(" to: ")
             html.number_input(self._name + "_to", "")
 
         def filter(self, infoname):

@@ -489,7 +489,7 @@ def dashboard_edit_controls(name, board, dashlet_types):
                      onmouseover="show_submenu(\'control_add\');")
         html.open_a(href="javascript:void(0)")
         html.img("images/dashboard_menuarrow.png")
-        html.write(_("Add dashlet"))
+        html.write_text(_("Add dashlet"))
         html.close_a()
 
         # The dashlet types which can be added to the view
@@ -952,8 +952,7 @@ def choose_view(name):
             return
 
         except MKUserError, e:
-            html.div(e, class_="error")
-            html.add_user_error(e.varname, e)
+            html.user_error(e)
 
     html.begin_form('choose_view')
     forms.header(_('Select View'))
@@ -1139,8 +1138,7 @@ def page_edit_dashlet():
             return
 
         except MKUserError, e:
-            html.div(e, class_="error")
-            html.add_user_error(e.varname, e)
+            html.user_error(e)
 
     html.begin_form("dashlet", method="POST")
     vs_general.render_input("general", dashlet)
@@ -1203,7 +1201,7 @@ def page_delete_dashlet():
 
             html.message(_('The dashlet has been deleted.'))
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % html.attrencode(e))
+            html.div(e.message, class_="error")
             return
 
     html.immediate_browser_redirect(1, back_url)

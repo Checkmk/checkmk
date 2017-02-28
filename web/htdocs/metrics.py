@@ -374,7 +374,7 @@ def mix_colors(a, b):
 
 
 def render_color_icon(color):
-    return "<div class=color style=\"background-color: %s\"></div>" % color
+    return html.render_div('', class_="color", style="background-color: %s" % color)
 
 #.
 #   .--Evaluation----------------------------------------------------------.
@@ -1575,7 +1575,7 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
         else:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
     except livestatus.MKLivestatusNotFoundError:
-        html.write("<div class=error>%s</div>" % html.attrencode(_("Cannot render graphs: cannot fetch data via Livestatus")))
+        html.div(_("Cannot render graphs: cannot fetch data via Livestatus"), class_="error")
         return
 
     # When the legend is enabled, we need to reduce the height by the height of the legend to

@@ -2126,7 +2126,7 @@ class DualListChoice(ListChoice):
 
         self.load_elements()
         if not self._elements:
-            html.write(_("There are no elements for selection."))
+            html.write_text(_("There are no elements for selection."))
             return
 
         selected   = []
@@ -2155,13 +2155,13 @@ class DualListChoice(ListChoice):
 
         html.open_tr()
         html.open_td(class_="head")
-        html.write(_('Available'))
+        html.write_text(_('Available'))
         if not self._instant_add:
             html.a(">", href="javascript:%s;" % select_func, class_=["control", "add"])
         html.close_td()
 
         html.open_td(class_="head")
-        html.write(_('Selected'))
+        html.write_text(_('Selected'))
         if not self._instant_add:
             html.a("<", href="javascript:%s;" % unselect_func, class_=["control", "del"])
         html.close_td()
@@ -2452,7 +2452,7 @@ class AbsoluteDate(ValueSpec):
         else:
             for count, val in enumerate(values):
                 if count > 0:
-                    html.write(" ")
+                    html.write_text(" ")
                 html.nbsp() if val is None else\
                     html.number_input(varprefix + val[0], val[1], size=val[2])
 
@@ -2615,7 +2615,7 @@ class TimeofdayRange(ValueSpec):
             value = (None, None)
         self._bounds[0].render_input(varprefix + "_from", value[0])
         html.nbsp()
-        html.write("-")
+        html.write_text("-")
         html.nbsp()
         self._bounds[1].render_input(varprefix + "_until", value[1])
 
@@ -3089,7 +3089,8 @@ class Alternative(ValueSpec):
             html.open_td()
         html.select(varprefix + "_use", options, sel_option, onchange)
         if self._orientation == "vertical":
-            html.write("<br><br>")
+            html.br()
+            html.br()
 
         for nr, vs in enumerate(self._elements):
             if str(nr) == sel_option:
@@ -3243,9 +3244,9 @@ class Tuple(ValueSpec):
                     if self._title_br:
                         html.br()
                     else:
-                        html.write(" ")
+                        html.write_text(" ")
                 else:
-                    html.write(" ")
+                    html.write_text(" ")
                     html.help(element.help())
 
             if self._orientation == "vertical":
@@ -3399,11 +3400,11 @@ class Dictionary(ValueSpec):
                             html.close_b()
                             html.br()
                         else:
-                            html.write(": ")
+                            html.write_text(": ")
 
             if self._columns == 2:
                 if vs.title() and not colon_printed:
-                    html.write(':')
+                    html.write_text(':')
                 html.help(vs.help())
                 if not oneline:
                     html.close_td()
@@ -4119,7 +4120,7 @@ class IconSelector(ValueSpec):
                           style="display:none;" if active_category != category_name else None)
 
             for nr, icon in enumerate(empty + icons):
-                html.write(self.render_icon(icon,
+                html.write_html(self.render_icon(icon,
                     onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
                     title = _('Choose this icon'), id = varprefix + '_i_' + icon))
             html.close_div()

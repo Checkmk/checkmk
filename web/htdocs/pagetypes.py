@@ -821,8 +821,7 @@ class Overridable(Base):
                     html.footer()
                     return
             except MKUserError, e:
-                html.write("<div class=error>%s</div>\n" % e.message)
-                html.add_user_error(e.varname, e.message)
+                html.user_error(e)
 
         # Bulk delete
         if html.var("_bulk_delete_my") and html.transaction_valid():
@@ -857,7 +856,9 @@ class Overridable(Base):
             if not instances:
                 continue
 
-            html.write('<h3>' + title + '</h3>')
+            html.open_h3()
+            html.write(title)
+            html.close_h3()
 
             if what != "builtin":
                 html.begin_form("bulk_delete_%s" % what, method="POST")
@@ -894,7 +895,7 @@ class Overridable(Base):
 
                 # Title
                 table.cell(_('Title'))
-                html.write(html.attrencode(instance.render_title()))
+                html.write_text(instance.render_title())
                 html.help(html.attrencode(_u(instance.description())))
 
                 # Custom columns specific to that page type
@@ -1122,18 +1123,22 @@ class OverridableContainer(Overridable, Container):
     # Helper functions for layouting the add-to popup
     @classmethod
     def render_addto_popup_title(self, title):
-        html.write('<li><span>%s:</span></li>' % title)
+        html.open_li()
+        html.open_span()
+        html.write("%s:" % title)
+        html.close_span()
+        html.close_li()
 
 
     @classmethod
     def render_addto_popup_entry(self, type_name, name, title):
-        html.write("<li>")
-        html.write("<a href=\"javascript:void(0)\" "
-                   "onclick=\"pagetype_add_to_container('%s', '%s');reload_sidebar();\">" %
+        html.open_li()
+        html.open_a(href="javascript:void(0)",
+                    onclick="pagetype_add_to_container('%s', '%s');reload_sidebar();" %
                     (type_name, name))
         html.render_icon(type_name)
-        html.write(html.attrencode(title))
-        html.write("</li>")
+        html.write_text(title)
+        html.close_li()
 
 
     # Callback for the Javascript function pagetype_add_to_container(). The
@@ -1156,7 +1161,7 @@ class OverridableContainer(Overridable, Container):
             if type(target_page) != str:
                 target_page = target_page.page_url()
             html.write(target_page)
-        html.write("\n%s" % (need_sidebar_reload and "true" or "false"))
+        html.write_text("\n%s" % ("true" if need_sidebar_reload else "false"))
 
 
     # Default implementation for generic containers - used e.g. by GraphCollection

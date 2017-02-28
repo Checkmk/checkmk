@@ -362,10 +362,10 @@ multisite_commands.append({
     "render"      : lambda: \
         html.write_text(_('Comment') + ": ") == \
         html.text_input("_cusnot_comment", "TEST", size=20, submit="_customnotification") == \
-        html.write(" &nbsp; ") == \
+        html.write_text(" &nbsp; ") == \
         html.checkbox("_cusnot_forced", False, label=_("forced")) == \
         html.checkbox("_cusnot_broadcast", False, label=_("broadcast")) == \
-        html.write(" &nbsp; ") == \
+        html.write_text(" &nbsp; ") == \
         html.button("_customnotification", _('Send')),
     "action"      : command_custom_notification,
 })
@@ -499,7 +499,7 @@ multisite_commands.append({
     "render"      : lambda: \
         html.write_text(_('Comment')+": ") == \
         html.text_input("_comment", size=33, submit="_add_comment") == \
-        html.write(" &nbsp; ") == \
+        html.write_text(" &nbsp; ") == \
         html.button("_add_comment", _("Add comment")),
     "action"      : command_comment,
 })
@@ -705,28 +705,28 @@ def paint_downtime_buttons(what):
     html.text_input("_down_comment", "", size=60, submit="")
     html.hr()
     html.button("_down_from_now", _("From now for"))
-    html.write("&nbsp;")
+    html.nbsp()
     html.number_input("_down_minutes", 60, size=4, submit="_down_from_now")
-    html.write("&nbsp; " + _("minutes"))
+    html.write_text("&nbsp; " + _("minutes"))
     html.hr()
     for time_range in config.user_downtime_timeranges:
         html.button("_downrange__%s" % time_range['end'], _u(time_range['title']))
     if what != "aggr":
-        html.write(" &nbsp; - &nbsp;")
+        html.write_text(" &nbsp; - &nbsp;")
         html.button("_down_remove", _("Remove all"))
     html.hr()
     if config.adhoc_downtime and config.adhoc_downtime.get("duration"):
         adhoc_duration = config.adhoc_downtime.get("duration")
         adhoc_comment  = config.adhoc_downtime.get("comment", "")
         html.button("_down_adhoc", _("Adhoc for %d minutes") % adhoc_duration)
-        html.write("&nbsp;")
+        html.nbsp()
         html.write_text(_('with comment')+": ")
         html.write(adhoc_comment)
         html.hr()
 
     html.button("_down_custom", _("Custom time range"))
     html.datetime_input("_down_from", time.time(), submit="_down_custom")
-    html.write("&nbsp; "+_('to')+" &nbsp;")
+    html.write_text("&nbsp; "+_('to')+" &nbsp;")
     html.datetime_input("_down_to", time.time() + 7200, submit="_down_custom")
     html.hr()
     html.checkbox("_down_flexible", False, label="%s " % _('flexible with max. duration'))

@@ -745,9 +745,9 @@ class FilterNumberRange(Filter): # type is int
         Filter.__init__(self, name, title, info, varnames, [])
 
     def display(self):
-        html.write(_("From:") + "&nbsp;")
+        html.write_text(_("From:") + "&nbsp;")
         html.text_input(self.htmlvars[0], style="width: 80px;")
-        html.write(" &nbsp; " + _("To:") + "&nbsp;")
+        html.write_text(" &nbsp; " + _("To:") + "&nbsp;")
         html.text_input(self.htmlvars[1], style="width: 80px;")
 
     def filter(self, tablename):
@@ -976,7 +976,7 @@ class FilterLogState(Filter):
                 html.u("%s:" % title)
                 html.close_td()
                 html.open_td()
-            html.write("&nbsp; ")
+            html.write_text("&nbsp; ")
             html.checkbox("logst_" + varsuffix, True, label=text)
             if not html.mobile:
                 html.br()
@@ -1246,9 +1246,9 @@ class FilterECServiceLevelRange(Filter):
 
     def display(self):
         selection = [ ("", "") ] + self._prepare_choices()
-        html.write("From")
+        html.write_text("From")
         html.select(self.lower_bound_varname, selection)
-        html.write("To")
+        html.write_text("To")
         html.select(self.upper_bound_varname, selection)
 
 

@@ -77,17 +77,23 @@ class FilterInvtableAge(Filter):
         Filter.__init__(self, name, title, infoname, [name + "_from", name + "_to"], [])
 
     def display(self):
-        html.write("<table><tr><td style='vertical-align: middle;'>")
-        html.write("%s:" % _("from"))
-        html.close_td()
+        html.open_table()
+
+        html.open_tr()
+        html.td("%s:" % _("from"), style="vertical-align: middle;")
         html.open_td()
         Age(display=["days"]).render_input(self.name + "_from", 0)
-        html.write("</td></tr><tr><td style='vertical-align: middle;'>")
-        html.write("%s:" % _("to"))
         html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.td("%s:" % _("to"), style="vertical-align: middle;")
         html.open_td()
         Age(display=["days"]).render_input(self.name + "_to", 0)
-        html.write("</tr></table>")
+        html.close_td()
+        html.close_tr()
+
+        html.close_table()
 
 
     def double_height(self):
@@ -138,9 +144,9 @@ class FilterInvtableIDRange(Filter):
         Filter.__init__(self, name, title, infoname, [name + "_from", name + "_to"], [])
 
     def display(self):
-        html.write(_("from:") + " ")
+        html.write_text(_("from:") + " ")
         html.number_input(self.name + "_from")
-        html.write("&nbsp; %s: " % _("to"))
+        html.write_text("&nbsp; %s: " % _("to"))
         html.number_input(self.name + "_to")
 
     def filter_table(self, rows):
@@ -273,7 +279,7 @@ class FilterInvtableInterfaceType(Filter):
             return current
 
     def display(self):
-        html.write('<div class=multigroup>')
+        html.open_div(class_="multigroup")
         self.valuespec().render_input(self.name, self.selection())
         html.close_div()
 
@@ -295,10 +301,10 @@ class FilterInvtableVersion(Filter):
 
     def display(self):
         htmlvar = self.htmlvars[0]
-        html.write(_("Min.&nbsp;Version:"))
+        html.write_text(_("Min.&nbsp;Version:"))
         html.text_input(self.htmlvars[0], size=9)
-        html.write(" &nbsp; ")
-        html.write(_("Max.&nbsp;Version:"))
+        html.write_text(" &nbsp; ")
+        html.write_text(_("Max.&nbsp;Version:"))
         html.text_input(self.htmlvars[1], size=9)
 
     def filter_table(self, rows):
@@ -367,14 +373,14 @@ class FilterInvFloat(Filter):
         return True
 
     def display(self):
-        html.write(_("From: "))
+        html.write_text(_("From: "))
         htmlvar = self.htmlvars[0]
         current_value = html.var(htmlvar, "")
         html.number_input(htmlvar, current_value)
         if self._unit:
             html.write(self._unit)
 
-        html.write("&nbsp;&nbsp;" + _("To: " ))
+        html.write_text("&nbsp;&nbsp;" + _("To: " ))
         htmlvar = self.htmlvars[1]
         current_value = html.var(htmlvar, "")
         html.number_input(htmlvar, current_value)
@@ -481,10 +487,10 @@ class FilterInvHasSoftwarePackage(Filter):
         html.radiobutton(self._varprefix + "match", "regex", False, label=_("regular expression, substring match"))
         html.end_radio_group()
         html.br()
-        html.write(_("Min.&nbsp;Version:"))
+        html.write_text(_("Min.&nbsp;Version:"))
         html.text_input(self._varprefix + "version_from", size=9)
-        html.write(" &nbsp; ")
-        html.write(_("Max.&nbsp;Vers.:"))
+        html.write_text(" &nbsp; ")
+        html.write_text(_("Max.&nbsp;Vers.:"))
         html.text_input(self._varprefix + "version_to", size=9)
         html.br()
         html.checkbox(self._varprefix + "negate", False, label=_("Negate: find hosts <b>not</b> having this package"))

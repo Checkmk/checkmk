@@ -5854,7 +5854,7 @@ def render_condition_editor(tag_specs, varprefix=""):
                     default_tag, deflt = current_tag_setting(choices)
                     tag_condition_dropdown("tag", deflt, id)
                     if len(choices) == 1:
-                        html.write(" " + _("set"))
+                        html.write_text(" " + _("set"))
                     else:
                         html.select(varprefix + "tagvalue_" + id,
                             [(t[0], _u(t[1])) for t in choices if t[0] != None], deflt=default_tag)
@@ -5872,7 +5872,7 @@ def render_condition_editor(tag_specs, varprefix=""):
                     html.close_td()
                     default_tag, deflt = current_tag_setting([(id, _u(title))])
                     tag_condition_dropdown("auxtag", deflt, id)
-                    html.write(" " + _("set"))
+                    html.write_text(" " + _("set"))
                     html.close_div()
                     html.close_td()
                     html.close_tr()

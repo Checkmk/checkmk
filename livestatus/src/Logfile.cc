@@ -26,7 +26,7 @@
 #include "Logfile.h"
 #include <fcntl.h>
 #include <cstdlib>
-#include <fstream>
+#include <sstream>
 #include <utility>
 #include "LogCache.h"
 #include "LogEntry.h"
@@ -53,9 +53,9 @@ using std::vector;
 extern unsigned long g_max_lines_per_logfile;
 
 Logfile::Logfile(Logger *logger, const CommandsHolder &commands_holder,
-                 string path, bool watch)
+                 const fs::path &path, bool watch)
     : _commands_holder(commands_holder)
-    , _path(move(path))
+    , _path(path)
     , _since(0)
     , _watch(watch)
     , _read_pos{}
@@ -67,7 +67,7 @@ Logfile::Logfile(Logger *logger, const CommandsHolder &commands_holder,
     , _logclasses_read(0) {
     ifstream is(_path, ios::binary);
     if (!is) {
-        generic_error ge("cannot open logfile " + _path);
+        generic_error ge("cannot open logfile " + _path.string());
         Informational(_logger) << ge;
         return;
     }
@@ -144,7 +144,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
 
         file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
-            generic_error ge("cannot open logfile " + _path);
+            generic_error ge("cannot open logfile " + _path.string());
             Informational(_logger) << ge;
             return;
         }
@@ -288,7 +288,7 @@ unique_ptr<vector<char>> Logfile::readIntoBuffer() {
     unique_ptr<vector<char>> result;
     ifstream is(_path, ios::binary | ios::ate);
     if (!is) {
-        generic_error ge("cannot open logfile " + _path);
+        generic_error ge("cannot open logfile " + _path.string());
         Warning(_logger) << ge;
         return result;
     }
@@ -296,7 +296,7 @@ unique_ptr<vector<char>> Logfile::readIntoBuffer() {
     auto end = is.tellg();
     is.seekg(0, ios::beg);
     if (!is) {
-        generic_error ge("cannot determine size of " + _path);
+        generic_error ge("cannot determine size of " + _path.string());
         Warning(_logger) << ge;
         return result;
     }
@@ -314,7 +314,7 @@ unique_ptr<vector<char>> Logfile::readIntoBuffer() {
     is.read(&result->front() + 1, size);
     if (!is) {
         generic_error ge("cannot open read " + to_string(size) +
-                         " byted from " + _path);
+                         " byted from " + _path.string());
         Warning(_logger) << ge;
     }
 

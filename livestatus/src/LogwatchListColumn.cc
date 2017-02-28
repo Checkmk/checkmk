@@ -23,7 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "LogwatchListColumn.h"
-#include <dirent.h>
+#include <ostream>
+#include "FileSystem.h"
+#include "Logger.h"
 #include "Renderer.h"
 #include "pnp4nagios.h"
 
@@ -50,21 +52,15 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
 #endif
 
     ListRenderer l(r);
-    if (_logwatch_path.empty()) {
-        return;
-    }
-    string path = _logwatch_path + pnp_cleanup(host_name);
-    if (DIR *dir = opendir(path.c_str())) {
-        while (true) {
-            if (dirent *ent = readdir(dir)) {
-                string name = ent->d_name;
-                if (name != "." && name != "..") {
-                    l.output(name);
-                }
-            } else {
-                break;
+    if (!_logwatch_path.empty()) {
+        try {
+            for (const auto &entry : fs::directory_iterator(
+                     _logwatch_path + pnp_cleanup(host_name))) {
+                l.output(entry.path().string());
             }
+        } catch (const fs::filesystem_error &e) {
+            Warning(logger()) << "error while iterating directory: "
+                              << e.what();
         }
-        closedir(dir);
     }
 }

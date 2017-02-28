@@ -1,9 +1,11 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 # call using
 # > py.test -s -k test_HTML_generator.py
 
 # external imports
 import re
+import traceback
 
 # internal imports
 from htmllib import HTML, HTMLGenerator
@@ -37,10 +39,22 @@ def test_HTMLGenerator():
         html.close_table()
         assert tools.compare_html(html.drain(), "<table><tr><td>1</td><td>2</td></tr></table>")
 
+    a = u"\u2665"
+    print a
+    with html.plugged():
+        assert html.render_a("test", href="www.test.case")
+        html.render_a(u"test", href="www.test.case")
+        html.render_a("test", href=u"www.test.case")
+        html.render_a(u"test", href=u"www.test.case")
+        try:
+            assert html.render_a(u"test", href=unicode("www.test.case"), id_=unicode("something"), class_=unicode("test_%s") % a)
+        except Exception, e:
+            print traceback.print_exc()
+            print e
+
 
 def test_exception_handling():
     html = HTMLGenerator()
-    html.plug()
     try:
         raise Exception("Test")
     except Exception, e:

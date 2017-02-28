@@ -329,8 +329,7 @@ def page_list(what, title, visuals, custom_columns = None,
                 html.footer()
                 return
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e)
-            html.add_user_error(e.varname, e)
+            html.user_error(e)
 
     keys_sorted = visuals.keys()
     keys_sorted.sort(cmp = lambda a,b: -cmp(a[0],b[0]) or cmp(a[1], b[1]))
@@ -349,7 +348,9 @@ def page_list(what, title, visuals, custom_columns = None,
             builtin.append((owner, visual_name, visual))
 
     for title, items in [ (_('Custom'), custom), (_('Builtin'), builtin) ]:
-        html.write('<h3>' + title + '</h3>')
+        html.open_h3()
+        html.write(title)
+        html.close_h3()
 
         table.begin(css = 'data', limit = None)
 
@@ -388,11 +389,10 @@ def page_list(what, title, visuals, custom_columns = None,
             table.cell(_('Title'))
             title = _u(visual['title'])
             if not visual["hidden"]:
-                html.write("<a href=\"%s.py?%s=%s\">%s</a>" %
-                    (what_s, visual_types[what]['ident_attr'], visual_name, html.attrencode(title)))
+                html.a(title, href="%s.py?%s=%s" % (what_s, visual_types[what]['ident_attr'], visual_name))
             else:
-                html.write(html.attrencode(title))
-            html.help(html.attrencode(_u(visual['description'])))
+                html.write_text(title)
+            html.help(_u(visual['description']))
 
             # Custom cols
             for title, renderer in custom_columns:
@@ -443,7 +443,7 @@ def page_create_visual(what, info_keys, next_url = None):
     html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
     html.end_context_buttons()
 
-    html.write('<p>')
+    html.open_p()
     html.write(
         _('Depending on the choosen datasource a %s can list <i>multiple</i> or <i>single</i> objects. '
           'For example the <i>services</i> datasource can be used to simply create a list '
@@ -452,7 +452,7 @@ def page_create_visual(what, info_keys, next_url = None):
           'create a list of objects, you do not need to make any selection in this dialog. '
           'If you like to create a view for one specific object of a specific type, select the '
           'object type below and continue.') % what_s)
-    html.write('</p>')
+    html.close_p()
 
     if html.var('save') and html.check_transaction():
         try:
@@ -467,8 +467,7 @@ def page_create_visual(what, info_keys, next_url = None):
             return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e)
-            html.add_user_error(e.varname, e)
+            html.user_error(e)
 
     html.begin_form('create_visual')
     html.hidden_field('mode', 'create')
@@ -787,8 +786,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                 return
 
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e)
-            html.add_user_error(e.varname, e)
+            html.user_error(e)
 
     html.begin_form("visual", method = "POST")
     html.hidden_field("back", back_url)
@@ -857,7 +855,7 @@ def show_filter(f):
         tbs = ['Traceback (most recent call last):\n']
         tbs += traceback.format_tb(tb)
         html.icon(_("This filter cannot be displayed") + " (%s)\n%s" % (e, "".join(tbs)), "alert")
-        html.write(_("This filter cannot be displayed"))
+        html.write_text(_("This filter cannot be displayed"))
     html.close_div()
     html.close_div()
 
@@ -1476,7 +1474,7 @@ def transform_old_visual(visual):
 def ajax_popup_add():
     add_type = html.var("add_type")
 
-    html.write("<ul>")
+    html.open_ul()
     pagetypes.render_addto_popup(add_type)
 
     for visual_type_name, visual_type in visual_types.items():
@@ -1489,12 +1487,21 @@ def ajax_popup_add():
             if not visuals:
                 continue
 
-            html.write('<li><span>%s %s:</span></li>' % (_('Add to'), visual_type["title"]))
+            html.open_li()
+            html.open_span()
+            html.write("%s %s:" % (_('Add to'), visual_type["title"]))
+            html.close_span()
+            html.close_li()
+
             for name, title in sorted(visuals, key=lambda x: x[1]):
-                html.write('<li><a href="javascript:void(0)" '
-                           'onclick="add_to_visual(\'%s\', \'%s\')"><img src="images/icon_%s.png"> %s</a></li>' %
-                           (visual_type_name, name, visual_type_name.rstrip('s'), title))
-    html.write('</ul>\n')
+                html.open_li()
+                html.open_a(href="javascript:void(0)",
+                            onclick="add_to_visual(\'%s\', \'%s\')" % (visual_type_name, name))
+                html.img(src="images/icon_%s.png" % visual_type_name.rstrip('s'))
+                html.write(title)
+                html.close_a()
+                html.close_li()
+    html.close_ul()
 
 
 def ajax_add_visual():

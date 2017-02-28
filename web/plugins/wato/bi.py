@@ -814,7 +814,11 @@ class ModeBI(WatoMode):
 
         sub_rule_ids = self.aggregation_sub_rule_ids(rule)
         if not sub_rule_ids:
-            html.write('<li><a href="%s">%s</a></li>' % (edit_url, title))
+            html.open_li()
+            html.open_a(href=edit_url)
+            html.write(title)
+            html.close_a()
+            html.close_li()
         else:
             html.begin_foldable_container("bi_rule_trees", tree_path, False, title,
                                           title_url=edit_url, tree_img="tree_black")
@@ -1187,7 +1191,8 @@ class ModeBIRules(ModeBI):
                     if aggr_id not in have_this:
                         pack = self.pack_containing_rule(ruleid)
                         aggr_url = html.makeuri_contextless([("mode", "bi_edit_aggregation"), ("id", aggr_id), ("pack", pack["id"])])
-                        html.write('<a href="%s">%s</a><br>' % (aggr_url, html.attrencode(self.aggregation_title(aggregation))))
+                        html.a(self.aggregation_title(aggregation), href=aggr_url)
+                        html.br()
                         have_this.add(aggr_id)
                 table.cell(_("Comment"), rule.get("comment", ""))
         table.end()

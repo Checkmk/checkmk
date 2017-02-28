@@ -1377,9 +1377,9 @@ def mode_mkeventd_rules(phase):
             if rule.get("drop"):
                 table.cell(_("State"), css="state statep nowrap")
                 if rule["drop"] == "skip_pack":
-                    html.write(_("SKIP PACK"))
+                    html.write_text(_("SKIP PACK"))
                 else:
-                    html.write(_("DROP"))
+                    html.write_text(_("DROP"))
             else:
                 if type(rule['state']) == tuple:
                     stateval = rule["state"][0]
@@ -1422,8 +1422,8 @@ def mode_mkeventd_rules(phase):
             url = rule.get("docu_url")
             if url:
                 html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
-                html.write("&nbsp;")
-            html.write(html.attrencode(rule.get("description", "")))
+                html.nbsp()
+            html.write_text(rule.get("description", ""))
 
             # Move rule to other pack
             if len(rule_packs) > 1:
@@ -1732,21 +1732,27 @@ def mode_mkeventd_status(phase):
 
     status = mkeventd.get_local_ec_status()
     repl_mode = status["status_replication_slavemode"]
-    html.write("<h3>%s</h3>" % _("Current status of local Event Console"))
+    html.h3(_("Current status of local Event Console"))
     html.open_ul()
-    html.write("<li>%s</li>" % _("Event Daemon is running."))
-    html.write("<li>%s: <b>%s</b></li>" % (_("Current replication mode"),
-        { "sync" : _("synchronize"),
-          "takeover" : _("Takeover!"),
-        }.get(repl_mode, _("master / standalone"))))
+    html.li(_("Event Daemon is running."))
+    html.open_li()
+    html.write_text("%s: " % _("Current replication mode"))
+    html.open_b()
+    html.write("%s" % ({ "sync" : _("synchronize"),
+                         "takeover" : _("Takeover!"),
+                       }.get(repl_mode, _("master / standalone"))))
+    html.close_b()
+    html.close_li()
     if repl_mode in [ "sync", "takeover" ]:
-        html.write(("<li>" + _("Status of last synchronization: <b>%s</b>") + "</li>") % (
+        html.open_li()
+        html.write_text(_("Status of last synchronization: <b>%s</b>") % (
                 status["status_replication_success"] and _("Success") or _("Failed!")))
+        html.close_li()
         last_sync = status["status_replication_last_sync"]
         if last_sync:
-            html.write("<li>" + _("Last successful sync %d seconds ago.") % (time.time() - last_sync) + "</li>")
+            html.li(_("Last successful sync %d seconds ago.") % (time.time() - last_sync))
         else:
-            html.write(_("<li>No successful synchronization so far.</li>"))
+            html.li(_("No successful synchronization so far."))
 
     html.close_ul()
 
@@ -1893,12 +1899,12 @@ def mode_mkeventd_mibs(phase):
 
         return
 
-    html.write("<h3>" + _("Upload MIB file") + "</h3>")
-    html.write(_("Use this form to upload MIB files for translating incoming SNMP traps. "
-                 "You can upload single MIB files with the extension <tt>.mib</tt> or "
-                 "<tt>.txt</tt>, but you can also upload multiple MIB files at once by "
-                 "packing them into a <tt>.zip</tt> file. Only files in the root directory "
-                 "of the zip file will be processed.<br><br>"))
+    html.h3(_("Upload MIB file"))
+    html.write_text(_("Use this form to upload MIB files for translating incoming SNMP traps. "
+                      "You can upload single MIB files with the extension <tt>.mib</tt> or "
+                      "<tt>.txt</tt>, but you can also upload multiple MIB files at once by "
+                      "packing them into a <tt>.zip</tt> file. Only files in the root directory "
+                      "of the zip file will be processed.<br><br>"))
 
     html.begin_form("upload_form", method="POST")
     forms.header(_("Upload MIB file"))

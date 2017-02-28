@@ -40,18 +40,18 @@ multisite_layouts["python-raw"] = {
 }
 
 def render_python(rows, view, group_cells, cells, num_columns, show_checkboxes):
-    html.write("[\n")
+    html.write_text("[\n")
     html.write(repr([cell.export_title() for cell in cells]))
-    html.write(",\n")
+    html.write_text(",\n")
     for row in rows:
-        html.write("[")
+        html.write_text("[")
         for cell in cells:
             joined_row = join_row(row, cell)
             tdclass, content = cell.render_content(joined_row)
             html.write(repr(html.strip_tags(content)))
-            html.write(",")
-        html.write("],")
-    html.write("\n]\n")
+            html.write_text(",")
+        html.write_text("],")
+    html.write_text("\n]\n")
 
 multisite_layouts["python"] = {
     "title"  : _("Python data output"),
@@ -115,7 +115,7 @@ multisite_layouts["json"] = {
 def render_jsonp(rows, view, group_cells, cells, num_columns, show_checkboxes):
     html.write("%s(\n" % html.var('jsonp', 'myfunction'));
     render_json(rows, view, group_cells, cells, num_columns, show_checkboxes)
-    html.write(");\n");
+    html.write_text(");\n");
 
 multisite_layouts["jsonp"] = {
     "title"  : _("JSONP data output"),
@@ -141,7 +141,7 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
         html.write('"%s"' % stripped.encode("utf-8"))
 
     for row in rows:
-        html.write("\n")
+        html.write_text("\n")
         first = True
         for cell in group_cells + cells:
             if first:

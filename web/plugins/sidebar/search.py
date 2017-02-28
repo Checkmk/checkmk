@@ -25,10 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 def render_searchform():
-    html.write('<div id="mk_side_search" class="content_center" onclick="mkSearchClose();">\n')
-    html.write('<input id="mk_side_search_field" type="text" name="search" autocomplete="off" />\n')
+    html.open_div(id_="mk_side_search", class_="content_center", onclick="mkSearchClose();")
+    html.input(id_="mk_side_search_field", type_="text", name="search", autocomplete="off")
     html.icon_button("#", _("Search"), "quicksearch", onclick="mkSearchButton();")
-    html.write('</div>\n<div id=mk_side_clear></div>\n')
+    html.close_div()
+    html.div('', id_="mk_side_clear")
     html.javascript_file(html.javascript_filename_for_browser("search"))
 
 sidebar_snapins["search"] = {

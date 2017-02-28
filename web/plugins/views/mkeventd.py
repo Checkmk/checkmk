@@ -567,7 +567,7 @@ if mkeventd_enabled:
 
     def render_mkeventd_changestate():
         html.button('_mkeventd_changestate', _("Change Event state to:"))
-        html.write("&nbsp;")
+        html.nbsp()
         MonitoringState().render_input("_mkeventd_state", 2)
 
     def command_mkeventd_changestate(cmdtag, spec, row):

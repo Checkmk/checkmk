@@ -325,7 +325,7 @@ def render_hosts(mode):
         else:
             statecolor = 0
         html.open_div(class_=["statebullet", "state%d" % statecolor])
-        html.write("&nbsp;")
+        html.nbsp()
         html.close_div()
         link(host, target + "&host=%s&site=%s" % (html.urlencode(host), html.urlencode(site)))
         html.close_td()

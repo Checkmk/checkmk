@@ -791,7 +791,7 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
                     rendered_class, rendered_content = rendered_cell
                     html.open_p(class_="ui-li-desc")
                     cell.paint_as_header()
-                    html.write(': ')
+                    html.write_text(': ')
                     html.open_span(class_=rendered_class)
                     html.write(rendered_content)
                     html.close_span()

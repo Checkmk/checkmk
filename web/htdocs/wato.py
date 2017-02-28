@@ -8786,11 +8786,11 @@ def mode_timeperiod_import_ical(phase):
                 index += 1
                 html.set_var('except_%d_0' % index, event['date'])
                 html.set_var('except_indexof_%d' % index, "%d" % index)
-                if ical['times']:
-                    for n in range(3):
-                        if ical['times'][n]:
-                            html.set_var('except_%d_1_%d_from' % (index, n+1), ical['times'][n][0])
-                            html.set_var('except_%d_1_%d_until' % (index, n+1), ical['times'][n][1])
+                for n, time_spec in enumerate(ical["times"]):
+                    start_time = ":".join(map(str, time_spec[0]))
+                    end_time   = ":".join(map(str, time_spec[1]))
+                    html.set_var('except_%d_1_%d_from' % (index, n), start_time)
+                    html.set_var('except_%d_1_%d_until' % (index, n), end_time)
             return "edit_timeperiod"
         return
 

@@ -1,0 +1,10 @@
+Title: quicksearch: fixed exception when using special characters
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1488291410
+Class: fix
+
+

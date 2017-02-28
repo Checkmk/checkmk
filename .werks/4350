@@ -1,0 +1,10 @@
+Title: check_sql: Make database server to connect to configurable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1488274925
+Class: feature
+
+

@@ -302,7 +302,7 @@ try:
 
             # Issue a HTTP request with those parameters
             # Extract the form target and method
-            method = form['attrs'].get('method', 'GET')
+            method = form['attrs'].get('method', 'GET').upper()
             target = form['attrs'].get('action', real_url)
             if target[0] == '/':
                 # target is given as absolute path, relative to hostname

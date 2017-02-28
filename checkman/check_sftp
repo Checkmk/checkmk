@@ -1,0 +1,12 @@
+title: SFTP Server
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This performs an active check of an SFTP server by testing if a connection
+ is successful. Optionally it is possible to put a file to the server. It is
+ not neccessary to create a file as the check will do that if the given file
+ does not exist. Also same or another file or the timestamp of a file of the
+ server can be fetched. The Service will go {CRIT} if one of the tests fails.
+

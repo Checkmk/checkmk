@@ -48,10 +48,16 @@ def check_mssql_blocked_sessions(_no_item, params, info):
 
     state = params['state']
 
+    ignored_waittypes = set()
     for line in info:
         if "blocked" in line[0].lower():
             continue # Skip debug output which was send by old agent by accident
+
         session_id, wait_duration_ms, wait_type, blocking_session_id = line
+
+        if wait_type in params.get("ignore_waittypes", []):
+            ignored_waittypes.add(wait_type)
+            continue
 
         if params.has_key('waittime'):
             warn, crit = params['waittime']
@@ -63,9 +69,12 @@ def check_mssql_blocked_sessions(_no_item, params, info):
             else:
                 state = 0
 
-        yield state, \
-              "Session %s blocked by %s (Wait %s ms, Type: %s)" % \
-              ( session_id, blocking_session_id, wait_duration_ms, wait_type )
+        yield state, "Session %s blocked by %s (Wait %s ms, Type: %s)" % \
+              (session_id, blocking_session_id, wait_duration_ms, wait_type)
+
+    if ignored_waittypes:
+        yield 0, "Ignored wait types: %s" % ", ".join(ignored_waittypes)
+
 
 check_info['mssql_blocked_sessions'] = {
     'inventory_function'        : inventory_mssql_blocked_sessions,

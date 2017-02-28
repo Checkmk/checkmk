@@ -709,7 +709,7 @@ def to_regex(s):
 
 
 def ajax_search():
-    q = html.var('q').strip()
+    q = html.var_utf8('q').strip()
     if not q:
         return
 

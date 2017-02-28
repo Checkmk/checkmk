@@ -80,6 +80,8 @@ def show_log_list():
     html.end_context_buttons()
 
     for site, host_name, logs in all_logs():
+        if not logs:
+            continue
         html.h2(html.render_a(host_name, href=html.makeuri([('site', site), ('host', host_name)])))
         list_logs(site, host_name, logs)
     html.footer()

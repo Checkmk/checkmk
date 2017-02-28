@@ -1,0 +1,16 @@
+Title: Cleaning up signatures of unused packages now
+Level: 1
+Component: metrics
+Compatible: compat
+Version: 1.4.0b4
+Edition: cee
+Date: 1488294733
+Class: fix
+
+The signatures of old agents (packages that are not needed by any host) were not
+deleted from the var/check_mk/agents/*/_PACKAGES directories while the packages
+and config files were deleted.
+
+This had the effect that when you change a agent package relevant configuration,
+bake the agent, change the value back and bake the agent with the same config,
+the agent will already be signed without the need manually sign it again. This

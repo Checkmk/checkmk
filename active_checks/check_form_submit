@@ -186,7 +186,7 @@ def open_url(url, method = 'GET', data = None):
     if method == 'GET' and data is not None:
         # Add the query string to the url in this case
         start = '?' in url and '&' or '?'
-        url += start + '&'.join([ '='.join(item) for item in data.items() ])
+        url += start + urllib.urlencode(data)
         data = None
 
     try:

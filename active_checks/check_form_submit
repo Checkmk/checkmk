@@ -208,6 +208,10 @@ def open_url(url, method = 'GET', data = None):
     code     = fd.getcode()
     content  = fd.read()
 
+    encoding = fd.headers.getparam('charset')
+    if encoding:
+        content = content.decode(encoding)
+
     debug('CODE: %s RESPONSE:' % code)
     debug('\n'.join([ '    %02d %s' % (index + 1, line) for index, line in enumerate(content.split('\n')) ]))
     return code, real_url, content

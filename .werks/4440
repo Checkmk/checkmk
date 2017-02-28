@@ -1,0 +1,14 @@
+Title: check_sftp: New Check for SFTP Connections
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1488271633
+Class: feature
+
+With this new active check you are able to verify successful logins and
+optionally a timestamp of a file or operability of getting/putting a file.
+
+This plugin needs the python libary paramiko and is therefore not out of
+the box compatible with older releases of Check_MK.

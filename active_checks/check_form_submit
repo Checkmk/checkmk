@@ -78,9 +78,10 @@ OPTIONS:
 """)
 
 short_options = 'I:u:p:H:f:q:e:t:n:sd'
+long_options = [ "help" ]
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], short_options)
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
@@ -100,7 +101,7 @@ num_warn     = None
 num_crit     = None
 
 for o,a in opts:
-    if o == '-h':
+    if o in [ '-h', '--help' ]:
         usage()
         sys.exit(0)
     elif o == '-I':

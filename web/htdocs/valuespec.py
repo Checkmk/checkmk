@@ -2724,23 +2724,21 @@ class TimeHelper(object):
 
 class Timerange(CascadingDropdown):
     def __init__(self, **kwargs):
-        self._title = _('Time range')
+        self._title         = _('Time range')
+        self._allow_empty   = kwargs.get("allow_empty", False)
+        self._include_time  = kwargs.get("include_time", False)
+        self._fixed_choices = kwargs.get("choices", [])
+        kwargs['choices']   = self._prepare_choices
+        CascadingDropdown.__init__(self, **kwargs)
 
-        if 'choices' not in kwargs:
-            kwargs['choices'] = []
 
-        if kwargs.get('allow_empty', False):
-            kwargs['choices'] += [
-                (None, ''),
-            ]
+    def _prepare_choices(self):
+        choices = list(self._fixed_choices)
 
-        kwargs['choices'] += [
-            ( "4h",  _("The last 4 hours")),
-            ( "25h", _("The last 25 hours")),
-            ( "8d",  _("The last 8 days")),
-            ( "35d", _("The last 35 days")),
-            ( "400d", _("The last 400 days")),
+        if self._allow_empty:
+            choices += [ (None, '') ]
 
+        choices += self._get_graph_timeranges() + [
             ( "d0",  _("Today") ),
             ( "d1",  _("Yesterday") ),
 
@@ -2761,13 +2759,11 @@ class Timerange(CascadingDropdown):
                     elements = [
                         AbsoluteDate(title = _("From:")),
                         AbsoluteDate(title = _("To:")),
-                    ],
-                ),
-            ),
+            ])),
         ]
 
-        if kwargs.get('include_time', False):
-            kwargs['choices'].append(
+        if self._include_time:
+            choices += [
                 ( "time", _("Date & time range"),
                     Tuple(
                         orientation = "horizontal",
@@ -2784,9 +2780,24 @@ class Timerange(CascadingDropdown):
                         ],
                     ),
                 )
-            )
+            ]
+        return choices
 
-        CascadingDropdown.__init__(self, **kwargs)
+
+
+    def _get_graph_timeranges(self):
+        try:
+            import config # FIXME
+            return [ (('age', timerange_attrs["duration"]), timerange_attrs['title'])
+                     for timerange_attrs in config.graph_timeranges ]
+
+        except AttributeError: # only available in cee
+            return [ ( "4h",   _("The last 4 hours")),
+                     ( "25h",  _("The last 25 hours")),
+                     ( "8d",   _("The last 8 days")),
+                     ( "35d",  _("The last 35 days")),
+                     ( "400d", _("The last 400 days")), ]
+
 
     def compute_range(self, rangespec):
         if rangespec == None:

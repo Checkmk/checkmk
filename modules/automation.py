@@ -135,7 +135,7 @@ def do_automation(cmd, args):
         if cmk.debug.enabled():
             raise
         else:
-            sys.stderr.write("%s\n" % e)
+            sys.stderr.write("%s\n" % make_utf8("%s" % e))
             output_profile()
             sys.exit(2)
 

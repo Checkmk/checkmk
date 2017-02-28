@@ -53,9 +53,9 @@ using std::vector;
 extern unsigned long g_max_lines_per_logfile;
 
 Logfile::Logfile(Logger *logger, const CommandsHolder &commands_holder,
-                 const fs::path &path, bool watch)
+                 fs::path path, bool watch)
     : _commands_holder(commands_holder)
-    , _path(path)
+    , _path(std::move(path))
     , _since(0)
     , _watch(watch)
     , _read_pos{}

@@ -64,7 +64,7 @@ private:
 
 public:
     Logfile(Logger *logger, const CommandsHolder &commands_holder,
-            const fs::path &path, bool watch);
+            fs::path path, bool watch);
     ~Logfile();
 
     std::string path() { return _path; }

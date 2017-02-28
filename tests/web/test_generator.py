@@ -40,7 +40,6 @@ def test_HTMLGenerator():
         assert tools.compare_html(html.drain(), "<table><tr><td>1</td><td>2</td></tr></table>")
 
     a = u"\u2665"
-    print a
     with html.plugged():
         assert html.render_a("test", href="www.test.case")
         html.render_a(u"test", href="www.test.case")

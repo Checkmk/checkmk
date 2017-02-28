@@ -5,4 +5,19 @@ Date: 2017-02-23 13:11:32
 Targetversion: 1.4.0
 Class: bug
 
-The GUI is only using the active checks under ~/lib/nagios/plugins and not local ones (~/local/lib/nagios/plugins). 
+The GUI is only using the active checks under ~/lib/nagios/plugins and
+not local ones (~/local/lib/nagios/plugins).
+
+-------------------------
+
+The active checks shown on the WATO service page is executed by the
+automation "active-check" in modules/automation.py which simply uses
+the argument_function defined in checks_check_*.
+
+This seems also affect the regular checks. At least when configuring
+active checks with the "active_checks" rule which is used by default
+when configuring a formalized active check with WATO. The
+checks/check_* files hard code a $USER1$ path to the configuration
+which tells Check_MK to use the file found in ~/lib/nagios/plugins.
+
+This affects the CMC. Nagios has not been checked.

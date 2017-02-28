@@ -1,0 +1,9 @@
+Title: FIX Logwatch problematic logfiles list was showing too many logfiles
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p19
+Date: 1488280277
+Class: fix
+
+This is an addition to the werk #4315 which was not fixing all cases

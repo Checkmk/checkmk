@@ -430,7 +430,8 @@ def parse_file(host, file, hidecontext = False):
 
 def host_logs(host):
     try:
-        return filter(lambda x: x != '..' and x != '.', os.listdir(defaults.logwatch_dir + '/' + host))
+        return filter(lambda x: x != '..' and x != '.' and os.stat(defaults.logwatch_dir + '/' + host + '/' + x).st_size != 0,
+                        os.listdir(defaults.logwatch_dir + '/' + host))
     except:
         return []
 

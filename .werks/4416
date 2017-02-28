@@ -1,0 +1,10 @@
+Title: check_form_submit: added documented but missing --help argument
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b4
+Date: 1488293307
+Class: fix
+
+

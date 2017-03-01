@@ -67,9 +67,9 @@ Function readIniFile(path)
                     End If
                 End If
             End If
-            Set FH = Nothing
         Loop
         FH.Close
+        Set FH = Nothing
     End If
     Set readIniFile = parsed
     Set parsed = Nothing

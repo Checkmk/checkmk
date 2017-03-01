@@ -28,9 +28,9 @@ unixcat_SOURCES = unixcat.cc
 unixcat_LDADD = -lpthread
 unixcat_LDFLAGS = -static-libstdc++
 
-pkglib_LIBRARIES = livestatus.so
+pkglib_LIBRARIES = liblivestatus.a
 
-livestatus_so_SOURCES = \
+liblivestatus_a_SOURCES = \
         AndingFilter.cc \
         AttributeListAsIntColumn.cc \
         AttributeListColumn.cc \
@@ -158,14 +158,14 @@ livestatus_so_SOURCES = \
         strutil.cc \
         waittriggers.cc
 
-livestatus_so_CPPFLAGS = -I.. @BOOST_CPPFLAGS@
-livestatus_so_CXXFLAGS = -fPIC
+liblivestatus_a_CPPFLAGS = -I.. @BOOST_CPPFLAGS@
+liblivestatus_a_CXXFLAGS = -fPIC
 
-livestatus.o: $(livestatus_so_OBJECTS)
+livestatus.o: $(liblivestatus_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky
 	$(CXX) $(LDFLAGS) -s -shared $^ -o $@ -lstdc++fs -lpthread -static-libstdc++ @BOOST_LDFLAGS@
 # To make sure we can dlopen() our NEB later
-	$(CXX) $(livestatus_so_CXXFLAGS) $(CXXFLAGS) NagiosMockup.cc $@ -o NagiosMockup
+	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.cc $@ -o NagiosMockup
 	$(RM) NagiosMockup
 
 all-local: livestatus.o
@@ -173,7 +173,7 @@ all-local: livestatus.o
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(pkglibdir)
 	$(INSTALL_PROGRAM) livestatus.o $(DESTDIR)$(pkglibdir)
-	rm -f $(DESTDIR)$(pkglibdir)/livestatus.so
+	rm -f $(DESTDIR)$(pkglibdir)/liblivestatus.a
 
 clean-local:
 	rm -f *~

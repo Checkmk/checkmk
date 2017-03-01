@@ -14,7 +14,3 @@
      cmp: auf num_split() von Hostname bzw. Service anwenden.
      Auch den Fall behandeln, dass Hostgraphen gemalt werden. Dazu den
      Host check command z.B. auf "TCP COnnect" umstellen.
-
-
-[22] Graph Collection: Export als PDF kann die combined noch nicht.
-     Da kommt ein Fehler.

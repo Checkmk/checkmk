@@ -162,9 +162,10 @@ livestatus_so_CPPFLAGS = -I.. @BOOST_CPPFLAGS@
 livestatus_so_CXXFLAGS = -fPIC
 livestatus_so_CFLAGS   = -fPIC
 
+# Note: libstdc++fs is only available as a static library, so we are lucky
 livestatus.o: $(livestatus_so_OBJECTS) $(livestatus_so_DEPENDENCIES)
 	-rm -f plugin.so
-	$(CXX) $(LDFLAGS) -s -fPIC -shared $(livestatus_so_OBJECTS) -o $@ -lpthread -static-libstdc++ @BOOST_LDFLAGS@
+	$(CXX) $(LDFLAGS) -s -fPIC -shared $(livestatus_so_OBJECTS) -o $@ -lstdc++fs -lpthread -static-libstdc++ @BOOST_LDFLAGS@
 
 all-local: livestatus.o
 

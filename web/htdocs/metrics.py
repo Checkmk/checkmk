@@ -251,13 +251,13 @@ def get_hue_by_weight_index(weight_index):
 hsv_color_distribution = [
   (0.1, 10.0), # orange ... red
   (0.2, 10.0), # orange ... yellow(-greenish)
-  (0.3, 5.0), # green-yellow
-  (0.4, 2.0), # green
-  (0.5, 5.0), # green .... cyan
+  (0.3,  5.0), # green-yellow
+  (0.4,  2.0), # green
+  (0.5,  5.0), # green .... cyan
   (0.6, 20.0), # cyan ... seablue
   (0.7, 10.0), # seablue ... dark blue
   (0.8, 20.0), # dark blue ... violet
-  (0.9, 10.0), # violet .. magenta
+  (0.9, 20.0), # violet .. magenta
   (1.0, 20.0), # magenta .. red
 ]
 

@@ -38,9 +38,10 @@ import math, time, colorsys, shlex, operator, random
 import config, pagetypes, table
 import sites
 import traceback
+from log import logger
 from lib import *
 from valuespec import *
-from livestatus import MKLivestatusNotFoundError
+import livestatus
 from cmk.regex import regex
 from collections import OrderedDict
 
@@ -1556,7 +1557,7 @@ def host_service_graph_dashlet_cmk(graph_identification, custom_graph_render_opt
             graph_recipe = graph_recipes[0]
         else:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
-    except MKLivestatusNotFoundError:
+    except livestatus.MKLivestatusNotFoundError:
         html.write("<div class=error>%s</div>" % html.attrencode(_("Cannot render graphs: cannot fetch data via Livestatus")))
         return
 

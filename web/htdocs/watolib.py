@@ -1867,12 +1867,15 @@ class Folder(BaseFolder):
         # Must not fail because of auth problems. Auth is check at the
         # actually renamed host.
         changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
-        add_change("rename-parent",
-            _("Renamed parent (set in folder) from %s to %s") % (self.path(), oldname, newname),
+        if not changed:
+            return False
+
+        add_change("rename-parent", _("Renamed parent (set in folder) from %s to %s") %
+                (self.path(), oldname, newname),
             obj=self, sites=self.all_site_ids())
         self.save_hosts()
         self.save()
-        return changed
+        return True
 
 
     def rewrite_hosts_files(self):
@@ -2433,19 +2436,25 @@ class Host(WithPermissionsAndAttributes):
         # on the renamed host must be sufficient. If we would
         # fail here we would leave an inconsistent state
         changed = rename_host_in_list(self._cluster_nodes, oldname, newname)
+        if not changed:
+            return False
+
         add_change("rename-node", _("Renamed cluster node from %s into %s.") % (oldname, newname),
             obj=self, sites=[self.site_id()])
         self.folder().save_hosts()
-        return changed
+        return True
 
 
     def rename_parent(self, oldname, newname):
         # Same is with rename_cluster_node()
         changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
+        if not changed:
+            return False
+
         add_change("rename-parent", _("Renamed parent from %s into %s.") % (oldname, newname),
             obj=self, sites=[self.site_id()])
         self.folder().save_hosts()
-        return changed
+        return True
 
 
     def rename(self, new_name):

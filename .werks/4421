@@ -1,0 +1,12 @@
+Title: Host rename created a "parent rename" change for each existing host
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488356473
+
+When renaming a host via WATO, this created a change for each existing host. In
+large installations this lead to a performance issue.

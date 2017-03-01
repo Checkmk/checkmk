@@ -349,49 +349,39 @@ def inventory_if_common(info, has_nodeinfo = False):
             for group_name, attrs in group_patterns.items():
                 group_type     = attrs["group_type"]
                 group_presence = attrs["group_presence"]
-                group_nodes    = attrs["group_patterns"].keys()
 
-                for p_nodename, pattern in attrs["group_patterns"].items():
-                    p_iftype     = pattern.get("iftype")
-                    p_node_items = pattern.get("items")
+                if g_hostname not in attrs["group_patterns"]:
+                    continue
 
-                    match_node = True
-                    if p_nodename not in group_nodes:
-                        match_node = False
+                p_node_items = attrs["group_patterns"][g_hostname].get("items")
+                p_iftype     = attrs["group_patterns"][g_hostname].get("iftype")
 
-                    # Interfaces can be grouped by item or iftype
-                    match_type = True
-                    if p_iftype is not None and saveint(p_iftype) != saveint(ifType):
-                        match_type = False
+                # Interfaces can be grouped by item or iftype
+                match_type = True
+                if p_iftype is not None and saveint(p_iftype) != saveint(ifType):
+                    match_type = False
 
-                    match_item = True
-                    if p_node_items is not None and not tryint(item) in map(tryint, p_node_items):
-                        match_item = False
+                match_item = True
+                if p_node_items is not None and not tryint(item) in map(tryint, p_node_items):
+                    match_item = False
 
-                    if not (match_item and match_type and match_node):
-                        continue
+                if not (match_item and match_type):
+                    continue
 
-                    if group_presence == "instead":
-                        is_only_in_group = True
+                if group_presence == "instead":
+                    is_only_in_group = True
 
-                    have_groups.setdefault(group_name, {
-                        "group_presence" : group_presence,
-                        "group_type"     : group_type,
-                        "group_patterns" : {},
-                    })
+                have_groups.setdefault(group_name, {
+                    "group_presence" : group_presence,
+                    "group_type"     : group_type,
+                    "group_patterns" : attrs["group_patterns"],
+                })
 
-                    have_groups[group_name]["group_patterns"].setdefault(p_nodename, {})
-                    if p_iftype is not None:
-                        have_groups[group_name]["group_patterns"][p_nodename].setdefault("iftype", p_iftype)
-
-                    if p_node_items is not None:
-                        have_groups[group_name]["group_patterns"][p_nodename].setdefault("items", p_node_items)
-
-                    # If we're on a cluster, we have no chance calculating expected speed
-                    if group_type == "single_host":
-                        have_groups[group_name].setdefault("interfaces", [])
-                        have_groups[group_name]["interfaces"].append(
-                            (saveint(ifSpeed), ifOperStatus, ifType))
+                # If we're on a cluster, we have no chance calculating expected speed
+                if group_type == "single_host":
+                    have_groups[group_name].setdefault("interfaces", [])
+                    have_groups[group_name]["interfaces"].append(
+                        (saveint(ifSpeed), ifOperStatus, ifType))
 
             # The agent output already set this interface to grouped
             if ifGroup:
@@ -478,7 +468,7 @@ def inventory_if_common(info, has_nodeinfo = False):
 
 
 def _convert_old_if_group_params(params):
-    if params.get("aggregate") == True:
+    if params["aggregate"] == True:
         del params["aggregate"]
         params.setdefault("aggregate", {})
         params["aggregate"].setdefault("group_patterns", {})
@@ -537,29 +527,32 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
                 matching_interfaces.append((if_member_item, element))
 
             else:
-                for node_name, entry in params["aggregate"].get("group_patterns", {}).items():
-                    if not (node is None or node == node_name):
-                        continue
+                if node is None:
+                    node = g_hostname
 
-                    node_items = entry.get("items")
-                    iftype     = entry.get("iftype")
+                if node not in params["aggregate"]["group_patterns"]:
+                    continue
 
-                    # The iftype and node_items parameters are further restrictions
-                    # If none of them are set, the interface is added to the group
-                    # tryint -> force "01" and "1" to be identical.
-                    add_interface = True # This approach is easier to comprehend..
+                attrs      = params["aggregate"]["group_patterns"][node]
+                node_items = attrs.get("items")
+                iftype     = attrs.get("iftype")
 
-                    if node_items is not None and \
-                       tryint(if_member_item) not in map(tryint, node_items):
-                        add_interface = False
+                # The iftype and node_items parameters are further restrictions
+                # If none of them are set, the interface is added to the group
+                # tryint -> force "01" and "1" to be identical.
+                add_interface = True # This approach is easier to comprehend..
 
-                    if iftype is not None and \
-                       not saveint(ifType) == saveint(iftype):
-                        add_interface = False
+                if node_items is not None and \
+                   tryint(if_member_item) not in map(tryint, node_items):
+                    add_interface = False
 
-                    this_element = (if_member_item, element)
-                    if add_interface and this_element not in matching_interfaces:
-                        matching_interfaces.append(this_element)
+                if iftype is not None and \
+                   not saveint(ifType) == saveint(iftype):
+                    add_interface = False
+
+                this_element = (if_member_item, element)
+                if add_interface and this_element not in matching_interfaces:
+                    matching_interfaces.append(this_element)
 
         # TODO Now we're done and have all matching interfaces
         # Accumulate info over matching_interfaces
@@ -571,6 +564,7 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
                       "outmcast"    : 0, "outbcast"    : 0, "ifOutDiscards" : 0,
                       "ifOutErrors" : 0, "ifOutQLen"   : 0, }
 
+        num_up = 0
         for (if_member_item, element) in matching_interfaces:
             node, line = if_extract_node(element, has_nodeinfo)
             ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
@@ -585,6 +579,10 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
             else:
                 ifOperStatusName = if_statename(ifOperStatus)
 
+            # Append an additional entry to the info table containing the calculated group_info
+            if ifOperStatus == '1':
+                num_up += 1
+
             ifGroup = None
             if type(ifIndex) == tuple:
                 ifGroup, ifIndex = ifIndex
@@ -593,7 +591,6 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
             group_members[node].append({"name"       : if_member_item,
                                         "state"      : ifOperStatus,
                                         "state_name" : ifOperStatusName, })
-            perfdata = []
 
             # Only these values are packed into counters
             # We might need to enlarge this table
@@ -635,19 +632,6 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
             group_info["ifOutQLen"]     += saveint(ifOutQLen)
             # This is the fallback ifType if None is set in the parameters
             group_info["ifType"]         = ifType
-
-        # Append an additional entry to the info table containing the calculated group_info
-        num_up = 0
-        for (if_member_item, element) in matching_interfaces:
-            node, line = if_extract_node(element, has_nodeinfo)
-            ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
-                inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
-                outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-                ifOutQLen, ifAlias, ifPhysAddress = line
-
-            if ifOperStatus == '1' or (
-               type(ifOperStatus) == tuple and ifOperStatus[0] == '1'):
-                num_up += 1
 
         if num_up == len(matching_interfaces):
             group_operStatus = "1" # up
@@ -844,8 +828,9 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                     member_info = []
                     for member in members:
                         member_info.append("%s (%s)" % (member["name"], member["state_name"]))
+
                     nodeinfo = ""
-                    if group_node is not None:
+                    if group_node is not None and len(group_members) > 1:
                         nodeinfo = " on node %s" % group_node
                     infotext += "[%s%s] " % (", ".join(member_info), nodeinfo)
 
@@ -859,7 +844,6 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                 ref_speed = targetspeed / 8.0
             else:
                 ref_speed = None
-
 
             if ifPhysAddress:
                 if type(ifPhysAddress) != list:

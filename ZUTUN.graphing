@@ -10,11 +10,6 @@
 [14] Import views und visuals irgendwie aufrüamen
 
 
-[18] au: Default festlegen, wenn man auf die Seite kommt. Wenn die Variable
-     "presentation" nicht da ist, soll er einfache "Summe" nehmen. Bei
-     den Links von den Views dann "presentation" weglassen.
-
-
 [19] Umswitchen der Darstellungsarten über die Knöpfe soll den gewählten
      Zeitbereich beibehalten.  Geht das überhaupt?
 

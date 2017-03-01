@@ -5,11 +5,6 @@
     lm: nicht durch...
 
 
-[19] Umswitchen der Darstellungsarten über die Knöpfe soll den gewählten
-     Zeitbereich beibehalten. -> Das genauso machen wie bei den Graph
-     Collections und dem PDF-Exportknopf. Da gibt es eine Kiste im Javaskript.
-
-
 [21] au: Sortierung der Hosts im Graphen ist chaotisch -> numsort
      cmp: auf num_split() von Hostname bzw. Service anwenden.
      Auch den Fall behandeln, dass Hostgraphen gemalt werden. Dazu den

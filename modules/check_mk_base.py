@@ -289,7 +289,7 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
                                ignore_check_interval=True)
                 if new_info != None:
                     if has_nodeinfo:
-                        new_info = add_nodeinfo(new_info, None)
+                        new_info = add_nodeinfo(new_info, node)
 
                     info += new_info
                     at_least_one_without_exception = True

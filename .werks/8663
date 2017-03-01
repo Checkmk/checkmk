@@ -1,0 +1,11 @@
+Title: MSSQL plugin: fixed reading in of ini file(s)
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488381734
+
+Fixed a nasty bug in MSSQL plugin, which prevented the plugin to read in the ini files.

@@ -6,13 +6,22 @@
 
 
 [19] Umswitchen der Darstellungsarten über die Knöpfe soll den gewählten
-     Zeitbereich beibehalten.  Geht das überhaupt?
+     Zeitbereich beibehalten. -> Das genauso machen wie bei den Graph
+     Collections und dem PDF-Exportknopf. Da gibt es eine Kiste im Javaskript.
 
-[21] Sortierung der Hosts im Graphen ist chaotisch -> numsort
 
-TESTEN
---------------------------------------------------------------------------------
+[21] au: Sortierung der Hosts im Graphen ist chaotisch -> numsort
+     cmp: auf num_split() von Hostname bzw. Service anwenden.
+     Auch den Fall behandeln, dass Hostgraphen gemalt werden. Dazu den
+     Host check command z.B. auf "TCP COnnect" umstellen.
 
-[20] Test CEE mit Nagios als Kern
 
-[21] Test CRE (Knopf darf nicht kommen)
+[22] Graph Collection: Export als PDF kann die combined noch nicht.
+     Da kommt ein Fehler.
+
+
+[23] Hinzufügen der Metriken eines Graphs in einen Customgraphen geht nicht.
+
+
+[24] Lines werden als Area dargestellt, wenn der Graph nur eine Metrik
+    enthält.

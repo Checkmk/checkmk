@@ -21,7 +21,3 @@
 
 
 [23] Hinzufügen der Metriken eines Graphs in einen Customgraphen geht nicht.
-
-
-[24] Lines werden als Area dargestellt, wenn der Graph nur eine Metrik
-    enthält.

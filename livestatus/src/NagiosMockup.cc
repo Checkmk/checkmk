@@ -1,9 +1,11 @@
-#include <sys/types.h>
+#include <time.h>
 
 extern "C" {
 // dummy types -----------------------------------------------------------------
 
-struct circular_buffer {};
+struct circular_buffer {
+    int dummy;
+};
 struct command;
 struct contactgroup;
 struct contact;

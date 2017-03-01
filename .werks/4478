@@ -1,0 +1,11 @@
+Title: systemtime: Now takes the agent data cache file age into account
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488365020
+
+

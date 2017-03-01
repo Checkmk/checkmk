@@ -1,5 +1,3 @@
-[1]  Alles HIRN: abarbeiten
-
 [2]  Profilen und Performance verbessern
 
 
@@ -9,6 +7,8 @@
 
 [19] Umswitchen der Darstellungsarten über die Knöpfe soll den gewählten
      Zeitbereich beibehalten.  Geht das überhaupt?
+
+[21] Sortierung der Hosts im Graphen ist chaotisch -> numsort
 
 TESTEN
 --------------------------------------------------------------------------------

@@ -990,7 +990,6 @@ void omd_advertize() {
 }
 
 // Called from Nagios after we have been loaded.
-// cppcheck-suppress unusedFunction
 extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
                               void *handle) {
     fl_logger_nagios = Logger::getLogger("nagios");
@@ -1039,7 +1038,6 @@ extern "C" int nebmodule_init(int flags __attribute__((__unused__)), char *args,
 }
 
 // Called from Nagios after before we are unloaded.
-// cppcheck-suppress unusedFunction
 extern "C" int nebmodule_deinit(int flags __attribute__((__unused__)),
                                 int reason __attribute__((__unused__))) {
     Notice(fl_logger_nagios) << "deinitializing";

@@ -1,0 +1,12 @@
+Title: prefer ucd_mem over hr_mem in case of pfSense monitoring
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.8p19
+Date: 1488466566
+Class: fix
+
+If monitoring pfSense firewalls the hr_mem check does not provide the right data. Because of this ucd_mem is preferred here.
+
+The change is incompatible because you have to rediscover the affected hosts so ucd_mem is used instead of hr_mem.
+

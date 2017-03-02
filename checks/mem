@@ -148,13 +148,14 @@
 
 
 factory_settings["mem_linux_default_levels"] = {
-    "levels_virtual":       ("perc_used", ( 80.0,  90.0)),
-    "levels_total":         ("perc_used", (120.0, 150.0)),
-    "levels_shm":           ("perc_used", ( 20.0,  30.0)),
-    "levels_pagetables":    ("perc_used", (  8.0,  16.0)),
-    "levels_committed":     ("perc_used", (100.0, 150.0)),
-    "levels_commitlimit":   ("perc_free", ( 20.0,  10.0)),
-    "levels_vmalloc":       ("abs_free",  (50*1024*1024, 30*1024*1024)),
+    "levels_virtual"      : ("perc_used", ( 80.0,  90.0)),
+    "levels_total"        : ("perc_used", (120.0, 150.0)),
+    "levels_shm"          : ("perc_used", ( 20.0,  30.0)),
+    "levels_pagetables"   : ("perc_used", (  8.0,  16.0)),
+    "levels_committed"    : ("perc_used", (100.0, 150.0)),
+    "levels_commitlimit"  : ("perc_free", ( 20.0,  10.0)),
+    "levels_available"    : ("perc_free", ( 20.0,  10.0)),
+    "levels_vmalloc"      : ("abs_free",  (50*1024*1024, 30*1024*1024)),
 }
 
 def is_linux_meminfo(meminfo):
@@ -316,6 +317,13 @@ def check_mem_linux(_no_item, params, info):
     if "CommitLimit" in meminfo:
         r = check_mem_levels("Commit Limit", meminfo["TotalTotal"] - meminfo["CommitLimit"],
                 meminfo["TotalTotal"], params.get("levels_commitlimit"), of_what = "RAM + Swap")
+        if r[0]:
+            yield r # only display if non-OK
+
+    # Available Memory
+    if "MemAvailable" in meminfo:
+        r = check_mem_levels("Available Memory", meminfo["MemAvailable"],
+                meminfo["TotalTotal"], params.get("levels_available"), of_what = "RAM")
         if r[0]:
             yield r # only display if non-OK
 

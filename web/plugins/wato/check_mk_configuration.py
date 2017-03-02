@@ -223,6 +223,39 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "quicksearch_search_order",
+    ListOf(
+        Tuple(
+            elements = [
+                DropdownChoice(
+                    title = _("Search filter"),
+                    choices = [
+                        ("h",  _("Hostname")),
+                        ("al", _("Hostalias")),
+                        ("ad", _("Hostaddress")),
+                        ("tg", _("Hosttag")),
+                        ("hg", _("Hostgroup")),
+                        ("sg", _("Servicegroup")),
+                        ("s",  _("Service Description")),
+                    ],
+                ),
+                DropdownChoice(
+                    title = _("Match behaviour"),
+                    choices = [
+                        ("continue",          _("Continue search")),
+                        ("finished",          _("Search finished: Also show all results of previous filters")),
+                        ("finished_distinct", _("Search finished: Only show results of this filter")),
+                    ],
+                ),
+            ],
+        ),
+        title = _("Quicksearch search order"),
+        default_value = [("h", "continue"), ("al", "continue"), ("ad", "continue"), ("s", "continue")],
+        add_label = _("Add search filter")
+    ),
+    domain = "multisite")
+
+register_configvar(group,
     "table_row_limit",
     Integer(title = _("Limit the number of rows shown in tables"),
             help = _("Several pages which use tables to show data in rows, like the "

@@ -82,6 +82,9 @@ sidebar_notify_interval = None
 # Maximum number of results to show in quicksearch dropdown
 quicksearch_dropdown_limit = 80
 
+# Quicksearch search order
+quicksearch_search_order = [("h", "continue"), ("al", "continue"), ("ad", "continue"), ("s", "continue")]
+
 #    _     _           _ _
 #   | |   (_)_ __ ___ (_) |_ ___
 #   | |   | | '_ ` _ \| | __/ __|

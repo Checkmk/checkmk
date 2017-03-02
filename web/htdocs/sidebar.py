@@ -733,114 +733,54 @@ def search_open():
     html.http_redirect(url)
 
 
+# Handles exactly one livestatus query
+class LivestatusSearchConductor(object):
+    def __init__(self, used_filters, filter_behaviour):
+        # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
+        # filter_behaviour: "continue"
+        self._used_filters       = used_filters
+        self._filter_behaviour   = filter_behaviour
 
-class LivestatusQuicksearch(object):
-    def __init__(self, query):
-        self._query = query
-
-        self._used_filters       = None  # Filters entered in query
-        self._livestatus_table   = None  # Livestatus table to query
-        self._livestatus_command = None  # Computed livestatus query
-        self._rows               = None  # Resulting rows
-        self._no_filters_set     = False # Note that no filters were set
-                                         # This changes the mode to a host search
-                                         # followed by a service search
-        super(LivestatusQuicksearch, self).__init__()
+        self._livestatus_command = None # Computed livestatus query
+        self._rows               = []   # Raw data from livestatus
+        self._elements           = []   # Postprocessed rows
 
 
-    def generate_dropdown_results(self):
-        self._query_data()
-
-        self._determine_dropdown_elements()
-        self._render_dropdown_elements()
+    def get_filter_behaviour(self):
+        return self._filter_behaviour
 
 
-    def generate_search_url(self):
-        self._query_data()
-
-        exact_match = len(self._rows) == 1
-        target_view = self._get_target_view(exact_match = exact_match)
-
-        url_params = []
-        for plugin in self._used_search_plugins:
-            match_info = plugin.get_matches(target_view,
-                                            exact_match and self._rows[0] or None,
-                                            self._livestatus_table,
-                                            self._used_filters,
-                                            rows = self._rows)
-            if not match_info:
-                continue
-            text, url_filters = match_info
-            url_params.extend(url_filters)
-
-        return html.makeuri([("view_name", target_view),
-                             ("filled_in", "filter")] + url_params,
-                             delvars  = "q",
-                             filename = "view.py")
-
-
-    def _get_target_view(self, exact_match = True):
-        if exact_match:
-            if self._livestatus_table == "hosts":
-                return "host"
-            elif self._livestatus_table == "services":
-                return "allservices"
-            elif self._livestatus_table == "hostgroups":
-                return "hostgroup"
-            elif self._livestatus_table == "servicegroups":
-                return "servicegroup"
-        else:
-            if self._livestatus_table == "hosts":
-                return "searchhost"
-            elif self._livestatus_table == "services":
-                return "searchsvc"
-            elif self._livestatus_table == "hostgroups":
-                return "hostgroups"
-            elif self._livestatus_table == "servicegroups":
-                return "svcgroups"
-
-
-    def _query_data(self):
-        self._determine_used_filters()
+    def do_query(self):
         self._execute_livestatus_command()
 
 
-        # If no rows were found with the given (filterless) query, issue
-        # -> Hostaddress -> Hostalias -> Service description
-        if not self._rows and self._no_filters_set:
-            for try_filter in ["ad", "al", "s"]:
-                self._used_filters = {try_filter: [self._query]}
-                self._execute_livestatus_command()
-                if self._rows:
-                    break
+    def num_rows(self):
+        return len(self._rows)
 
 
-    def _determine_used_filters(self):
-        self._used_filters = {}
-        filter_names = set(map(lambda x: "(%s)" % x.get_filter_shortname(), quicksearch_match_plugins))
-        filter_regex = "|".join(filter_names)
+    def remove_rows_from_end(self, num):
+        self._rows = self._rows[:-num]
 
-        # Goal: "(^| )((hg)|h|(sg)|s|(al)|(tg)|(ad)):"
-        regex = "(^| )(%(filter_regex)s):" % {"filter_regex": filter_regex}
-        found = []
-        matches = re.finditer(regex, self._query)
-        for match in matches:
-            found.append((match.group(2), match.start()))
 
-        if not found:
-            # Default to host search
-            self._no_filters_set = True
-            self._used_filters = {"h": [to_regex(self._query)]}
-            return
+    def row_limit_exceeded(self):
+        return self._too_much_rows
 
-        # I wasn't able to include the filter text into the regex match..
-        found_filters = []
-        current_string = self._query
-        for filter_type, offset in found[-1::-1]:
-            filter_text = to_regex(current_string[offset+len(filter_type)+2:]).strip()
-            self._used_filters.setdefault(filter_type.strip(), [])
-            self._used_filters[filter_type.strip()].append(filter_text)
-            current_string = current_string[:offset]
+
+    def get_elements(self):
+        return self._elements
+
+
+    def get_match_topic(self):
+        if len(self._used_filters.keys()) > 1:
+            return "Multi-Filter"
+        shortname = self._used_filters.keys()[0]
+        return self._get_plugin_with_shortname(shortname).get_match_topic()
+
+
+    def _get_plugin_with_shortname(self, shortname):
+        for plugin in quicksearch_match_plugins:
+            if plugin.get_filter_shortname() == shortname:
+                return plugin
 
 
     def _execute_livestatus_command(self):
@@ -860,10 +800,9 @@ class LivestatusQuicksearch(object):
         if not results:
             return
 
-        # TODO: fix bug in livestatus, livestatus does not report "site" in the headers
         headers =  ["site"] + self._queried_livestatus_columns
-
         self._rows = map(lambda x: dict(zip(headers, x)), results)
+
 
         limit = config.quicksearch_dropdown_limit
         if len(self._rows) > limit:
@@ -880,7 +819,6 @@ class LivestatusQuicksearch(object):
 
         for plugin in self._used_search_plugins:
             columns_to_query.update(set(plugin.get_livestatus_columns(self._livestatus_table)))
-
             name = plugin.get_filter_shortname()
             livestatus_filter_domains.setdefault(name, [])
             livestatus_filter_domains[name].append(plugin.get_livestatus_filters(self._livestatus_table,
@@ -892,7 +830,6 @@ class LivestatusQuicksearch(object):
             livestatus_filters.append("\n".join(entries))
             if len(entries) > 1:
                 livestatus_filters[-1] += "\nOr: %d" % len(entries)
-
 
         if len(livestatus_filters) > 1:
             livestatus_filters.append("And: %d" % len(livestatus_filters))
@@ -957,10 +894,10 @@ class LivestatusQuicksearch(object):
         } [self._livestatus_table]
 
 
-    def _determine_dropdown_elements(self):
+    def create_result_elements(self):
         self._elements = []
         if not self._rows:
-            return []
+            return
 
         target_view = self._get_target_view()
 
@@ -968,7 +905,9 @@ class LivestatusQuicksearch(object):
         for row in self._rows:
             entry = {"text_tokens": []}
             url_params = []
-            for plugin in self._used_search_plugins:
+            for filter_shortname in self._used_filters:
+                plugin = self._get_plugin_with_shortname(filter_shortname)
+
                 match_info = plugin.get_matches(target_view, row, self._livestatus_table, self._used_filters)
                 if not match_info:
                     continue
@@ -984,8 +923,28 @@ class LivestatusQuicksearch(object):
             self._elements.append(entry)
 
         self._generate_display_texts()
-        if self._too_much_rows:
-            html.show_warning(_("More than %d results") % config.quicksearch_dropdown_limit)
+
+
+
+    def _get_target_view(self, exact_match = True):
+        if exact_match:
+            if self._livestatus_table == "hosts":
+                return "host"
+            elif self._livestatus_table == "services":
+                return "allservices"
+            elif self._livestatus_table == "hostgroups":
+                return "hostgroup"
+            elif self._livestatus_table == "servicegroups":
+                return "servicegroup"
+        else:
+            if self._livestatus_table == "hosts":
+                return "searchhost"
+            elif self._livestatus_table == "services":
+                return "searchsvc"
+            elif self._livestatus_table == "hostgroups":
+                return "hostgroups"
+            elif self._livestatus_table == "servicegroups":
+                return "svcgroups"
 
 
     def _generate_display_texts(self):
@@ -996,22 +955,35 @@ class LivestatusQuicksearch(object):
                 element["display_text"] = element["text_tokens"][0][1]
 
 
-        # Some (ugly) special handling when the results are not unique
-        # Whenever this happens we try to find a fitting second value
         if self._element_texts_unique():
             return
 
-        for element in self._elements:
-            hostname = element["raw_data"].get("host_name", element["raw_data"].get("name"))
-            if "&host_regex=" not in element["url"]:
-                element["url"] += "&host_regex=%s" % hostname
+        # Some (ugly) special handling when the results are not unique
+        # Whenever this happens we try to find a fitting second value
 
-            for shortname, text in element["text_tokens"]:
-                if shortname in ["h", "al"] and text not in element["display_text"]:
-                    element["display_text"] += " <b>%s</b>" % text
-                    break
-            else:
-                element["display_text"] += " <b>%s</b>" % hostname
+        if self._livestatus_table in ["hostgroups", "servicegroups"]:
+            # Discard redundant hostgroups
+            new_elements = []
+            used_groups  = set()
+            for element in self._elements:
+                if element["display_text"] in used_groups:
+                    continue
+                new_elements.append(element)
+                used_groups.add(element["display_text"])
+            self._elements = new_elements
+        else:
+            # Add additional info to the display text
+            for element in self._elements:
+                hostname = element["raw_data"].get("host_name", element["raw_data"].get("name"))
+                if "&host_regex=" not in element["url"]:
+                    element["url"] += "&host_regex=%s" % hostname
+
+                for shortname, text in element["text_tokens"]:
+                    if shortname in ["h", "al"] and text not in element["display_text"]:
+                        element["display_text"] += " <b>%s</b>" % text
+                        break
+                else:
+                    element["display_text"] += " <b>%s</b>" % hostname
 
 
     def _element_texts_unique(self):
@@ -1023,10 +995,128 @@ class LivestatusQuicksearch(object):
         return True
 
 
+
+class LivestatusQuicksearch(object):
+    def __init__(self, query):
+        self._query = query
+        self._search_objects     = []    # Each of these objects do exactly one ls query
+        super(LivestatusQuicksearch, self).__init__()
+
+
+    def generate_dropdown_results(self):
+        self._query_data()
+        self._evaluate_results()
+        self._render_dropdown_elements()
+
+
+    def generate_search_url(self):
+        self._query_data()
+
+        exact_match = len(self._rows) == 1
+        target_view = self._get_target_view(exact_match = exact_match)
+
+        url_params = []
+        for plugin in self._used_search_plugins:
+            match_info = plugin.get_matches(target_view,
+                                            exact_match and self._rows[0] or None,
+                                            self._livestatus_table,
+                                            self._used_filters,
+                                            rows = self._rows)
+            if not match_info:
+                continue
+            text, url_filters = match_info
+            url_params.extend(url_filters)
+
+        return html.makeuri([("view_name", target_view),
+                             ("filled_in", "filter")] + url_params,
+                             delvars  = "q",
+                             filename = "view.py")
+
+
+    def _query_data(self):
+        self._determine_search_objects()
+        self._conduct_search()
+
+
+    def _determine_search_objects(self):
+        filter_names = set(map(lambda x: "(%s)" % x.get_filter_shortname(), quicksearch_match_plugins))
+        filter_regex = "|".join(filter_names)
+
+        # Goal: "(^| )((hg)|h|(sg)|s|(al)|(tg)|(ad)):"
+        regex = "(^| )(%(filter_regex)s):" % {"filter_regex": filter_regex}
+        found_filters = []
+        matches = re.finditer(regex, self._query)
+        for match in matches:
+            found_filters.append((match.group(2), match.start()))
+
+        if found_filters:
+            # I wasn't able to include the filter text into the regex match..
+            filter_spec = {}
+            current_string = self._query
+            for filter_type, offset in found_filters[-1::-1]:
+                filter_text = to_regex(current_string[offset+len(filter_type)+2:]).strip()
+                filter_spec.setdefault(filter_type.strip(), [])
+                filter_spec[filter_type.strip()].append(filter_text)
+                current_string = current_string[:offset]
+            self._search_objects.append(LivestatusSearchConductor(filter_spec, "continue"))
+        else:
+            # No explicit filters set.
+            # Use configured quicksearch search order
+            for (filter_name, filter_behaviour) in config.quicksearch_search_order:
+                self._search_objects.append(LivestatusSearchConductor({filter_name: [self._query]}, filter_behaviour))
+
+
+    # Collect the raw data from livestatus
+    def _conduct_search(self):
+        too_much_rows = False
+        total_rows = 0
+        for idx, search_object in enumerate(self._search_objects):
+            search_object.do_query()
+            total_rows += search_object.num_rows()
+
+            if total_rows > config.quicksearch_dropdown_limit:
+                search_object.remove_rows_from_end(total_rows - config.quicksearch_dropdown_limit)
+                too_much_rows = True
+                break
+
+            if search_object.row_limit_exceeded():
+                too_much_rows = True
+                break
+
+            if search_object.num_rows() > 0 and search_object.get_filter_behaviour() != "continue":
+                if search_object.get_filter_behaviour() == "finished_distinct":
+                    # Discard all data of previous filters and break
+                    for i in range(idx-1, -1, -1):
+                        self._search_objects[i].remove_rows_from_end(config.quicksearch_dropdown_limit)
+                break
+
+        if too_much_rows:
+            html.show_warning(_("More than %d results") % config.quicksearch_dropdown_limit)
+
+
+    # Generates elements out of the raw data
+    def _evaluate_results(self):
+        for search_object in self._search_objects:
+            search_object.create_result_elements()
+
+
+    # Renders the elements
     def _render_dropdown_elements(self):
-        self._elements.sort(key = lambda x: x["display_text"])
-        for entry in self._elements:
-            html.a(entry["display_text"], id="result_%s" % self._query, href=entry["url"], target="main")
+        # Show search topic if at least two search objects provide elements
+        show_match_topics = len([x for x in self._search_objects if x.num_rows() > 0]) > 1
+
+        for search_object in self._search_objects:
+            if not search_object.num_rows():
+                continue
+            elements = search_object.get_elements()
+            logger.error(elements)
+            elements.sort(key = lambda x: x["display_text"])
+            if show_match_topics:
+                match_topic = search_object.get_match_topic()
+                html.div(_("Results for %s") % match_topic, class_="topic")
+
+            for entry in elements:
+                html.a(entry["display_text"], id="result_%s" % self._query, href=entry["url"], target="main")
 
 
 

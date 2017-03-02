@@ -2492,15 +2492,15 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         self.context_buttons_open = False
 
 
-    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, fkey=None):
+    def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title=None, fkey=None, class_=None):
         # TODO: REFACTOR
         id_ = id
-        self._context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title, fkey=fkey)
+        self._context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title, fkey=fkey, class_=class_)
         if fkey and self.keybindings_enabled:
             self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self._escape_attribute(url))
 
 
-    def _context_button(self, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None):
+    def _context_button(self, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None, class_=None):
         title = self.attrencode(title)
         display = "block"
         if bestof:
@@ -2515,8 +2515,18 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         if not self.context_buttons_open:
             self.begin_context_buttons()
 
-        self.open_div(class_=["contextlink", "hot" if hot else '', 'button' if fkey and self.keybindings_enabled else ''],\
-                      id_=id_, style="display:%s;" % display)
+        css_classes = [ "contextlink" ]
+        if hot:
+            css_classes.append("hot")
+        if fkey and self.keybindings_enabled:
+            css_classes.append("button")
+        if class_:
+            if type(class_) == list:
+                css_classes += class_
+            else:
+                css_classes += class_.split(" ")
+
+        self.open_div(class_=css_classes, id_=id_, style="display:%s;" % display)
 
         self.open_a(href=url, title=hover_title, onclick="count_context_button(this);" if bestof else None)
 

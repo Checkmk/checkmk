@@ -12388,70 +12388,101 @@ register_check_parameters(subgroup_applications,
             Dictionary(
                 title = _('Forward Messages to Event Console'),
                 elements = [
-                    ('restrict_logfiles',
-                        ListOfStrings(
-                            title = _('Restrict Logfiles (Prefix matching regular expressions)'),
-                            help  = _("Put the item names of the logfiles here. For example \"System$\" "
-                                      "to select the service \"LOG System\". You can use regular expressions "
-                                      "which must match the beginning of the logfile name."),
-                        ),
-                    ),
-                    ('method', Alternative(
-                        title = _("Forwarding Method"),
-                        elements = [
-                            Alternative(
-                                title = _("Send events to local event console"),
-                                elements = [
-                                    FixedValue(
-                                        "",
-                                        totext = _("Directly forward to event console"),
-                                        title = _("Send events to local event console in same OMD site"),
-                                    ),
-                                    TextAscii(
-                                        title = _("Send events to local event console into unix socket"),
-                                        allow_empty = False,
-                                    ),
+                    ('method', Transform(
+                        # TODO: Clean this up to some CascadingDropdown()
+                        Alternative(
+                            style = "dropdown",
+                            title = _("Forwarding Method"),
+                            elements = [
+                                FixedValue(
+                                    "",
+                                    title = _("Local: Send events to local Event Console in same OMD site"),
+                                    totext = _("Directly forward to Event Console"),
+                                ),
+                                TextAscii(
+                                    title = _("Local: Send events to local Event Console into unix socket"),
+                                    allow_empty = False,
+                                ),
 
-                                    FixedValue(
-                                        "spool:",
-                                        totext = _("Spool to event console"),
-                                        title = _("Spooling: Send events to local event console in same OMD site"),
-                                    ),
-                                    Transform(
-                                        TextAscii(),
-                                        title = _("Spooling: Send events to local event console into given spool directory"),
-                                        allow_empty = False,
-                                        forth = lambda x: x[6:],        # remove prefix
-                                        back  = lambda x: "spool:" + x, # add prefix
-                                    ),
-                                ],
-                                match = lambda x: x and (x == 'spool:' and 2 or x.startswith('spool:') and 3 or 1) or 0
-                            ),
-                            Tuple(
-                                title = _("Send events to remote syslog host"),
-                                elements = [
-                                    DropdownChoice(
-                                        choices = [
-                                            ('udp', _('UDP')),
-                                            ('tcp', _('TCP')),
-                                        ],
-                                        title = _("Protocol"),
-                                    ),
-                                    TextAscii(
-                                        title = _("Address"),
-                                        allow_empty = False,
-                                    ),
-                                    Integer(
-                                        title = _("Port"),
-                                        allow_empty = False,
-                                        default_value = 514,
-                                        minvalue = 1,
-                                        maxvalue = 65535,
-                                        size = 6,
-                                    ),
-                                ]
-                            ),
-                        ],
+                                FixedValue(
+                                    "spool:",
+                                    title = _("Local: Spooling - Send events to local event console in same OMD site"),
+                                    totext = _("Spool to Event Console"),
+                                ),
+                                Transform(
+                                    TextAscii(),
+                                    title = _("Local: Spooling - Send events to local Event Console into given spool directory"),
+                                    allow_empty = False,
+                                    forth = lambda x: x[6:],        # remove prefix
+                                    back  = lambda x: "spool:" + x, # add prefix
+                                ),
+                                CascadingDropdown(
+                                    title = _("Remote: Send events to remote syslog host"),
+                                    choices = [
+                                        ("tcp", _("Send via TCP"), Dictionary(
+                                            elements = [
+                                                ("address", TextAscii(
+                                                    title = _("Address"),
+                                                    allow_empty = False,
+                                                )),
+                                                ("port", Integer(
+                                                    title = _("Port"),
+                                                    allow_empty = False,
+                                                    default_value = 514,
+                                                    minvalue = 1,
+                                                    maxvalue = 65535,
+                                                    size = 6,
+                                                )),
+                                                ("spool", Dictionary(
+                                                    title = _("Spool messages that could not be sent"),
+                                                    help = _("Messages that can now be forwarded, e.g. when the target Event Console is "
+                                                             "not running, can temporarily be stored locally. Forwarding is tried again "
+                                                             "on next execution. When messages are spooled, the check will go into WARNING "
+                                                             "state. In case messages are dropped by the rules below, the check will shortly "
+                                                             "go into CRITICAL state for this execution."),
+                                                    elements = [
+                                                        ("max_age", Age(
+                                                            title = _("Maximum spool duration"),
+                                                            help = _("Messages that are spooled longer than this time will be thrown away."),
+                                                            default_value = 60*60*24*7, # 1 week should be fine (if size is not exceeded)
+                                                        )),
+                                                        ("max_size", Filesize(
+                                                            title = _("Maximum spool size"),
+                                                            help = _("When the total size of spooled messages exceeds this number, the oldest "
+                                                                     "messages of the currently spooled messages is thrown away until the left "
+                                                                     "messages have the half of the maximum size."),
+                                                            default_value = 500000, # do not save more than 500k of message
+                                                        )),
+                                                    ],
+                                                    optional_keys = [],
+                                                )),
+                                            ],
+                                            optional_keys = [ "spool" ],
+                                        )),
+                                        ("udp", _("Send via UDP"), Dictionary(
+                                            elements = [
+                                                ("address", TextAscii(
+                                                    title = _("Address"),
+                                                    allow_empty = False,
+                                                )),
+                                                ("port", Integer(
+                                                    title = _("Port"),
+                                                    allow_empty = False,
+                                                    default_value = 514,
+                                                    minvalue = 1,
+                                                    maxvalue = 65535,
+                                                    size = 6,
+                                                )),
+                                            ],
+                                            optional_keys = [],
+                                        )),
+                                    ],
+                                ),
+                            ],
+                            match = lambda x: 4 if type(x) == tuple else (0 if not x else (2 if x == 'spool:' else (3 if x.startswith('spool:') else 1)))
+                        ),
+                        # migrate old (tcp, address, port) tuple to new dict
+                        forth = lambda v: (v[0], {"address": v[1], "port": v[2]}) if type(v) == tuple and type(v[1]) != dict else v,
                     )),
                     ('facility', DropdownChoice(
                         title = _("Syslog facility for forwarded messages"),
@@ -12460,6 +12491,14 @@ register_check_parameters(subgroup_applications,
                         choices = syslog_facilities,
                         default_value = 17, # local1
                     )),
+                    ('restrict_logfiles',
+                        ListOfStrings(
+                            title = _('Restrict Logfiles (Prefix matching regular expressions)'),
+                            help  = _("Put the item names of the logfiles here. For example \"System$\" "
+                                      "to select the service \"LOG System\". You can use regular expressions "
+                                      "which must match the beginning of the logfile name."),
+                        ),
+                    ),
                     ('monitor_logfilelist',
                         Checkbox(
                             title =  _("Monitoring of forwarded logfiles"),

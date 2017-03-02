@@ -894,6 +894,28 @@ class LivestatusSearchConductor(object):
         } [self._livestatus_table]
 
 
+    def get_search_url(self):
+        exact_match = self.num_rows() == 1
+        target_view = self._get_target_view(exact_match = exact_match)
+
+        url_params = []
+        for plugin in self._used_search_plugins:
+            match_info = plugin.get_matches(target_view,
+                                            exact_match and self._rows[0] or None,
+                                            self._livestatus_table,
+                                            self._used_filters,
+                                            rows = self._rows)
+            if not match_info:
+                continue
+            text, url_filters = match_info
+            url_params.extend(url_filters)
+
+        return html.makeuri([("view_name", target_view),
+                             ("filled_in", "filter")] + url_params,
+                             delvars  = "q",
+                             filename = "view.py")
+
+
     def create_result_elements(self):
         self._elements = []
         if not self._rows:
@@ -1012,25 +1034,16 @@ class LivestatusQuicksearch(object):
     def generate_search_url(self):
         self._query_data()
 
-        exact_match = len(self._rows) == 1
-        target_view = self._get_target_view(exact_match = exact_match)
+        # Generate a search page for the topmost search_object with results
+        search_object = None
+        for search_object in self._search_objects:
+            if search_object.num_rows() > 0:
+                use_search_object = search_object
+                break
+        else:
+            return
 
-        url_params = []
-        for plugin in self._used_search_plugins:
-            match_info = plugin.get_matches(target_view,
-                                            exact_match and self._rows[0] or None,
-                                            self._livestatus_table,
-                                            self._used_filters,
-                                            rows = self._rows)
-            if not match_info:
-                continue
-            text, url_filters = match_info
-            url_params.extend(url_filters)
-
-        return html.makeuri([("view_name", target_view),
-                             ("filled_in", "filter")] + url_params,
-                             delvars  = "q",
-                             filename = "view.py")
+        return search_object.get_search_url()
 
 
     def _query_data(self):

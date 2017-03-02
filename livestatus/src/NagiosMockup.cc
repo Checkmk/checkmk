@@ -1,4 +1,4 @@
-#include <time.h>
+#include <ctime>
 
 extern "C" {
 // dummy types -----------------------------------------------------------------
@@ -20,36 +20,55 @@ struct timeperiod;
 
 int accept_passive_host_checks;
 int accept_passive_service_checks;
-int check_time_against_period(time_t, timeperiod *) { return 0; }
-command *find_command(char *) { return nullptr; }
-contact *find_contact(char *) { return nullptr; }
-contactgroup *find_contactgroup(char *) { return nullptr; }
-host *find_host(char *) { return nullptr; }
-hostgroup *find_hostgroup(char *) { return nullptr; }
-service *find_service(char *, char *) { return nullptr; }
-servicegroup *find_servicegroup(char *) { return nullptr; }
+int check_time_against_period(time_t /*unused*/, timeperiod * /*unused*/) {
+    return 0;
+}
+command *find_command(char * /*unused*/) { return nullptr; }
+contact *find_contact(char * /*unused*/) { return nullptr; }
+contactgroup *find_contactgroup(char * /*unused*/) { return nullptr; }
+host *find_host(char * /*unused*/) { return nullptr; }
+hostgroup *find_hostgroup(char * /*unused*/) { return nullptr; }
+service *find_service(char * /*unused*/, char * /*unused*/) { return nullptr; }
+servicegroup *find_servicegroup(char * /*unused*/) { return nullptr; }
 time_t get_next_log_rotation_time(void) { return 0; }
 char *get_program_version(void) { return nullptr; }
-int is_contact_for_host(host *, contact *) { return 0; }
-int is_contact_for_service(service *, contact *) { return 0; }
-int is_contact_member_of_contactgroup(contactgroup *, contact *) { return 0; }
-int is_escalated_contact_for_host(host *, contact *) { return 0; }
-int is_escalated_contact_for_service(service *, contact *) { return 0; }
+int is_contact_for_host(host * /*unused*/, contact * /*unused*/) { return 0; }
+int is_contact_for_service(service * /*unused*/, contact * /*unused*/) {
+    return 0;
+}
+int is_contact_member_of_contactgroup(contactgroup * /*unused*/,
+                                      contact * /*unused*/) {
+    return 0;
+}
+int is_escalated_contact_for_host(host * /*unused*/, contact * /*unused*/) {
+    return 0;
+}
+int is_escalated_contact_for_service(service * /*unused*/,
+                                     contact * /*unused*/) {
+    return 0;
+}
 time_t last_command_check;
 time_t last_log_rotation;
-int neb_deregister_callback(int, int (*)(int, void *)) { return 0; }
-int neb_register_callback(int, void *, int, int (*)(int, void *)) { return 0; }
+int neb_deregister_callback(int /*unused*/, int (*/*unused*/)(int, void *)) {
+    return 0;
+}
+int neb_register_callback(int /*unused*/, void * /*unused*/, int /*unused*/,
+                          int (*/*unused*/)(int, void *)) {
+    return 0;
+}
 int obsess_over_hosts;
 int obsess_over_services;
 int process_performance_data;
 time_t program_start;
-int rotate_log_file(time_t) { return 0; }
-int schedule_new_event(int, int, time_t, int, unsigned long, void *, int,
-                       void *, void *, int) {
+int rotate_log_file(time_t /*unused*/) { return 0; }
+int schedule_new_event(int /*unused*/, int /*unused*/, time_t /*unused*/,
+                       int /*unused*/, unsigned long /*unused*/,
+                       void * /*unused*/, int /*unused*/, void * /*unused*/,
+                       void * /*unused*/, int /*unused*/) {
     return 0;
 }
-int submit_external_command(char *, int *) { return 0; }
-int write_to_all_logs(char *, unsigned long) { return 0; }
+int submit_external_command(char * /*unused*/, int * /*unused*/) { return 0; }
+int write_to_all_logs(char * /*unused*/, unsigned long /*unused*/) { return 0; }
 
 // inofficial exports ----------------------------------------------------------
 

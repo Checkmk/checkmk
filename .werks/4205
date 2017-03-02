@@ -1,0 +1,20 @@
+Title: You can now combine several graphs into one
+Level: 3
+Component: metrics
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1488465972
+
+All views showing a selection of hosts or services now have the new
+button {{Combined graphs}}. This will bring you to a new page where
+all metrics graphs of these objects are being shown in a combined
+way so that you can for example see all HTTP-metrics of certain
+hosts in one graph. You can then choose of of the presentations
+"stacked", "sum", "min", "max", "average" and "lines".
+
+Such graphs can be added to graph collections and reports. They
+also can be converted into custom graphs and then edited manually.
+Addition to dashboards is not yet implemented but will follow soon.

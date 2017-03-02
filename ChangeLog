@@ -1,4 +1,7 @@
 1.2.8p19:
+    Checks & Agents:
+    * 4479 FIX: Fixed wrong scaling of check-mk-host-service host check command
+
     Multisite:
     * 4400 FIX: Fixed possible random "OSError: [Errno 9] Bad file descriptor" in GUI...
     * 4404 FIX: FIX Logwatch problematic logfiles list was showing too many logfiles...

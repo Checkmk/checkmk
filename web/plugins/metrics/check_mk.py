@@ -2995,6 +2995,491 @@ check_metrics["check-mk-ping"] = {
     "rtmin" : { "scale" : m },
 }
 
+metric_info["varnish_backend_success_ratio"] = {
+    "title" : _("Varnish Backend success ratio"),
+    "unit"  : "%",
+    "color" : "#60c0c0",
+}
+
+metric_info["varnish_worker_thread_ratio"] = {
+    "title" : _("Varnish Worker thread ratio"),
+    "unit"  : "%",
+    "color" : "#60c0c0",
+}
+
+metric_info["rx_light"] = {
+    "title" : _("RX Signal Power"),
+    "unit"  : "dbm",
+    "color" : "35/a"
+}
+
+metric_info["tx_light"] = {
+    "title" : _("TX Signal Power"),
+    "unit"  : "dbm",
+    "color" : "15/a"
+}
+
+for i in range(10):
+    metric_info["rx_light_%d" % i] = {
+        "title" : _("RX Signal Power Lane %d") % (i + 1),
+        "unit"  : "dbm",
+        "color" : "35/b",
+    }
+    metric_info["tx_light_%d" % i] = {
+        "title" : _("TX Signal Power Lane %d") % (i + 1),
+        "unit"  : "dbm",
+        "color" : "15/b",
+    }
+    metric_info["port_temp_%d" % i] = {
+        "title" : _("Temperature Lane %d") % (i + 1),
+        "unit"  : "dbm",
+        "color" : indexed_color(i * 3 + 2, 30),
+    }
+
+metric_info["locks_per_batch"] = {
+    "title" : _("Locks/Batch"),
+    "unit"  : "",
+    "color" : "21/a"
+}
+
+metric_info["page_reads_sec"] = {
+    "title" : _("Page Reads"),
+    "unit"  : "1/s",
+    "color" : "33/b"
+}
+
+metric_info["page_writes_sec"] = {
+    "title" : _("Page Writes"),
+    "unit"  : "1/s",
+    "color" : "14/a"
+}
+
+metric_info["page_lookups_sec"] = {
+    "title" : _("Page Lookups"),
+    "unit"  : "1/s",
+    "color" : "42/a"
+}
+
+metric_info["failed_search_requests"] = {
+    "title" : _("WEB - Failed search requests"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["failed_location_requests"] = {
+    "title" : _("WEB - Failed Get Locations Requests"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["failed_ad_requests"] = {
+    "title" : _("WEB - Timed out Active Directory Requests"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["http_5xx"] = {
+    "title" : _("HTTP 5xx Responses"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["sip_message_processing_time"] = {
+    "title" : _("SIP - Average Incoming Message Processing Time"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["asp_requests_rejected"] = {
+    "title" : _("ASP Requests Rejected"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["failed_file_requests"] = {
+    "title" : _("Failed File Requests"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["join_failures"] = {
+    "title" : _("Join Launcher Service Failures"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["failed_validate_cert_calls"] = {
+    "title" : _("WEB - Failed validate cert calls"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["sip_incoming_responses_dropped"] = {
+    "title" : _("SIP - Incoming Responses Dropped"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["sip_incoming_requests_dropped"] = {
+    "title" : _("SIP - Incoming Requests Dropped"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["usrv_queue_latency"] = {
+    "title" : _("USrv - Queue Latency"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["srv_sproc_latency"] = {
+    "title" : _("USrv - Sproc Latency"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["usrv_throttled_requests"] = {
+    "title" : _("USrv - Throttled requests"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["sip_503_responses"] = {
+    "title" : _("SIP - Local 503 Responses"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["sip_incoming_messages_timed_out"] = {
+    "title" : _("SIP - Incoming Messages Timed out"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["caa_incomplete_calls"] = {
+    "title" : _("CAA - Incomplete Calls"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["usrv_create_conference_latency"] = {
+    "title" : _("USrv - Create Conference Latency"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["usrv_allocation_latency"] = {
+    "title" : _("USrv - Allocation Latency"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["sip_avg_holding_time_incoming_messages"] = {
+    "title" : _("SIP - Average Holding Time For Incoming Messages"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["sip_flow_controlled_connections"] = {
+    "title" : _("SIP - Flow-controlled Connections"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["sip_avg_outgoing_queue_delay"] = {
+    "title" : _("SIP - Average Outgoing Queue Delay"),
+    "unit": "s",
+    "color": "42/a"
+}
+
+metric_info["sip_sends_timed_out"] = {
+    "title" : _("SIP - Sends Timed-Out"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["sip_authentication_errors"] = {
+    "title" : _("SIP - Authentication Errors"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["mediation_load_call_failure_index"] = {
+    "title" : _("MediationServer - Load Call Failure Index"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["mediation_failed_calls_because_of_proxy"] = {
+    "title" : _("MediationServer - Failed calls caused by unexpected interaction from proxy"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["mediation_failed_calls_because_of_gateway"] = {
+    "title" : _("MediationServer - Failed calls caused by unexpected interaction from gateway"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["mediation_media_connectivity_failure"] = {
+    "title" : _("Mediation Server - Media Connectivity Check Failure"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["avauth_failed_requests"] = {
+    "title" : _("A/V Auth - Bad Requests Received"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["edge_udp_failed_auth"] = {
+    "title" : _("UDP Authentication Failures"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["edge_tcp_failed_auth"] = {
+    "title" : _("A/V Edge - TCP Authentication Failures"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["edge_udp_allocate_requests_exceeding_port_limit"] = {
+    "title" : _("A/V Edge - UDP Allocate Requests Exceeding Port Limit"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["edge_tcp_allocate_requests_exceeding_port_limit"] = {
+    "title" : _("A/V Edge - TCP Allocate Requests Exceeding Port Limit"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["edge_udp_packets_dropped"] = {
+    "title" : _("A/V Edge - UDP Packets Dropped"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["edge_tcp_packets_dropped"] = {
+    "title" : _("A/V Edge - TCP Packets Dropped"),
+    "unit": "1/s",
+    "color": "42/a"
+}
+
+metric_info["dataproxy_connections_throttled"] = {
+    "title": _("DATAPROXY - Throttled Server Connections"),
+    "unit": "count",
+    "color": "42/a"
+}
+
+metric_info["xmpp_failed_outbound_streams"] = {
+    "title": _("XmppFederationProxy - Failed outbound stream establishes"),
+    "unit": "1/s",
+    "color" : "26/a",
+}
+
+metric_info["xmpp_failed_inbound_streams"] = {
+    "title": _("XmppFederationProxy - Failed inbound stream establishes"),
+    "unit": "1/s",
+    "color" : "31/a",
+}
+
+skype_mobile_devices = [("android", "Android", "33/a"),
+                        ("iphone", "iPhone", "42/a"),
+                        ("ipad", "iPad", "45/a"),
+                        ("mac", "Mac", "23/a")]
+
+for device, name, color in skype_mobile_devices:
+    metric_info["ucwa_active_sessions_%s" % device] = {
+        "title" : _("UCWA - Active Sessions (%s)") % name,
+        "unit": "count",
+        "color": color
+    }
+
+metric_info["web_requests_processing"] = {
+    "title" : _("WEB - Requests in Processing"),
+    "unit": "count",
+    "color": "12/a"
+}
+
+for what, descr, unit, color in [
+    ("db_cpu",                  "DB CPU time",       "1/s", "11/a"),
+    ("db_time",                 "DB time",           "1/s", "15/a"),
+    ("buffer_hit_ratio",        "buffer hit ratio",  "%",   "21/a"),
+    ("physical_reads",          "physical reads",    "1/s", "43/b"),
+    ("physical_writes",         "physical writes",   "1/s", "26/a"),
+    ("db_block_gets",           "block gets",        "1/s", "13/a"),
+    ("db_block_change",         "block change",      "1/s", "15/a"),
+    ("consistent_gets",         "consistent gets",   "1/s", "23/a"),
+    ("free_buffer_wait",        "free buffer wait",  "1/s", "25/a"),
+    ("buffer_busy_wait",        "buffer busy wait",  "1/s", "41/a"),
+    ("library_cache_hit_ratio", "library cache hit ratio", "%",   "21/b"),
+    ("pins_sum",                "pins sum",          "1/s", "41/a"),
+    ("pin_hits_sum",            "pin hits sum",      "1/s", "46/a")]:
+    metric_info["oracle_%s" % what] = {
+        "title" : _("ORACLE %s") % descr,
+        "unit"  : unit,
+        "color" : color,
+    }
+
+metric_info["dhcp_requests"] = {
+    "title" : _("DHCP received requests"),
+    "unit"  : "count",
+    "color" : "14/a",
+}
+
+metric_info["dhcp_releases"] = {
+    "title" : _("DHCP received releases"),
+    "unit"  : "count",
+    "color" : "21/a",
+}
+
+metric_info["dhcp_declines"] = {
+    "title" : _("DHCP received declines"),
+    "unit"  : "count",
+    "color" : "24/a",
+}
+
+metric_info["dhcp_informs"] = {
+    "title" : _("DHCP received informs"),
+    "unit"  : "count",
+    "color" : "31/a",
+}
+
+metric_info["dhcp_others"] = {
+    "title" : _("DHCP received other messages"),
+    "unit"  : "count",
+    "color" : "34/a",
+}
+
+metric_info["dhcp_offers"] = {
+    "title" : _("DHCP sent offers"),
+    "unit"  : "count",
+    "color" : "12/a",
+}
+
+metric_info["dhcp_acks"] = {
+    "title" : _("DHCP sent acks"),
+    "unit"  : "count",
+    "color" : "15/a",
+}
+
+metric_info["dhcp_nacks"] = {
+    "title" : _("DHCP sent nacks"),
+    "unit"  : "count",
+    "color" : "22/b",
+}
+
+metric_info["dns_successes"] = {
+    "title" : _("DNS successful responses"),
+    "unit"  : "count",
+    "color" : "11/a",
+}
+
+metric_info["dns_referrals"] = {
+    "title" : _("DNS referrals"),
+    "unit"  : "count",
+    "color" : "14/a",
+}
+
+metric_info["dns_recursion"] = {
+    "title" : _("DNS queries received using recursion"),
+    "unit"  : "count",
+    "color" : "21/a",
+}
+
+metric_info["dns_failures"] = {
+    "title" : _("DNS failed queries"),
+    "unit"  : "count",
+    "color" : "24/a",
+}
+
+metric_info["dns_nxrrset"] = {
+    "title" : _("DNS queries received for non-existent record"),
+    "unit"  : "count",
+    "color" : "31/a",
+}
+
+metric_info["dns_nxdomain"] = {
+    "title" : _("DNS queries received for non-existent domain"),
+    "unit"  : "count",
+    "color" : "34/a",
+}
+
+metric_info["filehandler_perc"] = {
+    "title" : _("Used file handles"),
+    "unit"  : "%",
+    "color" : "#4800ff",
+}
+
+metric_info["fan"] = {
+    "title" : _("Fan speed"),
+    "unit"  : "rpm",
+    "color" : "16/b"
+}
+
+metric_info["inside_macs"] = {
+    "title" : _("Number of unique inside MAC addresses"),
+    "unit"  : "count",
+    "color" : "31/a",
+}
+
+metric_info["outside_macs"] = {
+    "title" : _("Number of unique outside MAC addresses"),
+    "unit"  : "count",
+    "color" : "33/a",
+}
+
+
+#.
+#   .--Checks--------------------------------------------------------------.
+#   |                    ____ _               _                            |
+#   |                   / ___| |__   ___  ___| | _____                     |
+#   |                  | |   | '_ \ / _ \/ __| |/ / __|                    |
+#   |                  | |___| | | |  __/ (__|   <\__ \                    |
+#   |                   \____|_| |_|\___|\___|_|\_\___/                    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  How various checks' performance data translate into the known       |
+#   |  metrics                                                             |
+#   '----------------------------------------------------------------------'
+
+check_metrics["check_mk_active-icmp"] = {
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
+}
+
+# This metric is not for an official Check_MK check
+# It may be provided by an check_icmp check configured as mrpe
+check_metrics["check_icmp"] = {
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
+}
+
+check_metrics["check-mk-host-ping"] = {
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
+}
+
+check_metrics["check-mk-host-service"] = {
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
+}
+
+check_metrics["check-mk-ping"] = {
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
+}
+
 check_metrics["check-mk-host-ping-cluster"] = {
     "~.*rta"   : { "name" : "rta",   "scale": m },
     "~.*pl"    : { "name" : "pl",    "scale": m },

@@ -4,8 +4,3 @@
 [6] lm: Graph zu Dashboard hinzufügen --> Das könnte Lars machen. Ich blick da
     lm: nicht durch...
 
-
-[21] au: Sortierung der Hosts im Graphen ist chaotisch -> numsort
-     cmp: auf num_split() von Hostname bzw. Service anwenden.
-     Auch den Fall behandeln, dass Hostgraphen gemalt werden. Dazu den
-     Host check command z.B. auf "TCP COnnect" umstellen.

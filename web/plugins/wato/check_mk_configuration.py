@@ -1626,7 +1626,6 @@ register_rule(
           ( "agent",      _("Use the status of the Check_MK Agent") ),
           ( "service",    _("Use the status of the service..."),
             TextUnicode(
-                label = ":",
                 size = 45,
                 allow_empty = False,
                 attrencode = True,

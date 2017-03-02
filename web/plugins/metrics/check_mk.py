@@ -7203,7 +7203,6 @@ for idx in range(1, MAX_NUMBER_HOPS):
             ( "hop_%d_rtmin"   % idx, "area" ),
             ( "hop_%d_rta"     % idx, "line" ),
             ( "hop_%d_rtstddev" % idx, "line" ),
-            ( "hop_%d_response_time" % idx, "line" ),
         ],
     }
     graph_info["hop_%d_packet_loss" % idx] = {

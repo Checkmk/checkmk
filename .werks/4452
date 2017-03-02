@@ -28,3 +28,10 @@ in the default search
 Additionally, you can modify the matching behaviour for a specific filter.
 When a match is found you can continue the search, abort the search and show all results
 or abort the search and show only the results for the current filter.
+
+
+Search (magnifying glass) behaviour: If there are multiple topics shown in the
+dropdown result, the topmost topic is shown in the resulting page, since not
+all topics can be combined effectiviely.
+Keep in mind that you can configure the topic ordering in the global settings.
+

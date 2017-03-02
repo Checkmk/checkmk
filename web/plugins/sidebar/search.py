@@ -86,6 +86,12 @@ sidebar_snapins["search"] = {
     float: left;
 }
 
+#mk_side_search div.topic{
+    font-size: 125%;
+    margin-top:  3px;
+    margin-left:  2px;
+}
+
 #mk_search_results {
     position: relative;
     float:left;
@@ -161,6 +167,10 @@ class QuicksearchMatchPlugin(object):
         return True
 
 
+    def get_match_topic(self):
+        raise NotImplementedError()
+
+
     def get_livestatus_columns(self, livestatus_table):
         raise NotImplementedError()
 
@@ -191,6 +201,13 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
         super(GroupMatchPlugin, self).__init__(["%sgroups" % group_type, "%ss" % group_type, "services"],
                                                 filter_shortname)
         self._group_type = group_type
+
+
+    def get_match_topic(self):
+        if self._group_type == "host":
+            return _("Hostgroup")
+        else:
+            return _("Servicegroup")
 
 
     def get_livestatus_columns(self, livestatus_table):
@@ -257,6 +274,10 @@ class ServiceMatchPlugin(QuicksearchMatchPlugin):
         super(ServiceMatchPlugin, self).__init__(["services"], "s")
 
 
+    def get_match_topic(self):
+        return _("Service Description")
+
+
     def get_livestatus_columns(self, livestatus_table):
         return ["service_description"]
 
@@ -290,6 +311,15 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self, livestatus_field = None, filter_shortname = None):
         super(HostMatchPlugin, self).__init__(["hosts", "services"], filter_shortname)
         self._livestatus_field = livestatus_field # address, name or alias
+
+
+    def get_match_topic(self):
+        if self._livestatus_field == "name":
+            return _("Hostname")
+        elif self._livestatus_field == "address":
+            return _("Hostaddress")
+        else:
+            return _("Hostalias")
 
 
     def _get_real_fieldname(self, livestatus_table):
@@ -365,6 +395,9 @@ class HosttagMatchPlugin(QuicksearchMatchPlugin):
             for value in values:
                 lookup_dict[value[0]] = group
         return lookup_dict
+
+    def get_match_topic(self):
+        return _("Hosttag")
 
 
     def get_livestatus_columns(self, livestatus_table):

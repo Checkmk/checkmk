@@ -86,6 +86,8 @@ def parse_cisco_fru_power(info):
 
     ppre_parsed = {}
     for end_oid, oper_state, fru_current in info[0]:
+        # We discover only "real" power supplies which have current value >= 0
+        # Others such as modules do not have such values
         if oper_state not in [ "", "0", "1", "5" ] and \
            fru_current and int(fru_current) >= 0:
             ppre_parsed.setdefault(end_oid, map_states.get(oper_state, (3, "unexpected(%s)" % oper_state)))

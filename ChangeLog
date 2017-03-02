@@ -8,6 +8,9 @@
     * 4400 FIX: Fixed possible random "OSError: [Errno 9] Bad file descriptor" in GUI...
     * 4404 FIX: FIX Logwatch problematic logfiles list was showing too many logfiles...
 
+    HW/SW-Inventory:
+    * 4385 FIX: mk_inventory.vbs: Add new query type for installed software on hosts...
+
 
 1.2.8p18:
     Checks & Agents:

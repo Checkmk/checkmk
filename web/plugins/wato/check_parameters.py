@@ -7342,6 +7342,7 @@ register_check_parameters(
             ( "levels_writeback",   UpperMemoryLevels(_("Disk Writeback"))),
             ( "levels_committed",   UpperMemoryLevels(_("Committed memory"),    (100.0, 150.0), _("RAM + Swap"))),
             ( "levels_commitlimit", LowerMemoryLevels(_("Commit Limit"),        ( 20.0,  10.0), _("RAM + Swap"))),
+            ( "levels_available",   LowerMemoryLevels(_("Available memory"),    ( 20.0,  10.0), _("RAM"))),
             ( "levels_vmalloc",     LowerMemoryLevels(_("Largest Free VMalloc Chunk"))),
             ( "handle_hw_corrupted_error", MonitoringState(
                 title = _("Handle Hardware Corrupted Error"),

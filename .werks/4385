@@ -1,0 +1,15 @@
+Title: mk_inventory.vbs: Add new query type for installed software on hosts
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488465519
+
+We added a new query type to get the information about installed software on hosts.
+This new type is the default way, how information is collected.
+The old way is a fallback and will be tried, if the new one is not possible.
+
+In error situations, we do not query the installed software and report an empty section.

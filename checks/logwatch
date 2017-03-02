@@ -833,7 +833,7 @@ def check_logwatch_ec(item, params, info):
         else:
             logfile_info = ""
 
-        result = logwatch_forward_messages(params.get("method"), messages)
+        result = logwatch_forward_messages(params.get("method"), item, messages)
 
         yield 0, "Forwarded %d messages%s" % (result.num_forwarded, logfile_info), \
                             [('messages', result.num_forwarded)]
@@ -871,7 +871,7 @@ class LogwatchFordwardResult(object):
 # b) local pipe
 # c) remote via udp
 # d) remote via tcp
-def logwatch_forward_messages(method, messages):
+def logwatch_forward_messages(method, item, messages):
     if not method:
         method = os.getenv('OMD_ROOT') + "/tmp/run/mkeventd/eventsocket"
     elif method == 'spool:':
@@ -884,7 +884,7 @@ def logwatch_forward_messages(method, messages):
         return logwatch_forward_pipe(method, messages)
 
     else:
-        return logwatch_forward_spool_directory(method, messages)
+        return logwatch_forward_spool_directory(method, item, messages)
 
 
 # write into local event pipe
@@ -907,7 +907,7 @@ def logwatch_forward_pipe(method, messages):
 # Spool the log messages to given spool directory.
 # First write a file which is not read into ec, then
 # perform the move to make the file visible for ec
-def logwatch_forward_spool_directory(method, messages):
+def logwatch_forward_spool_directory(method, item, messages):
     if not messages:
         return LogwatchFordwardResult()
 

@@ -1,0 +1,18 @@
+Title: logwatch.ec: Message forwarding via TCP can now use a spool
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488443586
+
+When forwaring messages to a remote host via TCP it can happen that
+messages are dropped. This may happen e.g. when the destination host
+or service is not available. By default the messages to be forwarded
+are dropped.
+
+Now you can configure the TCP forwarding to spool the messages until
+a deadline or the spool has reached a specific size to prevent
+loss of messages.

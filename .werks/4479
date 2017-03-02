@@ -1,0 +1,11 @@
+Title: Fixed wrong scaling of check-mk-host-service host check command
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1488463507
+
+

@@ -3847,6 +3847,12 @@ check_metrics["check-mk-host-ping"] = {
     "rtmin" : { "scale" : m },
 }
 
+check_metrics["check-mk-host-service"] = {
+    "rta"   : { "scale" : m },
+    "rtmax" : { "scale" : m },
+    "rtmin" : { "scale" : m },
+}
+
 check_metrics["check-mk-ping"] = {
     "rta"   : { "scale" : m },
     "rtmax" : { "scale" : m },

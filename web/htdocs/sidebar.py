@@ -1041,7 +1041,10 @@ class LivestatusQuicksearch(object):
                 use_search_object = search_object
                 break
         else:
-            return
+            return html.makeuri([("view_name", "allservices"),
+                                 ("filled_in", "filter"), ("service_regex", self._query)],
+                                 delvars  = "q",
+                                 filename = "view.py")
 
         return search_object.get_search_url()
 
@@ -1140,5 +1143,5 @@ def generate_results(query):
 
 def generate_search_results(query):
     quicksearch = LivestatusQuicksearch(query)
-    return  quicksearch.generate_search_url()
+    return quicksearch.generate_search_url()
 

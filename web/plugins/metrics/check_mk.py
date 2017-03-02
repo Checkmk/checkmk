@@ -7225,7 +7225,8 @@ def create_hop_response_graph():
         if idx > 0:
             new_graph["optional_metrics"].append( ("hop_%d_response_time" % (idx + 1)) )
 
-    graph_info.append(new_graph)
+    graph_info["hop_response_time"] = new_graph
+
 
 create_hop_response_graph()
 

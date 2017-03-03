@@ -1,0 +1,15 @@
+Title: Availability of service filtered views was showing services multiple times
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488542925
+
+When a service is in multiple service groups and a view is filtered by a single service
+group and the availability view is grouped by service groups, a single service was
+shown multiple times. Once for each service group membership.
+
+The service is now shown only for the filtered service group memberships.

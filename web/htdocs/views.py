@@ -1544,7 +1544,11 @@ def show_view(view, show_heading = False, show_buttons = True,
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)
     if html.var("mode") == "availability" and (
           "aggr" not in datasource["infos"] or html.var("timeline_aggr")):
-        return render_availability_page(view, datasource, filterheaders, only_sites, limit)
+
+        context = visuals.get_context_from_uri_vars(datasource['infos'])
+        context.update(visuals.get_singlecontext_html_vars(view))
+
+        return render_availability_page(view, datasource, context, filterheaders, only_sites, limit)
 
     query = filterheaders + view.get("add_headers", "")
 

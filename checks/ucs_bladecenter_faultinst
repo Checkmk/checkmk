@@ -49,10 +49,12 @@ def check_ucs_bladecenter_faultinst(item, _no_params, parsed):
         severities.setdefault(entry_sev, [])
         severities[entry_sev].append(values)
 
-    state = 0
+    if not severities.items():
+        yield 0, "No fault instances found"
+        return
+
     for sev, instances in severities.items():
         sev_state = severity_map.get(sev, 3)
-        state = max(state, sev_state)
 
         # Right now, OK instances are also reported in detail
         # If required we can increase the state level here, so that only WARN+ messages are shown

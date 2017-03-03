@@ -492,6 +492,7 @@ def action_activate_changes(request):
     sites = request.get("sites")
 
     changes = ActivateChanges()
+    changes.load()
 
     if changes.has_foreign_changes():
         if not config.user.may("wato.activateforeign"):
@@ -507,6 +508,7 @@ def action_activate_changes(request):
 
 
     manager = ActivateChangesManager()
+    manager.load()
 
     if not manager.has_changes():
         raise MKUserError(None, _("Currently there are no changes to activate."))

@@ -59,8 +59,8 @@ check_info['ucd_mem'] = {
                                         "6",    # memAvailable -> kB
                                   ]),
     'snmp_scan_function'        : lambda oid: \
-                                  "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower() or 
-                                  prefer_hr_scan_function,
+                                  "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower() or
+                                  prefer_hr_scan_function(oid),
     'default_levels_variable'   : 'ucd_mem_default_levels',
     'group'                     : 'memory_simple',
     'includes'                  : [ "ucd.include", "memory.include" ],

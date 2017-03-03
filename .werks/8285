@@ -31,6 +31,9 @@ then you have to follow three steps:
 
 <ul>
  <li>Rename existing RRDs to new service description:<br>
+     RRDs im Check_MK-Format: ~/var/check_mk/rrd<br>
+     RRDs im alten Format (PNP): ~/var/pnp4nagios/perfdata<br>
+     <br>
      Example:<br>
      mv Apache___1_80_Status.rrd Apache_[__1]_80_Status.rrd<br>
      mv Apache_2001_cdba__3257_9652_443_Status.rrd Apache_[2001_cdba__3257_9652]_443_Status.rrd

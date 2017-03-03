@@ -640,7 +640,7 @@ def get_outage_statistic_options(avoptions):
 # of spans. Each span is a dictionary that describes one span of time where
 # a specific host or service has one specific state.
 # what is either "host" or "service" or "bi".
-def get_availability_rawdata(what, filterheaders, only_sites, av_object, include_output, avoptions):
+def get_availability_rawdata(what, context, filterheaders, only_sites, av_object, include_output, avoptions):
     if what == "bi":
         return get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_output, avoptions)
 
@@ -692,6 +692,10 @@ def get_availability_rawdata(what, filterheaders, only_sites, av_object, include
     columns = ["site"] + columns
     spans = [ dict(zip(columns, span)) for span in data ]
 
+    # When a group filter is set, only care about these groups in the group fields
+    if avoptions["grouping"] not in [ None, "host" ]:
+        filter_groups_of_entries(context, avoptions, spans)
+
     # Now we find out if the log row limit was exceeded or
     # if the log's length is the limit by accident.
     # If this limit was exceeded then we cut off the last element
@@ -701,6 +705,56 @@ def get_availability_rawdata(what, filterheaders, only_sites, av_object, include
         logrow_limit_reached_entry = dict(zip(columns, data[-1]))
 
     return spans_by_object(spans, logrow_limit_reached_entry)
+
+
+def filter_groups_of_entries(context, avoptions, spans):
+    group_by = avoptions["grouping"]
+
+    only_groups = set()
+    # TODO: This is a dirty hack. The logic of the filters needs to be moved to the filters.
+    # They need to be able to filter the list of all groups.
+    # TODO: Negated filters are not handled here. :(
+    if group_by == "service_groups":
+        # Extract from context:
+        # 'servicegroups': {'servicegroups': 'cpu|disk', 'neg_servicegroups': 'off'},
+        # 'optservicegroup': {'optservice_group': '', 'neg_optservice_group': 'off'},
+        negated = context.get("servicegroups", {}).get("neg_servicegroups") == "on"
+        if negated:
+            return
+
+        only_groups.update([ e for e in context.get("servicegroups", {}).get("servicegroups", "").split("|") if e ])
+
+        negated = context.get("optservicegroup", {}).get("neg_optservice_group") == "on"
+        if negated:
+            return
+
+        group_name = context.get("optservicegroup", {}).get("optservice_group")
+        if group_name and not negated:
+            only_groups.add(group_name)
+
+    elif group_by == "host_groups":
+        html.log(repr(context))
+        negated = context.get("hostgroups", {}).get("neg_hostgroups") == "on"
+        if negated:
+            return
+
+        only_groups.update([ e for e in context.get("hostgroups", {}).get("hostgroups", "").split("|") if e ])
+
+        negated = context.get("opthostgroup", {}).get("neg_opthost_group") == "on"
+        if negated:
+            return
+
+        group_name = context.get("opthostgroup", {}).get("opthost_group")
+        if group_name and not negated:
+            only_groups.add(group_name)
+
+    else:
+        raise NotImplementedError()
+
+    for span in spans:
+        filtered_groups = list(set(span[group_by]).intersection(only_groups))
+        span[group_by] = filtered_groups
+
 
 # Sort the raw spans into a tree of dicts, so that we
 # have easy access to the timeline of each object

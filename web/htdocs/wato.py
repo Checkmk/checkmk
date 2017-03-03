@@ -5183,6 +5183,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
     def __init__(self):
         self._value = {}
         super(ModeActivateChanges, self).__init__()
+        super(ModeActivateChanges, self).load()
 
 
     def title(self):
@@ -5465,6 +5466,7 @@ class ModeAjaxStartActivation(WatoWebApiMode):
             raise MKUserError("activate_until", _("Missing parameter \"%s\".") % "activate_until")
 
         manager = ActivateChangesManager()
+        manager.load()
 
         affected_sites = request.get("sites", "").strip()
         if not affected_sites:
@@ -5500,7 +5502,8 @@ class ModeAjaxActivationState(WatoWebApiMode):
             raise MKUserError("activation_id", _("Missing parameter \"%s\".") % "activation_id")
 
         manager = ActivateChangesManager()
-        manager.load(activation_id)
+        manager.load()
+        manager.load_activation(activation_id)
 
         return manager.get_state()
 
@@ -13978,7 +13981,9 @@ def user_profile_async_replication_dialog():
 
         html.icon(status_txt, icon)
         if start_sync:
-            estimated_duration = ActivateChanges().get_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC, 2.0)
+            changes_manager = ActivateChanges()
+            changes_manager.load()
+            estimated_duration = changes_manager.get_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC, 2.0)
             html.javascript('wato_do_profile_replication(\'%s\', %d, \'%s\');' %
                       (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
             num_replsites += 1

@@ -1,0 +1,13 @@
+Title: apache_status: Fix wrong IPv6 URLs to query the information
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1488546356
+
+If the information from Apache is queried by IPv6, the request was denied,
+because we created a bad request. Now IPv6 addresses are surrounded by
+square bracket.

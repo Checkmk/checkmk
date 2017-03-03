@@ -730,17 +730,19 @@ def compute_availability(what, av_rawdata, avoptions):
 
     # Now compute availability table. We have the following possible states:
     # 1. "unmonitored"
-    # 2. "monitored"
-    #    2.1 "outof_notification_period"
-    #    2.2 "in_notification_period"
-    #         2.2.1 "in_downtime" (also in_host_downtime)
-    #         2.2.2 "not_in_downtime"
-    #               2.2.2.1 "host_down"
-    #               2.2.2.2 "host not down"
-    #                    2.2.2.2.1 "ok"
-    #                    2.2.2.2.2 "warn"
-    #                    2.2.2.2.3 "crit"
-    #                    2.2.2.2.4 "unknown"
+    # 2. monitored -->
+    #    2.1 "outof_service_period"
+    #    2.2 in service period -->
+    #        2.2.1 "outof_notification_period"
+    #        2.2.2 in notification period -->
+    #             2.2.2.1 "in_downtime" (also in_host_downtime)
+    #             2.2.2.2 not in downtime -->
+    #                   2.2.2.2.1 "host_down"
+    #                   2.2.2.2.2 host not down -->
+    #                        2.2.2.2.2.1 "ok"
+    #                        2.2.2.2.2.2 "warn"
+    #                        2.2.2.2.2.3 "crit"
+    #                        2.2.2.2.2.4 "unknown"
     availability_table = []
     os_aggrs, os_states = get_outage_statistic_options(avoptions)
     need_statistics = os_aggrs and os_states

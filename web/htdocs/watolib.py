@@ -213,13 +213,12 @@ def confirm_all_local_changes():
     site_id = config.omd_site()
 
     try:
-        repl_status = load_site_replication_status(site_id, lock=True)
-        repl_status["changes"] = []
-    except KeyError:
-        pass # No change for this site. Fine...
-
-    finally:
-        save_site_replication_status(site_id, repl_status)
+        os.unlink(site_changes_path(site_id))
+    except OSError, e:
+        if e.errno == 2:
+            pass # Not existant -> OK
+        else:
+            raise
 
     need_sidebar_reload()
 
@@ -229,63 +228,29 @@ def confirm_all_local_changes():
 #
 
 
-def add_change(action_name, text, obj=None, add_user=True, need_sync=None, need_restart=None, domains=None, sites=None):
-    # Default to a core only change
-    if domains == None:
-        domains = [ConfigDomainCore]
-
+def add_change(action_name, text, obj=None, add_user=True, need_sync=None,
+               need_restart=None, domains=None, sites=None):
 
     log_audit(obj, action_name, text, config.user.id if add_user else '')
     need_sidebar_reload()
 
     # On each change to the Check_MK configuration mark the agents to be rebuild
-    if 'need_to_bake_agents' in globals():
+    if has_agent_bakery():
         # pylint: disable=undefined-variable
         need_to_bake_agents()
 
-    # All replication sites in case no specific site is given
-    if sites == None:
-        sites = ActivateChanges().activation_site_ids()
-
-    change_id = gen_id()
-
-    for site_id in sites:
-        add_change_to_site(site_id, change_id, action_name, text, obj, add_user, need_sync, need_restart, domains)
+    ActivateChangesWriter().add_change(action_name, text, obj, add_user,
+                                       need_sync, need_restart, domains, sites)
 
 
 def add_service_change(host, action_name, text):
     add_change(action_name, text, obj=host, sites=[host.site_id()], need_sync=False)
 
 
-def add_change_to_site(site_id, change_id, action_name, text, obj, add_user, need_sync, need_restart, domains):
-    # Individual changes may override the domain restart default value
-    if need_restart == None:
-        need_restart = any([ d.needs_activation for d in domains ])
-
-    if need_sync == None:
-        need_sync = any([ d.needs_sync for d in domains ])
-
-    def serialize_object(obj):
-        if obj == None:
-            return None
-        else:
-            return obj.__class__.__name__, obj.ident()
-
-    update_replication_status(site_id, {}, changes=[{
-        "id"           : change_id,
-        "action_name"  : action_name,
-        "text"         : "%s" % text,
-        "object"       : serialize_object(obj),
-        "user_id"      : config.user.id if add_user else None,
-        "domains"      : [ d.ident for d in domains ],
-        "time"         : time.time(),
-        "need_sync"    : need_sync,
-        "need_restart" : need_restart,
-    }])
-
-
 def get_number_of_pending_changes():
-    return len(ActivateChanges().grouped_changes())
+    changes = ActivateChanges()
+    changes.load()
+    return len(changes.grouped_changes())
 
 
 class ConfigDomain(object):
@@ -3527,6 +3492,7 @@ def check_mk_remote_automation(site_id, command, args, indata, stdin_data=None, 
 # If the site is not up-to-date, synchronize it first.
 def sync_changes_before_remote_automation(site_id):
     manager = ActivateChangesManager()
+    manager.load()
 
     if not manager.is_sync_needed(site_id):
         return
@@ -3688,6 +3654,10 @@ def site_replication_status_path(site_id):
     return "%sreplication_status_%s.mk" % (var_dir, site_id)
 
 
+def site_changes_path(site_id):
+    return os.path.join(var_dir, "replication_changes_%s.mk" % site_id)
+
+
 def load_replication_status(lock=False):
     status = {}
 
@@ -3705,19 +3675,13 @@ def save_replication_status(status):
 
 
 # Updates one or more dict elements of a site in an atomic way.
-def update_replication_status(site_id, vars, changes=None):
+def update_replication_status(site_id, vars):
     make_nagios_directory(var_dir)
 
     repl_status = load_site_replication_status(site_id, lock=True)
     try:
         repl_status.setdefault("times", {})
-        repl_status.setdefault("changes", [])
-
         repl_status.update(vars)
-
-        # Optionally add new pending change entries
-        if changes:
-            repl_status["changes"] += changes
     finally:
         save_site_replication_status(site_id, repl_status)
 
@@ -3789,7 +3753,8 @@ def verify_slave_site_config(site_id):
 
     # Make sure there are no local changes we would lose!
     changes = ActivateChanges()
-    pending = list(reversed(ActivateChanges().grouped_changes()))
+    changes.load()
+    pending = list(reversed(changes.grouped_changes()))
     if pending:
         message = _("There are %d pending changes that would get lost. The most recent are: ") % len(pending)
         message += ", ".join([ change["text"] for change_id, change in pending[:10] ])
@@ -3870,30 +3835,128 @@ def add_profile_replication_change(site_id, result):
 class ActivateChanges(object):
     def __init__(self):
         self._repstatus = {}
-        self._changes   = []
 
-        self._load_changes()
+        # Changes grouped by site
+        self._changes_by_site = {}
+
+        # A list of changes ordered by time and grouped by the change.
+        # Each change contains a list of affected sites.
+        self._changes   = []
 
         super(ActivateChanges, self).__init__()
 
 
-    def _load_changes(self):
+    def load(self):
+        self._load_replication_status()
+        self._load_changes_by_site()
+        self._load_changes_by_id()
+
+
+    def _load_replication_status(self):
         self._repstatus = load_replication_status()
 
-        changes = self._group_changes_by_id(self._repstatus)
-        self._changes = sorted(changes.items(), key=lambda (k, v): v["time"])
+
+    def _load_changes_by_site(self):
+        self._changes_by_site = {}
+
+        self._migrate_old_changes()
+
+        for site_id in self.activation_site_ids():
+            self._changes_by_site[site_id] = self._load_site_changes(site_id)
+
+
+    # Between 1.4.0i* and 1.4.0b4 the changes were stored in
+    # self._repstatus[site_id]["changes"], migrate them.
+    # TODO: Drop this one day.
+    def _migrate_old_changes(self):
+        has_old_changes = False
+        for site_id, status in self._repstatus.items():
+            if status.get("changes"):
+                has_old_changes = True
+                break
+
+        if not has_old_changes:
+            return
+
+        repstatus = load_replication_status(lock=True)
+
+        for site_id, status in self._repstatus.items():
+            for change_spec in status.get("changes", []):
+                self._save_change(site_id, change_spec)
+
+            try:
+                del status["changes"]
+            except KeyError:
+                pass
+
+        save_replication_status(repstatus)
+
+
+    # Parse the site specific changes file. The file format has been choosen
+    # to be able to append changes without much cost. This is just a
+    # intermmediate format for 1.4.x. In 1.5 we will reimplement WATO changes
+    # and this very specific file format will vanish.
+    def _load_site_changes(self, site_id, lock=False):
+        path = site_changes_path(site_id)
+
+        if lock:
+            aquire_lock(path)
+
+        changes = []
+        try:
+            for entry in open(path).read().split("\0"):
+                if entry:
+                    changes.append(ast.literal_eval(entry))
+        except IOError, e:
+            if e.errno == 2: # No such file or directory
+                pass
+            else:
+                raise
+        except:
+            if lock:
+                release_lock(path)
+            raise
+
+        return changes
+
+
+    def _save_site_changes(self, site_id, changes):
+        # First truncate the file
+        open(site_changes_path(site_id), "w")
+
+        for change_spec in changes:
+            self._save_change(site_id, change_spec)
+
+
+    def _save_change(self, site_id, change_spec):
+        path = site_changes_path(site_id)
+        try:
+            aquire_lock(path)
+
+            with open(path, "a+") as f:
+                f.write(repr(change_spec)+"\0")
+                f.flush()
+                os.fsync(f.fileno())
+
+            os.chmod(path, 0660)
+
+        except Exception, e:
+            raise MKGeneralException(_("Cannot write file \"%s\": %s") % (path, e))
+
+        finally:
+            release_lock(path)
 
 
     # Returns a list of changes ordered by time and grouped by the change.
     # Each change contains a list of affected sites.
-    def _group_changes_by_id(self, repstatus):
+    def _load_changes_by_id(self):
         changes = {}
 
-        for site_id, status in repstatus.items():
-            if not status.get("changes"):
+        for site_id, site_changes in self._changes_by_site.items():
+            if not site_changes:
                 continue
 
-            for change in status["changes"]:
+            for change in site_changes:
                 change_id = change["id"]
 
                 if change_id not in changes:
@@ -3902,7 +3965,8 @@ class ActivateChanges(object):
                 affected_sites = changes[change_id].setdefault("affected_sites", [])
                 affected_sites.append(site_id)
 
-        return changes
+        self._changes = sorted(changes.items(), key=lambda (k, v): v["time"])
+
 
 
     def grouped_changes(self):
@@ -3910,7 +3974,7 @@ class ActivateChanges(object):
 
 
     def _changes_of_site(self, site_id):
-        return self._repstatus.get(site_id, {}).get("changes", [])
+        return self._changes_by_site[site_id]
 
 
     # Returns the list of sites that are affected by WATO changes.
@@ -3978,8 +4042,9 @@ class ActivateChanges(object):
     def _last_activation_state(self, site_id):
         last_activation_id = self._repstatus.get(site_id, {}).get("last_activation")
         manager = ActivateChangesManager()
+        manager.load()
         try:
-            manager.load(last_activation_id)
+            manager.load_activation(last_activation_id)
         except MKUserError:
             return {}
 
@@ -4035,6 +4100,56 @@ class ActivateChanges(object):
 
 
 
+class ActivateChangesWriter(ActivateChanges):
+    def add_change(self, action_name, text, obj, add_user, need_sync, need_restart, domains, sites):
+        # Default to a core only change
+        if domains == None:
+            domains = [ConfigDomainCore]
+
+        # All replication sites in case no specific site is given
+        if sites == None:
+            sites = self.activation_site_ids()
+
+        change_id = self._new_change_id()
+
+        for site_id in sites:
+            self._add_change_to_site(site_id, change_id, action_name, text, obj,
+                                     add_user, need_sync, need_restart, domains)
+
+
+    def _new_change_id(self):
+        return gen_id()
+
+
+    def _add_change_to_site(self, site_id, change_id, action_name, text, obj,
+                            add_user, need_sync, need_restart, domains):
+        # Individual changes may override the domain restart default value
+        if need_restart == None:
+            need_restart = any([ d.needs_activation for d in domains ])
+
+        if need_sync == None:
+            need_sync = any([ d.needs_sync for d in domains ])
+
+        def serialize_object(obj):
+            if obj == None:
+                return None
+            else:
+                return obj.__class__.__name__, obj.ident()
+
+        self._save_change(site_id, {
+            "id"           : change_id,
+            "action_name"  : action_name,
+            "text"         : "%s" % text,
+            "object"       : serialize_object(obj),
+            "user_id"      : config.user.id if add_user else None,
+            "domains"      : [ d.ident for d in domains ],
+            "time"         : time.time(),
+            "need_sync"    : need_sync,
+            "need_restart" : need_restart,
+        })
+
+
+
 class ActivateChangesManager(ActivateChanges):
     activation_base_dir = cmk.paths.tmp_dir + "/wato/activation"
 
@@ -4048,7 +4163,7 @@ class ActivateChangesManager(ActivateChanges):
         super(ActivateChangesManager, self).__init__()
 
 
-    def load(self, activation_id):
+    def load_activation(self, activation_id):
         self._activation_id = activation_id
 
         if not os.path.exists(self._info_path()):
@@ -4301,9 +4416,14 @@ class ActivateChangesManager(ActivateChanges):
 
 
     def _do_start_site_activation(self, site_id):
-        ActivateChangesSite(site_id, self._activation_id,
-                            self._site_snapshot_file(site_id), self._prevent_activate).start()
-        os._exit(0)
+        try:
+            site_activation = ActivateChangesSite(site_id, self._activation_id,
+                                self._site_snapshot_file(site_id), self._prevent_activate)
+            site_activation.load()
+            site_activation.start()
+            os._exit(0)
+        except:
+            log_exception()
 
 
     def _log_activation(self):
@@ -4353,10 +4473,11 @@ class ActivateChangesManager(ActivateChanges):
 
                 delete = False
                 manager = ActivateChangesManager()
+                manager.load()
 
                 try:
                     try:
-                        manager.load(activation_id)
+                        manager.load_activation(activation_id)
                     except MKUserError:
                         # Not existant anymore!
                         delete = True
@@ -4406,12 +4527,11 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         super(ActivateChangesSite, self).__init__()
 
         self._site_id           = site_id
+        self._site_changes      = []
         self._activation_id     = activation_id
         self._snapshot_file     = site_snapshot_file
         self.daemon             = True
         self._prevent_activate  = prevent_activate
-
-        self._load_changes()
 
         self._time_started      = None
         self._time_updated      = None
@@ -4422,13 +4542,18 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         self._status_details    = None
         self._warnings          = []
         self._pid               = None
-        self._expected_duration = self._get_expected_duration()
+        self._expected_duration = 10.0
 
         self._set_result(PHASE_INITIALIZED, _("Initialized"))
 
 
-    def _load_changes(self):
-        super(ActivateChangesSite, self)._load_changes()
+    def load(self):
+        super(ActivateChangesSite, self).load()
+        self._load_this_sites_changes()
+        self._load_expected_duration()
+
+
+    def _load_this_sites_changes(self):
         all_changes = self._changes_of_site(self._site_id)
 
         change_id = self._activate_until_change_id()
@@ -4482,7 +4607,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
     def _activate_until_change_id(self):
         manager = ActivateChangesManager()
-        manager.load(self._activation_id)
+        manager.load()
+        manager.load_activation(self._activation_id)
         manager.activate_until()
 
 
@@ -4515,7 +4641,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
     def _lock_activation(self):
-        # This locks the global replication status file
+        # This locks the site specific replication status file
         repl_status = load_site_replication_status(self._site_id, lock=True)
         try:
             if self._is_currently_activating(repl_status):
@@ -4541,9 +4667,10 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         current_activation_id = rep_status.get(self._site_id, {}).get("current_activation")
 
         manager = ActivateChangesManager()
+        manager.load()
 
         try:
-            manager.load(current_activation_id)
+            manager.load_activation(current_activation_id)
         except MKUserError:
             return False # Not existant anymore!
 
@@ -4688,21 +4815,21 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
     def _confirm_activated_changes(self):
-        repl_status = load_site_replication_status(self._site_id, lock=True)
+        changes = self._load_site_changes(self._site_id, lock=True)
+
         try:
-            changes = repl_status.get("changes", [])
-            repl_status["changes"] = changes[len(self._site_changes):]
+            changes = changes[len(self._site_changes):]
         finally:
-            save_site_replication_status(self._site_id, repl_status)
+            self._save_site_changes(self._site_id, changes)
 
 
     def _confirm_synchronized_changes(self):
-        repl_status = load_site_replication_status(self._site_id, lock=True)
+        changes = self._load_site_changes(self._site_id, lock=True)
         try:
-            for change in repl_status.get("changes", []):
+            for change in changes:
                 change["need_sync"] = False
         finally:
-            save_site_replication_status(self._site_id, repl_status)
+            self._save_site_changes(self._site_id, changes)
 
 
     def _set_result(self, phase, status_text, status_details=None, state=STATE_SUCCESS):
@@ -4759,7 +4886,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             (ActivateChangesManager.activation_base_dir, self._activation_id, self._site_id)
 
 
-    def _get_expected_duration(self):
+    def _load_expected_duration(self):
         times = self.get_activation_times(self._site_id)
         duration = 0.0
 

@@ -1,0 +1,11 @@
+Title: mk_jolokia: added missing protocol configuration
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1488533605
+
+

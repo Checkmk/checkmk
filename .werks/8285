@@ -15,20 +15,24 @@ Service description for IPv6 Apache status information services will change,
 because the general CIDR notation will be used as new service description.
 
 In version 1.2.8 and 1.4.0:
-Apache ::1:80 Status
-Apache 2001:cdba::3257:9652:443 Status
+<ul>
+ <li>Apache ::1:80 Status</li>
+ <li>Apache 2001:cdba::3257:9652:443 Status</li>
+</ul>
 
 Since version 1.5.0:
-Apache [::1]:80 Status
-Apache [2001:cdba::3257:9652]:443 Status
+<ul>
+ <li>Apache [::1]:80 Status</li>
+ <li>Apache [2001:cdba::3257:9652]:443 Status</li>
+</ul>
 
 If historic information should not be lost and graphs should be continued,
 then you have to follow three steps:
 
 <ul>
- <li>Rename existing RRDs to new service description:
-     Example:
-     mv Apache___1_80_Status.rrd Apache_[__1]_80_Status.rrd
+ <li>Rename existing RRDs to new service description:<br>
+     Example:<br>
+     mv Apache___1_80_Status.rrd Apache_[__1]_80_Status.rrd<br>
      mv Apache_2001_cdba__3257_9652_443_Status.rrd Apache_[2001_cdba__3257_9652]_443_Status.rrd
  </li>
  <li>Update apache_status plugin on monitored hosts</li>

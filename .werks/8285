@@ -1,0 +1,36 @@
+Title: apache_status: Fixed wrong IPv6 URLs to query the information
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cee
+Version: 1.5.0i1
+Date: 1488549674
+Class: fix
+
+If the information from Apache is queried by IPv6, the request was denied,
+because we created a bad request. Now IPv6 addresses are surrounded by
+square bracket.
+
+Service description for IPv6 Apache status information services will change,
+because the general CIDR notation will be used as new service description.
+
+In version 1.2.8 and 1.4.0:
+Apache ::1:80 Status
+Apache 2001:cdba::3257:9652:443 Status
+
+Since version 1.5.0:
+Apache [::1]:80 Status
+Apache [2001:cdba::3257:9652]:443 Status
+
+If historic information should not be lost and graphs should be continued,
+then you have to follow three steps:
+
+<ul>
+ <li>Rename existing RRDs to new service description:
+     Example:
+     mv Apache___1_80_Status.rrd Apache_[__1]_80_Status.rrd
+     mv Apache_2001_cdba__3257_9652_443_Status.rrd Apache_[2001_cdba__3257_9652]_443_Status.rrd
+ </li>
+ <li>Update apache_status plugin on monitored hosts</li>
+ <li>Make a service discovery of the affected hosts</li>
+</ul>

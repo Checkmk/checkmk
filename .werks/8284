@@ -1,4 +1,4 @@
-Title: apache_status: Fix wrong IPv6 URLs to query the information
+Title: apache_status: Fixed wrong IPv6 URLs to query the information
 Level: 1
 Component: checks
 Compatible: compat

@@ -72,6 +72,7 @@ def check_cisco_redundancy(_no_item, params, info):
             "7" : "active unit removed",
         },
     }
+
     infotexts = {}
     for what, states in [("now", info[0][:5]), ("init", params["init_states"])]:
         unit_id, unit_state, peer_id, peer_state, duplex_mode = states
@@ -93,7 +94,7 @@ def check_cisco_redundancy(_no_item, params, info):
             state = 2
 
         infotext = "Switchover - Old status: %s, New status: %s" % \
-                   (infotext["init"], infotext["now"])
+                   (infotexts["init"], infotexts["now"])
 
     if peer_state == "1":
         state = 2

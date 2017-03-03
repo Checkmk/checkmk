@@ -138,7 +138,7 @@ def render_availability_options(what):
 # Render the page showing availability table or timelines. It
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
-def render_availability_page(view, datasource, filterheaders, only_sites, limit):
+def render_availability_page(view, datasource, context, filterheaders, only_sites, limit):
 
     if handle_edit_annotations():
         return
@@ -191,7 +191,7 @@ def render_availability_page(view, datasource, filterheaders, only_sites, limit)
     # Now compute all data, we need this also for CSV export
     if not html.has_user_errors():
         av_rawdata, has_reached_logrow_limit = \
-            availability.get_availability_rawdata(what, filterheaders, only_sites,
+            availability.get_availability_rawdata(what, context, filterheaders, only_sites,
                                                   av_object, av_mode == "timeline", avoptions)
         av_data = availability.compute_availability(what, av_rawdata, avoptions)
 

@@ -9,3 +9,15 @@ When viewing an event of a host which the user is not permitted to see
 while the user has "see all events permission", the user sees the
 service states in the last column. The user can also add more columns
 to the view to see all information about the host.
+
+----
+
+The EC tables are already capable of returning "empty" data for unrelated
+events. This needs to be handled equal in case a user has set "see all events"
+and is not permitted on a host.
+
+This should make the user see the event and prevent the user from seeing
+the monitoring data of that host.
+
+This needs to be filtered either in the core (then we need the AuthUser header and
+the info that the user has "see all" permission) or in web/plugins/views/mkeventd.py query_ec_table().

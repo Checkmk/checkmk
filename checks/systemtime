@@ -40,7 +40,7 @@ def check_systemtime(item, params, info):
     systemtime = int(info[0][0])
     try:
         systemtime += get_agent_data_time()
-    except NameError:
+    except (NameError, TypeError):
         pass
 
     ourtime    = int(time.time())

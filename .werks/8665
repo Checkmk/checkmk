@@ -1,0 +1,10 @@
+Title: fixed aborted snmp scan because of werk #8664
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.8p19
+Date: 1488788498
+Class: fix
+
+werk #8664 caused an aborted snmp scan for devices other than pfSense. This has been fixed now.
+

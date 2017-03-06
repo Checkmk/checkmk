@@ -663,7 +663,7 @@ class WebSession(requests.Session):
         if allow_errors and matches:
             print "Found error message, but it's allowed: %s" % matches.groups()
         else:
-            assert not matches, "Found error message: %s" % matches.groups()
+            assert not matches, "Found error message(s): %s" % "\n".join(matches.groups())
 
 
     def _check_html_page_resources(self, response):

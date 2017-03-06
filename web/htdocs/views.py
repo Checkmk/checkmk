@@ -1804,7 +1804,9 @@ def render_view(view, rows, datasource, group_painters, painters,
                        # Show link to availability
                        datasource["table"] in [ "hosts", "services" ] or "aggr" in datasource["infos"],
                        # Show link to combined graphs
-                       "host" in datasource["infos"] or "service" in datasource["infos"])
+                       ("host" in datasource["infos"] or "service" in datasource["infos"]) and \
+                           ("host" in datasource["table"] or "service" in datasource["table"]),
+                       )
 
     # User errors in filters
     html.show_user_errors()

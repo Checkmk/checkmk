@@ -3018,7 +3018,7 @@ class StatusServer:
                 if header == "OutputFormat":
                     output_format = argument
                 else:
-                    header_lines += line
+                    header_lines.append(line)
 
             with lock_eventstatus:
                 if method == "GET":

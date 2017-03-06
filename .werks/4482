@@ -1,0 +1,10 @@
+Title: websphere_mq_instance: fixed missing installation info handling
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b4
+Date: 1488782802
+Class: fix
+
+

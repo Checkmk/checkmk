@@ -76,8 +76,9 @@ def inventory_websphere_mq_channels(parsed):
 
 def check_websphere_mq_channels(item, params, parsed):
     if isinstance(params, tuple):
-        params = {'message_count': params,
-                  'status': websphere_mq_channels_default_levels['status']}
+        params = { 'message_count' : params,
+                   'status' : { 'RUNNING': 0,
+                                'STOPPED': 1, }}
 
     if item in parsed:
         data = parsed[item]

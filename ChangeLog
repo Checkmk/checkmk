@@ -14,6 +14,7 @@
 
     HW/SW-Inventory:
     * 4385 FIX: mk_inventory.vbs: Add new query type for installed software on hosts...
+    * 8667 FIX: fixed missing patchlevel in inventory data of SuSE 12.1 and 12.2...
 
 
 1.2.8p18:

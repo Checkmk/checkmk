@@ -1,0 +1,11 @@
+Title: fixed missing patchlevel in inventory data of SuSE 12.1 and 12.2
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.8p19
+Date: 1488802019
+Class: fix
+
+SuSE 12 SP1 and SP2 are reporting a fourth line in /etc/SuSE-release to use /etc/os-release in future versions.
+This line prevented detecting the patchlevel in HW/SW inventory. This has been fixed by a workaround until development of /etc/os-release integration has finished.
+

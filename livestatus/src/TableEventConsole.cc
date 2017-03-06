@@ -124,11 +124,9 @@ bool TableEventConsole::isAuthorizedForEvent(contact *ctc, void *data) {
     if (precedence == "rule") {
         isAuthorizedForEventViaContactGroups(c, r, result) ||
             isAuthorizedForEventViaHost(c, r, result);
-        Error(_core->loggerLivestatus()) << "RULE " << result << "   " << ctc;
     } else if (precedence == "host") {
         isAuthorizedForEventViaHost(c, r, result) ||
             isAuthorizedForEventViaContactGroups(c, r, result);
-        Error(_core->loggerLivestatus()) << "HOST " << result << "   " << ctc;
     } else {
         Error(_core->loggerLivestatus()) << "unknown precedence '" << precedence
                                          << "' in table " << name();
@@ -150,8 +148,6 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
             return (result = true, true);
         }
     }
-    Error(_core->loggerLivestatus())
-        << "isAuthorizedForEventViaContactGroups 3";
     return (result = false, true);
 }
 

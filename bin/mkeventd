@@ -3010,10 +3010,19 @@ class StatusServer:
 
             method, table = parts
             output_format = "python"
+            # TODO(sp) Handle all header lines centrally in a separate method
+            header_lines = []
+            for line in query[1:]:
+                header, argument = line.rstrip().split(":", 1)
+                argument = argument.strip()
+                if header == "OutputFormat":
+                    output_format = argument
+                else:
+                    header_lines += line
 
             with lock_eventstatus:
                 if method == "GET":
-                    response, output_format = self.handle_get_request(table, query[1:])
+                    response = self.handle_get_request(table, header_lines)
 
                 elif method == "REPLICATE":
                     response = self.handle_replicate(table, client_ip)
@@ -3228,7 +3237,6 @@ class StatusServer:
         filters = []
         only_host = None
         limit = None
-        output_format = "python"
         for line in headerlines:
             try:
                 header, argument = line.rstrip().split(":", 1)
@@ -3239,8 +3247,6 @@ class StatusServer:
                     if name == "event_host" and opfunc == filter_operators['=']:
                         only_host = argument
                     filters.append((name, opfunc, argument))
-                elif header == "OutputFormat":
-                    output_format = argument
                 elif header == "Limit":
                     limit = int(argument)
                 elif header == "Columns":
@@ -3273,7 +3279,7 @@ class StatusServer:
         else:
             rows += list_rows
 
-        return rows, output_format
+        return rows
 
     def filter_row(self, headers, filters, list_row):
         row = dict(zip(headers, list_row))

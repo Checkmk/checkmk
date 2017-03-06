@@ -71,9 +71,8 @@ import traceback
 import logging
 import multiprocessing
 
-# TODO: Remove the disablings below once the builds ship these modules
-import psutil # pylint: disable=import-error
-import npyscreen # pylint: disable=import-error
+import psutil
+import npyscreen
 
 from collections import namedtuple
 
@@ -1106,9 +1105,8 @@ class Measurement(object):
     def set_value(self, k, val):
         """Set an attribute of the measurement. Cares about converting tuples
         to the correct namedtuples."""
-        # TODO: Remove the disablings below once the builds ship these modules
-        from psutil._common import sdiskusage # pylint: disable=import-error
-        from psutil._pslinux import svmem, sdiskio # pylint: disable=import-error
+        from psutil._common import sdiskusage
+        from psutil._pslinux import svmem, sdiskio
 
         if k == "memory":
             val = svmem(*val)

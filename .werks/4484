@@ -1,0 +1,14 @@
+Title: Now time range previews can be enabled or disabled and default graph time range can be choosen in 'Service Graphs with Timerange previews'
+Level: 1
+Component: multisite
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0b4
+Date: 1488819450
+
+If you insert the 'Service Graphs with Timerange previews' column
+then you're able to en- or disable time range previews. Moreover
+the default time range can be choosen from configured time ranges
+in global settings.

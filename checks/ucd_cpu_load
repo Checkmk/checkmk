@@ -57,17 +57,17 @@ def check_ucd_cpu_load(item, params, info):
 
 
 check_info["ucd_cpu_load"] = {
-    'check_function':          check_ucd_cpu_load,
-    'inventory_function':      inventory_ucd_cpu_load,
-    'service_description':     'CPU load',
-    'has_perfdata':            True,
-    'snmp_info':               ('.1.3.6.1.4.1.2021.10.1', [
-                                    "5",    # UCD-SNMP-MIB::laLoadInt       Int table
-                                    "6",    # UCD-SNMP-MIB::laLoadFloat     Float table
-                               ]),
+    'inventory_function'    : inventory_ucd_cpu_load,
+    'check_function'        : check_ucd_cpu_load,
+    'service_description'   : 'CPU load',
+    'has_perfdata'          : True,
+    'snmp_info'             : ('.1.3.6.1.4.1.2021.10.1', [
+                                        "5", # UCD-SNMP-MIB::laLoadInt       Int table
+                                        "6", # UCD-SNMP-MIB::laLoadFloat     Float table
+                              ]),
                                # 'CPU load' is not available in the HR-MIB
                                # thus we cannot use 'prefer_hr_scan_function'
-    'snmp_scan_function':      ucd_scan_function,
-    'group':                   'cpu_load',
-    "includes":                ["cpu_load.include", "ucd.include"],
+    'snmp_scan_function'    : ucd_scan_function,
+    'group'                 : 'cpu_load',
+    "includes"              : ["cpu_load.include", "ucd.include"],
 }

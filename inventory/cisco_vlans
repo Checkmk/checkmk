@@ -109,8 +109,6 @@ def inv_cisco_vlans(info, params):
                     if_info["vlantype"] = vlan_readable
                     break
 
-    return node
-
 
 inv_info['inv_cisco_vlans'] = {
     "inv_function"      : inv_cisco_vlans,

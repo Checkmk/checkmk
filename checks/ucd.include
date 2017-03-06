@@ -37,6 +37,7 @@ def ucd_scan_function(oid):
             "HP Onboard Administrator" in oid(".1.3.6.1.2.1.1.1.0") or \
             # for barracuda spam firewall appliance
             "barracuda" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
+            "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
             "genugate" in oid(".1.3.6.1.2.1.1.1.0") or \
             # for artec email archiv appliance
             ( oid('.1.3.6.1.2.1.1.2.0') == '.1.3.6.1.4.1.8072.3.2.10' and \
@@ -44,9 +45,22 @@ def ucd_scan_function(oid):
               "serial"  in oid('.1.3.6.1.2.1.1.1.0').lower() ))
 
 
-def prefer_hr_scan_function(oid):
+def avoid_ucd_scan_function(oid):
     # We prefer HOST-RESOURCES-MIB implementation but not in case
     # of check 'ucd_cpu_load' because the HR-MIB has not data
     # about cpu load
     return ucd_scan_function(oid) and \
            not oid(".1.3.6.1.2.1.25.1.1.0")
+
+def hr_mem_scan_function(oid):
+    # We prefer HOST-RESOURCES-MIB implementation but not in case
+    # of devices, which are known to report incorrect information
+    # about mem usage
+    return not "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
+              (oid(".1.3.6.1.2.1.25.1.1.0") and \
+              not ucd_scan_function(oid))
+
+def ucd_mem_scan_function(oid):
+    # Avoid inverting output of a function in a check plugin and be
+    # descriptive about what a function is actually doing
+    return not hr_mem_scan_function(oid)

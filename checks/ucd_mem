@@ -55,12 +55,13 @@ check_info['ucd_mem'] = {
     'service_description'       : 'Memory',
     'has_perfdata'              : True,
     'snmp_info'                 : (".1.3.6.1.4.1.2021.4", [
-                                        "5",    # memTotal     -> kB
-                                        "6",    # memAvailable -> kB
+                                        "5", # memTotal     -> kB
+                                        "6", # memAvailable -> kB
                                   ]),
-    'snmp_scan_function'        : lambda oid: \
-                                  "pfsense" in oid(".1.3.6.1.2.1.1.1.0").lower() or \
-                                  prefer_hr_scan_function(oid),
+                                  # Some devices are reporting wrong data on
+                                  # HOST-RESOURCES-MIB. Use UCD-MIB in these
+                                  # cases instead
+    'snmp_scan_function'        : ucd_mem_scan_function,
     'default_levels_variable'   : 'ucd_mem_default_levels',
     'group'                     : 'memory_simple',
     'includes'                  : [ "ucd.include", "memory.include" ],

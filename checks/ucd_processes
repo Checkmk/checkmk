@@ -83,6 +83,6 @@ check_info['ucd_processes'] = {
                                     "100",  # prErrFlag
                                     "101",  # prErrMessage
                                   ]),
-    'snmp_scan_function'        : prefer_hr_scan_function,
+    'snmp_scan_function'        : avoid_ucd_scan_function,
     'includes'                  : [ "ucd.include" ],
 }

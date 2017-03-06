@@ -1,4 +1,4 @@
-Title: websphere_mq_channels: fixed incomplete info handling, id. ValueError: need more than 2 values to unpack
+Title: websphere_mq_channels: fixed incomplete info handling, ie. ValueError: need more than 2 values to unpack
 Level: 1
 Component: checks
 Compatible: compat

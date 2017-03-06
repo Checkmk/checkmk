@@ -47,11 +47,11 @@ check_info['ucd_disk'] = {
     'service_description'       : 'Filesystem %s',
     'has_perfdata'              : True,
     'snmp_info'                 : (".1.3.6.1.4.1.2021.9.1", [
-                                        "2",    # dskPath  -> where the disk is mounted.
-                                        "6",    # dskTotal -> in kBytes
-                                        "7",    # dskAvail -> in kBytes
+                                        "2", # dskPath  -> where the disk is mounted.
+                                        "6", # dskTotal -> in kBytes
+                                        "7", # dskAvail -> in kBytes
                                   ]),
-    'snmp_scan_function'        : prefer_hr_scan_function,
+    'snmp_scan_function'        : avoid_ucd_scan_function,
     "group"                     : "filesystem",
     'default_levels_variable'   : "filesystem_default_levels",
     'includes'                  : [ "ucd.include", "df.include" ],

@@ -102,20 +102,21 @@ def check_hr_mem(_no_item, params, info):
     return (3, "Invalid information. Total memory is empty.")
 
 check_info["hr_mem"] = {
-    'check_function':          check_hr_mem,
-    'inventory_function':      inventory_hr_mem,
-    'service_description':     'Memory used',
-    'has_perfdata':            True,
-    'snmp_info':               ('.1.3.6.1.2.1.25.2.3.1', [
+    'inventory_function'        : inventory_hr_mem,
+    'check_function'            : check_hr_mem,
+    'service_description'       : 'Memory used',
+    'has_perfdata'              : True,
+    'snmp_info'                 : ('.1.3.6.1.2.1.25.2.3.1', [
                                     2, # hrStorageType
                                     3, # hrStorageDescr
                                     4, # hrStorageAllocationUnits
                                     5, # hrStorageSize
                                     6, # hrStorageUsed
                                 ]),
-    # HOST-RESOURCES-MIB::hrSystemUptime.0
-    'snmp_scan_function':      lambda oid: \
-         not not oid('.1.3.6.1.2.1.25.1.1.0') and
-         "pfsense" not in oid(".1.3.6.1.2.1.1.1.0").lower(),
-    'group':                   'memory',
+                                  # Some devices are reporting wrong data on
+                                  # HOST-RESOURCES-MIB. Use UCD-MIB in these
+                                  # cases instead
+    'snmp_scan_function'        : hr_mem_scan_function,
+    'group'                     : 'memory',
+    'includes'                  : [ "ucd.include" ]
 }

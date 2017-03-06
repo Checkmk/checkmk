@@ -846,6 +846,8 @@ inventory_displayhints.update({
     ".networking.interfaces:*.speed"                   : { "title" : _("Speed"), "paint" : "nic_speed", },
     ".networking.interfaces:*.port_type"               : { "title" : _("Type"), "paint" : "if_port_type", "filter" : visuals.FilterInvtableInterfaceType },
     ".networking.interfaces:*.last_change"             : { "title" : _("Last Change"), "paint" : "timestamp_as_age_days", "filter" : visuals.FilterInvtableTimestampAsAge },
+    ".networking.interfaces:*.vlans"                   : { "title" : _("VLANs") },
+    ".networking.interfaces:*.vlantype"                : { "title" : _("VLAN type") },
 
     ".networking.wlan"                                 : { "title" : _("WLAN") },
     ".networking.wlan.controller"                      : { "title" : _("Controller") },

@@ -1,0 +1,12 @@
+Title: "Always up" hosts are never stale
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1488806295
+Class: fix
+
+When a host check command "Always assume host to be up" was configured, the
+corresponding host went stale after some time.  This has been fixed, such
+hosts are never stale.

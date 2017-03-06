@@ -94,7 +94,7 @@ def parse_winperf_if(info):
     nic_index = winperf_if_get_nic_index_map(nic_names)
 
     try:
-        agent_timestamp = int(info[0][0])
+        agent_timestamp = float(info[0][0])
     except (IndexError, ValueError):
         agent_timestamp = None
 

@@ -1,0 +1,10 @@
+Title: cisco_vlans: New inventory plugin which collects vlan information of Cisco devices supporting CISCO-VLAN-MEMBERSHIP mib
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1488784681
+Class: feature
+
+

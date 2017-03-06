@@ -178,9 +178,9 @@ def check_websphere_mq_manager(item, params, parsed):
         status  = data["STATUS"]
         default = data["DEFAULT"]
         standby = data["STANDBY"]
-        installation_name   = data["INSTNAME"]
-        installation_path   = data["INSTPATH"]
-        installation_server = data["INSTVER"]
+        installation_name    = data.get("INSTNAME")
+        installation_path    = data.get("INSTPATH")
+        installation_version = data.get("INSTVER")
 
         instances_modes = []
         for instance, instance_info in parsed["instances"].items():
@@ -211,8 +211,13 @@ def check_websphere_mq_manager(item, params, parsed):
         if "map_instance_states" in params:
             state = get_websphere_mq_status("standby", standby, params)
 
-        yield state, "Status: %s%s, Default: %s, Installation name: %s, Path: %s, Version: %s" % \
-              (standby.lower(), extra_info, default, installation_name, installation_path, installation_server)
+        yield state, "Status: %s%s, Default: %s" % (standby.lower(), extra_info, default)
+
+        for what, title in [ (installation_name,    "Name"),
+                             (installation_path,    "Path"),
+                             (installation_version, "Version") ]:
+            if what:
+                yield 0, "%s: %s" % (title, what)
 
 
 check_info['websphere_mq_instance.manager'] = {

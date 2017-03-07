@@ -6962,40 +6962,34 @@ class Rule(object):
 
 
     def _matches_hostname(self, hostname):
-        negate         = False
-        regex_match    = False
-        hostname_match = False
+        if not self.host_list:
+            return False # empty list of explicit host does never match
+
+        # Assume WATO conforming rule where either *all* or *none* of the
+        # host expressions are negated.
+        negate = self.host_list[0].startswith("!")
 
         for check_host in self.host_list:
-            if check_host == "@all" or hostname == check_host:
-                hostname_match = True
-                break
+            if check_host == "@all":
+                return not negate
 
-            if check_host[0] == '!':
+            if check_host[0] == '!': # strip negate character
                 check_host = check_host[1:]
-                negate = True
+
             if check_host[0] == '~':
                 check_host = check_host[1:]
                 regex_match = True
+            else:
+                regex_match = False
 
             if not regex_match and hostname == check_host:
-                if negate:
-                    break
-                hostname_match = True
-                break
+                return not negate
 
             elif regex_match and regex(check_host).match(hostname):
-                if negate:
-                    break
-                hostname_match = True
-                break
+                return not negate
 
-            # No Match until now, but negate, so thats a match
-            if negate:
-                hostname_match = True
-                break
+        return not negate
 
-        return hostname_match
 
 
     def matches_item(self, item):

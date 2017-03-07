@@ -33,17 +33,17 @@
 # unit_name:          The ID of a unit, e.g. "%"
 # unit:               The definition-dict of a unit like in unit_info
 # graph_template:     Template for a graph. Essentially a dict with the key "metrics"
-
 import math, time, colorsys, shlex, operator, random
 import config, pagetypes, table
 import sites
 import traceback
+from collections import OrderedDict
 from log import logger
 from lib import *
 from valuespec import *
 import livestatus
 from cmk.regex import regex
-from collections import OrderedDict
+from cmk.containers import AutomaticDict
 
 try:
     import simplejson as json
@@ -72,7 +72,9 @@ def load_plugins(force):
     global metric_info     ; metric_info     = {}
     global check_metrics   ; check_metrics   = {}
     global perfometer_info ; perfometer_info = []
-    global graph_info      ; graph_info      = OrderedDict()
+    # mk_collections.AutomaticDict is used here to provide some list methods.
+    # This is needed to maintain backwards-compatibility.
+    global graph_info      ; graph_info      = AutomaticDict("manual_graph_template")
     load_web_plugins("metrics", globals())
     loaded_with_language = current_language
 

@@ -435,6 +435,7 @@ def send_mail_sendmail(m, target, from_address):
     if from_address:
         cmd += ['-F', from_address, "-f", from_address]
     cmd += [ "-i", target.encode("utf-8")]
+
     try:
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     except OSError:
@@ -926,6 +927,7 @@ def main():
     from_address = context.get("PARAMETER_FROM") or default_from_address()
     reply_to = context.get("PARAMETER_REPLY_TO")
     m = multipart_mail(mailto, subject, from_address, reply_to, content_txt, content_html, attachments)
+
     try:
         sys.exit(send_mail(m, mailto, from_address, context))
     except Exception, e:

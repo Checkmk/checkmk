@@ -92,8 +92,17 @@ def send_mail(m, target, from_address):
     if from_address:
         cmd += ['-F', from_address, "-f", from_address]
     cmd += [ "-i", target.encode("utf-8")]
-    p = subprocess.Popen(cmd, stdin = subprocess.PIPE)
+
+    try:
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    except OSError:
+        raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
+
     p.communicate(m.as_string())
+    if p.returncode != 0:
+        raise Exception("sendmail returned with exit code: %d" % p.returncode)
+
+    return 0
 
 def construct_content(context):
 
@@ -238,13 +247,19 @@ def main():
         subject = context['SUBJECT']
 
     if not mailto: # e.g. empty field in user database
-        sys.stdout.write("Cannot send HTML email: empty destination email address")
+        sys.stdout.write("Cannot send ASCII email: empty destination email address\n")
         sys.exit(2)
 
     # Create the mail and send it
     from_address = context.get("PARAMETER_FROM")
     reply_to = context.get("PARAMETER_REPLY_TO")
     m = build_mail(mailto, subject, from_address, reply_to, content_txt)
-    send_mail(m, mailto, from_address)
+
+    try:
+        sys.exit(send_mail(m, mailto, from_address))
+    except Exception, e:
+        sys.stderr.write("Unhandled exception: %s\n" % e)
+        # unhandled exception, don't retry this...
+        sys.exit(2)
 
 main()

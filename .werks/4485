@@ -1,0 +1,14 @@
+Title: Removed uptime and snmp_uptime inventory plugins and other monitoring data from oracle_tablespaces inventory plugin
+Level: 1
+Component: inv
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488880767
+
+Uptime, snmp_uptime and oracle_tablespaces inventory plugins produced
+a lot of monitoring data which filled up inventory archive and slowed
+down the monitoring system. These plugins have been removed now resp.
+oracle_tablespace has been adapted.

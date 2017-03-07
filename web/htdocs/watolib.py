@@ -6971,7 +6971,7 @@ class Rule(object):
 
         for check_host in self.host_list:
             if check_host == "@all":
-                return not negate
+                return True
 
             if check_host[0] == '!': # strip negate character
                 check_host = check_host[1:]
@@ -6988,7 +6988,7 @@ class Rule(object):
             elif regex_match and regex(check_host).match(hostname):
                 return not negate
 
-        return not negate
+        return negate
 
 
 

@@ -52,104 +52,14 @@
 
 def inv_oracle_tablespaces(parsed):
     node = inv_tree_list("software.applications.oracle.tablespaces:")
-    tablespaces_sizes_by_type = {}
     tablespaces, error_sids = parsed
-    for tablespace, attrs in tablespaces.items():
-        db_version     = attrs["db_version"]
-        num_files      = 0
-        num_avail      = 0
-        num_extensible = 0
-        current_size   = 0
-        max_size       = 0
-        used_size      = 0
-        num_increments = 0
-        increment_size = 0
-        free_space     = 0
-
-        tablespaces_sizes_by_type.setdefault(tablespace, {})
-
-        for datafile in attrs.get("datafiles", []):
-            datafile_name      = datafile["name"]
-            datafile_status    = datafile["status"]
-            autoextensible     = datafile["autoextensible"]
-            ts_type            = datafile["ts_type"]
-            ts_status          = datafile["ts_status"]
-            file_online_status = datafile["file_online_status"]
-
-            tablespaces_sizes_by_type[tablespace].setdefault(ts_type, {})
-            this_ts_by_type = tablespaces_sizes_by_type[tablespace][ts_type]
-
-            # The following values may be None
-            try:
-                bs                  = datafile["block_size"]
-                filesize_blocks     = bs * int(datafile["size"])
-                max_filesize_blocks = bs * int(datafile["max_size"])
-                used_blocks         = bs * int(datafile["used_size"])
-                free_space          = bs * int(datafile["free_space"])
-                increment_size      = bs * int(datafile["increment_size"])
-            except:
-                continue
-
-            num_files += 1
-            if datafile["status"] in [ "AVAILABLE", "ONLINE", "READONLY" ]:
-                df_size       = datafile["size"]
-                df_free_space = datafile["free_space"]
-                df_max_size   = datafile["max_size"]
-
-                num_avail    += 1
-                current_size += df_size
-                used_size    += df_size - df_free_space
-
-                # Autoextensible? Honor max size. Everything is computed in
-                # *Bytes* here!
-                if datafile["autoextensible"]:
-                    num_extensible += 1
-                    incsize         = datafile["increment_size"]
-
-                    if df_size > df_max_size:
-                        max_size       += df_size
-                        free_extension  = df_size - df_max_size # free extension space
-                    else:
-                        max_size       += df_max_size
-                        free_extension  = df_max_size - df_size # free extension space
-
-                    if incsize == datafile["block_size"]:
-                        uses_default_increment = True
-
-                    #incs, rest = divmod(free_extension, incsize)
-                    #if rest:
-                    #    # ??? Was ist, wenn es nicht genau aufgeht und ein weiteres
-                    #    # increment max_size überschreiten würde? Das geht ja wohl
-                    #    # nicht oder??
-                    #    # incs += 1 ### Dann würde max_size überschritten!
-                    incs = free_extension / incsize
-                    num_increments += incs
-                    increment_size += incsize * incs
-
-                    if db_version >= 11:
-                        # The size of next extent in datafile is ignored when remaining
-                        # free space is > then next extend. Oracle uses all space up to the maximum!
-                        free_space += df_max_size - df_size
-                    else:
-                        # The free space in this table is the current free space plus
-                        # the additional space that can be gathered by using all available
-                        # remaining increments
-                        free_space += increment_size + df_free_space
-
-                # not autoextensible: take current size as maximum
-                else:
-                    max_size   += df_size
-                    free_space += df_free_space
-
+    for (sid, name), attrs in tablespaces.items():
         node.append({
-            "name"           : tablespace[0],
-            "type"           : ts_type,
-            "current_size"   : current_size,
-            "max_size"       : max_size,
-            "used_size"      : used_size,
-            "num_increments" : num_increments,
-            "increment_size" : increment_size,
-            "free_space"     : free_space,
+            "id"             : sid,
+            "name"           : name,
+            "version"        : attrs["db_version"] or "",
+            "type"           : attrs["type"],
+            "autoextensible" : attrs["autoextensible"] and "YES" or "NO",
         })
 
 

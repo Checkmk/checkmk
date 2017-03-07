@@ -29,6 +29,7 @@ def parse_avaya_88xx(info):
     for line in info:
         parsed["fanstate"].append(line[0])
         parsed["temp"].append(line[1])
+
     return parsed
 
 def inventory_avaya_88xx_fan(parsed):
@@ -58,14 +59,18 @@ factory_settings["avaya_88xx_default_levels"] = {
 def inventory_avaya_88xx(parsed):
     sensors = parsed["temp"]
     for idx, temp in enumerate(sensors):
-        yield str(idx), {}
+#        if temp:
+            yield str(idx), {}
 
 def check_avaya_88xx(item, params, parsed):
     sensors = parsed["temp"]
     if len(sensors) < int(item):
         return
 
-    return check_temperature(int(sensors[int(item)]), params, "avaya_88xx_%s" % item)
+    reading = sensors[int(item)]
+    if reading:
+        return check_temperature(int(reading), params, "avaya_88xx_%s" % item)
+
 
 check_info["avaya_88xx"] = {
     'parse_function':       parse_avaya_88xx,

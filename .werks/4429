@@ -1,0 +1,12 @@
+Title: Freshness check respects check period now
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1488874943
+Class: fix
+
+The freshness check didn't take the check period of host/service into
+account, so these objects were considered "unfresh" outside the check
+period. This has been fixed.

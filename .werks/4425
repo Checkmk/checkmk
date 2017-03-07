@@ -1,0 +1,11 @@
+Title: Fixed issue in WATO rule analayzer with negated host conditions
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1488890260
+
+

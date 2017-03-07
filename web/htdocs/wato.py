@@ -13930,7 +13930,8 @@ def select_language(user):
         html.div(default_label, class_="inherited", id_="attr_default_language", style= "display: none" if active else "")
         html.open_div(id_="attr_entry_language", style="display: none" if not active else "")
 
-        html.select("language", languages, user.get('language') or '')
+        language = user.get('language') if user.get('language') != None else ''
+        html.select("language", languages, language)
         html.close_div()
         html.help(_('Configure the default language '
                     'to be used by the user in the user interface here. If you do not check '

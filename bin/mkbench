@@ -2946,12 +2946,18 @@ class TestAgentBasedStandardHosts(TestCase):
             if num_not_ready == None:
                 self._test.info("  Waiting for helper initialization")
             else:
-                self._test.info("  Waiting for helper initialization (%d not ready)" % num_not_ready)
+                self._test.info("  Waiting for helper initialization (%d not ready)" %
+                                                                        num_not_ready)
+
+            try:
+                matched_pids = subprocess.check_output([
+                               "pgrep", "-u", site_id(), "-f", "python.*check_mk.py --keepalive$"]).split("\n")
+            except subprocess.CalledProcessError, e:
+                self._test.error("  Found no helper yet (%s)" % e.returncode)
+                continue
 
             num_not_ready = 0
-            for p in subprocess.check_output([
-                    "pgrep", "-u", site_id(), "-f", "python.*check_mk.py --keepalive$"
-                   ]).split("\n"):
+            for p in matched_pids:
                 if p and not os.path.exists("/proc/%s/fd/3" % p):
                     num_not_ready += 1
             time.sleep(1)

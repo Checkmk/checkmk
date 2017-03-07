@@ -1,9 +1,9 @@
 Title: Fix broken rule evaluation when using multiple negated hosts
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2016-11-09 14:46:05
 Targetversion: future
-Class: bug
 
 The functions wato.py:rule_matches_host_and_item and modules/check_mk.py:in_extraconf_hostlist
 can not handle these kind of hostlist ['!heute1', '!heute', '!heute2', '@all']
@@ -16,3 +16,7 @@ Replay issue:
 2) Setup hosts as mentioned in the example above
 3) Navigate to "Parameters of {hostname}"
    Host heute matches, Host heute1 does not match
+
+2017-03-07 13:08:12: changed state open -> done
+The problem could only be found in WATO rule analyzer. modules/check_mk.py:in_extraconf_hostlist
+is working as expected.

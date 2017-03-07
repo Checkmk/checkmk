@@ -2712,6 +2712,35 @@ class TestAgentBasedStandardHosts(TestCase):
                 "] + agent_ports\n"
             )
 
+            # Ensure RRDs are created with Check_MK default config
+            f.write(
+                "cmc_host_rrd_config = [\n"
+                "      ({'rras': [\n"
+                "          (50.0, 1, 2880), (50.0, 5, 2880),\n"
+                "          (50.0, 30, 4320), (50.0, 360, 5840)\n"
+                "         ],\n"
+                "         'step': 60,\n"
+                "         'cfs': ['MIN', 'MAX', 'AVERAGE'],\n"
+                "         'format': 'cmc_single'\n"
+                "      },\n"
+                "      [], ALL_HOSTS, {\n"
+                "       'description': u'Default RRD configuration, using new single RRD format'\n"
+                "      }),\n"
+                "] + cmc_host_rrd_config\n"
+                "\n"
+                "\n"
+                "cmc_service_rrd_config = [\n"
+                "   ( {'rras': [\n"
+                "       (50.0, 1, 2880), (50.0, 5, 2880),\n"
+                "       (50.0, 30, 4320), (50.0, 360, 5840)\n"
+                "      ],\n"
+                "      'step': 60,\n"
+                "      'cfs': ['MIN', 'MAX', 'AVERAGE'],\n"
+                "      'format': 'cmc_single'\n"
+                "   },\n"
+                "   [], ALL_HOSTS, ALL_SERVICES ),\n"
+                "] + cmc_service_rrd_config\n"
+            )
 
 
     def _create_hosts(self):
@@ -2895,8 +2924,13 @@ class TestAgentBasedStandardHosts(TestCase):
 
             time.sleep(2)
 
-        num_rrds = None
-        while num_rrds is None or num_rrds < 23:
+        num_rrds, wait_sec = None, 10
+        while num_rrds is None or num_rrds < 30:
+            if wait_sec == 0:
+                raise MKGeneralException("Did not create RRDs for '%s' "
+                                         "after 10 seconds" % host_name)
+            wait_sec -= 1
+
             if self._runner.shall_stop():
                 break
             num_rrds = len(glob.glob("%s/var/check_mk/rrd/%s/*.rrd" % (omd_root(), host_name)))

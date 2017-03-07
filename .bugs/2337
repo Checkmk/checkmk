@@ -1,9 +1,9 @@
 Title: Better handling of situation where /sbin/sendmail is missing
 Component: notification
-State: open
+Class: bug
+State: done
 Date: 2015-06-02 15:16:00
 Targetversion: future
-Class: bug
 
 If you do not have installed a local SMTP agent then the notification
 plugin mail will crash with an exception:
@@ -37,3 +37,6 @@ But no further information is being displayed at the GUI.
   itself...
 
 - Do some default monitoring of errors in the notification log.
+
+2017-03-07 07:57:00: changed state open -> done
+Has now been fixed (failed notification tracking, ...)

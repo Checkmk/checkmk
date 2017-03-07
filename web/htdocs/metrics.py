@@ -43,7 +43,6 @@ from lib import *
 from valuespec import *
 import livestatus
 from cmk.regex import regex
-from cmk.containers import AutomaticDict
 
 try:
     import simplejson as json
@@ -62,6 +61,22 @@ except ImportError:
 #   '----------------------------------------------------------------------'
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
+
+
+# Dictionary class with the ability of appending items like provided
+# by a list.
+class AutomaticDict(OrderedDict):
+
+    def __init__(self, list_identifier = None, start_index = None):
+        OrderedDict.__init__(self)
+        self._list_identifier = list_identifier or "item"
+        self._item_index = start_index or 0
+
+
+    def append(self, item):
+        self["%s_%i" %(self._list_identifier, self._item_index)] = item
+        self._item_index += 1
+
 
 def load_plugins(force):
     global loaded_with_language

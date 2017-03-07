@@ -64,7 +64,7 @@ def get_languages():
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
-    languages = set([ (None, _('English')) ])
+    languages = set([ ('', _('English')) ])
 
     for lang_dir in get_language_dirs():
         try:

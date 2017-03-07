@@ -331,7 +331,6 @@ class Table(object):
             html.end_form()
             html.close_tr()
 
-        odd = "even"
         for nr, (row, css, state, fixed) in enumerate(rows):
             # Intermediate header
             if state == "header":
@@ -345,11 +344,9 @@ class Table(object):
                     html.close_td()
                     html.close_tr()
 
-                    odd = "even"
                     self._render_headers(actions_enabled, actions_visible)
                 continue
 
-            odd = "even" if odd == "odd" else "odd"
             html.open_tr(class_=["data", "odd%d" % state, css if css else None])
             for cell_content, css_classes, colspan in row:
                 html.open_td(class_=css_classes if css_classes else None, colspan=colspan if colspan else None)
@@ -383,7 +380,6 @@ class Table(object):
         if not omit_headers and self.rows and self.rows[0][2] != "header":
             html.write(csv_separator.join([html.strip_tags(header) or "" for (header, css, help, sortable) in headers]) + "\n")
 
-        odd = "even"
         for nr, (row, css, state, fixed) in enumerate(rows):
             html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
             html.write("\n")

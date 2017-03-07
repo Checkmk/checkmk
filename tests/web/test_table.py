@@ -189,7 +189,7 @@ def test_groupheader():
     print bcolors.WARNING + "TODO"
 
 
-def test_table_wrapper(monkeypatch, tmpdir):
+def test_table_wrapper(monkeypatch):
     import config
     monkeypatch.setattr(config, "save_user_file", save_user_mock)
 
@@ -199,11 +199,11 @@ def test_table_wrapper(monkeypatch, tmpdir):
         for searchable in [True, False]:
             for limit in [None, 2]:
                 for output_format in ["html", "csv"]:
-                    passed, emsg = table_test_cubical(sortable, searchable, limit, output_format, tmpdir)
+                    passed, emsg = table_test_cubical(sortable, searchable, limit, output_format)
                     assert passed, emsg
 
 
-def table_test_cubical(sortable, searchable, limit, output_format, tmpdir):
+def table_test_cubical(sortable, searchable, limit, output_format):
     import table
 
     html = TableTester()

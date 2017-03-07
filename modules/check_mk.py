@@ -1101,7 +1101,6 @@ def in_extraconf_hostlist(hostlist, hostname):
                 hostentry = hostentry[1:]
                 use_regex = True
 
-        hostentry = hostentry
         try:
             if not use_regex and hostname == hostentry:
                 return not negate

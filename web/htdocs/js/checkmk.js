@@ -34,17 +34,6 @@
 //#   | Generic library functions used anywhere in Check_MK                |
 //#   '--------------------------------------------------------------------'
 
-// The nextSibling attribute points also to "text nodes" which might
-// be created by spaces or even newlines in the HTML code and not to
-// the next painted dom object.
-// This works around the problem and really returns the next object.
-function real_next_sibling(o) {
-    var n = o.nextSibling;
-    while (n.nodeType != 1)
-      n = n.nextSibling;
-    return n;
-}
-
 function has_class(o, cn) {
     if (typeof(o.className) === 'undefined')
         return false;
@@ -418,6 +407,27 @@ if (!("nextElementSibling" in document.documentElement)) {
     });
 }
 
+// Not available in IE <9
+if (!("children" in document.documentElement)) {
+    Object.defineProperty(Element.prototype, "children", {
+        get: function(){
+            var typefilter = function(n){return n && n.nodeType == 1;}
+            return Array.prototype.slice.call(this.childNodes).filter(typefilter);
+        }
+    });
+}
+
+
+// Not available in IE <9
+if (!("lastElementChild" in document.documentElement)) {
+    Object.defineProperty(Element.prototype, "lastElementChild", {
+        get: function(){
+            return this.children[this.children.length - 1];
+        }
+    });
+}
+
+
 //#.
 //#   .-AJAX---------------------------------------------------------------.
 //#   |                         _       _   _    __  __                    |
@@ -722,7 +732,7 @@ function toggle_other_filters(fname, disable_others) {
         // Now dig into the filter and rename all input fields.
         // If disabled add an "_disabled" to the end of the var
         // If enabled remve "_disabled" from the end of the var
-        var oFloatFilter = real_next_sibling(oSelect);
+        var oFloatFilter = oSelect.nextElementSibling;
         if (oFloatFilter) {
             toggle_input_fields(oFloatFilter, 'input', disable_others);
             toggle_input_fields(oFloatFilter, 'select', disable_others);
@@ -1268,7 +1278,7 @@ function toggle_tree_state(tree, name, oContainer, fetch_url) {
         }
         state = 'on';
         if (oContainer.tagName == 'TR') { // handle in-table toggling
-            while (oContainer = oContainer.nextSibling)
+            while (oContainer = oContainer.nextElementSibling)
                 change_class(oContainer, 'closed', 'open');
         }
     }
@@ -1276,7 +1286,7 @@ function toggle_tree_state(tree, name, oContainer, fetch_url) {
         change_class(oContainer, 'open', 'closed');
         state = 'off';
         if (oContainer.tagName == 'TR') { // handle in-table toggling
-            while (oContainer = oContainer.nextSibling)
+            while (oContainer = oContainer.nextElementSibling)
                 change_class(oContainer, 'open', 'closed');
         }
     }
@@ -1295,8 +1305,8 @@ function toggle_foldable_container(treename, id, fetch_url) {
     // Check, if we fold a NG-Norm
     var oNform = document.getElementById('nform.' + treename + '.' + id);
     if (oNform) {
-        var oImg = oNform.childNodes[0];
-        var oTr = oNform.parentNode.nextSibling;
+        var oImg = oNform.children[0];
+        var oTr = oNform.parentNode.nextElementSibling;
         toggle_tree_state(treename, id, oTr, fetch_url);
         toggle_folding(oImg, !has_class(oTr, "closed"));
     }
@@ -1363,7 +1373,7 @@ function find_checkbox(oTd) {
     // 1. Go up to the row
     // 2. search backwards for the next checkbox
     // 3. loop the number of columns to highlight
-    var allTds = oTd.parentNode.childNodes;
+    var allTds = oTd.parentNode.children;
     var found = false;
     var checkbox = null;
     for(var a = allTds.length - 1; a >= 0 && checkbox === null; a--) {
@@ -1377,7 +1387,7 @@ function find_checkbox(oTd) {
 
         // Found the clicked column, now walking the cells backward from the
         // current cell searching for the next checkbox
-        var oTds = allTds[a].childNodes;
+        var oTds = allTds[a].children;
         for(var x = 0; x < oTds.length; x++) {
             if(oTds[x].tagName === 'INPUT' && oTds[x].type == 'checkbox') {
                 checkbox = oTds[x];
@@ -1518,11 +1528,11 @@ function toggle_row(e, elem) {
 // Toggles the datarows of the group which the given checkbox is part of.
 function toggle_group_rows(checkbox) {
     // 1. Find the first tbody parent
-    // 2. iterate over the childNodes and search for the group header of the checkbox
+    // 2. iterate over the children and search for the group header of the checkbox
     //    - Save the TR with class groupheader
     //    - End this search once found the checkbox element
     var this_row = checkbox.parentNode.parentNode;
-    var rows     = this_row.parentNode.childNodes;
+    var rows     = this_row.parentNode.children;
 
     var in_this_group = false;
     var group_start   = null;
@@ -1601,7 +1611,7 @@ function iter_cells(checkbox, func) {
     // 2. Find the current td
     // 3. find the next N tds
     var cell = checkbox.parentNode;
-    var row_childs = cell.parentNode.childNodes;
+    var row_childs = cell.parentNode.children;
     var found = false;
     for(var c = 0; c < row_childs.length && num_columns > 0; c++) {
         if(found === false) {
@@ -1750,12 +1760,10 @@ function position_dragging_object(event)
 
     var get_previous = function(node) {
         var previous = node.previousElementSibling;
-        if (!previous)
-            return previous;
 
         // In case this is a header TR, don't move it above this!
         // TODO: Does not work with all tables! See comment in finalize_dragging()
-        if (previous.children && previous.children[0].tagName == "TH")
+        if (previous && previous.children && previous.children[0].tagName == "TH")
             return null;
 
         return previous;
@@ -1804,9 +1812,9 @@ function finalize_dragging()
     if (!g_dragging.moved)
         return; // Nothing changed. Fine.
 
-    var elements = Array.prototype.slice.call(dragging.parentNode.children);
+    var elements = dragging.parentNode.children;
 
-    var index = elements.indexOf(dragging);
+    var index = Array.prototype.slice.call(elements).indexOf(dragging);
 
     // TODO: This currently makes the draggig work with tables having:
     // - no header
@@ -1873,8 +1881,8 @@ function unhide_context_buttons(oA)
 {
     var oNode;
     var oTd = oA.parentNode.parentNode;
-    for (var i in oTd.childNodes) {
-        oNode = oTd.childNodes[i];
+    for (var i in oTd.children) {
+        oNode = oTd.children[i];
         if (oNode.tagName == "DIV" && !has_class(oNode, "togglebutton"))
             oNode.style.display = "";
     }
@@ -2005,7 +2013,7 @@ function valuespec_listof_add(varprefix, magic)
     var count = parseInt(oCountInput.value);
     var strcount = "" + (count + 1);
     oCountInput.value = strcount;
-    var oPrototype = document.getElementById(varprefix + "_prototype").childNodes[0].childNodes[0]; // TR
+    var oPrototype = document.getElementById(varprefix + "_prototype").children[0].children[0]; // TR
     var htmlcode = oPrototype.innerHTML;
     // replace the magic
     var re = new RegExp(magic, "g")
@@ -2017,7 +2025,7 @@ function valuespec_listof_add(varprefix, magic)
 
     var oTable = document.getElementById(varprefix + "_table");
 
-    var oTbody = oTable.childNodes[0];
+    var oTbody = oTable.children[0];
     if(oTbody == undefined) { // no row -> no <tbody> present!
         oTbody = document.createElement('tbody');
         oTable.appendChild(oTbody);
@@ -2026,10 +2034,10 @@ function valuespec_listof_add(varprefix, magic)
     // Hack for IE. innerHTML does not work on tbody/tr correctly.
     var container = document.createElement('div');
     container.innerHTML = '<table><tbody><tr>' + htmlcode + '</tr></tbody></tr>';
-    var oTr = container.childNodes[0].childNodes[0].childNodes[0] // TR
+    var oTr = container.children[0].children[0].children[0] // TR
     oTbody.appendChild(oTr);
 
-    executeJSbyObject(oTable.lastChild);
+    executeJSbyObject(oTable.lastElementChild);
 
     valuespec_listof_fixarrows(oTbody);
 }
@@ -2056,17 +2064,17 @@ function valuespec_listof_move(oA, varprefix, nr, where) {
     var oTable = oTbody.parentNode;
 
     if (where == "up")  {
-        var sib = oTr.previousSibling;
+        var sib = oTr.previousElementSibling;
         oTbody.removeChild(oTr);
         oTbody.insertBefore(oTr, sib);
     }
     else /* down */ {
-        var sib = oTr.nextSibling;
+        var sib = oTr.nextElementSibling;
         oTbody.removeChild(oTr);
-        if (sib == oTbody.lastChild)
+        if (sib == oTbody.lastElementChild)
             oTbody.appendChild(oTr);
         else
-            oTbody.insertBefore(oTr, sib.nextSibling);
+            oTbody.insertBefore(oTr, sib.nextElementSibling);
     }
     valuespec_listof_fixarrows(oTbody);
 }
@@ -2082,7 +2090,7 @@ function valuespec_listof_fixarrows(oTbody) {
             continue;
 
         var oTd = row.cells[0]; /* TD with buttons */
-        if(oTd.childNodes.length == 0)
+        if(oTd.children.length == 0)
             continue;
 
         var oIndex = oTd.getElementsByClassName("index")[0];
@@ -2133,7 +2141,7 @@ function vs_textascii_button(img, text, how) {
     while (oInput.tagName == "A")
         oInput = oInput.previousElementSibling;
     if (oInput.tagName != "INPUT" && oInput.tagName != "TEXTAREA")
-        oInput = oInput.firstChild; // complain mode
+        oInput = oInput.children[0]; // complain mode
     oInput.value = text + oInput.value; // TODO: how
     oInput.focus();
 }
@@ -2152,7 +2160,7 @@ function vs_passwordspec_randomize(img) {
     }
     var oInput = img.previousElementSibling;
     if (oInput.tagName != "INPUT")
-        oInput = oInput.firstChild; // in complain mode
+        oInput = oInput.children[0]; // in complain mode
     oInput.value = password;
 }
 
@@ -2231,7 +2239,7 @@ function vs_duallist_switch(field_suffix, varprefix, keeporder) {
         var sibling = false;
 
         if (!keeporder) {
-            sibling = other_field.firstChild;
+            sibling = other_field.children[0];
             while (sibling != null) {
                 if (sibling.nodeType == 1 && sibling.label.toLowerCase() > selected[i].label.toLowerCase())
                     break;
@@ -2330,9 +2338,9 @@ function vs_listofmultiple_del(varprefix, ident) {
 
     // Make it choosable from the dropdown field again
     var choice = document.getElementById(varprefix + '_choice');
-    for (var i = 0; i < choice.childNodes.length; i++)
-        if (choice.childNodes[i].value == ident)
-            choice.childNodes[i].disabled = false;
+    for (var i = 0; i < choice.children.length; i++)
+        if (choice.children[i].value == ident)
+            choice.children[i].disabled = false;
 
     // Remove it from the list of active elements
     var active = document.getElementById(varprefix + '_active');
@@ -2378,9 +2386,9 @@ function vs_listofmultiple_disable_selected_options(varprefix)
     var active_choices = document.getElementById(varprefix + '_active').value.split(";");
 
     var choice_field = document.getElementById(varprefix + '_choice');
-    for (var i = 0; i < choice_field.childNodes.length; i++) {
-        if (active_choices.indexOf(choice_field.childNodes[i].value) !== -1) {
-            choice_field.childNodes[i].disabled = true;
+    for (var i = 0; i < choice_field.children.length; i++) {
+        if (active_choices.indexOf(choice_field.children[i].value) !== -1) {
+            choice_field.children[i].disabled = true;
         }
     }
 }
@@ -3173,9 +3181,9 @@ function hover_menu_in_screen(hoverMenu, hoverSpacer)
 function bi_toggle_subtree(oImg, lazy)
 {
     if (oImg.tagName == "SPAN") { // clicked on title,
-        oImg = oImg.previousSibling;
+        oImg = oImg.previousElementSibling;
     }
-    var oSubtree = oImg.parentNode.childNodes[6];
+    var oSubtree = oImg.parentNode.children[6];
     var url = "bi_save_treestate.py?path=" + encodeURIComponent(oSubtree.id);
 
     if (has_class(oImg, "closed")) {
@@ -3245,8 +3253,8 @@ function bi_toggle_box(oDiv, lazy)
         // control visibility of those. Note: the BI child nodes
         // are *no* child nodes in HTML but siblings!
         var found = 0;
-        for (var i in oDiv.parentNode.childNodes) {
-            var onode = oDiv.parentNode.childNodes[i];
+        for (var i in oDiv.parentNode.children) {
+            var onode = oDiv.parentNode.children[i];
             if (onode == oDiv)
                 found = 1;
             else if (found == 1)
@@ -3361,7 +3369,7 @@ function handle_crash_report_response(handler_data, response_body)
     else {
         var fail_container = document.getElementById("fail_msg");
         fail_container.style.display = "block";
-        fail_container.childNodes[0].innerHTML += " ("+response_body+").";
+        fail_container.children[0].innerHTML += " ("+response_body+").";
     }
 }
 
@@ -3372,13 +3380,13 @@ function handle_crash_report_error(handler_data, status_code, error_msg)
     var fail_container = document.getElementById("fail_msg");
     fail_container.style.display = "block";
     if (status_code) {
-        fail_container.childNodes[0].innerHTML += " (HTTP: "+status_code+").";
+        fail_container.children[0].innerHTML += " (HTTP: "+status_code+").";
     }
     else if (error_msg) {
-        fail_container.childNodes[0].innerHTML += " ("+error_msg+").";
+        fail_container.children[0].innerHTML += " ("+error_msg+").";
     }
     else {
-        fail_container.childNodes[0].innerHTML += " (Maybe <tt>"+handler_data["base_url"]+"</tt> not reachable).";
+        fail_container.children[0].innerHTML += " (Maybe <tt>"+handler_data["base_url"]+"</tt> not reachable).";
     }
 }
 
@@ -3452,7 +3460,7 @@ function handle_job_detail_error(handler_data, status_code, error_msg)
     var container = document.getElementById("job_details");
 
     var msg = document.createElement("div");
-    container.insertBefore(msg, container.firstChild);
+    container.insertBefore(msg, container.children[0]);
     msg.setAttribute("id", "job_detail_msg");
     msg.className = "message";
 

@@ -1,0 +1,11 @@
+Title: Fixed user language selection showing wrong language after change
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1488875764
+
+

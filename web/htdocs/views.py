@@ -1794,8 +1794,11 @@ def render_view(view, rows, datasource, group_painters, painters,
 
     # Is the layout able to display checkboxes?
     can_display_checkboxes = layout.get('checkboxes', False)
-
     if show_buttons:
+        show_combined_graphs_button  = \
+            ("host" in datasource["infos"] or "service" in datasource["infos"]) and \
+            (type(datasource["table"]) == str) and \
+            ("host" in datasource["table"] or "service" in datasource["table"])
         show_context_links(view, datasource, show_filters,
                        # Take into account: permissions, display_options
                        row_count > 0 and command_form,
@@ -1804,10 +1807,7 @@ def render_view(view, rows, datasource, group_painters, painters,
                        # Show link to availability
                        datasource["table"] in [ "hosts", "services" ] or "aggr" in datasource["infos"],
                        # Show link to combined graphs
-                       ("host" in datasource["infos"] or "service" in datasource["infos"]) and \
-                           ("host" in datasource["table"] or "service" in datasource["table"]),
-                       )
-
+                       show_combined_graphs_button,)
     # User errors in filters
     html.show_user_errors()
 

@@ -741,7 +741,7 @@ class TestRunner(threading.Thread):
         if self.test_case.duration() < 300:
             return
 
-        if m.site_stats and m.site_stats["average_latency_cmk"] > 80:
+        if m.site_stats and m.site_stats["average_latency_cmk"] > 30:
             raise MKFailTestCaseHighLatency("The average check latency is too high (%0.2f sec)" %
                                                   m.site_stats["average_latency_cmk"])
 
@@ -759,7 +759,7 @@ class TestRunner(threading.Thread):
 	if m.memory.percent > 10:
             return
 
-        if m.site_stats and m.site_stats["helper_usage_cmk"] > 10:
+        if m.site_stats and m.site_stats["helper_usage_cmk"]*100 > 10:
             return
 
         if m.site_stats and m.site_stats["average_latency_cmk"] > 2:
@@ -1191,6 +1191,9 @@ class AgentListener(multiprocessing.Process):
         super(AgentListener, self).__init__(*args, **kwargs)
         self.name        = "mkbench_agent-listener"
 
+        # Holds the counters per host that are used to track the dynamic agent data
+        self._counters   = {}
+
 
     def run(self):
         try:
@@ -1254,9 +1257,185 @@ class AgentListener(multiprocessing.Process):
         del self._sockets[:]
 
 
-    # TODO: Generate dynamic sections to make the counters logic do something
     def _get_answer(self, host_id):
-        return static_agent_data
+        agent_data = static_agent_data
+        agent_data += self._section_kernel(host_id)
+        return agent_data
+
+
+    def _update_counter(self, host_id, ident, per_sec):
+        counters = self._counters.setdefault(host_id, {})
+
+        now = time.time()
+        if ident not in counters:
+            counters[ident] = now, 0
+            return # just initialied. Don't increase
+
+        else:
+            last_update, last_value = counters[ident]
+            duration = now - last_update
+
+            counters[ident] = now, last_value + (duration * per_sec)
+
+
+    def _section_kernel(self, host_id):
+        self._update_counter(host_id, "kernel_ctxt",         per_sec=5000)
+        self._update_counter(host_id, "kernel_processes",    per_sec=1)
+        self._update_counter(host_id, "kernel_pgmajfault",   per_sec=50)
+
+        # hundrets of a second
+        num_cpus = 4
+        for i in [ "" ] + range(num_cpus):
+            self._update_counter(host_id, "kernel_cpu%s_user" % i,    per_sec=0.10)
+            self._update_counter(host_id, "kernel_cpu%s_nice" % i,    per_sec=0.05)
+            self._update_counter(host_id, "kernel_cpu%s_system" % i,  per_sec=0.10)
+            self._update_counter(host_id, "kernel_cpu%s_idle" % i,    per_sec=0.30)
+            self._update_counter(host_id, "kernel_cpu%s_iowait" % i,  per_sec=0.05)
+
+
+        counters = dict([ (k, v) for k, (t, v) in self._counters[host_id].items() ])
+        counters["now"] = time.time()
+
+        cpu_output = ""
+        for i in [ "" ] + range(num_cpus):
+            cpu_output += "cpu%s %d %d %d %d %d 0 0 0 0 0\n" % \
+                (i,
+                 counters["kernel_cpu%s_user" % i],
+                 counters["kernel_cpu%s_nice" % i],
+                 counters["kernel_cpu%s_system" % i],
+                 counters["kernel_cpu%s_idle" % i],
+                 counters["kernel_cpu%s_iowait" % i])
+
+        section = """<<<kernel>>>
+%(now)d
+nr_free_pages 2544893
+nr_alloc_batch 3169
+nr_inactive_anon 52641
+nr_active_anon 980946
+nr_inactive_file 87489
+nr_active_file 314428
+nr_unevictable 0
+nr_mlock 0
+nr_anon_pages 979995
+nr_mapped 82615
+nr_file_pages 455554
+nr_dirty 10237
+nr_writeback 0
+nr_slab_reclaimable 34034
+nr_slab_unreclaimable 15947
+nr_page_table_pages 17569
+nr_kernel_stack 927
+nr_unstable 0
+nr_bounce 0
+nr_vmscan_write 0
+nr_vmscan_immediate_reclaim 0
+nr_writeback_temp 0
+nr_isolated_anon 0
+nr_isolated_file 0
+nr_shmem 53638
+nr_dirtied 3163803
+nr_written 1642042
+nr_pages_scanned 0
+numa_hit 43145578
+numa_miss 0
+numa_foreign 0
+numa_interleave 32848
+numa_local 43145578
+numa_other 0
+workingset_refault 0
+workingset_activate 0
+workingset_nodereclaim 0
+nr_anon_transparent_hugepages 495
+nr_free_cma 0
+nr_dirty_threshold 580548
+nr_dirty_background_threshold 289919
+pgpgin 886510
+pgpgout 6647136
+pswpin 0
+pswpout 0
+pgalloc_dma 0
+pgalloc_dma32 5351681
+pgalloc_normal 40330396
+pgalloc_movable 0
+pgfree 48229229
+pgactivate 194701
+pgdeactivate 0
+pgfault 45121049
+pgmajfault %(kernel_pgmajfault)d
+pgrefill_dma 0
+pgrefill_dma32 0
+pgrefill_normal 0
+pgrefill_movable 0
+pgsteal_kswapd_dma 0
+pgsteal_kswapd_dma32 0
+pgsteal_kswapd_normal 0
+pgsteal_kswapd_movable 0
+pgsteal_direct_dma 0
+pgsteal_direct_dma32 0
+pgsteal_direct_normal 0
+pgsteal_direct_movable 0
+pgscan_kswapd_dma 0
+pgscan_kswapd_dma32 0
+pgscan_kswapd_normal 0
+pgscan_kswapd_movable 0
+pgscan_direct_dma 0
+pgscan_direct_dma32 0
+pgscan_direct_normal 0
+pgscan_direct_movable 0
+pgscan_direct_throttle 0
+zone_reclaim_failed 0
+pginodesteal 0
+slabs_scanned 0
+kswapd_inodesteal 0
+kswapd_low_wmark_hit_quickly 0
+kswapd_high_wmark_hit_quickly 0
+pageoutrun 1
+allocstall 0
+pgrotated 0
+drop_pagecache 0
+drop_slab 0
+numa_pte_updates 0
+numa_huge_pte_updates 0
+numa_hint_faults 0
+numa_hint_faults_local 0
+numa_pages_migrated 0
+pgmigrate_success 0
+pgmigrate_fail 0
+compact_migrate_scanned 0
+compact_free_scanned 0
+compact_isolated 0
+compact_stall 0
+compact_fail 0
+compact_success 0
+htlb_buddy_alloc_success 0
+htlb_buddy_alloc_fail 0
+unevictable_pgs_culled 2964
+unevictable_pgs_scanned 0
+unevictable_pgs_rescued 1580
+unevictable_pgs_mlocked 4145
+unevictable_pgs_munlocked 4145
+unevictable_pgs_cleared 0
+unevictable_pgs_stranded 0
+thp_fault_alloc 2907
+thp_fault_fallback 0
+thp_collapse_alloc 500
+thp_collapse_alloc_failed 0
+thp_split 428
+thp_zero_page_alloc 1
+thp_zero_page_alloc_failed 0
+balloon_inflate 0
+balloon_deflate 0
+balloon_migrate 0
+intr 1664579 22 0 0 0 0 0 0 0 1 33196 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 20295 70340 0 0 0 0 0 0 0 2419 352 0 11 571 752 1616 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+ctxt %(kernel_ctxt)d
+btime 1484812069
+processes %(kernel_processes)d
+procs_running 1
+procs_blocked 0
+softirq 3526225 0 845354 2 177933 55525 0 6372 577174 0 1863865
+""" % counters
+
+        return section + cpu_output
 
 
 static_agent_data = """<<<check_mk>>>
@@ -1279,7 +1458,7 @@ LocalDirectory: /usr/lib/check_mk_agent/local
 /dev/mapper/rootvg-lv_var          ext4     2064208    1524036    435328      78% /var
 /dev/mapper/rootvg-lv_install      ext4    34060032   10740480  21589632      34% /install
 /dev/mapper/rootvg-lv_agent        ext4     4128448    1975432   1943316      51% /agent
-/dev/mapper/dwhvg-lv_essbasedata   ext4   258030980  103616116 151793424      41% /essbasedata
+/dev/mapper/dwhvg-lv_dingdata   ext4   258030980  103616116 151793424      41% /dingdata
 /dev/mapper/dwhvg-lv_conndir       ext4     1032088      61064    918596       7% /conndir
 /dev/mapper/dwhvg-lv_backup        ext4    61927420   11445540  47336152      20% /backup
 <<<df>>>
@@ -1294,7 +1473,7 @@ LocalDirectory: /usr/lib/check_mk_agent/local
 /dev/mapper/rootvg-lv_var          ext4    131072  61541     69531   47% /var
 /dev/mapper/rootvg-lv_install      ext4   2162688   8503   2154185    1% /install
 /dev/mapper/rootvg-lv_agent        ext4    262144  12469    249675    5% /agent
-/dev/mapper/dwhvg-lv_essbasedata   ext4  16384000   2429  16381571    1% /essbasedata
+/dev/mapper/dwhvg-lv_dingdata   ext4  16384000   2429  16381571    1% /dingdata
 /dev/mapper/dwhvg-lv_conndir       ext4     65536    205     65331    1% /conndir
 /dev/mapper/dwhvg-lv_backup        ext4   3932160     82   3932078    1% /backup
 [df_inodes_end]
@@ -1310,7 +1489,7 @@ LocalDirectory: /usr/lib/check_mk_agent/local
 /dev/mapper/rootvg-lv_var /var ext4 rw,relatime,barrier=0,data=ordered 0 0
 /dev/mapper/rootvg-lv_install /install ext4 rw,relatime,barrier=0,data=ordered 0 0
 /dev/mapper/rootvg-lv_agent /agent ext4 rw,relatime,barrier=0,data=ordered 0 0
-/dev/mapper/dwhvg-lv_essbasedata /essbasedata ext4 rw,relatime,barrier=0,data=ordered 0 0
+/dev/mapper/dwhvg-lv_dingdata /dingdata ext4 rw,relatime,barrier=0,data=ordered 0 0
 /dev/mapper/dwhvg-lv_conndir /conndir ext4 rw,relatime,barrier=0,data=ordered 0 0
 /dev/mapper/dwhvg-lv_backup /backup ext4 rw,relatime,barrier=0,data=ordered 0 0
 <<<ps>>>
@@ -1527,25 +1706,15 @@ LocalDirectory: /usr/lib/check_mk_agent/local
 (heute,311868,68852,00:00:01/24:16,2177) /usr/sbin/apache2 -f /omd/sites/heute/etc/apache/apache.conf
 (root,0,0,00:00:00/10:32,2189) [kworker/u16:10]
 (root,228240,6648,00:00:00/24:16,2190) lightdm --session-child 12 15
-(lm,45380,5124,00:00:00/24:16,2199) /lib/systemd/systemd --user
-(lm,64096,2780,00:00:00/24:16,2201) (sd-pam)
-(lm,399456,17000,00:00:00/24:16,2205) mate-session
 (heute2,221652,12080,00:00:00/24:16,2248) python /omd/sites/heute2/bin/mkeventd
 (heute2,53952,7448,00:00:00/24:16,2279) python /omd/sites/heute2/bin/liveproxyd
 (heute2,78852,9724,00:00:00/24:16,2289) python /omd/sites/heute2/bin/mknotifyd
-(lm,22312,2444,00:00:00/24:16,2298) /usr/bin/unclutter -idle 10 -root -noevents
-(lm,11140,320,00:00:00/24:15,2304) /usr/bin/ssh-agent /usr/bin/dbus-launch --exit-with-session /usr/bin/im-launch mate-session
 (heute2,251656,3172,00:00:00/24:15,2305) /omd/sites/heute2/bin/rrdcached -w 3600 -z 1800 -f 7200 -s heute2 -m 660 -l unix:/omd/sites/heute2/tmp/run/rrdcached.sock -p /omd/sites/heute2/tmp/rrdcached.pid -j /omd/sites/heute2/var/rrdcached
-(lm,43600,372,00:00:00/24:15,2310) /usr/bin/dbus-launch --exit-with-session /usr/bin/im-launch mate-session
-(lm,43560,3884,00:00:00/24:15,2317) /usr/bin/dbus-daemon --fork --print-pid 5 --print-address 7 --session
 (heute2,1530808,8520,00:00:00/24:15,2341) /omd/sites/heute2/bin/cmc /omd/sites/heute2/var/check_mk/core/config
-(lm,346876,7076,00:00:06/24:15,2364) /usr/bin/ibus-daemon --daemonize --xim --address unix:tmpdir=/tmp/ibus
 (heute2,218676,38616,00:00:01/24:15,2379) python /omd/sites/heute2/bin/cmk --create-rrd --keepalive
-(lm,276056,10468,00:00:00/24:15,2382) /usr/lib/gvfs/gvfsd
 (heute2,100348,27400,00:00:00/24:15,2383) python /omd/sites/heute2/bin/cmk --handle-alerts --keepalive
 (heute2,100644,28100,00:00:00/24:15,2387) python /omd/sites/heute2/bin/cmk --notify --keepalive
 (heute2,10492,1068,00:00:00/24:15,2391) checkhelper
-(lm,406860,5348,00:00:00/24:15,2393) /usr/lib/gvfs/gvfsd-fuse /run/user/1000/gvfs -f -o big_writes
 (heute2,10492,1004,00:00:00/24:15,2395) checkhelper
 (heute2,10492,968,00:00:00/24:15,2397) checkhelper
 (heute2,10492,1004,00:00:00/24:15,2398) checkhelper
@@ -1557,7 +1726,6 @@ LocalDirectory: /usr/lib/check_mk_agent/local
 (heute2,100348,27516,00:00:00/24:15,2407) python /omd/sites/heute2/bin/cmk --keepalive
 (heute2,100360,27488,00:00:00/24:15,2408) python /omd/sites/heute2/bin/cmk --keepalive
 (heute2,100348,27480,00:00:00/24:15,2409) python /omd/sites/heute2/bin/cmk --keepalive
-(lm,338084,5996,00:00:00/24:15,2410) /usr/lib/at-spi2-core/at-spi-bus-launcher
 (heute2,100348,27564,00:00:00/24:15,2411) python /omd/sites/heute2/bin/cmk --keepalive
 (heute2,100348,27456,00:00:00/24:15,2413) python /omd/sites/heute2/bin/cmk --keepalive
 (heute2,100352,27316,00:00:00/24:15,2414) python /omd/sites/heute2/bin/cmk --keepalive
@@ -1569,54 +1737,24 @@ LocalDirectory: /usr/lib/check_mk_agent/local
 (heute2,100356,27512,00:00:00/24:15,2420) python /omd/sites/heute2/bin/cmk --keepalive
 (heute2,100348,27400,00:00:00/24:15,2421) python /omd/sites/heute2/bin/cmk --keepalive
 (heute2,100348,27444,00:00:00/24:15,2422) python /omd/sites/heute2/bin/cmk --keepalive
-(lm,265832,5712,00:00:00/24:15,2426) /usr/lib/ibus/ibus-dconf
-(lm,514060,38644,00:00:01/24:15,2428) /usr/lib/ibus/ibus-ui-gtk3
-(lm,389220,27620,00:00:00/24:15,2431) /usr/lib/ibus/ibus-x11 --kill-daemon
 (heute2,100348,27600,00:00:00/24:15,2441) python /omd/sites/heute2/bin/cmk --keepalive
 (heute2,100352,27300,00:00:00/24:15,2442) python /omd/sites/heute2/bin/cmk --keepalive
 (heute2,102436,27812,00:00:00/24:15,2443) python /omd/sites/heute2/bin/cmk --keepalive --real-time-checks
 (root,12596,1060,00:00:00/24:15,2448) icmpsender 8 0 1000
 (root,14848,1024,00:00:00/24:15,2449) icmpreceiver
 (heute2,101268,10624,00:00:00/24:15,2450) /usr/sbin/apache2 -f /omd/sites/heute2/etc/apache/apache.conf
-(lm,43016,4132,00:00:00/24:15,2453) /usr/bin/dbus-daemon --config-file=/etc/at-spi2/accessibility.conf --nofork --print-address 3
 (heute2,101228,4216,00:00:00/24:15,2457) /usr/sbin/apache2 -f /omd/sites/heute2/etc/apache/apache.conf
 (heute2,313420,70412,00:00:01/24:15,2458) /usr/sbin/apache2 -f /omd/sites/heute2/etc/apache/apache.conf
-(lm,206868,6464,00:00:00/24:15,2461) /usr/lib/at-spi2-core/at-spi2-registryd --use-gnome-session
-(lm,179680,5856,00:00:00/24:15,2468) /usr/lib/dconf/dconf-service
-(lm,206720,6664,00:00:00/24:15,2482) gnome-keyring-daemon --start
-(lm,908756,27512,00:00:00/24:15,2488) /usr/bin/mate-settings-daemon
-(lm,704988,32596,00:00:00/24:15,2492) mate-panel
-(lm,189916,5604,00:00:02/24:15,2506) /usr/lib/ibus/ibus-engine-simple
 (test1,221484,11476,00:00:00/24:15,2511) python /omd/sites/test1/bin/mkeventd
-(lm,1230876,50432,00:00:00/24:15,2520) caja
-(lm,510476,11592,00:00:00/24:15,2523) /usr/bin/pulseaudio --start --log-target=syslog
 (rtkit,183544,3124,00:00:00/24:15,2524) /usr/lib/rtkit/rtkit-daemon
 (test1,54204,7964,00:00:00/24:15,2526) python /omd/sites/test1/bin/liveproxyd
-(lm,324920,15452,00:00:00/24:15,2533) /usr/lib/x86_64-linux-gnu/polkit-mate/polkit-mate-authentication-agent-1
-(lm,519004,7372,00:00:00/24:15,2544) /usr/lib/x86_64-linux-gnu/deja-dup/deja-dup-monitor
-(lm,470944,23540,00:00:00/24:15,2547) mate-power-manager
-(lm,412176,18400,00:00:00/24:15,2552) mate-screensaver
-(lm,408384,16724,00:00:00/24:15,2566) mate-maximus
 (test1,78848,9756,00:00:00/24:15,2568) python /omd/sites/test1/bin/mknotifyd
-(lm,594748,31564,00:00:00/24:15,2569) update-notifier
-(lm,286976,8128,00:00:00/24:14,2574) /usr/lib/gvfs/gvfs-udisks2-volume-monitor
-(lm,621244,58064,00:00:00/24:14,2579) /usr/bin/python3 /usr/bin/blueman-applet
 (root,367748,8604,00:00:00/24:14,2580) /usr/lib/udisks2/udisksd --no-debug
-(lm,549964,28004,00:00:00/24:14,2581) mate-volume-control-applet
 (test1,177660,3136,00:00:00/24:14,2582) /omd/sites/test1/bin/rrdcached -w 3600 -z 1800 -f 7200 -s test1 -m 660 -l unix:/omd/sites/test1/tmp/run/rrdcached.sock -p /omd/sites/test1/tmp/rrdcached.pid -j /omd/sites/test1/var/rrdcached
-(lm,237552,30288,00:00:00/24:14,2590) /usr/bin/python3 /usr/share/system-config-printer/applet.py
-(lm,955308,46772,00:00:00/24:14,2595) synapse --startup
-(lm,14068,3268,00:00:00/24:14,2600) /bin/bash /usr/local/bin/session-screensaver
-(lm,25520,1448,00:00:00/24:14,2619) dbus-monitor --session type='signal',interface='org.mate.ScreenSaver'
-(lm,14068,240,00:00:00/24:14,2620) /bin/bash /usr/local/bin/session-screensaver
-(lm,1085388,70300,00:00:01/24:14,2622) seafile-applet
-(lm,807836,36736,00:00:00/24:14,2638) nm-applet
 (test1,1529284,6224,00:00:00/24:14,2642) /omd/sites/test1/bin/cmc /omd/sites/test1/var/check_mk/core/config
-(lm,22372,220,00:00:00/24:14,2643) syndaemon -i 0.5 -t -d
 (test1,218580,38660,00:00:01/24:14,2698) python /omd/sites/test1/share/check_mk/modules/check_mk.py --create-rrd --keepalive
 (test1,100332,27696,00:00:00/24:14,2700) python /omd/sites/test1/share/check_mk/modules/check_mk.py --handle-alerts --keepalive
 (test1,100336,27624,00:00:00/24:14,2702) python /omd/sites/test1/share/check_mk/modules/check_mk.py --notify --keepalive
-(lm,273368,7648,00:00:00/24:14,2703) /usr/lib/gvfs/gvfs-gphoto2-volume-monitor
 (root,0,0,00:00:00/24:14,2704) [krfcommd]
 (test1,4364,632,00:00:00/24:14,2711) checkhelper
 (test1,4364,636,00:00:00/24:14,2712) checkhelper
@@ -1628,7 +1766,6 @@ LocalDirectory: /usr/lib/check_mk_agent/local
 (test1,100332,27612,00:00:00/24:14,2741) python /omd/sites/test1/share/check_mk/modules/check_mk.py --keepalive
 (test1,100336,27660,00:00:00/24:14,2742) python /omd/sites/test1/share/check_mk/modules/check_mk.py --keepalive
 (root,349032,10440,00:00:00/24:14,2744) /usr/lib/upower/upowerd
-(lm,405136,9044,00:00:00/24:14,2746) /usr/lib/gvfs/gvfs-afc-volume-monitor
 (test1,100324,27752,00:00:00/24:14,2747) python /omd/sites/test1/share/check_mk/modules/check_mk.py --keepalive
 (test1,100340,27676,00:00:00/24:14,2748) python /omd/sites/test1/share/check_mk/modules/check_mk.py --keepalive
 (test1,100332,27608,00:00:00/24:14,2751) python /omd/sites/test1/share/check_mk/modules/check_mk.py --keepalive
@@ -1648,26 +1785,6 @@ LocalDirectory: /usr/lib/check_mk_agent/local
 (test1,102668,27744,00:00:00/24:14,2775) python /omd/sites/test1/share/check_mk/modules/check_mk.py --keepalive --real-time-checks
 (root,12520,1160,00:00:00/24:14,2776) icmpsender 8 0 1000
 (root,8720,752,00:00:00/24:14,2777) icmpreceiver
-(lm,261148,5136,00:00:00/24:14,2780) /usr/lib/gvfs/gvfs-mtp-volume-monitor
-(lm,259064,4424,00:00:00/24:14,2804) /usr/lib/gvfs/gvfs-goa-volume-monitor
-(lm,352096,6872,00:00:00/24:14,2805) /usr/lib/gvfs/gvfsd-trash --spawner :1.1 /org/gtk/gvfs/exec_spaw/0
-(lm,484776,25636,00:00:00/24:14,2839) /usr/lib/mate-panel/wnck-applet
-(lm,489280,32048,00:00:01/24:14,2840) /usr/lib/mate-applets/battstat-applet
-(lm,511344,24228,00:00:01/24:14,2849) /usr/lib/mate-sensors-applet/mate-sensors-applet
-(lm,544432,28748,00:00:00/24:14,2850) /usr/lib/mate-panel/clock-applet
-(lm,400616,17684,00:00:00/24:14,2851) /usr/lib/mate-panel/notification-area-applet
-(lm,4508,788,00:00:00/24:14,2887) /bin/sh -c /usr/lib/x86_64-linux-gnu/zeitgeist/zeitgeist-maybe-vacuum; /usr/bin/zeitgeist-daemon
-(lm,405524,8288,00:00:00/24:14,2891) /usr/bin/zeitgeist-daemon
-(lm,310836,9660,00:00:00/24:13,2901) /usr/lib/x86_64-linux-gnu/zeitgeist-fts
-(lm,115068,6076,00:00:00/24:13,2934) ccnet -c /home/lm/.ccnet
-(lm,419172,23484,00:00:01/24:13,2937) marco
-(lm,150344,10176,00:00:00/24:12,2970) /usr/lib/bluetooth/obexd
-(lm,409688,11724,00:00:01/24:12,2974) seaf-daemon -c /home/lm/.ccnet -d /home/lm/Seafile/.seafile-data -w /home/lm/Seafile
-(lm,188160,6052,00:00:00/24:11,2981) /usr/lib/gvfs/gvfsd-metadata
-(lm,708220,63172,00:00:10/24:11,2994) /usr/bin/python /usr/bin/terminator -m
-(lm,62832,5496,00:00:00/24:10,3002) /usr/lib/x86_64-linux-gnu/gconf/gconfd-2
-(lm,14872,1656,00:00:00/24:10,3007) gnome-pty-helper
-(lm,24416,5836,00:00:00/24:10,3008) /bin/bash
 (heute,311868,68908,00:00:01/24:06,3812) /usr/sbin/apache2 -f /omd/sites/heute/etc/apache/apache.conf
 (www-data,83948,4364,00:00:00/24:06,4132) /usr/sbin/apache2 -k start
 (test1,101264,10604,00:00:00/24:05,4165) /usr/sbin/apache2 -f /omd/sites/test1/etc/apache/apache.conf
@@ -1754,9 +1871,6 @@ LocalDirectory: /usr/lib/check_mk_agent/local
 (test_modes,101484,4220,00:00:00/23:46,5774) /usr/sbin/apache2 -f /omd/sites/test_modes/etc/apache/apache.conf
 (test_modes,313392,70500,00:00:01/23:46,5775) /usr/sbin/apache2 -f /omd/sites/test_modes/etc/apache/apache.conf
 (test_modes,15056,2172,00:00:00/23:46,5776) /omd/sites/test_modes/var/tmp/xinetd -pidfile /omd/sites/test_modes/tmp/run/xinetd.pid -filelog /omd/sites/test_modes/var/log/xinetd.log -f /omd/sites/test_modes/etc/xinetd.conf
-(lm,2453464,68388,00:00:03/23:46,5909) /usr/bin/python /home/lm/Meine Bibliothek/dotfiles/.vim/bundle/YouCompleteMe/python/ycm/../../third_party/ycmd/ycmd --port=45363 --options_file=/tmp/tmpbobgf8_4 --log=info --idle_suicide_seconds=10800 --stdout=/tmp/ycm_temp/server_45363_stdout.log --stderr=/tmp/ycm_temp/server_45363_stderr.log
-(lm,360584,35872,00:00:00/23:45,5968) /usr/bin/python /home/lm/Meine Bibliothek/dotfiles/.vim/bundle/YouCompleteMe/third_party/ycmd/third_party/JediHTTP/jedihttp.py --port 37414 --log info --hmac-file-secret /tmp/tmpKjjNJD
-(lm,24332,5564,00:00:00/23:23,6466) /bin/bash
 (test_modes,313392,70520,00:00:01/23:16,6881) /usr/sbin/apache2 -f /omd/sites/test_modes/etc/apache/apache.conf
 (test1,316088,70808,00:00:01/23:16,7013) /usr/sbin/apache2 -f /omd/sites/test1/etc/apache/apache.conf
 (heute2,313420,70432,00:00:01/23:16,7014) /usr/sbin/apache2 -f /omd/sites/heute2/etc/apache/apache.conf
@@ -2338,13 +2452,12 @@ unused devices: <none>
   70       0 sdcs 64756720 0 13552847368 323976097 17006889 0 2971624668 240668581 0 158802441 564637339
 [dmsetup_info]
 mpathr 253:18  
-dwhvg-lv_essbasedata_rimage_0 253:39 dwhvg lv_essbasedata_rimage_0
+dwhvg-lv_dingdata_rimage_0 253:39 dwhvg lv_dingdata_rimage_0
 mpathe 253:27  
 dwhvg-lv_backup_rimage_1 253:51 dwhvg lv_backup_rimage_1
 rootvg-lv_swap 253:1 rootvg lv_swap
 rootvg-lv_usr 253:60 rootvg lv_usr
 rootvg-lv_root 253:0 rootvg lv_root
-dwhvg-lv_var_dibadwh_rmeta_0 253:33 dwhvg lv_var_dibadwh_rmeta_0
 rootvg-lv_var 253:62 rootvg lv_var
 mpathq 253:13  
 mpathd 253:2  
@@ -2357,9 +2470,7 @@ mpathb 253:17
 rootvg-lv_install 253:66 rootvg lv_install
 rootvg-lv_local 253:61 rootvg lv_local
 mpathn 253:8  
-dwhvg-lv_var_dibadwh 253:37 dwhvg lv_var_dibadwh
 dwhvg-lv_backup 253:52 dwhvg lv_backup
-rootvg-lv_home_dibadwh 253:67 rootvg lv_home_dibadwh
 mpathz 253:20  
 mpathm 253:10  
 dwhvg-lv_opt_uniserv 253:57 dwhvg lv_opt_uniserv
@@ -2371,7 +2482,7 @@ dwhvg-lv_backup_rmeta_1 253:50 dwhvg lv_backup_rmeta_1
 mpathx 253:19  
 mpathk 253:5  
 dwhvg-lv_opt_uniserv_rmeta_1 253:55 dwhvg lv_opt_uniserv_rmeta_1
-dwhvg-lv_essbasedata 253:42 dwhvg lv_essbasedata
+dwhvg-lv_dingdata 253:42 dwhvg lv_dingdata
 dwhvg-lv_backup_rmeta_0 253:48 dwhvg lv_backup_rmeta_0
 mpathw 253:23  
 mpathj 253:6  
@@ -2380,8 +2491,7 @@ mpathv 253:22
 dwhvg-lv_conndir_rimage_1 253:46 dwhvg lv_conndir_rimage_1
 mpathi 253:12  
 dwhvg-lv_opt_uniserv_rimage_1 253:56 dwhvg lv_opt_uniserv_rimage_1
-dwhvg-lv_essbasedata_rmeta_1 253:40 dwhvg lv_essbasedata_rmeta_1
-dwhvg-lv_var_dibadwh_rimage_1 253:36 dwhvg lv_var_dibadwh_rimage_1
+dwhvg-lv_dingdata_rmeta_1 253:40 dwhvg lv_dingdata_rmeta_1
 mpathu 253:24  
 mpathaa 253:14  
 dwhvg-lv_conndir_rimage_0 253:44 dwhvg lv_conndir_rimage_0
@@ -2390,163 +2500,21 @@ mpathh 253:4
 dwhvg-lv_opt_uniserv_rimage_0 253:54 dwhvg lv_opt_uniserv_rimage_0
 dwhvg-lv_conndir_rmeta_1 253:45 dwhvg lv_conndir_rmeta_1
 rootvg-lv_tmp 253:58 rootvg lv_tmp
-dwhvg-lv_essbasedata_rmeta_0 253:38 dwhvg lv_essbasedata_rmeta_0
-dwhvg-lv_var_dibadwh_rimage_0 253:34 dwhvg lv_var_dibadwh_rimage_0
+dwhvg-lv_dingdata_rmeta_0 253:38 dwhvg lv_dingdata_rmeta_0
 rootvg-lv_agent 253:68 rootvg lv_agent
 mpatht 253:16  
 rootvg-lv_oragrid 253:65 rootvg lv_oragrid
 mpathg 253:7  
 dwhvg-lv_conndir_rmeta_0 253:43 dwhvg lv_conndir_rmeta_0
 mpaths 253:15  
-dwhvg-lv_essbasedata_rimage_1 253:41 dwhvg lv_essbasedata_rimage_1
+dwhvg-lv_dingdata_rimage_1 253:41 dwhvg lv_dingdata_rimage_1
 mpathf 253:3  
-dwhvg-lv_var_dibadwh_rmeta_1 253:35 dwhvg lv_var_dibadwh_rmeta_1
-<<<kernel>>>
-1484813538
-nr_free_pages 2544893
-nr_alloc_batch 3169
-nr_inactive_anon 52641
-nr_active_anon 980946
-nr_inactive_file 87489
-nr_active_file 314428
-nr_unevictable 0
-nr_mlock 0
-nr_anon_pages 979995
-nr_mapped 82615
-nr_file_pages 455554
-nr_dirty 10237
-nr_writeback 0
-nr_slab_reclaimable 34034
-nr_slab_unreclaimable 15947
-nr_page_table_pages 17569
-nr_kernel_stack 927
-nr_unstable 0
-nr_bounce 0
-nr_vmscan_write 0
-nr_vmscan_immediate_reclaim 0
-nr_writeback_temp 0
-nr_isolated_anon 0
-nr_isolated_file 0
-nr_shmem 53638
-nr_dirtied 3163803
-nr_written 1642042
-nr_pages_scanned 0
-numa_hit 43145578
-numa_miss 0
-numa_foreign 0
-numa_interleave 32848
-numa_local 43145578
-numa_other 0
-workingset_refault 0
-workingset_activate 0
-workingset_nodereclaim 0
-nr_anon_transparent_hugepages 495
-nr_free_cma 0
-nr_dirty_threshold 580548
-nr_dirty_background_threshold 289919
-pgpgin 886510
-pgpgout 6647136
-pswpin 0
-pswpout 0
-pgalloc_dma 0
-pgalloc_dma32 5351681
-pgalloc_normal 40330396
-pgalloc_movable 0
-pgfree 48229229
-pgactivate 194701
-pgdeactivate 0
-pgfault 45121049
-pgmajfault 3576
-pgrefill_dma 0
-pgrefill_dma32 0
-pgrefill_normal 0
-pgrefill_movable 0
-pgsteal_kswapd_dma 0
-pgsteal_kswapd_dma32 0
-pgsteal_kswapd_normal 0
-pgsteal_kswapd_movable 0
-pgsteal_direct_dma 0
-pgsteal_direct_dma32 0
-pgsteal_direct_normal 0
-pgsteal_direct_movable 0
-pgscan_kswapd_dma 0
-pgscan_kswapd_dma32 0
-pgscan_kswapd_normal 0
-pgscan_kswapd_movable 0
-pgscan_direct_dma 0
-pgscan_direct_dma32 0
-pgscan_direct_normal 0
-pgscan_direct_movable 0
-pgscan_direct_throttle 0
-zone_reclaim_failed 0
-pginodesteal 0
-slabs_scanned 0
-kswapd_inodesteal 0
-kswapd_low_wmark_hit_quickly 0
-kswapd_high_wmark_hit_quickly 0
-pageoutrun 1
-allocstall 0
-pgrotated 0
-drop_pagecache 0
-drop_slab 0
-numa_pte_updates 0
-numa_huge_pte_updates 0
-numa_hint_faults 0
-numa_hint_faults_local 0
-numa_pages_migrated 0
-pgmigrate_success 0
-pgmigrate_fail 0
-compact_migrate_scanned 0
-compact_free_scanned 0
-compact_isolated 0
-compact_stall 0
-compact_fail 0
-compact_success 0
-htlb_buddy_alloc_success 0
-htlb_buddy_alloc_fail 0
-unevictable_pgs_culled 2964
-unevictable_pgs_scanned 0
-unevictable_pgs_rescued 1580
-unevictable_pgs_mlocked 4145
-unevictable_pgs_munlocked 4145
-unevictable_pgs_cleared 0
-unevictable_pgs_stranded 0
-thp_fault_alloc 2907
-thp_fault_fallback 0
-thp_collapse_alloc 500
-thp_collapse_alloc_failed 0
-thp_split 428
-thp_zero_page_alloc 1
-thp_zero_page_alloc_failed 0
-balloon_inflate 0
-balloon_deflate 0
-balloon_migrate 0
-cpu  93517 676 24891 1047425 4824 0 574 0 0 0
-cpu0 12245 28 3270 129953 827 0 236 0 0 0
-cpu1 12133 9 3158 130011 872 0 98 0 0 0
-cpu2 11842 22 3454 130266 642 0 132 0 0 0
-cpu3 11739 351 3468 129623 1093 0 44 0 0 0
-cpu4 11594 19 2775 131828 271 0 20 0 0 0
-cpu5 11195 23 2774 132240 368 0 20 0 0 0
-cpu6 11744 18 3145 131316 391 0 9 0 0 0
-cpu7 11021 203 2845 132186 358 0 14 0 0 0
-intr 1664579 22 0 0 0 0 0 0 0 1 33196 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 20295 70340 0 0 0 0 0 0 0 2419 352 0 11 571 752 1616 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-ctxt 4607510
-btime 1484812069
-processes 201191
-procs_running 1
-procs_blocked 0
-softirq 3526225 0 845354 2 177933 55525 0 6372 577174 0 1863865
 <<<md>>>
 Personalities : 
 unused devices: <none>
-<<<vbox_guest>>>
-<<<ntp:cached(1484813509,30)>>>
-% 0.ubuntu.pool.n .POOL.          16 p    -   64    0    0.000    0.000   0.000
-% 1.ubuntu.pool.n .POOL.          16 p    -   64    0    0.000    0.000   0.000
-% 2.ubuntu.pool.n .POOL.          16 p    -   64    0    0.000    0.000   0.000
-% 3.ubuntu.pool.n .POOL.          16 p    -   64    0    0.000    0.000   0.000
-% ntp.ubuntu.com  .POOL.          16 p    -   64    0    0.000    0.000   0.000
+<<<ntp>>>
+* 172.33.44.49    29.244.104.45    2 u    2   64  377    0.302   -0.353   0.483
++ 172.44.33.19     29.244.104.33    2 u   18   64  377    0.408    0.051   0.319
 <<<postfix_mailq>>>
 QUEUE_deferred 4 0
 QUEUE_active 4 0
@@ -2856,10 +2824,11 @@ class TestAgentBasedStandardHosts(TestCase):
             # races with the core.
             LocalConnection().command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
 
-            self._test.info("  Creating RRDs")
+            self._test.info("  Creating RRDs (stopping core during this step)")
             first_host_name = self.host_name_template % 0
             self._create_rrds_of_host(first_host_name)
             self._copy_rrds_of(first_host_name)
+            self._test.info("  Finished creating RRDs")
         finally:
             LocalConnection().command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
 
@@ -2987,7 +2956,7 @@ class TestAgentBasedStandardHosts(TestCase):
                     num_not_ready += 1
             time.sleep(1)
 
-        self._test.info("  Helpers initialized")
+        self._test.info("  Finished helper initialization")
 
 
     def _cleanup_hosts(self):

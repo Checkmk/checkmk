@@ -80,7 +80,7 @@ void BufferedSocketProxy::output(const char *format, ...) {
 void BufferedSocketProxy::writeBinary(const char *buffer, size_t size) {
     size_t target_size = _length + size + 1;
     if (_buffer.size() < target_size) {
-        size_t new_size = _buffer.size() * 2;
+        size_t new_size = target_size * 2;
         _buffer.resize(new_size);
     }
 

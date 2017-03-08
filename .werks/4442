@@ -1,0 +1,10 @@
+Title: mem: Fixed wrong calculation of Available Memory
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1488988585
+Class: fix
+
+

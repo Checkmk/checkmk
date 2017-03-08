@@ -1,7 +1,7 @@
 Title: mk_saprouter: is now bakeable
 Level: 1
 Edition: cee
-Component: agents
+Component: checks
 Compatible: compat
 Version: 1.4.0i1
 Date: 1463731329

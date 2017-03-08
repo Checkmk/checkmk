@@ -1,4 +1,4 @@
-Title: WATO Web-API: i18n of error messages and intitial validation of incoming request
+Title: WATO API: i18n of error messages and intitial validation of incoming request
 Level: 1
 Component: wato
 Compatible: compat
@@ -6,5 +6,5 @@ Version: 1.2.7i4
 Date: 1447232146
 Class: feature
 
-The api now checks if all keys of the incoming request object are valid.
+The API now checks if all keys of the incoming request object are valid.
 Furthermore, the error messages are now internationalized.

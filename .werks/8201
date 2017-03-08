@@ -1,7 +1,7 @@
 Title: new agent bakery plugin: mk_mongodb
 Level: 1
 Edition: cee
-Component: agents
+Component: checks
 Compatible: compat
 Version: 1.2.7i4
 Date: 1453995900

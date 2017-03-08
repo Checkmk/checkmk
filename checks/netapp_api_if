@@ -131,14 +131,14 @@ def netapp_convert_to_if64(info):
             nic[4]  = state                                 # Status
             # IN
             nic[5]  = values.get("recv_data", 0)            # inoctets
-            nic[6]  = 0                                     # inucast
+            nic[6]  = values.get("recv_packet", 0)          # inucast
             nic[7]  = values.get("recv_mcasts", 0)          # inmcast
             nic[8]  = 0                                     # ibcast
             nic[9]  = 0                                     # indiscards
             nic[10] = values.get("recv_errors", 0)          # inerrors
             # OUT
             nic[11] = values.get("send_data", 0)            # outoctets
-            nic[12] = 0                                     # outucast
+            nic[12] = values.get("send_packet", 0)          # outucast
             nic[13] = values.get("send_mcasts", 0)          # outmcast
             nic[14] = 0                                     # outbcast
             nic[15] = 0                                     # outdiscards

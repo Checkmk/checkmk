@@ -69,8 +69,8 @@ int32_t AttributeListColumn::getValue(void *row, contact * /*unused*/) {
 
 void AttributeListColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
-    modified_atttibutes values(getValue(row, nullptr));
     ListRenderer l(r);
+    modified_atttibutes values(getValue(row, nullptr));
     for (const auto &entry : known_attributes) {
         if (values[entry.second]) {
             l.output(entry.first);

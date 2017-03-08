@@ -738,7 +738,7 @@ class TestRunner(threading.Thread):
         # Initial scheduling of the CMC spreads the service checks for a maximum of
         # 5 * check_interval. So we should terminate the test only after some initialization
         # time.
-        if self.test_case.duration() < 300:
+        if self.test_case.duration() < 450:
             return
 
         if m.site_stats and m.site_stats["average_latency_cmk"] > 30:

@@ -56,7 +56,7 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
         try {
             for (const auto &entry : fs::directory_iterator(
                      _logwatch_path + pnp_cleanup(host_name))) {
-                l.output(entry.path().string());
+                l.output(entry.path().filename().string());
             }
         } catch (const fs::filesystem_error &e) {
             Warning(logger()) << "error while iterating directory: "

@@ -38,6 +38,9 @@ using std::string;
 void LogwatchListColumn::output(void *row, RowRenderer &r,
                                 contact * /* auth_user */) {
     ListRenderer l(r);
+    if (_logwatch_path.empty()) {
+        return;
+    }
 
 #ifdef CMC
     auto hst = rowData<Host>(row);
@@ -53,15 +56,14 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
     string host_name = hst->name;
 #endif
 
-    if (!_logwatch_path.empty()) {
-        try {
-            for (const auto &entry : fs::directory_iterator(
-                     _logwatch_path + pnp_cleanup(host_name))) {
+    auto dir = _logwatch_path + pnp_cleanup(host_name);
+    try {
+        if (fs::exists(dir)) {
+            for (const auto &entry : fs::directory_iterator(dir)) {
                 l.output(entry.path().filename().string());
             }
-        } catch (const fs::filesystem_error &e) {
-            Warning(logger()) << "error while iterating directory: "
-                              << e.what();
         }
+    } catch (const fs::filesystem_error &e) {
+        Warning(logger()) << "error while iterating directory: " << e.what();
     }
 }

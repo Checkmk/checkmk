@@ -1,4 +1,4 @@
-Title: Exceptions in WATO Web-API are now rendered as plain text messages
+Title: Exceptions in WATO API are now rendered as plain text messages
 Level: 1
 Component: wato
 Class: fix

@@ -1,4 +1,4 @@
-Title: WATO Web-API now allows to specify root folder with / instead of empty string again
+Title: WATO API now allows to specify root folder with / instead of empty string again
 Level: 1
 Component: wato
 Class: fix

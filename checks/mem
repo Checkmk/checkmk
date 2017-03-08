@@ -322,8 +322,8 @@ def check_mem_linux(_no_item, params, info):
 
     # Available Memory
     if "MemAvailable" in meminfo:
-        r = check_mem_levels("Available Memory", meminfo["MemAvailable"],
-                meminfo["TotalTotal"], params.get("levels_available"), of_what = "RAM")
+        r = check_mem_levels("Available Memory", meminfo["MemTotal"] - meminfo["MemAvailable"],
+                meminfo["MemTotal"], params.get("levels_available"), of_what = "RAM", show_free=True)
         if r[0]:
             yield r # only display if non-OK
 

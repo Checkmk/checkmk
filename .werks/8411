@@ -1,4 +1,4 @@
-Title: Added global setting for ignoring TCP RST packets
+Title: New option for ignoring TCP RST packets as "host up" indication
 Level: 1
 Edition: cee
 Component: cmc

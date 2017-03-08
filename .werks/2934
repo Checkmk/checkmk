@@ -1,4 +1,4 @@
-Title: All temperature checks now use common code and have the same features
+Title: All temperature checks now have the same comprehensive featureset
 Level: 2
 Component: checks
 Compatible: incomp
@@ -6,26 +6,24 @@ Version: 1.2.7i4
 Date: 1453300152
 Class: feature
 
-Over 100 checks were touched in this update. For most of these
-checks it won't be necessary to re-inventorize but once you do,
-item names on many checks will change.
+Over 100 check plugins were touched in this update. For most of these checks
+it won't be necessary to rediscovery, but once you do, item names on many
+checks will change.
 
-Service descriptions have also been normalized but to ease the
-transition from existing setups, the old service description will
-continue to show on existing installations.
+Service descriptions have also been normalized but to ease the transition
+from existing setups, the old service description will continue to show on
+existing installations.
 
 If you have an existing installation and would like to switch to
 the new service descriptions you can toggle them in:
-Global Settings->Execution of checks->Use new service descriptions
+{{Global Settings|Execution of checks|Use new service descriptions}}.
 
-Finally, all temperature checks can now be configured through the
-same rule (called "Temperature", who would've thunk) and support the
-same features (like configurable unit, support for trend computations,
-upper and lower thersholds and so on).
-Unfortunately this means that most existing rules for temperature
-checks will no longer be applied and disappear from the
-Host&Service Parameter list.
-Please make sure you carry over all important temperature rules!
+Finally, all temperature checks can now be configured through the same rule
+and support the same features (like configurable unit, support for trend
+computations, upper and lower thresholds and so on).  Unfortunately this
+means that most existing rules for temperature checks will no longer be
+applied and disappear from the {{Host- & service parameters}} list.  Please make
+sure you carry over all important temperature rules!
 
 You can still see the now deprecated rules through the
-button "Deprecated Rulesets" in Host&Service Parameters.
+button {{Deprecated Rulesets}} in {{Host & Service Parameters}}.

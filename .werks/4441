@@ -1,4 +1,4 @@
-Title: mem: MemAvailable is now configurable
+Title: mem: new configurable thresholds for "Avaiable memory"
 Level: 1
 Component: checks
 Compatible: compat

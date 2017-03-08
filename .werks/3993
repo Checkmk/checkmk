@@ -1,6 +1,6 @@
 Title: Some minor performance improvements during config generation
 Level: 1
-Component: checks
+Component: core
 Compatible: compat
 Version: 1.4.0i3
 Date: 1480088343

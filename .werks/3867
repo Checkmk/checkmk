@@ -1,6 +1,6 @@
 Title: filter 'Servicegroup (Regex)' can be negated
 Level: 1
-Component: checks
+Component: multisite
 Compatible: compat
 Version: 1.4.0i1
 Date: 1472655066

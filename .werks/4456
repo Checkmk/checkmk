@@ -1,0 +1,10 @@
+Title: windows agent: fixed broken agent encryption when section data exceeded 16kB
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b4
+Date: 1488973927
+Class: fix
+
+The agent encryption only worked if the sections had less than 16kB (~300 lines standard output).

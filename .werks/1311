@@ -1,6 +1,6 @@
 Title: netapp_api_volumes: Added option to configure inode levels in wato
 Level: 1
-Component: wato
+Component: checks
 Compatible: compat
 Version: 1.2.7i4
 Date: 1449496150

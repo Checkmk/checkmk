@@ -1,4 +1,4 @@
-Title: WATO API: Fixed default output format - using JSON as intended
+Title: WATO Web-API: Fixed default output format - using JSON as intended
 Level: 2
 Component: wato
 Class: fix
@@ -7,7 +7,7 @@ State: unknown
 Version: 1.4.0i1
 Date: 1469772716
 
-The WATO API was using Python as default output format since version 1.2.8b8
+The WATO Web-API was using Python as default output format since version 1.2.8b8
 and commit 36142e6d, which was not intended.
 
 The API is able to output JSON and Python formated data, which can be

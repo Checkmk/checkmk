@@ -64,6 +64,6 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
             }
         }
     } catch (const fs::filesystem_error &e) {
-        Warning(logger()) << "error while iterating directory: " << e.what();
+        Warning(logger()) << name() << ": " << e.what();
     }
 }

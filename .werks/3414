@@ -1,6 +1,6 @@
 Title: New declarator BINARY(...) for OIDs - returning a list of byte values
 Level: 1
-Component: checks
+Component: core
 Class: feature
 Compatible: compat
 State: unknown

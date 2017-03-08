@@ -1,10 +1,10 @@
 Title: Check_MK Check helpers: Decreased memory consumption in distributed setups
 Level: 1
-Component: checks
+Component: cmc
 Compatible: compat
 Version: 1.4.0i1
 Date: 1472556738
 Class: feature
 
-Hosts which are not monitored in a specific site are no longer put into
-the respective Check_MK Helpers configuration, thus reducing their size.
+Hosts which are not monitored in a specific site are no longer put into the
+respective Check_MK Helpers configuration, thus reducing their size.

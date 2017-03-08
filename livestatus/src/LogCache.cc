@@ -98,7 +98,7 @@ void LogCache::updateLogfileIndex() {
     fs::path dirpath = log_archive_path;
     try {
         for (const auto &entry : fs::directory_iterator(dirpath)) {
-            scanLogfile(dirpath / entry.path(), false);
+            scanLogfile(entry.path(), false);
         }
     } catch (const fs::filesystem_error &e) {
         Warning(_logger) << "error while iterating directory: " << e.what();

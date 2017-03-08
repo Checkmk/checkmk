@@ -37,6 +37,8 @@ using std::string;
 
 void LogwatchListColumn::output(void *row, RowRenderer &r,
                                 contact * /* auth_user */) {
+    ListRenderer l(r);
+
 #ifdef CMC
     auto hst = rowData<Host>(row);
     if (hst == nullptr) {
@@ -51,7 +53,6 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
     string host_name = hst->name;
 #endif
 
-    ListRenderer l(r);
     if (!_logwatch_path.empty()) {
         try {
             for (const auto &entry : fs::directory_iterator(

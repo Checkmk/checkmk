@@ -246,7 +246,15 @@ bool SectionPS::outputWMI(std::ostream &out) {
 bool SectionPS::outputNative(std::ostream &out) {
     PROCESSENTRY32 pe32;
 
-    process_entry_t process_perfdata = getProcessPerfdata();
+    process_entry_t process_perfdata;
+    try {
+        process_perfdata = getProcessPerfdata();
+    } catch (const std::runtime_error &e) {
+        // the most likely cause is that the wmi query fails, i.e. because the
+        // service is currently offline.
+        crash_log("Exception: Error while querying process perfdata: %s", e.what());
+        return false;
+    }
 
     WinHandle hProcessSnap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (hProcessSnap == INVALID_HANDLE_VALUE) {

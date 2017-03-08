@@ -1,0 +1,12 @@
+Title: windows agent: now longer crashes when no performancecounter for process monitoring could be found
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1488963413
+Class: fix
+
+The agent now simply skips the ps section.
+
+

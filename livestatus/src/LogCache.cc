@@ -101,7 +101,7 @@ void LogCache::updateLogfileIndex() {
             scanLogfile(entry.path(), false);
         }
     } catch (const fs::filesystem_error &e) {
-        Warning(_logger) << "error while iterating directory: " << e.what();
+        Warning(_logger) << "updating log file index: " << e.what();
     }
 }
 

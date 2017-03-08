@@ -7427,6 +7427,7 @@ def simple_host_rule_match_conditions():
     return [
         ( "match_folder",
           FolderChoice(
+              title = _("Match folder"),
               help = _("This condition makes the rule match only hosts that are managed "
                        "via WATO and that are contained in this folder - either directly "
                        "or in one of its subfolders."),

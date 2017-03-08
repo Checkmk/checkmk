@@ -938,7 +938,8 @@ try:
                                 extra_info_report = [ "recv_data", "send_data",
                                                       "recv_mcasts", "send_mcasts",
                                                       "recv_errors", "send_errors",
-                                                      "instance_name", "link-status", "operational-speed"])
+                                                      "instance_name", "link-status", "operational-speed",
+                                                      "recv_packet", "send_packet", ])
 
 
         # Fibrechannels
@@ -1200,7 +1201,8 @@ try:
                                 extra_info = create_dict(if_counters), extra_info_report = [ "recv_data", "send_data",
                                                                                              "recv_mcasts", "send_mcasts",
                                                                                              "recv_errors", "send_errors",
-                                                                                             "instance_name", "mediatype"])
+                                                                                             "instance_name", "mediatype",
+                                                                                             "recv_packet", "send_packet" ])
 
         # TODO: Fibrechannel interfaces
 

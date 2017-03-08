@@ -58,7 +58,8 @@ factory_settings["avaya_88xx_default_levels"] = {
 def inventory_avaya_88xx(parsed):
     sensors = parsed["temp"]
     for idx, temp in enumerate(sensors):
-        yield str(idx), {}
+        if temp:
+            yield str(idx), {}
 
 def check_avaya_88xx(item, params, parsed):
     sensors = parsed["temp"]

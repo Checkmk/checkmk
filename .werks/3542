@@ -1,4 +1,4 @@
-Title: WATO API: fixed exception when WATO Git is activated
+Title: WATO Web-API: fixed exception when WATO Git is activated
 Level: 1
 Component: wato
 Compatible: compat

@@ -1,4 +1,4 @@
-Title: WATO API: new function get_all_hosts (returns all host attributes)
+Title: WATO Web-API: new function get_all_hosts (returns all host attributes)
 Level: 1
 Component: wato
 Compatible: compat

@@ -1,4 +1,4 @@
-Title: WATO API: Now able to add/edit/delete htpasswd users
+Title: WATO Web-API: Now able to add/edit/delete htpasswd users
 Level: 2
 Component: wato
 Compatible: compat
@@ -7,7 +7,7 @@ Date: 1486477736
 Class: feature
 
 
-New functions for the WATO API have been introduced.
+New functions for the WATO Web-API have been introduced.
 You can now manage htpasswd users with automation calls.
 
 The following (not very fleshed out) examples provide a quick overview.

@@ -1,4 +1,4 @@
-Title: WATO API: edit host action does no longer unset all unspecified attributes
+Title: WATO Web-API: edit host action does no longer unset all unspecified attributes
 Level: 1
 Component: wato
 Class: fix

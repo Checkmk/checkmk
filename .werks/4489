@@ -1,0 +1,9 @@
+Title: check_mk_agent.linux: Fixed group option, ie. newer ipmi-sensors versions have a different group option, thus the section was empty.
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p19
+Date: 1488979535
+Class: fix
+
+

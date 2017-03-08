@@ -71,7 +71,7 @@ SINGLE = 'single'
 MULTIPLE = 'multi'
 
 # possible aggregated states
-MISSING = -2
+MISSING = -2 # currently unused
 PENDING = -1
 OK = 0
 WARN = 1
@@ -2381,7 +2381,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
     status = status_info.get((site, host))
     if status == None:
         return ({
-            "state"               : MISSING,
+            "state"               : None,
             "output"              : _("Host %s not found") % host,
             "in_downtime"         : 0,
             "acknowledged"        : False,
@@ -2431,7 +2431,7 @@ def execute_leaf_node(node, status_info, aggregation_options):
                 return (state, assumed_state, node)
 
         return ({
-                "state"             : MISSING,
+                "state"             : None,
                 "output"            : _("This host has no such service"),
                 "in_downtime"       : host_in_downtime,
                 "acknowledged"      : False,

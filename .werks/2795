@@ -6,5 +6,5 @@ Version: 1.2.7i4
 Date: 1447772581
 Class: fix
 
-This werk fixes an encoding exception within the event console.
+This werk fixes an encoding exception within the Event Console.
 Message texts like <i>"This wüll break"</i> will no longer cause trouble.

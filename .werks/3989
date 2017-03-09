@@ -7,4 +7,4 @@ Date: 1478525175
 Class: feature
 
 You can now reclassify the state of context lines to a different state.
-For example to IGNORE, which prevents that the line is forwarded to the event console.
+For example to IGNORE, which prevents that the line is forwarded to the Event Console.

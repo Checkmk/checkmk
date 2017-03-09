@@ -1,4 +1,4 @@
-Title: Event console: The EC notifications are now also controlled through the master control snapin
+Title: Event Console: The EC notifications are now also controlled through the master control snapin
 Level: 1
 Component: ec
 Compatible: compat
@@ -6,7 +6,7 @@ Version: 1.4.0i1
 Date: 1464179953
 Class: feature
 
-In previous versions, the event console always sent notifications, hereby
+In previous versions, the Event Console always sent notifications, hereby
 ignoring the <i>Notifications</i> switch in the master control plugin.
 
 This has been fixed.

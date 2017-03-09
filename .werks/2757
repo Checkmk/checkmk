@@ -7,6 +7,6 @@ State: unknown
 Version: 1.2.7i4
 Date: 1447054989
 
-The "Check event state in event console" check (check_mkevents) was finding too many events in case
+The "Check event state in Event Console" check (check_mkevents) was finding too many events in case
 the check was configured to search for hostname and ipaddress of a host. The regular expression used
 for matching was constructed as infix search, not as full match.

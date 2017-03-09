@@ -1,4 +1,4 @@
-Title: Fixed bug in event console rule editor when no contact groups configured
+Title: Fixed bug in Event Console rule editor when no contact groups configured
 Level: 1
 Component: ec
 Class: fix

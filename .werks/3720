@@ -1,19 +1,21 @@
-Title: The Event Console views are now supporting distributed setups
-Level: 2
+Title: The Event Console now supports real distributed setups
+Level: 3
 Component: ec
 Compatible: compat
 Version: 1.4.0i1
 Date: 1469428806
 Class: feature
 
-The Event Console was not really supporting distributed setups in the past. In case you have
-a setup of multiple sites you always had to decide whether or not to setup a single, central,
-EC or one EC per site and how to handle and configure monitoring and notifications.
+The Event Console was not really supporting distributed setups in the past. In
+case you have a setup of multiple sites you always had to decide whether or
+not to setup a single, central, EC or one EC per site and how to handle and
+configure monitoring and notifications.
 
-The Event Console can now be integrated into distributed setups more easily. The standard
-setup should now be a single Event Console per site which receives the events of all
-hosts monitoringed with this site.
+The Event Console can now be integrated into distributed setups more
+easily. The standard setup is now a single Event Console per site,
+which receives the events of all hosts monitoringed with this site.
 
-In case you have a central view site, the Event Console views show up the events of all Event
-Console instances configured in the central site. You can manage all the events of the remote
-Event Console just like managing hosts and services of the remote site.
+In case you have a central view site, the Event Console views show up the
+events of all Event Console instances configured in the central site. You
+can manage all the events of the remote Event Console just like managing
+hosts and services of the remote site.

@@ -154,7 +154,6 @@ factory_settings["mem_linux_default_levels"] = {
     "levels_pagetables"   : ("perc_used", (  8.0,  16.0)),
     "levels_committed"    : ("perc_used", (100.0, 150.0)),
     "levels_commitlimit"  : ("perc_free", ( 20.0,  10.0)),
-    "levels_available"    : ("perc_free", ( 20.0,  10.0)),
     "levels_vmalloc"      : ("abs_free",  (50*1024*1024, 30*1024*1024)),
 }
 
@@ -322,7 +321,7 @@ def check_mem_linux(_no_item, params, info):
 
     # Available Memory
     if "MemAvailable" in meminfo:
-        r = check_mem_levels("Available Memory", meminfo["MemTotal"] - meminfo["MemAvailable"],
+        r = check_mem_levels("RAM available", meminfo["MemTotal"] - meminfo["MemAvailable"],
                 meminfo["MemTotal"], params.get("levels_available"), of_what = "RAM", show_free=True)
         if r[0]:
             yield r # only display if non-OK

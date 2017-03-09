@@ -520,7 +520,7 @@ metric_info["mem_used"] = {
 
 metric_info["mem_available"] = {
     "color" : "21/a",
-    "title" : _("RAM available"),
+    "title" : _("Estimated RAM for new processes"),
     "unit"  : "bytes",
 }
 

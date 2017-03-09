@@ -57,6 +57,11 @@ def is_raw_edition():
     return edition_short() == "cre"
 
 
+def is_managed_edition():
+    return True # TODO: cleanup
+    return edition_short() == "cme"
+
+
 def is_demo():
     parts = omd_version().split(".")
     return parts[-1] == "demo"

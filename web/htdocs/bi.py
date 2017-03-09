@@ -319,22 +319,23 @@ class JobWorker(object):
         log("Compiling aggregation %d/%d: %r with %d hosts" % (aggr_type, aggr_idx, groups, len(g_services_by_hostname)))
         enabled_aggregations = get_enabled_aggregations()
 
+
+
         # Check if the aggregation is still correct
         if aggr_idx >= len(enabled_aggregations):
             # aggregation mismatch... config might have changed
-            log("Aggregation mismatch: Index error")
-            return
+            raise MKConfigError("Aggregation mismatch: Index error")
 
         aggr = enabled_aggregations[aggr_idx]
         if aggr[0] != aggr_type:
-            log("Aggregation type mismatch")
-            return
+            raise MKConfigError("Aggregation type mismatch")
 
         aggr = aggr[1]
         aggr_groups = type(aggr[1]) == list and tuple(aggr[1]) or tuple([aggr[1]])
         if groups != aggr_groups:
-            log("Aggregation groups mismatch")
-            return
+            raise MKConfigError("Aggregation groups mismatch")
+
+
 
         aggr_options, aggr = aggr[0], aggr[1:]
         use_hard_states = aggr_options.get("hard_states")
@@ -906,26 +907,33 @@ class BIJobManager(object):
         # We do not want to alter the cached original
         jobfile_data = copy.deepcopy(jobfile_data)
 
-        # jobfile_data example
-        # { "jobs":
-        #        # Single host aggregations
-        #        { (aggr_type, aggr_index, aggr_groups): { "queued_hosts": [], "compiled_hosts": [] },
-        #        # Multihost aggregation
-        #          (aggr_type, aggr_index, aggr_groups): { "included_hosts": [], "compiled": True } }
-        for job, info in jobfile_data.get("jobs", {}).items():
-            if job[0] == AGGR_HOST:
-                # Reduce queued hosts by already compiled hosts
-                if not discard_old_cache:
+        if discard_old_cache:
+            aggr_ids = get_aggr_ids([AGGR_HOST, AGGR_MULTI])
+            # Recompile everything mentioned in the jobs file and remove obsolete aggregations
+            for job, info in jobfile_data.get("jobs", {}).items():
+                if job in aggr_ids:
+                    queued_jobs.append({ "id": job, "info": info })
+        else:
+            # jobfile_data example
+            # { "jobs":
+            #        # Single host aggregations
+            #        { (aggr_type, aggr_index, aggr_groups): { "queued_hosts": [], "compiled_hosts": [] },
+            #        # Multihost aggregation
+            #          (aggr_type, aggr_index, aggr_groups): { "included_hosts": [], "compiled": True } }
+            for job, info in jobfile_data.get("jobs", {}).items():
+                if job[0] == AGGR_HOST:
+                    # Reduce queued hosts by already compiled hosts
                     info["queued_hosts"] -= info["compiled_hosts"]
-                if not info.get("queued_hosts"):
-                    # Single host aggregation, no hosts in queue - GOOD!
-                    continue
-            else:
-                if not discard_old_cache and info.get("compiled") == True:
-                    # Fully compiled multi aggregation - GOOD!
-                    continue
+                    if not info.get("queued_hosts"):
+                        # Single host aggregation, no hosts in queue - GOOD!
+                        continue
+                else:
+                    if info.get("compiled") == True:
+                        # Fully compiled multi aggregation - GOOD!
+                        continue
 
-            queued_jobs.append( { "id": job, "info": info } )
+                queued_jobs.append( { "id": job, "info": info } )
+
         return queued_jobs
 
 
@@ -1059,8 +1067,8 @@ class BIJobManager(object):
 
 
             if fully_compiled or error_info:
-                g_bi_cache_manager.generate_cachefiles(is_fully_compiled  = fully_compiled,
-                                                       error_info  = error_info)
+                g_bi_cache_manager.generate_cachefiles(is_fully_compiled = fully_compiled,
+                                                       error_info = error_info)
 
         return True # Did compilation
 

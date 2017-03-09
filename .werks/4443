@@ -1,0 +1,10 @@
+Title: mem: Changed name from RAM available to Estimated RAM for new processes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1489069824
+Class: fix
+
+The name "RAM available" has not been descriptive enough since it did not reflect the differenz between the regular free RAM calculation made by Check_MK. For differences and more information see werk #4441

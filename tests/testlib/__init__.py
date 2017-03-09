@@ -37,6 +37,10 @@ def cmc_path():
     return repo_path() + "/enterprise"
 
 
+def cme_path():
+    return repo_path() + "/managed"
+
+
 # Directory for persisting variable data produced by tests
 def var_dir():
     if "WORKSPACE" in os.environ:
@@ -318,6 +322,11 @@ class Site(object):
                 cmc_path() + "/agents/bakery",
                 cmc_path() + "/agents/plugins",
                 cmc_path() + "/agents",
+            ]
+
+        if os.path.exists(cme_path()):
+            paths += [
+                cme_path() + "/web",
             ]
 
         for path in paths:

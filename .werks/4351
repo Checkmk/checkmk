@@ -1,0 +1,13 @@
+Title: jolokia_generic: Add missing bakery functionality
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1489069930
+
+The configuration for mk_jolokia necessary to make use of the
+jolokia_generic checks had not been properly integrated into
+the agent bakery. This has been fixed.

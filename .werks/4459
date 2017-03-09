@@ -1,0 +1,12 @@
+Title: BI aggregations: fixed bug where the attempt to inactive aggregations raised an exception
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1489078329
+
+During the compilation, the BI Cache now checks whether the required aggregation is
+still in the list of available and enabled aggregations.

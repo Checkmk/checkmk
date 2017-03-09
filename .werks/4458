@@ -1,0 +1,10 @@
+Title: BI aggregations: Users with restricted host/services access no longer see "Not yet monitored" messages for unavailable hosts
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1489071952
+Class: fix
+
+

@@ -2835,6 +2835,8 @@ def ajax_render_tree():
     for tree in trees:
         if tree["title"] == aggr_title:
             row = create_aggregation_row(tree)
+            if row["aggr_state"]["state"] == None:
+                continue # Not yet monitored, aggregation is not displayed
             row["aggr_group"] = aggr_group
             # ZUTUN: omit_root, boxes, only_problems has HTML-Variablen
             tdclass, htmlcode = render_tree_foldable(row, boxes=boxes, omit_root=omit_root,
@@ -3152,6 +3154,13 @@ def filter_tree_only_problems(tree):
 
 def create_aggregation_row(tree, status_info = None):
     tree_state = execute_tree(tree, status_info)
+
+    # TODO: the tree state may include hosts the current user has
+    #       no access to. Reason: The BI aggregation is always compiled
+    #       with full host/service access.
+    #       To fix this properly we need a list of all hosts/services
+    #       available to this user
+
     state, assumed_state, node, subtrees = tree_state
     eff_state = state
     if assumed_state != None:
@@ -3233,6 +3242,9 @@ def table(columns, add_headers, only_sites, limit, filters):
                 continue
 
             row = create_aggregation_row(tree)
+            if row["aggr_state"]["state"] == None:
+                continue # Not yet monitored, aggregation is not displayed
+
             row["aggr_group"] = group
             rows.append(row)
             if not html.check_limit(rows, limit):
@@ -3369,7 +3381,11 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                             this_row['services_with_fullstate'],
                         ]
 
-            row.update(create_aggregation_row(aggregation, status_info))
+            new_row = create_aggregation_row(aggregation, status_info)
+            if new_row["aggr_state"]["state"] == None:
+                continue # Not yet monitored, aggregation is not displayed
+
+            row.update(new_row)
             row["aggr_group"] = group
             rows.append(row)
             if not html.check_limit(rows, limit):

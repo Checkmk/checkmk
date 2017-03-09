@@ -1,4 +1,4 @@
-Title: BI aggregations: fixed bug where the attempt to inactive aggregations raised an exception
+Title: BI aggregations: fixed bug where the compilation of inactive aggregations raised an exception
 Level: 1
 Component: bi
 Compatible: compat

@@ -7214,7 +7214,7 @@ def _set_group(all_groups, group_type, name, extra_info):
 
     all_groups.setdefault(group_type, {})
     all_groups[group_type].setdefault(name, {})
-    all_groups[group_type][name].update(extra_info)
+    all_groups[group_type][name] = extra_info
     save_group_information(all_groups)
 
     if group_type == "contact":

@@ -6991,6 +6991,9 @@ def mode_groups(phase, what):
         table.cell(_("Name"), name)
         table.cell(_("Alias"), group['alias'])
 
+        if cmk.is_managed_edition():
+            table.cell(_("Customer"), managed.get_customer_name(group))
+
         if what == "contact":
             table.cell(_("Members"))
             html.write_html(HTML(", ").join(
@@ -7022,6 +7025,9 @@ def mode_edit_group(phase, group_type):
     name = html.var("edit") # missing -> new group
     new = name == None
 
+    if cmk.is_managed_edition():
+        vs_customer = managed.vs_customer()
+
     if phase == "title":
         if new:
             if group_type == "host":
@@ -7045,10 +7051,29 @@ def mode_edit_group(phase, group_type):
     all_groups = userdb.load_group_information()
     groups = all_groups.setdefault(group_type, {})
 
+    if new:
+        clone_group = html.var("clone")
+        if clone_group:
+            name = clone_group
+
+            try:
+                group = groups[name]
+            except KeyError:
+                raise MKUserError("clone", _("This group does not exist."))
+        else:
+            group = {}
+    else:
+        try:
+            group = groups[name]
+        except KeyError:
+            raise MKUserError("edit", _("This group does not exist."))
+
+    group.setdefault("alias", name)
+
     edit_nagvis_map_permissions = group_type == 'contact'
     if edit_nagvis_map_permissions:
         if not new:
-            permitted_maps = groups[name].get('nagvis_maps', [])
+            permitted_maps = group.get('nagvis_maps', [])
         else:
             permitted_maps = []
 
@@ -7058,19 +7083,29 @@ def mode_edit_group(phase, group_type):
             if not alias:
                 raise MKUserError("alias", _("Please specify an alias name."))
 
-            extra_info = {"alias": alias}
+            group = {
+                "alias": alias
+            }
+
             if edit_nagvis_map_permissions:
                 vs_nagvis_maps = get_nagvis_maps_valuespec()
                 permitted_maps = vs_nagvis_maps.from_html_vars('nagvis_maps')
                 vs_nagvis_maps.validate_value(permitted_maps, 'nagvis_maps')
                 if permitted_maps:
-                    extra_info['nagvis_maps'] = permitted_maps
+                    group["nagvis_maps"] = permitted_maps
+
+            if cmk.is_managed_edition():
+                customer = vs_customer.from_html_vars("customer")
+                vs_customer.validate_value(customer, "customer")
+
+                if customer != "provider":
+                    group["customer"] = customer
 
             if new:
                 name = html.var("name").strip()
-                add_group(name, group_type, extra_info)
+                add_group(name, group_type, group)
             else:
-                edit_group(name, group_type, extra_info)
+                edit_group(name, group_type, group)
 
         return group_type + "_groups"
 
@@ -7081,23 +7116,20 @@ def mode_edit_group(phase, group_type):
     html.help(_("The name of the group is used as an internal key. It cannot be "
                  "changed later. It is also visible in the status GUI."))
     if new:
-        clone_group = html.var("clone")
-        html.text_input("name", clone_group or "")
+        html.text_input("name", name)
         html.set_focus("name")
     else:
-        clone_group = None
         html.write_text(name)
         html.set_focus("alias")
 
     forms.section(_("Alias"))
     html.help(_("An Alias or description of this group."))
-    alias = groups.get(name, {}).get('alias', '')
-    if not alias:
-        if clone_group:
-            alias = groups.get(clone_group, {}).get('alias', '')
-        else:
-            alias = name
-    html.text_input("alias", alias)
+    html.text_input("alias", group["alias"])
+
+    if cmk.is_managed_edition():
+        forms.section(vs_customer.title())
+        vs_customer.render_input("customer", managed.get_customer_id(group))
+        html.help(vs_customer.help())
 
     # Show permissions for NagVis maps if any of those exist
     if edit_nagvis_map_permissions and get_nagvis_maps():

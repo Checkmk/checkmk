@@ -26,7 +26,10 @@
 
 import re
 
+import cmk
 import cmk.paths
+
+import managed
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
@@ -1092,16 +1095,16 @@ def list_contactgroups():
     entries.sort()
     return entries
 
-register_configvar(group,
-    "default_user_profile",
-    Dictionary(
-        title = _("Default user profile"),
-        help  = _("With this option you can specify the attributes a user which is created during "
-                  "its initial login gets added. For example, the default is to add the role \"user\" "
-                  "to all automatically created users."),
-        elements = [
+
+def default_user_profile_elements():
+    elements = []
+
+    if cmk.is_managed_edition():
+        elements += managed.customer_choice_element()
+
+    return elements + [
             ('roles', ListChoice(
-                title = _('User Roles'),
+                title = _('User roles'),
                 help  = _('Specify the initial roles of an automatically created user.'),
                 default_value = [ 'user' ],
                 choices = list_roles,
@@ -1112,7 +1115,17 @@ register_configvar(group,
                 default_value = [],
                 choices = list_contactgroups,
             )),
-        ],
+        ]
+
+
+register_configvar(group,
+    "default_user_profile",
+    Dictionary(
+        title = _("Default user profile"),
+        help  = _("With this option you can specify the attributes a user which is created during "
+                  "its initial login gets added. For example, the default is to add the role \"user\" "
+                  "to all automatically created users."),
+        elements = default_user_profile_elements,
         optional_keys = [],
     ),
     domain = "multisite",

@@ -10246,6 +10246,9 @@ def mode_users(phase):
             else:
                 html.write_text(_("Never logged in"))
 
+        if cmk.is_managed_edition():
+            table.cell(_("Customer"), managed.get_customer_name(user))
+
         # Connection
         if connection:
             table.cell(_("Connection"), '%s (%s)' % (connection.short_title(), user_connection_id))
@@ -10421,6 +10424,9 @@ def mode_edit_user(phase):
     timeperiods    = load_timeperiods()
     roles          = userdb.load_roles()
 
+    if cmk.is_managed_edition():
+        vs_customer = managed.vs_customer()
+
     if phase == "action":
         if not html.check_transaction():
             return "users"
@@ -10493,6 +10499,13 @@ def mode_edit_user(phase):
 
         # Pager
         user_attrs["pager"] = html.var("pager", '').strip()
+
+        if cmk.is_managed_edition():
+            customer = vs_customer.from_html_vars("customer")
+            vs_customer.validate_value(value, "customer")
+
+            if customer != "provider":
+                user_attrs["customer"] = customer
 
         # Roles
         user_attrs["roles"] = filter(lambda role: html.get_checkbox("role_" + role),
@@ -10591,6 +10604,13 @@ def mode_edit_user(phase):
     forms.section(_("Pager address"))
     lockable_input('pager', '')
     html.help(_("The pager address is optional "))
+
+    if cmk.is_managed_edition():
+        forms.section(vs_customer.title())
+        vs_customer.render_input("customer", managed.get_customer_id(user))
+
+        html.help(vs_customer.help())
+
     custom_user_attributes('ident')
 
     forms.header(_("Security"))

@@ -7428,9 +7428,10 @@ def UpperMemoryLevels(what, default_percents=None, of_what=None):
         ]
     )
 
-def LowerMemoryLevels(what, default_percents=None, of_what=None):
+def LowerMemoryLevels(what, default_percents=None, of_what=None, help_text=None):
     return CascadingDropdown(
         title = _("Lower levels for %s") % what,
+        help = help_text,
         choices = [
             ( "perc_free",  _("Percentual levels"), FreePercentage(default_percents, of_what) ),
             ( "abs_free",   _("Absolute levels"),   FreeSize() ),
@@ -7463,7 +7464,17 @@ register_check_parameters(
             ( "levels_writeback",   UpperMemoryLevels(_("Disk Writeback"))),
             ( "levels_committed",   UpperMemoryLevels(_("Committed memory"),    (100.0, 150.0), _("RAM + Swap"))),
             ( "levels_commitlimit", LowerMemoryLevels(_("Commit Limit"),        ( 20.0,  10.0), _("RAM + Swap"))),
-            ( "levels_available",   LowerMemoryLevels(_("RAM available"),       ( 20.0,  10.0), _("RAM"))),
+            ( "levels_available",   LowerMemoryLevels(_("Estimated RAM for new processes"),       ( 20.0,  10.0), _("RAM"),
+                                    _("If the host has a kernel of version 3.14 or newer, the information MemAvailable is provided: "
+                                      "\"An estimate of how much memory is available for starting new "
+                                      "applications, without swapping. Calculated from MemFree, "
+                                      "SReclaimable, the size of the file LRU lists, and the low "
+                                      "watermarks in each zone. "
+                                      "The estimate takes into account that the system needs some "
+                                      "page cache to function well, and that not all reclaimable "
+                                      "slab will be reclaimable, due to items being in use. The "
+                                      "impact of those factors will vary from system to system.\" "
+                                      "(https://www.kernel.org/doc/Documentation/filesystems/proc.txt)"))),
             ( "levels_vmalloc",     LowerMemoryLevels(_("Largest Free VMalloc Chunk"))),
             ( "handle_hw_corrupted_error", MonitoringState(
                 title = _("Handle Hardware Corrupted Error"),

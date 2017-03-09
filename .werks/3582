@@ -7,7 +7,7 @@ State: unknown
 Version: 1.4.0i1
 Date: 1464681864
 
-When the check is configured to forward mails to the event console,
+When the check is configured to forward mails to the Event Console,
 it was unable to parse multipart mails. This has been fixed. The
 events now get the contents of the first text/plain part added until
 the configured body limit.

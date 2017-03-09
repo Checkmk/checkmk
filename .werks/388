@@ -7,7 +7,7 @@ Version: 1.2.5i1
 Date: 1387358820
 Targetversion: future
 
-The event console global settings configuration has been moved to
+The Event Console global settings configuration has been moved to
 its own configuration page to clearify which settings need a reload
-of the event console daemon and which ones need a restart of the
+of the Event Console daemon and which ones need a restart of the
 monitoring core.

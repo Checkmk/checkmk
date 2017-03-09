@@ -9,4 +9,4 @@ Targetversion: future
 
 The site specific global settings page should show all configuration
 options. Independent of the fact that they are related to LDAP or
-the event console. This has been fixed now.
+the Event Console. This has been fixed now.

@@ -7,7 +7,7 @@ State: unknown
 Version: 1.2.7i1
 Date: 1422344183
 
-To optimize searches in the Event Console archive files, the event console
+To optimize searches in the Event Console archive files, the Event Console
 uses "grep" to make a fast preselection of history entries. The grep command
 is used for different filters, like the "ID of rule". This allows normal logged
 in users with only GUI privileges to execute shell commands on the monitoring

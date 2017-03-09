@@ -6,5 +6,5 @@ Version: 1.4.0i1
 Date: 1468833224
 Class: feature
 
-When forwarding mails to the event console the plugin now
+When forwarding mails to the Event Console the plugin now
 decodes any base64 content back to human readable lines.

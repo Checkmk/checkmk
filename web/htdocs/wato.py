@@ -5997,6 +5997,10 @@ def mode_ldap_config(phase):
             html.empty_icon_button()
 
         table.cell(_("ID"), connection["id"])
+
+        if cmk.is_managed_edition():
+            table.cell(_("Customer"), managed.get_customer_name(connection))
+
         table.cell(_("Description"))
         url = connection.get("docu_url")
         if url:
@@ -6013,19 +6017,28 @@ def validate_ldap_connection_id(value, varprefix):
 
 
 def vs_ldap_connection(new, connection_id):
+    general_elements = []
+
     if new:
-        general_elements = [
-            ("id", TextAscii(
-                title = _("Unique ID"),
-                help = _("The ID of the connection must be a unique text. It will be used as an internal key "
-                         "when objects refer to the connection."),
-                allow_empty = False,
-                size = 12,
-                validate = validate_ldap_connection_id,
-            ))
-        ] + rule_option_elements()
+        id_element = ("id", TextAscii(
+            title = _("ID"),
+            help = _("The ID of the connection must be a unique text. It will be used as an internal key "
+                     "when objects refer to the connection."),
+            allow_empty = False,
+            size = 12,
+            validate = validate_ldap_connection_id,
+        ))
     else:
-        general_elements = rule_option_elements()
+        id_element = ("id", FixedValue(connection_id,
+            title = _("ID"),
+        ))
+
+    general_elements += [ id_element ]
+
+    if cmk.is_managed_edition():
+        general_elements += managed.customer_choice_element()
+
+    general_elements += rule_option_elements()
 
     connection_elements = [
         ("server", TextAscii(
@@ -10502,7 +10515,7 @@ def mode_edit_user(phase):
 
         if cmk.is_managed_edition():
             customer = vs_customer.from_html_vars("customer")
-            vs_customer.validate_value(value, "customer")
+            vs_customer.validate_value(customer, "customer")
 
             if customer != "provider":
                 user_attrs["customer"] = customer

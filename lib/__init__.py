@@ -58,7 +58,6 @@ def is_raw_edition():
 
 
 def is_managed_edition():
-    return True # TODO: cleanup
     return edition_short() == "cme"
 
 

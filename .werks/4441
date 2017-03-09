@@ -1,4 +1,4 @@
-Title: mem: new configurable thresholds for "Avaiable memory"
+Title: mem: new configurable thresholds for "Estimated RAM for new processes"
 Level: 1
 Component: checks
 Compatible: compat
@@ -7,4 +7,19 @@ Version: 1.5.0i1
 Date: 1488458833
 Class: feature
 
+Now thresholds for the graph "Estimated RAM for new processes" are
+configureable. This is optional and will use the "MemAvailable" value,
+which is part of meminfo since kernel version 3.14. This value will not be
+checked on older kernel versions and thresholds will not be used even if a
+rule has been set.
 
+From kernel.org:
+An estimate of how much memory is available for starting new
+applications, without swapping. Calculated from MemFree,
+SReclaimable, the size of the file LRU lists, and the low
+watermarks in each zone.
+The estimate takes into account that the system needs some
+page cache to function well, and that not all reclaimable
+slab will be reclaimable, due to items being in use. The
+impact of those factors will vary from system to system.
+(https://www.kernel.org/doc/Documentation/filesystems/proc.txt)

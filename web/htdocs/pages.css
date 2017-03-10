@@ -309,6 +309,7 @@ div.togglebutton.off a:active {
     border-style: solid;
     border-color: #86a9b8 #22404d #22414d #86a9b8;
     border-radius: 5px 5px 5px 5px;
+    box-shadow: 1px 1px 1.5px rgba(0, 0, 0, 0.2);
 }
 
 div.togglebutton.off a {

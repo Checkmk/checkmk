@@ -494,11 +494,17 @@ def get_avoption_entries(what):
           "single",
           True,
           Integer(
-              title = _("Log row limit"),
-              help  = _("Limit the fetched rows of logfile in order to avoid "
-                        "a hanging system. A value of zero means no limit."),
+              title = _("Limit processed data"),
+              help  = _("The availability is computed by processing entries from a data table "
+                        "of historic events and state phases. In order to avoid a hanging system "
+                        "in cases where your time range and filtering would accept a vast amount "
+                        "of data entries, the number of processed entries is limited. You can raise "
+                        "this limit here if you really need to process a huge amount of data. Set this "
+                        "to zero in order to disable the limit."),
+              label = _("process at most"),
+              unit = _("status entries"),
+              minvalue = 1,
               default_value = 5000,
-              minvalue = 0,
         )),
       ]
 

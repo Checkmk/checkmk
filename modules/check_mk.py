@@ -204,6 +204,7 @@ old_service_descriptions = {
     "wmic_process"                     : "proc_%s",
     "services"                         : "service_%s",
     "logwatch"                         : "LOG %s",
+    "logwatch.groups"                  : "LOG %s",
     "hyperv_vm"                        : "hyperv_vms",
     "ibm_svc_mdiskgrp"                 : "MDiskGrp %s",
     "ibm_svc_system"                   : "IBM SVC Info",

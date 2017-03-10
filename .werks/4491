@@ -1,0 +1,13 @@
+Title: logwatch.groups: Fixed inconsistency of service description which now begins with 'Log' instead of 'LOG'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1489145596
+
+In order to use the new service desciption please enable configuration option
+below {{Global Settings > Execution of checks > Use new service descriptions}}
+for logfile groups.

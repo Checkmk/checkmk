@@ -7003,146 +7003,196 @@ def mode_groups(phase, what):
     table.end()
 
 
-def get_nagvis_maps():
-    # Find all NagVis maps in the local installation to register permissions
-    # for each map. When no maps can be found skip this problem silently.
-    # This only works in OMD environments.
-    maps = []
-    nagvis_maps_path = cmk.paths.omd_root + '/etc/nagvis/maps'
-    for f in os.listdir(nagvis_maps_path):
-        if f[0] != '.' and f.endswith('.cfg'):
-            maps.append((f[:-4], f[:-4]))
-    return maps
 
-def get_nagvis_maps_valuespec():
-    return ListChoice(
-        title = _('NagVis Maps'),
-        choices = get_nagvis_maps,
-        toggle_all = True,
-    )
+class ModeEditGroup(WatoMode):
+    type_name = None
 
-def mode_edit_group(phase, group_type):
-    name = html.var("edit") # missing -> new group
-    new = name == None
+    def __init__(self):
+        super(ModeEditGroup, self).__init__()
 
-    if cmk.is_managed_edition():
-        vs_customer = managed.vs_customer()
+        self.name    = None
+        self._new    = False
+        self._groups = {}
+        self.group   = {}
 
-    if phase == "title":
-        if new:
-            if group_type == "host":
-                return _("Create new host group")
-            elif group_type == "service":
-                return _("Create new service group")
-            elif group_type == "contact":
-                return _("Create new contact group")
-        else:
-            if group_type == "host":
-                return _("Edit host group")
-            elif group_type == "service":
-                return _("Edit service group")
-            elif group_type == "contact":
-                return _("Edit contact group")
+        self._load_groups()
+        self._from_vars()
 
-    elif phase == "buttons":
-        html.context_button(_("All groups"), folder_preserving_link([("mode", "%s_groups" % group_type)]), "back")
-        return
+        if cmk.is_managed_edition():
+            self._vs_customer = managed.vs_customer()
 
-    all_groups = userdb.load_group_information()
-    groups = all_groups.setdefault(group_type, {})
 
-    if new:
-        clone_group = html.var("clone")
-        if clone_group:
-            name = clone_group
+    def _load_groups(self):
+        all_groups = userdb.load_group_information()
+        self._groups = all_groups.setdefault(self.type_name, {})
 
-            try:
-                group = groups[name]
-            except KeyError:
-                raise MKUserError("clone", _("This group does not exist."))
-        else:
-            group = {}
-    else:
-        try:
-            group = groups[name]
-        except KeyError:
-            raise MKUserError("edit", _("This group does not exist."))
 
-    group.setdefault("alias", name)
+    def _from_vars(self):
+        self.name = html.var("edit") # missing -> new group
+        self._new = self.name == None
 
-    edit_nagvis_map_permissions = group_type == 'contact'
-    if edit_nagvis_map_permissions:
-        if not new:
-            permitted_maps = group.get('nagvis_maps', [])
-        else:
-            permitted_maps = []
+        if self._new:
+            clone_group = html.var("clone")
+            if clone_group:
+                self.name = clone_group
 
-    if phase == "action":
-        if html.check_transaction():
-            alias = html.get_unicode_input("alias").strip()
-            if not alias:
-                raise MKUserError("alias", _("Please specify an alias name."))
-
-            group = {
-                "alias": alias
-            }
-
-            if edit_nagvis_map_permissions:
-                vs_nagvis_maps = get_nagvis_maps_valuespec()
-                permitted_maps = vs_nagvis_maps.from_html_vars('nagvis_maps')
-                vs_nagvis_maps.validate_value(permitted_maps, 'nagvis_maps')
-                if permitted_maps:
-                    group["nagvis_maps"] = permitted_maps
-
-            if cmk.is_managed_edition():
-                customer = vs_customer.from_html_vars("customer")
-                vs_customer.validate_value(customer, "customer")
-
-                if customer != "provider":
-                    group["customer"] = customer
-
-            if new:
-                name = html.var("name").strip()
-                add_group(name, group_type, group)
+                self.group = self._get_group(self.name)
             else:
-                edit_group(name, group_type, group)
+                self.group = {}
+        else:
+            self.group = self._get_group(self.name)
 
-        return group_type + "_groups"
+        self.group.setdefault("alias", self.name)
 
 
-    html.begin_form("group")
-    forms.header(_("Properties"))
-    forms.section(_("Name"), simple = not new)
-    html.help(_("The name of the group is used as an internal key. It cannot be "
-                 "changed later. It is also visible in the status GUI."))
-    if new:
-        html.text_input("name", name)
-        html.set_focus("name")
-    else:
-        html.write_text(name)
-        html.set_focus("alias")
+    def _get_group(self, group_name):
+        try:
+            return self._groups[self.name]
+        except KeyError:
+            raise MKUserError(None, _("This group does not exist."))
 
-    forms.section(_("Alias"))
-    html.help(_("An Alias or description of this group."))
-    html.text_input("alias", group["alias"])
 
-    if cmk.is_managed_edition():
-        forms.section(vs_customer.title())
-        vs_customer.render_input("customer", managed.get_customer_id(group))
-        html.help(vs_customer.help())
+    def buttons(self):
+        html.context_button(_("All groups"),
+            folder_preserving_link([("mode", "%s_groups" % self.type_name)]), "back")
 
-    # Show permissions for NagVis maps if any of those exist
-    if edit_nagvis_map_permissions and get_nagvis_maps():
-        vs_nagvis_maps = get_nagvis_maps_valuespec()
-        forms.header(_("Permissions"))
-        forms.section(_("Access to NagVis Maps"))
-        html.help(_("Configure access permissions to NagVis maps."))
-        vs_nagvis_maps.render_input('nagvis_maps', permitted_maps)
 
-    forms.end()
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
+    def action(self):
+        if not html.check_transaction():
+            return "%s_groups" % self.type_name
+
+        alias = html.get_unicode_input("alias").strip()
+        if not alias:
+            raise MKUserError("alias", _("Please specify an alias name."))
+
+        self.group = {
+            "alias": alias
+        }
+
+        self._edit_nagvis_map_permissions()
+
+        if cmk.is_managed_edition():
+            customer = self._vs_customer.from_html_vars("customer")
+            self._vs_customer.validate_value(customer, "customer")
+
+            if customer != "provider":
+                self.group["customer"] = customer
+
+        if self._new:
+            self.name = html.var("name").strip()
+            add_group(self.name, self.type_name, self.group)
+        else:
+            edit_group(self.name, self.type_name, self.group)
+
+        return "%s_groups" % self.type_name
+
+
+    def page(self):
+        html.begin_form("group")
+        forms.header(_("Properties"))
+        forms.section(_("Name"), simple = not self._new)
+        html.help(_("The name of the group is used as an internal key. It cannot be "
+                     "changed later. It is also visible in the status GUI."))
+        if self._new:
+            html.text_input("name", self.name)
+            html.set_focus("name")
+        else:
+            html.write_text(self.name)
+            html.set_focus("alias")
+
+        forms.section(_("Alias"))
+        html.help(_("An Alias or description of this group."))
+        html.text_input("alias", self.group["alias"])
+
+        if cmk.is_managed_edition():
+            forms.section(self._vs_customer.title())
+            self._vs_customer.render_input("customer", managed.get_customer_id(self.group))
+            html.help(self._vs_customer.help())
+
+        self._show_nagvis_map_permissions_form()
+
+        forms.end()
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
+
+
+    def _show_nagvis_map_permissions_form(self):
+        pass
+
+
+    def _edit_nagvis_map_permissions(self):
+        pass
+
+
+
+class ModeEditServicegroup(ModeEditGroup):
+    type_name = "service"
+
+    def title(self):
+        if self._new:
+            return _("Create new service group")
+        else:
+            return _("Edit service group")
+
+
+
+class ModeEditHostgroup(ModeEditGroup):
+    type_name = "host"
+
+    def title(self):
+        if self._new:
+            return _("Create new host group")
+        else:
+            return _("Edit host group")
+
+
+
+class ModeEditContactgroup(ModeEditGroup):
+    type_name = "contact"
+
+    def title(self):
+        if self._new:
+            return _("Create new contact group")
+        else:
+            return _("Edit contact group")
+
+
+    def _vs_nagvis_maps(self):
+        return ListChoice(
+            title = _('NagVis Maps'),
+            choices = self._get_nagvis_maps,
+            toggle_all = True,
+        )
+
+
+    def _get_nagvis_maps(self):
+        # Find all NagVis maps in the local installation to register permissions
+        # for each map. When no maps can be found skip this problem silently.
+        # This only works in OMD environments.
+        maps = []
+        nagvis_maps_path = cmk.paths.omd_root + '/etc/nagvis/maps'
+        for f in os.listdir(nagvis_maps_path):
+            if f[0] != '.' and f.endswith('.cfg'):
+                maps.append((f[:-4], f[:-4]))
+        return maps
+
+
+    def _edit_nagvis_map_permissions(self):
+        permitted_maps = self._vs_nagvis_maps().from_html_vars('nagvis_maps')
+        self._vs_nagvis_maps().validate_value(permitted_maps, 'nagvis_maps')
+        if permitted_maps:
+            self.group["nagvis_maps"] = permitted_maps
+
+
+    def _show_nagvis_map_permissions_form(self):
+        # Show permissions for NagVis maps if any of those exist
+        if self._get_nagvis_maps():
+            forms.header(_("Permissions"))
+            forms.section(_("Access to NagVis Maps"))
+            html.help(_("Configure access permissions to NagVis maps."))
+            self._vs_nagvis_maps().render_input('nagvis_maps', self.group.get('nagvis_maps', []))
+
 
 
 class GroupSelection(ElementSelection):
@@ -7165,6 +7215,7 @@ class GroupSelection(ElementSelection):
             # keys, so we cannot take 'None' as a value.
             elements.append(('', self._no_selection))
         return dict(elements)
+
 
 
 class CheckTypeGroupSelection(ElementSelection):
@@ -16930,9 +16981,9 @@ modes = {
    "host_groups"        : (["groups"], lambda phase: mode_groups(phase, "host")),
    "service_groups"     : (["groups"], lambda phase: mode_groups(phase, "service")),
    "contact_groups"     : (["users"], lambda phase: mode_groups(phase, "contact")),
-   "edit_host_group"    : (["groups"], lambda phase: mode_edit_group(phase, "host")),
-   "edit_service_group" : (["groups"], lambda phase: mode_edit_group(phase, "service")),
-   "edit_contact_group" : (["users"], lambda phase: mode_edit_group(phase, "contact")),
+   "edit_host_group"    : (["groups"], ModeEditHostgroup),
+   "edit_service_group" : (["groups"], ModeEditServicegroup),
+   "edit_contact_group" : (["users"], ModeEditContactgroup),
    "notifications"      : (["notifications"], mode_notifications),
    "notification_rule"  : (["notifications"], lambda phase: mode_notification_rule(phase, False)),
    "user_notifications" : (["users"], lambda phase: mode_user_notifications(phase, False)),

@@ -300,9 +300,9 @@ def get_avoption_entries(what):
             ListChoice(
                 title = _("Aggregations"),
                 choices = [
-                  ( "min", _("minimum duration" )),
-                  ( "max", _("maximum duration" )),
-                  ( "avg", _("average duration" )),
+                  ( "min", _("min. duration" )),
+                  ( "max", _("max. duration" )),
+                  ( "avg", _("avg. duration" )),
                   ( "cnt", _("count" )),
                 ]
             ),

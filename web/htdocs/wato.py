@@ -7080,7 +7080,7 @@ class ModeEditGroup(WatoMode):
             self.group["customer"] = self._vs_customer.from_html_vars("customer")
             self._vs_customer.validate_value(self.group["customer"], "customer")
 
-            if customer == "provider":
+            if self.group["customer"] == "provider":
                 del self.group["customer"]
 
         if self._new:

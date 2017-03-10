@@ -7077,11 +7077,11 @@ class ModeEditGroup(WatoMode):
         self._edit_nagvis_map_permissions()
 
         if cmk.is_managed_edition():
-            customer = self._vs_customer.from_html_vars("customer")
-            self._vs_customer.validate_value(customer, "customer")
+            self.group["customer"] = self._vs_customer.from_html_vars("customer")
+            self._vs_customer.validate_value(self.group["customer"], "customer")
 
-            if customer != "provider":
-                self.group["customer"] = customer
+            if customer == "provider":
+                del self.group["customer"]
 
         if self._new:
             self.name = html.var("name").strip()

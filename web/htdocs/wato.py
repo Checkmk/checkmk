@@ -102,7 +102,10 @@ from cmk.regex import escape_regex_chars, regex
 from cmk.defines import short_service_state_name
 import cmk.render as render
 
-
+if cmk.is_managed_edition():
+    import managed
+else:
+    managed = None
 
 try:
     import simplejson as json

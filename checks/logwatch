@@ -332,7 +332,7 @@ def check_logwatch_groups(item, params, info):
 check_info['logwatch.groups'] = {
     'check_function':      check_logwatch_groups,
     'inventory_function':  inventory_logwatch_groups,
-    'service_description': "LOG %s",
+    'service_description': "Log %s",
     'group':               'logwatch',
 }
 precompile_params['logwatch.groups'] = logwatch_group_precompile

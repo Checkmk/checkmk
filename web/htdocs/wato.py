@@ -14053,6 +14053,7 @@ def create_sample_config():
                 "wmic_process",
                 "services",
                 "logwatch",
+                "logwatch.groups",
                 "cmk-inventory",
                 "hyperv_vms",
                 "ibm_svc_mdiskgrp",

@@ -38,7 +38,7 @@ def inventory_dell_poweredge_temp(info):
     for line in info:
         if line[2] != '1':  # StateSettings not 'unknown'
             item = dell_poweredge_temp_makeitem(line[0], line[1], line[5])
-            yield item, None
+            yield item, {}
 
 
 def check_dell_poweredge_temp(item, params, info):

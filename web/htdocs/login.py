@@ -268,6 +268,12 @@ def check_auth(mod_python_req):
     if (user_id is not None and type(user_id) != unicode) or user_id == u'':
         raise MKInternalError(_("Invalid user authentication"))
 
+    if user_id and not userdb.is_customer_user_allowed_to_login(user_id):
+        # A CME not assigned with the current sites customer
+        # is not allowed to login
+        auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % user_id)
+        return None
+
     return user_id
 
 

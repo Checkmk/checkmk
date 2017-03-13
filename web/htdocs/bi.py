@@ -2016,15 +2016,17 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
 
     # Convert new dictionary style rule into old tuple based
     # format
+    # TODO: O.o Remove this code, all of it...
     if type(rule) == dict:
         rule = (
             rule.get("title", _("Untitled BI rule")),
             rule.get("params", []),
             rule.get("aggregation", "worst"),
-            rule.get("nodes", [])
+            rule.get("nodes", []),
+            rule.get("state_messages")
         )
 
-    if len(rule) != 4:
+    if len(rule) != 5:
         raise MKConfigError(_("<b>Invalid BI aggregation rule</b>: "
                 "Aggregation rules must contain four elements: description, argument list, "
                 "aggregation function and list of nodes. Your rule has %d elements: "
@@ -2036,7 +2038,7 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                 "too many levels or built an infinite recursion. This happened in rule %s")
                   % pprint.pformat(rule))
 
-    description, arglist, funcname, nodes = rule
+    description, arglist, funcname, nodes, state_messages = rule
 
     # check arguments and convert into dictionary
     if len(arglist) != len(args):
@@ -2134,6 +2136,9 @@ def compile_aggregation_rule(aggr_type, rule, args, lvl):
                     "title"    : inst_description,
                     "func"     : funcname,
                     "nodes"    : elements}
+
+    if state_messages:
+        aggregation["state_messages"] = state_messages
 
     # Handle REMAINING references, if we are a root node
     if lvl == 0:
@@ -2855,6 +2860,17 @@ def ajax_render_tree():
     raise MKGeneralException(_("Unknown BI Aggregation %s") % aggr_title)
 
 
+def compute_output_message(effective_state, rule):
+    output = []
+    if effective_state["output"]:
+        output.append(effective_state["output"])
+
+    str_state = str(effective_state["state"])
+    if str_state in rule.get("state_messages", {}):
+        output.append(html.attrencode(rule["state_messages"][str_state]))
+
+    return ", ".join(output)
+
 def render_tree_json(row):
     expansion_level = int(html.var("expansion_level", 999))
 
@@ -2895,8 +2911,7 @@ def render_tree_json(row):
             effective_state = tree[0]
 
         json_node["state"] = effective_state["state"]
-        json_node["output"] = effective_state["output"]
-
+        json_node["output"] = compute_output_message(effective_state, tree[2])
         return json_node
 
 
@@ -3055,13 +3070,18 @@ def aggr_render_node(tree, title, show_host, mousecode=None, img_class=None):
         title = ('<img class="icon bi" src="images/icon_outof_serviceperiod.png" title="%s">' % \
             _("This element is currently not in its service period.")) + title
 
+
     h = '<span class="content state state%d%s">%s</span>\n' \
          % (effective_state["state"] if effective_state["state"] != None else -1, addclass, render_bi_state(effective_state["state"]))
     if mousecode:
+        state_message = ""
+        if str(effective_state["state"]) in tree[2].get("state_messages", {}):
+            state_message = "<b class=bullet>&diams;</b>" + html.attrencode(tree[2]["state_messages"][str(effective_state["state"])])
+
         if img_class:
             h += '<img src="images/tree_black_closed.png" class="treeangle %s"%s>' % \
                                                                    (img_class, mousecode)
-        h += '<span class="content name" %s>%s</span>' % (mousecode, title)
+        h += '<span class="content name" %s>%s%s</span>' % (mousecode, title, state_message)
     else:
         h += title
 
@@ -3174,6 +3194,8 @@ def create_aggregation_row(tree, status_info = None):
     if assumed_state != None:
         eff_state = assumed_state
 
+    output = compute_output_message(eff_state, node)
+
     return {
         "aggr_tree"            : tree,
         "aggr_treestate"       : tree_state,
@@ -3181,7 +3203,7 @@ def create_aggregation_row(tree, status_info = None):
         "aggr_assumed_state"   : assumed_state,  # is None, if there are no assumptions
         "aggr_effective_state" : eff_state,      # is assumed_state, if there are assumptions, else real state
         "aggr_name"            : node["title"],
-        "aggr_output"          : eff_state["output"],
+        "aggr_output"          : output,
         "aggr_hosts"           : node["reqhosts"],
         "aggr_function"        : node["func"],
     }
@@ -3486,3 +3508,4 @@ def migrate_bi_configuration():
             config.host_aggregations = map(convert_aggregation, config.host_aggregations)
         if config.aggregations and type(config.aggregations[0]) != dict:
             config.aggregations = map(convert_aggregation, config.aggregations)
+

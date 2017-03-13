@@ -1,0 +1,19 @@
+Title: BI aggregations: Now able to configure additional message for each rule result
+Level: 1
+Component: bi
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1489414976
+
+When configuring a rule, you can now set an optional message, which will be displayed
+beside the rule result. In earlier versions, a rule result was <i>OK</i>, <i>CRIT</i>, etc.
+The new option allows you to provide an additional text for each state.
+
+
+So the result now may look like <i>CRIT, only 70% of servers are up</i>.
+
+
+This additional information is also shown in the check plugins <i>check_bi_aggr</i> and <i>check_bi_locals.py</i>.

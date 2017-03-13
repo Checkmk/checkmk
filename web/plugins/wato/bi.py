@@ -1516,6 +1516,26 @@ class ModeBIEditRule(ModeBI):
                   title = _("Nodes that are aggregated by this rule"),
               ),
             ),
+            ( "state_messages",
+                Optional(
+                Dictionary(
+                    elements = map(lambda (state, name):
+                            (state, TextAscii(
+                                    title = _("Message when rule result is %s") % name,
+                                    default_value = None, size = 80)),
+                                    [("0", "OK"),
+                                     ("1", "WARN"),
+                                     ("2", "CRIT"),
+                                     ("3", "UNKNOWN")])
+                ),
+                title = _("Additional messages describing rule state"),
+                help  = _("This option allows you to display an additional, freely configurable text, to the rule outcome, "
+                          "which may describe the state more in detail. For example, instead of <tt>CRIT</tt>, the rule can now "
+                          "display <tt>CRIT, less than 70% of servers reachable</tt>. This message is also shown within the BI aggregation "
+                          "check plugins."),
+                label  = _("Add messages")
+                )
+            )
         ]
 
         return Dictionary(
@@ -1526,7 +1546,7 @@ class ModeBIEditRule(ModeBI):
             headers = [
                 ( _("General Properties"),     [ "id", "title", "comment", "params", "disabled" ]),
                 ( _("Child Node Generation"),  [ "nodes" ] ),
-                ( _("Aggregation Function"),   [ "aggregation" ], ),
+                ( _("Aggregation Function"),   [ "aggregation", "state_messages" ], ),
             ]
         )
 

@@ -38,9 +38,10 @@ def check_hyperv_checkpoints(item, params, info):
     number_of_checkpoints = 0
 
     for line in info:
-        snapshot, age = line
-        oldest = max(int(age), oldest)
-        number_of_checkpoints += 1
+        if len(line) == 2:
+            snapshot, age = line
+            oldest = max(int(age), oldest)
+            number_of_checkpoints += 1
 
     if number_of_checkpoints > 0:
         state = 0

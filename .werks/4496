@@ -1,0 +1,14 @@
+Title: The site ID can now be used as match condition
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1489399160
+Class: feature
+
+Setting the site ID as condition is now possible to be configured in
+notification rules. This is useful for setups where centralized
+notifications are used and you want to configured rules depending
+on the origin site.
+

@@ -1,0 +1,20 @@
+Title: Alert handling: Added several missing match conditions
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1489401357
+Class: feature
+
+The following match conditions have been added:
+
+<ul>
+<li>Exclude list of services</li>
+<li>Check type</li>
+<li>Plugin output</li>
+<li>Contacts</li>
+<li>Contact groups</li>
+<li>Service level</li>
+<li>Matching during timeperiod</li>
+<ul>

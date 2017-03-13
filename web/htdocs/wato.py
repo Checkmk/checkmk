@@ -7659,8 +7659,6 @@ def generic_rule_match_conditions():
               orientation = "horizontal",
           )
         ),
-        # BEWARE: If you add further match conditions here, you might have to adjust
-        # the the number in the_alert_handlers.py:ModeAlertHandlerRule._alert_handler_conditions
         ( "match_checktype",
           CheckTypeSelection(
               title = _("Match the following check types"),

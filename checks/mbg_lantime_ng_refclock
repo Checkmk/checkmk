@@ -97,6 +97,20 @@ mbg_lantime_ng_refclock_types = {
         "45" : "liu",
         "46" : "dcf600HS",
         "47" : "dcf600RS",
+        "48" : "mri",
+        "49" : "bpe",
+        "50" : "gln180Pex",
+        "51" : "n2x",
+        "52" : "rsc180",
+        "53" : "lneGb",
+        "54" : "lnePpg180",
+        "55" : "scg",
+        "56" : "mdu300",
+        "57" : "sdi",
+        "58" : "fdm180",
+        "59" : "spt",
+        "60" : "pzf180",
+        "61" : "rel1000",
 }
 
 def mbg_lantime_ng_generalstate(clock_type, usage, state, substate):

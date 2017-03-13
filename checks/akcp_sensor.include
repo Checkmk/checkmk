@@ -164,6 +164,8 @@ def check_akcp_sensor_temp(item, params, info):
 
             if degreeraw and degreeraw != "0":
                 temperature = float(degreeraw) / 10.0
+            elif not degree:
+                return 3, "Temperature information not found"
             else:
                 temperature = float(degree)
 

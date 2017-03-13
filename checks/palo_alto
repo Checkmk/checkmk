@@ -30,12 +30,12 @@ def inventory_palo_alto(info):
 
 
 def check_palo_alto(_no_item, _no_params, info):
-    firmware_version, ha_mode, local_state, peer_state = info[0]
+    firmware_version, local_state, peer_state, ha_mode = info[0]
     ha_modes = {}
     yield 0, "Firmware Version: %s" % firmware_version
     yield 0, "HA mode: %s" % ha_mode
     yield 0, "Local HA state: %s" % local_state
-    yield 0, "Peer HA state: %s" % local_state
+    yield 0, "Peer HA state: %s" % peer_state
 
 
 check_info["palo_alto"] = {
@@ -43,9 +43,10 @@ check_info["palo_alto"] = {
     "check_function"        : check_palo_alto,
     "service_description"   : "Palo Alto State",
     "snmp_info"             : ( ".1.3.6.1.4.1.25461.2.1.2.1", [
-                                        "1",
-                                        "11",
-                                        "12",
-                                        "13", ] ),
+                                        "1",  # panSysSwVersion
+                                        "11", # panSysHAState
+                                        "12", # panSysHAPeerState
+                                        "13", # panSysHAMode
+                                        ] ),
     "snmp_scan_function"    : lambda oid: "25461" in oid(".1.3.6.1.2.1.1.2.0"),
 }

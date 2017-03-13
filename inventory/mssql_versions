@@ -67,7 +67,10 @@ def inv_mssql_versions(info):
         if len(line) not in [2, 4]:
             continue
 
-        instance_id  = line[0].split("_", 1)[1]
+        if "_" in line[0]:
+            instance_id = line[0].split("_", 1)[1]
+        else:
+            instance_id = line[0]
         version      = line[1]
         edition      = len(line) == 4 and line[2] or ""
         clustered    = len(line) == 4 and line[3] != ""

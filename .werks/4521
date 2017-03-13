@@ -1,0 +1,10 @@
+Title: mssql_versions: Fixed IndexError during inventory
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.4.0b4
+Date: 1489420731
+Class: fix
+
+

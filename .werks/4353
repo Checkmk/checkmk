@@ -1,0 +1,9 @@
+Title: palo_alto: Fix wrong infotext
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p19
+Date: 1489419411
+Class: fix
+
+Thanks to Robert Sander for the fix!

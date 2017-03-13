@@ -1,0 +1,12 @@
+Title: cisco_cpu: Fixed crash if values are empty
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1489409114
+
+The checkplugin now also deals with empty values. See werk #2088 for more
+information.

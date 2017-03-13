@@ -11,6 +11,7 @@
     * 4491 FIX: logwatch.groups: Fixed inconsistency of service description which now begins with 'Log' instead of 'LOG'...
     * 4492 FIX: mk_oracle.ps1: Now takes version into account which fixed wrong calculation of tablespaces and fixed missing possibility of wallet configuration
     * 4494 FIX: cisco_wlc, cisco_wlc_clients: Fixed missing OID for Cisco WLC 5520 Appliances
+    * 4495 FIX: mk_mysql.vbs: Fixed missing command if DB process runs as mysqld-nt.exe
 
     Multisite:
     * 4400 FIX: Fixed possible random "OSError: [Errno 9] Bad file descriptor" in GUI...

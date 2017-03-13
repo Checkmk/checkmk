@@ -11,7 +11,7 @@ import tempfile
 from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter
 from pylint.utils import Message
 
-from testlib import repo_path, cmk_path, cmc_path
+from testlib import repo_path, cmk_path, cmc_path, cme_path
 
 
 def ordered_module_files():
@@ -33,6 +33,7 @@ def ordered_module_files():
         cmc_path() + "/modules/inline_snmp.py",
         cmc_path() + "/modules/agent_bakery.py",
         cmc_path() + "/modules/rrd.py",
+        cme_path() + "/modules/managed.py",
     ]
 
     modules = ordered_modules

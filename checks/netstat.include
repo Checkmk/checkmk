@@ -53,28 +53,31 @@ def check_netstat_generic(item, params, connections):
         if match:
             found += 1
 
-    # Check if found connections are within limits
-    yield 0, "Found %d matching entries" % found
-
+    infotext = "Found %d matching entries" % found
+    states   = [0]
     if params.get("min_states"):
         min_warn, min_crit = params["min_states"]
-        if found <= min_crit:
-            state = 2
-        elif found <= min_warn:
-            state = 1
+        if found < min_crit:
+            min_state = 2
+        elif found < min_warn:
+            min_state = 1
         else:
-            state = 0
-        if state:
-            yield state, "too few (warn/crit at %d/%d)" % (min_warn, min_crit)
+            min_state = 0
+        if min_state:
+            states.append(min_state)
+            infotext += " (warn/crit below %d/%d)" % (min_warn, min_crit)
 
     if params.get("max_states"):
         max_warn, max_crit = params["max_states"]
         if found >= max_crit:
-            state = 2
+            max_state = 2
         elif found >= max_warn:
-            state = 1
+            max_state = 1
         else:
-            state = 0
-        if state:
-            yield state, "too many (warn/crit at %d/%d)" % (max_warn, max_crit)
+            max_state = 0
+        if max_state:
+            states.append(max_state)
+            infotext += " (warn/crit at %d/%d)" % (max_warn, max_crit)
+
+    yield max(states), infotext
 

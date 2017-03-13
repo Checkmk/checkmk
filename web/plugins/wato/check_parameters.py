@@ -3108,21 +3108,21 @@ register_check_parameters(
             ( "local_port", Integer(title = _("Local port number"), minvalue = 1, maxvalue = 65535, )),
             ( "remote_ip", IPv4Address(title = _("Remote IP address"))),
             ( "remote_port", Integer(title = _("Remote port number"), minvalue = 1, maxvalue = 65535, )),
-            ( "min_states",
-               Tuple(
-                   title = _("Minimum number of connections or listeners"),
-                   elements = [
-                       Integer(title = _("Warning if below")),
-                       Integer(title = _("Critical if below")),
-                    ],
-               ),
-            ),
             ( "max_states",
                Tuple(
                    title = _("Maximum number of connections or listeners"),
                    elements = [
                        Integer(title = _("Warning at")),
                        Integer(title = _("Critical at")),
+                    ],
+               ),
+            ),
+            ( "min_states",
+               Tuple(
+                   title = _("Minimum number of connections or listeners"),
+                   elements = [
+                       Integer(title = _("Warning if below")),
+                       Integer(title = _("Critical if below")),
                     ],
                ),
             ),

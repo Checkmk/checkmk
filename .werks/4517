@@ -1,0 +1,11 @@
+Title: 4516 FIX check_mk_agent.openwrt: Escaped quotes in run_cached function used for ipmi-sensors command
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1489399863
+
+

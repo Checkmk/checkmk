@@ -114,6 +114,7 @@ For Each instance In instances.Keys
     cmd = Replace(cmd, "mysqld""", "mysql""")
     cmd = Replace(cmd, "mysqld-nt""", "mysql""")
     cmd = Replace(cmd, "mysql""", "mysql.exe""")
+    cmd = Replace(cmd, "mysqld.exe""", "mysql.exe""")
     cmd = Left(cmd, InStr(cmd, "mysql.exe""")+9)
     If cfg_file <> "" Then
         cmd = cmd & " --defaults-extra-file=""" & cfg_file & """"

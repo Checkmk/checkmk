@@ -13366,7 +13366,7 @@ register_check_parameters(
             )),
             ( "levels_5v_lower",
             Tuple(
-                title = _("3.3 Volt Output Lower Levels"),
+                title = _("5 Volt Output Lower Levels"),
                 elements = [
                     Float(title = _("warning if below or equal"),  unit = "V", default_value = 3.25),
                     Float(title = _("critical if below or equal"), unit = "V", default_value = 3.20),
@@ -13374,7 +13374,7 @@ register_check_parameters(
             )),
             ( "levels_5v_upper",
             Tuple(
-                title = _("3.3 Volt Output Upper Levels"),
+                title = _("5 Volt Output Upper Levels"),
                 elements = [
                     Float(title = _("warning if above or equal"),  unit = "V", default_value = 3.4),
                     Float(title = _("critical if above or equal"), unit = "V", default_value = 3.45),

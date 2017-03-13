@@ -1,0 +1,11 @@
+Title: blade_bx_powermod: Fixed outdated calculation of state
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1489421952
+
+In the old version of this checkplugin the state "fanmodule" has not been considered.

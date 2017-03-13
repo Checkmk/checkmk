@@ -14,6 +14,7 @@
     * 4495 FIX: mk_mysql.vbs: Fixed missing command if DB process runs as mysqld-nt.exe
     * 4516 FIX: check_mk_agent.linux: Escaped quotes in run_cached function used for ipmi-sensors command
     * 4518 FIX: citrix_licenses: Fixed related PNP template with error 'Unused Arguments " " in AREA:used...'
+    * 4519 FIX: mbg_lantime_ng_refclock: Added missing refclock types
 
     Multisite:
     * 4400 FIX: Fixed possible random "OSError: [Errno 9] Bad file descriptor" in GUI...

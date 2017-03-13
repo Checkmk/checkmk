@@ -1,0 +1,11 @@
+Title: mbg_lantime_ng_refclock: Added missing refclock types
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1489403291
+
+

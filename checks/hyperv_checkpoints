@@ -35,9 +35,13 @@ def inventory_hyperv_checkpoints(info):
 
 def check_hyperv_checkpoints(item, params, info):
     oldest = 0
-    for snapshot, age in info[1:]:
+    number_of_checkpoints = 0
+
+    for line in info:
+        snapshot, age = line
         oldest = max(int(age), oldest)
-    number_of_checkpoints = len(info[1:])
+        number_of_checkpoints += 1
+
     if number_of_checkpoints > 0:
         state = 0
         if params.get('age'):
@@ -50,7 +54,7 @@ def check_hyperv_checkpoints(item, params, info):
         else:
             perfdata = [("age", oldest)]
         return state, "%s Checkpoints, Oldest is: %s" % \
-                        (len(info[1:]), get_age_human_readable(oldest)), perfdata
+                        (number_of_checkpoints, get_age_human_readable(oldest)), perfdata
     else:
         return 0, "No Checkpoints found", [("age", 0)]
 

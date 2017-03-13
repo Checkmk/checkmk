@@ -77,6 +77,13 @@ def inventory_akcp_humidity(info):
             yield description, "akcp_humidity_defaultlevels"
 
 def check_akcp_humidity(item, params, info):
+    if isinstance(params, tuple):
+        params = {
+            "levels_lower"  : (params[1], params[0]),
+            "levels"        : (params[3], params[2]),
+        }
+
+
     for description, percent, status, online in info:
         if description == item:
             # Online is set to "2" if sensor is offline
@@ -87,7 +94,8 @@ def check_akcp_humidity(item, params, info):
                 state, state_name = akcp_sensor_level_states[status]
                 return state, "State: %s" % state_name
 
-            crit_lower, warn_lower, warn, crit = params
+            crit_lower, warn_lower  = params['levels_lower']
+            warn, crit              = params['levels']
             humidity = int(percent)
 
             infotext = "%s%%" % humidity

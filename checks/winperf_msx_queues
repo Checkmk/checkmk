@@ -86,7 +86,7 @@ def inventory_winperf_msx_queues(info):
                 queues = inventory_rules
             else:
                 queues = winperf_msx_queues
-            return [ (name, { "offset" : offset } ) for name, offset in queues.items() ]
+            return [ (name, { "offset" : int(offset) } ) for name, offset in queues.items() ]
 
 def check_winperf_msx_queues(item, params, info):
     # current windows  agents should not produce winperf sections with no data after the header but

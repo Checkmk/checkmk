@@ -7492,7 +7492,7 @@ def vs_notification_rule(userid = None):
           ),
 
         ],
-        optional_keys = [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
+        optional_keys = [ "match_site", "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
                           "match_servicegroups", "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
                           "match_services", "match_exclude_services",
                           "match_contacts", "match_contactgroups",
@@ -7506,7 +7506,7 @@ def vs_notification_rule(userid = None):
             ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
             + contact_headers
             + [
-            ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hostgroups",
+            ( _("Conditions"),         [ "match_site", "match_folder", "match_hosttags", "match_hostgroups",
                                          "match_hosts", "match_exclude_hosts", "match_servicegroups",
                                          "match_exclude_servicegroups", "match_servicegroups_regex", "match_exclude_servicegroups_regex",
                                          "match_services", "match_exclude_services",
@@ -7524,6 +7524,14 @@ def vs_notification_rule(userid = None):
 
 def simple_host_rule_match_conditions():
     return [
+        ( "match_site",
+          DualListChoice(
+              title = _("Match site"),
+              help = _("This condition makes the rule match only notifications that have been "
+                       "created on the selected sites."),
+              choices = config.site_choices,
+          ),
+        ),
         ( "match_folder",
           FolderChoice(
               title = _("Match folder"),

@@ -1,0 +1,9 @@
+Title: akcp_exp_temp, akcp_sensor_temp: No longer crash when temperature information is missing.
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p19
+Date: 1489410378
+Class: fix
+
+

@@ -18,6 +18,7 @@
     * 4519 FIX: mbg_lantime_ng_refclock: Added missing refclock types
     * 4520 FIX: avaya_45xx_temp: Fixed wrong temperature unit and value handling
     * 4445 FIX: cisco_cpu: Fixed crash if values are empty...
+    * 4352 FIX: akcp_exp_temp, akcp_sensor_temp: No longer crash when temperature information is missing.
 
     Multisite:
     * 4400 FIX: Fixed possible random "OSError: [Errno 9] Bad file descriptor" in GUI...

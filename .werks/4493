@@ -1,0 +1,10 @@
+Title: mk_oracle.ps1: Now takes version into account which fixed wrong calculation of tablespaces
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b4
+Date: 1489388435
+Class: fix
+
+

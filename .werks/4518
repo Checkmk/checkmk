@@ -1,0 +1,9 @@
+Title: citrix_licenses: Fixed related PNP template with error 'Unused Arguments " " in AREA:used...'
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p19
+Date: 1489401772
+Class: fix
+
+

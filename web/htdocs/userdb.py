@@ -216,6 +216,20 @@ def is_automation_user(user_id):
     return os.path.isfile(cmk.paths.var_dir + "/web/" + user_id.encode("utf-8") + "/automation.secret")
 
 
+def is_customer_user_allowed_to_login(user_id):
+    if not cmk.is_managed_edition():
+       return True
+
+    import managed
+    user = config.LoggedInUser(user_id)
+    customer_id = managed.get_customer_id(user.attributes)
+
+    if managed.is_global(customer_id):
+        return True
+
+    return managed.is_current_customer(customer_id)
+
+
 # This function is called very often during regular page loads so it has to be efficient
 # even when having a lot of users.
 #
@@ -1173,6 +1187,11 @@ def hook_login(username, password):
                     "connector is not of type string (%r).") % (connection_id, username))
             # Check whether or not the user exists (and maybe create it)
             create_non_existing_user(connection_id, username)
+
+            if not is_customer_user_allowed_to_login(username):
+                # A CME not assigned with the current sites customer
+                # is not allowed to login
+                return False
 
             # Now, after successfull login (and optional user account
             # creation), check whether or not the user is locked.

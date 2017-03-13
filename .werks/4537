@@ -1,0 +1,11 @@
+Title: hyperv_checkpoints: Fixed wrong detection of checkpoint
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1489418293
+Class: fix
+
+The original plugin expected an leading line which never existed. Therfore
+the amount of checkpoints has been undercharged.

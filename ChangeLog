@@ -15,6 +15,7 @@
     * 4516 FIX: check_mk_agent.linux: Escaped quotes in run_cached function used for ipmi-sensors command
     * 4518 FIX: citrix_licenses: Fixed related PNP template with error 'Unused Arguments " " in AREA:used...'
     * 4519 FIX: mbg_lantime_ng_refclock: Added missing refclock types
+    * 4520 FIX: avaya_45xx_temp: Fixed wrong temperature unit and value handling
 
     Multisite:
     * 4400 FIX: Fixed possible random "OSError: [Errno 9] Bad file descriptor" in GUI...

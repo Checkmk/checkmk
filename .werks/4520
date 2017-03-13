@@ -1,0 +1,9 @@
+Title: avaya_45xx_temp: Fixed wrong temperature unit and value handling
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p19
+Date: 1489408727
+Class: fix
+
+

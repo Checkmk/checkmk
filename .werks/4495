@@ -1,0 +1,11 @@
+Title: mk_mysql.vbs: Fixed missing command if DB process runs as mysqld-nt.exe
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1489399150
+
+

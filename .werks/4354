@@ -1,0 +1,11 @@
+Title: netstat_an.bat: Fix syntax error
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1489420846
+
+Thanks to Davide Del Grande for the patch!

@@ -62,9 +62,9 @@ def check_dhcp_pools_levels(free, used, pending, size, params):
                 warn_abs = warn
                 crit_abs = crit
 
-            if value <= crit:
+            if value < crit:
                 state = 2
-            elif value <= warn:
+            elif value < warn:
                 state = 1
 
             if state:

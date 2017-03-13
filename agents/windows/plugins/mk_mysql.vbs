@@ -86,6 +86,7 @@ For Each instance In instances.Keys
     ' with the option --print-defaults
     cmd = instances.Item(instance)
     cmd = Replace(cmd, "mysqld.exe", "mysql.exe")
+    cmd = Replace(cmd, "mysqld-nt.exe", "mysql.exe")
     cmd = Left(cmd, InStrRev(cmd, " ")) & " --print-defaults"
     Set PROC = SHO.Exec(cmd)
     PROC.StdIn.Close()
@@ -111,6 +112,7 @@ For Each instance In instances.Keys
     ' my.ini and instance name from the end of the command and add our config as --defaults-extra-file.
     cmd = instances.Item(instance)
     cmd = Replace(cmd, "mysqld""", "mysql""")
+    cmd = Replace(cmd, "mysqld-nt""", "mysql""")
     cmd = Replace(cmd, "mysql""", "mysql.exe""")
     cmd = Left(cmd, InStr(cmd, "mysql.exe""")+9)
     If cfg_file <> "" Then

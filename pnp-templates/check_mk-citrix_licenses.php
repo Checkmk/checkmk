@@ -28,10 +28,10 @@ $opt[1] = "--vertical-label Licenses -l 0 -u $MAX[1] --title 'Used Citrix Licens
 
 $def[1] = ""
           . "DEF:used=$RRDFILE[1]:$DS[1]:MAX "
-          . "AREA:used#60d070:\"Used Licenses: \" "
-          . "GPRINT:used:LAST:\"last\\: % 6.0lf\" "
-          . "GPRINT:used:MAX:\"maximum\\: % 6.0lf\" "
-          . "GPRINT:used:AVERAGE:\"average\\:% 6.0lf\\n\" "
+          . "AREA:used#60d070:\"Used Licenses\: \" "
+          . "GPRINT:used:LAST:\"last\: % 6.0lf\" "
+          . "GPRINT:used:MAX:\"maximum\: % 6.0lf\" "
+          . "GPRINT:used:AVERAGE:\"average\:% 6.0lf\\n\" "
           . "HRULE:$MAX[1]#000000:\"Installed Licences\" "
           . "LINE:used#008000 "
           . "";

@@ -243,26 +243,22 @@ bool Store::handleCommand(const string &command) {
         // COMMAND [1462191638] MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog
         if (parts.size() != 3) {
             Warning(_logger) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
-            return false;
+        } else {
+            extern char g_mk_logwatch_path[];
+            mk_logwatch_acknowledge(_logger, g_mk_logwatch_path, parts[1],
+                                    parts[2]);
         }
-        extern char g_mk_logwatch_path[];
-        mk_logwatch_acknowledge(_logger, g_mk_logwatch_path, parts[1],
-                                parts[2]);
         return true;
     }
 
     if (starts_with(command_name, "EC_")) {
-        if (parts.size() != 1) {
-            Warning(_logger) << command_name << "expects 0 arguments";
-            return false;
-        }
-        if (_core->mkeventdEnabled()) {
-            ECTableConnection(_logger, _core->mkeventdSocketPath(),
-                              "COMMAND " + command_name.substr(3))
-                .run();
-        } else {
+        if (!_core->mkeventdEnabled()) {
             Notice(_logger) << "event console disabled, ignoring command '"
                             << command << "'";
+        } else {
+            ECTableConnection(_logger, _core->mkeventdSocketPath(),
+                              "COMMAND " + command.substr(3))
+                .run();
         }
         return true;
     }

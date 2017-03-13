@@ -1,0 +1,9 @@
+Title: cisco_wlc, cisco_wlc_clients: Fixed missing OID for Cisco WLC 5520 Appliances
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p19
+Date: 1489397305
+Class: fix
+
+

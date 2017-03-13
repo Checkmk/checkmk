@@ -1,0 +1,11 @@
+Title: f5_bigip_vserver: Fixed crash when Service has no params
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1489400639
+Class: fix
+
+In older version this check had no params. To be compatible with newer
+version we need to take care of this circumstance and convert the variable.

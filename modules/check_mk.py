@@ -272,7 +272,7 @@ config_variable_names = set(vars().keys()).difference(known_vars)
 # at check time (and many of what is also needed at administration time).
 try:
     modules = [ 'check_mk_base', 'discovery', 'snmp', 'notify', 'events',
-                 'alert_handling', 'cmc', 'inline_snmp', 'agent_bakery' ]
+                 'alert_handling', 'cmc', 'inline_snmp', 'agent_bakery', 'managed' ]
     for module in modules:
         if module_exists(module):
             load_module(module)
@@ -2935,6 +2935,9 @@ def get_host_attributes(hostname, tags):
     actions = icons_and_actions_of("host", hostname)
     if actions:
         attrs["_ACTIONS"] = ",".join(actions)
+
+    if cmk.is_managed_edition():
+        attrs["_CUSTOMER"] = current_customer
 
     return attrs
 

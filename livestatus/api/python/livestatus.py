@@ -601,8 +601,13 @@ class MultiSiteConnection(Helpers):
     def set_prepend_site(self, p):
         self.prepend_site = p
 
-    def set_only_sites(self, os = None):
-        self.only_sites = os
+    def set_only_sites(self, sites=None):
+        """Make future queries only contact the given sites.
+
+        Provide a list of site IDs to not contact all configured sites, but only the listed
+        site IDs. In case None is given, the limitation is removed.
+        """
+        self.only_sites = sites
 
     # Impose Limit on number of returned datasets (distributed amoung sites)
     def set_limit(self, limit = None):

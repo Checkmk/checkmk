@@ -1,0 +1,18 @@
+Title: cmk-update-agent: Temporary files cmk-update-agent-verify-* were not deleted
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1489493094
+
+When using the Check_MK Agent Updater on some systems it could happen
+that small temporary files named cmk-update-agent-verify-* could be
+left over after program execution in the system temporary paths like
+/tmp on Linux and %TEMP% on Windows.
+
+New versions of the updater are now cleaning up the files created during
+the agent signature verification. Files created by older versions of the
+updater need to be cleaned up manually.

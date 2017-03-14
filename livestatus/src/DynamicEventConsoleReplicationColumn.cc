@@ -42,9 +42,9 @@ using std::vector;
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(MonitoringCore *core, string command)
-        : EventConsoleConnection(core->loggerLivestatus(),
-                                 core->mkeventdSocketPath())
+    ECTableConnection(MonitoringCore *mc, string command)
+        : EventConsoleConnection(mc->loggerLivestatus(),
+                                 mc->mkeventdSocketPath())
         , _command(move(command)) {}
     string getResult() const { return _result; }
 
@@ -75,19 +75,18 @@ private:
 }  // namespace
 
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
-    const std::string &name, const std::string &description,
-    MonitoringCore *core, int indirect_offset, int extra_offset,
-    int extra_extra_offset)
-    : DynamicColumn(name, description, core->loggerLivestatus(),
-                    indirect_offset, extra_offset, extra_extra_offset)
-    , _core(core) {}
+    const std::string &name, const std::string &description, MonitoringCore *mc,
+    int indirect_offset, int extra_offset, int extra_extra_offset)
+    : DynamicColumn(name, description, mc->loggerLivestatus(), indirect_offset,
+                    extra_offset, extra_extra_offset)
+    , _mc(mc) {}
 
 unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
     const std::string &name, const std::string &arguments) {
     string result;
-    if (_core->mkeventdEnabled()) {
+    if (_mc->mkeventdEnabled()) {
         try {
-            ECTableConnection ec(_core, "REPLICATE " + arguments);
+            ECTableConnection ec(_mc, "REPLICATE " + arguments);
             ec.run();
             result = ec.getResult();
         } catch (const generic_error &ge) {

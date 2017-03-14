@@ -64,9 +64,9 @@ using std::string;
 
 TableHosts::TableHosts(const DowntimesOrComments &downtimes_holder,
                        const DowntimesOrComments &comments_holder,
-                       MonitoringCore *core)
-    : Table(core->loggerLivestatus()) {
-    addColumns(this, "", -1, -1, downtimes_holder, comments_holder, core);
+                       MonitoringCore *mc)
+    : Table(mc->loggerLivestatus()) {
+    addColumns(this, "", -1, -1, downtimes_holder, comments_holder, mc);
 }
 
 string TableHosts::name() const { return "hosts"; }
@@ -78,7 +78,7 @@ void TableHosts::addColumns(Table *table, const string &prefix,
                             int indirect_offset, int extra_offset,
                             const DowntimesOrComments &downtimes_holder,
                             const DowntimesOrComments &comments_holder,
-                            MonitoringCore *core) {
+                            MonitoringCore *mc) {
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "Host name", DANGEROUS_OFFSETOF(host, name),
         indirect_offset, extra_offset, -1));
@@ -606,36 +606,36 @@ void TableHosts::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<HostSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in hard_state)",
-        core, HostSpecialIntColumn::Type::real_hard_state, indirect_offset,
+        mc, HostSpecialIntColumn::Type::real_hard_state, indirect_offset,
         extra_offset, -1));
     table->addColumn(make_unique<HostSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
-        core, HostSpecialIntColumn::Type::pnp_graph_present, indirect_offset,
+        mc, HostSpecialIntColumn::Type::pnp_graph_present, indirect_offset,
         extra_offset, -1));
     table->addColumn(make_unique<HostSpecialIntColumn>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
-        core, HostSpecialIntColumn::Type::mk_inventory_last, indirect_offset,
+        mc, HostSpecialIntColumn::Type::mk_inventory_last, indirect_offset,
         extra_offset, -1));
     table->addColumn(make_unique<HostFileColumn>(
         prefix + "mk_inventory",
         "The file content content of the Check_MK HW/SW-Inventory",
-        core->mkInventoryPath(), "", indirect_offset, extra_offset, -1));
+        mc->mkInventoryPath(), "", indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<HostFileColumn>(
         prefix + "mk_inventory_gz",
         "The gzipped file content content of the Check_MK HW/SW-Inventory",
-        core->mkInventoryPath(), ".gz", indirect_offset, extra_offset, -1));
+        mc->mkInventoryPath(), ".gz", indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",
-        "This list of logfiles with problems fetched via mk_logwatch", core,
+        "This list of logfiles with problems fetched via mk_logwatch", mc,
         indirect_offset, extra_offset, -1));
 
     table->addDynamicColumn(make_unique<DynamicLogwatchFileColumn>(
         prefix + "mk_logwatch_file",
         "This contents of a logfile fetched via mk_logwatch", table->_logger,
-        core, indirect_offset, extra_offset, -1));
+        mc, indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<HostSpecialDoubleColumn>(
         prefix + "staleness", "Staleness indicator for this host",
@@ -648,7 +648,7 @@ void TableHosts::addColumns(Table *table, const string &prefix,
         -1));
     table->addColumn(make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
-        "A list of all contact groups this host is in", core,
+        "A list of all contact groups this host is in", mc,
         DANGEROUS_OFFSETOF(host, contact_groups), indirect_offset, extra_offset,
         -1));
 

@@ -54,7 +54,7 @@ class Query;
 
 class TableEventConsole : public Table {
 public:
-    explicit TableEventConsole(MonitoringCore *core);
+    explicit TableEventConsole(MonitoringCore *mc);
 
     void answerQuery(Query *) override;
 
@@ -196,7 +196,7 @@ protected:
     bool isAuthorizedForEvent(contact *ctc, void *data);
 
 private:
-    MonitoringCore *_core;
+    MonitoringCore *_mc;
 
     bool isAuthorizedForEventViaContactGroups(MonitoringCore::Contact *ctc,
                                               Row *row, bool &result);

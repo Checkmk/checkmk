@@ -36,7 +36,7 @@ class DynamicEventConsoleReplicationColumn : public DynamicColumn {
 public:
     DynamicEventConsoleReplicationColumn(const std::string &name,
                                          const std::string &description,
-                                         MonitoringCore *core,
+                                         MonitoringCore *mc,
                                          int indirect_offset, int extra_offset,
                                          int extra_extra_offset);
 
@@ -44,7 +44,7 @@ public:
                                          const std::string &arguments) override;
 
 private:
-    MonitoringCore *_core;
+    MonitoringCore *_mc;
 };
 
 #endif  // DynamicEventConsoleReplicationColumn_h

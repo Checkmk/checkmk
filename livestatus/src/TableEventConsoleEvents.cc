@@ -60,7 +60,7 @@ void TableEventConsoleEvents::addColumns(Table *table,
 #else
 void TableEventConsoleEvents::addColumns(
     Table *table, const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder, MonitoringCore *core)
+    const DowntimesOrComments &comments_holder, MonitoringCore *mc)
 #endif
 {
     table->addColumn(make_unique<IntEventConsoleColumn>(
@@ -115,10 +115,12 @@ void TableEventConsoleEvents::addColumns(
                            downtimes_holder, comments_holder
 #ifdef CMC
                            ,
-                           holder_lock, mc
-#endif
+                           holder_lock, mc, core
+#else
                            ,
-                           core);
+                           mc
+#endif
+                           );
 }
 
 string TableEventConsoleEvents::name() const { return "eventconsoleevents"; }

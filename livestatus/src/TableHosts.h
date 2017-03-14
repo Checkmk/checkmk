@@ -55,13 +55,12 @@ public:
                            MonitoringCore *mc, Core *core);
 #else
     TableHosts(const DowntimesOrComments &downtimes_holder,
-               const DowntimesOrComments &comments_holder,
-               MonitoringCore *core);
+               const DowntimesOrComments &comments_holder, MonitoringCore *mc);
     static void addColumns(Table *, const std::string &prefix,
                            int indirect_offset, int extra_offset,
                            const DowntimesOrComments &downtimes_holder,
                            const DowntimesOrComments &comments_holder,
-                           MonitoringCore *core);
+                           MonitoringCore *mc);
 #endif
 
     std::string name() const override;

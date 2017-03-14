@@ -63,7 +63,7 @@ public:
     static void addColumns(Table *table,
                            const DowntimesOrComments &downtimes_holder,
                            const DowntimesOrComments &comments_holder,
-                           MonitoringCore *core);
+                           MonitoringCore *mc);
 #endif
 
     bool isAuthorized(contact *ctc, void *data) override;

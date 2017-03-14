@@ -48,7 +48,7 @@ public:
                              const Comments &comments_holder,
                              std::recursive_mutex &holder_lock, Core *core);
 #else
-    TableEventConsoleHistory(MonitoringCore *core,
+    TableEventConsoleHistory(MonitoringCore *mc,
                              const DowntimesOrComments &downtimes_holder,
                              const DowntimesOrComments &comments_holder);
 #endif

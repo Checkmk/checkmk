@@ -33,7 +33,7 @@ class Query;
 
 class TableEventConsoleReplication : public Table {
 public:
-    explicit TableEventConsoleReplication(MonitoringCore *core);
+    explicit TableEventConsoleReplication(MonitoringCore *mc);
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;

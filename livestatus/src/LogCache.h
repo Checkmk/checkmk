@@ -68,7 +68,7 @@ public:
     void forgetLogfiles();
     void updateLogfileIndex();
 
-    bool logCachePreChecks(MonitoringCore *core);
+    bool logCachePreChecks(MonitoringCore *mc);
 
 private:
     void scanLogfile(const fs::path &path, bool watch);

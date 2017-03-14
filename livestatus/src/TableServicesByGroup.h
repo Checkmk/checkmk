@@ -50,7 +50,7 @@ public:
 #else
     TableServicesByGroup(const DowntimesOrComments &downtimes_holder,
                          const DowntimesOrComments &comments_holder,
-                         MonitoringCore *core);
+                         MonitoringCore *mc);
 #endif
 
     std::string name() const override;

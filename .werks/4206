@@ -1,0 +1,13 @@
+Title: Fix display of host availability annotations in service views
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cre
+Version: 1.4.0b4
+Date: 1489500952
+Class: fix
+
+Host annotations are also shown in a service availability table for the
+host of the shown services. But in the table in the columns {{Service}}
+of such entries there was displayed a random service name. This has
+been fixed in the columns are now correctly empty.

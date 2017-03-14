@@ -27,6 +27,7 @@
 #include "Column.h"
 #include "HostFileColumn.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 
 using std::make_unique;
 using std::string;
@@ -69,7 +70,7 @@ unique_ptr<Column> DynamicLogwatchFileColumn::createColumn(
     }
 
     return make_unique<HostFileColumn>(name, "Contents of logwatch file",
-                                       _logwatch_path,
+                                       _core->mkLogwatchPath(),
                                        "/" + unescape_filename(arguments),
                                        _indirect_offset, _extra_offset, -1);
 }

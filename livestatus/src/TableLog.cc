@@ -122,7 +122,7 @@ TableLog::TableLog(LogCache *log_cache,
                            downtimes_holder, comments_holder
 #ifdef CMC
                            ,
-                           holder_lock, core
+                           holder_lock, mc, core
 #else
                            ,
                            mc
@@ -133,7 +133,7 @@ TableLog::TableLog(LogCache *log_cache,
         false /* no hosts table */, downtimes_holder, comments_holder
 #ifdef CMC
         ,
-        holder_lock, core
+        holder_lock, mc, core
 #else
         ,
         mc

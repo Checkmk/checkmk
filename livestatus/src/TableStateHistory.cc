@@ -229,7 +229,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
                            downtimes_holder, comments_holder
 #ifdef CMC
                            ,
-                           holder_lock, core
+                           holder_lock, mc, core
 #else
                            ,
                            mc
@@ -241,7 +241,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
                               comments_holder
 #ifdef CMC
                               ,
-                              holder_lock, core
+                              holder_lock, mc, core
 #else
                               ,
                               mc

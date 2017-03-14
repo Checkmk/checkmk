@@ -244,8 +244,7 @@ bool Store::handleCommand(const string &command) {
         if (parts.size() != 3) {
             Warning(_logger) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
         } else {
-            extern char g_mk_logwatch_path[];
-            mk_logwatch_acknowledge(_logger, g_mk_logwatch_path, parts[1],
+            mk_logwatch_acknowledge(_logger, _core->mkLogwatchPath(), parts[1],
                                     parts[2]);
         }
         return true;

@@ -29,22 +29,24 @@
 #include <string>
 #include "Table.h"
 #include "nagios.h"  // IWYU pragma: keep
+class MonitoringCore;
+class Query;
+
 #ifdef CMC
 #include <mutex>
 #include "Notes.h"
 class Core;
 #else
 class DowntimesOrComments;
-class MonitoringCore;
 #endif
-class Query;
 
 class TableHostsByGroup : public Table {
 public:
 #ifdef CMC
     TableHostsByGroup(const Downtimes &downtimes_holder,
                       const Comments &comments_holder,
-                      std::recursive_mutex &holder_lock, Core *core);
+                      std::recursive_mutex &holder_lock, MonitoringCore *mc,
+                      Core *core);
 #else
     TableHostsByGroup(const DowntimesOrComments &_downtimes_holder,
                       const DowntimesOrComments &_comments_holder,

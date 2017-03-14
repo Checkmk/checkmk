@@ -54,7 +54,8 @@ public:
 
     static void addColumns(Table *table, const Downtimes &downtimes_holder,
                            const Comments &comments_holder,
-                           std::recursive_mutex &holder_lock, Core *core);
+                           std::recursive_mutex &holder_lock,
+                           MonitoringCore *mc, Core *core);
 #else
     TableEventConsoleEvents(MonitoringCore *mc,
                             const DowntimesOrComments &downtimes_holder,

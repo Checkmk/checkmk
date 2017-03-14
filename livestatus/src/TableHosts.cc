@@ -58,7 +58,6 @@
 #include "auth.h"
 
 extern host *host_list;
-extern char g_mk_inventory_path[];
 
 using std::make_unique;
 using std::string;
@@ -607,26 +606,26 @@ void TableHosts::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<HostSpecialIntColumn>(
         prefix + "hard_state",
         "The effective hard state of the host (eliminates a problem in hard_state)",
-        HostSpecialIntColumn::Type::real_hard_state, indirect_offset,
+        core, HostSpecialIntColumn::Type::real_hard_state, indirect_offset,
         extra_offset, -1));
     table->addColumn(make_unique<HostSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this host (-1/0/1)",
-        HostSpecialIntColumn::Type::pnp_graph_present, indirect_offset,
+        core, HostSpecialIntColumn::Type::pnp_graph_present, indirect_offset,
         extra_offset, -1));
     table->addColumn(make_unique<HostSpecialIntColumn>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
-        HostSpecialIntColumn::Type::mk_inventory_last, indirect_offset,
+        core, HostSpecialIntColumn::Type::mk_inventory_last, indirect_offset,
         extra_offset, -1));
     table->addColumn(make_unique<HostFileColumn>(
         prefix + "mk_inventory",
         "The file content content of the Check_MK HW/SW-Inventory",
-        g_mk_inventory_path, "", indirect_offset, extra_offset, -1));
+        core->mkInventoryPath(), "", indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<HostFileColumn>(
         prefix + "mk_inventory_gz",
         "The gzipped file content content of the Check_MK HW/SW-Inventory",
-        g_mk_inventory_path, ".gz", indirect_offset, extra_offset, -1));
+        core->mkInventoryPath(), ".gz", indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<LogwatchListColumn>(
         prefix + "mk_logwatch_files",

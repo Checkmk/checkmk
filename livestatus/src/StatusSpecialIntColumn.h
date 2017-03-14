@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <string>
 #include "IntColumn.h"
+class MonitoringCore;
 
 #ifdef CMC
 #include "cmc.h"
@@ -41,18 +42,17 @@ public:
     enum class Type { mk_inventory_last };
 
     StatusSpecialIntColumn(const std::string& name,
-                           const std::string& description,
-                           const std::string& inventory_path, Type type,
-                           int indirect_offset, int extra_offset,
+                           const std::string& description, MonitoringCore* mc,
+                           Type type, int indirect_offset, int extra_offset,
                            int extra_extra_offset)
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset)
-        , _inventory_path(inventory_path)
+        , _mc(mc)
         , _type(type) {}
     int32_t getValue(void* row, contact* auth_user) override;
 
 private:
-    std::string _inventory_path;
+    MonitoringCore* _mc;
     const Type _type;
 };
 

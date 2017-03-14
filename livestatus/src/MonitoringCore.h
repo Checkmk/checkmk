@@ -49,9 +49,10 @@ public:
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
 
     virtual bool mkeventdEnabled() = 0;
-    virtual std::string mkeventdSocketPath() = 0;
 
+    virtual std::string mkeventdSocketPath() = 0;
     virtual std::string mkLogwatchPath() = 0;
+    virtual std::string mkInventoryPath() = 0;
 
     virtual Logger *loggerLivestatus() = 0;
 };

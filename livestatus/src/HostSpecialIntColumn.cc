@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostSpecialIntColumn.h"
+#include "MonitoringCore.h"
 #include "mk_inventory.h"
 #include "pnp4nagios.h"
 
@@ -44,8 +45,7 @@ int32_t HostSpecialIntColumn::getValue(void *row, contact * /* auth_user */) {
                 return pnpgraph_present(hst->name);
 
             case Type::mk_inventory_last: {
-                extern char g_mk_inventory_path[];
-                return mk_inventory_last(string(g_mk_inventory_path) + "/" +
+                return mk_inventory_last(_mc->mkInventoryPath() + "/" +
                                          hst->name);
             }
         }

@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "StatusSpecialIntColumn.h"
+#include "MonitoringCore.h"
 #include "mk_inventory.h"
 
 using std::string;
@@ -32,7 +33,7 @@ int32_t StatusSpecialIntColumn::getValue(void* /* row */,
     switch (_type) {
         case Type::mk_inventory_last:
             // Check_MK Inventory touches the file ".last" after each inventory
-            return mk_inventory_last(_inventory_path + "/.last");
+            return mk_inventory_last(_mc->mkInventoryPath() + "/.last");
     }
     // never reached, make -Wall happy
     return 0;

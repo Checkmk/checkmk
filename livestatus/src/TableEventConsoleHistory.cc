@@ -61,7 +61,7 @@ TableEventConsoleHistory::TableEventConsoleHistory(
     TableEventConsoleEvents::addColumns(this, downtimes_holder, comments_holder
 #ifdef CMC
                                         ,
-                                        holder_lock
+                                        holder_lock, mc
 #endif
                                         ,
                                         core);

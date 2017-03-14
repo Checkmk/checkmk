@@ -104,8 +104,8 @@ int g_max_fd_ever = 0;
 char g_socket_path[4096];
 char pnp_path_storage[4096];
 char *g_pnp_path = pnp_path_storage;
-char g_mk_inventory_path[4096];  // base path of Check_MK inventory files
-char g_mk_logwatch_path[4096];   // base path of Check_MK logwatch files
+char g_mk_inventory_path[4096];         // base path of Check_MK inventory files
+static char fl_mk_logwatch_path[4096];  // base path of Check_MK logwatch files
 static char fl_logfile_path[4096];
 static char fl_mkeventd_socket_path[4096];
 static bool fl_should_terminate = false;
@@ -605,6 +605,8 @@ public:
 
     string mkeventdSocketPath() override { return fl_mkeventd_socket_path; }
 
+    string mkLogwatchPath() override { return fl_mk_logwatch_path; }
+
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
 private:
@@ -924,15 +926,15 @@ void livestatus_parse_arguments(const char *args_orig) {
                 }
                 check_path("Check_MK Inventory directory", g_mk_inventory_path);
             } else if (strcmp(left, "mk_logwatch_path") == 0) {
-                strncpy(g_mk_logwatch_path, right,
-                        sizeof(g_mk_logwatch_path) - 1);
+                strncpy(fl_mk_logwatch_path, right,
+                        sizeof(fl_mk_logwatch_path) - 1);
                 if (right[strlen(right) - 1] != '/') {
-                    strncat(g_mk_logwatch_path, "/",
-                            sizeof(g_mk_logwatch_path) -
-                                strlen(g_mk_logwatch_path) -
+                    strncat(fl_mk_logwatch_path, "/",
+                            sizeof(fl_mk_logwatch_path) -
+                                strlen(fl_mk_logwatch_path) -
                                 1);  // make sure, that trailing slash is there
                 }
-                check_path("Check_MK logwatch directory", g_mk_logwatch_path);
+                check_path("Check_MK logwatch directory", fl_mk_logwatch_path);
             } else if (strcmp(left, "data_encoding") == 0) {
                 if (strcmp(right, "utf8") == 0) {
                     g_data_encoding = Encoding::utf8;

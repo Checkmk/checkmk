@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
+class MonitoringCore;
 class RowRenderer;
 
 #ifdef CMC
@@ -39,16 +40,16 @@ class RowRenderer;
 class LogwatchListColumn : public Column {
 public:
     LogwatchListColumn(const std::string &name, const std::string &description,
-                       const std::string &logwatch_path, int indirect_offset,
+                       MonitoringCore *core, int indirect_offset,
                        int extra_offset, int extra_extra_offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset)
-        , _logwatch_path(logwatch_path) {}
+        , _core(core) {}
     ColumnType type() override { return ColumnType::list; }
     void output(void *row, RowRenderer &r, contact *auth_user) override;
 
 private:
-    std::string _logwatch_path;
+    MonitoringCore *_core;
 };
 
 #endif  // LogwatchListColumn_h

@@ -31,23 +31,23 @@
 #include "DynamicColumn.h"
 class Column;
 class Logger;
+class MonitoringCore;
 
 class DynamicLogwatchFileColumn : public DynamicColumn {
 public:
     DynamicLogwatchFileColumn(const std::string &name,
                               const std::string &description, Logger *logger,
-                              const std::string &logwatch_path,
-                              int indirect_offset, int extra_offset,
-                              int extra_extra_offset)
+                              MonitoringCore *core, int indirect_offset,
+                              int extra_offset, int extra_extra_offset)
         : DynamicColumn(name, description, logger, indirect_offset,
                         extra_offset, extra_extra_offset)
-        , _logwatch_path(logwatch_path) {}
+        , _core(core) {}
     virtual ~DynamicLogwatchFileColumn() {}
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;
 
 private:
-    std::string _logwatch_path;
+    MonitoringCore *_core;
 };
 
 #endif  // DynamicLogwatchFileColumn_h

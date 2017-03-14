@@ -39,7 +39,7 @@ TableEventConsoleEvents::TableEventConsoleEvents(
     const Comments &comments_holder, std::recursive_mutex &holder_lock,
     Core *core)
     : TableEventConsole(mc) {
-    addColumns(this, downtimes_holder, comments_holder, holder_lock, core);
+    addColumns(this, downtimes_holder, comments_holder, holder_lock, mc, core);
 }
 #else
 TableEventConsoleEvents::TableEventConsoleEvents(
@@ -56,7 +56,7 @@ void TableEventConsoleEvents::addColumns(Table *table,
                                          const Downtimes &downtimes_holder,
                                          const Comments &comments_holder,
                                          std::recursive_mutex &holder_lock,
-                                         Core *core)
+                                         MonitoringCore *mc, Core *core)
 #else
 void TableEventConsoleEvents::addColumns(
     Table *table, const DowntimesOrComments &downtimes_holder,
@@ -115,7 +115,7 @@ void TableEventConsoleEvents::addColumns(
                            downtimes_holder, comments_holder
 #ifdef CMC
                            ,
-                           holder_lock
+                           holder_lock, mc
 #endif
                            ,
                            core);

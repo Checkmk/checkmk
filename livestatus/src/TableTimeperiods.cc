@@ -35,7 +35,7 @@ using std::string;
 
 extern timeperiod *timeperiod_list;
 
-TableTimeperiods::TableTimeperiods(Logger *logger) : Table(logger) {
+TableTimeperiods::TableTimeperiods(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<OffsetStringColumn>(
         "name", "The name of the timeperiod",
         DANGEROUS_OFFSETOF(timeperiod, name), -1, -1, -1));

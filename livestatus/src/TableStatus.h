@@ -34,8 +34,6 @@ class Query;
 
 #ifdef CMC
 class Core;
-#else
-class Logger;
 #endif
 
 class TableStatus : public Table {
@@ -43,7 +41,7 @@ public:
 #ifdef CMC
     explicit TableStatus(MonitoringCore *mc, Core *core);
 #else
-    explicit TableStatus(Logger *logger, MonitoringCore *mc);
+    explicit TableStatus(MonitoringCore *mc);
 #endif
 
     std::string name() const override;

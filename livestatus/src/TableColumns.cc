@@ -33,7 +33,7 @@ using std::make_unique;
 using std::shared_ptr;
 using std::string;
 
-TableColumns::TableColumns(Logger *logger) : Table(logger) {
+TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<ColumnsColumn>("table", "The name of the table",
                                          ColumnsColumn::Type::table, this, -1,
                                          -1, -1));

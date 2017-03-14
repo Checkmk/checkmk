@@ -33,8 +33,8 @@ using std::make_unique;
 using std::string;
 
 TableCommands::TableCommands(const CommandsHolder &commands_holder,
-                             Logger *logger)
-    : Table(logger), _commands_holder(commands_holder) {
+                             MonitoringCore *mc)
+    : Table(mc), _commands_holder(commands_holder) {
     addColumns(this, "", 0);
 }
 

@@ -30,7 +30,6 @@
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logfile.h"
-#include "MonitoringCore.h"
 #include "OffsetIntColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
@@ -62,7 +61,7 @@ TableLog::TableLog(LogCache *log_cache,
 #endif
                    ,
                    MonitoringCore *mc)
-    : Table(mc->loggerLivestatus()), _mc(mc), _log_cache(log_cache) {
+    : Table(mc), _mc(mc), _log_cache(log_cache) {
     addColumn(make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (UNIX timestamp)",
         DANGEROUS_OFFSETOF(LogEntry, _time), -1, -1, -1));

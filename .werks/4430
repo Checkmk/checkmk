@@ -1,0 +1,15 @@
+Title: Fixed logwatch-related Livestatus queries in NEB module
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1489480904
+Class: fix
+
+The 'mk_logwatch_files' and 'mk_logwatch_file' columns in the 'hosts' table
+didn't work when the Nagios core was used, they were always empty.  The net
+result was that logwatch-related things in the GUI always looked OK, even
+when there were problems. This has been fixed.
+
+Note that the CMC was not affected by this bug.

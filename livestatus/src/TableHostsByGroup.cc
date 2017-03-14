@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableHostsByGroup.h"
-#include "MonitoringCore.h"
 #include "Query.h"
 #include "TableHostGroups.h"
 #include "TableHosts.h"
@@ -44,7 +43,7 @@ struct hostbygroup {
 TableHostsByGroup::TableHostsByGroup(
     const DowntimesOrComments &_downtimes_holder,
     const DowntimesOrComments &_comments_holder, MonitoringCore *mc)
-    : Table(mc->loggerLivestatus()) {
+    : Table(mc) {
     TableHosts::addColumns(this, "", -1, -1, _downtimes_holder,
                            _comments_holder, mc);
     TableHostGroups::addColumns(this, "hostgroup_",

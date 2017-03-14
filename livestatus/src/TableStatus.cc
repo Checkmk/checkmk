@@ -77,7 +77,7 @@ time_t dummy = 0;
 }  // namespace
 #endif  // NAGIOS4
 
-TableStatus::TableStatus(Logger *logger, MonitoringCore *mc) : Table(logger) {
+TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addCounterColumns("neb_callbacks", "NEB callbacks", Counter::neb_callbacks);
     addCounterColumns("requests", "requests to Livestatus", Counter::requests);
     addCounterColumns("connections", "client connections to Livestatus",

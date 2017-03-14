@@ -31,14 +31,14 @@
 #include "ColumnsColumn.h"
 #include "Table.h"
 class Column;
-class Logger;
+class MonitoringCore;
 class Query;
 
 class TableColumns : public Table {
     std::vector<Table *> _tables;
 
 public:
-    explicit TableColumns(Logger *logger);
+    explicit TableColumns(MonitoringCore *mc);
 
     std::string name() const override;
     std::string namePrefix() const override;

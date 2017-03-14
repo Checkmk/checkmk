@@ -26,14 +26,13 @@
 #include <memory>
 #include "DynamicColumn.h"
 #include "DynamicEventConsoleReplicationColumn.h"
-#include "MonitoringCore.h"
 #include "Query.h"
 
 using std::make_unique;
 using std::string;
 
 TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *mc)
-    : Table(mc->loggerLivestatus()) {
+    : Table(mc) {
     addDynamicColumn(make_unique<DynamicEventConsoleReplicationColumn>(
         "value", "The replication value", mc, -1, -1, -1));
 }

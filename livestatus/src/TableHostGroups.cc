@@ -39,7 +39,7 @@ using std::string;
    portable? */
 extern hostgroup *hostgroup_list;
 
-TableHostGroups::TableHostGroups(Logger *logger) : Table(logger) {
+TableHostGroups::TableHostGroups(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", -1);
 }
 

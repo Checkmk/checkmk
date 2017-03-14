@@ -83,6 +83,8 @@ def load_plugins(force):
     global ubiquitary_filters   ; ubiquitary_filters = [] # Always show these filters
 
     load_web_plugins('visuals', globals())
+    declare_site_filters()
+
     loaded_with_language = current_language
 
 #.
@@ -850,6 +852,7 @@ def show_filter(f):
     except Exception, e:
         #TODO: html.plugged_text = ''
         #TODO: html.unplug()
+        log_exception()
         tb = sys.exc_info()[2]
         tbs = ['Traceback (most recent call last):\n']
         tbs += traceback.format_tb(tb)

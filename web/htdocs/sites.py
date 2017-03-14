@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import cmk
+
 import config
 import livestatus
 
@@ -106,7 +108,12 @@ def _connect_multiple_sites():
     global _live
     enabled_sites, disabled_sites = _get_enabled_and_disabled_sites()
     _set_initial_site_states(enabled_sites, disabled_sites)
-    _live = livestatus.MultiSiteConnection(enabled_sites, disabled_sites)
+
+    if cmk.is_managed_edition():
+        import managed
+        _live = managed.CMEMultiSiteConnection(enabled_sites, disabled_sites)
+    else:
+        _live = livestatus.MultiSiteConnection(enabled_sites, disabled_sites)
 
     # Fetch status of sites by querying the version of Nagios and livestatus
     # This may be cached by a proxy for up to the next configuration reload.

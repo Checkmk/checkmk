@@ -689,21 +689,27 @@ class FilterSite(Filter):
         Filter.__init__(self, name, _("Site") + (enforce and _( " (enforced)") or ""), 'host', ["site"], [])
         self.enforce = enforce
 
+
     def visible(self):
         return config.is_multisite()
 
+
     def display(self):
-        if not config.is_multisite():
-            choices = [("", _("(local)"))]
+        html.select("site", self._choices())
+
+
+    def _choices(self):
+        if self.enforce:
+            choices = []
         else:
-            if self.enforce:
-                choices = []
-            else:
-                choices = [("","")]
-            for sitename, state in sites.states().items():
-                if state["state"] == "online":
-                    choices.append((sitename, config.site(sitename)["alias"]))
-        html.sorted_select("site", choices)
+            choices = [("","")]
+
+        for sitename, state in sites.states().items():
+            if state["state"] == "online":
+                choices.append((sitename, config.site(sitename)["alias"]))
+
+        return sorted(choices, key=lambda a: a[1].lower())
+
 
     def heading_info(self):
         current_value = html.var("site")
@@ -711,11 +717,22 @@ class FilterSite(Filter):
             alias = config.site(current_value)["alias"]
             return alias
 
+
     def variable_settings(self, row):
         return [("site", row["site"])]
 
-declare_filter(500, FilterSite("siteopt", False), _("Optional selection of a site"))
-declare_filter(501, FilterSite("site",    True),  _("Selection of site is enforced, use this filter for joining"))
+
+
+def declare_site_filters():
+    if cmk.is_managed_edition():
+        cls = FilterCMESite
+    else:
+        cls = FilterSite
+
+    declare_filter(500, cls("siteopt", False),
+                   _("Optional selection of a site"))
+    declare_filter(501, cls("site",    True),
+                   _("Selection of site is enforced, use this filter for joining"))
 
 # name: internal id of filter
 # title: user displayed title of the filter

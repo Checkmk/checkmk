@@ -92,9 +92,11 @@ public:
     virtual bool isAuthorized(contact *ctc, void *data);
     virtual void *findObject(const std::string &objectspec);
 
-    Logger *const _logger;
+    Logger *logger() const;
 
 private:
+    Logger *const _logger;
+
     std::unique_ptr<Column> dynamicColumn(const std::string &name,
                                           const std::string &rest);
 

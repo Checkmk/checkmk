@@ -78,7 +78,7 @@ Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
     , _time_limit_timeout(0)
     , _current_line(0)
     , _timezone_offset(0)
-    , _logger(table->_logger) {
+    , _logger(table->logger()) {
     for (auto &line : lines) {
         vector<char> line_copy(line.begin(), line.end());
         line_copy.push_back('\0');

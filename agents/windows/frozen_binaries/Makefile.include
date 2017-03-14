@@ -35,8 +35,7 @@ prepare-python: src/python-$(PYTHON_VERSION).msi src/get-pip.py src/pyinstaller
 		cd ../../.. ; \
 	    wine c:\\Python27\\python c:\\Python27\\Scripts\\pip.exe install pypiwin32 ; \
 	    wine c:\\Python27\\python c:\\Python27\\Scripts\\pip.exe install pyopenssl ; \
-	    wine c:\\Python27\\python c:\\Python27\\Scripts\\pip.exe install requests ; \
-	    wine c:\\Python27\\python c:\\Python27\\Scripts\\pip.exe install psutil
+	    wine c:\\Python27\\python c:\\Python27\\Scripts\\pip.exe install requests
 
 setup:
 	sudo apt-get install scons upx-ucl wine

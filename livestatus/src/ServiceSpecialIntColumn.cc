@@ -30,7 +30,8 @@ int32_t ServiceSpecialIntColumn::getValue(void *row,
     if (auto svc = rowData<service>(row)) {
         switch (_type) {
             case Type::pnp_graph_present:
-                return pnpgraph_present(svc->host_ptr->name, svc->description);
+                return pnpgraph_present(_mc, svc->host_ptr->name,
+                                        svc->description);
         }
     }
     return 0;

@@ -27,6 +27,8 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+class MonitoringCore;
+
 #ifdef CMC
 #include "FileSystem.h"
 #endif
@@ -34,7 +36,7 @@
 std::string pnp_cleanup(const std::string& name);
 
 #ifndef CMC
-int pnpgraph_present(const std::string& host,
+int pnpgraph_present(MonitoringCore* mc, const std::string& host,
                      const std::string& service = "_HOST_");
 #endif
 
@@ -42,8 +44,8 @@ int pnpgraph_present(const std::string& host,
 // Determines if a RRD database exists and returns its path name. Returns an
 // empty string otherwise. This assumes paths created in the PNP4Nagios style
 // with storage type MULTIPLE.
-fs::path rrd_path(const std::string& host, const std::string& service,
-                  const std::string& varname);
+fs::path rrd_path(MonitoringCore* mc, const std::string& host,
+                  const std::string& service, const std::string& varname);
 #endif
 
 #endif  // pnp4nagios_h

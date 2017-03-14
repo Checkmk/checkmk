@@ -42,7 +42,7 @@ int32_t HostSpecialIntColumn::getValue(void *row, contact * /* auth_user */) {
                 }
 
             case Type::pnp_graph_present:
-                return pnpgraph_present(hst->name);
+                return pnpgraph_present(_mc, hst->name);
 
             case Type::mk_inventory_last: {
                 return mk_inventory_last(_mc->mkInventoryPath() + "/" +

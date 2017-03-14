@@ -102,8 +102,7 @@ void *g_nagios_handle;
 int g_unix_socket = -1;
 int g_max_fd_ever = 0;
 static char fl_socket_path[4096];
-char pnp_path_storage[4096];
-char *g_pnp_path = pnp_path_storage;
+static char fl_pnp_path[4096];
 static char fl_mk_inventory_path[4096];
 static char fl_mk_logwatch_path[4096];
 static char fl_logfile_path[4096];
@@ -607,6 +606,7 @@ public:
     string mkeventdSocketPath() override { return fl_mkeventd_socket_path; }
     string mkLogwatchPath() override { return fl_mk_logwatch_path; }
     string mkInventoryPath() override { return fl_mk_inventory_path; }
+    string pnpPath() override { return fl_pnp_path; }
 
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
@@ -799,7 +799,7 @@ void livestatus_parse_arguments(const char *args_orig) {
     fl_mkeventd_socket_path[0] = 0;
 
     /* there is no default PNP path */
-    g_pnp_path[0] = 0;
+    fl_pnp_path[0] = 0;
 
     if (args_orig == nullptr) {
         return;  // no arguments, use default options
@@ -909,13 +909,13 @@ void livestatus_parse_arguments(const char *args_orig) {
                            "allowed are strict and loose";
                 }
             } else if (strcmp(left, "pnp_path") == 0) {
-                strncpy(g_pnp_path, right, sizeof(pnp_path_storage) - 1);
+                strncpy(fl_pnp_path, right, sizeof(fl_pnp_path) - 1);
                 // make sure, that trailing slash is always there
                 if (right[strlen(right) - 1] != '/') {
-                    strncat(g_pnp_path, "/",
-                            sizeof(pnp_path_storage) - strlen(g_pnp_path) - 1);
+                    strncat(fl_pnp_path, "/",
+                            sizeof(fl_pnp_path) - strlen(fl_pnp_path) - 1);
                 }
-                check_path("PNP perfdata directory", g_pnp_path);
+                check_path("PNP perfdata directory", fl_pnp_path);
             } else if (strcmp(left, "mk_inventory_path") == 0) {
                 strncpy(fl_mk_inventory_path, right,
                         sizeof(fl_mk_inventory_path) - 1);

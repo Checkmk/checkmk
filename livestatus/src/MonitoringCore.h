@@ -53,6 +53,7 @@ public:
     virtual std::string mkeventdSocketPath() = 0;
     virtual std::string mkLogwatchPath() = 0;
     virtual std::string mkInventoryPath() = 0;
+    virtual std::string pnpPath() = 0;
 
     virtual Logger *loggerLivestatus() = 0;
 };

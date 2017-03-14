@@ -30,21 +30,24 @@
 #include <string>
 #include "IntColumn.h"
 #include "nagios.h"
+class MonitoringCore;
 
 class ServiceSpecialIntColumn : public IntColumn {
 public:
     enum class Type { pnp_graph_present };
 
     ServiceSpecialIntColumn(const std::string& name,
-                            const std::string& description, Type ssic_type,
-                            int indirect_offset, int extra_offset,
-                            int extra_extra_offset)
+                            const std::string& description, MonitoringCore* mc,
+                            Type ssic_type, int indirect_offset,
+                            int extra_offset, int extra_extra_offset)
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset)
+        , _mc(mc)
         , _type(ssic_type) {}
     int32_t getValue(void* row, contact* auth_user) override;
 
 private:
+    MonitoringCore* _mc;
     Type _type;
 };
 

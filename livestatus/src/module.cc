@@ -101,7 +101,7 @@ extern int g_disable_statehist_filtering;
 void *g_nagios_handle;
 int g_unix_socket = -1;
 int g_max_fd_ever = 0;
-char g_socket_path[4096];
+static char fl_socket_path[4096];
 char pnp_path_storage[4096];
 char *g_pnp_path = pnp_path_storage;
 static char fl_mk_inventory_path[4096];
@@ -369,13 +369,13 @@ void terminate_threads() {
 
 bool open_unix_socket() {
     struct stat st;
-    if (stat(g_socket_path, &st) == 0) {
-        if (unlink(g_socket_path) == 0) {
+    if (stat(fl_socket_path, &st) == 0) {
+        if (unlink(fl_socket_path) == 0) {
             Debug(fl_logger_nagios) << "removed old socket file "
-                                    << g_socket_path;
+                                    << fl_socket_path;
         } else {
             generic_error ge("cannot remove old socket file " +
-                             string(g_socket_path));
+                             string(fl_socket_path));
             Alert(fl_logger_nagios) << ge;
             return false;
         }
@@ -395,14 +395,15 @@ bool open_unix_socket() {
         Informational(fl_logger_nagios) << ge;
     }
 
-    // Bind it to its address. This creates the file with the name g_socket_path
+    // Bind it to its address. This creates the file with the name
+    // fl_socket_path
     struct sockaddr_un sockaddr;
     sockaddr.sun_family = AF_UNIX;
-    strncpy(sockaddr.sun_path, g_socket_path, sizeof(sockaddr.sun_path));
+    strncpy(sockaddr.sun_path, fl_socket_path, sizeof(sockaddr.sun_path));
     if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
              sizeof(sockaddr)) < 0) {
         generic_error ge("cannot bind UNIX socket to address " +
-                         string(g_socket_path));
+                         string(fl_socket_path));
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
@@ -410,9 +411,9 @@ bool open_unix_socket() {
 
     // Make writable group members (fchmod didn't do nothing for me. Don't know
     // why!)
-    if (0 != chmod(g_socket_path, 0660)) {
+    if (0 != chmod(fl_socket_path, 0660)) {
         generic_error ge("cannot change file permissions for UNIX socket at " +
-                         string(g_socket_path) + " to 0660");
+                         string(fl_socket_path) + " to 0660");
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
@@ -420,19 +421,19 @@ bool open_unix_socket() {
 
     if (0 != listen(g_unix_socket, 3 /* backlog */)) {
         generic_error ge("cannot listen to UNIX socket at " +
-                         string(g_socket_path));
+                         string(fl_socket_path));
         Error(fl_logger_nagios) << ge;
         close(g_unix_socket);
         return false;
     }
 
     Informational(fl_logger_nagios) << "opened UNIX socket at "
-                                    << g_socket_path;
+                                    << fl_socket_path;
     return true;
 }
 
 void close_unix_socket() {
-    unlink(g_socket_path);
+    unlink(fl_socket_path);
     if (g_unix_socket >= 0) {
         close(g_unix_socket);
         g_unix_socket = -1;
@@ -783,7 +784,7 @@ void check_path(const char *name, char *path) {
 
 void livestatus_parse_arguments(const char *args_orig) {
     /* set default socket path */
-    strncpy(g_socket_path, default_socket_path, sizeof(g_socket_path));
+    strncpy(fl_socket_path, default_socket_path, sizeof(fl_socket_path));
 
     /* set default path to our logfile to be in the same path as nagios.log */
     strncpy(fl_logfile_path, log_file,
@@ -811,7 +812,7 @@ void livestatus_parse_arguments(const char *args_orig) {
         char *left = next_token(&part, '=');
         char *right = next_token(&part, 0);
         if (right == nullptr) {
-            strncpy(g_socket_path, left, sizeof(g_socket_path));
+            strncpy(fl_socket_path, left, sizeof(fl_socket_path));
         } else {
             if (strcmp(left, "debug") == 0) {
                 int debug_level = atoi(right);
@@ -961,7 +962,7 @@ void livestatus_parse_arguments(const char *args_orig) {
     }
 
     if (fl_mkeventd_socket_path[0] == 0) {
-        strncpy(fl_mkeventd_socket_path, g_socket_path,
+        strncpy(fl_mkeventd_socket_path, fl_socket_path,
                 sizeof(fl_mkeventd_socket_path));
         char *slash = strrchr(fl_mkeventd_socket_path, '/');
         char *pos = slash == nullptr ? fl_mkeventd_socket_path : (slash + 1);
@@ -970,7 +971,7 @@ void livestatus_parse_arguments(const char *args_orig) {
             &fl_mkeventd_socket_path[sizeof(fl_mkeventd_socket_path)] - pos);
         fl_mkeventd_socket_path[sizeof(fl_mkeventd_socket_path) - 1] = 0;
     }
-    Warning(fl_logger_nagios) << "g_socket_path=[" << g_socket_path
+    Warning(fl_logger_nagios) << "fl_socket_path=[" << fl_socket_path
                               << "], fl_mkeventd_socket_path=["
                               << fl_mkeventd_socket_path << "]";
 
@@ -980,7 +981,7 @@ void livestatus_parse_arguments(const char *args_orig) {
 void omd_advertize() {
     Notice(fl_logger_nagios) << "Livestatus " << VERSION
                              << " by Mathias Kettner. Socket: '"
-                             << g_socket_path << "'";
+                             << fl_socket_path << "'";
     Notice(fl_logger_nagios) << "Please visit us at http://mathias-kettner.de/";
     if (char *omd_site = getenv("OMD_SITE")) {
         Informational(fl_logger_nagios) << "running on OMD site " << omd_site

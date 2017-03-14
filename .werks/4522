@@ -1,0 +1,18 @@
+Title: emka_modules: New checks for EMKA devices which support the ELM2-MIB
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1489478220
+Class: feature
+
+The following check plugins are included:
+emka_modules
+emka_modules.alarm
+emka_modules.handle
+emka_modules.relay
+emka_modules.sensor_humid
+emka_modules.sensor_temp
+emka_modules.sensor_volt
+See check man pages for more information

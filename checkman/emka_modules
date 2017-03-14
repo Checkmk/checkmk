@@ -1,0 +1,20 @@
+title: EMKA Electronic Locking & Monitoring: Modules
+agents: snmp
+catalog: hw/environment/emka
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the modules of EMKA devices which
+ support the ELM2-MIB.
+
+ The service status is OK if the module state is either
+ 'vacant', 'detect modus', 'excluded', 'inactive',
+ 'alarm latched' or 'OK'. It is WARN if 'wait for dynamic address'
+ or 'polling' and CRIT if 'error', 'collision detected',
+ 'timeout' or 'timeout alarm' is reported.
+
+item:
+ The module name.
+
+inventory:
+ One service per module is created.

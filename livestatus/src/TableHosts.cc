@@ -634,7 +634,7 @@ void TableHosts::addColumns(Table *table, const string &prefix,
 
     table->addDynamicColumn(make_unique<DynamicLogwatchFileColumn>(
         prefix + "mk_logwatch_file",
-        "This contents of a logfile fetched via mk_logwatch", table->_logger,
+        "This contents of a logfile fetched via mk_logwatch", table->logger(),
         mc, indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<HostSpecialDoubleColumn>(

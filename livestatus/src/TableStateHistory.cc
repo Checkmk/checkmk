@@ -639,7 +639,7 @@ void TableStateHistory::answerQuery(Query *query) {
 
                 if (tp_state == nullptr) {
                     // This line is broken...
-                    Warning(_logger)
+                    Warning(logger())
                         << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
                         << entry->_complete;
                     free(buffer);

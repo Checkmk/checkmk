@@ -351,8 +351,8 @@ void TableServices::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<ServiceSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
-        ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset, -1,
-        -1));
+        core, ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset,
+        -1, -1));
     table->addColumn(make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
         ServiceSpecialDoubleColumn::Type::staleness, indirect_offset, -1, -1));

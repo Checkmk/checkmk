@@ -27,15 +27,13 @@
 #include "pnp4nagios.h"
 #include <cstddef>
 #include <system_error>
+#include "MonitoringCore.h"
+
 #ifndef CMC
 #include "FileSystem.h"
 #endif
 
 using std::string;
-
-// Note: If the path is not empty, it always ends with '/', see
-// livestatus_parse_arguments.
-extern char* g_pnp_path;
 
 namespace {
 
@@ -56,8 +54,9 @@ string pnp_cleanup(const string& name) {
 
 #ifndef CMC
 // TODO(sp) Merge this with Perfdatabase::getPNPXMLPath
-int pnpgraph_present(const string& host, const string& service) {
-    fs::path pnp_path = g_pnp_path;
+int pnpgraph_present(MonitoringCore* mc, const string& host,
+                     const string& service) {
+    fs::path pnp_path = mc->pnpPath();
     if (pnp_path.empty()) {
         return -1;
     }
@@ -71,9 +70,9 @@ int pnpgraph_present(const string& host, const string& service) {
 
 #ifdef CMC
 // TODO(sp) Merge this with Perfdatabase::getPNPRRDPath
-fs::path rrd_path(const string& host, const string& service,
+fs::path rrd_path(MonitoringCore* mc, const string& host, const string& service,
                   const string& varname) {
-    fs::path pnp_path = g_pnp_path;
+    fs::path pnp_path = mc->pnpPath();
     if (pnp_path.empty()) {
         return "";
     }

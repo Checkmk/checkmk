@@ -142,14 +142,19 @@ sidebar_snapins["search"] = {
 
 
 class QuicksearchMatchPlugin(object):
-    def __init__(self, livestatus_tables, filter_shortname):
+    def __init__(self, supported_livestatus_tables, preferred_livestatus_table, filter_shortname):
         self._filter_shortname  = filter_shortname
-        self._livestatus_tables = livestatus_tables
+        self._supported_livestatus_tables = supported_livestatus_tables
+        self._preferred_livestatus_table = preferred_livestatus_table
         super(QuicksearchMatchPlugin, self).__init__()
 
 
     def get_filter_shortname(self):
         return self._filter_shortname
+
+
+    def get_preferred_livestatus_table(self):
+        return self._preferred_livestatus_table
 
 
     def is_filter_set(self, used_filters):
@@ -158,7 +163,7 @@ class QuicksearchMatchPlugin(object):
 
     def is_used_for_table(self, livestatus_table, used_filters):
         # Check if this filters handles the table at all
-        if livestatus_table not in self._livestatus_tables:
+        if livestatus_table not in self._supported_livestatus_tables:
             return False
 
         if self.get_filter_shortname() not in used_filters:
@@ -199,6 +204,7 @@ class QuicksearchMatchPlugin(object):
 class GroupMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self, group_type = None, filter_shortname = None):
         super(GroupMatchPlugin, self).__init__(["%sgroups" % group_type, "%ss" % group_type, "services"],
+                                                "%sgroups" % group_type,
                                                 filter_shortname)
         self._group_type = group_type
 
@@ -271,7 +277,7 @@ class GroupMatchPlugin(QuicksearchMatchPlugin):
 
 class ServiceMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self):
-        super(ServiceMatchPlugin, self).__init__(["services"], "s")
+        super(ServiceMatchPlugin, self).__init__(["services"], "services", "s")
 
 
     def get_match_topic(self):
@@ -309,7 +315,7 @@ class ServiceMatchPlugin(QuicksearchMatchPlugin):
 
 class HostMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self, livestatus_field = None, filter_shortname = None):
-        super(HostMatchPlugin, self).__init__(["hosts", "services"], filter_shortname)
+        super(HostMatchPlugin, self).__init__(["hosts", "services"], "hosts", filter_shortname)
         self._livestatus_field = livestatus_field # address, name or alias
 
 
@@ -386,7 +392,7 @@ class HostMatchPlugin(QuicksearchMatchPlugin):
 
 class HosttagMatchPlugin(QuicksearchMatchPlugin):
     def __init__(self):
-        super(HosttagMatchPlugin, self).__init__(["hosts", "services"], "tg")
+        super(HosttagMatchPlugin, self).__init__(["hosts", "services"], "hosts", "tg")
 
 
     def _get_hosttag_dict(self):

@@ -853,34 +853,24 @@ class LivestatusSearchConductor(object):
         # Hostgroups -> Hosts -> Services
         # Servicegroups -> Services
 
-        # TODO: This is currently hardcoded
-        # So whenever a new filter is introduced this block
-        # requires an update too..
+        preferred_tables = []
+        for shortname in self._used_filters.keys():
+            plugin = self._get_plugin_with_shortname(shortname)
+            preferred_tables.append(plugin.get_preferred_livestatus_table())
+
+
         table_to_query = ""
-
-        if "hg" in self._used_filters:
-            table_to_query = "hostgroups"
-
-        if "h" in self._used_filters:
-            table_to_query = "hosts"
-
-        if "ad" in self._used_filters:
-            table_to_query = "hosts"
-
-        if "al" in self._used_filters:
-            table_to_query = "hosts"
-
-        if "tg" in self._used_filters:
-            table_to_query = "hosts"
-
-        if "sg" in self._used_filters:
-            if table_to_query in ["hosts", "hostgroups"]:
+        if "services" in preferred_tables:
+            table_to_query = "services"
+        elif "servicegroups" in preferred_tables:
+            if "hosts" in preferred_tables or "hostgroups" in preferred_tables:
                 table_to_query = "services"
             else:
                 table_to_query = "servicegroups"
-
-        if "s" in self._used_filters:
-            table_to_query = "services"
+        elif "hosts" in preferred_tables:
+            table_to_query = "hosts"
+        elif "hostgroups" in preferred_tables:
+            table_to_query = "hostgroups"
 
         self._livestatus_table = table_to_query
 

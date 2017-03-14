@@ -72,7 +72,7 @@ unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
         int _offset;
     };
 
-    return make_unique<ContainsContactGroup>(_core->find_contactgroup(name),
+    return make_unique<ContainsContactGroup>(_mc->find_contactgroup(name),
                                              _offset);
 }
 

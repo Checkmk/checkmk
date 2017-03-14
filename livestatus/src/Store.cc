@@ -52,31 +52,31 @@ using std::lock_guard;
 using std::mutex;
 using std::string;
 
-Store::Store(MonitoringCore *core)
-    : _core(core)
-    , _logger(core->loggerLivestatus())
+Store::Store(MonitoringCore *mc)
+    : _mc(mc)
+    , _logger(mc->loggerLivestatus())
     , _log_cache(_logger, _commands_holder, g_max_cached_messages)
     , _table_columns(_logger)
     , _table_commands(_commands_holder, _logger)
-    , _table_comments(_downtimes, _comments, core)
-    , _table_contactgroups(_core)
+    , _table_comments(_downtimes, _comments, mc)
+    , _table_contactgroups(mc)
     , _table_contacts(_logger)
-    , _table_downtimes(_downtimes, _comments, core)
-    , _table_eventconsoleevents(core, _downtimes, _comments)
-    , _table_eventconsolehistory(core, _downtimes, _comments)
-    , _table_eventconsolereplication(core)
-    , _table_eventconsolerules(core)
-    , _table_eventconsolestatus(core)
+    , _table_downtimes(_downtimes, _comments, mc)
+    , _table_eventconsoleevents(mc, _downtimes, _comments)
+    , _table_eventconsolehistory(mc, _downtimes, _comments)
+    , _table_eventconsolereplication(mc)
+    , _table_eventconsolerules(mc)
+    , _table_eventconsolestatus(mc)
     , _table_hostgroups(_logger)
-    , _table_hosts(_downtimes, _comments, core)
-    , _table_hostsbygroup(_downtimes, _comments, core)
-    , _table_log(&_log_cache, _downtimes, _comments, core)
+    , _table_hosts(_downtimes, _comments, mc)
+    , _table_hostsbygroup(_downtimes, _comments, mc)
+    , _table_log(&_log_cache, _downtimes, _comments, mc)
     , _table_servicegroups(_logger)
-    , _table_services(_downtimes, _comments, core)
-    , _table_servicesbygroup(_downtimes, _comments, core)
-    , _table_servicesbyhostgroup(_downtimes, _comments, core)
-    , _table_statehistory(&_log_cache, _downtimes, _comments, core)
-    , _table_status(_logger, core)
+    , _table_services(_downtimes, _comments, mc)
+    , _table_servicesbygroup(_downtimes, _comments, mc)
+    , _table_servicesbyhostgroup(_downtimes, _comments, mc)
+    , _table_statehistory(&_log_cache, _downtimes, _comments, mc)
+    , _table_status(_logger, mc)
     , _table_timeperiods(_logger) {
     addTable(&_table_columns);
     addTable(&_table_commands);
@@ -244,18 +244,18 @@ bool Store::handleCommand(const string &command) {
         if (parts.size() != 3) {
             Warning(_logger) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
         } else {
-            mk_logwatch_acknowledge(_logger, _core->mkLogwatchPath(), parts[1],
+            mk_logwatch_acknowledge(_logger, _mc->mkLogwatchPath(), parts[1],
                                     parts[2]);
         }
         return true;
     }
 
     if (starts_with(command_name, "EC_")) {
-        if (!_core->mkeventdEnabled()) {
+        if (!_mc->mkeventdEnabled()) {
             Notice(_logger) << "event console disabled, ignoring command '"
                             << command << "'";
         } else {
-            ECTableConnection(_logger, _core->mkeventdSocketPath(),
+            ECTableConnection(_logger, _mc->mkeventdSocketPath(),
                               "COMMAND " + command.substr(3))
                 .run();
         }

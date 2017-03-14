@@ -41,10 +41,10 @@ using std::vector;
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(MonitoringCore *core, string table_name, Query *query)
-        : EventConsoleConnection(core->loggerLivestatus(),
-                                 core->mkeventdSocketPath())
-        , _core(core)
+    ECTableConnection(MonitoringCore *mc, string table_name, Query *query)
+        : EventConsoleConnection(mc->loggerLivestatus(),
+                                 mc->mkeventdSocketPath())
+        , _mc(mc)
         , _table_name(move(table_name))
         , _query(query) {}
 
@@ -85,27 +85,27 @@ private:
                 auto it = row._map.find("event_host");
                 row._host = it == row._map.end()
                                 ? nullptr
-                                : _core->getHostByDesignation(it->second);
+                                : _mc->getHostByDesignation(it->second);
                 _query->processDataset(&row);
             }
         } while (true);
         return true;
     }
 
-    MonitoringCore *_core;
+    MonitoringCore *_mc;
     std::string _table_name;
     Query *_query;
 };
 }  // namespace
 
-TableEventConsole::TableEventConsole(MonitoringCore *core)
-    : Table(core->loggerLivestatus()), _core(core) {}
+TableEventConsole::TableEventConsole(MonitoringCore *mc)
+    : Table(mc->loggerLivestatus()), _mc(mc) {}
 
 void TableEventConsole::answerQuery(Query *query) {
-    if (_core->mkeventdEnabled()) {
+    if (_mc->mkeventdEnabled()) {
         try {
             // skip "eventconsole" prefix :-P
-            ECTableConnection(_core, name().substr(12), query).run();
+            ECTableConnection(_mc, name().substr(12), query).run();
         } catch (const generic_error &ge) {
             query->invalidRequest(ge.what());
         }
@@ -128,8 +128,8 @@ bool TableEventConsole::isAuthorizedForEvent(contact *ctc, void *data) {
         isAuthorizedForEventViaHost(c, r, result) ||
             isAuthorizedForEventViaContactGroups(c, r, result);
     } else {
-        Error(_core->loggerLivestatus()) << "unknown precedence '" << precedence
-                                         << "' in table " << name();
+        Error(_mc->loggerLivestatus()) << "unknown precedence '" << precedence
+                                       << "' in table " << name();
         result = false;
     }
     return result;
@@ -143,8 +143,8 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
         return false;
     }
     for (const auto &name : col->getValue(row)) {
-        if (_core->is_contact_member_of_contactgroup(
-                _core->find_contactgroup(name), ctc)) {
+        if (_mc->is_contact_member_of_contactgroup(_mc->find_contactgroup(name),
+                                                   ctc)) {
             return (result = true, true);
         }
     }
@@ -154,7 +154,7 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
 bool TableEventConsole::isAuthorizedForEventViaHost(
     MonitoringCore::Contact *ctc, Row *row, bool &result) {
     if (MonitoringCore::Host *hst = row->_host) {
-        return (result = _core->host_has_contact(hst, ctc), true);
+        return (result = _mc->host_has_contact(hst, ctc), true);
     }
     return false;
 }

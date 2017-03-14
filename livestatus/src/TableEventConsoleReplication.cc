@@ -32,10 +32,10 @@
 using std::make_unique;
 using std::string;
 
-TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *core)
-    : Table(core->loggerLivestatus()) {
+TableEventConsoleReplication::TableEventConsoleReplication(MonitoringCore *mc)
+    : Table(mc->loggerLivestatus()) {
     addDynamicColumn(make_unique<DynamicEventConsoleReplicationColumn>(
-        "value", "The replication value", core, -1, -1, -1));
+        "value", "The replication value", mc, -1, -1, -1));
 }
 
 string TableEventConsoleReplication::name() const {

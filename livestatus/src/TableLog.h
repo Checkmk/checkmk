@@ -62,7 +62,7 @@ public:
     std::shared_ptr<Column> column(std::string colname) override;
 
 private:
-    MonitoringCore *_core;
+    MonitoringCore *_mc;
     LogCache *_log_cache;
     bool answerQuery(Query *, Logfile *, time_t, time_t);
 };

@@ -964,7 +964,7 @@ void livestatus_parse_arguments(const char *args_orig) {
         char *pos = slash == nullptr ? g_mkeventd_socket_path : (slash + 1);
         strncpy(
             pos, "mkeventd/status",
-            &g_mkeventd_socket_path[sizeof(g_mkeventd_socket_path)] - slash);
+            &g_mkeventd_socket_path[sizeof(g_mkeventd_socket_path)] - pos);
         g_mkeventd_socket_path[sizeof(g_mkeventd_socket_path) - 1] = 0;
     }
     Warning(fl_logger_nagios) << "g_socket_path=[" << g_socket_path

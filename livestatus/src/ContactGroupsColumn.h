@@ -36,14 +36,14 @@ class RowRenderer;
 class ContactGroupsColumn : public ListColumn {
 public:
     ContactGroupsColumn(const std::string &name, const std::string &description,
-                        MonitoringCore *core, int offset, int indirect_offset,
+                        MonitoringCore *mc, int offset, int indirect_offset,
                         int extra_offset, int extra_extra_offset)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset)
-        , _core(core)
+        , _mc(mc)
         , _offset(offset) {
 #ifdef CMC
-        (void)_core;
+        (void)_mc;
         (void)_offset;
 #endif
     }
@@ -52,7 +52,7 @@ public:
     bool isEmpty(void *data) override;
 
 private:
-    MonitoringCore *_core;
+    MonitoringCore *_mc;
     int _offset;
 };
 

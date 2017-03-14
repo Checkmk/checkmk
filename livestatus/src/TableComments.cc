@@ -45,8 +45,8 @@ using std::string;
 
 TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
                              const DowntimesOrComments &comments_holder,
-                             MonitoringCore *core)
-    : Table(core->loggerLivestatus()), _holder(comments_holder) {
+                             MonitoringCore *mc)
+    : Table(mc->loggerLivestatus()), _holder(comments_holder) {
     addColumn(make_unique<OffsetSStringColumn>(
         "author", "The contact that entered the comment",
         DANGEROUS_OFFSETOF(Comment, _author_name), -1, -1, -1));
@@ -85,10 +85,10 @@ TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
         DANGEROUS_OFFSETOF(Comment, _expire_time), -1, -1, -1));
 
     TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Comment, _host),
-                           -1, downtimes_holder, comments_holder, core);
+                           -1, downtimes_holder, comments_holder, mc);
     TableServices::addColumns(
         this, "service_", DANGEROUS_OFFSETOF(Comment, _service),
-        false /* no hosts table */, downtimes_holder, comments_holder, core);
+        false /* no hosts table */, downtimes_holder, comments_holder, mc);
 }
 
 string TableComments::name() const { return "comments"; }

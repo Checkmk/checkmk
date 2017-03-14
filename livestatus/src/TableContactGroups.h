@@ -33,7 +33,7 @@ class Query;
 
 class TableContactGroups : public Table {
 public:
-    explicit TableContactGroups(MonitoringCore *core);
+    explicit TableContactGroups(MonitoringCore *mc);
 
     std::string name() const override;
     std::string namePrefix() const override;
@@ -41,7 +41,7 @@ public:
     void *findObject(const std::string &objectspec) override;
 
 private:
-    MonitoringCore *_core;
+    MonitoringCore *_mc;
 };
 
 #endif  // TableContactGroups_h

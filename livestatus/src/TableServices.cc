@@ -60,9 +60,9 @@ using std::string;
 
 TableServices::TableServices(const DowntimesOrComments &downtimes_holder,
                              const DowntimesOrComments &comments_holder,
-                             MonitoringCore *core)
-    : Table(core->loggerLivestatus()) {
-    addColumns(this, "", -1, true, downtimes_holder, comments_holder, core);
+                             MonitoringCore *mc)
+    : Table(mc->loggerLivestatus()) {
+    addColumns(this, "", -1, true, downtimes_holder, comments_holder, mc);
 }
 
 string TableServices::name() const { return "services"; }
@@ -74,7 +74,7 @@ void TableServices::addColumns(Table *table, const string &prefix,
                                int indirect_offset, bool add_hosts,
                                const DowntimesOrComments &downtimes_holder,
                                const DowntimesOrComments &comments_holder,
-                               MonitoringCore *core) {
+                               MonitoringCore *mc) {
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
     table->addColumn(make_unique<OffsetStringColumn>(
@@ -351,7 +351,7 @@ void TableServices::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<ServiceSpecialIntColumn>(
         prefix + "pnpgraph_present",
         "Whether there is a PNP4Nagios graph present for this service (0/1)",
-        core, ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset,
+        mc, ServiceSpecialIntColumn::Type::pnp_graph_present, indirect_offset,
         -1, -1));
     table->addColumn(make_unique<ServiceSpecialDoubleColumn>(
         prefix + "staleness", "The staleness indicator for this service",
@@ -438,7 +438,7 @@ void TableServices::addColumns(Table *table, const string &prefix,
     if (add_hosts) {
         TableHosts::addColumns(table, "host_",
                                DANGEROUS_OFFSETOF(service, host_ptr), -1,
-                               downtimes_holder, comments_holder, core);
+                               downtimes_holder, comments_holder, mc);
     }
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
@@ -462,7 +462,7 @@ void TableServices::addColumns(Table *table, const string &prefix,
         -1));
     table->addColumn(make_unique<ContactGroupsColumn>(
         prefix + "contact_groups",
-        "A list of all contact groups this service is in", core,
+        "A list of all contact groups this service is in", mc,
         DANGEROUS_OFFSETOF(service, contact_groups), indirect_offset, -1, -1));
 
     table->addColumn(make_unique<MetricsColumn>(

@@ -41,7 +41,7 @@ using std::string;
 void LogwatchListColumn::output(void *row, RowRenderer &r,
                                 contact * /* auth_user */) {
     ListRenderer l(r);
-    auto logwatch_path = _core->mkLogwatchPath();
+    auto logwatch_path = _mc->mkLogwatchPath();
     if (logwatch_path.empty()) {
         return;
     }

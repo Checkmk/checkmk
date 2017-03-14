@@ -91,7 +91,7 @@ public:
     void addFlappingToStatehistCache(Object *, bool started);
     Logger *logger() const { return _logger; }
 #else
-    explicit Store(MonitoringCore *core);
+    explicit Store(MonitoringCore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
 
     void registerDowntime(nebstruct_downtime_data *);
@@ -102,7 +102,7 @@ private:
 #ifdef CMC
     Core *_core;
 #else
-    MonitoringCore *_core;
+    MonitoringCore *_mc;
 #endif
     Logger *const _logger;
 #ifndef CMC

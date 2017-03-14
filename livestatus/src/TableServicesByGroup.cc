@@ -43,10 +43,10 @@ struct servicebygroup {
 
 TableServicesByGroup::TableServicesByGroup(
     const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder, MonitoringCore *core)
-    : Table(core->loggerLivestatus()) {
+    const DowntimesOrComments &comments_holder, MonitoringCore *mc)
+    : Table(mc->loggerLivestatus()) {
     TableServices::addColumns(this, "", -1, true, downtimes_holder,
-                              comments_holder, core);
+                              comments_holder, mc);
     TableServiceGroups::addColumns(
         this, "servicegroup_",
         DANGEROUS_OFFSETOF(servicebygroup, _servicegroup));

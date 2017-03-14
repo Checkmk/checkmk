@@ -45,8 +45,8 @@ using std::string;
 
 TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
                                const DowntimesOrComments &comments_holder,
-                               MonitoringCore *core)
-    : Table(core->loggerLivestatus()), _holder(downtimes_holder) {
+                               MonitoringCore *mc)
+    : Table(mc->loggerLivestatus()), _holder(downtimes_holder) {
     addColumn(make_unique<OffsetSStringColumn>(
         "author", "The contact that scheduled the downtime",
         DANGEROUS_OFFSETOF(Downtime, _author_name), -1, -1, -1));
@@ -86,10 +86,10 @@ TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
         DANGEROUS_OFFSETOF(Downtime, _triggered_by), -1, -1, -1));
 
     TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Downtime, _host),
-                           -1, downtimes_holder, comments_holder, core);
+                           -1, downtimes_holder, comments_holder, mc);
     TableServices::addColumns(
         this, "service_", DANGEROUS_OFFSETOF(Downtime, _service),
-        false /* no hosts table */, downtimes_holder, comments_holder, core);
+        false /* no hosts table */, downtimes_holder, comments_holder, mc);
 }
 
 string TableDowntimes::name() const { return "downtimes"; }

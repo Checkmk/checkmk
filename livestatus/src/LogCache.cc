@@ -66,9 +66,8 @@ void LogCache::setMaxCachedMessages(unsigned long m) {
 
 LogCache::~LogCache() { forgetLogfiles(); }
 
-bool LogCache::logCachePreChecks(MonitoringCore *core) {
-    if (_logfiles.empty() ||
-        core->last_logfile_rotation() > _last_index_update) {
+bool LogCache::logCachePreChecks(MonitoringCore *mc) {
+    if (_logfiles.empty() || mc->last_logfile_rotation() > _last_index_update) {
         forgetLogfiles();
         updateLogfileIndex();
     }

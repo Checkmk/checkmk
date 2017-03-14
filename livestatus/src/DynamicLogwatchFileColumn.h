@@ -37,17 +37,17 @@ class DynamicLogwatchFileColumn : public DynamicColumn {
 public:
     DynamicLogwatchFileColumn(const std::string &name,
                               const std::string &description, Logger *logger,
-                              MonitoringCore *core, int indirect_offset,
+                              MonitoringCore *mc, int indirect_offset,
                               int extra_offset, int extra_extra_offset)
         : DynamicColumn(name, description, logger, indirect_offset,
                         extra_offset, extra_extra_offset)
-        , _core(core) {}
+        , _mc(mc) {}
     virtual ~DynamicLogwatchFileColumn() {}
     std::unique_ptr<Column> createColumn(const std::string &name,
                                          const std::string &arguments) override;
 
 private:
-    MonitoringCore *_core;
+    MonitoringCore *_mc;
 };
 
 #endif  // DynamicLogwatchFileColumn_h

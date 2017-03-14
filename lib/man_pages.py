@@ -79,6 +79,7 @@ catalog_titles = {
             "stulz"        : "STULZ",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
+            "emka"         : "EMKA Electronic Locking & Monitoring",
         "other"       : "Other devices",
         "time"        : "Clock Devices",
             "meinberg"   : "Meinberg",

@@ -1,0 +1,11 @@
+Title: brocade_fcport: Fix usage of port name during discovery
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b4
+Date: 1489479514
+Class: fix
+
+The rule allowing to use the port name in the service description never took
+effect, due to no port name being found. This has been fixed.

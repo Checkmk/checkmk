@@ -65,7 +65,7 @@ using std::string;
 TableHosts::TableHosts(const DowntimesOrComments &downtimes_holder,
                        const DowntimesOrComments &comments_holder,
                        MonitoringCore *mc)
-    : Table(mc->loggerLivestatus()) {
+    : Table(mc) {
     addColumns(this, "", -1, -1, downtimes_holder, comments_holder, mc);
 }
 

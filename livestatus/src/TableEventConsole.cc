@@ -98,8 +98,7 @@ private:
 };
 }  // namespace
 
-TableEventConsole::TableEventConsole(MonitoringCore *mc)
-    : Table(mc->loggerLivestatus()), _mc(mc) {}
+TableEventConsole::TableEventConsole(MonitoringCore *mc) : Table(mc), _mc(mc) {}
 
 void TableEventConsole::answerQuery(Query *query) {
     if (_mc->mkeventdEnabled()) {

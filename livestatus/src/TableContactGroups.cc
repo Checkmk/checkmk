@@ -37,7 +37,7 @@ using std::string;
 extern contactgroup *contactgroup_list;
 
 TableContactGroups::TableContactGroups(MonitoringCore *mc)
-    : Table(mc->loggerLivestatus()), _mc(mc) {
+    : Table(mc), _mc(mc) {
     addColumn(make_unique<OffsetStringColumn>(
         "name", "The name of the contactgroup",
         DANGEROUS_OFFSETOF(contactgroup, group_name), -1, -1, -1));

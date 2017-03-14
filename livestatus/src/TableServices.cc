@@ -36,7 +36,6 @@
 #include "DownCommColumn.h"
 #include "FixedIntColumn.h"
 #include "MetricsColumn.h"
-#include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetPerfdataColumn.h"
@@ -61,7 +60,7 @@ using std::string;
 TableServices::TableServices(const DowntimesOrComments &downtimes_holder,
                              const DowntimesOrComments &comments_holder,
                              MonitoringCore *mc)
-    : Table(mc->loggerLivestatus()) {
+    : Table(mc) {
     addColumns(this, "", -1, true, downtimes_holder, comments_holder, mc);
 }
 

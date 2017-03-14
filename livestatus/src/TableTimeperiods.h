@@ -28,12 +28,12 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Table.h"
-class Logger;
+class MonitoringCore;
 class Query;
 
 class TableTimeperiods : public Table {
 public:
-    explicit TableTimeperiods(Logger *logger);
+    explicit TableTimeperiods(MonitoringCore *mc);
 
     std::string name() const override;
     std::string namePrefix() const override;

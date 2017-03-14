@@ -42,7 +42,7 @@ using std::to_string;
 
 extern contact *contact_list;
 
-TableContacts::TableContacts(Logger *logger) : Table(logger) {
+TableContacts::TableContacts(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", -1);
 }
 

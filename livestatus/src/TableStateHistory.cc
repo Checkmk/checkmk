@@ -38,7 +38,6 @@
 #include "HostServiceState.h"
 #include "LogEntry.h"
 #include "Logger.h"
-#include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
@@ -110,7 +109,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
 #endif
                                      ,
                                      MonitoringCore *mc)
-    : Table(mc->loggerLivestatus()), _mc(mc), _log_cache(log_cache) {
+    : Table(mc), _mc(mc), _log_cache(log_cache) {
     addColumn(make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (seconds since 1/1/1970)",
         DANGEROUS_OFFSETOF(HostServiceState, _time), -1, -1, -1));

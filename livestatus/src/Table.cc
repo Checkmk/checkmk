@@ -28,6 +28,7 @@
 #include "Column.h"
 #include "DynamicColumn.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "StringUtils.h"
 
 using mk::starts_with;
@@ -36,7 +37,7 @@ using std::string;
 using std::shared_ptr;
 using std::unique_ptr;
 
-Table::Table(Logger *logger) : _logger(logger) {}
+Table::Table(MonitoringCore *mc) : _mc(mc) {}
 
 Table::~Table() = default;
 
@@ -110,4 +111,4 @@ bool Table::isAuthorized(contact * /*unused*/, void * /*unused*/) {
 
 void *Table::findObject(const string & /*unused*/) { return nullptr; }
 
-Logger *Table::logger() const { return _logger; }
+Logger *Table::logger() const { return _mc->loggerLivestatus(); }

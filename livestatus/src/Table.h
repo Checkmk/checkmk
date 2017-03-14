@@ -35,6 +35,7 @@
 class Column;
 class DynamicColumn;
 class Logger;
+class MonitoringCore;
 class Query;
 
 // NOTE: This macro leads to undefined behaviour for non-POD/non-standard-layout
@@ -45,7 +46,7 @@ class Query;
 /// A table-like view for some underlying data, exposed via LQL.
 class Table {
 public:
-    explicit Table(Logger *logger);
+    explicit Table(MonitoringCore *mc);
     virtual ~Table();
 
     void addColumn(std::unique_ptr<Column> col);
@@ -95,7 +96,7 @@ public:
     Logger *logger() const;
 
 private:
-    Logger *const _logger;
+    MonitoringCore *_mc;
 
     std::unique_ptr<Column> dynamicColumn(const std::string &name,
                                           const std::string &rest);

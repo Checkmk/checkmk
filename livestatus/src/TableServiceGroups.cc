@@ -39,7 +39,7 @@ Ethan: please help me here: how should this be code to be
 portable? */
 extern servicegroup *servicegroup_list;
 
-TableServiceGroups::TableServiceGroups(Logger *logger) : Table(logger) {
+TableServiceGroups::TableServiceGroups(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", -1);
 }
 

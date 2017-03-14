@@ -28,7 +28,6 @@
 #include "Column.h"
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"  // IWYU pragma: keep
-#include "MonitoringCore.h"
 #include "OffsetBoolColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
@@ -46,7 +45,7 @@ using std::string;
 TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
                              const DowntimesOrComments &comments_holder,
                              MonitoringCore *mc)
-    : Table(mc->loggerLivestatus()), _holder(comments_holder) {
+    : Table(mc), _holder(comments_holder) {
     addColumn(make_unique<OffsetSStringColumn>(
         "author", "The contact that entered the comment",
         DANGEROUS_OFFSETOF(Comment, _author_name), -1, -1, -1));

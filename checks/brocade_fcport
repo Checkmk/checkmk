@@ -144,7 +144,7 @@ def inventory_brocade_fcport(info):
                 admstate = int(line[3])
             except: # missing vital data. Skipping this port
                 continue
-            portname = line[13]
+            portname = line[14]
             is_isl = line[0] in isl_ports
 
             if admstate in admstates and \

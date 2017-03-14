@@ -675,13 +675,17 @@ def get_online_user_ids():
 def split_dict(d, keylist, positive):
     return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
 
-def save_users(profiles):
+
+def determine_save_users_data(profiles):
+    import copy
+    updated_profiles = copy.deepcopy(profiles)
+
     # Add custom macros
     core_custom_macros =  [ k for k,o in user_attributes.items() if o.get('add_custom_macro') ]
-    for user in profiles.keys():
+    for user in updated_profiles.keys():
         for macro in core_custom_macros:
-            if macro in profiles[user]:
-                profiles[user]['_'+macro] = profiles[user][macro]
+            if macro in updated_profiles[user]:
+                updated_profiles[user]['_'+macro] = updated_profiles[user][macro]
 
     multisite_custom_values = [ k for k,v in user_attributes.items() if v["domain"] == "multisite" ]
 
@@ -711,38 +715,25 @@ def save_users(profiles):
         "connector",
     ] + multisite_custom_values
 
-    # Remove multisite keys in contacts.
-    contacts = dict(
-        e for e in
-            [ (id, split_dict(user, non_contact_keys + non_contact_attributes(user.get('connector')), False))
-               for (id, user)
-               in profiles.items() ])
-
-    # Only allow explicitely defined attributes to be written to multisite config
-    users = {}
-    for uid, profile in profiles.items():
-        users[uid] = dict([ (p, val)
-                            for p, val in profile.items()
-                            if p in multisite_keys + multisite_attributes(profile.get('connector'))])
+    return non_contact_keys, multisite_keys, updated_profiles
 
 
-    # Check_MK's monitoring contacts
-    store.save_to_mk_file(root_dir + "contacts.mk", "contacts", contacts)
-
-    # GUI specific user configuration
-    store.save_to_mk_file(multisite_dir + "users.mk", "multisite_users", users)
+def save_users(profiles):
+    write_contacts_and_users_file(profiles)
 
     # Execute user connector save hooks
     hook_save(profiles)
 
+    non_contact_keys, multisite_keys, updated_profiles = determine_save_users_data(profiles)
+
     # Write out the users serials
     serials = ""
-    for user_id, user in profiles.items():
+    for user_id, user in updated_profiles.items():
         serials += '%s:%d\n' % (make_utf8(user_id), user.get('serial', 0))
     store.save_file('%s/auth.serials' % os.path.dirname(cmk.paths.htpasswd_file), serials)
 
     # Write user specific files
-    for user_id, user in profiles.items():
+    for user_id, user in updated_profiles.items():
         user_dir = cmk.paths.var_dir + "/web/" + user_id.encode("utf-8")
         make_nagios_directory(user_dir)
 
@@ -785,7 +776,7 @@ def save_users(profiles):
     ]
     dir = cmk.paths.var_dir + "/web"
     for user_dir in os.listdir(cmk.paths.var_dir + "/web"):
-        if user_dir not in ['.', '..'] and user_dir.decode("utf-8") not in profiles:
+        if user_dir not in ['.', '..'] and user_dir.decode("utf-8") not in updated_profiles:
             entry = dir + "/" + user_dir
             if not os.path.isdir(entry):
                 continue
@@ -800,10 +791,43 @@ def save_users(profiles):
     release_lock(root_dir + "contacts.mk")
 
     # populate the users cache
-    html.set_cache('users', profiles)
+    html.set_cache('users', updated_profiles)
 
     # Call the users_saved hook
-    hooks.call("users-saved", profiles)
+    hooks.call("users-saved", updated_profiles)
+
+
+def write_contacts_and_users_file(profiles, custom_default_config_dir = None):
+    non_contact_keys, multisite_keys, updated_profiles = determine_save_users_data(profiles)
+
+    if custom_default_config_dir:
+        check_mk_config_dir  = "%s/conf.d/wato" %      custom_default_config_dir
+        multisite_config_dir = "%s/multisite.d/wato" % custom_default_config_dir
+    else:
+        check_mk_config_dir  = "%s/conf.d/wato" %      cmk.paths.default_config_dir
+        multisite_config_dir = "%s/multisite.d/wato" % cmk.paths.default_config_dir
+
+
+    # Remove multisite keys in contacts.
+    contacts = dict(
+        e for e in
+            [ (id, split_dict(user, non_contact_keys + non_contact_attributes(user.get('connector')), False))
+               for (id, user)
+               in updated_profiles.items() ])
+
+    # Only allow explicitely defined attributes to be written to multisite config
+    users = {}
+    for uid, profile in updated_profiles.items():
+        users[uid] = dict([ (p, val)
+                            for p, val in profile.items()
+                            if p in multisite_keys + multisite_attributes(profile.get('connector'))])
+
+
+    # Check_MK's monitoring contacts
+    store.save_to_mk_file("%s/%s" % (check_mk_config_dir, "contacts.mk"), "contacts", contacts)
+
+    # GUI specific user configuration
+    store.save_to_mk_file("%s/%s" % (multisite_config_dir, "users.mk"), "multisite_users", users)
 
 
 def rewrite_users():

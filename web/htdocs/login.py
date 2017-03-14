@@ -97,11 +97,13 @@ def load_secret():
     # current auth cookies which means that all logged in users will need to
     # renew their login after update.
     if secret == '' or len(secret) == 32:
-        secret = get_random_string(256)
+        secret = generate_secret()
         file(secret_path, 'w').write(secret)
 
     return secret
 
+def generate_secret():
+    return get_random_string(256)
 
 # Load the password serial of the user. This serial identifies the current config
 # state of the user account. If either the password is changed or the account gets

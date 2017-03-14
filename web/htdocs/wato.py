@@ -107,6 +107,7 @@ if cmk.is_managed_edition():
 else:
     managed = None
 
+
 try:
     import simplejson as json
 except ImportError:
@@ -353,8 +354,8 @@ class WatoMode(object):
 
 
     @classmethod
-    def create_mode_function(self):
-        mode_object = self()
+    def create_mode_function(cls):
+        mode_object = cls()
         def mode_function(phase):
             if phase == "title":
                 return mode_object.title()
@@ -2703,6 +2704,8 @@ def ajax_diag_host():
         html.write_text("1 %s" % _("Exception: %s") % traceback.format_exc())
 
 #.
+
+
 #   .--Discovery & Services------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
@@ -3460,7 +3463,6 @@ class ModeDiscovery(WatoMode):
 
 class ModeFirstDiscovery(ModeDiscovery):
     pass
-
 
 
 class ModeAjaxExecuteCheck(WatoWebApiMode):
@@ -6921,93 +6923,62 @@ def mode_edit_configvar(phase, what = 'globalvars'):
 #   | Mode for editing host-, service- and contact groups                  |
 #   '----------------------------------------------------------------------'
 
+class ModeGroups(WatoMode):
+    type_name = None
 
-def mode_groups(phase, what):
-    if what == "host":
-        what_name = _("host groups")
-    elif what == "service":
-        what_name = _("service groups")
-    elif what == "contact":
-        what_name = _("contact groups")
+    def __init__(self):
+        super(ModeGroups, self).__init__()
+        self._load_groups()
 
-    if phase == "title":
-        return what_name.title()
 
-    elif phase == "buttons":
+    def _load_groups(self):
+        all_groups = userdb.load_group_information()
+        self._groups = all_groups.setdefault(self.type_name, {})
+
+
+    def buttons(self):
         global_buttons()
-        if what == "host":
-            html.context_button(_("Service groups"), folder_preserving_link([("mode", "service_groups")]), "hostgroups")
-            html.context_button(_("New host group"), folder_preserving_link([("mode", "edit_host_group")]), "new")
-        elif what == "service":
-            html.context_button(_("Host groups"), folder_preserving_link([("mode", "host_groups")]), "servicegroups")
-            html.context_button(_("New service group"), folder_preserving_link([("mode", "edit_service_group")]), "new")
-        else:
-            html.context_button(_("New contact group"), folder_preserving_link([("mode", "edit_contact_group")]), "new")
-        if what == "contact":
-            html.context_button(_("Rules"), folder_preserving_link([("mode", "rulesets"),
-                ("filled_in", "search"), ("search", _("contact group"))]), "rulesets")
-        else:
-            varname = what + "_groups"
-            html.context_button(_("Rules"), folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)]), "rulesets")
-        return
 
-    all_groups = userdb.load_group_information()
-    groups = all_groups.get(what, {})
 
-    if phase == "action":
+    def action(self):
         if html.var('_delete'):
             delname = html.var("_delete")
-
-            usages = find_usages_of_group(delname, what)
+            usages = find_usages_of_group(delname, self.type_name)
 
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % \
-                            (_("You cannot delete this %s group.") % what,
+                            (_("You cannot delete this %s group.") % self.type_name,
                              _("It is still in use by"))
                 for title, link in usages:
                     message += '<li><a href="%s">%s</a></li>\n' % (link, title)
                 message += "</ul>"
                 raise MKUserError(None, message)
 
-            confirm_txt = _('Do you really want to delete the %s group "%s"?') % (what, delname)
+            confirm_txt = _('Do you really want to delete the %s group "%s"?') % (self.type_name, delname)
 
             c = wato_confirm(_("Confirm deletion of group \"%s\"") % delname, confirm_txt)
             if c:
-                delete_group(delname, what)
+                delete_group(delname, self.type_name)
+                self._load_groups()
             elif c == False:
                 return ""
 
         return None
 
-    sorted = groups.items()
-    sorted.sort(cmp = lambda a,b: cmp(a[1]['alias'], b[1]['alias']))
-    if len(sorted) == 0:
-        if what == "contact":
-            render_main_menu([
-              ( "edit_contact_group", _("Create new contact group"), "new",
-              what == "contact" and "users" or "groups",
-              _("Contact groups are needed for assigning hosts and services to people (contacts)"))])
-        else:
-            html.div(_("No groups are defined yet."), class_="info")
-        return
 
-    # Show member of contact groups
-    if what == "contact":
-        users = userdb.load_users()
-        members = {}
-        for userid, user in users.items():
-            cgs = user.get("contactgroups", [])
-            for cg in cgs:
-                members.setdefault(cg, []).append((userid, user.get('alias', userid)))
+    def _page_no_groups(self):
+        html.div(_("No groups are defined yet."), class_="info")
 
-    table.begin(what + "groups")
-    for name, group in sorted:
-        table.row()
 
+    def _collect_additional_data(self):
+        pass
+
+
+    def _show_row_cells(self, name, group):
         table.cell(_("Actions"), css="buttons")
-        edit_url = folder_preserving_link([("mode", "edit_%s_group" % what), ("edit", name)])
+        edit_url   = folder_preserving_link([("mode", "edit_%s_group" % self.type_name), ("edit", name)])
         delete_url = html.makeactionuri([("_delete", name)])
-        clone_url    =  folder_preserving_link([("mode", "edit_%s_group" % what), ("clone", name)])
+        clone_url  = folder_preserving_link([("mode", "edit_%s_group" % self.type_name), ("clone", name)])
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
@@ -7015,17 +6986,20 @@ def mode_groups(phase, what):
         table.cell(_("Name"), name)
         table.cell(_("Alias"), group['alias'])
 
-        if cmk.is_managed_edition():
-            table.cell(_("Customer"), managed.get_customer_name(group))
 
-        if what == "contact":
-            table.cell(_("Members"))
-            html.write_html(HTML(", ").join(
-               [ html.render_a(alias, href=folder_preserving_link([("mode", "edit_user"), ("edit", userid)]))
-                 for userid, alias in members.get(name, [])]))
+    def page(self):
+        sorted_groups = self._groups.items()
+        sorted_groups.sort(cmp = lambda a,b: cmp(a[1]['alias'], b[1]['alias']))
+        if len(sorted_groups) == 0:
+            return self._page_no_groups()
 
-    table.end()
+        self._collect_additional_data()
 
+        table.begin(self.type_name + "groups")
+        for name, group in sorted_groups:
+            table.row()
+            self._show_row_cells(name, group)
+        table.end()
 
 
 class ModeEditGroup(WatoMode):
@@ -7041,9 +7015,6 @@ class ModeEditGroup(WatoMode):
 
         self._load_groups()
         self._from_vars()
-
-        if cmk.is_managed_edition():
-            self._vs_customer = managed.vs_customer()
 
 
     def _load_groups(self):
@@ -7081,6 +7052,10 @@ class ModeEditGroup(WatoMode):
             folder_preserving_link([("mode", "%s_groups" % self.type_name)]), "back")
 
 
+    def _determine_additional_group_data(self):
+        pass
+
+
     def action(self):
         if not html.check_transaction():
             return "%s_groups" % self.type_name
@@ -7093,14 +7068,7 @@ class ModeEditGroup(WatoMode):
             "alias": alias
         }
 
-        self._edit_nagvis_map_permissions()
-
-        if cmk.is_managed_edition():
-            self.group["customer"] = self._vs_customer.from_html_vars("customer")
-            self._vs_customer.validate_value(self.group["customer"], "customer")
-
-            if self.group["customer"] == "provider":
-                del self.group["customer"]
+        self._determine_additional_group_data()
 
         if self._new:
             self.name = html.var("name").strip()
@@ -7109,6 +7077,10 @@ class ModeEditGroup(WatoMode):
             edit_group(self.name, self.type_name, self.group)
 
         return "%s_groups" % self.type_name
+
+
+    def _show_extra_page_elements(self):
+        pass
 
 
     def page(self):
@@ -7128,12 +7100,7 @@ class ModeEditGroup(WatoMode):
         html.help(_("An Alias or description of this group."))
         html.text_input("alias", self.group["alias"])
 
-        if cmk.is_managed_edition():
-            forms.section(self._vs_customer.title())
-            self._vs_customer.render_input("customer", managed.get_customer_id(self.group))
-            html.help(self._vs_customer.help())
-
-        self._show_nagvis_map_permissions_form()
+        self._show_extra_page_elements()
 
         forms.end()
         html.button("save", _("Save"))
@@ -7141,12 +7108,73 @@ class ModeEditGroup(WatoMode):
         html.end_form()
 
 
-    def _show_nagvis_map_permissions_form(self):
-        pass
+
+class ModeHostgroups(ModeGroups):
+    type_name = "host"
+
+    def title(self):
+        return _("Host Groups")
 
 
-    def _edit_nagvis_map_permissions(self):
-        pass
+    def buttons(self):
+        super(ModeHostgroups, self).buttons()
+        html.context_button(_("Service groups"), folder_preserving_link([("mode", "service_groups")]), "hostgroups")
+        html.context_button(_("New host group"), folder_preserving_link([("mode", "edit_host_group")]), "new")
+        html.context_button(_("Rules"), folder_preserving_link([("mode", "edit_ruleset"), ("varname", "host_groups")]), "rulesets")
+
+
+
+class ModeServicegroups(ModeGroups):
+    type_name = "service"
+
+    def title(self):
+        return _("Service Groups")
+
+
+    def buttons(self):
+        super(ModeServicegroups, self).buttons()
+        html.context_button(_("Host groups"), folder_preserving_link([("mode", "host_groups")]), "servicegroups")
+        html.context_button(_("New service group"), folder_preserving_link([("mode", "edit_service_group")]), "new")
+        html.context_button(_("Rules"), folder_preserving_link([("mode", "edit_ruleset"), ("varname", "service_groups")]), "rulesets")
+
+
+
+class ModeContactgroups(ModeGroups):
+    type_name = "contact"
+
+
+    def title(self):
+        self._members = {}
+        return _("Contact Groups")
+
+
+    def buttons(self):
+        super(ModeContactgroups, self).buttons()
+        html.context_button(_("New contact group"), folder_preserving_link([("mode", "edit_contact_group")]), "new")
+        html.context_button(_("Rules"), folder_preserving_link([("mode", "rulesets"),
+                             ("filled_in", "search"), ("search", _("contact group"))]), "rulesets")
+
+
+    def _page_no_groups(self):
+        render_main_menu([("edit_contact_group", _("Create new contact group"), "new",
+         "users", _("Contact groups are needed for assigning hosts and services to people (contacts)"))])
+
+
+    def _collect_additional_data(self):
+        users = userdb.load_users()
+        self._members = {}
+        for userid, user in users.items():
+            cgs = user.get("contactgroups", [])
+            for cg in cgs:
+                self._members.setdefault(cg, []).append((userid, user.get('alias', userid)))
+
+
+    def _show_row_cells(self, name, group):
+        super(ModeContactgroups, self)._show_row_cells(name, group)
+        table.cell(_("Members"))
+        html.write_html(HTML(", ").join(
+           [ html.render_a(alias, href=folder_preserving_link([("mode", "edit_user"), ("edit", userid)]))
+             for userid, alias in self._members.get(name, [])]))
 
 
 
@@ -7202,14 +7230,16 @@ class ModeEditContactgroup(ModeEditGroup):
         return maps
 
 
-    def _edit_nagvis_map_permissions(self):
+    def _determine_additional_group_data(self):
+        super(ModeEditContactgroup, self)._determine_additional_group_data()
         permitted_maps = self._vs_nagvis_maps().from_html_vars('nagvis_maps')
         self._vs_nagvis_maps().validate_value(permitted_maps, 'nagvis_maps')
         if permitted_maps:
             self.group["nagvis_maps"] = permitted_maps
 
 
-    def _show_nagvis_map_permissions_form(self):
+    def _show_extra_page_elements(self):
+        super(ModeEditContactgroup, self)._show_extra_page_elements()
         # Show permissions for NagVis maps if any of those exist
         if self._get_nagvis_maps():
             forms.header(_("Permissions"))
@@ -7258,38 +7288,6 @@ class CheckTypeGroupSelection(ElementSelection):
 
 
 #.
-#   .--Notifications-(Rule Based)------------------------------------------.
-#   |       _   _       _   _  __ _           _   _                        |
-#   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |
-#   |      |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \/ __|       |
-#   |      | |\  | (_) | |_| |  _| | (_| (_| | |_| | (_) | | | \__ \       |
-#   |      |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|___/       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Module for managing the new rule based notifications.               |
-#   '----------------------------------------------------------------------'
-
-def load_notification_rules():
-    filename = wato_root_dir + "notifications.mk"
-    notification_rules = store.load_from_mk_file(filename,
-                                                 "notification_rules", [])
-
-    # Convert to new plugin configuration format
-    for rule in notification_rules:
-        if "notify_method" in rule:
-            method = rule["notify_method"]
-            plugin = rule["notify_plugin"]
-            del rule["notify_method"]
-            rule["notify_plugin"] = ( plugin, method )
-
-    return notification_rules
-
-
-def save_notification_rules(rules):
-    make_nagios_directory(wato_root_dir)
-    store.save_to_mk_file(wato_root_dir + "notifications.mk",
-                          "notification_rules", rules)
-
 
 def FolderChoice(**kwargs):
     kwargs["choices"] = lambda: Folder.folder_choices()
@@ -10745,7 +10743,7 @@ def mode_edit_user(phase):
             customer = vs_customer.from_html_vars("customer")
             vs_customer.validate_value(customer, "customer")
 
-            if customer != "provider":
+            if customer != managed.default_customer_id():
                 user_attrs["customer"] = customer
 
         # Roles
@@ -17123,9 +17121,9 @@ modes = {
    "new_rule"           : ([], ModeNewRule),
    "edit_rule"          : ([], ModeEditRule),
 
-   "host_groups"        : (["groups"], lambda phase: mode_groups(phase, "host")),
-   "service_groups"     : (["groups"], lambda phase: mode_groups(phase, "service")),
-   "contact_groups"     : (["users"], lambda phase: mode_groups(phase, "contact")),
+   "host_groups"        : (["groups"], ModeHostgroups),
+   "service_groups"     : (["groups"], ModeServicegroups),
+   "contact_groups"     : (["users"],  ModeContactgroups),
    "edit_host_group"    : (["groups"], ModeEditHostgroup),
    "edit_service_group" : (["groups"], ModeEditServicegroup),
    "edit_contact_group" : (["users"], ModeEditContactgroup),
@@ -17495,4 +17493,6 @@ def link_to_folder_by_path(path):
 def link_to_host_by_name(host_name):
     return "wato.py?" + html.urlencode_vars(
     [("mode", "edit_host"), ("host", host_name)])
+
+
 

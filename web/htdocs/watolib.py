@@ -63,6 +63,11 @@ import cmk.paths
 import cmk.store as store
 import cmk.render as render
 
+
+if cmk.is_managed_edition():
+    import managed
+    import managed_snapshots
+
 replication_paths = []
 backup_paths = []
 backup_domains = {}
@@ -722,7 +727,7 @@ class BaseFolder(WithPermissionsAndAttributes):
 #   '----------------------------------------------------------------------'
 
 
-class Folder(BaseFolder):
+class CREFolder(BaseFolder):
     # .--------------------------------------------------------------------.
     # | STATIC METHODS                                                     |
     # '--------------------------------------------------------------------'
@@ -830,12 +835,19 @@ class Folder(BaseFolder):
     # '-----------------------------------------------------------------------'
 
 
-    def __init__(self, name, folder_path=None, parent_folder=None, title=None, attributes=None):
-        super(Folder, self).__init__()
+    def __init__(self, name, folder_path=None, parent_folder=None, title=None, attributes=None, root_dir=None):
+        super(CREFolder, self).__init__()
         self._name = name
         self._parent = parent_folder
         self._subfolders = {}
         self._choices_for_moving_host = None
+
+        self._root_dir = root_dir
+        if self._root_dir:
+            self._root_dir = root_dir.rstrip("/") + "/" # FIXME: ugly
+        else:
+            self._root_dir = wato_root_dir
+
         if folder_path != None:
             self._init_by_loading_existing_directory(folder_path)
         else:
@@ -860,6 +872,15 @@ class Folder(BaseFolder):
 
     def __repr__(self):
         return "Folder(%r, %r)" % (self.path(), self._title)
+
+
+    def get_root_dir(self):
+        return self._root_dir
+
+
+    # Dangerous operation! Only use this if you have a good knowledge of the internas
+    def set_root_dir(self, root_dir):
+        self._root_dir = root_dir.rstrip("/") + "/" # O.o
 
 
     def parent(self):
@@ -1184,7 +1205,7 @@ class Folder(BaseFolder):
 
 
     def load_subfolders(self):
-        dir_path = wato_root_dir + self.path()
+        dir_path = self._root_dir + self.path()
         for entry in os.listdir(dir_path):
             subfolder_dir = dir_path + "/" + entry
             if os.path.isdir(subfolder_dir):
@@ -1192,7 +1213,7 @@ class Folder(BaseFolder):
                     subfolder_path = self.path() + "/" + entry
                 else:
                     subfolder_path = entry
-                self._subfolders[entry] = Folder(entry, subfolder_path, self)
+                self._subfolders[entry] = Folder(entry, subfolder_path, self, root_dir = self._root_dir)
 
 
     def wato_info_path(self):
@@ -1232,7 +1253,7 @@ class Folder(BaseFolder):
 
 
     def filesystem_path(self):
-        return (wato_root_dir + self.path()).rstrip("/")
+        return (self._root_dir + self.path()).rstrip("/")
 
 
     def ident(self):
@@ -1915,7 +1936,6 @@ class Folder(BaseFolder):
             html.show_info(lock_message)
 
 
-
 def validate_host_uniqueness(varname, host_name):
     host = Host.host(host_name)
     if host:
@@ -2065,6 +2085,7 @@ class SearchFolder(BaseFolder):
         auth_errors = []
         for folder, host_names in self._group_hostnames_by_folder(host_names):
             try:
+                # FIXME: this is not transaction safe, might get partially finished...
                 folder.move_hosts(host_names, target_folder)
             except MKAuthException, e:
                 auth_errors.append(_("<li>Cannot move hosts from folder %s: %s</li>") % (folder.alias_path(), e))
@@ -2138,7 +2159,7 @@ class SearchFolder(BaseFolder):
 #   |  contained in Folders.                                               |
 #   '----------------------------------------------------------------------'
 
-class Host(WithPermissionsAndAttributes):
+class CREHost(WithPermissionsAndAttributes):
     # .--------------------------------------------------------------------.
     # | STATIC METHODS                                                     |
     # '--------------------------------------------------------------------'
@@ -2164,7 +2185,7 @@ class Host(WithPermissionsAndAttributes):
     # '--------------------------------------------------------------------'
 
     def __init__(self, folder, host_name, attributes, cluster_nodes):
-        super(Host, self).__init__()
+        super(CREHost, self).__init__()
         self._folder = folder
         self._name = host_name
         self._attributes = attributes
@@ -2431,6 +2452,16 @@ class Host(WithPermissionsAndAttributes):
             obj=self, sites=[self.site_id()])
         self._name = new_name
 
+
+
+if cmk.is_managed_edition():
+    # TODO: watolib -> import managed_watolib -> import watolib !
+    import managed_watolib
+    Folder = managed_watolib.CMEFolder
+    Host   = managed_watolib.CMEHost
+else:
+    Folder = CREFolder
+    Host   = CREHost
 
 #.
 #   .--Attributes----------------------------------------------------------.
@@ -4342,8 +4373,13 @@ class ActivateChangesManager(ActivateChanges):
 
         # TODO: This can easily be parallelized by executing all sites in own threads and wait for
         # completion of all the threads.
-        for site_id in self._sites:
-            self._create_site_sync_snapshot(site_id)
+        try:
+            for site_id in self._sites:
+                self._create_site_sync_snapshot(site_id)
+        finally:
+            if cmk.is_managed_edition():
+                # Discards any data which was shared during the snapshot creation
+                managed_snapshots.CMESnapshot.discard_cached_data()
 
         unlock_exclusive()
 
@@ -4371,24 +4407,42 @@ class ActivateChangesManager(ActivateChanges):
 
         # Add site-specific global settings.
         site_tmp_dir = cmk.paths.tmp_dir + "/sync-%s-specific-%s" % (site_id, id(html))
-        self._create_site_globals_file(site_id, site_tmp_dir)
-
         paths = replication_paths + [("dir", "sitespecific", site_tmp_dir)]
 
         # Remove Event Console settings, if this site does not want it (might
         # be removed in some future day)
+        replicate_components = set()
         if not config.sites[site_id].get("replicate_ec"):
             paths = [ e for e in paths if e[1] != "mkeventd" ]
+        else:
+            replicate_components.add("mkeventd")
 
         # Remove extensions if site does not want them
         if not config.sites[site_id].get("replicate_mkps"):
             paths = [ e for e in paths if e[1] not in [ "local", "mkps" ] ]
+        else:
+            replicate_components.add("mkps")
+
+        if cmk.is_managed_edition():
+            managed_snapshots.CMESnapshot(site_id, site_tmp_dir, replicate_components).create_site_snapshot()
+            customer_components = [
+                ( "file", "customer_multisite", "%s/multisite.d/customer.mk" % cmk.paths.default_config_dir),
+                ( "file", "customer_check_mk",  "%s/conf.d/customer.mk" % cmk.paths.default_config_dir),
+            ]
+            new_paths = []
+
+            for entry in map(list, paths + customer_components):
+                entry[2] = entry[2].replace(cmk.paths.omd_root, site_tmp_dir)
+                new_paths.append(tuple(entry))
+            paths = new_paths
+        else:
+            self.create_site_globals_file(site_id, site_tmp_dir)
 
         multitar.create(snapshot_path, paths)
         shutil.rmtree(site_tmp_dir)
 
 
-    def _create_site_globals_file(self, site_id, tmp_dir):
+    def create_site_globals_file(self, site_id, tmp_dir):
         try:
             os.makedirs(tmp_dir)
         except OSError, e:
@@ -6298,7 +6352,7 @@ class RulesetCollection(object):
 
 
     def _save_folder(self, folder):
-        make_nagios_directory(wato_root_dir)
+        make_nagios_directory(folder.get_root_dir())
 
         content = ""
         for varname, ruleset in sorted(self._rulesets.items(), key=lambda x: x[0]):
@@ -7285,10 +7339,17 @@ def delete_group(name, group_type):
     add_change("edit-%sgroups", _("Deleted %s group %s") % (group_type, name))
 
 
-def save_group_information(all_groups):
+def save_group_information(all_groups, custom_default_config_dir = None):
     # Split groups data into Check_MK/Multisite parts
     check_mk_groups  = {}
     multisite_groups = {}
+
+    if custom_default_config_dir:
+        check_mk_config_dir  = "%s/conf.d/wato" %      custom_default_config_dir
+        multisite_config_dir = "%s/multisite.d/wato" % custom_default_config_dir
+    else:
+        check_mk_config_dir  = "%s/conf.d/wato" %      cmk.paths.default_config_dir
+        multisite_config_dir = "%s/multisite.d/wato" % cmk.paths.default_config_dir
 
     for what, groups in all_groups.items():
         check_mk_groups[what] = {}
@@ -7302,24 +7363,22 @@ def save_group_information(all_groups):
                     multisite_groups[what][gid][attr] = value
 
     # Save Check_MK world related parts
-    make_nagios_directory(wato_root_dir)
-    out = create_user_file(wato_root_dir + "groups.mk", "w")
-    out.write(wato_fileheader())
+    make_nagios_directory(check_mk_config_dir)
+    output = wato_fileheader()
     for what in [ "host", "service", "contact" ]:
         if what in check_mk_groups and len(check_mk_groups[what]) > 0:
-            out.write("if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what))
-            out.write("define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(check_mk_groups[what])))
+            output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what)
+            output += "define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(check_mk_groups[what]))
+    cmk.store.save_file("%s/conf.d/wato/groups.mk" % cmk.paths.default_config_dir, output)
 
     # Users with passwords for Multisite
-    filename = multisite_dir + "groups.mk.new"
-    make_nagios_directory(multisite_dir)
-    out = create_user_file(filename, "w")
-    out.write(wato_fileheader())
+    filename = "%s/%s" % (multisite_config_dir, "groups.mk.new")
+    make_nagios_directory(multisite_config_dir)
+    output = wato_fileheader()
     for what in [ "host", "service", "contact" ]:
         if what in multisite_groups and len(multisite_groups[what]) > 0:
-            out.write("multisite_%sgroups = \\\n%s\n\n" % (what, pprint.pformat(multisite_groups[what])))
-    out.close()
-    os.rename(filename, filename[:-4])
+            output += "multisite_%sgroups = \\\n%s\n\n" % (what, pprint.pformat(multisite_groups[what]))
+    cmk.store.save_file("%s/multisite.d/wato/groups.mk" % cmk.paths.default_config_dir, output)
 
 
 def find_usages_of_group(name, group_type):
@@ -7395,6 +7454,42 @@ def find_usages_of_service_group(name):
 
 
 #.
+
+
+
+#   .--Notifications-(Rule Based)------------------------------------------.
+#   |       _   _       _   _  __ _           _   _                        |
+#   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |
+#   |      |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \/ __|       |
+#   |      | |\  | (_) | |_| |  _| | (_| (_| | |_| | (_) | | | \__ \       |
+#   |      |_| \_|\___/ \__|_|_| |_|\___\__,_|\__|_|\___/|_| |_|___/       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Module for managing the new rule based notifications.               |
+#   '----------------------------------------------------------------------'
+
+def load_notification_rules():
+    filename = wato_root_dir + "notifications.mk"
+    notification_rules = store.load_from_mk_file(filename,
+                                                 "notification_rules", [])
+
+    # Convert to new plugin configuration format
+    for rule in notification_rules:
+        if "notify_method" in rule:
+            method = rule["notify_method"]
+            plugin = rule["notify_plugin"]
+            del rule["notify_method"]
+            rule["notify_plugin"] = ( plugin, method )
+
+    return notification_rules
+
+
+def save_notification_rules(rules):
+    make_nagios_directory(wato_root_dir)
+    store.save_to_mk_file(wato_root_dir + "notifications.mk",
+                          "notification_rules", rules)
+
+
 #   .--Users---------------------------------------------------------------.
 #   |                       _   _                                          |
 #   |                      | | | |___  ___ _ __ ___                        |
@@ -7930,3 +8025,4 @@ def mk_repr(s):
         return base64.b64encode(repr(s))
     else:
         return base64.b64encode(pickle.dumps(s))
+

@@ -28,6 +28,7 @@
 #include <ostream>
 #include "FileSystem.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "Renderer.h"
 #include "pnp4nagios.h"
 
@@ -40,7 +41,8 @@ using std::string;
 void LogwatchListColumn::output(void *row, RowRenderer &r,
                                 contact * /* auth_user */) {
     ListRenderer l(r);
-    if (_logwatch_path.empty()) {
+    auto logwatch_path = _core->mkLogwatchPath();
+    if (logwatch_path.empty()) {
         return;
     }
 
@@ -58,7 +60,7 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
     string host_name = hst->name;
 #endif
 
-    auto dir = _logwatch_path + pnp_cleanup(host_name);
+    auto dir = logwatch_path + pnp_cleanup(host_name);
     try {
         if (fs::exists(dir)) {
             for (const auto &entry : fs::directory_iterator(dir)) {

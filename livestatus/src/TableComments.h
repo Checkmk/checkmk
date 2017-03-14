@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Table.h"
+class MonitoringCore;
 class Query;
 
 #ifdef CMC
@@ -38,7 +39,6 @@ class Core;
 #else
 #include "nagios.h"
 class DowntimesOrComments;
-class MonitoringCore;
 #endif
 
 class TableComments : public Table {
@@ -46,7 +46,8 @@ public:
 #ifdef CMC
     TableComments(const Downtimes &downtimes_holder,
                   const Comments &comments_holder,
-                  std::recursive_mutex &holder_lock, Core *core);
+                  std::recursive_mutex &holder_lock, MonitoringCore *mc,
+                  Core *core);
 #else
     TableComments(const DowntimesOrComments &downtimes_holder,
                   const DowntimesOrComments &comments_holder,

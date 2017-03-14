@@ -51,6 +51,8 @@ public:
     virtual bool mkeventdEnabled() = 0;
     virtual std::string mkeventdSocketPath() = 0;
 
+    virtual std::string mkLogwatchPath() = 0;
+
     virtual Logger *loggerLivestatus() = 0;
 };
 

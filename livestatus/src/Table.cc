@@ -83,21 +83,21 @@ unique_ptr<Column> Table::dynamicColumn(const string &name,
                                         const string &rest) {
     auto it = _dynamic_columns.find(name);
     if (it == _dynamic_columns.end()) {
-        Warning(_logger) << "Unknown dynamic column '" << name << "'";
+        Warning(logger()) << "Unknown dynamic column '" << name << "'";
         return nullptr;
     }
 
     auto sep_pos = rest.find(':');
     if (sep_pos == string::npos) {
-        Warning(_logger) << "Missing separator in dynamic column '" << name
-                         << "'";
+        Warning(logger()) << "Missing separator in dynamic column '" << name
+                          << "'";
         return nullptr;
     }
 
     string name2 = rest.substr(0, sep_pos);
     if (name2.empty()) {
-        Warning(_logger) << "Empty column name for dynamic column '" << name
-                         << "'";
+        Warning(logger()) << "Empty column name for dynamic column '" << name
+                          << "'";
         return nullptr;
     }
 
@@ -109,3 +109,5 @@ bool Table::isAuthorized(contact * /*unused*/, void * /*unused*/) {
 }
 
 void *Table::findObject(const string & /*unused*/) { return nullptr; }
+
+Logger *Table::logger() const { return _logger; }

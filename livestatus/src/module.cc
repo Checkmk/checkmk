@@ -107,7 +107,7 @@ char *g_pnp_path = pnp_path_storage;
 char g_mk_inventory_path[4096];  // base path of Check_MK inventory files
 char g_mk_logwatch_path[4096];   // base path of Check_MK logwatch files
 static char fl_logfile_path[4096];
-char g_mkeventd_socket_path[4096];
+static char fl_mkeventd_socket_path[4096];
 static bool fl_should_terminate = false;
 
 struct ThreadInfo {
@@ -603,7 +603,7 @@ public:
     // TODO(sp) Do we need a separate NEB argument for this?
     bool mkeventdEnabled() override { return true; }
 
-    string mkeventdSocketPath() override { return g_mkeventd_socket_path; }
+    string mkeventdSocketPath() override { return fl_mkeventd_socket_path; }
 
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
@@ -793,7 +793,7 @@ void livestatus_parse_arguments(const char *args_orig) {
         strncpy(slash + 1, "livestatus.log", 15);
     }
 
-    g_mkeventd_socket_path[0] = 0;
+    fl_mkeventd_socket_path[0] = 0;
 
     /* there is no default PNP path */
     g_pnp_path[0] = 0;
@@ -825,8 +825,8 @@ void livestatus_parse_arguments(const char *args_orig) {
             } else if (strcmp(left, "log_file") == 0) {
                 strncpy(fl_logfile_path, right, sizeof(fl_logfile_path));
             } else if (strcmp(left, "mkeventd_socket_path") == 0) {
-                strncpy(g_mkeventd_socket_path, right,
-                        sizeof(g_mkeventd_socket_path));
+                strncpy(fl_mkeventd_socket_path, right,
+                        sizeof(fl_mkeventd_socket_path));
             } else if (strcmp(left, "max_cached_messages") == 0) {
                 g_max_cached_messages = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios)
@@ -957,19 +957,19 @@ void livestatus_parse_arguments(const char *args_orig) {
         }
     }
 
-    if (g_mkeventd_socket_path[0] == 0) {
-        strncpy(g_mkeventd_socket_path, g_socket_path,
-                sizeof(g_mkeventd_socket_path));
-        char *slash = strrchr(g_mkeventd_socket_path, '/');
-        char *pos = slash == nullptr ? g_mkeventd_socket_path : (slash + 1);
+    if (fl_mkeventd_socket_path[0] == 0) {
+        strncpy(fl_mkeventd_socket_path, g_socket_path,
+                sizeof(fl_mkeventd_socket_path));
+        char *slash = strrchr(fl_mkeventd_socket_path, '/');
+        char *pos = slash == nullptr ? fl_mkeventd_socket_path : (slash + 1);
         strncpy(
             pos, "mkeventd/status",
-            &g_mkeventd_socket_path[sizeof(g_mkeventd_socket_path)] - pos);
-        g_mkeventd_socket_path[sizeof(g_mkeventd_socket_path) - 1] = 0;
+            &fl_mkeventd_socket_path[sizeof(fl_mkeventd_socket_path)] - pos);
+        fl_mkeventd_socket_path[sizeof(fl_mkeventd_socket_path) - 1] = 0;
     }
     Warning(fl_logger_nagios) << "g_socket_path=[" << g_socket_path
-                              << "], g_mkeventd_socket_path=["
-                              << g_mkeventd_socket_path << "]";
+                              << "], fl_mkeventd_socket_path=["
+                              << fl_mkeventd_socket_path << "]";
 
     // free(args); won't free, since we use pointers?
 }

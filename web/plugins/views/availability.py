@@ -658,16 +658,21 @@ def get_relevant_annotations(annotations, by_host, what, avoptions):
 
     for site_host, avail_entries in by_host.iteritems():
         for service in avail_entries.keys():
-            site_host_svc = site_host[0], site_host[1], (service or None)
-            annotations_to_check = annotations.get(site_host_svc, [])
-            if what == "service": # Also show host annotations for services
-                annotations_to_check += annotations.get((site_host[0], site_host[1], None), [])
-            for annotation in annotations_to_check:
-                if (annotation["from"] >= from_time and annotation["from"] <= until_time) or \
-                   (annotation["until"] >= from_time and annotation["until"] <= until_time):
-                   if id(annotation) not in annos_rendered:
-                       annos_to_render.append((site_host_svc, annotation))
-                       annos_rendered.add(id(annotation))
+            for search_what in [ "host", "service" ]:
+                if what == "host" and search_what == "service":
+                    continue # Service notifications are not relevant for host
+
+                if search_what == "host":
+                    site_host_svc = site_host[0], site_host[1], None
+                else:
+                    site_host_svc = site_host[0], site_host[1], service # service can be None
+
+                for annotation in annotations.get(site_host_svc, []):
+                    if (annotation["from"] >= from_time and annotation["from"] <= until_time) or \
+                       (annotation["until"] >= from_time and annotation["until"] <= until_time):
+                       if id(annotation) not in annos_rendered:
+                           annos_to_render.append((site_host_svc, annotation))
+                           annos_rendered.add(id(annotation))
 
     annos_to_render.sort(cmp=lambda a,b: cmp(a[1]["from"], b[1]["from"]) or cmp(a[0], b[0]))
 
@@ -705,11 +710,15 @@ def render_annotations(annotations, av_rawdata, what, avoptions, omit_service):
                 host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site_id), ("host", host)])
                 table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
 
-            if service:
-                service_url = "view.py?" + html.urlencode_vars([("view_name", "service"), ("site", site_id), ("host", host), ("service", service)])
-                # TODO: honor use_display_name. But we have no display names here...
-                service_name = service
-                table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service_name))
+            if what == "service":
+                if service:
+                    service_url = "view.py?" + html.urlencode_vars([("view_name", "service"), ("site", site_id), ("host", host), ("service", service)])
+                    # TODO: honor use_display_name. But we have no display names here...
+                    service_name = service
+                    table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service_name))
+                else:
+                    table.cell(_("Service"), "") # Host annotation in service table
+
 
         table.cell(_("From"), render_date(annotation["from"]), css="nobr narrow")
         table.cell(_("Until"), render_date(annotation["until"]), css="nobr narrow")

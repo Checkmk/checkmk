@@ -33,7 +33,6 @@ using std::string;
 
 extern host *host_list;
 extern hostgroup *hostgroup_list;
-extern char g_mk_inventory_path[];
 
 namespace {
 struct hostbygroup {

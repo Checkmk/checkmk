@@ -76,7 +76,7 @@ Store::Store(MonitoringCore *core)
     , _table_servicesbygroup(_downtimes, _comments, core)
     , _table_servicesbyhostgroup(_downtimes, _comments, core)
     , _table_statehistory(&_log_cache, _downtimes, _comments, core)
-    , _table_status(_logger)
+    , _table_status(_logger, core)
     , _table_timeperiods(_logger) {
     addTable(&_table_columns);
     addTable(&_table_commands);

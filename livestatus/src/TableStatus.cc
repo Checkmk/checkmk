@@ -77,7 +77,7 @@ time_t dummy = 0;
 }  // namespace
 #endif  // NAGIOS4
 
-TableStatus::TableStatus(Logger *logger) : Table(logger) {
+TableStatus::TableStatus(Logger *logger, MonitoringCore *mc) : Table(logger) {
     addCounterColumns("neb_callbacks", "NEB callbacks", Counter::neb_callbacks);
     addCounterColumns("requests", "requests to Livestatus", Counter::requests);
     addCounterColumns("connections", "client connections to Livestatus",
@@ -234,12 +234,10 @@ TableStatus::TableStatus(Logger *logger) : Table(logger) {
         &g_num_clientthreads));
 
     // Special stuff for Check_MK
-    extern char g_mk_inventory_path[];
     addColumn(make_unique<StatusSpecialIntColumn>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
-        g_mk_inventory_path, StatusSpecialIntColumn::Type::mk_inventory_last,
-        -1, -1, -1));
+        mc, StatusSpecialIntColumn::Type::mk_inventory_last, -1, -1, -1));
 }
 
 void TableStatus::addCounterColumns(const string &name,

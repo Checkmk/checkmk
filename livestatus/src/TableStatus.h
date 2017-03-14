@@ -29,19 +29,21 @@
 #include <string>
 #include "Table.h"
 #include "global_counters.h"
+class MonitoringCore;
+class Query;
+
 #ifdef CMC
 class Core;
 #else
 class Logger;
 #endif
-class Query;
 
 class TableStatus : public Table {
 public:
 #ifdef CMC
-    explicit TableStatus(Core *core);
+    explicit TableStatus(MonitoringCore *mc, Core *core);
 #else
-    explicit TableStatus(Logger *logger);
+    explicit TableStatus(Logger *logger, MonitoringCore *mc);
 #endif
 
     std::string name() const override;

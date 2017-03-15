@@ -150,7 +150,7 @@ string TableLog::namePrefix() const { return "log_"; }
 
 void TableLog::answerQuery(Query *query) {
     lock_guard<mutex> lg(_log_cache->_lock);
-    if (!_log_cache->logCachePreChecks(core())) {
+    if (!_log_cache->logCachePreChecks()) {
         return;
     }
 

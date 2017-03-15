@@ -607,6 +607,10 @@ public:
     string mkLogwatchPath() override { return fl_mk_logwatch_path; }
     string mkInventoryPath() override { return fl_mk_inventory_path; }
     string pnpPath() override { return fl_pnp_path; }
+    string logArchivePath() override {
+        extern char *log_archive_path;
+        return log_archive_path;
+    }
 
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 

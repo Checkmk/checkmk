@@ -54,8 +54,7 @@ using std::string;
 
 Store::Store(MonitoringCore *mc)
     : _mc(mc)
-    , _logger(mc->loggerLivestatus())
-    , _log_cache(_logger, _commands_holder, g_max_cached_messages)
+    , _log_cache(mc, _commands_holder, g_max_cached_messages)
     , _table_columns(mc)
     , _table_commands(_commands_holder, mc)
     , _table_comments(_downtimes, _comments, mc)
@@ -137,9 +136,9 @@ list<string> getLines(InputBuffer &input) {
 }  // namespace
 
 void Store::logRequest(const string &line, const list<string> &lines) {
-    Informational log(_logger);
+    Informational log(logger());
     log << "request: " << line;
-    if (_logger->isLoggable(LogLevel::debug)) {
+    if (logger()->isLoggable(LogLevel::debug)) {
         for (const auto &l : lines) {
             log << R"(\n)" << l;
         }
@@ -182,7 +181,7 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
     }
     if (starts_with(line, "LOGROTATE")) {
         logRequest(line, {});
-        Informational(_logger) << "Forcing logfile rotation";
+        Informational(logger()) << "Forcing logfile rotation";
         rotate_log_file(time(nullptr));
         schedule_new_event(EVENT_LOG_ROTATION, 1, get_next_log_rotation_time(),
                            0, 0,
@@ -191,7 +190,7 @@ bool Store::answerRequest(InputBuffer &input, OutputBuffer &output) {
         return false;
     }
     logRequest(line, {});
-    Warning(_logger) << "Invalid request '" << line << "'";
+    Warning(logger()) << "Invalid request '" << line << "'";
     output.setError(OutputBuffer::ResponseCode::invalid_request,
                     "Invalid request method");
     return false;
@@ -201,7 +200,7 @@ void Store::answerCommandRequest(const char *command) {
     int len = strlen(command);
     if (len < 14 || command[0] != '[' || command[11] != ']' ||
         command[12] != ' ') {
-        Warning(_logger) << "Ignoring malformed command '" << command << "'";
+        Warning(logger()) << "Ignoring malformed command '" << command << "'";
         return;
     }
 
@@ -242,9 +241,9 @@ bool Store::handleCommand(const string &command) {
     if (command_name == "MK_LOGWATCH_ACKNOWLEDGE") {
         // COMMAND [1462191638] MK_LOGWATCH_ACKNOWLEDGE;host123;\var\log\syslog
         if (parts.size() != 3) {
-            Warning(_logger) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
+            Warning(logger()) << "MK_LOGWATCH_ACKNOWLEDGE expects 2 arguments";
         } else {
-            mk_logwatch_acknowledge(_logger, _mc->mkLogwatchPath(), parts[1],
+            mk_logwatch_acknowledge(logger(), _mc->mkLogwatchPath(), parts[1],
                                     parts[2]);
         }
         return true;
@@ -252,10 +251,10 @@ bool Store::handleCommand(const string &command) {
 
     if (starts_with(command_name, "EC_")) {
         if (!_mc->mkeventdEnabled()) {
-            Notice(_logger) << "event console disabled, ignoring command '"
-                            << command << "'";
+            Notice(logger()) << "event console disabled, ignoring command '"
+                             << command << "'";
         } else {
-            ECTableConnection(_logger, _mc->mkeventdSocketPath(),
+            ECTableConnection(logger(), _mc->mkeventdSocketPath(),
                               "COMMAND " + command.substr(3))
                 .run();
         }
@@ -283,3 +282,5 @@ bool Store::answerGetRequest(const list<string> &lines, OutputBuffer &output,
 
     return Query(lines, table, g_data_encoding, output).process();
 }
+
+Logger *Store::logger() const { return _mc->loggerLivestatus(); }

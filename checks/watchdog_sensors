@@ -1,0 +1,278 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# very odd and confusing example outputs:
+
+# version 3.0.0
+# .1.3.6.1.4.1.21239.5.1.1.2.0 3.0.0
+# .1.3.6.1.4.1.21239.5.1.1.7.0 1
+# .1.3.6.1.4.1.21239.5.1.2.1.3.1 Data Center 1
+# .1.3.6.1.4.1.21239.5.1.2.1.5.1 1
+# .1.3.6.1.4.1.21239.5.1.2.1.4.1 "91 54 06 9D C9 54 06 9D E9 C9 06 9D BD 9B 06 9D "
+# .1.3.6.1.4.1.21239.5.1.2.1.6.1 199
+# .1.3.6.1.4.1.21239.5.1.2.1.7.1 36
+# .1.3.6.1.4.1.21239.5.1.2.1.8.1 44
+#
+# version 3.2.0
+# .1.3.6.1.4.1.21239.5.1.1.2.0 3.2.0
+# .1.3.6.1.4.1.21239.5.1.1.7.0 1
+# .1.3.6.1.4.1.21239.5.1.2.1.1.1 1
+# .1.3.6.1.4.1.21239.5.1.2.1.2.1 41D88039003580C3
+# .1.3.6.1.4.1.21239.5.1.2.1.3.1 RSGLDN Watchdog 15
+# .1.3.6.1.4.1.21239.5.1.2.1.4.1 1
+# .1.3.6.1.4.1.21239.5.1.2.1.5.1 173
+# .1.3.6.1.4.1.21239.5.1.2.1.6.1 46
+# .1.3.6.1.4.1.21239.5.1.2.1.7.1 56
+
+def parse_watchdog_sensors(info):
+    translate_unit = {
+        '1' : 'C',
+        '0' : 'F',
+    }
+
+    translate_availability = {
+        '0' : (2, 'unavailable'),
+        '1' : (0, 'available'),
+        '2' : (1, 'partially unavailable'),
+    }
+
+    parsed = {}
+
+    general, data = info
+    # sometimes there is an empty string in
+    # the output. We need to handle this...
+    if not general[0][1] == "":
+        unit = translate_unit[general[0][1]]
+    else:
+        unit = "C"
+
+    version = int(general[0][0].replace('.', ''))
+
+    if version <= 300:
+        for line in data:
+            item = line[0]
+
+            parsed[item] = {}
+            parsed[item]['descr'] = line[1]
+            parsed[item]['availability'] = translate_availability[line[3]]
+            parsed[item]['temp'] = (line[4], unit)
+            parsed[item]['humidity'] = line[5]
+            parsed[item]['dew'] = (line[6], unit)
+    else:
+        for line in data:
+            item = line[0]
+
+            parsed[item] = {}
+            parsed[item]['descr'] = line[1]
+            parsed[item]['availability'] = translate_availability[line[2]]
+            parsed[item]['temp'] = (line[3], unit)
+            parsed[item]['humidity'] = line[4]
+            parsed[item]['dew'] = (line[5], unit)
+
+    return parsed
+
+
+#.
+#   .--general-------------------------------------------------------------.
+#   |                                                  _                   |
+#   |                   __ _  ___ _ __   ___ _ __ __ _| |                  |
+#   |                  / _` |/ _ \ '_ \ / _ \ '__/ _` | |                  |
+#   |                 | (_| |  __/ | | |  __/ | | (_| | |                  |
+#   |                  \__, |\___|_| |_|\___|_|  \__,_|_|                  |
+#   |                  |___/                                               |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_watchdog_sensors(parsed):
+    for key in parsed:
+        yield ( key, {} )
+
+
+def check_watchdog_sensors(item, params, parsed):
+    data = None
+    for key in parsed:
+        if key == item:
+            data = parsed[key]
+
+    if data:
+        descr = data['descr']
+        state, state_readable = data['availability']
+
+        yield state, state_readable
+
+        if not descr == '':
+            yield 0, "Location: %s" % descr
+
+
+check_info['watchdog_sensors'] = {
+    'parse_function'        : parse_watchdog_sensors,
+    'inventory_function'    : inventory_watchdog_sensors,
+    'check_function'        : check_watchdog_sensors,
+    'service_description'   : 'Watchdog %s',
+    'snmp_info'             : [ ('.1.3.6.1.4.1.21239.5.1.1', [
+                                        '2', #GEIST-V4-MIB::productVersion
+                                        '7', #GEIST-V4-MIB::temperatureUnits
+                                ]),
+                                ('.1.3.6.1.4.1.21239.5.1.2.1', [OID_END,
+                                        '3', #GEIST-V4-MIB::internalName
+                                        '4', #GEIST-V4-MIB::internalLabel    but internalAvail    if version 3.2.0
+                                        '5', #GEIST-V4-MIB::internalAvail    but internalTemp     if version 3.2.0
+                                        '6', #GEIST-V4-MIB::internalTemp     but internalHumidity if version 3.2.0
+                                        '7', #GEIST-V4-MIB::internalHumidity but internalDewPoint if version 3.2.0
+                                        '8', #GEIST-V4-MIB::internalDewPoint but empty            if version 3.2.0
+                                ]) ],
+    'snmp_scan_function'    : lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.21239.5.1'),
+    'includes'              : [ 'temperature.include' ]
+}
+
+
+#.
+#   .--temp----------------------------------------------------------------.
+#   |                       _                                              |
+#   |                      | |_ ___ _ __ ___  _ __                         |
+#   |                      | __/ _ \ '_ ` _ \| '_ \                        |
+#   |                      | ||  __/ | | | | | |_) |                       |
+#   |                       \__\___|_| |_| |_| .__/                        |
+#   |                                        |_|                           |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_watchdog_sensors_temp(parsed):
+    for key in parsed:
+        yield ( key, {} )
+
+def check_watchdog_sensors_temp(item, params, parsed):
+    for key in parsed:
+        if key == item:
+            data = parsed[key]
+
+        temperature = float(data['temp'][0])/10.0
+        unit = data['temp'][1]
+        if unit == "F":
+            temperature = 5.0/9.0*(temperature-32)
+        yield check_temperature(temperature, params, "check_watchdog_sensors.%s" % item)
+
+
+check_info['watchdog_sensors.temp'] = {
+    'inventory_function'    : inventory_watchdog_sensors_temp,
+    'check_function'        : check_watchdog_sensors_temp,
+    'service_description'   : 'Temperature %s ',
+    'has_perfdata'          : True,
+    'group'                 : 'temperature',
+}
+
+
+#.
+#   .--humidity------------------------------------------------------------.
+#   |              _                     _     _ _ _                       |
+#   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
+#   |             | '_ \| | | | '_ ` _ \| |/ _` | | __| | | |              |
+#   |             | | | | |_| | | | | | | | (_| | | |_| |_| |              |
+#   |             |_| |_|\__,_|_| |_| |_|_|\__,_|_|\__|\__, |              |
+#   |                                                  |___/               |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings['watchdog_sensors_humidity_default_levels'] = {
+            'levels'        : (50, 55),
+            'levels_lower'  : (10, 15),
+}
+
+def inventory_watchdog_sensors_humidity(parsed):
+    for key in parsed:
+        yield ( key, {} )
+
+
+def check_watchdog_sensors_humidity(item, params, parsed):
+    for key in parsed:
+        if key == item:
+            data = parsed[key]
+
+        humidity = int(data['humidity'])
+        warn, crit = params['levels']
+        warn_lower, crit_lower = params['levels_lower']
+
+        yield 0, "%.1f%%" % humidity, [ ('humidity', humidity, warn, crit) ]
+
+        if humidity >= crit:
+            yield 2, "warn/crit at %s/%s" % (warn, crit)
+        elif humidity <= crit_lower:
+            yield 2, "warn/crit at %s/%s" % (warn, crit)
+        elif humidity >= warn:
+            yield 1, "warn/crit below %s/%s" % (warn, crit)
+        elif humidity <= warn_lower:
+            yield 1, "warn/crit below %s/%s" % (warn, crit)
+
+
+check_info['watchdog_sensors.humidity'] = {
+    'inventory_function'        : inventory_watchdog_sensors_humidity,
+    'check_function'            : check_watchdog_sensors_humidity,
+    'service_description'       : 'Humidity %s',
+    'has_perfdata'              : True,
+    'group'                     : 'humidity',
+    'default_levels_variable'   : 'watchdog_sensors_humidity_default_levels',
+}
+
+#.
+#   .--dew-----------------------------------------------------------------.
+#   |                             _                                        |
+#   |                          __| | _____      __                         |
+#   |                         / _` |/ _ \ \ /\ / /                         |
+#   |                        | (_| |  __/\ V  V /                          |
+#   |                         \__,_|\___| \_/\_/                           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_watchdog_sensors_dew(parsed):
+    for key in parsed:
+        yield ( key, {} )
+
+
+def check_watchdog_sensors_dew(item, params, parsed):
+    for key in parsed:
+        if key == item:
+            data = parsed[key]
+
+        dew = float(data['dew'][0])/10.0
+        unit = data['dew'][1]
+        if unit == "F":
+            dew = 5.0/9.0*(dew-32)
+        yield check_temperature(dew, params, "check_watchdog_sensors.%s" % item)
+
+
+check_info['watchdog_sensors.dew'] = {
+    'inventory_function'    : inventory_watchdog_sensors_dew,
+    'check_function'        : check_watchdog_sensors_dew,
+    'service_description'   : 'Dew point %s',
+    'has_perfdata'          : True,
+    'group'                 : 'temperature',
+}

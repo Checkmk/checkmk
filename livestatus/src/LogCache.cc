@@ -39,24 +39,23 @@ constexpr unsigned long check_mem_cycle = 1000;
 }  // namespace
 
 // watch nagios' logfile rotation
-extern char *log_archive_path;
 extern char *log_file;
 
 int num_cached_log_messages = 0;
 
-LogCache::LogCache(Logger *logger, const CommandsHolder &commands_holder,
+LogCache::LogCache(MonitoringCore *mc, const CommandsHolder &commands_holder,
                    unsigned long max_cached_messages)
-    : _commands_holder(commands_holder)
+    : _mc(mc)
+    , _commands_holder(commands_holder)
     , _max_cached_messages(max_cached_messages)
-    , _num_at_last_check(0)
-    , _logger(logger) {
+    , _num_at_last_check(0) {
     updateLogfileIndex();
 }
 
 #ifdef CMC
 void LogCache::setMaxCachedMessages(unsigned long m) {
     if (m != _max_cached_messages) {
-        Notice(_logger)
+        Notice(logger())
             << "changing maximum number of messages for log file cache to "
             << m;
         _max_cached_messages = m;
@@ -66,19 +65,20 @@ void LogCache::setMaxCachedMessages(unsigned long m) {
 
 LogCache::~LogCache() { forgetLogfiles(); }
 
-bool LogCache::logCachePreChecks(MonitoringCore *mc) {
-    if (_logfiles.empty() || mc->last_logfile_rotation() > _last_index_update) {
+bool LogCache::logCachePreChecks() {
+    if (_logfiles.empty() ||
+        _mc->last_logfile_rotation() > _last_index_update) {
         forgetLogfiles();
         updateLogfileIndex();
     }
     if (_logfiles.empty()) {
-        Notice(_logger) << "no log file found, not even " << log_file;
+        Notice(logger()) << "no log file found, not even " << log_file;
     }
     return !_logfiles.empty();
 }
 
 void LogCache::forgetLogfiles() {
-    Notice(_logger) << "flushing log file index";
+    Notice(logger()) << "flushing log file index";
     for (auto &logfile : _logfiles) {
         delete logfile.second;
     }
@@ -87,25 +87,24 @@ void LogCache::forgetLogfiles() {
 }
 
 void LogCache::updateLogfileIndex() {
-    Informational(_logger) << "updating log file index";
+    Informational(logger()) << "updating log file index";
     _last_index_update = system_clock::now();
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.
     scanLogfile(log_file, true);
 
-    // TODO(sp) Avoid global variable
-    fs::path dirpath = log_archive_path;
+    fs::path dirpath = _mc->logArchivePath();
     try {
         for (const auto &entry : fs::directory_iterator(dirpath)) {
             scanLogfile(entry.path(), false);
         }
     } catch (const fs::filesystem_error &e) {
-        Warning(_logger) << "updating log file index: " << e.what();
+        Warning(logger()) << "updating log file index: " << e.what();
     }
 }
 
 void LogCache::scanLogfile(const fs::path &path, bool watch) {
-    auto logfile = new Logfile(_logger, _commands_holder, path, watch);
+    auto logfile = new Logfile(logger(), _commands_holder, path, watch);
     time_t since = logfile->since();
     if (since != 0) {
         // make sure that no entry with that 'since' is existing yet.
@@ -114,7 +113,7 @@ void LogCache::scanLogfile(const fs::path &path, bool watch) {
         if (_logfiles.find(since) == _logfiles.end()) {
             _logfiles.emplace(since, logfile);
         } else {
-            Warning(_logger) << "ignoring duplicate log file " << path;
+            Warning(logger()) << "ignoring duplicate log file " << path;
             delete logfile;
         }
     } else {
@@ -181,8 +180,8 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     for (; it != _logfiles.end(); ++it) {
         Logfile *log = it->second;
         if (log->numEntries() > 0 && (log->classesRead() & ~logclasses) != 0) {
-            Debug(_logger) << "freeing classes " << ~logclasses << " of file "
-                           << log->path();
+            Debug(logger()) << "freeing classes " << ~logclasses << " of file "
+                            << log->path();
             long freed = log->freeMessages(~logclasses);  // flush only messages
                                                           // not needed for
                                                           // current query
@@ -202,8 +201,8 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     for (it = ++queryit; it != _logfiles.end(); ++it) {
         Logfile *log = it->second;
         if (log->numEntries() > 0) {
-            Debug(_logger) << "flush newer log, " << log->numEntries()
-                           << " number of entries";
+            Debug(logger()) << "flush newer log, " << log->numEntries()
+                            << " number of entries";
             num_cached_log_messages -= log->numEntries();
             log->flush();
             if (static_cast<unsigned long>(num_cached_log_messages) <=
@@ -218,7 +217,9 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     // despite the fact that there are still too many messages
     // loaded.
 
-    Debug(_logger) << "cannot unload more messages, still "
-                   << num_cached_log_messages << " loaded (max is "
-                   << _max_cached_messages << ")";
+    Debug(logger()) << "cannot unload more messages, still "
+                    << num_cached_log_messages << " loaded (max is "
+                    << _max_cached_messages << ")";
 }
+
+Logger *LogCache::logger() const { return _mc->loggerLivestatus(); }

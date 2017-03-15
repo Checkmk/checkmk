@@ -89,7 +89,6 @@ public:
     void addAlertToStatehistCache(Object *, int state, const char *output);
     void addDowntimeToStatehistCache(Object *, bool started);
     void addFlappingToStatehistCache(Object *, bool started);
-    Logger *logger() const { return _logger; }
 #else
     explicit Store(MonitoringCore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
@@ -97,14 +96,13 @@ public:
     void registerDowntime(nebstruct_downtime_data *);
     void registerComment(nebstruct_comment_data *);
 #endif
+    Logger *logger() const;
 
 private:
+    MonitoringCore *_mc;
 #ifdef CMC
     Core *_core;
-#else
-    MonitoringCore *_mc;
 #endif
-    Logger *const _logger;
 #ifndef CMC
     CommandsHolderNagios _commands_holder;
     DowntimesOrComments _downtimes;

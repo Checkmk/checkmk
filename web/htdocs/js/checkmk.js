@@ -2500,6 +2500,21 @@ function vs_autocomplete_close(input_id)
         popup.parentNode.removeChild(popup);
 }
 
+
+var vs_color_pickers = [];
+
+function vs_update_color_picker(varprefix, hex, update_picker) {
+    if (!/^#[0-9A-F]{6}$/i.test(hex))
+        return; // skip invalid/unhandled colors
+
+    document.getElementById(varprefix + "_input").value = hex;
+    document.getElementById(varprefix + "_value").value = hex;
+    document.getElementById(varprefix + "_preview").style.backgroundColor = hex;
+
+    if (update_picker)
+        vs_color_pickers[varprefix].setHex(hex);
+}
+
 //#.
 //#   .-Help Toggle--------------------------------------------------------.
 //#   |          _   _      _         _____                 _              |

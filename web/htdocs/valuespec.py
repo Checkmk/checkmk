@@ -4196,21 +4196,31 @@ class Color(ValueSpec):
                                         class_="cp-preview",
                                         style="background-color:%s" % value)
 
+
+        # TODO(rh): Please take a look at this hard coded HTML
         # FIXME: Rendering with HTML class causes bug in html popup_trigger function.
         #        Reason is HTML class and the escaping.
-        menu_content = "<div id=\"%s_picker\" class=\"cp-small\"></div>" % varprefix
+        menu_content  = "<div id=\"%s_picker\" class=\"cp-small\"></div>" % varprefix
+        menu_content += "<div class=\"cp-input\">" \
+            "%s" \
+            "<input id=\"%s_input\" type=\"text\"></input></div>" % \
+                (_("Hex color:"), varprefix)
+
         menu_content += "<script language=\"javascript\">" \
-            "ColorPicker(document.getElementById(\"%s_picker\")," \
-            "            function(hex, hsv, rgb) {" \
-            "               document.getElementById(\"%s_value\").value = hex;" \
-            "               document.getElementById(\"%s_preview\").style.backgroundColor = hex;" \
-            "}).setHex(\"%s\");</script>" % (varprefix, varprefix, varprefix, value)
+            "vs_color_pickers[\"%s\"] = ColorPicker(document.getElementById(\"%s_picker\")," \
+            "            function(hex, hsv, rgb) { vs_update_color_picker(\"%s\", hex, false); }" \
+            ");" \
+            "document.getElementById(\"%s_input\").oninput = function() { " \
+            "    vs_update_color_picker(\"%s\", this.value, true); " \
+            "};" \
+            "vs_update_color_picker(\"%s\", \"%s\", true);" \
+            "</script>" % \
+                (varprefix, varprefix, varprefix, varprefix, varprefix, varprefix, value)
 
         html.popup_trigger(indicator, varprefix + '_popup',
                            menu_content=menu_content,
                            cssclass="colorpicker",
                            onclose=self._on_change)
-
 
 
     def from_html_vars(self, varprefix):

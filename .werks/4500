@@ -1,0 +1,11 @@
+Title: Graph designer: Hex codes can now be inserted into color picker manually
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1489583045
+Class: feature
+
+You can now either choose the color from the picker area or insert it into
+the new hex color input field.

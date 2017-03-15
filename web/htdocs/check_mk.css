@@ -733,6 +733,16 @@ table.data td .cp-preview {
     background-color: black;
 }
 
+.cp-input {
+    float: left;
+    margin-top: 2px;
+}
+
+.cp-input input {
+    margin-left: 2px;
+    width: 106px;
+}
+
 div.popup_trigger.colorpicker .popup_menu {
     top: 17px;
     left: 26px;

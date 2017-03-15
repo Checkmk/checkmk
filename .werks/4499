@@ -1,0 +1,13 @@
+Title: Agent Updater: Prevent broken state files caused by incomplete writes
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1489567247
+Class: fix
+
+When the agent updater is being executed it writes it's current deployment state
+to a state file. When the system is turned of suddenly it could cause a file
+corruption of the cmk-update-agent.state file. We prevent this now by writing to
+a temporary file first, flush it and then move it over to the state file path.

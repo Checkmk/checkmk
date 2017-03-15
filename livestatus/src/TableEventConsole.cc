@@ -98,13 +98,13 @@ private:
 };
 }  // namespace
 
-TableEventConsole::TableEventConsole(MonitoringCore *mc) : Table(mc), _mc(mc) {}
+TableEventConsole::TableEventConsole(MonitoringCore *mc) : Table(mc) {}
 
 void TableEventConsole::answerQuery(Query *query) {
-    if (_mc->mkeventdEnabled()) {
+    if (core()->mkeventdEnabled()) {
         try {
             // skip "eventconsole" prefix :-P
-            ECTableConnection(_mc, name().substr(12), query).run();
+            ECTableConnection(core(), name().substr(12), query).run();
         } catch (const generic_error &ge) {
             query->invalidRequest(ge.what());
         }
@@ -127,8 +127,8 @@ bool TableEventConsole::isAuthorizedForEvent(contact *ctc, void *data) {
         isAuthorizedForEventViaHost(c, r, result) ||
             isAuthorizedForEventViaContactGroups(c, r, result);
     } else {
-        Error(_mc->loggerLivestatus()) << "unknown precedence '" << precedence
-                                       << "' in table " << name();
+        Error(logger()) << "unknown precedence '" << precedence << "' in table "
+                        << name();
         result = false;
     }
     return result;
@@ -142,8 +142,8 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
         return false;
     }
     for (const auto &name : col->getValue(row)) {
-        if (_mc->is_contact_member_of_contactgroup(_mc->find_contactgroup(name),
-                                                   ctc)) {
+        if (core()->is_contact_member_of_contactgroup(
+                core()->find_contactgroup(name), ctc)) {
             return (result = true, true);
         }
     }
@@ -153,7 +153,7 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
 bool TableEventConsole::isAuthorizedForEventViaHost(
     MonitoringCore::Contact *ctc, Row *row, bool &result) {
     if (MonitoringCore::Host *hst = row->_host) {
-        return (result = _mc->host_has_contact(hst, ctc), true);
+        return (result = core()->host_has_contact(hst, ctc), true);
     }
     return false;
 }

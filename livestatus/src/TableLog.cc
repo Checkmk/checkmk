@@ -61,7 +61,7 @@ TableLog::TableLog(LogCache *log_cache,
 #endif
                    ,
                    MonitoringCore *mc)
-    : Table(mc), _mc(mc), _log_cache(log_cache) {
+    : Table(mc), _log_cache(log_cache) {
     addColumn(make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (UNIX timestamp)",
         DANGEROUS_OFFSETOF(LogEntry, _time), -1, -1, -1));
@@ -150,7 +150,7 @@ string TableLog::namePrefix() const { return "log_"; }
 
 void TableLog::answerQuery(Query *query) {
     lock_guard<mutex> lg(_log_cache->_lock);
-    if (!_log_cache->logCachePreChecks(_mc)) {
+    if (!_log_cache->logCachePreChecks(core())) {
         return;
     }
 

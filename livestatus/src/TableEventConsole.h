@@ -196,8 +196,6 @@ protected:
     bool isAuthorizedForEvent(contact *ctc, void *data);
 
 private:
-    MonitoringCore *_mc;
-
     bool isAuthorizedForEventViaContactGroups(MonitoringCore::Contact *ctc,
                                               Row *row, bool &result);
     bool isAuthorizedForEventViaHost(MonitoringCore::Contact *ctc, Row *row,

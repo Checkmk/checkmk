@@ -615,6 +615,8 @@ public:
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
 private:
+    void *implInternal() const override { return nullptr; }
+
     static contact *toImpl(Contact *c) {
         return reinterpret_cast<contact *>(c);
     }

@@ -57,11 +57,11 @@ extern service *service_list;
 using std::make_unique;
 using std::string;
 
-TableServices::TableServices(const DowntimesOrComments &downtimes_holder,
-                             const DowntimesOrComments &comments_holder,
-                             MonitoringCore *mc)
+TableServices::TableServices(MonitoringCore *mc,
+                             const DowntimesOrComments &downtimes_holder,
+                             const DowntimesOrComments &comments_holder)
     : Table(mc) {
-    addColumns(this, "", -1, true, downtimes_holder, comments_holder, mc);
+    addColumns(this, mc, "", -1, true, downtimes_holder, comments_holder);
 }
 
 string TableServices::name() const { return "services"; }
@@ -69,11 +69,11 @@ string TableServices::name() const { return "services"; }
 string TableServices::namePrefix() const { return "service_"; }
 
 // static
-void TableServices::addColumns(Table *table, const string &prefix,
-                               int indirect_offset, bool add_hosts,
+void TableServices::addColumns(Table *table, MonitoringCore *mc,
+                               const string &prefix, int indirect_offset,
+                               bool add_hosts,
                                const DowntimesOrComments &downtimes_holder,
-                               const DowntimesOrComments &comments_holder,
-                               MonitoringCore *mc) {
+                               const DowntimesOrComments &comments_holder) {
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
     table->addColumn(make_unique<OffsetStringColumn>(
@@ -435,9 +435,9 @@ void TableServices::addColumns(Table *table, const string &prefix,
         comments_holder, false, true, true, true, indirect_offset, -1, -1));
 
     if (add_hosts) {
-        TableHosts::addColumns(table, "host_",
+        TableHosts::addColumns(table, mc, "host_",
                                DANGEROUS_OFFSETOF(service, host_ptr), -1,
-                               downtimes_holder, comments_holder, mc);
+                               downtimes_holder, comments_holder);
     }
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(

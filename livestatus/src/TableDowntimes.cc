@@ -42,9 +42,9 @@ using std::string;
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
-TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
-                               const DowntimesOrComments &comments_holder,
-                               MonitoringCore *mc)
+TableDowntimes::TableDowntimes(MonitoringCore *mc,
+                               const DowntimesOrComments &downtimes_holder,
+                               const DowntimesOrComments &comments_holder)
     : Table(mc), _holder(downtimes_holder) {
     addColumn(make_unique<OffsetSStringColumn>(
         "author", "The contact that scheduled the downtime",
@@ -84,11 +84,12 @@ TableDowntimes::TableDowntimes(const DowntimesOrComments &downtimes_holder,
         "The id of the downtime this downtime was triggered by or 0 if it was not triggered by another downtime",
         DANGEROUS_OFFSETOF(Downtime, _triggered_by), -1, -1, -1));
 
-    TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Downtime, _host),
-                           -1, downtimes_holder, comments_holder, mc);
+    TableHosts::addColumns(this, mc, "host_",
+                           DANGEROUS_OFFSETOF(Downtime, _host), -1,
+                           downtimes_holder, comments_holder);
     TableServices::addColumns(
-        this, "service_", DANGEROUS_OFFSETOF(Downtime, _service),
-        false /* no hosts table */, downtimes_holder, comments_holder, mc);
+        this, mc, "service_", DANGEROUS_OFFSETOF(Downtime, _service),
+        false /* no hosts table */, downtimes_holder, comments_holder);
 }
 
 string TableDowntimes::name() const { return "downtimes"; }

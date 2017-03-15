@@ -43,24 +43,22 @@ class Query;
 #ifdef CMC
 #include <mutex>
 #include "Notes.h"
-class Core;
 #else
 class DowntimesOrComments;
 #endif
 
 class TableStateHistory : public Table {
 public:
+    TableStateHistory(MonitoringCore *mc, LogCache *log_cache,
 #ifdef CMC
-    TableStateHistory(LogCache *log_cache, const Downtimes &downtimes_holder,
+                      const Downtimes &downtimes_holder,
                       const Comments &comments_holder,
-                      std::recursive_mutex &holder_lock, Core *core,
-                      MonitoringCore *mc);
+                      std::recursive_mutex &holder_lock
 #else
-    TableStateHistory(LogCache *log_cache,
                       const DowntimesOrComments &downtimes_holder,
-                      const DowntimesOrComments &comments_holder,
-                      MonitoringCore *mc);
+                      const DowntimesOrComments &comments_holder
 #endif
+                      );
 
     std::string name() const override;
     std::string namePrefix() const override;

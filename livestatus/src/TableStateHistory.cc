@@ -96,19 +96,17 @@ string getCustomVariable(customvariablesmember *cvm, const char *name) {
 }  // namespace
 #endif
 
-TableStateHistory::TableStateHistory(LogCache *log_cache,
+TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache,
 #ifdef CMC
                                      const Downtimes &downtimes_holder,
                                      const Comments &comments_holder,
-                                     std::recursive_mutex &holder_lock,
-                                     Core *core
+                                     std::recursive_mutex &holder_lock
 #else
                                      const DowntimesOrComments
                                          &downtimes_holder,
                                      const DowntimesOrComments &comments_holder
 #endif
-                                     ,
-                                     MonitoringCore *mc)
+                                     )
     : Table(mc), _log_cache(log_cache) {
     addColumn(make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (seconds since 1/1/1970)",
@@ -223,27 +221,21 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
         -1, -1));
 
     // join host and service tables
-    TableHosts::addColumns(this, "current_host_",
+    TableHosts::addColumns(this, mc, "current_host_",
                            DANGEROUS_OFFSETOF(HostServiceState, _host), -1,
                            downtimes_holder, comments_holder
 #ifdef CMC
                            ,
-                           holder_lock, mc, core
-#else
-                           ,
-                           mc
+                           holder_lock
 #endif
                            );
-    TableServices::addColumns(this, "current_service_",
+    TableServices::addColumns(this, mc, "current_service_",
                               DANGEROUS_OFFSETOF(HostServiceState, _service),
                               false /* no hosts table */, downtimes_holder,
                               comments_holder
 #ifdef CMC
                               ,
-                              holder_lock, mc, core
-#else
-                              ,
-                              mc
+                              holder_lock
 #endif
                               );
 }

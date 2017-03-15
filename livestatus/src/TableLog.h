@@ -36,7 +36,6 @@ class Column;
 #ifdef CMC
 #include <mutex>
 #include "Notes.h"
-class Core;
 #else
 class DowntimesOrComments;
 #endif
@@ -47,14 +46,16 @@ class Query;
 
 class TableLog : public Table {
 public:
+    TableLog(MonitoringCore *mc, LogCache *log_cache,
 #ifdef CMC
-    TableLog(LogCache *log_cache, const Downtimes &downtimes_holder,
-             const Comments &comments_holder, std::recursive_mutex &holder_lock,
-             Core *core, MonitoringCore *mc);
+             const Downtimes &downtimes_holder, const Comments &comments_holder,
+             std::recursive_mutex &holder_lock
 #else
-    TableLog(LogCache *log_cache, const DowntimesOrComments &downtimes_holder,
-             const DowntimesOrComments &comments_holder, MonitoringCore *mc);
+             const DowntimesOrComments &downtimes_holder,
+             const DowntimesOrComments &comments_holder
 #endif
+             );
+
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;

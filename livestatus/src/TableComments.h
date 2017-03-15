@@ -35,7 +35,6 @@ class Query;
 #include <mutex>
 #include "Notes.h"
 #include "cmc.h"
-class Core;
 #else
 #include "nagios.h"
 class DowntimesOrComments;
@@ -43,16 +42,16 @@ class DowntimesOrComments;
 
 class TableComments : public Table {
 public:
+    TableComments(MonitoringCore *mc,
 #ifdef CMC
-    TableComments(const Downtimes &downtimes_holder,
+                  const Downtimes &downtimes_holder,
                   const Comments &comments_holder,
-                  std::recursive_mutex &holder_lock, MonitoringCore *mc,
-                  Core *core);
+                  std::recursive_mutex &holder_lock
 #else
-    TableComments(const DowntimesOrComments &downtimes_holder,
-                  const DowntimesOrComments &comments_holder,
-                  MonitoringCore *mc);
+                  const DowntimesOrComments &downtimes_holder,
+                  const DowntimesOrComments &comments_holder
 #endif
+                  );
 
     std::string name() const override;
     std::string namePrefix() const override;

@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <list>
 #include <map>
+#include <mutex>
 #include <string>
 #include "LogCache.h"
 #include "TableColumns.h"
@@ -60,12 +61,12 @@ class Table;
 
 #ifdef CMC
 #include <cstdint>
+#include "Notes.h"
 #include "TableCachedStatehist.h"
+class CommandsHolderCMC;
 class Config;
-class Core;
 class Object;
 #else
-#include <mutex>
 #include "CommandsHolderNagios.h"
 #include "DowntimesOrComments.h"
 #include "nagios.h"
@@ -73,8 +74,8 @@ class Object;
 
 class Store {
 public:
+    explicit Store(MonitoringCore *mc);
 #ifdef CMC
-    Store(MonitoringCore *mc, Core *core);
     LogCache *logCache() { return &_log_cache; };
     bool answerRequest(InputBuffer *, OutputBuffer *);
     bool answerGetRequest(const std::list<std::string> &lines,
@@ -90,7 +91,6 @@ public:
     void addDowntimeToStatehistCache(Object *, bool started);
     void addFlappingToStatehistCache(Object *, bool started);
 #else
-    explicit Store(MonitoringCore *mc);
     bool answerRequest(InputBuffer &input, OutputBuffer &output);
 
     void registerDowntime(nebstruct_downtime_data *);
@@ -101,9 +101,11 @@ public:
 private:
     MonitoringCore *_mc;
 #ifdef CMC
-    Core *_core;
-#endif
-#ifndef CMC
+    CommandsHolderCMC &_commands_holder;
+    Downtimes &_downtimes;
+    Comments &_comments;
+    std::recursive_mutex &_notes_lock;
+#else
     CommandsHolderNagios _commands_holder;
     DowntimesOrComments _downtimes;
     DowntimesOrComments _comments;

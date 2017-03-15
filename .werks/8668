@@ -1,0 +1,11 @@
+Title: ipmi: fixed handling of units containing spaces
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b4
+Date: 1489591985
+Class: fix
+
+Fixed ipmi check in case agent provides units like "Degrees C", containing spaces. Those units cause issues with RRD creation.
+Spaces are now replaces by underscores.

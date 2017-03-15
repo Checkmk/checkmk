@@ -41,16 +41,16 @@ class MonitoringCore;
 typedef std::map<time_t, Logfile *> _logfiles_t;
 
 class LogCache {
+    MonitoringCore *_mc;
     const CommandsHolder &_commands_holder;
     unsigned long _max_cached_messages;
     unsigned long _num_at_last_check;
-    Logger *const _logger;
     _logfiles_t _logfiles;
 
 public:
     std::mutex _lock;
 
-    LogCache(Logger *logger, const CommandsHolder &commands_holder,
+    LogCache(MonitoringCore *mc, const CommandsHolder &commands_holder,
              unsigned long max_cached_messages);
     ~LogCache();
 #ifdef CMC
@@ -68,11 +68,12 @@ public:
     void forgetLogfiles();
     void updateLogfileIndex();
 
-    bool logCachePreChecks(MonitoringCore *mc);
+    bool logCachePreChecks();
 
 private:
     void scanLogfile(const fs::path &path, bool watch);
     _logfiles_t::iterator findLogfileStartingBefore(time_t);
+    Logger *logger() const;
 };
 
 #endif  // LogCache_h

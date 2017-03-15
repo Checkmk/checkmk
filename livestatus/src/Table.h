@@ -93,6 +93,7 @@ public:
     virtual bool isAuthorized(contact *ctc, void *data);
     virtual void *findObject(const std::string &objectspec);
 
+    MonitoringCore *core() const { return _mc; }
     Logger *logger() const;
 
 private:

@@ -72,7 +72,6 @@ protected:
     bool _abort_query;
 
 private:
-    MonitoringCore *_mc;
     LogCache *_log_cache;
 
     int _query_timeframe;

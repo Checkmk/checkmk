@@ -1,0 +1,16 @@
+Title: watchdog_sensors: Added new checks for GEIST watchdog devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1489597240
+Class: feature
+
+This feature contains the following checks:
+watchdog_sensors
+watchdog_sensors.temp
+watchdog_sensors.humidity
+watchdog_sensors.dew
+
+Please see the manpages for further information.

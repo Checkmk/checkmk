@@ -105,6 +105,7 @@ catalog_titles = {
             "f5"          : "F5 Networks",
             "fireeye"     : "FireEye",
             "fortinet"    : "Fortinet",
+            "geist"       : "GEIST",
             "genua"       : "genua",
             "h3c"         : "H3C Technologies (also 3Com)",
             "hp"          : "Hewlett-Packard (HP)",

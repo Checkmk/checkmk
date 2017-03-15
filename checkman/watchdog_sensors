@@ -1,0 +1,10 @@
+title: GEIST watchdog: Status
+agents: snmp
+catalog: hw/network/geist
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the general status of the watchdog device. The state will change to {WARN} if the reported status is {{Partially Available}} and to {CRIT} if the status is {{Unavailable}}.
+
+inventory:
+ the status service will be automatically inventorized.

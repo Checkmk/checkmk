@@ -106,9 +106,8 @@ def heartbeat_crm_parse_general(info):
 #   |                        | |___|  _ <| |  | |                          |
 #   |                         \____|_| \_\_|  |_|                          |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   '----------------------------------------------------------------------'
+
 def inventory_heartbeat_crm(info):
     # Use these lines to gather the inventory and perform this check:
     # ============
@@ -134,6 +133,7 @@ def inventory_heartbeat_crm(info):
     if settings.get('naildown_dc', False):
         params['dc'] = dc
     return [(None, params)]
+
 
 def check_heartbeat_crm(item, params, info):
     if len(info) > 0:

@@ -39,9 +39,6 @@ public:
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
     void *findObject(const std::string &objectspec) override;
-
-private:
-    MonitoringCore *_mc;
 };
 
 #endif  // TableContactGroups_h

@@ -109,7 +109,7 @@ TableStateHistory::TableStateHistory(LogCache *log_cache,
 #endif
                                      ,
                                      MonitoringCore *mc)
-    : Table(mc), _mc(mc), _log_cache(log_cache) {
+    : Table(mc), _log_cache(log_cache) {
     addColumn(make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (seconds since 1/1/1970)",
         DANGEROUS_OFFSETOF(HostServiceState, _time), -1, -1, -1));
@@ -321,7 +321,7 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     lock_guard<mutex> lg(_log_cache->_lock);
-    if (!_log_cache->logCachePreChecks(_mc)) {
+    if (!_log_cache->logCachePreChecks(core())) {
         return;
     }
 

@@ -36,33 +36,32 @@ using std::string;
 #ifdef CMC
 TableEventConsoleEvents::TableEventConsoleEvents(
     MonitoringCore *mc, const Downtimes &downtimes_holder,
-    const Comments &comments_holder, std::recursive_mutex &holder_lock,
-    Core *core)
+    const Comments &comments_holder, std::recursive_mutex &holder_lock)
     : TableEventConsole(mc) {
-    addColumns(this, downtimes_holder, comments_holder, holder_lock, mc, core);
+    addColumns(this, mc, downtimes_holder, comments_holder, holder_lock);
 }
 #else
 TableEventConsoleEvents::TableEventConsoleEvents(
     MonitoringCore *mc, const DowntimesOrComments &downtimes_holder,
     const DowntimesOrComments &comments_holder)
     : TableEventConsole(mc) {
-    addColumns(this, downtimes_holder, comments_holder, mc);
+    addColumns(this, mc, downtimes_holder, comments_holder);
 }
 #endif
 
 // static
+void TableEventConsoleEvents::addColumns(Table *table, MonitoringCore *mc,
 #ifdef CMC
-void TableEventConsoleEvents::addColumns(Table *table,
                                          const Downtimes &downtimes_holder,
                                          const Comments &comments_holder,
-                                         std::recursive_mutex &holder_lock,
-                                         MonitoringCore *mc, Core *core)
+                                         std::recursive_mutex &holder_lock
 #else
-void TableEventConsoleEvents::addColumns(
-    Table *table, const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder, MonitoringCore *mc)
+                                         const DowntimesOrComments
+                                             &downtimes_holder,
+                                         const DowntimesOrComments
+                                             &comments_holder
 #endif
-{
+                                         ) {
     table->addColumn(make_unique<IntEventConsoleColumn>(
         "event_id", "The unique ID for this event"));
     table->addColumn(make_unique<IntEventConsoleColumn>(
@@ -111,14 +110,11 @@ void TableEventConsoleEvents::addColumns(
     table->addColumn(make_unique<StringEventConsoleColumn>(
         "event_ipaddress", "The IP address where the event originated"));
 
-    TableHosts::addColumns(table, "host_", DANGEROUS_OFFSETOF(Row, _host), -1,
-                           downtimes_holder, comments_holder
+    TableHosts::addColumns(table, mc, "host_", DANGEROUS_OFFSETOF(Row, _host),
+                           -1, downtimes_holder, comments_holder
 #ifdef CMC
                            ,
-                           holder_lock, mc, core
-#else
-                           ,
-                           mc
+                           holder_lock
 #endif
                            );
 }

@@ -35,33 +35,34 @@ class Query;
 #ifdef CMC
 #include <mutex>
 #include "Notes.h"
-class Core;
 #else
 class DowntimesOrComments;
 #endif
 
 class TableHosts : public Table {
 public:
+    TableHosts(MonitoringCore *mc,
 #ifdef CMC
-    TableHosts(const Downtimes &downtimes_holder,
+               const Downtimes &downtimes_holder,
                const Comments &comments_holder,
-               std::recursive_mutex &holder_lock, MonitoringCore *mc,
-               Core *core);
-    static void addColumns(Table *, const std::string &prefix,
-                           int indirect_offset, int extra_offset,
+               std::recursive_mutex &holder_lock
+#else
+               const DowntimesOrComments &downtimes_holder,
+               const DowntimesOrComments &comments_holder
+#endif
+               );
+    static void addColumns(Table *, MonitoringCore *mc,
+                           const std::string &prefix, int indirect_offset,
+                           int extra_offset,
+#ifdef CMC
                            const Downtimes &downtimes_holder,
                            const Comments &comments_holder,
-                           std::recursive_mutex &holder_lock,
-                           MonitoringCore *mc, Core *core);
+                           std::recursive_mutex &holder_lock
 #else
-    TableHosts(const DowntimesOrComments &downtimes_holder,
-               const DowntimesOrComments &comments_holder, MonitoringCore *mc);
-    static void addColumns(Table *, const std::string &prefix,
-                           int indirect_offset, int extra_offset,
                            const DowntimesOrComments &downtimes_holder,
-                           const DowntimesOrComments &comments_holder,
-                           MonitoringCore *mc);
+                           const DowntimesOrComments &comments_holder
 #endif
+                           );
 
     std::string name() const override;
     std::string namePrefix() const override;

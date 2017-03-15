@@ -42,11 +42,11 @@ struct servicebyhostgroup {
 }  // namespace
 
 TableServicesByHostGroup::TableServicesByHostGroup(
-    const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder, MonitoringCore *mc)
+    MonitoringCore *mc, const DowntimesOrComments &downtimes_holder,
+    const DowntimesOrComments &comments_holder)
     : Table(mc) {
-    TableServices::addColumns(this, "", -1, true, downtimes_holder,
-                              comments_holder, mc);
+    TableServices::addColumns(this, mc, "", -1, true, downtimes_holder,
+                              comments_holder);
     TableHostGroups::addColumns(
         this, "hostgroup_", DANGEROUS_OFFSETOF(servicebyhostgroup, _hostgroup));
 }

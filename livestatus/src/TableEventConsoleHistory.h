@@ -34,7 +34,6 @@ class MonitoringCore;
 #include <mutex>
 #include "Notes.h"
 #include "cmc.h"
-class Core;
 #else
 #include "nagios.h"
 class DowntimesOrComments;
@@ -42,16 +41,17 @@ class DowntimesOrComments;
 
 class TableEventConsoleHistory : public TableEventConsole {
 public:
-#ifdef CMC
     TableEventConsoleHistory(MonitoringCore *mc,
+#ifdef CMC
                              const Downtimes &downtimes_holder,
                              const Comments &comments_holder,
-                             std::recursive_mutex &holder_lock, Core *core);
+                             std::recursive_mutex &holder_lock
 #else
-    TableEventConsoleHistory(MonitoringCore *mc,
                              const DowntimesOrComments &downtimes_holder,
-                             const DowntimesOrComments &comments_holder);
+                             const DowntimesOrComments &comments_holder
 #endif
+                             );
+
     std::string name() const override;
     std::string namePrefix() const override;
 

@@ -32,17 +32,9 @@
 class MonitoringCore;
 class Query;
 
-#ifdef CMC
-class Core;
-#endif
-
 class TableStatus : public Table {
 public:
-#ifdef CMC
-    explicit TableStatus(MonitoringCore *mc, Core *core);
-#else
     explicit TableStatus(MonitoringCore *mc);
-#endif
 
     std::string name() const override;
     std::string namePrefix() const override;

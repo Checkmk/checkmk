@@ -42,9 +42,9 @@ using std::string;
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
-TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
-                             const DowntimesOrComments &comments_holder,
-                             MonitoringCore *mc)
+TableComments::TableComments(MonitoringCore *mc,
+                             const DowntimesOrComments &downtimes_holder,
+                             const DowntimesOrComments &comments_holder)
     : Table(mc), _holder(comments_holder) {
     addColumn(make_unique<OffsetSStringColumn>(
         "author", "The contact that entered the comment",
@@ -83,11 +83,12 @@ TableComments::TableComments(const DowntimesOrComments &downtimes_holder,
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
         DANGEROUS_OFFSETOF(Comment, _expire_time), -1, -1, -1));
 
-    TableHosts::addColumns(this, "host_", DANGEROUS_OFFSETOF(Comment, _host),
-                           -1, downtimes_holder, comments_holder, mc);
+    TableHosts::addColumns(this, mc, "host_",
+                           DANGEROUS_OFFSETOF(Comment, _host), -1,
+                           downtimes_holder, comments_holder);
     TableServices::addColumns(
-        this, "service_", DANGEROUS_OFFSETOF(Comment, _service),
-        false /* no hosts table */, downtimes_holder, comments_holder, mc);
+        this, mc, "service_", DANGEROUS_OFFSETOF(Comment, _service),
+        false /* no hosts table */, downtimes_holder, comments_holder);
 }
 
 string TableComments::name() const { return "comments"; }

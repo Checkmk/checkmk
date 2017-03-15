@@ -111,6 +111,13 @@
 #                   'state': 'Enabled'},
 # }
 
+factory_settings['emcvnx_disks_default_levels'] = {
+        'state_read_error'  : (2, 2), # (state, count of errors)
+        'state_write_error' : (2, 2), # (state, count of errors)
+        'state_rebuilding'   : 1,
+}
+
+
 def parse_emcvnx_disks(info):
     parsed = {}
     for line in info:
@@ -162,14 +169,14 @@ def check_emcvnx_disks(item, params, parsed):
 
     read_errors = parsed[item]["Hard Read Errors"]
     message += ", Hard Read Errors: %s" % read_errors
-    if read_errors > 0:
-        nagstate = params.get("state_read_error", 2)
+    if read_errors >= params["state_read_error"][1]:
+        nagstate = params["state_read_error"][0]
         message += " %s" % state_markers[nagstate]
 
     write_errors = parsed[item]["Hard Write Errors"]
     message += ", Hard Write Errors: %s" % write_errors
-    if write_errors > 0:
-        nagstate = params.get("state_write_error", 2)
+    if write_errors >= params["state_write_error"][1]:
+        nagstate = params["state_write_error"][0]
         message += " %s" % state_markers[nagstate]
 
     read_bytes = parsed[item]["Kbytes Read"] * 1024
@@ -195,4 +202,5 @@ check_info['emcvnx_disks'] = {
     "service_description"     : "Enclosure %s",
     "group"                   : "emcvnx_disks",
     "has_perfdata"            : True,
+    "default_levels_variable" : "emcvnx_disks_default_levels"
 }

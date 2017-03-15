@@ -1,0 +1,10 @@
+title: Fortigate devices: Network interfaces via standard MIB using 64 Bit counters
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This check does exactly the same as {if64} but retrieves {ifName} instead
+ of {ifAlias}, because {ifAlias} is not useful in Fortigate firewalls.
+
+ Please refer to the if64 manpage for documentation.

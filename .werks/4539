@@ -1,0 +1,14 @@
+Title: if_fortigate: transfered if-checks for fortigate devices into own checkplugin
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1489591394
+Class: fix
+
+Due incompatible usage of snmp information interface checks for fortigate
+firewalls needed to be transfered into an own checkplugin.
+
+This change is incompatible and you will have to rediscover your services
+on fortigate firewall devices.

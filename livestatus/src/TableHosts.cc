@@ -62,11 +62,11 @@ extern host *host_list;
 using std::make_unique;
 using std::string;
 
-TableHosts::TableHosts(const DowntimesOrComments &downtimes_holder,
-                       const DowntimesOrComments &comments_holder,
-                       MonitoringCore *mc)
+TableHosts::TableHosts(MonitoringCore *mc,
+                       const DowntimesOrComments &downtimes_holder,
+                       const DowntimesOrComments &comments_holder)
     : Table(mc) {
-    addColumns(this, "", -1, -1, downtimes_holder, comments_holder, mc);
+    addColumns(this, mc, "", -1, -1, downtimes_holder, comments_holder);
 }
 
 string TableHosts::name() const { return "hosts"; }
@@ -74,11 +74,11 @@ string TableHosts::name() const { return "hosts"; }
 string TableHosts::namePrefix() const { return "host_"; }
 
 // static
-void TableHosts::addColumns(Table *table, const string &prefix,
-                            int indirect_offset, int extra_offset,
+void TableHosts::addColumns(Table *table, MonitoringCore *mc,
+                            const string &prefix, int indirect_offset,
+                            int extra_offset,
                             const DowntimesOrComments &downtimes_holder,
-                            const DowntimesOrComments &comments_holder,
-                            MonitoringCore *mc) {
+                            const DowntimesOrComments &comments_holder) {
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "Host name", DANGEROUS_OFFSETOF(host, name),
         indirect_offset, extra_offset, -1));

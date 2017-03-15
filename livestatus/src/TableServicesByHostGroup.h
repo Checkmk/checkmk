@@ -35,23 +35,22 @@ class Query;
 #ifdef CMC
 #include <mutex>
 #include "Notes.h"
-class Core;
 #else
 class DowntimesOrComments;
 #endif
 
 class TableServicesByHostGroup : public Table {
 public:
+    TableServicesByHostGroup(MonitoringCore *mc,
 #ifdef CMC
-    TableServicesByHostGroup(const Downtimes &downtimes_holder,
+                             const Downtimes &downtimes_holder,
                              const Comments &comments_holder,
-                             std::recursive_mutex &holder_lock,
-                             MonitoringCore *mc, Core *core);
+                             std::recursive_mutex &holder_lock
 #else
-    TableServicesByHostGroup(const DowntimesOrComments &downtimes_holder,
-                             const DowntimesOrComments &comments_holder,
-                             MonitoringCore *mc);
+                             const DowntimesOrComments &downtimes_holder,
+                             const DowntimesOrComments &comments_holder
 #endif
+                             );
 
     std::string name() const override;
     std::string namePrefix() const override;

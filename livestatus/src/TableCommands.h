@@ -34,7 +34,7 @@ class Query;
 
 class TableCommands : public Table {
 public:
-    TableCommands(const CommandsHolder &commands_holder, MonitoringCore *mc);
+    TableCommands(MonitoringCore *mc, const CommandsHolder &commands_holder);
 
     std::string name() const override;
     std::string namePrefix() const override;

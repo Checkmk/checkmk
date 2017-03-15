@@ -35,7 +35,6 @@ class Table;
 #include <mutex>
 #include "Notes.h"
 #include "cmc.h"
-class Core;
 #else
 #include "nagios.h"
 class DowntimesOrComments;
@@ -46,25 +45,26 @@ public:
     std::string name() const override;
     std::string namePrefix() const override;
 
-#ifdef CMC
     TableEventConsoleEvents(MonitoringCore *mc,
+#ifdef CMC
                             const Downtimes &downtimes_holder,
                             const Comments &comments_holder,
-                            std::recursive_mutex &holder_lock, Core *core);
-
-    static void addColumns(Table *table, const Downtimes &downtimes_holder,
-                           const Comments &comments_holder,
-                           std::recursive_mutex &holder_lock,
-                           MonitoringCore *mc, Core *core);
+                            std::recursive_mutex &holder_lock
 #else
-    TableEventConsoleEvents(MonitoringCore *mc,
                             const DowntimesOrComments &downtimes_holder,
-                            const DowntimesOrComments &comments_holder);
-    static void addColumns(Table *table,
-                           const DowntimesOrComments &downtimes_holder,
-                           const DowntimesOrComments &comments_holder,
-                           MonitoringCore *mc);
+                            const DowntimesOrComments &comments_holder
 #endif
+                            );
+    static void addColumns(Table *table, MonitoringCore *mc,
+#ifdef CMC
+                           const Downtimes &downtimes_holder,
+                           const Comments &comments_holder,
+                           std::recursive_mutex &holder_lock
+#else
+                           const DowntimesOrComments &downtimes_holder,
+                           const DowntimesOrComments &comments_holder
+#endif
+                           );
 
     bool isAuthorized(contact *ctc, void *data) override;
 };

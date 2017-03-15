@@ -41,11 +41,11 @@ struct servicebygroup {
 }  // namespace
 
 TableServicesByGroup::TableServicesByGroup(
-    const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder, MonitoringCore *mc)
+    MonitoringCore *mc, const DowntimesOrComments &downtimes_holder,
+    const DowntimesOrComments &comments_holder)
     : Table(mc) {
-    TableServices::addColumns(this, "", -1, true, downtimes_holder,
-                              comments_holder, mc);
+    TableServices::addColumns(this, mc, "", -1, true, downtimes_holder,
+                              comments_holder);
     TableServiceGroups::addColumns(
         this, "servicegroup_",
         DANGEROUS_OFFSETOF(servicebygroup, _servicegroup));

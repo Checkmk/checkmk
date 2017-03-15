@@ -57,6 +57,15 @@ public:
     virtual std::string logArchivePath() = 0;
 
     virtual Logger *loggerLivestatus() = 0;
+
+    // Our escape hatch, this should die in the long run...
+    template <typename T>
+    T *impl() const {
+        return static_cast<T *>(implInternal());
+    }
+
+private:
+    virtual void *implInternal() const = 0;
 };
 
 #endif  // MonitoringCore_h

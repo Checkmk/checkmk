@@ -326,7 +326,7 @@ class Site(object):
 
         if os.path.exists(cme_path()):
             paths += [
-                cme_path() + "/web",
+                cme_path(),
             ]
 
         for path in paths:

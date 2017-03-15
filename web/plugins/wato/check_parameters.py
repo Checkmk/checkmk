@@ -4327,22 +4327,40 @@ register_check_parameters(
     Dictionary(
         elements = [
             ("state_read_error",
-                MonitoringState(
-                    default_value = 2,
-                    title = _("State on hard read error")
-                )
+             Tuple(
+                title = _("State on hard read error"),
+                elements = [
+                    MonitoringState(
+                        title = _("State"),
+                        default_value = 2,
+                    ),
+                    Integer(
+                        title = _("Minimum error count"),
+                        default_value = 2,
+                    ),
+                ]
+             )
             ),
             ("state_write_error",
-                MonitoringState(
-                    default_value = 2,
-                    title = _("State on hard write error")
-                )
+             Tuple(
+                title = _("State on hard write error"),
+                elements = [
+                    MonitoringState(
+                        title = _("State"),
+                        default_value = 2,
+                    ),
+                    Integer(
+                        title = _("Minimum error count"),
+                        default_value = 2,
+                    ),
+                ]
+             )
             ),
             ("state_rebuilding",
-                MonitoringState(
+             MonitoringState(
                     default_value = 1,
                     title = _("State when rebuildung enclosure")
-                )
+             )
             ),
         ]
     ),

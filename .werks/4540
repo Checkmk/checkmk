@@ -1,0 +1,16 @@
+Title: emcvnx_disks: Thresholds for count of failures can be set now
+Level: 1
+Component: checks
+Class: feature
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.4.0b5
+Date: 1489591974
+
+Previously only the state for hard read or write failures could be set. As from
+now additionally a counter of failures can be set. The Service will change the
+state only if the amount of failure will be equal or higher than set in rule.
+
+On default the Service will be go critical if there are 2 or more failures
+detected.

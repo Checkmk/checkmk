@@ -379,42 +379,71 @@ def inventory_esx_vsphere_vm_snapshots(info):
         return [(None, {})]
 
 def check_esx_vsphere_vm_snapshots(_no_item, params, info):
+    def check_levels(age, warn, crit):
+        if age >= crit:
+            return (2, "snapshot is older than %s" % get_age_human_readable(age))
+        elif age >= warn:
+            return (1, "snapshot is older than %s" % get_age_human_readable(age))
+        else:
+            return (0, "")
+
     data = esx_vsphere_vm_convert(info)
 
     if 'snapshot.rootSnapshotList' not in data:
         yield 0, "No snapshots found"
     else:
         last_snapshot  = None
+        oldest_snapshot = None
         powered_on_snapshot = None
         snapshots = map(lambda x: x.split(" ", 3), " ".join(data["snapshot.rootSnapshotList"]).split("|"))
         snapshots = map(lambda x: (int(x[0]), int(x[1]), x[2], x[3]) , snapshots)
         yield 0, "Number of Snapshots %d" % len(snapshots)
 
         if len(snapshots) > 0:
+            perfdata = []
+            last_time = max(zip(*snapshots)[1])
+            oldest_time = min(zip(*snapshots)[1])
             last_snapshot = snapshots[0]
+            oldest_snapshot = snapshots[0]
             for snapshot in snapshots:
-                if snapshot[1] > last_snapshot[1]:
+                if last_time == snapshot[1]:
                     last_snapshot = snapshot
-                if snapshot[2] == "poweredOn":
+                elif oldest_time == snapshot[1]:
+                    oldest_snapshot = snapshot
+
+                if "poweredOn" == snapshot[2]:
                     powered_on_snapshot = snapshot
 
             yield 0, "Powered On: %s" % (powered_on_snapshot and powered_on_snapshot[3] or "None")
 
-            perfdata = []
-            snapshot_age = time.time() - last_snapshot[1]
+            last_snapshot_age = time.time() - last_snapshot[1]
             if params.get("age"):
                 warn, crit = params["age"]
-                if snapshot_age > crit:
-                    yield 2, "Snapshot is older than %s" % get_age_human_readable(snapshot_age)
-                elif snapshot_age > warn:
-                    yield 1, "Snapshot is older than %s" % get_age_human_readable(snapshot_age)
-                perfdata = [("age", snapshot_age, warn, crit)]
-            else:
-                perfdata = [("age", snapshot_age)]
-
+                state, message = check_levels(last_snapshot_age, warn, crit)
+                if state > 0:
+                    yield state, "Last %s" % message,
+                    perfdata = [ ("age", last_snapshot_age, warn, crit) ]
+                else:
+                    perfdata = [ ("age", last_snapshot_age) ]
             yield 0, "Last Snapshot: %s %s" % (last_snapshot[3],
                                                time.strftime("%D %H:%M",time.localtime(last_snapshot[1]))),\
                                                perfdata
+
+            # Display oldest snapshot only, if it is not identical with the last snapshot
+            if not oldest_snapshot == last_snapshot:
+                oldest_snapshot_age = time.time() - oldest_snapshot[1]
+                if params.get("age_oldest"):
+                    warn, crit = params["age_oldest"]
+                    state, message = check_levels(oldest_snapshot_age, warn, crit)
+                    if state > 0:
+                        yield state, "Oldest %s" % message,
+                        perfdata = [ ("age_oldst", oldest_snapshot_age, warn, crit) ]
+                    else:
+                        perfdata = [ ("age_oldest", oldest_snapshot_age) ]
+
+                yield 0, "Oldest Snapshot: %s %s" % (oldest_snapshot[3],
+                                                   time.strftime("%D %H:%M",time.localtime(oldest_snapshot[1]))),\
+                                                   perfdata
 
 
 check_info['esx_vsphere_vm.snapshots'] = {

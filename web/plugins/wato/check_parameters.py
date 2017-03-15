@@ -9028,7 +9028,17 @@ register_check_parameters(
                 Age(title = _("Critical if older than"))
             ]
           )
-        )]
+        ),
+        ("age_oldest",
+          Tuple(
+            title = _("Age of the oldest snapshot"),
+            elements = [
+                Age(title = _("Warning if older than")),
+                Age(title = _("Critical if older than"))
+            ]
+          )
+        ),
+        ]
     ),
     None,
     match_type = "dict",

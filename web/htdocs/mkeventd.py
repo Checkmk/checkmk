@@ -31,6 +31,10 @@ import sites
 from lib import *
 import cmk.paths
 
+if cmk.is_managed_edition():
+    import managed
+else:
+    managed = None
 
 # ASN1 MIB source directory candidates. Non existing dirs are ok.
 # Please sync these paths with htdocs/mkeventd.py
@@ -292,8 +296,8 @@ def get_stats_per_site(only_sites, stats_keys):
 # here. But it does not make sense to query the live eventd here since it
 # does not know anything about the currently configured but not yet activated
 # rules. And also we do not want to have shared code.
-def event_rule_matches(rule, event):
-    result = event_rule_matches_non_inverted(rule, event)
+def event_rule_matches(rule_pack, rule, event):
+    result = event_rule_matches_non_inverted(rule_pack, rule, event)
     if rule.get("invert_matching"):
         if type(result) == tuple:
             return _("The rule would match, but matching is inverted.")
@@ -303,7 +307,7 @@ def event_rule_matches(rule, event):
         return result
 
 
-def event_rule_matches_non_inverted(rule, event):
+def event_rule_matches_non_inverted(rule_pack, rule, event):
     if False == match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
         return _("The source IP address does not match.")
 
@@ -361,6 +365,18 @@ def event_rule_matches_non_inverted(rule, event):
         reason = check_timeperiod(rule["match_timeperiod"])
         if reason:
             return reason
+
+    if cmk.is_managed_edition():
+        import managed
+        if "customer" in rule_pack:
+            rule_customer_id = rule_pack["customer"]
+        else:
+            rule_customer_id = rule.get("customer", managed.SCOPE_GLOBAL)
+
+        site_customer_id = managed.get_customer_id(config.sites[event["site"]])
+
+        if rule_customer_id != managed.SCOPE_GLOBAL and site_customer_id != rule_customer_id:
+            return _("Wrong customer")
 
     if match_groups == True:
         match_groups = () # no matching groups

@@ -1150,7 +1150,7 @@ def mode_mkeventd_rule_packs(phase):
                 skips = 0
 
                 for rule in rule_pack["rules"]:
-                    result = mkeventd.event_rule_matches(rule, event)
+                    result = mkeventd.event_rule_matches(rule_pack, rule, event)
                     if type(result) == tuple:
                         cancelling, groups = result
 
@@ -1336,7 +1336,7 @@ def mode_mkeventd_rules(phase):
             if rule.get("disabled"):
                 html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
             elif event:
-                result = mkeventd.event_rule_matches(rule, event)
+                result = mkeventd.event_rule_matches(rule_pack, rule, event)
                 if type(result) != tuple:
                     html.icon(_("Rule does not match: %s") % result, "rulenmatch")
                 else:
@@ -1639,6 +1639,11 @@ def mode_mkeventd_edit_rule(phase):
                                 num_repl, num_groups))
             num_repl -= 1
 
+        if cmk.is_managed_edition() and "customer" in rule_pack:
+            try:
+                del rule["customer"]
+            except KeyError:
+                pass
 
         if new and clone_nr >= 0:
             rules[clone_nr:clone_nr] = [ rule ]

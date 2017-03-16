@@ -704,6 +704,18 @@ inventory_displayhints.update({
     ".hardware.video:*.driver_date"                    : { "title" : _("Driver Date"), "short" : _("Driver Date") },
     ".hardware.video:*.driver_version"                 : { "title" : _("Driver Version"), "short" : _("Driver Version") },
 
+    ".hardware.nwadapter:"                             : { "title" : _("Network Adapters"), },
+    ".hardware.nwadapter:*."                           : { "title" : _("Network Adapter %d"), },
+    ".hardware.nwadapter:*.name"                       : { "title" : _("Name"), },
+    ".hardware.nwadapter:*.type"                       : { "title" : _("Type"), },
+    ".hardware.nwadapter:*.macaddress"                 : { "title" : _("Physical Address (MAC)"), },
+    ".hardware.nwadapter:*.speed"                      : { "title" : _("Speed"), "paint" : "nic_speed", },
+    ".hardware.nwadapter:*.ipv4_address"               : { "title" : _("IPv4 Address"), },
+    ".hardware.nwadapter:*.ipv4_subnet"                : { "title" : _("IPv4 Subnet"), },
+    ".hardware.nwadapter:*.ipv6_address"               : { "title" : _("IPv6 Address"), },
+    ".hardware.nwadapter:*.ipv6_subnet"                : { "title" : _("IPv6 Subnet"), },
+    ".hardware.nwadapter:*.gateway"                    : { "title" : _("Gateway"), },
+
     ".software."                                       : { "title" : _("Software"), "icon" : "software" },
     ".software.os."                                    : { "title" : _("Operating System") },
     ".software.os.name"                                : { "title" : _("Name"), "short" : _("Operating System") },

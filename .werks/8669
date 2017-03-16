@@ -1,0 +1,12 @@
+Title: win_video: now inventorizes memory of graphic cards for Windows hosts
+Level: 1
+Component: inv
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1489663402
+
+Memory of graphic cards is now gathered and shown in HW/SW inventory views of Windows hosts.
+

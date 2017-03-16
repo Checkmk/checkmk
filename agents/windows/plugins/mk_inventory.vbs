@@ -120,6 +120,35 @@ Sub getWMIObject2(strClass,arrVars)
     Next
 End Sub
 
+Sub getNetworkAdapter(arrVars)
+    Set objClass = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+    Set Entries = objClass.ExecQuery("Select * from Win32_NetworkAdapter")
+    Set AdapterConfigs = objClass.ExecQuery("Select * from Win32_NetworkAdapterConfiguration")
+
+    For Each entry in Entries
+        ' Only handle Adapters with a MAC address
+        If entry.ServiceName <> "AsyncMac" And Len(entry.MACAddress) > 0 Then
+            For Each item in entry.Properties_
+                ' if it is in arrVars
+                If UBound(filter(arrVars, item.name)) = 0 Then
+                    If isArray(item.value) Then
+                        outPut(item.name & ": " & join(item.value))
+                    Else
+                        outPut(item.name & ": " & item.value)
+                    End If
+                End If
+            Next
+
+            For Each adapterCfg in AdapterConfigs
+                If entry.name = adapterCfg.Description Then
+                    outPut("Address: " & join(adapterCfg.IPAddress))
+                    outPut("Subnet: " & join(adapterCfg.IPSubnet))
+                    outPut("DefaultGateway: " & join(adapterCfg.DefaultIPGateway))
+                End If
+            Next
+        End If
+  Next
+End Sub
 
 Sub RecurseForExecs(strFolderPath)
     Dim objFolder : Set objFolder = fso.GetFolder(strFolderPath)
@@ -228,6 +257,11 @@ Call getWMIObject("Win32_diskDrive",diskVars)
 Call startSection("win_video",58,timeUntil)
 adapterVars = Array( "Name", "Description", "Caption", "AdapterCompatibility", "VideoModeDescription", "VideoProcessor", "DriverVersion", "DriverDate", "MaxMemorySupported")
 Call getWMIObject("Win32_VideoController",adapterVars)
+
+' Network Adapter
+Call startSection("win_networkadapter",58,timeUntil)
+adapterVars = Array("ServiceName", "MACAddress", "AdapterType", "DeviceID", "NetworkAddresses", "Speed")
+Call getNetworkAdapter(adapterVars)
 
 ' Installed Software
 Call startSection("win_wmi_software",124,timeUntil)

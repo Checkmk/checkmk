@@ -54,9 +54,9 @@ using std::string;
 
 Store::Store(MonitoringCore *mc)
     : _mc(mc)
-    , _log_cache(mc, _commands_holder, g_max_cached_messages)
+    , _log_cache(mc, g_max_cached_messages)
     , _table_columns(mc)
-    , _table_commands(mc, _commands_holder)
+    , _table_commands(mc)
     , _table_comments(mc, _downtimes, _comments)
     , _table_contactgroups(mc)
     , _table_contacts(mc)

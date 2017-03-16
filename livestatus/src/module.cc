@@ -600,6 +600,23 @@ public:
         return system_clock::from_time_t(last_log_rotation);
     }
 
+    Command find_command(string name) const override {
+        // Older Nagios headers are not const-correct... :-P
+        if (command *cmd = ::find_command(const_cast<char *>(name.c_str()))) {
+            return {cmd->name, cmd->command_line};
+        }
+        return {"", ""};
+    }
+
+    vector<Command> commands() const override {
+        extern command *command_list;
+        vector<Command> commands;
+        for (command *cmd = command_list; cmd != nullptr; cmd = cmd->next) {
+            commands.push_back({cmd->name, cmd->command_line});
+        }
+        return commands;
+    }
+
     // TODO(sp) Do we need a separate NEB argument for this?
     bool mkeventdEnabled() override { return true; }
 

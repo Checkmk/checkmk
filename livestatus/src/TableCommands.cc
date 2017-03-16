@@ -25,16 +25,14 @@
 #include "TableCommands.h"
 #include <memory>
 #include "Column.h"
-#include "CommandsHolder.h"
+#include "MonitoringCore.h"
 #include "OffsetSStringColumn.h"
 #include "Query.h"
 
 using std::make_unique;
 using std::string;
 
-TableCommands::TableCommands(MonitoringCore *mc,
-                             const CommandsHolder &commands_holder)
-    : Table(mc), _commands_holder(commands_holder) {
+TableCommands::TableCommands(MonitoringCore *mc) : Table(mc) {
     addColumns(this, "", 0);
 }
 
@@ -46,16 +44,14 @@ string TableCommands::namePrefix() const { return "command_"; }
 void TableCommands::addColumns(Table *table, const string &prefix, int offset) {
     table->addColumn(make_unique<OffsetSStringColumn>(
         prefix + "name", "The name of the command",
-        offset + DANGEROUS_OFFSETOF(CommandsHolder::Command, _name), -1, -1,
-        -1));
+        offset + DANGEROUS_OFFSETOF(Command, _name), -1, -1, -1));
     table->addColumn(make_unique<OffsetSStringColumn>(
         prefix + "line", "The shell command line",
-        offset + DANGEROUS_OFFSETOF(CommandsHolder::Command, _command_line), -1,
-        -1, -1));
+        offset + DANGEROUS_OFFSETOF(Command, _command_line), -1, -1, -1));
 }
 
 void TableCommands::answerQuery(Query *query) {
-    for (auto &cmd : _commands_holder.commands()) {
+    for (auto &cmd : core()->commands()) {
         if (!query->processDataset(&cmd)) {
             break;
         }

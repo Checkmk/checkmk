@@ -28,22 +28,18 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Table.h"
-class CommandsHolder;
 class MonitoringCore;
 class Query;
 
 class TableCommands : public Table {
 public:
-    TableCommands(MonitoringCore *mc, const CommandsHolder &commands_holder);
+    explicit TableCommands(MonitoringCore *mc);
 
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
 
     static void addColumns(Table *table, const std::string &prefix, int offset);
-
-private:
-    const CommandsHolder &_commands_holder;
 };
 
 #endif  // TableCommands_h

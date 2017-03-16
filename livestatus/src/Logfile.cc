@@ -52,9 +52,8 @@ using std::vector;
 
 extern unsigned long g_max_lines_per_logfile;
 
-Logfile::Logfile(Logger *logger, const CommandsHolder &commands_holder,
-                 fs::path path, bool watch)
-    : _commands_holder(commands_holder)
+Logfile::Logfile(MonitoringCore *mc, Logger *logger, fs::path path, bool watch)
+    : _mc(mc)
     , _path(std::move(path))
     , _since(0)
     , _watch(watch)
@@ -196,7 +195,7 @@ long Logfile::freeMessages(unsigned logclasses) {
 
 bool Logfile::processLogLine(uint32_t lineno, const char *linebuffer,
                              unsigned logclasses) {
-    auto entry = make_unique<LogEntry>(_commands_holder, lineno, linebuffer);
+    auto entry = make_unique<LogEntry>(_mc, lineno, linebuffer);
     // ignored invalid lines
     if (entry->_logclass == LogEntry::Class::invalid) {
         return false;
@@ -274,7 +273,7 @@ void Logfile::updateReferences() {
     if (_world != g_live_world) {
         unsigned num = 0;
         for (auto &entry : _entries) {
-            num += entry.second->updateReferences(_commands_holder);
+            num += entry.second->updateReferences(_mc);
         }
         Notice(_logger) << "updated " << num << " log cache references of "
                         << _path << " to new world.";

@@ -32,11 +32,11 @@
 #include <map>
 #include <string>
 #include "FileSystem.h"
-class CommandsHolder;
 class LogCache;
-class Query;
 class LogEntry;
 class Logger;
+class MonitoringCore;
+class Query;
 
 #ifdef CMC
 #include <memory>
@@ -49,7 +49,7 @@ typedef std::map<uint64_t, LogEntry *>
 
 class Logfile {
 private:
-    const CommandsHolder &_commands_holder;
+    MonitoringCore *_mc;
     fs::path _path;
     time_t _since;     // time of first entry
     bool _watch;       // true only for current logfile
@@ -63,8 +63,7 @@ private:
     Logger *const _logger;
 
 public:
-    Logfile(Logger *logger, const CommandsHolder &commands_holder,
-            fs::path path, bool watch);
+    Logfile(MonitoringCore *mc, Logger *logger, fs::path path, bool watch);
     ~Logfile();
 
     std::string path() { return _path; }

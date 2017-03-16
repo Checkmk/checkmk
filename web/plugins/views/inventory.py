@@ -703,6 +703,7 @@ inventory_displayhints.update({
     ".hardware.video:*.driver"                         : { "title" : _("Driver"), "short" : _("Driver") },
     ".hardware.video:*.driver_date"                    : { "title" : _("Driver Date"), "short" : _("Driver Date") },
     ".hardware.video:*.driver_version"                 : { "title" : _("Driver Version"), "short" : _("Driver Version") },
+    ".hardware.video:*.graphic_memory"                 : { "title" : _("Memory"), "paint" : "bytes_rounded" },
 
     ".hardware.nwadapter:"                             : { "title" : _("Network Adapters"), },
     ".hardware.nwadapter:*."                           : { "title" : _("Network Adapter %d"), },

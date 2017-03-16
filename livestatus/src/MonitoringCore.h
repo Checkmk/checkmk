@@ -28,7 +28,13 @@
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
 #include <string>
+#include <vector>
 class Logger;
+
+struct Command {
+    std::string _name;
+    std::string _command_line;
+};
 
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
@@ -47,6 +53,9 @@ public:
                                                    Contact *contact) = 0;
 
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
+
+    virtual Command find_command(std::string name) const = 0;
+    virtual std::vector<Command> commands() const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 

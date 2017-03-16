@@ -63,11 +63,9 @@ class Table;
 #include <cstdint>
 #include "Notes.h"
 #include "TableCachedStatehist.h"
-class CommandsHolderCMC;
 class Config;
 class Object;
 #else
-#include "CommandsHolderNagios.h"
 #include "DowntimesOrComments.h"
 #include "nagios.h"
 #endif
@@ -101,12 +99,10 @@ public:
 private:
     MonitoringCore *_mc;
 #ifdef CMC
-    CommandsHolderCMC &_commands_holder;
     Downtimes &_downtimes;
     Comments &_comments;
     std::recursive_mutex &_notes_lock;
 #else
-    CommandsHolderNagios _commands_holder;
     DowntimesOrComments _downtimes;
     DowntimesOrComments _comments;
 #endif

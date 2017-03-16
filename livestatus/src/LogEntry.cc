@@ -28,6 +28,7 @@
 #include <cstring>
 #include <unordered_map>
 #include <utility>
+#include "MonitoringCore.h"
 #include "StringUtils.h"
 #include "strutil.h"
 
@@ -35,8 +36,7 @@ using mk::starts_with;
 using std::string;
 using std::unordered_map;
 
-LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
-                   const char *line)
+LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
     : _logclass(Class::info), _type(LogEntryType::none) {
     // TODO(sp) Fix all handleFooEntry() member functions below to always set
     // all fields and remove this set-me-to-zero-to-be-sure-block.
@@ -89,7 +89,7 @@ LogEntry::LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
     _text = _msg + 13;  // also skip space after timestamp
 
     if (classifyLogMessage()) {
-        updateReferences(commands_holder);
+        updateReferences(mc);
     } else {
         handleTextEntry() || handleProgrammEntry();  // Performance killer
                                                      // strstr in
@@ -425,7 +425,7 @@ HostState LogEntry::parseHostState(const string &str) {
     return it == hostStateTypes.end() ? HostState::up : it->second;
 }
 
-unsigned LogEntry::updateReferences(const CommandsHolder &commands_holder) {
+unsigned LogEntry::updateReferences(MonitoringCore *mc) {
     unsigned updated = 0;
     if (_host_name != nullptr) {
         _host = find_host(_host_name);
@@ -440,7 +440,7 @@ unsigned LogEntry::updateReferences(const CommandsHolder &commands_holder) {
         updated++;
     }
     if (_command_name != nullptr) {
-        _command = commands_holder.find(_command_name);
+        _command = mc->find_command(_command_name);
         updated++;
     }
     return updated;

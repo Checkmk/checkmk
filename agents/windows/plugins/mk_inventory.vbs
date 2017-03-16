@@ -255,7 +255,7 @@ Call getWMIObject("Win32_diskDrive",diskVars)
 
 ' Graphics Adapter
 Call startSection("win_video",58,timeUntil)
-adapterVars = Array( "Name", "Description", "Caption", "AdapterCompatibility", "VideoModeDescription", "VideoProcessor", "DriverVersion", "DriverDate", "MaxMemorySupported")
+adapterVars = Array( "Name", "Description", "Caption", "AdapterCompatibility", "VideoModeDescription", "VideoProcessor", "DriverVersion", "DriverDate", "MaxMemorySupported", "AdapterRAM")
 Call getWMIObject("Win32_VideoController",adapterVars)
 
 ' Network Adapter

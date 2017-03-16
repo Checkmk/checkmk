@@ -61,6 +61,9 @@ def inv_win_video(info):
             array["driver_version"] = value
         elif varname == "DriverDate":
             array["driver_date"] = int(time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S")))
+        elif varname == "AdapterRAM":
+            array["graphic_memory"] = saveint(value)
+
     node.append(array)
 
 

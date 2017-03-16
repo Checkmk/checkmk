@@ -102,7 +102,7 @@ void LogCache::updateLogfileIndex() {
 }
 
 void LogCache::scanLogfile(const fs::path &path, bool watch) {
-    auto logfile = new Logfile(_mc, logger(), path, watch);
+    auto logfile = new Logfile(_mc, path, watch);
     time_t since = logfile->since();
     if (since != 0) {
         // make sure that no entry with that 'since' is existing yet.

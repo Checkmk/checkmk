@@ -60,10 +60,9 @@ private:
 #ifdef CMC
     World *_world;  // CMC: world our references point into
 #endif
-    Logger *const _logger;
 
 public:
-    Logfile(MonitoringCore *mc, Logger *logger, fs::path path, bool watch);
+    Logfile(MonitoringCore *mc, fs::path path, bool watch);
     ~Logfile();
 
     std::string path() { return _path; }
@@ -96,6 +95,7 @@ private:
                    time_t until, unsigned logclasses);
     bool processLogLine(uint32_t, const char *linebuffer, unsigned);
     uint64_t makeKey(time_t, unsigned);
+    Logger *logger() const;
 };
 
 #endif  // Logfile_h

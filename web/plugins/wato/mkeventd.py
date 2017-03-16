@@ -251,37 +251,39 @@ class RuleState(CascadingDropdown):
         ]
         CascadingDropdown.__init__(self, choices = choices, **kwargs)
 
-vs_mkeventd_rule_pack = Dictionary(
-    title = _("Rule pack properties"),
-    render = "form",
+
+def vs_mkeventd_rule_pack():
     elements = [
-        ( "id",
-          ID(
+        ("id", ID(
             title = _("Rule pack ID"),
             help = _("A unique ID of this rule pack."),
             allow_empty = False,
             size = 12,
         )),
-        (   "title",
-            TextUnicode(
-                title = _("Title"),
-                help = _("A descriptive title for this rule pack"),
-                allow_empty = False,
-                size = 64,
-            )
-        ),
-        (   "disabled",
-            Checkbox(
-                title = _("Disable"),
-                label = _("Currently disable execution of all rules in the pack"),
-            )
-        ),
-    ],
-    optional_keys = False,
-)
+        ("title", TextUnicode(
+            title = _("Title"),
+            help = _("A descriptive title for this rule pack"),
+            allow_empty = False,
+            size = 64,
+        )),
+        ("disabled", Checkbox(
+            title = _("Disable"),
+            label = _("Currently disable execution of all rules in the pack"),
+        )),
+    ]
 
-vs_mkeventd_rule = Dictionary(
-    title = _("Rule Properties"),
+    if cmk.is_managed_edition():
+        elements += managed.customer_choice_element(deflt=managed.SCOPE_GLOBAL)
+
+    return Dictionary(
+        title = _("Rule pack properties"),
+        render = "form",
+        elements = elements,
+        optional_keys = ["customer"],
+    )
+
+
+def vs_mkeventd_rule(rule_pack):
     elements = [
         ( "id",
           ID(
@@ -291,8 +293,23 @@ vs_mkeventd_rule = Dictionary(
             allow_empty = False,
             size = 12,
         )),
-    ] + rule_option_elements() +
-    [
+    ] + rule_option_elements()
+
+    if cmk.is_managed_edition():
+        if "customer" in rule_pack:
+            # Enforced by rule pack
+            elements += [
+                ("customer", FixedValue(
+                    rule_pack["customer"],
+                    title = _("Customer"),
+                    totext = "%s (%s)" % (managed.get_customer_name_by_id(rule_pack["customer"]),
+                                          _("Set by rule pack")),
+                )),
+            ]
+        else:
+            elements += managed.customer_choice_element()
+
+    elements += [
         ( "drop",
           DropdownChoice(
             title = _("Rule type"),
@@ -807,22 +824,26 @@ vs_mkeventd_rule = Dictionary(
               attrencode = True,
           )
         ),
-    ],
-    optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority",
-                      "match_facility", "match_sl", "match_host", "match_ipaddress", "match_application", "match_timeperiod",
-                      "set_text", "set_host", "set_application", "set_comment",
-                      "set_contact", "cancel_priority", "cancel_application", "match_ok", "contact_groups", ],
-    headers = [
-        ( _("Rule Properties"), [ "id", "description", "comment", "docu_url", "disabled" ] ),
-        ( _("Matching Criteria"), [ "match", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
-                                    "match_sl", "match_ok", "cancel_priority", "cancel_application", "match_timeperiod", "invert_matching" ]),
-        ( _("Outcome & Action"), [ "state", "sl", "contact_groups", "actions", "cancel_actions", "cancel_action_phases", "drop", "autodelete" ]),
-        ( _("Counting & Timing"), [ "count", "expect", "delay", "livetime", ]),
-        ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),
-    ],
-    render = "form",
-    form_narrow = True,
-)
+    ]
+
+    return Dictionary(
+        title = _("Rule Properties"),
+        elements = elements,
+        optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority",
+                          "match_facility", "match_sl", "match_host", "match_ipaddress", "match_application", "match_timeperiod",
+                          "set_text", "set_host", "set_application", "set_comment",
+                          "set_contact", "cancel_priority", "cancel_application", "match_ok", "contact_groups", ],
+        headers = [
+            ( _("Rule Properties"), [ "id", "description", "comment", "docu_url", "disabled", "customer" ] ),
+            ( _("Matching Criteria"), [ "match", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
+                                        "match_sl", "match_ok", "cancel_priority", "cancel_application", "match_timeperiod", "invert_matching" ]),
+            ( _("Outcome & Action"), [ "state", "sl", "contact_groups", "actions", "cancel_actions", "cancel_action_phases", "drop", "autodelete" ]),
+            ( _("Counting & Timing"), [ "count", "expect", "delay", "livetime", ]),
+            ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),
+        ],
+        render = "form",
+        form_narrow = True,
+    )
 
 # VS for simulating an even
 vs_mkeventd_event = Dictionary(
@@ -1169,8 +1190,14 @@ def mode_mkeventd_rule_packs(phase):
 
             table.cell(_("ID"), rule_pack["id"])
             table.cell(_("Title"), html.attrencode(rule_pack["title"]))
-            table.cell(_("Rules"), css="number")
-            html.write('<a href="%s">%d</a>' % (rules_url, len(rule_pack["rules"])))
+
+            if cmk.is_managed_edition():
+                table.cell(_("Customer"))
+                if "customer" in rule_pack:
+                    html.write_text(managed.get_customer_name(rule_pack))
+
+            table.cell(_("Rules"),
+                html.render_a("%d" % len(rule_pack["rules"]), href=rules_url), css="number")
 
             hits = rule_pack.get('hits')
             table.cell(_("Hits"), hits != None and hits or '', css="number")
@@ -1336,7 +1363,16 @@ def mode_mkeventd_rules(phase):
                            (", ".join(rule["contact_groups"]["groups"]) or _("(none)")),
                          "contactgroups")
 
-            table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, rule["id"]))
+            table.cell(_("ID"), html.render_a(rule["id"], edit_url))
+
+            if cmk.is_managed_edition():
+                table.cell(_("Customer"))
+                if "customer" in rule_pack:
+                    html.write_text("%s (%s)" %
+                            (managed.get_customer_name(rule_pack), _("Set by rule pack")))
+                else:
+                    html.write_text(managed.get_customer_name(rule))
+
 
             if rule.get("drop"):
                 table.cell(_("State"), css="state statep nowrap")
@@ -1437,7 +1473,8 @@ def mode_mkeventd_edit_rule_pack(phase):
         mkeventd_changes_button()
         if edit_nr >= 0:
             rule_pack_id = rule_packs[edit_nr]["id"]
-            html.context_button(_("Edit Rules"), html.makeuri([("mode", "mkeventd_rules"), ("rule_pack", rule_pack_id)]), "mkeventd_rules")
+            html.context_button(_("Edit Rules"),
+                html.makeuri([("mode", "mkeventd_rules"),("rule_pack", rule_pack_id)]), "mkeventd_rules")
         return
 
     if new:
@@ -1445,10 +1482,11 @@ def mode_mkeventd_edit_rule_pack(phase):
         ###     rule_pack = {}
         ###     rule_pack.update(rule_packs[clone_nr])
         ### else:
-            rule_pack = { "rules" : [], }
+        rule_pack = { "rules" : [], }
     else:
         rule_pack = rule_packs[edit_nr]
 
+    vs = vs_mkeventd_rule_pack()
 
     if phase == "action":
         if not html.check_transaction():
@@ -1459,8 +1497,8 @@ def mode_mkeventd_edit_rule_pack(phase):
         else:
             existing_rules = []
 
-        rule_pack = vs_mkeventd_rule_pack.from_html_vars("rule_pack")
-        vs_mkeventd_rule_pack.validate_value(rule_pack, "rule_pack")
+        rule_pack = vs.from_html_vars("rule_pack")
+        vs.validate_value(rule_pack, "rule_pack")
         rule_pack["rules"] = existing_rules
         new_id = rule_pack["id"]
 
@@ -1485,8 +1523,8 @@ def mode_mkeventd_edit_rule_pack(phase):
 
 
     html.begin_form("rule_pack")
-    vs_mkeventd_rule_pack.render_input("rule_pack", rule_pack)
-    vs_mkeventd_rule_pack.set_focus("rule_pack")
+    vs.render_input("rule_pack", rule_pack)
+    vs.set_focus("rule_pack")
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()
@@ -1520,6 +1558,7 @@ def mode_mkeventd_edit_rule(phase):
 
     rules = rule_pack["rules"]
 
+    vs = vs_mkeventd_rule(rule_pack)
 
     edit_nr = int(html.var("edit", -1)) # missing -> new rule
     clone_nr = int(html.var("clone", -1)) # Only needed in 'new' mode
@@ -1557,8 +1596,8 @@ def mode_mkeventd_edit_rule(phase):
 
         if not new:
             old_id = rule["id"]
-        rule = vs_mkeventd_rule.from_html_vars("rule")
-        vs_mkeventd_rule.validate_value(rule, "rule")
+        rule = vs.from_html_vars("rule")
+        vs.validate_value(rule, "rule")
         if not new and old_id != rule["id"]:
             raise MKUserError("rule_p_id",
                  _("It is not allowed to change the ID of an existing rule."))
@@ -1619,8 +1658,8 @@ def mode_mkeventd_edit_rule(phase):
 
 
     html.begin_form("rule")
-    vs_mkeventd_rule.render_input("rule", rule)
-    vs_mkeventd_rule.set_focus("rule")
+    vs.render_input("rule", rule)
+    vs.set_focus("rule")
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()

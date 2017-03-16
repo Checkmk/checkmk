@@ -1,0 +1,93 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# <<<win_networkadapter:sep(58)>>>
+# AdapterType: Ethernet 802.3
+# DeviceID: 7
+# MACAddress: 08:00:27:9C:F8:39
+# Name: Intel(R) PRO/1000 MT-Desktopadapter
+# NetworkAddresses: 
+# ServiceName: E1G60
+# Speed: 1000000000
+# Address: 192.168.178.26
+# Subnet: 255.255.255.0
+# DefaultGateway: 192.168.178.1
+
+def inv_win_networkadapter(info):
+    node = inv_tree_list("hardware.nwadapter:")
+    array = {}
+    first_varname = None
+    addrtypes = {}
+    for line in info:
+        if len(line) > 2:
+            line = [ line[0], ":".join(line[1:]) ]
+        varname, value = line
+        varname = re.sub(" *","", varname)
+        value = re.sub("^ ", "", value)
+
+        if first_varname and varname == first_varname:
+            # Looks like we have a new instance
+            node.append(array)
+            array = {}
+
+        if not first_varname:
+            first_varname = varname
+
+        if varname == "Name":
+            array["name"] = value
+        elif varname == "AdapterType":
+            array["type"] = value
+        elif varname == "MACAddress":
+            array["macaddress"] = value
+        elif varname == "Speed":
+            array["speed"] = int(value)
+        elif varname == "Address":
+            for address in value.split(' '):
+                addrtype = "ipv4"
+                if ':' in address:
+                    addrtype = "ipv6"
+                addrtypes.setdefault(addrtype + "_address", []).append(address)
+        elif varname == "Subnet":
+            for address in value.split(' '):
+                addrtype = "ipv6"
+                if '.' in address:
+                    addrtype = "ipv4"
+                #addrtypes.setdefault(addrtype, {}).setdefault("subnet", []).append(address)
+                addrtypes.setdefault(addrtype + "_subnet", []).append(address)
+        elif varname == "DefaultGateway":
+            array["gateway"] = value
+
+    for addrtype in addrtypes:
+        array[addrtype] = ', '.join(addrtypes[addrtype])
+        #for type in addrtypes[addrtype]:
+        #    array[addrtype + '_' + type] = ', '.join(addrtypes[addrtype][type])
+    node.append(array)
+
+
+inv_info['win_networkadapter'] = {
+   "inv_function"           : inv_win_networkadapter,
+}

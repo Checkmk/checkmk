@@ -1,0 +1,10 @@
+Title: win_networkadapter: added network adapters to inventory of Windows hosts
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.4.0b4
+Date: 1489665801
+Class: feature
+
+The inventory plugin now gathers information on network adapters of Windows hosts. This information is then shown in HW/SW inventory of the host as "Hardware -> Network Adapters."

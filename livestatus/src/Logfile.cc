@@ -31,6 +31,7 @@
 #include "LogCache.h"
 #include "LogEntry.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "Query.h"
 
 #ifdef CMC
@@ -52,7 +53,7 @@ using std::vector;
 
 extern unsigned long g_max_lines_per_logfile;
 
-Logfile::Logfile(MonitoringCore *mc, Logger *logger, fs::path path, bool watch)
+Logfile::Logfile(MonitoringCore *mc, fs::path path, bool watch)
     : _mc(mc)
     , _path(std::move(path))
     , _since(0)
@@ -62,12 +63,11 @@ Logfile::Logfile(MonitoringCore *mc, Logger *logger, fs::path path, bool watch)
 #ifdef CMC
     , _world(nullptr)
 #endif
-    , _logger(logger)
     , _logclasses_read(0) {
     ifstream is(_path, ios::binary);
     if (!is) {
         generic_error ge("cannot open logfile " + _path.string());
-        Informational(_logger) << ge;
+        Informational(logger()) << ge;
         return;
     }
 
@@ -78,8 +78,8 @@ Logfile::Logfile(MonitoringCore *mc, Logger *logger, fs::path path, bool watch)
     }
 
     if (line[0] != '[' || line[11] != ']') {
-        Informational(_logger) << "ignoring logfile '" << _path
-                               << "': does not begin with '[123456789] '";
+        Informational(logger()) << "ignoring logfile '" << _path
+                                << "': does not begin with '[123456789] '";
         return;
     }
 
@@ -111,7 +111,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
     if (_watch) {
         file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
-            Informational(_logger) << "cannot open logfile '" << _path << "'";
+            Informational(logger()) << "cannot open logfile '" << _path << "'";
             return;
         }
         // If we read this file for the first time, we initialize
@@ -144,7 +144,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
         file = fopen(_path.c_str(), "r");
         if (file == nullptr) {
             generic_error ge("cannot open logfile " + _path.string());
-            Informational(_logger) << ge;
+            Informational(logger()) << ge;
             return;
         }
 
@@ -160,9 +160,9 @@ void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
     vector<char> linebuffer(65536);
     while (fgets(&linebuffer[0], linebuffer.size(), file) != nullptr) {
         if (_lineno >= g_max_lines_per_logfile) {
-            Error(_logger) << "more than " << g_max_lines_per_logfile
-                           << " lines in " << this->_path
-                           << ", ignoring the rest!";
+            Error(logger()) << "more than " << g_max_lines_per_logfile
+                            << " lines in " << this->_path
+                            << ", ignoring the rest!";
             return;
         }
         _lineno++;
@@ -206,7 +206,8 @@ bool Logfile::processLogLine(uint32_t lineno, const char *linebuffer,
     uint64_t key = makeKey(entry->_time, entry->_lineno);
     if (_entries.find(key) != _entries.end()) {
         // this should never happen. The lineno must be unique!
-        Error(_logger) << "strange duplicate logfile line " << entry->_complete;
+        Error(logger()) << "strange duplicate logfile line "
+                        << entry->_complete;
         return false;
     }
     _entries.emplace(key, entry.release());
@@ -275,8 +276,8 @@ void Logfile::updateReferences() {
         for (auto &entry : _entries) {
             num += entry.second->updateReferences(_mc);
         }
-        Notice(_logger) << "updated " << num << " log cache references of "
-                        << _path << " to new world.";
+        Notice(logger()) << "updated " << num << " log cache references of "
+                         << _path << " to new world.";
         _world = g_live_world;
     }
 #endif
@@ -288,7 +289,7 @@ unique_ptr<vector<char>> Logfile::readIntoBuffer() {
     ifstream is(_path, ios::binary | ios::ate);
     if (!is) {
         generic_error ge("cannot open logfile " + _path.string());
-        Warning(_logger) << ge;
+        Warning(logger()) << ge;
         return result;
     }
 
@@ -296,7 +297,7 @@ unique_ptr<vector<char>> Logfile::readIntoBuffer() {
     is.seekg(0, ios::beg);
     if (!is) {
         generic_error ge("cannot determine size of " + _path.string());
-        Warning(_logger) << ge;
+        Warning(logger()) << ge;
         return result;
     }
     auto size = end - is.tellg();
@@ -305,8 +306,8 @@ unique_ptr<vector<char>> Logfile::readIntoBuffer() {
         // Remember: Zeroes at both ends, so we need a bit more space.
         result = make_unique<vector<char>>(size + 2);
     } catch (bad_alloc &) {
-        Warning(_logger) << "cannot allocate " << size << " byte buffer for "
-                         << _path;
+        Warning(logger()) << "cannot allocate " << size << " byte buffer for "
+                          << _path;
         return result;
     }
 
@@ -314,9 +315,11 @@ unique_ptr<vector<char>> Logfile::readIntoBuffer() {
     if (!is) {
         generic_error ge("cannot open read " + to_string(size) +
                          " byted from " + _path.string());
-        Warning(_logger) << ge;
+        Warning(logger()) << ge;
     }
 
     return result;
 }
 #endif
+
+Logger *Logfile::logger() const { return _mc->loggerLivestatus(); }

@@ -38,7 +38,6 @@ liblivestatus_a_SOURCES = \
         ClientQueue.cc \
         Column.cc \
         ColumnsColumn.cc \
-        CommandsHolderNagios.cc \
         ContactGroupsColumn.cc \
         ContactGroupsMemberColumn.cc \
         ContactsColumn.cc \

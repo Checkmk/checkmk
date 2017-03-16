@@ -30,7 +30,7 @@
 #include <ctime>
 #include <string>
 #include <vector>
-#include "CommandsHolder.h"
+#include "MonitoringCore.h"
 #include "nagios.h"
 
 enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
@@ -98,12 +98,11 @@ public:
     host *_host;
     service *_service;
     contact *_contact;
-    CommandsHolder::Command _command;
+    Command _command;
 
-    LogEntry(const CommandsHolder &commands_holder, unsigned lineno,
-             const char *line);
+    LogEntry(MonitoringCore *mc, unsigned lineno, const char *line);
     ~LogEntry();
-    unsigned updateReferences(const CommandsHolder &commands_holder);
+    unsigned updateReferences(MonitoringCore *mc);
     static ServiceState parseServiceState(const std::string &str);
     static HostState parseHostState(const std::string &str);
 

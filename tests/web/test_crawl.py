@@ -258,7 +258,7 @@ class Worker(threading.Thread):
             raise InvalidUrl("Skipping filled in filter URL: %s" % url)
 
         # Don't follow the view editor
-        if "edit_view.py":
+        if "edit_view.py" in url:
             raise InvalidUrl("Skipping view editor URL: %s" % url)
 
         # Skip agent download files

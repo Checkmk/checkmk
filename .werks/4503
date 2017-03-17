@@ -1,0 +1,11 @@
+Title: Graph designer: Show warnings when all or single sites use incompatible cores
+Level: 1
+Component: metrics
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0b4
+Date: 1489741823
+
+

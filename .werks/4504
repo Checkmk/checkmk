@@ -1,0 +1,10 @@
+Title: Removed wrong context menu links to add "availability views" to dashboards
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1489742803
+Class: fix
+
+

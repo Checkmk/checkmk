@@ -1,0 +1,11 @@
+Title: Bulk delete possible for bookmark lists, graph collections and custom graphs
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1489737551
+Class: feature
+
+A bulk deletion option has been added to the bookmark lists, graph collections and custom graphs.
+A users own elements and elements of other users can now be deleted in bulk (if permitted).

@@ -824,6 +824,16 @@ class Overridable(Base):
                 html.write("<div class=error>%s</div>\n" % e.message)
                 html.add_user_error(e.varname, e.message)
 
+        # Bulk delete
+        if html.var("_bulk_delete_my") and html.transaction_valid():
+            if self._bulk_delete_after_confirm("my") == False:
+                html.footer()
+                return
+
+        elif html.var("_bulk_delete_foreign") and html.transaction_valid():
+            if self._bulk_delete_after_confirm("foreign") == False:
+                html.footer()
+                return
 
         my_instances  = []
         foreign_instances  = []
@@ -838,19 +848,29 @@ class Overridable(Base):
                      or instance.may_delete() or instance.may_edit():
                     foreign_instances.append(instance)
 
-        for title, instances in [
-            (_('Customized'),           my_instances),
-            (_('Owned by other users'), foreign_instances),
-            (_('Builtin'),              builtin_instances),
+
+        for what, title, instances in [
+            ("my",       _('Customized'),           my_instances),
+            ("foreign",  _('Owned by other users'), foreign_instances),
+            ("builtin",  _('Builtin'),              builtin_instances),
         ]:
             if not instances:
                 continue
 
             html.write('<h3>' + title + '</h3>')
 
+            if what != "builtin":
+                html.begin_form("bulk_delete_%s" % what, method="POST")
+
             table.begin(limit = None)
             for instance in instances:
                 table.row()
+
+                if what != "builtin" and instance.may_delete():
+                    table.cell(html.render_input("_toggle_group", type_="button",
+                                class_="checkgroup", onclick="toggle_all_rows(this.form);",
+                                value='X'), sortable=False, css="checkbox")
+                    html.checkbox("_c_%s+%s+%s" % (what, instance.owner(), instance.name()))
 
                 # Actions
                 table.cell(_('Actions'), css = 'buttons visuals')
@@ -895,10 +915,43 @@ class Overridable(Base):
                 # TODO: Haeeh? Another custom columns
                 ### if render_custom_columns:
                 ###     render_custom_columns(visual_name, visual)
+
             table.end()
+
+            if what != "builtin":
+                html.button("_bulk_delete_%s" % what, _("Bulk delete"), "submit",
+                    style="margin-top:10px")
+                html.hidden_fields()
+                html.end_form()
 
         html.footer()
         return
+
+
+    @classmethod
+    def _bulk_delete_after_confirm(cls, what):
+        to_delete = []
+        for varname in html.all_varnames_with_prefix("_c_%s+" % what):
+            if html.get_checkbox(varname):
+                checkbox_ident = varname.split("_c_%s+" % what)[-1]
+                to_delete.append(checkbox_ident.split("+", 1))
+
+        if not to_delete:
+            return
+
+        c = html.confirm(_("Do you really want to delete %d %s?") %
+                            (len(to_delete), cls.phrase("title_plural")))
+
+        if c:
+            for owner, instance_id in to_delete:
+                cls.remove_instance((owner, instance_id))
+
+            for owner in set([ e[0] for e in to_delete]):
+                cls.save_user_instances(owner)
+
+            html.reload_sidebar()
+        elif c == False:
+            return False
 
     # Override this in order to display additional columns of an instance
     # in the table of all instances.

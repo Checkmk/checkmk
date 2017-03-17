@@ -1624,7 +1624,7 @@ function iter_cells(checkbox, func) {
 function get_all_checkboxes(container) {
     var checkboxes = [];
 
-    if(typeof(container) === 'object' && container.length) {
+    if(typeof(container) === 'object' && container.length && !container.tagName) {
         // Array given - at the moment this is a list of TR objects
         // Skip the header checkboxes
         for(var i = 0; i < container.length; i++) {

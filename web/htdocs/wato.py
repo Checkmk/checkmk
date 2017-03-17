@@ -3290,7 +3290,9 @@ class ModeDiscovery(WatoMode):
 
 
     def _get_ruleset_name(self, check_source, check_type, checkgroup):
-        if checkgroup:
+        if checkgroup == "logwatch":
+            return "logwatch_rules"
+        elif checkgroup:
             return "checkgroup_parameters:" + checkgroup
         elif check_source == "active":
             return "active_checks:" + check_type

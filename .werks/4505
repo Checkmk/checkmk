@@ -1,0 +1,11 @@
+Title: Fixed broken links of logwatch and OMD * status services on services page
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b4
+Date: 1489747076
+
+

@@ -121,6 +121,5 @@ check_info["omd_status"] = {
     'inventory_function'  : inventory_omd_status,
     'parse_function'      : parse_omd_status,
     'service_description' : 'OMD %s status',
-    'group'               : 'omd_status',
     'node_info'           : True,
 }

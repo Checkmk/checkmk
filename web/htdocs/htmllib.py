@@ -2568,7 +2568,7 @@ class html(DeprecationWrapper, RequestHandler):
             self.popup_trigger(
                 self.render_icon("menu", _("Add this view to..."), cssclass="iconbutton inline"),
                 'add_visual', 'add_visual', data=[mode_name, encoded_vars, {'name': self.var('view_name')}],
-                url_vars=[("add_type", "view")])
+                url_vars=[("add_type", mode_name)])
 
         # TODO: This should be handled by pagetypes.py
         elif self.myfile == "graph_collection":

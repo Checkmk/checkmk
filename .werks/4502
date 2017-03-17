@@ -1,0 +1,10 @@
+Title: LDAP: Fixed setting default values for user/group filters and attributes
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.4.0b4
+Date: 1489739280
+Class: fix
+
+

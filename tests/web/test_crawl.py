@@ -257,6 +257,10 @@ class Worker(threading.Thread):
         if "view.py" in url and "filled_in=filter" in url:
             raise InvalidUrl("Skipping filled in filter URL: %s" % url)
 
+        # Don't follow the view editor
+        if "edit_view.py":
+            raise InvalidUrl("Skipping view editor URL: %s" % url)
+
         # Skip agent download files
         if parsed.path.startswith("/%s/check_mk/agents/" % self.crawler.site.id):
             raise InvalidUrl("Skipping agent download file: %s" % url)

@@ -184,7 +184,8 @@ declare_host_attribute(
                           "contacting this host via SNMP v1/v2 or v3. It is possible to configure the SNMP community by "
                           "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
                           "a community here, this will override the community defined by the rules.") % \
-                          html.makeuri([('mode', 'edit_ruleset'), ('varname', 'snmp_communities')]),
+                          html.makeuri_contextless([('mode', 'edit_ruleset'), ('varname', 'snmp_communities')],
+                                       filename="wato.py"),
                 default_value = None,
             )
     ),

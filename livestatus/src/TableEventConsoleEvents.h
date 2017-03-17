@@ -28,44 +28,16 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "TableEventConsole.h"
+#include "contact_fwd.h"
 class MonitoringCore;
 class Table;
 
-#ifdef CMC
-#include <mutex>
-#include "Notes.h"
-#include "cmc.h"
-#else
-#include "nagios.h"
-class DowntimesOrComments;
-#endif
-
 class TableEventConsoleEvents : public TableEventConsole {
 public:
+    explicit TableEventConsoleEvents(MonitoringCore *mc);
     std::string name() const override;
     std::string namePrefix() const override;
-
-    TableEventConsoleEvents(MonitoringCore *mc,
-#ifdef CMC
-                            const Downtimes &downtimes_holder,
-                            const Comments &comments_holder,
-                            std::recursive_mutex &holder_lock
-#else
-                            const DowntimesOrComments &downtimes_holder,
-                            const DowntimesOrComments &comments_holder
-#endif
-                            );
-    static void addColumns(Table *table, MonitoringCore *mc,
-#ifdef CMC
-                           const Downtimes &downtimes_holder,
-                           const Comments &comments_holder,
-                           std::recursive_mutex &holder_lock
-#else
-                           const DowntimesOrComments &downtimes_holder,
-                           const DowntimesOrComments &comments_holder
-#endif
-                           );
-
+    static void addColumns(Table *table, MonitoringCore *mc);
     bool isAuthorized(contact *ctc, void *data) override;
 };
 

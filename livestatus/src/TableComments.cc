@@ -27,12 +27,13 @@
 #include <utility>
 #include "Column.h"
 #include "DowntimeOrComment.h"
-#include "DowntimesOrComments.h"  // IWYU pragma: keep
+#include "MonitoringCore.h"
 #include "OffsetBoolColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
+#include "Store.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "auth.h"
@@ -42,10 +43,7 @@ using std::string;
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
-TableComments::TableComments(MonitoringCore *mc,
-                             const DowntimesOrComments &downtimes_holder,
-                             const DowntimesOrComments &comments_holder)
-    : Table(mc), _holder(comments_holder) {
+TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<OffsetSStringColumn>(
         "author", "The contact that entered the comment",
         DANGEROUS_OFFSETOF(Comment, _author_name), -1, -1, -1));
@@ -84,11 +82,10 @@ TableComments::TableComments(MonitoringCore *mc,
         DANGEROUS_OFFSETOF(Comment, _expire_time), -1, -1, -1));
 
     TableHosts::addColumns(this, mc, "host_",
-                           DANGEROUS_OFFSETOF(Comment, _host), -1,
-                           downtimes_holder, comments_holder);
-    TableServices::addColumns(
-        this, mc, "service_", DANGEROUS_OFFSETOF(Comment, _service),
-        false /* no hosts table */, downtimes_holder, comments_holder);
+                           DANGEROUS_OFFSETOF(Comment, _host), -1);
+    TableServices::addColumns(this, mc, "service_",
+                              DANGEROUS_OFFSETOF(Comment, _service),
+                              false /* no hosts table */);
 }
 
 string TableComments::name() const { return "comments"; }
@@ -96,7 +93,7 @@ string TableComments::name() const { return "comments"; }
 string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query *query) {
-    for (const auto &entry : _holder) {
+    for (const auto &entry : core()->impl<Store>()->_comments) {
         if (!query->processDataset(entry.second.get())) {
             break;
         }

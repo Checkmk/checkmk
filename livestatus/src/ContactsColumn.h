@@ -29,13 +29,8 @@
 #include <memory>
 #include <string>
 #include "ListColumn.h"
+#include "contact_fwd.h"
 class RowRenderer;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class ContactsColumn : public ListColumn {
 public:

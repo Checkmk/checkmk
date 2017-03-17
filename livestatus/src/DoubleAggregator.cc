@@ -26,6 +26,7 @@
 #include <cmath>
 #include "DoubleColumn.h"
 #include "Renderer.h"
+#include "contact_fwd.h"
 
 /* SORRY: This file is copy&pasted from IntAggregator.
    I hate copy & paste. But I also dislike complicating

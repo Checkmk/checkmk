@@ -24,6 +24,7 @@
 
 #include "ServiceContactsColumn.h"
 #include "ListColumn.h"
+#include "nagios.h"
 
 using std::make_unique;
 using std::string;

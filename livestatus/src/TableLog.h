@@ -28,17 +28,11 @@
 // IWYU pragma: no_include <bits/shared_ptr.h>
 #include "config.h"  // IWYU pragma: keep
 #include <ctime>
-#include <memory>  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "Table.h"
-#include "nagios.h"  // IWYU pragma: keep
+#include "contact_fwd.h"
 class Column;
-#ifdef CMC
-#include <mutex>
-#include "Notes.h"
-#else
-class DowntimesOrComments;
-#endif
 class Logfile;
 class LogCache;
 class MonitoringCore;
@@ -46,15 +40,7 @@ class Query;
 
 class TableLog : public Table {
 public:
-    TableLog(MonitoringCore *mc, LogCache *log_cache,
-#ifdef CMC
-             const Downtimes &downtimes_holder, const Comments &comments_holder,
-             std::recursive_mutex &holder_lock
-#else
-             const DowntimesOrComments &downtimes_holder,
-             const DowntimesOrComments &comments_holder
-#endif
-             );
+    TableLog(MonitoringCore *mc, LogCache *log_cache);
 
     std::string name() const override;
     std::string namePrefix() const override;

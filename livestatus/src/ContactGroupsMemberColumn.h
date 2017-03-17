@@ -29,12 +29,10 @@
 #include <memory>
 #include <string>
 #include "ContactsColumn.h"
+#include "contact_fwd.h"
 
 #ifdef CMC
-#include "cmc.h"
 class RowRenderer;
-#else
-#include "nagios.h"
 #endif
 
 class ContactGroupsMemberColumn : public ContactsColumn {

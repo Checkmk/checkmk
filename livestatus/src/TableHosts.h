@@ -28,41 +28,16 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Table.h"
-#include "nagios.h"  // IWYU pragma: keep
+#include "contact_fwd.h"
 class MonitoringCore;
 class Query;
 
-#ifdef CMC
-#include <mutex>
-#include "Notes.h"
-#else
-class DowntimesOrComments;
-#endif
-
 class TableHosts : public Table {
 public:
-    TableHosts(MonitoringCore *mc,
-#ifdef CMC
-               const Downtimes &downtimes_holder,
-               const Comments &comments_holder,
-               std::recursive_mutex &holder_lock
-#else
-               const DowntimesOrComments &downtimes_holder,
-               const DowntimesOrComments &comments_holder
-#endif
-               );
+    explicit TableHosts(MonitoringCore *mc);
     static void addColumns(Table *, MonitoringCore *mc,
                            const std::string &prefix, int indirect_offset,
-                           int extra_offset,
-#ifdef CMC
-                           const Downtimes &downtimes_holder,
-                           const Comments &comments_holder,
-                           std::recursive_mutex &holder_lock
-#else
-                           const DowntimesOrComments &downtimes_holder,
-                           const DowntimesOrComments &comments_holder
-#endif
-                           );
+                           int extra_offset);
 
     std::string name() const override;
     std::string namePrefix() const override;

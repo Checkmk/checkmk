@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <string>
 #include "IntColumn.h"
+#include "contact_fwd.h"
 #include "nagios.h"
 
 class CustomTimeperiodColumn : public IntColumn {

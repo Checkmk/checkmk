@@ -30,6 +30,7 @@
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "auth.h"
+#include "contact_fwd.h"
 
 using std::make_unique;
 using std::string;

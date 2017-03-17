@@ -29,6 +29,7 @@
 #include <memory>
 #include <string>
 #include "ListColumn.h"
+#include "contact_fwd.h"
 #include "nagios.h"
 class RowRenderer;
 

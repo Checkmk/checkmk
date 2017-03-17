@@ -28,37 +28,21 @@
 // IWYU pragma: no_include <bits/shared_ptr.h>
 #include "config.h"  // IWYU pragma: keep
 #include <map>
-#include <memory>  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "LogCache.h"
 #include "Logfile.h"
 #include "Table.h"
-#include "nagios.h"  // IWYU pragma: keep
+#include "contact_fwd.h"
 class Column;
 class HostServiceState;
 class LogEntry;
 class MonitoringCore;
 class Query;
 
-#ifdef CMC
-#include <mutex>
-#include "Notes.h"
-#else
-class DowntimesOrComments;
-#endif
-
 class TableStateHistory : public Table {
 public:
-    TableStateHistory(MonitoringCore *mc, LogCache *log_cache,
-#ifdef CMC
-                      const Downtimes &downtimes_holder,
-                      const Comments &comments_holder,
-                      std::recursive_mutex &holder_lock
-#else
-                      const DowntimesOrComments &downtimes_holder,
-                      const DowntimesOrComments &comments_holder
-#endif
-                      );
+    TableStateHistory(MonitoringCore *mc, LogCache *log_cache);
 
     std::string name() const override;
     std::string namePrefix() const override;

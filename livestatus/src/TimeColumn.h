@@ -31,15 +31,10 @@
 #include "Aggregator.h"
 #include "Column.h"
 #include "IntColumn.h"
+#include "contact_fwd.h"
 #include "opids.h"
 class Filter;
 class RowRenderer;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class TimeColumn : public IntColumn {
 public:

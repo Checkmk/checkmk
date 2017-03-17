@@ -26,6 +26,7 @@
 #include <cmath>
 #include "IntColumn.h"
 #include "Renderer.h"
+#include "contact_fwd.h"
 
 void IntAggregator::consume(void *row, contact *auth_user,
                             int /* timezone_offset */) {

@@ -56,17 +56,15 @@
 #include "ServiceListStateColumn.h"
 #include "TimeperiodColumn.h"
 #include "auth.h"
+#include "nagios.h"
 
 extern host *host_list;
 
 using std::make_unique;
 using std::string;
 
-TableHosts::TableHosts(MonitoringCore *mc,
-                       const DowntimesOrComments &downtimes_holder,
-                       const DowntimesOrComments &comments_holder)
-    : Table(mc) {
-    addColumns(this, mc, "", -1, -1, downtimes_holder, comments_holder);
+TableHosts::TableHosts(MonitoringCore *mc) : Table(mc) {
+    addColumns(this, mc, "", -1, -1);
 }
 
 string TableHosts::name() const { return "hosts"; }
@@ -76,9 +74,7 @@ string TableHosts::namePrefix() const { return "host_"; }
 // static
 void TableHosts::addColumns(Table *table, MonitoringCore *mc,
                             const string &prefix, int indirect_offset,
-                            int extra_offset,
-                            const DowntimesOrComments &downtimes_holder,
-                            const DowntimesOrComments &comments_holder) {
+                            int extra_offset) {
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "name", "Host name", DANGEROUS_OFFSETOF(host, name),
         indirect_offset, extra_offset, -1));
@@ -487,28 +483,23 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
         indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes",
-        "A list of the ids of all scheduled downtimes of this host",
-        downtimes_holder, true, false, false, false, indirect_offset,
-        extra_offset, -1));
+        "A list of the ids of all scheduled downtimes of this host", mc, true,
+        false, false, false, indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes_with_info",
         "A list of the all scheduled downtimes of the host with id, author and comment",
-        downtimes_holder, true, false, true, false, indirect_offset,
-        extra_offset, -1));
+        mc, true, false, true, false, indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        comments_holder, false, false, false, false, indirect_offset,
-        extra_offset, -1));
+        mc, false, false, false, false, indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_info",
-        "A list of all comments of the host with id, author and comment",
-        comments_holder, false, false, true, false, indirect_offset,
-        extra_offset, -1));
+        "A list of all comments of the host with id, author and comment", mc,
+        false, false, true, false, indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        comments_holder, false, false, true, true, indirect_offset,
-        extra_offset, -1));
+        mc, false, false, true, true, indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",

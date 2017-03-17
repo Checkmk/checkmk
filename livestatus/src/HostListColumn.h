@@ -29,13 +29,13 @@
 #include <memory>
 #include <string>
 #include "Column.h"
+#include "contact_fwd.h"
 #include "opids.h"
 class Filter;
 class RowRenderer;
 
 #ifdef CMC
 #include <unordered_set>
-#include "cmc.h"
 class Host;
 #else
 #include "nagios.h"

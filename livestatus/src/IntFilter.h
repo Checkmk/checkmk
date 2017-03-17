@@ -30,13 +30,8 @@
 #include <string>
 #include "ColumnFilter.h"
 #include "IntColumn.h"
+#include "contact_fwd.h"
 #include "opids.h"
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class IntFilter : public ColumnFilter {
 public:

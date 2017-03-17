@@ -37,6 +37,7 @@
 #include <unistd.h>
 #include <chrono>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -48,6 +49,7 @@
 #include <vector>
 #include "ChronoUtils.h"
 #include "ClientQueue.h"
+#include "DowntimeOrComment.h"
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
@@ -56,6 +58,7 @@
 #include "StringUtils.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
+#include "contact_fwd.h"
 #include "data_encoding.h"
 #include "global_counters.h"
 #include "nagios.h"
@@ -617,6 +620,23 @@ public:
         return commands;
     }
 
+    vector<DowntimeData> downtimes_for_host(Host *host) const override {
+        return downtimes_for_object(toImpl(host), nullptr);
+    }
+
+    vector<DowntimeData> downtimes_for_service(
+        Service *service) const override {
+        return downtimes_for_object(toImpl(service)->host_ptr, toImpl(service));
+    }
+
+    vector<CommentData> comments_for_host(Host *host) const override {
+        return comments_for_object(toImpl(host), nullptr);
+    }
+
+    vector<CommentData> comments_for_service(Service *service) const override {
+        return comments_for_object(toImpl(service)->host_ptr, toImpl(service));
+    }
+
     // TODO(sp) Do we need a separate NEB argument for this?
     bool mkeventdEnabled() override { return true; }
 
@@ -632,7 +652,7 @@ public:
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
 private:
-    void *implInternal() const override { return nullptr; }
+    void *implInternal() const override { return fl_store; }
 
     static contact *toImpl(Contact *c) {
         return reinterpret_cast<contact *>(c);
@@ -648,6 +668,34 @@ private:
 
     static host *toImpl(Host *h) { return reinterpret_cast<host *>(h); }
     static Host *fromImpl(host *h) { return reinterpret_cast<Host *>(h); }
+
+    static service *toImpl(Service *h) {
+        return reinterpret_cast<service *>(h);
+    }
+
+    vector<DowntimeData> downtimes_for_object(::host *h, ::service *s) const {
+        vector<DowntimeData> result;
+        for (const auto &entry : fl_store->_downtimes) {
+            Downtime *dt = static_cast<Downtime *>(entry.second.get());
+            if (dt->_host == h && dt->_service == s) {
+                result.push_back({dt->_id, dt->_author_name, dt->_comment});
+            }
+        }
+        return result;
+    }
+
+    vector<CommentData> comments_for_object(::host *h, ::service *s) const {
+        vector<CommentData> result;
+        for (const auto &entry : fl_store->_comments) {
+            Comment *co = static_cast<Comment *>(entry.second.get());
+            if (co->_host == h && co->_service == s) {
+                result.push_back({co->_id, co->_author_name, co->_comment,
+                                  static_cast<uint32_t>(co->_entry_type),
+                                  system_clock::from_time_t(co->_entry_time)});
+            }
+        }
+        return result;
+    }
 };
 
 NagiosCore core;

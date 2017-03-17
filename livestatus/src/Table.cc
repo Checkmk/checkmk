@@ -30,6 +30,7 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "StringUtils.h"
+#include "contact_fwd.h"
 
 using mk::starts_with;
 using std::move;

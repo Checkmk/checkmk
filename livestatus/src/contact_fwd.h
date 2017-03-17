@@ -22,33 +22,14 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef DoubleColumn_h
-#define DoubleColumn_h
+#ifndef contact_fwd_h
+#define contact_fwd_h
 
-#include "config.h"  // IWYU pragma: keep
-#include <memory>
-#include <string>
-#include "Aggregator.h"
-#include "Column.h"
-#include "contact_fwd.h"
-#include "opids.h"
-class Filter;
-class RowRenderer;
+#ifdef CMC
+class Contact;
+typedef Contact contact;
+#else
+typedef struct contact_struct contact;
+#endif
 
-class DoubleColumn : public Column {
-public:
-    DoubleColumn(const std::string &name, const std::string &description,
-                 int indirect_offset, int extra_offset, int extra_extra_offset)
-        : Column(name, description, indirect_offset, extra_offset,
-                 extra_extra_offset) {}
-    virtual double getValue(void *data) = 0;
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
-    ColumnType type() override { return ColumnType::double_; }
-    std::string valueAsString(void *row, contact * /* auth_user */) override;
-    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
-                                         const std::string &value) override;
-    std::unique_ptr<Aggregator> createAggregator(
-        StatsOperation operation) override;
-};
-
-#endif  // DoubleColumn_h
+#endif  // contact_fwd_h

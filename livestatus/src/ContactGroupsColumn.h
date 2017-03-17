@@ -29,7 +29,7 @@
 #include <memory>
 #include <string>
 #include "ListColumn.h"
-#include "nagios.h"
+#include "contact_fwd.h"
 class MonitoringCore;
 class RowRenderer;
 

@@ -374,8 +374,8 @@ class TestCrawler(object):
                         (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
 
         # Copy the previous file for analysis
-        if os.path.exists(self.report_file()):
-            open(self.report_file()+".old", "w").write(open(self.report_file()).read())
+        #if os.path.exists(self.report_file()):
+        #    open(self.report_file()+".old", "w").write(open(self.report_file()).read())
 
         os.rename(self.report_file()+".tmp", self.report_file())
 

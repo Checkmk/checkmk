@@ -1244,7 +1244,9 @@ g_editing_connection_id = None
 def ldap_attr_of_connection(connection_id, attr):
     connection = get_connection(connection_id)
     if not connection:
-        return None
+        # Handle "new connection" situation where there is no connection object existant yet.
+        # The default type is "Active directory", so we use it here.
+        return ldap_attr_map["ad"].get(attr, attr).lower()
 
     return connection.ldap_attr(attr)
 
@@ -1253,7 +1255,9 @@ def ldap_attr_of_connection(connection_id, attr):
 def ldap_filter_of_connection(connection_id, *args, **kwargs):
     connection = get_connection(connection_id)
     if not connection:
-        return None
+        # Handle "new connection" situation where there is no connection object existant yet.
+        # The default type is "Active directory", so we use it here.
+        return ldap_filter_map["ad"].get(args[0], '(objectclass=*)')
 
     return connection.ldap_filter(*args, **kwargs)
 

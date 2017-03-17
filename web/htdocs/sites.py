@@ -72,6 +72,36 @@ def disconnect():
     _site_status = None
 
 
+def sites_using_foreign_cores():
+    site_ids = []
+    for site_id, core in cores_by_site().items():
+        if core not in [ "cmc", None ]:
+            site_ids.append(site_id)
+
+    return sorted(site_ids)
+
+
+def all_sites_use_foreign_cores():
+    for site_id, core in cores_by_site().items():
+        if core == "cmc":
+            return False
+
+    return True
+
+
+def cores_by_site():
+    cores = {}
+    for site_id, site_state in states().items():
+        # Offline sites don't provide core info. Assume CMC is this case
+        if site_state["state"] == "dead":
+            state = "cmc"
+        else:
+            state = site_state.get("core")
+
+        cores[site_id] = state
+
+    return cores
+
 #.
 #   .--Internal------------------------------------------------------------.
 #   |                ___       _                        _                  |

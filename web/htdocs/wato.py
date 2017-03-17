@@ -3088,7 +3088,7 @@ class ModeDiscovery(WatoMode):
               "disable them. If you are sure that they are just transitional, just leave them "
               "until they vanish.")), # undecided
             ("vanished",      True,  _("Vanished services (monitored, but no longer exist)"),
-            _("These service had been added to the monitoring by a previous discovery "
+            _("These services had been added to the monitoring by a previous discovery "
               "but the actual items that are monitored are not present anymore. This might "
               "be due to a real failure. In that case you should leave them in the monitoring. "
               "If the actually monitored things are really not relevant for the monitoring "
@@ -3098,20 +3098,20 @@ class ModeDiscovery(WatoMode):
             _("These services had been found by a discovery and are currently configured "
               "to be monitored.")),
             ("ignored",       True,  _("Disabled services"),
-            _("These services are being discovery but have been disabled by creating a rule "
-              "in the rule set <i>Disabled service</i> oder <i>Disabled checks</i>.")),
+            _("These services are being discovered but have been disabled by creating a rule "
+              "in the rule set <i>Disabled services</i> oder <i>Disabled checks</i>.")),
             ("active",        False, _("Active checks"),
-            _("These service do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+            _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
               "call classical check plugins. They have been added by a rule in the section "
               "<i>Active checks</i> or implicitely by Check_MK.")),
             ("manual",        False, _("Manual checks"),
             _("These services have not been found by the discovery but have been added "
-              "manually by a rule in the WATO module <i>Manual checks</i>")),
+              "manually by a rule in the WATO module <i>Manual checks</i>.")),
             ("legacy",        False, _("Legacy services (defined in main.mk)"),
-            _("These services have been configured by the deprecated variable <i>legacy_check</i> "
+            _("These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
               "in <tt>main.mk</tt> or a similar configuration file.")),
             ("custom",        False, _("Custom checks (defined via rule)"),
-            _("These service do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+            _("These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
               "call a classical check plugin, that you have installed yourself.")),
             ("clustered_old", False, _("Monitored clustered services (located on cluster host)"),
             _("These services have been found on this host but have been mapped to "

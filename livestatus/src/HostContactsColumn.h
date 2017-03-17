@@ -29,7 +29,7 @@
 #include <memory>
 #include <string>
 #include "ContactsColumn.h"
-#include "nagios.h"
+#include "contact_fwd.h"
 
 class HostContactsColumn : public ContactsColumn {
 public:

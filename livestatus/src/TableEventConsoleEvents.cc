@@ -33,35 +33,13 @@
 using std::make_unique;
 using std::string;
 
-#ifdef CMC
-TableEventConsoleEvents::TableEventConsoleEvents(
-    MonitoringCore *mc, const Downtimes &downtimes_holder,
-    const Comments &comments_holder, std::recursive_mutex &holder_lock)
+TableEventConsoleEvents::TableEventConsoleEvents(MonitoringCore *mc)
     : TableEventConsole(mc) {
-    addColumns(this, mc, downtimes_holder, comments_holder, holder_lock);
+    addColumns(this, mc);
 }
-#else
-TableEventConsoleEvents::TableEventConsoleEvents(
-    MonitoringCore *mc, const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder)
-    : TableEventConsole(mc) {
-    addColumns(this, mc, downtimes_holder, comments_holder);
-}
-#endif
 
 // static
-void TableEventConsoleEvents::addColumns(Table *table, MonitoringCore *mc,
-#ifdef CMC
-                                         const Downtimes &downtimes_holder,
-                                         const Comments &comments_holder,
-                                         std::recursive_mutex &holder_lock
-#else
-                                         const DowntimesOrComments
-                                             &downtimes_holder,
-                                         const DowntimesOrComments
-                                             &comments_holder
-#endif
-                                         ) {
+void TableEventConsoleEvents::addColumns(Table *table, MonitoringCore *mc) {
     table->addColumn(make_unique<IntEventConsoleColumn>(
         "event_id", "The unique ID for this event"));
     table->addColumn(make_unique<IntEventConsoleColumn>(
@@ -111,12 +89,7 @@ void TableEventConsoleEvents::addColumns(Table *table, MonitoringCore *mc,
         "event_ipaddress", "The IP address where the event originated"));
 
     TableHosts::addColumns(table, mc, "host_", DANGEROUS_OFFSETOF(Row, _host),
-                           -1, downtimes_holder, comments_holder
-#ifdef CMC
-                           ,
-                           holder_lock
-#endif
-                           );
+                           -1);
 }
 
 string TableEventConsoleEvents::name() const { return "eventconsoleevents"; }

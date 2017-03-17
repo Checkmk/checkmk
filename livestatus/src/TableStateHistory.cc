@@ -28,6 +28,7 @@
 #include <ctime>
 #include <deque>
 #include <memory>
+#include <mutex>
 #include <ostream>
 #include <set>
 #include <utility>
@@ -54,13 +55,14 @@ class VariadicFilter;
 #include "Host.h"
 #include "Service.h"
 #include "Timeperiod.h"
+#include "cmc.h"
 #define STATE_OK 0
 #define STATE_WARNING 1
 #define STATE_CRITICAL 2
 #define STATE_UNKNOWN 3
 #else
-#include <mutex>
 #include "auth.h"
+#include "nagios.h"
 #endif
 
 using mk::starts_with;
@@ -96,17 +98,7 @@ string getCustomVariable(customvariablesmember *cvm, const char *name) {
 }  // namespace
 #endif
 
-TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache,
-#ifdef CMC
-                                     const Downtimes &downtimes_holder,
-                                     const Comments &comments_holder,
-                                     std::recursive_mutex &holder_lock
-#else
-                                     const DowntimesOrComments
-                                         &downtimes_holder,
-                                     const DowntimesOrComments &comments_holder
-#endif
-                                     )
+TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
     addColumn(make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (seconds since 1/1/1970)",
@@ -222,22 +214,10 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache,
 
     // join host and service tables
     TableHosts::addColumns(this, mc, "current_host_",
-                           DANGEROUS_OFFSETOF(HostServiceState, _host), -1,
-                           downtimes_holder, comments_holder
-#ifdef CMC
-                           ,
-                           holder_lock
-#endif
-                           );
+                           DANGEROUS_OFFSETOF(HostServiceState, _host), -1);
     TableServices::addColumns(this, mc, "current_service_",
                               DANGEROUS_OFFSETOF(HostServiceState, _service),
-                              false /* no hosts table */, downtimes_holder,
-                              comments_holder
-#ifdef CMC
-                              ,
-                              holder_lock
-#endif
-                              );
+                              false /* no hosts table */);
 }
 
 string TableStateHistory::name() const { return "statehist"; }

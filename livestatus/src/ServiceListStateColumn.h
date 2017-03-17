@@ -29,10 +29,10 @@
 #include <cstdint>
 #include <string>
 #include "IntColumn.h"
+#include "contact_fwd.h"
 
 #ifdef CMC
 #include <unordered_set>
-#include "cmc.h"
 class Service;
 typedef std::unordered_set<Service *> servicelist_t;
 #else

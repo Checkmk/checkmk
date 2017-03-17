@@ -32,16 +32,7 @@
 using std::make_unique;
 using std::string;
 
-TableEventConsoleHistory::TableEventConsoleHistory(
-    MonitoringCore *mc,
-#ifdef CMC
-    const Downtimes &downtimes_holder, const Comments &comments_holder,
-    std::recursive_mutex &holder_lock
-#else
-    const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder
-#endif
-    )
+TableEventConsoleHistory::TableEventConsoleHistory(MonitoringCore *mc)
     : TableEventConsole(mc) {
     addColumn(make_unique<IntEventConsoleColumn>(
         "history_line", "The line number of the event in the history file"));
@@ -56,13 +47,7 @@ TableEventConsoleHistory::TableEventConsoleHistory(
     addColumn(make_unique<StringEventConsoleColumn>(
         "history_addinfo",
         "Additional information, like email recipient/subject or action ID"));
-    TableEventConsoleEvents::addColumns(this, mc, downtimes_holder,
-                                        comments_holder
-#ifdef CMC
-                                        ,
-                                        holder_lock
-#endif
-                                        );
+    TableEventConsoleEvents::addColumns(this, mc);
 }
 
 string TableEventConsoleHistory::name() const { return "eventconsolehistory"; }

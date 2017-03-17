@@ -25,6 +25,7 @@
 #include "HostSpecialIntColumn.h"
 #include "MonitoringCore.h"
 #include "mk_inventory.h"
+#include "nagios.h"
 #include "pnp4nagios.h"
 
 using std::string;

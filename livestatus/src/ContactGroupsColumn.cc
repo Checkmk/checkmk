@@ -26,6 +26,7 @@
 #include "Column.h"
 #include "MonitoringCore.h"
 #include "Renderer.h"
+#include "nagios.h"
 
 using std::make_unique;
 using std::string;

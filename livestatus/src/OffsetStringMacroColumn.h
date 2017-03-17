@@ -29,6 +29,7 @@
 #include <memory>
 #include <string>
 #include "OffsetStringColumn.h"
+#include "contact_fwd.h"
 #include "nagios.h"
 #include "opids.h"
 class Filter;

@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceSpecialIntColumn.h"
+#include "nagios.h"
 #include "pnp4nagios.h"
 
 int32_t ServiceSpecialIntColumn::getValue(void *row,

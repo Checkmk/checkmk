@@ -29,13 +29,8 @@
 #include <string>
 #include "ColumnFilter.h"
 #include "DoubleColumn.h"
+#include "contact_fwd.h"
 #include "opids.h"
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class DoubleFilter : public ColumnFilter {
 public:

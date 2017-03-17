@@ -30,13 +30,8 @@
 #include <string>
 #include <vector>
 #include "Column.h"
+#include "contact_fwd.h"
 class RowRenderer;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class BlobColumn : public Column {
 public:

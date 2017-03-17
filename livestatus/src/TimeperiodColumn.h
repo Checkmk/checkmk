@@ -29,12 +29,7 @@
 #include <sys/types.h>
 #include <string>
 #include "IntColumn.h"
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
+#include "contact_fwd.h"
 
 class TimeperiodColumn : public IntColumn {
 public:

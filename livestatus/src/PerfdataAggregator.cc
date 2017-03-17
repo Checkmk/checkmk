@@ -30,6 +30,7 @@
 #include <vector>
 #include "Renderer.h"
 #include "StringColumn.h"
+#include "contact_fwd.h"
 #include "strutil.h"
 
 using std::string;

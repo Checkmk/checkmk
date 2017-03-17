@@ -26,6 +26,7 @@
 #include "ServiceListFilter.h"
 #include <ostream>
 #include "Logger.h"
+#include "nagios.h"
 
 using std::string;
 

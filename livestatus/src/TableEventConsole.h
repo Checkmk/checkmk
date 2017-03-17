@@ -44,13 +44,8 @@
 #include "StringUtils.h"
 #include "Table.h"
 #include "TimeColumn.h"
+#include "contact_fwd.h"
 class Query;
-
-#ifdef CMC
-#include "cmc.h"  // for contact
-#else
-#include "nagios.h"  // for contact
-#endif
 
 class TableEventConsole : public Table {
 public:

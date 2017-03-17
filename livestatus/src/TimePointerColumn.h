@@ -33,12 +33,6 @@
 class Filter;
 class RowRenderer;
 
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
-
 class TimePointerColumn : public TimeColumn {
 public:
     TimePointerColumn(const std::string &name, const std::string &description,

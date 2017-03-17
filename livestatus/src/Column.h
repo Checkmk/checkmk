@@ -30,16 +30,11 @@
 #include <memory>
 #include <string>
 #include "Aggregator.h"
+#include "contact_fwd.h"
 #include "opids.h"
 class Filter;
 class Logger;
 class RowRenderer;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 template <typename T>
 T *offset_cast(void *ptr, size_t offset) {

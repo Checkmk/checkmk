@@ -51,17 +51,15 @@
 #include "TimeperiodColumn.h"
 #include "WorldNagios.h"
 #include "auth.h"
+#include "nagios.h"
 
 extern service *service_list;
 
 using std::make_unique;
 using std::string;
 
-TableServices::TableServices(MonitoringCore *mc,
-                             const DowntimesOrComments &downtimes_holder,
-                             const DowntimesOrComments &comments_holder)
-    : Table(mc) {
-    addColumns(this, mc, "", -1, true, downtimes_holder, comments_holder);
+TableServices::TableServices(MonitoringCore *mc) : Table(mc) {
+    addColumns(this, mc, "", -1, true);
 }
 
 string TableServices::name() const { return "services"; }
@@ -71,9 +69,7 @@ string TableServices::namePrefix() const { return "service_"; }
 // static
 void TableServices::addColumns(Table *table, MonitoringCore *mc,
                                const string &prefix, int indirect_offset,
-                               bool add_hosts,
-                               const DowntimesOrComments &downtimes_holder,
-                               const DowntimesOrComments &comments_holder) {
+                               bool add_hosts) {
     // Es fehlen noch: double-Spalten, unsigned long spalten, etliche weniger
     // wichtige Spalten und die Servicegruppen.
     table->addColumn(make_unique<OffsetStringColumn>(
@@ -416,28 +412,27 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
         "A list of all contacts of the service, either direct or via a contact group",
         indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
-        prefix + "downtimes", "A list of all downtime ids of the service",
-        downtimes_holder, true, true, false, false, indirect_offset, -1, -1));
+        prefix + "downtimes", "A list of all downtime ids of the service", mc,
+        true, true, false, false, indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        downtimes_holder, true, true, true, false, indirect_offset, -1, -1));
+        mc, true, true, true, false, indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
-        prefix + "comments", "A list of all comment ids of the service",
-        comments_holder, false, true, false, false, indirect_offset, -1, -1));
+        prefix + "comments", "A list of all comment ids of the service", mc,
+        false, true, false, false, indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_info",
-        "A list of all comments of the service with id, author and comment",
-        comments_holder, false, true, true, false, indirect_offset, -1, -1));
+        "A list of all comments of the service with id, author and comment", mc,
+        false, true, true, false, indirect_offset, -1, -1));
     table->addColumn(make_unique<DownCommColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry type and entry time",
-        comments_holder, false, true, true, true, indirect_offset, -1, -1));
+        mc, false, true, true, true, indirect_offset, -1, -1));
 
     if (add_hosts) {
         TableHosts::addColumns(table, mc, "host_",
-                               DANGEROUS_OFFSETOF(service, host_ptr), -1,
-                               downtimes_holder, comments_holder);
+                               DANGEROUS_OFFSETOF(service, host_ptr), -1);
     }
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(

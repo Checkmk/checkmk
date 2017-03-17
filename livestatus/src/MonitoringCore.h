@@ -36,12 +36,27 @@ struct Command {
     std::string _command_line;
 };
 
+struct DowntimeData {
+    unsigned long _id;
+    std::string _author;
+    std::string _comment;
+};
+
+struct CommentData {
+    unsigned long _id;
+    std::string _author;
+    std::string _comment;
+    uint32_t _entry_type;  // TODO(sp) Move Comment::Type here
+    std::chrono::system_clock::time_point _entry_time;
+};
+
 /// An abstraction layer for the monitoring core (nagios or cmc)
 class MonitoringCore {
 public:
     class Contact;
     class ContactGroup;
     class Host;
+    class Service;
 
     virtual ~MonitoringCore() = default;
 
@@ -56,6 +71,12 @@ public:
 
     virtual Command find_command(std::string name) const = 0;
     virtual std::vector<Command> commands() const = 0;
+
+    virtual std::vector<DowntimeData> downtimes_for_host(Host *) const = 0;
+    virtual std::vector<DowntimeData> downtimes_for_service(
+        Service *) const = 0;
+    virtual std::vector<CommentData> comments_for_host(Host *) const = 0;
+    virtual std::vector<CommentData> comments_for_service(Service *) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 

@@ -29,12 +29,7 @@
 #include <cstdint>
 #include <string>
 #include "TimeColumn.h"
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
+#include "contact_fwd.h"
 
 class OffsetTimeColumn : public TimeColumn {
 public:

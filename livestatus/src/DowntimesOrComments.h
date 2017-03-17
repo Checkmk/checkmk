@@ -37,7 +37,6 @@ public:
     DowntimesOrComments();
     void registerDowntime(nebstruct_downtime_data *data);
     void registerComment(nebstruct_comment_data *data);
-    DowntimeOrComment *findEntry(unsigned long id) const;
     auto begin() const { return _entries.cbegin(); }
     auto end() const { return _entries.cend(); }
 

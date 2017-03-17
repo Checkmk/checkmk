@@ -28,13 +28,8 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
+#include "contact_fwd.h"
 class RowRenderer;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class NullColumn : public Column {
 public:

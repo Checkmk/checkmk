@@ -28,11 +28,13 @@
 #include "Column.h"
 #include "DowntimeOrComment.h"
 #include "DowntimesOrComments.h"  // IWYU pragma: keep
+#include "MonitoringCore.h"
 #include "OffsetBoolColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
+#include "Store.h"
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "auth.h"
@@ -42,10 +44,7 @@ using std::string;
 
 // TODO(sp): the dynamic data in this table must be locked with a mutex
 
-TableDowntimes::TableDowntimes(MonitoringCore *mc,
-                               const DowntimesOrComments &downtimes_holder,
-                               const DowntimesOrComments &comments_holder)
-    : Table(mc), _holder(downtimes_holder) {
+TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<OffsetSStringColumn>(
         "author", "The contact that scheduled the downtime",
         DANGEROUS_OFFSETOF(Downtime, _author_name), -1, -1, -1));
@@ -85,11 +84,10 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc,
         DANGEROUS_OFFSETOF(Downtime, _triggered_by), -1, -1, -1));
 
     TableHosts::addColumns(this, mc, "host_",
-                           DANGEROUS_OFFSETOF(Downtime, _host), -1,
-                           downtimes_holder, comments_holder);
-    TableServices::addColumns(
-        this, mc, "service_", DANGEROUS_OFFSETOF(Downtime, _service),
-        false /* no hosts table */, downtimes_holder, comments_holder);
+                           DANGEROUS_OFFSETOF(Downtime, _host), -1);
+    TableServices::addColumns(this, mc, "service_",
+                              DANGEROUS_OFFSETOF(Downtime, _service),
+                              false /* no hosts table */);
 }
 
 string TableDowntimes::name() const { return "downtimes"; }
@@ -97,7 +95,7 @@ string TableDowntimes::name() const { return "downtimes"; }
 string TableDowntimes::namePrefix() const { return "downtime_"; }
 
 void TableDowntimes::answerQuery(Query *query) {
-    for (const auto &entry : _holder) {
+    for (const auto &entry : core()->impl<Store>()->_downtimes) {
         if (!query->processDataset(entry.second.get())) {
             break;
         }

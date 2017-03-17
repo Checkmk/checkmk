@@ -28,30 +28,32 @@
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
+#include <vector>
 #include "ListColumn.h"
-#include "nagios.h"
-class DowntimeOrComment;
-class DowntimesOrComments;
+#include "contact_fwd.h"
+class MonitoringCore;
 class RowRenderer;
+struct CommentData;
+struct DowntimeData;
 
 class DownCommColumn : public ListColumn {
-    const DowntimesOrComments &_holder;
+    MonitoringCore *_mc;
     bool _is_downtime;
     bool _with_info;
-    bool _is_service;       // and not host
-    bool _with_extra_info;  // provides date and type
+    bool _is_service;
+    bool _with_extra_info;
 
-    bool match(DowntimeOrComment *dt, void *data);
+    std::vector<DowntimeData> downtimes_for_object(void *data) const;
+    std::vector<CommentData> comments_for_object(void *data) const;
 
 public:
     DownCommColumn(const std::string &name, const std::string &description,
-                   const DowntimesOrComments &holder, bool is_downtime,
-                   bool is_service, bool with_info, bool with_extra_info,
-                   int indirect_offset, int extra_offset,
-                   int extra_extra_offset)
+                   MonitoringCore *mc, bool is_downtime, bool is_service,
+                   bool with_info, bool with_extra_info, int indirect_offset,
+                   int extra_offset, int extra_extra_offset)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset)
-        , _holder(holder)
+        , _mc(mc)
         , _is_downtime(is_downtime)
         , _with_info(with_info)
         , _is_service(is_service)

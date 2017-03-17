@@ -28,7 +28,7 @@
 #include "TableServices.h"
 #include "WorldNagios.h"
 #include "auth.h"
-class DowntimesOrComments;
+#include "nagios.h"
 
 using std::string;
 
@@ -41,12 +41,9 @@ struct servicebyhostgroup {
 };
 }  // namespace
 
-TableServicesByHostGroup::TableServicesByHostGroup(
-    MonitoringCore *mc, const DowntimesOrComments &downtimes_holder,
-    const DowntimesOrComments &comments_holder)
+TableServicesByHostGroup::TableServicesByHostGroup(MonitoringCore *mc)
     : Table(mc) {
-    TableServices::addColumns(this, mc, "", -1, true, downtimes_holder,
-                              comments_holder);
+    TableServices::addColumns(this, mc, "", -1, true);
     TableHostGroups::addColumns(
         this, "hostgroup_", DANGEROUS_OFFSETOF(servicebyhostgroup, _hostgroup));
 }

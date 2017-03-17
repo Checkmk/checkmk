@@ -28,14 +28,9 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Column.h"
+#include "contact_fwd.h"
 class MonitoringCore;
 class RowRenderer;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class LogwatchListColumn : public Column {
 public:

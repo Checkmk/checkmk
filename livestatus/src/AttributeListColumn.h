@@ -31,16 +31,11 @@
 #include <string>
 #include "Column.h"
 #include "IntColumn.h"
+#include "contact_fwd.h"
 #include "opids.h"
 class Filter;
 class Logger;
 class RowRenderer;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class AttributeListColumn : public IntColumn {
 public:

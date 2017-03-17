@@ -29,13 +29,8 @@
 #include <cstdint>
 #include <string>
 #include "IntColumn.h"
+#include "contact_fwd.h"
 class MonitoringCore;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class StatusSpecialIntColumn : public IntColumn {
 public:

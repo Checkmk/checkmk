@@ -24,6 +24,7 @@
 
 #include "TimeperiodColumn.h"
 #include "TimeperiodsCache.h"
+#include "nagios.h"
 
 using std::string;
 

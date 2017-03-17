@@ -25,6 +25,7 @@
 #include "TableLog.h"
 #include <cstdint>
 #include <map>
+#include <mutex>
 #include <utility>
 #include "Column.h"
 #include "LogCache.h"
@@ -39,9 +40,11 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 
-#ifndef CMC
-#include <mutex>
+#ifdef CMC
+#include "cmc.h"
+#else
 #include "auth.h"
+#include "nagios.h"
 #endif
 
 using std::lock_guard;
@@ -50,16 +53,7 @@ using std::mutex;
 using std::shared_ptr;
 using std::string;
 
-TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache,
-#ifdef CMC
-                   const Downtimes &downtimes_holder,
-                   const Comments &comments_holder,
-                   std::recursive_mutex &holder_lock
-#else
-                   const DowntimesOrComments &downtimes_holder,
-                   const DowntimesOrComments &comments_holder
-#endif
-                   )
+TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     : Table(mc), _log_cache(log_cache) {
     addColumn(make_unique<OffsetTimeColumn>(
         "time", "Time of the log event (UNIX timestamp)",
@@ -116,21 +110,10 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache,
 
     // join host and service tables
     TableHosts::addColumns(this, mc, "current_host_",
-                           DANGEROUS_OFFSETOF(LogEntry, _host), -1,
-                           downtimes_holder, comments_holder
-#ifdef CMC
-                           ,
-                           holder_lock
-#endif
-                           );
-    TableServices::addColumns(
-        this, mc, "current_service_", DANGEROUS_OFFSETOF(LogEntry, _service),
-        false /* no hosts table */, downtimes_holder, comments_holder
-#ifdef CMC
-        ,
-        holder_lock
-#endif
-        );
+                           DANGEROUS_OFFSETOF(LogEntry, _host), -1);
+    TableServices::addColumns(this, mc, "current_service_",
+                              DANGEROUS_OFFSETOF(LogEntry, _service),
+                              false /* no hosts table */);
     TableContacts::addColumns(this, "current_contact_",
                               DANGEROUS_OFFSETOF(LogEntry, _contact));
     TableCommands::addColumns(this, "current_command_",

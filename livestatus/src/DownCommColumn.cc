@@ -23,96 +23,118 @@
 // Boston, MA 02110-1301 USA.
 
 #include "DownCommColumn.h"
+#include <chrono>
+#include <cstdint>
 #include <cstdlib>
-#include <ctime>
-#include <utility>
-#include "DowntimeOrComment.h"
-#include "DowntimesOrComments.h"
+#include "MonitoringCore.h"
 #include "Renderer.h"
 
 using std::make_unique;
 using std::string;
 using std::unique_ptr;
+using std::vector;
 
 void DownCommColumn::output(void *row, RowRenderer &r,
                             contact * /* auth_user */) {
-    ListRenderer l(r);
-    if (auto data = rowData<void>(row)) {
-        for (const auto &entry : _holder) {
-            unsigned long id = entry.first;
-            DowntimeOrComment *dt = entry.second.get();
-            if (match(dt, data)) {
+    if (_is_downtime) {
+        ListRenderer l(r);
+        if (auto data = rowData<void>(row)) {
+            for (const auto &downtime : downtimes_for_object(data)) {
                 if (_with_info) {
                     SublistRenderer s(l);
-                    s.output(id);
-                    s.output(dt->_author_name);
-                    s.output(dt->_comment);
-                    if (_with_extra_info && !_is_downtime) {
-                        s.output(static_cast<Comment *>(dt)->_entry_type);
-                        s.output(dt->_entry_time);
+                    s.output(downtime._id);
+                    s.output(downtime._author);
+                    s.output(downtime._comment);
+                } else {
+                    l.output(downtime._id);
+                }
+            }
+        }
+    } else {
+        ListRenderer l(r);
+        if (auto data = rowData<void>(row)) {
+            for (const auto &comment : comments_for_object(data)) {
+                if (_with_info) {
+                    SublistRenderer s(l);
+                    s.output(comment._id);
+                    s.output(comment._author);
+                    s.output(comment._comment);
+                    if (_with_extra_info) {
+                        s.output(comment._entry_type);
+                        s.output(comment._entry_time);
                     }
                 } else {
-                    l.output(id);
+                    l.output(comment._id);
                 }
             }
         }
     }
 }
 
-bool DownCommColumn::match(DowntimeOrComment *dt, void *data) {
-    // TableDownComm always enumerates dowtimes/comments for both hosts and
-    // services, regardless of what we are interested in. So we have to skip the
-    // ones which have the wrong kind.
-    if (_is_service != dt->_is_service) {
-        return false;
-    }
-
-    if (_is_service) {
-        service *s = static_cast<service *>(data);
-        return dt->_service != nullptr &&  // just to be sure...
-               dt->_service->host_name == s->host_name &&
-               dt->_service->description == s->description;
-    }
-    host *h = static_cast<host *>(data);
-    return dt->_host->name == h->name;
-}
-
 unique_ptr<ListColumn::Contains> DownCommColumn::makeContains(
     const string &name) {
-    class ContainsDownCommID : public Contains {
+    class ContainsDowntimeID : public Contains {
     public:
-        ContainsDownCommID(unsigned long element,
-                           const DowntimesOrComments &holder)
-            : _element(element), _holder(holder) {}
+        ContainsDowntimeID(unsigned long element, DownCommColumn *column)
+            : _element(element), _column(column) {}
 
-        bool operator()(void *row) override {
-            DowntimeOrComment *dt = _holder.findEntry(_element);
-            return dt != nullptr &&
-                   (dt->_service == static_cast<service *>(row) ||
-                    (dt->_service == nullptr &&
-                     dt->_host == static_cast<host *>(row)));
+        bool operator()(void *data) override {
+            for (const auto &downtime : _column->downtimes_for_object(data)) {
+                if (downtime._id == _element) {
+                    return true;
+                }
+            }
+            return false;
         }
 
     private:
         const unsigned long _element;
-        const DowntimesOrComments &_holder;
+        DownCommColumn *_column;
     };
 
-    return make_unique<ContainsDownCommID>(strtoul(name.c_str(), nullptr, 10),
-                                           _holder);
+    class ContainsCommentID : public Contains {
+    public:
+        ContainsCommentID(unsigned long element, DownCommColumn *column)
+            : _element(element), _column(column) {}
+
+        bool operator()(void *data) override {
+            for (const auto &comment : _column->comments_for_object(data)) {
+                if (comment._id == _element) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+    private:
+        const unsigned long _element;
+        DownCommColumn *_column;
+    };
+
+    unsigned long id = strtoul(name.c_str(), nullptr, 10);
+    if (_is_downtime) {
+        return make_unique<ContainsDowntimeID>(id, this);
+    }
+    return make_unique<ContainsCommentID>(id, this);
 }
 
 bool DownCommColumn::isEmpty(void *data) {
-    if (data == nullptr) {
-        return true;
-    }
+    return _is_downtime ? downtimes_for_object(data).empty()
+                        : comments_for_object(data).empty();
+}
 
-    for (const auto &entry : _holder) {
-        DowntimeOrComment *dt = entry.second.get();
-        if (dt->_service == data ||
-            (dt->_service == nullptr && dt->_host == data)) {
-            return false;
-        }
-    }
-    return true;  // empty
+vector<DowntimeData> DownCommColumn::downtimes_for_object(void *data) const {
+    return _is_service
+               ? _mc->downtimes_for_service(
+                     reinterpret_cast<MonitoringCore::Service *>(data))
+               : _mc->downtimes_for_host(
+                     reinterpret_cast<MonitoringCore::Host *>(data));
+}
+
+vector<CommentData> DownCommColumn::comments_for_object(void *data) const {
+    return _is_service
+               ? _mc->comments_for_service(
+                     reinterpret_cast<MonitoringCore::Service *>(data))
+               : _mc->comments_for_host(
+                     reinterpret_cast<MonitoringCore::Host *>(data));
 }

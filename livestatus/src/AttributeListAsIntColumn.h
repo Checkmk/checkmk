@@ -30,14 +30,9 @@
 #include <memory>
 #include <string>
 #include "IntColumn.h"
+#include "contact_fwd.h"
 #include "opids.h"
 class Filter;
-
-#ifdef CMC
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 
 class AttributeListAsIntColumn : public IntColumn {
 public:

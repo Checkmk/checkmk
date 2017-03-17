@@ -24,7 +24,6 @@
 
 #include "DowntimesOrComments.h"
 #include <iosfwd>
-#include <utility>
 #include "DowntimeOrComment.h"
 #include "Logger.h"
 
@@ -67,9 +66,4 @@ void DowntimesOrComments::registerComment(nebstruct_comment_data *data) {
         default:
             break;
     }
-}
-
-DowntimeOrComment *DowntimesOrComments::findEntry(unsigned long id) const {
-    auto it = _entries.find(id);
-    return it == _entries.end() ? nullptr : it->second.get();
 }

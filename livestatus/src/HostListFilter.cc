@@ -26,6 +26,7 @@
 #include <ostream>
 #include <utility>
 #include "Logger.h"
+#include "nagios.h"
 
 using std::move;
 using std::string;

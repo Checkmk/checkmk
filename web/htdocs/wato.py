@@ -794,8 +794,9 @@ def show_hosts(folder):
         # Column with actions (buttons)
 
         if show_checkboxes:
-            table.cell("<input type=button class=checkgroup name=_toggle_group"
-                       " onclick=\"toggle_all_rows();\" value=\"X\" />", sortable=False)
+            table.cell(html.render_input("_toggle_group", type_="button",
+                        class_="checkgroup", onclick="toggle_all_rows();",
+                        value='X'), sortable=False, css="checkbox")
             # Use CSS class "failed" in order to provide information about
             # selective toggling inventory-failed hosts for Javascript
             html.input(name="_c_%s" % hostname, type_="checkbox", value=colspan,
@@ -3306,9 +3307,9 @@ class ModeDiscovery(WatoMode):
             table.cell(css="checkbox")
             return
 
-        table.cell("<input type=button class=checkgroup name=_toggle_group"
-                   " onclick=\"toggle_group_rows(this);\" value=\"X\" />", sortable=False,
-                   css="checkbox")
+        table.cell(html.render_input("_toggle_group", type_="button",
+                    class_="checkgroup", onclick="toggle_group_rows(this);",
+                    value='X'), sortable=False, css="checkbox")
 
         html.checkbox(self._checkbox_name(check_source,check_type, item),
             True, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
@@ -10422,9 +10423,9 @@ def mode_users(phase):
         table.row()
 
         # Checkboxes
-        table.cell("<input type=button class=checkgroup name=_toggle_group"
-                   " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'),
-                   sortable=False, css="buttons")
+        table.cell(html.render_input("_toggle_group", type_="button",
+                    class_="checkgroup", onclick="toggle_all_rows();",
+                    value='X'), sortable=False, css="checkbox")
 
         if id != config.user.id:
             html.checkbox("_c_user_%s" % id)

@@ -1271,7 +1271,7 @@ def popup_list_dashboards(add_type):
     if not config.user.may("general.edit_dashboards"):
         return []
 
-    if add_type == "graph_collection":
+    if add_type in [ "availability", "graph_collection" ]:
         return
 
     load_dashboards()

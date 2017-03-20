@@ -1,4 +1,4 @@
-Title: windows agent, df section: now supports filesystems with spaces in it
+Title: windows agent, df section: volumes with spaces in name are now supported
 Level: 1
 Component: checks
 Compatible: compat

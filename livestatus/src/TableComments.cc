@@ -37,6 +37,7 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "auth.h"
+#include "nagios.h"
 
 using std::make_unique;
 using std::string;

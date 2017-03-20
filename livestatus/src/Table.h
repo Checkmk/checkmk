@@ -31,7 +31,7 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include "nagios.h"  // IWYU pragma: keep
+#include "contact_fwd.h"
 class Column;
 class DynamicColumn;
 class Logger;

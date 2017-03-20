@@ -28,6 +28,7 @@
 // IWYU pragma: no_include <bits/shared_ptr.h>
 #include "config.h"  // IWYU pragma: keep
 #include <map>
+#include <memory>  // IWYU pragma: keep
 #include <string>
 #include "LogCache.h"
 #include "Logfile.h"

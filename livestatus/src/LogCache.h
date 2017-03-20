@@ -31,7 +31,6 @@
 #include <map>
 #include <mutex>
 #include "FileSystem.h"
-#include "nagios.h"  // IWYU pragma: keep
 class Column;
 class Logfile;
 class Logger;

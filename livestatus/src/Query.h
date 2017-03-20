@@ -40,8 +40,8 @@
 #include "RendererBrokenCSV.h"
 #include "StatsColumn.h"
 #include "VariadicFilter.h"
+#include "contact_fwd.h"
 #include "data_encoding.h"
-#include "nagios.h"  // IWYU pragma: keep
 #include "opids.h"
 class Aggregator;
 class Column;

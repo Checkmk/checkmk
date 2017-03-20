@@ -28,16 +28,16 @@
 #include "config.h"  // IWYU pragma: keep
 
 #ifdef CMC
-class Contact;
+#include "contact_fwd.h"
 #else
-#include "nagios.h"  // IWYU pragma: keep
+#include "nagios.h"
 #endif
 
 enum class AuthorizationKind { loose = 0, strict = 1 };
 
 #ifdef CMC
-inline Contact *unknown_auth_user() {
-    return reinterpret_cast<Contact *>(0xdeadbeaf);
+inline contact *unknown_auth_user() {
+    return reinterpret_cast<contact *>(0xdeadbeaf);
 }
 #else
 extern AuthorizationKind g_service_authorization;

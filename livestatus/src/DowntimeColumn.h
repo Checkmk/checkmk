@@ -48,14 +48,14 @@ public:
         , _with_info(with_info) {}
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(void *data) override;
+    bool isEmpty(void *row) override;
 
 private:
     MonitoringCore *_mc;
     bool _is_service;
     bool _with_info;
 
-    std::vector<DowntimeData> downtimes_for_object(void *data) const;
+    std::vector<DowntimeData> downtimes_for_row(void *row) const;
 };
 
 #endif  // DowntimeColumn_h

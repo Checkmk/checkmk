@@ -165,8 +165,6 @@ protected:
             }
         }
 
-        bool isEmpty(void *row) override { return _ecc.getValue(row).empty(); }
-
         std::unique_ptr<Contains> makeContains(
             const std::string &name) override {
             class ContainsElem : public Contains {
@@ -186,6 +184,8 @@ protected:
             };
             return std::make_unique<ContainsElem>(name, _ecc);
         }
+
+        bool isEmpty(void *row) override { return _ecc.getValue(row).empty(); }
     };
 
     bool isAuthorizedForEvent(contact *ctc, void *data);

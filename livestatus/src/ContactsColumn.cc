@@ -42,10 +42,12 @@ void ContactsColumn::output(void *row, RowRenderer &r,
     }
 }
 
-bool ContactsColumn::isEmpty(void *data) {
-    for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
-        if ((*containsContact(ctc))(data)) {
-            return false;
+bool ContactsColumn::isEmpty(void *row) {
+    if (auto data = rowData<void>(row)) {
+        for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
+            if ((*containsContact(ctc))(data)) {
+                return false;
+            }
         }
     }
     return true;

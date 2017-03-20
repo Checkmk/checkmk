@@ -44,7 +44,7 @@ public:
 #else
     virtual std::unique_ptr<Contains> containsContact(contact *ctc) = 0;
 #endif
-    bool isEmpty(void *data) override;
+    bool isEmpty(void *row) override;
     void output(void *row, RowRenderer &r, contact *auth_user) override;
 };
 

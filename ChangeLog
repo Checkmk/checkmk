@@ -1,5 +1,6 @@
 1.2.8p21:
     Checks & Agents:
+    * 4544 FIX: multipath: Fixed missing infos in output if a failure occurs...
     * 4549 FIX: citrix_licenses: Fixed always ok state even if all licenses are used...
     * 4550 FIX: smart: the services do not crash anymore if a threshold is not provided
     * 8629 FIX: win_printers: Fix broken default parameters

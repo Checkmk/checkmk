@@ -49,7 +49,7 @@ public:
         , _with_extra_info(with_extra_info) {}
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(void *data) override;
+    bool isEmpty(void *row) override;
 
 private:
     MonitoringCore *_mc;
@@ -57,7 +57,7 @@ private:
     bool _with_info;
     bool _with_extra_info;
 
-    std::vector<CommentData> comments_for_object(void *data) const;
+    std::vector<CommentData> comments_for_row(void *row) const;
 };
 
 #endif  // CommentColumn_h

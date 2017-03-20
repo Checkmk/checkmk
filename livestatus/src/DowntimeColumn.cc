@@ -35,16 +35,14 @@ using std::vector;
 void DowntimeColumn::output(void *row, RowRenderer &r,
                             contact * /* auth_user */) {
     ListRenderer l(r);
-    if (auto data = rowData<void>(row)) {
-        for (const auto &downtime : downtimes_for_object(data)) {
-            if (_with_info) {
-                SublistRenderer s(l);
-                s.output(downtime._id);
-                s.output(downtime._author);
-                s.output(downtime._comment);
-            } else {
-                l.output(downtime._id);
-            }
+    for (const auto &downtime : downtimes_for_row(row)) {
+        if (_with_info) {
+            SublistRenderer s(l);
+            s.output(downtime._id);
+            s.output(downtime._author);
+            s.output(downtime._comment);
+        } else {
+            l.output(downtime._id);
         }
     }
 }
@@ -56,8 +54,8 @@ unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
         ContainsDowntimeID(unsigned long element, DowntimeColumn *column)
             : _element(element), _column(column) {}
 
-        bool operator()(void *data) override {
-            for (const auto &downtime : _column->downtimes_for_object(data)) {
+        bool operator()(void *row) override {
+            for (const auto &downtime : _column->downtimes_for_row(row)) {
                 if (downtime._id == _element) {
                     return true;
                 }
@@ -74,14 +72,17 @@ unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
     return make_unique<ContainsDowntimeID>(id, this);
 }
 
-bool DowntimeColumn::isEmpty(void *data) {
-    return downtimes_for_object(data).empty();
+bool DowntimeColumn::isEmpty(void *row) {
+    return downtimes_for_row(row).empty();
 }
 
-vector<DowntimeData> DowntimeColumn::downtimes_for_object(void *data) const {
-    return _is_service
-               ? _mc->downtimes_for_service(
-                     reinterpret_cast<MonitoringCore::Service *>(data))
-               : _mc->downtimes_for_host(
-                     reinterpret_cast<MonitoringCore::Host *>(data));
+vector<DowntimeData> DowntimeColumn::downtimes_for_row(void *row) const {
+    if (auto data = rowData<void>(row)) {
+        return _is_service
+                   ? _mc->downtimes_for_service(
+                         reinterpret_cast<MonitoringCore::Service *>(data))
+                   : _mc->downtimes_for_host(
+                         reinterpret_cast<MonitoringCore::Host *>(data));
+    }
+    return {};
 }

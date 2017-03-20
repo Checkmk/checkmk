@@ -34,8 +34,6 @@
 class RowRenderer;
 
 class ServiceGroupsColumn : public ListColumn {
-    int _offset;
-
 public:
     ServiceGroupsColumn(const std::string &name, const std::string &description,
                         int offset, int indirect_offset, int extra_offset,
@@ -45,10 +43,12 @@ public:
         , _offset(offset) {}
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(void *data) override;
+    bool isEmpty(void *row) override;
 
 private:
-    objectlist *getData(void *);
+    int _offset;
+
+    objectlist *getData(void *row);
 };
 
 #endif  // ServiceGroupsColumn_h

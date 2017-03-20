@@ -33,14 +33,17 @@ using std::unique_ptr;
 namespace {
 class ContainsContact : public ListColumn::Contains {
 public:
-    explicit ContainsContact(contact *element) : _element(element) {}
+    explicit ContainsContact(contact *element,
+                             ContactGroupsMemberColumn *column)
+        : _element(element), _column(column) {}
 
     bool operator()(void *row) override {
-        contactgroup *cg = static_cast<contactgroup *>(row);
-        for (contactsmember *mem = cg->members; mem != nullptr;
-             mem = mem->next) {
-            if (mem->contact_ptr == _element) {
-                return true;
+        if (auto cg = _column->rowData<contactgroup>(row)) {
+            for (contactsmember *mem = cg->members; mem != nullptr;
+                 mem = mem->next) {
+                if (mem->contact_ptr == _element) {
+                    return true;
+                }
             }
         }
         return false;
@@ -48,16 +51,17 @@ public:
 
 private:
     contact *const _element;
+    ContactGroupsMemberColumn *_column;
 };
 }  // namespace
 
 unique_ptr<ListColumn::Contains> ContactGroupsMemberColumn::makeContains(
     const string &name) {
     return make_unique<ContainsContact>(
-        find_contact(const_cast<char *>(name.c_str())));
+        find_contact(const_cast<char *>(name.c_str())), this);
 }
 
 unique_ptr<ListColumn::Contains> ContactGroupsMemberColumn::containsContact(
     contact *ctc) {
-    return make_unique<ContainsContact>(ctc);
+    return make_unique<ContainsContact>(ctc, this);
 }

@@ -46,7 +46,7 @@ public:
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
 #ifdef CMC
     void output(void *row, RowRenderer &r, contact *auth_user) override;
-    bool isEmpty(void *data) override;
+    bool isEmpty(void *row) override;
 #else
     std::unique_ptr<Contains> containsContact(contact *ctc) override;
 #endif

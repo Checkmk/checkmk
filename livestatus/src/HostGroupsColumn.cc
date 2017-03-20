@@ -30,13 +30,6 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-objectlist *HostGroupsColumn::getData(void *data) {
-    if (auto p = rowData<void>(data)) {
-        return *offset_cast<objectlist *>(p, _offset);
-    }
-    return nullptr;
-}
-
 void HostGroupsColumn::output(void *row, RowRenderer &r,
                               contact * /* auth_user */) {
     ListRenderer l(r);
@@ -50,18 +43,12 @@ unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
     const string &name) {
     class ContainsHostGroup : public Contains {
     public:
-        ContainsHostGroup(hostgroup *element, int offset)
-            : _element(element), _offset(offset) {}
+        ContainsHostGroup(hostgroup *element, HostGroupsColumn *column)
+            : _element(element), _column(column) {}
 
         bool operator()(void *row) override {
-            if (_element == nullptr || row == nullptr) {
-                return false;
-            }
-
-            // row is already shifted (_indirect_offset is taken into account),
-            // but _offset needs still to be accounted for
-            for (auto list = *offset_cast<objectlist *>(row, _offset);
-                 list != nullptr; list = list->next) {
+            for (auto list = _column->getData(row); list != nullptr;
+                 list = list->next) {
                 if (list->object_ptr == _element) {
                     return true;
                 }
@@ -71,13 +58,18 @@ unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
 
     private:
         hostgroup *const _element;
-        const int _offset;
+        HostGroupsColumn *_column;
     };
 
     return make_unique<ContainsHostGroup>(
-        find_hostgroup(const_cast<char *>(name.c_str())), _offset);
+        find_hostgroup(const_cast<char *>(name.c_str())), this);
 }
 
-bool HostGroupsColumn::isEmpty(void *data) {
-    return *offset_cast<objectlist *>(data, _offset) == nullptr;
+bool HostGroupsColumn::isEmpty(void *row) { return getData(row) == nullptr; }
+
+objectlist *HostGroupsColumn::getData(void *row) {
+    if (auto data = rowData<void>(row)) {
+        return *offset_cast<objectlist *>(data, _offset);
+    }
+    return nullptr;
 }

@@ -26,13 +26,13 @@
 #define StringUtils_h
 
 #include "config.h"  // IWYU pragma: keep
-#ifdef CMC
-#include <netinet/in.h>
-#endif
-#include <algorithm>  // IWYU pragma: keep
 #include <string>
 #include <utility>
 #include <vector>
+
+#ifdef CMC
+#include <netinet/in.h>
+#endif
 
 namespace mk {
 std::string unsafe_tolower(const std::string &str);

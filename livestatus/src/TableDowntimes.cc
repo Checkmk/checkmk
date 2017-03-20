@@ -27,7 +27,6 @@
 #include <utility>
 #include "Column.h"
 #include "DowntimeOrComment.h"
-#include "DowntimesOrComments.h"  // IWYU pragma: keep
 #include "MonitoringCore.h"
 #include "OffsetBoolColumn.h"
 #include "OffsetIntColumn.h"
@@ -38,6 +37,7 @@
 #include "TableHosts.h"
 #include "TableServices.h"
 #include "auth.h"
+#include "nagios.h"
 
 using std::make_unique;
 using std::string;

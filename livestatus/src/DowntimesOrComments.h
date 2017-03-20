@@ -28,8 +28,8 @@
 #include "config.h"  // IWYU pragma: keep
 #include <map>
 #include <memory>
-#include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "nagios.h"
+class DowntimeOrComment;
 class Logger;
 
 class DowntimesOrComments {

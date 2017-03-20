@@ -30,7 +30,7 @@
 #include "ServiceListColumn.h"
 #include "ServiceListStateColumn.h"
 #include "auth.h"
-#include "contact_fwd.h"
+#include "nagios.h"
 
 using std::make_unique;
 using std::string;

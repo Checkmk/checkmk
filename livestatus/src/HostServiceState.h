@@ -29,8 +29,14 @@
 #include <ctime>
 #include <string>  // for string
 #include <vector>
-#include "nagios.h"  // IWYU pragma: keep
 class HostServiceState;
+
+// for host/service, ugly...
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
 
 typedef std::vector<HostServiceState *> HostServices;
 

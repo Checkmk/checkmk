@@ -34,7 +34,6 @@
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "TimeperiodColumn.h"
-#include "contact_fwd.h"
 #include "nagios.h"
 
 using std::make_unique;

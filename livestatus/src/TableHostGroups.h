@@ -28,7 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "Table.h"
-#include "nagios.h"  // IWYU pragma: keep
+#include "contact_fwd.h"
 class MonitoringCore;
 class Query;
 

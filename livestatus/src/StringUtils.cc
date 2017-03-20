@@ -24,12 +24,14 @@
 
 // IWYU pragma: no_include <type_traits>
 #include "StringUtils.h"
+#include <algorithm>
+#include <cctype>
+#include <sstream>
+
 #ifdef CMC
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #endif
-#include <cctype>
-#include <sstream>
 
 using std::pair;
 using std::string;

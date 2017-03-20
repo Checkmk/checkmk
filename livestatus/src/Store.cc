@@ -30,6 +30,7 @@
 #include <ostream>
 #include <utility>
 #include <vector>
+#include "DowntimeOrComment.h"  // IWYU pragma: keep
 #include "EventConsoleConnection.h"
 #include "InputBuffer.h"
 #include "Logger.h"

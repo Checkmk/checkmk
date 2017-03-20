@@ -44,6 +44,13 @@
 #include "strutil.h"
 #include "waittriggers.h"
 
+// for find_contact, ugly...
+#ifdef CMC
+#include "cmc.h"
+#else
+#include "nagios.h"
+#endif
+
 extern unsigned long g_max_response_size;
 
 using std::chrono::duration_cast;

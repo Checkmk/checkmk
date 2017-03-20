@@ -27,13 +27,14 @@
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
 #include "Column.h"
+#include "CommentColumn.h"
 #include "ContactGroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsExplicitColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
-#include "DownCommColumn.h"
+#include "DowntimeColumn.h"
 #include "FixedIntColumn.h"
 #include "MetricsColumn.h"
 #include "OffsetDoubleColumn.h"
@@ -411,24 +412,24 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
         prefix + "contacts",
         "A list of all contacts of the service, either direct or via a contact group",
         indirect_offset, -1, -1));
-    table->addColumn(make_unique<DownCommColumn>(
+    table->addColumn(make_unique<DowntimeColumn>(
         prefix + "downtimes", "A list of all downtime ids of the service", mc,
-        true, true, false, false, indirect_offset, -1, -1));
-    table->addColumn(make_unique<DownCommColumn>(
+        true, false, indirect_offset, -1, -1));
+    table->addColumn(make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        mc, true, true, true, false, indirect_offset, -1, -1));
-    table->addColumn(make_unique<DownCommColumn>(
+        mc, true, true, indirect_offset, -1, -1));
+    table->addColumn(make_unique<CommentColumn>(
         prefix + "comments", "A list of all comment ids of the service", mc,
-        false, true, false, false, indirect_offset, -1, -1));
-    table->addColumn(make_unique<DownCommColumn>(
+        true, false, false, indirect_offset, -1, -1));
+    table->addColumn(make_unique<CommentColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the service with id, author and comment", mc,
-        false, true, true, false, indirect_offset, -1, -1));
-    table->addColumn(make_unique<DownCommColumn>(
+        true, true, false, indirect_offset, -1, -1));
+    table->addColumn(make_unique<CommentColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry type and entry time",
-        mc, false, true, true, true, indirect_offset, -1, -1));
+        mc, true, true, true, indirect_offset, -1, -1));
 
     if (add_hosts) {
         TableHosts::addColumns(table, mc, "host_",

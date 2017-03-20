@@ -26,7 +26,6 @@
 #include "Column.h"
 #include "MonitoringCore.h"
 #include "Renderer.h"
-#include "nagios.h"
 
 using std::make_unique;
 using std::string;
@@ -35,11 +34,8 @@ using std::unique_ptr;
 void ContactGroupsColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
-    if (auto p = rowData<void>(row)) {
-        for (auto cgm = *offset_cast<contactgroupsmember *>(p, _offset);
-             cgm != nullptr; cgm = cgm->next) {
-            l.output(string(cgm->group_ptr->group_name));
-        }
+    for (auto cgm = getData(row); cgm != nullptr; cgm = cgm->next) {
+        l.output(string(cgm->group_ptr->group_name));
     }
 }
 
@@ -47,18 +43,13 @@ unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
     const string &name) {
     class ContainsContactGroup : public Contains {
     public:
-        ContainsContactGroup(MonitoringCore::ContactGroup *element, int offset)
-            : _element(element), _offset(offset) {}
+        ContainsContactGroup(MonitoringCore::ContactGroup *element,
+                             ContactGroupsColumn *column)
+            : _element(element), _column(column) {}
 
         bool operator()(void *row) override {
-            if (_element == nullptr || row == nullptr) {
-                return false;
-            }
-
-            // row is already shifted (_indirect_offset is taken into account),
-            // but _offset needs still to be accounted for
-            for (auto cgm = *offset_cast<contactgroupsmember *>(row, _offset);
-                 cgm != nullptr; cgm = cgm->next) {
+            for (auto cgm = _column->getData(row); cgm != nullptr;
+                 cgm = cgm->next) {
                 // TODO(sp) Remove evil cast below.
                 if (cgm->group_ptr ==
                     reinterpret_cast<contactgroup *>(_element)) {
@@ -70,13 +61,18 @@ unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
 
     private:
         MonitoringCore::ContactGroup *const _element;
-        int _offset;
+        ContactGroupsColumn *_column;
     };
 
     return make_unique<ContainsContactGroup>(_mc->find_contactgroup(name),
-                                             _offset);
+                                             this);
 }
 
-bool ContactGroupsColumn::isEmpty(void *data) {
-    return *offset_cast<contactgroupsmember *>(data, _offset) == nullptr;
+bool ContactGroupsColumn::isEmpty(void *row) { return getData(row) == nullptr; }
+
+contactgroupsmember *ContactGroupsColumn::getData(void *row) {
+    if (auto data = rowData<void>(row)) {
+        return *offset_cast<contactgroupsmember *>(data, _offset);
+    }
+    return nullptr;
 }

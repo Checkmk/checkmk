@@ -43,12 +43,6 @@ ListFilter::ListFilter(ListColumn *column, RelationalOperator relOp,
 
 bool ListFilter::accepts(void *row, contact * /* auth_user */,
                          int /* timezone_offset */) {
-    // TODO(sp) The typing here is ugly, push the shifting to its use sites and
-    // templatize the code.
-    auto data = _column->rowData<void>(row);
-    if (data == nullptr) {
-        return false;
-    }
     switch (_relOp) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
@@ -57,12 +51,12 @@ bool ListFilter::accepts(void *row, contact * /* auth_user */,
                     << "Sorry, equality for lists implemented only "
                        "for emptyness";
             }
-            return _column->isEmpty(data) ==
+            return _column->isEmpty(row) ==
                    (_relOp == RelationalOperator::equal);
         case RelationalOperator::less:
-            return !((*_predicate)(data));
+            return !((*_predicate)(row));
         case RelationalOperator::greater_or_equal:
-            return (*_predicate)(data);
+            return (*_predicate)(row);
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:

@@ -33,6 +33,10 @@
 class MonitoringCore;
 class RowRenderer;
 
+#ifndef CMC
+#include "nagios.h"
+#endif
+
 class ContactGroupsColumn : public ListColumn {
 public:
     ContactGroupsColumn(const std::string &name, const std::string &description,
@@ -49,11 +53,15 @@ public:
     }
     void output(void *row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(void *data) override;
+    bool isEmpty(void *row) override;
 
 private:
     MonitoringCore *_mc;
     int _offset;
+
+#ifndef CMC
+    contactgroupsmember *getData(void *row);
+#endif
 };
 
 #endif  // ContactGroupsColumn_h

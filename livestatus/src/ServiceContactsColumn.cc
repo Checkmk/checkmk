@@ -33,25 +33,29 @@ using std::unique_ptr;
 namespace {
 class ContainsContact : public ListColumn::Contains {
 public:
-    explicit ContainsContact(contact *element) : _element(element) {}
+    ContainsContact(contact *element, ServiceContactsColumn *column)
+        : _element(element), _column(column) {}
 
     bool operator()(void *row) override {
-        service *svc = static_cast<service *>(row);
-        return is_contact_for_service(svc, _element) != 0;
+        if (auto svc = _column->rowData<service>(row)) {
+            return is_contact_for_service(svc, _element) != 0;
+        }
+        return false;
     }
 
 private:
     contact *const _element;
+    ServiceContactsColumn *_column;
 };
 }  // namespace
 
 unique_ptr<ListColumn::Contains> ServiceContactsColumn::makeContains(
     const string &name) {
     return make_unique<ContainsContact>(
-        find_contact(const_cast<char *>(name.c_str())));
+        find_contact(const_cast<char *>(name.c_str())), this);
 }
 
 unique_ptr<ListColumn::Contains> ServiceContactsColumn::containsContact(
     contact *ctc) {
-    return make_unique<ContainsContact>(ctc);
+    return make_unique<ContainsContact>(ctc, this);
 }

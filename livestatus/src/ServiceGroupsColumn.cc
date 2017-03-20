@@ -30,13 +30,6 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-objectlist *ServiceGroupsColumn::getData(void *data) {
-    if (auto p = rowData<void>(data)) {
-        return *offset_cast<objectlist *>(p, _offset);
-    }
-    return nullptr;
-}
-
 void ServiceGroupsColumn::output(void *row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
@@ -50,13 +43,12 @@ unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
     const string &name) {
     class ContainsServiceGroup : public Contains {
     public:
-        ContainsServiceGroup(servicegroup *element, int offset)
-            : _element(element), _offset(offset) {}
+        ContainsServiceGroup(servicegroup *element, ServiceGroupsColumn *column)
+            : _element(element), _column(column) {}
 
         bool operator()(void *row) override {
-            // row is already shifted
-            for (auto list = *offset_cast<objectlist *>(row, _offset);
-                 list != nullptr; list = list->next) {
+            for (auto list = _column->getData(row); list != nullptr;
+                 list = list->next) {
                 if (list->object_ptr == _element) {
                     return true;
                 }
@@ -66,13 +58,18 @@ unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
 
     private:
         servicegroup *const _element;
-        int _offset;
+        ServiceGroupsColumn *_column;
     };
 
     return make_unique<ContainsServiceGroup>(
-        find_servicegroup(const_cast<char *>(name.c_str())), _offset);
+        find_servicegroup(const_cast<char *>(name.c_str())), this);
 }
 
-bool ServiceGroupsColumn::isEmpty(void *data) {
-    return *offset_cast<objectlist *>(data, _offset) == nullptr;
+bool ServiceGroupsColumn::isEmpty(void *row) { return getData(row) == nullptr; }
+
+objectlist *ServiceGroupsColumn::getData(void *row) {
+    if (auto p = rowData<void>(row)) {
+        return *offset_cast<objectlist *>(p, _offset);
+    }
+    return nullptr;
 }

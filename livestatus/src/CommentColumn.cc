@@ -37,20 +37,18 @@ using std::vector;
 void CommentColumn::output(void *row, RowRenderer &r,
                            contact * /* auth_user */) {
     ListRenderer l(r);
-    if (auto data = rowData<void>(row)) {
-        for (const auto &comment : comments_for_object(data)) {
-            if (_with_info) {
-                SublistRenderer s(l);
-                s.output(comment._id);
-                s.output(comment._author);
-                s.output(comment._comment);
-                if (_with_extra_info) {
-                    s.output(comment._entry_type);
-                    s.output(comment._entry_time);
-                }
-            } else {
-                l.output(comment._id);
+    for (const auto &comment : comments_for_row(row)) {
+        if (_with_info) {
+            SublistRenderer s(l);
+            s.output(comment._id);
+            s.output(comment._author);
+            s.output(comment._comment);
+            if (_with_extra_info) {
+                s.output(comment._entry_type);
+                s.output(comment._entry_time);
             }
+        } else {
+            l.output(comment._id);
         }
     }
 }
@@ -62,8 +60,8 @@ unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
         ContainsCommentID(unsigned long element, CommentColumn *column)
             : _element(element), _column(column) {}
 
-        bool operator()(void *data) override {
-            for (const auto &comment : _column->comments_for_object(data)) {
+        bool operator()(void *row) override {
+            for (const auto &comment : _column->comments_for_row(row)) {
                 if (comment._id == _element) {
                     return true;
                 }
@@ -80,14 +78,15 @@ unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
     return make_unique<ContainsCommentID>(id, this);
 }
 
-bool CommentColumn::isEmpty(void *data) {
-    return comments_for_object(data).empty();
-}
+bool CommentColumn::isEmpty(void *row) { return comments_for_row(row).empty(); }
 
-vector<CommentData> CommentColumn::comments_for_object(void *data) const {
-    return _is_service
-               ? _mc->comments_for_service(
-                     reinterpret_cast<MonitoringCore::Service *>(data))
-               : _mc->comments_for_host(
-                     reinterpret_cast<MonitoringCore::Host *>(data));
+vector<CommentData> CommentColumn::comments_for_row(void *row) const {
+    if (auto data = rowData<void>(row)) {
+        return _is_service
+                   ? _mc->comments_for_service(
+                         reinterpret_cast<MonitoringCore::Service *>(data))
+                   : _mc->comments_for_host(
+                         reinterpret_cast<MonitoringCore::Host *>(data));
+    }
+    return {};
 }

@@ -2,7 +2,7 @@ Title: Matching of Texts in EC inconsistent if no regexes are used
 Component: ec
 State: open
 Date: 2017-01-25 14:13:01
-Targetversion: 1.2.8
+Targetversion: 1.4.0
 Class: bug
 
 The matching if "app" and "ap[p]" differ - but shouldn't. The EC uses
@@ -13,3 +13,8 @@ like foo.
 
 Investigate this. Maybe we need to migrate existing match strings
 in order to stay compabible and fix the problem anyway.
+
+---
+
+This also affects 1.2.8 and possibly older version, but we won't change
+it in this old versions.

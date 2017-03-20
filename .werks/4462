@@ -1,0 +1,11 @@
+Title: Windows agent: df section (filesystem monitoring) now also support spaces in paths
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b5
+Date: 1490019662
+
+

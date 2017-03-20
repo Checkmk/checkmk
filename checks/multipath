@@ -280,7 +280,8 @@ def inventory_multipath(parsed):
     return inventory
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
-def check_multipath(item, target_numpaths, parsed):
+#def check_multipath(item, target_numpaths, parsed):
+def check_multipath(item, params, parsed):
     # Keys in parsed are the UUIDs. First assume that we are
     # looking for a UUID. Then fall back to aliases
     if item in parsed:
@@ -293,7 +294,8 @@ def check_multipath(item, target_numpaths, parsed):
             if mmap.get("alias") == item:
                 break
         else:
-            return 3, "Multipath device not found in agent output"
+            yield 3, "Multipath device not found in agent output"
+            return
 
     # If the item is the alias, then show the UUID in the plugin output.
     # If the item is the UUID, then vice versa.
@@ -301,46 +303,56 @@ def check_multipath(item, target_numpaths, parsed):
     uuid = mmap.get('uuid')
 
     if item == uuid and alias:
-        aliasinfo = "(%s) " % alias
+        aliasinfo = "(%s):" % alias
     elif item == alias and uuid:
-        aliasinfo = "(%s) " % uuid
+        aliasinfo = "(%s):" % uuid
     else:
         aliasinfo = ""
 
-    numpaths = mmap['numpaths']
-    broken = mmap['broken_paths']
-    numbroken = len(broken)
-    if numbroken > 0:
-        return (2, "%sbroken paths: %s" % (aliasinfo, ",".join(broken)))
+    all_paths       = mmap['paths']
+    broken_paths    = mmap['broken_paths']
+    num_paths       = len(all_paths)
+    num_broken      = len(broken_paths)
+    num_active      = num_paths - num_broken
 
-    if target_numpaths == None:
-        target_numpaths = 2 # default case: we need two paths
-    elif type(target_numpaths) == tuple:
-        warn, crit = target_numpaths
-        warn_num  = (warn / 100.0) * numpaths
-        crit_num = (crit / 100.0) * numpaths
-        levels = " (Warning/ Critical at %d/ %d)" % (warn_num, crit_num)
-        info = "%spaths active: %d" % (aliasinfo, numpaths)
-        if numpaths <= crit_num:
-            return 2, info + levels
-        elif numpaths <= warn_num:
-            return 1, info + levels
+    yield 0, "%s paths active: %s, expected paths: %d" % \
+                        (aliasinfo, num_active, num_paths)
+
+    if isinstance(params, tuple):
+        warn, crit = params
+        warn_num = (warn / 100.0) * num_paths
+        crit_num = (crit / 100.0) * num_paths
+        if num_active <= crit_num:
+            state = 2
+        elif num_active <= warn_num:
+            state = 1
         else:
-            return 0, info
+            state = 0
 
-    info = "%spaths expected: %d, paths active: %d" % (aliasinfo, target_numpaths, numpaths)
-
-    if numpaths < target_numpaths:
-        return 2, info
-    elif numpaths > target_numpaths:
-        return 1, info
+        if state > 0:
+            yield state, "(warn, crit at %d/%d)" % (warn_num, crit_num)
     else:
-        return 0, info
+        if isinstance(params, int):
+            expected_paths = params
+        else:
+            expected_paths = 2
+        if num_active < expected_paths:
+            state = 2
+        elif num_active > expected_paths:
+            state = 1
+        else:
+            state = 0
+
+        if state > 0:
+            yield state, "(crit if less than %d)" % expected_paths
+
+    if num_broken > 0:
+        yield 0, "broken paths: %s" % ",".join(broken_paths)
 
 check_info["multipath"] = {
-    'check_function':          check_multipath,
-    'inventory_function':      inventory_multipath,
-    'parse_function':          parse_multipath,
-    'service_description':     'Multipath %s',
-    'group':                   'multipath',
+    'check_function'            : check_multipath,
+    'inventory_function'        : inventory_multipath,
+    'parse_function'            : parse_multipath,
+    'service_description'       : "Multipath %s",
+    'group'                     : "multipath",
 }

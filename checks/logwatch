@@ -741,7 +741,7 @@ def check_logwatch_ec(item, params, info):
                         continue
 
             msg = '<%d>' % (facility + logwatch_to_prio(rclfd_level or line[0]),)
-            msg += '@%s;%d;; %s %s: "%s"' % (cur_time, params.get("service_level", 0), g_hostname, logfile, line[2:])
+            msg += '@%s;%d;; %s %s: %s' % (cur_time, params.get("service_level", 0), g_hostname, logfile, line[2:])
 
             messages.append(msg)
             forwarded_logfiles.add(logfile)

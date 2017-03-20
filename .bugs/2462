@@ -1,9 +1,9 @@
 Title: EC: User without permission to host can view host information
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2016-07-22 18:02:26
 Targetversion: 1.2.8
-Class: bug
 
 When viewing an event of a host which the user is not permitted to see
 while the user has "see all events permission", the user sees the
@@ -21,3 +21,6 @@ the monitoring data of that host.
 
 This needs to be filtered either in the core (then we need the AuthUser header and
 the info that the user has "see all" permission) or in web/plugins/views/mkeventd.py query_ec_table().
+
+2017-03-20 12:03:26: changed state open -> done
+Has been fixed now

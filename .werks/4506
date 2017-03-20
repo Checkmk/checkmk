@@ -1,0 +1,17 @@
+Title: User without permission to host could see host information when permitted for "all events"
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1490007809
+Class: fix
+
+When a user has the permission "see all events", he can see events for hosts that the user is not
+permitted to in the status GUI. This is the default for regular users.
+
+These users could access the event detail page and see information about the host, like the state
+of the services, even when they were not permitted to see data about this host in the status page.
+
+Whe the user is allowed to customize his views, he could easily add more host related columns to
+see even more information about that host.

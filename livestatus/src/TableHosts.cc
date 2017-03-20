@@ -27,13 +27,14 @@
 #include "AttributeListAsIntColumn.h"
 #include "AttributeListColumn.h"
 #include "Column.h"
+#include "CommentColumn.h"
 #include "ContactGroupsColumn.h"
 #include "CustomTimeperiodColumn.h"
 #include "CustomVarsDictColumn.h"
 #include "CustomVarsExplicitColumn.h"
 #include "CustomVarsNamesColumn.h"
 #include "CustomVarsValuesColumn.h"
-#include "DownCommColumn.h"
+#include "DowntimeColumn.h"
 #include "DynamicColumn.h"
 #include "DynamicLogwatchFileColumn.h"
 #include "HostContactsColumn.h"
@@ -481,25 +482,25 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
         prefix + "contacts",
         "A list of all contacts of this host, either direct or via a contact group",
         indirect_offset, extra_offset, -1));
-    table->addColumn(make_unique<DownCommColumn>(
+    table->addColumn(make_unique<DowntimeColumn>(
         prefix + "downtimes",
-        "A list of the ids of all scheduled downtimes of this host", mc, true,
-        false, false, false, indirect_offset, extra_offset, -1));
-    table->addColumn(make_unique<DownCommColumn>(
+        "A list of the ids of all scheduled downtimes of this host", mc, false,
+        false, indirect_offset, extra_offset, -1));
+    table->addColumn(make_unique<DowntimeColumn>(
         prefix + "downtimes_with_info",
         "A list of the all scheduled downtimes of the host with id, author and comment",
-        mc, true, false, true, false, indirect_offset, extra_offset, -1));
-    table->addColumn(make_unique<DownCommColumn>(
+        mc, false, true, indirect_offset, extra_offset, -1));
+    table->addColumn(make_unique<CommentColumn>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        mc, false, false, false, false, indirect_offset, extra_offset, -1));
-    table->addColumn(make_unique<DownCommColumn>(
+        mc, false, false, false, indirect_offset, extra_offset, -1));
+    table->addColumn(make_unique<CommentColumn>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment", mc,
-        false, false, true, false, indirect_offset, extra_offset, -1));
-    table->addColumn(make_unique<DownCommColumn>(
+        false, true, false, indirect_offset, extra_offset, -1));
+    table->addColumn(make_unique<CommentColumn>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        mc, false, false, true, true, indirect_offset, extra_offset, -1));
+        mc, false, true, true, indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<CustomVarsNamesColumn>(
         prefix + "custom_variable_names",

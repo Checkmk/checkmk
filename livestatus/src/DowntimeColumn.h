@@ -22,8 +22,8 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef DownCommColumn_h
-#define DownCommColumn_h
+#ifndef DowntimeColumn_h
+#define DowntimeColumn_h
 
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
@@ -31,36 +31,31 @@
 #include <vector>
 #include "ListColumn.h"
 #include "contact_fwd.h"
+struct DowntimeData;
 class MonitoringCore;
 class RowRenderer;
-struct CommentData;
-struct DowntimeData;
 
-class DownCommColumn : public ListColumn {
-    MonitoringCore *_mc;
-    bool _is_downtime;
-    bool _with_info;
-    bool _is_service;
-    bool _with_extra_info;
-
-    std::vector<DowntimeData> downtimes_for_object(void *data) const;
-    std::vector<CommentData> comments_for_object(void *data) const;
-
+class DowntimeColumn : public ListColumn {
 public:
-    DownCommColumn(const std::string &name, const std::string &description,
-                   MonitoringCore *mc, bool is_downtime, bool is_service,
-                   bool with_info, bool with_extra_info, int indirect_offset,
-                   int extra_offset, int extra_extra_offset)
+    DowntimeColumn(const std::string &name, const std::string &description,
+                   MonitoringCore *mc, bool is_service, bool with_info,
+                   int indirect_offset, int extra_offset,
+                   int extra_extra_offset)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset)
         , _mc(mc)
-        , _is_downtime(is_downtime)
-        , _with_info(with_info)
         , _is_service(is_service)
-        , _with_extra_info(with_extra_info) {}
-    std::unique_ptr<Contains> makeContains(const std::string &name) override;
+        , _with_info(with_info) {}
     void output(void *row, RowRenderer &r, contact *auth_user) override;
+    std::unique_ptr<Contains> makeContains(const std::string &name) override;
     bool isEmpty(void *data) override;
+
+private:
+    MonitoringCore *_mc;
+    bool _is_service;
+    bool _with_info;
+
+    std::vector<DowntimeData> downtimes_for_object(void *data) const;
 };
 
-#endif  // DownCommColumn_h
+#endif  // DowntimeColumn_h

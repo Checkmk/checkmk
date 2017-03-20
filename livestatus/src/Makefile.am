@@ -38,6 +38,7 @@ liblivestatus_a_SOURCES = \
         ClientQueue.cc \
         Column.cc \
         ColumnsColumn.cc \
+        CommentColumn.cc \
         ContactGroupsColumn.cc \
         ContactGroupsMemberColumn.cc \
         ContactsColumn.cc \
@@ -53,7 +54,7 @@ liblivestatus_a_SOURCES = \
         DoubleAggregator.cc \
         DoubleColumn.cc \
         DoubleFilter.cc \
-        DownCommColumn.cc \
+        DowntimeColumn.cc \
         DowntimeOrComment.cc \
         DowntimesOrComments.cc \
         DynamicColumn.cc \

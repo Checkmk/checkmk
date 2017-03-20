@@ -53,11 +53,61 @@ def query_ec_table(datasource, columns, add_columns, query, only_sites, limit, t
     rows = query_data(datasource, columns, add_columns, query, only_sites, limit,
                       tablename=tablename)
 
+    if not rows:
+        return rows
+
+    _ec_filter_host_information_of_not_permitted_hosts(rows)
+
     if config.user.may("mkeventd.seeunrelated"):
         return rows # user is allowed to see all events returned by the core
 
     return [ r for r in rows if r["event_contact_groups"] != [] or r["host_name"] != "" ]
 
+
+# Handle the case where a user is allowed to see all events (-> events for hosts he
+# is not permitted for). In this case the user should be allowed to see the event
+# information, but not the host related information.
+#
+# To realize this, whe filter all data from the host_* columns from the response.
+# See Gitbug #2462 for some more information.
+#
+# This should be handled in the core, but the core does not know anything about
+# the "mkeventd.seeall" permissions. So it is simply not possible to do this on
+# core level at the moment.
+def _ec_filter_host_information_of_not_permitted_hosts(rows):
+    if not config.user.may("mkeventd.seeall"):
+        return
+
+    user_groups = set(config.user.contact_groups())
+
+    def is_contact(row):
+        return bool(user_groups.intersection(row["host_contact_groups"]))
+
+    if rows:
+        remove_keys = [ c for c in rows[0].keys() if c.startswith("host_") ]
+    else:
+        remove_keys = []
+
+    for row in rows:
+        if row["host_name"] == "":
+            continue # This is an "unrelated host", don't treat it here
+
+        if is_contact(row):
+            continue # The user may see these host information
+
+        # Now remove the host information. This can sadly not apply the cores
+        # default values for the different columns. We try our best to clean up
+        for key in remove_keys:
+            if type(row[key]) == list:
+                row[key] = []
+            elif type(row[key]) == int:
+                row[key] = 0
+            elif type(row[key]) == float:
+                row[key] = 0.0
+            elif type(row[key]) == str:
+                row[key] = ""
+            elif type(row[key]) == unicode:
+                row[key] = u""
 
 
 # Declare datasource only if the event console is activated. We do

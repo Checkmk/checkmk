@@ -411,6 +411,10 @@ class LoggedInUser(object):
         return self.get_attribute("language", get_language(default))
 
 
+    def contact_groups(self):
+        return self.get_attribute("contactgroups", [])
+
+
     def load_stars(self):
         return set(self.load_file("favorites", []))
 

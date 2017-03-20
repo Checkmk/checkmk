@@ -1,0 +1,13 @@
+Title: multipath: Fixed missing infos in output if a failure occurs
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b5
+Date: 1490016471
+
+The output of available/expected paths way missing, if a path was failing. Now
+the information of failure will be added instead of replacing the original
+information.

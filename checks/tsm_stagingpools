@@ -52,7 +52,7 @@ def parse_tsm_stagingpools(info):
             item = inst + " / " + pool
         parsed.setdefault( item, {} )
         parsed[item].setdefault( node, [] )
-        parsed[item][node].append( util )
+        parsed[item][node].append( util.replace(",", ".") )
 
     for line in info:
         node = line[0]

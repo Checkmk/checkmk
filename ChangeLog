@@ -27,6 +27,7 @@
     * 4538 FIX: blade_bx_powermod: Fixed outdated calculation of state...
     * 4543 FIX: cisco_cpu: Fixed too restrictive service discovery
     * 4523 FIX: tsm_stagingpools, tsm_storagepools: Fixed numerical data handling, ie. util and size may contain ","
+    * 4461 FIX: windows agent, df section: now supports filesystems with spaces in it
 
     Multisite:
     * 4400 FIX: Fixed possible random "OSError: [Errno 9] Bad file descriptor" in GUI...

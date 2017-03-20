@@ -395,12 +395,12 @@ void df_output_filesystem(OutputProxy &out, char *volid) {
         else
             strncpy(volume, volid, sizeof(volume));
 
-        out.output("%s %s ", volume, fsname);
-        out.output("%" PRIu64 " ", total.QuadPart / KiloByte);
-        out.output("%" PRIu64 " ",
+        out.output("%s\t%s\t", volume, fsname);
+        out.output("%" PRIu64 "\t", total.QuadPart / KiloByte);
+        out.output("%" PRIu64 "\t",
                    (total.QuadPart - free_avail.QuadPart) / KiloByte);
-        out.output("%" PRIu64 " ", free_avail.QuadPart / KiloByte);
-        out.output("%3.0f%% ", perc_used);
+        out.output("%" PRIu64 "\t", free_avail.QuadPart / KiloByte);
+        out.output("%3.0f%%\t", perc_used);
         out.output("%s\n", volid);
     }
 }
@@ -423,8 +423,8 @@ void df_output_mountpoints(OutputProxy &out, char *volid) {
 }
 
 void section_df(OutputProxy &out) {
-    crash_log("<<<df>>>");
-    out.output("<<<df>>>\n");
+    crash_log("<<<df:sep(9)>>>");
+    out.output("<<<df:sep(9)>>>\n");
     TCHAR buffer[4096];
     DWORD len = GetLogicalDriveStrings(sizeof(buffer), buffer);
 

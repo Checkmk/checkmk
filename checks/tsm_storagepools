@@ -52,7 +52,7 @@ def parse_tsm_storagepools(info):
             item = name
         else:
             item = inst + " / " + name
-        parsed.setdefault(item, {"type" : stype, "size" : size})
+        parsed.setdefault(item, {"type" : stype, "size" : size.replace(",", ".")})
 
     return parsed
 

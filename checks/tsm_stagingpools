@@ -71,7 +71,7 @@ def check_tsm_stagingpools(item, params, parsed):
     utilization = 0.0 # in relation to one tape size
     for inst, pool, util in parsed:
         if inst + " / " + pool == item or pool == item:
-            util = float(util) / 100.0
+            util = float(util.replace(",", ".")) / 100.0
             utilization += util
             num_tapes += 1
             if util <= params["free_below"] / 100.0:

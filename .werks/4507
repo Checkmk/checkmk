@@ -1,0 +1,17 @@
+Title: Non resolvable hosts may lead to config compilation error
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1490079245
+
+When having hosts without host address configured and compiling
+the config of the core while the host can not be resolved, this
+may lead to an excception:
+
+AttributeError: 'NoneType' object has no attribute 'strip'
+
+This has been fixed now.

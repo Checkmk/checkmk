@@ -32,22 +32,17 @@ extern contact *contact_list;
 void ContactsColumn::output(void *row, RowRenderer &r,
                             contact * /* auth_user */) {
     ListRenderer l(r);
-    // TODO(sp) Horrible typing...
-    if (auto data = rowData<void>(row)) {
-        for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
-            if ((*containsContact(ctc))(data)) {
-                l.output(string(ctc->name));
-            }
+    for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
+        if ((*containsContact(ctc))(row)) {
+            l.output(string(ctc->name));
         }
     }
 }
 
 bool ContactsColumn::isEmpty(void *row) {
-    if (auto data = rowData<void>(row)) {
-        for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
-            if ((*containsContact(ctc))(data)) {
-                return false;
-            }
+    for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
+        if ((*containsContact(ctc))(row)) {
+            return false;
         }
     }
     return true;

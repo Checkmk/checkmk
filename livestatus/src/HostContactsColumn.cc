@@ -33,7 +33,7 @@ using std::unique_ptr;
 namespace {
 class ContainsContact : public ListColumn::Contains {
 public:
-    explicit ContainsContact(contact *element, HostContactsColumn *column)
+    ContainsContact(contact *element, HostContactsColumn *column)
         : _element(element), _column(column) {}
 
     bool operator()(void *row) override {

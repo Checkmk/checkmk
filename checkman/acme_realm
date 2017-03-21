@@ -1,0 +1,15 @@
+title: ACME devices: Realm
+agents: snmp
+catalog: hw/environment/acme
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the realms of ACME devices which support APSYSMGMT-MIB.
+ The status is OK if "in service", it is WARN if "contraints violation" and
+ CRIT if "call load reduction" is reported.
+
+item:
+ The name of the realm.
+
+inventory:
+ One service per realm is created.

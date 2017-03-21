@@ -56,6 +56,7 @@ except NameError:
 catalog_titles = {
     "hw"       : "Appliances, other dedicated Hardware",
         "environment" : "Environmental sensors",
+            "acme"         : "ACME",
             "akcp"         : "AKCP",
             "allnet"       : "ALLNET",
             "bachmann"     : "Bachmann",

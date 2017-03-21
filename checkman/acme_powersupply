@@ -1,0 +1,16 @@
+title: ACME devices: Power supplies
+agents: snmp
+catalog: hw/environment/acme
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the power supplies of ACME devices which support ACMEPACKET-ENVMON-MIB.
+ The state is OK if "initial" or "normal" is reported, it is WARN if "minor" or
+ "major" and CRIT if "critical", "shutdown", "not present", "not functioning" or
+ "unknown".
+
+item:
+ The name of the power supply.
+
+inventory:
+ One service per power supply is created.

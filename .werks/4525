@@ -1,0 +1,10 @@
+Title: acme_agent_sessions, acme_certificates, acme_fan, acme_powersupply, acme_realm, acme_temp, acme_voltage: New checks for ACME devices which support the APSYSMGMT-MIB, APSECURITY-MIB and ACMEPACKET-ENVMON-MIB
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1490089283
+Class: feature
+
+

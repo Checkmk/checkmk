@@ -1,0 +1,12 @@
+Title: Removed now useless "parents" attribute from "New/Edit cluster dialog"
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1490081502
+
+Since the parents of cluster hosts are automatically determined in all situations now,
+we have removed this attribute from the GUI.

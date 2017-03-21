@@ -209,6 +209,9 @@ class ParentsAttribute(ValueSpecAttribute):
                       "of its parents are monitored by the same site."),
                    orientation = "horizontal"))
 
+    def is_visible(self, for_what):
+        return for_what != "cluster"
+
     def to_nagios(self, value):
         if value:
             return ",".join(value)

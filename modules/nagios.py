@@ -184,7 +184,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
             if parents_list:
                 outfile.write("  parents\t\t\t%s\n" % (",".join(parents_list)))
 
-    elif is_cluster:
+    elif is_clust:
         # Special handling of clusters
         alias = "cluster of %s" % ", ".join(nodes)
         outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))

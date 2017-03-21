@@ -1115,8 +1115,10 @@ def in_extraconf_hostlist(hostlist, hostname):
 
     return False
 
-def extra_host_conf_of(hostname):
-    return extra_conf_of(extra_host_conf, hostname, None)
+def extra_host_conf_of(hostname, exclude=None):
+    if exclude == None:
+        exclude = []
+    return extra_conf_of(extra_host_conf, hostname, None, exclude)
 
 def extra_summary_host_conf_of(hostname):
     return extra_conf_of(extra_summary_host_conf, hostname, None)
@@ -1144,16 +1146,24 @@ def extra_service_conf_of(hostname, description):
 def extra_summary_service_conf_of(hostname, description):
     return extra_conf_of(extra_summary_service_conf, hostname, description)
 
-def extra_conf_of(confdict, hostname, service):
+def extra_conf_of(confdict, hostname, service, exclude=None):
+    if exclude == None:
+        exclude = []
+
     result = ""
     for key, conflist in confdict.items():
         if service != None:
             values = service_extra_conf(hostname, service, conflist)
         else:
             values = host_extra_conf(hostname, conflist)
-        if len(values) > 0:
+
+        if exclude and key in exclude:
+            continue
+
+        if values:
             format = "  %-29s %s\n"
             result += format % (key, values[0])
+
     return result
 
 def autodetect_plugin(command_line):

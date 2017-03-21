@@ -1,0 +1,17 @@
+Title: hpux_tunables: All services will now have thresholds
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1490091101
+Class: feature
+
+Only two services created by hpux_tunables used thresholds. Now all of them have them set. The created services are:
+
+Number of IPC Semaphore IDs
+Number of IPC Semaphores
+Number of open files
+Number of processes
+Number of shares memory segments
+Number of threads

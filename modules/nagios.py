@@ -172,21 +172,22 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
         outfile.write("  contact_groups\t\t%s\n" % make_utf8(",".join(cgrs)))
         contactgroups_to_define.update(cgrs)
 
-    # Get parents manually defined via extra_host_conf["parents"]. Only honor
-    # variable "parents" and implicit parents if this setting is empty
-    extra_conf_parents = host_extra_conf(hostname, extra_host_conf.get("parents", []))
+    if not is_clust:
+        # Parents for non-clusters
 
-    # Parents for non-clusters
-    if not extra_conf_parents and not is_clust:
-        parents_list = parents_of(hostname)
-        if len(parents_list) > 0:
-            outfile.write("  parents\t\t\t%s\n" % (",".join(parents_list)))
+        # Get parents manually defined via extra_host_conf["parents"]. Only honor
+        # variable "parents" and implicit parents if this setting is empty
+        extra_conf_parents = host_extra_conf(hostname, extra_host_conf.get("parents", []))
 
-    # Special handling of clusters
-    if is_clust:
-        alias = "cluster of %s" % ", ".join(nodes)
         if not extra_conf_parents:
-            outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))
+            parents_list = parents_of(hostname)
+            if parents_list:
+                outfile.write("  parents\t\t\t%s\n" % (",".join(parents_list)))
+
+    elif is_cluster:
+        # Special handling of clusters
+        alias = "cluster of %s" % ", ".join(nodes)
+        outfile.write("  parents\t\t\t%s\n" % ",".join(nodes))
 
     # Output alias, but only if it's not defined in extra_host_conf
     alias = alias_of(hostname, None)
@@ -196,7 +197,7 @@ def create_nagios_hostdefs(outfile, hostname, attrs):
         alias = make_utf8(alias)
 
     # Custom configuration last -> user may override all other values
-    outfile.write(make_utf8(extra_host_conf_of(hostname)))
+    outfile.write(make_utf8(extra_host_conf_of(hostname, exclude=["parents"] if is_clust else [])))
 
     outfile.write("}\n")
 

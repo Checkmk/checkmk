@@ -1,0 +1,16 @@
+Title: Clusters: Now always have their nodes as parents (Fixes Nagios inconsistency)
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1490080766
+
+When configuring clusters via Check_MK it was possible to configure custom parent nodes
+for the cluster nodes when using the Nagios core. The Microcore already used it's nodes
+before as it was designed. We have now changed the Nagios handling to also enforce the
+nodes to be parent hosts of their cluster hosts.
+
+The assumption is: The cluster host is reachable while at least one node is up. 

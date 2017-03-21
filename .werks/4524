@@ -1,0 +1,11 @@
+Title: logwatch.ec: Removed quotes from message text which caused errors in EC rule evalution with matching criteria 'Text to match'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b5
+Date: 1490021222
+
+

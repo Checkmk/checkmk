@@ -1,0 +1,16 @@
+title: ACME devices: Fans
+agents: snmp
+catalog: hw/environment/acme
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the fans of ACME devices which support ACMEPACKET-ENVMON-MIB.
+ The state is OK if "initial" or "normal" is reported, it is WARN if "minor" or
+ "major" and CRIT if "critical", "shutdown", "not present", "not functioning" or
+ "unknown".
+
+item:
+ The name of the fan.
+
+inventory:
+ One service per fan is created.

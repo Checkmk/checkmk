@@ -1,0 +1,98 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.1 MAIN 1.20V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.1
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.2 MAIN 1.50V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.2
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.3 MAIN 1.80V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.3
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.4 MAIN 2.50V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.4
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.5 MAIN 3.30V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.5
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.6 MAIN 5.00V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.6
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.7 MAIN 3.30V AUX --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.7
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.8 PHY 1.20V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.8
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.9 PHY 1.50V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.9
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.10 PHY 1.80V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.10
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.11 PHY 2.50V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.11
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.12 PHY 3.30V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.12
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.13 PHY 1.00V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.13
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.3.14 PHY 3.30V --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr.14
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.1 1199 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.1
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.2 1500 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.2
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.3 1794 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.3
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.4 2513 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.4
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.5 3287 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.5
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.6 4967 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.6
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.7 3258 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.7
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.8 1205 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.8
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.9 1500 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.9
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.10 1800 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.10
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.11 2490 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.11
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.12 3270 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.12
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.13 989 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.13
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.4.14 3318 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue.14
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.1 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.1
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.2 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.2
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.3 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.3
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.4 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.4
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.5 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.5
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.6 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.6
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.7 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.7
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.8 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.8
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.9 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.9
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.10 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.10
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.11 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.11
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.12 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.12
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.13 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.13
+# .1.3.6.1.4.1.9148.3.3.1.2.1.1.5.14 2 --> ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState.14
+
+
+def inventory_acme_voltage(info):
+    return [ (descr, {}) for descr, value_str, state in info
+             if state != "7" ]
+
+
+def check_acme_voltage(item, params, info):
+    for descr, value_str, state in info:
+        if item == descr:
+            return check_elphase(descr, params, {
+                   descr : { "voltage" : (float(value_str)/1000.0,
+                             acme_environment_states[state]) }})
+
+
+check_info['acme_voltage'] = {
+    'inventory_function'    : inventory_acme_voltage,
+    'check_function'        : check_acme_voltage,
+    'service_description'   : 'Voltage %s',
+    'has_perfdata'          : True,
+    'snmp_info'             : ('.1.3.6.1.4.1.9148.3.3.1.2.1.1', [
+                                "3",    # ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusDescr
+                                "4",    # ACMEPACKET-ENVMON-MIB::apEnvMonVoltageStatusValue
+                                "5",    # ACMEPACKET-ENVMON-MIB::apEnvMonVoltageState
+                              ]),
+    'snmp_scan_function'    : scan_acme,
+    'includes'              : ['elphase.include', 'acme.include'],
+    'group'                 : 'el_inphase',
+}

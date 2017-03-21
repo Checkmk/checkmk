@@ -1,0 +1,15 @@
+title: ACME devices: Certificates
+agents: snmp
+catalog: hw/environment/acme
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the age of expire of certificates of ACME devices which support APSYSMGMT-MIB.
+ Default lower levels are set to one week and 30 days. These are configurable.
+ If the expire date lies in the past the state will be CRIT.
+
+item:
+ The name of the certificate.
+
+inventory:
+ One service per certificate is created.

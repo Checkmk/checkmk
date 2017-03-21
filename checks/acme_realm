@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inventory_acme_realm(info):
+    return [ (name, {}) for name, inbound, outbound,
+             total_inbound, total_outbound, state in info ]
+
+
+def check_acme_realm(item, params, info):
+    map_states = {
+        "3" : (0, "in service"),
+        "4" : (1, "contraints violation"),
+        "7" : (2, "call load reduction"),
+    }
+    for name, inbound, outbound, total_inbound, total_outbound, state in info:
+        if item == name:
+            dev_state, dev_state_readable = map_states[state]
+            return dev_state, "Status: %s, Inbound: %s/%s, Outbound: %s/%s" % \
+                   (dev_state_readable, inbound, total_inbound,
+                    outbound, total_outbound),\
+                   [("inbound",  int(inbound),  None, None, 0, int(total_inbound)),
+                    ("outbound", int(outbound), None, None, 0, int(total_outbound))]
+
+
+check_info['acme_realm'] = {
+    'inventory_function'    : inventory_acme_realm,
+    'check_function'        : check_acme_realm,
+    'service_description'   : 'Realm %s',
+    'has_perfdata'          : True,
+    'snmp_info'             : ('.1.3.6.1.4.1.9148.3.2.1.2.4.1', [
+                                "2",    # APSYSMGMT-MIB::apSigRealmStatsRealmName
+                                "3",    # APSYSMGMT-MIB::apSigRealmStatsCurrentActiveSessionsInbound
+                                "5",    # APSYSMGMT-MIB::apSigRealmStatsCurrentActiveSessionsOutbound
+                                "7",    # APSYSMGMT-MIB::apSigRealmStatsTotalSessionsInbound
+                                "11",   # APSYSMGMT-MIB::apSigRealmStatsTotalSessionsOutbound
+                                "30",   # APSYSMGMT-MIB::apSigRealmStatsRealmStatus
+                              ]),
+    'snmp_scan_function'    : scan_acme,
+    'includes'              : ['acme.include'],
+}

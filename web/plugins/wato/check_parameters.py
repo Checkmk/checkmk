@@ -3199,6 +3199,28 @@ register_check_parameters(
     "dict"
 )
 
+
+register_check_parameters(
+    subgroup_applications,
+    "acme_certificates",
+    _("ACME certificates"),
+    Dictionary(
+        elements = [
+            ("expire_lower", Tuple(
+                title    = _("Lower age levels for expire date"),
+                elements = [
+                    Age(title = _("Warning if below"),  default_value = 604800),
+                    Age(title = _("Critical if below"), default_value = 2592000),
+            ]))
+        ],
+    ),
+    TextAscii(
+        title       = _("Name of certificate"),
+        allow_empty = False,
+    ),
+    "dict"
+)
+
 register_check_parameters(
     subgroup_applications,
     "skype",

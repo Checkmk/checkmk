@@ -24,12 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-# These are default levels for the most critical limits.
-# If they trigger, the admin SHOULD act.
-hpux_tunables_nproc_default_levels = (90.0, 96.0)
-hpux_tunables_nkthread_default_levels = (80.0, 85.0)
-
 # Example output:
 # <<<hpux_tunables:sep(58)>>>
 # Tunable:        dbc_max_pct
@@ -42,97 +36,284 @@ hpux_tunables_nkthread_default_levels = (80.0, 85.0)
 # Setting:        1073741824
 # Percentage:     16.5
 
+# Example of parsed:
+#
+# {'dbc_max_pct' : (0, 1),
+#  'maxdsiz'     : (176676864, 1073741824),
+# }
+
+#.
+#   .--general functions---------------------------------------------------.
+#   |                                                  _                   |
+#   |                   __ _  ___ _ __   ___ _ __ __ _| |                  |
+#   |                  / _` |/ _ \ '_ \ / _ \ '__/ _` | |                  |
+#   |                 | (_| |  __/ | | |  __/ | | (_| | |                  |
+#   |                  \__, |\___|_| |_|\___|_|  \__,_|_|                  |
+#   |                  |___/                                               |
+#   |              __                  _   _                               |
+#   |             / _|_   _ _ __   ___| |_(_) ___  _ __  ___               |
+#   |            | |_| | | | '_ \ / __| __| |/ _ \| '_ \/ __|              |
+#   |            |  _| |_| | | | | (__| |_| | (_) | | | \__ \              |
+#   |            |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/              |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# For legacy reasons we need to keep the old format:
+hpux_tunables_nproc_default_levels = (90.0, 96.0)
+hpux_tunables_nkthread_default_levels = (80.0, 85.0)
+
 def parse_hpux_tunables(info):
     parsed = {}
     for line in info:
-        if   "Tunable" in line[0]:
-            key       = line[1].strip()
+        if "Tunable" in line[0]:
+            key = line[1]
         elif "Usage"   in line[0]:
-            usage     = saveint(line[1])
+            usage = int(line[1])
         elif "Setting" in line[0]:
-            threshold = saveint(line[1])
+            threshold = int(line[1])
+
             parsed[key] = (usage, threshold)
+
     return parsed
 
 
-def inventory_hpux_tunables(info, hpux_tunable):
-    if hpux_tunable in parse_hpux_tunables(info):
-        if   hpux_tunable == "nproc":
-            return [( None,    "hpux_tunables_nproc_default_levels")]
-        elif hpux_tunable == "nkthread":
-            return [( None, "hpux_tunables_nkthread_default_levels")]
-        else:
-            return [(None, None)]
+def inventory_hpux_tunables(info, tunable):
+    if tunable in parse_hpux_tunables(info):
+        return [ (None, {}) ]
 
-
-def check_hpux_tunables(item, params, info, hpux_tunable, thingname):
+def check_hpux_tunables(info, params, tunable, descr):
+    # Since the original author forgot to implement a
+    # main check (without dot) we cannot declare parse
+    # function in check_info...
     parsed = parse_hpux_tunables(info)
 
-    if hpux_tunable not in parsed:
-        return (3, "tunable not found in agent output")
+    if tunable in parsed:
+        usage, threshold = parsed[tunable]
+        perc = float(usage)/float(threshold)*100
 
-    usage, threshold =  parsed[hpux_tunable]
-    mimi = float(threshold) / 100
-    pct = float(usage) / mimi
+        if isinstance(params, tuple):
+            params = {
+                'levels' : params,
+            }
+        warn, crit = params["levels"]
+        warn_perf = float(warn * threshold / 100)
+        crit_perf = float(crit * threshold / 100)
 
-    state = 0
+        yield 0, "%.2f%% used (%d/%d %s)" % (perc, usage, threshold, descr), \
+            [ (descr, usage, warn_perf, crit_perf, 0, threshold) ]
 
-    if params:
-        warn, crit = params
-        if   float(crit) < pct:
+        if perc > crit:
             state = 2
-        elif float(warn) < pct:
+        elif perc > warn:
             state = 1
-# name = current , warn , crit , min , max
-        perfdata = [ (thingname, usage, warn * mimi, crit * mimi, 0, threshold) ]
+        else:
+            state = 0
+
+        if state > 0:
+            yield state, "(warn/crit at %s/%s)" % (warn, crit)
+
     else:
-        perfdata = [ (thingname, usage, None, None, 0, threshold) ]
-
-    return (state, "%.2f%% used" % pct + state * "!" + " (%d/%d %s) " % (usage, threshold, thingname), perfdata)
+       yield 3, "tunable not found in agent output"
 
 
+#.
+#   .--nkthread------------------------------------------------------------.
+#   |                    _    _   _                        _               |
+#   |              _ __ | | _| |_| |__  _ __ ___  __ _  __| |              |
+#   |             | '_ \| |/ / __| '_ \| '__/ _ \/ _` |/ _` |              |
+#   |             | | | |   <| |_| | | | | |  __/ (_| | (_| |              |
+#   |             |_| |_|_|\_\\__|_| |_|_|  \___|\__,_|\__,_|              |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings["hpux_tunables_nkthread_default_levels"] = {
+            'levels' : (80.0, 85.0),
+}
+
+def inventory_hpux_tunables_nkthread(info):
+    tunable = "nkthread"
+    return inventory_hpux_tunables(info, tunable)
+
+def check_hpux_tunables_nkthread(_no_item, params, info):
+    tunable = "nkthread"
+    descr = "threads"
+    return check_hpux_tunables(info, params, tunable, descr)
 
 check_info["hpux_tunables.nkthread"] = {
-    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "nkthread", "threads"),
-    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "nkthread"),
-    "service_description"  : "Number of threads",
-    "has_perfdata"         : True,
+    "inventory_function"        : inventory_hpux_tunables_nkthread,
+    "check_function"            : check_hpux_tunables_nkthread,
+    "service_description"       : "Number of threads",
+    "has_perfdata"              : True,
+    "default_levels_variable"   : "hpux_tunables_nkthread_default_levels",
 }
+
+#.
+#   .--nproc---------------------------------------------------------------.
+#   |                                                                      |
+#   |                     _ __  _ __  _ __ ___   ___                       |
+#   |                    | '_ \| '_ \| '__/ _ \ / __|                      |
+#   |                    | | | | |_) | | | (_) | (__                       |
+#   |                    |_| |_| .__/|_|  \___/ \___|                      |
+#   |                          |_|                                         |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings["hpux_tunables_nproc_default_levels"] = {
+            'levels'    : (90.0, 96.0)
+}
+
+def inventory_hpux_tunables_nproc(info):
+    tunable = "nproc"
+    return inventory_hpux_tunables(info, tunable)
+
+def check_hpux_tunables_nproc(_no_item, params, info):
+    tunable = "nproc"
+    descr = "processes"
+    return check_hpux_tunables(info, params, tunable, descr)
 
 check_info["hpux_tunables.nproc"] = {
-    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "nproc", "processes"),
-    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "nproc"),
-    "service_description"  : "Number of processes",
-    "has_perfdata"         : True,
+    "inventory_function"        : inventory_hpux_tunables_nproc,
+    "check_function"            : check_hpux_tunables_nproc,
+    "service_description"       : "Number of processes",
+    "has_perfdata"              : True,
+    "default_levels_variable"   : "hpux_tunables_nproc_default_levels",
 }
+
+#.
+#   .--maxfiles_lim--------------------------------------------------------.
+#   |                            __ _ _               _ _                  |
+#   |      _ __ ___   __ ___  __/ _(_) | ___  ___    | (_)_ __ ___         |
+#   |     | '_ ` _ \ / _` \ \/ / |_| | |/ _ \/ __|   | | | '_ ` _ \        |
+#   |     | | | | | | (_| |>  <|  _| | |  __/\__ \   | | | | | | | |       |
+#   |     |_| |_| |_|\__,_/_/\_\_| |_|_|\___||___/___|_|_|_| |_| |_|       |
+#   |                                           |_____|                    |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings["hpux_tunables_maxfiles_lim_default_levels"] = {
+            'levels'    : (85.0, 90.0)
+}
+
+def inventory_hpux_tunables_maxfiles_lim(info):
+    tunable = "maxfiles_lim"
+    return inventory_hpux_tunables(info, tunable)
+
+def check_hpux_tunables_maxfiles_lim(_no_item, params, info):
+    tunable = "maxfiles_lim"
+    descr = "files"
+    return check_hpux_tunables(info, params, tunable, descr)
 
 check_info["hpux_tunables.maxfiles_lim"] = {
-    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "maxfiles_lim", "files"),
-    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "maxfiles_lim"),
-    "service_description"  : "Number of open files",
-    "has_perfdata"         : True,
+    "inventory_function"        : inventory_hpux_tunables_maxfiles_lim,
+    "check_function"            : check_hpux_tunables_maxfiles_lim,
+    "service_description"       : "Number of open files",
+    "has_perfdata"              : True,
+    "default_levels_variable"   : "hpux_tunables_maxfiles_lim_default_levels",
 }
+
+#.
+#   .--semmni--------------------------------------------------------------.
+#   |                                                   _                  |
+#   |                ___  ___ _ __ ___  _ __ ___  _ __ (_)                 |
+#   |               / __|/ _ \ '_ ` _ \| '_ ` _ \| '_ \| |                 |
+#   |               \__ \  __/ | | | | | | | | | | | | | |                 |
+#   |               |___/\___|_| |_| |_|_| |_| |_|_| |_|_|                 |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings["hpux_tunables_semmni_default_levels"] = {
+            'levels'    : (85.0, 90.0)
+}
+
+def inventory_hpux_tunables_semmni(info):
+    tunable = "semmni"
+    return inventory_hpux_tunables(info, tunable)
+
+def check_hpux_tunables_semmni(_no_item, params, info):
+    tunable = "semmni"
+    descr = "semaphore_ids"
+    return check_hpux_tunables(info, params, tunable, descr)
 
 check_info["hpux_tunables.semmni"] = {
-    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "semmni", "semaphore_ids"),
-    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "semmni"),
-    "service_description"  : "Number of IPC Semaphore IDs",
-    "has_perfdata"         : True,
+    "inventory_function"        : inventory_hpux_tunables_semmni,
+    "check_function"            : check_hpux_tunables_semmni,
+    "service_description"       : "Number of IPC Semaphore IDs",
+    "has_perfdata"              : True,
+    "default_levels_variable"   : "hpux_tunables_semmni_default_levels",
 }
+
+#.
+#   .--shmseg--------------------------------------------------------------.
+#   |                     _                                                |
+#   |                 ___| |__  _ __ ___  ___  ___  __ _                   |
+#   |                / __| '_ \| '_ ` _ \/ __|/ _ \/ _` |                  |
+#   |                \__ \ | | | | | | | \__ \  __/ (_| |                  |
+#   |                |___/_| |_|_| |_| |_|___/\___|\__, |                  |
+#   |                                              |___/                   |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings["hpux_tunables_shmseg_default_levels"] = {
+            'levels'    : (85.0, 90.0)
+}
+
+def inventory_hpux_tunables_shmseg(info):
+    tunable = "shmseg"
+    return inventory_hpux_tunables(info, tunable)
+
+def check_hpux_tunables_shmseg(_no_item, params, info):
+    tunable = "shmseg"
+    descr = "segments"
+    return check_hpux_tunables(info, params, tunable, descr)
 
 check_info["hpux_tunables.shmseg"] = {
-    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "shmseg", "segments"),
-    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "shmseg"),
-    "service_description"  : "Number of shared memory segments",
-    "has_perfdata"         : True,
+    "inventory_function"        : inventory_hpux_tunables_shmseg,
+    "check_function"            : check_hpux_tunables_shmseg,
+    "service_description"       : "Number of shared memory segments",
+    "has_perfdata"              : True,
+    "default_levels_variable"   : "hpux_tunables_shmseg_default_levels",
 }
+
+#.
+#   .--semmns--------------------------------------------------------------.
+#   |                                                                      |
+#   |               ___  ___ _ __ ___  _ __ ___  _ __  ___                 |
+#   |              / __|/ _ \ '_ ` _ \| '_ ` _ \| '_ \/ __|                |
+#   |              \__ \  __/ | | | | | | | | | | | | \__ \                |
+#   |              |___/\___|_| |_| |_|_| |_| |_|_| |_|___/                |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+factory_settings["hpux_tunables_semmns_default_levels"] = {
+            'levels'    : (85.0, 90.0)
+}
+
+def inventory_hpux_tunables_semmns(info):
+    tunable = "semmns"
+    return inventory_hpux_tunables(info, tunable)
+
+def check_hpux_tunables_semmns(_no_item, params, info):
+    tunable = "semmns"
+    descr = "entries"
+    return check_hpux_tunables(info, params, tunable, descr)
 
 check_info["hpux_tunables.semmns"] = {
-    "check_function"       : lambda i, p, o: check_hpux_tunables(i, p, o, "semmns", "entries"),
-    "inventory_function"   : lambda i: inventory_hpux_tunables(i, "semmns"),
-    "service_description"  : "Number of IPC Semaphores",
-    "has_perfdata"         : True,
+    "inventory_function"        : inventory_hpux_tunables_semmns,
+    "check_function"            : check_hpux_tunables_semmns,
+    "service_description"       : "Number of IPC Semaphores",
+    "has_perfdata"              : True,
+    "default_levels_variable"   : "hpux_tunables_semmns_default_levels",
 }
 
-# There is no check for nfile, systems that support kcusage don't have the
-# limit anymore (AFAIR)
+

@@ -1,9 +1,9 @@
 Title: Cluster should always have only it's nodes as parents
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2016-02-16 13:42:50
 Targetversion: 1.2.9
-Class: bug
 
 bin mir nicht 100% sicher ob es als Bug definiert werden sollte, evtl. übersehe ich einen Use-Case.
 
@@ -25,3 +25,6 @@ Das erwartete Ergebnis kann aktuell erreicht werden, in dem für das Cluster Par
 ----------------------------
 
 Is this really correct for all kind of clusters (with, without IP, ...)?
+
+2017-03-21 08:23:02: changed state open -> done
+Has been fixed for 1.4.0 and master.

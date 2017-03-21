@@ -1380,7 +1380,8 @@ def mode_edit_host(phase, new, is_cluster):
         html.help(_('Enter the host names of the cluster nodes. These '
                    'hosts must be present in WATO. '))
 
-    configure_attributes(new, {hostname: host}, "host", parent = Folder.current())
+    configure_attributes(new, {hostname: host}, "host" if not is_cluster else "cluster",
+                         parent = Folder.current())
 
     forms.end()
     if not Folder.current().locked_hosts():
@@ -16752,10 +16753,11 @@ class UserIconOrAction(DropdownChoice):
 #
 # new: Boolean flag if this is a creation step or editing
 # for_what can be:
-#   "host"   -> normal host edit dialog
-#   "folder" -> properties of folder or file
+#   "host"        -> normal host edit dialog
+#   "cluster"     -> normal host edit dialog
+#   "folder"      -> properties of folder or file
 #   "host_search" -> host search dialog
-#   "bulk"   -> bulk change
+#   "bulk"        -> bulk change
 # parent: The parent folder of the objects to configure
 # myself: For mode "folder" the folder itself or None, if we edit a new folder
 #         This is needed for handling mandatory attributes.
@@ -16812,7 +16814,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 depends_on_roles = attr.depends_on_roles()
                 # Add host tag dependencies, but only in host mode. In other
                 # modes we always need to show all attributes.
-                if for_what == "host" and depends_on_tags:
+                if for_what in [ "host", "cluster" ] and depends_on_tags:
                     dependency_mapping_tags[attrname] = depends_on_tags
 
                 if depends_on_roles:
@@ -16838,7 +16840,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             # one and have the same value
             unique = num_haveit == 0 or (len(values) == 1 and num_haveit == len(hosts))
 
-            if for_what in [ "host", "folder" ]:
+            if for_what in [ "host", "cluster", "folder" ]:
                 host = hosts.values()[0]
 
             # Collect information about attribute values inherited from folder.
@@ -16850,7 +16852,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             container = None
 
             if attr.show_inherited_value():
-                if for_what == "host":
+                if for_what in [ "host", "cluster" ]:
                     url = Folder.current().edit_url()
 
                 container = parent # container is of type Folder
@@ -16902,7 +16904,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 and not has_inherited:
                 force_entry = True
                 active = True
-            elif for_what == "host" and attr.is_mandatory() and not has_inherited:
+            elif for_what in [ "host", "cluster" ] and attr.is_mandatory() and not has_inherited:
                 force_entry = True
                 active = True
             elif cb != None:
@@ -16911,7 +16913,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 active = unique and len(values) > 0
             elif for_what == "folder" and myself:
                 active = myself.has_explicit_attribute(attrname)
-            elif for_what == "host" and host: # "host"
+            elif for_what in [ "host", "cluster" ] and host: # "host"
                 active = host.has_explicit_attribute(attrname)
             else:
                 active = False
@@ -16922,7 +16924,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 else:
                     disabled = True
 
-            if (for_what == "host" and parent.locked_hosts()) or (for_what == "folder" and myself and myself.locked()):
+            if (for_what in [ "host", "cluster" ] and parent.locked_hosts()) or (for_what == "folder" and myself and myself.locked()):
                 checkbox_code = None
             elif force_entry:
                 checkbox_code  = html.render_checkbox("ignored_" + checkbox_name, add_attr=["disabled"])
@@ -16976,7 +16978,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 else:
                     value = values[0]
 
-            elif for_what in [ "host", "folder" ]:
+            elif for_what in [ "host", "cluster", "folder" ]:
                 if not new and (not attr.editable() or not attr.may_edit()) and active:
                     value = values[0]
                 else:

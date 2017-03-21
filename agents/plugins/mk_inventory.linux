@@ -41,13 +41,13 @@ then
     # List of DEB packages
     if type dpkg-query >/dev/null; then
         echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
-        dpkg-query --show --showformat='${Package}|${Version}|${Architecture}|deb|${Summary}|${Status}\n'
+        dpkg-query --show --showformat='${Package}|${Version}|${Architecture}|deb|-|${Summary}|${Status}\n'
     fi
 
     # List of RPM packages in same format
     if type rpm >/dev/null; then
         echo "<<<lnx_packages:sep(9):persist($UNTIL)>>>"
-        rpm -qa --qf '%{NAME}\t%{VERSION}\t%{ARCH}\trpm\t%{SUMMARY}\t-\n'
+        rpm -qa --qf '%{NAME}\t%{VERSION}\t%{ARCH}\trpm\t%{RELEASE}\t%{SUMMARY}\t-\n'
     fi
 
     # List Gentoo packages

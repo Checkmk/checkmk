@@ -2910,11 +2910,15 @@ def get_host_attributes(hostname, tags):
     # Now lookup configured IP addresses
     if is_ipv4_host(hostname):
         attrs["_ADDRESS_4"] = ip_address_of(hostname, 4)
+        if attrs["_ADDRESS_4"] == None:
+            attrs["_ADDRESS_4"] = ""
     else:
         attrs["_ADDRESS_4"] = ""
 
     if is_ipv6_host(hostname):
         attrs["_ADDRESS_6"] = ip_address_of(hostname, 6)
+        if attrs["_ADDRESS_6"] == None:
+            attrs["_ADDRESS_6"] = ""
     else:
         attrs["_ADDRESS_6"] = ""
 

@@ -1,0 +1,12 @@
+Title: jolokia_metrics.threads: Prevent service staleness in case of decreasing threads
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1490189869
+
+Previously, the check would go stale occasionally due to a decreasing number of threads
+being interpreted as a counter wrap. This has been fixed.

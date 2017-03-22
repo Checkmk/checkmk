@@ -653,7 +653,6 @@ def check_jolokia_metrics_threads(item, params, info):
     d = parsed[item]
 
     this_time = time.time()
-    wrapped = False
     perfdata = []
     output   = []
     status   = 0
@@ -673,20 +672,13 @@ def check_jolokia_metrics_threads(item, params, info):
                 status_info = "(!) (Levels at %d/%d)" % (warn, crit)
 
             # Calculate the thread increase rate
-            try:
-                rate = get_rate("jolokia_metrics.threads.%s" % item, this_time, val)
-                output.append('ThreadRate: %0.2f' % rate)
-                perfdata.append(('ThreadRate', rate))
-            except MKCounterWrapped:
-                wrapped = True
+            rate = get_rate("jolokia_metrics.threads.%s" % item, this_time, val, allow_negative=True)
+            output.append('ThreadRate: %0.2f' % rate)
+            perfdata.append(('ThreadRate', rate))
 
         perfdata.append((key, val))
         output.append('%s: %d%s' % (key, val, status_info))
-    # Only process the perfdata when no wrap occured
-    if wrapped:
-        return (status, ', '.join(output))
-    else:
-        return (status, ', '.join(output), perfdata)
+    return (status, ', '.join(output), perfdata)
 
 
 check_info["jolokia_metrics.threads"] = {

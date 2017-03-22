@@ -30,16 +30,20 @@ fortigate_ipsecvpn_default_levels = (1, 2)
 
 def inventory_fortigate_ipsecvpn(info):
     if len(info) > 0:
-        return [(None, "fortigate_ipsecvpn_default_levels")]
+        return [(None, {})]
 
 
 def check_fortigate_ipsecvpn(item, params, info):
+
+    if type(params) == tuple:
+        params = { "levels" : params }
+
     ent_status_map = {
         "1": "down",
         "2": "up"
     }
 
-    warn, crit = params
+    warn, crit = params["levels"]
 
     tunnels_down = [p2name for p2name, ent_status in info
                     if ent_status_map[ent_status] == "down"]
@@ -63,12 +67,14 @@ def check_fortigate_ipsecvpn(item, params, info):
 
 
 check_info["fortigate_ipsecvpn"] = {
-    "inventory_function"  : inventory_fortigate_ipsecvpn,
-    "check_function"      : check_fortigate_ipsecvpn,
-    "service_description" : "VPN IPSec Tunnels",
-    "has_perfdata"        : True,
-    "snmp_scan_function"  : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
-    "snmp_info"           : (".1.3.6.1.4.1.12356.101.12.2.2.1", [3,     # fgVpnTunEntPhase2Name
+    "default_levels_variable"   : "fortigate_ipsecvpn",
+    "inventory_function"        : inventory_fortigate_ipsecvpn,
+    "check_function"            : check_fortigate_ipsecvpn,
+    "service_description"       : "VPN IPSec Tunnels",
+    "has_perfdata"              : True,
+    "snmp_scan_function"        : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info"                 : (".1.3.6.1.4.1.12356.101.12.2.2.1", [3,     # fgVpnTunEntPhase2Name
                                                                  20]),  # fgVpnTunEntStatus
+    "group"                     : "ipsecvpn",
 }
 

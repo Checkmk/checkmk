@@ -1,0 +1,12 @@
+Title: Checking for name conflict during host rename
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1490166831
+Class: fix
+
+The host rename function is now performing a check whether or not the
+host name is already used by another host. In case the name is in use
+an error is displayed.

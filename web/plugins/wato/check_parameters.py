@@ -12556,7 +12556,7 @@ register_check_parameters(subgroup_applications,
                                                 )),
                                                 ("spool", Dictionary(
                                                     title = _("Spool messages that could not be sent"),
-                                                    help = _("Messages that can now be forwarded, e.g. when the target Event Console is "
+                                                    help = _("Messages that can not be forwarded, e.g. when the target Event Console is "
                                                              "not running, can temporarily be stored locally. Forwarding is tried again "
                                                              "on next execution. When messages are spooled, the check will go into WARNING "
                                                              "state. In case messages are dropped by the rules below, the check will shortly "

@@ -2202,7 +2202,7 @@ def cached_dns_lookup(hostname, family):
         cache[cache_id] = ipa # Update in-memory-cache
         return ipa
 
-    except:
+    except Exception, e:
         # DNS failed. Use cached IP address if present, even if caching
         # is disabled.
         if cached_ip:
@@ -2210,7 +2210,9 @@ def cached_dns_lookup(hostname, family):
             return cached_ip
         else:
             cache[cache_id] = None
-            raise
+            raise MKGeneralException(
+                "Failed to lookup IPv%d address of %s via DNS: %s\n" %
+                (family, hostname, e))
 
 
 def lookup_ipv4_address(hostname):

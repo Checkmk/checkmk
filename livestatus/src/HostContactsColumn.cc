@@ -23,39 +23,23 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostContactsColumn.h"
-#include "ListColumn.h"
 #include "nagios.h"
 
-using std::make_unique;
 using std::string;
-using std::unique_ptr;
+using std::unordered_set;
 
-namespace {
-class ContainsContact : public ListColumn::Contains {
-public:
-    ContainsContact(contact *element, HostContactsColumn *column)
-        : _element(element), _column(column) {}
-
-    bool operator()(void *row) override {
-        if (auto hst = _column->rowData<host>(row)) {
-            return is_contact_for_host(hst, _element) != 0;
+unordered_set<string> HostContactsColumn::contactNames(void *row) const {
+    unordered_set<string> names;
+    if (auto hst = rowData<host>(row)) {
+        for (auto cm = hst->contacts; cm != nullptr; cm = cm->next) {
+            names.insert(cm->contact_ptr->name);
         }
-        return false;
+        for (auto cgm = hst->contact_groups; cgm != nullptr; cgm = cgm->next) {
+            for (auto cm = cgm->group_ptr->members; cm != nullptr;
+                 cm = cm->next) {
+                names.insert(cm->contact_ptr->name);
+            }
+        }
     }
-
-private:
-    contact *const _element;
-    HostContactsColumn *_column;
-};
-}  // namespace
-
-unique_ptr<ListColumn::Contains> HostContactsColumn::makeContains(
-    const string &name) {
-    return make_unique<ContainsContact>(
-        find_contact(const_cast<char *>(name.c_str())), this);
-}
-
-unique_ptr<ListColumn::Contains> HostContactsColumn::containsContact(
-    contact *ctc) {
-    return make_unique<ContainsContact>(ctc, this);
+    return names;
 }

@@ -1,9 +1,9 @@
 Title: Option -N on omd backup (and om cp) disregards various historic data
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2017-01-24 12:01:59
 Targetversion: future
-Class: bug
 
 It seems that <tt>-N</tt> just skips the monitoring history and the RRDs.
 Several possible large files are still handled, e.g.
@@ -11,3 +11,54 @@ the EC archive and the HW/SW-Inventory history. Also we could
 arguably consider var/log/*.log as historic data and drop
 that. Maybe also a git Konfiguration history, WATO snapshots
 and other stuff.
+
+---------
+
+In fact the following paths are skipped:
+
+    if "no-rrds" in options or "no-past" in options:
+        excludes.append("var/pnp4nagios/perfdata/*")
+        excludes.append("var/pnp4nagios/spool/*")
+        excludes.append("var/rrdcached/*")
+        excludes.append("var/pnp4nagios/states/*")
+        excludes.append("var/check_mk/rrd/*")
+
+    if "no-logs" in options or "no-past" in options:
+        excludes.append("var/log/*/*")
+        excludes.append("var/nagios/nagios.log")
+        excludes.append("var/nagios/archive/")
+        excludes.append("var/pnp4nagios/log/*")
+        excludes.append("var/pnp4nagios/perfdata.dump")
+        excludes.append("var/mkeventd/history/*")
+        # CMC
+        excludes.append("var/check_mk/core/history")
+        excludes.append("var/check_mk/core/archive/*")
+
+
+The help shows the following info:
+
+    Possible options for this command:
+     --no-rrds            do not copy RRD files (performance data
+     --no-logs            do not copy log files
+     -N,--no-past         do not copy RRD file and log files
+     --no-compression      do not compress tar archive
+
+The name of the option is a bit missleading, but the help of the options is a
+bit clearer. From that description we would not have to add more files.
+
+The question is about the use case: The user may want to have a backup that
+is done fast and where the resulting file is small. Assuming this, adding more
+files would be good.
+
+We add the following now to the "--no-logs" and "--no-past" options:
+
+var/log/*.log
+var/check_mk/inventory_archive/*/*
+var/check_mk/wato/snapshots/*.tar
+var/check_mk/wato/log/audit.log
+
+
+where 
+
+2017-03-22 08:49:00: changed state open -> done
+Has been fixed now.

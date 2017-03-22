@@ -364,7 +364,7 @@ def dashlet_graph(nr, dashlet):
 
 
 def dashlet_graph_reload_js(nr, dashlet):
-    host = dashlet['context'].get('host')
+    host = dashlet['context'].get('host', html.var("host"))
     if not host:
         raise MKUserError('host', _('Missing needed host parameter.'))
 

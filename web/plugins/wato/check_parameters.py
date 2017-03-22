@@ -623,6 +623,28 @@ register_check_parameters(
     "dict",
 )
 
+register_check_parameters(
+    subgroup_networking,
+    "ipsecvpn",
+    _(u"Fortigate IPSec VPN Tunnels"),
+    Transform(
+        Dictionary(
+            elements=[
+                ("levels", Tuple(
+                    title=_("Levels for number of down channels"),
+                    elements=[
+                        Integer(title=_("Warning at"), default_value=1),
+                        Integer(title=_("Critical at"), default_value=2),
+                    ])),
+            ],
+            optional_keys = []
+        ),
+        forth=lambda params: type(params) == dict and params or { "levels" : params },
+    ),
+    None,
+    "dict",
+)
+
 
 #.
 #   .--Inventory-----------------------------------------------------------.

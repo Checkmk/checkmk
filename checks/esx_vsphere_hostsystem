@@ -397,10 +397,10 @@ def esx_vsphere_multipath_convert(info):
 
     data = zip(data[::2], data[1::2])
     for path, state in data:
-        # ESX 6.0 uses a different format, e.g "vmhba32:C0:T0:L0 active"
+        # vSphere6 uses a different format, e.g "vmhba32:C0:T0:L0 active"
         if len(path.split(":")) == 4:
             hba_num = int(path.split(":")[0].replace("vmhba", ""))
-            real_path = path.split(":")[-1]
+            lun_id = path.split(":")[-1]
 
             # vmware specificies three different types of LUNs. Physical LUNs will
             # reserves vmhba number 0-31. The other two reserve numbers of base64.
@@ -409,27 +409,29 @@ def esx_vsphere_multipath_convert(info):
             # 64-95 for logical LUNs like iSCSI.
             # These should be added as different multipath LUNs.
             if hba_num >= 32 and hba_num % 64 < 33:
-                real_path = "%s pseudo-logical" % real_path
+                lun_id = "%s pseudo-logical" % lun_id
             elif hba_num >= 32 and hba_num % 64 > 32:
-                real_path = "%s logical" % real_path
+                lun_id = "%s logical" % lun_id
             else:
-                real_path = "%s physical" % real_path
+                lun_id = "%s physical" % lun_id
 
-            paths.setdefault(real_path, [])
+            paths.setdefault(lun_id, [])
             # Note: There is no path type information available in these esx paths
-            paths[real_path].append((state, None, path))
+            paths[lun_id].append((state, None, path))
             continue
 
-        path_tokens = path.split('-')
-        if "." not in path_tokens[-1]:
-            continue # invalid format / unknown type
-        path_type, path_id = path_tokens[-1].split('.')
+        # Legacy format for older vSphere versions:
+        else:
+            path_tokens = path.split('-')
+            if "." not in path_tokens[-1]:
+                continue # invalid format / unknown type
+            path_type, path_id = path_tokens[-1].split('.')
 
-        if path_type in ['naa', 'eui']:
             hw_type = path.split('.')[0]
-            if hw_type != 'unknown':
-                paths.setdefault(path_id, [])
-                paths[path_id].append((state, "%s/%s" % (path_type, hw_type), path))
+
+            if path_type in ['naa', 'eui'] and not hw_type == 'unknown':
+                paths.setdefault(lun_id, [])
+                paths[lun_id].append((state, "%s/%s" % (path_type, hw_type), path))
 
     return paths
 

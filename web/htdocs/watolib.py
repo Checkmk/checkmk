@@ -1728,11 +1728,7 @@ class Folder(BaseFolder):
 
         for host_name, attributes, cluster_nodes in entries:
             must_be_in_contactgroups(attributes.get("contactgroups"))
-            existing_host = Host.host(host_name)
-            if existing_host:
-                raise MKUserError("host", _('A host with the name <b><tt>%s</tt></b> already '
-                       'exists in the folder <a href="%s">%s</a>.') %
-                         (host_name, existing_host.folder().url(), existing_host.folder().alias_path()))
+            validate_host_uniqueness("host", host_name)
 
         # 2. Actual modification
         self._load_hosts_on_demand()
@@ -1918,6 +1914,14 @@ class Folder(BaseFolder):
                 lock_message = "<ul>" + li_elements + "</ul>"
             html.show_info(lock_message)
 
+
+
+def validate_host_uniqueness(varname, host_name):
+    host = Host.host(host_name)
+    if host:
+        raise MKUserError(varname, _('A host with the name <b><tt>%s</tt></b> already '
+               'exists in the folder <a href="%s">%s</a>.') %
+                 (host_name, host.folder().url(), host.folder().alias_path()))
 
 
 #.

@@ -1465,19 +1465,12 @@ def action_edit_host(mode, hostname, is_cluster):
             return "folder"
 
 
-def validate_host_uniqueness(host_name):
-    host = Host.host(host_name)
-    if host:
-        raise MKUserError("host", _('A host with the name <b><tt>%s</tt></b> already '
-               'exists in the folder <a href="%s">%s</a>.') %
-                 (host_name, host.folder().url(), host.folder().alias_path()))
-
-
 def check_new_host_name(varname, host_name):
     if not host_name:
         raise MKUserError(varname, _("Please specify a host name."))
     elif Folder.current().has_host(host_name):
         raise MKUserError(varname, _("A host with this name already exists in this folder."))
+    validate_host_uniqueness(varname, host_name)
     Hostname().validate_value(host_name, varname)
 
 

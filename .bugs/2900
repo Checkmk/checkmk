@@ -1,0 +1,28 @@
+Title: cmk-update-agent: Better configuration of updater plugin to prevent problems during updates
+Component: checks
+State: open
+Date: 2017-03-22 11:58:23
+Targetversion: 1.2.8
+Class: bug
+
+The current standard setings of our cmk-update-agent:
+- Timeout for plugin: 60s
+- Execution is synchron to agent
+
+This settings do not take care about several situations on customer side.
+Updates in the local network will not be a problem, because most systems do not need
+more time than 60 seconds for it.
+
+If the updater is used on foreign hosts, like other locations or countries, then
+the 60 seconds are a problem. The download will take much more time to end successfully.
+That will result in the situation, that download perhaps will be finished, but the updater
+does not have enough time to finish. The agent will not work and no further information
+can be queried.
+
+A workaround for it is following (manual setting of specific rules):
+- Set execution mode for plugins and local checks: as value use cmk-update-agent.exe
+- Set timeouts for plugins and local checks: as value use cmk-upadte-agent.exe and 300 seconds (5 Minutes)
+
+It will not solve the problem of long running agent udpates. It will only take care about,
+that the update will successful ended in more situations. For a good solution, the updater
+should handle those thing itself.

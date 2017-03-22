@@ -28,24 +28,25 @@
 #include "config.h"  // IWYU pragma: keep
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include "ListColumn.h"
 #include "contact_fwd.h"
 class RowRenderer;
 
 class ContactsColumn : public ListColumn {
 public:
-    ContactsColumn(const std::string &name, const std::string &description,
+    ContactsColumn(const std::string& name, const std::string& description,
                    int indirect_offset, int extra_offset,
                    int extra_extra_offset)
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset) {}
-#ifdef CMC
-    std::unique_ptr<Contains> makeContains(const std::string &name) override;
-#else
-    virtual std::unique_ptr<Contains> containsContact(contact *ctc) = 0;
-#endif
-    bool isEmpty(void *row) override;
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+
+    void output(void* row, RowRenderer& r, contact* auth_user) override;
+    std::unique_ptr<Contains> makeContains(const std::string& name) override;
+    bool isEmpty(void* row) override;
+
+private:
+    virtual std::unordered_set<std::string> contactNames(void* row) const = 0;
 };
 
 #endif  // ContactsColumn_h

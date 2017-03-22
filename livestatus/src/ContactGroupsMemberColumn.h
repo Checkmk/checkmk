@@ -26,30 +26,21 @@
 #define ContactGroupsMemberColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <memory>
 #include <string>
+#include <unordered_set>
 #include "ContactsColumn.h"
-#include "contact_fwd.h"
-
-#ifdef CMC
-class RowRenderer;
-#endif
 
 class ContactGroupsMemberColumn : public ContactsColumn {
 public:
-    ContactGroupsMemberColumn(const std::string &name,
-                              const std::string &description,
+    ContactGroupsMemberColumn(const std::string& name,
+                              const std::string& description,
                               int indirect_offset, int extra_offset,
                               int extra_extra_offset)
         : ContactsColumn(name, description, indirect_offset, extra_offset,
                          extra_extra_offset) {}
-    std::unique_ptr<Contains> makeContains(const std::string &name) override;
-#ifdef CMC
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
-    bool isEmpty(void *row) override;
-#else
-    std::unique_ptr<Contains> containsContact(contact *ctc) override;
-#endif
+
+private:
+    std::unordered_set<std::string> contactNames(void* row) const override;
 };
 
 #endif  // ContactGroupsMemberColumn_h

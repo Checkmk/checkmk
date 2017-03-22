@@ -23,27 +23,40 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ContactsColumn.h"
+#include <algorithm>
 #include "Renderer.h"
 
+using std::make_unique;
+using std::move;
 using std::string;
-
-extern contact *contact_list;
+using std::unique_ptr;
 
 void ContactsColumn::output(void *row, RowRenderer &r,
                             contact * /* auth_user */) {
     ListRenderer l(r);
-    for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
-        if ((*containsContact(ctc))(row)) {
-            l.output(string(ctc->name));
-        }
+    for (const auto &name : contactNames(row)) {
+        l.output(name);
     }
 }
 
-bool ContactsColumn::isEmpty(void *row) {
-    for (contact *ctc = contact_list; ctc != nullptr; ctc = ctc->next) {
-        if ((*containsContact(ctc))(row)) {
-            return false;
+unique_ptr<ListColumn::Contains> ContactsColumn::makeContains(
+    const string &name) {
+    class ContainsContact : public ListColumn::Contains {
+    public:
+        ContainsContact(string name, ContactsColumn *column)
+            : _name(move(name)), _column(column) {}
+
+        bool operator()(void *row) override {
+            const auto &names = _column->contactNames(row);
+            return names.find(_name) != names.end();
         }
-    }
-    return true;
+
+    private:
+        string _name;
+        ContactsColumn *_column;
+    };
+
+    return make_unique<ContainsContact>(name, this);
 }
+
+bool ContactsColumn::isEmpty(void *row) { return contactNames(row).empty(); }

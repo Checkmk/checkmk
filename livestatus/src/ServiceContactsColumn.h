@@ -26,10 +26,9 @@
 #define ServiceContactsColumn_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <memory>
 #include <string>
+#include <unordered_set>
 #include "ContactsColumn.h"
-#include "contact_fwd.h"
 
 class ServiceContactsColumn : public ContactsColumn {
 public:
@@ -38,8 +37,9 @@ public:
                           int extra_offset, int extra_extra_offset)
         : ContactsColumn(name, description, indirect_offset, extra_offset,
                          extra_extra_offset) {}
-    std::unique_ptr<Contains> makeContains(const std::string& name) override;
-    std::unique_ptr<Contains> containsContact(contact* ctc) override;
+
+private:
+    std::unordered_set<std::string> contactNames(void* row) const override;
 };
 
 #endif  // ServiceContactsColumn_h

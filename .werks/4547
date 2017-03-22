@@ -1,0 +1,15 @@
+Title: check_mk_agent.linux: Fixed agent section which spammed in utmp of RHEL/CentOS
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1490199589
+Class: fix
+
+The section postfix_mailq_status was writing into utmp everytime the agent
+run. With the new version we are able to avoid this behaviour and still get
+informations about multiple instances of postfix.
+
+This fix needs an updated agent AND an updated checkplugin but a rediscovery
+is not neccessary.

@@ -1,0 +1,12 @@
+Title: Graph dashlets: Fixed graph rendering on host specific dashboards
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0b5
+Date: 1490178137
+Class: fix
+
+When creating a host specific dashlet, where the host context is set via URL
+variable, the graph dashlet was unable to select the correct graph. Instead it
+displayed the message "Missing needed host parameter.".

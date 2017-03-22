@@ -29,6 +29,7 @@
     * 4523 FIX: tsm_stagingpools, tsm_storagepools: Fixed numerical data handling, ie. util and size may contain ","
     * 4461 FIX: windows agent, df section: volumes with spaces in name are now supported
     * 4524 FIX: logwatch.ec: Removed quotes from message text which caused errors in EC rule evalution with matching criteria 'Text to match'
+    * 8626 FIX: jolokia_metrics.threads: Prevent service staleness in case of decreasing threads...
 
     Multisite:
     * 4400 FIX: Fixed possible random "OSError: [Errno 9] Bad file descriptor" in GUI...

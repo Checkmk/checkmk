@@ -418,14 +418,13 @@ def esx_vsphere_multipath_convert(info):
             paths.setdefault(lun_id, [])
             # Note: There is no path type information available in these esx paths
             paths[lun_id].append((state, None, path))
-            continue
 
         # Legacy format for older vSphere versions:
         else:
             path_tokens = path.split('-')
             if "." not in path_tokens[-1]:
                 continue # invalid format / unknown type
-            path_type, path_id = path_tokens[-1].split('.')
+            path_type, lun_id = path_tokens[-1].split('.')
 
             hw_type = path.split('.')[0]
 

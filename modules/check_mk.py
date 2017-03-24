@@ -1213,14 +1213,11 @@ def host_check_command(hostname, ip, is_clust):
         service = value == "agent" and "Check_MK" or value[1]
         if monitoring_core == "cmc":
             return "check-mk-host-service!" + service
-
         command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
-        # TODO: Global
         hostcheck_commands_to_define.append((command,
            'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' %
                 (hostname, service.replace('$HOSTNAME$', hostname),
                  hostname, service.replace('$HOSTNAME$', hostname))))
-
         return command
 
     elif value[0] == "tcp":

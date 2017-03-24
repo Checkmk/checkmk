@@ -111,6 +111,6 @@ check_info["websphere_mq_channels"] = {
     "service_description"       : "MQ Channel %s",
     "has_perfdata"              : True,
     "default_levels_variable"   : "websphere_mq_channels_default_levels",
-    "group"                     : "websphere_mq",
+    "group"                     : "websphere_mq_channels",
 }
 

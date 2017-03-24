@@ -1,0 +1,12 @@
+Title: Rule list: Fixed possible "assert table" error on ruleset rule listing page
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1490348642
+
+This issue could occur in specific situations when having a specific folder hierarchy
+while some folders have no rule assigned and some have.

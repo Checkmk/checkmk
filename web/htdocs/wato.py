@@ -12839,18 +12839,19 @@ class ModeEditRuleset(WatoMode):
         skip_this_folder = False
         for folder, rulenr, rule in ruleset.get_rules():
             if folder != last_folder:
-                skip_this_folder = False
+                if not Folder.current().is_root() and not folder.is_transitive_parent_of(Folder.current()):
+                    skip_this_folder = True
+                    continue
+                else:
+                    skip_this_folder = False
+
                 if last_folder != None:
                     table.end()
 
                 first_in_group = True
-                alias_path = folder.alias_path(show_main = False)
                 last_folder = folder
 
-                if not Folder.current().is_root() and not folder.is_transitive_parent_of(Folder.current()):
-                    skip_this_folder = True
-                    continue
-
+                alias_path = folder.alias_path(show_main = False)
                 table.begin("rules", title="%s %s" % (_("Rules in folder"), alias_path),
                     css="ruleset", searchable=False, sortable=False, limit=None)
             else:

@@ -10,6 +10,7 @@ import signal
 import threading
 import Queue
 import traceback
+import shutil
 from urlparse import urlsplit, parse_qsl, urlunsplit, urljoin
 from urllib import urlencode
 from bs4 import BeautifulSoup
@@ -318,6 +319,10 @@ class TestCrawler(object):
         return var_dir() + "/crawl.report"
 
 
+    def web_log_file(self):
+        return var_dir() + "/craw-web.log"
+
+
     def load_stats(self):
         try:
             self.stats = eval(file(self.stats_file()).read())
@@ -378,6 +383,9 @@ class TestCrawler(object):
         #    open(self.report_file()+".old", "w").write(open(self.report_file()).read())
 
         os.rename(self.report_file()+".tmp", self.report_file())
+
+        # Save the web.log for later diagnose
+        shutil.copyfile(self.site.read_file("var/log/web.log"), self.web_log_file())
 
         if self.errors:
             pytest.fail("Crawled %d URLs in %d seconds. Failures:\n%s" %

@@ -33,6 +33,7 @@ import cmk.defines as defines
 import cmk.paths
 import cmk.store as store
 
+
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
 #   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
@@ -1113,7 +1114,7 @@ def melt_short_intervals(entries, duration, dont_merge):
 #         {
 #            "from"       : 1238288548,
 #            "until"      : 1238292845,
-#            "text"       : u"Das ist ein Text Ã¼ber mehrere Zeilen, oder was weiÃŸ ich",
+#            "text"       : u"Das ist ein Text über mehrere Zeilen, oder was weiß ich",
 #            "date"       : 12348854885, # Time of entry
 #            "author"     : "mk",
 #            "downtime"   : True, # Can also be False or None or missing. None is like missing
@@ -1187,11 +1188,11 @@ def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 # When grouping is enabled, this function is called once for each group
-# TODO: range_title sollte hier Ã¼berflÃ¼ssig sein
+# TODO: range_title sollte hier ueberfluessig sein
 # TODO: Hier jetzt nicht direkt HTML erzeugen, sondern eine saubere
-# Datenstruktur fÃ¼llen, welche die Daten so reprÃ¤sentiert, dass sie
-# nur noch 1:1 dargestellt werden mÃ¼ssen.
-# Beispiel fÃ¼r einen RÃ¼ckgabewert:
+# Datenstruktur füllen, welche die Daten so repräsentiert, dass sie
+# nur noch 1:1 dargestellt werden müssen.
+# Beispiel für einen Rückgabewert:
 # {
 #    "title" : "Hostgroup foobar",
 #    "headers" : [ "OK, "CRIT", "Downtime" ],
@@ -1649,29 +1650,50 @@ def get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_ou
     raise Exception("Not implemented yet. Sorry.")
 
 
-def get_bi_spans(tree, aggr_group, avoptions, countdown_logrow_limit, timewarp):
+
+def get_timeline_containers(aggr_rows, avoptions, timewarp, livestatus_limit):
     time_range, range_title = avoptions["range"]
-
-    phases_list, countdown_logrow_limit = \
-        get_bi_leaf_history(tree, aggr_group, time_range, countdown_logrow_limit)
-
-    return compute_bi_timeline(tree, aggr_group, time_range, timewarp, phases_list), countdown_logrow_limit
+    phases_list, timeline_containers, fetched_rows = get_bi_leaf_history(aggr_rows, time_range, livestatus_limit)
+    return compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list), fetched_rows
 
 
-def get_bi_leaf_history(tree, aggr_group, time_range, countdown_logrow_limit):
+
+# Not a real class, more a struct
+class TimelineContainer(object):
+    def __init__(self, aggr_row):
+        self._aggr_row          = aggr_row
+
+        # PUBLIC accessible data
+        self.aggr_tree          = self._aggr_row["aggr_tree"]
+        self.aggr_group         = self._aggr_row["aggr_group"]
+
+        # Data fetched from livestatus query
+        self.host_service_info  = None
+
+        # Computed data
+        self.timeline           = []
+        self.states             = {}
+        self.timewarp_state     = None
+        self.tree_time          = None
+        self.tree_state         = None
+
+
+def get_bi_leaf_history(aggr_rows, time_range, livestatus_limit):
     # Get state history of all hosts and services contained in the tree.
     # In order to simplify the query, we always fetch the information for
     # all hosts of the aggregates.
-    only_sites = set([])
-    hosts = []
-    for site, host in tree["reqhosts"]:
-        only_sites.add(site)
-        hosts.append(host)
+    only_sites = set()
+    hosts = set()
+    for row in aggr_rows:
+        tree = row["aggr_tree"]
+        for site, host in tree["reqhosts"]:
+            only_sites.add(site)
+            hosts.add(host)
 
     columns = [ "host_name", "service_description", "from", "until", "log_output", "state", "in_downtime", "in_service_period" ]
     sites.live().set_only_sites(list(only_sites))
     sites.live().set_prepend_site(True)
-    sites.live().set_limit() # removes limit
+    sites.live().set_limit(livestatus_limit)
     query = "GET statehist\n" + \
             "Columns: " + " ".join(columns) + "\n" +\
             "Filter: time >= %d\nFilter: time < %d\n" % time_range
@@ -1680,8 +1702,17 @@ def get_bi_leaf_history(tree, aggr_group, time_range, countdown_logrow_limit):
     # of the aggregation in question. That prevents status changes
     # irrelevant services from introducing new phases.
     by_host = {}
-    for site, host, service in bi.find_all_leaves(tree):
-        by_host.setdefault(host, set([])).add(service)
+    timeline_containers = []
+    for row in aggr_rows:
+        tree = row["aggr_tree"]
+        host_service_info = set()
+        for site, host, service in bi.find_all_leaves(tree):
+            by_host.setdefault(host, set([])).add(service)
+            host_service_info.add((host, service and service or ""))
+
+        timeline_container = TimelineContainer(row)
+        timeline_container.host_service_info = host_service_info
+        timeline_containers.append(timeline_container)
 
     for host, services in by_host.items():
         query += "Filter: host_name = %s\n" % host
@@ -1701,12 +1732,6 @@ def get_bi_leaf_history(tree, aggr_group, time_range, countdown_logrow_limit):
     columns = ["site"] + columns
     rows = [ dict(zip(columns, row)) for row in data ]
 
-    # Now we find out if the log row limit was exceeded or
-    # if the log's length is the limit by accident.
-    # If this limit was exceeded then we cut off the last element
-    # in spans_by_object because it might be incomplete.
-    countdown_logrow_limit = countdown_logrow_limit - len(data)
-
     # Reclassify base data due to annotations
     rows = reclassify_bi_rows(rows)
 
@@ -1719,54 +1744,84 @@ def get_bi_leaf_history(tree, aggr_group, time_range, countdown_logrow_limit):
     # First partition the rows into sequences with equal start time
     phases = {}
     for row in rows:
-        from_time = row["from"]
-        phases.setdefault(from_time, []).append(row)
+        phases.setdefault(row["from"], {})[(row["host_name"], row["service_description"])] = row
 
     # Convert phases to sorted list
     sorted_times = phases.keys()
     sorted_times.sort()
     phases_list = []
+
     for from_time in sorted_times:
         phases_list.append((from_time, phases[from_time]))
 
-    return phases_list, countdown_logrow_limit
+    return phases_list, timeline_containers, len(rows)
+
+def compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list):
+    aggr_row_timelines = []
+    bi.load_assumptions()
+
+    def update_states(states, use_entries, phase_entries):
+        for element in use_entries:
+            hostname, svc_desc = element
+            values      = phase_entries.get(element)
+            key         = values["site"], hostname, svc_desc
+            states[key] = values["state"], values["log_output"], values["in_downtime"], (values["in_service_period"] != 0)
 
 
-def compute_bi_timeline(tree, aggr_group, time_range, timewarp, phases_list):
-    states = {}
-    def update_states(phase_entries):
-        for row in phase_entries:
-            service     = row["service_description"]
-            key         = row["site"], row["host_name"], service
-            states[key] = row["state"], row["log_output"], row["in_downtime"], (row["in_service_period"] != 0)
+    # Initial phase, this includes all elements
+    from_time, first_phase = phases_list[0]
+    first_phase_keys = set(first_phase.keys())
+    for timeline_container in timeline_containers:
+        timeline_container.states = {}
+        use_elements = timeline_container.host_service_info.intersection(first_phase_keys)
+        update_states(timeline_container.states, use_elements, first_phase)
+
+        # States does now reflect the host/services states at the beginning of the query range.
+        tree_state = compute_bi_tree_state(timeline_container.aggr_tree,
+                                           timeline_container.states)
+
+        tree_time = time_range[0]
+        timeline_container.timewarp_state = timewarp == int(tree_time) and tree_state or None
+        timeline_container.tree_state = tree_state
+        timeline_container.tree_time  = tree_time
 
 
-    update_states(phases_list[0][1])
-    # states does now reflect the host/services states at the beginning
-    # of the query range.
-    tree_state = compute_bi_tree_state(tree, states)
-    tree_time = time_range[0]
-    if timewarp == int(tree_time):
-        timewarp_state = tree_state
-    else:
-        timewarp_state = None
+    # Remaining phases, may include some elements
+    for from_time, phase_hst_svc in phases_list:
+        phase_keys = set(phase_hst_svc.keys())
 
-    timeline = []
+        for timeline_container in timeline_containers:
+            use_elements = timeline_container.host_service_info.intersection(phase_keys)
+            if not use_elements:
+                continue
 
-    for from_time, phase in phases_list[1:]:
-        update_states(phase)
-        next_tree_state = compute_bi_tree_state(tree, states)
-        duration = from_time - tree_time
-        timeline.append(create_bi_timeline_entry(tree, aggr_group, tree_time, from_time, tree_state))
-        tree_state = next_tree_state
-        tree_time = from_time
-        if timewarp == tree_time:
-            timewarp_state = tree_state
+            update_states(timeline_container.states, use_elements, phase_hst_svc)
+            next_tree_state = compute_bi_tree_state(timeline_container.aggr_tree,
+                                                    timeline_container.states)
+            timeline_container.timeline.append(create_bi_timeline_entry(timeline_container.aggr_tree,
+                                                           timeline_container.aggr_group,
+                                                           timeline_container.tree_time,
+                                                           from_time,
+                                                           timeline_container.tree_state))
 
-    # Add one last entry - for the state until the end of the interval
-    timeline.append(create_bi_timeline_entry(tree, aggr_group, tree_time, time_range[1], tree_state))
+            timeline_container.tree_state = next_tree_state
+            timeline_container.tree_time  = tree_time
+            if timewarp == tree_time:
+                timeline_container.timewarp_state = tree_state
 
-    return timeline, timewarp_state
+
+
+    # Each element gets a final timeline_entry - to the end of the interval
+    for timeline_container in timeline_containers:
+        timeline_container.timeline.append((create_bi_timeline_entry(timeline_container.aggr_tree,
+                                                        timeline_container.aggr_group,
+                                                        timeline_container.tree_time,
+                                                        time_range[1],
+                                                        timeline_container.tree_state)))
+
+
+    return timeline_containers
+
 
 
 def create_bi_timeline_entry(tree, aggr_group, from_time, until_time, tree_state):
@@ -1831,7 +1886,6 @@ def compute_bi_tree_state(tree, status):
         ]
 
     # Finally we can execute the tree
-    bi.load_assumptions()
     tree_state = bi.execute_tree(tree, status_info)
     return tree_state
 

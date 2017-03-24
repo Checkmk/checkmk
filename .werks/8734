@@ -7,4 +7,6 @@ Version: 1.2.8p19
 Date: 1490341441
 Class: fix
 
-
+If certificate is uploaded in the ruleset {{Monitoring Agents > Automatic Updates > Install agent updater (Linux, Windows)}}
+that contains non-ascii character an encoding error was reported:
+"The value of this rule is not valid. 'ascii' codec can't decode byte ..."

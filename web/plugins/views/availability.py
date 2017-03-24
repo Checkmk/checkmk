@@ -530,25 +530,36 @@ def render_bi_availability(title, aggr_rows):
 
     timewarpcode = ""
     if not html.has_user_errors():
-        countdown_logrow_limit   = avoptions["logrow_limit"]
-        has_reached_logrow_limit = False
+        logrow_limit = avoptions["logrow_limit"]
+        if logrow_limit == 0:
+            livestatus_limit = None
+        else:
+            livestatus_limit = (len(aggr_rows) * logrow_limit) + 1
+
         spans = []
-        for aggr_row in aggr_rows:
-            tree = aggr_row["aggr_tree"]
-            reqhosts = tree["reqhosts"]
-            try:
-                timewarp = int(html.var("timewarp"))
-            except:
-                timewarp = None
 
-            (these_spans, timewarp_tree_state), countdown_logrow_limit = \
-                availability.get_bi_spans(tree, aggr_row["aggr_group"], avoptions, countdown_logrow_limit, timewarp)
+        # iterate all aggregation rows
+        timewarpcode = ""
 
-            # We take only complete aggregations i.d. if we have
-            # undershot the log row limit then we ignore the rest
-            if avoptions["logrow_limit"] and countdown_logrow_limit < 0:
-                has_reached_logrow_limit = True
-                break
+        try:
+            timewarp = int(html.var("timewarp"))
+        except:
+            timewarp = None
+
+        has_reached_logrow_limit = False
+        timeline_containers, fetched_rows = availability.get_timeline_containers(aggr_rows,
+                                                                                 avoptions,
+                                                                                 livestatus_limit,
+                                                                                 timewarp)
+        if livestatus_limit and fetched_rows > livestatus_limit:
+            has_reached_logrow_limit = True
+
+
+        for timeline_container in timeline_containers:
+            tree                = timeline_container.aggr_tree
+            these_spans         = timeline_container.timeline
+            timewarp_tree_state = timeline_container.timewarp_state
+
 
             spans += these_spans
             if timewarp and timewarp_tree_state:
@@ -608,7 +619,7 @@ def render_bi_availability(title, aggr_rows):
         # with changed logrow_limit = 0, which means no limit
         if has_reached_logrow_limit:
             text  = _("Your query matched more than %d log entries. "
-                      "<b>Note:</b> The number of shown rows does not necessarily reflect the "
+                      "<b>Note:</b> The shown data does not necessarily reflect the "
                       "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
             text += '<a href="%s">%s</a>' % \
                     (html.makeuri([("_unset_logrow_limit", "1")]), _('Repeat query without limit.'))

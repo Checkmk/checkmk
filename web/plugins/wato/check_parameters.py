@@ -4828,6 +4828,46 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
+    "emcvnx_storage_pools",
+    _("EMC VNX storage pools"),
+    Dictionary(
+        elements = [
+            ("percent_full",
+             Tuple(
+                title = _("Upper levels for physical capacity in percent"),
+                elements = [
+                    Percentage(title = _("Warning at"),  default_value = 70.0),
+                    Percentage(title = _("Critical at"), default_value = 90.0),
+                ]
+            )),
+        ]
+    ),
+    TextAscii(title = _("Pool name")),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "emcvnx_storage_pools_tiering",
+    _("EMC VNX storage pools tiering"),
+    Dictionary(
+        elements = [
+            ("time_to_complete",
+             Tuple(
+                title = _("Upper levels for estimated time to complete"),
+                elements = [
+                    Age(title = _("Warning at"),  default_value = 300*60*60),
+                    Age(title = _("Critical at"), default_value = 350*60*60),
+                ]
+            )),
+        ]
+    ),
+    TextAscii(title = _("Pool name")),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_storage,
     "filehandler",
     _("Filehandler"),
     Dictionary(
@@ -6419,7 +6459,7 @@ register_check_parameters(
               Tuple(
                   title = _("FIN_WAIT1"),
                   help = _("our socket has closed; we are in the process of "
-                           "tearing down the connection"),
+                           "tiering down the connection"),
                   elements = [
                       Integer(title = _("Warning at"),  label = _("connections")),
                       Integer(title = _("Critical at"), label = _("connections"))

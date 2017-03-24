@@ -1,0 +1,333 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_emcvnx_storage_pools(info):
+    parsed    = {}
+    section   = None
+    pool_name = None
+    tier_name = None
+    for line in info:
+        line = map(lambda x: x.strip(), line)
+
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            section = line[0][3:-3]
+
+        elif (section == "storage_pools" and line[0] == "Pool Name") or \
+             (section == "auto_tiering"  and line[0] == "Storage Pool Name"):
+            pool_name = line[1]
+            parsed.setdefault(pool_name, {})
+
+        elif pool_name is not None and len(line) == 2:
+            if line[0] == "Tier Name":
+                tier_name = line[1]
+                parsed[pool_name].setdefault("tier_names", [])
+                parsed[pool_name]["tier_names"].append(tier_name)
+
+            elif line[0] == "Disks (Type)":
+                tier_name = None
+
+            elif tier_name is not None:
+                parsed[pool_name].setdefault("%s_%s" % (tier_name, line[0]), line[1])
+
+            else:
+                parsed[pool_name].setdefault(line[0], line[1])
+
+    return parsed
+
+
+def inventory_emcvnx_storage_pools(parsed):
+    for pool_name in parsed:
+        yield pool_name, {}
+
+
+#   .--general-------------------------------------------------------------.
+#   |                                                  _                   |
+#   |                   __ _  ___ _ __   ___ _ __ __ _| |                  |
+#   |                  / _` |/ _ \ '_ \ / _ \ '__/ _` | |                  |
+#   |                 | (_| |  __/ | | |  __/ | | (_| | |                  |
+#   |                  \__, |\___|_| |_|\___|_|  \__,_|_|                  |
+#   |                  |___/                                               |
+#   '----------------------------------------------------------------------'
+
+
+# Suggested by customer
+factory_settings["emcvnx_storage_pools_default_levels"] = {
+    "percent_full" : (70.0, 90.0)
+}
+
+
+def check_emcvnx_storage_pools(item, params, parsed):
+    # Better readable names in web GUI of device:
+    # "User Capacity (GBs)"             : "Physical Capacity: Total",
+    # "Consumed Capacity (GBs)"         : "Physical Capacity: Total Allocation",
+    # "Available Capacity (GBs)"        : "Physical Capacity: Free",
+    # "Percent Full"                    : "Physical Capacity: Percent Full",
+    # "Percent Subscribed"              : "Virtual Capacity: Percent Subscribed",
+    # "Oversubscribed by (GBs)"         : "Virtual Capacity: Oversubscribed by",
+    # "Total Subscribed Capacity (GBs)" : "Virtual Capacity: Total Subscription",
+
+    if item in parsed:
+        data                      = parsed[item]
+        state                     = data["State"]
+        status                    = data["Status"]
+        user_capacity             = float(data["User Capacity (GBs)"]) * 1024**3
+        consumed_capacity         = float(data["Consumed Capacity (GBs)"]) * 1024**3
+        avail_capacity            = float(data["Available Capacity (GBs)"]) * 1024**3
+        percent_full              = float(data["Percent Full"])
+        percent_subscribed        = float(data["Percent Subscribed"])
+        over_subscribed           = float(data["Oversubscribed by (GBs)"]) * 1024**3
+        total_subscribed_capacity = float(data["Total Subscribed Capacity (GBs)"]) * 1024**3
+
+        yield 0, ("State: %s, Status: %s, [Phys. capacity] User capacity: %s, " +\
+             "Consumed capacity: %s, Available capacity: %s") %\
+            (state, status, get_bytes_human_readable(user_capacity),
+             get_bytes_human_readable(consumed_capacity),
+             get_bytes_human_readable(avail_capacity))
+
+        state    = 0
+        infotext = "Percent full: %s" % get_percent_human_readable(percent_full)
+        if "percent_full" in params:
+            perc_full_warn, perc_full_crit = params["percent_full"]
+            if percent_full >= perc_full_crit:
+                state = 2
+            elif percent_full >= perc_full_warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %s/%s)" % \
+                            (get_bytes_human_readable(perc_full_warn),
+                             get_bytes_human_readable(perc_full_crit))
+
+        yield state, infotext
+        yield 0, ("[Virt. capacity] Percent subscribed: %s, Oversubscribed by: %s, " +\
+             "Total subscribed capacity: %s") %\
+            (get_percent_human_readable(percent_subscribed),
+             get_bytes_human_readable(over_subscribed),
+             get_bytes_human_readable(total_subscribed_capacity)), [
+            ("emcvnx_consumed_capacity",         consumed_capacity),
+            ("emcvnx_avail_capacity",            avail_capacity),
+            ("emcvnx_perc_full",                 percent_full),
+            ("emcvnx_perc_subscribed",           percent_subscribed),
+            ("emcvnx_over_subscribed",           over_subscribed),
+            ("emcvnx_total_subscribed_capacity", total_subscribed_capacity),
+        ]
+
+
+check_info['emcvnx_storage_pools'] = {
+    'parse_function'            : parse_emcvnx_storage_pools,
+    'inventory_function'        : inventory_emcvnx_storage_pools,
+    'check_function'            : check_emcvnx_storage_pools,
+    'service_description'       : 'Pool %s General',
+    'group'                     : 'emcvnx_storage_pools',
+    'has_perfdata'              : True,
+    'default_levels_variable'   : 'emcvnx_storage_pools_default_levels',
+}
+
+#.
+#   .--tiering-------------------------------------------------------------.
+#   |                  _                  _                                |
+#   |                 | |_ ___  __ _ _ __(_)_ __   __ _                    |
+#   |                 | __/ _ \/ _` | '__| | '_ \ / _` |                   |
+#   |                 | ||  __/ (_| | |  | | | | | (_| |                   |
+#   |                  \__\___|\__,_|_|  |_|_| |_|\__, |                   |
+#   |                                             |___/                    |
+#   '----------------------------------------------------------------------'
+
+
+# Suggested by customer
+factory_settings['emcvnx_storage_pools_tiering_default_levels'] = {
+    "time_to_complete" : (21*60*60*24, 28*60*60*24),
+}
+
+
+def parse_emcvnx_time_to_complete(time_to_complete):
+    map_units = {
+        "day"    : 24*60*60,
+        "hour"   : 60*60,
+        "minute" : 60,
+    }
+    # 11 days, 17 hours, 24 minutes
+    # 17 hours, 24 minutes
+    # 1 hour, 43 minutes
+    # ...
+    try:
+        seconds = 0
+        for value, unit in map(lambda x: x.strip().split(), time_to_complete.split(",")):
+            if unit.endswith("s"):
+                unit = unit[:-1]
+            seconds += int(value) * map_units[unit]
+        return seconds
+    except:
+        return
+
+
+def inventory_emcvnx_storage_pools_tiering(parsed):
+    for pool_name, data in parsed.items():
+        yield pool_name, {}
+
+
+def check_emcvnx_storage_pools_tiering(item, params, parsed):
+    if item in parsed:
+        data              = parsed[item]
+        fast_cache        = data["FAST Cache"]
+        relocation_status = data["Relocation Status"]
+        relocation_rate   = data["Relocation Rate"]
+        move_up           = float(data["Data to Move Up (GBs)"]) * 1024**3
+        move_down         = float(data["Data to Move Down (GBs)"]) * 1024**3
+        move_within       = float(data["Data to Move Within Tiers (GBs)"]) * 1024**3
+        move_completed    = float(data["Data Movement Completed (GBs)"]) * 1024**3
+        time_to_complete  = data["Estimated Time to Complete"]
+        age               = parse_emcvnx_time_to_complete(time_to_complete)
+
+        infotext = ("Fast cache: %s, Relocation status: %s, Relocation rate: %s, " +\
+                    "Move up: %s, Move down: %s, Move within: %s, " +\
+                    "Movement completed: %s") %\
+                   (fast_cache, relocation_status, relocation_rate,
+                    get_bytes_human_readable(move_up),
+                    get_bytes_human_readable(move_down),
+                    get_bytes_human_readable(move_within),
+                    get_bytes_human_readable(move_completed))
+
+        yield 0, infotext, [
+            ("emcvnx_move_up",        move_up),
+            ("emcvnx_move_down",      move_down),
+            ("emcvnx_move_within",    move_within),
+            ("emcvnx_move_completed", move_completed),
+        ]
+
+        if age is not None:
+            infotext   = "Estimated time to complete: %s" % time_to_complete
+            warn, crit = params["time_to_complete"]
+            state      = 0
+            if age > crit:
+                state = 2
+            elif age > warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %s/%s)" % (
+                            get_age_human_readable(warn),
+                            get_age_human_readable(crit))
+            yield state, infotext, [("emcvnx_time_to_complete", age)]
+
+
+check_info['emcvnx_storage_pools.tiering'] = {
+    'inventory_function'        : inventory_emcvnx_storage_pools_tiering,
+    'check_function'            : check_emcvnx_storage_pools_tiering,
+    'service_description'       : 'Pool %s Tiering Status',
+    'has_perfdata'              : True,
+    'group'                     : 'emcvnx_storage_pools_tiering',
+    'default_levels_variable'   : 'emcvnx_storage_pools_tiering_default_levels',
+}
+
+
+def inventory_emcvnx_storage_pools_tieringtypes(parsed):
+    for pool_name, data in parsed.items():
+        for tier_name in data.get("tier_names", []):
+            yield "%s %s" % (pool_name, tier_name), {}
+
+
+def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
+    for pool_name, data in parsed.items():
+        for tier_name in data.get("tier_names", []):
+            if item == "%s %s" % (pool_name, tier_name):
+                user_capacity      = float(data["%s_User Capacity (GBs)" % tier_name]) * 1024**3
+                consumed_capacity  = float(data["%s_Consumed Capacity (GBs)" % tier_name]) * 1024**3
+                avail_capacity     = float(data["%s_Available Capacity (GBs)" % tier_name]) * 1024**3
+                percent_subscribed = float(data["%s_Percent Subscribed" % tier_name].replace("%", ""))
+                targeted_higher    = float(data["%s_Data Targeted for Higher Tier (GBs)" % tier_name]) * 1024**3
+                targeted_lower     = float(data["%s_Data Targeted for Lower Tier (GBs)" % tier_name]) * 1024**3
+                targeted_within    = float(data["%s_Data Targeted Within Tier (GBs)" % tier_name]) * 1024**3
+
+                infotext = ("User capacity: %s, Consumed capacity: %s, Available capacity: %s, " +\
+                            "Percent subscribed: %s, Move up: %s, Move down: %s, Move within: %s") %\
+                           (get_bytes_human_readable(user_capacity),
+                            get_bytes_human_readable(consumed_capacity),
+                            get_bytes_human_readable(avail_capacity),
+                            get_percent_human_readable(percent_subscribed),
+                            get_bytes_human_readable(targeted_higher),
+                            get_bytes_human_readable(targeted_lower),
+                            get_bytes_human_readable(targeted_within))
+
+                return 0, infotext, [
+                    ("emcvnx_consumed_capacity", consumed_capacity),
+                    ("emcvnx_avail_capacity",    avail_capacity),
+                    ("emcvnx_perc_subscribed",   percent_subscribed),
+                    ("emcvnx_targeted_higher",   targeted_higher),
+                    ("emcvnx_targeted_lower",    targeted_lower),
+                    ("emcvnx_targeted_within",   targeted_within),
+                ]
+
+
+check_info['emcvnx_storage_pools.tieringtypes'] = {
+    'inventory_function'    : inventory_emcvnx_storage_pools_tieringtypes,
+    'check_function'        : check_emcvnx_storage_pools_tieringtypes,
+    'service_description'   : 'Pool %s tiering',
+    'has_perfdata'          : True,
+}
+
+#.
+#   .--deduplication-------------------------------------------------------.
+#   |        _          _             _ _           _   _                  |
+#   |     __| | ___  __| |_   _ _ __ | (_) ___ __ _| |_(_) ___  _ __       |
+#   |    / _` |/ _ \/ _` | | | | '_ \| | |/ __/ _` | __| |/ _ \| '_ \      |
+#   |   | (_| |  __/ (_| | |_| | |_) | | | (_| (_| | |_| | (_) | | | |     |
+#   |    \__,_|\___|\__,_|\__,_| .__/|_|_|\___\__,_|\__|_|\___/|_| |_|     |
+#   |                          |_|                                         |
+#   '----------------------------------------------------------------------'
+
+
+def check_emcvnx_storage_pools_deduplication(item, params, parsed):
+    if item in parsed:
+        data              = parsed[item]
+        state             = data["Deduplication State"]
+        status            = data["Deduplication Status"].split("(")[0]
+        rate              = data["Deduplication Rate"]
+        savings           = float(data["Efficiency Savings (GBs)"]) * 1024**3
+        percent_completed = float(data["Deduplication Percent Completed"])
+        remaining_size    = float(data["Deduplication Remaining Size (GBs)"]) * 1024**3
+        shared_capacity   = float(data["Deduplication Shared Capacity (GBs)"]) * 1024**3
+
+        infotext = ("State: %s, Status: %s, Rate: %s, Efficiency savings: %s, " +\
+                    "Percent completed: %s, Remaining size: %s, Shared capacity: %s") % \
+                   (state, status, rate, get_bytes_human_readable(savings),
+                    get_percent_human_readable(percent_completed),
+                    get_bytes_human_readable(remaining_size),
+                    get_bytes_human_readable(shared_capacity))
+
+        return 0, infotext, [
+            ("emcvnx_dedupl_perc_completed",     percent_completed),
+            ("emcvnx_dedupl_remaining_size",     remaining_size),
+            ("emcvnx_dedupl_efficiency_savings", savings),
+            ("emcvnx_dedupl_shared_capacity",    shared_capacity),
+        ]
+
+
+check_info['emcvnx_storage_pools.deduplication'] = {
+    'inventory_function'    : inventory_emcvnx_storage_pools,
+    'check_function'        : check_emcvnx_storage_pools_deduplication,
+    'service_description'   : 'Pool %s Deduplication',
+    'has_perfdata'          : True,
+}

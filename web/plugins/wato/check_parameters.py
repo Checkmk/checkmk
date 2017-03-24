@@ -1680,8 +1680,45 @@ register_check_parameters(
     match_type = "dict",
 )
 
+websphere_mq_common_elements = [
+    ("message_count",
+        OptionalDropdownChoice(
+            title      = _('Maximum number of messages'),
+            choices    = [ (None, _("Ignore these levels")) ],
+            otherlabel = _("Set absolute levels"),
+            explicit   = \
+                Tuple(
+                    title = _('Maximum number of messages'),
+                    elements = [
+                        Integer(title = _("Warning at")),
+                        Integer(title = _("Critical at")),
+                    ]
+                ),
+            default_value = (1000, 1200)
+        )
+    ),
+    ("status",
+     Dictionary(
+         title = _('Override check state based on channel state (only for channels)'),
+         elements = [
+             ("STOPPED",  MonitoringState(
+                 title = _("State when channel is stopped"),
+                 default_value = 1)),
+             ("RETRYING", MonitoringState(
+                 title = _("State when channel is retrying"),
+                 default_value = 2)),
+             ("RUNNING",  MonitoringState(
+                 title = _("State when channel is running"),
+                 default_value = 0)),
+             ("other",    MonitoringState(
+                 title = _("State when channel status is unknown"),
+                 default_value = 2)),
+         ],
+         optional_keys = []
+    )),
+]
 
-def transform_websphere_mq(source):
+def transform_websphere_mq_queues(source):
     if isinstance(source, tuple):
         return {"message_count": source}
 
@@ -1695,33 +1732,16 @@ def transform_websphere_mq(source):
     else:
         return source
 
-
 register_check_parameters(
     subgroup_applications,
     "websphere_mq",
-    _("Websphere Message Queues"),
+    _("Websphere MQ"),
     Transform(
         Dictionary(
             elements = [
-                ("message_count",
-                    OptionalDropdownChoice(
-                        title      = _('Maximum number of messages'),
-                        choices    = [ (None, _("Ignore these levels")) ],
-                        otherlabel = _("Set absolute levels"),
-                        explicit   = \
-                            Tuple(
-                                title = _('Maximum number of messages'),
-                                elements = [
-                                    Integer(title = _("Warning at")),
-                                    Integer(title = _("Critical at")),
-                                ]
-                            ),
-                        default_value = (1000, 1200)
-                    )
-                ),
                 ("message_count_perc",
                     OptionalDropdownChoice(
-                        title      = _('Percentage of Queue Length'),
+                        title      = _('Percentage of queue length'),
                         help       = _('This setting only applies if the WebSphere MQ reports the queue length'),
                         choices    = [ (None, _("Ignore these levels")) ],
                         otherlabel = _("Set relative levels"),
@@ -1735,26 +1755,8 @@ register_check_parameters(
                             ),
                         default_value = (80.0, 90.0)
                     )
-                ),
-                ("status",
-                 Dictionary(
-                     title = _('Override check state based on channel state (only for channels)'),
-                     elements = [
-                         ("STOPPED",  MonitoringState(
-                             title = _("State when channel is stopped"),
-                             default_value = 1)),
-                         ("RETRYING", MonitoringState(
-                             title = _("State when channel is retrying"),
-                             default_value = 2)),
-                         ("RUNNING",  MonitoringState(
-                             title = _("State when channel is running"),
-                             default_value = 0)),
-                         ("other",    MonitoringState(
-                             title = _("State when channel status is unknown"),
-                             default_value = 2)),
-                     ],
-                     optional_keys = []
-                 )),
+                ), ] + \
+                websphere_mq_common_elements + [
                 ("messages_not_processed",
                     Dictionary(
                         title = _("Settings for messages not processed"),
@@ -1783,9 +1785,20 @@ register_check_parameters(
                 ),
             ],
         ),
-        forth = transform_websphere_mq
+        forth = transform_websphere_mq_queues
     ),
-    TextAscii(title = _("Name of Channel or Queue")),
+    TextAscii(title = _("Name of channel or queue")),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "websphere_mq_channels",
+    _("Websphere MQ Channels"),
+    Dictionary(
+        elements = websphere_mq_common_elements
+    ),
+    TextAscii(title = _("Name of channel")),
     match_type = "dict",
 )
 

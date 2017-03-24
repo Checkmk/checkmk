@@ -1,0 +1,13 @@
+Title: websphere_mq_channels: Now has its own WATO ruleset
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1490358517
+Class: feature
+
+In order to separate Websphere MQ queues from channels, above
+check plugin got its own WATO ruleset. This means that all
+rules that have been configured for the {{MQ Channels}} services
+have to be migrated to the new ruleset {{Websphere MQ Channels}}.

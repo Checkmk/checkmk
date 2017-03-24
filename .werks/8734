@@ -1,0 +1,10 @@
+Title: cmk_update_agent: Fixed encoding error if certificate contains non-ascii characters
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.2.8p19
+Date: 1490341441
+Class: fix
+
+

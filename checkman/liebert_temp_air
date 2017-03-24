@@ -1,0 +1,16 @@
+title: Liebert: Ait Temperatur
+agents: snmp
+catalog: hw/environment/emerson
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the temperatur of supply and return air flow. The thresholds can be configured by the regular temperatur ruleset. The service will always be {OK} if the device is in standy mode.
+
+item:
+
+ The item will be the data label of the OID
+
+inventory:
+
+ One service for each item will be disovered

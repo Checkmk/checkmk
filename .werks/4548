@@ -1,0 +1,31 @@
+Title: Added new checks for liebert devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1490372915
+Class: feature
+
+Including Checks for temperatures, fans, humidity, system events, pressure,
+fluids, etc. Please the manpage of the checkplugins for details.
+
+Checkplugins added in this werk:
+
+liebert_chilled_water
+liebert_cooling_position
+liebert_fans_condenser
+liebert_maintenance
+liebert_system
+liebert_temp_fluid
+liebert_compressor
+liebert_cooling_status
+liebert_humidity_air
+liebert_pump
+liebert_system_events
+liebert_temp_general
+liebert_cooling
+liebert_fans
+liebert.include
+liebert_reheating
+liebert_temp_air

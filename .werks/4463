@@ -1,0 +1,11 @@
+Title: f5_bigip_cluster_status: fixed invalid evaluation of node states when this check runs on a cluster
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0b5
+Date: 1490351215
+
+

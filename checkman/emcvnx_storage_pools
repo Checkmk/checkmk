@@ -1,0 +1,16 @@
+title: EMC VNX Storage: Storage pools
+agents: emc
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ This check reports pool states, physical capacity and virtual capacity
+ on EMC VNX storage systems.
+
+ Levels for full percent can be set. Default levels are 70/80%.
+
+item:
+ Pool name
+
+inventory:
+ Creates one service per pool.

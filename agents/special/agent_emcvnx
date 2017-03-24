@@ -103,14 +103,17 @@ mortypes       = [ 'all' ]
 fetch_agent_info = False
 
 naviseccli_options = {
-    "disks"       : {"cmd_option" : "getall -disk",     "active" : False, "sep" : None},
-    "hba"         : {"cmd_option" : "getall -hba",      "active" : False, "sep" : None},
-    "hwstatus"    : {"cmd_option" : "getall -array",    "active" : False, "sep" : None},
-    "raidgroups"  : {"cmd_option" : "getall -rg",       "active" : False, "sep" : None},
-#   "agent-info"  : {"cmd_option" : "-sp",              "active" : False, "sep" : None},
-    "sp_util"     : {"cmd_option" : "getcontrol -cbt",  "active" : False, "sep" : 58},
-    "writecache"  : {"cmd_option" : "getcache -wst",    "active" : False, "sep" : None},
-    "mirrorview"  : {"cmd_option" : "mirrorview -list", "active" : False, "sep" : 58},
+    "disks"         : {"cmd_options" : [(None, "getall -disk")],      "active" : False, "sep" : None},
+    "hba"           : {"cmd_options" : [(None, "getall -hba")],       "active" : False, "sep" : None},
+    "hwstatus"      : {"cmd_options" : [(None, "getall -array")],     "active" : False, "sep" : None},
+    "raidgroups"    : {"cmd_options" : [(None, "getall -rg")],        "active" : False, "sep" : None},
+#   "agent-info"    : {"cmd_options" : [(None, "-sp")],               "active" : False, "sep" : None},
+    "sp_util"       : {"cmd_options" : [(None, "getcontrol -cbt")],   "active" : False, "sep" : 58},
+    "writecache"    : {"cmd_options" : [(None, "getcache -wst")],     "active" : False, "sep" : None},
+    "mirrorview"    : {"cmd_options" : [(None, "mirrorview -list")],  "active" : False, "sep" : 58},
+    "storage_pools" : {"cmd_options" : [("storage_pools", "storagepool -list -all"),
+                                        ("auto_tiering",  "autoTiering -info -opStatus -loadBalance")],
+                                                                      "active" : False, "sep" : 58},
 }
 
 for o,a in opts:
@@ -141,18 +144,17 @@ else:
     sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
 
-for module in naviseccli_options.keys():
-
+for module, module_options in naviseccli_options.items():
     try:
         if mortypes.index("all") >= 0:
-            naviseccli_options[module]["active"] = True
+            module_options["active"] = True
             fetch_agent_info = True
     except ValueError:
         pass
 
     try:
         if mortypes.index(module) >= 0:
-            naviseccli_options[module]["active"] = True
+            module_options["active"] = True
     except ValueError:
         pass
 
@@ -225,18 +227,22 @@ if fetch_agent_info:
 #
 # all other sections of agent output
 #
-for module in naviseccli_options.keys():
-    if naviseccli_options[module]["active"] == True:
-        separator = naviseccli_options[module]["sep"]
+for module, module_options in naviseccli_options.items():
+    if module_options["active"] == True:
+        separator = module_options["sep"]
         if separator:
             print "<<<emcvnx_%s:sep(%s)>>>" % (module, separator)
         else:
             print "<<<emcvnx_%s>>>" % module
-        cmd=basecmd + naviseccli_options[module]["cmd_option"]
-        if opt_debug:
-            sys.stderr.write("executing external command: %s\n" % cmd)
-        for line in os.popen(cmd).readlines():
-            print line,
+
+        for header, cmd_option in module_options["cmd_options"]:
+            if header is not None:
+                print "[[[%s]]]" % header
+            cmd = basecmd + cmd_option
+            if opt_debug:
+                sys.stderr.write("executing external command: %s\n" % cmd)
+            for line in os.popen(cmd).readlines():
+                print line,
 
 
 #############################################################################

@@ -1,0 +1,17 @@
+title: EMC VNX Storage: Storage pools deduplication
+agents: emc
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ The check reports deduplication states, efficieny savings,
+ deduplication percent completed, remaining size and shared
+ capacity of pools on EMC VNX storage systems.
+
+ The check is always OK.
+
+item:
+ Pool name
+
+inventory:
+ Creates one service per pool.

@@ -1,4 +1,4 @@
-Title: Fixed raise condition when mulitple Check_MK helpers updated the ipaddresses.cache file
+Title: Fixed race condition when mulitple Check_MK helpers updated the ipaddresses.cache file
 Level: 1
 Component: checks
 Compatible: compat
@@ -9,6 +9,6 @@ Class: fix
 
 Check helpers now lock the ipaddresses.cache file when they want to update an ip address.
 The locked file is read, updated with the new content and written afterwards.
-The raise condition happened when multiple check helpers tried to update the file
+The race condition happened when multiple check helpers tried to update the file
 at the same time, hereby removing some recently looked up ip addresses.
 

@@ -1,0 +1,14 @@
+Title: liveproxyd: fixed needless connection timeouts (site dead) when changing the site configuration
+Level: 1
+Component: liveproxy
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1490457827
+Class: fix
+
+Upon startup, the liveproxyd waited one heartbeat interval before making any attempts
+to contact the remote sites. This has been fixed. Changes in the distributed monitoring
+configuration should no longer result in longer fake "site dead" messages.
+
+Note: This also improves the stability of BI aggregation checks which rely on a stable connection to the remote sites.

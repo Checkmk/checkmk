@@ -1,0 +1,11 @@
+Title: RRD Helper Process: No longer uses default RRD templates after a core reload
+Level: 2
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1490447132
+Class: fix
+
+The rrd helper lost its entire configuration on a core reload. As a result, new rrds for host and services
+used the default rrd configuration and not any configurations specified in the corresponding WATO rules.

@@ -2268,7 +2268,8 @@ def initialize_ip_lookup_cache():
     ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
 
     try:
-        ip_lookup_cache.update(eval(file(cmk.paths.var_dir + '/ipaddresses.cache').read()))
+        data_from_file = cmk.store.load_data_from_file(cmk.paths.var_dir + '/ipaddresses.cache', {})
+        ip_lookup_cache.update(data_from_file)
 
         # be compatible to old caches which were created by Check_MK without IPv6 support
         if ip_lookup_cache and type(ip_lookup_cache.keys()[0]) != tuple:
@@ -2286,10 +2287,18 @@ def initialize_ip_lookup_cache():
 def write_ip_lookup_cache():
     ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
 
-    # TODO: Write using cmk.store
-    suffix = "." + str(os.getpid())
-    file(cmk.paths.var_dir + '/ipaddresses.cache' + suffix, 'w').write(repr(ip_lookup_cache))
-    os.rename(cmk.paths.var_dir + '/ipaddresses.cache' + suffix, cmk.paths.var_dir + '/ipaddresses.cache')
+
+    cache_path = cmk.paths.var_dir + '/ipaddresses.cache'
+    # Read already known data
+    data_from_file = cmk.store.load_data_from_file(cache_path,
+                                                   default={},
+                                                   lock=True)
+    ip_lookup_cache.update(data_from_file)
+    # The lock from the previous call is released in the following function
+    # (I don't like this)
+    # TODO: this file always grows... there should be a cleanup mechanism
+    #       maybe on "cmk --update-dns-cache"
+    cmk.store.save_data_to_file(cache_path, ip_lookup_cache)
 
 
 def do_update_dns_cache():

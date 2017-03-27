@@ -91,7 +91,10 @@ def parse_smart_normalized_values(info):
             field = line[4]
             if field != "Unknown_Attribute":
                 value = int(line[6])
-                threshold = int(line[8])
+                if isinstance(line[8], int):
+                    threshold = int(line[8])
+                else:
+                    threshold = None
                 disk[field] = value, threshold
     return disks
 

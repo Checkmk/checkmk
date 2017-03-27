@@ -234,7 +234,7 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
 
     # size
     if "size" in parsed.keys():
-        size_bytes    = parsed["size"] * 1024.0 * 1024.0
+        size_bytes    = parsed["size"]
         size_readable = get_bytes_human_readable(size_bytes)
         yield 0, "Cache size: %s" % size_readable, \
               [("size", size_bytes, '', '', 0)]
@@ -246,9 +246,9 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
        "arc_meta_max" in parsed.keys():
         yield 0, "Arc Meta %d MB used, Limit %d MB, Max %d MB"  % \
               (parsed["arc_meta_used"], parsed["arc_meta_limit"], parsed["arc_meta_max"]), \
-              [("arc_meta_used",  parsed["arc_meta_used"] * 1024 * 1024, '', '', 0),
-               ("arc_meta_limit", parsed["arc_meta_limit"] * 1024 * 1024, '', '', 0),
-               ("arc_meta_max",   parsed["arc_meta_max"] * 1024 * 1024, '', '', 0)]
+              [("arc_meta_used",  parsed["arc_meta_used"], '', '', 0),
+               ("arc_meta_limit", parsed["arc_meta_limit"], '', '', 0),
+               ("arc_meta_max",   parsed["arc_meta_max"], '', '', 0)]
 
 
 check_info["zfs_arc_cache"] = {

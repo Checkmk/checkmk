@@ -1,0 +1,10 @@
+Title: zfs_arc_cache: Fixed metrics in html5 graphing
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1490624706
+Class: fix
+
+

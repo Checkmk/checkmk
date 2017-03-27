@@ -4549,10 +4549,10 @@ check_metrics["check_mk-docsis_channels_downstream"] = {
 
 check_metrics["check_mk-zfs_arc_cache"]  = {
     "hit_ratio"     : { "name": "cache_hit_ratio", },
-    "size"          : { "name": "caches", "scale" : MB },
-    "arc_meta_used" : { "name": "zfs_metadata_used", "scale" : MB },
-    "arc_meta_limit": { "name": "zfs_metadata_limit", "scale" : MB },
-    "arc_meta_max"  : { "name": "zfs_metadata_max", "scale" : MB },
+    "size"          : { "name": "caches", },
+    "arc_meta_used" : { "name": "zfs_metadata_used",},
+    "arc_meta_limit": { "name": "zfs_metadata_limit", },
+    "arc_meta_max"  : { "name": "zfs_metadata_max",},
 }
 
 check_metrics["check_mk-zfs_arc_cache.l2"] = {

@@ -1,0 +1,11 @@
+Title: smart: the services do not crash anymore if a threshold is not provided
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b5
+Date: 1490622387
+
+

@@ -1,6 +1,7 @@
 1.2.8p20:
     Checks & Agents:
     * 4528 FIX: datapower_mem, hp_procurve_mem, ucd_mem: Improved graph readability...
+    * 8627 FIX: apt: Fix Ubuntu "NOTE: This is only a simulation!" warning being output in check...
 
 
 1.2.8p19:

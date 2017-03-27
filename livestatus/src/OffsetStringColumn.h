@@ -39,7 +39,7 @@ public:
         , _offset(offset) {}
     std::string getValue(void* data) const override;
 
-protected:
+private:
     const int _offset;
 };
 

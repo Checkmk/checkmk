@@ -1,5 +1,6 @@
 1.2.8p21:
     Checks & Agents:
+    * 4549 FIX: citrix_licenses: Fixed always ok state even if all licenses are used...
     * 8629 FIX: win_printers: Fix broken default parameters
 
 

@@ -11,3 +11,5 @@ Date: 1490619155
 Previously, the discovery would only work, when the device listed
 some alerts, but not in the (hopefully more common) case that the
 list of alerts was empty. This has been fixed.
+
+Thanks to Andreas Döhler for the patch!

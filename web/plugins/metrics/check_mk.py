@@ -3573,9 +3573,17 @@ check_metrics["check_mk-ibm_svc_nodestats.diskio"] = {
     "write" : { "name" : "disk_write_throughput" }
 }
 
-check_metrics["check_mk-netscaler_mem"] = {
-    "mem"  : { "name" : "mem_used" }
+check_metrics["check_mk-hp_procurve_mem"] = {
+    "memory_used" : { "name" : "mem_used" }
 }
+
+memory_simple_translation = {
+    "memory_used" : { "name" : "mem_used" }
+}
+
+check_metrics["check_mk-datapower_mem"] = memory_simple_translation
+check_metrics["check_mk-ucd_mem"]       = memory_simple_translation
+check_metrics["check_mk-netscaler_mem"] = memory_simple_translation
 
 ram_used_swap_translation = {
     "ramused"  : { "name" : "mem_used",  "scale" : MB },

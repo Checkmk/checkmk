@@ -1,0 +1,9 @@
+Title: datapower_mem, hp_procurve_mem, ucd_mem: Improved graph readability
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p20
+Date: 1490601892
+Class: fix
+
+Previously scientific notation was used.

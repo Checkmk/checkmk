@@ -385,7 +385,8 @@ class TestCrawler(object):
         os.rename(self.report_file()+".tmp", self.report_file())
 
         # Save the web.log for later diagnose
-        shutil.copyfile(self.site.read_file("var/log/web.log"), self.web_log_file())
+        if self.site.file_exists("var/log/web.log"):
+            shutil.copyfile(self.site.read_file("var/log/web.log"), self.web_log_file())
 
         if self.errors:
             pytest.fail("Crawled %d URLs in %d seconds. Failures:\n%s" %

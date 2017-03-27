@@ -7944,18 +7944,6 @@ register_check_parameters(
     "dict",
 )
 
-def transform_printer_supply(l):
-    if type(l) == tuple:
-        if len(l) == 2:
-            return { "levels" : l }
-        else:
-            return {
-                "levels" : l[:2],
-                "upturn_toner" : l[2],
-            }
-    else:
-        return l
-
 register_check_parameters(
     subgroup_printing,
     "printer_supply",

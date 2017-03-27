@@ -1,9 +1,9 @@
 Title: SSH private key of linux remote handler visible in agent package
 Component: agents
-State: open
+Class: bug
+State: done
 Date: 2017-02-14 15:05:49
 Targetversion: 1.4.0
-Class: bug
 
 The private SSH key for remote login and execution of remote alert handlers
 is part of the agent configuration because it is done in an agent bakery
@@ -17,3 +17,6 @@ a) Try to remove just that key from the visiable agent configuration (hack)
 b) Remove the information about the configuration totally
 c) Use the valuespec totext() for the information rather than repr() (if
    possible)
+
+2017-03-27 13:59:50: changed state open -> done
+Has been fixed by removing the config from the description of the deb packages

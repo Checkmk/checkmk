@@ -7943,6 +7943,202 @@ register_check_parameters(
     ),
     "dict",
 )
+
+def transform_printer_supply(l):
+    if type(l) == tuple:
+        if len(l) == 2:
+            return { "levels" : l }
+        else:
+            return {
+                "levels" : l[:2],
+                "upturn_toner" : l[2],
+            }
+    else:
+        return l
+
+register_check_parameters(
+    subgroup_printing,
+    "printer_supply",
+    _("Printer cartridge levels"),
+    Transform(
+        Dictionary(
+            elements = [
+                ( "levels",
+                    Tuple(
+                        title = _("Levels for remaining supply"),
+                        elements = [
+                            Percentage(
+                                title = _("Warning level for remaining"),
+                                allow_int = True,
+                                default_value = 20.0,
+                                help = _("For consumable supplies, this is configured as the percentage of "
+                                         "remaining capacity. For supplies that fill up, this is configured "
+                                         "as remaining space."),
+                            ),
+                            Percentage(
+                                title = _("Critical level for remaining"),
+                                allow_int = True,
+                                default_value = 10.0,
+                                help = _("For consumable supplies, this is configured as the percentage of "
+                                         "remaining capacity. For supplies that fill up, this is configured "
+                                         "as remaining space."),
+                            ),
+                        ]
+                )),
+                ( "some_remaining",
+                   MonitoringState(
+                    title = _("State for <i>some remaining</i>"),
+                    help = _("Some printers do not report a precise percentage but "
+                             "just <i>some remaining</i> at a low fill state. Here you "
+                             "can set the monitoring state for that situation"),
+                    default_value = 1,
+                )),
+                ( "upturn_toner",
+                    Checkbox(
+                        title = _("Upturn toner levels"),
+                        label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
+                        help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                                  " fuel instead of what is left. In this case it's possible"
+                                  " to upturn the levels to handle this behavior"),
+                )),
+            ]
+        ),
+        forth = transform_printer_supply,
+    ),
+    TextAscii(
+        title = _("cartridge specification"),
+        allow_empty = True
+    ),
+    match_type = "first",
+)
+
+def windows_printer_queues_forth(old):
+    default = {
+        "warn_states"   : [ 8, 11 ],
+        "crit_states"   : [ 9, 10 ],
+      }
+    if type(old) == tuple:
+        default['levels'] = old
+    if type(old) == dict:
+        return old
+    return default
+
+register_check_parameters(
+    subgroup_printing,
+    "windows_printer_queues",
+    _("Number of open jobs of a printer on windows" ),
+    Transform(
+        Dictionary(
+            title = _("Windows Printer Configuration"),
+            elements = [
+                ( "levels",
+                    Tuple(
+                        title = _("Levels for the number of print jobs"),
+                        help = _("This rule is applied to the number of print jobs "
+                                 "currently waiting in windows printer queue."),
+                        elements = [
+                            Integer(title = _("Warning at"), unit = _("jobs"), default_value = 40),
+                            Integer(title = _("Critical at"), unit = _("jobs"), default_value = 60),
+                        ]
+                    ),
+                ),
+                ("crit_states",
+                    ListChoice(
+                        title = _("States who should lead to critical"),
+                        choices = [
+                            ( 0,  "Unkown"),
+                            ( 1,  "Other"),
+                            ( 2,  "No Error"),
+                            ( 3,  "Low Paper"),
+                            ( 4,  "No Paper"),
+                            ( 5,  "Low Toner"),
+                            ( 6,  "No Toner"),
+                            ( 7,  "Door Open"),
+                            ( 8,  "Jammed"),
+                            ( 9,  "Offline"),
+                            ( 10, "Service Requested"),
+                            ( 11, "Output Bin Full"),
+                            ],
+                        default_value = [9, 10],
+                        )
+                 ),
+                ("warn_states",
+                    ListChoice(
+                        title = _("States who should lead to warning"),
+                        choices = [
+                            ( 0,  "Unkown"),
+                            ( 1,  "Other"),
+                            ( 2,  "No Error"),
+                            ( 3,  "Low Paper"),
+                            ( 4,  "No Paper"),
+                            ( 5,  "Low Toner"),
+                            ( 6,  "No Toner"),
+                            ( 7,  "Door Open"),
+                            ( 8,  "Jammed"),
+                            ( 9,  "Offline"),
+                            ( 10, "Service Requested"),
+                            ( 11, "Output Bin Full"),
+                            ],
+                        default_value = [8, 11],
+                        )
+                 ),
+                ]
+        ),
+        forth = windows_printer_queues_forth,
+    ),
+    TextAscii(
+        title = _("Printer Name"),
+        allow_empty = True
+    ),
+    match_type = "first",
+)
+
+register_check_parameters(
+    subgroup_printing,
+    "printer_input",
+    _("Printer Input Units"),
+    Dictionary(
+        elements =  [
+            ('capacity_levels', Tuple(
+                title = _('Capacity remaining'),
+                elements = [
+                    Percentage(title = _("Warning at"), default_value = 0.0),
+                    Percentage(title = _("Critical at"), default_value = 0.0),
+                ],
+            )),
+        ],
+        default_keys = ['capacity_levels'],
+    ),
+    TextAscii(
+        title = _('Unit Name'),
+        allow_empty = True
+    ),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_printing,
+    "printer_output",
+    _("Printer Output Units"),
+    Dictionary(
+        elements =  [
+            ('capacity_levels', Tuple(
+                title = _('Capacity filled'),
+                elements = [
+                    Percentage(title = _("Warning at"), default_value = 0.0),
+                    Percentage(title = _("Critical at"), default_value = 0.0),
+                ],
+            )),
+        ],
+        default_keys = ['capacity_levels'],
+    ),
+    TextAscii(
+        title = _('Unit Name'),
+        allow_empty = True
+    ),
+    match_type = "dict",
+)
+
 register_check_parameters(
     subgroup_os,
     "cpu_load",

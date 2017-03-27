@@ -1,0 +1,11 @@
+Title: printer_alerts: Fix discovery when there are no alerts
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p20
+Date: 1490619155
+Class: fix
+
+Previously, the discovery would only work, when the device listed
+some alerts, but not in the (hopefully more common) case that the
+list of alerts was empty. This has been fixed.

@@ -30,8 +30,6 @@
 #include "StringColumn.h"
 
 class OffsetSStringColumn : public StringColumn {
-    int _offset;
-
 public:
     OffsetSStringColumn(const std::string& name, const std::string& description,
                         int offset, int indirect_offset, int extra_offset,
@@ -40,6 +38,9 @@ public:
                        extra_extra_offset)
         , _offset(offset) {}
     std::string getValue(void* data) const override;
+
+private:
+    const int _offset;
 };
 
 #endif  // OffsetSStringColumn_h

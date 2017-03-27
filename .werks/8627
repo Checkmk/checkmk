@@ -1,0 +1,16 @@
+Title: apt: Fix Ubuntu "NOTE: This is only a simulation!" warning being output in check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1490608751
+
+When running the Check_MK agent as a non-root user, the apt-get command used in the
+mk_apt plugin would output a note that would then appear in the update check.
+The agent plugin no longer outputs this message. To fix the problem, you will need
+to deploy the updated version of the mk_apt plugin.
+
+Thanks to Barnaby Shearer for the fix!

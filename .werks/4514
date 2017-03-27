@@ -1,0 +1,12 @@
+Title: Removed agent configuration from debian package descriptions
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1490615882
+Class: fix
+
+The debian packages created by the agent bakery contained the whole
+agent configuration. This could contain secrets that should not be
+available with the description, e.g. when using the alert handlers.

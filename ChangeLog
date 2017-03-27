@@ -1,4 +1,7 @@
 1.2.8p21:
+    Checks & Agents:
+    * 8629 FIX: win_printers: Fix broken default parameters
+
 
 1.2.8p20:
     Checks & Agents:

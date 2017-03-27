@@ -32,7 +32,6 @@
 
 
 factory_settings['win_printer_default_levels'] = {
-        "levels"        : (None, None),
         "warn_states"   : [ 8, 11 ],
         "crit_states"   : [ 9, 10 ],
 }
@@ -77,7 +76,7 @@ def check_win_printers(item, params, info):
         params['crit_states'] = [9,10]
         params['warn_states'] = [8,11]
     else:
-        warn, crit = params['levels']
+        warn, crit = params.get('levels', (None, None))
 
     for line in info:
         name = " ".join(line[:-3])

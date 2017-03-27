@@ -1,0 +1,9 @@
+Title: win_printers: Fix broken default parameters
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p21
+Date: 1490622508
+Class: fix
+
+

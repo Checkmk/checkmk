@@ -4946,7 +4946,6 @@ register_check_parameters(
 
 def windows_printer_queues_forth(old):
     default = {
-        "levels"        : (None, None),
         "warn_states"   : [ 8, 11 ],
         "crit_states"   : [ 9, 10 ],
       }

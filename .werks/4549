@@ -1,0 +1,12 @@
+Title: citrix_licenses: Fixed always ok state even if all licenses are used
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1490620927
+Class: fix
+
+Previously the state has been always been ok, even if no rule has been set
+(with default on "Go crit if all licenses are used") and no license has
+been left.

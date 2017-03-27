@@ -1,0 +1,23 @@
+Title: Agent Updater: Fixed broken state persisting on windows (regression since #4499)
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1490604948
+
+The following exception could occur with Check_MK version shipping werk #4499 (1.2.8p19, 1.4.0b4):
+
+Traceback (most recent call last):
+File "cmk-update-agent.py", line 1230, in
+File "cmk-update-agent.py", line 255, in main_update
+File "cmk-update-agent.py", line 271, in do_update_as_command
+File "cmk-update-agent.py", line 319, in do_update_agent
+File "cmk-update-agent.py", line 939, in update_deployment_state
+File "cmk-update-agent.py", line 925, in write_state_file
+WindowsError: [Error 183] Cannot create a file when that file already exists
+
+This issue occured during update and trying to save the new deployment state. It
+should be enough to apply the update on the Check_MK server and rebuild the agents.

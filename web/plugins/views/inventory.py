@@ -509,13 +509,13 @@ def inv_paint_volt(volt):
 def inv_paint_date(stamp):
     if stamp:
         date_painted = time.strftime("%Y-%m-%d", time.localtime(stamp))
-        return "date", "%s" % date_painted
+        return "number", "%s" % date_painted
     else:
         return "", ""
 
 def inv_paint_age(age):
     if age:
-        return "", age_human_readable(age)
+        return "number", age_human_readable(age)
     else:
         return "", ""
 
@@ -532,12 +532,13 @@ def inv_paint_timestamp_as_age_days(timestamp):
     change_day = round_to_day(timestamp)
     age_days = (now_day - change_day) / 86400
 
+    css_class = "number"
     if age_days == 0:
-        return "", _("today")
+        return css_class, _("today")
     elif age_days == 1:
-        return "", _("yesterday")
+        return css_class, _("yesterday")
     else:
-        return "", "%d %s ago" % (int(age_days), _("days"))
+        return css_class, "%d %s ago" % (int(age_days), _("days"))
 
 inventory_displayhints.update({
     "."                                                : { "title" : _("Inventory") },

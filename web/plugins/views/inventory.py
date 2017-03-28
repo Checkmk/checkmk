@@ -422,6 +422,8 @@ def inv_paint_bytes(b):
 
 
 def inv_paint_size(b):
+    if b is None:
+        return "", ""
     return "number", bytes_human_readable(b)
 
 

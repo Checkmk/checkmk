@@ -285,11 +285,12 @@ def check_oracle_tablespaces(item, params, parsed):
                 max_size   += df_size
                 free_space += df_free_space
 
-    infotexts = ["%s (%s), Size: %s, %s used (%s of max. %s)" % \
+    infotexts = ["%s (%s), Size: %s, %s used (%s of max. %s), Free: %s" % \
         (ts_status, ts_type, get_bytes_human_readable(current_size),
          get_percent_human_readable(100.0 * used_size / max_size),
          get_bytes_human_readable(used_size),
-         get_bytes_human_readable(max_size))]
+         get_bytes_human_readable(max_size),
+         get_bytes_human_readable(free_space))]
 
     if num_extensible > 0 and db_version <= 10:
         # only display the number of remaining extents in Databases <= 10g
@@ -342,6 +343,8 @@ def check_oracle_tablespaces(item, params, parsed):
     if num_files != 1 or num_avail != 1 or num_extensible != 1:
         yield 0, "%d data files (%d avail, %d autoext)" % \
                   (num_files, num_avail, num_extensible)
+
+    yield 0, "DB Version: %s" % db_version
 
 
 check_info['oracle_tablespaces'] = {

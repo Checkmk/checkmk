@@ -5,6 +5,7 @@
     * 8629 FIX: win_printers: Fix broken default parameters
     * 4551 FIX: zfs_arc_cache: Fixed metrics in html5 graphing
     * 4530 FIX: lnx_distro: Fixed missing distribution if eg. Oracle and Redhat release files are available
+    * 4531 FIX: oracle_tablespaces: Added missing info for better analysis
 
 
 1.2.8p20:

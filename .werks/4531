@@ -1,0 +1,9 @@
+Title: oracle_tablespaces: Added missing info for better analysis
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p21
+Date: 1490699441
+Class: fix
+
+

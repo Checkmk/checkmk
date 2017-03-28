@@ -68,6 +68,7 @@ public:
                                                    Contact *contact) = 0;
 
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
+    virtual uint32_t maxLinesPerLogFile() const = 0;
 
     virtual Command find_command(std::string name) const = 0;
     virtual std::vector<Command> commands() const = 0;

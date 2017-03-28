@@ -40,6 +40,9 @@
 # <<<lnx_distro:sep(124):persist(1399310551)>>>
 # /etc/SuSE-release|SUSE Linux Enterprise Server 11 (x86_64)|VERSION = 11|PATCHLEVEL = 2
 
+# <<<lnx_distro:sep(124):persist(1490598851)>>>
+# /etc/oracle-release|Oracle LinuxServer release 7.1
+
 
 def inv_lnx_distro(info):
     node = inv_tree("software.os.")
@@ -57,6 +60,8 @@ def inv_lnx_distro(info):
             inv_lnx_parse_suse_release(node, line[1:])
         elif line[0] == '/usr/share/cma/version':
             inv_lnx_parse_cma(node, line[1])
+        elif line[0] == '/etc/oracle-release':
+            inv_lnx_parse_oracle_vm_server_release(node, line[1])
 
 
 def inv_lnx_parse_suse_release(node, line):

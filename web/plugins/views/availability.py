@@ -609,8 +609,6 @@ def render_bi_availability(title, aggr_rows):
 
                     timewarpcode = html.drain()
 
-                html.write_text("LOL%sLOL" % type(htmlcode))
-
         # Note: 'spans_by_object' returns two arguments which are used by
         # all availability views but not by BI. There we have to take
         # only complete aggregations

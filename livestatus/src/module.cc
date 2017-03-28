@@ -120,7 +120,7 @@ static vector<ThreadInfo> fl_thread_info;
 static thread_local ThreadInfo *tl_info;
 unsigned long g_max_cached_messages = 500000;
 // do never read more than that number of lines from a logfile
-unsigned long g_max_lines_per_logfile = 1000000;
+static uint32_t fl_max_lines_per_logfile = 1000000;
 unsigned long g_max_response_size = 100 * 1024 * 1024;  // limit answer to 10 MB
 int g_thread_running = 0;
 AuthorizationKind g_service_authorization = AuthorizationKind::loose;
@@ -610,6 +610,10 @@ public:
         return {"", ""};
     }
 
+    uint32_t maxLinesPerLogFile() const override {
+        return fl_max_lines_per_logfile;
+    }
+
     vector<Command> commands() const override {
         extern command *command_list;
         vector<Command> commands;
@@ -906,10 +910,10 @@ void livestatus_parse_arguments(const char *args_orig) {
                     << "setting max number of cached log messages to "
                     << g_max_cached_messages;
             } else if (strcmp(left, "max_lines_per_logfile") == 0) {
-                g_max_lines_per_logfile = strtoul(right, nullptr, 10);
+                fl_max_lines_per_logfile = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios)
                     << "setting max number lines per logfile to "
-                    << g_max_lines_per_logfile;
+                    << fl_max_lines_per_logfile;
             } else if (strcmp(left, "thread_stack_size") == 0) {
                 g_thread_stack_size = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios) << "setting size of thread stacks to "

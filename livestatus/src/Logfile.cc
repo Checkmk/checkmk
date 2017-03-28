@@ -51,8 +51,6 @@ using std::make_unique;
 using std::string;
 using std::vector;
 
-extern unsigned long g_max_lines_per_logfile;
-
 Logfile::Logfile(MonitoringCore *mc, fs::path path, bool watch)
     : _mc(mc)
     , _path(std::move(path))
@@ -159,10 +157,9 @@ void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
                         time_t since, time_t until, unsigned logclasses) {
     vector<char> linebuffer(65536);
     while (fgets(&linebuffer[0], linebuffer.size(), file) != nullptr) {
-        if (_lineno >= g_max_lines_per_logfile) {
-            Error(logger()) << "more than " << g_max_lines_per_logfile
-                            << " lines in " << this->_path
-                            << ", ignoring the rest!";
+        if (_lineno >= _mc->maxLinesPerLogFile()) {
+            Error(logger()) << "more than " << _mc->maxLinesPerLogFile()
+                            << " lines in " << _path << ", ignoring the rest!";
             return;
         }
         _lineno++;

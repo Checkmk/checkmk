@@ -1,0 +1,12 @@
+Title: ups_bat_temp, ups_capacity, ups_in_freq, ups_in_voltage, ups_out_load, ups_out_voltage, ups_power, ups_test: Extend and unify range of discovered devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b5
+Date: 1490705300
+Class: fix
+
+Due to overly specific SNMP scan functions, discovery did not work properly for these checks
+on some devices, or only for some of these checks, despite being based on the same MIB.
+This has been fixed.

@@ -1,0 +1,21 @@
+Title: Fixed compatibility problem in agent updater with some older windows versions
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0b5
+Date: 1490258522
+
+When running Check_MK agent updater under some older Windows versions (eg. Windows XP),
+a problem with some missing runtime libraries can possibly occur.
+This would result in an error message beginning with "Error loading Python DLL:..."
+
+A quick-fix for this problem would be the installation of a Microsoft Visual C++
+Redistributable package. It can be found at Microsoft support homepage.
+(support.microsoft.com) with the search term "vcredist_x86".
+The MS VC++ 2008 Redistributable Package (x86) would be sufficient.
+
+However, the needed runtime libraries will be included in all Check_MK
+releases containg this werk.

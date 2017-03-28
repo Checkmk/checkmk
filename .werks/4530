@@ -1,0 +1,11 @@
+Title: lnx_distro: Fixed missing distribution if eg. Oracle and Redhat release files are available
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1490684986
+
+

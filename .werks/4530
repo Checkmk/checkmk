@@ -1,0 +1,9 @@
+Title: lnx_distro: Fixed missing distribution if eg. Oracle and Redhat release files are available
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p21
+Date: 1490684986
+Class: fix
+
+

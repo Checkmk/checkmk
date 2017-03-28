@@ -35,7 +35,7 @@ def inv_oracle_dataguard_stats(info):
                 switchover = line[-1]
 
             node.append({
-                "id"         : db_name,
+                "sid"        : db_name,
                 "db_unique"  : "%s.%s" % (db_name, db_unique_name),
                 "role"       : database_role,
                 "switchover" : switchover,

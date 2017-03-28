@@ -776,44 +776,42 @@ inventory_displayhints.update({
     ".software.applications.citrix.vm.catalog"                    : { "title" : _("Catalog"), },
     ".software.applications.citrix.vm.agent_version"              : { "title" : _("Agent Version"), },
 
-    ".software.applications.oracle."          : { "title" : _("Oracle DB") },
-    ".software.applications.oracle.instance:" : { "title"    : _("Instances"),
-                                                  "render"   : render_inv_dicttable,
-                                                  "keyorder" : [ "id", "version", "openmode", "logmode", "logins", "db_uptime", "db_creation_time" ] },
-    ".software.applications.oracle.instance:*.id"       : { "title" : _("ID"), },
-    ".software.applications.oracle.instance:*.version"  : { "title" : _("Version"), },
-    ".software.applications.oracle.instance:*.openmode" : { "title" : _("Open mode"), },
-    ".software.applications.oracle.instance:*.logmode"  : { "title" : _("Log mode"), },
-    ".software.applications.oracle.instance:*.logins"   : { "title" : _("Logins"), },
-    ".software.applications.oracle.instance:*.db_uptime"        : { "title" : _("Uptime"), "paint" : "age" },
-    ".software.applications.oracle.instance:*.db_creation_time" : { "title" : _("Creation time") },
+    ".software.applications.oracle." : { "title" : _("Oracle DB") },
 
-    ".software.applications.oracle.dataguard_stats:" : { "title"    : _("Dataguard-Stats"),
-                                                         "render"   : render_inv_dicttable,
-                                                         "keyorder" : [ "id", "role", "db_unique", "switchover" ] },
-    ".software.applications.oracle.dataguard_stats:*.id"   : { "title" : _("ID"), },
-    ".software.applications.oracle.dataguard_stats:*.role" : { "title" : _("Role"), },
-    ".software.applications.oracle.dataguard_stats:*.db_unique" : { "title" : _("Unique name"), },
+    ".software.applications.oracle.instance:"                   : { "title"    : _("Instances"),
+                                                                    "render"   : render_inv_dicttable,
+                                                                    "keyorder" : [ "sid", "version", "openmode", "logmode",
+                                                                                   "logins", "db_uptime", "db_creation_time" ],
+                                                                    "view"     : "invora_instance_of_host" },
+    ".software.applications.oracle.instance:*.sid"              : { "title" : _("SID"), },
+    ".software.applications.oracle.instance:*.version"          : { "title" : _("Version"), },
+    ".software.applications.oracle.instance:*.openmode"         : { "title" : _("Open mode"), },
+    ".software.applications.oracle.instance:*.logmode"          : { "title" : _("Log mode"), },
+    ".software.applications.oracle.instance:*.logins"           : { "title" : _("Logins"), },
+    ".software.applications.oracle.instance:*.db_uptime"        : { "title" : _("Uptime"), "paint" : "age" },
+    ".software.applications.oracle.instance:*.db_creation_time" : { "title" : _("Creation time"), "paint" : "date_and_time" },
+
+    ".software.applications.oracle.dataguard_stats:"             : { "title"    : _("Dataguard statistics"),
+                                                                     "render"   : render_inv_dicttable,
+                                                                     "keyorder" : [ "sid", "db_unique", "role", "switchover" ],
+                                                                     "view"     : "invora_dataguard_stats_of_host" },
+    ".software.applications.oracle.dataguard_stats:*.sid"        : { "title" : _("SID"), },
+    ".software.applications.oracle.dataguard_stats:*.db_unique"  : { "title" : _("Name"), },
+    ".software.applications.oracle.dataguard_stats:*.role"       : { "title" : _("Role"), },
     ".software.applications.oracle.dataguard_stats:*.switchover" : { "title" : _("Switchover"), },
 
-    ".software.applications.oracle.recovery_area:" : { "title"    : _("Recovery area"),
-                                                       "render"   : render_inv_dicttable,
-                                                       "keyorder" : [ "id", "role" ] },
-    ".software.applications.oracle.recovery_area:*.id"        : { "title" : _("ID"), },
+    ".software.applications.oracle.recovery_area:"            : { "title"    : _("Recovery area"),
+                                                                  "render"   : render_inv_dicttable,
+                                                                  "keyorder" : [ "sid", "flashback" ],
+                                                                  "view"     : "invora_recovery_area_of_host" },
+    ".software.applications.oracle.recovery_area:*.sid"       : { "title" : _("SID"), },
     ".software.applications.oracle.recovery_area:*.flashback" : { "title" : _("Flashback"), },
 
-    ".software.applications.oracle.performance:" : { "title"    : _("Performance"),
-                                                     "render"   : render_inv_dicttable,
-                                                     "keyorder" : [ "id", "sga_info", "sga_size" ] },
-    ".software.applications.oracle.performance:*.id"        : { "title" : _("ID"), },
-    ".software.applications.oracle.performance:*.sga_info" : { "title" : _("SGA info"), },
-    ".software.applications.oracle.performance:*.sga_size" : { "title" : _("SGA size"), "paint" : "size" },
-
-    ".software.applications.oracle.tablespaces:" : { "title"    : _("Tablespaces"),
-                                                     "render"   : render_inv_dicttable,
-                                                     "keyorder" : [ "id", "name", "version", "type", "autoextensible" ],
-                                                     "view" : "invora_tablespace_of_host" },
-    ".software.applications.oracle.tablespaces:*.id"             : { "title" : _("ID"), },
+    ".software.applications.oracle.tablespaces:"                 : { "title"    : _("Tablespaces"),
+                                                                     "render"   : render_inv_dicttable,
+                                                                     "keyorder" : [ "sid", "name", "version", "type", "autoextensible" ],
+                                                                     "view"     : "invora_tablespace_of_host" },
+    ".software.applications.oracle.tablespaces:*.sid"            : { "title" : _("SID"), },
     ".software.applications.oracle.tablespaces:*.name"           : { "title" : _("Name"), },
     ".software.applications.oracle.tablespaces:*.version"        : { "title" : _("Version"), },
     ".software.applications.oracle.tablespaces:*.type"           : { "title" : _("Type"), },
@@ -1163,7 +1161,10 @@ declare_invtable_view("invpsu",        ".hardware.components.psus:",       _("Po
 declare_invtable_view("invsensor",     ".hardware.components.sensors:",    _("Sensor"),     _("Sensors"))
 declare_invtable_view("invmodule",     ".hardware.components.modules:",    _("Module"),     _("Modules"))
 
-declare_invtable_view("invora_tablespace", ".software.applications.oracle.tablespaces:", _("Oracle tablespace"),  _("Oracle tablespaces"))
+declare_invtable_view("invora_instance",        ".software.applications.oracle.instance:",        _("Oracle instance"),            _("Oracle instances"))
+declare_invtable_view("invora_recovery_area",   ".software.applications.oracle.recovery_area:",   _("Oracle recovery area"),       _("Oracle recovery areas"))
+declare_invtable_view("invora_dataguard_stats", ".software.applications.oracle.dataguard_stats:", _("Oracle dataguard statistic"), _("Oracle dataguard statistics"))
+declare_invtable_view("invora_tablespace",      ".software.applications.oracle.tablespaces:",     _("Oracle tablespace"),          _("Oracle tablespaces"))
 
 
 # This would also be possible. But we muss a couple of display and filter hints.

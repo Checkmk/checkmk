@@ -30,7 +30,7 @@ def inv_oracle_recovery_area(info):
     for line in info:
         if len(line) > 5:
             node.append({
-                "id"        : line[0],
+                "sid"       : line[0],
                 "flashback" : line[-1],
             })
 

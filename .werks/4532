@@ -1,0 +1,10 @@
+Title: Removed inventory plugin oracle_performance in sense of werk 4485 and unified all other Oracle inventory plugins
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b5
+Date: 1490719761
+Class: fix
+
+

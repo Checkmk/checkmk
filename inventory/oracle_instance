@@ -44,13 +44,13 @@ def inv_oracle_instance(info):
                 logmode, database_role, force_logging, name = line[:11]
             up_seconds = int(up_seconds_str)
             if len(line) > 11:
-                db_creation_time = time.strftime("%d-%m-%Y %H:%M:%S", time.strptime(line[-1], "%d%m%Y%H%M%S"))
+                db_creation_time = time.mktime(time.strptime(line[-1], "%d%m%Y%H%M%S"))
 
         else:
             continue
 
         node.append({
-            "id"               : sid,
+            "sid"              : sid,
             "version"          : version,
             "openmode"         : openmode,
             "logmode"          : logmode,

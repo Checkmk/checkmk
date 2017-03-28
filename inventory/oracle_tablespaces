@@ -55,7 +55,7 @@ def inv_oracle_tablespaces(parsed):
     tablespaces, error_sids = parsed
     for (sid, name), attrs in tablespaces.items():
         node.append({
-            "id"             : sid,
+            "sid"            : sid,
             "name"           : name,
             "version"        : attrs["db_version"] or "",
             "type"           : attrs["type"],

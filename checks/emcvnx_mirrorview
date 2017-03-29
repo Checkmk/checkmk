@@ -96,9 +96,13 @@
 def parse_emcvnx_mirrorview(info):
     parsed = {}
     for line in info:
-        if line[0] == "MirrorView Name":
+        if line[0] == "Request failed.  Management Server - Sync Mirror Feature software is not installed or unavailable.":
+            break
+
+        elif line[0] == "MirrorView Name":
             lun_name = line[1].replace("_", " ").replace("Mirror", "").strip()
             parsed.setdefault(lun_name, {})
+
         else:
             if "UID" in line[0]:
                 lun_value = ":".join(line[1:]).strip()

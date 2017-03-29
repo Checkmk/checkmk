@@ -1,0 +1,11 @@
+Title: emcvnx_writecache: Fixed discovery, id. if getcache command is not supported
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1490796827
+
+

@@ -1,0 +1,11 @@
+Title: cisco_vpn_tunnel: Fixed handling if tunnel is not yet open and phase two values are not set
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1490789927
+
+

@@ -1,0 +1,18 @@
+Title: BI aggregation compilation: fixed race condition exception, also forks less processes for compilation
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b5
+Date: 1490784487
+
+The compiliation process now spawns less worker processes for the compilation, which reduces the overall CPU load.
+
+Furthermore a race condition has been fixed, which was likely to happen when all of these conditions were true:<br>
+<ul>
+<li>there were several dozens BI requests per minute, e.g. from multiple web browsers</li>
+<li>a distributed montitoring setup started to deploy new configurations</li>
+<li>there were lots (>100) of BI aggregations configured</li>
+<ul>

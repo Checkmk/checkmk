@@ -206,12 +206,15 @@ def get_current_sitestats():
                      "known_sites":  set()}
 
     # This request here is mandatory, since the sites.states() info might be outdated
-    sites.live().query("GET status")
+    sites.live().set_prepend_site(True)
+    result = sites.live().query("GET status\nColumns: program_start\nCache: reload")
+    program_start_times = dict(result)
+    sites.live().set_prepend_site(False)
 
     for site, values in sites.states().items():
-        current_world["known_sites"].add((site, values.get("program_start", 0)))
+        current_world["known_sites"].add((site, program_start_times.get(site, 0)))
         if values.get("state") == "online":
-            current_world["online_sites"].add((site, values["program_start"]))
+            current_world["online_sites"].add((site, program_start_times.get(site, 0)))
 
     return current_world
 
@@ -259,33 +262,33 @@ def get_cache_dir():
 
 
 class JobWorker(object):
-    # TODO: It looks like we dont need this
     def __init__(self):
         super(JobWorker, self).__init__()
 
-
     @staticmethod
-    def run(job, mp_queue, mp_errors):
+    def run(jobs, site_data, mp_queue, mp_errors):
         new_data = {}
-        start_time = time.time()
-        try:
-            new_data = JobWorker.compile_job(job["id"], job["info"])
-        except Exception, e:
-            log("MP-Worker Exception %s" % e)
-            log_exception()
-            mp_errors.put("Aggregation error: %s" % e)
-        finally:
-            # Even in an error scenario we consider these hosts as compiled
-            if job["id"][0] == AGGR_HOST:
-                new_data["compiled_hosts"] = job["info"]["queued_hosts"]
+        for job in jobs:
+            try:
+                start_time = time.time()
+                log("Compiling %r" % (job["id"],))
+                new_data = JobWorker.compile_job(job["id"], job["info"], site_data)
+                aggr_type, aggr_idx, groups = job["id"]
+                log("Compilation finished %r - took %.3f sec" % (job["id"], time.time() - start_time))
+            except Exception, e:
+                log("MP-Worker Exception %s" % e)
+                mp_errors.put("Aggregation error: %s" % e)
+            finally:
+                # Even in an error scenario we consider these hosts as compiled
+                if job["id"][0] == AGGR_HOST:
+                    new_data["compiled_hosts"] = job["info"]["queued_hosts"]
 
-        mp_queue.put((job, new_data))
-        log("Compilation finished - took %.3f sec" % (time.time() - start_time))
+                mp_queue.put((job, new_data))
 
 
     # Does the compilation of one aggregation
     @staticmethod
-    def compile_job(job, data):
+    def compile_job(job, data, site_data):
         # This variable holds all newly found entries and is returned later on
         new_data = BICacheManager.empty_compiled_tree()
         aggr_type, aggr_idx, groups = job
@@ -294,7 +297,6 @@ class JobWorker(object):
         global g_services_items
         global g_services_by_hostname
 
-        site_data = g_bi_sitedata_manager.get_data()
         # Prepare service globals for this job
         if aggr_type == AGGR_MULTI:
             g_services             = site_data["services"]
@@ -319,11 +321,8 @@ class JobWorker(object):
         log("Compiling aggregation %d/%d: %r with %d hosts" % (aggr_type, aggr_idx, groups, len(g_services_by_hostname)))
         enabled_aggregations = get_enabled_aggregations()
 
-
-
         # Check if the aggregation is still correct
         if aggr_idx >= len(enabled_aggregations):
-            # aggregation mismatch... config might have changed
             raise MKConfigError("Aggregation mismatch: Index error")
 
         aggr = enabled_aggregations[aggr_idx]
@@ -334,8 +333,6 @@ class JobWorker(object):
         aggr_groups = type(aggr[1]) == list and tuple(aggr[1]) or tuple([aggr[1]])
         if groups != aggr_groups:
             raise MKConfigError("Aggregation groups mismatch")
-
-
 
         aggr_options, aggr = aggr[0], aggr[1:]
         use_hard_states = aggr_options.get("hard_states")
@@ -493,8 +490,6 @@ class BICacheFile(object):
     def __init__(self, **kwargs):
         self._filepath            = kwargs.get("filepath")
         self._cached_data         = None
-
-        # Timestamp of the last/read write operation
         self._filetime            = None
 
         try:
@@ -772,28 +767,7 @@ class BISitedataManager(object):
 
 class BIJobManager(object):
     def __init__(self):
-        self._jobs_file = BICacheFile(filepath = "%s/bi_cache_jobs" % get_cache_dir())
-
         super(BIJobManager, self).__init__()
-
-
-    def clear_jobfile(self):
-        self._jobs_file.truncate()
-
-
-    def save_jobs(self, jobfile_data):
-        self._jobs_file.save(jobfile_data)
-
-
-    def get_jobs(self):
-        jobs = self._jobs_file.load()
-        if not jobs:
-            jobs = {"jobs" : {}}
-        return jobs
-
-
-    def _get_jobs_filepath(self):
-        return self._jobs_file.get_filepath()
 
 
     def _get_only_hosts_and_only_groups(self, aggr_ids, only_hosts, only_groups, all_hosts):
@@ -855,103 +829,20 @@ class BIJobManager(object):
         return jobs
 
 
-    def update_queued_jobs(self, jobs):
-        def update(apply_changes):
-            with BILock("%s_UPDATE_LOCK" % self._get_jobs_filepath(), shared = not apply_changes):
-                jobfile_data = self.get_jobs()
-                # This copy is important since we are going to modify it
-                # We do not want to alter the cached original
-                jobfile_data = copy.deepcopy(jobfile_data)
-
-                # jobfile_data example
-                # { "jobs":
-                #        # Single host aggregations
-                #        { (aggr_type, aggr_index, aggr_groups): { "queued_hosts": [], "compiled_hosts": [] },
-                #        # Multihost aggregation
-                #          (aggr_type, aggr_index, aggr_groups): { "compiled": True } }
-                changed_config = False
-                for job_id, values in jobs.items():
-                    aggr_type, idx, aggr_groups = job_id
-                    if aggr_type == AGGR_HOST:
-                        # Reduce number of required hosts, since some of them may already be compiled
-                        jobfile_data["jobs"].setdefault(job_id, {"queued_hosts": set([]),
-                                                                 "compiled_hosts": set([])})
-                        # Always set all hosts to queued. Already compiled hosts are filtered out later on
-                        new_hosts_to_compile = values["queued_hosts"] - jobfile_data["jobs"][job_id]["queued_hosts"]
-                        if new_hosts_to_compile:
-                            jobfile_data["jobs"][job_id]["queued_hosts"].update(values["queued_hosts"])
-                            changed_config = True
-                    elif aggr_type == AGGR_MULTI:
-                        jobfile_data["jobs"].setdefault(job_id, {})
-                        # Check if already compiled
-                        if not jobfile_data["jobs"][job_id].get("compiled"):
-                            jobfile_data["jobs"][job_id]["compiled"] = False
-                            changed_config = True
-
-            if changed_config and apply_changes:
-                log("Updating jobfile for real")
-                g_bi_job_manager.save_jobs(jobfile_data)
-            return changed_config
-
-
-        # This prevents that hundreds of apaches are trying to apply the same changes..
-        if update(False): # Dry run with shared lock
-            update(True)  # Apply changes with exclusive lock
-
-
-    def _get_queued_jobs(self, discard_old_cache=False):
-        queued_jobs  = []
-
-        jobfile_data = self.get_jobs()
-        # This copy is important since we are going to modify it
-        # We do not want to alter the cached original
-        jobfile_data = copy.deepcopy(jobfile_data)
-
-        if discard_old_cache:
-            aggr_ids = get_aggr_ids([AGGR_HOST, AGGR_MULTI])
-            # Recompile everything mentioned in the jobs file and remove obsolete aggregations
-            for job, info in jobfile_data.get("jobs", {}).items():
-                if job in aggr_ids:
-                    queued_jobs.append({ "id": job, "info": info })
-        else:
-            # jobfile_data example
-            # { "jobs":
-            #        # Single host aggregations
-            #        { (aggr_type, aggr_index, aggr_groups): { "queued_hosts": [], "compiled_hosts": [] },
-            #        # Multihost aggregation
-            #          (aggr_type, aggr_index, aggr_groups): { "included_hosts": [], "compiled": True } }
-            for job, info in jobfile_data.get("jobs", {}).items():
-                if job[0] == AGGR_HOST:
-                    # Reduce queued hosts by already compiled hosts
-                    info["queued_hosts"] -= info["compiled_hosts"]
-                    if not info.get("queued_hosts"):
-                        # Single host aggregation, no hosts in queue - GOOD!
-                        continue
-                else:
-                    if info.get("compiled") == True:
-                        # Fully compiled multi aggregation - GOOD!
-                        continue
-
-                queued_jobs.append( { "id": job, "info": info } )
-
-        return queued_jobs
-
-
     def _prepare_compilation(self, discard_old_cache=False):
         # Check if the currently known cache is worth keeping
         # The cache may have more, but not less than the required sites
 
         if discard_old_cache:
             log("#### CLEARING CACHEFILES ####")
-            g_bi_job_manager.clear_jobfile()       # Note: The jobs to do are already determined
             g_bi_cache_manager.truncate_cachefiles()  # Clears files
             g_bi_cache_manager.reset_cached_data() # Reset internal caches
 
         # Determine number of workers
-        self.maximum_workers = multiprocessing.cpu_count()
+        self._maximum_workers = multiprocessing.cpu_count()
         # Just in case the multiprocessing call is not working as intended
-        if self.maximum_workers == 0:
-            self.maximum_workers = 2
+        if self._maximum_workers < 1:
+            self._maximum_workers = 2
 
         # Multiprocessing queue for IPC
         self._mp_queue  = multiprocessing.Queue()
@@ -961,23 +852,25 @@ class BIJobManager(object):
         self._currently_compiling = []
 
 
-    def _is_compilation_finished(self):
-        return not self._queued_jobs and not self._currently_compiling
-
-
-    def _manage_workers(self):
-        # Remove finished jobs
+    def _update_compilation_status(self):
         self._currently_compiling = [ t for t in self._currently_compiling if t.is_alive() ]
 
-        while True:
-            if self._queued_jobs and len(self._currently_compiling) < self.maximum_workers:
-                job = self._queued_jobs.pop()
-                new_worker = multiprocessing.Process(target = JobWorker.run, args = [job, self._mp_queue, self._mp_errors])
-                new_worker.daemon = True
-                self._currently_compiling.append(new_worker)
-                self._currently_compiling[-1].start()
-            else:
-                break
+    def _is_compilation_finished(self):
+        if not self._currently_compiling:
+            log("Worker threads finished")
+        return not self._currently_compiling
+
+
+    def _start_workers(self):
+        site_data = g_bi_sitedata_manager.get_data()
+        import copy
+        for x in range(self._maximum_workers):
+            jobs = self._queued_jobs[x::self._maximum_workers]
+            new_worker = multiprocessing.Process(target = JobWorker.run, args = [jobs, copy.deepcopy(site_data), self._mp_queue, self._mp_errors])
+            new_worker.daemon = True
+            self._currently_compiling.append(new_worker)
+            self._currently_compiling[-1].start()
+        self._queued_jobs = []
 
 
     def _reap_worker_results(self):
@@ -998,53 +891,38 @@ class BIJobManager(object):
         if not results:
             return
 
-        g_bi_cache_manager.load_cachefile()
         for job, new_data in results:
             g_bi_cache_manager._merge_compiled_data(job, new_data)
 
-        jobfile_data = self.get_jobs()
-        for job, new_data in results:
-            job_id   = job["id"]
-            job_info = job["info"]
-
-            if job_id[0] == AGGR_HOST:
-                jobfile_data["jobs"].setdefault(job_id, {"queued_hosts": set([]),
-                                                         "compiled_hosts": set([])})
-                jobfile_data["jobs"][job_id]["queued_hosts"] -= job_info["queued_hosts"]
-                jobfile_data["jobs"][job_id]["compiled_hosts"].update(job_info["queued_hosts"])
-            else:
-                jobfile_data["jobs"].setdefault(job_id, {})
-                jobfile_data["jobs"][job_id]["compiled"] = True
-        self.save_jobs(jobfile_data)
         g_bi_cache_manager.generate_cachefiles()
 
 
     def _compile_jobs_parallel(self):
-        with BILock("%s_COMPILATION_LOCK" % self._get_jobs_filepath(), blocking = False) as compilation_lock:
+        with BILock("%s/bi_cache_COMPILATION_LOCK" % get_cache_dir(), blocking = False) as compilation_lock:
             if not compilation_lock.has_lock():
                 log("Did not get compilation lock")
                 return False # Someone else is compiling
 
+
+            # Check if the cache still requires a complete recompilation
             current_sitestats = get_current_sitestats()
-            discard_old_cache = not g_bi_cache_manager.can_handle_sitestats(current_sitestats)
+            if g_bi_cache_manager.can_handle_sitestats(current_sitestats):
+                g_bi_cache_manager.load_cachefile()
+                return
 
-            self._queued_jobs = self._get_queued_jobs(discard_old_cache = discard_old_cache) # Jobs to do
-            if not self._queued_jobs:
-                log("No queued jobs")
-                return False # No compilation
 
-            log("Compilation discards old cache: %s" % discard_old_cache)
-
-            self._prepare_compilation(discard_old_cache = discard_old_cache)
+            log("Do compilation, discarding old caches")
+            self._queued_jobs = self._get_all_jobs()
+            self._prepare_compilation(discard_old_cache = True)
             self._set_compilation_info(current_sitestats)
 
             error_info = ""
+            self._start_workers()
             while True:
                 if self._is_compilation_finished():
                     break
 
-                # Start/Stop workers (also updates currently compiling)
-                self._manage_workers()
+                self._update_compilation_status()
 
                 # Collect results
                 results, errors = self._reap_worker_results()
@@ -1053,28 +931,43 @@ class BIJobManager(object):
                 # Update cache with new results
                 self._merge_worker_results(results)
 
-                # Sleep a little bit
-                time.sleep(0.1)
 
-
-            # At the end of the compilation check the title uniquness and for fully compiled
-            fully_compiled = self._is_fully_compiled()
+                # Allow the worker thread to compile their jobs
+                time.sleep(0.2)
 
             try:
                 check_title_uniqueness(g_bi_cache_manager.get_compiled_trees()["forest"])
             except MKConfigError, e:
                 error_info += str(e)
 
+            g_bi_cache_manager.get_compiled_trees()["compiled_all"] = True
+            g_bi_cache_manager.generate_cachefiles(error_info = error_info)
 
-            if fully_compiled or error_info:
-                g_bi_cache_manager.generate_cachefiles(is_fully_compiled = fully_compiled,
-                                                       error_info = error_info)
-
+        # Everything is compiled, clear cached data
+        g_bi_sitedata_manager.discard_cached_data()
+        g_bi_cache_manager.clear_cachefile_cache()
         return True # Did compilation
 
 
+    def _get_all_jobs(self):
+        jobs = []
+        aggr_ids  = get_aggr_ids([AGGR_HOST, AGGR_MULTI])
+        all_hosts = g_bi_sitedata_manager.get_all_hosts()
+
+        for aggr_id in aggr_ids:
+            aggr_type, idx, aggr_groups = aggr_id
+
+            if aggr_type == AGGR_HOST:
+                new_job = {"id": aggr_id, "info": {"queued_hosts": all_hosts}}
+            else:
+                new_job = {"id": aggr_id, "info": {"compiled": False}}
+            jobs.append(new_job)
+
+        return jobs
+
+
     # Returns True if compilation was done
-    def compile_jobs(self):
+    def compile_all_jobs(self):
         return self._compile_jobs_parallel()
 
 
@@ -1086,39 +979,6 @@ class BIJobManager(object):
     # Returns the information which was using during the compilation
     def get_compilation_info(self):
         return self._compilation_info
-
-
-    def _is_fully_compiled(self):
-        # Used later on to determine if the cache is fully compiled
-        enabled_aggr     = get_enabled_aggregations()
-        multi_aggr_count = len([x for x in enabled_aggr if x[0] == AGGR_MULTI])
-        host_aggr_count  = len([x for x in enabled_aggr if x[0] == AGGR_HOST])
-        total_hosts      = len(g_bi_sitedata_manager.get_data()["services"])
-
-        # Check if cache is fully compiled
-        compiled_all              = True
-        compiled_multi_aggr_count = 0
-        compiled_host_aggr_count  = 0
-
-        jobfile_data = self.get_jobs()
-        for job_id, values in jobfile_data["jobs"].items():
-            if job_id[0] == AGGR_HOST:
-                if len(values.get("compiled_hosts")) != total_hosts:
-                    compiled_all = False
-                    break
-                else:
-                    compiled_host_aggr_count += 1
-            elif job_id[0] == AGGR_MULTI:
-                compiled_multi_aggr_count += values.get("compiled") and 1 or 0
-        else:
-            if multi_aggr_count != compiled_multi_aggr_count:
-                compiled_all = False
-            if host_aggr_count  != compiled_host_aggr_count:
-                compiled_all = False
-
-        log("Fully compiled check result: %s" % compiled_all)
-        return compiled_all
-
 
 
 class BICacheManager(object):
@@ -1226,6 +1086,10 @@ class BICacheManager(object):
             self.reset_cached_data()
             return False
 
+        if not self._bicache_file.has_new_data():
+            log("Cachefile has no new data - Sitestats also valid")
+            return True
+
         def reinstiate_references(cachefile_content):
             self._compiled_trees = cachefile_content
             self._compiled_trees["forest"] = {}
@@ -1248,16 +1112,16 @@ class BICacheManager(object):
                         new_value = self._compiled_trees["aggr_ref"][aggr]
                     self._compiled_trees["forest"][key].append(new_value)
 
-        cachefile_content      = self._bicache_file.load()
+        cachefile_content = self._bicache_file.load()
         if cachefile_content:
             reinstiate_references(cachefile_content)
 
         return True
 
 
-    def generate_cachefiles(self, is_fully_compiled=False, error_info=""):
+    def generate_cachefiles(self, error_info=""):
         self._save_cacheinfofile(error_info = error_info)
-        self._save_cachefile(is_fully_compiled = is_fully_compiled)
+        self._save_cachefile()
 
 
     def _save_cacheinfofile(self, error_info=""):
@@ -1290,10 +1154,11 @@ class BICacheManager(object):
                      "compiled_sites":      compiled_sites,
                      "error_info":  error_info
                 }
+
         self._bicacheinfo_file.save(content)
 
 
-    def _save_cachefile(self, is_fully_compiled):
+    def _save_cachefile(self):
         keys_for_cachefile = [
                               "aggr_ref",
                               "forest_ref",
@@ -1303,12 +1168,11 @@ class BICacheManager(object):
                               "affected_services_ref",
                               "compiled_host_aggr",
                               "compiled_multi_aggr",
+                              "compiled_all"
                               ]
         cache_to_dump = {}
         for what in keys_for_cachefile:
             cache_to_dump[what] = self._compiled_trees.get(what)
-
-        cache_to_dump["compiled_all"] = is_fully_compiled
 
         start_time = time.time()
         self._bicache_file.save(cache_to_dump)
@@ -1352,11 +1216,12 @@ class BICacheManager(object):
 
 
 
+
 def get_enabled_aggregations():
     result = []
     for aggr_type, what in [ (AGGR_MULTI, config.aggregations),
                              (AGGR_HOST, config.host_aggregations) ]:
-        for aggr_def in what:
+        for aggr_def in sorted(what):
             if aggr_def[0].get("disabled"): # options field
                 continue
             result.append((aggr_type, aggr_def))
@@ -1448,8 +1313,7 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
                 log("No jobs required")
                 return
 
-            g_bi_job_manager.update_queued_jobs(jobs)
-            did_compile = g_bi_job_manager.compile_jobs()
+            did_compile = g_bi_job_manager.compile_all_jobs()
 
             # Hard working apache processes are allowed to continue
             if did_compile:
@@ -1459,7 +1323,7 @@ def compile_forest_improved(only_hosts=None, only_groups=None):
             # Passive apache processes simply reload the cachefile (if applicable) and wait
             g_bi_cache_manager.load_cachefile()
 
-            log("Wait for jobs to finish", jobs.keys())
+            log("Wait for jobs to finish: %s" % len(jobs.keys()))
             time.sleep(1)
 
     except Exception, e:

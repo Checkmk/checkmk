@@ -354,17 +354,20 @@ then
     # note: patterns in the fileinfo.cfg are resolved inside this loop
     for file in $(cat "$MK_CONFDIR/fileinfo.cfg")
     do
-        ls $file > /dev/null 2>&1
-        if [ $? -eq 0 ]; then
-            echo $file | \
-            /usr/bin/perl -e '
-                while(my $file = <>) {
-                    $file =~ s/\n$//;
-                    ($device, $inode, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($file);
-                    print("$file|$size|$mtime\n");
-                }'
-        else
-            echo "$file|missing|$(/usr/bin/perl -e 'print time')"
+        # only work on lines containing files, skip e.g. comments and blank lines
+        if [ ${file:0:1} = "/" ]; then
+            ls $file > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                echo $file | \
+                /usr/bin/perl -e '
+                    while(my $file = <>) {
+                        $file =~ s/\n$//;
+                        ($device, $inode, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($file);
+                        print("$file|$size|$mtime\n");
+                    }'
+            else
+                echo "$file|missing|$(/usr/bin/perl -e 'print time')"
+            fi
         fi
     done
 fi

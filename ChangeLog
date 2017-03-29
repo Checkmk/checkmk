@@ -7,6 +7,7 @@
     * 4551 FIX: zfs_arc_cache: Fixed metrics in html5 graphing
     * 4530 FIX: lnx_distro: Fixed missing distribution if eg. Oracle and Redhat release files are available
     * 4531 FIX: oracle_tablespaces: Added missing info for better analysis
+    * 4533 FIX: cisco_vpn_tunnel: Fixed handling if tunnel is not yet open and phase two values are not set
 
 
 1.2.8p20:

@@ -319,7 +319,11 @@ class TestCrawler(object):
 
 
     def web_log_file(self):
-        return var_dir() + "/craw-web.log"
+        return var_dir() + "/crawl-web.log"
+
+
+    def apache_error_log_file(self):
+        return var_dir() + "/crawl-apache_error_log.log"
 
 
     def load_stats(self):
@@ -383,11 +387,14 @@ class TestCrawler(object):
 
         os.rename(self.report_file()+".tmp", self.report_file())
 
-        # Save the web.log for later diagnose
-        if self.site.file_exists("var/log/web.log"):
-            open(self.web_log_file(), "w").write(self.site.read_file("var/log/web.log"))
-
         if self.errors:
+            for site_path, test_path in [
+                    ("var/log/web.log", self.web_log_file()),
+                    ("var/log/apache/error_log", self.apache_error_log_file()),
+                ]:
+                if self.site.file_exists(site_path):
+                    open(test_path, "w").write(self.site.read_file(site_path))
+
             pytest.fail("Crawled %d URLs in %d seconds. Failures:\n%s" %
                         (len(self.visited), time.time() - self.started, "\n".join(self.errors)))
 

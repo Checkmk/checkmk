@@ -1,0 +1,13 @@
+Title: Linux/Solaris Agent: add support for comments and blank lines in fileinfo.cfg
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b5
+Date: 1490781773
+Class: feature
+
+Support for comments and/or blank lines in fileinfo.cfg has been added to the Linux and Solaris Agents.
+Those lines are simply ignored now.
+
+

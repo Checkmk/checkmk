@@ -407,8 +407,10 @@ def parse_cisco_vpn_tunnel(info):
     for index, state, phase_2_in, phase_2_out in info[1]:
         if state != "2":
             pre_parsed.setdefault(index, {'in' : 0, 'out' : 0, 'state' : state})
-            pre_parsed[index]['in']  += float(phase_2_in)
-            pre_parsed[index]['out'] += float(phase_2_out)
+            if phase_2_in:
+                pre_parsed[index]['in']  += float(phase_2_in)
+            if phase_2_out:
+                pre_parsed[index]['out'] += float(phase_2_out)
 
     parsed = {}
     for oid_end, remote_ip, phase_1_in, phase_1_out in info[0]:

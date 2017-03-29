@@ -9844,7 +9844,7 @@ register_check_parameters(
         title = _("Pool name"),
         allow_empty = False,
     ),
-    match_type = "dict",
+    match_type = "first",
 )
 
 register_check_parameters(

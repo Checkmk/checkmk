@@ -340,8 +340,8 @@ def inventory_diskstat(parsed):
         (disk["node"], device) for device, disk in converted_disks.items()])
 
 
-def check_diskstat(item, params, info):
-    return check_diskstat_dict(item, params, diskstat_convert_info(info))
+def check_diskstat(item, params, parsed):
+    return check_diskstat_dict(item, params, diskstat_convert_info(parsed))
 
 
 check_info["diskstat"] = {

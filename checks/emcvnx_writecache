@@ -30,7 +30,12 @@
 
 
 def inventory_emcvnx_writecache(info):
-    return [ (line[0], None) for line in info ]
+    inventory = []
+    for line in info:
+        if " ".join(line) == "Error: getcache command failed":
+            return []
+        inventory.append((line[0], None))
+    return inventory
 
 
 def check_emcvnx_writecache(item, params, info):

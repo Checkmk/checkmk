@@ -670,10 +670,14 @@ function reload_main_plus_sidebar(id, code) {
     parent.frames[0].location.reload(); /* reload side bar */
 }
 
+// TODO move to managed/web/htdocs/js
+function switch_customer(customer_id, switch_state) {
+    get_url("switch_customer.py?_customer_switch=" + customer_id + ":" + switch_state,
+            reload_main_plus_sidebar, null);
+}
+
 function switch_site(switchvar) {
     get_url("switch_site.py?" + switchvar, reload_main_plus_sidebar, null);
-    /* After the site switch has been done, everything must be reloaded since
-       everything is affected by the switch */
 }
 
 var g_seconds_to_update = null;

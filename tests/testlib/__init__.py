@@ -246,10 +246,21 @@ class Site(object):
         if not self._is_running_as_site_user():
             p = self.execute(["cat", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
             if p.wait() != 0:
-                raise MKGeneralException("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
+                raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
             return p.stdout.read()
         else:
             return open("%s/%s" % (self.root, rel_path)).read()
+
+
+    def write_file(self, rel_path, content):
+        if not self._is_running_as_site_user():
+            p = self.execute(["dd", "of=%s/%s" % (self.root, rel_path)],
+                             stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            p.communicate(content)
+            if p.wait() != 0:
+                raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
+        else:
+            return open("%s/%s" % (self.root, rel_path), "w").write(content)
 
 
     def file_exists(self, rel_path):
@@ -291,6 +302,8 @@ class Site(object):
 
         if self.update_with_git:
             self._update_with_f12_files()
+
+        self._enable_mod_python_debug()
 
 
     def _update_with_f12_files(self):
@@ -338,6 +351,15 @@ class Site(object):
                                       (path, self.id)) >> 8 == 0
                 print("Executing .f12 in \"%s\" DONE" % path)
                 sys.stdout.flush()
+
+
+    def _enable_mod_python_debug(self):
+        path = "etc/check_mk/apache.conf"
+        content = self.read_file(path)
+
+        self.write_file(path,
+            content.replace("PythonHandler index",
+                            "PythonHandler index\n        PythonDebug On"))
 
 
     def rm_if_not_reusing(self):

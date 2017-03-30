@@ -1038,9 +1038,7 @@ def save_item_state(hostname):
                 os.makedirs(cmk.paths.counters_dir)
             file(filename, "w").write("%r\n" % g_item_state)
         except Exception, e:
-            import pwd
-            username = pwd.getpwuid(os.getuid())[0]
-            raise MKGeneralException("User %s cannot write to %s: %s" % (username, filename, e))
+            raise MKGeneralException("Cannot write to %s: %s" % (filename, traceback.format_exc()))
 
 
 # Store arbitrary values until the next execution of a check

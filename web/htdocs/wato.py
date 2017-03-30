@@ -153,6 +153,11 @@ def page_handler():
     if not config.wato_enabled:
         raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
                                    " in your <tt>multisite.mk</tt> if you want to use WATO."))
+
+    if cmk.is_managed_edition() and not managed.is_provider(config.current_customer):
+        raise MKGeneralException(_("Check_MK can only be configured on "
+                                   "the managers central site."))
+
     current_mode = html.var("mode") or "main"
     modeperms, modefunc = get_mode_function(current_mode)
 

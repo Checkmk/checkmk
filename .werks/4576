@@ -1,0 +1,11 @@
+Title: if64, if64adm: Fixed interface speed handling, if highspeed data is not available or zero
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1490866454
+
+

@@ -35,7 +35,7 @@ def parse_if64(info):
             # ifHighSpeed (idx 21) can't represent interfaces with less than  10^6 bit bandwidth,
             # ifSpeed (idx 4) is capped at 4GBit.
             # combine the two to get the actual interface speed
-            if line[-1] == "0":
+            if line[-1] in [ "0", "" ]:
                 real_speed = saveint(line[4])
             else:
                 real_speed = saveint(line[-1]) * 1000000

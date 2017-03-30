@@ -842,6 +842,9 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                         nodeinfo = " on node %s" % group_node
                     infotext += "[%s%s] " % (", ".join(member_info), nodeinfo)
 
+            if ifPhysAddress:
+                infotext += 'MAC: %s, ' % if_render_mac_address(ifPhysAddress)
+
             # prepare reference speed for computing relative bandwidth usage
             speed = saveint(ifSpeed)
             if speed:
@@ -852,9 +855,6 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                 ref_speed = targetspeed / 8.0
             else:
                 ref_speed = None
-
-            if ifPhysAddress:
-                infotext += 'MAC: %s, ' % if_render_mac_address(ifPhysAddress)
 
             # Check speed settings of interface, but only if speed information
             # is available. This is not always the case.

@@ -286,7 +286,7 @@ public:
 private:
     class LivestatusFormatter : public Formatter {
         void format(ostream &os, const LogRecord &record) override {
-            os << FormattedTimePoint(record.getTimePoint(), "%F %T [")
+            os << FormattedTimePoint(record.getTimePoint()) << " ["
                << tl_info->name << "] " << record.getMessage();
         }
     } _formatter;

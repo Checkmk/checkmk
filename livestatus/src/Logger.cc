@@ -48,8 +48,8 @@ ostream &operator<<(ostream &os, const LogLevel &c) {
 // -----------------------------------------------------------------------------
 
 void SimpleFormatter::format(ostream &os, const LogRecord &record) {
-    os << FormattedTimePoint(record.getTimePoint(), "%F %T ")  //
-       << "[" << record.getLevel() << "] " << record.getMessage();
+    os << FormattedTimePoint(record.getTimePoint()) <<  //
+        " [" << record.getLevel() << "] " << record.getMessage();
 }
 
 SharedStreamHandler::SharedStreamHandler(mutex &mutex, ostream &os)

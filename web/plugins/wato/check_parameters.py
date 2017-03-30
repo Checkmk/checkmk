@@ -1787,7 +1787,7 @@ register_check_parameters(
         ),
         forth = transform_websphere_mq_queues
     ),
-    TextAscii(title = _("Name of channel or queue")),
+    TextAscii(title = _("Name of queue")),
     match_type = "dict",
 )
 

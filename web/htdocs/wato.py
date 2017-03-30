@@ -13978,15 +13978,16 @@ def PredictiveLevels(**args):
 
 # To be used as ValueSpec for levels on numeric values, with
 # prediction
-def match_levels_alternative(v):
-    if type(v) == dict:
-        return 2
-    elif type(v) == tuple and v != (None, None):
-        return 1
-    else:
-        return 0
-
 def Levels(**kwargs):
+
+    def match_levels_alternative(v):
+        if type(v) == dict:
+            return 2
+        elif type(v) == tuple and v != (None, None):
+            return 1
+        else:
+            return 0
+
     help = kwargs.get("help")
     unit = kwargs.get("unit")
     title = kwargs.get("title")

@@ -105,6 +105,14 @@ def if_extract_node(line, has_nodeinfo):
         return None, line
 
 
+def if_render_mac_address(ifPhysAddress):
+    if type(ifPhysAddress) != list:
+        mac_bytes = map(ord, ifPhysAddress)
+    else:
+        mac_bytes = ifPhysAddress
+    return (":".join(["%02s" % hex(m)[2:] for m in mac_bytes]).replace(' ', '0')).upper()
+
+
 def if_item_matches(item, ifIndex, ifAlias, ifDescr):
     return item.lstrip("0") == ifIndex \
             or (item == "0" * len(item) and saveint(ifIndex) == 0) \
@@ -846,12 +854,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False,
                 ref_speed = None
 
             if ifPhysAddress:
-                if type(ifPhysAddress) != list:
-                    mac_bytes = map(ord, ifPhysAddress)
-                else:
-                    mac_bytes = ifPhysAddress
-                mac = ":".join(["%02s" % hex(m)[2:] for m in mac_bytes]).replace(' ', '0')
-                infotext += 'MAC: %s, ' % mac
+                infotext += 'MAC: %s, ' % if_render_mac_address(ifPhysAddress)
 
             # Check speed settings of interface, but only if speed information
             # is available. This is not always the case.

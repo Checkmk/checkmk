@@ -60,7 +60,7 @@ check_info["if"] = {
          19,           # ifOutDiscards          13
          20,           # ifOutErrors            14
          21,           # ifOutQLen              15
-         6,            # ifPhysAddress          16
+         BINARY(6),    # ifPhysAddress          16
     ]),
     # check if number of network interfaces (IF-MIB::ifNumber.0) is at least 2
     # use if64 if possible and not disabled

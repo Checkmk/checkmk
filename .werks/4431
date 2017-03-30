@@ -1,0 +1,17 @@
+Title: Fixed enabling/disabling of notifications/active checks/passive checks
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1490873695
+Class: fix
+
+Changing various flags in an ad-hoc (i.e. non-rule-based) manner did not
+work correctly: Changing a flag to a value different from the configurated
+one worked, but trying to change it back to its configurated value had no
+effect.  This affected the various Enable/Disable buttons on the
+host/service details pages plus the corresponding Livestatus commands
+(ENABLE_HOST_CHECK etc.).
+
+Note that 1.2.8 versions and earlier are were not affected by this bug.

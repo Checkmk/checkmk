@@ -40,9 +40,6 @@ def inv_if(info, params):
            [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229' ])
     unused_duration = params.get("unused_duration", 30 * 86400)
 
-    def render_mac_address(bytestring):
-        return ":".join(["%02s" % hex(ord(m))[2:] for m in bytestring]).replace(' ', '0').upper()
-
     total_ethernet_ports = 0
     available_ethernet_ports = 0
 
@@ -87,7 +84,7 @@ def inv_if(info, params):
             "description"  : if_descr,
             "alias"        : if_alias,
             "speed"        : speed,
-            "phys_address" : render_mac_address(if_phys_address),
+            "phys_address" : if_render_mac_address(if_phys_address),
             "oper_status"  : int(if_oper_status),
             "admin_status" : int(if_admin_status), # 1(up) or 2(down)
             "port_type"    : int(if_type),
@@ -121,10 +118,11 @@ inv_info['inv_if'] = {
            "31.1.1.1.15",        # ifHighSpeed   .. 1000 means 1Gbit
            "2.2.1.8",            # ifOperStatus
            "2.2.1.7",            # ifAdminStatus
-           "2.2.1.6",            # ifPhysAddress
+           BINARY("2.2.1.6"),    # ifPhysAddress
            "2.2.1.9",            # ifLastChange
         ]),
         ( ".1.3.6.1.2.1.1", [ "3.0" ] ), # uptime
     ],
     'snmp_scan_function': lambda oid: int(oid(".1.3.6.1.2.1.2.1.0")) >= 2,
+    'includes': ['if.include'],
 }

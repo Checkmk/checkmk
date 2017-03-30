@@ -197,6 +197,7 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 		--exclude "windows/*.h" \
 		--exclude "windows/openhardwaremonitor" \
 		--exclude "windows/sections" \
+		--exclude "windows/frozen_binaries" \
 		--exclude .f12 $$(cd agents ; ls)
 	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)

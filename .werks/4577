@@ -1,0 +1,11 @@
+Title: websphere_mq_channels: Fixed missing channel states
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b5
+Date: 1490946082
+
+

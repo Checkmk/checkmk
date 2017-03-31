@@ -1697,25 +1697,6 @@ websphere_mq_common_elements = [
             default_value = (1000, 1200)
         )
     ),
-    ("status",
-     Dictionary(
-         title = _('Override check state based on channel state (only for channels)'),
-         elements = [
-             ("STOPPED",  MonitoringState(
-                 title = _("State when channel is stopped"),
-                 default_value = 1)),
-             ("RETRYING", MonitoringState(
-                 title = _("State when channel is retrying"),
-                 default_value = 2)),
-             ("RUNNING",  MonitoringState(
-                 title = _("State when channel is running"),
-                 default_value = 0)),
-             ("other",    MonitoringState(
-                 title = _("State when channel status is unknown"),
-                 default_value = 2)),
-         ],
-         optional_keys = []
-    )),
 ]
 
 def transform_websphere_mq_queues(source):
@@ -1738,7 +1719,7 @@ register_check_parameters(
     _("Websphere MQ"),
     Transform(
         Dictionary(
-            elements = [
+            elements = websphere_mq_common_elements + [
                 ("message_count_perc",
                     OptionalDropdownChoice(
                         title      = _('Percentage of queue length'),
@@ -1754,9 +1735,7 @@ register_check_parameters(
                                 ]
                             ),
                         default_value = (80.0, 90.0)
-                    )
-                ), ] + \
-                websphere_mq_common_elements + [
+                )),
                 ("messages_not_processed",
                     Dictionary(
                         title = _("Settings for messages not processed"),
@@ -1781,9 +1760,8 @@ register_check_parameters(
                                     default_value = 1)
                             ),
                         ]
-                    ),
-                ),
-            ],
+                    )),
+                ],
         ),
         forth = transform_websphere_mq_queues
     ),
@@ -1796,7 +1774,42 @@ register_check_parameters(
     "websphere_mq_channels",
     _("Websphere MQ Channels"),
     Dictionary(
-        elements = websphere_mq_common_elements
+        elements = websphere_mq_common_elements + [
+            ("status",
+                Dictionary(
+                     title = _('Override check state based on channel state'),
+                     elements = [
+                         ("INACTIVE",  MonitoringState(
+                             title = _("State when channel is inactive"),
+                             default_value = 2)),
+                         ("INITIALIZING",  MonitoringState(
+                             title = _("State when channel is initializing"),
+                             default_value = 2)),
+                         ("BINDING",  MonitoringState(
+                             title = _("State when channel is binding"),
+                             default_value = 2)),
+                         ("STARTING",  MonitoringState(
+                             title = _("State when channel is starting"),
+                             default_value = 2)),
+                         ("RUNNING",  MonitoringState(
+                             title = _("State when channel is running"),
+                             default_value = 0)),
+                         ("RETRYING", MonitoringState(
+                             title = _("State when channel is retrying"),
+                             default_value = 2)),
+                         ("STOPPING", MonitoringState(
+                             title = _("State when channel is stopping"),
+                             default_value = 2)),
+                         ("STOPPED",  MonitoringState(
+                             title = _("State when channel is stopped"),
+                             default_value = 1)),
+                         ("other",    MonitoringState(
+                             title = _("State when channel status is unknown"),
+                             default_value = 2)),
+                     ],
+                     optional_keys = []
+            )),
+        ],
     ),
     TextAscii(title = _("Name of channel")),
     match_type = "dict",

@@ -10,6 +10,7 @@
     * 4533 FIX: cisco_vpn_tunnel: Fixed handling if tunnel is not yet open and phase two values are not set
     * 4552 FIX: win_dhcp_pools: Fixed conversion of old type of rules (1.2.6) to new type (1.2.8)...
     * 4576 FIX: if64, if64adm: Fixed interface speed handling, if highspeed data is not available or zero
+    * 4577 FIX: websphere_mq_channels: Fixed missing channel states
 
 
 1.2.8p20:

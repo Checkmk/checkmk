@@ -359,15 +359,30 @@ register_check_parameters(
                  Dictionary(
                      title = _('Override check state based on channel state (only for channels)'),
                      elements = [
-                         ("STOPPED",  MonitoringState(
-                             title = _("State when channel is stopped"),
-                             default_value = 1)),
-                         ("RETRYING", MonitoringState(
-                             title = _("State when channel is retrying"),
+                         ("INACTIVE",  MonitoringState(
+                             title = _("State when channel is inactive"),
+                             default_value = 2)),
+                         ("INITIALIZING",  MonitoringState(
+                             title = _("State when channel is initializing"),
+                             default_value = 2)),
+                         ("BINDING",  MonitoringState(
+                             title = _("State when channel is binding"),
+                             default_value = 2)),
+                         ("STARTING",  MonitoringState(
+                             title = _("State when channel is starting"),
                              default_value = 2)),
                          ("RUNNING",  MonitoringState(
                              title = _("State when channel is running"),
                              default_value = 0)),
+                         ("RETRYING", MonitoringState(
+                             title = _("State when channel is retrying"),
+                             default_value = 2)),
+                         ("STOPPING", MonitoringState(
+                             title = _("State when channel is stopping"),
+                             default_value = 2)),
+                         ("STOPPED",  MonitoringState(
+                             title = _("State when channel is stopped"),
+                             default_value = 1)),
                          ("other",    MonitoringState(
                              title = _("State when channel status is unknown"),
                              default_value = 2)),

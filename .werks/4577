@@ -1,0 +1,9 @@
+Title: websphere_mq_channels: Fixed missing channel states
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p21
+Date: 1490946082
+Class: fix
+
+

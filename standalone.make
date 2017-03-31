@@ -22,5 +22,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-EXECUTABLES := mkevent mkeventd_open514
-include ../standalone.make
+# TODO(sp) We should really use autotools here...
+ifneq ($(shell which g++-6 2>/dev/null),)
+        CXX := g++-6 -std=c++14
+else
+        CXX := g++-5 -std=c++14
+endif
+
+CXXFLAGS    := -g -O3 -Wall -Wextra
+LDFLAGS     := -static-libstdc++
+
+.PHONY: all clean
+
+all: $(EXECUTABLES)
+
+clean:
+	$(RM) $(EXECUTABLES)

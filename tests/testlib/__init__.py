@@ -295,21 +295,8 @@ class Site(object):
         if not self.version.is_installed():
             self.version.install()
 
-        # When using the Git version, the original version files will be
-        # replaced by the .f12 scripts. When tests are running in parallel
-        # with the same daily build, this may lead to problems when the .f12
-        # scripts are executed while another test is loading affected files
-        # As workaround we copy the original files to a test specific version
-        # Don't do this in non CI environments
-        if self.update_with_git and os.environ.get("BUILD_NUMBER"):
-            src_path = self.version.version_path()
-            new_version_name = "%s-%s" % (self.version.version, os.environ["BUILD_NUMBER"])
-            self.version = CMKVersion(new_version_name, self.version._edition, self.version._branch)
-            print("Copy CMK '%s' to '%s'" % (src_path, self.version.version_path()))
-            cmd = "sudo /bin/cp -pr %s %s" % (src_path, self.version.version_path())
-            if os.system(cmd) >> 8 != 0:
-                raise Exception("Failed to copy Check_MK: %s" % cmd)
-
+        if self.update_with_git:
+            self._copy_omd_version_for_test()
 
         if not self.reuse and self.exists():
             raise Exception("The site %s already exists." % self.id)
@@ -325,6 +312,32 @@ class Site(object):
             self._update_with_f12_files()
 
         self._enable_mod_python_debug()
+
+
+    # When using the Git version, the original version files will be
+    # replaced by the .f12 scripts. When tests are running in parallel
+    # with the same daily build, this may lead to problems when the .f12
+    # scripts are executed while another test is loading affected files
+    # As workaround we copy the original files to a test specific version
+    def _copy_omd_version_for_test(self):
+        if not os.environ.get("BUILD_NUMBER"):
+            return # Don't do this in non CI environments
+
+        src_version, src_path = self.version.version, self.version.version_path()
+        new_version_name = "%s-%s" % (src_version, os.environ["BUILD_NUMBER"])
+        self.version = CMKVersion(new_version_name, self.version._edition, self.version._branch)
+
+        print("Copy CMK '%s' to '%s'" % (src_path, self.version.version_path()))
+        assert not os.path.exists(self.version.version_path()), \
+            "New version path '%s' already exists" % self.version.version_path()
+
+        cmd = "sudo /bin/cp -pr %s %s" % (src_path, self.version.version_path())
+        if os.system(cmd) >> 8 != 0:
+            raise Exception("Failed to copy Check_MK: %s" % cmd)
+
+        if os.system("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
+            (src_version, new_version_name, self.version.version_path())) >> 8 != 0:
+            raise Exception("Failed to set new version to bin/omd")
 
 
     def _update_with_f12_files(self):

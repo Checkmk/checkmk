@@ -66,9 +66,10 @@ def check_3par_volumes(item, params, parsed):
                 yield 0, "Compact: %s" % entry['capacityEfficiency']['compaction']
 
             # Add some additional information and the performance data about Provisioning
-            yield states[entry['state']], \
-                  "Type: %s, WWN: %s" % (provisioning_map[entry['provisioningType']], entry['wwn']), \
-                  [ ( "fs_provisioning", get_bytes_human_readable(entry['userSpace']['rawReservedMiB'] * 1024 * 1024)) ]
+            provisioning = entry['userSpace']['rawReservedMiB'] * 1024 * 1024
+            yield states[entry['state']], "Type: %s, WWN: %s" % \
+                    (provisioning_map[entry['provisioningType']], entry['wwn']), \
+                    [ ( "fs_provisioning", provisioning) ]
 
 
 check_info['3par_volumes'] = {

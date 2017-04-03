@@ -1433,7 +1433,7 @@ def mode_mkeventd_rules(phase):
                           [ (pack["id"], pack["title"])
                             for pack in rule_packs
                             if not pack is rule_pack]
-                html.select("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
+                html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
 
         if len(rule_packs) > 1:
             html.hidden_field("_move_to", "yes")

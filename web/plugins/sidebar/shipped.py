@@ -2121,7 +2121,8 @@ def render_tag_tree():
         upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(cwd[:-1])
         html.icon_button(upurl, _("Go up one tree level"), "back")
 
-    html.select("vtree", choices, "%s" % tree_conf["tree"], onchange='virtual_host_tree_changed(this)')
+    html.dropdown("vtree", choices, deflt="%s" % tree_conf["tree"],
+                  onchange='virtual_host_tree_changed(this)')
     html.br()
     html.end_form()
     html.final_javascript(virtual_host_tree_js)

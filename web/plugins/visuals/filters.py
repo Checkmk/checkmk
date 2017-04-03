@@ -341,7 +341,7 @@ class FilterGroupCombo(Filter):
         choices = all_groups(self.what.split("_")[-1])
         if not self.enforce:
             choices = [("", "")] + choices
-        html.sorted_select(self.htmlvars[0], choices)
+        html.dropdown(self.htmlvars[0], choices, sorted=True)
         if not self.enforce:
             html.open_nobr()
             html.checkbox(self.htmlvars[1], False, label=_("negate"))
@@ -415,7 +415,7 @@ class FilterGroupSelection(Filter):
 
     def display(self):
         choices = all_groups(self.what[:-5]) # chop off "group", leaves host or service
-        html.sorted_select(self.htmlvars[0], choices)
+        html.dropdown(self.htmlvars[0], choices, sorted=True)
 
     def current_value(self):
         return html.var(self.htmlvars[0])
@@ -468,7 +468,7 @@ class FilterQueryDropdown(Filter):
 
     def display(self):
         selection = sites.live().query_column_unique(self.query)
-        html.sorted_select(self.name, [("", "")] + [(x,x) for x in selection])
+        html.dropdown(self.name, [("", "")] + [(x,x) for x in selection], sorted=True)
 
     def filter(self, infoname):
         current = html.var(self.name)
@@ -695,7 +695,7 @@ class FilterSite(Filter):
 
 
     def display(self):
-        html.select("site", self._choices())
+        html.dropdown("site", self._choices())
 
 
     def _choices(self):
@@ -807,7 +807,7 @@ class FilterTime(Filter):
             html.text_input(varprefix, style="width: 116px;")
             html.close_td()
             html.open_td()
-            html.select(varprefix + "_range", choices, "3600")
+            html.dropdown(varprefix + "_range", choices, deflt="3600")
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -1105,20 +1105,16 @@ class FilterHostTags(Filter):
             prefix = 'host_tag_%d' % num
             html.open_tr()
             html.open_td()
-            html.sorted_select(prefix + '_grp',
-                [("", "")] + groups,
-                onchange = 'host_tag_update_value(\'%s\', this.value)' % prefix,
-                attrs = {'style': 'width:129px'}
-            )
+            html.dropdown(prefix + '_grp', [("", "")] + groups,
+                          onchange = 'host_tag_update_value(\'%s\', this.value)' % prefix,
+                          style='width:129px', sorted=True)
             html.close_td()
             html.open_td()
-            html.sorted_select(prefix + '_op', [("", "")] + operators,
-                attrs = {'style': 'width:36px'})
+            html.dropdown(prefix + '_op', [("", "")] + operators, style="width:36px", sorted=True)
             html.close_td()
             html.open_td()
-            html.sorted_select(prefix + '_val',
-                html.var(prefix + '_grp') and grouped[html.var(prefix + '_grp')] or [("", "")],
-                attrs = {'style': 'width:129px'})
+            choices = grouped[html.var(prefix + '_grp')] if html.var(prefix + '_grp') else [("", "")]
+            html.dropdown(prefix + '_val', choices, style="width:129px", sorted=True)
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -1192,8 +1188,7 @@ class FilterHostAuxTags(Filter):
     def display(self):
         selection = []
         for num in range(self.count):
-            html.sorted_select( '%s_%d' % (self.prefix, num),
-                                [("", "")] + self.auxtags )
+            html.dropdown('%s_%d' % (self.prefix, num), [("", "")] + self.auxtags, sorted=True)
 
 
     def host_auxtags_filter(self, tag):
@@ -1247,7 +1242,7 @@ class FilterECServiceLevelRange(Filter):
     def display(self):
         selection = [ ("", "") ] + self._prepare_choices()
         html.write_text("From")
-        html.select(self.lower_bound_varname, selection)
+        html.dropdown(self.lower_bound_varname, selection)
         html.write_text("To")
         html.select(self.upper_bound_varname, selection)
 

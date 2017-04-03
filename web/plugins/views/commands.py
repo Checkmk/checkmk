@@ -750,7 +750,7 @@ def paint_downtime_buttons(what):
         html.write_text(" ")
         recurring_selections = [ (str(k), v) for (k,v) in
                                  sorted(wato.recurring_downtimes_types.items())]
-        html.select("_down_recurring", recurring_selections, "3")
+        html.dropdown("_down_recurring", recurring_selections, deflt="3")
         html.write_text(_("(This only works when using CMC)"))
 
 

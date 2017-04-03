@@ -710,11 +710,8 @@ class BaseFolder(WithPermissionsAndAttributes):
             breadcrump_element_start(z_index = 100 + num)
             html.open_div(class_=["content"])
             html.open_form(name="folderpath", method="GET")
-            html.sorted_select(
-                "folder", [ ("", "") ] + self.subfolder_choices(),
-                onchange = "folderpath.submit();",
-                attrs = { "class": "folderpath", }
-            )
+            html.sorted_dropdown("folder", [ ("", "") ] + self.subfolder_choices(),
+                                 class_="folderpath", onchange = "folderpath.submit();")
             if keepvarnames == True:
                 html.hidden_fields()
             else:
@@ -2842,7 +2839,7 @@ class EnumAttribute(Attribute):
         return "", self._enumdict.get(value, self.default_value())
 
     def render_input(self, varprefix, value):
-        html.select(varprefix + "attr_" + self.name(), self._enumlist, value)
+        html.dropdown(varprefix + "attr_" + self.name(), self._enumlist, value)
 
     def from_html_vars(self, varprefix):
         return html.var(varprefix + "attr_" + self.name(), self.default_value())
@@ -2904,7 +2901,7 @@ class HostTagAttribute(Attribute):
             html.checkbox(varname, value != "", label = choices[0][1],
                           onclick='wato_fix_visibility();', tags=choices[0][0])
         else:
-            html.select(varname, choices, value, onchange='wato_fix_visibility();')
+            html.dropdown(varname, choices, value, onchange="wato_fix_visibility();")
 
     def from_html_vars(self, varprefix):
         varname = varprefix + "attr_" + self.name()
@@ -6645,15 +6642,15 @@ def render_condition_editor(tag_specs, varprefix=""):
     # Show dropdown with "is/isnot/ignore" and beginning
     # of div that is switched visible by is/isnot
     def tag_condition_dropdown(tagtype, deflt, id):
+
         html.open_td()
-        html.select(varprefix + tagtype + "_" + id, [
-            ("ignore", _("ignore")),
-            ("is",     _("is")),
-            ("isnot",  _("isnot"))], deflt,
-            onchange="valuespec_toggle_dropdownn(this, '%stag_sel_%s');" % \
-                    (varprefix, id)
-        )
+        onchange="valuespec_toggle_dropdownn(this, '%stag_sel_%s');" % (varprefix, id)
+        choices = [("ignore", _("ignore")),
+                   ("is",     _("is")),
+                   ("isnot",  _("isnot"))]
+        html.dropdown(varprefix + tagtype + "_" + id, choices, deflt=deflt, onchange=onchange)
         html.close_td()
+
         html.open_td(class_="tag_sel")
         if html.form_submitted():
             div_is_open = html.var(tagtype + "_" + id, "ignore") != "ignore"
@@ -6690,8 +6687,9 @@ def render_condition_editor(tag_specs, varprefix=""):
                     if len(choices) == 1:
                         html.write_text(" " + _("set"))
                     else:
-                        html.select(varprefix + "tagvalue_" + id,
-                            [(t[0], _u(t[1])) for t in choices if t[0] != None], deflt=default_tag)
+                        html.dropdown(varprefix + "tagvalue_" + id,
+                                      [(t[0], _u(t[1])) for t in choices if t[0] != None],
+                                      deflt=default_tag)
                     html.close_div()
                     html.close_td()
                     html.close_tr()

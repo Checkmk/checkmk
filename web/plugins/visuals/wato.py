@@ -72,7 +72,7 @@ class FilterWatoFile(Filter):
                 subfolder += part
                 allowed_folders.add(subfolder)
 
-        html.select(self.name, [("", "")] + [ entry for entry in self.selection if (entry[0] in allowed_folders) ])
+        html.dropdown(self.name, [("", "")] + [ entry for entry in self.selection if (entry[0] in allowed_folders) ])
 
     def filter(self, infoname):
         self.check_wato_data_update()

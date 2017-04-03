@@ -4183,6 +4183,7 @@ check_metrics["check_mk-emc_isilon_ifs"]                        = df_translation
 check_metrics["check_mk-mongodb_collections"]                   = df_translation
 check_metrics["check_mk-3par_cpgs.usage"]                       = df_translation
 check_metrics["check_mk-3par_capacity"]                         = df_translation
+check_metrics["check_mk-3par_volumes"]                          = df_translation
 
 disk_utilization_translation = { "disk_utilization" : { "scale" : 100.0 } }
 

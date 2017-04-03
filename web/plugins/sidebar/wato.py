@@ -239,7 +239,7 @@ def render_wato_foldertree():
     dashboard.load_dashboards()
     topic_views  = visuals_by_topic(views.permitted_views().items() + dashboard.permitted_dashboards().items())
     topics = [ (t, t) for t, s in topic_views ]
-    html.select("topic", topics, selected_topic, onchange='wato_tree_topic_changed(this)')
+    html.dropdown("topic", topics, deflt=selected_topic, onchange='wato_tree_topic_changed(this)')
     html.span(_('Topic:'), class_="left")
 
     for topic, view_list in topic_views:
@@ -254,14 +254,12 @@ def render_wato_foldertree():
                     name = 'dashboard|' + name
                 targets.append((name, title))
 
-        attrs = {}
         if topic != selected_topic:
-            attrs['style'] = 'display:none'
-            default = ''
+            default, style = '', 'display:none'
         else:
-            default = selected_target
-
-        html.select("target_%s" % topic, targets, default, attrs=attrs, onchange='wato_tree_target_changed(this)')
+            default, style = selected_target, None
+        html.dropdown("target_%s" % topic, targets, deflt=default,
+                      onchange='wato_tree_target_changed(this)', style=style)
 
     html.span(_("View:"), class_="left")
 

@@ -1036,9 +1036,8 @@ def ajax_popup_move_to_folder():
 
     if choices:
         choices = [("@", _("(select target folder)"))] + choices
-        html.select("_host_move_%s" % ident, choices, "@",
-            "location.href='%s&_ident=%s&_move_%s_to=' + this.value;" % (back_url, ident, what),
-            attrs={'size': '10'})
+        onchange="location.href='%s&_ident=%s&_move_%s_to=' + this.value;" % (back_url, ident, what)
+        html.dropdown("_host_move_%s" % ident, choices, deflt="@", size = '10', onchange=onchange)
     else:
         html.write_text(_("No valid target folder."))
 
@@ -1054,9 +1053,9 @@ def host_bulk_move_to_folder_combo(folder, top):
             field_name = '_top_bulk_moveto'
             if html.has_var('bulk_moveto'):
                 html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
-        html.select(field_name, choices, "@",
-                     onchange = "update_bulk_moveto(this.value)",
-                     attrs = {'class': 'bulk_moveto'})
+        html.dropdown(field_name, choices, deflt="@",
+                      onchange = "update_bulk_moveto(this.value)",
+                      class_ = 'bulk_moveto')
     else:
         html.write_text(_("No valid target folder."))
 
@@ -3856,7 +3855,7 @@ class ModeBulkImport(WatoMode):
                 attribute_method = self._try_detect_default_attribute(attributes, header)
                 html.del_var(attribute_varname)
 
-            html.select("attribute_%d" % col_num, attributes, attribute_method, attrs={"autocomplete": "off"})
+            html.dropdown("attribute_%d" % col_num, attributes, deflt=attribute_method, autocomplete="off")
 
         # Render sample rows
         for row in rows:
@@ -9965,9 +9964,8 @@ class ModeEditSite(ModeSites):
         html.text_input("sh_host", self._sh_host, size=10)
         html.write_text(_(" on monitoring site: "))
 
-        html.sorted_select("sh_site",
-           [ ("", _("(no status host)")) ] + [
-             (sk, si.get("alias", sk)) for (sk, si) in self.load_sites().items() ], self._sh_site)
+        choices = [ ("", _("(no status host)")) ] + [ (sk, si.get("alias", sk)) for (sk, si) in self.load_sites().items() ]
+        html.dropdown("sh_site", choices, deflt=self._sh_site, sorted=True)
 
         html.help( _("By specifying a status host for each non-local connection "
                      "you prevent Multisite from running into timeouts when remote sites do not respond. "
@@ -9986,10 +9984,10 @@ class ModeEditSite(ModeSites):
         # Replication
         forms.header(_("Configuration Replication (Distributed WATO)"))
         forms.section(_("Replication method"))
-        html.select("replication",
+        html.dropdown("replication",
             [ (None,  _("No replication with this site")),
               ("slave", _("Slave: push configuration to this site"))
-            ], self._site.get("replication"))
+            ], deflt=self._site.get("replication"))
         html.help( _("WATO replication allows you to manage several monitoring sites with a "
                     "logically centralized WATO. Slave sites receive their configuration "
                     "from master sites. <br><br>Note: Slave sites "
@@ -10839,7 +10837,7 @@ def mode_edit_user(phase):
         forms.section(_("Notification time period"))
         choices = [ ( "24X7", _("Always")) ] + \
                   [ ( id, "%s" % (tp["alias"])) for (id, tp) in timeperiods.items() ]
-        html.sorted_select("notification_period", choices, user.get("notification_period"))
+        html.dropdown("notification_period", choices, deflt=user.get("notification_period"), sorted=True)
         html.help(_("Only during this time period the "
                      "user will get notifications about host or service alerts."))
 
@@ -11187,7 +11185,7 @@ def mode_edit_role(phase):
                     "not get those new permissions based on the default settings of the builtin role it's "
                     "based on."))
         choices = [ (i, r["alias"]) for i, r in roles.items() if r.get("builtin") ]
-        html.sorted_select("basedon", choices, role.get("basedon", "user"))
+        html.dropdown("basedon", choices, deflt=role.get("basedon", "user"), sorted=True)
 
 
     forms.end()
@@ -11240,8 +11238,9 @@ def mode_edit_role(phase):
             choices = [ ( "yes", _("yes")),
                         ( "no", _("no")),
                         ( "default", _("default (%s)") % (def_value and _("yes") or _("no") )) ]
-            html.select("perm_" + pname, choices, { True: "yes", False: "no" }.get(pvalue, "default"), attrs={"style": "width: 130px;"} )
+            deflt = { True: "yes", False: "no" }.get(pvalue, "default")
 
+            html.dropdown("perm_" + pname, choices, deflt=deflt, style="width: 130px;")
             html.help(perm["description"])
 
     forms.end()
@@ -13006,7 +13005,7 @@ class ModeEditRuleset(WatoMode):
         html.close_td()
         html.open_td()
 
-        html.select("rule_folder", Folder.folder_choices(), html.var('folder'))
+        html.dropdown("rule_folder", Folder.folder_choices(), deflt=html.var('folder'))
         html.close_td()
         html.close_tr()
         html.close_table()
@@ -13417,7 +13416,7 @@ class ModeEditRule(WatoMode):
 
         # Rule folder
         forms.section(_("Folder"))
-        html.select("new_rule_folder", Folder.folder_choices(), self._folder.path())
+        html.dropdown("new_rule_folder", Folder.folder_choices(), deflt=self._folder.path())
         html.help(_("The rule is only applied to hosts directly in or below this folder."))
 
         # Host tags
@@ -13986,7 +13985,7 @@ def select_language(user):
         html.open_div(id_="attr_entry_language", style="display: none" if not active else "")
 
         language = user.get('language') if user.get('language') != None else ''
-        html.select("language", languages, language)
+        html.dropdown("language", languages, deflt=language)
         html.close_div()
         html.help(_('Configure the default language '
                     'to be used by the user in the user interface here. If you do not check '
@@ -14852,7 +14851,7 @@ def mode_edit_custom_attr(phase, what):
         topics.insert(0, (_("Custom attributes"), _("Custom attributes")))
         default_topic = _("Custom attributes")
 
-    html.select('topic', topics, attr.get('topic', 'personal'))
+    html.dropdown('topic', topics, deflt=attr.get('topic', 'personal'))
 
     forms.section(_('Help Text') + "<sup>*</sup>")
     html.help(_('You might want to add some helpful description for the attribute.'))
@@ -14861,7 +14860,7 @@ def mode_edit_custom_attr(phase, what):
     forms.section(_('Data type'))
     html.help(_('The type of information to be stored in this attribute.'))
     if new:
-        html.select('type', custom_attr_types, attr.get('type'))
+        html.dropdown('type', custom_attr_types, deflt=attr.get('type'))
     else:
         html.write(dict(custom_attr_types)[attr.get('type')])
 

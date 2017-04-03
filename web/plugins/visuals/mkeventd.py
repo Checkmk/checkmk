@@ -182,7 +182,7 @@ if mkeventd_enabled:
                 choices = self._choices
             else:
                 choices = self._choices()
-            html.select(self._varname, [ ("", "") ] + [(str(n),t) for (n,t) in choices])
+            html.dropdown(self._varname, [ ("", "") ] + [(str(n),t) for (n,t) in choices])
 
         def filter(self, infoname):
             val = html.var(self._varname)

@@ -2324,53 +2324,73 @@ class html(HTMLGenerator, RequestHandler):
             self.close_x()
 
 
-    def sorted_select(self, varname, choices, deflt="", onchange=None, attrs=None):
+    # TODO: DEPRECATED!!
+    def sorted_select(self, varname, choices, deflt='', onchange=None, attrs=None):
         if attrs is None:
             attrs = {}
+        self.dropdown(varname, choices, deflt=deflt, onchange=onchange, sorted = True, **attrs)
 
-        # Sort according to display texts, not keys
-        sorted = choices[:]
-        sorted.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
-        self.select(varname, sorted, deflt, onchange, attrs)
+
+    # TODO: DEPRECATED!!
+    def select(self, varname, choices, deflt='', onchange=None, attrs=None):
+        if attrs is None:
+            attrs = {}
+        self.dropdown(varname, choices, deflt=deflt, onchange=onchange, **attrs)
+
+
+    # TODO: DEPRECATED!!
+    def icon_select(self, varname, choices, deflt=''):
+        self.icon_dropdown(varname, choices, deflt=deflt)
 
 
     # Choices is a list pairs of (key, title). They keys of the choices
     # and the default value must be of type None, str or unicode.
-    def select(self, varname, choices, deflt="", onchange=None, attrs=None):
-        if attrs is None:
-            attrs = {}
+    def dropdown(self, varname, choices, deflt='', sorted='', **attrs):
 
-        # Model
         current = self.get_unicode_input(varname, deflt)
         error = self.user_errors.get(varname)
         if varname:
             self.form_vars.append(varname)
-
-        # View
         attrs.setdefault('size', 1)
-        html_code = HTML()
-        for value, text in choices:
-            html_code += self.render_option(text, value=value if value else "",
-                                                  selected='' if value==current else None)
-        html_code = self.render_select(html_code, name=varname, id_=varname, onchange=onchange, **attrs)
+
+        chs = choices[:]
+        if sorted:
+            # Sort according to display texts, not keys
+            chs.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
+
         if error:
-            html_code = self.render_x(html_code, class_="inputerror")
-        self.write(html_code)
+            self.open_x(class_="inputerror")
+
+        self.open_select(name=varname, id_=varname, **attrs)
+        for value, text in choices:
+            # if both the default in choices and current was '' then selected depended on the order in choices
+            selected = (value == current) or (not value and not current)
+            self.option(text, value=value if value else "",
+                              selected="" if selected else None)
+        self.close_select()
+        if error:
+            self.close_x()
 
 
-    def icon_select(self, varname, choices, deflt=""):
-        # Model
+    def icon_dropdown(self, varname, choices, deflt=""):
         current = self.var(varname, deflt)
         if varname:
             self.form_vars.append(varname)
 
-        # View
         self.open_select(class_="icon", name=varname, id_=varname, size="1")
         for value, text, icon in choices:
+            # if both the default in choices and current was '' then selected depended on the order in choices
+            selected = (value == current) or (not value and not current)
             self.option(text, value=value if value else "",
-                              selected='' if value == current else None,
+                              selected='' if selected else None,
                               style="background-image:url(images/icon_%s.png);" % icon)
         self.close_select()
+
+
+    # Wrapper for DualListChoice
+    def multi_select(self, varname, choices, deflt='', sorted='', **attrs):
+        attrs["multiple"] = "multiple"
+        self.dropdown(varname, choices, deflt=deflt, sorted=sorted, **attrs)
 
 
     def upload_file(self, varname):

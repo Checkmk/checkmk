@@ -365,7 +365,7 @@ class Filesize(Integer):
         html.number_input(varprefix + '_size', count, size = self._size)
         html.nbsp()
         choices = [ (str(nr), name) for (nr, name) in enumerate(self._names) ]
-        html.select(varprefix + '_unit', choices, str(exp))
+        html.dropdown(varprefix + '_unit', choices, deflt=str(exp))
 
     def from_html_vars(self, varprefix):
         try:
@@ -1417,13 +1417,10 @@ class ListOfMultiple(ValueSpec):
         html.close_table()
         html.br()
 
-        choosable = [('', '')] + [ (ident, vs.title()) for ident, vs in self._choices ]
-        attrs = {}
-        if self._size != None:
-            attrs["style"] = "width: %dex" % self._size
-        if self._delete_style == "filter":
-            attrs["class"] = "vlof_filter"
-        html.select(varprefix + '_choice', choosable, attrs=attrs)
+        choices = [('', '')] + [ (ident, vs.title()) for ident, vs in self._choices ]
+        html.dropdown(varprefix + '_choice', choices,
+                      style="width: %dex" % self._size if self._size is not None else None,
+                      class_="vlof_filter" if self._delete_style == "filter" else None)
         html.javascript('vs_listofmultiple_init(\'%s\');' % varprefix)
         html.jsbutton(varprefix + '_add', self._add_label, "vs_listofmultiple_add('%s')" % varprefix)
 
@@ -1626,12 +1623,9 @@ class DropdownChoice(ValueSpec):
         if len(options) == 0:
             html.write(self._empty_text)
         elif len(options[0]) == 3:
-            html.icon_select(varprefix, options, defval)
+            html.icon_dropdown(varprefix, options, deflt=defval)
         else:
-            if not self._sorted:
-                html.select(varprefix, options, defval, onchange=self._on_change)
-            else:
-                html.sorted_select(varprefix, options, defval, onchange=self._on_change)
+            html.dropdown(varprefix, options, deflt=defval, onchange=self._on_change, sorted=self._sorted)
 
 
     def _get_invalid_choice_title(self, value):
@@ -1802,7 +1796,7 @@ class CascadingDropdown(ValueSpec):
             options.append((str(nr), title))
             # Determine the default value for the select, so the
             # the dropdown pre-selects the line corresponding with value.
-            # Note: the html.select() with automatically show the modified
+            # Note: the html.dropdown() with automatically show the modified
             # selection, if the HTML variable varprefix_sel aleady
             # exists.
             if value == val or (
@@ -1811,10 +1805,7 @@ class CascadingDropdown(ValueSpec):
 
         vp = varprefix + "_sel"
         onchange="valuespec_cascading_change(this, '%s', %d);" % (varprefix, len(choices))
-        if self._sorted:
-            html.select(vp, options, def_val, onchange=onchange)
-        else:
-            html.sorted_select(vp, options, def_val, onchange=onchange)
+        html.dropdown(vp, options, deflt=def_val, onchange=onchange, sorted=self._sorted)
 
         # make sure, that the visibility is done correctly, in both
         # cases:
@@ -2171,7 +2162,6 @@ class DualListChoice(ListChoice):
             onchange_selected   = 'vs_duallist_enlarge(\'selected\', \'%s\');' % varprefix
             onchange_unselected = 'vs_duallist_enlarge(\'unselected\', \'%s\');' % varprefix
 
-        func = html.select if self._custom_order else html.sorted_select
         attrs = {
             'multiple'   : 'multiple',
             'style'      : 'height:auto' if self._autoheight else "height: %dpx" % (self._rows * 16),
@@ -2180,10 +2170,13 @@ class DualListChoice(ListChoice):
 
         html.open_tr()
         html.open_td()
-        func(varprefix + '_unselected', unselected, attrs = attrs, onchange = onchange_unselected)
+        attrs["onchange"] = onchange_unselected
+        html.multi_select(varprefix + '_unselected', unselected, deflt='', sorted=self._custom_order, **attrs)
         html.close_td()
+
         html.open_td()
-        func(varprefix + '_selected', selected, attrs = attrs, onchange = onchange_selected)
+        attrs["onchange"] = onchange_selected
+        html.multi_select(varprefix + '_selected', selected, deflt='', sorted=self._custom_order, **attrs)
         html.close_td()
         html.close_tr()
 
@@ -2241,8 +2234,8 @@ class OptionalDropdownChoice(DropdownChoice):
         if self._sorted:
             options.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         options.append(("other", self._otherlabel))
-        html.select(varprefix, options, defval, # attrs={"style":"float:left;"},
-                    onchange="valuespec_toggle_dropdown(this, '%s_ex');" % varprefix )
+        html.dropdown(varprefix, options, deflt=defval, # style="float:left;",
+                                 onchange="valuespec_toggle_dropdown(this, '%s_ex');" % varprefix)
         if html.has_var(varprefix):
             div_is_open = html.var(varprefix) == "other"
         else:
@@ -3085,7 +3078,7 @@ class Alternative(ValueSpec):
             html.open_table()
             html.open_tr()
             html.open_td()
-        html.select(varprefix + "_use", options, sel_option, onchange)
+        html.dropdown(varprefix + "_use", options, deflt=sel_option, onchange=onchange)
         if self._orientation == "vertical":
             html.br()
             html.br()
@@ -3610,7 +3603,7 @@ class ElementSelection(ValueSpec):
             if self._label:
                 html.write("%s" % self._label)
                 html.nbsp()
-            html.sorted_select(varprefix, self._elements.items(), value)
+            html.dropdown(varprefix, self._elements.items(), deflt=value, sorted=True)
 
     def value_to_text(self, value):
         self.load_elements()

@@ -450,7 +450,7 @@ class ManagementTypeAttribute(Attribute):
         return "", self._choices_dict.get(value, value)
 
     def render_input(self, varprefix, value):
-        html.select(varprefix + "protocol", self._choices, value)
+        html.dropdown(varprefix + "protocol", self._choices, deflt=value)
 
     def from_html_vars(self, varprefix):
         return html.var(varprefix + "protocol")

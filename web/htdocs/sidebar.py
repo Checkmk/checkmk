@@ -150,7 +150,8 @@ def snapin_site_choice(ident, choices):
         return None
 
     site_choices = [ ("", _("All sites")), ] + site_choices
-    html.select("site", site_choices, site, onchange="set_snapin_site(event, %s, this)" % json.dumps(ident))
+    onchange = "set_snapin_site(event, %s, this)" % json.dumps(ident)
+    html.dropdown("site", site_choices, deflt=site, onchange=onchange)
 
     return only_sites
 
@@ -410,6 +411,7 @@ def write_snapin_exception(e):
     html.open_div(class_=["snapinexception"])
     html.h2(_('Error'))
     html.p(e)
+    html.div(traceback.format_exc().replace('\n', '<br>'), style="display:none;")
     html.close_div()
 
 def ajax_fold():

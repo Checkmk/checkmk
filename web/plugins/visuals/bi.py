@@ -36,7 +36,7 @@ class BIGroupFilter(FilterUnicodeFilter):
 
     def display(self):
         htmlvar = self.htmlvars[0]
-        html.select(htmlvar, [ ("", "") ] + [(g, g) for g in bi.aggregation_groups()])
+        html.dropdown(htmlvar, [ ("", "") ] + [(g, g) for g in bi.aggregation_groups()])
 
     def selected_group(self):
         return html.get_unicode_input(self.htmlvars[0])

@@ -65,6 +65,10 @@ class CMKVersion(object):
     CRE   = "cre"
 
     def __init__(self, version, edition, branch):
+        self._version = version
+        self._edition = edition
+        self._branch  = branch
+
         self.set_version(version, branch)
 
         if len(edition) != 3:
@@ -85,6 +89,7 @@ class CMKVersion(object):
     def set_version(self, version, branch):
         if version in [ CMKVersion.DAILY, CMKVersion.GIT ]:
             date_part = time.strftime("%Y.%m.%d")
+
             if branch != "master":
                 self.version = "%s-%s" % (branch, date_part)
             else:
@@ -289,6 +294,22 @@ class Site(object):
     def create(self):
         if not self.version.is_installed():
             self.version.install()
+
+        # When using the Git version, the original version files will be
+        # replaced by the .f12 scripts. When tests are running in parallel
+        # with the same daily build, this may lead to problems when the .f12
+        # scripts are executed while another test is loading affected files
+        # As workaround we copy the original files to a test specific version
+        # Don't do this in non CI environments
+        if self.update_with_git and os.environ.get("BUILD_NUMBER"):
+            src_path = self.version.version_path()
+            new_version_name = "%s-%s" % (self.version.version, os.environ["BUILD_NUMBER"])
+            self.version = CMKVersion(new_version_name, self.version._edition, self.version._branch)
+            print("Copy CMK '%s' to '%s'" % (src_path, self.version.version_path()))
+            cmd = "sudo /bin/cp -pr %s %s" % (src_path, self.version.version_path())
+            if os.system(cmd) >> 8 != 0:
+                raise Exception("Failed to copy Check_MK: %s" % cmd)
+
 
         if not self.reuse and self.exists():
             raise Exception("The site %s already exists." % self.id)

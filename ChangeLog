@@ -11,6 +11,7 @@
     * 4552 FIX: win_dhcp_pools: Fixed conversion of old type of rules (1.2.6) to new type (1.2.8)...
     * 4576 FIX: if64, if64adm: Fixed interface speed handling, if highspeed data is not available or zero
     * 4577 FIX: websphere_mq_channels: Fixed missing channel states
+    * 4581 FIX: postgres_stats: Fixed confusion of VACUUM and ANALYSE timestamp in agent plugin
 
 
 1.2.8p20:

@@ -1,0 +1,14 @@
+Title: Fixed freshness and staleness for always-up and cluster hosts.
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0b5
+Date: 1491304933
+
+Host which should be considered always-up and cluster hosts had wrong
+freshness and staleness values: They were effectively only checked once, but
+never again, so they were considered unfresh and stale after some time. 
+This has been fixed.

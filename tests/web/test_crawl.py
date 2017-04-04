@@ -393,7 +393,8 @@ class TestCrawler(object):
                     ("var/log/apache/error_log", self.apache_error_log_file()),
                 ]:
                 if self.site.file_exists(site_path):
-                    open(test_path, "w").write(self.site.read_file(site_path))
+                    open(test_path+".tmp", "w").write(self.site.read_file(site_path))
+                    os.rename(test_path+".tmp", test_path)
 
             pytest.fail("Crawled %d URLs in %d seconds. Failures:\n%s" %
                         (len(self.visited), time.time() - self.started, "\n".join(self.errors)))

@@ -1,6 +1,6 @@
 Title: check_http: now able to configure HTTP method PROPFIND
 Level: 1
-Component: wato
+Component: checks
 Compatible: compat
 Version: 1.4.0i1
 Date: 1472039146

@@ -837,7 +837,9 @@ class CMKWebSession(WebSession):
 
         profile_page = self.get("user_profile.py").text
         assert "name=\"language\"" in profile_page
-        assert "value=\""+lang+"\"" in profile_page
+
+        if lang:
+            assert "value=\""+lang+"\"" in profile_page
 
         r = self.post("user_profile.py", data={
             "filled_in" : "profile",

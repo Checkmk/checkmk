@@ -47,7 +47,8 @@ test-bandit-ci:
 setup:
 	sudo apt-get install \
 	    python-pip \
-	    python-lxml
+	    python-lxml \
+	    chrpath
 	sudo pip install --upgrade pip
 	sudo pip install --upgrade \
 	    pytest \

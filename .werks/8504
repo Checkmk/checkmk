@@ -1,11 +1,11 @@
 Title: Agent bakery: Now able to deploy custom files for Linux/AIX-systems
 Level: 2
 Edition: cee
-Component: wato
+Component: agents
 Compatible: compat
 Version: 1.4.0i1
 Date: 1466779419
 Class: feature
 
 You can now deploy your own plugins through the agent bakery.
-For further information have a look at the WATO rule <i>"Deploy custom files with agent"</i>.
+For further information have a look at the bakery rule <i>"Deploy custom files with agent"</i>.

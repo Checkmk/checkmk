@@ -1,0 +1,110 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+factory_settings['informix_dbspaces_default_levels'] = {
+    'levels_perc': (80.0, 85.0)
+}
+
+
+def parse_informix_dbspaces(info):
+    parsed = {}
+    instance = None
+    entry = None
+    for line in info:
+        if instance is not None and len(line) > 2 and \
+           line[0] == "(expression)" and line[2] == "DBSPACE":
+            entry = {}
+            ts = "%s %s" % (instance, line[1])
+            parsed.setdefault(ts, [])
+            parsed[ts].append(entry)
+
+        elif line[0].startswith("[[[") and line[0].endswith("]]]"):
+            instance = line[0][3:-3]
+
+        elif entry is not None:
+            entry.setdefault(line[0], "".join(line[1:]))
+
+    return parsed
+
+
+def inventory_informix_dbspaces(parsed):
+    return [(ts, {}) for ts in parsed]
+
+
+def check_informix_dbspaces(item, params, parsed):
+    if item in parsed:
+        datafiles = parsed[item]
+        size = 0
+        free = 0
+        for entry in datafiles:
+            pagesize = int(entry['pagesize'])
+            free += int(entry['nfree']) * pagesize
+            size += int(entry['chksize']) * pagesize
+
+        used = size - free
+        infotext = "Data files: %s, Size: %s, Used: %s" % \
+                   (len(datafiles), get_bytes_human_readable(size),
+                    get_bytes_human_readable(used))
+        state = 0
+        if 'levels' in params:
+            warn, crit = params['levels']
+            if size >= crit:
+                state = 2
+            elif size >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %s/%s)" % \
+                            (get_bytes_human_readable(warn),
+                             get_bytes_human_readable(crit))
+
+        yield state, infotext, [("tablespace_size", size),
+                                ("tablespace_used", used)]
+
+        if size:
+            used_perc = used * 100.0 / size
+            infotext = "%.2f%%" % used_perc
+            warn_perc, crit_perc = params['levels_perc']
+            state = 0
+            if used_perc >= crit_perc:
+                state = 2
+            elif used_perc >= warn_perc:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %.2f%%/%.2f%%)" % (warn_perc, crit_perc)
+
+            yield state, infotext
+
+
+
+check_info['informix_dbspaces'] = {
+    'parse_function'        : parse_informix_dbspaces,
+    'inventory_function'    : inventory_informix_dbspaces,
+    'check_function'        : check_informix_dbspaces,
+    'service_description'   : 'Informix Tablespace %s',
+    'has_perfdata'          : True,
+    'default_levels_variable': 'informix_dbspaces_default_levels',
+}

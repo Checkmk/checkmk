@@ -1,0 +1,25 @@
+Title: informix_dbspaces, informix_locks, informix_logusage, informix_sessions, informix_status, informix_tabextents: New checks for IBM Informix DBs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1491293050
+Class: feature
+
+In order to use these checks you have to install the related
+agent plugin {{mk_informix}} and state a configuration file
+informix.cfg.
+<ul>
+<li>ONINIT_PATH; Default is empty, which means auto detection:</li>
+<ul>
+<li>ONINIT_PATH=/PATH/TO/ONINIT-BINARY</li>
+</ul>
+<li>Excluding sections: status, sessions, locks, tabextents, dbspaces, logusage:</li>
+<ul>
+<li>EXCLUDES_INFORMIX-INSTANCE="SECTION SECTION ..."</li>
+<li>EXCLUDES_INFORMIX-INSTANCE=ALL</li>
+<li>EXCLUDES="SECTION SECTION ..."</li>
+<li>EXCLUDES=ALL</li>
+</ul>
+</ul>

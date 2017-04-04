@@ -1,0 +1,18 @@
+title: Informix DB: Table extents
+agents: linux
+catalog: app/informix
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors table extents of
+ Informix Database application.
+ Moveover the rows and maximal extents are reported.
+
+ Upper default levels are set to 40, 70 percent. These
+ are configurable.
+
+item:
+ Instance name.
+
+inventory:
+ One service per instance.

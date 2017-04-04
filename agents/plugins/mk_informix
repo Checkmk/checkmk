@@ -1,0 +1,296 @@
+#!/bin/bash
+# Monitor status of LUNs on HP-UX
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Make ENV-VARs avail for subshells
+set -a
+
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
+
+
+function do_check () {
+    # $1:section, $2:excludelist
+    if echo "$2" | grep -qe "${1}"; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+
+function sql () {
+    db="sysmaster"
+    sqltxt="$1"
+    dbaccess_par=
+    export DBDELIMITER="|"
+    echo "$sqltxt" | dbaccess ${db}
+}
+
+
+function set_excludes () {
+    excludes=""
+    if [ "$EXCLUDES" = "ALL" ]; then
+        excludes="$all_sections"
+        global_exclude=true
+    elif [ ! -z "$EXCLUDES" ]; then
+        excludes=$EXCLUDES
+        global_exclude=true
+    else
+        global_exclude=false
+    fi
+
+    if [ "$global_exclude" = "false" ]; then
+        excludes_i="EXCLUDES_${1}"
+        if [ "${!excludes_i}" = "ALL" ]; then
+            excludes="$all_sections"
+        elif [ ! -z "${!excludes_i}" ]; then
+            excludes=${!excludes_i}
+        fi
+    fi
+}
+
+
+#.
+#   .--sqls----------------------------------------------------------------.
+#   |                                     _                                |
+#   |                           ___  __ _| |___                            |
+#   |                          / __|/ _` | / __|                           |
+#   |                          \__ \ (_| | \__ \                           |
+#   |                          |___/\__, |_|___/                           |
+#   |                                  |_|                                 |
+#   '----------------------------------------------------------------------'
+
+
+all_sections="sessions locks tabextents dbspaces logusage"
+
+
+function informix_status(){
+    echo "<<<informix_status:sep(58)>>>"
+    echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
+    $INFORMIXDIR/bin/onstat - >/dev/null 2>&1
+    state=$?
+    echo "Status:"$state
+    $INFORMIXDIR/bin/onstat -g dis
+    port=$(grep $INFORMIXSERVER /etc/services)
+    echo "PORT:"$port
+}
+
+
+function informix_sessions(){
+    echo "<<<informix_sessions>>>"
+    echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
+    # don't count our own session
+    sql "select 'SESSIONS', (count(*)-1)::int from syssessions"
+}
+
+
+function informix_locks(){
+    echo "<<<informix_locks>>>"
+    echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
+    # don't count our own session
+    sql "select 'LOCKS', (count(*)-1)::int, type from syslocks group by type"
+}
+
+
+function informix_tabextents(){
+    echo "<<<informix_tabextents>>>"
+    echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
+    sql "select first 10
+            'TABEXTENTS',
+            trim(n.dbsname) db,
+            trim(n.tabname) tab,
+            h.nextns extents,
+            nrows
+        from sysptnhdr h, systabnames n
+        where h.partnum = n.partnum
+        and nrows > 0
+        and n.dbsname not in ( 'sysadmin', 'sysuser', 'sysutils', 'sysmaster' )
+        and n.tabname not like 'sys%'
+        order by extents desc"
+}
+
+
+function informix_dbspaces(){
+    echo "<<<informix_dbspaces>>>"
+    echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
+    sql "select
+            trim(sd.name) || ' DBSPACE',
+            sd.dbsnum,
+            sd.is_temp,
+            sd.flags,
+            'CHUNK',
+            sc.fname,
+            sc.pagesize,
+            sc.chksize,
+            sc.nfree,
+            sc.flags,
+            trim(sc.mfname),
+            sc.mflags
+        from sysdbspaces sd, syschunks sc
+        where sd.dbsnum = sc.dbsnum
+        -- NO SBSPACE CURRENTLY
+        and sd.is_sbspace = 0
+        order by sd.name"
+}
+
+
+function informix_logusage(){
+    echo "<<<informix_logusage>>>"
+    echo "[[[$INFORMIXSERVER/$SERVERNUM]]]"
+    sql "select 'LOGUSAGE',
+            number,
+            sh_pagesize,
+            size,
+            used,
+            flags,
+            'is_used:'||is_used,
+            'is_current:'||is_current,
+            'is_backed_up:'||is_backed_up,
+            'is_new:'||is_new,
+            'is_archived:'||is_archived,
+            'is_temp:'||is_temp,
+            'is_pre_dropped:'||is_pre_dropped
+        from syslogs, sysshmvals
+        order by number"
+}
+
+
+#.
+#   .--config--------------------------------------------------------------.
+#   |                                      __ _                            |
+#   |                      ___ ___  _ __  / _(_) __ _                      |
+#   |                     / __/ _ \| '_ \| |_| |/ _` |                     |
+#   |                    | (_| (_) | | | |  _| | (_| |                     |
+#   |                     \___\___/|_| |_|_| |_|\__, |                     |
+#   |                                           |___/                      |
+#   '----------------------------------------------------------------------'
+
+
+# Config opts:
+# - oninit-path; Default is empty, which means autodetection:
+#       ONINIT_PATH=<path to oninit-binary>
+# - Excluding sections ("status sessions locks tabextents dbspaces logusage"):
+#       EXCLUDES_INFORMIX_INSTANCE="SECTION SECTION ..."
+#       EXCLUDES_INFORMIX_INSTANCE=ALL
+#       EXCLUDES="SECTION SECTION ..."
+#       EXCLUDES=ALL
+
+
+if [ -f "$MK_CONFDIR/informix.cfg" ]; then
+    . $MK_CONFDIR/informix.cfg
+fi
+
+
+if [ -z "$ONINIT_PATH" -o ! -x "$ONINIT_PATH" ]; then
+    ONINIT=$(UNIX95=true ps ax  | grep oninit | grep -v grep | head -1 | awk '{print $1 " " $5}')
+    if [ -z "$ONINIT" ]; then
+        exit 0
+    fi
+
+    ONINIT_PATH=${ONINIT#* }
+    ONINIT_PID=${ONINIT% *}
+    case "$ONINIT_PATH" in
+    /*)
+        ;;
+    *)    # BUG not platform independent!
+        ONINIT_PATH=$(ls -l /proc/$ONINIT_PID/exe 2>/dev/null| sed 's/.* //')
+        ;;
+    esac
+
+    # If not set in config or not found we end up here
+    if [ -z "$ONINIT_PATH" -o ! -f "$ONINIT_PATH" ]; then
+        exit 1
+    fi
+fi
+
+
+#.
+#   .--main----------------------------------------------------------------.
+#   |                                       _                              |
+#   |                       _ __ ___   __ _(_)_ __                         |
+#   |                      | '_ ` _ \ / _` | | '_ \                        |
+#   |                      | | | | | | (_| | | | | |                       |
+#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+for IDSENV in $( export INFORMIXDIR=${ONINIT_PATH%/bin*}
+    $INFORMIXDIR/bin/onstat -g dis | \
+        egrep '^Server[         ]*:|^Server Number[     ]*:|^INFORMIX|^SQLHOSTS|^ONCONFIG' | \
+        sed -e 's/Server Number/SERVERNUM/' \
+            -e 's/Server/INFORMIXSERVER/' \
+            -e 's/SQLHOSTS/INFORMIXSQLHOSTS/' \
+            -e 's/[     ]*:[    ]*/=/' | \
+         tr '\n' ';' | \
+        sed -e 's/;$/\n/' -e 's/;\(INFORMIXSERVER=[^;]*;\)/\n\1/g'
+
+    ) ; do
+    (
+        # Set environment
+        eval $IDSENV
+    	PATH=$INFORMIXDIR/bin:$PATH
+
+	    # try to set them via 'onstat -g env' otherwise
+	    # DB HAS TO BE RUNNING
+	    if [ -z "$INFORMIXSQLHOSTS" -o -z "$ONCONFIG" ]; then
+	        onstat -g env | egrep -e '^INFORMIXSQLHOSTS' \
+	    	                      -e '^ONCONFIG' |       \
+	    	                sed   -e 's/[         ][      ]*/=/'
+	    fi
+
+        informix_status
+
+        set_excludes $INFORMIXSERVER
+
+        if do_check "sessions" "$excludes"; then
+            informix_sessions
+        fi
+
+        if do_check "locks" "$excludes"; then
+            informix_locks
+        fi
+
+        if do_check "tabextents" "$excludes"; then
+            informix_tabextents
+        fi
+
+        if do_check "dbspaces" "$excludes"; then
+            informix_dbspaces
+        fi
+
+        if do_check "logusage" "$excludes"; then
+            informix_logusage
+        fi
+    )
+done
+

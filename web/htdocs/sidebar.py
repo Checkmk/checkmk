@@ -190,11 +190,16 @@ def save_user_config(user_config):
 
 
 def get_check_mk_edition_title():
-    version_link = os.readlink("%s/version" % cmk.paths.omd_root)
-    if version_link.endswith(".cee.demo"):
-        return "Enterprise (Demo)"
-    elif "cee" in version_link:
-        return "Enterprise"
+    import cmk
+    if cmk.is_enterprise_edition():
+        if cmk.is_demo():
+            return "Enterprise (Demo)"
+        else:
+            return "Enterprise"
+
+    elif cmk.is_managed_edition():
+        return "Managed"
+
     else:
         return "Raw"
 

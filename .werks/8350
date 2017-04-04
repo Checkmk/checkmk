@@ -7,8 +7,8 @@ Version: 1.2.7i4
 Date: 1450274655
 Class: feature
 
-This release introduces a new feature named Real-time checks. With the new
-Real-time checks it is possible to monitor specific things a lot shorter
+This release introduces a new feature named real-time checks. With the new
+real-time checks it is possible to monitor specific things a lot shorter
 intervals than the normal interval of 60 seconds.
 
 This feature has mainly been developed to get detailed graphs for some values
@@ -16,15 +16,15 @@ which change often like for example the memory usage or CPU utilization. But
 not only the performance data is updated in this interval. The complete service
 state is updated which may also result in faster notifications.
 
-The Real-time checks are working like this: The core is listening on the network
-for incoming Real-time check results which are basically UDP packets sent by
-the agents in an interval of one second. This needds to be enabled using the
+The real-time checks are working like this: The core is listening on the network
+for incoming real-time check results, which are basically UDP packets sent by
+the agents in an interval of one second. This needs to be enabled using the
 configuration option <i>Global Settings > Enable handling of Real-Time Checks</i>.
 You need to configure the UDP port to listen on (6559 by default) and the secret
-which is used to decrypt the Real-time checks. This secret needs to be equal for
-the Check_MK server and all agents which are sending Real-time check results.
+which is used to decrypt the real-time checks. This secret needs to be equal for
+the Check_MK server and all agents which are sending real-time check results.
 
-The agents need to be configured to send Real-time check results. This can currently
+The agents need to be configured to send real-time check results. This can currently
 be done for the Linux and Windows Agents. On linux you need to create a file
 /etc/check_mk/real_time_checks.cfg with the following contents:
 
@@ -42,7 +42,7 @@ real-time check secret which is shared between the Check_MK agent and the server
 to encrypt the transfered data. For example <tt>chmod 640 /etc/check_mk/real_time_checks.cfg</tt>
 is a good idea.
 
-On windows you need to add the following to the <tt>[global]</tt> section
+On Windows you need to add the following to the <tt>[global]</tt> section
 of your check_mk.ini and restart the Check_MK service:
 
 F+:check_mk.ini
@@ -54,15 +54,15 @@ F-:
 
 The agent is working as usual, waiting for connections from the Check_MK server.
 Once a Check_MK server is contacting the agent, the agent is responding with
-it's regular response. Now, when Real-time checks are enabled, the agent is 
+it's regular response. Now, when real-time checks are enabled, the agent is
 sending one UDP packet for each enabled section per second to the host address
 which had queried the Check_MK agent, which is normally the Check_MK servers
 address.
 
-The data which can be processed as Real-time check is limited, so we limit the
-sections which can be send as Real-time checks. Currently you can enable only
+The data which can be processed as real-time check is limited, so we limit the
+sections which can be sent as real-time checks. Currently you can enable only
 the <tt>mem</tt> and <tt>cpu</tt> sections on linux and <tt>mem</tt> and
-<tt>winperf</tt> on windows systems. This might be extended in the future.
+<tt>winperf</tt> on Windows systems. This might be extended in the future.
 
 To get detailed graphs, you now need to configure your RRD databases to be able
 to store these detailed information. This can be done via the ruleset 
@@ -71,7 +71,7 @@ to store these detailed information. This can be done via the ruleset
 You need to create a new rule and first need to ensure that you only apply the
 rule to checks which get real-time check information as the RRDs of these
 services need more disk space. So you should only select the CPU/Memory services
-of hosts which are sending Real-time check results.
+of hosts which are sending real-time check results.
 Then you need to configure this rule to have a 1 second precision for a duration
 of your choice.
 
@@ -100,6 +100,6 @@ You need to configure these numbers:
 After you configured this, you need to run <tt>cmk --convert-rrds -v</tt> to convert
 the existing RRDs.
 
-After the conversion has finished and processing of the Real-time checks works
+After the conversion has finished and processing of the real-time checks works
 correctly, you should see the service state, output and graphs e.g. of the "CPU utilisation"
 service updating in an interval of one second.

@@ -340,7 +340,7 @@ class Site(object):
             raise Exception("Failed to set new version to bin/omd")
 
         if os.system("sudo chrpath -r %s/lib %s/bin/python" %
-            (self.version.version_path(), self.version.version_path())) >> 8 != 0:
+            (self.root, self.version.version_path())) >> 8 != 0:
             raise Exception("Failed to set new version to bin/python")
 
 

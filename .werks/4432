@@ -1,0 +1,12 @@
+Title: Avoid starvation of normal checks by real-time checks
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1491296216
+Class: fix
+
+Real-time checks could easily starvate normal checks, because they prevented
+scheduling of the Check_MK agent with a high probability.  This has been
+fixed now.

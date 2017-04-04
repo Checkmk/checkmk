@@ -1,7 +1,7 @@
 Title: windows textfiles can now be configured with tags
 Level: 1
 Edition: cee
-Component: checks
+Component: agents
 Compatible: compat
 Version: 1.4.0i1
 Date: 1463128563

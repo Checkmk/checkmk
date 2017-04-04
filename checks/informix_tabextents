@@ -1,0 +1,88 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+#TODO WATORule
+factory_settings['informix_tabextents_default_levels'] = {
+    'levels': (40, 70),
+}
+
+
+def parse_informix_tabextents(info):
+    parsed = {}
+    instance = None
+    entry = None
+    for line in info:
+        if instance is not None and line == ["(constant)", "TABEXTENTS"]:
+            entry = {}
+            parsed.setdefault(instance, [])
+            parsed[instance].append(entry)
+
+        elif line[0].startswith("[[[") and line[0].endswith("]]]"):
+            instance = line[0][3:-3]
+
+        elif entry is not None:
+            entry.setdefault(line[0], line[1])
+
+    return parsed
+
+
+def inventory_informix_tabextents(parsed):
+    return [(instance, {}) for instance in parsed]
+
+
+def check_informix_tabextents(item, params, parsed):
+    if item in parsed:
+        max_extents = -1
+        long_output = []
+        for entry in parsed[item]:
+            extents = int(entry['extents'])
+            if extents >= max_extents:
+                max_extents = extents
+            long_output.append("[%s/%s] Extents: %s, Rows: %s" % \
+                    (entry['db'], entry["tab"], entry['extents'], entry['nrows']))
+
+        warn, crit = params['levels']
+        state = 0
+        infotext = "Maximal extents: %s" % max_extents
+        if max_extents >= crit:
+            state = 2
+        elif max_extents >= warn:
+            state = 1
+        if state:
+            infotext += " (warn/crit at %s/%s)" % (warn, crit)
+        return state, "%s\n%s" % (infotext, "\n".join(long_output)),\
+               [('max_extents', max_extents)]
+
+
+check_info['informix_tabextents'] = {
+    'parse_function'        : parse_informix_tabextents,
+    'inventory_function'    : inventory_informix_tabextents,
+    'check_function'        : check_informix_tabextents,
+    'has_perfdata'          : True,
+    'service_description'   : 'Informix Table Extents %s',
+    'default_levels_variable': 'informix_tabextents_default_levels',
+}

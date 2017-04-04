@@ -1,0 +1,17 @@
+title: Informix DB: Locks
+agents: linux
+catalog: app/informix
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors locks of Informix Database application.
+ The type of locks is also reported.
+
+ Upper default levels are set to 70, 80 percent. These
+ are configurable.
+
+item:
+ Instance name.
+
+inventory:
+ One service per instance.

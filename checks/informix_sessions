@@ -1,0 +1,75 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+#TODO WATO
+
+
+factory_settings['informix_sessions_default_levels'] = {
+    'levels': (50, 60)
+}
+
+
+def parse_informix_sessions(info):
+    parsed = {}
+    instance = None
+    for line in info:
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            instance = line[0][3:-3]
+
+        elif instance is not None and line[0] == "SESSIONS":
+            parsed.setdefault(instance, line[1])
+
+    return parsed
+
+
+def inventory_informix_sessions(parsed):
+    return [(instance, {}) for instance in parsed]
+
+
+def check_informix_sessions(item, params, parsed):
+    if item in parsed:
+        sessions = int(parsed[item])
+        warn, crit = params['levels']
+        state = 0
+        infotext = "%s sessions" % sessions
+        if sessions >= crit:
+            state = 2
+        elif sessions >= warn:
+            state = 0
+        if state:
+            infotext += " (warn/crit at %s/%s)" % (warn, crit)
+        return state, infotext, [('sessions', sessions)]
+
+
+check_info['informix_sessions'] = {
+    'parse_function'        : parse_informix_sessions,
+    'inventory_function'    : inventory_informix_sessions,
+    'check_function'        : check_informix_sessions,
+    'has_perfdata'          : True,
+    'service_description'   : 'Informix Sessions %s',
+    'default_levels_variable': 'informix_sessions_default_levels',
+}

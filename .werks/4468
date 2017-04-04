@@ -1,0 +1,10 @@
+Title: mk_logwatch.exe: added missing executable for recently converted linux mk_logwatch
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1491316639
+Class: fix
+
+

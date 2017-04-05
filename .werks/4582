@@ -1,0 +1,10 @@
+Title: Prevent timeout messages in passive service, should be reported by Check_MK service
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1491401772
+Class: fix
+
+

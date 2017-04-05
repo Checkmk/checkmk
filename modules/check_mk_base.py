@@ -1434,6 +1434,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                 console.verbose("%-20s PEND - Cannot compute check result: %s\n" % (description, e))
                 dont_submit = True
 
+            except MKTimeout:
+                raise
+
             except Exception, e:
                 if cmk.debug.enabled():
                     raise

@@ -26,6 +26,7 @@
 #define InputBuffer_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <chrono>
 #include <cstddef>
 #include <list>
 #include <string>
@@ -45,7 +46,9 @@ public:
         timeout
     };
 
-    InputBuffer(int fd, const bool &termination_flag, Logger *logger);
+    InputBuffer(int fd, const bool &termination_flag, Logger *logger,
+                std::chrono::milliseconds query_timeout,
+                std::chrono::milliseconds idle_timeout);
     Result readRequest();
     bool empty() const;
     std::string nextLine();
@@ -53,6 +56,8 @@ public:
 private:
     int _fd;
     const bool &_termination_flag;
+    std::chrono::milliseconds _query_timeout;
+    std::chrono::milliseconds _idle_timeout;
     std::vector<char> _readahead_buffer;
     size_t _read_index;
     size_t _write_index;

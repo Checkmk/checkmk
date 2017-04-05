@@ -86,10 +86,10 @@ extern int enable_environment_macros;
 extern char *log_file;
 
 // maximum idle time for connection in keep alive state
-milliseconds g_idle_timeout = minutes(5);
+static milliseconds fl_idle_timeout = minutes(5);
 
 // maximum time for reading a query
-milliseconds g_query_timeout = seconds(10);
+static milliseconds fl_query_timeout = seconds(10);
 
 size_t g_num_clientthreads =
     10; /* allow 10 concurrent connections per default */
@@ -234,7 +234,8 @@ void *client_thread(void *data) {
             Debug(fl_logger_livestatus) << "accepted client connection on fd "
                                         << cc;
             InputBuffer input_buffer(cc, fl_should_terminate,
-                                     fl_logger_livestatus);
+                                     fl_logger_livestatus, fl_query_timeout,
+                                     fl_idle_timeout);
             bool keepalive = true;
             unsigned requestnr = 0;
             while (keepalive) {
@@ -940,7 +941,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                 if (c < 0) {
                     Warning(fl_logger_nagios) << "query_timeout must be >= 0";
                 } else {
-                    g_query_timeout = milliseconds(c);
+                    fl_query_timeout = milliseconds(c);
                     if (c == 0) {
                         Notice(fl_logger_nagios) << "disabled query timeout!";
                     } else {
@@ -954,7 +955,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                 if (c < 0) {
                     Warning(fl_logger_nagios) << "idle_timeout must be >= 0";
                 } else {
-                    g_idle_timeout = milliseconds(c);
+                    fl_idle_timeout = milliseconds(c);
                     if (c == 0) {
                         Notice(fl_logger_nagios) << "disabled idle timeout!";
                     } else {

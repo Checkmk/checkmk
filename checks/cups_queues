@@ -55,72 +55,84 @@ factory_settings['cups_queues_default_levels'] = {
 }
 
 
-def inventory_cups_queues(info):
-    return [ ('%s' % line[1], {}) for line in info if line[0] == 'printer' ]
+def parse_cups_queues(info):
+    parsed = {}
 
+    for num, line in enumerate(info):
+        if line[0] == "printer":
+            parsed[line[1]] = {
+              'status_readable' : ' '.join(line[2:4]).replace(' ', '_').strip('.'),
+              'output'          : ' '.join(line[2:]),
+              'jobs'            : [],
+            }
+            if len(info) > num+1 and \
+              not info[num+1][0] in [ 'printer', '---' ]:
+                parsed[line[1]]['output'] += " (%s)" % \
+                    " ".join(info[num+1])
+        elif line[0] == "---":
+            break
 
-def check_cups_queues(item, params, info):
+    queue_section = False
+    for line in info:
+        if line[0] == '---':
+            queue_section = True
+            continue
+
+        item = line[0].split("-", 1)[0]
+        if item in parsed and queue_section:
+            # Handle different time formats...
+            try: # Tue Jun 29 09:05:54 2010
+                job_time = time.mktime(time.strptime(' '.join(line[-5:]), \
+                                '%a %b %d %H:%M:%S %Y'))
+            except: # Thu 29 Aug 2013 12:41:42 AM CEST
+                job_time = time.mktime(time.strptime(' '.join(line[-7:]), \
+                                '%a %d %b %Y %H:%M:%S %p %Z'))
+            parsed[item]['jobs'].append(job_time)
+
+    return parsed
+
+def inventory_cups_queues(parsed):
+    for item in parsed:
+        yield item, {}
+
+def check_cups_queues(item, params, parsed):
+    data = parsed[item]
     if type(params) == tuple and len(params) == 4:
         params = {"job_count" : (params[0], params[1]),
                   "job_age"   : (params[2], params[3]),
         }
 
-    warn_num, crit_num = params["job_count"]
-    warn_age, crit_age = params["job_age"]
-    state   = 3
-    output  = "Queue not found"
-    jobs    = 0
-    now     = time.time()
-    oldest  = now
-    for num, line in enumerate(info):
-        # Parse printer status
-        if line[0] == 'printer' and line[1] == item:
-            statusoutput = ' '.join(line[2:])
-            status = ' '.join(line[2:4])
+    if data["status_readable"] in params:
+        state = params[data["status_readable"]]
+        yield state, data["output"]
+    else:
+        yield 3, "Undefinded status output in \"lpr -p\""
 
-            # If the next line does not start with "printer" append it as additional output
-            if len(info) > num+1 and not info[num+1][0] in [ 'printer', '---' ]:
-                statusoutput += " (%s)" % " ".join(info[num+1])
+    now = time.time()
+    jobs_count = len(data["jobs"])
+    if jobs_count > 0:
+        warn_num, crit_num = params["job_count"]
+        yield 0, "Jobs: %d" % jobs_count, \
+                 [ ("jobs", jobs_count, warn_num, crit_num, 0) ]
 
-            if status in [ "is idle.", "now printing", "disabled since" ]:
-                state = params[status.replace(" ", "_").replace(".", "")]
-                output = "%s" % statusoutput
-            else:
-                state = 3
-                output = "Undefined status output in \"lpr -p\""
+        warn_age, crit_age = params["job_age"]
+        now = time.time()
+        oldest = min(data["jobs"])
+        oldest_readable = time.strftime("%c", time.localtime(oldest))
 
-        # Parse job
-        elif line[0].startswith(item+'-'):
-            # This is a queue item count the number of items and check the max age
-            jobs += 1
-
-            # Try to parse different time formats. TODO: Couldn't we run the lpr command
-            # with some environment var to fixate the date format?
-            try:
-                # Tue Jun 29 09:05:54 2010
-                timestring = ' '.join(line[-5:])
-                parsed = time.strptime(timestring, '%a %b %d %H:%M:%S %Y')
-            except:
-                # Thu 29 Aug 2013 12:41:42 AM CEST
-                timestring = ' '.join(line[-7:])
-                parsed = time.strptime(timestring, '%a %d %b %Y %H:%M:%S %p %Z')
-
-            dt = time.mktime(parsed)
-            if dt < oldest:
-                oldest = dt
-
-    jobOutput = 'Jobs: %d' % jobs
-    if jobs > 0:
-        if oldest < now - crit_age or jobs > crit_num:
+        if oldest < now - crit_age or jobs_count > crit_num:
             state = 2
-        elif oldest < now - warn_age or jobs > warn_num:
+        elif oldest < now - warn_age or jobs_count > warn_num:
             state = 1
-        jobOutput += ', Oldest job is from %s' % time.strftime("%c", time.localtime(oldest))
+        else:
+            state = 0
 
-    return (state, output + " - " + jobOutput, [ ("jobs", jobs, warn_num, crit_num, 0) ])
+        if state:
+            yield state, "Oldest job is from %s" % oldest_readable
 
 
 check_info["cups_queues"] = {
+    'parse_function'            : parse_cups_queues,
     'inventory_function'        : inventory_cups_queues,
     'check_function'            : check_cups_queues,
     'service_description'       : 'CUPS Queue %s',

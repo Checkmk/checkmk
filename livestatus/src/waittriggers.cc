@@ -45,7 +45,7 @@ condition_variable *from_trigger(struct trigger *c) {
     return reinterpret_cast<condition_variable *>(c);
 }
 
-mutex g_wait_mutex;
+mutex wait_mutex;
 
 condition_variable cond_all;
 condition_variable cond_check;
@@ -127,12 +127,12 @@ void trigger_notify_all(struct trigger *which) {
 }
 
 void trigger_wait(struct trigger *which) {
-    unique_lock<mutex> ul(g_wait_mutex);
+    unique_lock<mutex> ul(wait_mutex);
     from_trigger(which)->wait(ul);
 }
 
 int trigger_wait_for(struct trigger *which, unsigned ms) {
-    unique_lock<mutex> ul(g_wait_mutex);
+    unique_lock<mutex> ul(wait_mutex);
     return static_cast<int>(from_trigger(which)->wait_for(
                                 ul, milliseconds(ms)) == cv_status::no_timeout);
 }

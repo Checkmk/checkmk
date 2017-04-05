@@ -26,7 +26,6 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <cctype>
-#include <chrono>
 #include <cstring>
 #include <ostream>
 #include <ratio>
@@ -36,9 +35,6 @@
 using std::chrono::milliseconds;
 using std::chrono::system_clock;
 using std::string;
-
-extern milliseconds g_query_timeout;
-extern milliseconds g_idle_timeout;
 
 namespace {
 const size_t initial_buffer_size = 4096;
@@ -52,9 +48,12 @@ bool timeout_reached(const system_clock::time_point &start,
 }
 }  // namespace
 
-InputBuffer::InputBuffer(int fd, const bool &termination_flag, Logger *logger)
+InputBuffer::InputBuffer(int fd, const bool &termination_flag, Logger *logger,
+                         milliseconds query_timeout, milliseconds idle_timeout)
     : _fd(fd)
     , _termination_flag(termination_flag)
+    , _query_timeout(query_timeout)
+    , _idle_timeout(idle_timeout)
     , _readahead_buffer(initial_buffer_size)
     , _logger(logger) {
     _read_index = 0;   // points to data not yet processed
@@ -98,14 +97,14 @@ InputBuffer::Result InputBuffer::readRequest() {
                 if (rd == Result::timeout) {
                     if (query_started) {
                         Informational(_logger)
-                            << "Timeout of " << g_query_timeout.count()
+                            << "Timeout of " << _query_timeout.count()
                             << " ms exceeded while reading query";
                         return Result::timeout;
                     }
                     // Check if we exceeded the maximum time between two queries
-                    if (timeout_reached(start_of_idle, g_idle_timeout)) {
+                    if (timeout_reached(start_of_idle, _idle_timeout)) {
                         Informational(_logger)
-                            << "Idle timeout of " << g_idle_timeout.count()
+                            << "Idle timeout of " << _idle_timeout.count()
                             << " ms exceeded. Going to close connection.";
                         return Result::timeout;
                     }
@@ -197,12 +196,12 @@ InputBuffer::Result InputBuffer::readRequest() {
     }
 }
 
-// read at least *some* data. Return IB_TIMEOUT if that
-// lasts more than g_query_timeout_msec msecs.
+// read at least *some* data. Return IB_TIMEOUT if that lasts more than
+// _query_timeout msecs.
 InputBuffer::Result InputBuffer::readData() {
     auto start = system_clock::now();
     while (!_termination_flag) {
-        if (timeout_reached(start, g_query_timeout)) {
+        if (timeout_reached(start, _query_timeout)) {
             return Result::timeout;
         }
 

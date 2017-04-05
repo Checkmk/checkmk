@@ -577,45 +577,6 @@ if [ -e /proc/drbd ]; then
   cat /proc/drbd
 fi
 
-# Status of CUPS printer queues
-if type lpstat > /dev/null 2>&1; then
-    # Systemd starts cupsd on demand: Instead of checking that the cupsd is
-    # running we check that the cups service exists and is enabled.
-    if pgrep -f "\bcupsd" > /dev/null 2>&1 \
-       || (type systemctl >/dev/null 2>&1 && systemctl is-enabled cups.service); then
-        # first define a function to check cups
-        function cups_queues () {
-            CPRINTCONF=/etc/cups/printers.conf
-            if [ -r "$CPRINTCONF" ] ; then
-                LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" $CPRINTCONF | awk '{print $2}' | sed -e 's/>//')
-                lpstat -p | while read LINE
-                do
-                    PRINTER=$(echo $LINE | awk '{print $2}')
-                    if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
-                        echo $LINE
-                    fi
-                done
-                echo '---'
-                lpstat -o | while read LINE
-                do
-                    PRINTER=${LINE%%-*}
-                    if echo $LOCAL_PRINTERS | grep -q $PRINTER; then
-                        echo $LINE
-                    fi
-                done
-            else
-                lpstat -p
-                echo '---'
-                lpstat -o | sort
-                fi
-        }
-        # Make cups_queues available for subshell
-        export -f cups_queues
-        # Use cups_queues function with run_cached and cache time of 5 mins
-        run_cached -s cups_queues 300 "cups_queues"
-    fi
-fi
-
 # Heartbeat monitoring
 # Different handling for heartbeat clusters with and without CRM
 # for the resource state

@@ -1,0 +1,13 @@
+Title: cups_queues: Moved agent section into own plugin script
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1491400977
+Class: fix
+
+Due performance issues we decided to remove this section from the linux agent
+and put into a plugin. Now you are able to define individual caching ages
+instead of being forced having a caching of five minutes to satisfy large
+environments even if you do not have one.

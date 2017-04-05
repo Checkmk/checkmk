@@ -6616,6 +6616,10 @@ def mode_globalvars(phase):
 
         if config.user.may("wato.set_read_only"):
             html.context_button(_("Read only mode"), folder_preserving_link([("mode", "read_only")]), "read_only")
+
+        if cmk.is_managed_edition():
+            cme_global_settings_buttons()
+
         return
 
     # Get default settings of all configuration variables of interest in the domain
@@ -15555,23 +15559,6 @@ def manpage_text(text):
 #   '----------------------------------------------------------------------'
 
 def validate_icon(value, varprefix):
-    from PIL import Image
-    from StringIO import StringIO
-    file_name, mime_type, content = value
-    if file_name[-4:] != '.png' \
-       or mime_type != 'image/png' \
-       or not content.startswith('\x89PNG'):
-        raise MKUserError(varprefix, _('Please choose a PNG icon.'))
-
-    try:
-        im = Image.open(StringIO(content))
-    except IOError:
-        raise MKUserError(varprefix, _('Please choose a valid PNG icon.'))
-
-    w, h = im.size
-    if w > 80 or h > 80:
-        raise MKUserError(varprefix, _('Maximum image size: 80x80px'))
-
     if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (cmk.paths.omd_root, file_name)) \
        or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.paths.omd_root, file_name)):
         raise MKUserError(varprefix, _('Your icon conflicts with a Check_MK builtin icon. Please '
@@ -15622,9 +15609,10 @@ def mode_icons(phase):
         optional_keys = False,
         render = "form",
         elements = [
-            ('icon', FileUpload(
+            ('icon', ImageUpload(
                 title = _('Icon'),
                 allow_empty = False,
+                max_size = (80, 80),
                 validate = validate_icon,
             )),
             ('category', DropdownChoice(

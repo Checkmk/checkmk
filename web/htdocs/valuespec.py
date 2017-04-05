@@ -3947,6 +3947,38 @@ class FileUpload(ValueSpec):
 
 
 
+class ImageUpload(FileUpload):
+    def __init__(self, max_size=None, *args, **kwargs):
+        self._max_size = max_size
+        FileUpload.__init__(self, *args, **kwargs)
+
+
+    def validate_value(self, value, varprefix):
+        from PIL import Image
+        from StringIO import StringIO
+
+        file_name, mime_type, content = value
+
+        if file_name[-4:] != '.png' \
+           or mime_type != 'image/png' \
+           or not content.startswith('\x89PNG'):
+            raise MKUserError(varprefix, _('Please choose a PNG image.'))
+
+        try:
+            im = Image.open(StringIO(content))
+        except IOError:
+            raise MKUserError(varprefix, _('Please choose a valid PNG image.'))
+
+        if self._max_size:
+            w, h = im.size
+            max_w, max_h = self._max_size
+            if w > max_w or h > max_h:
+                raise MKUserError(varprefix, _('Maximum image size: %dx%dpx') % (max_w, max_h))
+
+        ValueSpec.custom_validate(self, value, varprefix)
+
+
+
 class UploadOrPasteTextFile(Alternative):
     def __init__(self, **kwargs):
         file_title = kwargs.get("file_title", _("File"))

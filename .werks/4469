@@ -1,0 +1,11 @@
+Title: BI aggregations: Views containing multiple aggregations now render faster
+Level: 1
+Component: bi
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b6
+Date: 1491485215
+
+

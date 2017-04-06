@@ -3123,19 +3123,36 @@ def table(columns, add_headers, only_sites, limit, filters):
 
     online_sites = set(map(lambda x: x[0], get_current_sitestats()["online_sites"]))
 
+
+    # Prefetch data for later usage - this saves lots of redundant livestatus queries
+    def is_tree_required(tree):
+        if only_aggr_name and only_aggr_name != tree.get("title"):
+            return False
+
+        aggr_sites = set(x[0] for x in tree.get("reqhosts"))
+        if not aggr_sites.intersection(online_sites):
+            return False
+        return True
+
+
+    required_hosts = set()
+    for group, trees in items:
+        for tree in trees:
+            if not is_tree_required(tree):
+                continue
+            required_hosts.update(tree.get("reqhosts"))
+    status_info = get_status_info(required_hosts)
+
+
     for group, trees in items:
         if only_group not in [ None, group ]:
             continue
 
         for tree in trees:
-            if only_aggr_name and only_aggr_name != tree.get("title"):
+            if not is_tree_required(tree):
                 continue
 
-            aggr_sites = set(x[0] for x in tree.get("reqhosts"))
-            if not aggr_sites.intersection(online_sites):
-                continue
-
-            row = create_aggregation_row(tree)
+            row = create_aggregation_row(tree, status_info)
             if row["aggr_state"]["state"] == None:
                 continue # Not yet monitored, aggregation is not displayed
 

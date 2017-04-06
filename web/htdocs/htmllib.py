@@ -638,7 +638,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
             yield ' %s=\"%s\"' %(k, v)
 
         for k in options:
-            yield " %s" % k
+            yield " %s=\'\'" % k
 
 
     # applies attribute encoding to prevent code injections.
@@ -2263,7 +2263,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         html_code = HTML()
         for value, text in choices:
             html_code += self.render_option(text, value=value if value else "",
-                                                  selected="" if value == current else None)
+                                                  selected='' if value==current else None)
         html_code = self.render_select(html_code, name=varname, id_=varname, onchange=onchange, **attrs)
         if error:
             html_code = self.render_x(html_code, class_="inputerror")
@@ -2280,7 +2280,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         self.open_select(class_="icon", name=varname, id_=varname, size="1")
         for value, text, icon in choices:
             self.option(text, value=value if value else "",
-                              selected="" if value == current else None,
+                              selected='' if value == current else None,
                               style="background-image:url(images/icon_%s.png);" % icon)
         self.close_select()
 
@@ -2360,7 +2360,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         # View
         id_="rb_%s_%s" % (varname, value) if label else None
         self.input(name=varname, type_="radio", value = value,
-                   checked="" if checked else None, id_=id_)
+                   checked='' if checked else None, id_=id_)
         if label:
             self.label(label, for_=id_)
 

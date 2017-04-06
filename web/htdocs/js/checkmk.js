@@ -2784,12 +2784,26 @@ function timeline_hover(td, row_nr, onoff)
     var timeline_bar_table = td.parentNode.parentNode.parentNode.parentNode;
     var events_table = timeline_bar_table.nextElementSibling;
     var row = events_table.children[0].children[row_nr+1];
-    if (onoff)
+    if (onoff) {
         add_class(row, 'hilite');
-    else {
+    } else {
         remove_class(row, 'hilite');
     }
 }
+
+
+function timetable_hover(tr, row_nr, onoff) {
+
+    var timeline_bar_table = tr.parentNode.parentNode.previousElementSibling;
+    var tds = timeline_bar_table.getElementsByTagName("TD");
+    var td = tds[row_nr];
+    if (td && onoff) {
+        add_class(td, 'hilite');
+    } else if (td) {
+        remove_class(td, 'hilite');
+    }
+}
+
 
 //#.
 //#   .-Keybindings--------------------------------------------------------.

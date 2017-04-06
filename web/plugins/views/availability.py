@@ -329,7 +329,7 @@ def render_availability_timeline(what, av_entry, avoptions):
     # Table with detailed events
     table.begin("av_timeline", "", css="timelineevents", sortable=False, searchable=False)
     for row_nr, row in enumerate(timeline_layout["table"]):
-        table.row()
+        table.row(onmouseover="timetable_hover(this, %d, 1);" % row_nr, onmouseout="timetable_hover(this, %d, 0);" % row_nr)
         table.cell(_("Links"), css="buttons")
         if what == "bi":
             url = html.makeuri([("timewarp", str(int(row["from"])))])

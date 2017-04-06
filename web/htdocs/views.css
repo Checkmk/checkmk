@@ -530,10 +530,10 @@ table.data.availability tr.summary td {
     padding-top: 1px;
 }
 
+
 table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
     background-color: #f0f;
 }
-
 table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
     background-color: #0af;
 }
@@ -607,6 +607,13 @@ table.timeline.inline {
 table.timeline td {
     padding: 0px;
     border-style: none;
+}
+
+table.timeline td.hilite {
+    padding: 0px;
+    border-style: none;
+    background-color: #0091b6;
+    filter: brightness(80%);
 }
 
 table.timeline td.chaos {

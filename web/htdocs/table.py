@@ -152,11 +152,11 @@ class Table(object):
             self.next_func = None
 
 
-    def add_row(self, css=None, state=0, collect_headers=True, fixed=False):
+    def add_row(self, css=None, state=0, collect_headers=True, fixed=False, **attrs):
         if self.next_header:
-            self.rows.append((self.next_header, None, "header", True))
+            self.rows.append((self.next_header, None, "header", True, attrs))
             self.next_header = None
-        self.rows.append(([], css, state, fixed))
+        self.rows.append(([], css, state, fixed, attrs))
         if collect_headers:
             if self.options["collect_headers"] == False:
                 self.options["collect_headers"] = True
@@ -331,7 +331,13 @@ class Table(object):
             html.end_form()
             html.close_tr()
 
-        for nr, (row, css, state, fixed) in enumerate(rows):
+        for nr, (row, css, state, fixed, attrs) in enumerate(rows):
+
+            if not css and "class_" in attrs:
+                css = attrs.pop("class_")
+            if not css and "class" in attrs:
+                css = attrs.pop("class")
+
             # Intermediate header
             if state == "header":
                 # Show the header only, if at least one (non-header) row follows
@@ -347,7 +353,7 @@ class Table(object):
                     self._render_headers(actions_enabled, actions_visible)
                 continue
 
-            html.open_tr(class_=["data", "odd%d" % state, css if css else None])
+            html.open_tr(class_=["data", "odd%d" % state, css if css else None], **attrs)
             for cell_content, css_classes, colspan in row:
                 html.open_td(class_=css_classes if css_classes else None, colspan=colspan if colspan else None)
                 html.write(cell_content)
@@ -380,7 +386,7 @@ class Table(object):
         if not omit_headers and self.rows and self.rows[0][2] != "header":
             html.write(csv_separator.join([html.strip_tags(header) or "" for (header, css, help, sortable) in headers]) + "\n")
 
-        for nr, (row, css, state, fixed) in enumerate(rows):
+        for nr, (row, css, state, fixed, attrs) in enumerate(rows):
             html.write(csv_separator.join([html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
             html.write("\n")
 
@@ -448,14 +454,14 @@ class Table(object):
 
 def _filter_rows(rows, search_term):
     filtered_rows = []
-    for row, css, state, fixed in rows:
+    for row, css, state, fixed, attrs in rows:
         if state == "header" or fixed:
-            filtered_rows.append((row, css, state, fixed))
+            filtered_rows.append((row, css, state, fixed, attrs))
             continue # skip filtering of headers or fixed rows
 
         for cell_content, css_classes, colspan in row:
             if search_term in cell_content.lower():
-                filtered_rows.append((row, css, state, fixed))
+                filtered_rows.append((row, css, state, fixed, attrs))
                 break # skip other cells when matched
     return filtered_rows
 

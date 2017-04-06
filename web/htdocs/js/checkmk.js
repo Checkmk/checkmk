@@ -3197,7 +3197,7 @@ function bi_toggle_subtree(oImg, lazy)
     if (oImg.tagName == "SPAN") { // clicked on title,
         oImg = oImg.previousElementSibling;
     }
-    var oSubtree = oImg.parentNode.children[6];
+    var oSubtree = oImg.parentNode.getElementsByTagName("ul")[0];
     var url = "bi_save_treestate.py?path=" + encodeURIComponent(oSubtree.id);
 
     if (has_class(oImg, "closed")) {

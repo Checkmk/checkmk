@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from lxml import etree
+import xml.etree.ElementTree as etree
 import sys
 from urllib2 import urlopen
 import urllib2, base64

@@ -45,7 +45,7 @@ def check_netapp_api_luns(item, params, parsed):
         return
 
     if lun.get("online") != "true":
-        yield 1, "LUN is %s" % lun.get("online")
+        yield 2, "LUN is offline"
 
     if lun.get("read-only") != "false":
         yield 1, "read-only is %s" % lun.get("read-only")

@@ -1,0 +1,10 @@
+Title: netapp_api_luns: Fix nonsensical infotext, treat LUN offline status as CRIT instead of WARN
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b6
+Date: 1491823896
+Class: fix
+
+

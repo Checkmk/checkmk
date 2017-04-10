@@ -117,9 +117,18 @@ display_options  = None
 
 wato_styles = [ "pages", "wato", "status" ]
 
-def init_wato_datastructures():
-    create_sample_config()        # if called for the very first time!
+# TODO: Must only be unlocked when it was not locked before. We should find a more
+# robust way for doing something like this. If it is locked before, it can now happen
+# that this call unlocks the wider locking when calling this funktion in a wrong way.
+def init_wato_datastructures(with_wato_lock=False):
+    if with_wato_lock:
+        lock_exclusive()
+
+    create_sample_config()
     init_watolib_datastructures()
+
+    if with_wato_lock:
+        unlock_exclusive()
 
 
 #.
@@ -172,7 +181,7 @@ def page_handler():
         lock_exclusive()
 
     try:
-        init_wato_datastructures()
+        init_wato_datastructures(with_wato_lock=not html.is_transaction())
     except:
         # Snapshot must work in any case
         if current_mode == 'snapshot':
@@ -2632,7 +2641,7 @@ def mode_diag_host(phase):
 
 def ajax_diag_host():
     try:
-        init_wato_datastructures()
+        init_wato_datastructures(with_wato_lock=True)
 
         if not config.user.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
@@ -3478,7 +3487,7 @@ class ModeAjaxExecuteCheck(WatoWebApiMode):
 
 
     def page(self):
-        init_wato_datastructures()
+        init_wato_datastructures(with_wato_lock=True)
         try:
             state, output = check_mk_automation(self._site, "active-check",
                                 [ self._host_name, self._check_type, self._item ], sync=False)
@@ -5459,7 +5468,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
 
 class ModeAjaxStartActivation(WatoWebApiMode):
     def page(self):
-        init_wato_datastructures()
+        init_wato_datastructures(with_wato_lock=True)
 
         config.user.need_permission("wato.activate")
 
@@ -5495,7 +5504,7 @@ class ModeAjaxStartActivation(WatoWebApiMode):
 
 class ModeAjaxActivationState(WatoWebApiMode):
     def page(self):
-        init_wato_datastructures()
+        init_wato_datastructures(with_wato_lock=True)
 
         config.user.need_permission("wato.activate")
 
@@ -10113,7 +10122,7 @@ def page_automation():
     # we request the lock in all cases.
     lock_exclusive()
 
-    init_wato_datastructures()
+    init_wato_datastructures(with_wato_lock=False)
 
     command = html.var("command")
     if command == "checkmk-automation":
@@ -10169,8 +10178,6 @@ def automation_push_profile():
     profile = html.var("profile")
     if not profile:
         raise MKGeneralException(_('Invalid call: The profile is missing.'))
-
-    init_wato_datastructures()
 
     users = userdb.load_users(lock = True)
     profile = mk_eval(profile)
@@ -14363,6 +14370,8 @@ def page_user_profile(change_pw=False):
     else:
         users = userdb.load_users()
 
+    init_wato_datastructures(with_wato_lock=True)
+
     # When in distributed setup, display the replication dialog instead of the normal
     # profile edit dialog after changing the password.
     if start_async_replication:
@@ -14491,7 +14500,7 @@ def page_download_agent_output():
     if ty not in [ "walk", "agent" ]:
         raise MKGeneralException(_("Invalid type specified."))
 
-    init_wato_datastructures()
+    init_wato_datastructures(with_wato_lock=True)
 
     host = Folder.current().host(host_name)
     if not host:
@@ -16123,7 +16132,7 @@ def read_agent_contents_file(root):
 # master site. Finds the next folder to scan and starts it via WATO
 # automation. The result is written to the folder in the master site.
 def execute_network_scan_job():
-    init_wato_datastructures()
+    init_wato_datastructures(with_wato_lock=True)
 
     if is_wato_slave_site():
         return # Don't execute this job on slaves.

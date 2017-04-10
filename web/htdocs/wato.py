@@ -15559,6 +15559,7 @@ def manpage_text(text):
 #   '----------------------------------------------------------------------'
 
 def validate_icon(value, varprefix):
+    file_name = value[0]
     if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (cmk.paths.omd_root, file_name)) \
        or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.paths.omd_root, file_name)):
         raise MKUserError(varprefix, _('Your icon conflicts with a Check_MK builtin icon. Please '

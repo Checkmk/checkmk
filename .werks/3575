@@ -1,4 +1,4 @@
-Title: User logins can now be limited to single session at a time
+Title: User logins can now be limited to a single session at a time
 Level: 2
 Component: multisite
 Compatible: compat
@@ -6,9 +6,9 @@ Version: 1.4.0i1
 Date: 1464094732
 Class: feature
 
-Normally a user can login to the GUI from unlimited number of clients at
-the same time. If you want to enforce your users to be able to login only once
+Normally a user can login to the GUI from unlimited number of clients at the
+same time. If you want to enforce your users to be able to login only once
 (from one client which means device and browser), you can enable this option.
-When the user logs out or is inactive for the configured amount of time, the
-session is invalidated automatically and the user has to log in again from the
-current or another device.
+When the user logs out or is inactive for the configured amount of time,
+the session is invalidated automatically and the user has to log in again
+from the current or another device.

@@ -380,6 +380,10 @@ class Site(object):
                 cme_path(),
             ]
 
+        # Prevent build problems of livestatus
+        print("Cleanup git files")
+        assert os.system("git clean -xfd")
+
         for path in paths:
             if os.path.exists("%s/.f12" % path):
                 print("Executing .f12 in \"%s\"..." % path)

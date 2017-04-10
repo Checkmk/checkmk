@@ -1,4 +1,4 @@
-Title: New bookmark lists, strucutrable and shareable between users
+Title: New structured bookmark lists, shareable between users
 Level: 2
 Component: multisite
 Compatible: compat
@@ -7,13 +7,12 @@ Date: 1445942455
 Class: feature
 
 The bookmark sidebar snapin has been extended to be structurable into
-topics. Each bookmark can now be put into a topic which can then be
-expanded or closed in the GUI.
+topics. Each bookmark can now be put into a topic which can then be expanded
+or closed in the GUI.
 
 It is now possible to group bookmarks together in multiple bookmark
-lists. These lists can be made available to other users, just like
-views, dashboards, reports and graph collections.
+lists. These lists can be made available to other users, just like views,
+dashboards, reports and graph collections.
 
-The summary of all bookmark lists a user can access is grouped together
-in the bookmark snapin and shown to the user as one single list of
-bookmarks.
+The summary of all bookmark lists a user can access is grouped together in
+the bookmark snapin and shown to the user as one single list of bookmarks.

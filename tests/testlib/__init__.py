@@ -346,6 +346,8 @@ class Site(object):
 
     def _update_with_f12_files(self):
         paths = [
+            cmk_path() + "/livestatus",
+            cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",
             cmk_path() + "/modules",
             cmk_path() + "/cmk_base",
@@ -355,8 +357,6 @@ class Site(object):
             cmk_path() + "/web",
             cmk_path() + "/inventory",
             cmk_path() + "/notifications",
-            cmk_path() + "/livestatus",
-            cmk_path() + "/livestatus/api/python",
             cmk_path() + "/.werks",
         ]
 

@@ -77,6 +77,67 @@ def web_log_level_elements():
 
     return elements
 
+
+def vs_bulk_discovery(render_form=False):
+    if render_form:
+        render = "form"
+    else:
+        render = None
+
+    return Dictionary(
+        title    = _("Bulk discovery"),
+        render   = render,
+        elements = [
+            ("mode", RadioChoice(
+                title       = _("Mode"),
+                orientation = "vertical",
+                default_value = "new",
+                choices     = [
+                    ("new",     _("Add unmonitored services")),
+                    ("remove",  _("Remove vanished services")),
+                    ("fixall",  _("Add unmonitored & remove vanished services")),
+                    ("refresh", _("Refresh all services (tabula rasa)")),
+                ],
+            )),
+            ("selection", Tuple(
+                title    = _("Selection"),
+                elements = [
+                    Checkbox(label = _("Include all subfolders"),
+                             default_value = True),
+                    Checkbox(label = _("Only include hosts that failed on previous discovery"),
+                             default_value = False),
+                    Checkbox(label = _("Only include hosts with a failed discovery check"),
+                             default_value = False),
+                    Checkbox(label = _("Exclude hosts where the agent is unreachable"),
+                             default_value = False),
+                ]
+            )),
+            ("performance", Tuple(
+                title    = _("Performance options"),
+                elements = [
+                    Checkbox(label = _("Use cached data if present"),
+                             default_value = True),
+                    Checkbox(label = _("Do full SNMP scan for SNMP devices"),
+                             default_value = True),
+                    Integer(label = _("Number of hosts to handle at once"),
+                            default_value = 10),
+                ]
+            )),
+            ("error_handling", Checkbox(
+                title = _("Error handling"),
+                label = _("Ignore errors in single check plugins"),
+                default_value = True)),
+        ],
+        optional_keys = [],
+    )
+
+
+register_configvar(group,
+    "bulk_discovery_default_settings",
+    vs_bulk_discovery(),
+    domain = "multisite"
+)
+
 register_configvar(
     group,
     "log_levels",

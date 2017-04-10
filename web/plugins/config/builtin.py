@@ -267,6 +267,14 @@ crash_report_target = "feedback@check-mk.org"
 # GUI Tests (see cmk-guitest)
 guitests_enabled = False
 
+# Bulk discovery default options
+bulk_discovery_default_settings = {
+    "mode"           : "new",
+    "selection"      : (True, False, False, False),
+    "performance"    : (True, True, 10),
+    "error_handling" : True,
+}
+
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
 #    | | | / __|/ _ \ '__| | | |  _ \

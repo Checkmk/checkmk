@@ -3945,233 +3945,259 @@ class ModeBulkImport(WatoMode):
 #   | simply do something like -I or -II on the list of hosts.             |
 #   '----------------------------------------------------------------------'
 
-def mode_bulk_discovery(phase):
-    if phase == "title":
+
+
+class ModeBulkDiscovery(WatoMode):
+    def __init__(self):
+        super(ModeBulkDiscovery, self).__init__()
+        self._from_html_vars()
+        self._vs = vs_bulk_discovery
+        self._get_bulk_discovery_params()
+
+
+    def _from_html_vars(self):
+        if html.var("_start"):
+            self._start = True
+        else:
+            self._start = False
+
+        if html.var("all"):
+            self._all = True
+        else:
+            self._all = False
+
+        if html.var("_item"):
+            self._item = html.var("_item")
+        else:
+            self._item = None
+
+
+    def _get_bulk_discovery_params(self):
+        self._bulk_discovery_params = config.bulk_discovery_default_settings
+
+        if self._start:
+            bulk_discover_params = self._vs().from_html_vars("bulkinventory")
+            self._bulk_discovery_params.update(bulk_discover_params)
+
+        self._recurse, self._only_failed, self._only_failed_invcheck, \
+            self._only_ok_agent = self._bulk_discovery_params["selection"]
+        self._use_cache, self._do_scan, self._bulk_size = \
+            self._bulk_discovery_params["performance"]
+        self._mode           = self._bulk_discovery_params["mode"]
+        self._error_handling = self._bulk_discovery_params["error_handling"]
+
+
+    def title(self):
         return _("Bulk Service Discovery")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         html.context_button(_("Folder"), Folder.current().url(), "back")
-        return
 
-    elif phase == "action":
-        if html.var("_item"):
-            if not html.check_transaction():
-                html.write(json.dumps([ 'failed', 0, 0, 0, 0, 0, 0, ]) + "\n")
-                html.write_text(_("Error during discovery: Maximum number of retries reached. "
-                                  "You need to restart the bulk service discovery"))
-                return ""
 
-            how = html.var("how")
-            try:
-                site_id, folderpath, hostnamesstring = html.var("_item").split("|")
-                hostnames = hostnamesstring.split(";")
-                num_hosts = len(hostnames)
-                num_skipped_hosts = 0
-                num_failed_hosts = 0
-                folder = Folder.folder(folderpath)
-                arguments = [how,] + hostnames
-                if html.var("use_cache"):
-                    arguments = [ "@cache" ] + arguments
-                if html.var("do_scan"):
-                    arguments = [ "@scan" ] + arguments
-                if not html.get_checkbox("ignore_errors"):
-                    arguments = [ "@raiseerrors" ] + arguments
+    def action(self):
+        if not self._item:
+            return
 
-                timeout = html.request_timeout() - 2
-
-                unlock_exclusive() # Avoid freezing WATO when hosts do not respond timely
-                counts, failed_hosts = check_mk_automation(site_id, "inventory",
-                                                           arguments, timeout=timeout)
-                lock_exclusive()
-                Folder.invalidate_caches()
-                folder = Folder.folder(folderpath)
-
-                # sum up host individual counts to have a total count
-                sum_counts = [ 0, 0, 0, 0 ] # added, removed, kept, new
-                result_txt = ''
-                for hostname in hostnames:
-                    sum_counts[0] += counts[hostname][0]
-                    sum_counts[1] += counts[hostname][1]
-                    sum_counts[2] += counts[hostname][2]
-                    sum_counts[3] += counts[hostname][3]
-                    host = folder.host(hostname)
-                    if hostname in failed_hosts:
-                        reason = failed_hosts[hostname]
-                        if reason == None:
-                            result_txt += _("%s: discovery skipped: host not monitored<br>") % hostname
-                            num_skipped_hosts += 1
-                        else:
-                            num_failed_hosts += 1
-                            result_txt += _("%s: discovery failed: %s<br>") % (hostname, failed_hosts[hostname])
-                            if not host.locked():
-                                host.set_discovery_failed()
-                    else:
-                        result_txt += _("%s: discovery successful<br>\n") % hostname
-
-                        add_service_change(host, "bulk-inventory",
-                            _("Did service discovery on host %s: %d added, %d removed, %d kept, "
-                              "%d total services") % tuple([hostname] + counts[hostname]))
-
-                        if not host.locked():
-                            host.clear_discovery_failed()
-
-                result = json.dumps([ 'continue', num_hosts, num_failed_hosts, num_skipped_hosts ] + sum_counts) + "\n" + result_txt
-
-            except Exception, e:
-                result = json.dumps([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"
-                if site_id:
-                    msg = _("Error during inventory of %s on site %s<div class=exc>%s</div") % \
-                                     (", ".join(hostnames), site_id, e)
-                else:
-                    msg = _("Error during inventory of %s<div class=exc>%s</div>") % (", ".join(hostnames), e)
-                if config.debug:
-                    msg += "<br><pre>%s</pre><br>" % html.attrencode(traceback.format_exc().replace("\n", "<br>"))
-                result += msg
-            html.write(result)
+        if not html.check_transaction():
+            html.write(json.dumps([ 'failed', 0, 0, 0, 0, 0, 0, ]) + "\n")
+            html.write_text(_("Error during discovery: Maximum number of retries reached. "
+                              "You need to restart the bulk service discovery"))
             return ""
-        return
+
+        try:
+            site_id, folderpath, hostnamesstring = self._item.split("|")
+            hostnames         = hostnamesstring.split(";")
+            num_hosts         = len(hostnames)
+            num_skipped_hosts = 0
+            num_failed_hosts  = 0
+            folder            = Folder.folder(folderpath)
+            arguments         = [self._mode,] + hostnames
+
+            if self._use_cache:
+                arguments = [ "@cache" ] + arguments
+            if self._do_scan:
+                arguments = [ "@scan" ] + arguments
+            if not self._error_handling:
+                arguments = [ "@raiseerrors" ] + arguments
+
+            timeout = html.request_timeout() - 2
+
+            unlock_exclusive() # Avoid freezing WATO when hosts do not respond timely
+            counts, failed_hosts = check_mk_automation(site_id, "inventory",
+                                                       arguments, timeout=timeout)
+            lock_exclusive()
+            Folder.invalidate_caches()
+            folder = Folder.folder(folderpath)
+
+            # sum up host individual counts to have a total count
+            sum_counts = [ 0, 0, 0, 0 ] # added, removed, kept, new
+            result_txt = ''
+            for hostname in hostnames:
+                sum_counts[0] += counts[hostname][0]
+                sum_counts[1] += counts[hostname][1]
+                sum_counts[2] += counts[hostname][2]
+                sum_counts[3] += counts[hostname][3]
+                host           = folder.host(hostname)
+
+                if hostname in failed_hosts:
+                    reason = failed_hosts[hostname]
+                    if reason == None:
+                        num_skipped_hosts += 1
+                        result_txt        += _("%s: discovery skipped: host not monitored<br>") % hostname
+                    else:
+                        num_failed_hosts += 1
+                        result_txt       += _("%s: discovery failed: %s<br>") % (hostname, failed_hosts[hostname])
+                        if not host.locked():
+                            host.set_discovery_failed()
+                else:
+                    result_txt += _("%s: discovery successful<br>\n") % hostname
+
+                    add_service_change(host, "bulk-inventory",
+                        _("Did service discovery on host %s: %d added, %d removed, %d kept, "
+                          "%d total services") % tuple([hostname] + counts[hostname]))
+
+                    if not host.locked():
+                        host.clear_discovery_failed()
+
+            result = json.dumps([ 'continue', num_hosts, num_failed_hosts, num_skipped_hosts ] + sum_counts) + "\n" + result_txt
+
+        except Exception, e:
+            result = json.dumps([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"
+            if site_id:
+                msg = _("Error during inventory of %s on site %s<div class=exc>%s</div") % \
+                       (", ".join(hostnames), site_id, e)
+            else:
+                msg = _("Error during inventory of %s<div class=exc>%s</div>") % (", ".join(hostnames), e)
+            if config.debug:
+                msg += "<br><pre>%s</pre><br>" % html.attrencode(traceback.format_exc().replace("\n", "<br>"))
+            result += msg
+        html.write(result)
+        return ""
 
 
-    # interactive progress is *not* done in action phase. It
-    # renders the page content itself.
+    def page(self):
+        config.user.need_permission("wato.services")
 
-    def recurse_hosts(folder, recurse, only_failed):
+        items, hosts_to_discover = self._fetch_items_for_interactive_progress()
+        if html.var("_start"):
+            # Start interactive progress
+            interactive_progress(
+                items,
+                _("Bulk Service Discovery"),  # title
+                [ (_("Total hosts"),      0),
+                  (_("Failed hosts"),     0),
+                  (_("Skipped hosts"),    0),
+                  (_("Services added"),   0),
+                  (_("Services removed"), 0),
+                  (_("Services kept"),    0),
+                  (_("Total services"),   0) ], # stats table
+                [ ("mode", "folder") ], # URL for "Stop/Finish" button
+                50, # ms to sleep between two steps
+                fail_stats = [ 1 ],
+            )
+
+        else:
+            html.begin_form("bulkinventory", method="POST")
+            html.hidden_fields()
+
+            vs = self._vs(render_form=True)
+
+            msgs = []
+            if not self._all:
+                msgs.append(_("You have selected <b>%d</b> hosts for bulk discovery.") % len(hosts_to_discover))
+                selection = self._bulk_discovery_params["selection"]
+                self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
+
+            html.write("%s" % self._bulk_discovery_params)
+            msgs.append(_("Check_MK service discovery will automatically find and "
+                          "configure services to be checked on your hosts."))
+            html.open_p()
+            html.write_text(" ".join(msgs))
+            vs.render_input("bulkinventory", self._bulk_discovery_params)
+            forms.end()
+
+            html.button("_start", _("Start"))
+            html.end_form()
+
+
+    def _fetch_items_for_interactive_progress(self):
+        if self._only_failed_invcheck:
+            restrict_to_hosts = find_hosts_with_failed_inventory_check()
+        else:
+            restrict_to_hosts = None
+
+        if self._only_ok_agent:
+            skip_hosts = find_hosts_with_failed_agent()
+        else:
+            skip_hosts = []
+
+        # 'all' not set -> only inventorize checked hosts
+        hosts_to_discover = []
+
+        if not self._all:
+            if self._only_failed:
+                filterfunc = lambda host: host.discovery_failed()
+            else:
+                filterfunc = None
+
+            for host_name in get_hostnames_from_checkboxes(filterfunc):
+                if restrict_to_hosts and host_name not in restrict_to_hosts:
+                    continue
+                if host_name in skip_hosts:
+                    continue
+                host = Folder.current().host(host_name)
+                host.need_permission("write")
+                hosts_to_discover.append( (host.site_id(), host.folder(), host_name) )
+
+        # all host in this folder, maybe recursively. New: we always group
+        # a bunch of subsequent hosts of the same folder into one item.
+        # That saves automation calls and speeds up mass inventories.
+        else:
+            entries                    = self._recurse_hosts(Folder.current())
+            items                      = []
+            hostnames                  = []
+            current_folder             = None
+            num_hosts_in_current_chunk = 0
+            for host_name, folder in entries:
+                if restrict_to_hosts != None and host_name not in restrict_to_hosts:
+                    continue
+                if host_name in skip_hosts:
+                    continue
+                host = folder.host(host_name)
+                host.need_permission("write")
+                hosts_to_discover.append( (host.site_id(), host.folder(), host_name) )
+
+        # Create a list of items for the progress bar, where we group
+        # subsequent hosts that are in the same folder and site
+        hosts_to_discover.sort()
+
+        current_site_and_folder = None
+        items                   = []
+        hosts_in_this_item      = 0
+
+        for site_id, folder, host_name in hosts_to_discover:
+            if not items or (site_id, folder) != current_site_and_folder or \
+               hosts_in_this_item >= self._bulk_size:
+                items.append("%s|%s|%s" % (site_id, folder.path(), host_name))
+                hosts_in_this_item = 1
+            else:
+                items[-1]          += ";" + host_name
+                hosts_in_this_item += 1
+            current_site_and_folder = site_id, folder
+        return items, hosts_to_discover
+
+
+    def _recurse_hosts(self, folder):
         entries = []
         for host_name, host in folder.hosts().items():
-            if not only_failed or host.discovery_failed():
+            if not self._only_failed or host.discovery_failed():
                 entries.append((host_name, folder))
-        if recurse:
+        if self._recurse:
             for subfolder in folder.all_subfolders().values():
-                entries += recurse_hosts(subfolder, recurse, only_failed)
+                entries += self._recurse_hosts(subfolder)
         return entries
 
-    config.user.need_permission("wato.services")
-
-    if html.get_checkbox("only_failed_invcheck"):
-        restrict_to_hosts = find_hosts_with_failed_inventory_check()
-    else:
-        restrict_to_hosts = None
-
-    if html.get_checkbox("only_ok_agent"):
-        skip_hosts = find_hosts_with_failed_agent()
-    else:
-        skip_hosts = []
-
-    # 'all' not set -> only inventorize checked hosts
-    hosts_to_discover = []
-
-    if not html.var("all"):
-        complete_folder = False
-        if html.get_checkbox("only_failed"):
-            filterfunc = lambda host: host.discovery_failed()
-        else:
-            filterfunc = None
-
-        for host_name in get_hostnames_from_checkboxes(filterfunc):
-            if restrict_to_hosts and host_name not in restrict_to_hosts:
-                continue
-            if host_name in skip_hosts:
-                continue
-            host = Folder.current().host(host_name)
-            host.need_permission("write")
-            hosts_to_discover.append( (host.site_id(), host.folder(), host_name) )
-
-    # all host in this folder, maybe recursively. New: we always group
-    # a bunch of subsequent hosts of the same folder into one item.
-    # That saves automation calls and speeds up mass inventories.
-    else:
-        complete_folder = True
-        entries = recurse_hosts(Folder.current(), html.get_checkbox("recurse"), html.get_checkbox("only_failed"))
-        items = []
-        hostnames = []
-        current_folder = None
-        num_hosts_in_current_chunk = 0
-        for host_name, folder in entries:
-            if restrict_to_hosts != None and host_name not in restrict_to_hosts:
-                continue
-            if host_name in skip_hosts:
-                continue
-            host = folder.host(host_name)
-            host.need_permission("write")
-            hosts_to_discover.append( (host.site_id(), host.folder(), host_name) )
-
-    # Create a list of items for the progress bar, where we group
-    # subsequent hosts that are in the same folder and site
-    hosts_to_discover.sort()
-
-    current_site_and_folder = None
-    items = []
-    hosts_in_this_item = 0
-    bulk_size = int(html.var("bulk_size", 10))
-
-    for site_id, folder, host_name in hosts_to_discover:
-        if not items or (site_id, folder) != current_site_and_folder or hosts_in_this_item >= bulk_size:
-            items.append("%s|%s|%s" % (site_id, folder.path(), host_name))
-            hosts_in_this_item = 1
-        else:
-            items[-1] += ";" + host_name
-            hosts_in_this_item += 1
-        current_site_and_folder = site_id, folder
-
-
-    if html.var("_start"):
-        # Start interactive progress
-        interactive_progress(
-            items,
-            _("Bulk Service Discovery"),  # title
-            [ (_("Total hosts"),      0),
-              (_("Failed hosts"),     0),
-              (_("Skipped hosts"),    0),
-              (_("Services added"),   0),
-              (_("Services removed"), 0),
-              (_("Services kept"),    0),
-              (_("Total services"),   0) ], # stats table
-            [ ("mode", "folder") ], # URL for "Stop/Finish" button
-            50, # ms to sleep between two steps
-            fail_stats = [ 1 ],
-        )
-
-    else:
-        html.begin_form("bulkinventory", method = "POST")
-        html.hidden_fields()
-
-        # Mode of action
-        html.open_p()
-        if not complete_folder:
-            html.write_text(_("You have selected <b>%d</b> hosts for bulk discovery. ") % len(hosts_to_discover))
-        html.write_text(_("Check_MK service discovery will automatically find and configure "
-                          "services to be checked on your hosts."))
-        forms.header(_("Bulk Discovery"))
-        forms.section(_("Mode"))
-        html.radiobutton("how", "new",     True,  _("Add unmonitored services") + "<br>")
-        html.radiobutton("how", "remove",  False, _("Remove vanished services") + "<br>")
-        html.radiobutton("how", "fixall",  False, _("Add unmonitored & remove vanished services") + "<br>")
-        html.radiobutton("how", "refresh", False, _("Refresh all services (tabula rasa)") + "<br>")
-
-        forms.section(_("Selection"))
-        if complete_folder:
-            html.checkbox("recurse", True, label=_("Include all subfolders"))
-            html.br()
-        html.checkbox("only_failed", False, label=_("Only include hosts that failed on previous discovery"))
-        html.br()
-        html.checkbox("only_failed_invcheck", False, label=_("Only include hosts with a failed discovery check"))
-        html.br()
-        html.checkbox("only_ok_agent", False, label=_("Exclude hosts where the agent is unreachable"))
-
-        forms.section(_("Performance options"))
-        html.checkbox("use_cache", True, label=_("Use cached data if present"))
-        html.br()
-        html.checkbox("do_scan", True, label=_("Do full SNMP scan for SNMP devices"))
-        html.br()
-        html.write_text(_("Number of hosts to handle at once:") + " ")
-        html.number_input("bulk_size", 10, size=3)
-
-        forms.section(_("Error handling"))
-        html.checkbox("ignore_errors", True, label=_("Ignore errors in single check plugins"))
-
-        # Start button
-        forms.end()
-        html.button("_start", _("Start"))
 
 
 def find_hosts_with_failed_inventory_check():
@@ -17118,7 +17144,7 @@ modes = {
    "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
    "object_parameters"  : (["hosts", "rulesets"], mode_object_parameters),
    "search"             : (["hosts"], mode_search),
-   "bulkinventory"      : (["hosts", "services"], mode_bulk_discovery),
+   "bulkinventory"      : (["hosts", "services"], ModeBulkDiscovery),
    "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
    "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),
    "random_hosts"       : (["hosts", "random_hosts"], mode_random_hosts),

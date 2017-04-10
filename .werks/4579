@@ -1,0 +1,12 @@
+Title: Bulk discovery options can now be set in global settings
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1491288496
+Class: feature
+
+Default bulk discovery options which are shown in the bulk discovery
+dialog can now be preset in the {{Global settings}} below
+{{User Interface}}, {{Bulk discovery}}.

@@ -28,8 +28,9 @@ src/python-$(PYTHON_VERSION).msi:
 $(PYTHON_PACKAGES): src/python-$(PYTHON_VERSION).msi
 	# Download needed python packages including depencencies. This has to be done
 	# from within wine to obtain the correct win32 packages.
-	# Note: This target might download different or additional versions that specified in
-	# PYTHON_PACKAGES because the pip download option resolves dependencies.
+	# Note: We built this list to make the agent compilation reproducable. From time
+	# to time we should update the packages here, but we don't want to fetch new versions
+	# automatically.
 	mkdir $(BUILD_DIR) && \
 	export WINEPREFIX=$(BUILD_DIR) && \
 	cd $(BUILD_DIR) && \
@@ -37,23 +38,23 @@ $(PYTHON_PACKAGES): src/python-$(PYTHON_VERSION).msi
 	wine msiexec /qn /i python-$(PYTHON_VERSION).msi && \
 	mkdir pip && \
 	cd pip && \
-	wine c:\\Python27\\python.exe -m pip download appdirs==1.4.3 && \
-	wine c:\\Python27\\python.exe -m pip download idna==2.5 && \
-	wine c:\\Python27\\python.exe -m pip download pyparsing==2.2.0 && \
-	wine c:\\Python27\\python.exe -m pip download asn1crypto==0.22.0 && \
-	wine c:\\Python27\\python.exe -m pip download ipaddress==1.0.18 && \
-	wine c:\\Python27\\python.exe -m pip download pypiwin32==219 && \
-	wine c:\\Python27\\python.exe -m pip download cffi==1.10.0 && \
-	wine c:\\Python27\\python.exe -m pip download packaging==16.8 && \
-	wine c:\\Python27\\python.exe -m pip download requests==2.13.0 && \
-	wine c:\\Python27\\python.exe -m pip download cryptography==1.8.1 && \
-	wine c:\\Python27\\python.exe -m pip download pycparser==2.17 && \
-	wine c:\\Python27\\python.exe -m pip download setuptools==34.3.3 && \
-	wine c:\\Python27\\python.exe -m pip download enum34==1.1.6 && \
-	wine c:\\Python27\\python.exe -m pip download pyinstaller==3.2.1 && \
-	wine c:\\Python27\\python.exe -m pip download six==1.10.0 && \
-	wine c:\\Python27\\python.exe -m pip download future==0.16.0. && \
-	wine c:\\Python27\\python.exe -m pip download pyOpenSSL==16.2.0 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps appdirs==1.4.3 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps idna==2.5 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps pyparsing==2.2.0 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps asn1crypto==0.22.0 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps ipaddress==1.0.18 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps pypiwin32==219 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps cffi==1.10.0 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps packaging==16.8 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps requests==2.13.0 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps cryptography==1.8.1 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps pycparser==2.17 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps setuptools==34.3.3 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps enum34==1.1.6 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps pyinstaller==3.2.1 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps six==1.10.0 && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps future==0.16.0. && \
+	wine c:\\Python27\\python.exe -m pip download --no-deps pyOpenSSL==16.2.0 && \
 	mkdir -p $(CURDIR)/src/pip && \
 	cp -r * $(CURDIR)/src/pip
 	rm -rf $(BUILD_DIR)

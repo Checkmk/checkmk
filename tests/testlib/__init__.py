@@ -382,7 +382,7 @@ class Site(object):
 
         # Prevent build problems of livestatus
         print("Cleanup git files")
-        assert os.system("git clean -xfd") >> 8 == 0
+        assert os.system("sudo git clean -xfd") >> 8 == 0
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):

@@ -233,7 +233,7 @@ check_info['esx_vsphere_vm.datastores'] = {
 def inventory_esx_vsphere_vm_guest_tools(info):
     data = esx_vsphere_vm_convert(info)
     if 'guest.toolsVersionStatus' in data:
-        return [(None, None)]
+        return [(None, {})]
 
 def check_esx_vsphere_vm_guest_tools(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)
@@ -283,7 +283,7 @@ check_info['esx_vsphere_vm.guest_tools'] = {
 def inventory_esx_vsphere_vm_hb_status(info):
     data = esx_vsphere_vm_convert(info)
     if 'guestHeartbeatStatus' in data:
-        return [(None, None)]
+        return [(None, {})]
 
 def check_esx_vsphere_vm_hb_status(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)

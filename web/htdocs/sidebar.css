@@ -255,6 +255,13 @@ div.snapin div.content {
     width: 228px;
 }
 
+div.snapin select {
+    background-color: #6da1b8;
+    color: #fff;
+    border-color: #123a4a;
+    font-size: 8pt;
+}
+
 /*
  * General styles for snapin contents
  */

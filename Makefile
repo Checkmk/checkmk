@@ -550,7 +550,7 @@ ifeq ($(ENTERPRISE),yes)
 	cd enterprise && $(DOXYGEN) doc/Doxyfile
 endif
 
-This dummy rule is called from subdirectories whenever one of the
+# This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not
 # need to depend on %MAKEFILE% because GNU make will always make sure
 # %MAKEFILE% is updated before considering the am--refresh target.

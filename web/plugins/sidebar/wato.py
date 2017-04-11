@@ -284,13 +284,6 @@ sidebar_snapins['wato_foldertree'] = {
     width:   190px;
     height: 19px;
     margin-bottom: 2px;
-    background-color: #6da1b8;
-    color: #fff;
-    border-color: #123a4a;
-    font-size: 8pt;
-}
-#snapin_wato_foldertree select option {
-    background-color: #6da1b8;
 }
 #snapin_wato_foldertree span {
     margin-top: 1px;

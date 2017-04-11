@@ -78,8 +78,6 @@ def check_mssql_instance(item, _unused, parsed):
     if not instance:
         return
 
-    print instance
-
     if instance["state"] == "0":
         yield 2, "Failed to connect to database (%s)" % instance["error_msg"]
 

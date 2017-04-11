@@ -691,19 +691,10 @@ form.search {
     width: 317px;
     height: 76px;
     display: block;
-    background-image: url("images/wato_mainmenu_button_lo.png");
-    background-repeat: no-repeat;
     float: left;
     position: relative;
-    margin: 0px -1px -1px 0px;
-    left: -2px;
-    text-decoration: none;
-}
-.wato div.mainmenu a:hover {
-    background-image: url("images/wato_mainmenu_button_hi.png");
-}
-.wato div.mainmenu a:active {
-    background-image: url("images/wato_mainmenu_button_clicked.png");
+    margin: 0px 2px 2px 0px;
+    padding: 0;
 }
 
 .wato div.mainmenu div {
@@ -730,7 +721,6 @@ form.search {
     width: 237px;
     overflow: hidden;
 }
-
 
 /* Special styles for roles editor (permissions) */
 .wato table.form table.permissions {

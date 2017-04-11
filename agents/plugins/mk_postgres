@@ -33,7 +33,7 @@ else
 fi
 
 function compare_version_greater_equal() {
-    GREATER_ONE=$(echo "$1 $2" | awk "{if ($1 >= $2) print $1; else print $2}")
+    GREATER_ONE=$(echo "$1 $2" | awk '{if ($1 >= $2) print $1; else print $2}')
     if [ $GREATER_ONE == $1 ] ; then
         return 0
     else

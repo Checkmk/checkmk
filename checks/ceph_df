@@ -1,0 +1,113 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_ceph_df(info):
+    parsed         = {}
+    section        = None
+    global_headers = None
+    pools_headers  = None
+
+    for line in info:
+        if line[0] == "GLOBAL:":
+            section = "global"
+            continue
+
+        elif line[0] == "POOLS:":
+            section = "pools"
+            continue
+
+        if section == "global":
+            if line == ['SIZE', 'AVAIL', 'RAW', 'USED', '%RAW', 'USED', 'OBJECTS']:
+                global_headers = ['SIZE', 'AVAIL', 'RAW USED', '%RAW USED', 'OBJECTS']
+
+            elif global_headers is not None:
+                parsed.setdefault("SUMMARY", dict(zip(global_headers, line)))
+
+        elif section == "pools":
+            if line == ['NAME', 'ID', 'CATEGORY', 'QUOTA', 'OBJECTS', 'QUOTA',
+                        'BYTES', 'USED', '%USED', 'MAX', 'AVAIL', 'OBJECTS',
+                        'DIRTY', 'READ', 'WRITE', 'RAW', 'USED']:
+                pools_headers = ['NAME', 'ID', 'CATEGORY', 'QUOTA OBJECTS', 'QUOTA BYTES',
+                                 'USED', '%USED', 'MAX AVAIL', 'OBJECTS', 'DIRTY', 'READ',
+                                 'WRITE', 'RAW USED']
+
+            elif line == ['NAME', 'ID', 'QUOTA', 'OBJECTS', 'QUOTA',
+                        'BYTES', 'USED', '%USED', 'MAX', 'AVAIL', 'OBJECTS',
+                        'DIRTY', 'READ', 'WRITE', 'RAW', 'USED']:
+                pools_headers = ['NAME', 'ID', 'QUOTA OBJECTS', 'QUOTA BYTES',
+                                 'USED', '%USED', 'MAX AVAIL', 'OBJECTS', 'DIRTY', 'READ',
+                                 'WRITE', 'RAW USED']
+
+            elif pools_headers is not None:
+                parsed.setdefault(line[0], dict(zip(pools_headers[1:], line[1:])))
+
+    def parse_byte_values(value_str):
+        if value_str.endswith("T"):
+            return float(value_str[:-1]) * 1024**2
+        elif value_str.endswith("G"):
+            return float(value_str[:-1]) * 1024
+        elif value_str.endswith("M"):
+            return float(value_str[:-1])
+        elif value_str.endswith("k"):
+            return float(value_str[:-1]) / 1024
+        elif value_str == 'N/A':
+            return 0.0
+        else:
+            return float(value_str) / (1024**2)
+
+    mps = []
+    for mp, data in parsed.iteritems():
+        # GLOBAL section:
+        #   SIZE: The overall storage capacity of the cluster.
+        #   AVAIL: The amount of free space available in the cluster.
+        # POOLS section:
+        #   USED: The notional amount of data stored in kilobytes, unless the number appends M for megabytes or G for gigabytes.
+        #   MAX AVAIL: An estimate of the notional amount of data that can be written to this pool.
+        if mp == "SUMMARY":
+            size_mb = parse_byte_values(data["SIZE"])
+            avail_mb = parse_byte_values(data["AVAIL"])
+        else:
+            size_mb = parse_byte_values(data["MAX AVAIL"])
+            avail_mb = size_mb - parse_byte_values(data["USED"])
+        mps.append((mp, size_mb, avail_mb, 0))
+    return mps
+
+
+def inventory_ceph_df(mps):
+    return df_inventory(map(lambda x: x[0], mps))
+
+
+check_info['ceph_df'] = {
+    'parse_function'            : parse_ceph_df,
+    'inventory_function'        : inventory_ceph_df,
+    'check_function'            : df_check_filesystem_list,
+    'service_description'       : 'Ceph Pool %s',
+    'has_perfdata'              : True,
+    'includes'                  : ['df.include', 'size_trend.include'],
+    'group'                     : 'filesystem',
+    'default_levels_variable'   : 'filesystem_default_levels',
+}

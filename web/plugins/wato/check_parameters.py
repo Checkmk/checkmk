@@ -5518,6 +5518,62 @@ register_check_parameters(
     "first",
 )
 
+def ceph_epoch_element(title):
+    return  [("epoch", Tuple(
+        title    = title,
+        elements = [
+            Float(title=_("Warning at")),
+            Float(title=_("Critical at")),
+            Integer(title=_("Average interval"), unit=_("minutes")),
+        ])
+    )]
+
+register_check_parameters(
+    subgroup_storage,
+    "ceph_status",
+    _("Ceph Status"),
+    Dictionary(
+        elements = ceph_epoch_element(_("Status epoch levels and average")),
+    ),
+    None,
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "ceph_osds",
+    _("Ceph OSDs"),
+    Dictionary(
+        elements = [
+            ("num_out_osds", Tuple(
+                title    = _("Upper levels for number of OSDs which are out"),
+                elements = [
+                    Percentage(title = _("Warning at")),
+                    Percentage(title = _("Critical at")),
+            ])),
+            ("num_down_osds", Tuple(
+                title    = _("Upper levels for number of OSDs which are down"),
+                elements = [
+                    Percentage(title = _("Warning at")),
+                    Percentage(title = _("Critical at")),
+            ])),
+        ] + ceph_epoch_element(_("OSDs epoch levels and average")),
+    ),
+    None,
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "ceph_mgrs",
+    _("Ceph MGRs"),
+    Dictionary(
+        elements = ceph_epoch_element(_("MGRs epoch levels and average")),
+    ),
+    None,
+    "dict",
+)
+
 #.
 #   .--Printing------------------------------------------------------------.
 #   |                ____       _       _   _                              |

@@ -296,6 +296,10 @@ class html_mod_python(htmllib.html):
         if config.custom_style_sheet:
             self.write('<link rel="stylesheet" type="text/css" href="%s">\n' % config.custom_style_sheet)
 
+        if cmk.is_managed_edition():
+            import gui_colors
+            gui_colors.GUIColors().render_html()
+
 
     def plugin_stylesheets(self):
         plugin_stylesheets = set([])

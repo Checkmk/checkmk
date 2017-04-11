@@ -431,7 +431,7 @@ def normal_login_page(called_directly = True):
         html.http_redirect(origtarget and origtarget or 'index.py')
 
     html.open_div(id_="login")
-    html.img(id_="login_window", src="images/login_window.png")
+    html.open_div(id_="login_window")
     html.div(cmk.__version__, id_="version")
 
     html.begin_form("login", method = 'POST', add_transid = False, action = 'login.py')
@@ -451,6 +451,7 @@ def normal_login_page(called_directly = True):
 
     html.open_div(id_="button_text")
     html.button("_login", _('Login'))
+    html.close_div()
     html.close_div()
 
     html.open_div(id_="foot")

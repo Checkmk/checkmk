@@ -49,23 +49,25 @@ div#login {
     width: 770px;
     height: 605px;
     position: absolute;
-    top: 50%;
-    left: 50%;
-    margin: -276px 0px 0px -386px;
-    /* border: 1px solid yellow; */
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
 }
 
 body.main.screenshotmode div#login {
     background-image: url("");
 }
 
-img#login_window {
+#login_window {
+    background-image: url("images/login_window.png");
     width: 370px;
     height: 230px;
-    position: relative;
     left: 10px;
-    top: 160px;
-    float: none;
+    top: 187px;
+    position: relative;
+    margin: -30px auto 10px auto;
 }
 
 label {
@@ -76,36 +78,36 @@ label {
     position: absolute;
     text-align: right;
     width: 150px;
-    top: 173px;
-    left: 415px;
+    top: 15px;
+    right: 20px;
     color: white;
     font-size: 8pt;
 }
 
 #label_user, #label_pass {
-    left: 264px;
+    left: 55px;
 }
 
 #input_user, #input_pass {
-    left: 330px;
+    left: 121px;
 }
 
 #label_user {
     position: absolute;
-    top: 275px;
+    top: 115px;
 }
 #input_user {
     position: absolute;
-    top: 270px;
+    top: 110px;
 }
 
 #label_pass {
     position: absolute;
-    top: 315px;
+    top: 155px;
 }
 #input_pass {
     position: absolute;
-    top: 310px;
+    top: 150px;
 }
 
 #input_user, #input_pass {
@@ -125,33 +127,16 @@ label {
     background-repeat: no-repeat;
 }
 
-#button_login {
+#_login {
     position: absolute;
-    top: 345px;
-    left: 505px;
-}
-
-#button_login img {
-    width: 63px;
-    height: 32px;
-}
-
-#button_text {
-    position: absolute;
-    top: 356px;
-    left: 508px;
-    text-align: center;
-    width: 61px;
-    color: white;
-    z-index: 100;
-    font-size: 10px;
-    text-transform: uppercase;
+    bottom: 15px;
+    right: 15px;
 }
 
 #login_error {
     position: absolute;
-    top: 347px;
-    left: 320px;
+    bottom: 15px;
+    left: 105px;
     width: 180px;
     height: 30px;
     z-index: 100;
@@ -173,13 +158,15 @@ label {
 }
 
 #foot {
-    position: absolute;
     text-align: center;
-    top: 400px;
-    left: 220px;
     width: 350px;
     color: white;
     font-size: 8pt;
+
+    position: relative;
+    left: 10px;
+    top: 187px;
+    margin: 0 auto 10px auto;
 }
 
 

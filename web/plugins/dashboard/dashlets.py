@@ -257,7 +257,7 @@ def render_statistics(pie_id, what, table, filter, dashlet):
 
     table_entries = pies
     while len(table_entries) < 6:
-        table_entries = table_entries + [ (("", "#95BBCD", "", ""), HTML("&nbsp;")) ]
+        table_entries = table_entries + [ (("", None, "", ""), HTML("&nbsp;")) ]
     table_entries.append(((_("Total"), "", "all%s" % what, ""), total))
 
     for (name, color, viewurl, query), count in table_entries:

@@ -309,17 +309,19 @@ def check_mssql_counters_pageactivity(item, params, info):
     if now is None:
         now = time.time()
 
+    found = False
     for line in info:
         if mssql_counters_item(line, False) != item:
             continue
 
         for counter, label in mssql_pageactivity_counters:
             if line[1] == counter:
-                reading = float(line[-1])
+                found       = True
+                reading     = float(line[-1])
                 countername = "mssql_counters_pageactivity.%s.%s" % (item, counter)
-                rate = get_rate(countername, now, reading)
-                state = 0
-                infotext = "%s %.1f/sec" % (label, rate)
+                rate        = get_rate(countername, now, reading)
+                state       = 0
+                infotext    = "%s %.1f/sec" % (label, rate)
 
                 if params.get(counter):
                     warn, crit = params[counter]
@@ -334,12 +336,12 @@ def check_mssql_counters_pageactivity(item, params, info):
                 else:
                     perfdata = [ (counter, rate) ]
 
-
                 yield state, infotext, perfdata
 
-    # Assume general connection problem to the database, which is reported
-    # by the "X Instance" service and skip this check.
-    raise MKCounterWrapped("Failed to connect to database")
+    if not found:
+        # Assume general connection problem to the database, which is reported
+        # by the "X Instance" service and skip this check.
+        raise MKCounterWrapped("Failed to connect to database")
 
 
 check_info['mssql_counters.pageactivity'] = {

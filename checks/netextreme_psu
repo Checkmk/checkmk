@@ -36,7 +36,10 @@ factory_settings["netextreme_psu_default_levels"] = {
 
 
 def parse_netextreme_psu(info):
-    return { "1" : {"power" : float(info[0][0]) * pow(10, int(info[0][1])) }}
+    try:
+        return { "1" : {"power" : float(info[0][0]) * pow(10, int(info[0][1])) }}
+    except (IndexError, ValueError):
+        return {}
 
 
 check_info['netextreme_psu'] = {

@@ -101,7 +101,8 @@ PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs
 .PHONY: all analyze build check check-binaries check-permissions check-spaces \
         check-version clean cppcheck dist documentation format \
         GTAGS headers healspaces help install iwyu mrproper \
-        optimize-images packages setup setversion tidy version
+        optimize-images packages setup setversion tidy version \
+	am--refresh
 
 all: dist packages
 
@@ -433,6 +434,7 @@ setup:
 	    librrd-dev \
 	    pngcrush \
 	    slimit
+
 ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	  autoreconf --install --include=m4
 
@@ -547,3 +549,10 @@ documentation: config.h
 ifeq ($(ENTERPRISE),yes)
 	cd enterprise && $(DOXYGEN) doc/Doxyfile
 endif
+
+# This dummy rule is called from subdirectories whenever one of the
+# top-level Makefile's dependencies must be updated.  It does not
+# need to depend on %MAKEFILE% because GNU make will always make sure
+# %MAKEFILE% is updated before considering the am--refresh target.
+am--refresh: 
+	@:

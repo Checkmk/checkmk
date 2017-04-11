@@ -1,0 +1,13 @@
+Title: mk_postgres/mk_db2.linux: Fixed quotes which lead into wrong interpretation
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1491906005
+Class: fix
+
+The double quotes in awk of the function compare_version_greater_euqal lead
+into a bash interpreting of the $1 variable expansion. In consequence the
+comparison between e.g. 9.0 and 7.3 resultet in a return 1. This misbehaviour
+has been fixed now.

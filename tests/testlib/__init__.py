@@ -331,22 +331,22 @@ class Site(object):
         assert not os.path.exists(self.version.version_path()), \
             "New version path '%s' already exists" % self.version.version_path()
 
-        cmd = "sudo /bin/cp -pr %s %s" % (src_path, self.version.version_path())
-        if os.system(cmd) >> 8 != 0:
-            raise Exception("Failed to copy Check_MK: %s" % cmd)
+        def execute(cmd):
+            print("Executing: %s" % cmd)
+            rc = os.system(cmd) >> 8
+            if rc != 0:
+                raise Exception("Failed to execute '%s'. Exit code: %d" % (cmd, rc))
 
-        if os.system("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
-            (src_version, new_version_name, self.version.version_path())) >> 8 != 0:
-            raise Exception("Failed to set new version to bin/omd")
+        execute("sudo /bin/cp -pr %s %s" % (src_path, self.version.version_path()))
 
-        if os.system("sudo chrpath -r %s/lib %s/bin/python" %
-            (self.root, self.version.version_path())) >> 8 != 0:
-            raise Exception("Failed to set new version to bin/python")
+        execute("sudo sed -i \"s|%s|%s|g\" %s/bin/omd" %
+            (src_version, new_version_name, self.version.version_path()))
 
-        if os.system("sudo sed -i 's|^initialize()$|sys.path.insert(0, \"%s/lib/python\")\\ninitialize()|g' "
-                     "%s/share/check_mk/web/htdocs/index.py" %
-            (self.version.version_path(), self.version.version_path())) >> 8 != 0:
-            raise Exception("Failed to add python module path of fake version")
+        execute("sudo chrpath -r %s/lib %s/bin/python" %
+            (self.root, self.version.version_path()))
+
+        execute("sudo sed -i 's|^initialize()$|sys.path.insert(0, \"%s/lib/python\")\\ninitialize()|g' " \
+              "%s/share/check_mk/web/htdocs/index.py" % (self.version.version_path(), self.version.version_path()))
 
 
     def _update_with_f12_files(self):

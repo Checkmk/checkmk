@@ -4,6 +4,8 @@ set -e
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
+echo "PATH: $PATH"
+
 LANG=C make -C .. config.h
 LANG=C make -j4
 sudo install -v src/livestatus.o /omd/sites/$SITE/lib/mk-livestatus/livestatus.o

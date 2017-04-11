@@ -1,0 +1,11 @@
+Title: Stacking on metrics with empty values is now possible
+Level: 1
+Component: metrics
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0b6
+Date: 1491898933
+
+

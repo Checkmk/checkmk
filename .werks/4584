@@ -1,0 +1,10 @@
+Title: mssql_counters.pageactivity: Raised always a MKCounterWrapped which resulted in PENDING service state; Fixed that.
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b6
+Date: 1491902865
+Class: fix
+
+

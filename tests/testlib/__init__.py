@@ -343,7 +343,7 @@ class Site(object):
             (self.root, self.version.version_path())) >> 8 != 0:
             raise Exception("Failed to set new version to bin/python")
 
-        if os.system("sudo sed -i 's|^initialize()$|sys.path.insert(0, \"%s/lib/python\")\ninitialize()|g' "
+        if os.system("sudo sed -i 's|^initialize()$|sys.path.insert(0, \"%s/lib/python\")\\ninitialize()|g' "
                      "%s/share/check_mk/web/htdocs/index.py" %
             (self.version.version_path(), self.version.version_path())) >> 8 != 0:
             raise Exception("Failed to add python module path of fake version")

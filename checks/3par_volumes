@@ -59,11 +59,13 @@ def check_3par_volumes(item, params, parsed):
             usr_free = total - entry['userSpace']['usedMiB']
             yield df_check_filesystem_list(item, params, [ (item, total, usr_free, 0) ])
 
-            # These sections are not always existend. Only add them if available.
-            if "deduplication" in entry['capacityEfficiency']:
-                yield 0, "Dedup: %s" % entry['capacityEfficiency']['deduplication']
-            if "compaction" in entry['capacityEfficiency']:
-                yield 0, "Compact: %s" % entry['capacityEfficiency']['compaction']
+            # This section seems not always to be present...
+            if "capacityEfficiency" in entry:
+                # Even these sections are not always existend. Only add them if available.
+                if "deduplication" in entry['capacityEfficiency']:
+                    yield 0, "Dedup: %s" % entry['capacityEfficiency']['deduplication']
+                if "compaction" in entry['capacityEfficiency']:
+                    yield 0, "Compact: %s" % entry['capacityEfficiency']['compaction']
 
             # Add some additional information and the performance data about Provisioning
             provisioning = entry['userSpace']['rawReservedMiB'] * 1024 * 1024

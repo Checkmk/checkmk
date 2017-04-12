@@ -1,0 +1,19 @@
+Title: 3par: several fixes for 3PAR Storage Services
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b6
+Date: 1492008730
+
+This werk includes several fixes for 3par checkplugins. Details are listed below:
+- 3par_cpgs: CPGs are only discovered if their have at least one VV
+- 3par_ports: Ports are only discoverd if not marked as free
+- 3par_hosts: Checks do not crash anymore if the OS type is not delivered in output
+- 3par_volumes: Checks to not crash anymore if there is no information about efficiency at all
+
+This Bugfix is compatible although it is recommended to rediscover your host
+to get rid of some useless Services.
+

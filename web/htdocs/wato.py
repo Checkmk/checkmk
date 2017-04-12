@@ -6737,7 +6737,7 @@ def render_global_configuration_variables(group_names, default_values, current_s
                 forms.header(group_name, isopen=search)
                 header_is_painted = True
 
-            defaultvalue = default_values.get(varname, valuespec.default_value())
+            default_value = default_values.get(varname, valuespec.default_value())
 
             edit_url = folder_preserving_link([("mode", edit_mode),
                                                ("varname", varname),
@@ -6749,7 +6749,7 @@ def render_global_configuration_variables(group_names, default_values, current_s
             if varname in current_settings:
                 to_text = valuespec.value_to_text(current_settings[varname])
             else:
-                to_text = valuespec.value_to_text(defaultvalue)
+                to_text = valuespec.value_to_text(default_value)
 
             # Is this a simple (single) value or not? change styling in these cases...
             simple = True
@@ -6758,20 +6758,21 @@ def render_global_configuration_variables(group_names, default_values, current_s
             forms.section(title, simple=simple)
 
             toggle_url = html.makeactionuri([("_action", "toggle"), ("_varname", varname)])
+
             if varname in current_settings:
-                if is_a_checkbox(valuespec):
-                    html.icon_button(toggle_url, _("Immediately toggle this setting"),
-                        "snapin_switch_" + (current_settings[varname] and "on" or "off"),
-                        cssclass="modified")
-                else:
-                    html.a(HTML(to_text), href=edit_url, class_="modified")
+                value = current_settings[varname]
+                modified_cls = "modified"
             else:
-                if is_a_checkbox(valuespec):
-                    html.icon_button(toggle_url, _("Immediately toggle this setting"),
-                    # "snapin_greyswitch_" + (defaultvalue and "on" or "off"))
-                    "snapin_switch_" + (defaultvalue and "on" or "off"))
-                else:
-                    html.a(HTML(to_text), href=edit_url)
+                value = default_value
+                modified_cls = None
+
+            if is_a_checkbox(valuespec):
+                html.icon_button(toggle_url, _("Immediately toggle this setting"),
+                "snapin_switch_" + (value and "on" or "off"),
+                cssclass=modified_cls)
+
+            else:
+                html.a(HTML(to_text), href=edit_url, class_=modified_cls)
 
         if header_is_painted:
             forms.end()

@@ -6756,8 +6756,6 @@ def render_global_configuration_variables(group_names, default_values, current_s
                 simple = False
             forms.section(title, simple=simple)
 
-            toggle_url = html.makeactionuri([("_action", "toggle"), ("_varname", varname)])
-
             if varname in current_settings:
                 value = current_settings[varname]
                 modified_cls = "modified"
@@ -6766,9 +6764,12 @@ def render_global_configuration_variables(group_names, default_values, current_s
                 modified_cls = None
 
             if is_a_checkbox(valuespec):
-                html.icon_button(toggle_url, _("Immediately toggle this setting"),
-                "snapin_switch_" + (value and "on" or "off"),
-                cssclass=modified_cls)
+                html.toggle_switch(
+                    enabled=value,
+                    help=_("Immediately toggle this setting"),
+                    href=html.makeactionuri([("_action", "toggle"), ("_varname", varname)]),
+                    class_=modified_cls
+                )
 
             else:
                 html.a(HTML(to_text), href=edit_url, class_=modified_cls)

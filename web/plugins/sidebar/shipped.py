@@ -1228,9 +1228,11 @@ def render_master_control():
             html.open_tr()
             html.td(title, class_="left")
             html.open_td()
-            html.icon_button("#", _("Switch %s %s") % (title, colvalue and "off" or "on"),
-                             "snapin_switch_" + (colvalue and "on" or "off"), onclick=onclick)
-            # html.write("<a onclick=\"%s\" href=\"#\">%s</a>" % (title, enabled, onclick, enabled))
+            html.toggle_switch(
+                enabled=colvalue,
+                help=_("Switch '%s' to '%s'") % (title, _("off") if colvalue else _("on")),
+                onclick=onclick,
+            )
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -1251,9 +1253,8 @@ div.snapin table.master_control {
     border-spacing: 0px;
 }
 
-div.snapin table.master_control td {
-    padding: 0px 0px;
-    text-align: right;
+div.snapin table.master_control td div.toggle_switch {
+    float: right;
 }
 
 div.snapin table.master_control td.left a {

@@ -205,6 +205,62 @@ input.button.hot:active {
     border-color: #6d5723 #d9bf81 #d9bf81 #6d5723;
 }
 
+/* on/off toggle button */
+
+.toggle_switch {
+    border-color: #1b333d #264c18 #1b333d #274141;
+    border-radius: 4px;
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: 0 0 1px rgba(255, 255, 255, 0.8),
+                1px 1px 0px 0px rgba(0, 0, 0, 0.4) inset;
+
+    background-color: #427b94;
+
+    width: 56px;
+    height: 12px;
+}
+
+.toggle_switch a,
+.wato div.globalvars .toggle_switch a {
+    display: block;
+
+    border-color: #1b333d #264c18 #1b333d #274141;
+    border-radius: 4px;
+    border-style: solid;
+    box-shadow: 1px 1px 1px 0px rgba(255, 255, 255, 0.4) inset;
+
+    width: 30px;
+    height: 12px;
+
+    color: #fff;
+    text-decoration: none;
+    font-size: 7pt;
+    text-align: center;
+    line-height: 10px;
+
+    cursor: pointer;
+}
+
+.toggle_switch.on a {
+    float: right;
+    background-color: #54a626;
+    border-width: 0 0 0 1px;
+}
+
+.toggle_switch.off a {
+    background-color: #f60000;
+    border-width: 0 1px 0 0;
+}
+
+.toggle_switch a:hover {
+    /* TODO: create a better hover effect */
+    text-decoration: none !important;
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
+}
+
+
 
 /* pattern / regex input styling */
 

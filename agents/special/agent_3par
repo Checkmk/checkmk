@@ -64,7 +64,7 @@ OPTIONS:
 opt_host = None
 opt_user = None
 opt_pass = None
-opt_values = ["system", "cpgs", "volumes", "hosts", "capacity", "ports"]
+opt_values = ["system", "cpgs", "volumes", "hosts", "capacity", "ports", "remotecopy"]
 
 short_options = "hh:u:p:v:"
 long_options = [ "help", "user=", "password=", "values=" ]

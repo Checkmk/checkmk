@@ -145,41 +145,62 @@ img.pluginurl {
 
 /* Status of sites in sidebar and in WATO */
 
-.sitestatus.online   {
-    background-color: #3c0;
+.status_label {
+    border-color: #1b333d #264c18 #1b333d #274141;
+    border-radius: 4px;
+    border-style: solid;
+    border-width: 1px;
+    box-shadow: 0 0 1px rgba(255, 255, 255, 0.8),
+                1px 1px 0px 0px rgba(255, 255, 255, 0.4) inset;
+
+    width: 56px;
+    height: 12px;
+
+    font-size: 7pt;
     color: #fff;
-    border-color: #0f0;
+    text-align: center;
+    line-height: 12px;
+
+    cursor: default;
 }
-.sitestatus.disabled {
-    background-color: #666;
-    color: #ccc;
-    border-color: #888;
+
+.status_label.button {
+    cursor: pointer;
 }
-.sitestatus.dead     {
-    background-color: #c00;
-    color: #f88;
-    border-color: #f44;
+
+.status_label.button:hover {
+    /* TODO: create a better hover effect */
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* For IE8 and earlier */
 }
-.sitestatus.waiting  {
-    background-color: #666;
-    color: #fff;
-    border-color: #ccc;
+
+.status_label.disabled {
+    background-color: #787878;
+    color: #b2b2b2;
 }
-.sitestatus.down     {
-    background-color: #f00;
-    color: #fff;
-    border-color: #800;
+.status_label.dead     {
+    background-color: #b91e1d;
 }
-.sitestatus.unreach  {
-    background-color: #f80;
-    color: #fff;
-    border-color: #840;
+.status_label.down     {
+    background-color: #f60000;
 }
-.sitestatus.unknown  {
-    background-color: #26c;
-    color: #fff;
-    border-color: #44f;
+.status_label.online   {
+    background-color: #54a626;
 }
+.status_label.partial {
+    background-color: #bd8a3f;
+}
+.status_label.unknown  {
+    background-color: #a96394;
+}
+.status_label.unreach  {
+    background-color: #ef7b08;
+}
+.status_label.waiting  {
+    background-color: #3574c2;
+}
+
+
 /* Performeter styling */
 
 table.data tr.data td.perfometer {

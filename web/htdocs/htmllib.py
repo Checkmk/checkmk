@@ -2079,6 +2079,18 @@ class html(DeprecationWrapper, RequestHandler):
             self.close_x()
 
 
+    # Shows a colored badge with text (used on WATO activation page for the site status)
+    def status_label(self, content, status, help, **attrs):
+        self.status_label_button(content, status, help, onclick=None, **attrs)
+
+
+    # Shows a colored button with text (used in site and customer status snapins)
+    def status_label_button(self, content, status, help, onclick, **attrs):
+        button_cls = "button" if onclick else None
+        self.div(content, title=help, class_=[ "status_label", button_cls, status ],
+                 onclick=onclick, **attrs)
+
+
     def number_input(self, varname, deflt = "", size=8, style="", submit=None):
         if deflt != None:
             deflt = str(deflt)

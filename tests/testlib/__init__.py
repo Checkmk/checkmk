@@ -345,7 +345,11 @@ class Site(object):
         execute("sudo chrpath -r %s/lib %s/bin/python" %
             (self.root, self.version.version_path()))
 
-        execute("sudo sed -i '0,/^$/s|^$|import sys ; sys.path.insert(0, \"%s/lib/python\")\\n|' " \
+        self._add_version_path_to_index_py()
+
+
+    def _add_version_path_to_index_py(self):
+        os.system("sudo sed -i '0,/^$/s|^$|import sys ; sys.path.insert(0, \"%s/lib/python\")\\n|' " \
               "%s/share/check_mk/web/htdocs/index.py" % (self.version.version_path(), self.version.version_path()))
 
 
@@ -398,6 +402,8 @@ class Site(object):
                                       (path, self.id)) >> 8 == 0
                 print("Executing .f12 in \"%s\" DONE" % path)
                 sys.stdout.flush()
+
+        self._add_version_path_to_index_py()
 
 
     def _enable_mod_python_debug(self):

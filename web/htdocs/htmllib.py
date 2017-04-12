@@ -1654,6 +1654,16 @@ class html(DeprecationWrapper, RequestHandler):
         self.browser_redirect = url
 
 
+    def add_default_stylesheet(self, name):
+        if name not in self._default_stylesheets:
+            self._default_stylesheets.append(name)
+
+
+    def add_default_javascript(self, name):
+        if name not in self._default_javascripts:
+            self._default_javascripts.append(name)
+
+
     def immediate_browser_redirect(self, secs, url):
         self.javascript("set_reload(%s, '%s');" % (secs, url))
 

@@ -37,7 +37,9 @@ def check_3par_hosts(item, _no_params, parsed):
             continue
 
         if item == entry['name']:
-            yield 0, "ID: %s, OS: %s" % (entry['id'], entry['descriptors']['os'])
+            yield 0, "ID: %s" % entry['id']
+            if "descriptors" in entry:
+                yield 0, "OS: %s" % entry['descriptors']['os']
             if len(entry['FCPaths']) > 0:
                 yield 0, "FC Paths: %s" % len(entry['FCPaths'])
             elif len(entry['iSCSIPaths']) > 0:

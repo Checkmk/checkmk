@@ -128,8 +128,8 @@ def check_juniper_trpz_aps_sessions(item, _no_params, info):
                 radio_rates.append(radio_rate)
                 ap_rates[nr] += radio_rate
 
-            infotext = "Radio %s: input: %s/s, output: %s/s, \
-                        %d errors, %d resets, %d retries, %d sessions, noise: %d dBm" % \
+            infotext = ("Radio %s: Input: %s/s, Output: %s/s, " + \
+                        "%d errors, %d resets, %d retries, %d sessions, noise: %d dBm") % \
                        ( radio_number,
                          get_bytes_human_readable(radio_rates[5]),
                          get_bytes_human_readable(radio_rates[1] + radio_rates[3]),

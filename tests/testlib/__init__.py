@@ -345,7 +345,7 @@ class Site(object):
         execute("sudo chrpath -r %s/lib %s/bin/python" %
             (self.root, self.version.version_path()))
 
-        execute("sudo sed -i '0,/%%^$/s|^$|import sys ; sys.path.insert(0, \"%s/lib/python\")\\n|' " \
+        execute("sudo sed -i '0,/^$/s|^$|import sys ; sys.path.insert(0, \"%s/lib/python\")\\n|' " \
               "%s/share/check_mk/web/htdocs/index.py" % (self.version.version_path(), self.version.version_path()))
 
 

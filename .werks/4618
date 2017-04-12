@@ -1,0 +1,10 @@
+Title: 3par_remotecopy: New check for HPE 3PAR remote copy replication status
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1492011121
+Class: feature
+
+Now it is possible to monitor the remote replication of 3PAR devices.

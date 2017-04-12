@@ -1587,6 +1587,65 @@ register_check_parameters(
     "dict"
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "threepar_remotecopy",
+    _("3PAR Remote Copy"),
+    Dictionary(
+        elements = [
+            ("1",
+             MonitoringState(
+                title = _("Status: NORMAL"),
+                default_value = 0,
+             )
+            ),
+            ("2",
+             MonitoringState(
+                title = _("Status: STARTUP"),
+                default_value = 1,
+             )
+            ),
+            ("3",
+             MonitoringState(
+                title = _("Status: SHUTDOWN"),
+                default_value = 1,
+             )
+            ),
+            ("4",
+             MonitoringState(
+                title = _("Status: ENABLE"),
+                default_value = 0,
+             )
+            ),
+            ("5",
+             MonitoringState(
+                title = _("Status: DISBALE"),
+                default_value = 2,
+             )
+            ),
+            ("6",
+             MonitoringState(
+                title = _("Status: INVALID"),
+                default_value = 2,
+             )
+            ),
+            ("7",
+             MonitoringState(
+                title = _("Status: NODEUP"),
+                default_value = 1,
+             )
+            ),
+            ("8",
+             MonitoringState(
+                title = _("Status: UPGRADE"),
+                default_value = 0,
+             )
+            ),
+        ]
+    ),
+    None,
+    "dict"
+)
 
 register_check_parameters(
     subgroup_applications,

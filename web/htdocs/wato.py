@@ -9317,10 +9317,9 @@ class ModeDistributedMonitoring(ModeSites):
                 secret = do_site_login(login_id, name, passwd)
                 site["secret"] = secret
                 save_sites(configured_sites)
-                log_audit(None, "edit-site", _("Successfully logged into remote site %s") % \
-                          html.render_tt(site["alias"]))
-                return None, _("Successfully logged into remote site %s!") % \
-                       html.render_tt(site["alias"])
+                message = _("Successfully logged into remote site %s.") % html.render_tt(site["alias"])
+                log_audit(None, "edit-site", message)
+                return None, message
 
             except MKAutomationException, e:
                 error = _("Cannot connect to remote site: %s") % e

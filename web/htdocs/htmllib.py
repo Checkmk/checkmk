@@ -2210,6 +2210,26 @@ class html(HTMLGenerator, Encoder, RequestHandler):
                  onclick=onclick, **attrs)
 
 
+    def toggle_switch(self, enabled, help, **attrs):
+        # Same API as other elements: class_ can be a list or string/None
+        if "class_" in attrs:
+            if type(attrs["class_"]) != list:
+                attrs["class_"] = [ attrs["class_"] ]
+        else:
+            attrs["class_"] = []
+
+        attrs["class_"] += [ "toggle_switch", "on" if enabled else "off", ]
+
+        link_attrs = {
+            "href"    : attrs.pop("href", None),
+            "onclick" : attrs.pop("onclick", None),
+        }
+
+        self.open_div(**attrs)
+        self.a(_("on") if enabled else _("off"), title=help, **link_attrs)
+        self.close_div()
+
+
     def number_input(self, varname, deflt = "", size=8, style="", submit=None):
         if deflt != None:
             deflt = str(deflt)

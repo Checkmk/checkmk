@@ -1,0 +1,11 @@
+Title: juniper_trpz_aps, juniper_trpz_aps_sessions: Fixed missing OID for WLC800R series
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1492078119
+
+

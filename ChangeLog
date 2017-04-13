@@ -18,6 +18,7 @@
     * 4583 FIX: netextreme_psu: Fixed empty data handling
     * 4586 FIX: juniper_trpz_aps_sessions: Fixed crashes if access point is not reachable or no values could be calculated
     * 4587 FIX: juniper_trpz_aps, juniper_trpz_aps_sessions: Fixed missing OID for WLC800R series
+    * 4588 FIX: cisco_wlc, cisco_wlc_clients: Fixed missing OID for Cisco WLC-8510 devices
 
 
 1.2.8p20:

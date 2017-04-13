@@ -78,9 +78,9 @@ def parse_juniper_trpz_aps_sessions(info):
             for ap_name, ap_data in parsed.items():
                 if radio_oid == parsed[ap_name]['end_oid']:
                     ap_data['radios'][radio_number] = {
-                        'counters'    : map(int, data[1:-2]),
-                        'sessions'    : int(data[-2]),
-                        'noise_floor' : int(data[-1]),
+                        'counters'    : data[1:-2],
+                        'sessions'    : data[-2],
+                        'noise_floor' : data[-1],
                     }
 
     return parsed
@@ -109,7 +109,6 @@ def check_juniper_trpz_aps_sessions(item, _no_params, info):
             20 : (2, "conn outage"),
         }
         state, ap_status = ap_states[parsed[item]['status']]
-
         yield state, "Status: %s" % ap_status
 
         now = time.time()
@@ -118,23 +117,35 @@ def check_juniper_trpz_aps_sessions(item, _no_params, info):
         noise_floor_radios = []
 
         for radio_number, radio_data in parsed[item]['radios'].items():
-            noise_floor_radios.append( radio_data['noise_floor'] )
-            ap_sessions += radio_data['sessions']
+            try:
+                radio_data_noise_floor = int(radio_data['noise_floor'])
+                noise_floor_radios.append(radio_data_noise_floor)
+            except:
+                radio_data_noise_floor = "None"
 
-            radio_rates = []
+            try:
+                radio_data_sessions = int(radio_data['sessions'])
+                ap_sessions        += radio_data_sessions
+            except:
+                radio_data_sessions = "None"
+
+            radio_rates = [0, 0, 0, 0, 0, 0, 0, 0, 0]
             for nr, counter in enumerate(radio_data['counters']):
-                radio_rate = get_rate("juniper_trpz_aps_sessions.%s.%s.%d" \
-                             % (item, radio_number, nr), now, counter)
-                radio_rates.append(radio_rate)
-                ap_rates[nr] += radio_rate
+                try:
+                    radio_rate = get_rate("juniper_trpz_aps_sessions.%s.%s.%d" % \
+                                 (item, radio_number, nr), now, counter)
+                    radio_rates.append(radio_rate)
+                    ap_rates[nr] += radio_rate
+                except:
+                    pass
 
             infotext = ("Radio %s: Input: %s/s, Output: %s/s, " + \
-                        "%d errors, %d resets, %d retries, %d sessions, noise: %d dBm") % \
+                        "Errors: %d, Resets: %d, Retries: %d, Sessions: %s, Noise: %s dBm") % \
                        ( radio_number,
                          get_bytes_human_readable(radio_rates[5]),
                          get_bytes_human_readable(radio_rates[1] + radio_rates[3]),
                          radio_rates[6], radio_rates[7], radio_rates[8],
-                         radio_data['sessions'], radio_data['noise_floor'] )
+                         radio_data_sessions, radio_data_noise_floor )
 
             yield 0, infotext
 
@@ -148,9 +159,9 @@ def check_juniper_trpz_aps_sessions(item, _no_params, info):
             ("wlan_physical_errors",      ap_rates[6]),
             ("wlan_resets",               ap_rates[7]),
             ("wlan_retries",              ap_rates[8]),
-            ("total_sessions",            ap_sessions),
-            ("noise_floor",               max(noise_floor_radios)),
-        ]
+            ("total_sessions",            ap_sessions), ]
+        if noise_floor_radios:
+            perfdata.append(("noise_floor", max(noise_floor_radios)))
 
         yield 0, "", perfdata
 

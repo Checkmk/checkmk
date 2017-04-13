@@ -9628,7 +9628,7 @@ class ModeEditSite(ModeSites):
         if not re.match("^[-a-z0-9A-Z_]+$", self._id):
             raise MKUserError("id", _("The site id must consist only of letters, digit and the underscore."))
 
-        self._set_site_attributes()
+        detail_msg = self._set_site_attributes()
         configured_sites[self._id] = self._new_site
         save_sites(configured_sites)
 
@@ -9649,7 +9649,7 @@ class ModeEditSite(ModeSites):
             # On central site issue a change only affecting the GUI
             add_change("edit-sites", msg, sites=[config.omd_site()], domains=[ConfigDomainGUI])
 
-        return "sites"
+        return "sites", detail_msg
 
 
     def _set_site_attributes(self):

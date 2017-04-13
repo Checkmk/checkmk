@@ -1,0 +1,11 @@
+Title: cisco_wlc, cisco_wlc_clients: Fixed missing OID for Cisco WLC-8510 devices
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b6
+Date: 1492084188
+
+

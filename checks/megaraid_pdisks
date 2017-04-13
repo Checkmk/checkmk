@@ -125,5 +125,5 @@ check_info["megaraid_pdisks"] = {
     'check_function':          check_megaraid_pdisks,
     'inventory_function':      inventory_megaraid_pdisks,
     'service_description':     'RAID PDisk Adapt/Enc/Sl %s',
-    'group':                   'raid_disk',
+    'has_perfdata':            False,
 }

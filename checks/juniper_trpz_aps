@@ -24,31 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 def inventory_juniper_trpz_aps(info):
     return [ (None, None) ]
 
+
 def check_juniper_trpz_aps(_no_item, _no_params, info):
-    total_aps = 0
+    total_aps      = 0
     total_sessions = 0
-    message = ""
+    infotexts      = []
     for node, aps, sessions in info:
         # Are we a cluster?
+        message = ""
         if node != None:
-            message += "%s: " % node
+            message += "[%s] " % node
 
-        total_aps += int(aps)
+        total_aps      += int(aps)
         total_sessions += int(sessions)
-        message += "%s access points online, %s sessions - " % (aps, sessions)
-
-    if message.endswith(' - '):
-        message = message[:-3]
+        message        += "Online access points: %s, Sessions: %s" % \
+                          (aps, sessions)
+        infotexts.append(message)
 
     if len(info) > 1:
-        infotext = "Total: %d access points, %d sessions (%s)" % (total_aps, total_sessions, message)
-    else:
-        infotext = message
+        infotexts = ["Total: %d access points, Sessions: %d" % \
+                     (total_aps, total_sessions)] + infotexts
 
-    return 0, infotext, [ ('ap_devices_total', total_aps), ("total_sessions", total_sessions) ]
+    return 0, ", ".join(infotexts), [
+           ('ap_devices_total', total_aps),
+           ("total_sessions",   total_sessions)]
+
 
 check_info["juniper_trpz_aps"] = {
     "check_function"        : check_juniper_trpz_aps,

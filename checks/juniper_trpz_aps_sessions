@@ -56,29 +56,26 @@
 
 def parse_juniper_trpz_aps_sessions(info):
     parsed = {}
-    count = 0
-    for node in range(len(info)/2):
-        # This is needed cause of node_info
-        access_points = info[node+count][1:]
-        radios        = info[node+count+1][1:]
-        count += 1
-        for end_oid, status, name in access_points:
+    for access_points, radios in zip(info[::2], info[1::2]):
+        for node, end_oid, status, name in access_points:
             # 10 means that that accesspoint is located on the
-            # other cluster part. Use custered_services to see all APs
+            # other cluster part. Use clustered_services to see all APs
             if int(status) != 10:
                 name = name.replace('AP-','')
-                parsed[name] = {
-                    'end_oid'    : end_oid,
-                    'status'     : int(status),
-                    'radios'     : {},
+                parsed.setdefault(name, {})
+                parsed[name].setdefault(node, {})
+                parsed[name][node] = {
+                    'end_oid'   : end_oid,
+                    'status'    : int(status),
+                    'radios'    : {},
                 }
 
         for data in radios:
-            radio_oid, radio_number = data[0].rsplit('.', 1)
+            radio_oid, radio_number = data[1].rsplit('.', 1)
             for ap_name, ap_data in parsed.items():
-                if radio_oid == parsed[ap_name]['end_oid']:
-                    ap_data['radios'][radio_number] = {
-                        'counters'    : data[1:-2],
+                if radio_oid == ap_data.get(data[0], {}).get('end_oid'):
+                    ap_data[data[0]]['radios'][radio_number] = {
+                        'counters'    : data[2:-2],
                         'sessions'    : data[-2],
                         'noise_floor' : data[-1],
                     }
@@ -86,16 +83,14 @@ def parse_juniper_trpz_aps_sessions(info):
     return parsed
 
 
-def inventory_juniper_trpz_aps_sessions(info):
-    parsed = parse_juniper_trpz_aps_sessions(info)
+def inventory_juniper_trpz_aps_sessions(parsed):
     # A failover condition occurs when a primary controller goes down or fails for any reason.
     # Then, a second controller takes over the operation.
     # Failover is also called controller redundancy.
     return [ (key, None) for key in parsed ]
 
 
-def check_juniper_trpz_aps_sessions(item, _no_params, info):
-    parsed = parse_juniper_trpz_aps_sessions(info)
+def check_juniper_trpz_aps_sessions(item, _no_params, parsed):
     if item in parsed:
         ap_states = {
             1  : (2, "cleared"),
@@ -108,46 +103,53 @@ def check_juniper_trpz_aps_sessions(item, _no_params, info):
             10 : (0, "redundant"),
             20 : (2, "conn outage"),
         }
-        state, ap_status = ap_states[parsed[item]['status']]
-        yield state, "Status: %s" % ap_status
 
-        now = time.time()
-        ap_rates    = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        ap_sessions = 0
+        infotexts          = []
+        state              = 0
+        data               = parsed[item]
+        now                = time.time()
+        ap_rates           = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ap_sessions        = 0
         noise_floor_radios = []
 
-        for radio_number, radio_data in parsed[item]['radios'].items():
-            try:
-                radio_data_noise_floor = int(radio_data['noise_floor'])
-                noise_floor_radios.append(radio_data_noise_floor)
-            except:
-                radio_data_noise_floor = "None"
+        for node, ap_data in data.items():
+            node_info = ""
+            if node is not None:
+                node_info += "[%s] " % node
 
-            try:
-                radio_data_sessions = int(radio_data['sessions'])
-                ap_sessions        += radio_data_sessions
-            except:
-                radio_data_sessions = "None"
+            state, state_readable = ap_states[ap_data['status']]
+            infotexts.append("%sStatus: %s" % (node_info, state_readable))
 
-            radio_rates = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-            for nr, counter in enumerate(radio_data['counters']):
+            for radio_number, radio_data in ap_data['radios'].items():
                 try:
-                    radio_rate = get_rate("juniper_trpz_aps_sessions.%s.%s.%d" % \
-                                 (item, radio_number, nr), now, counter)
-                    radio_rates.append(radio_rate)
-                    ap_rates[nr] += radio_rate
+                    radio_data_noise_floor = int(radio_data['noise_floor'])
+                    noise_floor_radios.append(radio_data_noise_floor)
                 except:
-                    pass
+                    radio_data_noise_floor = "None"
 
-            infotext = ("Radio %s: Input: %s/s, Output: %s/s, " + \
-                        "Errors: %d, Resets: %d, Retries: %d, Sessions: %s, Noise: %s dBm") % \
-                       ( radio_number,
-                         get_bytes_human_readable(radio_rates[5]),
-                         get_bytes_human_readable(radio_rates[1] + radio_rates[3]),
-                         radio_rates[6], radio_rates[7], radio_rates[8],
-                         radio_data_sessions, radio_data_noise_floor )
+                try:
+                    radio_data_sessions = int(radio_data['sessions'])
+                    ap_sessions        += radio_data_sessions
+                except:
+                    radio_data_sessions = "None"
 
-            yield 0, infotext
+                radio_rates = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+                for nr, counter in enumerate(radio_data['counters']):
+                    try:
+                        radio_rate = get_rate("juniper_trpz_aps_sessions.%s.%s.%d" \
+                                     % (item, radio_number, nr), now, int(counter))
+                        radio_rates.append(radio_rate)
+                        ap_rates[nr] += radio_rate
+                    except:
+                        pass
+
+                infotexts.append(("Radio %s: Input: %s/s, Output: %s/s, " + \
+                                  "Errors: %d, Resets: %d, Retries: %d, Sessions: %s, Noise: %s dBm") % \
+                                 ( radio_number,
+                                   get_bytes_human_readable(radio_rates[5]),
+                                   get_bytes_human_readable(radio_rates[1] + radio_rates[3]),
+                                   radio_rates[6], radio_rates[7], radio_rates[8],
+                                   radio_data_sessions, radio_data_noise_floor ))
 
         perfdata = [
             ("if_out_unicast",            ap_rates[0]),
@@ -163,14 +165,15 @@ def check_juniper_trpz_aps_sessions(item, _no_params, info):
         if noise_floor_radios:
             perfdata.append(("noise_floor", max(noise_floor_radios)))
 
-        yield 0, "", perfdata
+        yield state, ", ".join(infotexts)
+        return
 
     else:
         yield 1, "Access point not reachable"
 
 
 check_info["juniper_trpz_aps_sessions"] = {
-    #"parse_function"            : parse_juniper_trpz_aps_sessions, #seams to conflicts with node_info
+    "parse_function"            : parse_juniper_trpz_aps_sessions,
     "inventory_function"        : inventory_juniper_trpz_aps_sessions,
     "check_function"            : check_juniper_trpz_aps_sessions,
     "service_description"       : "Access Point %s",

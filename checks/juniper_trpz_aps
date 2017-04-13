@@ -56,7 +56,8 @@ check_info["juniper_trpz_aps"] = {
     "service_description"   : "Access Points",
     "node_info"             : True,
     "has_perfdata"          : True,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.14525.3.1"),
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.14525.3.1") or \
+                                          oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.14525.3.3"),
     "snmp_info"             : (".1.3.6.1.4.1.14525.4", [
                                     "5.1.1.1", # number of active access points
                                     "4.1.1.4", # number of sessions on active access points

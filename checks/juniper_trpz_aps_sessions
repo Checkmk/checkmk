@@ -55,29 +55,30 @@
 # }
 
 def parse_juniper_trpz_aps_sessions(info):
-    access_points, radios = info
     parsed = {}
-    for node, end_oid, status, name in access_points:
-        # 10 means that that accesspoint is located on the
-        # other cluster part. Use custered_services to see all APs
-        if int(status) != 10:
-            name = name.replace('AP-','')
-            parsed[name] = {
-                'node_info' : node,
-                'end_oid'   : end_oid,
-                'status'    : int(status),
-                'radios'    : {},
-            }
-
-    for data in radios:
-        radio_oid, radio_number = data[1].rsplit('.', 1)
-        for ap_name, ap_data in parsed.items():
-            if radio_oid == parsed[ap_name]['end_oid']:
-                ap_data['radios'][radio_number] = {
-                    'counters'    : map(int, data[2:-2]),
-                    'sessions'    : int(data[-2]),
-                    'noise_floor' : int(data[-1]),
+    for access_points, radios in zip(info[::2], info[1::2]):
+        for node, end_oid, status, name in access_points:
+            # 10 means that that accesspoint is located on the
+            # other cluster part. Use clustered_services to see all APs
+            if int(status) != 10:
+                name = name.replace('AP-','')
+                parsed.setdefault(name, {})
+                parsed[name].setdefault(node, {})
+                parsed[name][node] = {
+                    'end_oid'   : end_oid,
+                    'status'    : int(status),
+                    'radios'    : {},
                 }
+
+        for data in radios:
+            radio_oid, radio_number = data[1].rsplit('.', 1)
+            for ap_name, ap_data in parsed.items():
+                if radio_oid == ap_data.get(data[0], {}).get('end_oid'):
+                    ap_data[data[0]]['radios'][radio_number] = {
+                        'counters'    : data[2:-2],
+                        'sessions'    : data[-2],
+                        'noise_floor' : data[-1],
+                    }
 
     return parsed
 
@@ -102,39 +103,53 @@ def check_juniper_trpz_aps_sessions(item, _no_params, parsed):
             10 : (0, "redundant"),
             20 : (2, "conn outage"),
         }
-        state, ap_status = ap_states[parsed[item]['status']]
 
-        if parsed[item]["node_info"] is not None:
-            node_info = " (on node %s)" % parsed[item]["node_info"]
-        else:
-            node_info = ""
-        yield state, "Status: %s%s" % (ap_status, node_info)
-
-        now = time.time()
-        ap_rates    = [0, 0, 0, 0, 0, 0, 0, 0, 0]
-        ap_sessions = 0
+        infotexts          = []
+        state              = 0
+        data               = parsed[item]
+        now                = time.time()
+        ap_rates           = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ap_sessions        = 0
         noise_floor_radios = []
 
-        for radio_number, radio_data in parsed[item]['radios'].items():
-            noise_floor_radios.append( radio_data['noise_floor'] )
-            ap_sessions += radio_data['sessions']
+        for node, ap_data in data.items():
+            node_info = ""
+            if node is not None:
+                node_info += "[%s] " % node
 
-            radio_rates = []
-            for nr, counter in enumerate(radio_data['counters']):
-                radio_rate = get_rate("juniper_trpz_aps_sessions.%s.%s.%d" \
-                             % (item, radio_number, nr), now, counter)
-                radio_rates.append(radio_rate)
-                ap_rates[nr] += radio_rate
+            state, state_readable = ap_states[ap_data['status']]
+            infotexts.append("%sStatus: %s" % (node_info, state_readable))
 
-            infotext = ("Radio %s: Input: %s/s, Output: %s/s, " + \
-                        "%d errors, %d resets, %d retries, %d sessions, noise: %d dBm") % \
-                       ( radio_number,
-                         get_bytes_human_readable(radio_rates[5]),
-                         get_bytes_human_readable(radio_rates[1] + radio_rates[3]),
-                         radio_rates[6], radio_rates[7], radio_rates[8],
-                         radio_data['sessions'], radio_data['noise_floor'] )
+            for radio_number, radio_data in ap_data['radios'].items():
+                try:
+                    radio_data_noise_floor = int(radio_data['noise_floor'])
+                    noise_floor_radios.append(radio_data_noise_floor)
+                except:
+                    radio_data_noise_floor = "None"
 
-            yield 0, infotext
+                try:
+                    radio_data_sessions = int(radio_data['sessions'])
+                    ap_sessions        += radio_data_sessions
+                except:
+                    radio_data_sessions = "None"
+
+                radio_rates = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+                for nr, counter in enumerate(radio_data['counters']):
+                    try:
+                        radio_rate = get_rate("juniper_trpz_aps_sessions.%s.%s.%d" \
+                                     % (item, radio_number, nr), now, int(counter))
+                        radio_rates.append(radio_rate)
+                        ap_rates[nr] += radio_rate
+                    except:
+                        pass
+
+                infotexts.append(("Radio %s: Input: %s/s, Output: %s/s, " + \
+                                  "Errors: %d, Resets: %d, Retries: %d, Sessions: %s, Noise: %s dBm") % \
+                                 ( radio_number,
+                                   get_bytes_human_readable(radio_rates[5]),
+                                   get_bytes_human_readable(radio_rates[1] + radio_rates[3]),
+                                   radio_rates[6], radio_rates[7], radio_rates[8],
+                                   radio_data_sessions, radio_data_noise_floor ))
 
         perfdata = [
             ("if_out_unicast",            ap_rates[0]),
@@ -146,11 +161,15 @@ def check_juniper_trpz_aps_sessions(item, _no_params, parsed):
             ("wlan_physical_errors",      ap_rates[6]),
             ("wlan_resets",               ap_rates[7]),
             ("wlan_retries",              ap_rates[8]),
-            ("total_sessions",            ap_sessions),
-            ("noise_floor",               max(noise_floor_radios)),
-        ]
+            ("total_sessions",            ap_sessions), ]
+        if noise_floor_radios:
+            perfdata.append(("noise_floor", max(noise_floor_radios)))
 
-        yield 0, "", perfdata
+        yield state, ", ".join(infotexts)
+        return
+
+    else:
+        yield 1, "Access point not reachable"
 
 
 check_info["juniper_trpz_aps_sessions"] = {

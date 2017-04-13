@@ -1,0 +1,11 @@
+Title: juniper_trpz_aps_sessions: Fixed crashes if access point is not reachable or no values could be calculated
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b6
+Date: 1492075527
+
+

@@ -6721,6 +6721,9 @@ def render_global_configuration_variables(group_names, default_values, current_s
                 else:
                     continue
 
+            if not configvar_show_in_global_settings(varname):
+                continue
+
             help_text  = valuespec.help() or ''
             title_text = valuespec.title()
 

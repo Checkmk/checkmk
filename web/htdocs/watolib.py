@@ -3157,6 +3157,13 @@ def configvar_order():
     return g_configvar_order
 
 
+def configvar_show_in_global_settings(varname):
+    try:
+        return configvars()[varname][-1]
+    except KeyError:
+        return False
+
+
 # domain is one of "check_mk", "multisite" or "nagios"
 def register_configvar(group, varname, valuespec, domain="check_mk",
                        need_restart=False, allow_reset=True, in_global_settings=True):

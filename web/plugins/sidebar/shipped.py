@@ -511,7 +511,7 @@ def render_sitestatus():
             html.write(text)
             html.close_td()
             html.open_td(class_="state")
-            html.status_label_button(content=_(state["state"]), status=state["state"],
+            html.status_label_button(content=state["state"], status=state["state"],
                 help=_("%s this site") % (state["state"] == "disabled" and _("enable") or _("disable")),
                 onclick="switch_site('_site_switch=%s:%s')" % (sitename, switch))
             html.close_tr()

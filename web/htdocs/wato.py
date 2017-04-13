@@ -5431,7 +5431,7 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
 
             # Livestatus
             table.cell(_("Status"), css="narrow nobr")
-            html.status_label(content=_(status), status=status, help=_("This site is %s") % status)
+            html.status_label(content=status, status=status, help=_("This site is %s") % status)
 
             # Livestatus-/Check_MK-Version
             table.cell(_("Version"), site_status.get("livestatus_version", ""), css="narrow nobr")

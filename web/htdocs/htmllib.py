@@ -2112,7 +2112,7 @@ class html(DeprecationWrapper, RequestHandler):
         attrs["class_"] += [ "toggle_switch", "on" if enabled else "off", ]
 
         link_attrs = {
-            "href"    : attrs.pop("href", None),
+            "href"    : attrs.pop("href", "javascript:void(0)"),
             "onclick" : attrs.pop("onclick", None),
         }
 

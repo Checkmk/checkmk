@@ -9626,6 +9626,13 @@ register_check_parameters(
                      default_value = None,
                 )
             ),
+            ( "http_req_rate",
+                Levels(
+                     title = _("HTTP requests per second"),
+                     default_value = None,
+                     default_levels = (500, 1000)
+                )
+            ),
         ]),
     None,
     "dict"

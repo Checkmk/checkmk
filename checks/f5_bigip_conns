@@ -28,6 +28,7 @@
 factory_settings["f5_bigip_conns_default_levels"] = {
         "conns"            : (25000, 30000),
         "ssl_conns"        : (25000, 30000),
+        "http_req_rate"    : (500, 1000),
 }
 
 
@@ -47,6 +48,8 @@ def check_f5_bigip_conns(item, params, info):
         compat_conn_rate = get_rate("compat", now, int(line[3]))
         total_native_compat_rate += native_conn_rate + compat_conn_rate
 
+        stat_http_req_rate = get_rate("stathttpreqs", now, int(line[4]))
+
         if line[0] != "":
             conns_dict.setdefault("total", 0)
             conns_dict["total"] += int(line[0])
@@ -62,7 +65,8 @@ def check_f5_bigip_conns(item, params, info):
     for val, dsname, params_values, perfkey, title in [
         (conns_dict.get("total", None),     "conns", params.get("conns"),         "connections",      "Connections"),
         (conns_dict.get("total_ssl", None), "ssl_conns", params.get("ssl_conns"), "connections_ssl",  "SSL connections"),
-        (total_native_compat_rate,  "connections_rate", conn_rate_params, "connections_rate", "Connections/s")
+        (total_native_compat_rate,          "connections_rate", conn_rate_params, "connections_rate",  "Connections/s"),
+        (stat_http_req_rate,                "http_req_rate", params.get("http_req_rate"), "requests_per_second", "HTTP requests/s"),
         ]:
 
         state    = 0
@@ -95,6 +99,7 @@ check_info["f5_bigip_conns"] = {
                                         '9.2',  # F5-BIGIP-SYSTEM-MIB::sysClientsslStatCurConns
                                         '9.6',  # F5-BIGIP-SYSTEM-MIB::sysClientSslStatTotNativeConns
                                         '9.9',  # F5-BIGIP-SYSTEM-MIB::sysClientSslStatTotCompatConns
+                                        '1.56', # F5-BIGIP-SYSTEM-MIB::sysStatHttpRequests
                                   ]),
     'snmp_scan_function'        : lambda oid: '.1.3.6.1.4.1.3375.2' in \
                                          oid(".1.3.6.1.2.1.1.2.0") and "big-ip" in \

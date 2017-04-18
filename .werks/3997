@@ -1,6 +1,6 @@
 Title: New metric for mrpe/check_icmp
 Level: 1
-Component: multisite
+Component: checks
 Compatible: compat
 Version: 1.4.0i3
 Date: 1480521650

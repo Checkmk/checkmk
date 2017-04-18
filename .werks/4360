@@ -1,6 +1,6 @@
 Title: Availability: now percentage and time format can be choosen simultaneously in the availability option 'Format time ranges'
 Level: 1
-Component: multisite
+Component: reporting
 Compatible: compat
 Version: 1.4.0b2
 Date: 1487076950

@@ -1,6 +1,6 @@
 Title: availability: now limit of fetched logfile rows is configurable.
 Level: 1
-Component: multisite
+Component: reporting
 Compatible: compat
 Version: 1.4.0i1
 Date: 1472111747

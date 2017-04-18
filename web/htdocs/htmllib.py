@@ -91,6 +91,7 @@ class InvalidUserInput(Exception):
         self.text = text
         super(InvalidUserInput, self).__init__(varname, text)
 
+
 class RequestTimeout(MKException):
     pass
 
@@ -100,9 +101,10 @@ class RequestTimeout(MKException):
 #
 class Escaper(object):
 
-
-    _unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
-    _unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
+    def __init__(self):
+        super(Escaper, self).__init__()
+        self._unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
+        self._unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
 
 
     # Encode HTML attributes. Replace HTML syntax with HTML text.
@@ -170,6 +172,7 @@ class Escaper(object):
 #
 
 class Encoder(object):
+
 
     # This function returns a str object, never unicode!
     # Beware: this code is crucial for the performance of Multisite!
@@ -410,6 +413,7 @@ class OutputFunnel(object):
 
 
     def __init__(self):
+        super(OutputFunnel, self).__init__()
         self.plug_level = -1
         self.plug_text = []
 
@@ -1355,9 +1359,10 @@ class RequestHandler(object):
 class html(HTMLGenerator, Encoder, RequestHandler):
 
     def __init__(self):
-        HTMLGenerator.__init__(self)
-        Encoder.__init__(self)
-        RequestHandler.__init__(self)
+        super(html, self).__init__()
+#        HTMLGenerator.__init__(self)
+#        Encoder.__init__(self)
+#        RequestHandler.__init__(self)
 
         # rendering state
         self.html_is_open = False

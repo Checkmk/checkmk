@@ -1,5 +1,5 @@
 Title: implemented dual monitoring for systems with management boards (like HP iLO)
-Level: 1
+Level: 2
 Component: core
 Compatible: compat
 Version: 1.4.0i1

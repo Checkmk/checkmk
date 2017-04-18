@@ -1786,7 +1786,8 @@ class EventServer:
 
         # Do delayed deletion now (was delayed in order to keep list indices OK)
         for nr in events_to_delete[::-1]:
-            del events[nr]
+            g_event_status.remove_event(events[nr])
+
 
     def hk_check_expected_messages(self):
         now = time.time()
@@ -1845,7 +1846,7 @@ class EventServer:
                     self.handle_absent_event(rule, 0, expected_count, interval_start)
 
                 for nr in events_to_delete[::1]:
-                    del events[nr]
+                    g_event_status.remove_event(events[nr])
 
 
     def handle_absent_event(self, rule, event_count, expected_count, interval_start):

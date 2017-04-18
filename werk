@@ -309,7 +309,7 @@ def main_list(args, format):
         hit = False
         for tp, values in [
           ( "edition",        editions ),
-          ( "component",      components ),
+          ( "component",      all_components()),
           ( "level",          levels ),
           ( "class",          classes ),
           ( "version",        versions ),
@@ -470,6 +470,13 @@ def input_choice(what, choices):
 
 def get_edition_components(edition):
     return components + edition_components.get(edition, [])
+
+
+def all_components():
+    c = components
+    for ed_components in edition_components.values():
+        c += ed_components
+    return components
 
 
 def main_new(args):

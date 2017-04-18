@@ -32,7 +32,7 @@ perfometers = {}
 
 # TODO: Umbau: alle Funktionen perfometer_.. geben eine logische Struktur
 # zurück.
-# perfometer_td() -> perfometer_segment() ergebit (breite_in_proz, farbe)
+# perfometer_td() -> perfometer_segment() ergibt (breite_in_proz, farbe)
 # Ein perfometer ist eine Liste von Listen.
 # [ [segment, segment, segment], [segment, segment] ] --> horizontal gespaltet.
 # Darin die vertikalen Balken.
@@ -48,16 +48,23 @@ perfometers = {}
 #   |  Perf-O-Meter helper functions for old classical Perf-O-Meters.      |
 #   '----------------------------------------------------------------------'
 
-def perfometer_td(perc, color):
-    return '<td class="inner" style="background-color: %s; ' \
-           'width: %d%%;"></td>' % (color, int(float(perc)))
+#helper function for perfometer tables
+def render_perfometer_td(perc, color):
+    style = ["width: %d%%;" % int(float(perc)), "background-color: %s" % color]
+    return html.render_td('', class_="inner", style=style)
+
+
+# render the perfometer table
+# data is expected to be a list of tuples [(perc, color), (perc2, color2), ...]
+def render_perfometer(data):
+    tds = HTML().join(render_perfometer_td(percentage, color) for percentage, color in data)
+    return html.render_table(html.render_tr(tds))
+
 
 # Paint linear performeter with one value
 def perfometer_linear(perc, color):
-    return "<table><tr>" + \
-        perfometer_td(perc, color) + \
-        perfometer_td(100 - perc, "white") + \
-        "</tr></table>"
+    return render_perfometer([(perc, color), (100-perc, "white")])
+
 
 # Paint logarithm with base 10, half_value is being
 # displayed at 50% of the width
@@ -65,13 +72,10 @@ def perfometer_logarithmic(value, half_value, base, color):
     return render_metricometer([metrics.metricometer_logarithmic(value, half_value, base, color)])
 
 
-# Dual logarithmic Perf-O-Meter
-def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right, half_value, base):
-    result = '<table><tr>'
-    for where, value, color in [
-        ("left", value_left, color_left),
-        ("right", value_right, color_right) ]:
+# prepare the rows for logarithmic perfometers (left or right)
+def calculate_half_row_logarithmic(left_or_right, value, color, half_value, base):
         value = float(value)
+
         if value == 0.0:
             pos = 0
         else:
@@ -82,42 +86,26 @@ def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right
                 pos = 1
             if pos > 49:
                 pos = 49
-
-        if where == "right":
-            result += perfometer_td(pos, color) + \
-                 perfometer_td(50 - pos, "white")
+        if left_or_right == "right":
+            return [(pos, color), (50 - pos, "white")]
         else:
-            result += perfometer_td(50 - pos, "white") + \
-                 perfometer_td(pos, color)
+            return [(50 - pos, "white"), (pos, color)]
 
-    return result + '</tr></table>'
+
+# Dual logarithmic Perf-O-Meter
+def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right, half_value, base):
+    data = []
+    data.extend(calculate_half_row_logarithmic("left", value_left, color_left, half_value, base))
+    data.extend(calculate_half_row_logarithmic("right", value_right, color_right, half_value, base))
+    return render_perfometer(data)
+
 
 def perfometer_logarithmic_dual_independent\
     (value_left, color_left, half_value_left, base_left, value_right, color_right, half_value_right, base_right):
-    result = '<table><tr>'
-    for where, value, color, half_value, base in [
-        ("left", value_left, color_left, half_value_left, base_left),
-        ("right", value_right, color_right, half_value_right, base_left) ]:
-        value = float(value)
-        if value == 0.0:
-            pos = 0
-        else:
-            half_value = float(half_value)
-            h = math.log(half_value, base) # value to be displayed at 50%
-            pos = 25 + 10.0 * (math.log(value, base) - h)
-            if pos < 1:
-                pos = 1
-            if pos > 49:
-                pos = 49
-
-        if where == "right":
-            result += perfometer_td(pos, color) + \
-                 perfometer_td(50 - pos, "white")
-        else:
-            result += perfometer_td(50 - pos, "white") + \
-                 perfometer_td(pos, color)
-
-    return result + '</tr></table>'
+    data = []
+    data.extend(calculate_half_row_logarithmic("left", value_left, color_left, half_value_left, base_left))
+    data.extend(calculate_half_row_logarithmic("right", value_right, color_right, half_value_right, base_right))
+    return render_perfometer(data)
 
 
 def paint_perfometer(row):
@@ -199,19 +187,9 @@ def paint_perfometer(row):
 def render_metricometer(stack):
     if len(stack) not in (1, 2):
         raise MKGeneralException(_("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack)
-
-    h = ""
+    h = HTML().join(map(render_perfometer, stack))
     if len(stack) == 2:
-        h += '<div class="stacked">'
-
-    for entry in stack:
-        h += '<table><tr>'
-        for percentage, color in entry:
-            h += perfometer_td(percentage, color)
-        h += "</tr></table>"
-
-    if len(stack) == 2:
-        h += '</div>'
+        h = html.render_div(h, class_="stacked")
     return h
 
 # Compute logarithmic Perf-O-Meter

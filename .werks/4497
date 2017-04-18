@@ -1,6 +1,6 @@
 Title: Alert handling: Added several missing match conditions
-Level: 1
-Component: core
+Level: 2
+Component: alerts
 Compatible: compat
 Edition: cee
 Version: 1.5.0i1

@@ -1,0 +1,20 @@
+Title: Event console: fixed incorrect event counting for timed-out and heartbeat events
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p22
+Date: 1492524907
+
+The internal event counter of status_num_open_events (and others) was not correctly decreased for
+
+<ul>
+<li>events with timeouts, e.g. an event with a lifetime</li>
+<li>events which expect something in a given interval</li>
+</ul>
+
+Since this event count never decreased, the limits specified in the global settings rule <i>Limit amount of current events</i>,
+were reached when the event console ran for a certain amount of time. A restart always fixed this problem, because these counts
+are calculated from scratch during startup.

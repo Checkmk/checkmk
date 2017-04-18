@@ -2,6 +2,9 @@
     Checks & Agents:
     * 4616 FIX: mk_postgres/mk_db2.linux: Fixed quotes which lead into wrong interpretation...
 
+    Event Console:
+    * 4470 FIX: Event console: fixed incorrect event counting for timed-out and heartbeat events...
+
 
 1.2.8p21:
     Checks & Agents:

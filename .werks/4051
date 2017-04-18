@@ -1,5 +1,5 @@
 Title: Timeline highlighting for availability tables works in both directions now.
-Level: 3
+Level: 1
 Component: multisite
 Compatible: compat
 Edition: cre
@@ -7,4 +7,5 @@ Version: 1.5.0i1
 Date: 1491468793
 Class: feature
 
-
+Now both hovering over a segment in the timeline highlites the corresponding
+table entry and hovering over the table entry highlites its timeline segment.

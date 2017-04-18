@@ -1636,7 +1636,7 @@ class EventServer:
                 else:
                     self.handle_absent_event(rule, 0, expected_count, interval_start)
 
-                for nr in events_to_delete[::1]:
+                for nr in events_to_delete[::-1]:
                     g_event_status.remove_event(events[nr])
 
 

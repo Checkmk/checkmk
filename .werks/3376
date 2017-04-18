@@ -1,4 +1,4 @@
-Title: Cleaned up handling of setting Livestatus AuthUser for "see all" users
+Title: Better handling of host/service visibility of users with admin role
 Level: 1
 Component: multisite
 Compatible: incomp
@@ -6,31 +6,34 @@ Version: 1.4.0i1
 Date: 1460548346
 Class: feature
 
-This change affects only users which have the "general.see_all" permission, normally Administrators
-and Guests. But the most affected users will be the admins.
+This change affects only users which have the "general.see_all" permission,
+normally Administrators and Guests. But the most affected users will be
+the admins.
 
-Previous Check_MK versions had the options "Visibility of Hosts/Services" and 
-"Visibility of Hosts/Services (Webservice)" which could be set in the user profile. These options
-could be used by all users which have the "see all" permission to limit the shown hosts and services
-to only the ones which they are really a contact for.
+Previous Check_MK versions had the options {{Visibility of Hosts/Services}}
+and {{Visibility of Hosts/Services (Webservice)}} which could be set in
+the user profile. These options could be used by all users which have the
+"see all" permission to limit the shown hosts and services to only the ones
+which they are really a contact for.
 
-The later option has been deprecated now. It was first integrated to make users of external tools
-like Nagstamon, which fetches it's list of host and service problems from the Check_MK webservice,
-be able to show only the the problems of their hosts and services.
-But this option also had a side effect: When it is enabled and the option "Visibility of Hosts/Services"
-was not enabled, the admin could see all hosts/services in the GUI but when executing a CSV export
-he was only getting the hosts/services he is a contact for.
+The later option has been deprecated now. It was first integrated to make users
+of external tools like Nagstamon, which fetches it's list of host and service
+problems from the Check_MK webservice, be able to show only the the problems
+of their hosts and services.  But this option also had a side effect: When
+it is enabled and the option {{Visibility of Hosts/Services}} was not enabled,
+the admin could see all hosts/services in the GUI but when executing a CSV
+export he was only getting the hosts/services he is a contact for.
 
-To fix this situation we decided to deprecate the "Visibility of Hosts/Services (Webservice)" and
-replace it with a URL variable which can be used to filter each page individually. The new URL
-variable <tt>force_authuser</tt> can be used on any view and set to:
+To fix this situation we decided to deprecate the {{Visibility of
+Hosts/Services (Webservice)}} and replace it with a URL variable which
+can be used to filter each page individually. The new URL variable
+<tt>force_authuser</tt> can be used on any view and set to:
 
-<ul>
-    <li><tt>1<tt> to show only the hosts/services the user is a contact for</li>
-    <li><tt>0<tt> to show all hosts/services</li>
-    <li><tt>[username]<tt> to show all hosts/services the given user is a contact for</li>
-</ul>
+LI:L<tt>1<tt> to show only the hosts/services the user is a contact for
+LI:L<tt>0<tt> to show all hosts/services
+LI:L<tt>[username]<tt> to show all hosts/services the given user is a contact for
 
-The now deprecated option will still be working as before but you are recommended to uncheck
-the option and use the new mechanism. If you are using it for Nagstamon you will need to
-use a Nagstamon 2.0 release newer than ALPHA-20160307 once it is available.
+The now deprecated option will still be working as before but you are
+recommended to uncheck the option and use the new mechanism. If you are
+using it for Nagstamon you will need to use a Nagstamon 2.0 release newer
+than ALPHA-20160307 once it is available.

@@ -1,7 +1,7 @@
 Title: Recurring downtimes now for nth day of month and xth weekday from beginning and end
 Level: 2
 Edition: cee
-Component: multisite
+Component: core
 Compatible: compat
 Version: 1.2.7i4
 Date: 1450723435

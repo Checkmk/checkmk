@@ -1,6 +1,6 @@
 Title: Changed graph time range choices
 Level: 1
-Component: multisite
+Component: metrics
 Compatible: compat
 Version: 1.4.0i1
 Date: 1474636659
@@ -11,8 +11,8 @@ to have a little more context. We also extended the "month" and "year" time rang
 
 You have now the following available:
 
-The last 4 hours
-The last 25 hours
-The last 8 days
-The last 35 days
-The last 400 days
+LI:The last 4 hours
+LI:The last 25 hours
+LI:The last 8 days
+LI:The last 35 days
+LI:The last 400 days

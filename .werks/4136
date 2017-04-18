@@ -1,6 +1,6 @@
 Title: Availability CSV export: Adding grouping title as first column in case of grouped views
 Level: 1
-Component: multisite
+Component: reporting
 Compatible: compat
 Version: 1.4.0i3
 Date: 1481189103

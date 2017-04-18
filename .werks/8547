@@ -1,7 +1,7 @@
 Title: Graph legend and controls can now be enabled/disabled through view display options
 Level: 1
 Edition: cee
-Component: multisite
+Component: metrics
 Compatible: compat
 Version: 1.4.0i1
 Date: 1472562783

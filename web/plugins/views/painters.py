@@ -1210,12 +1210,11 @@ def paint_custom_vars(what, row, blacklist=None):
 
     items = row[what + "_custom_variables"].items()
     items.sort()
-    code = '<table class=customvars>'
+    rows = []
     for varname, value in items:
         if varname not in blacklist:
-            code += '<tr><td>%s</td><td>%s</td></tr>' % (varname, value)
-    code += '</table>'
-    return "", code
+            rows.append(html.render_tr(html.render_td(varname) + html.render_td(value)))
+    return '', "%s" % html.render_table(HTML().join(rows))
 
 multisite_painters["svc_custom_vars"] = {
     "title"   : _("Service custom variables"),

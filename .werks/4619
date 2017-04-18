@@ -1,0 +1,10 @@
+Title: veeam_client: Now shows information to which host a backup job belongs to
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1492517559
+Class: feature
+
+You need to update the plugin to benefit from this werk.

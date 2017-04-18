@@ -122,6 +122,10 @@ foreach ($myJob in $myBackupJobs)
 
 		$myTaskText = "$myTaskText" + "DisplayName" + "`t" + "$myTaskDisplayName" + "`n"
 
+		$myBackupHost = Hostname
+
+		$myTaskText = "$myTaskText" + "BackupServer" + "`t" + "$myBackupHost" + "`n"
+
 		$myTaskText = "$myTaskText" + "<<<<" + ">>>>" +"`n"
 
 	}

@@ -1,0 +1,11 @@
+Title: Fixed error handling for graphs if graph is not found or unavailable
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1492606841
+
+

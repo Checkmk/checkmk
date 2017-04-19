@@ -2704,9 +2704,9 @@ def ajax_diag_host():
     except Exception, e:
         html.write_text("1 %s" % _("Exception: %s") % traceback.format_exc())
 
+
+
 #.
-
-
 #   .--Discovery & Services------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
@@ -6912,6 +6912,8 @@ def mode_edit_configvar(phase, what = 'globalvars'):
     html.hidden_fields()
     html.end_form()
 
+
+
 #.
 #   .--Groups--------------------------------------------------------------.
 #   |                    ____                                              |
@@ -7288,7 +7290,6 @@ class CheckTypeGroupSelection(ElementSelection):
         return "<tt>%s</tt>" % value
 
 
-#.
 
 def FolderChoice(**kwargs):
     kwargs["choices"] = lambda: Folder.folder_choices()
@@ -8549,8 +8550,6 @@ def mode_notification_rule(phase, profilemode):
 
 def load_notification_scripts():
     return load_user_scripts("notifications")
-
-
 
 
 #.

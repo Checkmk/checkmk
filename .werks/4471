@@ -1,0 +1,12 @@
+Title: Windows Agent Process Monitoring: ps section is no longer completely suppressed when only parts of the data is missing
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p22
+Date: 1492607121
+Class: fix
+
+The ps section was skipped entirely when no performance information (memory usage) could be found
+for the process. This has been fixed.
+
+

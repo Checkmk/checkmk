@@ -1189,7 +1189,14 @@ void section_ps(OutputProxy &out) {
     out.output("<<<ps:sep(9)>>>\n");
     PROCESSENTRY32 pe32;
 
-    process_entry_t process_perfdata = get_process_perfdata();
+    process_entry_t process_perfdata;
+    try {
+        process_perfdata = get_process_perfdata();
+    } catch (const std::runtime_error &e) {
+        // the most likely cause is that the wmi query fails, i.e. because the
+        // service is currently offline.
+        crash_log("Exception: Error while querying process perfdata: %s", e.what());
+    }
 
     WinHandle hProcessSnap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (hProcessSnap != INVALID_HANDLE_VALUE) {

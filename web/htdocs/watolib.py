@@ -4427,13 +4427,9 @@ class ActivateChangesManager(ActivateChanges):
 
         if cmk.is_managed_edition():
             managed_snapshots.CMESnapshot(site_id, site_tmp_dir, replicate_components).create_site_snapshot()
-            customer_components = [
-                ( "file", "customer_multisite", "%s/multisite.d/customer.mk" % cmk.paths.default_config_dir),
-                ( "file", "customer_check_mk",  "%s/conf.d/customer.mk" % cmk.paths.default_config_dir),
-            ]
             new_paths = []
 
-            for entry in map(list, paths + customer_components):
+            for entry in map(list, paths):
                 entry[2] = entry[2].replace(cmk.paths.omd_root, site_tmp_dir)
                 new_paths.append(tuple(entry))
             paths = new_paths

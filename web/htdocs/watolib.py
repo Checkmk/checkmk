@@ -7376,19 +7376,18 @@ def save_group_information(all_groups, custom_default_config_dir = None):
     make_nagios_directory(check_mk_config_dir)
     output = wato_fileheader()
     for what in [ "host", "service", "contact" ]:
-        if what in check_mk_groups and len(check_mk_groups[what]) > 0:
+        if check_mk_groups.get(what):
             output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what)
             output += "define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(check_mk_groups[what]))
-    cmk.store.save_file("%s/conf.d/wato/groups.mk" % cmk.paths.default_config_dir, output)
+    cmk.store.save_file("%s/groups.mk" % check_mk_config_dir, output)
 
     # Users with passwords for Multisite
-    filename = "%s/%s" % (multisite_config_dir, "groups.mk.new")
     make_nagios_directory(multisite_config_dir)
     output = wato_fileheader()
     for what in [ "host", "service", "contact" ]:
-        if what in multisite_groups and len(multisite_groups[what]) > 0:
+        if multisite_groups.get(what):
             output += "multisite_%sgroups = \\\n%s\n\n" % (what, pprint.pformat(multisite_groups[what]))
-    cmk.store.save_file("%s/multisite.d/wato/groups.mk" % cmk.paths.default_config_dir, output)
+    cmk.store.save_file("%s/groups.mk" % multisite_config_dir, output)
 
 
 def find_usages_of_group(name, group_type):

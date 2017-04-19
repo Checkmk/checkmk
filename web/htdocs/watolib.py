@@ -74,6 +74,8 @@ backup_domains = {}
 automation_commands = {}
 g_rulespecs = None
 g_rulegroups = {}
+builtin_host_tags = []
+builtin_aux_tags = []
 
 # Global datastructure holding all attributes (in a defined order)
 # as pairs of (attr, topic). Topic is the title under which the
@@ -4407,9 +4409,9 @@ class ActivateChangesManager(ActivateChanges):
 
         snapshot_path = self._site_snapshot_file(site_id)
 
-        # Add site-specific global settings.
         site_tmp_dir = cmk.paths.tmp_dir + "/sync-%s-specific-%s" % (site_id, id(html))
-        paths = replication_paths + [("dir", "sitespecific", site_tmp_dir)]
+
+        paths = replication_paths[:]
 
         # Remove Event Console settings, if this site does not want it (might
         # be removed in some future day)
@@ -4426,15 +4428,24 @@ class ActivateChangesManager(ActivateChanges):
             replicate_components.add("mkps")
 
         if cmk.is_managed_edition():
-            managed_snapshots.CMESnapshot(site_id, site_tmp_dir, replicate_components).create_site_snapshot()
-            new_paths = []
+            snapshot = managed_snapshots.CMESnapshot(site_id, site_tmp_dir, replicate_components)
+            snapshot.create_site_snapshot()
 
+            site_specific_globals_tmp_path = snapshot.get_site_globals_tmp_dir()
+
+            # Change all replication paths to be in the site specific temporary directory
+            # These paths are then packed into the sync snapshot
+            new_paths = []
             for entry in map(list, paths):
                 entry[2] = entry[2].replace(cmk.paths.omd_root, site_tmp_dir)
                 new_paths.append(tuple(entry))
             paths = new_paths
         else:
+            site_specific_globals_tmp_path = site_tmp_dir
             self.create_site_globals_file(site_id, site_tmp_dir)
+
+        # Add site-specific global settings
+        paths.append(("dir", "sitespecific", site_specific_globals_tmp_path))
 
         multitar.create(snapshot_path, paths)
         shutil.rmtree(site_tmp_dir)
@@ -5358,7 +5369,8 @@ def group_hosttags_by_topic(hosttags):
 
 def register_builtin_host_tags():
     global builtin_host_tags, builtin_aux_tags
-    builtin_host_tags = [
+    del builtin_host_tags[:]
+    builtin_host_tags += [
         ('address_family', u'/IP Address Family',
             [
                 ('ip-v4-only', u'IPv4 only', ['ip-v4']),
@@ -5368,7 +5380,8 @@ def register_builtin_host_tags():
         ),
     ]
 
-    builtin_aux_tags = [
+    del builtin_aux_tags[:]
+    builtin_aux_tags += [
         ('ip-v4', u'IPv4'),
         ('ip-v6', u'IPv6')
     ]

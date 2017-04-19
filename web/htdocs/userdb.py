@@ -1094,12 +1094,15 @@ def load_connection_config():
         return user_connections
 
 
-def save_connection_config(connections):
+def save_connection_config(connections, base_dir=None):
+    if not base_dir:
+        base_dir = multisite_dir
+
     output  = "# Written by Multisite UserDB\n# encoding: utf-8\n\n"
     output += "user_connections = \\\n%s\n\n" % pprint.pformat(connections)
 
-    make_nagios_directory(multisite_dir)
-    store.save_file(multisite_dir + "user_connections.mk", output)
+    make_nagios_directory(base_dir)
+    store.save_file(os.path.join(base_dir, "user_connections.mk"), output)
 
 #.
 #   .--ConnectorAPI--------------------------------------------------------.

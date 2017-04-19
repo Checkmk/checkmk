@@ -1215,6 +1215,7 @@ def hook_login(username, password):
             if not is_customer_user_allowed_to_login(username):
                 # A CME not assigned with the current sites customer
                 # is not allowed to login
+                auth_logger.debug("User '%s' is not allowed to login: Invalid customer" % username)
                 return False
 
             # Now, after successfull login (and optional user account
@@ -1224,6 +1225,7 @@ def hook_login(username, password):
             # a "!". But when using other conectors it might be neccessary
             # to validate the user "locked" attribute.
             if connection.is_locked(username):
+                auth_logger.debug("User '%s' is not allowed to login: Account locked" % username)
                 return False # The account is locked
 
             return result

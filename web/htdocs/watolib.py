@@ -95,7 +95,8 @@ def initialize_before_loading_plugins():
 
     # Directories and files to synchronize during replication
     global replication_paths
-    replication_paths = [
+    del replication_paths[:]
+    replication_paths += [
         ( "dir",  "check_mk",     wato_root_dir, ["sitespecific.mk"]),
         ( "dir",  "multisite",    multisite_dir, ["sitespecific.mk"] ),
         ( "file", "htpasswd",     cmk.paths.htpasswd_file ),
@@ -111,6 +112,7 @@ def initialize_before_loading_plugins():
 
     # Directories and files for backup & restore
     global backup_paths
+    del backup_paths[:]
     backup_paths = replication_paths + [
         ( "file", "sites",      sites_mk)
     ]
@@ -124,7 +126,7 @@ def initialize_before_loading_plugins():
         backup_paths.append(("dir", "mkeventd", mkeventd_config_dir))
 
     global backup_domains
-    backup_domains = {}
+    backup_domains.clear()
 
 def init_watolib_datastructures():
     if config.wato_use_git:

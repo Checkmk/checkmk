@@ -127,7 +127,6 @@ def initialize_before_loading_plugins():
         replication_paths.append(("dir", "mkeventd", mkeventd_config_dir, ["sitespecific.mk"]))
         backup_paths.append(("dir", "mkeventd", mkeventd_config_dir))
 
-    global backup_domains
     backup_domains.clear()
 
 def init_watolib_datastructures():

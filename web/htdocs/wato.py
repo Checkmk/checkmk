@@ -10748,6 +10748,8 @@ def mode_edit_user(phase):
 
             if customer != managed.default_customer_id():
                 user_attrs["customer"] = customer
+            elif "customer" in user_attrs:
+                del user_attrs["customer"]
 
         # Roles
         user_attrs["roles"] = filter(lambda role: html.get_checkbox("role_" + role),

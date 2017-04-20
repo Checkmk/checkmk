@@ -1,0 +1,12 @@
+Title: Fixed group-related 'contains' filters
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1492694507
+Class: fix
+
+Using a filter expression with '>=' (i.e.  'contains') on the column 'group'
+or 'contact_group' in host/service-related tables could lead to a crash of
+the Check_MK Monitoring Core. This has been fixed.

@@ -153,7 +153,7 @@ def check_postfix_mailq(item, params, parsed):
         params = { "deferred" : params }
 
     for what, size, length in parsed[item]:
-        warn, crit = params.get("deferred", (None, None))
+        warn, crit = params.get(what, (None, None))
         if what in [ "active", "deferred", "mail" ]:
             state    = 0
             infotext = "%s%s queue length: %d" % (what[0].upper(), what[1:], length)

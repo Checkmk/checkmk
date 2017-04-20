@@ -295,7 +295,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
         extra_offset, -1));
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "pending_flex_downtime",
-        "Whether a flex downtime is pending (0/1)",
+        "Number of pending flexible downtimes",
         DANGEROUS_OFFSETOF(host, pending_flex_downtime), indirect_offset,
         extra_offset, -1));
     table->addColumn(make_unique<OffsetIntColumn>(

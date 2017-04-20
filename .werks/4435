@@ -1,0 +1,17 @@
+Title: Fixed pending_flex_downtime column in host/service-related tables
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1492698749
+Class: fix
+
+In the NEB plugin, the pending_flex_downtime column has always been an
+integer, although the column comment claimed it was a boolean.  The
+Livestatus interface of the Check_MK Micro Core was inconsistent and
+returned a boolean.  Furthermore, the calculation of the value was not
+totally correct.
+
+Now pending_flex_downtime is always returned as an integer, and the column
+comment has been fixed to reflect that.

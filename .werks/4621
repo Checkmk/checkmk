@@ -7,4 +7,6 @@ Version: 1.5.0i1
 Date: 1492675329
 Class: fix
 
-
+If Check_MK did not discover the power supplies until now consider a
+rediscovery. Power supplies have not been discovered if the description has
+been "PS" in stead of "Power Supply".

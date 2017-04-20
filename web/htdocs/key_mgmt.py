@@ -176,10 +176,10 @@ class PageKeyManagement(object):
             download_url = html.makeuri_contextless([
                                     ("mode", self.download_mode), ("key", key_id)])
             html.icon_button(download_url, _("Download this key"), "download")
-            table.cell(_("Description"), html.attrencode(key["alias"]))
+            table.cell(_("Description"), html.render_text(key["alias"]))
             table.cell(_("Created"), date_human_readable(key["date"]))
-            table.cell(_("By"), html.attrencode(key["owner"]))
-            table.cell(_("Digest (MD5)"), html.attrencode(cert.digest("md5")))
+            table.cell(_("By"), html.render_text(key["owner"]))
+            table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5")))
         table.end()
 
 

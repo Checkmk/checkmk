@@ -7,14 +7,14 @@ import astroid
 from pylint.checkers import BaseChecker, utils
 from pylint.interfaces import IAstroidChecker
 
-BASE_ID = 76
+BASE_ID = 78
 
 def register(linter):
     """Register checkers."""
-    linter.register_checker(TranslationStringConstantsChecker(linter))
+    linter.register_checker(TestChecker(linter))
 
 
-class TranslationStringConstantsChecker(BaseChecker):
+class TestChecker(BaseChecker):
     """
     Checks for i18n translation functions (_, ugettext, ungettext, and many
     others) being called on something that isn't a string literal.
@@ -33,7 +33,7 @@ class TranslationStringConstantsChecker(BaseChecker):
 
     __implements__ = (IAstroidChecker,)
 
-    name = 'translation-string-checker'
+    name = 'test-checker'
 
     TRANSLATION_FUNCTIONS = set([
         '_',
@@ -45,12 +45,12 @@ class TranslationStringConstantsChecker(BaseChecker):
         'ungettext', 'ungettext_lazy',
     ])
 
-    MESSAGE_ID = 'translation-of-non-string'
+    MESSAGE_ID = 'test-jo'
     msgs = {
         'E%d10' % BASE_ID: (
-            "i18n function %s() must be called with a literal string",
+            "LALAL %s()",
             MESSAGE_ID,
-            "i18n functions must be called with a literal string",
+            "YO!",
         ),
     }
 
@@ -68,6 +68,8 @@ class TranslationStringConstantsChecker(BaseChecker):
 
         if not self.linter.is_message_enabled(self.MESSAGE_ID, line=node.fromlineno):
             return
+
+        self.add_message(self.MESSAGE_ID, args=node.func.name, node=node)
 
         first = node.args[0]
         if isinstance(first, astroid.Const):

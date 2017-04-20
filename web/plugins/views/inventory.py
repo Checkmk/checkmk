@@ -251,9 +251,9 @@ def render_inv_subtree_leaf_value(hostname, tree_id, invpath, node):
             text = node.decode("utf-8")
         except:
             text = node
-        html.write(html.attrencode(text))
+        html.write_text(text)
     elif type(node) == unicode:
-        html.write(html.attrencode(node))
+        html.write_text(node)
     elif type(node) == int:
         html.write(str(node))
     elif type(node) == float:

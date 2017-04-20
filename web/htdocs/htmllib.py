@@ -111,7 +111,7 @@ class RequestTimeout(MKException):
 class Escaper(object):
     def __init__(self):
         super(Escaper, self).__init__()
-        self._unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
+        self._unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|u|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
         self._unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
 
 
@@ -670,11 +670,6 @@ class HTMLGenerator(OutputFunnel):
         return HTML(tag)
 
 
-    # Write functionlity
-#    def write(self, text):
-#        raise NotImplementedError()
-
-
     # This is used to create all the render_tag() and close_tag() functions
     def __getattr__(self, name):
         """ All closing tags can be called like this:
@@ -714,9 +709,14 @@ class HTMLGenerator(OutputFunnel):
     # basic elements
     #
 
+
+    def render_text(self, text):
+        return HTML(self.escaper.escape_text(text))
+
+
     def write_text(self, text):
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
-        self.write(self.escaper.escape_text(text))
+        self.write(self.render_text(text))
 
 
     def write_html(self, content):
@@ -1640,7 +1640,7 @@ class html(HTMLGenerator, RequestHandler):
 
 
     # obj might be either a string (str or unicode) or an exception object
-    def message(self, obj, what='message'):
+    def message(self, msg, what='message'):
         if what == 'message':
             cls    = 'success'
             prefix = _('MESSAGE')
@@ -1651,18 +1651,16 @@ class html(HTMLGenerator, RequestHandler):
             cls    = 'error'
             prefix = _('ERROR')
 
-        msg = self.permissive_attrencode(obj)
-
         if self.output_format == "html":
             if self.mobile:
                 self.open_center()
             self.open_div(class_=cls)
-            self.write(msg)
+            self.write_text(msg)
             self.close_div()
             if self.mobile:
                 self.close_center()
         else:
-            self.write('%s: %s\n' % (prefix, self.strip_tags(msg)))
+            self.write_text('%s: %s\n' % (prefix, self.strip_tags(msg)))
 
         #self.guitest_record_output("message", (what, msg))
 
@@ -1683,12 +1681,8 @@ class html(HTMLGenerator, RequestHandler):
     def render_help(self, text):
         if text and text.strip():
             self.have_help = True
-            # TODO: Check escaping
-            c = self.render_div(
-                text.strip(),
-                class_="help",
-                style="display: %s;" % ("block" if self.help_visible else "none"))
-            # TODO: Replace with write_text???
+            style = "display: %s;" % "block" if self.help_visible else "none"
+            c = self.render_div(text.strip(), class_="help", style=style)
             return c
         else:
             return ""
@@ -2958,3 +2952,4 @@ class html(HTMLGenerator, RequestHandler):
         except:
             raise MKUserError(varname, _("Please enter the time in the format HH:MM."))
         return m * 60 + h * 3600
+

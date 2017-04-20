@@ -73,7 +73,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
                 except Exception, e:
                     html.write("%s" % e)
                     if config.debug:
-                        html.write(html.attrencode(traceback.format_exc()))
+                        html.write_text(traceback.format_exc())
                 raise FinalizeRequest()
 
         # Ensure the user is authenticated. This call is wrapping all the different
@@ -142,7 +142,7 @@ def handler(mod_python_req, fields = None, is_profiling = False):
         html.unplug_all()
         log_exception()
         if plain_error():
-            html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
+            html.write_text(_("Internal error") + ": %s\n" % e)
         elif not fail_silently():
             modules.get_handler("gui_crash")()
         response_code = apache.OK

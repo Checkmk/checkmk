@@ -386,8 +386,7 @@ class PageRenderer(Base):
 
     def render_title(self):
         if not self.is_hidden():
-            return HTML("<a href=\"%s\">%s</a>" %
-                    (self.page_url(), html.attrencode(self.title())))
+            return html.render_a(self.title(), href=self.page_url())
         else:
             return ""
 
@@ -900,7 +899,7 @@ class Overridable(Base):
                 # Title
                 table.cell(_('Title'))
                 html.write_text(instance.render_title())
-                html.help(html.attrencode(_u(instance.description())))
+                html.help(_u(instance.description()))
 
                 # Custom columns specific to that page type
                 instance.render_extra_columns()
@@ -910,13 +909,14 @@ class Overridable(Base):
 
                 # Owner
                 if instance.is_builtin():
-                    ownertxt = "<i>" + _("builtin") + "</i>"
+                    ownertxt = html.i(_("builtin"))
                 else:
                     ownertxt = instance.owner()
                 table.cell(_('Owner'), ownertxt)
-                table.cell(_('Public'), instance.is_public() and _("yes") or _("no"))
-                table.cell(_('Hidden'), instance.is_hidden() and _("yes") or _("no"))
+                table.cell(_('Public'), _("yes") if instance.is_public() else _("no"))
+                table.cell(_('Hidden'), _("yes") if instance.is_hidden() else _("no"))
 
+                # FIXME: WTF?!?
                 # TODO: Haeeh? Another custom columns
                 ### if render_custom_columns:
                 ###     render_custom_columns(visual_name, visual)

@@ -450,7 +450,7 @@ class Jobs(BackupEntityCollection):
 
                 html.icon_button(stop_url, _("Stop this backup job"), "backup_stop")
 
-            table.cell(_("Name"), html.attrencode(job.title()))
+            table.cell(_("Name"), html.render_text(job.title()))
 
             css = "state0"
             state_txt = job.state_name(state["state"])
@@ -464,7 +464,7 @@ class Jobs(BackupEntityCollection):
                 css = ""
 
             table.cell(_("State"), css=css)
-            html.write(html.attrencode(state_txt))
+            html.write(html.render_text(state_txt))
 
             table.cell(_("Runtime"))
             if state["started"]:
@@ -987,8 +987,8 @@ class Target(BackupEntity):
             else:
                 from_info += " (Version: %s)" % info["cma_version"]
 
-            table.cell(_("Backup-ID"), html.attrencode(backup_ident))
-            table.cell(_("From"), html.attrencode(from_info))
+            table.cell(_("Backup-ID"), html.render_text(backup_ident))
+            table.cell(_("From"), html.render_text(from_info))
             table.cell(_("Finished"), render.date_and_time(info["finished"]))
             table.cell(_("Size"), render.bytes(info["size"]))
             table.cell(_("Encrypted"))
@@ -1058,7 +1058,7 @@ class Targets(BackupEntityCollection):
                 html.icon_button(edit_url, _("Edit this backup target"), "edit")
                 html.icon_button(delete_url, _("Delete this backup target"), "delete")
 
-            table.cell(_("Title"), html.attrencode(target.title()))
+            table.cell(_("Title"), html.render_text(target.title()))
 
             target_class = target.type_class()
             vs_target = target_class(target.type_params()).valuespec()

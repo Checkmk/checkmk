@@ -44,3 +44,11 @@ def test_HTMLGenerator():
 
     print html.drain()
     assert True
+
+    text = "Toto &nbsp; <br>"
+    assert html.render_text(text) == text
+
+    text = "<u> Unterstrichen </u>"
+    assert html.render_text(text) == text
+    print html.render_text(text)
+

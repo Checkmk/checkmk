@@ -329,7 +329,7 @@ def page_handler():
 def get_mode_function(mode):
     modeperms, modefunc = modes.get(mode, ([], None))
     if modefunc == None:
-        raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % html.attrencode(mode))
+        raise MKGeneralException(_("No such WATO module '<tt>%s</tt>'") % html.render_text(mode))
 
     if type(modefunc) != type(lambda: None):
         mode_class = modefunc
@@ -540,7 +540,9 @@ def mode_folder(phase):
         folder.show_breadcrump()
 
         if not folder.may("read"):
-            html.message(HTML('<img class=authicon src="images/icon_autherr.png"> %s' % html.attrencode(folder.reason_why_may_not("read"))))
+            html.message(html.render_img(folder.reason_why_may_not("read"),
+                                         class_="authicon",
+                                         src="images/icon_autherr.png"))
 
         folder.show_locking_information()
         show_subfolders_of(folder)
@@ -892,7 +894,7 @@ def show_hosts(folder):
     selected = weblib.get_rowselection('wato-folder-/' + folder.path())
 
     row_count = len(rendered_hosts)
-    headinfo = "%d %s" % (row_count, row_count == 1 and _("host") or _("hosts"))
+    headinfo = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
     html.javascript("update_headinfo('%s');" % headinfo)
 
     if show_checkboxes:
@@ -1392,7 +1394,7 @@ def mode_edit_host(phase, new, is_cluster):
     # Cluster: nodes
     if is_cluster:
         forms.section(_("Nodes"))
-        vs_cluster_nodes().render_input("nodes", host and host.cluster_nodes() or [])
+        vs_cluster_nodes().render_input("nodes", host.cluster_nodes() if host else [])
         html.help(_('Enter the host names of the cluster nodes. These '
                    'hosts must be present in WATO. '))
 
@@ -1753,7 +1755,7 @@ def mode_rename_host(phase):
 
 
     if phase == "title":
-        return _("Rename %s %s") % (host.is_cluster() and _("Cluster") or _("Host"), host_name)
+        return _("Rename %s %s") % (_("Cluster") if host.is_cluster() else _("Host"), host_name)
 
     elif phase == "buttons":
         global_buttons()
@@ -3160,7 +3162,7 @@ class ModeDiscovery(WatoMode):
         self._show_actions(check)
 
         table.cell(_("State"), statename, css=stateclass)
-        table.cell(_("Service"), html.attrencode(descr))
+        table.cell(_("Service"), html.render_text(descr))
         table.cell(_("Status detail"))
         if check_source in ("custom", "active"):
             div_id = "activecheck_%s" % descr
@@ -3348,7 +3350,7 @@ class ModeDiscovery(WatoMode):
     # again without using the cache.
     def _get_check_table(self):
         # Read current check configuration
-        error_options = not html.var("ignoreerrors") and [ "@raiseerrors" ] or []
+        error_options = [ "@raiseerrors" ] if not html.var("ignoreerrors") else []
 
         options = self._cache_options + error_options + [ self._host_name ]
         check_table = check_mk_automation(self._host.site_id(), "try-inventory", options)
@@ -3842,8 +3844,8 @@ class ModeBulkImport(WatoMode):
         # Render attribute selection fields
         table.row()
         for col_num in range(num_columns):
-            header = len(headers) > col_num and headers[col_num] or None
-            table.cell(html.attrencode(header))
+            header = headers[col_num] if len(headers) > col_num else None
+            table.cell(html.render_text(header))
             attribute_varname = "attribute_%d" % col_num
             if html.var(attribute_varname):
                 attribute_method = html.var("attribute_varname")
@@ -3857,7 +3859,7 @@ class ModeBulkImport(WatoMode):
         for row in rows:
             table.row()
             for cell in row:
-                table.cell(None, html.attrencode(cell))
+                table.cell(None, html.render_text(cell))
 
         table.end()
         html.end_form()
@@ -4461,13 +4463,13 @@ def mode_parentscan(phase):
                 # failed, dnserror, garbled, root, direct, notfound, gateway
                 counts = [ 'continue',
                     1,                                           # Total hosts
-                    gateway and 1 or 0,                          # Gateways found
-                    state in [ "direct", "root" ] and 1 or 0,    # Directly reachable hosts
+                    1 if gateway else 0,                          # Gateways found
+                    1 if state in [ "direct", "root" ] else 0,    # Directly reachable hosts
                     skipped_gateways,                            # number of failed PING probes
-                    state == "notfound" and 1 or 0,              # No gateway found
-                    pconf and 1 or 0,                            # New parents configured
-                    gwcreat and 1 or 0,                          # Gateway hosts created
-                    state in [ "failed", "dnserror", "garbled" ] and 1 or 0, # Errors
+                    1 if state == "notfound" else 0,              # No gateway found
+                    1 if pconf else 0,                            # New parents configured
+                    1 if gwcreat else 0,                          # Gateway hosts created
+                    1 if state in [ "failed", "dnserror", "garbled" ] else 0, # Errors
                 ]
                 result = "%s\n%s: %s<br>\n" % (json.dumps(counts), host_name, message)
 
@@ -4478,8 +4480,10 @@ def mode_parentscan(phase):
                 else:
                     msg = _("Error during parent scan of %s: %s") % (host_name, e)
                 if config.debug:
-                    msg += "<br><pre>%s</pre>" % html.attrencode(traceback.format_exc().replace("\n", "<br>"))
-                result += msg + "\n<br>"
+                    msg += html.render_br()
+                    msg += html.render_pre(traceback.format_exc().replace("\n", "<br>"))
+                    msg += html.render_br()
+                result += msg
             html.write(result)
             return ""
         return
@@ -4734,7 +4738,7 @@ def configure_gateway(state, site_id, host, gateway):
 
     if host.effective_attribute("parents") == parents:
         return _("Parents unchanged at %s") %  \
-                (parents and ",".join(parents) or _("none")), False, gwcreat
+                (",".join(parents) if parents else _("none")), False, gwcreat
 
 
     if force_explicit or host.folder().effective_attribute("parents") != parents:
@@ -4932,8 +4936,8 @@ class ModeAuditLog(WatoMode):
             table.row()
             table.cell(_("Object"), self._render_logfile_linkinfo(linkinfo))
             table.cell(_("Time"), html.render_nobr(render.date_and_time(float(t))))
-            user = user == '-' and ('<i>%s</i>' % _('internal')) or user
-            table.cell(_("User"), html.attrencode(user), css="nobreak")
+            user = ('<i>%s</i>' % _('internal')) if user == '-' else user
+            table.cell(_("User"), html.render_text(user), css="nobreak")
 
             # This must not be attrencoded: The entries are encoded when writing to the log.
             table.cell(_("Change"), text.replace("\\n", "<br>\n"), css="fill")
@@ -5146,7 +5150,7 @@ class ModeAuditLog(WatoMode):
         else:
             return ""
 
-        return '<a href="%s">%s</a>' % (url, html.attrencode(title))
+        return html.render_a(title, href=url)
 
 
     def _export_audit_log(self):
@@ -6372,7 +6376,7 @@ def vs_ldap_connection(new, connection_id):
                 ],
                 default_value = "keep",
             ),
-            forth = lambda x: x == "skip" and "keep" or x
+            forth = lambda x: "keep" if (x == "skip") else x
         )),
     ]
 
@@ -6507,7 +6511,7 @@ def mode_edit_ldap_connection(phase):
         if new:
             return _("Create new LDAP Connection")
         else:
-            return _("Edit LDAP Connection: %s") % html.attrencode(connection_id)
+            return _("Edit LDAP Connection: %s") % html.render_text(connection_id)
 
     elif phase == "buttons":
         global_buttons()
@@ -6694,7 +6698,7 @@ def mode_edit_ldap_connection(phase):
                     state, msg = test_func(connection, address)
                 except Exception, e:
                     state = False
-                    msg = _('Exception: %s') % html.attrencode(e)
+                    msg = _('Exception: %s') % html.render_text(e)
 
                 if state:
                     img = html.render_icon("success", _('Success'))
@@ -6731,7 +6735,7 @@ def mode_globalvars(phase):
 
     if phase == "title":
         if search:
-            return _("Global Settings matching %s") % html.attrencode(search)
+            return _("Global Settings matching %s") % html.render_text(search)
         else:
             return _("Global Settings")
 
@@ -6775,7 +6779,7 @@ def mode_globalvars(phase):
                 else:
                     current_settings[varname] = not def_value
                 msg = _("Changed Configuration variable %s to %s.") % (varname,
-                    current_settings[varname] and "on" or "off")
+                         "on" if current_settings[varname] else "off")
                 save_global_settings(current_settings)
 
                 add_change("edit-configvar", msg, domains=[domain],
@@ -6861,7 +6865,7 @@ def render_global_configuration_variables(group_names, default_values, current_s
                                                ("varname", varname),
                                                ("site", html.var("site", ""))])
             title = HTML('<a href="%s" class=%s title="%s">%s</a>' % \
-                    (edit_url, varname in current_settings and '"modified"' or '""',
+                    (edit_url, '"modified"' if varname in current_settings else '""',
                      html.strip_tags(help_text), title_text))
 
             if varname in current_settings:
@@ -7032,7 +7036,7 @@ def mode_edit_configvar(phase, what = 'globalvars'):
     html.button("save", _("Save"))
     if allow_reset and not is_on_default:
         curvalue = current_settings[varname]
-        html.button("_reset", curvalue == defvalue and _("Remove explicit setting") or _("Reset to default"))
+        html.button("_reset", _("Remove explicit setting") if curvalue == defvalue else _("Reset to default"))
     html.hidden_fields()
     html.end_form()
 
@@ -7390,7 +7394,7 @@ class GroupSelection(ElementSelection):
         all_groups = userdb.load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
-        elements = [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items() ]
+        elements = [ (k, t['alias'] if t['alias'] else k) for (k, t) in this_group.items() ]
         if self._no_selection:
             # Beware: ElementSelection currently can only handle string
             # keys, so we cannot take 'None' as a value.
@@ -8120,7 +8124,7 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 anavar = html.var("analyse", "")
                 delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
                 drag_url   = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr)])
-                suffix = profilemode and "_p" or ""
+                suffix     = "_p" if profilemode else ""
                 edit_url   = folder_preserving_link([("mode", "notification_rule" + suffix), ("edit", nr), ("user", userid)])
                 clone_url  = folder_preserving_link([("mode", "notification_rule" + suffix), ("clone", nr), ("user", userid)])
 
@@ -8436,7 +8440,7 @@ def mode_notifications(phase):
 
 
 def render_bulks(only_ripe):
-    bulks = check_mk_local_automation("notification-get-bulks", [ only_ripe and "1" or "0" ], None)
+    bulks = check_mk_local_automation("notification-get-bulks", [ "1" if only_ripe else "0" ], None)
     if bulks:
         if only_ripe:
             table.begin(title = _("Overdue bulk notifications!"))
@@ -8574,7 +8578,7 @@ def mode_notification_rule(phase, profilemode):
         userid = html.get_unicode_input("user", "")
 
     if userid and not profilemode:
-        suffix = _(" for user ") + html.attrencode(userid)
+        suffix = _(" for user ") + html.render_text(userid)
     else:
         suffix = ""
 
@@ -9654,7 +9658,7 @@ class ModeEditSiteGlobals(ModeSites):
                 self._current_settings[varname] = not def_value
 
             msg = _("Changed site specific configuration variable %s to %s.") % \
-                  (varname, self._current_settings[varname] and _("on") or _("off"))
+                  (varname, _("on") if self._current_settings[varname] else _("off"))
 
             self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
             save_sites(self._configured_sites, activate=False)
@@ -10657,16 +10661,17 @@ def mode_users(phase):
         # Roles
         table.cell(_("Roles"))
         if user.get("roles", []):
-            html.write(", ".join(
-               [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_role"), ("edit", r)]), roles[r].get('alias')) for r in user["roles"]]))
+            role_links = [ (folder_preserving_link([("mode", "edit_role"), ("edit", role)]), roles[role].get("alias"))
+                                for role in user["roles"] ]
+            html.write_html(HTML(", ").join(html.render_a(alias, href=link) for (link, alias) in role_links))
 
         # contact groups
         table.cell(_("Contact groups"))
         cgs = user.get("contactgroups", [])
         if cgs:
-            html.write(", ".join(
-               [ '<a href="%s">%s</a>' % (folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)]),
-                                          c in contact_groups and contact_groups[c]['alias'] or c) for c in cgs]))
+            cg_aliases = [contact_groups[c]['alias'] if c in contact_groups else c for c in cgs]
+            cg_urls    = [folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)]) for c in cgs]
+            html.write_html(HTML(", ").join(html.render_a(content, href=url) for (content, url) in zip(cg_aliases, cg_urls)))
         else:
             html.i(_("none"))
 
@@ -10686,7 +10691,7 @@ def mode_users(phase):
                     tp = tp + _(" (invalid)")
                 elif tp != "24X7":
                     url = folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tp)])
-                    tp = '<a href="%s">%s</a>' % (url, timeperiods[tp].get("alias", tp))
+                    tp = html.render_a(timeperiods[tp].get("alias", tp), href=url)
                 else:
                     tp = _("Always")
                 html.write(tp)
@@ -11063,7 +11068,7 @@ def mode_edit_user(phase):
         html.checkbox("locked", user.get("locked", False), label = _("disable the login to this account"))
     else:
         html.write_text(_('Login disabled') if user.get("locked", False) else _('Login possible'))
-        html.hidden_field('locked', user.get("locked", False) and '1' or '')
+        html.hidden_field('locked', '1' if user.get("locked", False) else '')
     html.help(_("Disabling the password will prevent a user from logging in while "
                  "retaining the original password. Notifications are not affected "
                  "by this setting."))
@@ -11095,7 +11100,7 @@ def mode_edit_user(phase):
                 html.a(role["alias"], href=url)
                 html.br()
 
-            html.hidden_field("role_" + role_id, is_member and '1' or '')
+            html.hidden_field("role_" + role_id, '1' if is_member else '')
     if is_locked('roles') and not is_member_of_at_least_one:
         html.i(_('No roles assigned.'))
     custom_user_attributes('security')
@@ -11369,7 +11374,7 @@ def mode_roles(phase):
         table.cell(_("Alias"), role["alias"])
 
         # Type
-        table.cell(_("Type"), role.get("builtin") and _("builtin") or _("custom"))
+        table.cell(_("Type"), _("builtin") if role.get("builtin") else _("custom"))
 
         # Modifications
         table.cell(_("Modifications"), "<span title='%s'>%s</span>" % (
@@ -14626,7 +14631,7 @@ def page_download_agent_output():
         html.header(_("Failed to fetch agent data"), stylesheets=["status", "pages"])
         html.p(_("There was a problem fetching data from the host."))
         if output:
-            html.show_error(html.attrencode(output))
+            html.show_error(output)
         html.pre(agent_data)
         html.footer()
 
@@ -14961,9 +14966,9 @@ def mode_pattern_editor(phase):
                     # Prepare highlighted search txt
                     match_start = matched.start()
                     match_end   = matched.end()
-                    disp_match_txt = html.attrencode(match_txt[:match_start]) \
-                                     + '<span class=match>' + html.attrencode(match_txt[match_start:match_end]) + '</span>' \
-                                     + html.attrencode(match_txt[match_end:])
+                    disp_match_txt = html.render_text(match_txt[:match_start]) \
+                                     + html.render_span(match_txt[match_start:match_end], class_="match")\
+                                     + html.render_text(match_txt[match_end:])
 
                     if already_matched == False:
                         # First match
@@ -14989,8 +14994,8 @@ def mode_pattern_editor(phase):
             if match_class == 'match first':
                 cls = 'svcstate state%d' % logwatch.level_state(state)
             table.cell(_('State'), logwatch.level_name(state), css=cls)
-            table.cell(_('Pattern'), html.render_tt(html.attrencode(pattern)))
-            table.cell(_('Comment'), html.attrencode(comment))
+            table.cell(_('Pattern'), html.render_tt(pattern))
+            table.cell(_('Comment'), html.render_text(comment))
             table.cell(_('Matched line'), disp_match_txt)
 
         table.row(fixed=True)
@@ -15369,7 +15374,7 @@ def mode_check_plugins(phase):
         if topic and not search:
             heading = "%s - %s" % ( _("Catalog of Check Plugins"), topic_title )
         elif search:
-            heading = "%s: %s" % ( _("Check plugins matching"), html.attrencode(search) )
+            heading = html.render_text("%s: %s" % (_("Check plugins matching"), search))
         else:
             heading = _("Catalog of Check Plugins")
         return heading
@@ -15900,7 +15905,7 @@ class ModePasswords(WatoMode, PasswordStore):
         delete_url = make_action_link([("mode", "passwords"), ("_delete", ident)])
         html.icon_button(delete_url, _("Delete this password"), "delete")
 
-        table.cell(_("Title"), html.attrencode(password["title"]))
+        table.cell(_("Title"), html.render_text(password["title"]))
         table.cell(_("Editable by"))
         if password["owned_by"] == None:
             html.write_text(_("Administrators (having the permission "
@@ -15911,7 +15916,7 @@ class ModePasswords(WatoMode, PasswordStore):
         if not password["shared_with"]:
             html.write_text(_("Not shared"))
         else:
-            html.write(html.attrencode(", ".join([ self._contact_group_alias(g) for g in password["shared_with"]])))
+            html.write_text(", ".join([ self._contact_group_alias(g) for g in password["shared_with"]]))
 
 
     def _contact_group_alias(self, name):

@@ -236,10 +236,11 @@ def page_notify():
             error_message = ""
             for method, method_errors in errors.items():
                 error_message += _("Failed to send %s notifications to the following users:") % method
-                error_message += "<table>"
+                table_rows = ''
                 for user, exception in method_errors:
-                    error_message += "<tr><td><tt>%s</tt></td><td>%s</td></tr>" % (user, html.attrencode(exception))
-                error_message += "</table><br>"
+                    table_rows += html.render_tr(html.render_td(html.render_tt(user))\
+                                                 + html.render_td(exception))
+                error_message += html.render_table(table_rows) + html.render_br()
             html.show_error(HTML(error_message))
 
 

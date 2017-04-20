@@ -40,7 +40,7 @@ def isilon_power_item_name(sensor_name):
 def inventory_emc_isilon_power(info):
     for line in info:
         # only monitor power supply currently
-        if "Power Supply" in line[0]:
+        if "Power Supply" in line[0] or "PS" in line[0]:
             yield isilon_power_item_name(line[0]), "emc_isilon_power_default_levels"
 
 

@@ -1,0 +1,11 @@
+Title: emc_isilon_power: Now considers more naming possibilities
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b6
+Date: 1492675329
+
+

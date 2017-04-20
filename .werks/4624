@@ -1,0 +1,12 @@
+Title: postfix_mailq: Now takes correct parameters if checking the length of queues
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p3
+Date: 1492693544
+
+Previously the parameters of deferred mail queue has been used for all kind
+of mail queues.

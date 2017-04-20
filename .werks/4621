@@ -8,4 +8,6 @@ State: unknown
 Version: 1.4.0b6
 Date: 1492675329
 
-
+If Check_MK did not discover the power supplies until now consider a
+rediscovery. Power supplies have not been discovered if the description has
+been "PS" in stead of "Power Supply".

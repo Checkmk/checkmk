@@ -528,36 +528,28 @@ def render_bi_availability(title, aggr_rows):
         avoptions = render_availability_options("bi")
 
     if not html.has_user_errors():
-        logrow_limit = avoptions["logrow_limit"]
-        if logrow_limit == 0:
-            livestatus_limit = None
-        else:
-            livestatus_limit = (len(aggr_rows) * logrow_limit) + 1
-
+        countdown_logrow_limit   = avoptions["logrow_limit"]
+        has_reached_logrow_limit = False
         spans = []
 
         # iterate all aggregation rows
         timewarpcode = ""
+        for aggr_row in aggr_rows:
+            tree = aggr_row["aggr_tree"]
+            reqhosts = tree["reqhosts"]
+            try:
+                timewarp = int(html.var("timewarp"))
+            except:
+                timewarp = None
 
-        try:
-            timewarp = int(html.var("timewarp"))
-        except:
-            timewarp = None
+            (these_spans, timewarp_tree_state), countdown_logrow_limit = \
+                availability.get_bi_spans(tree, aggr_row["aggr_group"], avoptions, countdown_logrow_limit, timewarp)
 
-        has_reached_logrow_limit = False
-        timeline_containers, fetched_rows = availability.get_timeline_containers(aggr_rows,
-                                                                                 avoptions,
-                                                                                 livestatus_limit,
-                                                                                 timewarp)
-        if livestatus_limit and fetched_rows > livestatus_limit:
-            has_reached_logrow_limit = True
-
-
-        for timeline_container in timeline_containers:
-            tree                = timeline_container.aggr_tree
-            these_spans         = timeline_container.timeline
-            timewarp_tree_state = timeline_container.timewarp_state
-
+            # We take only complete aggregations i.d. if we have
+            # undershot the log row limit then we ignore the rest
+            if avoptions["logrow_limit"] and countdown_logrow_limit < 0:
+                has_reached_logrow_limit = True
+                break
 
             spans += these_spans
 
@@ -627,7 +619,7 @@ def render_bi_availability(title, aggr_rows):
         # with changed logrow_limit = 0, which means no limit
         if has_reached_logrow_limit:
             text  = _("Your query matched more than %d log entries. "
-                      "<b>Note:</b> The shown data does not necessarily reflect the "
+                      "<b>Note:</b> The number of shown rows does not necessarily reflect the "
                       "matched entries and the result might be incomplete. ") % avoptions["logrow_limit"]
             text += '<a href="%s">%s</a>' % \
                     (html.makeuri([("_unset_logrow_limit", "1")]), _('Repeat query without limit.'))
@@ -733,7 +725,7 @@ def render_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             html.icon(_("This period has been reclassified as a scheduled downtime"), "downtime")
         elif annotation.get("downtime") == False:
             html.icon(_("This period has been reclassified as a not being a scheduled downtime"), "nodowntime")
-        table.cell(_("Annotation"), html.render_text(annotation["text"]))
+        table.cell(_("Annotation"), html.attrencode(annotation["text"]))
         table.cell(_("Author"), annotation["author"])
         table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
     table.end()

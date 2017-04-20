@@ -47,35 +47,32 @@ mkeventd_status_file = cmk.paths.omd_root + "/var/mkeventd/status"
 #   +----------------------------------------------------------------------+
 #   | Declarations of the structure of rules and actions                   |
 #   '----------------------------------------------------------------------'
-substitute_help = _("""
-The following macros will be substituted by value from the actual event:
-<br><br>
-<table class=help>
-<tr><td class=tt>$ID$</td><td>Event ID</td></tr>
-<tr><td class=tt>$COUNT$</td><td>Number of occurrances</td></tr>
-<tr><td class=tt>$TEXT$</td><td>Message text</td></tr>
-<tr><td class=tt>$FIRST$</td><td>Time of the first occurrance (time stamp)</td></tr>
-<tr><td class=tt>$LAST$</td><td>Time of the most recent occurrance</td></tr>
-<tr><td class=tt>$COMMENT$</td><td>Event comment</td></tr>
-<tr><td class=tt>$SL$</td><td>Service Level</td></tr>
-<tr><td class=tt>$HOST$</td><td>Host name (as sent by syslog)</td></tr>
-<tr><td class=tt>$ORIG_HOST$</td><td>Original host name when host name has been rewritten, empty otherwise</td></tr>
-<tr><td class=tt>$CONTACT$</td><td>Contact information</td></tr>
-<tr><td class=tt>$APPLICATION$</td><td>Syslog tag / Application</td></tr>
-<tr><td class=tt>$PID$</td><td>Process ID of the origin process</td></tr>
-<tr><td class=tt>$PRIORITY$</td><td>Syslog Priority</td></tr>
-<tr><td class=tt>$FACILITY$</td><td>Syslog Facility</td></tr>
-<tr><td class=tt>$RULE_ID$</td><td>ID of the rule</td></tr>
-<tr><td class=tt>$STATE$</td><td>State of the event (0/1/2/3)</td></tr>
-<tr><td class=tt>$PHASE$</td><td>Phase of the event (open in normal situations, closed when cancelling)</td></tr>
-<tr><td class=tt>$OWNER$</td><td>Owner of the event</td></tr>
-<tr><td class=tt>$MATCH_GROUPS$</td><td>Text groups from regular expression match, separated by spaces</td></tr>
-<tr><td class=tt>$MATCH_GROUP_1$</td><td>Text of the first match group from expression match</td></tr>
-<tr><td class=tt>$MATCH_GROUP_2$</td><td>Text of the second match group from expression match</td></tr>
-<tr><td class=tt>$MATCH_GROUP_3$</td><td>Text of the third match group from expression match (and so on...)</td></tr>
-</table>
-"""
-)
+_help_list = [("$ID$",            _("Event ID")),
+              ("$COUNT$",         _("Number of occurrances")),
+              ("$TEXT$",          _("Message text")),
+              ("$FIRST$",         _("Time of the first occurrance (time stamp)")),
+              ("$LAST$",          _("Time of the most recent occurrance")),
+              ("$COMMENT$",       _("Event comment")),
+              ("$SL$",            _("Service Level")),
+              ("$HOST$",          _("Host name (as sent by syslog)")),
+              ("$ORIG_HOST$",     _("Original host name when host name has been rewritten, empty otherwise")),
+              ("$CONTACT$",       _("Contact information")),
+              ("$APPLICATION$",   _("Syslog tag / Application")),
+              ("$PID$",           _("Process ID of the origin process")),
+              ("$PRIORITY$",      _("Syslog Priority")),
+              ("$FACILITY$",      _("Syslog Facility")),
+              ("$RULE_ID$",       _("ID of the rule")),
+              ("$STATE$",         _("State of the event (0/1/2/3)")),
+              ("$PHASE$",         _("Phase of the event (open in normal situations, closed when cancelling)")),
+              ("$OWNER$",         _("Owner of the event")),
+              ("$MATCH_GROUPS$",  _("Text groups from regular expression match, separated by spaces")),
+              ("$MATCH_GROUP_1$", _("Text of the first match group from expression match")),
+              ("$MATCH_GROUP_2$", _("Text of the second match group from expression match")),
+              ("$MATCH_GROUP_3$", _("Text of the third match group from expression match (and so on...)"))]
+_help_rows = [html.render_tr(html.render_td(key) + html.render_td(value)) for key, value in _help_list]
+substitute_help = _("The following macros will be substituted by value from the actual event:")\
+                  + html.render_br() + html.render_br()\
+                  + html.render_table(HTML().join(_help_rows), class_="help")
 
 class ActionList(ListOf):
     def __init__(self, vs, **kwargs):
@@ -1193,7 +1190,7 @@ def mode_mkeventd_rule_packs(phase):
                 html.icon(msg, icon)
 
             table.cell(_("ID"), rule_pack["id"])
-            table.cell(_("Title"), html.attrencode(rule_pack["title"]))
+            table.cell(_("Title"), html.render_text(rule_pack["title"]))
 
             if cmk.is_managed_edition():
                 table.cell(_("Customer"))
@@ -1277,7 +1274,7 @@ def mode_mkeventd_rules(phase):
                         del rule_pack["rules"][move_nr]
                         save_mkeventd_rules(legacy_rules, rule_packs)
                         add_ec_change("move-rule-to-pack", _("Moved rule %s to pack %s") % (rule["id"], other_pack["id"]))
-                        return None, _("Moved rule %s to pack %s") % (rule["id"], html.attrencode(other_pack["title"]))
+                        return None, html.render_text(_("Moved rule %s to pack %s") % (rule["id"], other_pack["title"]))
 
         action_outcome = event_simulation_action()
         if action_outcome:
@@ -1609,7 +1606,8 @@ def mode_mkeventd_edit_rule(phase):
             for pack in rule_packs:
                 for r in pack["rules"]:
                     if r["id"] == rule["id"]:
-                        raise MKUserError("rule_p_id", _("A rule with this ID already exists in rule pack <b>%s</b>.") % html.attrencode(pack["title"]))
+                        error_text = _("A rule with this ID already exists in rule pack <b>%s</b>.") % pack["title"]
+                        raise MKUserError("rule_p_id", html.render_text(error_text))
 
         try:
             num_groups = re.compile(rule["match"]).groups
@@ -1777,7 +1775,7 @@ def mode_mkeventd_config(phase):
 
     if phase == 'title':
         if search:
-            return _("Event Console configuration matching %s") % html.attrencode(search)
+            return html.render_text(_("Event Console configuration matching %s") % search)
         else:
             return _('Event Console Configuration')
 
@@ -2149,7 +2147,7 @@ def process_uploaded_zip_file(filename, content):
             messages.append(process_uploaded_mib_file(mib_file_name, mib_obj.read()))
             success += 1
         except Exception, e:
-            messages.append(_("Skipped %s: %s") % (html.attrencode(mib_file_name), e))
+            messages.append(_("Skipped %s: %s") % (html.render_text(mib_file_name), e))
             fail += 1
 
     return "<br>\n".join(messages) + \

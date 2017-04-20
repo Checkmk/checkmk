@@ -890,7 +890,7 @@ def dashlet_notify_users(nr, dashlet):
             table.cell(_("Actions"), css="buttons", sortable=False)
             html.icon_button("", _("Delete"), "delete", onclick="delete_user_notification('%s', this);" % msg_id)
 
-            table.cell(_("Message"), html.attrencode(message))
+            table.cell(_("Message"), html.render_text(message))
             table.cell(_("Date"),    datetime)
 
     table.end()

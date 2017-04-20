@@ -125,9 +125,8 @@ def list_logs(site, host_name, logfile_names):
     for file_name in logfile_names:
         table.row()
         file_display = form_file_to_ext(file_name)
-        logfile_link = "<a href=\"%s\">%s</a></td>\n" % \
-                    (html.makeuri([('site', site), ('host', host_name), ('file', file_display)]),
-                    html.attrencode(file_display))
+        uri = html.makeuri([('site', site), ('host', host_name), ('file', file_display)])
+        logfile_link = html.render_a(file_display, url=uri)
 
         try:
             log_chunks = parse_file(site, host_name, file_name)
@@ -216,7 +215,7 @@ def show_file(site, host_name, file_name):
         for line in log['lines']:
             html.open_p(class_=line['class'])
             html.icon_button(analyse_url(site, host_name, file_name, line['line']), _("Analyze this line"), "analyze")
-            html.write(html.attrencode(line['line']).replace(" ", "&nbsp;").replace("\1", "<br>"))
+            html.write_text(line['line'].replace(" ", "&nbsp;").replace("\1", "<br>"))
             html.close_p()
 
         html.close_div()
@@ -267,20 +266,19 @@ def do_log_ack(site, host_name, file_name):
         for int_filename in logfiles_of_host(site, host_name):
             file_display = form_file_to_ext(int_filename)
             logs_to_ack.append((site, host_name, int_filename, file_display))
-        ack_msg = _('all logfiles of host %s') % html.attrencode(host_name)
+        ack_msg = _('all logfiles of host %s') % html.render_text(host_name)
 
     elif host_name and file_name: # one log on one host
         int_filename = form_file_to_int(file_name)
         logs_to_ack = [ (site, host_name, int_filename, form_file_to_ext(int_filename)) ]
-        ack_msg = _('the log file %s on host %s') % \
-                       (html.attrencode(file_name), html.attrencode(host_name))
+        ack_msg = html.render_text(_('the log file %s on host %s') % (file_name, host_name))
 
     else:
         for this_site, this_host, logs in all_logs():
             file_display = form_file_to_ext(file_name)
             if file_name in logs:
                 logs_to_ack.append((this_site, this_host, file_name, file_display))
-        ack_msg = _('log file %s on all hosts') % (html.attrencode(file_name))
+        ack_msg = html.render_text(_('log file %s on all hosts') % file_name)
 
 
     html.header(_("Acknowledge %s") % ack_msg, stylesheets = stylesheets)
@@ -313,7 +311,7 @@ def do_log_ack(site, host_name, file_name):
             acknowledge_logfile(this_site, this_host, int_filename, display_name)
         except Exception, e:
             html.show_error(_('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') % \
-                                      (html.attrencode(display_name), html.attrencode(this_host), e))
+                                      (display_name, this_host, e))
             html.footer()
             return
 
@@ -416,7 +414,7 @@ def parse_file(site, host_name, file_name, hidecontext = False):
     except Exception, e:
         if config.debug:
             raise
-        raise MKGeneralException(_("Cannot parse log file %s: %s") % (html.attrencode(file_name), e))
+        raise MKGeneralException(html.render_text(_("Cannot parse log file %s: %s") % (file_name, e)))
 
     return log_chunks
 

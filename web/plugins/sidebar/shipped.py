@@ -2039,9 +2039,8 @@ def render_tag_tree_level(taggroups, path, cwd, title, tree):
         url = tag_tree_url(taggroups, subpath, "allhosts")
         if "_num_hosts" in subtree:
             title += " (%d)" % subtree["_num_hosts"]
-        href = '<a target=main href="%s">%s</a>' % (url, html.attrencode(title))
+        href = html.render_a(title, href=url, target="main")
         if "_num_hosts" in subtree:
-
             if is_tag_subdir(path, cwd):
                 html.write(tag_tree_bullet(subtree["_state"], subpath, True))
                 if subtree.get("_svc_problems"):

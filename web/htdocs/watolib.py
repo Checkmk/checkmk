@@ -8579,7 +8579,7 @@ def mk_eval(s):
         else:
             return pickle.loads(base64.b64decode(s))
     except:
-        raise MKGeneralException(_('Unable to parse provided data: %s') % html.attrencode(repr(s)))
+        raise MKGeneralException(_('Unable to parse provided data: %s') % html.render_text(repr(s)))
 
 
 def mk_repr(s):

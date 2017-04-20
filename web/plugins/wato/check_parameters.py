@@ -12970,7 +12970,7 @@ register_check_parameters(subgroup_applications,
                             match = lambda x: 4 if type(x) == tuple else (0 if not x else (2 if x == 'spool:' else (3 if x.startswith('spool:') else 1)))
                         ),
                         # migrate old (tcp, address, port) tuple to new dict
-                        forth = lambda v: (v[0], {"address": v[1], "port": v[2]}) if type(v) == tuple and type(v[1]) != dict else v,
+                        forth = lambda v: (v[0], {"address": v[1], "port": v[2]}) if (type(v) == tuple and type(v[1]) != dict) else v,
                     )),
                     ('facility', DropdownChoice(
                         title = _("Syslog facility for forwarded messages"),

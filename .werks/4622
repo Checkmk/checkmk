@@ -1,0 +1,11 @@
+Title: emc_isilon_diskstatus: Now treats L3 caching devices as OK
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p22
+Date: 1492675448
+
+

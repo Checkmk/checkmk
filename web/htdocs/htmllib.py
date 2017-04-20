@@ -111,7 +111,7 @@ class Escaper(object):
     # For example: replace '"' with '&quot;', '<' with '&lt;'.
     # This code is slow. Works on str and unicode without changing
     # the type. Also works on things that can be converted with '%s'.
-    def _escape_attribute(self, value):
+    def escape_attribute(self, value):
         attr_type = type(value)
         if value is None:
             return ''
@@ -133,12 +133,12 @@ class Escaper(object):
     # This is useful for messages where we want to keep formatting
     # options. (Formerly known as 'permissive_attrencode') """
     # for the escaping functions
-    def _escape_text(self, text):
+    def escape_text(self, text):
 
         if isinstance(text, HTML):
             return "%s" % text # This is HTML code which must not be escaped
 
-        text = self._escape_attribute(text)
+        text = self.escape_attribute(text)
         text = self._unescaper_text.sub(r'<\1\2>', text)
         # Also repair link definitions
         text = self._unescaper_href.sub(r'<a href="\1">', text)
@@ -149,21 +149,6 @@ class Escaper(object):
     #
     # Deprecated functions
     #
-
-
-    # Encode HTML attributes: replace " with &quot;, also replace
-    # < and >. This code is slow. Works on str and unicode without
-    # changing the type. Also works on things that can be converted
-    # with %s.
-    def attrencode(self, value):
-        return self._escape_attribute(value)
-
-
-    # Only strip off some tags. We allow some simple tags like
-    # <b>, <tt>, <i> to be part of the string. This is useful
-    # for messages where we still want to have formating options.
-    def permissive_attrencode(self, obj):
-        return self._escape_text(obj)
 
 
 #.
@@ -522,7 +507,7 @@ class OutputFunnel(object):
 #   '----------------------------------------------------------------------'
 
 
-class HTMLGenerator(Escaper, OutputFunnel):
+class HTMLGenerator(OutputFunnel):
 
     """ Usage Notes:
 
@@ -581,6 +566,9 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
         self.testing_mode = False
 
+        self.escaper = Escaper()
+
+
 
     #
     # Rendering
@@ -618,14 +606,14 @@ class HTMLGenerator(Escaper, OutputFunnel):
             if v is None:
                 continue
 
-            k = self._escape_attribute(k.rstrip('_'))
+            k = self.escaper.escape_attribute(k.rstrip('_'))
 
             if v == '':
                 options.append(k)
                 continue
 
             if not isinstance(v, list):
-                v = self._escape_attribute(v)
+                v = self.escaper.escape_attribute(v)
             else:
                 if k == "class":
                     sep = ' '
@@ -634,7 +622,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
                 else:
                     sep = '_'
 
-                v = sep.join([a for a in (self._escape_attribute(vi) for vi in v) if a])
+                v = sep.join([a for a in (self.escaper.escape_attribute(vi) for vi in v) if a])
 
                 if sep.startswith(';'):
                     v = re.sub(';+', ';', v)
@@ -672,7 +660,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
             if isinstance(tag_content, HTML):
                 tag += tag_content.lstrip(' ').rstrip('\n')
             else:
-                tag += self._escape_text(tag_content)
+                tag += self.escaper.escape_text(tag_content)
 
         tag += "</%s>" % (tag_name)
 
@@ -726,7 +714,7 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
     def write_text(self, text):
         """ Write text. Highlighting tags such as h2|b|tt|i|br|pre|a|sup|p|li|ul|ol are not escaped. """
-        self.write(self._escape_text(text))
+        self.write(self.escaper.escape_text(text))
 
 
     def write_html(self, content):
@@ -1356,13 +1344,10 @@ class RequestHandler(object):
 #   '----------------------------------------------------------------------'
 
 
-class html(HTMLGenerator, Encoder, RequestHandler):
+class html(HTMLGenerator, RequestHandler):
 
     def __init__(self):
         super(html, self).__init__()
-#        HTMLGenerator.__init__(self)
-#        Encoder.__init__(self)
-#        RequestHandler.__init__(self)
 
         # rendering state
         self.html_is_open = False
@@ -1420,6 +1405,10 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         # FIXME: Drop this
         self.auto_id = 0
 
+        # encoding
+        self.encoder = Encoder()
+
+
     RETURN    = 13
     SHIFT     = 16
     CTRL      = 17
@@ -1427,6 +1416,43 @@ class html(HTMLGenerator, Encoder, RequestHandler):
     BACKSPACE = 8
     F1        = 112
 
+
+    #
+    # Encoding
+    #
+
+    def urlencode_vars(self, vars):
+        return self.encoder.urlencode_vars(vars)
+
+    def urlencode(self, value):
+        return self.encoder.urlencode(value)
+
+    # Escape a variable name so that it only uses allowed charachters for URL variables
+    def varencode(self, varname):
+        return self.encoder.varencode(varname)
+
+    def u8(self, c):
+        return self.encoder.u8(c)
+
+    def utf8_to_entities(self, text):
+        return self.encoder.utf8_to_entities(text)
+
+
+    #
+    # escaping - deprecated functions
+    #
+    # Encode HTML attributes: e.g. replace '"' with '&quot;', '<' and '>' with '&lt;' and '&gt;'
+    def attrencode(self, value):
+        return self.escaper.escape_attribute(value)
+
+    # Only strip off some tags. We allow some simple tags like <b> or <tt>.
+    def permissive_attrencode(self, obj):
+        return self.escaper.escape_text(obj)
+
+
+    #
+    # Stripping
+    #
 
     # remove all HTML-tags
     def strip_tags(self, ht):
@@ -2563,7 +2589,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
         id_ = id
         self._context_button(title, url, icon=icon, hot=hot, id_=id_, bestof=bestof, hover_title=hover_title, fkey=fkey, class_=class_)
         if fkey and self.keybindings_enabled:
-            self.add_keybinding([self.F1 + (fkey - 1)], "document.location='%s';" % self._escape_attribute(url))
+            self.add_keybinding([self.F1 + (fkey - 1)], "document.location='%s';" % self.escaper.escape_attribute(url))
 
 
     def _context_button(self, title, url, icon=None, hot=False, id_=None, bestof=None, hover_title=None, fkey=None, class_=None):

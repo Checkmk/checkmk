@@ -1057,7 +1057,7 @@ def automation_create_snapshot(args):
 
             # Decouple from parent environment
             os.chdir("/")
-            os.umask(0)
+            os.umask(022)
             os.setsid()
 
             # Close all fd except stdin,out,err

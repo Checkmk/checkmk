@@ -4,6 +4,9 @@
     * 4471 FIX: Windows Agent Process Monitoring: ps section is no longer completely suppressed when only parts of the data is missing...
     * 4622 FIX: emc_isilon_diskstatus: Now treats L3 caching devices as OK
 
+    WATO:
+    * 4558 FIX: Set correct file permissions for WATO snapshots
+
     Event Console:
     * 4470 FIX: Event console: fixed incorrect event counting for timed-out and heartbeat events...
 

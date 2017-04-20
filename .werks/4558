@@ -1,0 +1,9 @@
+Title: Set correct file permissions for WATO snapshots
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.8p22
+Date: 1492679871
+Class: fix
+
+

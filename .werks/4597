@@ -1,0 +1,14 @@
+Title: Vanilla agents (RPM/DEB) of latest releases did not contain recent changes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b6
+Date: 1492761725
+Class: fix
+
+The prepacked vanilla agent which is found below ~/share/check_mk/agents as .deb or
+.rpm files did only contain the changes shipped with the previous version. The fixes
+added to the agents in the meantime between the versions were not included.
+
+The packaging has now been fixed.

@@ -53,9 +53,6 @@ waitmax: waitmax.c
 	@echo "Fine. Typing 'make install' as root now will install into /usr/bin"
 
 setversion:
-	if [ -d ../.git ]; then \
-	    git rm -f *.rpm *.deb || true ; \
-	fi
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms ; \
 	for agent in check_mk_agent.*; do \
@@ -64,9 +61,6 @@ setversion:
 	    fi ; \
 	done ; \
 	$(MAKE) packages
-	if [ -d ../.git ]; then \
-	    git add *.rpm *.deb ; \
-	fi
 	$(MAKE) -C windows NEW_VERSION=$(NEW_VERSION) setversion
 
 packages: rpm deb

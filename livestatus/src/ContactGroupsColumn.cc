@@ -26,12 +26,13 @@
 #include "Column.h"
 #include "MonitoringCore.h"
 #include "Renderer.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void ContactGroupsColumn::output(void *row, RowRenderer &r,
+void ContactGroupsColumn::output(Row row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
     for (auto cgm = getData(row); cgm != nullptr; cgm = cgm->next) {
@@ -47,7 +48,7 @@ unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
                              ContactGroupsColumn *column)
             : _element(element), _column(column) {}
 
-        bool operator()(void *row) override {
+        bool operator()(Row row) override {
             for (auto cgm = _column->getData(row); cgm != nullptr;
                  cgm = cgm->next) {
                 // TODO(sp) Remove evil cast below.
@@ -68,10 +69,10 @@ unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
                                              this);
 }
 
-bool ContactGroupsColumn::isEmpty(void *row) { return getData(row) == nullptr; }
+bool ContactGroupsColumn::isEmpty(Row row) { return getData(row) == nullptr; }
 
-contactgroupsmember *ContactGroupsColumn::getData(void *row) {
-    if (auto data = rowData<void>(row)) {
+contactgroupsmember *ContactGroupsColumn::getData(Row row) {
+    if (auto data = columnData<void>(row)) {
         return *offset_cast<contactgroupsmember *>(data, _offset);
     }
     return nullptr;

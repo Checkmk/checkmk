@@ -26,6 +26,7 @@
 #include <cstring>
 #include <sstream>
 #include <tuple>
+#include "Row.h"
 #include "StringUtils.h"
 
 using mk::lstrip;
@@ -69,7 +70,7 @@ CustomVarsDictFilter::CustomVarsDictFilter(CustomVarsColumn *column,
     }
 }
 
-bool CustomVarsDictFilter::accepts(void *row, contact * /* auth_user */,
+bool CustomVarsDictFilter::accepts(Row row, contact * /* auth_user */,
                                    int /* timezone_offset */) {
     string act_string = _column->getVariable(row, _ref_varname);
     switch (_relOp) {

@@ -26,6 +26,7 @@
 #include <cstring>
 #include "Filter.h"
 #include "Renderer.h"
+#include "Row.h"
 #include "ServiceListFilter.h"
 #include "TimeperiodsCache.h"
 #include "auth.h"
@@ -36,14 +37,14 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-servicesmember *ServiceListColumn::getMembers(void *data) {
-    if (auto p = rowData<void>(data)) {
+servicesmember *ServiceListColumn::getMembers(Row row) {
+    if (auto p = columnData<void>(row)) {
         return *offset_cast<servicesmember *>(p, _offset);
     }
     return nullptr;
 }
 
-void ServiceListColumn::output(void *row, RowRenderer &r, contact *auth_user) {
+void ServiceListColumn::output(Row row, RowRenderer &r, contact *auth_user) {
     ListRenderer l(r);
     for (servicesmember *mem = getMembers(row); mem != nullptr;
          mem = mem->next) {

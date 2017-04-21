@@ -31,6 +31,7 @@
 #include "IntColumn.h"
 #include "ServiceListStateColumn.h"
 #include "contact_fwd.h"
+class Row;
 
 #ifdef CMC
 #include <unordered_set>
@@ -78,11 +79,11 @@ public:
                     extra_extra_offset)
         , _offset(offset)
         , _logictype(logictype) {}
-    int32_t getValue(void *row, contact *auth_user) override;
+    int32_t getValue(Row row, contact *auth_user) override;
 #ifdef CMC
-    std::unordered_set<Host *> *getMembers(void *data);
+    std::unordered_set<Host *> *getMembers(Row row);
 #else
-    hostsmember *getMembers(void *data);
+    hostsmember *getMembers(Row row);
 #endif
 
 private:

@@ -137,12 +137,12 @@ void TableContacts::addColumns(Table *table, const string &prefix,
 
 void TableContacts::answerQuery(Query *query) {
     for (contact *ct = contact_list; ct != nullptr; ct = ct->next) {
-        if (!query->processDataset(ct)) {
+        if (!query->processDataset(Row(ct))) {
             break;
         }
     }
 }
 
-void *TableContacts::findObject(const string &objectspec) {
-    return find_contact(const_cast<char *>(objectspec.c_str()));
+Row TableContacts::findObject(const string &objectspec) {
+    return Row(find_contact(const_cast<char *>(objectspec.c_str())));
 }

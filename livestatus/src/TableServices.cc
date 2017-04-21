@@ -479,7 +479,7 @@ void TableServices::answerQuery(Query *query) {
         if (host *host = find_host(const_cast<char *>(value->c_str()))) {
             for (servicesmember *m = host->services; m != nullptr;
                  m = m->next) {
-                if (!query->processDataset(m->service_ptr)) {
+                if (!query->processDataset(Row(m->service_ptr))) {
                     break;
                 }
             }
@@ -492,7 +492,7 @@ void TableServices::answerQuery(Query *query) {
         if (servicegroup *sg =
                 find_servicegroup(const_cast<char *>(name->c_str()))) {
             for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
-                if (!query->processDataset(m->service_ptr)) {
+                if (!query->processDataset(Row(m->service_ptr))) {
                     break;
                 }
             }
@@ -506,7 +506,7 @@ void TableServices::answerQuery(Query *query) {
             for (hostsmember *m = hg->members; m != nullptr; m = m->next) {
                 for (servicesmember *smem = m->host_ptr->services;
                      smem != nullptr; smem = smem->next) {
-                    if (!query->processDataset(smem->service_ptr)) {
+                    if (!query->processDataset(Row(smem->service_ptr))) {
                         break;
                     }
                 }
@@ -517,17 +517,17 @@ void TableServices::answerQuery(Query *query) {
 
     // no index -> iterator over *all* services
     for (service *svc = service_list; svc != nullptr; svc = svc->next) {
-        if (!query->processDataset(svc)) {
+        if (!query->processDataset(Row(svc))) {
             break;
         }
     }
 }
 
-bool TableServices::isAuthorized(contact *ctc, void *data) {
-    service *svc = static_cast<service *>(data);
+bool TableServices::isAuthorized(Row row, contact *ctc) {
+    service *svc = rowData<service>(row);
     return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 
-void *TableServices::findObject(const string &objectspec) {
-    return getServiceBySpec(objectspec);
+Row TableServices::findObject(const string &objectspec) {
+    return Row(getServiceBySpec(objectspec));
 }

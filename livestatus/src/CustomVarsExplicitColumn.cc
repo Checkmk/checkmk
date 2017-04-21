@@ -24,11 +24,12 @@
 
 #include "CustomVarsExplicitColumn.h"
 #include "Column.h"
+#include "Row.h"
 
 using std::string;
 
-string CustomVarsExplicitColumn::getValue(void *data) const {
-    for (customvariablesmember *cvm = getCVM(data); cvm != nullptr;
+string CustomVarsExplicitColumn::getValue(Row row) const {
+    for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
         if (cvm->variable_name == _varname) {
             return cvm->variable_value;
@@ -37,8 +38,8 @@ string CustomVarsExplicitColumn::getValue(void *data) const {
     return "";
 }
 
-customvariablesmember *CustomVarsExplicitColumn::getCVM(void *data) const {
-    if (auto p = rowData<void>(data)) {
+customvariablesmember *CustomVarsExplicitColumn::getCVM(Row row) const {
+    if (auto p = columnData<void>(row)) {
         return *offset_cast<customvariablesmember *>(p, _offset);
     }
     return nullptr;

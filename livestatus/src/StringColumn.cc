@@ -31,9 +31,8 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void StringColumn::output(void *row, RowRenderer &r,
-                          contact * /* auth_user */) {
-    r.output(row == nullptr ? "" : getValue(row));
+void StringColumn::output(Row row, RowRenderer &r, contact * /* auth_user */) {
+    r.output(row.isNull() ? "" : getValue(row));
 }
 
 unique_ptr<Filter> StringColumn::createFilter(RelationalOperator relOp,

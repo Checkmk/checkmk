@@ -58,7 +58,7 @@ void TableServicesByHostGroup::answerQuery(Query *query) {
             for (servicesmember *smem = mem->host_ptr->services;
                  smem != nullptr; smem = smem->next) {
                 servicebyhostgroup sbhg = {*smem->service_ptr, hg};
-                if (!query->processDataset(&sbhg)) {
+                if (!query->processDataset(Row(&sbhg))) {
                     break;
                 }
             }
@@ -66,11 +66,11 @@ void TableServicesByHostGroup::answerQuery(Query *query) {
     }
 }
 
-bool TableServicesByHostGroup::isAuthorized(contact *ctc, void *data) {
-    service *svc = static_cast<service *>(data);
+bool TableServicesByHostGroup::isAuthorized(Row row, contact *ctc) {
+    service *svc = rowData<service>(row);
     return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 
-void *TableServicesByHostGroup::findObject(const string &objectspec) {
-    return getServiceBySpec(objectspec);
+Row TableServicesByHostGroup::findObject(const string &objectspec) {
+    return Row(getServiceBySpec(objectspec));
 }

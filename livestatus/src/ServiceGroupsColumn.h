@@ -31,6 +31,7 @@
 #include "ListColumn.h"
 #include "contact_fwd.h"
 #include "nagios.h"
+class Row;
 class RowRenderer;
 
 class ServiceGroupsColumn : public ListColumn {
@@ -41,14 +42,14 @@ public:
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset)
         , _offset(offset) {}
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(void *row) override;
+    bool isEmpty(Row row) override;
 
 private:
     int _offset;
 
-    objectlist *getData(void *row);
+    objectlist *getData(Row row);
 };
 
 #endif  // ServiceGroupsColumn_h

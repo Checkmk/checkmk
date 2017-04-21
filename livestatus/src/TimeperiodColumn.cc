@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TimeperiodColumn.h"
+#include "Row.h"
 #include "TimeperiodsCache.h"
 #include "nagios.h"
 
@@ -36,8 +37,8 @@ TimeperiodColumn::TimeperiodColumn(string name, string description,
     : IntColumn(name, description, indirect_offset, extra_offset,
                 extra_extra_offset) {}
 
-int32_t TimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
-    if (auto tp = rowData<timeperiod>(row)) {
+int32_t TimeperiodColumn::getValue(Row row, contact * /* auth_user */) {
+    if (auto tp = columnData<timeperiod>(row)) {
         // no timeperiod set -> Nagios assumes 7x24
         return (tp == nullptr || g_timeperiods_cache->inTimeperiod(tp)) ? 1 : 0;
     }

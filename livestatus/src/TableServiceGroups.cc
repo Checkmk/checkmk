@@ -137,22 +137,22 @@ void TableServiceGroups::addColumns(Table *table, const string &prefix,
 
 void TableServiceGroups::answerQuery(Query *query) {
     for (servicegroup *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
-        if (!query->processDataset(sg)) {
+        if (!query->processDataset(Row(sg))) {
             break;
         }
     }
 }
 
-void *TableServiceGroups::findObject(const string &objectspec) {
-    return find_servicegroup(const_cast<char *>(objectspec.c_str()));
+Row TableServiceGroups::findObject(const string &objectspec) {
+    return Row(find_servicegroup(const_cast<char *>(objectspec.c_str())));
 }
 
-bool TableServiceGroups::isAuthorized(contact *ctc, void *data) {
+bool TableServiceGroups::isAuthorized(Row row, contact *ctc) {
     if (ctc == unknown_auth_user()) {
         return false;
     }
 
-    auto sg = static_cast<servicegroup *>(data);
+    auto sg = rowData<servicegroup>(row);
     for (servicesmember *mem = sg->members; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
         bool is = is_authorized_for(ctc, svc->host_ptr, svc);

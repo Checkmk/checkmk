@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <string>
 class FilterVisitor;
+class Row;
 
 #ifdef CMC
 #include "cmc.h"
@@ -41,8 +42,7 @@ public:
     virtual ~Filter();
     virtual void accept(FilterVisitor &) = 0;
 
-    virtual bool accepts(void *row, contact *auth_user,
-                         int timezone_offset) = 0;
+    virtual bool accepts(Row row, contact *auth_user, int timezone_offset) = 0;
     virtual const std::string *valueForIndexing(
         const std::string &column_name) const;
     virtual void findIntLimits(const std::string &column_name, int *lower,

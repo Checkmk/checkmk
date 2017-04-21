@@ -33,6 +33,7 @@
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
+class Row;
 class RowRenderer;
 
 class DoubleColumn : public Column {
@@ -41,10 +42,10 @@ public:
                  int indirect_offset, int extra_offset, int extra_extra_offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset) {}
-    virtual double getValue(void *data) = 0;
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    virtual double getValue(Row data) = 0;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::double_; }
-    std::string valueAsString(void *row, contact * /* auth_user */) override;
+    std::string valueAsString(Row row, contact * /* auth_user */) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
     std::unique_ptr<Aggregator> createAggregator(

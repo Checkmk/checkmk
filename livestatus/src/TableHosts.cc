@@ -677,7 +677,7 @@ void TableHosts::answerQuery(Query *query) {
                 find_hostgroup(const_cast<char *>(value->c_str()))) {
             for (hostsmember *mem = hg->members; mem != nullptr;
                  mem = mem->next) {
-                if (!query->processDataset(mem->host_ptr)) {
+                if (!query->processDataset(Row(mem->host_ptr))) {
                     break;
                 }
             }
@@ -687,15 +687,15 @@ void TableHosts::answerQuery(Query *query) {
 
     // no index -> linear search over all hosts
     for (host *hst = host_list; hst != nullptr; hst = hst->next) {
-        if (!query->processDataset(hst)) {
+        if (!query->processDataset(Row(hst))) {
             break;
         }
     }
 }
-bool TableHosts::isAuthorized(contact *ctc, void *data) {
-    return is_authorized_for(ctc, static_cast<host *>(data), nullptr);
+bool TableHosts::isAuthorized(Row row, contact *ctc) {
+    return is_authorized_for(ctc, rowData<host>(row), nullptr);
 }
 
-void *TableHosts::findObject(const string &objectspec) {
-    return find_host(const_cast<char *>(objectspec.c_str()));
+Row TableHosts::findObject(const string &objectspec) {
+    return Row(find_host(const_cast<char *>(objectspec.c_str())));
 }

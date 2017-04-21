@@ -31,6 +31,7 @@
 #include "ListColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
+class Row;
 class RowRenderer;
 
 #ifndef CMC
@@ -51,16 +52,16 @@ public:
         (void)_offset;
 #endif
     }
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(void *row) override;
+    bool isEmpty(Row row) override;
 
 private:
     MonitoringCore *_mc;
     int _offset;
 
 #ifndef CMC
-    contactgroupsmember *getData(void *row);
+    contactgroupsmember *getData(Row row);
 #endif
 };
 

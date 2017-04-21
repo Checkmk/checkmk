@@ -24,8 +24,9 @@
 
 #include "MetricsColumn.h"
 #include "Renderer.h"
+#include "Row.h"
 
-void MetricsColumn::output(void * /* row */, RowRenderer &r,
+void MetricsColumn::output(Row /* row */, RowRenderer &r,
                            contact * /* auth_user */) {
     ListRenderer l(r);
 }

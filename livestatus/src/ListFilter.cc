@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <ostream>
 #include "Logger.h"
+#include "Row.h"
 
 using std::move;
 using std::string;
@@ -41,7 +42,7 @@ ListFilter::ListFilter(ListColumn *column, RelationalOperator relOp,
     , _predicate(move(predicate))
     , _empty_ref(isEmptyValue) {}
 
-bool ListFilter::accepts(void *row, contact * /* auth_user */,
+bool ListFilter::accepts(Row row, contact * /* auth_user */,
                          int /* timezone_offset */) {
     switch (_relOp) {
         case RelationalOperator::equal:

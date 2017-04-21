@@ -24,14 +24,15 @@
 
 #include "HostSpecialIntColumn.h"
 #include "MonitoringCore.h"
+#include "Row.h"
 #include "mk_inventory.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
 using std::string;
 
-int32_t HostSpecialIntColumn::getValue(void *row, contact * /* auth_user */) {
-    if (auto hst = rowData<host>(row)) {
+int32_t HostSpecialIntColumn::getValue(Row row, contact* /* auth_user */) {
+    if (auto hst = columnData<host>(row)) {
         switch (_type) {
             case Type::real_hard_state:
                 if (hst->current_state == 0) {

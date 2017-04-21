@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <cstring>
 #include <sstream>
+#include "Row.h"
 
 using std::move;
 using std::regex;
@@ -58,7 +59,7 @@ StringFilter::StringFilter(StringColumn *column, RelationalOperator relOp,
     }
 }
 
-bool StringFilter::accepts(void *row, contact * /* auth_user */,
+bool StringFilter::accepts(Row row, contact * /* auth_user */,
                            int /* timezone_offset */) {
     string act_string = _column->getValue(row);
     switch (_relOp) {

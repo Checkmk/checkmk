@@ -107,10 +107,8 @@ unique_ptr<Column> Table::dynamicColumn(const string &name,
     return it->second->createColumn(name2, rest.substr(sep_pos + 1));
 }
 
-bool Table::isAuthorized(contact * /*unused*/, void * /*unused*/) {
-    return true;
-}
+bool Table::isAuthorized(Row /*unused*/, contact * /*unused*/) { return true; }
 
-void *Table::findObject(const string & /*unused*/) { return nullptr; }
+Row Table::findObject(const string & /*unused*/) { return Row(nullptr); }
 
 Logger *Table::logger() const { return _mc->loggerLivestatus(); }

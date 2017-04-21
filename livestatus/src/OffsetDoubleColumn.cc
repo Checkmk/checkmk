@@ -24,9 +24,10 @@
 
 #include "OffsetDoubleColumn.h"
 #include "Column.h"
+#include "Row.h"
 
-double OffsetDoubleColumn::getValue(void *data) {
-    if (auto p = rowData<void>(data)) {
+double OffsetDoubleColumn::getValue(Row row) {
+    if (auto p = columnData<void>(row)) {
         return *offset_cast<double>(p, _offset);
     }
     return 0;

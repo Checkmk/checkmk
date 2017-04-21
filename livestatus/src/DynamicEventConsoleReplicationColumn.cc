@@ -32,6 +32,7 @@
 #include "EventConsoleConnection.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::move;
@@ -65,7 +66,7 @@ public:
                      extra_extra_offset)
         , _blob(move(blob)) {}
 
-    unique_ptr<vector<char>> getBlob(void * /* unused */) override {
+    unique_ptr<vector<char>> getBlob(Row /* unused */) override {
         return make_unique<vector<char>>(_blob.begin(), _blob.end());
     };
 

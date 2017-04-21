@@ -29,6 +29,7 @@
 #include <utility>
 #include <vector>
 #include "Renderer.h"
+#include "Row.h"
 #include "StringColumn.h"
 #include "contact_fwd.h"
 #include "strutil.h"
@@ -37,7 +38,7 @@ using std::string;
 using std::to_string;
 using std::vector;
 
-void PerfdataAggregator::consume(void *row, contact * /* auth_user */,
+void PerfdataAggregator::consume(Row row, contact * /* auth_user */,
                                  int /* timezone_offset */) {
     string perf_data = _column->getValue(row);
     vector<char> perf_data_vec(perf_data.begin(), perf_data.end());

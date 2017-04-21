@@ -48,9 +48,10 @@ void *shift(void *data, int offset) {
 }
 }  // namespace
 
-void *Column::shiftPointer(void *data) const {
-    return shift(shift(shift(data, _indirect_offset), _extra_offset),
-                 _extra_extra_offset);
+void *Column::shiftPointer(Row row) const {
+    return shift(
+        shift(shift(row.rawData<void>(), _indirect_offset), _extra_offset),
+        _extra_extra_offset);
 }
 
 unique_ptr<Filter> Column::createFilter(RelationalOperator /*unused*/,

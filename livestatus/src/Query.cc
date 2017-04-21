@@ -628,7 +628,7 @@ void Query::parseWaitTriggerLine(char *line) {
 void Query::parseWaitObjectLine(char *line) {
     char *objectspec = lstrip(line);
     _wait_object = _table->findObject(objectspec);
-    if (_wait_object == nullptr) {
+    if (_wait_object.isNull()) {
         invalidHeader("WaitObject: object '" + string(objectspec) +
                       "' not found or not supported by this table");
     }
@@ -720,7 +720,7 @@ bool Query::timelimitReached() {
     return false;
 }
 
-bool Query::processDataset(void *data) {
+bool Query::processDataset(Row row) {
     if (_renderer_query->size() > g_max_response_size) {
         Informational(_logger) << "Maximum response size of "
                                << g_max_response_size << " bytes exceeded!";
@@ -729,8 +729,8 @@ bool Query::processDataset(void *data) {
         return false;
     }
 
-    if (_filter.accepts(data, _auth_user, _timezone_offset) &&
-        ((_auth_user == nullptr) || _table->isAuthorized(_auth_user, data))) {
+    if (_filter.accepts(row, _auth_user, _timezone_offset) &&
+        ((_auth_user == nullptr) || _table->isAuthorized(row, _auth_user))) {
         _current_line++;
         if (_limit >= 0 && static_cast<int>(_current_line) > _limit) {
             return false;
@@ -745,15 +745,15 @@ bool Query::processDataset(void *data) {
         if (doStats()) {
             vector<string> groupspec;
             for (const auto &column : _columns) {
-                groupspec.push_back(column->valueAsString(data, _auth_user));
+                groupspec.push_back(column->valueAsString(row, _auth_user));
             }
             for (const auto &aggr : getAggregatorsFor(groupspec)) {
-                aggr->consume(data, _auth_user, _timezone_offset);
+                aggr->consume(row, _auth_user, _timezone_offset);
             }
         } else {
             RowRenderer r(*_renderer_query);
             for (const auto &column : _columns) {
-                column->output(data, r, _auth_user);
+                column->output(row, r, _auth_user);
             }
         }
     }

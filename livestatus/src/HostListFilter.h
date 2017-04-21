@@ -31,12 +31,13 @@
 #include "HostListColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class Row;
 
 class HostListFilter : public ColumnFilter {
 public:
     HostListFilter(HostListColumn *column, RelationalOperator relOp,
                    std::string value);
-    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    bool accepts(Row row, contact *auth_user, int timezone_offset) override;
     HostListColumn *column() const override;
 
 private:

@@ -31,12 +31,13 @@
 #include "DoubleColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class Row;
 
 class DoubleFilter : public ColumnFilter {
 public:
     DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
                  const std::string &value);
-    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    bool accepts(Row row, contact *auth_user, int timezone_offset) override;
     DoubleColumn *column() const override;
 
 private:

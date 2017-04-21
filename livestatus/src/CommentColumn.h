@@ -33,6 +33,7 @@
 #include "contact_fwd.h"
 struct CommentData;
 class MonitoringCore;
+class Row;
 class RowRenderer;
 
 class CommentColumn : public ListColumn {
@@ -47,9 +48,9 @@ public:
         , _is_service(is_service)
         , _with_info(with_info)
         , _with_extra_info(with_extra_info) {}
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(void *row) override;
+    bool isEmpty(Row row) override;
 
 private:
     MonitoringCore *_mc;
@@ -57,7 +58,7 @@ private:
     bool _with_info;
     bool _with_extra_info;
 
-    std::vector<CommentData> comments_for_row(void *row) const;
+    std::vector<CommentData> comments_for_row(Row row) const;
 };
 
 #endif  // CommentColumn_h

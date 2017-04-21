@@ -30,6 +30,7 @@
 #include <string>
 #include "IntColumn.h"
 #include "contact_fwd.h"
+class Row;
 
 #ifdef CMC
 #include <unordered_set>
@@ -65,14 +66,14 @@ public:
                     extra_extra_offset)
         , _offset(offset)
         , _logictype(logictype) {}
-    int32_t getValue(void *row, contact *auth_user) override;
+    int32_t getValue(Row row, contact *auth_user) override;
 #ifdef CMC
     static int32_t getValue(Type logictype, servicelist_t *mem,
                             contact *auth_user);
 #else
     static int32_t getValue(Type logictype, servicesmember *mem,
                             contact *auth_user);
-    servicesmember *getMembers(void *data);
+    servicesmember *getMembers(Row row);
 #endif
     static bool svcStateIsWorse(int32_t state1, int32_t state2);
 

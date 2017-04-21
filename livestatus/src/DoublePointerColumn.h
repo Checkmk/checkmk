@@ -34,7 +34,7 @@ public:
                         const double *number)
         : DoubleColumn(name, description, -1, -1, -1), _number(number) {}
 
-    double getValue(void *) { return *_number; }
+    double getValue(Row) { return *_number; }
 
 private:
     const double *const _number;

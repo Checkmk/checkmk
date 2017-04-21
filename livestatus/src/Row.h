@@ -22,34 +22,26 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostGroupsColumn_h
-#define HostGroupsColumn_h
+#ifndef Row_h
+#define Row_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <memory>
-#include <string>
-#include "ListColumn.h"
-#include "contact_fwd.h"
-#include "nagios.h"
-class Row;
-class RowRenderer;
 
-class HostGroupsColumn : public ListColumn {
+class Row {
 public:
-    HostGroupsColumn(const std::string &name, const std::string &description,
-                     int offset, int indirect_offset, int extra_offset,
-                     int extra_extra_offset)
-        : ListColumn(name, description, indirect_offset, extra_offset,
-                     extra_extra_offset)
-        , _offset(offset) {}
-    void output(Row row, RowRenderer &r, contact *auth_user) override;
-    std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(Row row) override;
+    // Here we basically forget the actual type of the row...
+    explicit Row(void *ptr) : _ptr(ptr) {}
+
+    // ... and here we reconstruct it, hopefully in a correct way. :-/
+    template <typename T>
+    T *rawData() const {
+        return static_cast<T *>(_ptr);
+    }
+
+    bool isNull() const { return _ptr == nullptr; }
 
 private:
-    int _offset;
-
-    objectlist *getData(Row row);
+    void *_ptr;
 };
 
-#endif  // HostGroupsColumn_h
+#endif  // Row_h

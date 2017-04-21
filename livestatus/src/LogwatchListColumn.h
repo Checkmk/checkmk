@@ -30,6 +30,7 @@
 #include "Column.h"
 #include "contact_fwd.h"
 class MonitoringCore;
+class Row;
 class RowRenderer;
 
 class LogwatchListColumn : public Column {
@@ -41,7 +42,7 @@ public:
                  extra_extra_offset)
         , _mc(mc) {}
     ColumnType type() override { return ColumnType::list; }
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
 
 private:
     MonitoringCore *_mc;

@@ -175,22 +175,22 @@ void TableHostGroups::addColumns(Table *table, const string &prefix,
 
 void TableHostGroups::answerQuery(Query *query) {
     for (hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
-        if (!query->processDataset(hg)) {
+        if (!query->processDataset(Row(hg))) {
             break;
         }
     }
 }
 
-void *TableHostGroups::findObject(const string &objectspec) {
-    return find_hostgroup(const_cast<char *>(objectspec.c_str()));
+Row TableHostGroups::findObject(const string &objectspec) {
+    return Row(find_hostgroup(const_cast<char *>(objectspec.c_str())));
 }
 
-bool TableHostGroups::isAuthorized(contact *ctc, void *data) {
+bool TableHostGroups::isAuthorized(Row row, contact *ctc) {
     if (ctc == unknown_auth_user()) {
         return false;
     }
 
-    auto hg = static_cast<hostgroup *>(data);
+    auto hg = rowData<hostgroup>(row);
     for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
         bool is = is_authorized_for(ctc, hst, nullptr);

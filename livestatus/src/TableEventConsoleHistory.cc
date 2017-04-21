@@ -27,6 +27,7 @@
 #include "TableEventConsoleHistory.h"
 #include <memory>
 #include "Column.h"
+#include "Row.h"
 #include "TableEventConsoleEvents.h"
 
 using std::make_unique;
@@ -56,6 +57,6 @@ string TableEventConsoleHistory::namePrefix() const {
     return "eventconsolehistory_";
 }
 
-bool TableEventConsoleHistory::isAuthorized(contact *ctc, void *data) {
-    return isAuthorizedForEvent(ctc, data);
+bool TableEventConsoleHistory::isAuthorized(Row row, contact *ctc) {
+    return isAuthorizedForEvent(row, ctc);
 }

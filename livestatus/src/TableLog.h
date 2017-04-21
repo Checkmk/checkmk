@@ -37,6 +37,7 @@ class Logfile;
 class LogCache;
 class MonitoringCore;
 class Query;
+class Row;
 
 class TableLog : public Table {
 public:
@@ -45,7 +46,7 @@ public:
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
-    bool isAuthorized(contact *ctc, void *data) override;
+    bool isAuthorized(Row row, contact *ctc) override;
     std::shared_ptr<Column> column(std::string colname) override;
 
 private:

@@ -36,6 +36,7 @@
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
+#include "Row.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
 #include "TableHosts.h"
@@ -181,8 +182,8 @@ void TableLog::answerQuery(Query *query) {
     }
 }
 
-bool TableLog::isAuthorized(contact *ctc, void *data) {
-    LogEntry *entry = static_cast<LogEntry *>(data);
+bool TableLog::isAuthorized(Row row, contact *ctc) {
+    LogEntry *entry = rowData<LogEntry>(row);
     service *svc = entry->_service;
     host *hst = entry->_host;
 

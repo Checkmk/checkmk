@@ -27,6 +27,7 @@
 #include "TableEventConsoleEvents.h"
 #include <memory>
 #include "Column.h"
+#include "Row.h"
 #include "Table.h"
 #include "TableHosts.h"
 
@@ -88,7 +89,7 @@ void TableEventConsoleEvents::addColumns(Table *table, MonitoringCore *mc) {
     table->addColumn(make_unique<StringEventConsoleColumn>(
         "event_ipaddress", "The IP address where the event originated"));
 
-    TableHosts::addColumns(table, mc, "host_", DANGEROUS_OFFSETOF(Row, _host),
+    TableHosts::addColumns(table, mc, "host_", DANGEROUS_OFFSETOF(ECRow, _host),
                            -1);
 }
 
@@ -98,6 +99,6 @@ string TableEventConsoleEvents::namePrefix() const {
     return "eventconsoleevents_";
 }
 
-bool TableEventConsoleEvents::isAuthorized(contact *ctc, void *data) {
-    return isAuthorizedForEvent(ctc, data);
+bool TableEventConsoleEvents::isAuthorized(Row row, contact *ctc) {
+    return isAuthorizedForEvent(row, ctc);
 }

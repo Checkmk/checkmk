@@ -24,6 +24,7 @@
 
 #include "CustomVarsColumn.h"
 #include <utility>
+#include "Row.h"
 
 #ifdef CMC
 #include "Object.h"
@@ -44,14 +45,14 @@ CustomVarsColumn::CustomVarsColumn(string name, string description, int offset,
 CustomVarsColumn::~CustomVarsColumn() = default;
 
 // TODO(sp) This should live in our abstraction layer for cores.
-unordered_map<string, string> CustomVarsColumn::getCVM(void *row) const {
+unordered_map<string, string> CustomVarsColumn::getCVM(Row row) const {
 #ifdef CMC
-    Object *object = rowData<Object>(row);
+    Object *object = columnData<Object>(row);
     return object == nullptr ? unordered_map<string, string>()
                              : object->customAttributes();
 #else
     unordered_map<string, string> result;
-    if (auto p = rowData<void>(row)) {
+    if (auto p = columnData<void>(row)) {
         for (auto cvm = *offset_cast<customvariablesmember *>(p, _offset);
              cvm != nullptr; cvm = cvm->next) {
             result.emplace(cvm->variable_name, cvm->variable_value);
@@ -61,7 +62,7 @@ unordered_map<string, string> CustomVarsColumn::getCVM(void *row) const {
 #endif
 }
 
-string CustomVarsColumn::getVariable(void *row, const string &varname) {
+string CustomVarsColumn::getVariable(Row row, const string &varname) {
     auto cvm = getCVM(row);
     auto it = cvm.find(varname);
     return it == cvm.end() ? "" : it->second;

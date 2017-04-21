@@ -2481,6 +2481,8 @@ class html(HTMLGenerator, Encoder, RequestHandler):
             self.close_td()
             self.close_tr()
         else:
+            self.open_div(class_="foldable")
+
             if not icon:
                 self.img(id_="treeimg.%s.%s" % (treename, id),
                          class_=["treeangle", "open" if isopen else "closed"],
@@ -2516,6 +2518,7 @@ class html(HTMLGenerator, Encoder, RequestHandler):
     def end_foldable_container(self):
         if self.folding_indent != "nform":
             self.close_ul()
+            self.close_div()
 
 
     def foldable_container_is_open(self, treename, id, isopen):

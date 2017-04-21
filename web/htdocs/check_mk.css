@@ -347,6 +347,7 @@ img.treeangle {
     -webkit-transition: -webkit-transform .2s ease-in-out;
     -moz-transition: -moz-transform .2s ease-in-out;
     transition: transform .2s ease-in-out;
+    vertical-align: middle;
 }
 
 img.treeangle.open {
@@ -358,19 +359,25 @@ img.treeangle.open {
 img.treeangle.nform {
     margin-left: -5px;
 }
+
 img.treeangle.title {
     width: 16px;
     height: 16px;
     vertical-align: middle;
     margin-right: 5px;
 }
+
 b.treeangle.title {
     font-weight: bold;
     color: #ffffff;
     cursor: pointer;
 }
+
+img.treeangle+.treeangle.title {
+    display: inline-block;
+}
+
 ul.treeangle {
-    /* border: 1px solid #4060ff; */
     padding-left: 20px;
     margin: 8px 0px;
     position: relative; /* In order for placement of invtablelink */

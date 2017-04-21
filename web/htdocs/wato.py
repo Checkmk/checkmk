@@ -12871,8 +12871,10 @@ class ModeEditRuleset(WatoMode):
                 last_folder = folder
 
                 alias_path = folder.alias_path(show_main = False)
-                table.begin("rules", title="%s %s" % (_("Rules in folder"), alias_path),
-                    css="ruleset", searchable=False, sortable=False, limit=None)
+                table_id = "rules_%s_%s" % (self._name, folder.ident())
+                table.begin(table_id, title="%s %s (%d)" % (_("Rules in folder"), alias_path,
+                                                            ruleset.num_rules_in_folder(folder)),
+                    css="ruleset", searchable=False, sortable=False, limit=None, foldable=True)
             else:
                 if skip_this_folder:
                     continue

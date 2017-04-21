@@ -1,0 +1,13 @@
+Title: Folder tables in ruleset edit dialog can now be folded
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1492766075
+Class: feature
+
+For a more comfortable editing of a large number of rules in a single ruleset
+it is now possible to fold the rules based on the folders.
+
+We also added the number of rules per folder to the folder title.

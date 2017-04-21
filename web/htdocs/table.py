@@ -123,6 +123,7 @@ class Table(object):
             "omit_headers"    : kwargs.get("omit_headers", False),
             "searchable"      : kwargs.get("searchable", True),
             "sortable"        : kwargs.get("sortable", True),
+            "foldable"        : kwargs.get("foldable", False),
             "output_format"   : kwargs.get("output_format", "html"), # possible: html, csv, fetch
         }
 
@@ -206,9 +207,18 @@ class Table(object):
             return
 
         if self.title:
-            html.open_h3()
-            html.write(self.title)
-            html.close_h3()
+            if self.options["foldable"]:
+                html.begin_foldable_container(
+                    treename="table",
+                    id=self.id,
+                    isopen=True,
+                    indent=False,
+                    title=html.render_h3(self.title, class_=["treeangle", "title"])
+                )
+            else:
+                html.open_h3()
+                html.write(self.title)
+                html.close_h3()
 
         if self.help:
             html.help(self.help)
@@ -231,6 +241,9 @@ class Table(object):
 
         # Render header
         self._write_table(rows, actions_enabled, actions_visible, search_term)
+
+        if self.title and self.options["foldable"]:
+            html.end_foldable_container()
 
         if limit is not None and num_rows_unlimited > limit:
             html.message(_('This table is limited to show only %d of %d rows. '

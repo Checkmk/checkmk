@@ -1,0 +1,15 @@
+Title: mk_oracle: Fixed configuration for remote instances in bakery
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p35
+Date: 1492789655
+
+There has been a mistake causing an incorrect configuration for remote
+instances. In the confiugration created by the agent bakery the information for
+the piggyhost was missing. With this a connection could not be established,
+because of the consequential errors. Also this error has always been present
+since the bakery feature for oracle has been introduced.

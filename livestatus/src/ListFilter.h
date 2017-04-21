@@ -32,6 +32,7 @@
 #include "ListColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class Row;
 
 class ListFilter : public ColumnFilter {
 public:
@@ -39,7 +40,7 @@ public:
                std::string element,
                std::unique_ptr<ListColumn::Contains> predicate,
                bool isEmptyValue);
-    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    bool accepts(Row row, contact *auth_user, int timezone_offset) override;
     const std::string *valueForIndexing(
         const std::string &column_name) const override;
     ListColumn *column() const override;

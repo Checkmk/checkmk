@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "StringColumn.h"
+class Row;
 
 class OffsetSStringColumn : public StringColumn {
 public:
@@ -37,7 +38,7 @@ public:
         : StringColumn(name, description, indirect_offset, extra_offset,
                        extra_extra_offset)
         , _offset(offset) {}
-    std::string getValue(void* data) const override;
+    std::string getValue(Row row) const override;
 
 private:
     const int _offset;

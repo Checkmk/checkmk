@@ -34,6 +34,7 @@
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
+class Row;
 class RowRenderer;
 
 class TimeColumn : public IntColumn {
@@ -43,7 +44,7 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset) {}
 
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
 
     ColumnType type() override { return ColumnType::time; }
 

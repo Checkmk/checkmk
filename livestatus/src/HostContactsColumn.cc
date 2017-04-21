@@ -23,14 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostContactsColumn.h"
+#include "Row.h"
 #include "nagios.h"
 
 using std::string;
 using std::unordered_set;
 
-unordered_set<string> HostContactsColumn::contactNames(void *row) const {
+unordered_set<string> HostContactsColumn::contactNames(Row row) const {
     unordered_set<string> names;
-    if (auto hst = rowData<host>(row)) {
+    if (auto hst = columnData<host>(row)) {
         for (auto cm = hst->contacts; cm != nullptr; cm = cm->next) {
             names.insert(cm->contact_ptr->name);
         }

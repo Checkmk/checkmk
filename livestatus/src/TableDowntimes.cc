@@ -33,6 +33,7 @@
 #include "OffsetSStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
+#include "Row.h"
 #include "Store.h"
 #include "TableHosts.h"
 #include "TableServices.h"
@@ -96,13 +97,13 @@ string TableDowntimes::namePrefix() const { return "downtime_"; }
 
 void TableDowntimes::answerQuery(Query *query) {
     for (const auto &entry : core()->impl<Store>()->_downtimes) {
-        if (!query->processDataset(entry.second.get())) {
+        if (!query->processDataset(Row(entry.second.get()))) {
             break;
         }
     }
 }
 
-bool TableDowntimes::isAuthorized(contact *ctc, void *data) {
-    DowntimeOrComment *dtc = static_cast<DowntimeOrComment *>(data);
+bool TableDowntimes::isAuthorized(Row row, contact *ctc) {
+    DowntimeOrComment *dtc = rowData<DowntimeOrComment>(row);
     return is_authorized_for(ctc, dtc->_host, dtc->_service);
 }

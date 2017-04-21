@@ -28,14 +28,14 @@
 #include <cstdlib>
 #include "MonitoringCore.h"
 #include "Renderer.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
 using std::unique_ptr;
 using std::vector;
 
-void CommentColumn::output(void *row, RowRenderer &r,
-                           contact * /* auth_user */) {
+void CommentColumn::output(Row row, RowRenderer &r, contact * /* auth_user */) {
     ListRenderer l(r);
     for (const auto &comment : comments_for_row(row)) {
         if (_with_info) {
@@ -60,7 +60,7 @@ unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
         ContainsCommentID(unsigned long element, CommentColumn *column)
             : _element(element), _column(column) {}
 
-        bool operator()(void *row) override {
+        bool operator()(Row row) override {
             for (const auto &comment : _column->comments_for_row(row)) {
                 if (comment._id == _element) {
                     return true;
@@ -78,10 +78,10 @@ unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
     return make_unique<ContainsCommentID>(id, this);
 }
 
-bool CommentColumn::isEmpty(void *row) { return comments_for_row(row).empty(); }
+bool CommentColumn::isEmpty(Row row) { return comments_for_row(row).empty(); }
 
-vector<CommentData> CommentColumn::comments_for_row(void *row) const {
-    if (auto data = rowData<void>(row)) {
+vector<CommentData> CommentColumn::comments_for_row(Row row) const {
+    if (auto data = columnData<void>(row)) {
         return _is_service
                    ? _mc->comments_for_service(
                          reinterpret_cast<MonitoringCore::Service *>(data))

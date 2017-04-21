@@ -29,6 +29,7 @@
 #include <string>
 #include "OffsetStringMacroColumn.h"
 #include "nagios.h"  // IWYU pragma: keep
+class Row;
 
 class OffsetStringServiceMacroColumn : public OffsetStringMacroColumn {
 public:
@@ -38,8 +39,8 @@ public:
                                    int extra_extra_offset)
         : OffsetStringMacroColumn(name, description, offset, indirect_offset,
                                   extra_offset, extra_extra_offset) {}
-    host *getHost(void *data) override;
-    service *getService(void *data) override;
+    host *getHost(Row row) override;
+    service *getService(Row row) override;
 };
 
 #endif  // OffsetStringServiceMacroColumn_h

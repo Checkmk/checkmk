@@ -35,6 +35,7 @@
 #include "opids.h"
 class Filter;
 class Logger;
+class Row;
 class RowRenderer;
 
 class AttributeListColumn : public IntColumn {
@@ -48,13 +49,13 @@ public:
 
     // API of Column
     ColumnType type() override { return ColumnType::list; }
-    std::string valueAsString(void *row, contact * /* auth_user */) override;
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    std::string valueAsString(Row row, contact * /* auth_user */) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
 
     // API of IntColumn
-    int32_t getValue(void *row, contact *auth_user) override;
+    int32_t getValue(Row row, contact *auth_user) override;
 
     static std::string refValueFor(const std::string &value, Logger *logger);
 

@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+#include "Row.h"
 #include "Table.h"
 class MonitoringCore;
 class Query;
@@ -38,7 +39,7 @@ public:
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
-    void *findObject(const std::string &objectspec) override;
+    Row findObject(const std::string &objectspec) override;
 };
 
 #endif  // TableContactGroups_h

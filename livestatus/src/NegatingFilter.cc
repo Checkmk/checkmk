@@ -25,6 +25,7 @@
 #include "NegatingFilter.h"
 #include <algorithm>
 #include "FilterVisitor.h"
+#include "Row.h"
 
 using std::move;
 using std::unique_ptr;
@@ -38,7 +39,6 @@ void NegatingFilter::accept(FilterVisitor &v) { v.visit(*this); }
 const unique_ptr<Filter> &NegatingFilter::subfilter() { return _filter; }
 #endif
 
-bool NegatingFilter::accepts(void *row, contact *auth_user,
-                             int timezone_offset) {
+bool NegatingFilter::accepts(Row row, contact *auth_user, int timezone_offset) {
     return !_filter->accepts(row, auth_user, timezone_offset);
 }

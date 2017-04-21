@@ -29,6 +29,7 @@
 #include <string>
 #include "Column.h"
 #include "contact_fwd.h"
+class Row;
 class RowRenderer;
 
 #ifdef CMC
@@ -54,7 +55,7 @@ public:
                  extra_extra_offset) {}
 #endif
     ColumnType type() override { return ColumnType::list; }
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
 };
 
 #endif  // MetricsColumn_h

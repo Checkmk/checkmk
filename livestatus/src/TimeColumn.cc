@@ -27,6 +27,7 @@
 #include "Filter.h"
 #include "IntAggregator.h"
 #include "Renderer.h"
+#include "Row.h"
 #include "TimeFilter.h"
 
 using std::chrono::system_clock;
@@ -34,7 +35,7 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void TimeColumn::output(void *row, RowRenderer &r, contact *auth_user) {
+void TimeColumn::output(Row row, RowRenderer &r, contact *auth_user) {
     r.output(system_clock::from_time_t(getValue(row, auth_user)));
 }
 

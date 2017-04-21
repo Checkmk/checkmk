@@ -24,6 +24,7 @@
 
 #include "HostListStateColumn.h"
 #include "Column.h"
+#include "Row.h"
 #include "auth.h"
 
 static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
@@ -42,14 +43,14 @@ static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
     return false;  // both are UNREACHABLE
 }
 
-hostsmember *HostListStateColumn::getMembers(void *data) {
-    if (auto p = rowData<void>(data)) {
+hostsmember *HostListStateColumn::getMembers(Row row) {
+    if (auto p = columnData<void>(row)) {
         return *offset_cast<hostsmember *>(p, _offset);
     }
     return nullptr;
 }
 
-int32_t HostListStateColumn::getValue(void *row, contact *auth_user) {
+int32_t HostListStateColumn::getValue(Row row, contact *auth_user) {
     int32_t result = 0;
     for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;

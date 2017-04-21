@@ -30,6 +30,7 @@
 #include <string>
 #include "TimeColumn.h"
 #include "contact_fwd.h"
+class Row;
 
 class OffsetTimeColumn : public TimeColumn {
 public:
@@ -40,7 +41,7 @@ public:
                      extra_extra_offset)
         , _offset(offset) {}
 
-    int32_t getValue(void* row, contact* auth_user) override;
+    int32_t getValue(Row row, contact* auth_user) override;
 
 protected:
     const int _offset;

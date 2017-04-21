@@ -29,6 +29,7 @@
 #include <cstdint>
 #include <string>
 #include "VariadicFilter.h"
+class Row;
 
 #ifdef CMC
 #include "cmc.h"
@@ -38,7 +39,7 @@
 
 class AndingFilter : public VariadicFilter {
 public:
-    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    bool accepts(Row row, contact *auth_user, int timezone_offset) override;
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                          int timezone_offset) const override;
     const std::string *findValueForIndexing(

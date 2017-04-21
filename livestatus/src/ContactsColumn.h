@@ -31,6 +31,7 @@
 #include <unordered_set>
 #include "ListColumn.h"
 #include "contact_fwd.h"
+class Row;
 class RowRenderer;
 
 class ContactsColumn : public ListColumn {
@@ -41,12 +42,12 @@ public:
         : ListColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset) {}
 
-    void output(void* row, RowRenderer& r, contact* auth_user) override;
+    void output(Row row, RowRenderer& r, contact* auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string& name) override;
-    bool isEmpty(void* row) override;
+    bool isEmpty(Row row) override;
 
 private:
-    virtual std::unordered_set<std::string> contactNames(void* row) const = 0;
+    virtual std::unordered_set<std::string> contactNames(Row row) const = 0;
 };
 
 #endif  // ContactsColumn_h

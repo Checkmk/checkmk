@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <sstream>
 #include "Logger.h"
+#include "Row.h"
 
 using std::move;
 using std::string;
@@ -35,7 +36,7 @@ CustomVarsListFilter::CustomVarsListFilter(CustomVarsColumn *column,
                                            string value)
     : _column(column), _relOp(relOp), _ref_text(move(value)) {}
 
-bool CustomVarsListFilter::accepts(void *row, contact * /* auth_user */,
+bool CustomVarsListFilter::accepts(Row row, contact * /* auth_user */,
                                    int /* timezone_offset */) {
     bool is_member = _column->contains(row, _ref_text);
     switch (_relOp) {

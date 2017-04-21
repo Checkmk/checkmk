@@ -25,12 +25,13 @@
 #include "ServiceGroupsColumn.h"
 #include "Column.h"
 #include "Renderer.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void ServiceGroupsColumn::output(void *row, RowRenderer &r,
+void ServiceGroupsColumn::output(Row row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
     for (objectlist *list = getData(row); list != nullptr; list = list->next) {
@@ -46,7 +47,7 @@ unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
         ContainsServiceGroup(servicegroup *element, ServiceGroupsColumn *column)
             : _element(element), _column(column) {}
 
-        bool operator()(void *row) override {
+        bool operator()(Row row) override {
             for (auto list = _column->getData(row); list != nullptr;
                  list = list->next) {
                 if (list->object_ptr == _element) {
@@ -65,10 +66,10 @@ unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
         find_servicegroup(const_cast<char *>(name.c_str())), this);
 }
 
-bool ServiceGroupsColumn::isEmpty(void *row) { return getData(row) == nullptr; }
+bool ServiceGroupsColumn::isEmpty(Row row) { return getData(row) == nullptr; }
 
-objectlist *ServiceGroupsColumn::getData(void *row) {
-    if (auto p = rowData<void>(row)) {
+objectlist *ServiceGroupsColumn::getData(Row row) {
+    if (auto p = columnData<void>(row)) {
         return *offset_cast<objectlist *>(p, _offset);
     }
     return nullptr;

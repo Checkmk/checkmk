@@ -33,6 +33,7 @@
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
+class Row;
 
 class AttributeListAsIntColumn : public IntColumn {
 public:
@@ -49,7 +50,7 @@ public:
                                          const std::string &) override;
 
     // API of IntColumn
-    int32_t getValue(void *row, contact *auth_user) override;
+    int32_t getValue(Row row, contact *auth_user) override;
 
 private:
     const int _offset;

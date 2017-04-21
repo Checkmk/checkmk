@@ -24,8 +24,9 @@
 
 #include "NullColumn.h"
 #include "Renderer.h"
+#include "Row.h"
 
-void NullColumn::output(void* /* row */, RowRenderer& r,
+void NullColumn::output(Row /* row */, RowRenderer& r,
                         contact* /* auth_user */) {
     r.output(Null());
 }

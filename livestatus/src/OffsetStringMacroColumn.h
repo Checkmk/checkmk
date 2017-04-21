@@ -33,6 +33,7 @@
 #include "nagios.h"
 #include "opids.h"
 class Filter;
+class Row;
 class RowRenderer;
 
 class OffsetStringMacroColumn : public OffsetStringColumn {
@@ -45,14 +46,14 @@ public:
                              extra_offset, extra_extra_offset) {}
     // reimplement several functions from StringColumn
 
-    std::string valueAsString(void *row, contact *auth_user) override;
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    std::string valueAsString(Row row, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
 
     // overriden by host and service macro columns
-    virtual host *getHost(void *) = 0;
-    virtual service *getService(void *) = 0;
+    virtual host *getHost(Row) = 0;
+    virtual service *getService(Row) = 0;
 
 private:
     const char *expandMacro(const char *macroname, host *hst, service *svc);

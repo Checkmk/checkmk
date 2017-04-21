@@ -25,12 +25,13 @@
 #include "HostGroupsColumn.h"
 #include "Column.h"
 #include "Renderer.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void HostGroupsColumn::output(void *row, RowRenderer &r,
+void HostGroupsColumn::output(Row row, RowRenderer &r,
                               contact * /* auth_user */) {
     ListRenderer l(r);
     for (objectlist *list = getData(row); list != nullptr; list = list->next) {
@@ -46,7 +47,7 @@ unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
         ContainsHostGroup(hostgroup *element, HostGroupsColumn *column)
             : _element(element), _column(column) {}
 
-        bool operator()(void *row) override {
+        bool operator()(Row row) override {
             for (auto list = _column->getData(row); list != nullptr;
                  list = list->next) {
                 if (list->object_ptr == _element) {
@@ -65,10 +66,10 @@ unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
         find_hostgroup(const_cast<char *>(name.c_str())), this);
 }
 
-bool HostGroupsColumn::isEmpty(void *row) { return getData(row) == nullptr; }
+bool HostGroupsColumn::isEmpty(Row row) { return getData(row) == nullptr; }
 
-objectlist *HostGroupsColumn::getData(void *row) {
-    if (auto data = rowData<void>(row)) {
+objectlist *HostGroupsColumn::getData(Row row) {
+    if (auto data = columnData<void>(row)) {
         return *offset_cast<objectlist *>(data, _offset);
     }
     return nullptr;

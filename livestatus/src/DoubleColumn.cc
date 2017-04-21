@@ -27,18 +27,18 @@
 #include "DoubleFilter.h"
 #include "Filter.h"
 #include "Renderer.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
 using std::to_string;
 using std::unique_ptr;
 
-void DoubleColumn::output(void *row, RowRenderer &r,
-                          contact * /* auth_user */) {
+void DoubleColumn::output(Row row, RowRenderer &r, contact * /* auth_user */) {
     r.output(getValue(row));
 }
 
-string DoubleColumn::valueAsString(void *row, contact * /* auth_user */) {
+string DoubleColumn::valueAsString(Row row, contact * /* auth_user */) {
     return to_string(getValue(row));
 }
 

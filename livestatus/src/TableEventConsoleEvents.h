@@ -30,6 +30,7 @@
 #include "TableEventConsole.h"
 #include "contact_fwd.h"
 class MonitoringCore;
+class Row;
 class Table;
 
 class TableEventConsoleEvents : public TableEventConsole {
@@ -38,7 +39,7 @@ public:
     std::string name() const override;
     std::string namePrefix() const override;
     static void addColumns(Table *table, MonitoringCore *mc);
-    bool isAuthorized(contact *ctc, void *data) override;
+    bool isAuthorized(Row row, contact *ctc) override;
 };
 
 #endif  // TableEventConsoleEvents_h

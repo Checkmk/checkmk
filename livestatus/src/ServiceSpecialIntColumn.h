@@ -31,6 +31,7 @@
 #include "IntColumn.h"
 #include "contact_fwd.h"
 class MonitoringCore;
+class Row;
 
 class ServiceSpecialIntColumn : public IntColumn {
 public:
@@ -44,7 +45,7 @@ public:
                     extra_extra_offset)
         , _mc(mc)
         , _type(ssic_type) {}
-    int32_t getValue(void* row, contact* auth_user) override;
+    int32_t getValue(Row row, contact* auth_user) override;
 
 private:
     MonitoringCore* _mc;

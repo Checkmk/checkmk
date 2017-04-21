@@ -26,6 +26,7 @@
 #include "ServiceListFilter.h"
 #include <ostream>
 #include "Logger.h"
+#include "Row.h"
 #include "nagios.h"
 
 using std::string;
@@ -63,7 +64,7 @@ ServiceListFilter::ServiceListFilter(ServiceListColumn *column,
     }
 }
 
-bool ServiceListFilter::accepts(void *row, contact * /* auth_user */,
+bool ServiceListFilter::accepts(Row row, contact * /* auth_user */,
                                 int /* timezone_offset */) {
     // data points to a primary data object. We need to extract
     // a pointer to a service list

@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <string>
+#include "Row.h"
 #include "Table.h"
 #include "contact_fwd.h"
 class MonitoringCore;
@@ -38,8 +39,8 @@ public:
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *query) override;
-    bool isAuthorized(contact *ctc, void *data) override;
-    void *findObject(const std::string &objectspec) override;
+    bool isAuthorized(Row row, contact *ctc) override;
+    Row findObject(const std::string &objectspec) override;
 };
 
 #endif  // TableHostsByGroup_h

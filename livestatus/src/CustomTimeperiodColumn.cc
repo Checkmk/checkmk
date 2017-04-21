@@ -24,13 +24,14 @@
 
 #include "CustomTimeperiodColumn.h"
 #include "Column.h"
+#include "Row.h"
 #include "TimeperiodsCache.h"
 
 extern TimeperiodsCache *g_timeperiods_cache;
 
 // Get the name of a timeperiod from a custom variable and lookup the current
 // state of that period
-int32_t CustomTimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
+int32_t CustomTimeperiodColumn::getValue(Row row, contact * /* auth_user */) {
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
         if (cvm->variable_name == _varname) {
@@ -41,8 +42,8 @@ int32_t CustomTimeperiodColumn::getValue(void *row, contact * /* auth_user */) {
     return 1;  // assume 7X24
 }
 
-customvariablesmember *CustomTimeperiodColumn::getCVM(void *data) {
-    if (auto p = rowData<void>(data)) {
+customvariablesmember *CustomTimeperiodColumn::getCVM(Row row) {
+    if (auto p = columnData<void>(row)) {
         return *offset_cast<customvariablesmember *>(p, _offset);
     }
     return nullptr;

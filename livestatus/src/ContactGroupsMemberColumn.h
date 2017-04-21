@@ -29,6 +29,7 @@
 #include <string>
 #include <unordered_set>
 #include "ContactsColumn.h"
+class Row;
 
 class ContactGroupsMemberColumn : public ContactsColumn {
 public:
@@ -40,7 +41,7 @@ public:
                          extra_extra_offset) {}
 
 private:
-    std::unordered_set<std::string> contactNames(void* row) const override;
+    std::unordered_set<std::string> contactNames(Row row) const override;
 };
 
 #endif  // ContactGroupsMemberColumn_h

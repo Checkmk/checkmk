@@ -31,6 +31,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include "Row.h"
 #include "contact_fwd.h"
 class Column;
 class DynamicColumn;
@@ -90,8 +91,13 @@ public:
     virtual std::shared_ptr<Column> column(std::string colname);
 
     virtual void answerQuery(Query *query) = 0;
-    virtual bool isAuthorized(contact *ctc, void *data);
-    virtual void *findObject(const std::string &objectspec);
+    virtual bool isAuthorized(Row row, contact *ctc);
+    virtual Row findObject(const std::string &objectspec);
+
+    template <typename T>
+    T *rowData(Row row) const {
+        return row.rawData<T>();
+    }
 
     MonitoringCore *core() const { return _mc; }
     Logger *logger() const;

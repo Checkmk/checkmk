@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "DoubleColumn.h"
+class Row;
 
 class OffsetDoubleColumn : public DoubleColumn {
 public:
@@ -37,7 +38,7 @@ public:
         : DoubleColumn(name, description, indirect_offset, extra_offset,
                        extra_extra_offset)
         , _offset(offset) {}
-    double getValue(void* data);
+    double getValue(Row row);
 
 protected:
     const int _offset;

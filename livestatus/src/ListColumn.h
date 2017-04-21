@@ -31,6 +31,7 @@
 #include "Column.h"
 #include "opids.h"
 class Filter;
+class Row;
 
 class ListColumn : public Column {
 public:
@@ -38,7 +39,7 @@ public:
     class Contains {
     public:
         virtual ~Contains();
-        virtual bool operator()(void *row) = 0;
+        virtual bool operator()(Row row) = 0;
     };
 
     ListColumn(const std::string &name, const std::string &description,
@@ -47,7 +48,7 @@ public:
                  extra_extra_offset) {}
     ColumnType type() override { return ColumnType::list; }
     virtual std::unique_ptr<Contains> makeContains(const std::string &name) = 0;
-    virtual bool isEmpty(void *row) = 0;
+    virtual bool isEmpty(Row row) = 0;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
 };

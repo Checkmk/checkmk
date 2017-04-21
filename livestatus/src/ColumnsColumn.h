@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "StringColumn.h"
+class Row;
 class TableColumns;
 
 class ColumnsColumn : public StringColumn {
@@ -41,7 +42,7 @@ public:
                        extra_extra_offset)
         , _colcol(colcol)
         , _table_columns(tablecols) {}
-    std::string getValue(void *data) const override;
+    std::string getValue(Row row) const override;
 
 private:
     const Type _colcol;

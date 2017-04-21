@@ -35,11 +35,13 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "Column.h"
 #include "DoubleColumn.h"
 #include "IntColumn.h"
 #include "ListColumn.h"
 #include "MonitoringCore.h"
 #include "Renderer.h"
+#include "Row.h"
 #include "StringColumn.h"
 #include "StringUtils.h"
 #include "Table.h"
@@ -53,7 +55,7 @@ public:
 
     void answerQuery(Query *) override;
 
-    struct Row {
+    struct ECRow {
         std::map<std::string, std::string> _map;
         MonitoringCore::Host *_host;
     };
@@ -61,23 +63,23 @@ public:
 protected:
     template <typename T>
     class EventConsoleColumn {
-        std::string _name;
+        Column &_column;
         T _default_value;
         std::function<T(std::string)> _f;
 
     public:
-        EventConsoleColumn(std::string name, T default_value,
+        EventConsoleColumn(Column &column, T default_value,
                            std::function<T(std::string)> f)
-            : _name(name), _default_value(default_value), _f(f) {}
+            : _column(column), _default_value(default_value), _f(f) {}
 
-        std::string getRaw(void *row) const {
-            auto r = static_cast<Row *>(row);
-            return r == nullptr ? "" : r->_map.at(_name);
+        std::string getRaw(ECRow *row) const {
+            return row == nullptr ? "" : row->_map.at(_column.name());
         }
 
-        T getValue(void *row) const {
-            auto r = static_cast<Row *>(row);
-            return r == nullptr ? _default_value : _f(r->_map.at(_name));
+        T getValue(Row row) const {
+            auto r = _column.columnData<ECRow>(row);
+            return r == nullptr ? _default_value
+                                : _f(r->_map.at(_column.name()));
         }
     };
 
@@ -88,9 +90,9 @@ protected:
         StringEventConsoleColumn(const std::string &name,
                                  const std::string &description)
             : StringColumn(name, description, -1, -1, -1)
-            , _ecc(name, std::string(), [](std::string x) { return x; }) {}
+            , _ecc(*this, std::string(), [](std::string x) { return x; }) {}
 
-        std::string getValue(void *row) const override {
+        std::string getValue(Row row) const override {
             return _ecc.getValue(row);
         }
     };
@@ -102,11 +104,11 @@ protected:
         IntEventConsoleColumn(const std::string &name,
                               const std::string &description)
             : IntColumn(name, description, -1, -1, -1)
-            , _ecc(name, 0, [](std::string x) {
+            , _ecc(*this, 0, [](std::string x) {
                 return static_cast<int32_t>(atol(x.c_str()));
             }) {}
 
-        int32_t getValue(void *row, contact * /* auth_user */) override {
+        int32_t getValue(Row row, contact * /* auth_user */) override {
             return _ecc.getValue(row);
         }
     };
@@ -118,9 +120,9 @@ protected:
         DoubleEventConsoleColumn(const std::string &name,
                                  const std::string &description)
             : DoubleColumn(name, description, -1, -1, -1)
-            , _ecc(name, 0, [](std::string x) { return atof(x.c_str()); }) {}
+            , _ecc(*this, 0, [](std::string x) { return atof(x.c_str()); }) {}
 
-        double getValue(void *row) override { return _ecc.getValue(row); }
+        double getValue(Row row) override { return _ecc.getValue(row); }
     };
 
     class TimeEventConsoleColumn : public TimeColumn {
@@ -130,11 +132,11 @@ protected:
         TimeEventConsoleColumn(const std::string &name,
                                const std::string &description)
             : TimeColumn(name, description, -1, -1, -1)
-            , _ecc(name, 0, [](std::string x) {
+            , _ecc(*this, 0, [](std::string x) {
                 return static_cast<int32_t>(atof(x.c_str()));
             }) {}
 
-        int32_t getValue(void *row, contact * /* auth_user */) override {
+        int32_t getValue(Row row, contact * /* auth_user */) override {
             return _ecc.getValue(row);
         }
     };
@@ -147,17 +149,17 @@ protected:
         ListEventConsoleColumn(const std::string &name,
                                const std::string &description)
             : ListColumn(name, description, -1, -1, -1)
-            , _ecc(name, _column_t(), [](std::string x) {
+            , _ecc(*this, _column_t(), [](std::string x) {
                 return x.empty() || x == "\002"
                            ? _column_t()
                            : mk::split(x.substr(1), '\001');
             }) {}
 
-        bool isNone(void *row) { return _ecc.getRaw(row) == "\002"; }
+        bool isNone(ECRow *row) { return _ecc.getRaw(row) == "\002"; }
 
-        _column_t getValue(void *row) { return _ecc.getValue(row); }
+        _column_t getValue(Row row) { return _ecc.getValue(row); }
 
-        void output(void *row, RowRenderer &r,
+        void output(Row row, RowRenderer &r,
                     contact * /* auth_user */) override {
             ListRenderer l(r);
             for (const auto &elem : _ecc.getValue(row)) {
@@ -172,7 +174,7 @@ protected:
                 ContainsElem(const std::string &name,
                              const EventConsoleColumn<_column_t> &ecc)
                     : _name(name), _ecc(ecc) {}
-                bool operator()(void *row) override {
+                bool operator()(Row row) override {
                     const _column_t &values = _ecc.getValue(row);
                     return std::find(values.begin(), values.end(), _name) !=
                            values.end();
@@ -185,15 +187,15 @@ protected:
             return std::make_unique<ContainsElem>(name, _ecc);
         }
 
-        bool isEmpty(void *row) override { return _ecc.getValue(row).empty(); }
+        bool isEmpty(Row row) override { return _ecc.getValue(row).empty(); }
     };
 
-    bool isAuthorizedForEvent(contact *ctc, void *data);
+    bool isAuthorizedForEvent(Row row, contact *ctc);
 
 private:
     bool isAuthorizedForEventViaContactGroups(MonitoringCore::Contact *ctc,
-                                              Row *row, bool &result);
-    bool isAuthorizedForEventViaHost(MonitoringCore::Contact *ctc, Row *row,
+                                              ECRow *row, bool &result);
+    bool isAuthorizedForEventViaHost(MonitoringCore::Contact *ctc, ECRow *row,
                                      bool &result);
 };
 

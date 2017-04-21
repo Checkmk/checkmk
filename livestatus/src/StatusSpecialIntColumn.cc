@@ -24,11 +24,12 @@
 
 #include "StatusSpecialIntColumn.h"
 #include "MonitoringCore.h"
+#include "Row.h"
 #include "mk_inventory.h"
 
 using std::string;
 
-int32_t StatusSpecialIntColumn::getValue(void* /* row */,
+int32_t StatusSpecialIntColumn::getValue(Row /* row */,
                                          contact* /* auth_user */) {
     switch (_type) {
         case Type::mk_inventory_last:

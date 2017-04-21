@@ -74,7 +74,7 @@ void TableServicesByGroup::answerQuery(Query *query) {
         if (show_service_group) {
             for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
                 servicebygroup sbg = {*m->service_ptr, sg};
-                if (!query->processDataset(&sbg)) {
+                if (!query->processDataset(Row(&sbg))) {
                     break;
                 }
             }
@@ -82,11 +82,11 @@ void TableServicesByGroup::answerQuery(Query *query) {
     }
 }
 
-bool TableServicesByGroup::isAuthorized(contact *ctc, void *data) {
-    service *svc = static_cast<service *>(data);
+bool TableServicesByGroup::isAuthorized(Row row, contact *ctc) {
+    service *svc = rowData<service>(row);
     return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 
-void *TableServicesByGroup::findObject(const string &objectspec) {
-    return getServiceBySpec(objectspec);
+Row TableServicesByGroup::findObject(const string &objectspec) {
+    return Row(getServiceBySpec(objectspec));
 }

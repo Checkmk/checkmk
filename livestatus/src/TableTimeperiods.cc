@@ -27,6 +27,7 @@
 #include "Column.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
+#include "Row.h"
 #include "TimeperiodColumn.h"
 #include "nagios.h"
 
@@ -53,7 +54,7 @@ string TableTimeperiods::namePrefix() const { return "timeperiod_"; }
 
 void TableTimeperiods::answerQuery(Query *query) {
     for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
-        if (!query->processDataset(tp)) {
+        if (!query->processDataset(Row(tp))) {
             break;
         }
     }

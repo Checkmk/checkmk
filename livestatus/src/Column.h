@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 #include "Aggregator.h"
+#include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
@@ -53,13 +54,13 @@ public:
     std::string description() const { return _description; }
 
     template <typename T>
-    T *rowData(void *data) const {
-        return static_cast<T *>(shiftPointer(data));
+    T *columnData(Row row) const {
+        return static_cast<T *>(shiftPointer(row));
     }
 
     // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
     // fixed, it is just an artifact.
-    virtual std::string valueAsString(void * /* row */,
+    virtual std::string valueAsString(Row /* row */,
                                       contact * /* auth_user */) {
         return "invalid";
     }
@@ -67,7 +68,7 @@ public:
 
     // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
     // fixed, it is just an artifact.
-    virtual void output(void *row, RowRenderer &r, contact *auth_user) = 0;
+    virtual void output(Row row, RowRenderer &r, contact *auth_user) = 0;
 
     virtual std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                                  const std::string &value);
@@ -84,7 +85,7 @@ private:
     int _extra_offset;
     int _extra_extra_offset;
 
-    void *shiftPointer(void *data) const;
+    void *shiftPointer(Row row) const;
 };
 
 #endif  // Column_h

@@ -45,6 +45,7 @@
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
+#include "Row.h"
 #include "StringUtils.h"
 #include "TableHosts.h"
 #include "TableServices.h"
@@ -465,7 +466,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     if (entry->_svc_desc != nullptr) {
                         bool filtered_out = false;
                         for (auto filter : object_filter) {
-                            if (!filter->accepts(state, query->authUser(),
+                            if (!filter->accepts(Row(state), query->authUser(),
                                                  query->timezoneOffset())) {
                                 filtered_out = true;
                                 break;
@@ -951,13 +952,13 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
     }
 
     // if (hs_state->_duration > 0)
-    _abort_query = !query->processDataset(hs_state);
+    _abort_query = !query->processDataset(Row(hs_state));
 
     hs_state->_from = hs_state->_until;
 }
 
-bool TableStateHistory::isAuthorized(contact *ctc, void *data) {
-    HostServiceState *entry = static_cast<HostServiceState *>(data);
+bool TableStateHistory::isAuthorized(Row row, contact *ctc) {
+    HostServiceState *entry = rowData<HostServiceState>(row);
     service *svc = entry->_service;
     host *hst = entry->_host;
     return (hst != nullptr || svc != nullptr) &&

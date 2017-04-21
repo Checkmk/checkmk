@@ -30,6 +30,7 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "Renderer.h"
+#include "Row.h"
 #include "pnp4nagios.h"
 
 #ifdef CMC
@@ -40,7 +41,7 @@
 
 using std::string;
 
-void LogwatchListColumn::output(void *row, RowRenderer &r,
+void LogwatchListColumn::output(Row row, RowRenderer &r,
                                 contact * /* auth_user */) {
     ListRenderer l(r);
     auto logwatch_path = _mc->mkLogwatchPath();
@@ -49,13 +50,13 @@ void LogwatchListColumn::output(void *row, RowRenderer &r,
     }
 
 #ifdef CMC
-    auto hst = rowData<Host>(row);
+    auto hst = columnData<Host>(row);
     if (hst == nullptr) {
         return;
     }
     string host_name = hst->name();
 #else
-    auto hst = rowData<host>(row);
+    auto hst = columnData<host>(row);
     if (hst == nullptr) {
         return;
     }

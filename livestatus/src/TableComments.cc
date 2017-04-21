@@ -33,6 +33,7 @@
 #include "OffsetSStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
+#include "Row.h"
 #include "Store.h"
 #include "TableHosts.h"
 #include "TableServices.h"
@@ -95,13 +96,13 @@ string TableComments::namePrefix() const { return "comment_"; }
 
 void TableComments::answerQuery(Query *query) {
     for (const auto &entry : core()->impl<Store>()->_comments) {
-        if (!query->processDataset(entry.second.get())) {
+        if (!query->processDataset(Row(entry.second.get()))) {
             break;
         }
     }
 }
 
-bool TableComments::isAuthorized(contact *ctc, void *data) {
-    DowntimeOrComment *dtc = static_cast<DowntimeOrComment *>(data);
+bool TableComments::isAuthorized(Row row, contact *ctc) {
+    DowntimeOrComment *dtc = rowData<DowntimeOrComment>(row);
     return is_authorized_for(ctc, dtc->_host, dtc->_service);
 }

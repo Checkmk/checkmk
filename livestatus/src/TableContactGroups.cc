@@ -53,12 +53,12 @@ string TableContactGroups::namePrefix() const { return "contactgroup_"; }
 
 void TableContactGroups::answerQuery(Query *query) {
     for (contactgroup *cg = contactgroup_list; cg != nullptr; cg = cg->next) {
-        if (!query->processDataset(cg)) {
+        if (!query->processDataset(Row(cg))) {
             break;
         }
     }
 }
 
-void *TableContactGroups::findObject(const string &objectspec) {
-    return core()->find_contactgroup(objectspec);
+Row TableContactGroups::findObject(const string &objectspec) {
+    return Row(core()->find_contactgroup(objectspec));
 }

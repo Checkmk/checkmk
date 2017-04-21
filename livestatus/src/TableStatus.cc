@@ -29,6 +29,7 @@
 #include "DoublePointerColumn.h"
 #include "IntPointerColumn.h"
 #include "Query.h"
+#include "Row.h"
 #include "StatusSpecialIntColumn.h"
 #include "StringPointerColumn.h"
 #include "TimePointerColumn.h"
@@ -254,4 +255,6 @@ string TableStatus::name() const { return "status"; }
 
 string TableStatus::namePrefix() const { return "status_"; }
 
-void TableStatus::answerQuery(Query *query) { query->processDataset(this); }
+void TableStatus::answerQuery(Query *query) {
+    query->processDataset(Row(this));
+}

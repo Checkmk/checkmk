@@ -27,6 +27,7 @@
 #include "CustomVarsDictFilter.h"
 #include "Filter.h"
 #include "Renderer.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
@@ -41,7 +42,7 @@ CustomVarsDictColumn::CustomVarsDictColumn(string name, string description,
 
 ColumnType CustomVarsDictColumn::type() { return ColumnType::dict; }
 
-void CustomVarsDictColumn::output(void *row, RowRenderer &r,
+void CustomVarsDictColumn::output(Row row, RowRenderer &r,
                                   contact * /* auth_user */) {
     DictRenderer d(r);
     for (const auto &it : getCVM(row)) {
@@ -54,7 +55,7 @@ unique_ptr<Filter> CustomVarsDictColumn::createFilter(RelationalOperator relOp,
     return make_unique<CustomVarsDictFilter>(this, relOp, value);
 }
 
-bool CustomVarsDictColumn::contains(void *row, const string &value) {
+bool CustomVarsDictColumn::contains(Row row, const string &value) {
     for (const auto &it : getCVM(row)) {
         if (it.second == value) {
             return true;

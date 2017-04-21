@@ -32,12 +32,13 @@
 #include "CustomVarsColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class Row;
 
 class CustomVarsDictFilter : public ColumnFilter {
 public:
     CustomVarsDictFilter(CustomVarsColumn *column, RelationalOperator relOp,
                          std::string value);
-    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    bool accepts(Row row, contact *auth_user, int timezone_offset) override;
     CustomVarsColumn *column() const override;
 
 private:

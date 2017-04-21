@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 #include "BlobColumn.h"
+class Row;
 
 class HostFileColumn : public BlobColumn {
 public:
@@ -38,7 +39,7 @@ public:
                    int indirect_offset, int extra_offset,
                    int extra_extra_offset);
 
-    std::unique_ptr<std::vector<char>> getBlob(void *data) override;
+    std::unique_ptr<std::vector<char>> getBlob(Row row) override;
 
 private:
     std::string _base_dir;

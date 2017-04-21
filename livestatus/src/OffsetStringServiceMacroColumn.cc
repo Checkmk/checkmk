@@ -23,14 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OffsetStringServiceMacroColumn.h"
+#include "Row.h"
 
-host *OffsetStringServiceMacroColumn::getHost(void *data) {
-    if (auto svc = getService(data)) {
+host *OffsetStringServiceMacroColumn::getHost(Row row) {
+    if (auto svc = getService(row)) {
         return svc->host_ptr;
     }
     return nullptr;
 }
 
-service *OffsetStringServiceMacroColumn::getService(void *data) {
-    return rowData<service>(data);
+service *OffsetStringServiceMacroColumn::getService(Row row) {
+    return columnData<service>(row);
 }

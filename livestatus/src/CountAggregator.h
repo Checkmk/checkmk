@@ -29,6 +29,7 @@
 #include <cstdint>
 #include "Aggregator.h"
 class Filter;
+class Row;
 class RowRenderer;
 
 #ifdef CMC
@@ -41,7 +42,7 @@ class CountAggregator : public Aggregator {
 public:
     explicit CountAggregator(Filter *filter)
         : Aggregator(StatsOperation::count), _filter(filter), _count(0) {}
-    void consume(void *row, contact *auth_user, int timezone_offset) override;
+    void consume(Row row, contact *auth_user, int timezone_offset) override;
     void output(RowRenderer &r) override;
 
 private:

@@ -33,6 +33,7 @@
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
+class Row;
 class RowRenderer;
 
 class CustomVarsDictColumn : public CustomVarsColumn {
@@ -41,10 +42,10 @@ public:
                          int indirect_offset, int extra_offset,
                          int extra_extra_offset);
     ColumnType type() override;
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
-    bool contains(void *row, const std::string &value) override;
+    bool contains(Row row, const std::string &value) override;
 };
 
 #endif  // CustomVarsDictColumn_h

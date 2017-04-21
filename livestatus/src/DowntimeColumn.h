@@ -33,6 +33,7 @@
 #include "contact_fwd.h"
 struct DowntimeData;
 class MonitoringCore;
+class Row;
 class RowRenderer;
 
 class DowntimeColumn : public ListColumn {
@@ -46,16 +47,16 @@ public:
         , _mc(mc)
         , _is_service(is_service)
         , _with_info(with_info) {}
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(void *row) override;
+    bool isEmpty(Row row) override;
 
 private:
     MonitoringCore *_mc;
     bool _is_service;
     bool _with_info;
 
-    std::vector<DowntimeData> downtimes_for_row(void *row) const;
+    std::vector<DowntimeData> downtimes_for_row(Row row) const;
 };
 
 #endif  // DowntimeColumn_h

@@ -25,9 +25,10 @@
 #include "OffsetTimeColumn.h"
 #include <ctime>
 #include "Column.h"
+#include "Row.h"
 
-int32_t OffsetTimeColumn::getValue(void *row, contact * /* auth_user */) {
-    if (auto p = rowData<void>(row)) {
+int32_t OffsetTimeColumn::getValue(Row row, contact* /* auth_user */) {
+    if (auto p = columnData<void>(row)) {
         return static_cast<int32_t>(*offset_cast<time_t>(p, _offset));
     }
     return 0;

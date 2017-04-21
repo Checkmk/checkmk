@@ -25,12 +25,13 @@
 #include "ServiceSpecialDoubleColumn.h"
 #include <cstring>
 #include <ctime>
+#include "Row.h"
 #include "nagios.h"
 
 extern int interval_length;
 
-double ServiceSpecialDoubleColumn::getValue(void *data) {
-    if (auto svc = rowData<service>(data)) {
+double ServiceSpecialDoubleColumn::getValue(Row row) {
+    if (auto svc = columnData<service>(row)) {
         switch (_type) {
             case Type::staleness: {
                 time_t check_result_age = time(nullptr) - svc->last_check;

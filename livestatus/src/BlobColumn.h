@@ -31,6 +31,7 @@
 #include <vector>
 #include "Column.h"
 #include "contact_fwd.h"
+class Row;
 class RowRenderer;
 
 class BlobColumn : public Column {
@@ -39,8 +40,8 @@ public:
                int indirect_offset, int extra_offset, int extra_extra_offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset) {}
-    virtual std::unique_ptr<std::vector<char>> getBlob(void *data) = 0;
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    virtual std::unique_ptr<std::vector<char>> getBlob(Row row) = 0;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::blob; }
 };
 

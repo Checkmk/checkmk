@@ -28,6 +28,7 @@
 #include "MonitoringCore.h"
 #include "OffsetSStringColumn.h"
 #include "Query.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
@@ -52,7 +53,7 @@ void TableCommands::addColumns(Table *table, const string &prefix, int offset) {
 
 void TableCommands::answerQuery(Query *query) {
     for (auto &cmd : core()->commands()) {
-        if (!query->processDataset(&cmd)) {
+        if (!query->processDataset(Row(&cmd))) {
             break;
         }
     }

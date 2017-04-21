@@ -31,6 +31,7 @@
 #include "contact_fwd.h"
 class MonitoringCore;
 class Query;
+class Row;
 
 class TableDowntimes : public Table {
 public:
@@ -38,7 +39,7 @@ public:
     std::string name() const override;
     std::string namePrefix() const override;
     void answerQuery(Query *) override;
-    bool isAuthorized(contact *ctc, void *data) override;
+    bool isAuthorized(Row row, contact *ctc) override;
 };
 
 #endif  // TableDowntimes_h

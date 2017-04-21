@@ -34,6 +34,7 @@
 #include "IntFilter.h"
 #include "Logger.h"
 #include "Renderer.h"
+#include "Row.h"
 #include "strutil.h"
 
 using std::bitset;
@@ -60,14 +61,14 @@ map<string, unsigned long> known_attributes = {
 using modified_atttibutes = bitset<32>;
 }  // namespace
 
-int32_t AttributeListColumn::getValue(void *row, contact * /*unused*/) {
-    if (auto p = rowData<void>(row)) {
+int32_t AttributeListColumn::getValue(Row row, contact * /*unused*/) {
+    if (auto p = columnData<void>(row)) {
         return static_cast<int32_t>(*offset_cast<unsigned long>(p, _offset));
     }
     return 0;
 }
 
-void AttributeListColumn::output(void *row, RowRenderer &r,
+void AttributeListColumn::output(Row row, RowRenderer &r,
                                  contact * /* auth_user */) {
     ListRenderer l(r);
     modified_atttibutes values(getValue(row, nullptr));
@@ -78,8 +79,7 @@ void AttributeListColumn::output(void *row, RowRenderer &r,
     }
 }
 
-string AttributeListColumn::valueAsString(void *row,
-                                          contact * /* auth_user */) {
+string AttributeListColumn::valueAsString(Row row, contact * /* auth_user */) {
     return to_string(static_cast<unsigned long>(getValue(row, nullptr)));
 }
 

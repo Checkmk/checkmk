@@ -29,6 +29,7 @@
 #include <cstdint>
 #include "Aggregator.h"
 class DoubleColumn;
+class Row;
 class RowRenderer;
 
 #ifdef CMC
@@ -45,7 +46,7 @@ public:
         , _count(0)
         , _aggr(0)
         , _sumq(0) {}
-    void consume(void *row, contact *contact, int timezone_offset) override;
+    void consume(Row row, contact *contact, int timezone_offset) override;
     void output(RowRenderer &r) override;
 
 private:

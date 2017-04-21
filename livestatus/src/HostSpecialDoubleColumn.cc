@@ -24,12 +24,13 @@
 
 #include "HostSpecialDoubleColumn.h"
 #include <ctime>
+#include "Row.h"
 #include "nagios.h"
 
 extern int interval_length;
 
-double HostSpecialDoubleColumn::getValue(void *data) {
-    if (auto hst = rowData<host>(data)) {
+double HostSpecialDoubleColumn::getValue(Row row) {
+    if (auto hst = columnData<host>(row)) {
         switch (_type) {
             case Type::staleness: {
                 return (time(nullptr) - hst->last_check) /

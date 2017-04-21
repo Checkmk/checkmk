@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include "Renderer.h"
+#include "Row.h"
 class Query;
 
 #ifdef CMC
@@ -45,8 +46,7 @@ public:
 
     // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
     // fixed, it is just an artifact.
-    virtual void consume(void *row, contact *auth_user,
-                         int timezone_offset) = 0;
+    virtual void consume(Row row, contact *auth_user, int timezone_offset) = 0;
 
     virtual void output(RowRenderer &r) = 0;
 

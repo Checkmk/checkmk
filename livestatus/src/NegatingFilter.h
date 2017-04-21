@@ -29,6 +29,7 @@
 #include <memory>
 #include "Filter.h"
 class FilterVisitor;
+class Row;
 
 #ifdef CMC
 #include "cmc.h"
@@ -40,7 +41,7 @@ class NegatingFilter : public Filter {
 public:
     explicit NegatingFilter(std::unique_ptr<Filter> filter);
     void accept(FilterVisitor &v) override;
-    bool accepts(void *row, contact *auth_user, int timezone_offset) override;
+    bool accepts(Row row, contact *auth_user, int timezone_offset) override;
     const std::unique_ptr<Filter> &subfilter();
 
 private:

@@ -24,6 +24,7 @@
 
 #include "ServiceListStateColumn.h"
 #include "Column.h"
+#include "Row.h"
 #include "auth.h"
 
 // return true if state1 is worse than state2
@@ -43,8 +44,8 @@ bool ServiceListStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
     return (state1 > state2);  // both or WARN or UNKNOWN
 }
 
-servicesmember *ServiceListStateColumn::getMembers(void *data) {
-    if (auto p = rowData<void>(data)) {
+servicesmember *ServiceListStateColumn::getMembers(Row row) {
+    if (auto p = columnData<void>(row)) {
         return *offset_cast<servicesmember *>(p, _offset);
     }
     return nullptr;
@@ -96,6 +97,6 @@ int32_t ServiceListStateColumn::getValue(Type logictype, servicesmember *mem,
     return result;
 }
 
-int32_t ServiceListStateColumn::getValue(void *row, contact *auth_user) {
+int32_t ServiceListStateColumn::getValue(Row row, contact *auth_user) {
     return getValue(_logictype, getMembers(row), auth_user);
 }

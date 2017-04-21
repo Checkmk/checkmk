@@ -38,6 +38,7 @@
 #include "AndingFilter.h"
 #include "Renderer.h"
 #include "RendererBrokenCSV.h"
+#include "Row.h"
 #include "StatsColumn.h"
 #include "VariadicFilter.h"
 #include "contact_fwd.h"
@@ -57,7 +58,7 @@ public:
 
     bool process();
 
-    bool processDataset(void *);
+    bool processDataset(Row row);
 
     bool timelimitReached();
     void invalidRequest(const std::string &message);
@@ -84,7 +85,7 @@ private:
     AndingFilter _wait_condition;
     unsigned _wait_timeout;
     struct trigger *_wait_trigger;
-    void *_wait_object;
+    Row _wait_object;
     CSVSeparators _separators;
     bool _show_column_headers;
     OutputFormat _output_format;
@@ -102,8 +103,6 @@ private:
 
     // invalidHeader can be called during header parsing
     void invalidHeader(const std::string &message);
-
-    void *findTimerangeFilter(const char *columnname, time_t *, time_t *);
 
     bool doStats();
     void doWait();

@@ -29,6 +29,7 @@
 #include "Filter.h"
 #include "Logger.h"
 #include "Renderer.h"
+#include "Row.h"
 #include "VariadicFilter.h"
 
 using std::string;
@@ -36,7 +37,7 @@ using std::unique_ptr;
 
 extern char *macro_user[MAX_USER_MACROS];
 
-string OffsetStringMacroColumn::valueAsString(void *row,
+string OffsetStringMacroColumn::valueAsString(Row row,
                                               contact * /* auth_user */) {
     string raw = getValue(row);
     host *hst = getHost(row);
@@ -71,7 +72,7 @@ string OffsetStringMacroColumn::valueAsString(void *row,
     return result;
 }
 
-void OffsetStringMacroColumn::output(void *row, RowRenderer &r,
+void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
                                      contact *auth_user) {
     string s = valueAsString(row, auth_user);
     r.output(s);

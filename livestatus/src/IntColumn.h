@@ -34,6 +34,7 @@
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
+class Row;
 class RowRenderer;
 
 class IntColumn : public Column {
@@ -46,11 +47,11 @@ public:
     // TODO(sp) Get rid of the contact* parameter, it doesn't really belong here
     // and is only used in ServiceListStateColumn and HostListStateColumn for
     // questionable purposes...
-    virtual int32_t getValue(void *row, contact *auth_user) = 0;
+    virtual int32_t getValue(Row row, contact *auth_user) = 0;
 
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::int_; }
-    std::string valueAsString(void *row, contact *auth_user) override;
+    std::string valueAsString(Row row, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
     std::unique_ptr<Aggregator> createAggregator(

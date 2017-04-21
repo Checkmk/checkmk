@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <ostream>
 #include "Logger.h"
+#include "Row.h"
 
 using std::string;
 
@@ -33,7 +34,7 @@ DoubleFilter::DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
                            const string &value)
     : _column(column), _relOp(relOp), _ref_value(atof(value.c_str())) {}
 
-bool DoubleFilter::accepts(void *row, contact * /* auth_user */,
+bool DoubleFilter::accepts(Row row, contact * /* auth_user */,
                            int /* timezone_offset */) {
     double act_value = _column->getValue(row);
     switch (_relOp) {

@@ -30,6 +30,7 @@
 #include <string>
 #include "IntColumn.h"
 #include "contact_fwd.h"
+class Row;
 
 class OffsetIntColumn : public IntColumn {
 public:
@@ -39,7 +40,7 @@ public:
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset)
         , _offset(offset) {}
-    int32_t getValue(void* row, contact* auth_user) override;
+    int32_t getValue(Row row, contact* auth_user) override;
 
 protected:
     const int _offset;

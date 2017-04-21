@@ -27,6 +27,7 @@
 #include "DynamicColumn.h"
 #include "DynamicEventConsoleReplicationColumn.h"
 #include "Query.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
@@ -46,5 +47,5 @@ string TableEventConsoleReplication::namePrefix() const {
 }
 
 void TableEventConsoleReplication::answerQuery(Query *query) {
-    query->processDataset(nullptr);
+    query->processDataset(Row(nullptr));
 }

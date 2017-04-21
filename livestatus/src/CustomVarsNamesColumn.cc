@@ -28,6 +28,7 @@
 #include "CustomVarsListFilter.h"
 #include "Filter.h"
 #include "Renderer.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
@@ -42,7 +43,7 @@ CustomVarsNamesColumn::CustomVarsNamesColumn(string name, string description,
 
 ColumnType CustomVarsNamesColumn::type() { return ColumnType::list; }
 
-void CustomVarsNamesColumn::output(void *row, RowRenderer &r,
+void CustomVarsNamesColumn::output(Row row, RowRenderer &r,
                                    contact * /* auth_user */) {
     ListRenderer l(r);
     for (const auto &it : getCVM(row)) {
@@ -55,7 +56,7 @@ unique_ptr<Filter> CustomVarsNamesColumn::createFilter(RelationalOperator relOp,
     return make_unique<CustomVarsListFilter>(this, relOp, value);
 }
 
-bool CustomVarsNamesColumn::contains(void *row, const string &value) {
+bool CustomVarsNamesColumn::contains(Row row, const string &value) {
     auto cvm = getCVM(row);
     return cvm.find(value) != cvm.end();
 }

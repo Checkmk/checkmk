@@ -27,17 +27,18 @@
 #include "IntAggregator.h"
 #include "IntFilter.h"
 #include "Renderer.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
 using std::to_string;
 using std::unique_ptr;
 
-string IntColumn::valueAsString(void *row, contact *auth_user) {
+string IntColumn::valueAsString(Row row, contact *auth_user) {
     return to_string(getValue(row, auth_user));
 }
 
-void IntColumn::output(void *row, RowRenderer &r, contact *auth_user) {
+void IntColumn::output(Row row, RowRenderer &r, contact *auth_user) {
     r.output(getValue(row, auth_user));
 }
 

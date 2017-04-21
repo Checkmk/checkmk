@@ -23,12 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ColumnsColumn.h"
+#include "Row.h"
 #include "TableColumns.h"
 class Column;
 
 using std::string;
 
-string ColumnsColumn::getValue(void *data) const {
-    Column *column = static_cast<Column *>(data);
-    return _table_columns->getValue(column, _colcol);
+string ColumnsColumn::getValue(Row row) const {
+    if (auto p = columnData<Column>(row)) {
+        return _table_columns->getValue(p, _colcol);
+    }
+    return "";
 }

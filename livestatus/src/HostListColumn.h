@@ -32,6 +32,7 @@
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
+class Row;
 class RowRenderer;
 
 #ifdef CMC
@@ -51,13 +52,13 @@ public:
         , _offset(offset)
         , _show_state(show_state) {}
     ColumnType type() override { return ColumnType::list; }
-    void output(void *row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
 #ifdef CMC
-    std::unordered_set<Host *> *getMembers(void *data);
+    std::unordered_set<Host *> *getMembers(Row row);
 #else
-    hostsmember *getMembers(void *data);
+    hostsmember *getMembers(Row row);
 #endif
 
 private:

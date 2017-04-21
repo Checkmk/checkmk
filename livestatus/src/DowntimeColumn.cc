@@ -26,13 +26,14 @@
 #include <cstdlib>
 #include "MonitoringCore.h"
 #include "Renderer.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
 using std::unique_ptr;
 using std::vector;
 
-void DowntimeColumn::output(void *row, RowRenderer &r,
+void DowntimeColumn::output(Row row, RowRenderer &r,
                             contact * /* auth_user */) {
     ListRenderer l(r);
     for (const auto &downtime : downtimes_for_row(row)) {
@@ -54,7 +55,7 @@ unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
         ContainsDowntimeID(unsigned long element, DowntimeColumn *column)
             : _element(element), _column(column) {}
 
-        bool operator()(void *row) override {
+        bool operator()(Row row) override {
             for (const auto &downtime : _column->downtimes_for_row(row)) {
                 if (downtime._id == _element) {
                     return true;
@@ -72,12 +73,10 @@ unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
     return make_unique<ContainsDowntimeID>(id, this);
 }
 
-bool DowntimeColumn::isEmpty(void *row) {
-    return downtimes_for_row(row).empty();
-}
+bool DowntimeColumn::isEmpty(Row row) { return downtimes_for_row(row).empty(); }
 
-vector<DowntimeData> DowntimeColumn::downtimes_for_row(void *row) const {
-    if (auto data = rowData<void>(row)) {
+vector<DowntimeData> DowntimeColumn::downtimes_for_row(Row row) const {
+    if (auto data = columnData<void>(row)) {
         return _is_service
                    ? _mc->downtimes_for_service(
                          reinterpret_cast<MonitoringCore::Service *>(data))

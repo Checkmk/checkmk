@@ -24,11 +24,12 @@
 
 #include "OffsetSStringColumn.h"
 #include "Column.h"
+#include "Row.h"
 
 using std::string;
 
-string OffsetSStringColumn::getValue(void *data) const {
-    if (auto p = rowData<void>(data)) {
+string OffsetSStringColumn::getValue(Row row) const {
+    if (auto p = columnData<void>(row)) {
         auto s = offset_cast<string>(p, _offset);
         return s == nullptr ? "" : *s;
     }

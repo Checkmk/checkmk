@@ -24,9 +24,10 @@
 
 #include "OffsetIntColumn.h"
 #include "Column.h"
+#include "Row.h"
 
-int32_t OffsetIntColumn::getValue(void *row, contact * /* auth_user */) {
-    if (auto p = rowData<void>(row)) {
+int32_t OffsetIntColumn::getValue(Row row, contact* /* auth_user */) {
+    if (auto p = columnData<void>(row)) {
         return static_cast<int32_t>(*offset_cast<int>(p, _offset));
     }
     return 0;

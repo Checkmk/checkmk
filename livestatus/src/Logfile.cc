@@ -33,6 +33,7 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "Query.h"
+#include "Row.h"
 
 #ifdef CMC
 #include <new>
@@ -232,7 +233,7 @@ bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since,
     for (auto it = _entries.lower_bound(sincekey); it != _entries.end(); ++it) {
         LogEntry *entry = it->second;
         // end found or limit exceeded?
-        if (entry->_time >= until || !query->processDataset(entry)) {
+        if (entry->_time >= until || !query->processDataset(Row(entry))) {
             return false;  // limit exceeded
         }
     }
@@ -253,7 +254,7 @@ bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
         if (entry->_time < since) {
             return false;  // end found
         }
-        if (!query->processDataset(entry)) {
+        if (!query->processDataset(Row(entry))) {
             return false;  // limit exceeded
         }
     }

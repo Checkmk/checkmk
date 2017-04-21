@@ -28,6 +28,7 @@
 #include "Column.h"
 #include "ColumnsColumn.h"
 #include "Query.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::shared_ptr;
@@ -57,7 +58,7 @@ void TableColumns::addTable(Table *table) { _tables.push_back(table); }
 void TableColumns::answerQuery(Query *query) {
     for (auto table : _tables) {
         table->any_column([&](shared_ptr<Column> c) {
-            return !query->processDataset(c.get());
+            return !query->processDataset(Row(c.get()));
         });
     }
 }

@@ -29,6 +29,7 @@
 #include <string>
 #include <unordered_map>
 #include "Column.h"
+class Row;
 
 class CustomVarsColumn : public Column {
 public:
@@ -36,13 +37,13 @@ public:
                      int indirect_offset, int extra_offset,
                      int extra_extra_offset);
     virtual ~CustomVarsColumn();
-    virtual bool contains(void *row, const std::string &value) = 0;
-    std::string getVariable(void *row, const std::string &varname);
+    virtual bool contains(Row row, const std::string &value) = 0;
+    std::string getVariable(Row row, const std::string &varname);
 
 protected:
     const int _offset;  // within data structure (differs from host/service)
 
-    std::unordered_map<std::string, std::string> getCVM(void *row) const;
+    std::unordered_map<std::string, std::string> getCVM(Row row) const;
 };
 
 #endif  // CustomVarsColumn_h

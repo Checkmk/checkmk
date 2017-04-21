@@ -26,20 +26,21 @@
 #include "Filter.h"
 #include "HostListFilter.h"
 #include "Renderer.h"
+#include "Row.h"
 #include "auth.h"
 
 using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-hostsmember *HostListColumn::getMembers(void *data) {
-    if (auto p = rowData<void>(data)) {
+hostsmember *HostListColumn::getMembers(Row row) {
+    if (auto p = columnData<void>(row)) {
         return *offset_cast<hostsmember *>(p, _offset);
     }
     return nullptr;
 }
 
-void HostListColumn::output(void *row, RowRenderer &r, contact *auth_user) {
+void HostListColumn::output(Row row, RowRenderer &r, contact *auth_user) {
     ListRenderer l(r);
     for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;

@@ -25,13 +25,14 @@
 #include "ContactsColumn.h"
 #include <algorithm>
 #include "Renderer.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::move;
 using std::string;
 using std::unique_ptr;
 
-void ContactsColumn::output(void *row, RowRenderer &r,
+void ContactsColumn::output(Row row, RowRenderer &r,
                             contact * /* auth_user */) {
     ListRenderer l(r);
     for (const auto &name : contactNames(row)) {
@@ -46,7 +47,7 @@ unique_ptr<ListColumn::Contains> ContactsColumn::makeContains(
         ContainsContact(string name, ContactsColumn *column)
             : _name(move(name)), _column(column) {}
 
-        bool operator()(void *row) override {
+        bool operator()(Row row) override {
             const auto &names = _column->contactNames(row);
             return names.find(_name) != names.end();
         }
@@ -59,4 +60,4 @@ unique_ptr<ListColumn::Contains> ContactsColumn::makeContains(
     return make_unique<ContainsContact>(name, this);
 }
 
-bool ContactsColumn::isEmpty(void *row) { return contactNames(row).empty(); }
+bool ContactsColumn::isEmpty(Row row) { return contactNames(row).empty(); }

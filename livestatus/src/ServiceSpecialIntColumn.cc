@@ -23,12 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ServiceSpecialIntColumn.h"
+#include "Row.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
 
-int32_t ServiceSpecialIntColumn::getValue(void *row,
-                                          contact * /* auth_user */) {
-    if (auto svc = rowData<service>(row)) {
+int32_t ServiceSpecialIntColumn::getValue(Row row, contact* /* auth_user */) {
+    if (auto svc = columnData<service>(row)) {
         switch (_type) {
             case Type::pnp_graph_present:
                 return pnpgraph_present(_mc, svc->host_ptr->name,

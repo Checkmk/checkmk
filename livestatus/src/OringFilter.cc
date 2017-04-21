@@ -25,10 +25,11 @@
 #include "OringFilter.h"
 #include <memory>
 #include "Filter.h"
+#include "Row.h"
 
 using std::string;
 
-bool OringFilter::accepts(void *row, contact *auth_user, int timezone_offset) {
+bool OringFilter::accepts(Row row, contact *auth_user, int timezone_offset) {
     for (const auto &filter : _subfilters) {
         if (filter->accepts(row, auth_user, timezone_offset)) {
             return true;

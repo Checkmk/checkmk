@@ -28,6 +28,7 @@
 #include "Column.h"
 #include "Filter.h"
 #include "IntFilter.h"
+#include "Row.h"
 
 using std::make_unique;
 using std::string;
@@ -39,8 +40,8 @@ unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
         this, relOp, AttributeListColumn::refValueFor(value, logger()));
 }
 
-int32_t AttributeListAsIntColumn::getValue(void *row, contact * /*unused*/) {
-    if (auto p = rowData<void>(row)) {
+int32_t AttributeListAsIntColumn::getValue(Row row, contact * /*unused*/) {
+    if (auto p = columnData<void>(row)) {
         return static_cast<int32_t>(*offset_cast<unsigned long>(p, _offset));
     }
     return 0;

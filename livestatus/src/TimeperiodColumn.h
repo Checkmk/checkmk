@@ -30,13 +30,14 @@
 #include <string>
 #include "IntColumn.h"
 #include "contact_fwd.h"
+class Row;
 
 class TimeperiodColumn : public IntColumn {
 public:
     TimeperiodColumn(std::string name, std::string description,
                      int indirect_offset, int extra_offset,
                      int extra_extra_offset);
-    int32_t getValue(void *row, contact *auth_user) override;
+    int32_t getValue(Row row, contact *auth_user) override;
 };
 
 #endif  // TimeperiodColumn_h

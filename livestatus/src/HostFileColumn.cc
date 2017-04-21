@@ -31,6 +31,7 @@
 #include <ostream>
 #include <utility>
 #include "Logger.h"
+#include "Row.h"
 
 #ifdef CMC
 #include "Host.h"
@@ -52,19 +53,19 @@ HostFileColumn::HostFileColumn(string name, string description,
     , _base_dir(move(base_dir))
     , _suffix(move(suffix)) {}
 
-unique_ptr<vector<char>> HostFileColumn::getBlob(void *data) {
+unique_ptr<vector<char>> HostFileColumn::getBlob(Row row) {
     if (_base_dir.empty()) {
         return nullptr;  // Path is not configured
     }
 
 #ifdef CMC
-    auto hst = rowData<Host>(data);
+    auto hst = columnData<Host>(row);
     if (hst == nullptr) {
         return nullptr;
     }
     string host_name = hst->name();
 #else
-    auto hst = rowData<host>(data);
+    auto hst = columnData<host>(row);
     if (hst == nullptr) {
         return nullptr;
     }

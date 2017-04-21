@@ -75,7 +75,7 @@ private:
                 headers = std::move(columns);
                 is_header = false;
             } else {
-                TableEventConsole::Row row;
+                TableEventConsole::ECRow row;
                 int i = 0;
                 columns.resize(headers.size());  // just to be sure...
                 for (const auto &field : columns) {
@@ -86,7 +86,7 @@ private:
                 row._host = it == row._map.end()
                                 ? nullptr
                                 : _mc->getHostByDesignation(it->second);
-                _query->processDataset(&row);
+                _query->processDataset(Row(&row));
             }
         } while (true);
         return true;
@@ -111,15 +111,15 @@ void TableEventConsole::answerQuery(Query *query) {
     }
 }
 
-bool TableEventConsole::isAuthorizedForEvent(contact *ctc, void *data) {
+bool TableEventConsole::isAuthorizedForEvent(Row row, contact *ctc) {
     // TODO(sp) Remove evil casts below.
     auto c = reinterpret_cast<MonitoringCore::Contact *>(ctc);
-    auto r = static_cast<Row *>(data);
+    auto r = rowData<ECRow>(row);
     // NOTE: Further filtering in the GUI for mkeventd.seeunrelated permission
     bool result = true;
     auto precedence = static_pointer_cast<StringEventConsoleColumn>(
                           column("event_contact_groups_precedence"))
-                          ->getValue(data);
+                          ->getValue(row);
     if (precedence == "rule") {
         isAuthorizedForEventViaContactGroups(c, r, result) ||
             isAuthorizedForEventViaHost(c, r, result);
@@ -135,13 +135,13 @@ bool TableEventConsole::isAuthorizedForEvent(contact *ctc, void *data) {
 }
 
 bool TableEventConsole::isAuthorizedForEventViaContactGroups(
-    MonitoringCore::Contact *ctc, Row *row, bool &result) {
+    MonitoringCore::Contact *ctc, ECRow *row, bool &result) {
     auto col = static_pointer_cast<ListEventConsoleColumn>(
         column("event_contact_groups"));
     if (col->isNone(row)) {
         return false;
     }
-    for (const auto &name : col->getValue(row)) {
+    for (const auto &name : col->getValue(Row(row))) {
         if (core()->is_contact_member_of_contactgroup(
                 core()->find_contactgroup(name), ctc)) {
             return (result = true, true);
@@ -151,7 +151,7 @@ bool TableEventConsole::isAuthorizedForEventViaContactGroups(
 }
 
 bool TableEventConsole::isAuthorizedForEventViaHost(
-    MonitoringCore::Contact *ctc, Row *row, bool &result) {
+    MonitoringCore::Contact *ctc, ECRow *row, bool &result) {
     if (MonitoringCore::Host *hst = row->_host) {
         return (result = core()->host_has_contact(hst, ctc), true);
     }

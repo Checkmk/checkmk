@@ -28,6 +28,7 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "DoubleColumn.h"
+class Row;
 
 class HostSpecialDoubleColumn : public DoubleColumn {
 public:
@@ -40,7 +41,7 @@ public:
         : DoubleColumn(name, description, indirect, extra_offset,
                        extra_extra_offset)
         , _type(hsdc_type) {}
-    double getValue(void* data);
+    double getValue(Row row);
 
 private:
     Type _type;

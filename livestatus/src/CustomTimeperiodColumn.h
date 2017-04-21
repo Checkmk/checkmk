@@ -31,6 +31,7 @@
 #include "IntColumn.h"
 #include "contact_fwd.h"
 #include "nagios.h"
+class Row;
 
 class CustomTimeperiodColumn : public IntColumn {
     int _offset;  // within data structure (differs from host/service)
@@ -45,10 +46,10 @@ public:
                     extra_extra_offset)
         , _offset(offset)
         , _varname(varname) {}
-    int32_t getValue(void *row, contact *auth_user) override;
+    int32_t getValue(Row row, contact *auth_user) override;
 
 private:
-    customvariablesmember *getCVM(void *data);
+    customvariablesmember *getCVM(Row row);
 };
 
 #endif  // CustomTimeperiodColumn_h

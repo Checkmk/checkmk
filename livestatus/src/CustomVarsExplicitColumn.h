@@ -29,6 +29,7 @@
 #include <string>
 #include "StringColumn.h"
 #include "nagios.h"
+class Row;
 
 class CustomVarsExplicitColumn : public StringColumn {
     int _offset;  // within data structure (differs from host/service)
@@ -43,10 +44,10 @@ public:
                        extra_extra_offset)
         , _offset(offset)
         , _varname(varname) {}
-    std::string getValue(void *data) const override;
+    std::string getValue(Row row) const override;
 
 private:
-    customvariablesmember *getCVM(void *data) const;
+    customvariablesmember *getCVM(Row row) const;
 };
 
 #endif  // CustomVarsExplicitColumn_h

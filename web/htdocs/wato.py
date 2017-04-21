@@ -17000,7 +17000,11 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 tdclass, content = attr.paint(value, "")
                 if not content:
                     content = _("empty")
-                html.b(_u(content))
+
+                if isinstance(attr, ValueSpecAttribute):
+                    html.write(content)
+                else:
+                    html.b(_u(content))
 
             html.write_text(explanation)
             html.close_div()

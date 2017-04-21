@@ -723,7 +723,7 @@ def show_hosts(folder):
             is_context_button=False)
 
         if withsearch:
-            html.text_input(top and "search" or "search")
+            html.text_input("search")
             html.button("_search", _("Search"))
             html.set_focus("search")
         table.cell(css="bulkactions", colspan=colspan-3)

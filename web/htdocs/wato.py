@@ -17172,6 +17172,8 @@ modes = {
    "read_only"          : (["set_read_only"], ModeManageReadOnly),
 }
 
+extra_buttons = []
+modules = []
 builtin_host_attribute_names = []
 
 loaded_with_language = False
@@ -17188,9 +17190,8 @@ def load_plugins(force):
         return
 
     # Reset global vars
-    global extra_buttons, modules
-    extra_buttons = []
-    modules = []
+    del extra_buttons[:]
+    del modules[:]
 
     initialize_host_attribute_structures()
     undeclare_all_host_attributes()

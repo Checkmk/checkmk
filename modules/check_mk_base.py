@@ -55,6 +55,7 @@ import subprocess
 
 from cmk.exceptions import MKGeneralException, MKTerminate
 from cmk.regex import regex
+import cmk.store as store
 import cmk.tty as tty
 import cmk.render as render
 import cmk.crash_reporting as crash_reporting
@@ -483,8 +484,7 @@ def store_persisted_info(hostname, persisted):
             os.makedirs(dirname)
 
         file_path = "%s/%s" % (dirname, hostname)
-        file("%s.#new" % file_path, "w").write("%r\n" % persisted)
-        os.rename("%s.#new" % file_path, file_path)
+        store.save_data_to_file(file_path, persisted, pretty=False)
 
         console.verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
 

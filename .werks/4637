@@ -1,0 +1,11 @@
+Title: blade_blades: Fixed buggy state validation
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p3
+Date: 1493044917
+
+

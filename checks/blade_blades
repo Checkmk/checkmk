@@ -97,10 +97,10 @@ def check_blade_blades(item, _no_params, info):
             state, state_readable = map_exists[line[1]]
             yield state, "Exists: %s" % state_readable
             # power_state
-            state, state_readable = map_exists[line[2]]
+            state, state_readable = map_power[line[2]]
             yield state, "Power: %s" % state_readable
             # health_state
-            state, state_readable = map_exists[line[3]]
+            state, state_readable = map_health[line[3]]
             yield state, "Health: %s" % state_readable
 
 

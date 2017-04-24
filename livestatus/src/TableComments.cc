@@ -103,6 +103,6 @@ void TableComments::answerQuery(Query *query) {
 }
 
 bool TableComments::isAuthorized(Row row, contact *ctc) {
-    DowntimeOrComment *dtc = rowData<DowntimeOrComment>(row);
+    auto dtc = rowData<DowntimeOrComment>(row);
     return is_authorized_for(ctc, dtc->_host, dtc->_service);
 }

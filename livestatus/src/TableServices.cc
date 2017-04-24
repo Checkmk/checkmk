@@ -524,7 +524,7 @@ void TableServices::answerQuery(Query *query) {
 }
 
 bool TableServices::isAuthorized(Row row, contact *ctc) {
-    service *svc = rowData<service>(row);
+    auto svc = rowData<service>(row);
     return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 

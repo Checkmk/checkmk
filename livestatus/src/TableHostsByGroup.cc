@@ -81,7 +81,7 @@ void TableHostsByGroup::answerQuery(Query *query) {
 }
 
 bool TableHostsByGroup::isAuthorized(Row row, contact *ctc) {
-    return is_authorized_for(ctc, rowData<host>(row), nullptr);
+    return is_authorized_for(ctc, &rowData<hostbygroup>(row)->_host, nullptr);
 }
 
 Row TableHostsByGroup::findObject(const string &objectspec) {

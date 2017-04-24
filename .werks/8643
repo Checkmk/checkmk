@@ -1,5 +1,5 @@
 Title: Web API: New API for fetching graph data
-Level: 1
+Level: 2
 Edition: cee
 Component: metrics
 Compatible: compat
@@ -12,32 +12,34 @@ action is named <tt>get_graph</tt>.
 
 The request object is structured like this:
 
-C+:
+F+:
 {
     "specification": [..., ...],
     "data_range": {
         "time_range" : [..., ...],
     }
 }
-C-:
+F-:
 
-The specification is using the Check_MK internal graph specification format. The
-first element is the specification type (<tt>template</tt>, <tt>custom</tt> or <tt>explicit</tt>.
-The structure of the second element depends on the type. Please take a look at the
-examples below to get an idea of it.
+The specification is using the Check_MK internal graph specification
+format. The first element is the specification type (<tt>template</tt>,
+<tt>custom</tt> or <tt>explicit</tt>.  The structure of the second element
+depends on the type. Please take a look at the examples below to get an idea
+of it.
 
-The time range is given in two unix timestamps, the start time and the end time.
+The time range is given in two unix timestamps, the start time and the
+end time.
 
-For example this command can be used to fetch the first graph of the Check_MK service of
-the host myhost123:
+For example this command can be used to fetch the first graph of the Check_MK
+service of the host myhost123:
 
 C+:
-# curl "http://mycmkserver/mysite/check_mk/webapi.py?action=get_graph&_username=automation&_secret=af665c15-5728-4541-b5bf-04d1d98deee8" -d 'request={"specification": ["template", {"service_description": "Check_MK", "site": "mysite", "graph_index": 0, "host_name": "myhost123" }], "data_range": {"time_range": [1480653120, 1480667520]}}'
+UP:curl "http://mycmkserver/mysite/check_mk/webapi.py?action=get_graph&_username=automation&_secret=af665c15-5728-4541-b5bf-04d1d98deee8" -d 'request={"specification": ["template", {"service_description": "Check_MK", "site": "mysite", "graph_index": 0, "host_name": "myhost123" }], "data_range": {"time_range": [1480653120, 1480667520]}}'
 C-:
 
 The answer may look like this:
 
-C+:
+F+:
 {
     "result": {
         "step": 60,
@@ -54,10 +56,10 @@ C+:
     },
     "result_code": 0
 }
-C-:
+F-:
 
 This command is used to fetch the data of a custom graph named <tt>custom_graph_1</tt>:
 
 C+:
-# curl "http://mycmkserver/mysite/check_mk/webapi.py?action=get_graph&_username=automation&_secret=af665c15-5728-4541-b5bf-04d1d98deee8" -d 'request={"specification": ["custom", "custom_graph_1"], "data_range": {"time_range": [1480653120, 1480667520]}}'
+UP:curl "http://mycmkserver/mysite/check_mk/webapi.py?action=get_graph&_username=automation&_secret=af665c15-5728-4541-b5bf-04d1d98deee8" -d 'request={"specification": ["custom", "custom_graph_1"], "data_range": {"time_range": [1480653120, 1480667520]}}'
 C-:

@@ -9681,8 +9681,14 @@ class ModeEditSite(ModeSites):
                 self._new_site["socket"] = "tcp:%s:%d" % method[1]
         elif method:
             self._new_site["socket"] = method
+
         elif "socket" in self._new_site:
             del self._new_site["socket"]
+
+        if method == None and self._site_id != config.omd_site():
+            raise MKUserError("method_sel", _("You can only configure a local site connection for "
+                                              "the local site. The site IDs ('%s' and '%s') are "
+                                              "not equal.") % (self._site_id, config.omd_site()))
 
         # Timeout
         if self._timeout != "":

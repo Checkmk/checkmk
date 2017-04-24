@@ -122,6 +122,8 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
         ("message",   text.encode("utf-8")),
         ("timestamp", int(context["MICROTIME"])/1000000),
         ("priority",  context.get("PARAMETER_PRIORITY", 0)),
+        ("expire",    context.get("PARAMETER_PRIORITY_EXPIRE", 0)),
+        ("retry",     context.get("PARAMETER_PRIORITY_RETRY", 0)),
         ("html",      1),
     ])
 

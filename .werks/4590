@@ -1,0 +1,10 @@
+Title: Now retry and expire time can be configured in pushover notification below 'emergency' priority
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1493018255
+Class: feature
+
+

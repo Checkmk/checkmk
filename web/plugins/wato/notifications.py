@@ -284,6 +284,18 @@ register_notification_parameters(
     )
 )
 
+# We have to transform because 'add_to_event_context'
+# in modules/events.py can't handle complex data structures
+def transform_back_pushover_priority(params):
+    if type(params) == tuple:
+        return {"retry" : params[1][0], "expire" : params[1][1]}
+    return params
+
+def transform_forth_pushover_priority(params):
+    if type(params) == dict:
+        return ("2", (params["retry"], params["expire"]))
+    return params
+
 register_notification_parameters("pushover", Dictionary(
     optional_keys = ["url_prefix", "priority"],
     elements = [
@@ -320,15 +332,25 @@ register_notification_parameters("pushover", Dictionary(
               default_value = "http://" + socket.gethostname() + "/" + (
                       config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
         )),
-        ("priority", DropdownChoice(
-            title = _("Priority"),
-            choices = [
-                ("1",  _("High: Push notification alerts bypass quiet hours")),
-                ("0",  _("Normal: Regular push notification (default)")),
-                ("-1", _("Low: No sound/vibration but show popup")),
-                ("-2", _("Lowest: No notification, update badge number")),
-            ],
-            default_value = "0",
+        ("priority", Transform(
+            CascadingDropdown(
+                title = _("Priority"),
+                choices = [
+                    ("2",  _("Emergency: Repeat push notification in intervalls till expire time."),
+                        Tuple(elements = [
+                            Age(title = _("Retry time")),
+                            Age(title = _("Expire time")),
+                        ]),
+                    ),
+                    ("1",  _("High: Push notification alerts bypass quiet hours")),
+                    ("0",  _("Normal: Regular push notification (default)")),
+                    ("-1", _("Low: No sound/vibration but show popup")),
+                    ("-2", _("Lowest: No notification, update badge number")),
+                ],
+                default_value = "0",
+            ),
+            forth = transform_forth_pushover_priority,
+            back  = transform_back_pushover_priority,
         )),
     ]
 ))

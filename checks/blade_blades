@@ -115,6 +115,6 @@ check_info["blade_blades"] = {
                                                 5, # bladeHealthState
                                                 6, # bladeName
                               ]),
-    'snmp_scan_function'    : lambda oid: re.match('(BladeCenter|BladeCenter Advanced|IBM Flex Chassis) Management Module', \
+    'snmp_scan_function'    : lambda oid: re.match('(BladeCenter|BladeCenter Advanced|IBM Flex Chassis|Lenovo Flex Chassis) Management Module', \
                                 oid(".1.3.6.1.2.1.1.1.0")) != None,
 }

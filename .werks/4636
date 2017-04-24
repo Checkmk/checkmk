@@ -1,0 +1,11 @@
+Title: Added compatibility for Lenovo blades
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p3
+Date: 1493044817
+
+Devices are identical to old IBM Blades but with different identifier.

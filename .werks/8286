@@ -1,0 +1,11 @@
+Title: brocade_mlx_power: Added new standard OID for snChasPwrSupply2Table to receive all power supplies in stacked devices
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b6
+Date: 1493035394
+
+

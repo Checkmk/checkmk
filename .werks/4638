@@ -1,0 +1,11 @@
+Title: esx_vsphere_hostsystem.multipath: Fixed compatibility to older versions
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1493046828
+Class: fix
+
+Some older versions of vsphere could have some unusual multipath syntax in
+output which lead into a crash. This is now fixed.

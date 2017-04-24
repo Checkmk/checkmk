@@ -3,6 +3,7 @@
     * 4616 FIX: mk_postgres/mk_db2.linux: Fixed quotes which lead into wrong interpretation...
     * 4471 FIX: Windows Agent Process Monitoring: ps section is no longer completely suppressed when only parts of the data is missing...
     * 4622 FIX: emc_isilon_diskstatus: Now treats L3 caching devices as OK
+    * 8286 FIX: brocade_mlx_power: Added new standard OID for snChasPwrSupply2Table to receive all power supplies in stacked devices
 
     WATO:
     * 4558 FIX: Set correct file permissions for WATO snapshots

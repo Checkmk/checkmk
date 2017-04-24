@@ -398,7 +398,7 @@ def esx_vsphere_multipath_convert(info):
     data = zip(data[::2], data[1::2])
     for path, state in data:
         # vSphere6 uses a different format, e.g "vmhba32:C0:T0:L0 active"
-        if len(path.split(":")) == 4:
+        if len(path.split(":")) == 4 and path.startswith("vmhba"):
             hba_num = int(path.split(":")[0].replace("vmhba", ""))
             lun_id = path.split(":")[-1]
 

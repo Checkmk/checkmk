@@ -24,40 +24,64 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def brocade_mlx_power_combine_item(id, descr):
-    if descr == "" or "AC " in descr:
-        return id
-    else:
-        return "%s %s" % (id, descr)
+def parse_brocade_mlx_power(info):
+    parsed = {}
 
-def inventory_brocade_mlx_power(info):
+    if len(info[1]) > 0:
+    # .1.3.6.1.4.1.1991.1.1.1.2.2.1
+        for power_unit, power_id, power_desc, power_state in info[1]:
+            if power_state != "1":
+                parsed[power_unit] = { 'desc'  : power_desc,
+                                       'state' : power_state }
+    else:
+    # .1.3.6.1.4.1.1991.1.1.1.2.1.1
+        for power_id, power_desc, power_state in info[0]:
+            if power_state != "1":
+                parsed[power_id] = { 'desc'  : power_desc,
+                                     'state' : power_state }
+    return parsed
+
+
+def inventory_brocade_mlx_power(parsed):
     inventory = []
-    for power_id, power_descr, power_state in info:
-        if power_state != "1":
-            inventory.append( (brocade_mlx_power_combine_item(power_id, power_descr), None) )
+
+    for powersupply_id in parsed.keys():
+        inventory.append((powersupply_id, None))
     return inventory
 
-def check_brocade_mlx_power(item, _no_params, info):
-    for power_id, power_descr, power_state in info:
-        if brocade_mlx_power_combine_item(power_id, power_descr) == item:
-            if power_state == "2":
-                return 0, "Power supply reports state: normal"
-            elif power_state == "3":
-                return 2, "Power supply reports state: failure"
-            elif power_state == "1":
-                return 3, "Power supply reports state: other"
+
+def check_brocade_mlx_power(item, _no_params, parsed):
+    if item not in parsed.keys():
+        yield 3, "Power supply not found"
+
+    for powersupply_id in parsed.keys():
+        if powersupply_id == item:
+            if parsed[powersupply_id]['state'] == "2":
+                yield 0, "Power supply reports state: normal"
+            elif parsed[powersupply_id]['state'] == "3":
+                yield 2, "Power supply reports state: failure"
+            elif parsed[powersupply_id]['state'] == "1":
+                yield 3, "Power supply reports state: other"
             else:
-                return 3, "Power supply reports an unhandled state (%s)" % power_state
-    return 3, "Power supply not found"
+                yield 3, "Power supply reports an unhandled state (%s)" % parsed[powersupply_id]['state']
+
 
 check_info["brocade_mlx_power"] = {
+    "parse_function"        : parse_brocade_mlx_power,
     "check_function"        : check_brocade_mlx_power,
     "inventory_function"    : inventory_brocade_mlx_power,
     "service_description"   : "Power supply %s",
-    "snmp_info"             : ('.1.3.6.1.4.1.1991.1.1.1.2.1.1', [
-                                1, # FOUNDRY-SN-AGENT-MIB::snChasPwrSupplyIndex
-                                2, # FOUNDRY-SN-AGENT-MIB::snChasPwrSupplyDescription
-                                3, # FOUNDRY-SN-AGENT-MIB::snChasPwrSupplyOperStatus
-                            ]),
+    "snmp_info"             : [ ('.1.3.6.1.4.1.1991.1.1.1.2.1.1', [
+                                  1, # FOUNDRY-SN-AGENT-MIB::snChasPwrSupplyIndex
+                                  2, # FOUNDRY-SN-AGENT-MIB::snChasPwrSupplyDescription
+                                  3, # FOUNDRY-SN-AGENT-MIB::snChasPwrSupplyOperStatus
+                                ]),
+                                ('.1.3.6.1.4.1.1991.1.1.1.2.2.1', [
+                                  1, # FOUNDRY-SN-AGENT-MIB::snChasPwrSupply2Unit
+                                  2, # FOUNDRY-SN-AGENT-MIB::snChasPwrSupply2Index
+                                  3, # FOUNDRY-SN-AGENT-MIB::snChasPwrSupply2Description
+                                  4, # FOUNDRY-SN-AGENT-MIB::snChasPwrSupply2OperStatus
+                                ])
+                              ],
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
 }

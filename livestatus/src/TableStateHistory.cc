@@ -958,7 +958,7 @@ void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
 }
 
 bool TableStateHistory::isAuthorized(Row row, contact *ctc) {
-    HostServiceState *entry = rowData<HostServiceState>(row);
+    auto entry = rowData<HostServiceState>(row);
     service *svc = entry->_service;
     host *hst = entry->_host;
     return (hst != nullptr || svc != nullptr) &&

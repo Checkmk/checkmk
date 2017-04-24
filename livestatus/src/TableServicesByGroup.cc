@@ -83,7 +83,7 @@ void TableServicesByGroup::answerQuery(Query *query) {
 }
 
 bool TableServicesByGroup::isAuthorized(Row row, contact *ctc) {
-    service *svc = rowData<service>(row);
+    auto svc = &rowData<servicebygroup>(row)->_service;
     return is_authorized_for(ctc, svc->host_ptr, svc);
 }
 

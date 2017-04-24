@@ -183,7 +183,7 @@ void TableLog::answerQuery(Query *query) {
 }
 
 bool TableLog::isAuthorized(Row row, contact *ctc) {
-    LogEntry *entry = rowData<LogEntry>(row);
+    auto entry = rowData<LogEntry>(row);
     service *svc = entry->_service;
     host *hst = entry->_host;
 

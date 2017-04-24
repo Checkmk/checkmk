@@ -1,0 +1,17 @@
+Title: brocade_mlx_power: Added new standard OID for snChasPwrSupply2Table to receive all power supplies in stacked devices
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cee
+Version: 1.5.0i1
+Date: 1493037069
+Class: feature
+
+Added new OID for snChasPwrSupply2Table to receive the information about all available power supplies
+and fixed the item name for all power supplies. Now we take only the index as item name. This makes
+rule creation equal to all temperature checks.
+
+To get all power supplies automatically detected and renamed, you have to make a new service discovery.
+With this servicce discovery it can happen that power supplies will be renamed. Now historic data and
+rules exists for this check. So nothing special have to be done.
+

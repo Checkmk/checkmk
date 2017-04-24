@@ -96,7 +96,7 @@ check_info["blade_bays"] = {
                                     "3", # powerDomain2
                               ], [ OID_END, "1.1.5", "1.1.6", "1.1.2", "1.1.1", "1.1.7", "1.1.8" ] ), # BLADE-MIB
     'snmp_scan_function'    : lambda oid: \
-        re.match('(BladeCenter|BladeCenter Advanced|IBM Flex Chassis) Management Module', oid(".1.3.6.1.2.1.1.1.0")) != None,
+        re.match('(BladeCenter|BladeCenter Advanced|IBM Flex Chassis|Lenovo Flex Chassis) Management Module', oid(".1.3.6.1.2.1.1.1.0")) != None,
     'includes'              : [ 'elphase.include' ],
     'group'                 : 'el_inphase',
 }

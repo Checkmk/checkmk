@@ -1107,24 +1107,67 @@ class ModeBIRules(ModeBI):
 
     def action(self):
         self.must_be_contact_for_pack()
+
         if html.var("_del_rule"):
-            ruleid = html.var("_del_rule")
-            aggr_refs, rule_refs, level = self.count_rule_references(ruleid)
-            if aggr_refs:
-                raise MKUserError(None, _("You cannot delete this rule: it is still used by aggregations."))
-            if rule_refs:
-                raise MKUserError(None, _("You cannot delete this rule: it is still used by other rules."))
-            c = wato_confirm(_("Confirm rule deletion"),
-                _("Do you really want to delete the rule with "
-                  "the id <b>%s</b>?") % ruleid)
+            return self._delete_rule_after_confirm()
+
+        elif html.var("_bulk_delete_bi_rules"):
+            return self._bulk_delete_rules_after_confirm()
+
+
+    def _delete_rule_after_confirm(self):
+        ruleid = html.var("_del_rule")
+
+        self._check_delete_ruleid_permission(ruleid)
+
+        c = wato_confirm(_("Confirm rule deletion"),
+                         _("Do you really want to delete the rule with "
+                           "the id <b>%s</b>?") % ruleid)
+        if c:
+            del self._pack["rules"][ruleid]
+            self._add_change("bi-delete-rule",
+                           _("Deleted BI rule with id %s") % ruleid)
+            self.save_config()
+
+        elif c == False: # not yet confirmed
+            return ""
+
+
+    def _bulk_delete_rules_after_confirm(self):
+        selected_rules = self._get_selected_rules()
+        for ruleid in selected_rules:
+            self._check_delete_ruleid_permission(ruleid)
+
+        if selected_rules:
+            c = wato_confirm(_("Confirm deletion of %d rules") % \
+                               len(selected_rules),
+                             _("Do you really want to delete %d rules?") % \
+                               len(selected_rules))
             if c:
-                del self._pack["rules"][ruleid]
-                self._add_change("bi-delete-rule", _("Deleted BI rule with id %s") % ruleid)
+                for ruleid in selected_rules:
+                    del self._pack["rules"][ruleid]
+                    self._add_change("bi-delete-rule",
+                                   _("Deleted BI rule with id %s") % ruleid)
                 self.save_config()
-            elif c == False: # not yet confirmed
+
+            elif c == False:
                 return ""
-            else:
-                return None # browser reload
+
+
+    def _check_delete_ruleid_permission(self, ruleid):
+        aggr_refs, rule_refs, level = self.count_rule_references(ruleid)
+        if aggr_refs:
+            raise MKUserError(None, _("You cannot delete this rule: it is still used by aggregations."))
+        if rule_refs:
+            raise MKUserError(None, _("You cannot delete this rule: it is still used by other rules."))
+
+
+    def _get_selected_rules(self):
+        selected_rules = []
+        for varname in html.all_varnames_with_prefix("_c_rule_"):
+            if html.get_checkbox(varname):
+                selected_rules.append(varname.split("_c_rule_")[-1])
+        return selected_rules
 
 
     def page(self):
@@ -1138,10 +1181,19 @@ class ModeBIRules(ModeBI):
             render_main_menu(menu_items)
             return
 
+        html.begin_form("bulk_delete_form", method = "POST")
+
         if self._view_type == "list":
             self.render_rules(_("Rules"), only_unused = False)
         else:
             self.render_rules(_("Unused BI Rules"), only_unused = True)
+
+        html.hidden_fields()
+        fieldstyle = "margin-top:10px"
+
+        html.button("_bulk_delete_bi_rules", _("Bulk Delete"), "submit", style=fieldstyle)
+
+        html.end_form()
 
 
     def render_rules(self, title, only_unused):
@@ -1158,6 +1210,14 @@ class ModeBIRules(ModeBI):
             refs = aggr_refs + rule_refs
             if not only_unused or refs == 0:
                 table.row()
+
+                # Checkboxes
+                table.cell(html.render_input("_toggle_group", type_="button",
+                            class_="checkgroup", onclick="toggle_all_rows();",
+                            value='X'), sortable=False, css="checkbox")
+
+                html.checkbox("_c_rule_%s" % ruleid)
+
                 table.cell(_("Actions"), css="buttons")
 
                 edit_url = self.url_to_pack([("mode", "bi_edit_rule"), ("id", ruleid)])
@@ -1169,6 +1229,7 @@ class ModeBIRules(ModeBI):
                 if rule_refs == 0:
                     tree_url = html.makeuri([("mode", "bi_rule_tree"), ("id", ruleid)])
                     html.icon_button(tree_url, _("This is a top-level rule. Show rule tree"), "bitree")
+
                 if refs == 0:
                     delete_url = html.makeactionuri_contextless([("mode", "bi_rules"), ("_del_rule", ruleid), ("pack", self._pack_id)])
                     html.icon_button(delete_url, _("Delete this rule"), "delete")
@@ -1195,6 +1256,7 @@ class ModeBIRules(ModeBI):
                         html.br()
                         have_this.add(aggr_id)
                 table.cell(_("Comment"), rule.get("comment", ""))
+
         table.end()
 
 

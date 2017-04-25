@@ -1607,13 +1607,39 @@ class CREFolder(BaseFolder):
     #  None:      No network scan is enabled.
     #  timestamp: Next planned run according to config.
     def next_network_scan_at(self):
-        if "network_scan" in self._attributes:
-            interval = self._attributes["network_scan"]["scan_interval"]
-            last_end = self._attributes.get("network_scan_result", {}).get("end", None)
-            if last_end == None:
-                return time.time()
-            else:
-                return last_end + interval
+        if "network_scan" not in self._attributes:
+            return
+
+        interval = self._attributes["network_scan"]["scan_interval"]
+        last_end = self._attributes.get("network_scan_result", {}).get("end", None)
+        if last_end == None:
+            next_time = time.time()
+        else:
+            next_time = last_end + interval
+
+        time_allowed = self._attributes["network_scan"].get("time_allowed")
+        if time_allowed == None:
+            return next_time # No time frame limit
+
+        # First transform the time given by the user to UTC time
+        brokentime = list(time.localtime(next_time))
+        brokentime[3], brokentime[4] = time_allowed[0]
+        start_time = time.mktime(brokentime)
+
+        brokentime[3], brokentime[4] = time_allowed[1]
+        end_time = time.mktime(brokentime)
+
+        # In case the next time is earlier than the allowed time frame at a day set
+        # the time to the time frame start.
+        # In case the next time is in the time frame leave it at it's value.
+        # In case the next time is later then advance one day to the start of the
+        # time frame.
+        if next_time < start_time:
+            next_time = start_time
+        elif next_time > end_time:
+            next_time = start_time + 86400
+
+        return next_time
 
 
     # .-----------------------------------------------------------------------.

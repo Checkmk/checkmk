@@ -12,6 +12,6 @@ and fixed the item name for all power supplies. Now we take only the index as it
 rule creation equal to all temperature checks.
 
 To get all power supplies automatically detected and renamed, you have to make a new service discovery.
-With this servicce discovery it can happen that power supplies will be renamed. Now historic data and
+With this servicce discovery it can happen that power supplies will be renamed. No historic data and
 rules exists for this check. So nothing special have to be done.
 

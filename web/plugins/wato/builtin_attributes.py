@@ -274,6 +274,11 @@ class NetworkScanAttribute(ValueSpecAttribute):
                         default_value = 60*60*24,
                         minvalue = 3600, # 1 hour
                     )),
+                    ("time_allowed", TimeofdayRange(
+                        title = _("Time allowed"),
+                        help = _("Limit the execution of the scan to this time range."),
+                        allow_empty=False,
+                    )),
                     ("max_parallel_pings", Integer(
                         title = _("Parallel pings to send"),
                         help = _("Set the maximum number of concurrent pings sent to target IP "

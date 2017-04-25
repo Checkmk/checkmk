@@ -1,0 +1,11 @@
+Title: Network scan: Can now be configured to be executed only in a given time frame
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1493110366
+Class: feature
+
+Instead of being scheduled over the whole day you can now configure the network scan
+of a folder to be executed in a time frame.

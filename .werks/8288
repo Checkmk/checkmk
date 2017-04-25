@@ -1,0 +1,21 @@
+Title: cmk-update-agent: Fixed curl HTTP error 302 Found during agent registration process
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0b6
+Date: 1493120786
+Class: fix
+
+Werk 8702 improved HTTP error handling with curl during agent registration process. It did not
+take care about all the responses during the registration process. Now only the latest response
+must be successful (HTTP 200). Other responses are login and redirect.
+
+Affected systems have to fulfill two points:
+<ul>
+  <li>Agent version installed is 1.4.0b1 or newer</li>
+  <li>Python requests module is not installed</li>
+</ul>
+
+Workaround to solve this problem is to install Python requests on the system.
+

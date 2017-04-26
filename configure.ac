@@ -52,6 +52,7 @@ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(socket, shutdown)
+AC_SEARCH_LIBS([rrd_xport], [rrd_th rrd], [], [AC_MSG_ERROR([unable to find the rrd_xport function])])
 
 # Checks for header files.
 AC_HEADER_DIRENT

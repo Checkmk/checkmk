@@ -288,16 +288,18 @@ register_notification_parameters(
 # in modules/events.py can't handle complex data structures
 def transform_back_pushover_priority(params):
     if type(params) == tuple:
-        return {"retry" : params[1][0], "expire" : params[1][1]}
+        return {"retry"    : params[1][0],
+                "expire"   : params[1][1],
+                "receipts" : params[1][2]}
     return params
 
 def transform_forth_pushover_priority(params):
     if type(params) == dict:
-        return ("2", (params["retry"], params["expire"]))
+        return ("2", (params["retry"], params["expire"], params["receipts"]))
     return params
 
 register_notification_parameters("pushover", Dictionary(
-    optional_keys = ["url_prefix", "priority"],
+    optional_keys = ["url_prefix", "proxy_url", "priority", "sound"],
     elements = [
         ("api_key", TextAscii(
             title = _("API Key"),
@@ -332,6 +334,12 @@ register_notification_parameters("pushover", Dictionary(
               default_value = "http://" + socket.gethostname() + "/" + (
                       config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
         )),
+        ("proxy_url", TextAscii(
+            title       = _("Proxy-URL"),
+            size        = 64,
+            regex       = "^(http|https)://.*",
+            regex_error = _("The URL must begin with <tt>http</tt> or <tt>https</tt>."),
+        )),
         ("priority", Transform(
             CascadingDropdown(
                 title = _("Priority"),
@@ -340,6 +348,14 @@ register_notification_parameters("pushover", Dictionary(
                         Tuple(elements = [
                             Age(title = _("Retry time")),
                             Age(title = _("Expire time")),
+                            TextAscii(
+                                title = _("Receipt"),
+                                help  = _("The receipt can be used to periodically poll receipts API to get "
+                                          "the status of the notification. "
+                                          "See <a href=\"https://pushover.net/api#receipt\" target=\"_blank\">"
+                                          "Pushover receipts and callbacks</a> for more information."),
+                                size  = 40,
+                                regex = "[a-zA-Z0-9]{0,30}"),
                         ]),
                     ),
                     ("1",  _("High: Push notification alerts bypass quiet hours")),
@@ -351,6 +367,36 @@ register_notification_parameters("pushover", Dictionary(
             ),
             forth = transform_forth_pushover_priority,
             back  = transform_back_pushover_priority,
+        )),
+        ("sound", DropdownChoice(
+            title   = _("Select sound"),
+            help    = _("See <a href=\"https://pushover.net/api#sounds\" target=\"_blank\">"
+                        "Pushover sounds</a> for more information and trying out available sounds."),
+            choices = [
+                ("none",         _("None (silent)")),
+                ("alien",        _("Alien Alarm (long)")),
+                ("bike",         _("Bike")),
+                ("bugle",        _("Bugle")),
+                ("cashregister", _("Cash Register")),
+                ("classical",    _("Classical")),
+                ("climb",        _("Climb (long)")),
+                ("cosmic",       _("Cosmic")),
+                ("echo",         _("Pushover Echo (long)")),
+                ("falling",      _("Falling")),
+                ("gamelan",      _("Gamelan")),
+                ("incoming",     _("Incoming")),
+                ("intermission", _("Intermission")),
+                ("magic",        _("Magic")),
+                ("mechanical",   _("Mechanical")),
+                ("persistent",   _("Persistent (long)")),
+                ("pianobar",     _("Piano Bar")),
+                ("pushover",     _("Pushover")),
+                ("siren",        _("Siren")),
+                ("spacealarm",   _("Space Alarm")),
+                ("tugboat",      _("Tug Boat")),
+                ("updown",       _("Up Down (long)")),
+            ],
+            default_value = "none"
         )),
     ]
 ))

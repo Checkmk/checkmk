@@ -25,7 +25,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import urllib2, urllib, json, os, re, sys
+import requests, json, os, re, sys
 
 api_url = "https://api.pushover.net/1/messages.json"
 
@@ -115,33 +115,45 @@ def substitute_context(template, context):
 
 
 def send_push_notification(api_key, recipient_key, subject, text, context):
-    post_data = urllib.urlencode([
+    params = [
         ("token",     api_key),
         ("user",      recipient_key),
         ("title",     subject.encode("utf-8")),
         ("message",   text.encode("utf-8")),
         ("timestamp", int(context["MICROTIME"])/1000000),
-        ("priority",  context.get("PARAMETER_PRIORITY", 0)),
-        ("expire",    context.get("PARAMETER_PRIORITY_EXPIRE", 0)),
-        ("retry",     context.get("PARAMETER_PRIORITY_RETRY", 0)),
         ("html",      1),
-    ])
+    ]
 
-    result = urllib2.urlopen(api_url, post_data)
+    if context.get("PARAMETER_PRIORITY", 0):
+        params += [
+            ("priority", context["PARAMETER_PRIORITY"]),
+            ("expire",   context.get("PARAMETER_PRIORITY_EXPIRE", 0)),
+            ("retry",    context.get("PARAMETER_PRIORITY_RETRY", 0)),
+        ]
 
-    # FIXME: add error handling
-    response_txt = result.read()
-    response = json.loads(response_txt)
+    if context.get("PARAMETER_PRIORITY_RECEIPTS"):
+        params.append( ("receipts", context["PARAMETER_PRIORITY_RECEIPTS"]) )
 
-    if response["status"] == 1:
+    if context.get("PARAMETER_SOUND", "none") != "none":
+        params.append( ("sound", context["PARAMETER_SOUND"]) )
+
+    s = requests.Session()
+    if context.get("PARAMETER_PROXY_URL"):
+        if context["PARAMETER_PROXY_URL"].startswith('https'):
+            protocol = 'https'
+        else:
+            protocol = 'http'
+        r = s.get(api_url, params=dict(params), proxies={protocol : context["PARAMETER_PROXY_URL"]})
+
+    else:
+        r = s.get(api_url, params=dict(params))
+
+    r_status = r.status_code
+    if r_status == '200':
         return True
     else:
-        sys.stdout.write("Failed to send notification. Response: %s\n" % response)
+        sys.stdout.write("Failed to send notification. Status: %s, Response: %s\n" % (r_status, r.text))
         return False
-    #status_code = result.getcode()
-    #if status_code != 200:
-    #    sys.stdout.write("Status Code: %d\n") % status_code
-    #    sys.stdout.write("Response: %s\n") %  result.read()
 
 
 main()

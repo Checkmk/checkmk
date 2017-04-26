@@ -1,0 +1,11 @@
+Title: windows agent disabled sections: The existing WATO rule was ignored during the agent baking
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0b6
+Date: 1493208191
+
+

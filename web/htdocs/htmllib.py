@@ -759,8 +759,12 @@ class HTMLGenerator(OutputFunnel):
     #
 
 
+    def render_javascript(self, code):
+        return HTML("<script type=\"text/javascript\">\n%s\n</script>\n" % code)
+
+
     def javascript(self, code):
-        self.write_html("<script type=\"text/javascript\">\n%s\n</script>\n" % code)
+        self.write_html(self.render_javascript(code))
 
 
     def javascript_file(self, src):

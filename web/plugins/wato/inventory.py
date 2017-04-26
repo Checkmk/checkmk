@@ -83,8 +83,8 @@ register_rule(group,
         elements = [
             ( "filename",
               TextAscii(
-                  title = _("Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"),
-                  help = _("Please specify the path to the export file. The text <tt>&lt;HOST&gt;</tt> "
+                  title = _("Export file to create, containing <tt><HOST></tt> for the hostname"),
+                  help = _("Please specify the path to the export file. The text <tt><HOST></tt> "
                            "will be replaced with the host name the inventory has been done for. "
                            "If you use a relative path then that will be relative to Check_MK's directory "
                            "for variable data, which is <tt>%s</tt>.") % cmk.paths.var_dir,

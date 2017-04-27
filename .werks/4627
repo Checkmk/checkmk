@@ -1,0 +1,13 @@
+Title: apc_symmetra: Fix bogus 100000000 A battery current  occurring on some devices
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b6
+Date: 1493298932
+
+Some APC Symmetra devices react badly to OIDs being polled out of order, leading to
+a 1000000000 A being displayed in the check that cannot be seen in an SNMP walk.
+The OIDs of this check have been reordered to circumvent this problem.

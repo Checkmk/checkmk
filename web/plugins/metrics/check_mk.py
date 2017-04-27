@@ -375,6 +375,12 @@ metric_info["lifetime_remaining"] = {
     "color" : "#80f000",
 }
 
+metric_info["streams"] = {
+    "title" : _("Streams"),
+    "unit"  : "%",
+    "color" : "35/a",
+}
+
 metric_info["cache_hit_ratio"] = {
     "title" : _("Cache hit ratio"),
     "unit"  : "%",
@@ -5121,6 +5127,12 @@ perfometer_info.append({
 perfometer_info.append({
     "type"      : "linear",
     "segments"  : [ "util1", ],
+    "total"     : 100.0,
+})
+
+perfometer_info.append({
+    "type"      : "linear",
+    "segments"  : [ "user", "system", "streams" ],
     "total"     : 100.0,
 })
 

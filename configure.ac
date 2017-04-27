@@ -52,7 +52,19 @@ m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(socket, shutdown)
-AC_SEARCH_LIBS([rrd_xport], [rrd_th rrd], [], [AC_MSG_ERROR([unable to find the rrd_xport function])])
+
+# The detection of the right RRD library is a bit tricky: We can't simply put
+# -lrrd_th or -lrrd globally into LIBS. The problem is that our SUID programs
+# icmpsender and icmpreceiver would be linked with that option, too, but because
+# of security reasons the dynamic linker will ignore our LD_LIBRARY_PATH => no
+# RRD library found or even the wrong one... :-/
+RRDLIB=
+old_LIBS=$LIBS
+AC_SEARCH_LIBS([rrd_xport], [rrd_th rrd],
+    [test "$ac_cv_search_rrd_xport" = "none required" || RRDLIB="$ac_cv_search_rrd_xport"],
+    [AC_MSG_ERROR([unable to find the rrd_xport function])])
+LIBS=$old_LIBS
+AC_SUBST(RRDLIB)
 
 # Checks for header files.
 AC_HEADER_DIRENT

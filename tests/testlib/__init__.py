@@ -159,6 +159,8 @@ class CMKVersion(object):
         if os.system(cmd) >> 8 != 0:
             raise Exception("Failed to install package: %s" % temp_package_path)
 
+        os.unlink(temp_package_path)
+
         assert self.is_installed()
 
 

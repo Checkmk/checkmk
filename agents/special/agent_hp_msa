@@ -25,7 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 
-import getopt, sys, socket, urllib2, traceback, re, hashlib
+import getopt, sys, socket, traceback, re, hashlib
+
+import requests
+try:
+    from requests.packages.urllib3.exceptions import InsecureRequestWarning
+    requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+except:
+    pass
+
 
 def usage():
     sys.stderr.write("""Check_MK HP MSA Agent
@@ -162,37 +170,31 @@ class HTMLObjectParser(HTMLParser):
 
 parser = HTMLObjectParser()
 
+
+
 try:
+    session = requests.Session()
     # Login
     login_hash = hashlib.md5()
     login_hash.update("%s_%s" % (username, password))
     login_url = "https://%s/v3/api/login/%s" % (host_address, login_hash.hexdigest())
     socket.setdefaulttimeout(opt_timeout)
-    req = urllib2.Request(login_url)
-    handle = urllib2.urlopen(req)
-    contents = handle.read()
+    r = session.get(login_url, verify=False)
 
     # Extract sessionKey
-    session_key = re.match('.*"response">(.*?)<.*', contents).groups()[0]
-
-    headers = {
-        'User-agent': 'Check_MK agent_hp_msa',
-        'sessionKey': session_key,
-    }
+    session_key = re.match('.*"response">(.*?)<.*', r.text).groups()[0]
+    session.headers.update({"sessionKey": session_key,
+                            "User-agent": "Check_MK agent_hp_msa"})
 
     # Query objects
     for element in api_get_objects:
         show_url = "https://%s/v3/api/show/%s" % (host_address, element)
-        req      = urllib2.Request(show_url, None, headers)
-        handle   = urllib2.urlopen(req)
-
-        contents = handle.read()
-        parser.feed(contents)
+        parser.feed(session.get(show_url, verify=False).text)
 
     # Output sections
     for section, lines in sections.items():
         print "<<<hp_msa_%s>>>" % section
-        print "\n".join(lines)
+        print "\n".join(map(lambda x: x.encode("utf-8"), lines))
 
 except Exception, e:
     if opt_debug:
@@ -203,4 +205,5 @@ except Exception, e:
         pprint.pprint(complete_list)
     sys.stderr.write("Connection error: %s" % e)
     sys.exit(1)
+
 

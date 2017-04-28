@@ -88,7 +88,7 @@ def render_json(rows, view, group_cells, cells, num_columns, show_checkboxes, ex
                 if type(content) == unicode:
                     content = content.encode("utf-8")
                 else:
-                    content = str(content)
+                    content = "%s" % content
                 content = html.strip_tags(content.replace("<br>","\n"))
 
             painted_row.append(content)

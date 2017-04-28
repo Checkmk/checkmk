@@ -1,0 +1,12 @@
+Title: agent_hp_msa: HP MSA agent no longer throws ssl validation errors
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b6
+Date: 1493368821
+
+Starting with python 2.7.9, strict ssl certificate checking was introduced.
+This werk simply deactivates this check again.

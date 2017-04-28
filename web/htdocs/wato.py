@@ -11003,32 +11003,29 @@ def mode_edit_user(phase):
     # Contact groups
     forms.header(_("Contact Groups"), isopen=False)
     forms.section()
-    url1 = folder_preserving_link([("mode", "contact_groups")])
-    url2 = folder_preserving_link([("mode", "rulesets"), ("group", "grouping")])
+    groups_page_url  = folder_preserving_link([("mode", "contact_groups")])
+    group_assign_url = folder_preserving_link([("mode", "rulesets"), ("group", "grouping")])
     if len(contact_groups) == 0:
         html.write(_("Please first create some <a href='%s'>contact groups</a>") %
-                url1)
+                groups_page_url)
     else:
-        entries = [ (group['alias'], c) for c, group in contact_groups.items() ]
-        entries.sort()
+        entries = sorted([ (group['alias'], c) for c, group in contact_groups.items() ])
         is_member_of_at_least_one = False
         for alias, gid in entries:
             if not alias:
                 alias = gid
+
             if not is_locked('contactgroups'):
                 html.checkbox("cg_" + gid, gid in user.get("contactgroups", []))
-                url = folder_preserving_link([("mode", "edit_contact_group"), ("edit", gid)])
-                html.a(alias, href=url)
-                html.br()
             else:
                 is_member = gid in user.get("contactgroups", [])
                 if is_member:
                     is_member_of_at_least_one = True
-                    url = folder_preserving_link([("mode", "edit_contact_group"), ("edit", gid)])
-                    html.a(alias, href=url)
-                    html.br()
+                html.hidden_field("cg_" + gid, '1' if is_member else '')
 
-                html.hidden_field("cg_" + gid, is_member and '1' or '')
+            url = folder_preserving_link([("mode", "edit_contact_group"), ("edit", gid)])
+            html.a(alias, href=url)
+            html.br()
 
         if is_locked('contactgroups') and not is_member_of_at_least_one:
             html.i(_('No contact groups assigned.'))
@@ -11038,7 +11035,8 @@ def mode_edit_user(phase):
                 "then first <a href='%s'>do so</a>. Hosts and services can be "
                 "assigned to contact groups using <a href='%s'>rules</a>.<br><br>"
                 "If you do not put the user into any contact group "
-                "then no monitoring contact will be created for the user.") % (url1, url2))
+                "then no monitoring contact will be created for the user.") %
+                                    (groups_page_url, group_assign_url))
 
     forms.header(_("Notifications"), isopen=False)
     if not rulebased_notifications:

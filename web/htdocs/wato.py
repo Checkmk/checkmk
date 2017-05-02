@@ -9261,12 +9261,11 @@ class ModeDistributedMonitoring(ModeSites):
 
         logout_id = html.var("_logout")
         if logout_id:
-            self._action_logout(logout_id)
+            return self._action_logout(logout_id)
 
         login_id = html.var("_login")
         if login_id:
-            self._action_login(login_id)
-            return False
+            return self._action_login(login_id)
 
 
     def _action_delete(self, delete_id):
@@ -9391,6 +9390,8 @@ class ModeDistributedMonitoring(ModeSites):
         html.hidden_field("_login", login_id)
         html.hidden_fields()
         html.end_form()
+        html.footer()
+        return False
 
 
     def page(self):

@@ -1,4 +1,4 @@
-Title: Availability annotations are now rendered also in PDF reporting
+Title: Availability annotations are also rendered in PDF reporting now
 Level: 1
 Edition: cee
 Component: reporting
@@ -7,5 +7,4 @@ Version: 1.4.0b1
 Date: 1484045171
 Class: feature
 
-In the reports of availability the annotations where missing. This has
-now been fixed.
+In the reports of availability the annotations where missing. This has been fixed now.

@@ -9236,6 +9236,7 @@ class ModeDistributedMonitoring(ModeSites):
         login_id = html.var("_login")
         if login_id:
             self._action_login(login_id)
+            return False
 
 
     def _action_delete(self, delete_id):

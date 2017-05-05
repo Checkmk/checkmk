@@ -414,6 +414,9 @@ def parse_perf_data(perf_data_string, check_command=None):
         html.log("Failed to parse perfdata string: %s" % perf_data_string)
         return [], check_command
 
+    if not parts:
+        return [], check_command
+
     # Try if check command is appended to performance data
     # in a PNP like style
     if parts[-1].startswith("[") and parts[-1].endswith("]"):

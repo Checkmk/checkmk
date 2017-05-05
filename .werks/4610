@@ -1,0 +1,12 @@
+Title: Fixed error in graph displaying views with invalid perfdata strings
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b7
+Date: 1493993956
+
+When a service had a performance data string set which was only containing
+spaces or a single space this lead to an exception in the GUI.

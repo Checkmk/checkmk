@@ -1,0 +1,12 @@
+Title: Real time checks and DNS address in IPv4 Address field
+Component: core
+State: open
+Date: 2017-05-05 11:24:31
+Targetversion: 1.5.0
+Class: bug
+
+1) Setup heute host, add "localhost" in its ipv4address field
+2) Setup real time check for heute host
+
+Real time data is not correctly assigned to this host.
+Switch the ipv4address to 127.0.0.1 -> working

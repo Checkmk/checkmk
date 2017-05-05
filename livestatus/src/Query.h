@@ -54,7 +54,7 @@ class Table;
 class Query {
 public:
     Query(const std::list<std::string> &lines, Table *, Encoding data_encoding,
-          OutputBuffer &output);
+          size_t max_response_size, OutputBuffer &output);
 
     bool process();
 
@@ -76,6 +76,7 @@ public:
 
 private:
     const Encoding _data_encoding;
+    const size_t _max_response_size;
     OutputBuffer &_output;
     QueryRenderer *_renderer_query;
     Table *_table;

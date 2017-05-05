@@ -29,6 +29,7 @@
 #include <chrono>
 #include <string>
 #include <vector>
+#include "data_encoding.h"
 class Logger;
 
 struct Command {
@@ -86,6 +87,9 @@ public:
     virtual std::string mkInventoryPath() = 0;
     virtual std::string pnpPath() = 0;
     virtual std::string logArchivePath() = 0;
+    virtual Encoding dataEncoding() = 0;
+    virtual size_t maxResponseSize() = 0;
+    virtual size_t maxCachedMessages() = 0;
 
     virtual Logger *loggerLivestatus() = 0;
 

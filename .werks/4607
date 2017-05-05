@@ -1,0 +1,10 @@
+Title: mk_oracle.aix: Fixed baking mk_oracle plugin into AIX agent tgz
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0b7
+Date: 1493974367
+Class: fix
+
+

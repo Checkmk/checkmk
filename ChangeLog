@@ -7,6 +7,7 @@
     * 4638 FIX: esx_vsphere_hostsystem.multipath: Fixed compatibility to older versions...
     * 4627 FIX: apc_symmetra: Fix bogus 100000000 A battery current  occurring on some devices...
     * 4593 FIX: wmi_cpuload: Fixed missing WATO group
+    * 4640 FIX: heartbeat_crm: Fixed crash if output contains capital letters
 
     WATO:
     * 4558 FIX: Set correct file permissions for WATO snapshots

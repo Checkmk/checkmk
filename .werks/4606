@@ -1,0 +1,11 @@
+Title: Added context button to agent bakery to rulesets affecting the baked agents
+Level: 1
+Component: agents
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1493973915
+
+

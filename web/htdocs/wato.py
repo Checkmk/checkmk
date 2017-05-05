@@ -12784,6 +12784,9 @@ class ModeEditRuleset(WatoMode):
                                               ("host", self._hostname),
                                               ("service", self._item)]), "rulesets")
 
+        if has_agent_bakery():
+            agent_bakery_context_button(self._name)
+
 
     def action(self):
         rule_folder = Folder.folder(html.var("_folder", html.var("folder")))

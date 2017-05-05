@@ -23,9 +23,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Run and *send* only once every __ seconds
+. $MK_CONFDIR/mk_inventory.cfg 2>/dev/null || true
 
-# Run and *send* only once every 4 hours
-INTERVAL=14400
+# Default to four hours
+INTERVAL=${INVENTORY_INTERVAL:-14400}
 
 FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
 if [ `uname -r` = "5.10" ]; then

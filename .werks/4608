@@ -1,0 +1,13 @@
+Title: Agent bakery creates Solaris TGZ packages now
+Level: 2
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1493975029
+Class: feature
+
+The agent bakery can now create agent packages for Solaris in TGZ format.
+
+Most agent plugins that are relevant for solaris should be packageable now
+with these new packages.

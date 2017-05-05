@@ -204,7 +204,7 @@ def heartbeat_crm_parse_resources(info):
     for parts in info:
         line = " ".join(parts)
 
-        if line == 'Failed actions:':
+        if line.lower() == 'failed actions:':
             blockStart = False
         elif not blockStart and line == 'Full list of resources:':
             blockStart = True

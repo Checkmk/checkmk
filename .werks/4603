@@ -1,0 +1,13 @@
+Title: Bakery continues to build agents when one fails
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1493966426
+Class: fix
+
+In case an error occured while baking new agents with the bakery
+all not yet built packages were left unbuilt. This has been changed
+now. All error are collected during building and written to the
+user once all agents are done.

@@ -1,0 +1,11 @@
+Title: AIX TGZ: Agent plugins were not packed correctly
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0b7
+Date: 1493970756
+Class: fix
+
+Packing of agent plugins into the AIX tar.gz package was only working
+for plugins that were also available on linux.

@@ -39,11 +39,7 @@
 #include "Query.h"
 #include "StringUtils.h"
 #include "Table.h"
-#include "data_encoding.h"
 #include "mk_logwatch.h"
-
-extern Encoding g_data_encoding;
-extern unsigned long g_max_cached_messages;
 
 using mk::lstrip;
 using mk::split;
@@ -55,7 +51,7 @@ using std::string;
 
 Store::Store(MonitoringCore *mc)
     : _mc(mc)
-    , _log_cache(mc, g_max_cached_messages)
+    , _log_cache(mc, mc->maxCachedMessages())
     , _table_columns(mc)
     , _table_commands(mc)
     , _table_comments(mc)
@@ -281,7 +277,9 @@ bool Store::answerGetRequest(const list<string> &lines, OutputBuffer &output,
         return false;
     }
 
-    return Query(lines, table, g_data_encoding, output).process();
+    return Query(lines, table, _mc->dataEncoding(), _mc->maxResponseSize(),
+                 output)
+        .process();
 }
 
 Logger *Store::logger() const { return _mc->loggerLivestatus(); }

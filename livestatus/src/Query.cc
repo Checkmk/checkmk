@@ -51,8 +51,6 @@
 #include "nagios.h"
 #endif
 
-extern unsigned long g_max_response_size;
-
 using std::chrono::duration_cast;
 using std::chrono::milliseconds;
 using std::chrono::system_clock;
@@ -68,8 +66,9 @@ using std::unique_ptr;
 using std::vector;
 
 Query::Query(const list<string> &lines, Table *table, Encoding data_encoding,
-             OutputBuffer &output)
+             size_t max_response_size, OutputBuffer &output)
     : _data_encoding(data_encoding)
+    , _max_response_size(max_response_size)
     , _output(output)
     , _table(table)
     , _keepalive(false)
@@ -721,9 +720,9 @@ bool Query::timelimitReached() {
 }
 
 bool Query::processDataset(Row row) {
-    if (_renderer_query->size() > g_max_response_size) {
+    if (_renderer_query->size() > _max_response_size) {
         Informational(_logger) << "Maximum response size of "
-                               << g_max_response_size << " bytes exceeded!";
+                               << _max_response_size << " bytes exceeded!";
         // currently we only log an error into the log file and do
         // not abort the query. We handle it like Limit:
         return false;

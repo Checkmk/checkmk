@@ -118,14 +118,14 @@ struct ThreadInfo {
 
 static vector<ThreadInfo> fl_thread_info;
 static thread_local ThreadInfo *tl_info;
-unsigned long g_max_cached_messages = 500000;
+size_t fl_max_cached_messages = 500000;
 // do never read more than that number of lines from a logfile
 static uint32_t fl_max_lines_per_logfile = 1000000;
-unsigned long g_max_response_size = 100 * 1024 * 1024;  // limit answer to 10 MB
+size_t fl_max_response_size = 100 * 1024 * 1024;  // limit answer to 10 MB
 int g_thread_running = 0;
 AuthorizationKind g_service_authorization = AuthorizationKind::loose;
 AuthorizationKind g_group_authorization = AuthorizationKind::strict;
-Encoding g_data_encoding = Encoding::utf8;
+Encoding fl_data_encoding = Encoding::utf8;
 
 // Map to speed up access via name/alias/address
 unordered_map<string, host *> fl_hosts_by_designation;
@@ -652,6 +652,9 @@ public:
         extern char *log_archive_path;
         return log_archive_path;
     }
+    Encoding dataEncoding() override { return fl_data_encoding; }
+    size_t maxResponseSize() override { return fl_max_response_size; }
+    size_t maxCachedMessages() override { return fl_max_cached_messages; }
 
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
@@ -906,10 +909,10 @@ void livestatus_parse_arguments(const char *args_orig) {
                 strncpy(fl_mkeventd_socket_path, right,
                         sizeof(fl_mkeventd_socket_path));
             } else if (strcmp(left, "max_cached_messages") == 0) {
-                g_max_cached_messages = strtoul(right, nullptr, 10);
+                fl_max_cached_messages = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios)
                     << "setting max number of cached log messages to "
-                    << g_max_cached_messages;
+                    << fl_max_cached_messages;
             } else if (strcmp(left, "max_lines_per_logfile") == 0) {
                 fl_max_lines_per_logfile = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios)
@@ -920,11 +923,11 @@ void livestatus_parse_arguments(const char *args_orig) {
                 Notice(fl_logger_nagios) << "setting size of thread stacks to "
                                          << g_thread_stack_size;
             } else if (strcmp(left, "max_response_size") == 0) {
-                g_max_response_size = strtoul(right, nullptr, 10);
+                fl_max_response_size = strtoul(right, nullptr, 10);
                 Notice(fl_logger_nagios)
                     << "setting maximum response size to "
-                    << g_max_response_size << " bytes ("
-                    << (g_max_response_size / (1024.0 * 1024.0)) << " MB)";
+                    << fl_max_response_size << " bytes ("
+                    << (fl_max_response_size / (1024.0 * 1024.0)) << " MB)";
             } else if (strcmp(left, "num_client_threads") == 0) {
                 int c = atoi(right);
                 if (c <= 0 || c > 1000) {
@@ -1014,11 +1017,11 @@ void livestatus_parse_arguments(const char *args_orig) {
                 check_path("Check_MK logwatch directory", fl_mk_logwatch_path);
             } else if (strcmp(left, "data_encoding") == 0) {
                 if (strcmp(right, "utf8") == 0) {
-                    g_data_encoding = Encoding::utf8;
+                    fl_data_encoding = Encoding::utf8;
                 } else if (strcmp(right, "latin1") == 0) {
-                    g_data_encoding = Encoding::latin1;
+                    fl_data_encoding = Encoding::latin1;
                 } else if (strcmp(right, "mixed") == 0) {
-                    g_data_encoding = Encoding::mixed;
+                    fl_data_encoding = Encoding::mixed;
                 } else {
                     Warning(fl_logger_nagios)
                         << "invalid data_encoding " << right

@@ -30,6 +30,14 @@
 # zlib1g:i386|1:1.2.7.dfsg-13|i386|deb|compression library - runtime|install ok installed
 # zlib1g-dev:amd64|1:1.2.7.dfsg-13|amd64|deb|compression library - development|install ok installed
 
+# Example for Gentoo
+# sys-libs/ncurses|6.0-r1|amd64|ebuild|Repository gentoo|installed
+# sys-libs/pam|1.2.1|amd64|ebuild|Repository gentoo|installed
+# sys-libs/readline|6.3_p8-r3|amd64|ebuild|Repository gentoo|installed
+# sys-libs/slang|2.3.0|amd64|ebuild|Repository gentoo|installed
+# sys-libs/timezone-data|2016h|amd64|ebuild|Repository gentoo|installed
+# sys-libs/zlib|1.2.11|amd64|ebuild|Repository gentoo|installed
+
 # Example for RPM
 # gpg-pubkey|307e3d54|(none)|rpm|gpg(SuSE Package Signing Key <build@suse.de>)|
 # gpg-pubkey|1d061a62|(none)|rpm|gpg(build@novell.com (Novell Linux Products) <support@novell.com>)|

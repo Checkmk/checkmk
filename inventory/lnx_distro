@@ -51,6 +51,8 @@ def inv_lnx_distro(info):
             inv_lnx_parse_lsb_release(node, line[1:])
         elif line[0] == '/etc/debian_version':
             inv_lnx_parse_debian(node, line[1])
+        elif line[0] == '/etc/gentoo-release':
+            inv_lnx_parse_gentoo(node, line[1])
         elif line[0] == '/etc/redhat-release':
             if line[1].startswith("Oracle"):
                 inv_lnx_parse_oracle_vm_server_release(node, line[1])
@@ -164,6 +166,16 @@ def inv_lnx_parse_cma(node, line):
     node["name"] = "Check_MK Appliance " + line
     node["vendor"] = "Mathias Kettner GmbH"
     node["version"] = line
+    if "code_name" in node:
+        del node["code_name"]
+
+
+def inv_lnx_parse_gentoo(node, line):
+    node["type"] = "linux"
+    node["name"] = line
+    node["vendor"] = "Gentoo"
+    parts = line.split(" ")
+    node["version"] = parts.pop(-1)
     if "code_name" in node:
         del node["code_name"]
 

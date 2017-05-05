@@ -6,6 +6,7 @@
     * 8286 FIX: brocade_mlx_power: Added new standard OID for snChasPwrSupply2Table to receive all power supplies in stacked devices
     * 4638 FIX: esx_vsphere_hostsystem.multipath: Fixed compatibility to older versions...
     * 4627 FIX: apc_symmetra: Fix bogus 100000000 A battery current  occurring on some devices...
+    * 4593 FIX: wmi_cpuload: Fixed missing WATO group
 
     WATO:
     * 4558 FIX: Set correct file permissions for WATO snapshots

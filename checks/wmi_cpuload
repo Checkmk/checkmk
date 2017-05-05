@@ -56,5 +56,6 @@ check_info['wmi_cpuload'] = {
     'parse_function'      : parse_wmi_table,
     'has_perfdata'        : True,
     'service_description' : "Processor Queue",
-    'includes'            : ['wmi.include', 'cpu_load.include']
+    'includes'            : ['wmi.include', 'cpu_load.include'],
+    'group'               : 'cpu_load',
 }

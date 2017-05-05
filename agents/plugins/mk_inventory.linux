@@ -50,9 +50,15 @@ then
         rpm -qa --qf '%{NAME}\t%{VERSION}\t%{ARCH}\trpm\t%{SUMMARY}\t-\n'
     fi
 
+    # List Gentoo packages
+    if type equery >/dev/null; then
+        echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
+        equery -C list --format '$category/$name|$fullversion|$mask2|ebuild|Repository $repo|installed' \* | head -n -1
+    fi
+
     # Information about distribution
     echo "<<<lnx_distro:sep(124):persist($UNTIL)>>>"
-    for f in {/etc/{oracle-release,debian_version,lsb-release,redhat-release,SuSE-release},/usr/share/cma/version} ; do
+    for f in {/etc/{oracle-release,debian_version,gentoo-release,lsb-release,redhat-release,SuSE-release},/usr/share/cma/version} ; do
         if [ -e $f ] ; then
             echo -n "$f|" ; tr \\n \| < $f | sed 's/|$//' ; echo
             break

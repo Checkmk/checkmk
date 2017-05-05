@@ -3527,7 +3527,7 @@ class Dictionary(ValueSpec):
                         s += ", "
                     s += "%s: %s" % (vs.title(), text)
                 else:
-                    s += html.render_tr(html.render_td("%s:&nbsp;" % vs.title()) + html.render_td(text))
+                    s += html.render_tr(html.render_td("%s:&nbsp;" % vs.title(), class_="title") + html.render_td(text))
         if not oneline:
             s = html.render_table(s)
         return "%s" % s

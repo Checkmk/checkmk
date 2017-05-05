@@ -1286,6 +1286,50 @@ a.element_dragger:hover {
     transform: scale(1.005);
 }
 
+td.invtree table,
+td.agent_config table.rulesets table {
+   border-collapse: collapse;
+   border: 0.5px solid black;
+   box-shadow: 0.5px 0.5px 1px #ccc;
+   margin-top: 3px;
+}
+
+td.invtree table td,
+td.agent_config table.rulesets table td,
+td.invtree table th,
+td.agent_config table.rulesets table td.title,
+table.data.single tr.data td.invtree table td,
+table.data.single tr.data td.invtree table th
+{
+    border: 1px solid #888;
+    padding: 1px 5px;
+    height: 14px;
+}
+
+td.invtree table th,
+td.agent_config table.rulesets table td.title {
+    text-align: left;
+}
+td.invtree table td,
+td.agent_config table.rulesets table td {
+    background-color: #fff;
+}
+
+td.agent_config table.rulesets table td.title {
+    background-color: #999;
+    color: #fff;
+}
+
+table.agents tbody > tr.data > td {
+    vertical-align: top;
+    line-height: 20px;
+}
+
+table.agents tbody > tr.data > td.agent_config {
+    vertical-align: middle;
+    line-height: normal;
+}
+
 
 /*-------------------------------------------------------------------------.
 |         ____       _                                                     |

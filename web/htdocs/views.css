@@ -726,7 +726,8 @@ td.invtree ul.treeangle {
     margin-bottom: 3px;
 }
 
-td.invtree table {
+td.invtree table,
+td.agent_config table {
    border-collapse: collapse;
    border: 0.5px solid black;
    box-shadow: 0.5px 0.5px 1px #ccc;

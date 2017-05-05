@@ -42,6 +42,13 @@
 
 # FIXME: Crapy copy n paste! Consolidate with other mysql_* parse functions
 def parse_mysql_capacity(info):
+    def cut_spaces(line):
+        name = " ".join(line[:-2])
+        size = line[-2]
+        avail = line[-1]
+
+        return name, size, avail
+
     parsed = {}
     instance = False
     for line in info:
@@ -51,12 +58,12 @@ def parse_mysql_capacity(info):
                 instance = "mysql"
             parsed[instance] = []
         elif instance:
-            parsed[instance].append(line)
+            parsed[instance].append(cut_spaces(line))
 
     if not instance:
         parsed['mysql'] = []
         for line in info:
-            parsed['mysql'].append(line)
+            parsed['mysql'].append(cut_spaces(line))
 
     return parsed
 
@@ -64,10 +71,9 @@ def parse_mysql_capacity(info):
 def inventory_mysql_size(parsed):
     for instance, values in parsed.items():
         for line in values:
-            dbname = " ".join(line[:-2])
-            used = line[-2]
-            avail = line[-1]
-
+            if len(line) == 4:
+                print line
+        for dbname, used, avail in values:
             if dbname not in [ "information_schema", "mysql", "performance_schema" ] \
                and used != 'NULL' and avail != 'NULL':
                 yield "%s:%s" % (instance, dbname), None
@@ -84,11 +90,7 @@ def check_mysql_size(item, params, parsed):
     dbs = parsed[instance]
 
     # size and avail are given as bytes
-    for line in dbs:
-        db = " ".join(line[:-2])
-        size = line[-2]
-        avail = line[-1]
-
+    for db, size, avail in dbs:
         if db == dbname:
             if size == 'NULL':
                 return 3, "Missing information - Size is reported as 'NULL'"

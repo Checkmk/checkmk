@@ -46,7 +46,6 @@ def parse_mysql_capacity(info):
         name = " ".join(line[:-2])
         size = line[-2]
         avail = line[-1]
-
         return name, size, avail
 
     parsed = {}
@@ -70,9 +69,6 @@ def parse_mysql_capacity(info):
 
 def inventory_mysql_size(parsed):
     for instance, values in parsed.items():
-        for line in values:
-            if len(line) == 4:
-                print line
         for dbname, used, avail in values:
             if dbname not in [ "information_schema", "mysql", "performance_schema" ] \
                and used != 'NULL' and avail != 'NULL':

@@ -9,6 +9,9 @@
     * 4593 FIX: wmi_cpuload: Fixed missing WATO group
     * 4640 FIX: heartbeat_crm: Fixed crash if output contains capital letters
 
+    Multisite:
+    * 4610 FIX: Fixed error in graph displaying views with invalid perfdata strings...
+
     WATO:
     * 4558 FIX: Set correct file permissions for WATO snapshots
 

@@ -243,9 +243,10 @@ def add_change(action_name, text, obj=None, add_user=True, need_sync=None,
     need_sidebar_reload()
 
     # On each change to the Check_MK configuration mark the agents to be rebuild
-    if has_agent_bakery():
-        # pylint: disable=undefined-variable
-        need_to_bake_agents()
+    # TODO: Really? Why?
+    #if has_agent_bakery():
+    #    import agent_bakery
+    #    agent_bakery.mark_need_to_bake_agents()
 
     ActivateChangesWriter().add_change(action_name, text, obj, add_user,
                                        need_sync, need_restart, domains, sites)
@@ -6680,6 +6681,13 @@ class Ruleset(object):
         return self._rules[folder.path()][rule_index]
 
 
+    def edit_rule(self, rule):
+        add_change("edit-rule", _("Changed properties of rule \"%s\" in folder \"%s\"") %
+                   (self.title(), rule.folder.alias_path()),
+                   sites=rule.folder.all_site_ids())
+        self._on_change()
+
+
     def delete_rule(self, rule):
         self._rules[rule.folder.path()].remove(rule)
         add_change("edit-ruleset", _("Deleted rule in ruleset '%s'") % self.title(),
@@ -6780,8 +6788,9 @@ class Ruleset(object):
 
 
     def _on_change(self):
-        if has_agent_bakery() and is_affecting_baked_agents(self.name): # pylint: disable=undefined-variable
-            need_to_bake_agents() # pylint: disable=undefined-variable
+        if has_agent_bakery():
+            import agent_bakery
+            agent_bakery.ruleset_changed(self.name)
 
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
@@ -7779,7 +7788,11 @@ def edit_users(changed_users):
 
 
 def has_agent_bakery():
-    return 'bake_agents' in globals()
+    try:
+        import agent_bakery
+        return True
+    except ImportError:
+        return False
 
 
 def get_folder_cgconf_from_attributes(attributes):

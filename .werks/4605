@@ -1,0 +1,10 @@
+Title: Bakery: Fixed marking agents to be build after changing agent related rulesets
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0b7
+Date: 1493973466
+Class: fix
+
+

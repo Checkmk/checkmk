@@ -13522,10 +13522,8 @@ class ModeEditRule(WatoMode):
 
     def _save_rule(self):
         # Just editing without moving to other folder
+        self._ruleset.edit_rule(self._rule)
         self._rulesets.save()
-        add_change("edit-rule", _("Changed properties of rule \"%s\" in folder \"%s\"") %
-                   (self._ruleset.title(), self._folder.alias_path()),
-                   sites=self._folder.all_site_ids())
 
 
     def _success_message(self):

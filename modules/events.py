@@ -286,6 +286,7 @@ def complete_raw_context(raw_context, with_dump, event_log):
 
 def event_match_rule(rule, context):
     return \
+        event_match_site(rule, context)                or \
         event_match_folder(rule, context)                or \
         event_match_hosttags(rule, context)              or \
         event_match_hostgroups(rule, context)            or \
@@ -300,6 +301,20 @@ def event_match_rule(rule, context):
         event_match_checktype(rule, context)             or \
         event_match_timeperiod(rule)                     or \
         event_match_servicelevel(rule, context)
+
+
+def event_match_site(rule, context):
+    if "match_site" not in rule:
+        return
+
+    required_site_ids = rule["match_site"]
+
+    # Fallback to local site ID in case there is none in the context
+    site_id = context.get("OMD_SITE", os.getenv("OMD_SITE"))
+
+    if site_id not in required_site_ids:
+        return "The site '%s' is not in the required sites list: %s" % \
+                        (site_id, ",".join(required_site_ids))
 
 
 def event_match_folder(rule, context):

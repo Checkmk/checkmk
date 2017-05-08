@@ -64,9 +64,9 @@ extern int num_cached_log_messages;
 extern int interval_length;
 extern int g_num_hosts;
 extern int g_num_services;
-extern int g_num_clientthreads;
+extern int g_livestatus_threads;
 extern int g_num_queued_connections;
-extern int g_num_active_connections;
+extern int g_livestatus_active_connections;
 
 #ifndef NAGIOS4
 extern circular_buffer external_command_buffer;
@@ -224,7 +224,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<IntPointerColumn>(
         "livestatus_active_connections",
         "The current number of active connections to MK Livestatus",
-        &g_num_active_connections));
+        &g_livestatus_active_connections));
     addColumn(make_unique<IntPointerColumn>(
         "livestatus_queued_connections",
         "The current number of queued connections to MK Livestatus (that wait for a free thread)",
@@ -232,7 +232,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<IntPointerColumn>(
         "livestatus_threads",
         "The maximum number of connections to MK Livestatus that can be handled in parallel",
-        &g_num_clientthreads));
+        &g_livestatus_threads));
 
     // Special stuff for Check_MK
     addColumn(make_unique<StatusSpecialIntColumn>(

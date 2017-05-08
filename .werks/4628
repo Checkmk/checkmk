@@ -1,0 +1,10 @@
+Title: mk_jolokia: Bakery now allows to specify server to poll using FQDM instead of IPv4 address
+Level: 1
+Component: agents
+Class: feature
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1494234196
+

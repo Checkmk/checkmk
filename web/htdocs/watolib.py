@@ -6639,10 +6639,16 @@ class Ruleset(object):
             if rule.matches_search(search_options):
                 self.search_matching_rules.append(rule)
 
-        if not self.search_matching_rules:
-            return self.matches_fulltext_search(search_options)
-        else:
+        # Show all rulesets where at least one rule matched
+        if self.search_matching_rules:
             return True
+
+        # e.g. in case ineffective rules are searched and no fulltext
+        # search is filled in: Then don't show empty rulesets.
+        if not search_options.get("fulltext"):
+            return False
+
+        return self.matches_fulltext_search(search_options)
 
 
     def has_rule_search_options(self, search_options):

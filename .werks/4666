@@ -1,0 +1,11 @@
+Title: Fixed ineffective rulesets page showing empty rulesets
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b7
+Date: 1494256201
+
+

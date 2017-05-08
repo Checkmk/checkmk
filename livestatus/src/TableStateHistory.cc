@@ -84,8 +84,6 @@ constexpr unsigned classmask_statehist =
     (1u << static_cast<int>(LogEntry::Class::text));
 }  // namespace
 
-int g_disable_statehist_filtering = 0;
-
 #ifndef CMC
 namespace {
 string getCustomVariable(customvariablesmember *cvm, const char *name) {
@@ -283,7 +281,7 @@ void TableStateHistory::answerQuery(Query *query) {
     // check attributes of current hosts and services
     deque<Filter *> object_filter;
 
-    if (g_disable_statehist_filtering == 0) {
+    if (core()->stateHistoryFilteringEnabled()) {
         for (const auto &filter : *query->filter()) {
             IsObjectFilter is_obj;
             filter->accept(is_obj);

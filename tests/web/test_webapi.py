@@ -124,7 +124,7 @@ def test_delete_group(web, group_type):
 def test_get_all_users(web):
     users = {"klaus": {"alias": "mr. klaus", "pager": "99221199", "password": "1234"},
              "monroe": {"alias": "mr. monroe"}}
-    expected_users = set(["omdadmin", "automation"] + users.keys())
+    expected_users = set(["cmkadmin", "automation"] + users.keys())
     try:
         response = web.add_htpasswd_users(users)
         all_users = web.get_all_users()

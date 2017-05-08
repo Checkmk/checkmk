@@ -306,7 +306,9 @@ class Site(object):
         if not self.exists():
             p = subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
                                   "-V", self.version.version_directory(),
-                                  "create", "--apache-reload", self.id])
+                                  "create",
+                                  "--admin-password", "cmk",
+                                  "--apache-reload", self.id])
             assert p.wait() == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
 
@@ -833,7 +835,7 @@ class CMKWebSession(WebSession):
                                      self.site.apache_port, path)
 
 
-    def login(self, username="omdadmin", password="omd"):
+    def login(self, username="cmkadmin", password="cmk"):
         login_page = self.get("", allow_redirect_to_login=True).text
         assert "_username" in login_page, "_username not found on login page - page broken?"
         assert "_password" in login_page

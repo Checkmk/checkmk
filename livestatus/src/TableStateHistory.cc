@@ -25,7 +25,6 @@
 #include "TableStateHistory.h"
 #include <cstdlib>
 #include <cstring>
-#include <ctime>
 #include <deque>
 #include <memory>
 #include <mutex>
@@ -39,6 +38,7 @@
 #include "HostServiceState.h"
 #include "LogEntry.h"
 #include "Logger.h"
+#include "MonitoringCore.h"
 #include "OffsetDoubleColumn.h"
 #include "OffsetIntColumn.h"
 #include "OffsetSStringColumn.h"

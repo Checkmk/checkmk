@@ -90,6 +90,7 @@ public:
     virtual Encoding dataEncoding() = 0;
     virtual size_t maxResponseSize() = 0;
     virtual size_t maxCachedMessages() = 0;
+    virtual bool stateHistoryFilteringEnabled() = 0;
 
     virtual Logger *loggerLivestatus() = 0;
 

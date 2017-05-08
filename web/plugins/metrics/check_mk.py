@@ -429,6 +429,12 @@ metric_info["zfs_l2_size"] = {
     "color" : "31/a",
 }
 
+metric_info["file_size"] = {
+    "title" : _("File size"),
+    "unit"  : "bytes",
+    "color" : "16/a",
+}
+
 # database, tablespace
 
 metric_info["database_size"] = {
@@ -4570,6 +4576,10 @@ check_metrics["check_mk-zfs_arc_cache.l2"] = {
 check_metrics["check_mk-postgres_sessions"] = {
     "total": {"name": "total_sessions"},
     "running": {"name": "running_sessions"}
+}
+
+check_metrics["check_mk-fileinfo"] = {
+    "size" : { "name" : "file_size" }
 }
 
 check_metrics["check_mk-postgres_stat_database.size"] = {

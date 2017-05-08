@@ -27,11 +27,11 @@
 import crypt
 import cmk.paths
 
-def encrypt_password(password, salt = None):
+def encrypt_password(password, salt=None, prefix="1"):
     import md5crypt
     if not salt:
         salt = "%06d" % (1000000 * (time.time() % 1.0))
-    return md5crypt.md5crypt(password, salt, '$1$')
+    return md5crypt.md5crypt(password, salt, '$%s$' % prefix)
 
 
 class HtpasswdUserConnector(UserConnector):
@@ -89,9 +89,9 @@ class HtpasswdUserConnector(UserConnector):
     # crypt() and md5 hashes. This should be the common cases in the
     # used htpasswd files.
     def password_valid(self, pwhash, password):
-        if pwhash[:3] == '$1$':
-            salt = pwhash.split('$', 3)[2]
-            return pwhash == encrypt_password(password, salt)
+        if pwhash.startswith('$1$') or pwhash.startswith('$apr1$'):
+            prefix, salt = pwhash.split('$', 3)[1:3]
+            return pwhash == encrypt_password(password, salt, prefix)
         else:
             return pwhash == crypt.crypt(password, pwhash[:2])
 

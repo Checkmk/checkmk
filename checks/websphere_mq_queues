@@ -65,6 +65,9 @@ websphere_mq_queues_default_levels = {
 def parse_websphere_mq_queues(info):
     parsed = {}
     for line in info:
+        if len(line) < 2:
+            continue
+
         queue_name = line[1]
         parsed.setdefault(queue_name, {})
         parsed[queue_name].setdefault('cur_depth', int(line[0]))

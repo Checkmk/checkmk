@@ -453,6 +453,10 @@ elif type MegaCli64 >/dev/null ; then
     MegaCli_bin="MegaCli64"
 elif type megacli >/dev/null ; then
     MegaCli_bin="megacli"
+elif type storcli >/dev/null ; then
+    MegaCli_bin="storcli"
+elif type storcli64 >/dev/null ; then
+    MegaCli_bin="storcli64"
 else
     MegaCli_bin="unknown"
 fi

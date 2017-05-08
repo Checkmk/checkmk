@@ -1,0 +1,18 @@
+Title: Auth works now with $apr1$ prefixed passwords
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0b7
+Date: 1494235113
+Class: fix
+
+The default encryption algorithm of htpasswd stores passwords
+in MD5 format. If you take a look at the file it prefixes the
+password with $apr1$. This format was not handled by the Check_MK
+GUI. If you set the prefix to $1$ it worked.
+
+The GUI has been changed to be able to work with both formats.
+Passwords set with this command should now work out of the box:
+
+htpasswd -m $OMD_ROOT/etc/htpasswd [username]

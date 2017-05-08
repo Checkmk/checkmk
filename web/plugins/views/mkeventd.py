@@ -1219,7 +1219,7 @@ if mkeventd_enabled:
            'mobile': True,
            'name': 'ec_events_mobile',
            'num_columns': 1,
-           'owner': 'omdadmin',
+           'owner': 'cmkadmin',
            'painters': [('event_id', 'ec_event_mobile', None),
                         ('event_state', None, None),
                         ('event_host', 'ec_events_of_host', None),

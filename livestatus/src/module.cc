@@ -91,12 +91,12 @@ static milliseconds fl_idle_timeout = minutes(5);
 // maximum time for reading a query
 static milliseconds fl_query_timeout = seconds(10);
 
-size_t g_num_clientthreads =
-    10; /* allow 10 concurrent connections per default */
-int g_num_queued_connections =
-    0; /* current number of queued connections (for statistics) */
-int g_num_active_connections =
-    0; /* current number of active connections (for statistics) */
+// allow 10 concurrent connections per default
+size_t g_livestatus_threads = 10;
+// current number of queued connections (for statistics)
+int g_num_queued_connections = 0;
+// current number of active connections (for statistics)
+int g_livestatus_active_connections = 0;
 size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
 extern int g_disable_statehist_filtering;
 
@@ -229,7 +229,7 @@ void *client_thread(void *data) {
     while (!fl_should_terminate) {
         int cc = fl_client_queue->popConnection();
         g_num_queued_connections--;
-        g_num_active_connections++;
+        g_livestatus_active_connections++;
         if (cc >= 0) {
             Debug(fl_logger_livestatus) << "accepted client connection on fd "
                                         << cc;
@@ -252,7 +252,7 @@ void *client_thread(void *data) {
             }
             close(cc);
         }
-        g_num_active_connections--;
+        g_livestatus_active_connections--;
     }
     return voidp;
 }
@@ -309,7 +309,7 @@ void start_threads() {
         }
 
         Informational(fl_logger_nagios) << "starting main thread and "
-                                        << g_num_clientthreads
+                                        << g_livestatus_threads
                                         << " client threads";
 
         pthread_atfork(livestatus_count_fork, nullptr,
@@ -329,7 +329,7 @@ void start_threads() {
                                     << g_thread_stack_size;
         }
 
-        fl_thread_info.resize(g_num_clientthreads + 1);
+        fl_thread_info.resize(g_livestatus_threads + 1);
         for (auto &info : fl_thread_info) {
             ptrdiff_t idx = &info - &fl_thread_info[0];
             if (idx == 0) {
@@ -362,7 +362,7 @@ void terminate_threads() {
             }
         }
         Informational(fl_logger_nagios) << "main thread + "
-                                        << g_num_clientthreads
+                                        << g_livestatus_threads
                                         << " client threads have finished";
         g_thread_running = 0;
         fl_should_terminate = false;
@@ -937,7 +937,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                 } else {
                     Notice(fl_logger_nagios)
                         << "setting number of client threads to " << c;
-                    g_num_clientthreads = c;
+                    g_livestatus_threads = c;
                 }
             } else if (strcmp(left, "query_timeout") == 0) {
                 int c = atoi(right);

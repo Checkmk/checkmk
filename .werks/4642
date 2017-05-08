@@ -1,0 +1,11 @@
+Title: check_mk_agent: Added support for new storcli
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494255427
+Class: feature
+
+In future releases the MegaCli will be replaced by storcli. Up to now the
+output of this new cli is fully compatible to the old one.

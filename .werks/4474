@@ -1,0 +1,10 @@
+Title: graphs for fileinfo checks: the size value was displayed without unit information 
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494256217
+Class: fix
+
+

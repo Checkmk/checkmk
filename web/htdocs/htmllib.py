@@ -1689,7 +1689,7 @@ class html(HTMLGenerator, RequestHandler):
                 formatted = pprint.pformat(element)
             except UnicodeDecodeError:
                 formatted = repr(element)
-            self.lowlevel_write(self.render_pre(formatted))
+            self.lowlevel_write("%s" % self.render_pre(formatted))
 
 
     def log(self, *args):

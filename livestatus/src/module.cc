@@ -98,7 +98,7 @@ int g_num_queued_connections = 0;
 // current number of active connections (for statistics)
 int g_livestatus_active_connections = 0;
 size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
-extern int g_disable_statehist_filtering;
+static int fl_disable_statehist_filtering;
 
 void *g_nagios_handle;
 int g_unix_socket = -1;
@@ -655,6 +655,9 @@ public:
     Encoding dataEncoding() override { return fl_data_encoding; }
     size_t maxResponseSize() override { return fl_max_response_size; }
     size_t maxCachedMessages() override { return fl_max_cached_messages; }
+    bool stateHistoryFilteringEnabled() override {
+        return fl_disable_statehist_filtering == 0;
+    }
 
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
@@ -1031,7 +1034,7 @@ void livestatus_parse_arguments(const char *args_orig) {
                 Warning(fl_logger_nagios)
                     << "livecheck has been removed from Livestatus, sorry.";
             } else if (strcmp(left, "disable_statehist_filtering") == 0) {
-                g_disable_statehist_filtering = atoi(right);
+                fl_disable_statehist_filtering = atoi(right);
             } else {
                 Warning(fl_logger_nagios) << "ignoring invalid option " << left
                                           << "=" << right;

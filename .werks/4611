@@ -1,0 +1,10 @@
+Title: check_mail_loop: Fixed exception 'module' object has no attribute ‘text’
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b7
+Date: 1494229905
+Class: fix
+
+

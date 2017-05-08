@@ -1,0 +1,11 @@
+Title: websphere_mq_queues: Fixed 'list index out of range' error
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p22
+Date: 1494249613
+Class: fix
+
+In case of above error lines of the agent output may contain
+incomplete data, eg. only queue name without any additional
+queue information such as current queue length.

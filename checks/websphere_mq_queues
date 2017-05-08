@@ -45,7 +45,7 @@ websphere_mq_queues_default_levels = {
 }
 
 def inventory_websphere_mq_queues(info):
-    return [ ( x[1], 'websphere_mq_queues_default_levels' ) for x in info  ]
+    return [ ( x[1], 'websphere_mq_queues_default_levels' ) for x in info if len(x) >= 2 ]
 
 def check_websphere_mq_queues(item, params, info):
     if isinstance(params, tuple):
@@ -53,6 +53,9 @@ def check_websphere_mq_queues(item, params, info):
                   'message_count_perc': websphere_mq_queues_default_levels["message_count_perc"]}
 
     for line in info:
+        if len(line) < 2:
+            continue
+
         queue = line[1]
         if queue == item:
             messages = int(line[0])

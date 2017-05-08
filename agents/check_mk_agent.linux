@@ -691,7 +691,7 @@ if type postfix >/dev/null ; then
         do
             if [ -e "$i/pid/master.pid" ]; then
                 postfix_pid=$(cat $i/pid/master.pid | sed 's/ //g') # handle possible spaces in output
-                if [[ $(readlink -- /proc/$postfix_pid/exe) == *"postfix/master"* ]]; then
+                if readlink -- "/proc/$postfix_pid/exe" | grep -q ".*postfix/\(sbin/\)\?master.*"; then
                     echo "$i:the Postfix mail system is running:PID:$postfix_pid" | sed 's/\/var\/spool\///g'
                 else
                     echo "$i:PID file exists but instance is not running!" | sed 's/\/var\/spool\///g'

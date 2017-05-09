@@ -190,16 +190,26 @@ bool TableHostGroups::isAuthorized(Row row, contact *ctc) {
         return false;
     }
 
-    auto hg = rowData<hostgroup>(row);
-    for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
-        host *hst = mem->host_ptr;
-        bool is = is_authorized_for(ctc, hst, nullptr);
-        if (is && g_group_authorization == AuthorizationKind::loose) {
-            return true;
+    auto has_contact = [=](hostsmember *mem) {
+        return is_authorized_for(ctc, mem->host_ptr, nullptr);
+    };
+    if (g_group_authorization == AuthorizationKind::loose) {
+        // TODO(sp) Need an iterator here, "loose" means "any_of"
+        for (hostsmember *mem = rowData<hostgroup>(row)->members;
+             mem != nullptr; mem = mem->next) {
+            if (has_contact(mem)) {
+                return true;
+            }
         }
-        if (!is && g_group_authorization == AuthorizationKind::strict) {
-            return false;
+        return false;
+    } else {
+        // TODO(sp) Need an iterator here, "strict" means "all_of"
+        for (hostsmember *mem = rowData<hostgroup>(row)->members;
+             mem != nullptr; mem = mem->next) {
+            if (!has_contact(mem)) {
+                return false;
+            }
         }
+        return true;
     }
-    return true;
 }

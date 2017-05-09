@@ -202,14 +202,13 @@ bool TableHostGroups::isAuthorized(Row row, contact *ctc) {
             }
         }
         return false;
-    } else {
-        // TODO(sp) Need an iterator here, "strict" means "all_of"
-        for (hostsmember *mem = rowData<hostgroup>(row)->members;
-             mem != nullptr; mem = mem->next) {
-            if (!has_contact(mem)) {
-                return false;
-            }
-        }
-        return true;
     }
+    // TODO(sp) Need an iterator here, "strict" means "all_of"
+    for (hostsmember *mem = rowData<hostgroup>(row)->members; mem != nullptr;
+         mem = mem->next) {
+        if (!has_contact(mem)) {
+            return false;
+        }
+    }
+    return true;
 }

@@ -43,3 +43,4 @@ stamp-h1
 tags
 tests/web/data/*
 var/
+.idea/

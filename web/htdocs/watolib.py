@@ -2637,7 +2637,7 @@ class Attribute:
     # Gets the type of current view as argument and returns whether or not
     # this attribute is shown in this type of view
     def is_visible(self, for_what):
-        if for_what in [ "host", "bulk" ] and not self.show_in_form():
+        if for_what in [ "host", "cluster", "bulk" ] and not self.show_in_form():
             return False
         elif for_what == "folder" and not self.show_in_folder():
             return False

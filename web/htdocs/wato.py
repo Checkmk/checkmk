@@ -1417,7 +1417,7 @@ def vs_cluster_nodes():
 
 # Called by mode_edit_host() for new/clone/edit
 def action_edit_host(mode, hostname, is_cluster):
-    attributes = collect_attributes("host")
+    attributes = collect_attributes("host" if not is_cluster else "cluster")
 
     if is_cluster:
         cluster_nodes = vs_cluster_nodes().from_html_vars("nodes")

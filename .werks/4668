@@ -1,0 +1,11 @@
+Title: Fixed editing of cluster properties
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0b7
+Date: 1494330927
+Class: fix
+
+Editing of cluster host properties (except nodes) was not possible. When loading and
+saving a cluster the set attributes of the cluster were lost.

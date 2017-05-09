@@ -1,0 +1,120 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# example output
+#
+# <<<storeonce_servicesets:sep(9)>>>
+# [1]
+# ServiceSet ID   1
+# ServiceSet Name Service Set 1
+# ServiceSet Alias        SET1
+# Serial Number   CZ25132LTD01
+# Software Version        3.15.1-1636.1
+# Product Class   HPE StoreOnce 4700 Backup
+# Capacity in bytes       75952808613643
+# Free Space in bytes     53819324528395
+# User Data Stored in bytes       305835970141743
+# Size On Disk in bytes   19180587585836
+# Deduplication Ratio     15.945078260668
+# ServiceSet Health Level 1
+# ServiceSet Health       OK
+# ServiceSet Status       Running
+# Replication Health Level        1
+# Replication Health      OK
+# Replication Status      Running
+# Overall Health Level    1
+# Overall Health  OK
+# Overall Status  Running
+# Housekeeping Health Level       1
+# Housekeeping Health     OK
+# Housekeeping Status     Running
+# Primary Node    hpcz25132ltd
+# Secondary Node  None
+# Active Node     hpcz25132ltd
+
+
+def inventory_storeonce_servicesets(parsed):
+    for key, values in parsed.iteritems():
+        yield ( values["ServiceSet ID"], {} )
+
+def check_storeonce_servicesets(item, params, parsed):
+    for key, values in parsed.iteritems():
+        if not item == values["ServiceSet ID"]:
+            continue
+
+        if "ServiceSet Alias" in values:
+            yield 0, "Alias: %s" % values['ServiceSet Alias']
+        elif "ServiceSet Name" in values:
+            yield 0, "Name: %s" % values['ServiceSet Name']
+
+        yield 0, "Overall Status: %s, Overall Health: %s" % \
+                (values['Overall Status'], values['Overall Health'])
+
+        for component in ['ServiceSet Health',
+                          'Replication Health',
+                          'Housekeeping Health']:
+            state = translate_storeonce_status(values["%s Level" % component])
+            state_readable = "%s: %s" % (component, values[component])
+            if state > 0:
+                yield state, state_readable
+
+
+check_info['storeonce_servicesets'] = {
+    'parse_function'        : parse_storeonce_servicesets,
+    'inventory_function'    : inventory_storeonce_servicesets,
+    'check_function'        : check_storeonce_servicesets,
+    'service_description'   : 'ServiceSet %s Status',
+    'includes'              : [ 'storeonce.include' ],
+}
+
+
+def inventory_storeonce_servicesets_capacity(parsed):
+    for key, values in parsed.iteritems():
+        yield ( values["ServiceSet ID"], {} )
+
+def check_storeonce_servicesets_capacity(item, params, parsed):
+    for key, values in parsed.iteritems():
+        if not item == values["ServiceSet ID"]:
+            continue
+        total_mb = float(values['Capacity in bytes'])/1024/1024
+        free_mb  = float(values['Free Space in bytes'])/1024/1024
+        yield df_check_filesystem_list(item, params, [ (item, total_mb, free_mb, 0) ])
+
+        dedup = float(values['Deduplication Ratio'])
+
+        yield 0, "Dedup ratio: %.2f" % dedup
+
+
+check_info['storeonce_servicesets.capacity'] = {
+    'parse_function'        : parse_storeonce_servicesets,
+    'inventory_function'    : inventory_storeonce_servicesets_capacity,
+    'check_function'        : check_storeonce_servicesets_capacity,
+    'service_description'   : "ServiceSet %s Capacity",
+    'has_perfdata'          : True,
+    'group'                 : "filesystem",
+    'includes'              : [ "df.include" ],
+}

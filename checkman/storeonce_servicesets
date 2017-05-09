@@ -1,0 +1,17 @@
+title: HPE StoreOnce: Status of service set
+agents: storeonce
+catalog: hw/storagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This check displays the overall health and status of a service set. Also name
+ and/or alias will be displayed if available. The appliance reports states
+ for the Service set, the replication and the housekeeping. All of them are
+ compatible to states in Check_MK and will be displayed, if they change to
+ {WARN}, {CRIT}, or {UNKNOWN}. The "Information"-State will be treated as {OK}
+
+item:
+ The ID of a service set is the item
+
+inventory:
+ One service for each service set is created

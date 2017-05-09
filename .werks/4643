@@ -1,0 +1,20 @@
+Title: Added special agent and checks for HPE StoreOnce
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494333205
+Class: feature
+
+This special agent requires username and password. The matching host will be used as target and the following services will be created:
+
+- HPE StoreOnce xx00 Backup
+- Appliance Status
+- Total Capacity
+- Uptime
+- ServiceSet x Capacity
+- ServiceSet x Status
+- ServiceSet x Store y
+
+Further information will be in the manpages.

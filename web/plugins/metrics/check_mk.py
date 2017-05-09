@@ -1037,6 +1037,12 @@ metric_info["threads_daemon"] = {
     "color" : "32/a",
 }
 
+metric_info["dedup_rate"] = {
+    "title" : _("Deduplication rate"),
+    "unit"  : "count",
+    "color" : "12/a",
+}
+
 metric_info["threads_max"] = {
     "title" : _("Maximum number of threads"),
     "help"  : _("Maximum number of threads started at any given time during the JVM lifetime"),
@@ -4267,6 +4273,8 @@ check_metrics["check_mk-mongodb_collections"]                   = df_translation
 check_metrics["check_mk-3par_cpgs.usage"]                       = df_translation
 check_metrics["check_mk-3par_capacity"]                         = df_translation
 check_metrics["check_mk-3par_volumes"]                          = df_translation
+check_metrics["check_mk-storeonce_clusterinfo.space"]           = df_translation
+check_metrics["check_mk-storeonce_servicesets.capacity"]        = df_translation
 
 df_netapp_perfvarnames = list(df_basic_perfvarnames)
 for protocol in [ "nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
@@ -5179,6 +5187,13 @@ perfometer_info.append({
     "metric"        : "temp",
     "half_value"    : 40.0,
     "exponent"      : 1.2
+})
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "dedup_rate",
+    "half_value" : 30.0,
+    "exponent"   : 1.2,
 })
 
 perfometer_info.append({

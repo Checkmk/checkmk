@@ -1,0 +1,15 @@
+title: HPE StoreOnce: Cluster Status
+agents: storeonce
+catalog: hw/storeagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the cluster and replication status. The reported states
+ from the appliance are similar to Check_MK. The state "Information" will
+ be treated as {OK}.
+
+item:
+ No item will be created
+
+inventory:
+ Only one service will be created

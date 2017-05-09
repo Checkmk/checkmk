@@ -18,6 +18,9 @@
     WATO:
     * 4558 FIX: Set correct file permissions for WATO snapshots
 
+    BI:
+    * 4670 FIX: Fixed exception when trying to edit not existing BI aggregation
+
     Event Console:
     * 4470 FIX: Event console: fixed incorrect event counting for timed-out and heartbeat events...
 

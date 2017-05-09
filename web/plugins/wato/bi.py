@@ -71,7 +71,7 @@ class ModeBI(WatoMode):
         if html.has_var("pack"):
             self._pack_id = html.var("pack")
             if self._pack_id not in self._packs:
-                raise MKGeneralException(_("Invalid URL. BI pack %s does not exist.") % html.attrencode(self._pack_id))
+                raise MKGeneralException(_("The BI pack '%s' does not exist.") % html.attrencode(self._pack_id))
             self._pack = self._packs[self._pack_id]
         else:
             self._pack_id = None
@@ -1225,8 +1225,10 @@ class ModeBIEditAggregation(ModeBI):
             self._edited_aggregation = { "groups" : [ _("Main") ] }
         else:
             self._new = False
-            self._edited_aggregation = self._pack["aggregations"][self._edited_nr]
-
+            try:
+                self._edited_aggregation = self._pack["aggregations"][self._edited_nr]
+            except IndexError:
+                raise MKUserError("id", _("This aggregation does not exist."))
 
 
     def title(self):

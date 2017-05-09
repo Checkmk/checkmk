@@ -1,0 +1,13 @@
+Title: mk_logwatch.exe in windows: now supports IPv6 addresses, fixed path of statefile
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b7
+Date: 1494339798
+
+The mk_logwatch.exe crashed whenever an IPv6 host queried the system.
+The logwatch statefile is now located in the state directory instead of the agent directory.
+

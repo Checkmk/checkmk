@@ -54,7 +54,7 @@ if logwatch_dir:
     mk_vardir = logwatch_dir
 else:
     mk_confdir = os.getenv("MK_CONFDIR") or "."
-    mk_vardir = os.getenv("MK_VARDIR") or "."
+    mk_vardir = os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 
 
 sys.stdout.write("<<<logwatch>>>\n")
@@ -68,6 +68,7 @@ config_dir      = mk_confdir + "/logwatch.d/*.cfg"
 # $REMOTE not set and a tty     -> logwatch.state.local
 # $REMOTE not set and not a tty -> logwatch.state
 remote_hostname = os.getenv("REMOTE", "")
+remote_hostname = remote_hostname.replace(":", "_")
 if remote_hostname != "":
     status_filename = "%s/logwatch.state.%s" % (mk_vardir, remote_hostname)
 else:

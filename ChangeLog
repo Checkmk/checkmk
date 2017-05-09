@@ -13,6 +13,7 @@
     Multisite:
     * 4610 FIX: Fixed error in graph displaying views with invalid perfdata strings...
     * 4474 FIX: graphs for fileinfo checks: the size value was displayed without unit information
+    * 4669 FIX: Fixed possible exception in view dashlets (e.g. single event views)...
 
     WATO:
     * 4558 FIX: Set correct file permissions for WATO snapshots

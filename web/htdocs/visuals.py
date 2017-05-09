@@ -1029,7 +1029,7 @@ def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
     # filter vars in "multiple" context are not enforced.
     for key in get_single_info_keys(visual):
         if key in visual['context']:
-            html.set_var(key, visual['context'][key])
+            html.set_var(key, "%s" % visual['context'][key])
 
     # Now apply the multiple context filters
     for info_key in only_infos:
@@ -1044,7 +1044,7 @@ def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
                         break
                 if not skip or only_count:
                     for uri_varname, value in filter_vars.items():
-                        html.set_var(uri_varname, value)
+                        html.set_var(uri_varname, "%s" % value)
 
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.

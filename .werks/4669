@@ -1,0 +1,11 @@
+Title: Fixed possible exception in view dashlets (e.g. single event views)
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p22
+Date: 1494332276
+Class: fix
+
+Fixed possible exception in dashlets when context vars are not strings. This
+can occur e.g. when adding views filtering for single event console event
+history entries.

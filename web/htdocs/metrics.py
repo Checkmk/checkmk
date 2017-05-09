@@ -448,7 +448,16 @@ def translate_metrics(perf_data, check_command):
                 break
             elif entry[index]:
                 try:
-                    value = float_or_int(entry[index])
+                    try:
+                        value = float_or_int(entry[index])
+                    except ValueError:
+                        if ":" in entry[index]:
+                            # range format (see nagios docs) - not supported by Check_MK
+                            # Silently skip those numbers
+                            pass
+                        else:
+                            raise
+
                     new_entry["scalar"][key] = value * translation_entry["scale"]
                 except:
                     if config.debug:

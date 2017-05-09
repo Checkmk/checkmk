@@ -1,0 +1,13 @@
+Title: Metrics: Fixed exceptions when trying to parse perfdata with range warn/crit
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p22
+Date: 1494337042
+Class: fix
+
+The Nagios performance data format allows plugins to specify ranges for warn/crit thresholds.
+The numbers need to be separated by a ":" in this case. This is not supported with the Check_MK
+graphing system and lead to an exception.
+
+The handling has now been changed to silently ignore those values.

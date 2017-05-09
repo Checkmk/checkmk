@@ -73,6 +73,16 @@ def inv_if(info, params):
 
         if last_change > 0:
             state_age = uptime - last_change
+
+            # Assume counter rollover in case uptime is less than last_change and
+            # add 497 days (counter maximum).
+            # This way no negative chenge times are shown anymore. The state change is shown
+            # wrong in case it's really 497 days ago when state changed but there's no way to
+            # get the count of rollovers since change (or since uptime) and it's better the
+            # wrong negative state change is not shown anymore...
+            if state_age < 0:
+                state_age = 42949672 - last_change + uptime
+
         else:
             # Assume point of time of boot as last state change.
             state_age = uptime

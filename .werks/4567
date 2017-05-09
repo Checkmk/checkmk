@@ -1,0 +1,23 @@
+Title: inventory of interfaces: prevent showing negative last_state_change value
+Level: 2
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494337855
+Class: fix
+
+On SNMP devices sysUpTime is a 32-bit counter and will roll over after 496 days.
+ifLastChange is the timestamp from sysUpTime when the state changed. At
+inventory time we got a negative value if sysUpTime was smaller then
+ifLastChange (because it rolled over) using the normal formula. If sysUpTime is
+smaller than ifLastChange we add 496 days for the rollover now.
+
+When the device reboots all last_state_change values are set to 0 by the device
+so those cases are not affected by the fix..
+
+Beware there's no way to get the count of times the sysUpTime counter rolled
+over so the last_state_change is not accurate in case it's in real more than 496
+days ago. ...but this situation has never been different. This fix just removes
+another error in shown values.
+

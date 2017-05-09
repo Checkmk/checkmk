@@ -1431,11 +1431,17 @@ class ModeBIEditRule(ModeBI):
         if self._new:
             cloneid = html.var("clone")
             if cloneid:
-                value = self._pack["rules"][cloneid]
+                try:
+                    value = self._pack["rules"][cloneid]
+                except KeyError:
+                    raise MKGeneralException(_("This BI rule does not exist"))
             else:
                 value = {}
         else:
-            value = self._pack["rules"][self._ruleid]
+            try:
+                value = self._pack["rules"][self._ruleid]
+            except KeyError:
+                raise MKGeneralException(_("This BI rule does not exist"))
 
         html.begin_form("birule", method="POST")
         self.valuespec().render_input("rule", value)

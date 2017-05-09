@@ -1,0 +1,11 @@
+Title: Fixed exception when trying to edit not existing BI aggregation
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b7
+Date: 1494332654
+
+

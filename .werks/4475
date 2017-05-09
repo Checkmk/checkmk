@@ -1,0 +1,13 @@
+Title: Windows Agent: Agent shutdown no longer stalls while plugin is running
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b7
+Date: 1494321863
+
+The agent did not stop any running plugins when the shutdown command was issued
+and waited for their completion. A "net stop check_mk_agent" could fail because of this behaviour.
+The agent updater suffered from this too, because the MSI installer failed to stop the service in time.

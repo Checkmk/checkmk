@@ -152,16 +152,27 @@ bool TableServiceGroups::isAuthorized(Row row, contact *ctc) {
         return false;
     }
 
-    auto sg = rowData<servicegroup>(row);
-    for (servicesmember *mem = sg->members; mem != nullptr; mem = mem->next) {
+    auto has_contact = [=](servicesmember *mem) {
         service *svc = mem->service_ptr;
-        bool is = is_authorized_for(ctc, svc->host_ptr, svc);
-        if (is && g_group_authorization == AuthorizationKind::loose) {
-            return true;
+        return is_authorized_for(ctc, svc->host_ptr, svc);
+    };
+    if (g_group_authorization == AuthorizationKind::loose) {
+        // TODO(sp) Need an iterator here, "loose" means "any_of"
+        for (servicesmember *mem = rowData<servicegroup>(row)->members;
+             mem != nullptr; mem = mem->next) {
+            if (has_contact(mem)) {
+                return true;
+            }
         }
-        if (!is && g_group_authorization == AuthorizationKind::strict) {
-            return false;
+        return false;
+    } else {
+        // TODO(sp) Need an iterator here, "strict" means "all_of"
+        for (servicesmember *mem = rowData<servicegroup>(row)->members;
+             mem != nullptr; mem = mem->next) {
+            if (!has_contact(mem)) {
+                return false;
+            }
         }
+        return true;
     }
-    return true;
 }

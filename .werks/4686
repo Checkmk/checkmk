@@ -1,0 +1,13 @@
+Title: FIX Fixed "loose" authorization for hostgroups/servicegroups tables in NEB
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494318466
+Class: fix
+
+The "loose" authorization mode for hostgroups/servicegroups tables was
+effectively non-existent: It always authorized all contacts.  This has been
+fixed, so you see only the intended rows now.  Note that this only affected
+the NEB, not the Check_MK Micro Core.

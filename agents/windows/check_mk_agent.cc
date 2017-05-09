@@ -239,6 +239,7 @@ void foreach_enabled_section(bool realtime,
 TCHAR *gszServiceName = (TCHAR *)TEXT(SERVICE_NAME);
 SERVICE_STATUS serviceStatus;
 SERVICE_STATUS_HANDLE serviceStatusHandle = 0;
+void stop_threads();
 
 void WINAPI ServiceControlHandler(DWORD controlCode) {
     switch (controlCode) {
@@ -248,6 +249,7 @@ void WINAPI ServiceControlHandler(DWORD controlCode) {
         case SERVICE_CONTROL_SHUTDOWN:
         case SERVICE_CONTROL_STOP:
             g_should_terminate = true;
+            stop_threads();
             serviceStatus.dwCurrentState = SERVICE_STOP_PENDING;
             SetServiceStatus(serviceStatusHandle, &serviceStatus);
             return;
@@ -429,7 +431,7 @@ void stop_threads() {
     // just check the script_container status
     foreach_enabled_section(false, [&thread_handles](Section *section) {
         std::vector<HANDLE> temp = section->stopAsync();
-        thread_handles.insert(temp.begin(), temp.end(), thread_handles.end());
+        thread_handles.insert(thread_handles.end(), temp.begin(), temp.end());
     });
 
     WaitForMultipleObjects(thread_handles.size(), &thread_handles[0], TRUE,

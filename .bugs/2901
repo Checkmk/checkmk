@@ -1,0 +1,13 @@
+Title: WATO rule edit/delete: Rules are referenced by list index (can delete/edit wrong rule)
+Component: wato
+State: open
+Date: 2017-05-09 16:06:49
+Targetversion: 1.5.0
+Class: bug
+
+When multiple users edit the same ruleset for example by moving deleting rules they can edit wrong rules
+by accident. This can happen because the rules are identified by their position in the ruleset list which
+is really bad when doing actions with an outdated view.
+
+We either need to store a hash/token of the previous configuration, send it with the edit action and
+compare it when applying a new change or we need to add some permanent identity to the rules.

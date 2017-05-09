@@ -1,0 +1,114 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+
+# <<<storeonce_stores:sep(9)>>>
+# [1/0]
+# Store ID        0
+# Name    VM_WinSrv_Store
+# Description     Catalyst Store for Windows based Server
+# ServiceSet ID   1
+# Creation Time UTC       1434446799
+# Health Level    1
+# Health  OK
+# Status  Online
+# Version 2
+# Number Of Catalyst Items        274
+# User Data Stored        1467.568399314
+# Size On Disk    604.827284898
+# Dedupe Ratio    2.4
+# Dedupe Ratio    2.4
+# Creation On     2015-06-16T09:26:39Z
+# Last Modified   2015-06-16T09:26:39Z
+# primaryTransferPolicy   0
+# primaryTransferPolicyString     High Bandwidth
+# secondaryTransferPolicy 1
+# secondaryTransferPolicyString   Low Bandwidth
+# userDataSizeLimitBytes  0
+# dedupedDataSizeOnDiskLimitBytes 0
+# dataJobRetentionDays    90
+# inboundCopyJobRetentionDays     90
+# outboundCopyJobRetentionDays    90
+# supportStorageModeVariableBlockDedupe   true
+# supportStorageModeFixedBlockDedupe      true
+# supportStorageModeNoDedupe      true
+# supportWriteSparse      false
+# supportWriteInPlace     false
+# supportRawReadWrite     true
+# supportMultipleObjectOpeners    true
+# supportMultipleObjectWrites     false
+# supportCloneExtent      true
+# userBytes       1467568399314
+# diskBytes       604827284898
+# numItems        274
+# numDataJobs     2536
+# numOriginCopyJobs       0
+# numDestinationCopyJobs  0
+# Is online       true
+# is store encrypted      false
+# secure erase mode       0
+# secure erase mode description   Secure_Erase_NoPassCount
+# isTeamed        false
+# teamUUID        0000014DFBB121BB2954110834BAD600
+# numTeamMembers  0
+
+
+def inventory_storeonce_stores(parsed):
+    for key, values in parsed.iteritems():
+        yield ("ServiceSet %s Store %s" % \
+                (values["ServiceSet ID"], values["Name"]), \
+                {})
+
+def check_storeonce_stores(item, params, parsed):
+    for key, values in parsed.iteritems():
+        item_name = "ServiceSet %s Store %s" % \
+                (values["ServiceSet ID"], values["Name"])
+        if not item == item_name:
+            continue
+
+        state = translate_storeonce_status(values["Health Level"])
+        size = float(values["diskBytes"])
+        yield state, "Status: %s, Size: %s" % \
+                (values["Status"], get_bytes_human_readable(size)), \
+                [ ("data_size", size) ]
+
+        if "Dedupe Ratio" in values:
+            dedup = float(values["Dedupe Ratio"])
+            yield 0, "Dedup ratio: %.2f" % dedup, \
+                        [ ( "dedup_rate", dedup) ]
+        if not values["Description"] == "":
+            yield 0, "Description: %s" % values["Description"]
+
+
+check_info['storeonce_stores'] = {
+    'parse_function'        : parse_storeonce_servicesets,
+    'inventory_function'    : inventory_storeonce_stores,
+    'check_function'        : check_storeonce_stores,
+    'service_description'   : '%s',
+    'has_perfdata'          : True,
+    'includes'              : [ "storeonce.include" ],
+}

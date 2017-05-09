@@ -1,0 +1,17 @@
+title: HPE StoreOnce: Stores
+agents: storeonce
+catalog: hw/storagehw/hpe
+license: GPL
+distribution: check_mk
+description:
+ This check displays the state of a store. The states reported by the appliance
+ are compatible to Check_MK and the additional "Information" state will be
+ treated as {OK}. Further more the check displays the size of a store. If
+ available the ratio of deduplication and/or description of the store will
+ also be available.
+
+item:
+ The item is the store name of a particular service set
+
+inventory:
+ One service for each store is created

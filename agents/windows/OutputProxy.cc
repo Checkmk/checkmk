@@ -76,7 +76,6 @@ void BufferedSocketProxy::output(const char *format, ...) {
     _length += written_len;
 }
 
-
 void BufferedSocketProxy::writeBinary(const char *buffer, size_t size) {
     size_t target_size = _length + size + 1;
     if (_buffer.size() < target_size) {

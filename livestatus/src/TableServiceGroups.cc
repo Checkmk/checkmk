@@ -165,14 +165,13 @@ bool TableServiceGroups::isAuthorized(Row row, contact *ctc) {
             }
         }
         return false;
-    } else {
-        // TODO(sp) Need an iterator here, "strict" means "all_of"
-        for (servicesmember *mem = rowData<servicegroup>(row)->members;
-             mem != nullptr; mem = mem->next) {
-            if (!has_contact(mem)) {
-                return false;
-            }
-        }
-        return true;
     }
+    // TODO(sp) Need an iterator here, "strict" means "all_of"
+    for (servicesmember *mem = rowData<servicegroup>(row)->members;
+         mem != nullptr; mem = mem->next) {
+        if (!has_contact(mem)) {
+            return false;
+        }
+    }
+    return true;
 }

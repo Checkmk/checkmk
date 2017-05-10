@@ -1,0 +1,11 @@
+Title: Agent bakery creates Solaris PKG packages now
+Level: 2
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1494423234
+Class: feature
+
+The agent bakery can now pack solaris "pkg" packages now. With this change it
+is now also possible to use the agent updater on solaris systems.

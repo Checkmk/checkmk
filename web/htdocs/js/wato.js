@@ -645,6 +645,8 @@ function lock_activation_controls(lock)
     var elements = [];
     elements.push(document.getElementById("activate_affected"));
     elements.push(document.getElementById("activate_selected"));
+    // TODO: Remove once new changes mechanism has been implemented
+    elements.push(document.getElementById("discard_changes_button"));
 
     elements = elements.concat(Array.prototype.slice.call(document.getElementsByName("activate_p_comment"), 0));
     elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("site_checkbox"), 0));

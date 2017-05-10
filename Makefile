@@ -53,6 +53,23 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 CPPCHECK           := cppcheck
 DOXYGEN            := doxygen
 IWYU_TOOL          := tests/iwyu_tool_jenkins.py
+
+# The Bear versions have a slightly tragic history: Due to the clang bug
+# https://llvm.org/bugs/show_bug.cgi?id=24710 we need absolute paths in our
+# compilation database. Furthermore, gcc and clang have slightly different
+# behavior regarding include paths when the -I flag contains a relative path and
+# symlinks are involved, so this is yet another reason to use absolute paths.
+#
+# Consequently, we upstreamed a fix for this to the Bear project, see
+# https://github.com/rizsotto/Bear/commit/fb1645de9. This fix lived happily in
+# the Bear releases 2.1.4, 2.1.5, and 2.2.0, but after that, some "improvements"
+# broke the fix again. :-/ Until a new fix has been upstreamed, make sure that
+# that you use the right Bear.
+#
+# To install a working version locally, just do:
+#    git clone https://github.com/rizsotto/Bear.git && cd Bear && git checkout 2.2.0 && cmake -DCMAKE_INSTALL_PREFIX=$HOME/local/Bear-2.2.0 && make install
+# and put $HOME/local/Bear-2.2.0/bin into your PATH or set the make variable
+# below accordingly.
 BEAR               := bear
 
 M4_DEPS            := $(wildcard m4/*) configure.ac

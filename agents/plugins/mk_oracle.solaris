@@ -167,7 +167,8 @@ for SID in $SIDS; do
 
             if [ '$EXCLUDE' = '${EXCLUDE/logswitches/}' ]; then
                 echo '<<<oracle_logswitches>>>'
-                echo \"select count(1) from v\\\$loghist where first_time > sysdate - 1/24;\" | sqlplus \"$SID\"
+                echo \"select count(1) logswitches from v\\\$loghist h , v\\\$instance i
+                       where h.first_time > sysdate - 1/24 and h.thread# = i.instance_number;\" | sqlplus \"$SID\"
             fi
 
             if [ '$EXCLUDE' = '${EXCLUDE/tablespaces/}' ]; then

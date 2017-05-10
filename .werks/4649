@@ -1,0 +1,10 @@
+Title: fortigate_ipsecvpn: tunnels which are down can now be ignored during levels calculation
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494404461
+Class: feature
+
+

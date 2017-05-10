@@ -25,7 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 
-fortigate_ipsecvpn_default_levels = (1, 2)
+factory_settings['fortigate_ipsecvpn_default_levels'] = {
+    "levels" : (1, 2),
+}
 
 
 def inventory_fortigate_ipsecvpn(info):
@@ -34,47 +36,59 @@ def inventory_fortigate_ipsecvpn(info):
 
 
 def check_fortigate_ipsecvpn(item, params, info):
-
     if type(params) == tuple:
         params = { "levels" : params }
 
-    ent_status_map = {
-        "1": "down",
-        "2": "up"
-    }
-
     warn, crit = params["levels"]
+    tunnels_ignore_levels = params.get("tunnels_ignore_levels", [])
 
-    tunnels_down = [p2name for p2name, ent_status in info
-                    if ent_status_map[ent_status] == "down"]
+    tunnels_down    = []
+    tunnels_ignored = []
+    for p2name, ent_status in info:
+        if ent_status == "1":
+            tunnels_down.append(p2name)
+            if p2name in tunnels_ignore_levels:
+                tunnels_ignored.append(p2name)
 
-    num_down  = len(tunnels_down)
-    num_total = len(info)
-    num_up    = num_total - num_down
+    num_total        = len(info)
+    num_down         = len(tunnels_down)
+    num_ignored      = len(tunnels_ignored)
+    num_down_ignored = num_down - num_ignored
+    num_up           = num_total - num_down
 
-    if num_down >= crit:
+    if num_down_ignored >= crit:
         status = 2
-    elif num_down >= warn:
+    elif num_down_ignored >= warn:
         status = 1
     else:
         status = 0
 
-    infotext = "Active/Configured: %d/%d" % (num_total - num_down, num_total)
+    infotext = "Total: %d, Up: %d, Down: %d" % \
+               (num_total, num_up, num_down)
+
+    if num_ignored:
+        infotext += " (ignored: %d)" % num_ignored
+
+    if status > 0:
+        infotext += " (warn/crit at %d/%d)" % (warn, crit)
+
     if tunnels_down:
-        infotext += ", down: " + ", ".join(tunnels_down)
+        infotext += ", Tunnels: %s" % (", ".join(tunnels_down))
 
     return status, infotext, [('active_vpn_tunnels', num_up, '', '', 0, num_total)]
 
 
 check_info["fortigate_ipsecvpn"] = {
-    "default_levels_variable"   : "fortigate_ipsecvpn",
     "inventory_function"        : inventory_fortigate_ipsecvpn,
     "check_function"            : check_fortigate_ipsecvpn,
     "service_description"       : "VPN IPSec Tunnels",
     "has_perfdata"              : True,
     "snmp_scan_function"        : lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
-    "snmp_info"                 : (".1.3.6.1.4.1.12356.101.12.2.2.1", [3,     # fgVpnTunEntPhase2Name
-                                                                 20]),  # fgVpnTunEntStatus
+    "snmp_info"                 : (".1.3.6.1.4.1.12356.101.12.2.2.1", [
+                                    3,  # fgVpnTunEntPhase2Name
+                                    20, # fgVpnTunEntStatus
+                                  ]),
+    "default_levels_variable"   : "fortigate_ipsecvpn_default_levels",
     "group"                     : "ipsecvpn",
 }
 

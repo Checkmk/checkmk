@@ -1,0 +1,16 @@
+Title: Activation: Discard of changes is now possible again
+Level: 2
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1494398195
+
+The "discard changes" button which could be used to revert the pending
+changes in WATO to the last activated configuration was removes during
+1.4 development.
+
+The main reason for this is that the snapshot feature of WATO is being
+dropped and replaced in Check_MK 1.5 by some better mechanism.

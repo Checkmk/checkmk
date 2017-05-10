@@ -1,0 +1,13 @@
+Title: mk_oracle: Fixed logswitches SQL statement for ORACLE RAC case
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b7
+Date: 1494398362
+
+In case of at least two instances the overall sum of logswitches
+was reported for each instance. Now the related amounts of logswitches
+of each instance are returned.

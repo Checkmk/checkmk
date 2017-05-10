@@ -218,17 +218,7 @@ def log_audit(linkinfo, action, message, user_id = None):
 
 
 def confirm_all_local_changes():
-    site_id = config.omd_site()
-
-    try:
-        os.unlink(site_changes_path(site_id))
-    except OSError, e:
-        if e.errno == 2:
-            pass # Not existant -> OK
-        else:
-            raise
-
-    need_sidebar_reload()
+    ActivateChanges().confirm_site_changes(config.omd_site())
 
 
 #
@@ -3966,6 +3956,18 @@ class ActivateChanges(object):
         return changes
 
 
+    def confirm_site_changes(self, site_id):
+        try:
+            os.unlink(site_changes_path(site_id))
+        except OSError, e:
+            if e.errno == 2:
+                pass # Not existant -> OK
+            else:
+                raise
+
+        need_sidebar_reload()
+
+
     def _save_site_changes(self, site_id, changes):
         # First truncate the file
         open(site_changes_path(site_id), "w")
@@ -5001,6 +5003,7 @@ def execute_activate_changes(domains):
 #   '----------------------------------------------------------------------'
 # TODO: May be removed in near future.
 
+# TODO: Remove once new changes mechanism has been implemented
 def create_snapshot(comment):
     make_nagios_directory(snapshot_dir)
 
@@ -5027,6 +5030,7 @@ def create_snapshot(comment):
     return snapshot_name
 
 
+# TODO: Remove once new changes mechanism has been implemented
 def do_create_snapshot(data):
     snapshot_name = data["snapshot_name"]
     snapshot_dir  = cmk.paths.var_dir + "/wato/snapshots"
@@ -5115,6 +5119,7 @@ def do_create_snapshot(data):
         shutil.rmtree(work_dir)
 
 
+# TODO: Remove once new changes mechanism has been implemented
 def do_snapshot_maintenance():
     snapshots = []
     for f in os.listdir(snapshot_dir):
@@ -5131,6 +5136,7 @@ def do_snapshot_maintenance():
 
 
 # Returns status information for snapshots or snapshots in progress
+# TODO: Remove once new changes mechanism has been implemented
 def get_snapshot_status(snapshot, validate_checksums = False):
     if type(snapshot) == tuple:
         name, file_stream = snapshot

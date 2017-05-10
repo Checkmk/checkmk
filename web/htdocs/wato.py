@@ -5208,18 +5208,97 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
     def buttons(self):
         home_button()
 
+        # TODO: Remove once new changes mechanism has been implemented
+        if config.user.may("wato.activate") and self.has_changes() and self._get_last_wato_snapshot_file():
+            html.context_button(_("Discard Changes!"),
+                html.makeactionuri([("_action", "discard")]),
+                "discard", id="discard_changes_button")
+
         if config.user.may("wato.sites"):
             html.context_button(_("Site Configuration"), folder_preserving_link([("mode", "sites")]), "sites")
 
         if config.user.may("wato.auditlog"):
             html.context_button(_("Audit Log"), folder_preserving_link([("mode", "auditlog")]), "auditlog")
 
-        #if config.guitests_enabled:
-        #    html.context_button(_("Reschedule All"), "guitest_reschedule_all.py", "guitest")
-
 
     def action(self):
-        pass
+        if html.var("_action") != "discard":
+            return
+
+        if not html.check_transaction():
+            return
+
+        # TODO: Remove once new changes mechanism has been implemented
+        # Now remove all currently pending changes by simply restoring the last automatically
+        # taken snapshot. Then activate the configuration. This should revert all pending changes.
+        file_to_restore = self._get_last_wato_snapshot_file()
+
+        if not file_to_restore:
+            raise MKUserError(None, _('There is no WATO snapshot to be restored.'))
+
+        msg = _("Discarded pending changes (Restored %s)") % file_to_restore
+
+        # All sites and domains can be affected by a restore: Better restart everything.
+        add_change("changes-discarded", msg, sites=self.activation_site_ids(),
+            domains=ConfigDomain.enabled_domains(),
+            need_restart=True)
+
+        self._extract_snapshot(file_to_restore)
+        execute_activate_changes([ d.ident for d in ConfigDomain.enabled_domains() ])
+
+        for site_id in self.activation_site_ids():
+            self.confirm_site_changes(site_id)
+
+	html.header(self.title(), javascripts=["wato"], stylesheets=wato_styles,
+    	            show_body_start=display_options.enabled(display_options.H),
+    	            show_top_heading=display_options.enabled(display_options.T))
+    	html.open_div(class_="wato")
+
+	html.begin_context_buttons()
+	home_button()
+	html.end_context_buttons()
+
+	html.message(_("Successfully discarded all pending changes."))
+        html.javascript("hide_changes_buttons();")
+	html.footer()
+
+        return False
+
+
+    # TODO: Remove once new changes mechanism has been implemented
+    def _extract_snapshot(self, snapshot_file):
+        self._extract_from_file(snapshot_dir + snapshot_file, backup_domains)
+
+
+    # TODO: Remove once new changes mechanism has been implemented
+    def _extract_from_file(self, filename, elements):
+        import tarfile
+        if type(elements) == list:
+            multitar.extract(tarfile.open(filename, "r"), elements)
+
+        elif type(elements) == dict:
+            multitar.extract_domains(tarfile.open(filename, "r"), elements)
+
+
+    # TODO: Remove once new changes mechanism has been implemented
+    def _get_last_wato_snapshot_file(self):
+        for snapshot_file in self._get_snapshots():
+            status = get_snapshot_status(snapshot_file)
+            if status['type'] == 'automatic' and not status['broken']:
+                return snapshot_file
+
+
+    # TODO: Remove once new changes mechanism has been implemented
+    def _get_snapshots(self):
+        snapshots = []
+        try:
+            for f in os.listdir(snapshot_dir):
+                if os.path.isfile(snapshot_dir + f):
+                    snapshots.append(f)
+            snapshots.sort(reverse=True)
+        except OSError:
+            pass
+        return snapshots
 
 
     def page(self):

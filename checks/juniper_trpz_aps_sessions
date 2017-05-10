@@ -165,7 +165,7 @@ def check_juniper_trpz_aps_sessions(item, _no_params, parsed):
         if noise_floor_radios:
             perfdata.append(("noise_floor", max(noise_floor_radios)))
 
-        yield state, ", ".join(infotexts)
+        yield state, ", ".join(infotexts), perfdata
 
     else:
         yield 1, "Access point not reachable"

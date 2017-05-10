@@ -636,6 +636,7 @@ register_check_parameters(
                         Integer(title=_("Warning at"), default_value=1),
                         Integer(title=_("Critical at"), default_value=2),
                     ])),
+                ("tunnels_ignore_levels", ListOfStrings(title = _("Tunnels which ignore levels")))
             ],
             optional_keys = []
         ),

@@ -24,7 +24,7 @@
 
 
 SHELL         = /bin/bash
-VERSION       = 1.2.8p22
+VERSION       = 1.2.8p23
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i686-w64-mingw32-windres
 COPTIONS      = -s -O2 -Wall -Wformat=2 -Werror -static -static-libgcc -static-libstdc++ -fno-rtti -std=c++11 -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"' -D__USE_MINGW_ANSI_STDIO

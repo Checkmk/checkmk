@@ -44,7 +44,7 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-HostFileColumn::HostFileColumn(string name, string description,
+HostFileColumn::HostFileColumn(const string& name, const string& description,
                                std::string base_dir, std::string suffix,
                                int indirect_offset, int extra_offset,
                                int extra_extra_offset)
@@ -96,7 +96,7 @@ unique_ptr<vector<char>> HostFileColumn::getBlob(Row row) {
 
     size_t bytes_to_read = st.st_size;
     unique_ptr<vector<char>> result = make_unique<vector<char>>(bytes_to_read);
-    char *buffer = &(*result)[0];
+    char* buffer = &(*result)[0];
     while (bytes_to_read > 0) {
         ssize_t bytes_read = read(fd, buffer, bytes_to_read);
         if (bytes_read == -1) {

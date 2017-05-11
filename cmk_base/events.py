@@ -441,7 +441,7 @@ def event_match_site(rule, context):
     required_site_ids = rule["match_site"]
 
     # Fallback to local site ID in case there is none in the context
-    site_id = context.get("OMD_SITE", omd_site())
+    site_id = context.get("OMD_SITE", cmk.omd_site())
 
     if site_id not in required_site_ids:
         return "The site '%s' is not in the required sites list: %s" % \

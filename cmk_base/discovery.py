@@ -580,8 +580,8 @@ def _discovery_filter_by_lists(hostname, check_type, item, whitelist, blacklist)
 
 def get_info_for_discovery(hostname, ipaddress, section_name, use_caches):
     def add_nodeinfo_during_discovery(info, s):
-        if s in check_info and checks.check_info[s]["node_info"]:
-            return add_nodeinfo(info, None)
+        if s in checks.check_info and checks.check_info[s]["node_info"]:
+            return agent_data.add_nodeinfo(info, None)
         else:
             return info
 

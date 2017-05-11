@@ -41,6 +41,7 @@ structures like log files or stuff.
 """
 
 import os
+import traceback
 
 import cmk.paths
 from cmk.exceptions import MKGeneralException

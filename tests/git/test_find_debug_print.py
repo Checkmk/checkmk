@@ -13,6 +13,7 @@ check_paths = [
     "bin",
     "cmk_base",
     "cmk_base/cee",
+    "cmk_base/cme",
     "cmk_base/modes",
     "cmk_base/default_config",
     "lib",
@@ -28,7 +29,7 @@ check_paths = [
 
 def test_find_debug_code():
     scanned = 0
-    for base_path in [ cmk_path(), cmc_path() ]:
+    for base_path in [ cmk_path(), cmc_path(), cme_path() ]:
         for dir_path in check_paths:
             path = "%s/%s" % (base_path, dir_path)
             if not os.path.exists(path):

@@ -86,8 +86,10 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     try:
         item_state.load(hostname)
-        agent_version, num_success, error_sections, problems = \
+        cmk_info, num_success, error_sections, problems = \
             do_all_checks_on_host(hostname, ipaddress, only_check_types)
+
+        agent_version = cmk_info["version"]
 
         num_errors = len(error_sections)
 
@@ -96,13 +98,20 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
         if problems:
             output = "%s, " % problems
-            status = exit_spec.get("connection", 2)
+
+            if problems == "Empty output from agent":
+                status = exit_spec.get("empty_output", 2)
+            else:
+                status = exit_spec.get("connection", 2)
+
         elif num_errors > 0 and num_success > 0:
             output = "Missing agent sections: %s - " % ", ".join(error_sections)
             status = exit_spec.get("missing_sections", 1)
+
         elif num_errors > 0:
             output = "Got no information from host, "
             status = exit_spec.get("empty_output", 2)
+
         elif expected_version and agent_version \
              and not _is_expected_agent_version(agent_version, expected_version):
             # expected version can either be:
@@ -121,9 +130,11 @@ def do_check(hostname, ipaddress, only_check_types = None):
                 expected = expected_version
             output = "unexpected agent version %s (should be %s), " % (agent_version, expected)
             status = exit_spec.get("wrong_version", 1)
+
         elif config.agent_min_version and agent_version < config.agent_min_version:
             output = "old plugin version %s (should be at least %s), " % (agent_version, config.agent_min_version)
             status = exit_spec.get("wrong_version", 1)
+
         else:
             output = ""
             if not config.is_cluster(hostname) and agent_version != None:
@@ -301,6 +312,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                 console.verbose("%-20s PEND - Cannot compute check result: %s\n" % (description, e))
                 dont_submit = True
 
+            except MKTimeout:
+                raise
+
             except Exception, e:
                 if cmk.debug.enabled():
                     raise
@@ -358,23 +372,23 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
             num_success += 1
 
     if fetch_agent_version:
+        cmk_info = { "version" : "(unknown)" }
         try:
             if config.is_tcp_host(hostname):
-                version_info = agent_data.get_info_for_check(hostname, ipaddress, 'check_mk')
-                agent_version = version_info[0][1]
+                for line in get_info_for_check(hostname, ipaddress, 'check_mk'):
+                    value = " ".join(line[1:]) if len(line) > 1 else None
+                    cmk_info[line[0][:-1].lower()] = value
+
             else:
-                agent_version = None
+                cmk_info["version"] = None
         except MKAgentError:
             agent_data.add_broken_agent_host(hostname)
-            agent_version = "(unknown)"
-        except:
-            agent_version = "(unknown)"
     else:
-        agent_version = None
+        cmk_info["version"] = None
 
     error_section_list = sorted(list(error_sections))
 
-    return agent_version, num_success, error_section_list, ", ".join(problems)
+    return cmk_info, num_success, error_section_list, ", ".join(problems)
 
 
 def is_manual_check(hostname, check_type, item):

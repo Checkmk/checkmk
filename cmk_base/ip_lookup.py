@@ -33,6 +33,7 @@ import cmk_base
 import cmk_base.console as console
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
+from cmk.exceptions import MKGeneralException
 
 _fake_dns          = False
 _enforce_localhost = False
@@ -249,4 +250,3 @@ def update_dns_cache():
                     continue
 
     return updated, failed
->>>>>>> Moved agent communication to cmk_base

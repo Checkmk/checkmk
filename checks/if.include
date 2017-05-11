@@ -362,17 +362,19 @@ def inventory_if_common(info, has_nodeinfo = False):
             else:
                 item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo, pad_portnumbers)
 
+            current_host_name = host_name()
+
             # Prepare grouped interfaces
             is_only_in_group = False
             for group_name, attrs in group_patterns.items():
                 group_type     = attrs["group_type"]
                 group_presence = attrs["group_presence"]
 
-                if g_hostname not in attrs["group_patterns"]:
+                if current_host_name not in attrs["group_patterns"]:
                     continue
 
-                p_node_items = attrs["group_patterns"][g_hostname].get("items")
-                p_iftype     = attrs["group_patterns"][g_hostname].get("iftype")
+                p_node_items = attrs["group_patterns"][current_host_name].get("items")
+                p_iftype     = attrs["group_patterns"][current_host_name].get("iftype")
 
                 # Interfaces can be grouped by item or iftype
                 match_type = True
@@ -546,7 +548,7 @@ def check_if_common(item, params, info, has_nodeinfo = False, group_name = "Grou
 
             else:
                 if node is None:
-                    node = g_hostname
+                    node = host_name()
 
                 if node not in params["aggregate"]["group_patterns"]:
                     continue

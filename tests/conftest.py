@@ -15,6 +15,10 @@ def cmc_path():
     return os.path.realpath(cmk_path() + "/enterprise")
 
 
+def cme_path():
+    return os.path.realpath(cmk_path() + "/managed")
+
+
 def add_python_paths():
     # make the testlib available to the test modules
     sys.path.insert(0, os.path.dirname(__file__))

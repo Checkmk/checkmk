@@ -155,7 +155,7 @@ def do_automation(cmd, args):
         if cmk.debug.enabled():
             raise
         else:
-            console.error("%s\n" % make_utf8("%s" % e))
+            console.error("%s\n" % cmk_base.utils.make_utf8("%s" % e))
             profiling.output_profile()
             sys.exit(2)
 

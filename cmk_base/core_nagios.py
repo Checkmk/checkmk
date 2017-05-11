@@ -814,15 +814,10 @@ def _quote_nagios_string(s):
     return "'" + s.replace('\\', '\\\\').replace("'", "'\"'\"'").replace('!', '\\!') + "'"
 
 
-<<<<<<< f54b54af64c5b7de0b365bd41c4f75b121136825:modules/nagios.py
-def extra_host_conf_of(hostname, exclude=None):
+def _extra_host_conf_of(hostname, exclude=None):
     if exclude == None:
         exclude = []
-    return extra_conf_of(config.extra_host_conf, hostname, None, exclude)
-=======
-def _extra_host_conf_of(hostname):
-    return _extra_conf_of(config.extra_host_conf, hostname, None)
->>>>>>> Fully replaced modules by cmk_base:cmk_base/core_nagios.py
+    return _extra_conf_of(config.extra_host_conf, hostname, None, exclude)
 
 
 # Collect all extra configuration data for a service
@@ -846,14 +841,10 @@ def _extra_service_conf_of(hostname, description):
     return conf.encode("utf-8")
 
 
-<<<<<<< f54b54af64c5b7de0b365bd41c4f75b121136825:modules/nagios.py
-def extra_conf_of(confdict, hostname, service, exclude=None):
+def _extra_conf_of(confdict, hostname, service, exclude=None):
     if exclude == None:
         exclude = []
 
-=======
-def _extra_conf_of(confdict, hostname, service):
->>>>>>> Fully replaced modules by cmk_base:cmk_base/core_nagios.py
     result = ""
     for key, conflist in confdict.items():
         if service != None:

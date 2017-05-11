@@ -37,6 +37,7 @@ import cmk.cpu_tracking as cpu_tracking
 from cmk.exceptions import MKGeneralException
 
 import cmk_base
+import cmk.store as store
 import cmk_base.config as config
 import cmk_base.rulesets as rulesets
 import cmk_base.console as console
@@ -103,7 +104,7 @@ def add_nodeinfo(info, nodename):
     return new_info
 
 
-def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore_check_interval=False):
+def _get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore_check_interval=False):
     # If the check want's the node info, we add an additional
     # column (as the first column) with the name of the node
     # or None (in case of non-clustered nodes). On problem arises,
@@ -111,7 +112,7 @@ def get_host_info(hostname, ipaddress, checkname, max_cachefile_age=None, ignore
     # have the same setting here. If not, let's raise an exception.
     has_nodeinfo = checks.check_info.get(checkname, {}).get("node_info", False)
 
-    nodes = nodes_of(hostname)
+    nodes = config.nodes_of(hostname)
     if nodes != None:
         info = []
         at_least_one_without_exception = False
@@ -496,15 +497,13 @@ def _store_cached_checkinfo(hostname, checkname, table):
 #   '----------------------------------------------------------------------'
 
 def _store_persisted_info(hostname, persisted):
-    # TODO: Use store.save_data_to_file
     dirname = cmk.paths.var_dir + "/persisted/"
     if persisted:
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
         file_path = "%s/%s" % (dirname, hostname)
-        file("%s.#new" % file_path, "w").write("%r\n" % persisted)
-        os.rename("%s.#new" % file_path, file_path)
+        store.save_data_to_file(file_path, persisted, pretty=False)
 
         console.verbose("Persisted sections %s.\n" % ", ".join(persisted.keys()))
 

@@ -3410,6 +3410,17 @@ function hide_crash_report_processing_msg()
     msg.parentNode.removeChild(msg);
 }
 
+function download_gui_crash_report(data_url)
+{
+    var link = document.createElement("a");
+    link.download = "Check_MK_GUI_Crash-" + (new Date().toISOString()) + ".tar.gz";
+    link.href = data_url;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    delete link;
+}
+
 //#.
 //#   .-Backup-------------------------------------------------------------.
 //#   |                  ____             _                                |

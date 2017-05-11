@@ -83,7 +83,8 @@ void *copy_thread(void *info) {
         if (r == -1) {
             printErrno("Error reading from " + to_string(from));
             break;
-        } else if (r == 0) {
+        }
+        if (r == 0) {
             if (ti->should_shutdown != 0) {
                 shutdown(to, SHUT_WR);
             }
@@ -92,7 +93,8 @@ void *copy_thread(void *info) {
                 return voidp;
             }
             break;
-        } else if (r == -2) {
+        }
+        if (r == -2) {
             r = 0;
         }
 

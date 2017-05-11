@@ -86,7 +86,7 @@ ConcreteLogger::ConcreteLogger(const string &name, Logger *parent)
     , _handler(name.empty() ? nullptr : new StreamHandler(cerr))
     , _use_parent_handlers(true) {}
 
-ConcreteLogger::~ConcreteLogger() { setHandler(unique_ptr<Handler>()); }
+ConcreteLogger::~ConcreteLogger() { delete _handler; }
 
 string ConcreteLogger::getName() const { return _name; }
 

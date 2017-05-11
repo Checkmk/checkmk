@@ -34,7 +34,7 @@ class Row;
 
 class HostFileColumn : public BlobColumn {
 public:
-    HostFileColumn(std::string name, std::string description,
+    HostFileColumn(const std::string& name, const std::string& description,
                    std::string base_dir, std::string suffix,
                    int indirect_offset, int extra_offset,
                    int extra_extra_offset);

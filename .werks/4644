@@ -1,0 +1,14 @@
+Title: f5_bigip_mem: Improved Memory Check. Now also for TMM
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1494490116
+Class: feature
+
+As HR-MIB and UCD-MIB delivered incorrect information, F5 devices now have
+their own checkplugin for memory. This includes also a separate Memory
+Service for the TTM (Traffic Management Module). <b>Important</b>: This is
+an incompatible change. You need to rediscover your services to remove the
+hr_mem check and add the new f5_bigip_mem check.

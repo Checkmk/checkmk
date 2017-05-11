@@ -27,14 +27,13 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <chrono>
-#include <cstddef>
+#include <iosfwd>
 #include <memory>
 #include <string>
 #include <vector>
 #include "data_encoding.h"
 class CSVSeparators;
 class Logger;
-class OutputBuffer;
 
 enum class OutputFormat { csv, broken_csv, json, python, python3 };
 
@@ -50,19 +49,18 @@ struct HexEscape {
 
 class Renderer {
 public:
-    static std::unique_ptr<Renderer> make(OutputFormat format,
-                                          OutputBuffer &output,
+    static std::unique_ptr<Renderer> make(OutputFormat format, std::ostream &os,
+                                          Logger *logger,
                                           const CSVSeparators &separators,
                                           int timezone_offset,
                                           Encoding data_encoding);
 
     virtual ~Renderer();
 
-    std::size_t size() const;
-
+    // default implementation for (un)signed int/long
     template <typename T>
     void output(T value) {
-        add(std::to_string(value));
+        _os << std::to_string(value);
     }
 
     void output(double value);
@@ -104,20 +102,18 @@ public:
     virtual void endDict() = 0;
 
 protected:
-    Renderer(OutputBuffer &output, int timezone_offset, Encoding data_encoding);
+    std::ostream &_os;
+    const Encoding _data_encoding;
 
-    void add(const std::string &str);
-    void add(const std::vector<char> &value);
+    Renderer(std::ostream &os, Logger *logger, int timezone_offset,
+             Encoding data_encoding);
 
     void outputByteString(const std::string &prefix,
                           const std::vector<char> &value);
     void outputUnicodeString(const std::string &prefix, const char *start,
                              const char *end, Encoding data_encoding);
 
-    const Encoding _data_encoding;
-
 private:
-    OutputBuffer &_output;
     const int _timezone_offset;
     Logger *const _logger;
 
@@ -155,8 +151,6 @@ public:
     ~QueryRenderer() { renderer().endQuery(); }
 
     Renderer &renderer() const { return _renderer; }
-
-    std::size_t size() const { return renderer().size(); }
 
 private:
     Renderer &_renderer;

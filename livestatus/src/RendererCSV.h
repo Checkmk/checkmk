@@ -26,17 +26,18 @@
 #define RendererCSV_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <iosfwd>
 #include <string>
 #include <vector>
 #include "Renderer.h"
 #include "data_encoding.h"
-class OutputBuffer;
+class Logger;
 
 // Note: The CSV format is a bit underspecified, but the most "authorative"
 // reference seems to be https://tools.ietf.org/html/rfc4180.
 class RendererCSV : public Renderer {
 public:
-    RendererCSV(OutputBuffer &output, int timezone_offset,
+    RendererCSV(std::ostream &os, Logger *logger, int timezone_offset,
                 Encoding data_encoding);
 
     void outputNull() override;

@@ -23,14 +23,16 @@
 // Boston, MA 02110-1301 USA.
 
 #include "RendererCSV.h"
-class OutputBuffer;
+#include <ostream>
+class Logger;
 
+using std::ostream;
 using std::string;
 using std::vector;
 
-RendererCSV::RendererCSV(OutputBuffer &output, int timezone_offset,
+RendererCSV::RendererCSV(ostream &os, Logger *logger, int timezone_offset,
                          Encoding data_encoding)
-    : Renderer(output, timezone_offset, data_encoding) {}
+    : Renderer(os, logger, timezone_offset, data_encoding) {}
 
 // --------------------------------------------------------------------------
 
@@ -41,28 +43,28 @@ void RendererCSV::endQuery() {}
 // --------------------------------------------------------------------------
 
 void RendererCSV::beginRow() {}
-void RendererCSV::beginRowElement() { add(R"(")"); }
-void RendererCSV::endRowElement() { add(R"(")"); }
-void RendererCSV::separateRowElements() { add(","); }
-void RendererCSV::endRow() { add("\r\n"); }
+void RendererCSV::beginRowElement() { _os << R"(")"; }  // "
+void RendererCSV::endRowElement() { _os << R"(")"; }    // "
+void RendererCSV::separateRowElements() { _os << ","; }
+void RendererCSV::endRow() { _os << "\r\n"; }
 
 // --------------------------------------------------------------------------
 
 void RendererCSV::beginList() {}
-void RendererCSV::separateListElements() { add(","); }
+void RendererCSV::separateListElements() { _os << ","; }
 void RendererCSV::endList() {}
 
 // --------------------------------------------------------------------------
 
 void RendererCSV::beginSublist() {}
-void RendererCSV::separateSublistElements() { add("|"); }
+void RendererCSV::separateSublistElements() { _os << "|"; }
 void RendererCSV::endSublist() {}
 
 // --------------------------------------------------------------------------
 
 void RendererCSV::beginDict() {}
-void RendererCSV::separateDictElements() { add(","); }
-void RendererCSV::separateDictKeyValue() { add("|"); }
+void RendererCSV::separateDictElements() { _os << ","; }
+void RendererCSV::separateDictKeyValue() { _os << "|"; }
 void RendererCSV::endDict() {}
 
 // --------------------------------------------------------------------------
@@ -70,7 +72,7 @@ void RendererCSV::endDict() {}
 void RendererCSV::outputNull() {}
 
 void RendererCSV::outputEscaped(char ch) {
-    add(ch == '"' ? R"("")" : string(1, ch));
+    _os << (ch == '"' ? R"("")" : string(1, ch));
 }
 
 void RendererCSV::outputBlob(const vector<char> &value) {

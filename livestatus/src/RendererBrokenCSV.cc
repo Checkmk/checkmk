@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "RendererBrokenCSV.h"
+#include <ostream>
 
 using std::string;
 using std::vector;
@@ -38,29 +39,29 @@ void RendererBrokenCSV::endQuery() {}
 void RendererBrokenCSV::beginRow() {}
 void RendererBrokenCSV::beginRowElement() {}
 void RendererBrokenCSV::endRowElement() {}
-void RendererBrokenCSV::separateRowElements() { add(_separators.field()); }
-void RendererBrokenCSV::endRow() { add(_separators.dataset()); }
+void RendererBrokenCSV::separateRowElements() { _os << _separators.field(); }
+void RendererBrokenCSV::endRow() { _os << _separators.dataset(); }
 
 // --------------------------------------------------------------------------
 
 void RendererBrokenCSV::beginList() {}
-void RendererBrokenCSV::separateListElements() { add(_separators.list()); }
+void RendererBrokenCSV::separateListElements() { _os << _separators.list(); }
 void RendererBrokenCSV::endList() {}
 
 // --------------------------------------------------------------------------
 
 void RendererBrokenCSV::beginSublist() {}
 void RendererBrokenCSV::separateSublistElements() {
-    add(_separators.hostService());
+    _os << _separators.hostService();
 }
 void RendererBrokenCSV::endSublist() {}
 
 // --------------------------------------------------------------------------
 
 void RendererBrokenCSV::beginDict() {}
-void RendererBrokenCSV::separateDictElements() { add(_separators.list()); }
+void RendererBrokenCSV::separateDictElements() { _os << _separators.list(); }
 void RendererBrokenCSV::separateDictKeyValue() {
-    add(_separators.hostService());
+    _os << _separators.hostService();
 }
 void RendererBrokenCSV::endDict() {}
 
@@ -68,6 +69,8 @@ void RendererBrokenCSV::endDict() {}
 
 void RendererBrokenCSV::outputNull() {}
 
-void RendererBrokenCSV::outputBlob(const vector<char> &value) { add(value); }
+void RendererBrokenCSV::outputBlob(const vector<char> &value) {
+    _os.write(&value[0], value.size());
+}
 
-void RendererBrokenCSV::outputString(const string &value) { add(value); }
+void RendererBrokenCSV::outputString(const string &value) { _os << value; }

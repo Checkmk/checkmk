@@ -51,10 +51,10 @@ ServiceListFilter::ServiceListFilter(ServiceListColumn *column,
     auto pos = value.find(hostservice_separator);
     if (pos == string::npos) {
         if (_hostname_required) {
-            Informational(logger()) << "Invalid reference value for service "
-                                       "list membership. Must be 'hostname"
-                                    << string(1, hostservice_separator)
-                                    << "servicename'";
+            Informational(logger())
+                << "Invalid reference value for service "
+                   "list membership. Must be 'hostname"
+                << string(1, hostservice_separator) << "servicename'";
         } else {
             _ref_service = value;
         }

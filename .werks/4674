@@ -1,0 +1,10 @@
+Title: CSV/JSON export: Fixed exception in icon columns
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0b7
+Date: 1494491204
+Class: fix
+
+

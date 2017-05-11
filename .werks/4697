@@ -1,0 +1,14 @@
+Title: Availability/Timeline views: Restructored some code, speeding up data collection
+Level: 1
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494508744
+Class: feature
+
+The data collection of BI views has been improved.
+Instead of sending multiple queries for each aggregation row, the data is
+now queried with a big single call.
+
+

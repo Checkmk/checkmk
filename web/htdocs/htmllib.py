@@ -94,15 +94,21 @@ class RequestTimeout(MKException):
     pass
 
 
-#
-# Encoding and escaping
-#
+#.
+#   .--Escaper-------------------------------------------------------------.
+#   |                 _____                                                |
+#   |                | ____|___  ___ __ _ _ __   ___ _ __                  |
+#   |                |  _| / __|/ __/ _` | '_ \ / _ \ '__|                 |
+#   |                | |___\__ \ (_| (_| | |_) |  __/ |                    |
+#   |                |_____|___/\___\__,_| .__/ \___|_|                    |
+#   |                                    |_|                               |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 class Escaper(object):
-
-
     _unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
     _unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
-
 
     # Encode HTML attributes. Replace HTML syntax with HTML text.
     # For example: replace '"' with '&quot;', '<' with '&lt;'.
@@ -292,6 +298,7 @@ class HTML(object):
 __builtin__.HTML = HTML
 
 
+#.
 #   .--OutputFunnel--------------------------------------------------------.
 #   |     ___        _               _   _____                       _     |
 #   |    / _ \ _   _| |_ _ __  _   _| |_|  ___|   _ _ __  _ __   ___| |    |
@@ -306,8 +313,6 @@ __builtin__.HTML = HTML
 
 
 class OutputFunnel(object):
-
-
     def __init__(self):
         self.plugged = False
         self.plugged_text = ""
@@ -401,7 +406,6 @@ class OutputFunnel(object):
 
 
 class HTMLGenerator(Escaper, OutputFunnel):
-
     """ Usage Notes:
 
           - Tags can be opened using the open_[tag]() call where [tag] is one of the possible tag names.
@@ -761,8 +765,6 @@ class HTMLGenerator(Escaper, OutputFunnel):
 
 
 class HTMLCheck_MK(HTMLGenerator):
-
-
     def __init__(self):
         super(HTMLCheck_MK, self).__init__()
 
@@ -1234,7 +1236,16 @@ class HTMLCheck_MK(HTMLGenerator):
 
 
 #.
-
+#   .--Deprecated----------------------------------------------------------.
+#   |          ____                                _           _           |
+#   |         |  _ \  ___ _ __  _ __ ___  ___ __ _| |_ ___  __| |          |
+#   |         | | | |/ _ \ '_ \| '__/ _ \/ __/ _` | __/ _ \/ _` |          |
+#   |         | |_| |  __/ |_) | | |  __/ (_| (_| | ||  __/ (_| |          |
+#   |         |____/ \___| .__/|_|  \___|\___\__,_|\__\___|\__,_|          |
+#   |                    |_|                                               |
+#   +----------------------------------------------------------------------+
+#   | The methods in this class are kept for compatibility reasons         |
+#   '----------------------------------------------------------------------'
 
 class DeprecationWrapper(HTMLCheck_MK):
     # Only strip off some tags. We allow some simple tags like
@@ -1254,6 +1265,17 @@ class DeprecationWrapper(HTMLCheck_MK):
 
 
 #.
+#   .--RequestHandl.-------------------------------------------------------.
+#   |   ____                            _   _   _                 _ _      |
+#   |  |  _ \ ___  __ _ _   _  ___  ___| |_| | | | __ _ _ __   __| | |     |
+#   |  | |_) / _ \/ _` | | | |/ _ \/ __| __| |_| |/ _` | '_ \ / _` | |     |
+#   |  |  _ <  __/ (_| | |_| |  __/\__ \ |_|  _  | (_| | | | | (_| | |_    |
+#   |  |_| \_\___|\__, |\__,_|\___||___/\__|_| |_|\__,_|_| |_|\__,_|_(_)   |
+#   |                |_|                                                   |
+#   +----------------------------------------------------------------------+
+#   | Access to the HTTP request variables (vars, cookies, ...)            |
+#   '----------------------------------------------------------------------'
+
 class RequestHandler(object):
 
     def __init__(self):

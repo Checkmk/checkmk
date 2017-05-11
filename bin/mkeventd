@@ -32,6 +32,7 @@
 # which fields are mandatory for the events.
 
 import ast
+import errno
 import socket, os, time, sys, getopt, signal, thread, pprint, re, \
        select, subprocess, stat, string
 import traceback
@@ -271,7 +272,13 @@ def open_logfile():
 
 def drain_pipe(pipe):
     while True:
-        readable = select.select([ pipe ], [], [], 0.1)[0]
+        try:
+            readable = select.select([ pipe ], [], [], 10)[0]
+        except select.error, e:
+            if e[0] == errno.EINTR:
+                continue
+            raise
+
         data = None
         if pipe in readable:
             try:
@@ -286,11 +293,15 @@ def drain_pipe(pipe):
 def log(text):
     if type(text) == unicode:
         text = text.encode("utf-8")
+
+    msg = '[%.6f] %s\n' % (time.time(), text)
+
     try:
-        g_logfile.write('[%.6f] %s\n' % (time.time(), text))
+        g_logfile.write(msg)
         g_logfile.flush()
     except:
-        sys.stderr.write("%s\n" % text)
+        sys.stderr.write(msg)
+        sys.stderr.flush()
 
 
 def is_verbose():
@@ -1543,7 +1554,12 @@ class EventServer:
         client_sockets = {}
         select_timeout = 1
         while True:
-            readable = select.select(listen_list + client_sockets.keys(), [], [], select_timeout)[0]
+            try:
+                readable = select.select(listen_list + client_sockets.keys(), [], [], 10)[0]
+            except select.error, e:
+                if e[0] == errno.EINTR:
+                    continue
+                raise
             data = None
 
             # Accept new connection on event unix socket
@@ -2968,7 +2984,13 @@ class StatusServer:
                 if self._tcp_socket:
                     listen_list.append(self._tcp_socket)
 
-                readable = select.select(listen_list, [], [], 0.2)[0]
+                try:
+                    readable = select.select(listen_list, [], [], 10)[0]
+                except select.error, e:
+                    if e[0] == errno.EINTR:
+                        continue
+                    raise
+
                 for s in readable:
                     client_socket, addr_info = s.accept()
                     client_socket.settimeout(3)

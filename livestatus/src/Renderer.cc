@@ -27,7 +27,7 @@
 #include <iomanip>
 #include <ostream>
 #include "Logger.h"
-#include "OutputBuffer.h"
+#include "OStreamStateSaver.h"
 #include "RendererBrokenCSV.h"
 #include "RendererCSV.h"
 #include "RendererJSON.h"
@@ -37,6 +37,7 @@
 using std::chrono::system_clock;
 using std::hex;
 using std::make_unique;
+using std::ostream;
 using std::ostringstream;
 using std::setfill;
 using std::setw;
@@ -45,70 +46,61 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-Renderer::Renderer(OutputBuffer &output, int timezone_offset,
+Renderer::Renderer(ostream &os, Logger *logger, int timezone_offset,
                    Encoding data_encoding)
-    : _data_encoding(data_encoding)
-    , _output(output)
+    : _os(os)
+    , _data_encoding(data_encoding)
     , _timezone_offset(timezone_offset)
-    , _logger(output.getLogger()) {}
+    , _logger(logger) {}
 
 Renderer::~Renderer() = default;
 
 // static
-unique_ptr<Renderer> Renderer::make(OutputFormat format, OutputBuffer &output,
+unique_ptr<Renderer> Renderer::make(OutputFormat format, ostream &os,
+                                    Logger *logger,
                                     const CSVSeparators &separators,
                                     int timezone_offset,
                                     Encoding data_encoding) {
     switch (format) {
         case OutputFormat::csv:
-            return make_unique<RendererCSV>(output, timezone_offset,
+            return make_unique<RendererCSV>(os, logger, timezone_offset,
                                             data_encoding);
         case OutputFormat::broken_csv:
             return make_unique<RendererBrokenCSV>(
-                output, separators, timezone_offset, data_encoding);
+                os, logger, separators, timezone_offset, data_encoding);
         case OutputFormat::json:
-            return make_unique<RendererJSON>(output, timezone_offset,
+            return make_unique<RendererJSON>(os, logger, timezone_offset,
                                              data_encoding);
         case OutputFormat::python:
-            return make_unique<RendererPython>(output, timezone_offset,
+            return make_unique<RendererPython>(os, logger, timezone_offset,
                                                data_encoding);
         case OutputFormat::python3:
-            return make_unique<RendererPython3>(output, timezone_offset,
+            return make_unique<RendererPython3>(os, logger, timezone_offset,
                                                 data_encoding);
     }
     return nullptr;  // unreachable
 }
-
-size_t Renderer::size() const { return _output.size(); }
-
-void Renderer::add(const string &str) { _output.add(str); }
-
-void Renderer::add(const vector<char> &value) { _output.add(value); }
 
 void Renderer::output(double value) {
     // Funny cast for older non-C++11 headers
     if (static_cast<bool>(std::isnan(value))) {
         output(Null());
     } else {
-        ostringstream os;
-        os << value;
-        add(os.str());
+        _os << value;
     }
 }
 
-void Renderer::output(PlainChar value) { add(string(1, value._ch)); }
+void Renderer::output(PlainChar value) { _os.put(value._ch); }
 
 void Renderer::output(HexEscape value) {
-    ostringstream os;
-    os << R"(\x)" << hex << setw(2) << setfill('0')
-       << static_cast<unsigned>(static_cast<unsigned char>(value._ch));
-    add(os.str());
+    OStreamStateSaver s(_os);
+    _os << R"(\x)" << hex << setw(2) << setfill('0')
+        << static_cast<unsigned>(static_cast<unsigned char>(value._ch));
 }
 
 void Renderer::output(char16_t value) {
-    ostringstream os;
-    os << R"(\u)" << hex << setw(4) << setfill('0') << value;
-    add(os.str());
+    OStreamStateSaver s(_os);
+    _os << R"(\u)" << hex << setw(4) << setfill('0') << value;
 }
 
 void Renderer::output(char32_t value) {
@@ -149,8 +141,7 @@ void Renderer::invalidUTF8(unsigned char ch) {
 
 void Renderer::outputByteString(const string &prefix,
                                 const vector<char> &value) {
-    add(prefix);
-    add(R"(")");  // "
+    _os << prefix << R"(")";  // "
     for (auto ch : value) {
         if (isBoringChar(ch)) {
             output(PlainChar{ch});
@@ -158,13 +149,12 @@ void Renderer::outputByteString(const string &prefix,
             output(HexEscape{ch});
         }
     }
-    add(R"(")");  // "
+    _os << R"(")";  // "
 }
 
 void Renderer::outputUnicodeString(const string &prefix, const char *start,
                                    const char *end, Encoding data_encoding) {
-    add(prefix);
-    add(R"(")");  // "
+    _os << prefix << R"(")";  // "
     // TODO(sp) Use polymorphism instead of switch.
     // TODO(sp) Use codecvt framework instead of homemade stuff.
     switch (data_encoding) {
@@ -178,7 +168,7 @@ void Renderer::outputUnicodeString(const string &prefix, const char *start,
             outputMixed(start, end);
             break;
     }
-    add(R"(")");  // "
+    _os << R"(")";  // "
 }
 
 void Renderer::outputUTF8(const char *start, const char *end) {

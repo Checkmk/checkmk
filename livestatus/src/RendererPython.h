@@ -26,15 +26,16 @@
 #define RendererPython_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <iosfwd>
 #include <string>
 #include <vector>
 #include "Renderer.h"
 #include "data_encoding.h"
-class OutputBuffer;
+class Logger;
 
 class RendererPython : public Renderer {
 public:
-    RendererPython(OutputBuffer &output, int timezone_offset,
+    RendererPython(std::ostream &os, Logger *logger, int timezone_offset,
                    Encoding data_encoding);
 
     void outputNull() override;

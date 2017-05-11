@@ -23,34 +23,36 @@
 // Boston, MA 02110-1301 USA.
 
 #include "RendererPython.h"
-class OutputBuffer;
+#include <ostream>
+class Logger;
 
+using std::ostream;
 using std::string;
 using std::vector;
 
-RendererPython::RendererPython(OutputBuffer &output, int timezone_offset,
+RendererPython::RendererPython(ostream &os, Logger *logger, int timezone_offset,
                                Encoding data_encoding)
-    : Renderer(output, timezone_offset, data_encoding) {}
+    : Renderer(os, logger, timezone_offset, data_encoding) {}
 
 // --------------------------------------------------------------------------
 
-void RendererPython::beginQuery() { add("["); }
-void RendererPython::separateQueryElements() { add(",\n"); }
-void RendererPython::endQuery() { add("]\n"); }
+void RendererPython::beginQuery() { _os << "["; }
+void RendererPython::separateQueryElements() { _os << ",\n"; }
+void RendererPython::endQuery() { _os << "]\n"; }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::beginRow() { add("["); }
+void RendererPython::beginRow() { _os << "["; }
 void RendererPython::beginRowElement() {}
 void RendererPython::endRowElement() {}
-void RendererPython::separateRowElements() { add(","); }
-void RendererPython::endRow() { add("]"); }
+void RendererPython::separateRowElements() { _os << ","; }
+void RendererPython::endRow() { _os << "]"; }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::beginList() { add("["); }
-void RendererPython::separateListElements() { add(","); }
-void RendererPython::endList() { add("]"); }
+void RendererPython::beginList() { _os << "["; }
+void RendererPython::separateListElements() { _os << ","; }
+void RendererPython::endList() { _os << "]"; }
 
 // --------------------------------------------------------------------------
 
@@ -60,14 +62,14 @@ void RendererPython::endSublist() { endList(); }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::beginDict() { add("{"); }
-void RendererPython::separateDictElements() { add(","); }
-void RendererPython::separateDictKeyValue() { add(":"); }
-void RendererPython::endDict() { add("}"); }
+void RendererPython::beginDict() { _os << "{"; }
+void RendererPython::separateDictElements() { _os << ","; }
+void RendererPython::separateDictKeyValue() { _os << ":"; }
+void RendererPython::endDict() { _os << "}"; }
 
 // --------------------------------------------------------------------------
 
-void RendererPython::outputNull() { add("None"); }
+void RendererPython::outputNull() { _os << "None"; }
 
 void RendererPython::outputBlob(const vector<char> &value) {
     outputByteString("", value);

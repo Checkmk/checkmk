@@ -674,8 +674,9 @@ bool Query::doStats() { return !_stats_columns.empty(); }
 bool Query::process() {
     // Precondition: output has been reset
     auto start_time = system_clock::now();
-    auto renderer = Renderer::make(_output_format, _output, _separators,
-                                   _timezone_offset, _data_encoding);
+    auto renderer =
+        Renderer::make(_output_format, _output.os(), _output.getLogger(),
+                       _separators, _timezone_offset, _data_encoding);
     doWait();
     QueryRenderer q(*renderer);
     _renderer_query = &q;
@@ -685,7 +686,7 @@ bool Query::process() {
     auto elapsed =
         duration_cast<milliseconds>(system_clock::now() - start_time);
     Informational(_logger) << "processed request in " << elapsed.count()
-                           << " ms, replied with " << _output.size()
+                           << " ms, replied with " << _output.os().tellp()
                            << " bytes";
     return _keepalive;
 }
@@ -720,7 +721,7 @@ bool Query::timelimitReached() {
 }
 
 bool Query::processDataset(Row row) {
-    if (_renderer_query->size() > _max_response_size) {
+    if (static_cast<size_t>(_output.os().tellp()) > _max_response_size) {
         Informational(_logger) << "Maximum response size of "
                                << _max_response_size << " bytes exceeded!";
         // currently we only log an error into the log file and do

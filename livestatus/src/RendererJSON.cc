@@ -23,34 +23,36 @@
 // Boston, MA 02110-1301 USA.
 
 #include "RendererJSON.h"
-class OutputBuffer;
+#include <ostream>
+class Logger;
 
+using std::ostream;
 using std::string;
 using std::vector;
 
-RendererJSON::RendererJSON(OutputBuffer &output, int timezone_offset,
+RendererJSON::RendererJSON(ostream &os, Logger *logger, int timezone_offset,
                            Encoding data_encoding)
-    : Renderer(output, timezone_offset, data_encoding) {}
+    : Renderer(os, logger, timezone_offset, data_encoding) {}
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::beginQuery() { add("["); }
-void RendererJSON::separateQueryElements() { add(",\n"); }
-void RendererJSON::endQuery() { add("]\n"); }
+void RendererJSON::beginQuery() { _os << "["; }
+void RendererJSON::separateQueryElements() { _os << ",\n"; }
+void RendererJSON::endQuery() { _os << "]\n"; }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::beginRow() { add("["); }
+void RendererJSON::beginRow() { _os << "["; }
 void RendererJSON::beginRowElement() {}
 void RendererJSON::endRowElement() {}
-void RendererJSON::separateRowElements() { add(","); }
-void RendererJSON::endRow() { add("]"); }
+void RendererJSON::separateRowElements() { _os << ","; }
+void RendererJSON::endRow() { _os << "]"; }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::beginList() { add("["); }
-void RendererJSON::separateListElements() { add(","); }
-void RendererJSON::endList() { add("]"); }
+void RendererJSON::beginList() { _os << "["; }
+void RendererJSON::separateListElements() { _os << ","; }
+void RendererJSON::endList() { _os << "]"; }
 
 // --------------------------------------------------------------------------
 
@@ -60,14 +62,14 @@ void RendererJSON::endSublist() { endList(); }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::beginDict() { add("{"); }
-void RendererJSON::separateDictElements() { add(","); }
-void RendererJSON::separateDictKeyValue() { add(":"); }
-void RendererJSON::endDict() { add("}"); }
+void RendererJSON::beginDict() { _os << "{"; }
+void RendererJSON::separateDictElements() { _os << ","; }
+void RendererJSON::separateDictKeyValue() { _os << ":"; }
+void RendererJSON::endDict() { _os << "}"; }
 
 // --------------------------------------------------------------------------
 
-void RendererJSON::outputNull() { add("null"); }
+void RendererJSON::outputNull() { _os << "null"; }
 
 void RendererJSON::outputBlob(const vector<char> &value) {
     outputUnicodeString("", &value[0], &value[value.size()], Encoding::latin1);

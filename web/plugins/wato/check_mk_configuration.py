@@ -1298,7 +1298,7 @@ register_configvar(group,
             help = _("The number of seconds a cache file may be old if check_mk should "
                      "use it instead of getting information from the target hosts while "
                      "checking a cluster. Per default this is enabled and set to 90 seconds. "
-                     "If your check cycle is not set to a larger value than one minute then "
+                     "If your check cycle is set to a larger value than one minute then "
                      "you should increase this accordingly.")),
     need_restart = True)
 

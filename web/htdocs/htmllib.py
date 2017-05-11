@@ -95,12 +95,19 @@ class InvalidUserInput(Exception):
 class RequestTimeout(MKException):
     pass
 
+#.
+#   .--Escaper-------------------------------------------------------------.
+#   |                 _____                                                |
+#   |                | ____|___  ___ __ _ _ __   ___ _ __                  |
+#   |                |  _| / __|/ __/ _` | '_ \ / _ \ '__|                 |
+#   |                | |___\__ \ (_| (_| | |_) |  __/ |                    |
+#   |                |_____|___/\___\__,_| .__/ \___|_|                    |
+#   |                                    |_|                               |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------
 
-#
-# Encoding and escaping
-#
 class Escaper(object):
-
     def __init__(self):
         super(Escaper, self).__init__()
         self._unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
@@ -146,19 +153,19 @@ class Escaper(object):
         return text
 
 
-    #
-    # Deprecated functions
-    #
-
-
 #.
-#
-# HTML encoding
-#
+#   .--Encoding------------------------------------------------------------.
+#   |              _____                     _ _                           |
+#   |             | ____|_ __   ___ ___   __| (_)_ __   __ _               |
+#   |             |  _| | '_ \ / __/ _ \ / _` | | '_ \ / _` |              |
+#   |             | |___| | | | (_| (_) | (_| | | | | | (_| |              |
+#   |             |_____|_| |_|\___\___/ \__,_|_|_| |_|\__, |              |
+#   |                                                  |___/               |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 class Encoder(object):
-
-
     # This function returns a str object, never unicode!
     # Beware: this code is crucial for the performance of Multisite!
     # Changing from the self coded urlencode to urllib.quote
@@ -249,10 +256,7 @@ class Encoder(object):
 #   | Only utf-8 compatible encodings are supported.                       |
 #   '----------------------------------------------------------------------'
 
-
 class HTML(object):
-
-
     def __init__(self, value = u''):
         super(HTML, self).__init__()
         self.value = self._ensure_unicode(value)
@@ -375,6 +379,7 @@ class HTML(object):
 __builtin__.HTML = HTML
 
 
+#.
 #   .--OutputFunnel--------------------------------------------------------.
 #   |     ___        _               _   _____                       _     |
 #   |    / _ \ _   _| |_ _ __  _   _| |_|  ___|   _ _ __  _ __   ___| |    |
@@ -395,8 +400,6 @@ __builtin__.HTML = HTML
 
 
 class OutputFunnel(object):
-
-
     def __init__(self):
         super(OutputFunnel, self).__init__()
         self.plug_level = -1
@@ -508,7 +511,6 @@ class OutputFunnel(object):
 
 
 class HTMLGenerator(OutputFunnel):
-
     """ Usage Notes:
 
           - Tags can be opened using the open_[tag]() call where [tag] is one of the possible tag names.
@@ -567,7 +569,6 @@ class HTMLGenerator(OutputFunnel):
         self.testing_mode = False
 
         self.escaper = Escaper()
-
 
 
     #
@@ -2942,9 +2943,3 @@ class html(HTMLGenerator, RequestHandler):
         except:
             raise MKUserError(varname, _("Please enter the time in the format HH:MM."))
         return m * 60 + h * 3600
-
-
-
-#.
-
-

@@ -38,7 +38,7 @@
 
 
 factory_settings["websphere_mq_channels_default_levels"] = {
-    'message_count': ( 900, 1000 ),
+    'message_count' : ( 900, 1000 ),
     'status': {
         'RUNNING': 0,
         'STOPPED': 1
@@ -101,7 +101,25 @@ def check_websphere_mq_channels(item, params, parsed):
                 infotext += " (warn crit at %d/%d messages)" % (warn, crit)
         else:
             warn, crit = None, None
+
         yield state, infotext, [('messages', messages, warn, crit, 0, max_messages)]
+
+        if params.get("message_count_perc"):
+            warn, crit    = params["message_count_perc"]
+            messages_perc = 1.0 * messages / max_messages
+            infotext      = get_percent_human_readable(messages_perc)
+            state         = 0
+
+            if messages_perc >= crit:
+                state = 2
+            elif messages_perc >= warn:
+                state = 1
+            if state > 0:
+                infotext += " (warn/crit at %s/%s)" % (
+                            get_percent_human_readable(warn),
+                            get_percent_human_readable(crit))
+
+            yield state, infotext
 
 
 check_info["websphere_mq_channels"] = {

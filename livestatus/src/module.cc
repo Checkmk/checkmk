@@ -686,7 +686,7 @@ private:
     vector<DowntimeData> downtimes_for_object(::host *h, ::service *s) const {
         vector<DowntimeData> result;
         for (const auto &entry : fl_store->_downtimes) {
-            Downtime *dt = static_cast<Downtime *>(entry.second.get());
+            auto *dt = static_cast<Downtime *>(entry.second.get());
             if (dt->_host == h && dt->_service == s) {
                 result.push_back({dt->_id, dt->_author_name, dt->_comment});
             }
@@ -697,7 +697,7 @@ private:
     vector<CommentData> comments_for_object(::host *h, ::service *s) const {
         vector<CommentData> result;
         for (const auto &entry : fl_store->_comments) {
-            Comment *co = static_cast<Comment *>(entry.second.get());
+            auto *co = static_cast<Comment *>(entry.second.get());
             if (co->_host == h && co->_service == s) {
                 result.push_back({co->_id, co->_author_name, co->_comment,
                                   static_cast<uint32_t>(co->_entry_type),

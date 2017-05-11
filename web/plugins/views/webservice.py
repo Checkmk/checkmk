@@ -136,8 +136,8 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
         else:
             html.write(csv_separator)
         content = cell.export_title()
-        content = type(content) in [ int, float ] and str(content) or content
-        stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
+        # content can be int, float
+        stripped = html.strip_tags(str(content)).replace('\n', '').replace('"', '""')
         html.write('"%s"' % stripped.encode("utf-8"))
 
     for row in rows:
@@ -150,8 +150,8 @@ def render_csv(rows, view, group_cells, cells, num_columns, show_checkboxes, exp
                 html.write(csv_separator)
             joined_row = join_row(row, cell)
             tdclass, content = cell.render_content(joined_row)
-            content = type(content) in [ int, float ] and str(content) or content
-            stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
+            # content can be int, float
+            stripped = html.strip_tags(str(content)).replace('\n', '').replace('"', '""')
             html.write('"%s"' % stripped.encode("utf-8"))
 
 multisite_layouts["csv_export"] = {

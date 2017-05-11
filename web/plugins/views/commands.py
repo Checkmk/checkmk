@@ -347,8 +347,8 @@ config.declare_permission("action.customnotification",
 def command_custom_notification(cmdtag, spec, row):
     if html.var("_customnotification"):
         comment = html.get_unicode_input("_cusnot_comment")
-        broadcast = html.get_checkbox("_cusnot_broadcast") and 1 or 0
-        forced = html.get_checkbox("_cusnot_forced") and 2 or 0
+        broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
+        forced = 2 if html.get_checkbox("_cusnot_forced") else 0
         command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % \
                 ( cmdtag, spec, broadcast + forced, config.user.id, lqencode(comment))
         title = _("<b>send a custom notification</b> regarding")
@@ -405,9 +405,9 @@ def command_acknowledgement(cmdtag, spec, row):
         if ";" in comment:
             raise MKUserError("_ack_comment", _("The comment must not contain semicolons."))
 
-        sticky = html.var("_ack_sticky") and 2 or 0
-        sendnot = html.var("_ack_notify") and 1 or 0
-        perscomm = html.var("_ack_persistent") and 1 or 0
+        sticky = 2 if html.var("_ack_sticky") else 0
+        sendnot = 1 if html.var("_ack_notify") else 0
+        perscomm = 1 if html.var("_ack_persistent") else 0
 
         expire_secs = Age().from_html_vars("_ack_expire")
         if expire_secs:
@@ -836,7 +836,7 @@ multisite_commands.append({
 
 def command_star(cmdtag, spec, row):
     if html.var("_star") or html.var("_unstar"):
-        star = html.var("_star") and 1 or 0
+        star = 1 if html.var("_star") else 0
         if star:
             title = _("<b>add to you favorites</b>")
         else:

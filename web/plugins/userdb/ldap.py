@@ -630,7 +630,7 @@ class LDAPUserConnector(UserConnector):
             # posixGroup objects use the memberUid attribute to specify the group memberships.
             # This is the username instead of the users DN. So the username needs to be used
             # for filtering here.
-            user_cmp_attr = member_attr == 'memberuid' and user_id_attr or 'distinguishedname'
+            user_cmp_attr = user_id_attr if member_attr == 'memberuid' else 'distinguishedname'
 
             member_filter_items = []
             for member in self.get_filter_group_members(filter_group_dn):
@@ -1761,7 +1761,7 @@ def ldap_list_roles_with_group_dn():
                         ],
                     ),
                     # convert old distinguished names to tuples
-                    forth = lambda v: type(v) != tuple and (v, ) or v,
+                    forth = lambda v: (v, ) if not isinstance(v, tuple) else v,
                 ),
                 title = role['alias'],
                 help  = _("Distinguished Names of the LDAP groups to add users this role. "
@@ -1771,7 +1771,7 @@ def ldap_list_roles_with_group_dn():
                 movable = False,
             ),
             # convert old single distinguished names to list of :Ns
-            forth = lambda v: type(v) != list and [v] or v,
+            forth = lambda v: [v] if not isinstance(v, list) else v,
         )))
 
     elements.append(

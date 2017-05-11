@@ -5400,7 +5400,7 @@ def do_create_snapshot(data):
             filename_subtar = "%s.tar.gz" % name
             path_subtar     = "%s/%s" % (work_dir, filename_subtar)
 
-            paths = map(lambda x: x[1] == "" and "." or x[1], info.get("paths", []))
+            paths = map(lambda x: "." if x[1] == "" else x[1], info.get("paths", []))
             command = [ "tar", "czf", path_subtar, "--ignore-failed-read",
                         "--force-local", "-C", prefix ] + paths
 

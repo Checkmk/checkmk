@@ -1179,7 +1179,7 @@ def view_editor_specs(ds_name, general_properties=True):
                     ),
                 ],
                 style = 'dropdown',
-                match = lambda x: x != None and len(x) == 5 and 1 or 0,
+                match = lambda x: 1 * (x is not None and len(x) == 5),
             )
 
         return (ident, Dictionary(
@@ -1328,7 +1328,7 @@ def transform_valuespec_value_to_view(view):
                     pname, viewname, tooltip = column
                     join_index, col_title = None, None
 
-                viewname = viewname and viewname or None
+                viewname = viewname if viewname else None
 
                 if join_index and col_title:
                     painters.append((pname, viewname, tooltip, join_index, col_title))
@@ -1548,7 +1548,7 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     # Sorting - use view sorters and URL supplied sorters
     if not only_count:
-        sorter_list = html.has_var('sort') and parse_url_sorters(html.var('sort')) or view["sorters"]
+        sorter_list = parse_url_sorters(html.var('sort', deflt=view["sorters"]))
         sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list
                         if s[0] in multisite_sorters ]
     else:
@@ -1865,7 +1865,7 @@ def render_view(view, rows, datasource, group_painters, painters,
             html.check_limit(rows, get_limit())
         layout["render"](rows, view, group_painters, painters, num_columns,
                          show_checkboxes and not html.do_actions())
-        headinfo = "%d %s" % (row_count, row_count == 1 and _("row") or _("rows"))
+        headinfo = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
         if show_checkboxes:
             selected = filter_selected_rows(view, rows, weblib.get_rowselection('view-' + view['name']))
             headinfo = "%d/%s" % (len(selected), headinfo)
@@ -2036,7 +2036,7 @@ def view_optiondial_off(option):
 # FIXME: Consolidate with html.toggle_button() rendering functions
 def toggler(id, icon, help, onclick, value, hidden = False):
     html.begin_context_buttons() # just to be sure
-    hide = hidden and ' style="display:none"' or ''
+    hide = ' style="display:none"' if hidden else ''
     html.write('<div id="%s_on" title="%s" class="togglebutton %s %s" %s>'
                '<a href="javascript:void(0)" onclick="%s"><img src="images/icon_%s.png"></a></div>' % (
         id, help, icon, value and "down" or "up", hide, onclick, icon))
@@ -2095,7 +2095,7 @@ def show_context_links(thisview, datasource, show_filters,
                     "location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
                     show_checkboxes, hidden = True) # not selection_enabled)
         html.toggle_button("checkbox", False, "checkbox", "", hidden=not thisview.get("force_checkboxes"), disabled=True)
-        html.javascript('g_selection_enabled = %s;' % (selection_enabled and 'true' or 'false'))
+        html.javascript('g_selection_enabled = %s;' % ('true' if selection_enabled else 'false'))
 
     if display_options.enabled(display_options.O):
         if config.user.may("general.view_option_columns"):
@@ -2105,7 +2105,7 @@ def show_context_links(thisview, datasource, show_filters,
             view_optiondial_off("num_columns")
 
         if display_options.enabled(display_options.R) and config.user.may("general.view_option_refresh"):
-            choices = [ [x, {0:_("off")}.get(x,str(x) + "s") + (x and "" or "")] for x in config.view_option_refreshes ]
+            choices = [ [x, {0:_("off")}.get(x,str(x) + "s")] + '' for x in config.view_option_refreshes ]
             view_optiondial(thisview, "refresh", choices, _("Change the refresh rate"))
         else:
             view_optiondial_off("refresh")
@@ -2343,7 +2343,7 @@ def sort_data(data, sorters):
     sort_cmps = []
     for s in sorters:
         cmpfunc = s[0]["cmp"]
-        negate = s[1] and -1 or 1
+        negate = -1 if s[1] else 1
         if len(s) > 2:
             joinkey = s[2] # e.g. service description
         else:
@@ -2763,7 +2763,7 @@ def url_to_view(row, view_name):
         if do:
             url_vars.append(("display_options", do))
 
-        filename = html.mobile and "mobile_view.py" or "view.py"
+        filename = "mobile_view.py" if html.mobile else "view.py"
         return filename + "?" + html.urlencode_vars([("view_name", view_name)] + url_vars)
 
 def link_to_view(content, row, view_name):
@@ -3061,7 +3061,7 @@ def ajax_popup_action_menu():
     site    = html.var('site')
     host    = html.var('host')
     svcdesc = html.var('service')
-    what    = svcdesc and 'service' or 'host'
+    what    = 'service' if svcdesc else 'host'
 
     weblib.prepare_display_options(globals())
 

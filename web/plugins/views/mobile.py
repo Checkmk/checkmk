@@ -738,7 +738,7 @@ def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkb
 
     # Paint data rows
     for row in rows:
-        odd = odd == "odd" and "even" or "odd"
+        odd = "even" if odd == "odd" else "odd"
         html.open_tr(class_="%s0" % odd)
         for n, cell in enumerate(cells):
             if n > 0 and n % num_columns == 0:

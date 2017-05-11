@@ -30,15 +30,22 @@
 
 def inv_win_os(info):
     node = inv_tree("software.os.")
+
+    node["type"] = "Windows"
+    node["vendor"] = "Microsoft"
+
     line = info[0]
     if len(line) == 7:
         node["name"] = line[1]
+
         node["kernel_version"] = line[2]
+
         if line[3]:
             if line[3].lower() == "64-bit":
                 node["arch"] = "x86_64"
             else:
                 node["arch"] = "i386"
+
         node["service_pack"] = line[4]+"."+line[5]
 
         if '+' in line[6]:
@@ -49,6 +56,7 @@ def inv_win_os(info):
             tz = int(tz)*-1
         else:
             datestr, tz = line[6], 0
+
         node["install_date"] = int(time.mktime(time.strptime(datestr, "%Y%m%d%H%M%S.%f"))) - tz*60
 
 

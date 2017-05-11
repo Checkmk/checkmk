@@ -1,0 +1,90 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# Overall memory
+# .1.3.6.1.4.1.3375.2.1.7.1.1.0 8396496896 sysHostMemoryTotal
+# .1.3.6.1.4.1.3375.2.1.7.1.2.0 1331092416 sysHostMemoryUsed
+#
+# TMM (Traffic Management Module) memory
+# .1.3.6.1.4.1.3375.2.1.1.2.1.44.0 0 sysStatMemoryTotal
+# .1.3.6.1.4.1.3375.2.1.1.2.1.45.0 0 sysStatMemoryUsed
+
+factory_settings["f5_bigip_mem_default_levels"] = {
+    "levels"    : ("perc_used", (80.0, 90.0))
+}
+
+def parse_f5_bigip_mem(info):
+    parsed = {
+        "mem" : (info[0][0], info[0][1]),
+        "tmm" : (info[0][2], info[0][3]),
+    }
+    return parsed
+
+def inventory_f5_bigip_mem(parsed):
+    return [ ( "total", {} ) ]
+
+
+def check_f5_bigip_mem(item, params, parsed):
+    mem_total, mem_used = parsed["mem"]
+    return check_memory_simple(float(mem_used), float(mem_total), params)
+
+check_info['f5_bigip_mem'] = {
+    'parse_function'            : parse_f5_bigip_mem,
+    'inventory_function'        : inventory_f5_bigip_mem,
+    'check_function'            : check_f5_bigip_mem,
+    'service_description'       : 'Memory',
+    'has_perfdata'              : True,
+    'snmp_info'                 : (".1.3.6.1.4.1.3375.2.1", [
+                                        "7.1.1",     # F5-BIGIP-SYSTEM-MIB::sysHostMemoryTotal
+                                        "7.1.2",     # F5-BIGIP-SYSTEM-MIB::sysHostMemoryUsed
+                                        "1.2.1.143", # F5-BIGIP-SYSTEM-MIB::sysStatMemoryTotalKb
+                                        "1.2.1.144", # F5-BIGIP-SYSTEM-MIB::sysStatMemoryUsedKb
+                                  ]),
+    'snmp_scan_function'        : lambda oid: ".1.3.6.1.4.1.3375" in oid(".1.3.6.1.2.1.1.2.0"),
+    'default_levels_variable'   : 'f5_bigip_mem_default_levels',
+    'group'                     : 'memory_simple',
+    'includes'                  : [ "memory.include" ],
+}
+
+def inventory_f5_bigip_mem_tmm(parsed):
+    if not float(parsed["tmm"][0]) == 0:
+        return [ ( "TMM", {} ) ]
+
+
+def check_f5_bigip_mem_tmm(item, params, parsed):
+    mem_total, mem_used = parsed["tmm"]
+    return check_memory_simple(float(mem_used) * 1024, float(mem_total) * 1024, params)
+
+check_info['f5_bigip_mem.tmm'] = {
+    'inventory_function'        : inventory_f5_bigip_mem_tmm,
+    'check_function'            : check_f5_bigip_mem_tmm,
+    'service_description'       : 'Memory',
+    'has_perfdata'              : True,
+    'default_levels_variable'   : 'f5_bigip_mem_default_levels',
+    'group'                     : 'memory_simple',
+    'includes'                  : [ "memory.include" ],
+}

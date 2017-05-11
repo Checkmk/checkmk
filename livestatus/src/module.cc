@@ -231,8 +231,8 @@ void *client_thread(void *data) {
         g_num_queued_connections--;
         g_livestatus_active_connections++;
         if (cc >= 0) {
-            Debug(fl_logger_livestatus) << "accepted client connection on fd "
-                                        << cc;
+            Debug(fl_logger_livestatus)
+                << "accepted client connection on fd " << cc;
             InputBuffer input_buffer(cc, fl_should_terminate,
                                      fl_logger_livestatus, fl_query_timeout,
                                      fl_idle_timeout);
@@ -240,9 +240,9 @@ void *client_thread(void *data) {
             unsigned requestnr = 0;
             while (keepalive) {
                 if (++requestnr > 1) {
-                    Debug(fl_logger_livestatus) << "handling request "
-                                                << requestnr
-                                                << " on same connection";
+                    Debug(fl_logger_livestatus)
+                        << "handling request " << requestnr
+                        << " on same connection";
                 }
                 counterIncrement(Counter::requests);
                 OutputBuffer output_buffer(cc, fl_should_terminate,
@@ -308,9 +308,9 @@ void start_threads() {
             Warning(fl_logger_nagios) << ex;
         }
 
-        Informational(fl_logger_nagios) << "starting main thread and "
-                                        << g_livestatus_threads
-                                        << " client threads";
+        Informational(fl_logger_nagios)
+            << "starting main thread and " << g_livestatus_threads
+            << " client threads";
 
         pthread_atfork(livestatus_count_fork, nullptr,
                        livestatus_cleanup_after_fork);
@@ -322,11 +322,11 @@ void start_threads() {
             Debug(fl_logger_nagios) << "default stack size is " << defsize;
         }
         if (pthread_attr_setstacksize(&attr, g_thread_stack_size) != 0) {
-            Warning(fl_logger_nagios) << "cannot set thread stack size to "
-                                      << g_thread_stack_size;
+            Warning(fl_logger_nagios)
+                << "cannot set thread stack size to " << g_thread_stack_size;
         } else {
-            Debug(fl_logger_nagios) << "setting thread stack size to "
-                                    << g_thread_stack_size;
+            Debug(fl_logger_nagios)
+                << "setting thread stack size to " << g_thread_stack_size;
         }
 
         fl_thread_info.resize(g_livestatus_threads + 1);
@@ -357,13 +357,13 @@ void terminate_threads() {
         fl_client_queue->terminate();
         for (const auto &info : fl_thread_info) {
             if (pthread_join(info.id, nullptr) != 0) {
-                Warning(fl_logger_nagios) << "could not join thread "
-                                          << info.name;
+                Warning(fl_logger_nagios)
+                    << "could not join thread " << info.name;
             }
         }
-        Informational(fl_logger_nagios) << "main thread + "
-                                        << g_livestatus_threads
-                                        << " client threads have finished";
+        Informational(fl_logger_nagios)
+            << "main thread + " << g_livestatus_threads
+            << " client threads have finished";
         g_thread_running = 0;
         fl_should_terminate = false;
     }
@@ -373,8 +373,8 @@ bool open_unix_socket() {
     struct stat st;
     if (stat(fl_socket_path, &st) == 0) {
         if (unlink(fl_socket_path) == 0) {
-            Debug(fl_logger_nagios) << "removed old socket file "
-                                    << fl_socket_path;
+            Debug(fl_logger_nagios)
+                << "removed old socket file " << fl_socket_path;
         } else {
             generic_error ge("cannot remove old socket file " +
                              string(fl_socket_path));
@@ -429,8 +429,8 @@ bool open_unix_socket() {
         return false;
     }
 
-    Informational(fl_logger_nagios) << "opened UNIX socket at "
-                                    << fl_socket_path;
+    Informational(fl_logger_nagios)
+        << "opened UNIX socket at " << fl_socket_path;
     return true;
 }
 
@@ -740,57 +740,57 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
 int verify_event_broker_options() {
     int errors = 0;
     if ((event_broker_options & BROKER_PROGRAM_STATE) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_PROGRAM_STATE ("
-                                   << BROKER_PROGRAM_STATE
-                                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios)
+            << "need BROKER_PROGRAM_STATE (" << BROKER_PROGRAM_STATE
+            << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_TIMED_EVENTS) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_TIMED_EVENTS ("
-                                   << BROKER_TIMED_EVENTS
-                                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios)
+            << "need BROKER_TIMED_EVENTS (" << BROKER_TIMED_EVENTS
+            << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_SERVICE_CHECKS) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_SERVICE_CHECKS ("
-                                   << BROKER_SERVICE_CHECKS
-                                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios)
+            << "need BROKER_SERVICE_CHECKS (" << BROKER_SERVICE_CHECKS
+            << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_HOST_CHECKS) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_HOST_CHECKS ("
-                                   << BROKER_HOST_CHECKS
-                                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios)
+            << "need BROKER_HOST_CHECKS (" << BROKER_HOST_CHECKS
+            << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_LOGGED_DATA) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_LOGGED_DATA ("
-                                   << BROKER_LOGGED_DATA
-                                   << ") event_broker_option enabled to work.",
+        Critical(fl_logger_nagios)
+            << "need BROKER_LOGGED_DATA (" << BROKER_LOGGED_DATA
+            << ") event_broker_option enabled to work.",
             errors++;
     }
     if ((event_broker_options & BROKER_COMMENT_DATA) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_COMMENT_DATA ("
-                                   << BROKER_COMMENT_DATA
-                                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios)
+            << "need BROKER_COMMENT_DATA (" << BROKER_COMMENT_DATA
+            << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_DOWNTIME_DATA) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_DOWNTIME_DATA ("
-                                   << BROKER_DOWNTIME_DATA
-                                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios)
+            << "need BROKER_DOWNTIME_DATA (" << BROKER_DOWNTIME_DATA
+            << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_STATUS_DATA) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_STATUS_DATA ("
-                                   << BROKER_STATUS_DATA
-                                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios)
+            << "need BROKER_STATUS_DATA (" << BROKER_STATUS_DATA
+            << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_ADAPTIVE_DATA) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_ADAPTIVE_DATA ("
-                                   << BROKER_ADAPTIVE_DATA
-                                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios)
+            << "need BROKER_ADAPTIVE_DATA (" << BROKER_ADAPTIVE_DATA
+            << ") event_broker_option enabled to work.";
         errors++;
     }
     if ((event_broker_options & BROKER_EXTERNALCOMMAND_DATA) == 0) {
@@ -800,9 +800,9 @@ int verify_event_broker_options() {
         errors++;
     }
     if ((event_broker_options & BROKER_STATECHANGE_DATA) == 0) {
-        Critical(fl_logger_nagios) << "need BROKER_STATECHANGE_DATA ("
-                                   << BROKER_STATECHANGE_DATA
-                                   << ") event_broker_option enabled to work.";
+        Critical(fl_logger_nagios)
+            << "need BROKER_STATECHANGE_DATA (" << BROKER_STATECHANGE_DATA
+            << ") event_broker_option enabled to work.";
         errors++;
     }
 
@@ -904,8 +904,8 @@ void livestatus_parse_arguments(const char *args_orig) {
                 } else {
                     fl_livestatus_log_level = LogLevel::notice;
                 }
-                Notice(fl_logger_nagios) << "setting debug level to "
-                                         << fl_livestatus_log_level;
+                Notice(fl_logger_nagios)
+                    << "setting debug level to " << fl_livestatus_log_level;
             } else if (strcmp(left, "log_file") == 0) {
                 strncpy(fl_logfile_path, right, sizeof(fl_logfile_path));
             } else if (strcmp(left, "mkeventd_socket_path") == 0) {
@@ -965,8 +965,8 @@ void livestatus_parse_arguments(const char *args_orig) {
                     if (c == 0) {
                         Notice(fl_logger_nagios) << "disabled idle timeout!";
                     } else {
-                        Notice(fl_logger_nagios) << "setting idle timeout to "
-                                                 << c << " ms";
+                        Notice(fl_logger_nagios)
+                            << "setting idle timeout to " << c << " ms";
                     }
                 }
             } else if (strcmp(left, "service_authorization") == 0) {
@@ -1036,8 +1036,8 @@ void livestatus_parse_arguments(const char *args_orig) {
             } else if (strcmp(left, "disable_statehist_filtering") == 0) {
                 fl_disable_statehist_filtering = atoi(right);
             } else {
-                Warning(fl_logger_nagios) << "ignoring invalid option " << left
-                                          << "=" << right;
+                Warning(fl_logger_nagios)
+                    << "ignoring invalid option " << left << "=" << right;
             }
         }
     }
@@ -1052,21 +1052,21 @@ void livestatus_parse_arguments(const char *args_orig) {
             &fl_mkeventd_socket_path[sizeof(fl_mkeventd_socket_path)] - pos);
         fl_mkeventd_socket_path[sizeof(fl_mkeventd_socket_path) - 1] = 0;
     }
-    Warning(fl_logger_nagios) << "fl_socket_path=[" << fl_socket_path
-                              << "], fl_mkeventd_socket_path=["
-                              << fl_mkeventd_socket_path << "]";
+    Warning(fl_logger_nagios)
+        << "fl_socket_path=[" << fl_socket_path
+        << "], fl_mkeventd_socket_path=[" << fl_mkeventd_socket_path << "]";
 
     // free(args); won't free, since we use pointers?
 }
 
 void omd_advertize() {
-    Notice(fl_logger_nagios) << "Livestatus " << VERSION
-                             << " by Mathias Kettner. Socket: '"
-                             << fl_socket_path << "'";
+    Notice(fl_logger_nagios)
+        << "Livestatus " << VERSION << " by Mathias Kettner. Socket: '"
+        << fl_socket_path << "'";
     Notice(fl_logger_nagios) << "Please visit us at http://mathias-kettner.de/";
     if (char *omd_site = getenv("OMD_SITE")) {
-        Informational(fl_logger_nagios) << "running on OMD site " << omd_site
-                                        << ", cool.";
+        Informational(fl_logger_nagios)
+            << "running on OMD site " << omd_site << ", cool.";
     } else {
         Notice(fl_logger_nagios)
             << "Hint: Please try out OMD - the Open Monitoring Distribution";

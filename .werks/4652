@@ -1,0 +1,10 @@
+Title: ipmi_common.include: Fixed wrong states handling; only use state if there are related items
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b7
+Date: 1494500184
+Class: fix
+
+

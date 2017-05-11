@@ -208,7 +208,7 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
                 infotext += ": %s%s" % (", ".join(texts), extrainfo)
             infotexts.append( infotext )
 
-        if text_state:
-            states.append(text_state)
+            if text_state:
+                states.append(text_state)
 
     return max(states), ' - '.join(infotexts), perfdata

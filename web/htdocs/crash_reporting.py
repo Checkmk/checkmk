@@ -56,7 +56,7 @@ def page_crashed(what):
 
     html.header(title, stylesheets=["status", "pages"])
 
-    show_context_buttons(what)
+    show_context_buttons(what, tardata)
 
     if html.has_var("_report") and html.check_transaction():
         details = handle_report_form(tardata, what)
@@ -95,9 +95,9 @@ def show_crash_report_details(info):
         show_gui_crash_details(info)
 
 
-def show_context_buttons(what):
+def show_context_buttons(what, tardata):
+    html.begin_context_buttons()
     if what == "check":
-        html.begin_context_buttons()
         site    = html.var("site")
         host    = html.var("host")
         service = html.var("service")
@@ -113,10 +113,14 @@ def show_context_buttons(what):
                                  ("site",      site)], filename="view.py")
         html.context_button(_("Service status"), host_url, "status")
 
-        # FIXME: Make download possible for GUI crash reports
         download_url = html.makeuri([], filename="download_crash_report.py")
         html.context_button(_("Download"), download_url, "download")
-        html.end_context_buttons()
+
+    elif what == "gui":
+        download_data_url = "data:application/octet-stream;base64,%s" % base64.b64encode(tardata)
+        html.context_button(_("Download"), "javascript:download_gui_crash_report('%s')" % download_data_url, "download")
+
+    html.end_context_buttons()
 
 
 def get_crash_report_archive_as_string(site, host, service):

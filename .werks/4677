@@ -1,0 +1,10 @@
+Title: GUI crashes can now also be downloaded
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0b7
+Date: 1494503629
+Class: fix
+
+

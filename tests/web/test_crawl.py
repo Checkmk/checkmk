@@ -121,6 +121,7 @@ class Worker(threading.Thread):
         elif content_type in [ "application/x-rpm", "application/x-deb", "application/x-debian-package",
                                "application/x-gzip", "application/x-msdos-program", "application/x-msi",
                                "application/x-tgz", "application/x-redhat-package-manager",
+                               "application/x-pkg",
                                "text/x-chdr", "text/x-c++src", "text/x-sh", ]:
             pass # no specific test
         else:

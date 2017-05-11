@@ -273,7 +273,7 @@ def open_logfile():
 def drain_pipe(pipe):
     while True:
         try:
-            readable = select.select([ pipe ], [], [], 10)[0]
+            readable = select.select([ pipe ], [], [], 0.1)[0]
         except select.error, e:
             if e[0] == errno.EINTR:
                 continue
@@ -1555,7 +1555,7 @@ class EventServer:
         select_timeout = 1
         while True:
             try:
-                readable = select.select(listen_list + client_sockets.keys(), [], [], 10)[0]
+                readable = select.select(listen_list + client_sockets.keys(), [], [], select_timeout)[0]
             except select.error, e:
                 if e[0] == errno.EINTR:
                     continue
@@ -2985,7 +2985,7 @@ class StatusServer:
                     listen_list.append(self._tcp_socket)
 
                 try:
-                    readable = select.select(listen_list, [], [], 10)[0]
+                    readable = select.select(listen_list, [], [], 0.2)[0]
                 except select.error, e:
                     if e[0] == errno.EINTR:
                         continue

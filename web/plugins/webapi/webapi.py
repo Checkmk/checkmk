@@ -993,7 +993,7 @@ def action_discover_services(request):
     validate_request_keys(request, required_keys=["hostname"],
                                    optional_keys=["mode"])
 
-    mode = html.var("mode") and html.var("mode") or "new"
+    mode = html.var("mode", deflt="new")
     hostname = request.get("hostname")
 
     check_hostname(hostname, should_exist = True)
@@ -1031,7 +1031,7 @@ api_actions["discover_services"] = {
 def action_activate_changes(request):
     validate_request_keys(request, optional_keys=["mode", "sites", "allow_foreign_changes", "comment"])
 
-    mode = html.var("mode") and html.var("mode") or "dirty"
+    mode = html.var("mode", deflt="dirty")
     if request.get("allow_foreign_changes"):
         allow_foreign_changes = bool(int(request.get("allow_foreign_changes")))
     else:

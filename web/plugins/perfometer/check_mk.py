@@ -339,7 +339,7 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit = "B"):
 
 
 def perfometer_check_mk_if(row, check_command, perf_data):
-    unit =  "Bit/s" in row["service_plugin_output"] and "Bit" or "B"
+    unit = "Bit" if  "Bit/s" in row["service_plugin_output"] else "B"
     return perfometer_bandwidth(
         in_traffic  = savefloat(perf_data[0][1]),
         out_traffic = savefloat(perf_data[5][1]),
@@ -389,7 +389,7 @@ perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
 perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport
 
 def perfometer_check_mk_cisco_qos(row, check_command, perf_data):
-    unit =  "Bit/s" in row["service_plugin_output"] and "Bit" or "B"
+    unit = "Bit" if  "Bit/s" in row["service_plugin_output"] else "B"
     return perfometer_bandwidth(
         in_traffic  = savefloat(perf_data[0][1]),
         out_traffic = savefloat(perf_data[1][1]),

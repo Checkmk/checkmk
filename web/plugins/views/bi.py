@@ -287,7 +287,7 @@ def paint_aggr_tree_ltr(row, mirror):
     for code, colspan, parents in leaves:
         h += '<tr>\n'
         leaf_td = td + ' class="leaf %s"' % odd
-        odd = odd == "odd" and "even" or "odd"
+        odd = "even" if odd == "odd" else "odd"
         if colspan > 1:
             leaf_td += ' colspan=%d' % colspan
         leaf_td += '>%s</td>\n' % code

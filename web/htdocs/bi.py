@@ -330,7 +330,10 @@ class JobWorker(object):
             raise MKConfigError("Aggregation type mismatch")
 
         aggr = aggr[1]
-        aggr_groups = type(aggr[1]) == list and tuple(aggr[1]) or tuple([aggr[1]])
+        if isinstance(aggr[1], list):
+            aggr_groups = tuple(aggr[1])
+        else:
+            aggr_groups = tuple([aggr[1]])
         if groups != aggr_groups:
             raise MKConfigError("Aggregation groups mismatch")
 
@@ -2459,7 +2462,7 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, prec
     columns = [ "name", "host_name", "state", "hard_state", "plugin_output", "scheduled_downtime_depth",
                 "host_in_service_period", "acknowledged", "services_with_fullstate", "parents" ] + add_columns
 
-    query = "GET hosts%s\n" % (bygroup and "bygroup" or "")
+    query = "GET hosts%s\n" % ("bygroup" if bygroup else "")
     query += "Columns: " + (" ".join(columns)) + "\n"
     query += filter_header
 
@@ -2822,7 +2825,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
         h = ""
         state = tree[0]
         omit_content = lazy and not is_open
-        mousecode = 'onclick="bi_toggle_%s(this, %d);" ' % (boxes and "box" or "subtree", omit_content)
+        mousecode = 'onclick="bi_toggle_%s(this, %d);" ' % ("box" if boxes else "subtree", omit_content)
 
         # Variant: BI-Boxes
         if boxes:
@@ -3026,7 +3029,7 @@ def filter_tree_only_problems(tree):
     # remove subtrees in state OK
     new_subtrees = []
     for subtree in subtrees:
-        effective_state = subtree[1] != None and subtree[1] or subtree[0]
+        effective_state = subtree[1] if subtree[1] is not None else subtree[0]
         if effective_state["state"] not in [ OK, PENDING ]:
             if len(subtree) == 3:
                 new_subtrees.append(subtree)

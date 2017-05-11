@@ -509,7 +509,7 @@ class Overridable(Base):
 
 
     def edit_url(self):
-        owner = not self.is_mine() and ("&owner=%s" % self.owner()) or ""
+        owner = ("&owner=%s" % self.owner()) if not self.is_mine() else ""
         return "edit_%s.py?load_name=%s%s" % (self.type_name(), self.name(), owner)
 
 

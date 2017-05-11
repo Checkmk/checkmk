@@ -33,7 +33,7 @@ class FilterText(Filter):
         htmlvars = [htmlvar]
         if negateable:
             htmlvars.append("neg_" + htmlvar)
-        link_columns = type(column) == list and column or [column]
+        link_columns = column if isinstance(column, list) else [column]
         Filter.__init__(self, name, title, info, htmlvars, link_columns)
         self.op = op
         self.column = column
@@ -172,7 +172,7 @@ class FilterIPAddress(Filter):
             if self._what == "primary":
                 return "Filter: host_address %s %s\n" % (op, address)
             else:
-                varname = self._what == "ipv4" and "ADDRESS_4" or "ADDRESS_6"
+                varname = "ADDRESS_4" if self._what == "ipv4" else "ADDRESS_6"
                 return "Filter: host_custom_variables %s %s %s\n" % (op, varname, address)
         else:
             return ""
@@ -323,7 +323,7 @@ class FilterMultigroup(Filter):
 class FilterGroupCombo(Filter):
     def __init__(self, what, title, enforce):
         self.enforce = enforce
-        self.prefix = not self.enforce and "opt" or ""
+        self.prefix = "opt" if not self.enforce else ""
         htmlvars = [ self.prefix + what + "_group" ]
         if not enforce:
             htmlvars.append("neg_" + htmlvars[0])

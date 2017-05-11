@@ -83,7 +83,7 @@ def render_single_dataset(rows, view, group_cells, cells, num_columns, _ignore_s
             html.close_tr()
         thispart = rows[rownum:rownum + num_columns]
         for cell in cells:
-            odd = odd == "odd" and "even" or "odd"
+            odd = "even" if odd == "odd" else "odd"
             html.open_tr(class_="data %s0" % odd)
             if view.get("column_headers") != "off":
                 html.open_td(class_="left")
@@ -213,7 +213,7 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
 
             save_state_for_playing_alarm_sounds(row)
 
-            odd = odd == "odd" and "even" or "odd"
+            odd = "even" if odd == "odd" else "odd"
 
             # state = row.get("service_state", row.get("aggr_state"))
             state = saveint(row.get("service_state"))
@@ -227,7 +227,7 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
             if index in groups:
                 group_spec, num_grouped_rows = groups[index]
                 group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd, num_cells)
-                odd = odd == "odd" and "even" or "odd"
+                odd = "even" if odd == "odd" else "odd"
 
 
             css_classes = []
@@ -649,7 +649,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
             if index in groups:
                 group_spec, num_grouped_rows = groups[index]
                 group_hidden = grouped_row_title(index, group_spec, num_grouped_rows, odd, num_cells)
-                odd = odd == "odd" and "even" or "odd"
+                odd = "even" if odd == "odd" else "odd"
 
             css_classes = []
 
@@ -664,7 +664,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
                 css_classes.append("group_end")
                 group_hidden = None
 
-            odd = odd == "odd" and "even" or "odd"
+            odd = "even" if odd == "odd" else "odd"
 
             if num_columns > 1:
                 css_classes.append("multicolumn")
@@ -733,7 +733,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
         html.open_table(class_="data matrix")
         odd = "odd"
         for cell_nr, cell in enumerate(group_cells):
-            odd = odd == "odd" and "even" or "odd"
+            odd = "even" if odd == "odd" else "odd"
             html.open_tr(class_="data %s0" % odd)
             html.open_td(class_="matrixhead")
             html.write(cell.title(use_short=False))
@@ -762,7 +762,7 @@ def render_matrix(rows, view, group_cells, cells, num_columns, _ignore_show_chec
                 if not at_least_one_different:
                     continue
 
-            odd = odd == "odd" and "even" or "odd"
+            odd = "even" if odd == "odd" else "odd"
             html.open_tr(class_="data %s0" % odd)
             tdclass, content = cells[0].render(matrix_cells[row_id].values()[0])
             html.open_td(class_=["left", tdclass])

@@ -221,7 +221,7 @@ class DisplayOptions(object):
     # to lower-case. Vice versa when all display_options are lower case.
     # When the display_options are mixed case assume all unset options to be enabled
     def _merge_with_defaults(self, opts):
-        do_defaults = opts.isupper() and self.all_off() or self.all_on()
+        do_defaults = self.all_off() if opts.isupper() else self.all_on()
         for c in do_defaults:
             if c.lower() not in opts.lower():
                 opts += c

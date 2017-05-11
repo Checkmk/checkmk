@@ -498,7 +498,7 @@ def page_create_visual(what, info_keys, next_url = None):
 
 def get_context_specs(visual, info_handler):
     context_specs = []
-    info_keys = info_handler and info_handler(visual) or infos.keys()
+    info_keys = info_handler(visual) if info_handler else infos.keys()
 
     single_info_keys = [key for key in info_keys if key in visual['single_infos']]
     multi_info_keys =  [key for key in info_keys if key not in single_info_keys]
@@ -1226,7 +1226,7 @@ def pack_context_for_editing(visual, info_handler):
     # we pack into every info every filter. The dict valuespec will
     # pick out what it needs. Yurks.
     packed_context = {}
-    info_keys = info_handler and info_handler(visual) or infos.keys()
+    info_keys = info_handler(visual) if info_handler else infos.keys()
     for info_name in info_keys:
         packed_context[info_name] = visual.get('context', {})
     return packed_context

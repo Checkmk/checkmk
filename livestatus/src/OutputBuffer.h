@@ -26,10 +26,8 @@
 #define OutputBuffer_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <cstddef>
 #include <sstream>
 #include <string>
-#include <vector>
 class Logger;
 
 class OutputBuffer {
@@ -48,10 +46,7 @@ public:
     OutputBuffer(int fd, const bool &termination_flag, Logger *logger);
     ~OutputBuffer();
 
-    void add(const std::string &str);
-    void add(const std::vector<char> &blob);
-
-    size_t size();
+    std::ostream &os() { return _os; }
 
     void setResponseHeader(ResponseHeader r) { _response_header = r; }
 

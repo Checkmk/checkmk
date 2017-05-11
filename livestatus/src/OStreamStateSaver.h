@@ -22,48 +22,30 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef RendererPython3_h
-#define RendererPython3_h
+#ifndef OStreamStateSaver_h
+#define OStreamStateSaver_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <iosfwd>
-#include <string>
-#include <vector>
-#include "Renderer.h"
-#include "data_encoding.h"
-class Logger;
+#include <iostream>
 
-class RendererPython3 : public Renderer {
+class OStreamStateSaver {
 public:
-    RendererPython3(std::ostream &os, Logger *logger, int timezone_offset,
-                    Encoding data_encoding);
+    explicit OStreamStateSaver(std::ostream &os)
+        : _os(os)
+        , _old_flags(_os.flags())
+        , _old_precision(_os.precision())
+        , _old_fill(_os.fill()) {}
+    ~OStreamStateSaver() {
+        _os.fill(_old_fill);
+        _os.precision(_old_precision);
+        _os.flags(_old_flags);
+    }
 
-    void outputNull() override;
-    void outputBlob(const std::vector<char> &value) override;
-    void outputString(const std::string &value) override;
-
-    void beginQuery() override;
-    void separateQueryElements() override;
-    void endQuery() override;
-
-    void beginRow() override;
-    void beginRowElement() override;
-    void endRowElement() override;
-    void separateRowElements() override;
-    void endRow() override;
-
-    void beginList() override;
-    void separateListElements() override;
-    void endList() override;
-
-    void beginSublist() override;
-    void separateSublistElements() override;
-    void endSublist() override;
-
-    void beginDict() override;
-    void separateDictElements() override;
-    void separateDictKeyValue() override;
-    void endDict() override;
+private:
+    std::ostream &_os;
+    std::ios_base::fmtflags _old_flags;
+    std::streamsize _old_precision;
+    char _old_fill;
 };
 
-#endif  // RendererPython3_h
+#endif  // OStreamStateSaver_h

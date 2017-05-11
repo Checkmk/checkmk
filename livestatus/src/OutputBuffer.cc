@@ -26,6 +26,7 @@
 #include <sys/select.h>
 #include <unistd.h>
 #include <chrono>
+#include <cstddef>
 #include <iomanip>
 #include <ratio>
 #include "ChronoUtils.h"
@@ -38,7 +39,6 @@ using std::setw;
 using std::string;
 using std::stringbuf;
 using std::to_string;
-using std::vector;
 
 OutputBuffer::OutputBuffer(int fd, const bool &termination_flag, Logger *logger)
     : _fd(fd)
@@ -51,12 +51,6 @@ OutputBuffer::OutputBuffer(int fd, const bool &termination_flag, Logger *logger)
     , _response_code(ResponseCode::ok) {}
 
 OutputBuffer::~OutputBuffer() { flush(); }
-
-void OutputBuffer::add(const string &str) { _os << str; }
-
-void OutputBuffer::add(const vector<char> &blob) {
-    _os.write(&blob[0], blob.size());
-}
 
 void OutputBuffer::flush() {
     if (_response_header == ResponseHeader::fixed16) {
@@ -102,8 +96,6 @@ void OutputBuffer::writeData(ostringstream &os) {
         }
     }
 }
-
-size_t OutputBuffer::size() { return _os.tellp(); }
 
 void OutputBuffer::setError(ResponseCode code, const string &message) {
     // only the first error is being returned

@@ -7137,9 +7137,17 @@ class Rule(object):
         if "rule_value" in search_options and not self.ruleset.valuespec():
             return False
 
-        if self.ruleset.valuespec() and \
-           not match_search_expression(search_options, "rule_value",
-                                       "%s" % self.ruleset.valuespec().value_to_text(self.value)):
+        value_text = None
+        if self.ruleset.valuespec():
+            try:
+                value_text = "%s" % self.ruleset.valuespec().value_to_text(self.value)
+            except Exception, e:
+                log_exception()
+                html.show_warning(_("Failed to search rule of ruleset '%s' in folder '%s' (%s): %s") %
+                                       (self.ruleset.title(), self.folder.title(), self.to_config(), e))
+
+
+        if value_text != None and not match_search_expression(search_options, "rule_value", value_text):
             return False
 
         if not match_one_of_search_expression(search_options, "rule_host_list", self.host_list):
@@ -7154,8 +7162,8 @@ class Rule(object):
         ] + self.host_list \
           + (self.item_list or [])
 
-        if self.ruleset.valuespec():
-            to_search.append("%s" % self.ruleset.valuespec().value_to_text(self.value))
+        if value_text != None:
+            to_search.append(value_text)
 
         if not match_one_of_search_expression(search_options, "fulltext", to_search):
             return False

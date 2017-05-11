@@ -146,151 +146,154 @@ bool LogEntry::assign(Param par, char **scan) {
     return true;
 };
 
-std::vector<LogEntry::LogDef> LogEntry::log_definitions{
-    ////////////////
-    LogDef{"INITIAL HOST STATE: ",
-           Class::alert,
-           LogEntryType::alert_host,
-           {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
-            Param::CheckOutput}},
-    ////////////////
-    LogDef{"CURRENT HOST STATE: ",
-           Class::state,
-           LogEntryType::state_host_initial,
-           {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
-            Param::CheckOutput}},
-    ////////////////
-    LogDef{"HOST ALERT: ",
-           Class::state,
-           LogEntryType::state_host,
-           {Param::HostName, Param::HostState, Param::StateType, Param::Attempt,
-            Param::CheckOutput}},
-    ////////////////
-    LogDef{"HOST DOWNTIME ALERT: ",
-           Class::alert,
-           LogEntryType::downtime_alert_host,
-           {Param::HostName, Param::StateType, Param::Comment}},
-    ////////////////
-    LogDef{"HOST ACKNOWLEDGE ALERT: ",
-           Class::alert,
-           LogEntryType::acknowledge_alert_host,
-           {Param::HostName, Param::StateType, Param::ContactName,
-            Param::Comment}},
-    ////////////////
-    LogDef{"HOST FLAPPING ALERT: ",
-           Class::alert,
-           LogEntryType::flapping_host,
-           {Param::HostName, Param::StateType, Param::Comment}},
-    ////////////////
-    LogDef{"INITIAL SERVICE STATE: ",
-           Class::state,
-           LogEntryType::state_service_initial,
-           {Param::HostName, Param::SvcDesc, Param::ServiceState,
-            Param::StateType, Param::Attempt, Param::CheckOutput}},
-    ////////////////
-    LogDef{"CURRENT SERVICE STATE: ",
-           Class::state,
-           LogEntryType::state_service,
-           {Param::HostName, Param::SvcDesc, Param::ServiceState,
-            Param::StateType, Param::Attempt, Param::CheckOutput}},
-    ////////////////
-    LogDef{"SERVICE ALERT: ",
-           Class::alert,
-           LogEntryType::alert_service,
-           {Param::HostName, Param::SvcDesc, Param::ServiceState,
-            Param::StateType, Param::Attempt, Param::CheckOutput}},
-    ////////////////
-    LogDef{"SERVICE DOWNTIME ALERT: ",
-           Class::alert,
-           LogEntryType::downtime_alert_service,
-           {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
-    ////////////////
-    LogDef{"SERVICE ACKNOWLEDGE ALERT: ",
-           Class::alert,
-           LogEntryType::acknowledge_alert_service,
-           {Param::HostName, Param::SvcDesc, Param::StateType,
-            Param::ContactName, Param::Comment}},
-    ////////////////
-    LogDef{"SERVICE FLAPPING ALERT: ",
-           Class::alert,
-           LogEntryType::flapping_service,
-           {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
-    ////////////////
-    LogDef{"TIMEPERIOD_TRANSITION: ",
-           Class::state,
-           LogEntryType::timeperiod_transition,
-           {}},
-    ////////////////
-    LogDef{"HOST NOTIFICATION: ",
-           Class::hs_notification,
-           LogEntryType::none,
-           {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::CheckOutput}},
-    ////////////////
-    LogDef{"SERVICE NOTIFICATION: ",
-           Class::hs_notification,
-           LogEntryType::none,
-           {Param::ContactName, Param::HostName, Param::SvcDesc,
-            Param::StateType, Param::CommandName, Param::CheckOutput}},
-    ////////////////
-    LogDef{"HOST NOTIFICATION RESULT: ",
-           Class::hs_notification,
-           LogEntryType::none,
-           {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::CheckOutput, Param::Comment}},
-    ////////////////
-    LogDef{
-        "SERVICE NOTIFICATION RESULT: ",
-        Class::hs_notification,
-        LogEntryType::none,
-        {Param::ContactName, Param::HostName, Param::SvcDesc, Param::StateType,
-         Param::CommandName, Param::CheckOutput, Param::Comment}},
-    ////////////////
-    LogDef{"HOST NOTIFICATION PROGRESS: ",
-           Class::hs_notification,
-           LogEntryType::none,
-           {Param::ContactName, Param::HostName, Param::StateType,
-            Param::CommandName, Param::CheckOutput}},
-    ////////////////
-    LogDef{"SERVICE NOTIFICATION PROGRESS: ",
-           Class::hs_notification,
-           LogEntryType::none,
-           {Param::ContactName, Param::HostName, Param::SvcDesc,
-            Param::StateType, Param::CommandName, Param::CheckOutput}},
-    ////////////////
-    LogDef{"HOST ALERT HANDLER STARTED: ",
-           Class::alert_handlers,
-           LogEntryType::none,
-           {Param::HostName, Param::CommandName}},
-    ////////////////
-    LogDef{"SERVICE ALERT HANDLER STARTED: ",
-           Class::alert_handlers,
-           LogEntryType::none,
-           {Param::HostName, Param::SvcDesc, Param::CommandName}},
-    ////////////////
-    LogDef{"HOST ALERT HANDLER STOPPED: ",
-           Class::alert_handlers,
-           LogEntryType::none,
-           {Param::HostName, Param::CommandName, Param::ServiceState,
-            Param::CheckOutput}},
-    ////////////////
-    LogDef{"SERVICE ALERT HANDLER STOPPED: ",
-           Class::alert_handlers,
-           LogEntryType::none,
-           {Param::HostName, Param::SvcDesc, Param::CommandName,
-            Param::ServiceState, Param::CheckOutput}},
-    ////////////////
-    LogDef{"PASSIVE SERVICE CHECK: ",
-           Class::passivecheck,
-           LogEntryType::none,
-           {Param::HostName, Param::SvcDesc, Param::State, Param::CheckOutput}},
-    ////////////////
-    LogDef{"PASSIVE HOST CHECK: ",
-           Class::passivecheck,
-           LogEntryType::none,
-           {Param::HostName, Param::State, Param::CheckOutput}},
-    ////////////////
-    LogDef{"EXTERNAL COMMAND: ", Class::ext_command, LogEntryType::none, {}}};
+// False positive in clang-tidy-4.0, see https://reviews.llvm.org/D27048
+std::vector<LogEntry::LogDef> LogEntry::log_definitions  // NOLINT
+    {LogDef{"INITIAL HOST STATE: ",
+            Class::alert,
+            LogEntryType::alert_host,
+            {Param::HostName, Param::HostState, Param::StateType,
+             Param::Attempt, Param::CheckOutput}},
+     ////////////////
+     LogDef{"CURRENT HOST STATE: ",
+            Class::state,
+            LogEntryType::state_host_initial,
+            {Param::HostName, Param::HostState, Param::StateType,
+             Param::Attempt, Param::CheckOutput}},
+     ////////////////
+     LogDef{"HOST ALERT: ",
+            Class::state,
+            LogEntryType::state_host,
+            {Param::HostName, Param::HostState, Param::StateType,
+             Param::Attempt, Param::CheckOutput}},
+     ////////////////
+     LogDef{"HOST DOWNTIME ALERT: ",
+            Class::alert,
+            LogEntryType::downtime_alert_host,
+            {Param::HostName, Param::StateType, Param::Comment}},
+     ////////////////
+     LogDef{"HOST ACKNOWLEDGE ALERT: ",
+            Class::alert,
+            LogEntryType::acknowledge_alert_host,
+            {Param::HostName, Param::StateType, Param::ContactName,
+             Param::Comment}},
+     ////////////////
+     LogDef{"HOST FLAPPING ALERT: ",
+            Class::alert,
+            LogEntryType::flapping_host,
+            {Param::HostName, Param::StateType, Param::Comment}},
+     ////////////////
+     LogDef{"INITIAL SERVICE STATE: ",
+            Class::state,
+            LogEntryType::state_service_initial,
+            {Param::HostName, Param::SvcDesc, Param::ServiceState,
+             Param::StateType, Param::Attempt, Param::CheckOutput}},
+     ////////////////
+     LogDef{"CURRENT SERVICE STATE: ",
+            Class::state,
+            LogEntryType::state_service,
+            {Param::HostName, Param::SvcDesc, Param::ServiceState,
+             Param::StateType, Param::Attempt, Param::CheckOutput}},
+     ////////////////
+     LogDef{"SERVICE ALERT: ",
+            Class::alert,
+            LogEntryType::alert_service,
+            {Param::HostName, Param::SvcDesc, Param::ServiceState,
+             Param::StateType, Param::Attempt, Param::CheckOutput}},
+     ////////////////
+     LogDef{
+         "SERVICE DOWNTIME ALERT: ",
+         Class::alert,
+         LogEntryType::downtime_alert_service,
+         {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
+     ////////////////
+     LogDef{"SERVICE ACKNOWLEDGE ALERT: ",
+            Class::alert,
+            LogEntryType::acknowledge_alert_service,
+            {Param::HostName, Param::SvcDesc, Param::StateType,
+             Param::ContactName, Param::Comment}},
+     ////////////////
+     LogDef{
+         "SERVICE FLAPPING ALERT: ",
+         Class::alert,
+         LogEntryType::flapping_service,
+         {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
+     ////////////////
+     LogDef{"TIMEPERIOD_TRANSITION: ",
+            Class::state,
+            LogEntryType::timeperiod_transition,
+            {}},
+     ////////////////
+     LogDef{"HOST NOTIFICATION: ",
+            Class::hs_notification,
+            LogEntryType::none,
+            {Param::ContactName, Param::HostName, Param::StateType,
+             Param::CommandName, Param::CheckOutput}},
+     ////////////////
+     LogDef{"SERVICE NOTIFICATION: ",
+            Class::hs_notification,
+            LogEntryType::none,
+            {Param::ContactName, Param::HostName, Param::SvcDesc,
+             Param::StateType, Param::CommandName, Param::CheckOutput}},
+     ////////////////
+     LogDef{"HOST NOTIFICATION RESULT: ",
+            Class::hs_notification,
+            LogEntryType::none,
+            {Param::ContactName, Param::HostName, Param::StateType,
+             Param::CommandName, Param::CheckOutput, Param::Comment}},
+     ////////////////
+     LogDef{
+         "SERVICE NOTIFICATION RESULT: ",
+         Class::hs_notification,
+         LogEntryType::none,
+         {Param::ContactName, Param::HostName, Param::SvcDesc, Param::StateType,
+          Param::CommandName, Param::CheckOutput, Param::Comment}},
+     ////////////////
+     LogDef{"HOST NOTIFICATION PROGRESS: ",
+            Class::hs_notification,
+            LogEntryType::none,
+            {Param::ContactName, Param::HostName, Param::StateType,
+             Param::CommandName, Param::CheckOutput}},
+     ////////////////
+     LogDef{"SERVICE NOTIFICATION PROGRESS: ",
+            Class::hs_notification,
+            LogEntryType::none,
+            {Param::ContactName, Param::HostName, Param::SvcDesc,
+             Param::StateType, Param::CommandName, Param::CheckOutput}},
+     ////////////////
+     LogDef{"HOST ALERT HANDLER STARTED: ",
+            Class::alert_handlers,
+            LogEntryType::none,
+            {Param::HostName, Param::CommandName}},
+     ////////////////
+     LogDef{"SERVICE ALERT HANDLER STARTED: ",
+            Class::alert_handlers,
+            LogEntryType::none,
+            {Param::HostName, Param::SvcDesc, Param::CommandName}},
+     ////////////////
+     LogDef{"HOST ALERT HANDLER STOPPED: ",
+            Class::alert_handlers,
+            LogEntryType::none,
+            {Param::HostName, Param::CommandName, Param::ServiceState,
+             Param::CheckOutput}},
+     ////////////////
+     LogDef{"SERVICE ALERT HANDLER STOPPED: ",
+            Class::alert_handlers,
+            LogEntryType::none,
+            {Param::HostName, Param::SvcDesc, Param::CommandName,
+             Param::ServiceState, Param::CheckOutput}},
+     ////////////////
+     LogDef{
+         "PASSIVE SERVICE CHECK: ",
+         Class::passivecheck,
+         LogEntryType::none,
+         {Param::HostName, Param::SvcDesc, Param::State, Param::CheckOutput}},
+     ////////////////
+     LogDef{"PASSIVE HOST CHECK: ",
+            Class::passivecheck,
+            LogEntryType::none,
+            {Param::HostName, Param::State, Param::CheckOutput}},
+     ////////////////
+     LogDef{"EXTERNAL COMMAND: ", Class::ext_command, LogEntryType::none, {}}};
 
 bool LogEntry::classifyLogMessage() {
     string text = _text;

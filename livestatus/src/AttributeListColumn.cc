@@ -102,8 +102,8 @@ string AttributeListColumn::refValueFor(const string &value, Logger *logger) {
     for (const char *t; (t = next_token(&scan, ',')) != nullptr;) {
         auto it = known_attributes.find(t);
         if (it == known_attributes.end()) {
-            Informational(logger) << "Ignoring invalid value '" << t
-                                  << "' for attribute list";
+            Informational(logger)
+                << "Ignoring invalid value '" << t << "' for attribute list";
             continue;
         }
         values[it->second] = true;

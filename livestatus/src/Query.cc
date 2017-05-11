@@ -710,8 +710,8 @@ void Query::start(QueryRenderer &q) {
 
 bool Query::timelimitReached() {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
-        Informational(_logger) << "Maximum query time of " << _time_limit
-                               << " seconds exceeded!";
+        Informational(_logger)
+            << "Maximum query time of " << _time_limit << " seconds exceeded!";
         _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
                          "Maximum query time of " + to_string(_time_limit) +
                              " seconds exceeded!");

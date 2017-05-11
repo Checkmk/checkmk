@@ -1,0 +1,10 @@
+Title: Improved handling of rare but possible EINTR "interrupted system call" exceptions
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.4.0b7
+Date: 1494494906
+Class: fix
+
+

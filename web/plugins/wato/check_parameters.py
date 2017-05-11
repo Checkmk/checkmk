@@ -1756,6 +1756,22 @@ websphere_mq_common_elements = [
             default_value = (1000, 1200)
         )
     ),
+    ("message_count_perc",
+        OptionalDropdownChoice(
+            title      = _('Percentage of queue length'),
+            help       = _('This setting only applies if the WebSphere MQ reports the queue length'),
+            choices    = [ (None, _("Ignore these levels")) ],
+            otherlabel = _("Set relative levels"),
+            explicit   = \
+                Tuple(
+                    title = _('Percentage of queue length'),
+                    elements = [
+                        Percentage(title = _("Warning at")),
+                        Percentage(title = _("Critical at")),
+                    ]
+                ),
+            default_value = (80.0, 90.0)
+    )),
 ]
 
 def transform_websphere_mq_queues(source):
@@ -1779,22 +1795,6 @@ register_check_parameters(
     Transform(
         Dictionary(
             elements = websphere_mq_common_elements + [
-                ("message_count_perc",
-                    OptionalDropdownChoice(
-                        title      = _('Percentage of queue length'),
-                        help       = _('This setting only applies if the WebSphere MQ reports the queue length'),
-                        choices    = [ (None, _("Ignore these levels")) ],
-                        otherlabel = _("Set relative levels"),
-                        explicit   = \
-                            Tuple(
-                                title = _('Percentage of queue length'),
-                                elements = [
-                                    Percentage(title = _("Warning at")),
-                                    Percentage(title = _("Critical at")),
-                                ]
-                            ),
-                        default_value = (80.0, 90.0)
-                )),
                 ("messages_not_processed",
                     Dictionary(
                         title = _("Settings for messages not processed"),

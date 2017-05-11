@@ -62,6 +62,7 @@ class CMKVersion(object):
     GIT     = "git"
 
     CEE   = "cee"
+    CME   = "cme"
     CRE   = "cre"
 
     def __init__(self, version, edition, branch):
@@ -414,6 +415,7 @@ class Site(object):
         if os.path.exists(cme_path()):
             paths += [
                 cme_path(),
+                cme_path() + "/cmk_base",
             ]
 
         # Prevent build problems of livestatus

@@ -5,7 +5,7 @@ import os
 import sys
 import pytest
 
-from testlib import cmk_path, cmc_path
+from testlib import cmk_path, cmc_path, cme_path
 import testlib.pylint_cmk as pylint_cmk
 
 # Mark all tests in this file to be pylint checks
@@ -17,10 +17,10 @@ def test_pylint_misc():
         cmk_path() + "/cmk_base/modes",
         cmk_path() + "/cmk_base/default_config",
         cmc_path() + "/cmk_base",
-        cmc_path() + "/cmk_base/cme",
         cmc_path() + "/cmk_base/cee",
         cmc_path() + "/cmk_base/modes",
         cmc_path() + "/cmk_base/default_config",
+        cme_path() + "/cmk_base/default_config",
         cmk_path() + "/lib",
         cmk_path() + "/bin",
         cmk_path() + "/notifications",

@@ -38,7 +38,7 @@ using std::tie;
 
 CustomVarsDictFilter::CustomVarsDictFilter(CustomVarsColumn *column,
                                            RelationalOperator relOp,
-                                           string value)
+                                           const string &value)
     : _column(column), _relOp(relOp) {
     // Filter for custom_variables:
     //    Filter: custom_variables = PATH /hirni.mk

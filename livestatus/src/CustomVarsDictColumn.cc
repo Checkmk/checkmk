@@ -37,8 +37,8 @@ CustomVarsDictColumn::CustomVarsDictColumn(string name, string description,
                                            int offset, int indirect_offset,
                                            int extra_offset,
                                            int extra_extra_offset)
-    : CustomVarsColumn(name, description, offset, indirect_offset, extra_offset,
-                       extra_extra_offset) {}
+    : CustomVarsColumn(std::move(name), std::move(description), offset,
+                       indirect_offset, extra_offset, extra_extra_offset) {}
 
 ColumnType CustomVarsDictColumn::type() { return ColumnType::dict; }
 

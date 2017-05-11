@@ -59,8 +59,8 @@ private:
 
 class ReplicationColumn : public BlobColumn {
 public:
-    ReplicationColumn(string name, string description, string blob,
-                      int indirect_offset, int extra_offset,
+    ReplicationColumn(const string &name, const string &description,
+                      string blob, int indirect_offset, int extra_offset,
                       int extra_extra_offset)
         : BlobColumn(name, description, indirect_offset, extra_offset,
                      extra_extra_offset)

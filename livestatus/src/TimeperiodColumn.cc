@@ -29,15 +29,16 @@
 
 using std::string;
 
-extern TimeperiodsCache *g_timeperiods_cache;
+extern TimeperiodsCache* g_timeperiods_cache;
 
-TimeperiodColumn::TimeperiodColumn(string name, string description,
+TimeperiodColumn::TimeperiodColumn(const string& name,
+                                   const string& description,
                                    int indirect_offset, int extra_offset,
                                    int extra_extra_offset)
     : IntColumn(name, description, indirect_offset, extra_offset,
                 extra_extra_offset) {}
 
-int32_t TimeperiodColumn::getValue(Row row, contact * /* auth_user */) {
+int32_t TimeperiodColumn::getValue(Row row, contact* /* auth_user */) {
     if (auto tp = columnData<timeperiod>(row)) {
         // no timeperiod set -> Nagios assumes 7x24
         return (tp == nullptr || g_timeperiods_cache->inTimeperiod(tp)) ? 1 : 0;

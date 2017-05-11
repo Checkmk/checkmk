@@ -1,0 +1,11 @@
+Title: Availability reports: Fixed possible exception when working with empty data
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1494504269
+
+

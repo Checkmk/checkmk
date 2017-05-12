@@ -1,0 +1,11 @@
+Title: win_logwatch: Fixed exception when baking agents containing this plugin with old config
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1494588144
+
+

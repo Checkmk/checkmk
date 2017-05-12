@@ -512,6 +512,12 @@ metric_info["indexspace_wasted"] = {
     "color" : "#20a080",
 }
 
+metric_info["database_reclaimable"] = {
+    "title" : _("Database reclaimable size"),
+    "unit"  : "bytes",
+    "color" : "45/a",
+}
+
 metric_info["mem_total"] = {
     "title" : _("RAM installed"),
     "color": "#f0f0f0",
@@ -4045,6 +4051,11 @@ check_metrics["check_mk-oracle_jobs"] = {
     "duration" : { "name" : "job_duration" }
 }
 
+check_metrics["check_mk-oracle_recovery_area"] = {
+    "used"        : { "name" : "database_size", "scale" : MB },
+    "reclaimable" : { "name" : "database_reclaimable", "scale" : MB },
+}
+
 check_metrics["check_mk-vms_system.procs"] = {
     "procs" : { "name" : "processes" }
 }
@@ -6429,6 +6440,7 @@ graph_info["database_sizes"] = {
         ( "data_size",  "stack" ),
         ( "indexes_size",  "stack" ),
         ( "unused_size",  "stack" ),
+        ( "database_reclaimable", "stack"),
     ],
     "optional_metrics" : [
         "unallocated_size",
@@ -6436,6 +6448,7 @@ graph_info["database_sizes"] = {
         "data_size",
         "indexes_size",
         "unused_size",
+        "database_reclaimable",
     ],
     "legend_scale" : MB,
 }

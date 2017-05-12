@@ -57,7 +57,7 @@ def create(filename, components):
             exclude_args = list(itertools.chain.from_iterable([ ("--exclude", f) for f in excludes ]))
 
             subdata = subprocess.check_output(
-                [ "tar", "cf", "-", "--dereference", "--force-local" ]
+                [ "tar", "cf", "-", "--force-local" ]
                 + exclude_args
                 + [ "-C", basedir, filename ]
             )

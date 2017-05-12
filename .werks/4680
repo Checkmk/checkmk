@@ -1,0 +1,14 @@
+Title: Sync of local hierarchy (MKPs) preserves symlinks now
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b7
+Date: 1494586265
+
+A WATO slave site can be configured to get all local files (e.g. created with MKPs)
+of the master can be synced to the slave site. Previous versions were not copying
+symlinks. Instead of it the link destination files were copied to the symlink
+location.

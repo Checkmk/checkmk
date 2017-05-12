@@ -98,7 +98,7 @@ private:
     Logger *const _logger;
     std::vector<std::shared_ptr<Column>> _columns;
     std::vector<std::unique_ptr<StatsColumn>> _stats_columns;
-    std::map<std::vector<std::string>, std::vector<std::unique_ptr<Aggregator>>>
+    std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
         _stats_groups;
     std::unordered_set<std::shared_ptr<Column>> _all_columns;
 
@@ -137,7 +137,7 @@ private:
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
     const std::vector<std::unique_ptr<Aggregator>> &getAggregatorsFor(
-        const std::vector<std::string> &groupspec);
+        const RowFragment &groupspec);
 };
 
 #endif  // Query_h

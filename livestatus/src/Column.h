@@ -58,12 +58,6 @@ public:
         return static_cast<T *>(shiftPointer(row));
     }
 
-    // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
-    // fixed, it is just an artifact.
-    virtual std::string valueAsString(Row /* row */,
-                                      contact * /* auth_user */) {
-        return "invalid";
-    }
     virtual ColumnType type() = 0;
 
     // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is

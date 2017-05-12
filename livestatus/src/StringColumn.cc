@@ -25,6 +25,7 @@
 #include "StringColumn.h"
 #include "Filter.h"
 #include "Renderer.h"
+#include "Row.h"
 #include "StringFilter.h"
 
 using std::make_unique;

@@ -46,7 +46,6 @@ public:
                              extra_offset, extra_extra_offset) {}
     // reimplement several functions from StringColumn
 
-    std::string valueAsString(Row row, contact *auth_user) override;
     void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;

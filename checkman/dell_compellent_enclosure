@@ -1,0 +1,16 @@
+title: Dell Compellent: Enclosure status
+agents: snmp
+catalog: hw/storagehw/dell
+license: GPL
+distribution: check_mk
+description:
+ This check displays the status, model, type and service tag of an
+ enclosure. The state will change to {WARN} if the enclosure is degraded
+ and to {CRIT} if it is down. Additionally a state message is available if
+ the state changed.
+
+item:
+ The Enclosure number is the item
+
+inventory:
+ One service for each enclosure is created

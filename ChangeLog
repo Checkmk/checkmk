@@ -1,6 +1,7 @@
 1.2.8p23:
     Checks & Agents:
     * 4654 FIX: oracle_recovery_area: Added missing metric info
+    * 4655 FIX: fileinfo.groups: Added missing metric information
 
 
 1.2.8p22:

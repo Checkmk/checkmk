@@ -402,6 +402,29 @@ metric_info["file_size"] = {
     "color" : "16/a",
 }
 
+metric_info["total_file_size"] = {
+    "title" : _("Total file size"),
+    "unit"  : "bytes",
+    "color" : "16/a",
+}
+metric_info["file_size_smallest"] = {
+    "title" : _("Smallest file"),
+    "unit"  : "bytes",
+    "color" : "21/a",
+}
+
+metric_info["file_size_largest"] = {
+    "title" : _("Largest file"),
+    "unit"  : "bytes",
+    "color" : "25/a",
+}
+
+metric_info["file_count"] = {
+    "title" : _("Amount of files"),
+    "unit"  : "count",
+    "color" : "23/a",
+}
+
 # database, tablespace
 
 metric_info["database_size"] = {
@@ -2457,10 +2480,22 @@ metric_info["checkpoint_age"] = {
     "color" : "#006040",
 }
 
-metric_info["backup_age"] = {
-    "title" : _("Time since last backup"),
+metric_info["checkpoint_age"] = {
+    "title" : _("Time since last checkpoint"),
     "unit"  : "s",
-    "color" : "34/a",
+    "color" : "#006040",
+}
+
+metric_info["file_age_oldest"] = {
+    "title" : _("Oldest file"),
+    "unit"  : "s",
+    "color" : "11/a",
+}
+
+metric_info["file_age_newest"] = {
+    "title" : _("Newest file"),
+    "unit"  : "s",
+    "color" : "13/a",
 }
 
 metric_info["logswitches_last_hour"] = {
@@ -4177,6 +4212,15 @@ check_metrics["check_mk-postgres_sessions"] = {
 
 check_metrics["check_mk-fileinfo"] = {
     "size" : { "name" : "file_size" }
+}
+
+check_metrics["check_mk-fileinfo.groups"] = {
+    "size"          : { "name" : "total_file_size" },
+    "size_smallest" : { "name" : "file_size_smallest" },
+    "size_largest"  : { "name" : "file_size_largest" },
+    "count"         : { "name" : "file_count" },
+    "age_oldest"    : { "name" : "file_age_oldest" },
+    "age_newest"    : { "name" : "file_age_newest" },
 }
 
 check_metrics["check_mk-postgres_stat_database.size"] = {

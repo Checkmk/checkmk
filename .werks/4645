@@ -1,0 +1,10 @@
+Title: Dell Compellent: Added support for Compellent Storage appliances
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494599619
+Class: feature
+
+Check_MK is now able to check disks, controller and enclosures. Further checks are possible in the future.

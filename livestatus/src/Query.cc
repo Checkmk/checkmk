@@ -58,6 +58,7 @@ using std::list;
 using std::make_shared;
 using std::make_unique;
 using std::map;
+using std::ostringstream;
 using std::runtime_error;
 using std::shared_ptr;
 using std::string;
@@ -678,7 +679,7 @@ bool Query::process() {
         Renderer::make(_output_format, _output.os(), _output.getLogger(),
                        _separators, _timezone_offset, _data_encoding);
     doWait();
-    QueryRenderer q(*renderer);
+    QueryRenderer q(*renderer, EmitBeginEnd::on);
     _renderer_query = &q;
     start(q);
     _table->answerQuery(this);
@@ -743,11 +744,25 @@ bool Query::processDataset(Row row) {
         }
 
         if (doStats()) {
-            vector<string> groupspec;
-            for (const auto &column : _columns) {
-                groupspec.push_back(column->valueAsString(row, _auth_user));
+            // Things get a bit tricky here: For stats queries, we have to
+            // combine rows with the same values in the non-stats columns. But
+            // when we finally output those non-stats columns in finish(), we
+            // don't have the row anymore, so we can't use Column::output()
+            // then.  :-/ The slightly hacky workaround is to pre-render all
+            // non-stats columns into a single string here (RowFragment) and
+            // output it later in a verbatim manner.
+            ostringstream os;
+            {
+                auto renderer = Renderer::make(
+                    _output_format, os, _output.getLogger(), _separators,
+                    _timezone_offset, _data_encoding);
+                QueryRenderer q(*renderer, EmitBeginEnd::off);
+                RowRenderer r(q);
+                for (const auto &column : _columns) {
+                    column->output(row, r, _auth_user);
+                }
             }
-            for (const auto &aggr : getAggregatorsFor(groupspec)) {
+            for (const auto &aggr : getAggregatorsFor(RowFragment{os.str()})) {
                 aggr->consume(row, _auth_user, _timezone_offset);
             }
         } else {
@@ -764,8 +779,8 @@ void Query::finish(QueryRenderer &q) {
     if (doStats()) {
         for (const auto &group : _stats_groups) {
             RowRenderer r(q);
-            for (const auto &value : group.first) {
-                r.output(value);
+            if (!group.first._str.empty()) {
+                r.output(group.first);
             }
             for (const auto &aggr : group.second) {
                 aggr->output(r);
@@ -787,7 +802,7 @@ void Query::optimizeBitmask(const string &column_name, uint32_t *bitmask) {
 }
 
 const vector<unique_ptr<Aggregator>> &Query::getAggregatorsFor(
-    const vector<string> &groupspec) {
+    const RowFragment &groupspec) {
     auto it = _stats_groups.find(groupspec);
     if (it == _stats_groups.end()) {
         vector<unique_ptr<Aggregator>> aggrs;

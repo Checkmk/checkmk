@@ -32,6 +32,7 @@ class Logger;
 
 class OutputBuffer {
 public:
+    // TODO(sp) Replace this plus its string message with std::error_code
     enum class ResponseCode {
         ok = 200,
         invalid_header = 400,

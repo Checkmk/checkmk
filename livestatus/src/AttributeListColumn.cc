@@ -79,10 +79,6 @@ void AttributeListColumn::output(Row row, RowRenderer &r,
     }
 }
 
-string AttributeListColumn::valueAsString(Row row, contact * /* auth_user */) {
-    return to_string(static_cast<unsigned long>(getValue(row, nullptr)));
-}
-
 unique_ptr<Filter> AttributeListColumn::createFilter(RelationalOperator relOp,
                                                      const string &value) {
     return make_unique<IntFilter>(this, relOp, refValueFor(value, logger()));

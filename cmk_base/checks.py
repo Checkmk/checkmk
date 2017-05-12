@@ -213,9 +213,13 @@ def includes_of_plugin(check_file_path):
             return
 
         for key, val in zip(node.value.keys, node.value.values):
-            if key.s == "includes" and isinstance(val, ast.List):
-                for element in val.elts:
-                    include_names[element.s] = True
+            if key.s == "includes":
+                if isinstance(val, ast.List):
+                    for element in val.elts:
+                        include_names[element.s] = True
+                else:
+                    raise MKGeneralException("Includes must be a list of include file names, "
+                                             "found '%s'" % type(val))
 
 
     def _load_from_check_includes(node):

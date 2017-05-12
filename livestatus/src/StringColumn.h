@@ -29,10 +29,10 @@
 #include <memory>
 #include <string>
 #include "Column.h"
-#include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
+class Row;
 class RowRenderer;
 
 class StringColumn : public Column {
@@ -42,9 +42,6 @@ public:
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset) {}
     virtual std::string getValue(Row row) const = 0;
-    std::string valueAsString(Row row, contact * /* auth_user */) override {
-        return getValue(row);
-    }
     void output(Row row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() override { return ColumnType::string; }
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,

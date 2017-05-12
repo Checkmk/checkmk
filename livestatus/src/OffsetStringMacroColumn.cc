@@ -37,8 +37,8 @@ using std::unique_ptr;
 
 extern char *macro_user[MAX_USER_MACROS];
 
-string OffsetStringMacroColumn::valueAsString(Row row,
-                                              contact * /* auth_user */) {
+void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
+                                     contact * /*unused*/) {
     string raw = getValue(row);
     host *hst = getHost(row);
     service *svc = getService(row);
@@ -69,13 +69,7 @@ string OffsetStringMacroColumn::valueAsString(Row row,
         }
         scan = otherdollar + 1;
     }
-    return result;
-}
-
-void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
-                                     contact *auth_user) {
-    string s = valueAsString(row, auth_user);
-    r.output(s);
+    r.output(result);
 }
 
 unique_ptr<Filter> OffsetStringMacroColumn::createFilter(

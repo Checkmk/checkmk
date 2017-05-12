@@ -47,6 +47,11 @@ struct HexEscape {
     char _ch;
 };
 
+struct RowFragment {
+    std::string _str;
+    bool operator<(const RowFragment &other) const { return _str < other._str; }
+};
+
 class Renderer {
 public:
     static std::unique_ptr<Renderer> make(OutputFormat format, std::ostream &os,
@@ -66,6 +71,7 @@ public:
     void output(double value);
     void output(PlainChar value);
     void output(HexEscape value);
+    void output(RowFragment value);
     void output(char16_t value);
     void output(char32_t value);
     void output(Null value);
@@ -128,6 +134,8 @@ private:
     virtual void outputString(const std::string &value) = 0;
 };
 
+enum class EmitBeginEnd { on, off };
+
 class QueryRenderer {
 public:
     class BeginEnd {
@@ -144,16 +152,25 @@ public:
         QueryRenderer &_query;
     };
 
-    explicit QueryRenderer(Renderer &rend) : _renderer(rend), _first(true) {
-        renderer().beginQuery();
+    QueryRenderer(Renderer &rend, EmitBeginEnd emitBeginEnd)
+        : _renderer(rend), _emitBeginEnd(emitBeginEnd), _first(true) {
+        if (_emitBeginEnd == EmitBeginEnd::on) {
+            renderer().beginQuery();
+        }
     }
 
-    ~QueryRenderer() { renderer().endQuery(); }
+    ~QueryRenderer() {
+        if (_emitBeginEnd == EmitBeginEnd::on) {
+            renderer().endQuery();
+        }
+    }
 
     Renderer &renderer() const { return _renderer; }
+    EmitBeginEnd emitBeginEnd() const { return _emitBeginEnd; }
 
 private:
     Renderer &_renderer;
+    EmitBeginEnd _emitBeginEnd;
     bool _first;
 };
 
@@ -162,11 +179,7 @@ public:
     class BeginEnd {
     public:
         explicit BeginEnd(RowRenderer &row) : _row(row) {
-            if (_row._first) {
-                _row._first = false;
-            } else {
-                _row.renderer().separateRowElements();
-            }
+            _row.separate();
             _row.renderer().beginRowElement();
         }
         ~BeginEnd() { _row.renderer().endRowElement(); }
@@ -177,12 +190,23 @@ public:
 
     explicit RowRenderer(QueryRenderer &query)
         : _query(query), _be(query), _first(true) {
-        renderer().beginRow();
+        if (_query.emitBeginEnd() == EmitBeginEnd::on) {
+            renderer().beginRow();
+        }
     }
 
-    ~RowRenderer() { renderer().endRow(); }
+    ~RowRenderer() {
+        if (_query.emitBeginEnd() == EmitBeginEnd::on) {
+            renderer().endRow();
+        }
+    }
 
     Renderer &renderer() const { return _query.renderer(); }
+
+    void output(RowFragment value) {
+        separate();
+        renderer().output(value);
+    }
 
     template <typename T>
     void output(T value) {
@@ -194,6 +218,14 @@ private:
     QueryRenderer &_query;
     QueryRenderer::BeginEnd _be;
     bool _first;
+
+    void separate() {
+        if (_first) {
+            _first = false;
+        } else {
+            renderer().separateRowElements();
+        }
+    }
 };
 
 class ListRenderer {

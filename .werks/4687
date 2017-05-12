@@ -1,0 +1,12 @@
+Title: Fixed types of non-Stats: columns in Stats: queries
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494590556
+Class: fix
+
+Livestatus queries with Stats: can contain non-Stats: columns, too
+(grouping).  The latter columns were always rendered as strings, which was
+incorrect for e.g. numbers.  This has been fixed.

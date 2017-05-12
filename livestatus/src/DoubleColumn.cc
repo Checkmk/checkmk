@@ -31,15 +31,10 @@
 
 using std::make_unique;
 using std::string;
-using std::to_string;
 using std::unique_ptr;
 
 void DoubleColumn::output(Row row, RowRenderer &r, contact * /* auth_user */) {
     r.output(getValue(row));
-}
-
-string DoubleColumn::valueAsString(Row row, contact * /* auth_user */) {
-    return to_string(getValue(row));
 }
 
 unique_ptr<Filter> DoubleColumn::createFilter(RelationalOperator relOp,

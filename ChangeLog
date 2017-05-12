@@ -1,4 +1,7 @@
 1.2.8p23:
+    Checks & Agents:
+    * 4654 FIX: oracle_recovery_area: Added missing metric info
+
 
 1.2.8p22:
     Checks & Agents:

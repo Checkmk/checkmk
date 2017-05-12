@@ -60,5 +60,5 @@ check_info['ups_power'] = {
   "group"               : "epower",
   "snmp_info"           : ( ".1.3.6.1.2.1.33.1.4.4.1", [ 0, 4 ] ),
   "snmp_scan_function"  : ups_generic_scan_function,
-  "includes"            : "ups_generic.include",
+  "includes"            : [ "ups_generic.include" ],
 }

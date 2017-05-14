@@ -7410,7 +7410,6 @@ class Ruleset(object):
 
         # The ruleset matched or did not decide to skip the whole ruleset.
         # The ruleset should be matched in case a rule matches.
-
         if not self.has_rule_search_options(search_options):
             return self.matches_fulltext_search(search_options)
 
@@ -7923,6 +7922,9 @@ class Rule(object):
 
 
     def matches_search(self, search_options):
+        if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(search_options):
+            return False
+
         if "rule_disabled" in search_options and search_options["rule_disabled"] != self.is_disabled():
             return False
 
@@ -7976,6 +7978,15 @@ class Rule(object):
                     return False
 
         return True
+
+
+    def _get_search_folders(self, search_options):
+        current_folder, do_recursion = search_options["rule_folder"]
+        current_folder = Folder.folder(current_folder)
+        search_in_folders = [current_folder.name()]
+        if do_recursion:
+            search_in_folders = [x.split("/")[-1] for x,y in current_folder.recursive_subfolder_choices()]
+        return search_in_folders
 
 
     def index(self):

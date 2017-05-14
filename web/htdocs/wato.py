@@ -13095,6 +13095,7 @@ class ModeRuleSearch(WatoMode):
                     "rule_hosttags",
                     "rule_disabled",
                     "rule_ineffective",
+                    "rule_folder",
                 ]),
             ],
             elements = [
@@ -13181,6 +13182,23 @@ class ModeRuleSearch(WatoMode):
                     choices = [
                         (True, _("Search for ineffective rules (not matching any host or service)")),
                         (False, _("Search for effective rules")),
+                    ],
+                )),
+                ("rule_folder", Tuple(
+                    title = _("Folder"),
+                    elements = [
+                        DropdownChoice(
+                            title   = _("Selection"),
+                            choices = Folder.folder_choices(),
+                        ),
+                        DropdownChoice(
+                            title   = _("Recursion"),
+                            choices = [
+                                (True,  _("Also search in subfolders")),
+                                (False, _("Search in this folder")),
+                            ],
+                            default_value = False,
+                        ),
                     ],
                 )),
             ],

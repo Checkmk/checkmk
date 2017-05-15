@@ -37,12 +37,8 @@ def parse_netapp_api_volumes(info):
             volume[tokens[0]] = tokens[1]
 
         # Clustermode specific
-        if "node" in volume:
-            # There are cluster volumes and volumes which only exist on the node.
-            if "msid" not in volume:
-                name = "%s.%s" % (volume["node"], volume["name"])
-            else:
-                name = volume["name"]
+        if "vserver_name" in volume:
+            name = "%s.%s" % (volume["vserver_name"], volume["name"])
 
         volumes[name] = volume
 

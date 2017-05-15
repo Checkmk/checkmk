@@ -206,8 +206,8 @@ unique_ptr<Filter> Query::createFilter(Column &column, RelationalOperator relOp,
     try {
         return column.createFilter(relOp, value);
     } catch (const runtime_error &e) {
-        invalidHeader("error creating filter on table" + _table->name() + ": " +
-                      e.what());
+        invalidHeader("error creating filter on table " + _table->name() +
+                      ": " + e.what());
         return nullptr;
     }
 }

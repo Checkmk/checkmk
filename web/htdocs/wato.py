@@ -18891,13 +18891,13 @@ def load_plugins(force):
 
     config.declare_permission("wato.add_or_modify_executables",
         _("Can add or modify executables"),
-        _("There are different places in Check_MK where an admin, the user of the configuration "
-          "GUI, can use the GUI to add executable code to Check_MK. For example when configuring "
+        _("There are different places in Check_MK where an admin can use the GUI to add "
+          "executable code to Check_MK. For example when configuring "
           "datasource programs, the user inserts a command line for gathering monitoring data. "
           "This command line is then executed during monitoring by Check_MK. Another example is "
           "the upload of extension packages (MKPs). All these functions have in "
-          "common that the user provides data that is executed by Check_MK later. "
-          "If you want to ensure that your WATO users can not \"inject\" arbitrary executables "
+          "common that the user provides data that is executed by Check_MK. "
+          "If you want to ensure that your WATO users cannot \"inject\" arbitrary executables "
           "into your Check_MK installation, you only need to remove this permission for them. "
           "This permission is needed in addition to the other component related permissions. "
           "For example you need the <tt>wato.rulesets</tt> permission together with this "

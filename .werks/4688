@@ -1,0 +1,13 @@
+Title: Emit error message in livestatus response
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b8
+Date: 1494835970
+
+When the 'fixed16' response format is used, the Livestatus response should
+contain the actual error message when something goes wrong.  This was broken
+in the 1.4 series and has been fixed now.

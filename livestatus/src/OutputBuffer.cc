@@ -55,7 +55,9 @@ OutputBuffer::~OutputBuffer() { flush(); }
 void OutputBuffer::flush() {
     if (_response_header == ResponseHeader::fixed16) {
         if (_response_code != ResponseCode::ok) {
-            _os.str(_error_message);
+            _os.clear();
+            _os.str("");
+            _os << _error_message;
         }
         auto code = static_cast<unsigned>(_response_code);
         size_t size = _os.tellp();

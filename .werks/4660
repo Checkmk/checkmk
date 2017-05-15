@@ -1,0 +1,9 @@
+Title: win_os: Fixed wrong OS information if eg. ESX is installed on Windows host
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.8p23
+Date: 1494846640
+Class: fix
+
+

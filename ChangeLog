@@ -3,6 +3,9 @@
     * 4654 FIX: oracle_recovery_area: Added missing metric info
     * 4655 FIX: fileinfo.groups: Added missing metric information
 
+    HW/SW-Inventory:
+    * 4660 FIX: win_os: Fixed wrong OS information if eg. ESX is installed on Windows host
+
 
 1.2.8p22:
     Checks & Agents:

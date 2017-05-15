@@ -659,8 +659,7 @@ void Query::parseLocaltimeLine(char *line) {
     }
     if (full >= 48 || full <= -48) {
         invalidHeader(
-            "Invalid Localtime header: timezone difference "
-            "greater then 24 hours");
+            "Invalid Localtime header: timezone difference greater then 24 hours");
         return;
     }
     _timezone_offset = full * 1800;
@@ -711,8 +710,6 @@ void Query::start(QueryRenderer &q) {
 
 bool Query::timelimitReached() {
     if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
-        Informational(_logger)
-            << "Maximum query time of " << _time_limit << " seconds exceeded!";
         _output.setError(OutputBuffer::ResponseCode::limit_exceeded,
                          "Maximum query time of " + to_string(_time_limit) +
                              " seconds exceeded!");

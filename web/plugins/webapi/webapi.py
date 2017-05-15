@@ -586,106 +586,6 @@ api_actions["edit_users"] = {
 
 
 #.
-#   .--Other---------------------------------------------------------------.
-#   |                       ___  _   _                                     |
-#   |                      / _ \| |_| |__   ___ _ __                       |
-#   |                     | | | | __| '_ \ / _ \ '__|                      |
-#   |                     | |_| | |_| | | |  __/ |                         |
-#   |                      \___/ \__|_| |_|\___|_|                         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-def action_discover_services(request):
-    validate_request_keys(request, required_keys=["hostname"],
-                                   optional_keys=["mode"])
-    config.user.need_permission("wato.services")
-
-    mode = html.var("mode") and html.var("mode") or "new"
-    hostname = request.get("hostname")
-
-    check_hostname(hostname, should_exist = True)
-
-    host = Host.host(hostname)
-
-    host_attributes = host.effective_attributes()
-    counts, failed_hosts = check_mk_automation(host_attributes.get("site"), "inventory", [ "@scan", mode ] + [hostname])
-    if failed_hosts:
-        if not host.discovery_failed():
-            host.set_discovery_failed()
-        raise MKUserError(None, _("Failed to inventorize %s: %s") % (hostname, failed_hosts[hostname]))
-
-    if host.discovery_failed():
-        host.clear_discovery_failed()
-
-    if mode == "refresh":
-        message = _("Refreshed check configuration of host [%s] with %d services") % (hostname, counts[hostname][3])
-        add_service_change(host, "refresh-autochecks", message)
-    else:
-        message = _("Saved check configuration of host [%s] with %d services") % (hostname, counts[hostname][3])
-        add_service_change(host, "set-autochecks", message)
-
-    msg = _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d") % tuple(counts[hostname])
-    return msg
-
-api_actions["discover_services"] = {
-    "handler"     : action_discover_services,
-    "locking"     : True,
-}
-
-###############
-
-def action_activate_changes(request):
-    validate_request_keys(request, optional_keys=["mode", "sites", "allow_foreign_changes", "comment"])
-
-    mode = html.var("mode") and html.var("mode") or "dirty"
-    if request.get("allow_foreign_changes"):
-        allow_foreign_changes = bool(int(request.get("allow_foreign_changes")))
-    else:
-        allow_foreign_changes = False
-
-    sites = request.get("sites")
-
-    changes = ActivateChanges()
-    changes.load()
-
-    if changes.has_foreign_changes():
-        if not config.user.may("wato.activateforeign"):
-            raise MKAuthException(_("You are not allowed to activate changes of other users."))
-        if not allow_foreign_changes:
-            raise MKAuthException(_("There are changes from other users and foreign changes "\
-                                    "are not allowed in this API call."))
-
-    if mode == "specific":
-        for site in sites:
-            if site not in config.allsites().keys():
-                raise MKUserError(None, _("Unknown site %s") % html.attrencode(site))
-
-
-    manager = ActivateChangesManager()
-    manager.load()
-
-    if not manager.has_changes():
-        raise MKUserError(None, _("Currently there are no changes to activate."))
-
-    if not sites:
-        sites = manager.dirty_and_active_activation_sites()
-
-    comment = request.get("comment", "").strip()
-    if comment == "":
-        comment = None
-
-    manager.start(sites, comment=comment, activate_foreign=allow_foreign_changes)
-    manager.wait_for_completion()
-    return manager.get_state()
-
-api_actions["activate_changes"] = {
-    "handler"         : action_activate_changes,
-    "locking"         : True,
-}
-
-
-
-#.
 #   .--Rules---------------------------------------------------------------.
 #   |                       ____        _                                  |
 #   |                      |  _ \ _   _| | ___  ___                        |
@@ -810,6 +710,221 @@ class APICallRules(APICallCollection):
                 rulesets_info[varname]["item_help"] = item_help
 
         return rulesets_info
+
+
+#.
+#   .--Hosttags------------------------------------------------------------.
+#   |               _   _           _   _                                  |
+#   |              | | | | ___  ___| |_| |_ __ _  __ _ ___                 |
+#   |              | |_| |/ _ \/ __| __| __/ _` |/ _` / __|                |
+#   |              |  _  | (_) \__ \ |_| || (_| | (_| \__ \                |
+#   |              |_| |_|\___/|___/\__|\__\__,_|\__, |___/                |
+#   |                                            |___/                     |
+#   +----------------------------------------------------------------------+
+
+class APICallHosttags(APICallCollection):
+    def get_api_calls(self):
+        required_permissions = ["wato.hosttags"]
+        return {
+            "get_hosttags": {
+                "handler"             : self._get,
+                "required_permissions": required_permissions,
+                "locking"             : True,
+            },
+            "set_hosttags": {
+                "handler"             : self._set,
+                "required_permissions": required_permissions,
+                "locking"             : True,
+            }
+        }
+
+
+    def _get(self, request):
+        validate_request_keys(request)
+
+        hosttags_config = HosttagsConfiguration()
+        hosttags_config.load()
+
+        hosttags_dict = hosttags_config.get_dict_format()
+        hosttags_dict["configuration_hash"] = compute_config_hash(hosttags_dict)
+
+        return hosttags_dict
+
+
+    def _set(self, request):
+        validate_request_keys(request, required_keys=["tag_groups", "aux_tags"],
+                                       optional_keys=["configuration_hash"])
+
+        hosttags_config = HosttagsConfiguration()
+        hosttags_config.load()
+
+        hosttags_dict = hosttags_config.get_dict_format()
+        if "configuration_hash" in request:
+            validate_config_hash(request["configuration_hash"], hosttags_dict)
+        del request["configuration_hash"]
+
+        # Check for conflicts with existing configuration
+        # Tags may be either specified grouped in a host/folder configuration, e.g agent/cmk-agent,
+        # or specified as the plain id in rules. We need to check both variants..
+        used_tags = self._get_used_grouped_tags()
+        used_tags.update(self._get_used_rule_tags())
+
+        changed_hosttags_config = HosttagsConfiguration()
+        changed_hosttags_config.parse_config(request)
+
+        new_tags = changed_hosttags_config.get_tag_ids()
+        new_tags.update(changed_hosttags_config.get_tag_ids_with_group_prefix())
+
+        # Remove the builtin hoststags from the list of used_tags
+        builtin_hosttags, builtin_auxtags = load_builtin_hosttags()
+        for tag_group_id, tag_group__title, tags in builtin_hosttags:
+            for tag_id, tag_title, aux_tags in tags:
+                used_tags.discard("%s/%s" % (tag_group_id, tag_id))
+                used_tags.discard(tag_id)
+        for tag_id, tag_title in builtin_auxtags:
+            used_tags.discard(tag_id)
+
+        missing_tags = used_tags - new_tags
+        if missing_tags:
+            raise MKUserError(None, _("Unable to apply new hosttag configuration. The following tags "
+                                      "are still in use, but not mentioned in the updated "
+                                      "configuration: %s") % ", ".join(missing_tags))
+
+        changed_hosttags_config.save()
+
+
+    def _get_used_grouped_tags(self):
+        used_tags = set([])
+
+        # This requires a lot of computation power..
+        for folder in Folder.all_folders().values():
+            for attr_name, value in folder.attributes().items():
+                if attr_name.startswith("tag_"):
+                    used_tags.add("%s/%s" % (attr_name[4:], value))
+
+        for host in Host.all().values():
+            # NOTE: Do not use tags() function
+            for attr_name, value in host.attributes().items():
+                if attr_name.startswith("tag_"):
+                    used_tags.add("%s/%s" % (attr_name[4:], value))
+        return used_tags
+
+    def _get_used_rule_tags(self):
+        all_rulesets = AllRulesets()
+        all_rulesets.load()
+        used_tags = set()
+        for ruleset_name, ruleset in all_rulesets.get_rulesets().items():
+            for folder, rulenr, rule in ruleset.get_rules():
+                for tag_spec in rule.tag_specs:
+                    used_tags.add(tag_spec.lstrip("!"))
+
+        used_tags.discard(None)
+        return used_tags
+
+
+
+for api_call_class in APICallCollection.all_classes():
+    api_actions.update(api_call_class().get_api_calls())
+
+
+
+#.
+#   .--Other---------------------------------------------------------------.
+#   |                       ___  _   _                                     |
+#   |                      / _ \| |_| |__   ___ _ __                       |
+#   |                     | | | | __| '_ \ / _ \ '__|                      |
+#   |                     | |_| | |_| | | |  __/ |                         |
+#   |                      \___/ \__|_| |_|\___|_|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def action_discover_services(request):
+    validate_request_keys(request, required_keys=["hostname"],
+                                   optional_keys=["mode"])
+
+    mode = html.var("mode") and html.var("mode") or "new"
+    hostname = request.get("hostname")
+
+    check_hostname(hostname, should_exist = True)
+
+    host = Host.host(hostname)
+
+    host_attributes = host.effective_attributes()
+    counts, failed_hosts = check_mk_automation(host_attributes.get("site"), "inventory", [ "@scan", mode ] + [hostname])
+    if failed_hosts:
+        if not host.discovery_failed():
+            host.set_discovery_failed()
+        raise MKUserError(None, _("Failed to inventorize %s: %s") % (hostname, failed_hosts[hostname]))
+
+    if host.discovery_failed():
+        host.clear_discovery_failed()
+
+    if mode == "refresh":
+        message = _("Refreshed check configuration of host [%s] with %d services") % (hostname, counts[hostname][3])
+        add_service_change(host, "refresh-autochecks", message)
+    else:
+        message = _("Saved check configuration of host [%s] with %d services") % (hostname, counts[hostname][3])
+        add_service_change(host, "set-autochecks", message)
+
+    msg = _("Service discovery successful. Added %d, Removed %d, Kept %d, New Count %d") % tuple(counts[hostname])
+    return msg
+
+api_actions["discover_services"] = {
+    "handler"     : action_discover_services,
+    "required_permissions": ["wato.services"],
+    "locking"     : True,
+}
+
+###############
+
+def action_activate_changes(request):
+    validate_request_keys(request, optional_keys=["mode", "sites", "allow_foreign_changes", "comment"])
+
+    mode = html.var("mode") and html.var("mode") or "dirty"
+    if request.get("allow_foreign_changes"):
+        allow_foreign_changes = bool(int(request.get("allow_foreign_changes")))
+    else:
+        allow_foreign_changes = False
+
+    sites = request.get("sites")
+
+    changes = ActivateChanges()
+    changes.load()
+
+    if changes.has_foreign_changes():
+        if not config.user.may("wato.activateforeign"):
+            raise MKAuthException(_("You are not allowed to activate changes of other users."))
+        if not allow_foreign_changes:
+            raise MKAuthException(_("There are changes from other users and foreign changes "\
+                                    "are not allowed in this API call."))
+
+    if mode == "specific":
+        for site in sites:
+            if site not in config.allsites().keys():
+                raise MKUserError(None, _("Unknown site %s") % html.attrencode(site))
+
+
+    manager = ActivateChangesManager()
+    manager.load()
+
+    if not manager.has_changes():
+        raise MKUserError(None, _("Currently there are no changes to activate."))
+
+    if not sites:
+        sites = manager.dirty_and_active_activation_sites()
+
+    comment = request.get("comment", "").strip()
+    if comment == "":
+        comment = None
+
+    manager.start(sites, comment=comment, activate_foreign=allow_foreign_changes)
+    manager.wait_for_completion()
+    return manager.get_state()
+
+api_actions["activate_changes"] = {
+    "handler"         : action_activate_changes,
+    "locking"         : True,
+}
 
 
 for api_call_class in APICallCollection.all_classes():

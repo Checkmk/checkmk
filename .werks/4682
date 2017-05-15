@@ -1,0 +1,47 @@
+Title: Add permission "Can add or modify executables" to be able to fine tune access rights
+Level: 1
+Component: wato
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1494852992
+Class: security
+
+It is now possible to explicitly allow/deny users of WATO to add or modify executables.
+This done with the new permission <i>Can add or modify executables</i>. By default
+only users with the role <i>Administrator</i> have this permission.
+
+There are different places in Check_MK where an admin, the user of the configuration
+GUI, can use the GUI to add executable code to Check_MK.
+
+For example when configuring datasource programs, the user inserts a command line for
+gathering monitoring data. This command line is then executed during monitoring by
+Check_MK.
+
+Another example is the upload of extension packages (MKPs). 
+
+These functions have in common that the user provides data that is executed by Check_MK
+later in the context of Check_MK.
+
+If you want to ensure that your WATO users can not "inject" arbitrary executables 
+into your Check_MK installation, you only need to revoke this permission.
+
+This permission is needed in addition to the other component related permissions.
+For example you need the <tt>wato.rulesets</tt> permission together with the new
+permission to be able to configure rulesets where bare command lines are configured.
+
+These things are protected by the new permission at the moment:
+
+<ul>
+    <li>Ruleset: Classical active and passive monitoring checks</li>
+    <li>Ruleset: Datasource programs</li>
+    <li>Ruleset: Configuring custom host check command</li>
+    <li>Host diagnostic page: Setting arbritary command line as datasource program</li>
+    <li>Configure event console actions</li>
+<li>
+
+<strong>Incompatible</strong>: User with the role <i>Users</i> are allowed to edit rulesets
+for the WATO folders they are permitted on. In previous versions they were also able to
+insert arbitrary commands into the rulesets mentioned above. This has now been removed
+(by default) for security reasons. If you still need this functionality, you need to
+set the new permission to <i>yes</i> for this role.

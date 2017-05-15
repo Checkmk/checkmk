@@ -2485,6 +2485,21 @@ def mode_diag_host(phase):
         ]
     )
 
+    if config.user.may('wato.add_or_modify_executables'):
+        ds_option = [
+            ('datasource_program', TextAscii(
+                title = _("Datasource Program (<a href=\"%s\">Rules</a>)") % \
+                    folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'datasource_programs')]),
+                help = _("For agent based checks Check_MK allows you to specify an alternative "
+                         "program that should be called by Check_MK instead of connecting the agent "
+                         "via TCP. That program must output the agent's data on standard output in "
+                         "the same format the agent would do. This is for example useful for monitoring "
+                         "via SSH.") + monitoring_macro_help(),
+            ))
+        ]
+    else:
+        ds_option = []
+
     vs_rules = Dictionary(
         optional_keys = False,
         elements = [
@@ -2514,16 +2529,7 @@ def mode_diag_host(phase):
                 minvalue = 0,
                 maxvalue = 50,
             )),
-            ('datasource_program', TextAscii(
-                title = _("Datasource Program (<a href=\"%s\">Rules</a>)") % \
-                    folder_preserving_link([('mode', 'edit_ruleset'), ('varname', 'datasource_programs')]),
-                help = _("For agent based checks Check_MK allows you to specify an alternative "
-                         "program that should be called by Check_MK instead of connecting the agent "
-                         "via TCP. That program must output the agent's data on standard output in "
-                         "the same format the agent would do. This is for example useful for monitoring "
-                         "via SSH.") + monitoring_macro_help(),
-            ))
-        ]
+        ] + ds_option,
     )
 
     if host.is_cluster():
@@ -6920,6 +6926,9 @@ def mode_edit_configvar(phase, what = 'globalvars'):
         domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
     except KeyError:
         raise MKGeneralException(_("The global setting \"%s\" does not exist.") % varname)
+
+    if not may_edit_configvar(varname):
+        raise MKAuthException(_("You are not permitted to edit this global setting."))
 
     if siteid:
         current_settings = site.setdefault("globals", {})
@@ -16675,8 +16684,17 @@ def show_read_only_warning():
 def may_edit_ruleset(varname):
     if varname == "ignored_services":
         return config.user.may("wato.services") or config.user.may("wato.rulesets")
+    elif varname in [ "custom_checks", "datasource_programs" ]:
+        return config.user.may("wato.rulesets") and config.user.may("wato.add_or_modify_executables")
     else:
         return config.user.may("wato.rulesets")
+
+
+def may_edit_configvar(varname):
+    if varname in [ "actions" ]:
+        return config.user.may("wato.add_or_modify_executables")
+    else:
+        return True
 
 
 def host_status_button(hostname, viewname):
@@ -17562,6 +17580,22 @@ def load_plugins(force):
     config.declare_permission("wato.set_read_only",
         _("Set WATO to read only mode for other users"),
         _("Prevent other users from making modifications to WATO."),
+        [ "admin" ])
+
+    config.declare_permission("wato.add_or_modify_executables",
+        _("Can add or modify executables"),
+        _("There are different places in Check_MK where an admin, the user of the configuration "
+          "GUI, can use the GUI to add executable code to Check_MK. For example when configuring "
+          "datasource programs, the user inserts a command line for gathering monitoring data. "
+          "This command line is then executed during monitoring by Check_MK. Another example is "
+          "the upload of extension packages (MKPs). All these functions have in "
+          "common that the user provides data that is executed by Check_MK later. "
+          "If you want to ensure that your WATO users can not \"inject\" arbitrary executables "
+          "into your Check_MK installation, you only need to remove this permission for them. "
+          "This permission is needed in addition to the other component related permissions. "
+          "For example you need the <tt>wato.rulesets</tt> permission together with this "
+          "permission to be able to configure rulesets where bare command lines are "
+          "configured."),
         [ "admin" ])
 
     load_web_plugins("wato", globals())

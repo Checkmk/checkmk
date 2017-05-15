@@ -77,9 +77,13 @@ def page_api():
         config.user.need_permission("wato.use")
         config.user.need_permission("wato.api_allowed")
 
+
         action = html.var('action')
         if action not in api_actions:
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
+
+        for permission in api_actions[action].get("required_permissions", []):
+            config.user.need_permission(permission)
 
         # Initialize host and site attributes
         init_watolib_datastructures()
@@ -92,7 +96,7 @@ def page_api():
             if html.var("request"):
                 request_object = html.var("request")
         else:
-            request_object = html.get_request(exclude_vars=["action"])
+            request_object = html.get_request(exclude_vars=["action", "request_format"])
 
         if api_actions[action].get("locking", True):
             lock_exclusive() # unlock is done automatically

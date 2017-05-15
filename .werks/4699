@@ -1,0 +1,39 @@
+Title: WATO Web-API: now able to configure rulesets
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495550830
+Class: feature
+
+You can now configure all rules which are available in the <i>Host & Service Parameters Page</i>
+through the use of two Web-API calls.
+
+
+Important: Right now the interface is only able to speak the python language.<br>
+The existing output_format parameter, as well as the new request parameter <tt>request_format</tt>
+must both be set to <tt>python</tt>. An additional interface language is planned, maybe XML.
+Furthermore, these API calls are intended for admin use only, since they modify the entire
+ruleset in all folders.
+
+
+<tt>get_rulesets_info</tt><br>
+This API call does not require any additional info. It simply returns a list of all available rulesets.
+Each entry of this list is a dictionary which includes information about the title, the help text, the item
+help text and the how often the rule is used.
+
+
+<tt>get_ruleset</tt>br>
+Requires the request key <tt>ruleset_name</tt>, which specifies the ruleset to query.
+This API call returns exactly one complete ruleset of all folders, so you can't query differnt types.
+The response itself has an extra key configuration_hash, which can be used in the following call.
+
+
+<tt>set_ruleset</tt>br>
+The previous call provided a dict with the ruleset configuration. This call expect the same format
+in the request object. You can modify the modify the previously queried dict and send it back through this
+f you also sent the configuration_hash parameter, the Web-API will check if the configuration has changed
+in the meantime. If so, the set_ruleset call will fail. When no configuration_hash parameter is sent,
+no checking will be done.
+

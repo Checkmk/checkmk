@@ -60,6 +60,7 @@
 import time
 import os
 import urllib
+import ast
 import random
 import re
 import __builtin__
@@ -1129,12 +1130,21 @@ class RequestHandler(object):
         if exclude_vars == None:
             exclude_vars = []
 
-        try:
-            json_request = self.var("request", "{}")
-            request = json.loads(json_request)
-        except json.JSONDecodeError, e:
-            raise MKUserError("request", _("Failed to parse request: '%s': %s") %
-                                                                (json_request, e))
+        if self.var("request_format") == "python":
+            try:
+                python_request = self.var("request", "{}")
+                request = ast.literal_eval(python_request)
+            except (SyntaxError, ValueError) as e:
+                raise MKUserError("request", _("Failed to parse Python request: '%s': %s") %
+                                                                    (python_request, e))
+        else:
+            try:
+                json_request = self.var("request", "{}")
+                request = json.loads(json_request)
+            except json.JSONDecodeError, e:
+                raise MKUserError("request", _("Failed to parse JSON request: '%s': %s") %
+                                                                    (json_request, e))
+
 
         for key, val in self.all_vars().items():
             if key not in [ "request", "output_format" ] + exclude_vars:

@@ -6939,6 +6939,35 @@ class Rule(object):
 
 
     def _parse_rule(self, rule_config):
+        if isinstance(rule_config, dict):
+            self._parse_dict_rule(rule_config)
+        else: # tuple
+            self._parse_tuple_rule(rule_config)
+
+
+    def _parse_dict_rule(self, rule_config):
+        self.rule_options = rule_config.get("options", {})
+
+        # Extract value from front, if rule has a value
+        if self.ruleset.valuespec():
+            self.value = rule_config["value"]
+        else:
+            if rule_config.get("negate"):
+                self.value = False
+            else:
+                self.value = True
+
+        conditions     = rule_config.get("conditions", {})
+        self.host_list = conditions.get("host_specs", [])
+        self.item_list = conditions.get("service_specs")
+
+
+        # Remove folder tag from tag list
+        tag_specs = conditions.get("host_tags", [])
+        self.tag_specs = filter(lambda t: not t.startswith("/"), tag_specs)
+
+
+    def _parse_tuple_rule(self, rule_config):
         if type(rule_config[-1]) == dict:
             self.rule_options = rule_config[-1]
             rule_config = rule_config[:-1]
@@ -7015,6 +7044,29 @@ class Rule(object):
         content += " ),\n"
 
         return content
+
+    def to_dict_config(self):
+        result = {"conditions": {}}
+
+        result["path"]    = self.folder.path()
+        result["options"] = self._rule_options_to_config()
+
+        if self.ruleset.valuespec():
+            result["value"]  = self.value
+        else:
+            if self.value:
+                result["conditions"]["negate"] = False
+            else:
+                result["conditions"]["negate"] = True
+
+        result["conditions"]["host_specs"] = self.host_list
+        result["conditions"]["host_tags"]  = self.tag_specs
+
+        if self.ruleset.item_type():
+            result["conditions"]["service_specs"] = self.item_list
+
+        return result
+
 
 
     def _format_rule(self):

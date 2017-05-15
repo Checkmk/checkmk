@@ -26,6 +26,16 @@
 
 # TODO CLEANUP: Replace MKUserError by MKAPIError or something like that
 
+#.
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+
 def validate_request_keys(request, required_keys = None, optional_keys = None):
     if required_keys:
         missing = set(required_keys) - set(request.keys())
@@ -51,15 +61,6 @@ def check_hostname(hostname, should_exist = True):
         if Host.host_exists(hostname):
             raise MKUserError(None, _("Host %s already exists in the folder %s") % (hostname, Host.host(hostname).folder().path()))
 
-#.
-#   .--Hosts---------------------------------------------------------------.
-#   |                       _   _           _                              |
-#   |                      | | | | ___  ___| |_ ___                        |
-#   |                      | |_| |/ _ \/ __| __/ __|                       |
-#   |                      |  _  | (_) \__ \ |_\__ \                       |
-#   |                      |_| |_|\___/|___/\__|___/                       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
 
 # Check if the given attribute name exists, no type check
 def validate_general_host_attributes(host_attributes):
@@ -104,159 +105,317 @@ def validate_host_attributes(attributes):
     validate_host_tags(dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_")))
 
 
-def action_add_host(request):
-    validate_request_keys(request, required_keys=["hostname", "folder"],
-                                   optional_keys=["attributes", "nodes", "create_folders"])
+def compute_config_hash(entity):
+    import bencode, md5
+    try:
+        entity_encoded = bencode.Bencoder.encode(entity)
+        entity_hash    = md5.md5(entity_encoded).hexdigest()
+    except bencode.BencodeException, e:
+        logger.error("%s" % e)
+        entity_hash = "0"
 
-    create_folders = int(request.get("create_folders", "1")) == 1
+    return entity_hash
 
-    hostname      = request.get("hostname")
-    folder_path   = request.get("folder")
-    attributes    = request.get("attributes", {})
-    cluster_nodes = request.get("nodes")
 
-    check_hostname(hostname, should_exist = False)
+def validate_config_hash(hash_value, entity):
+    entity_hash = compute_config_hash(entity)
+    if hash_value != entity_hash:
+        raise MKUserError(None, _("The configuration has changed in the meantime. "\
+                                  "You need to load the configuration and start another update. "
+                                  "If the existing configuration should not be checked, you can "
+                                  "remove the configuration_hash value from the request object."))
 
-    # Validate folder
-    if folder_path != "" and folder_path != "/":
-        folders = folder_path.split("/")
-        for foldername in folders:
-            check_wato_foldername(None, foldername, just_name=True)
-    else:
-       folder_path = ""
-       folders =  [""]
 
-    # Deprecated, but still supported
-    # Nodes are now specified in an extra key
-    if ".nodes" in attributes:
-        cluster_nodes = attributes[".nodes"]
-        del attributes[".nodes"]
-    validate_host_attributes(attributes)
+class APICallCollection(object):
+    @classmethod
+    def all_classes(cls):
+        return cls.__subclasses__() # pylint: disable=no-member
 
-    # Create folder(s)
-    if not Folder.folder_exists(folder_path):
-        if not create_folders:
-            raise MKUserError(None, _("Folder not existing"))
-        Folder.create_missing_folders(folder_path)
 
-    # Add host
-    Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)])
+    def get_api_calls(self):
+        raise NotImplementedError("This API collection does not register any API call")
 
-api_actions["add_host"] = {
-    "handler"         : action_add_host,
-    "locking"         : True,
-}
 
-###############
+#.
+#   .--Folders-------------------------------------------------------------.
+#   |                   _____     _     _                                  |
+#   |                  |  ___|__ | | __| | ___ _ __ ___                    |
+#   |                  | |_ / _ \| |/ _` |/ _ \ '__/ __|                   |
+#   |                  |  _| (_) | | (_| |  __/ |  \__ \                   |
+#   |                  |_|  \___/|_|\__,_|\___|_|  |___/                   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
 
-def action_edit_host(request):
-    validate_request_keys(request, required_keys=["hostname"],
-                                   optional_keys=["unset_attributes", "attributes", "nodes"])
+class APICallFolders(APICallCollection):
+    def get_api_calls(self):
+        return {
+            "add_folder": {
+                "handler"         : self._add,
+                "locking"         : True,
+            },
+            "edit_folder": {
+                "handler"         : self._edit,
+                "locking"         : True,
+            },
+            "get_folder": {
+                "handler"         : self._get,
+                "locking"         : False,
+            },
+            "delete_folder": {
+                "handler"         : self._delete,
+                "locking"         : True,
+            },
+            "get_all_folders": {
+                "handler"         : self._get_all,
+                "locking"         : False,
+            },
+        }
 
-    hostname              = request.get("hostname")
-    attributes            = request.get("attributes", {})
-    unset_attribute_names = request.get("unset_attributes", [])
-    cluster_nodes         = request.get("nodes")
 
-    check_hostname(hostname, should_exist = True)
+    def _add(self, request):
+        validate_request_keys(request, required_keys=["folder"],
+                                       optional_keys=["attributes", "alias", "create_parent_folders",
+                                                       # "lock", "lock_subfolders"  # Not implemented yet
+                                                     ])
 
-    host = Host.host(hostname)
+        folder_path  = request["folder"]
+        check_wato_foldername(None, os.path.basename(folder_path), just_name = True)
 
-    # Deprecated, but still supported
-    # Nodes are now specified in an extra key
-    if ".nodes" in attributes:
-        cluster_nodes = attributes[".nodes"]
-        del attributes[".nodes"]
-    validate_host_attributes(attributes)
+        folder_alias = request.get("alias", folder_path)
+        folder_attributes = request.get("attributes", {})
 
-    # Update existing attributes. Add new, remove unset_attributes
-    current_attributes = host.attributes().copy()
-    for attrname in unset_attribute_names:
-        if attrname in current_attributes:
-            del current_attributes[attrname]
-    current_attributes.update(attributes)
+        # Validates host and folder attributes, since there are no real folder attributes, at all...
+        validate_host_attributes(folder_attributes)
 
-    if not cluster_nodes:
-        cluster_nodes = host.cluster_nodes()
+        # Check existance of parent folder, create it when configured
+        create_parent_folders = bool(int(request.get("create_parent_folders", "1")))
+        if create_parent_folders or Folder.folder_exists(os.path.dirname(folder_path)):
+            Folder.root_folder().create_missing_folders(folder_path)
+            Folder.folder(folder_path).edit(folder_alias, folder_attributes)
+        else:
+            raise MKUserError(None, _("Unable to create parent folder(s)."))
 
-    host.edit(current_attributes, cluster_nodes)
 
-api_actions["edit_host"] = {
-    "handler"     : action_edit_host,
-    "locking"     : True,
-}
+    def _edit(self, request):
+        validate_request_keys(request, required_keys=["folder"],
+                                       optional_keys=["attributes", "alias",
+                                                       # "lock", "lock_subfolders"  # Not implemented yet
+                                                     ])
+        folder_path  = request["folder"]
+        if not Folder.folder_exists(folder_path):
+            raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
-###############
+        folder_alias = request.get("alias", folder_path)
+        folder_attributes = request.get("attributes", {})
 
-def action_get_host(request):
-    validate_request_keys(request, required_keys=["hostname"],
-                                   optional_keys=["effective_attributes"])
+        # Validates host and folder attributes, since there are no real folder attributes, at all...
+        validate_host_attributes(folder_attributes)
 
-    hostname = request.get("hostname")
 
-    check_hostname(hostname, should_exist = True)
+        Folder.folder(folder_path).edit(folder_alias, folder_attributes)
 
-    host = Host.host(hostname)
-    host.need_permission("read")
 
-    if int(request.get("effective_attributes", "0")) == 1:
-        attributes = host.effective_attributes()
-    else:
-        attributes = host.attributes()
+    def _get(self, request):
+        validate_request_keys(request, required_keys=["folder"], optional_keys = ["effective_attributes"])
+        folder_path = request["folder"]
+        if not Folder.folder_exists(folder_path):
+            raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
-    response = { "attributes": attributes, "path": host.folder().path(), "hostname": host.name() }
-    if host.is_cluster():
-        response["nodes"] = host.cluster_nodes()
-    return response
+        folder = Folder.folder(folder_path)
+        if bool(int(request.get("effective_attributes", "0"))):
+            return folder.effective_attributes()
+        else:
+            return folder.attributes()
 
-api_actions["get_host"] = {
-    "handler"         : action_get_host,
-    "locking"         : False,
-}
 
-###############
+    def _delete(self, request):
+        validate_request_keys(request, required_keys=["folder"])
+        folder_path = request["folder"]
+        if not Folder.folder_exists(folder_path):
+            raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
-def action_get_all_hosts(request):
-    validate_request_keys(request, optional_keys=["effective_attributes"])
+        folder = Folder.folder(folder_path)
+        if folder.is_root():
+            raise MKUserError(None, _("Unable to delete root folder"))
 
-    effective_attributes = int(request.get("effective_attributes", "0")) == 1
+        folder.parent().delete_subfolder(folder.name())
 
-    response = {}
-    all_hosts = Folder.root_folder().all_hosts_recursively()
 
-    for hostname, host in all_hosts.items():
+    def _get_all(self, request):
+        validate_request_keys(request, optional_keys = ["effective_attributes"])
+
+        folders = {}
+        effective_attributes = bool(int(request.get("effective_attributes", "0")))
+
+        for folder_path, folder in Folder.all_folders().items():
+            if effective_attributes:
+                folders[folder_path] = folder.effective_attributes()
+            else:
+                folders[folder_path] = folder.attributes()
+
+        return folders
+
+
+#.
+#   .--Hosts---------------------------------------------------------------.
+#   |                       _   _           _                              |
+#   |                      | | | | ___  ___| |_ ___                        |
+#   |                      | |_| |/ _ \/ __| __/ __|                       |
+#   |                      |  _  | (_) \__ \ |_\__ \                       |
+#   |                      |_| |_|\___/|___/\__|___/                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+class APICallHosts(APICallCollection):
+    def get_api_calls(self):
+        return {
+            "add_host": {
+                "handler"         : self._add,
+                "locking"         : True,
+            },
+            "edit_host": {
+                "handler"         : self._edit,
+                "locking"         : True,
+            },
+            "get_host": {
+                "handler"         : self._get,
+                "locking"         : False,
+            },
+            "delete_host": {
+                "handler"         : self._delete,
+                "locking"         : True,
+            },
+            "get_all_hosts": {
+                "handler"         : self._get_all,
+                "locking"         : False,
+            },
+        }
+
+
+    def _add(self, request):
+        validate_request_keys(request, required_keys=["hostname", "folder"],
+                                       optional_keys=["attributes", "nodes", "create_folders"])
+
+        create_parent_folders_var = request.get("create_parent_folders", request.get("create_folders", "1"))
+        create_parent_folders = bool(int(create_parent_folders_var))
+
+        hostname      = request.get("hostname")
+        folder_path   = request.get("folder")
+        attributes    = request.get("attributes", {})
+        cluster_nodes = request.get("nodes")
+
+        check_hostname(hostname, should_exist = False)
+
+        # Validate folder
+        if folder_path != "" and folder_path != "/":
+            folders = folder_path.split("/")
+            for foldername in folders:
+                check_wato_foldername(None, foldername, just_name=True)
+        else:
+           folder_path = ""
+           folders =  [""]
+
+        # Deprecated, but still supported
+        # Nodes are now specified in an extra key
+        if ".nodes" in attributes:
+            cluster_nodes = attributes[".nodes"]
+            del attributes[".nodes"]
+        validate_host_attributes(attributes)
+
+        # Create folder(s)
+        if not Folder.folder_exists(folder_path):
+            if not create_parent_folders:
+                raise MKUserError(None, _("Unable to create parent folder(s)."))
+            Folder.create_missing_folders(folder_path)
+
+        # Add host
+        Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)])
+
+
+    def _edit(self, request):
+        validate_request_keys(request, required_keys=["hostname"],
+                                       optional_keys=["unset_attributes", "attributes", "nodes"])
+
+        hostname              = request.get("hostname")
+        attributes            = request.get("attributes", {})
+        unset_attribute_names = request.get("unset_attributes", [])
+        cluster_nodes         = request.get("nodes")
+
+        check_hostname(hostname, should_exist = True)
+
+        host = Host.host(hostname)
+
+        # Deprecated, but still supported
+        # Nodes are now specified in an extra key
+        if ".nodes" in attributes:
+            cluster_nodes = attributes[".nodes"]
+            del attributes[".nodes"]
+        validate_host_attributes(attributes)
+
+        # Update existing attributes. Add new, remove unset_attributes
+        current_attributes = host.attributes().copy()
+        for attrname in unset_attribute_names:
+            if attrname in current_attributes:
+                del current_attributes[attrname]
+        current_attributes.update(attributes)
+
+        if not cluster_nodes:
+            cluster_nodes = host.cluster_nodes()
+
+        host.edit(current_attributes, cluster_nodes)
+
+
+    def _get(self, request):
+        validate_request_keys(request, required_keys=["hostname"],
+                                       optional_keys=["effective_attributes"])
+
+        hostname = request.get("hostname")
+
+        check_hostname(hostname, should_exist = True)
+
+        host = Host.host(hostname)
         host.need_permission("read")
-        if effective_attributes:
+        if request.get("effective_attributes") == "1":
             attributes = host.effective_attributes()
         else:
             attributes = host.attributes()
-        response[hostname] = { "attributes": attributes, "path": host.folder().path(), "hostname": host.name() }
+
+        response = { "attributes": attributes, "path": host.folder().path(), "hostname": host.name() }
         if host.is_cluster():
-            response[hostname]["nodes"] = host.cluster_nodes()
-
-    return response
-
-api_actions["get_all_hosts"] = {
-    "handler": action_get_all_hosts,
-    "locking": False,
-}
+            response["nodes"] = host.cluster_nodes()
+        return response
 
 
-###############
+    def _get_all(self, request):
+        validate_request_keys(request, optional_keys=["effective_attributes"])
 
-def action_delete_host(request):
-    validate_request_keys(request, required_keys=["hostname"])
+        effective_attributes = bool(int(request.get("effective_attributes", "0")))
 
-    hostname = request.get("hostname")
-    check_hostname(hostname, should_exist = True)
+        response = {}
+        all_hosts = Folder.root_folder().all_hosts_recursively()
 
-    host = Host.host(hostname)
-    host.folder().delete_hosts([host.name()])
+        for hostname, host in all_hosts.items():
+            host.need_permission("read")
+            if effective_attributes:
+                attributes = host.effective_attributes()
+            else:
+                attributes = host.attributes()
+            response[hostname] = { "attributes": attributes, "path": host.folder().path(), "hostname": host.name() }
+            if host.is_cluster():
+                response[hostname]["nodes"] = host.cluster_nodes()
 
-api_actions["delete_host"] = {
-    "handler"     : action_delete_host,
-    "locking"     : True,
-}
+        return response
+
+
+    def _delete(self, request):
+        validate_request_keys(request, required_keys=["hostname"])
+
+        hostname = request["hostname"]
+        check_hostname(hostname, should_exist = True)
+
+        host = Host.host(hostname)
+        host.folder().delete_hosts([host.name()])
+
 
 #.
 #   .--Groups--------------------------------------------------------------.
@@ -525,3 +684,133 @@ api_actions["activate_changes"] = {
 }
 
 
+
+#.
+#   .--Rules---------------------------------------------------------------.
+#   |                       ____        _                                  |
+#   |                      |  _ \ _   _| | ___  ___                        |
+#   |                      | |_) | | | | |/ _ \/ __|                       |
+#   |                      |  _ <| |_| | |  __/\__ \                       |
+#   |                      |_| \_\\__,_|_|\___||___/                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+class APICallRules(APICallCollection):
+    def get_api_calls(self):
+        required_permissions = ["wato.rulesets"] # wato.services ?
+        return {
+            "get_ruleset": {
+                "handler"             : self._get,
+                "required_permissions": required_permissions,
+                "locking"             : True, # locking?
+            },
+            "set_ruleset": {
+                "handler"             : self._set,
+                "required_permissions": required_permissions,
+                "locking"             : True,
+            },
+            "get_rulesets_info": {
+                "handler"             : self._get_rulesets_info,
+                "required_permissions": required_permissions,
+                "locking"             : False,
+            }
+        }
+
+
+    def _get_ruleset_configuration(self, ruleset_name):
+        collection = SingleRulesetRecursively(ruleset_name)
+        collection.load()
+        ruleset = collection.get(ruleset_name)
+
+        ruleset_dict = {}
+        for folder, rule_index, rule in ruleset.get_rules():
+            ruleset_dict.setdefault(folder.path(), [])
+             # The path is already set in the folder hierarchy
+            rule_config = rule.to_dict_config()
+            del rule_config["path"]
+            ruleset_dict[folder.path()].append(rule_config)
+
+        return ruleset_dict
+
+
+
+    def _get(self, request):
+        validate_request_keys(request, required_keys=["ruleset_name"])
+        ruleset_name = request["ruleset_name"].encode("utf-8")
+
+        ruleset_dict = self._get_ruleset_configuration(ruleset_name)
+        ruleset_hash = compute_config_hash(ruleset_dict)
+        return {"ruleset": ruleset_dict, "configuration_hash": ruleset_hash}
+
+
+    def _set(self, request):
+        validate_request_keys(request, required_keys=["ruleset_name", "ruleset"],
+                                       optional_keys=["configuration_hash"])
+
+        # NOTE: This encoding here should be kept
+        # Otherwise and unicode encoded text will be written into the
+        # configuration file with unknown side effects
+        ruleset_name = request["ruleset_name"].encode("utf-8")
+
+        # Future validation, currently the rule API actions are admin only, so the check is pointless
+        # may_edit_ruleset(ruleset_name)
+
+        # Check if configuration hash has changed in the meantime
+        ruleset_dict = self._get_ruleset_configuration(ruleset_name)
+        if "configuration_hash" in request:
+            validate_config_hash(request["configuration_hash"], ruleset_dict)
+
+        # Check permissions of new rules and rules we are going to delete
+        new_ruleset            = request["ruleset"]
+        folders_set_ruleset    = set(new_ruleset.keys())
+        folders_obsolete_ruleset = set(ruleset_dict.keys()) - folders_set_ruleset
+
+        for check_folders in [folders_set_ruleset, folders_obsolete_ruleset]:
+            for folder_path in check_folders:
+                if not Folder.folder_exists(folder_path):
+                    raise MKUserError(None, _("Folder %s does not exist") % folder_path)
+                rule_folder = Folder.folder(folder_path)
+                rule_folder.need_permission("write")
+
+
+        # Add new rulesets
+        for folder_path, rules in new_ruleset.items():
+            folder = Folder.folder(folder_path)
+
+            new_ruleset = Ruleset(ruleset_name)
+            new_ruleset.from_config(folder, rules)
+
+            folder_rulesets = FolderRulesets(folder)
+            folder_rulesets.load()
+            folder_rulesets.set(ruleset_name, new_ruleset)
+            folder_rulesets.save()
+
+
+        # Remove obsolete rulesets
+        for folder_path in folders_obsolete_ruleset:
+            folder = Folder.folder(folder_path)
+            new_ruleset = FolderRulesets(ruleset_name)
+            new_ruleset.from_config(folder, [])
+            new_ruleset.save()
+
+
+    def _get_rulesets_info(self, request):
+        rulesets_info = {}
+        all_rulesets = AllRulesets()
+        all_rulesets.load()
+
+        for varname, ruleset in all_rulesets.get_rulesets().items():
+            rulesets_info[varname] = {
+                "title":     ruleset.title(),
+                "help":      ruleset.help(),
+                "number_of_rules": ruleset.num_rules(),
+            }
+            item_help = ruleset.item_help()
+            if item_help:
+                rulesets_info[varname]["item_help"] = item_help
+
+        return rulesets_info
+
+
+for api_call_class in APICallCollection.all_classes():
+    api_actions.update(api_call_class().get_api_calls())

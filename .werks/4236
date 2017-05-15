@@ -2,7 +2,7 @@ Title: Removed g_hostname and g_service_description from Check API
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.4.0i4
+Version: 1.5.0i1
 Date: 1484066870
 Class: fix
 

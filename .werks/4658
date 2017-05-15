@@ -1,0 +1,13 @@
+Title: Fixed permissions in BI packs using rules from other packs
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1494836173
+
+If users use rules with node rules from other BI packs for which they have
+no permissions, these parent rules could be damaged by editing them. Now they
+get an error message and editing is not allowed any more.

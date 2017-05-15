@@ -1,0 +1,26 @@
+Title: WATO Web-API: now able to manage sites
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495746521
+Class: feature
+
+
+You can now configure the WATO sites through new API calls
+
+<ul>
+<li>get_site: requires the site_id key in the request object</li>
+<li>set_site: expects the same data format, than the get_site call provides.</li>
+<li>delete_site: requires the site_id key in the request object</li>
+<li>login_site: requires the site_id, the username and the password keys in the request object</li>
+<li>logout_site: requires the site_id key in the request object</li>
+</ul>
+
+
+Important: Right now the interface is only able to speak the python language.<br>
+The existing output_format parameter, as well as the new request parameter <tt>request_format</tt>
+must both be set to <tt>python</tt>. An additional interface language is planned, maybe XML.
+Furthermore, these API calls are intended for admin use only, since they might modify the entire
+site configuration object.

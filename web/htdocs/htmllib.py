@@ -1141,6 +1141,7 @@ class RequestHandler(object):
             try:
                 json_request = self.var("request", "{}")
                 request = json.loads(json_request)
+                request["request_format"] = "json"
             except json.JSONDecodeError, e:
                 raise MKUserError("request", _("Failed to parse JSON request: '%s': %s") %
                                                                     (json_request, e))

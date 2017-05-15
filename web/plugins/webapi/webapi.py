@@ -605,9 +605,10 @@ class APICallRules(APICallCollection):
                 "locking"             : True, # locking?
             },
             "set_ruleset": {
-                "handler"             : self._set,
-                "required_permissions": required_permissions,
-                "locking"             : True,
+                "handler"               : self._set,
+                "required_permissions"  : required_permissions,
+                "required_input_format" : "python",
+                "locking"               : True,
             },
             "get_rulesets_info": {
                 "handler"             : self._get_rulesets_info,
@@ -732,9 +733,9 @@ class APICallHosttags(APICallCollection):
                 "locking"             : True,
             },
             "set_hosttags": {
-                "handler"             : self._set,
-                "required_permissions": required_permissions,
-                "locking"             : True,
+                "handler"               : self._set,
+                "required_permissions"  : required_permissions,
+                "locking"               : True,
             }
         }
 
@@ -821,6 +822,115 @@ class APICallHosttags(APICallCollection):
         used_tags.discard(None)
         return used_tags
 
+
+#.
+#   .--Sites---------------------------------------------------------------.
+#   |                        ____  _ _                                     |
+#   |                       / ___|(_) |_ ___  ___                          |
+#   |                       \___ \| | __/ _ \/ __|                         |
+#   |                        ___) | | ||  __/\__ \                         |
+#   |                       |____/|_|\__\___||___/                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+class APICallSites(APICallCollection):
+    def get_api_calls(self):
+        required_permissions = ["wato.sites"]
+        return {
+            "get_site": {
+                "handler"              : self._get,
+                "required_permissions" : required_permissions,
+                "locking"              : False,
+            },
+            "set_site": {
+                "handler"               : self._set,
+                "required_permissions"  : required_permissions,
+                "required_input_format" : "python",
+                "locking"               : True,
+            },
+            "delete_site": {
+                "handler"              : self._delete,
+                "required_permissions" : required_permissions,
+                "locking"              : True,
+            },
+            "login_site": {
+                "handler"              : self._login,
+                "required_permissions" : required_permissions,
+                "locking"              : True,
+            },
+            "logout_site": {
+                "handler"              : self._logout,
+                "required_permissions" : required_permissions,
+                "locking"              : True,
+            },
+        }
+
+
+    def _get(self, request):
+        validate_request_keys(request, required_keys=["site_id"])
+
+        all_sites = SiteManagement.load_sites()
+        existing_site = all_sites.get(request["site_id"])
+
+        if not existing_site:
+            raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
+
+        sites_dict = {"site_config": existing_site, "site_id": request["site_id"]}
+        sites_dict["configuration_hash"] = compute_config_hash(existing_site)
+        return sites_dict
+
+
+    def _set(self, request):
+        validate_request_keys(request, required_keys=["site_config", "site_id"],
+                                       optional_keys=["configuration_hash"])
+
+        all_sites = SiteManagement.load_sites()
+        existing_site = all_sites.get(request["site_id"])
+        if existing_site and "configuration_hash" in request:
+            validate_config_hash(request["configuration_hash"], existing_site)
+
+        SiteManagement.validate_configuration(request["site_id"], request["site_config"], all_sites)
+
+        all_sites[request["site_id"]] = request["site_config"]
+        SiteManagement.save_sites(all_sites)
+
+
+    def _delete(self, request):
+        validate_request_keys(request, required_keys=["site_id"],
+                                       optional_keys=["configuration_hash"])
+
+        all_sites = SiteManagement.load_sites()
+        existing_site = all_sites.get(request["site_id"])
+        if existing_site and "configuration_hash" in request:
+            validate_config_hash(request["configuration_hash"], existing_site)
+
+        SiteManagement.delete_site(request["site_id"])
+
+
+    def _login(self, request):
+        validate_request_keys(request, required_keys=["site_id", "username", "password"])
+
+        all_sites = SiteManagement.load_sites()
+        site = all_sites.get(request["site_id"])
+        if not site:
+            raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
+
+        secret = do_site_login(request["site_id"], request["username"], request["password"])
+        site["secret"] = secret
+        SiteManagement.save_sites(all_sites)
+
+
+    def _logout(self, request):
+        validate_request_keys(request, required_keys=["site_id"])
+
+        all_sites = SiteManagement.load_sites()
+        site = all_sites.get(request["site_id"])
+        if not site:
+            raise MKUserError(None, _("Site id not found: %s") % request["site_id"])
+
+        if "secret" in site:
+            del site["secret"]
+            SiteManagement.save_sites(all_sites)
 
 
 for api_call_class in APICallCollection.all_classes():

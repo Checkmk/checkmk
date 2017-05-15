@@ -6909,7 +6909,7 @@ def render_global_configuration_variables(group_names, default_values, current_s
 def mode_edit_configvar(phase, what = 'globalvars'):
     siteid = html.var("site")
     if siteid:
-        configured_sites = load_sites()
+        configured_sites = SiteManagement.load_sites()
         site = configured_sites[siteid]
 
     if phase == "title":
@@ -6977,7 +6977,7 @@ def mode_edit_configvar(phase, what = 'globalvars'):
             need_restart = None
 
         if siteid:
-            save_sites(configured_sites, activate=False)
+            SiteManagement.save_sites(configured_sites, activate=False)
             if siteid == config.omd_site():
                 save_site_global_settings(current_settings)
             add_change("edit-configvar", msg, sites=[siteid], domains=[domain], need_restart=need_restart)
@@ -9332,7 +9332,7 @@ def find_usages_of_timeperiod(tpname):
 
 
 
-class ModeSites(WatoMode):
+class ModeSites(WatoMode, SiteManagement):
     def __init__(self):
         super(ModeSites, self).__init__()
 
@@ -9373,7 +9373,7 @@ class ModeDistributedMonitoring(ModeSites):
 
 
     def _action_delete(self, delete_id):
-        configured_sites = load_sites()
+        configured_sites = self.load_sites()
         # The last connection can always be deleted. In that case we
         # fall back to non-distributed-WATO and the site attribute
         # will be removed.
@@ -9400,11 +9400,7 @@ class ModeDistributedMonitoring(ModeSites):
                          _("Do you really want to delete the connection to the site %s?") % \
                          html.render_tt(delete_id))
         if c:
-            del configured_sites[delete_id]
-            save_sites(configured_sites)
-            clear_site_replication_status(delete_id)
-            add_change("edit-sites", _("Deleted site %s") % html.render_tt(delete_id),
-                       domains=[ConfigDomainGUI], sites=[default_site()])
+            SiteManagement.delete_site(delete_id)
             return None
 
         elif c == False:
@@ -9415,7 +9411,7 @@ class ModeDistributedMonitoring(ModeSites):
 
 
     def _action_logout(self, logout_id):
-        configured_sites = load_sites()
+        configured_sites = self.load_sites()
         site = configured_sites[logout_id]
         c = wato_confirm(_("Confirm logout"),
                          _("Do you really want to log out of '%s'?") % \
@@ -9423,7 +9419,7 @@ class ModeDistributedMonitoring(ModeSites):
         if c:
             if "secret" in site:
                 del site["secret"]
-            save_sites(configured_sites)
+            self.save_sites(configured_sites)
             add_change("edit-site", _("Logged out of remote site %s") % html.render_tt(site["alias"]),
                        domains=[ConfigDomainGUI], sites=[default_site()])
             return None, _("Logged out.")
@@ -9436,7 +9432,7 @@ class ModeDistributedMonitoring(ModeSites):
 
 
     def _action_login(self, login_id):
-        configured_sites = load_sites()
+        configured_sites = self.load_sites()
         if html.var("_abort"):
             return "sites"
 
@@ -9452,7 +9448,7 @@ class ModeDistributedMonitoring(ModeSites):
             try:
                 secret = do_site_login(login_id, name, passwd)
                 site["secret"] = secret
-                save_sites(configured_sites)
+                self.save_sites(configured_sites)
                 message = _("Successfully logged into remote site %s.") % html.render_tt(site["alias"])
                 log_audit(None, "edit-site", message)
                 return None, message
@@ -9505,7 +9501,7 @@ class ModeDistributedMonitoring(ModeSites):
                                    "sites, please do not forget to add your local monitoring site also, if "
                                    "you want to display its data."))
 
-        sites = sort_sites(load_sites().items())
+        sites = sort_sites(self.load_sites().items())
         for site_id, site in sites:
             table.row()
 
@@ -9603,7 +9599,7 @@ class ModeEditSiteGlobals(ModeSites):
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
         self._site_id = html.var("site")
-        self._configured_sites = load_sites()
+        self._configured_sites = self.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]
         except KeyError:
@@ -9663,7 +9659,7 @@ class ModeEditSiteGlobals(ModeSites):
                   (varname, _("on") if self._current_settings[varname] else _("off"))
 
             self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
-            save_sites(self._configured_sites, activate=False)
+            self.save_sites(self._configured_sites, activate=False)
 
             add_change("edit-configvar", msg, sites=[self._site_id], need_restart=need_restart)
 
@@ -9708,7 +9704,7 @@ class ModeEditSite(ModeSites):
 
         self._new        = self._site_id == None
         self._new_site   = {}
-        configured_sites = load_sites()
+        configured_sites = self.load_sites()
 
         if self._clone_id:
             self._site = configured_sites[self._clone_id]
@@ -9757,7 +9753,7 @@ class ModeEditSite(ModeSites):
         else:
             self._id = self._site_id
 
-        configured_sites = load_sites()
+        configured_sites = self.load_sites()
         if self._new and self._id in configured_sites:
             raise MKUserError("id", _("This id is already being used by another connection."))
 
@@ -9766,7 +9762,7 @@ class ModeEditSite(ModeSites):
 
         detail_msg = self._set_site_attributes()
         configured_sites[self._id] = self._new_site
-        save_sites(configured_sites)
+        self.save_sites(configured_sites)
 
         if self._new:
             msg = _("Created new connection to site %s") % html.render_tt(self._id)
@@ -9790,26 +9786,19 @@ class ModeEditSite(ModeSites):
 
     def _set_site_attributes(self):
         # Save copy of old site for later
-        configured_sites = load_sites()
+        configured_sites = self.load_sites()
         if not self._new:
             old_site = configured_sites[self._site_id]
 
         self._new_site = {}
-        alias = html.get_unicode_input("alias", "").strip()
-        if not alias:
-            raise MKUserError("alias", _("Please enter an alias name or description of this site."))
-
-        self._new_site["alias"] = alias
-        if self._url_prefix and self._url_prefix[-1] != '/':
-            raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
+        self._new_site["alias"] = html.get_unicode_input("alias", "").strip()
         if self._url_prefix:
             self._new_site["url_prefix"] = self._url_prefix
-        disabled = html.get_checkbox("disabled")
-        self._new_site["disabled"] = disabled
+        self._new_site["disabled"] = html.get_checkbox("disabled")
 
         # Connection
-        method = self._vs_conn_method().from_html_vars("method")
-        self._vs_conn_method().validate_value(method, "method")
+        method = self.connection_method_valuespec().from_html_vars("method")
+        self.connection_method_valuespec().validate_value(method, "method")
         if type(method) == tuple and method[0] in [ "unix", "tcp"]:
             if method[0] == "unix":
                 self._new_site["socket"] = "unix:" + method[1]
@@ -9821,31 +9810,20 @@ class ModeEditSite(ModeSites):
         elif "socket" in self._new_site:
             del self._new_site["socket"]
 
-        if method == None and self._site_id != config.omd_site():
-            raise MKUserError("method_sel", _("You can only configure a local site connection for "
-                                              "the local site. The site IDs ('%s' and '%s') are "
-                                              "not equal.") % (self._site_id, config.omd_site()))
 
         # Timeout
         if self._timeout != "":
             try:
-                timeout = int(self._timeout)
-            except:
-                raise MKUserError("timeout", _("%s is not a valid integer number.") % self._timeout)
-            self._new_site["timeout"] = timeout
+                self._new_site["timeout"] = int(self._timeout)
+            except ValueError:
+                raise MKUserError("timeout", _("The timeout %s is not a valid integer number.") % self._timeout)
 
         # Persist
         self._new_site["persist"] = html.get_checkbox("persist")
 
         # Status host
         if self._sh_site:
-            if self._sh_site not in configured_sites:
-                raise MKUserError("sh_site", _("The site of the status host does not exist."))
-            if self._sh_site in [ self._site_id, self._id ]:
-                raise MKUserError("sh_site", _("You cannot use the site itself as site of the status host."))
-            if not self._sh_host:
-                raise MKUserError("sh_host", _("Please specify the name of the status host."))
-            self._new_site["status_host"] = ( self._sh_site, self._sh_host )
+            self._new_site["status_host"] = (self._sh_site, self._sh_host)
         else:
             self._new_site["status_host"] = None
 
@@ -9853,28 +9831,10 @@ class ModeEditSite(ModeSites):
         if self._repl == "none":
             self._repl = None
         self._new_site["replication"] = self._repl
-
-        if self._repl:
-            if not self._multisiteurl:
-                raise MKUserError("multisiteurl",
-                    _("Please enter the Multisite URL of the slave site."))
-
-            if not self._multisiteurl.endswith("/check_mk/"):
-                raise MKUserError("multisiteurl",
-                    _("The Multisite URL must end with /check_mk/"))
-
-            if not self._multisiteurl.startswith("http://") and \
-               not self._multisiteurl.startswith("https://"):
-                raise MKUserError("multisiteurl",
-                    _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
-
-            if "socket" not in self._new_site:
-                raise MKUserError("replication",
-                    _("You cannot do replication with the local site."))
+        self._new_site["multisiteurl"] = self._multisiteurl
 
         # Save Multisite-URL even if replication is turned off. That way that
         # setting is not lost if replication is turned off for a while.
-        self._new_site["multisiteurl"] = self._multisiteurl
 
         # Disabling of WATO
         self._new_site["disable_wato"] = html.get_checkbox("disable_wato")
@@ -9886,8 +9846,7 @@ class ModeEditSite(ModeSites):
         self._new_site["user_login"] = html.get_checkbox("user_login")
 
         # User synchronization
-        user_sync = self._vs_user_sync().from_html_vars("user_sync")
-        self._vs_user_sync().validate_value(user_sync, "user_sync")
+        user_sync = self.user_sync_valuespec().from_html_vars("user_sync")
         self._new_site["user_sync"] = user_sync
 
         # Event Console Replication
@@ -9906,6 +9865,9 @@ class ModeEditSite(ModeSites):
             for key in old_site.keys():
                 if key not in self._new_site and key != "socket":
                     self._new_site[key] = old_site[key]
+
+
+        self.validate_configuration(self._site_id or self._id, self._new_site, configured_sites)
 
 
     def page(self):
@@ -9951,7 +9913,7 @@ class ModeEditSite(ModeSites):
             parts = method.split(":")[1:] # pylint: disable=no-member
             method = ('tcp', (parts[0], int(parts[1])))
 
-        self._vs_conn_method().render_input("method", method)
+        self.connection_method_valuespec().render_input("method", method)
         html.help( _("When connecting to remote site please make sure "
                    "that Livestatus over TCP is activated there. You can use UNIX sockets "
                    "to connect to foreign sites on localhost. Please make sure that this "
@@ -10004,7 +9966,7 @@ class ModeEditSite(ModeSites):
 
         html.sorted_select("sh_site",
            [ ("", _("(no status host)")) ] + [
-             (sk, si.get("alias", sk)) for (sk, si) in load_sites().items() ], self._sh_site)
+             (sk, si.get("alias", sk)) for (sk, si) in self.load_sites().items() ], self._sh_site)
 
         html.help( _("By specifying a status host for each non-local connection "
                      "you prevent Multisite from running into timeouts when remote sites do not respond. "
@@ -10061,7 +10023,7 @@ class ModeEditSite(ModeSites):
                     'related option is changed in the master site.'))
 
         forms.section(_("Sync with LDAP connections"), simple=True)
-        self._vs_user_sync().render_input("user_sync",
+        self.user_sync_valuespec().render_input("user_sync",
                              self._site.get("user_sync", userdb.user_sync_default_config(self._site_id)))
         html.br()
         html.help(_('By default the users are synchronized automatically in the interval configured '
@@ -10092,119 +10054,6 @@ class ModeEditSite(ModeSites):
                     "directory will be also transferred to the slave site. Note: <b>all other MKPs and files "
                     "below <tt>~/local/</tt> on the slave will be removed</b>."))
 
-
-    def _vs_tcp_port(self):
-        return Tuple(
-                title = _("TCP Port to connect to"),
-                orientation = "float",
-                elements = [
-                    TextAscii(label = _("Host:"), allow_empty = False, size=15),
-                    Integer(label = _("Port:"), minvalue=1, maxvalue=65535, default_value=6557),
-        ])
-
-    def _conn_choices(self):
-        conn_choices = [
-            (None,   _("Connect to the local site")),
-            ("tcp",  _("Connect via TCP"), self._vs_tcp_port()),
-            ("unix", _("Connect via UNIX socket"), TextAscii(
-                label = _("Path:"),
-                size = 40,
-                allow_empty = False)
-            ),
-        ]
-
-        if config.liveproxyd_enabled:
-            conn_choices[2:2] = [
-            ( "proxy", _("Use Livestatus Proxy-Daemon"),
-              Dictionary(
-                  optional_keys = False,
-                  columns = 1,
-                  elements = [
-                      ("socket", Alternative(
-                          title = _("Connect to"),
-                          style = "dropdown",
-                          elements = [
-                              FixedValue(None,
-                                  title = _("Connect to the local site"),
-                                  totext = "",
-                              ),
-                              self._vs_tcp_port(),
-                          ],
-                      )),
-                      ( "channels",
-                        Integer(
-                            title = _("Number of channels to keep open"),
-                            minvalue = 2,
-                            maxvalue = 50,
-                            default_value = 5)),
-                      ( "heartbeat",
-                        Tuple(
-                            title = _("Regular heartbeat"),
-                            orientation = "float",
-                            elements = [
-                                Integer(label = _("One heartbeat every"), unit=_("sec"),
-                                        minvalue=1, default_value = 5),
-                                Float(label = _("with a timeout of"), unit=_("sec"),
-                                      minvalue=0.1, default_value = 2.0, display_format="%.1f"),
-                       ])),
-                       ( "channel_timeout",
-                         Float(
-                             title = _("Timeout waiting for a free channel"),
-                             minvalue = 0.1,
-                             default_value = 3,
-                             unit = _("sec"),
-                         )
-                       ),
-                       ( "query_timeout",
-                         Float(
-                             title = _("Total query timeout"),
-                             minvalue = 0.1,
-                             unit = _("sec"),
-                             default_value = 120,
-                         )
-                       ),
-                       ( "connect_retry",
-                         Float(
-                            title = _("Cooling period after failed connect/heartbeat"),
-                            minvalue = 0.1,
-                            unit = _("sec"),
-                            default_value = 4.0,
-                       )),
-                       ( "cache",
-                          Checkbox(title = _("Enable Caching"),
-                             label = _("Cache several non-status queries"),
-                              help = _("This option will enable the caching of several queries that "
-                                       "need no current data. This reduces the number of Livestatus "
-                                       "queries to sites and cuts down the response time of remote "
-                                       "sites with large latencies."),
-                              default_value = True,
-                       )),
-                    ]
-                 )
-              )
-            ]
-        return conn_choices
-
-
-    def _vs_conn_method(self):
-        # ValueSpecs for the more complex input fields
-        return CascadingDropdown(
-            orientation = "horizontal",
-            choices = self._conn_choices(),
-        )
-
-
-    def _vs_user_sync(self):
-        return CascadingDropdown(
-            orientation = "horizontal",
-            choices = [
-                (None, _("Disable automatic user synchronization (use master site users)")),
-                ("all", _("Sync users with all connections")),
-                ("list", _("Sync with the following LDAP connections"), ListChoice(
-                    choices = userdb.connection_choices,
-                    allow_empty = False,
-                )),
-            ])
 
 
 

@@ -1114,6 +1114,9 @@ class ModeBIRules(ModeBI):
         elif html.var("_bulk_delete_bi_rules"):
             return self._bulk_delete_rules_after_confirm()
 
+        elif html.var("_bulk_move_bi_rules"):
+            return self._bulk_move_rules_after_confirm()
+
 
     def _delete_rule_after_confirm(self):
         ruleid = html.var("_del_rule")
@@ -1162,6 +1165,35 @@ class ModeBIRules(ModeBI):
             raise MKUserError(None, _("You cannot delete this rule: it is still used by other rules."))
 
 
+    def _bulk_move_rules_after_confirm(self):
+        target = None
+        if html.has_var('bulk_moveto'):
+            target = html.var('bulk_moveto', '')
+            html.javascript('update_bulk_moveto("%s")' % target)
+
+        target_pack = None
+        if target in self._packs:
+            target_pack = self._packs[target]
+
+        selected_rules = self._get_selected_rules()
+        if selected_rules and target_pack is not None:
+            c = wato_confirm(_("Confirm moving of %d rules to %s") % \
+                              (len(selected_rules), target_pack['title']),
+                             _("Do you really want to move %d rules to %s?") % \
+                              (len(selected_rules), target_pack['title']))
+            if c:
+                for ruleid in selected_rules:
+                    rule_attrs = self._pack["rules"][ruleid]
+                    target_pack["rules"].setdefault(ruleid, rule_attrs)
+                    del self._pack["rules"][ruleid]
+                    self._add_change("bi-move-rule",
+                                   _("Moved BI rule with id %s to BI pack %s") % (ruleid, target))
+                self.save_config()
+
+            elif c == False:
+                return ""
+
+
     def _get_selected_rules(self):
         selected_rules = []
         for varname in html.all_varnames_with_prefix("_c_rule_"):
@@ -1191,7 +1223,17 @@ class ModeBIRules(ModeBI):
         html.hidden_fields()
         fieldstyle = "margin-top:10px"
 
-        html.button("_bulk_delete_bi_rules", _("Bulk Delete"), "submit", style=fieldstyle)
+        html.button("_bulk_delete_bi_rules", _("Bulk delete"), "submit", style=fieldstyle)
+        html.button("_bulk_move_bi_rules",   _("Bulk move"),   "submit", style=fieldstyle)
+
+        if html.has_var('bulk_moveto'):
+            html.javascript('update_bulk_moveto("%s")' % html.var('bulk_moveto', ''))
+        choices = [ (pack_id, attrs["title"]) for pack_id, attrs in self._packs.items()
+                    if pack_id is not self._pack["id"] and self.is_contact_for_pack(attrs) ]
+
+        html.select("bulk_moveto", choices, "@",
+                     onchange = "update_bulk_moveto(this.value)",
+                     attrs = {'class': 'bulk_moveto', 'style': fieldstyle})
 
         html.end_form()
 

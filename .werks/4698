@@ -1,0 +1,13 @@
+Title: netapp_api_volumes: Changed service description for clustermode volumes
+Level: 1
+Component: checks
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1494840344
+Class: fix
+
+The service description for clustermode volumes now always consists of the SVM name and the
+volume name. The old description used the node name and the volume name, which was not sufficient
+to uniquely identify the volume.
+

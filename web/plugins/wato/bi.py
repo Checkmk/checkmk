@@ -1532,7 +1532,6 @@ class ModeBIEditRule(ModeBI):
 
 
     def page(self):
-        self._may_use_rules_from_packs()
         if self._new:
             cloneid = html.var("clone")
             if cloneid:
@@ -1548,6 +1547,8 @@ class ModeBIEditRule(ModeBI):
             except KeyError:
                 raise MKGeneralException(_("This BI rule does not exist"))
 
+        self._may_use_rules_from_packs(value)
+
         html.begin_form("birule", method="POST")
         self.valuespec().render_input("rule", value)
         forms.end()
@@ -1561,9 +1562,9 @@ class ModeBIEditRule(ModeBI):
         html.end_form()
 
 
-    def _may_use_rules_from_packs(self):
+    def _may_use_rules_from_packs(self, rulepack):
         rules_without_permissions = {}
-        for node in self._pack["rules"][self._ruleid]["nodes"]:
+        for node in rulepack.get("nodes", []):
             node_type, node_content = node
             node_name = node_content[0]
             pack      = self.pack_containing_rule(node_name)
@@ -1573,10 +1574,10 @@ class ModeBIEditRule(ModeBI):
                rules_without_permissions[packid].append(node_name)
 
         if rules_without_permissions:
-            message = ", ".join([_("in BI rules %s used in pack '%s'") % \
+            message = ", ".join([_("BI rules %s from BI pack '%s'") % \
                                  (", ".join([ "'%s'" % ruleid for ruleid in ruleids]), title)
                                  for (nodeid, title), ruleids in rules_without_permissions.items()])
-            raise MKAuthException(_("You have no permission for changes %s.") % message)
+            raise MKAuthException(_("You have no permission for changes in this rule using %s.") % message)
 
 
     def valuespec(self):

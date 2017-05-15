@@ -2,7 +2,7 @@ Title: cmk command: Finally removed long deprecated -S/-H options
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.4.0i4
+Version: 1.5.0i1
 Date: 1484055718
 Class: fix
 

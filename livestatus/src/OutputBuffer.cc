@@ -100,6 +100,7 @@ void OutputBuffer::writeData(ostringstream &os) {
 }
 
 void OutputBuffer::setError(ResponseCode code, const string &message) {
+    Warning(_logger) << "error: " << message;
     // only the first error is being returned
     if (_error_message == "") {
         Informational(_logger) << "error: " << message;

@@ -1490,6 +1490,7 @@ class ModeBIEditRule(ModeBI):
 
 
     def page(self):
+        self._may_use_rules_from_packs()
         if self._new:
             cloneid = html.var("clone")
             if cloneid:
@@ -1516,6 +1517,24 @@ class ModeBIEditRule(ModeBI):
         else:
             html.set_focus("rule_p_title")
         html.end_form()
+
+
+    def _may_use_rules_from_packs(self):
+        rules_without_permissions = {}
+        for node in self._pack["rules"][self._ruleid]["nodes"]:
+            node_type, node_content = node
+            node_name = node_content[0]
+            pack      = self.pack_containing_rule(node_name)
+            if node_type == 'call' and not self.may_use_rules_in_pack(pack):
+               packid = (pack['id'], pack['title'])
+               rules_without_permissions.setdefault(packid, [])
+               rules_without_permissions[packid].append(node_name)
+
+        if rules_without_permissions:
+            message = ", ".join([_("in BI rules %s used in pack '%s'") % \
+                                 (", ".join([ "'%s'" % ruleid for ruleid in ruleids]), title)
+                                 for (nodeid, title), ruleids in rules_without_permissions.items()])
+            raise MKAuthException(_("You have no permission for changes %s.") % message)
 
 
     def valuespec(self):

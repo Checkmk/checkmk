@@ -1,0 +1,28 @@
+Title: WATO Web-API: Now able to configure host tags
+Level: 2
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495553122
+Class: feature
+
+You can now configure the WATO Hosttags through the new API calls <tt>get_hosttags</tt> and <tt>set_hosttags</tt>.
+
+Important: These API calls are intended for admin use only, since they modify the entire hosttags configuration.
+
+
+<tt>get_hosttags</tt><br>
+This API call does not require any additional info. It simply returns a dictionary with all tag_group and aux_tags.
+The response also includes an extra key <tt>configuration_hash</tt>, which can be used in the following call.
+
+<tt>set_hosttags</tt><br>
+The previous call provided a dict with the hosttags configuration. This call expect the same format
+in the request object. You can modify the modify the previously queried dict and send it back.
+If you also sent the configuration_hash parameter, the Web-API will check if the configuration has changed
+in the meantime. If so, the set_hosttags call will fail. When no configuration_hash parameter is sent,
+no checking will be done and the configuration is completely overwritten.
+However, there are some final checks before the configuration is applied.
+First of all, the syntax and dependencies are checked.
+Furthermore, the api call checks whether all explicitely configured host tags are still present in the updated
+configuration. You can not set hosttags when the operation would introduce corrupt host tag settings.

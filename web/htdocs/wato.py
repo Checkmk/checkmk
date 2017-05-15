@@ -11866,365 +11866,322 @@ def render_aux_tag_list(auxtags, builtin_auxtags):
     table.end()
 
 
-def mode_edit_auxtag(phase):
-    tag_nr = html.var("edit")
-    new = tag_nr == None
-    if not new:
-        tag_nr = int(tag_nr)
+class ModeEditHosttagConfiguration(WatoMode):
+    def __init__(self):
+        super(ModeEditHosttagConfiguration, self).__init__()
+        self._untainted_hosttags_config = HosttagsConfiguration()
+        self._untainted_hosttags_config.load()
 
-    if phase == "title":
-        if new:
+
+    def _get_topic_valuespec(self):
+        return OptionalDropdownChoice(
+            title = _("Topic"),
+            choices = self._untainted_hosttags_config.get_hosttag_topics(),
+            explicit = TextUnicode(),
+            otherlabel = _("Create New Topic"),
+            default_value = None,
+            sorted = True
+        )
+
+
+
+class ModeEditAuxtag(ModeEditHosttagConfiguration):
+    def title(self):
+        if self._is_new_aux_tag():
             return _("Create new auxiliary tag")
         else:
             return _("Edit auxiliary tag")
 
-    elif phase == "buttons":
+    def _is_new_aux_tag(self):
+        return html.var("edit") == None
+
+
+    def buttons(self):
         html.context_button(_("All Hosttags"), folder_preserving_link([("mode", "hosttags")]), "back")
-        return
 
-    hosttags, auxtags = load_hosttags()
 
-    vs_topic = OptionalDropdownChoice(
-        title = _("Topic") + "<sup>*</sup>",
-        choices = hosttag_topics(hosttags, auxtags),
-        explicit = TextUnicode(),
-        otherlabel = _("Create New Topic"),
-        default_value = None,
-        sorted = True
-    )
+    def action(self):
+        if not html.transaction_valid():
+            return "hosttags"
 
-    if phase == "action":
-        if html.transaction_valid():
-            html.check_transaction() # use up transaction id
-            if new:
-                tag_id = html.var("tag_id").strip()
-                if not tag_id:
-                    raise MKUserError("tag_id", _("Please enter a tag ID"))
-                validate_tag_id(tag_id, "tag_id")
-            else:
-                tag_id = auxtags[tag_nr][0]
+        html.check_transaction() # use up transaction id
 
-            title = html.get_unicode_input("title").strip()
-            if not title:
-                raise MKUserError("title", _("Please supply a title "
-                "for you auxiliary tag."))
+        if self._is_new_aux_tag():
+            changed_aux_tag = AuxTag()
+            changed_aux_tag.id = self._get_tag_id()
+        else:
+            tag_nr = self._get_tag_number()
+            changed_aux_tag = self._untainted_hosttags_config.aux_tag_list.get_number(tag_nr)
 
-            topic = forms.get_input(vs_topic, "topic")
-            if topic != '':
-                title = '%s/%s' % (topic, title)
+        changed_aux_tag.title = html.get_unicode_input("title").strip()
 
-            # Make sure that this ID is not used elsewhere
-            for entry in configured_host_tags():
-                tgid = entry[0]
-                tit  = entry[1]
-                ch   = entry[2]
-                for e in ch:
-                    if e[0] == tag_id:
-                        raise MKUserError("tag_id",
-                        _("This tag id is already being used "
-                          "in the host tag group %s") % tit)
+        topic = forms.get_input(self._get_topic_valuespec(), "topic")
+        if topic != '':
+            changed_aux_tag.topic = topic
 
-            for nr, (id, name) in enumerate(auxtags):
-                if nr != tag_nr and id == tag_id:
-                    raise MKUserError("tag_id",
-                    _("This tag id does already exist in the list "
-                      "of auxiliary tags."))
+        changed_aux_tag.validate()
 
-            if new:
-                auxtags.append((tag_id, title))
-            else:
-                auxtags[tag_nr] = (tag_id, title)
-            save_hosttags(hosttags, auxtags)
+        # Make sure that this ID is not used elsewhere
+        for tag_group in self._untainted_hosttags_config.tag_groups:
+            if changed_aux_tag.id in tag_group.get_tag_ids():
+                raise MKUserError("tag_id",
+                _("This tag id is already being used in the host tag group %s") % tag_group.title)
+
+
+        changed_hosttags_config = HosttagsConfiguration()
+        changed_hosttags_config.load()
+        if self._is_new_aux_tag():
+            changed_hosttags_config.aux_tag_list.append(changed_aux_tag)
+        else:
+            changed_hosttags_config.aux_tag_list.update(self._get_tag_number(), changed_aux_tag)
+
+        changed_hosttags_config.save()
+
         return "hosttags"
 
 
-    if new:
-        title = ""
-        tag_id = ""
-        topic = ""
-    else:
-        tag_id, title = auxtags[tag_nr]
-        topic, title = parse_hosttag_title(title)
+    def _get_tag_number(self):
+        return int(html.var("edit"))
 
-    html.begin_form("auxtag")
-    forms.header(_("Auxiliary Tag"))
 
-    # Tag ID
-    forms.section(_("Tag ID"))
-    if new:
-        html.text_input("tag_id", "")
-        html.set_focus("tag_id")
-    else:
-        html.write_text(tag_id)
-    html.help(_("The internal name of the tag. The special tags "
-                "<tt>snmp</tt>, <tt>tcp</tt> and <tt>ping</tt> can "
-                "be used here in order to specify the agent type."))
+    def _get_tag_id(self):
+        return html.var("tag_id")
 
-    # Title
-    forms.section(_("Title") + "<sup>*</sup>")
-    html.text_input("title", title, size = 30)
-    html.help(_("An alias or description of this auxiliary tag"))
 
-    # The (optional) topic
-    forms.section(_("Topic") + "<sup>*</sup>")
-    html.help(_("Different taggroups can be grouped in topics to make the visualization and "
-                "selections in the GUI more comfortable."))
-    forms.input(vs_topic, "topic", topic)
+    def page(self):
+        if self._is_new_aux_tag():
+            changed_aux_tag = AuxTag()
+        else:
+            tag_nr = self._get_tag_number()
+            changed_aux_tag = self._untainted_hosttags_config.aux_tag_list.get_number(tag_nr)
 
-    # Button and end
-    forms.end()
-    html.show_localization_hint()
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
+        html.begin_form("auxtag")
+        forms.header(_("Auxiliary Tag"))
 
-# Validate the syntactic form of a tag
-def validate_tag_id(id, varname):
-    if not re.match("^[-a-z0-9A-Z_]*$", id):
-        raise MKUserError(varname,
-            _("Invalid tag ID. Only the characters a-z, A-Z, "
-              "0-9, _ and - are allowed."))
+        # Tag ID
+        forms.section(_("Tag ID"))
+        if self._is_new_aux_tag():
+            html.text_input("tag_id", "")
+            html.set_focus("tag_id")
+        else:
+            html.write_text(self._get_tag_id())
+        html.help(_("The internal name of the tag. The special tags "
+                    "<tt>snmp</tt>, <tt>tcp</tt> and <tt>ping</tt> can "
+                    "be used here in order to specify the agent type."))
 
-def mode_edit_hosttag(phase):
-    tag_id = html.var("edit")
-    new = tag_id == None
+        # Title
+        forms.section(_("Title") + "<sup>*</sup>")
+        html.text_input("title", changed_aux_tag.title, size = 30)
+        html.help(_("An alias or description of this auxiliary tag"))
 
-    if phase == "title":
-        if new:
+        # The (optional) topic
+        forms.section(_("Topic") + "<sup>*</sup>")
+        html.help(_("Different taggroups can be grouped in topics to make the visualization and "
+                    "selections in the GUI more comfortable."))
+        forms.input(self._get_topic_valuespec(), "topic", changed_aux_tag.topic)
+
+        # Button and end
+        forms.end()
+        html.show_localization_hint()
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
+
+
+
+class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
+    def __init__(self):
+        super(ModeEditHosttagGroup, self).__init__()
+        self._untainted_tag_group = self._untainted_hosttags_config.get_tag_group(self._get_taggroup_id())
+        if not self._untainted_tag_group:
+            self._untainted_tag_group = HosttagGroup()
+
+
+    def title(self):
+        if self._is_new_hosttag_group():
             return _("Create new tag group")
         else:
             return _("Edit tag group")
 
-    elif phase == "buttons":
+
+    def _is_new_hosttag_group(self):
+        return html.var("edit") == None
+
+
+    def buttons(self):
         html.context_button(_("All Hosttags"), folder_preserving_link([("mode", "hosttags")]), "back")
-        return
 
-    hosttags, auxtags = load_hosttags()
-    title = ""
-    choices = []
-    topic = None
-    if not new:
-        for entry in hosttags:
-            id, tit, ch = entry[:3]
-            if id == tag_id:
-                topic, title = parse_hosttag_title(tit)
-                choices = ch
-                break
 
-    vs_topic = OptionalDropdownChoice(
-        title = _("Topic"),
-        choices = hosttag_topics(hosttags, auxtags),
-        explicit = TextUnicode(),
-        otherlabel = _("Create New Topic"),
-        default_value = None,
-        sorted = True
-    )
+    def action(self):
+        if not html.transaction_valid():
+            return "hosttags"
 
-    vs_choices = ListOf(
-        Tuple(
-            elements = [
-                TextAscii(
-                    title = _("Tag ID"),
-                    size = 16,
-                    regex="^[-a-z0-9A-Z_]*$",
-                    none_is_empty = True,
-                    regex_error = _("Invalid tag ID. Only the characters a-z, A-Z, "
-                                  "0-9, _ and - are allowed.")),
-                TextUnicode(
-                    title = _("Description") + "*",
-                    allow_empty = False,
-                    size = 40),
+        if self._is_new_hosttag_group():
+            html.check_transaction() # use up transaction id
 
-                Foldable(
-                    ListChoice(
-                        title = _("Auxiliary tags"),
-                        # help = _("These tags will implicitely added to a host if the "
-                        #          "user selects this entry in the tag group. Select multiple "
-                        #          "entries with the <b>Ctrl</b> key."),
-                        choices = auxtags)),
+        changed_tag_group = HosttagGroup()
+        changed_tag_group.id = self._get_taggroup_id()
 
-            ],
-            show_titles = True,
-            orientation = "horizontal"),
+        # Create new object with existing host tags
+        changed_hosttags_config = HosttagsConfiguration()
+        changed_hosttags_config.load()
 
-        add_label = _("Add tag choice"),
-        row_label = "@. Choice")
+        changed_tag_group.title = html.get_unicode_input("title").strip()
+        changed_tag_group.topic = forms.get_input(self._get_topic_valuespec(), "topic")
 
-    if phase == "action":
-        if html.transaction_valid():
-            if new:
-                html.check_transaction() # use up transaction id
-                tag_id = html.var("tag_id").strip()
-                validate_tag_id(tag_id, "tag_id")
-                if len(tag_id) == 0:
-                    raise MKUserError("tag_id", _("Please specify an ID for your tag group."))
-                if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
-                    raise MKUserError("tag_id", _("Invalid tag group ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-                for entry in configured_host_tags():
-                    tgid = entry[0]
-                    tit  = entry[1]
-                    if tgid == tag_id:
-                        raise MKUserError("tag_id", _("The tag group ID %s is already used by the tag group '%s'.") % (tag_id, tit))
 
-            title = html.get_unicode_input("title").strip()
-            if not title:
-                raise MKUserError("title", _("Please specify a title for your host tag group."))
+        for tag_entry in forms.get_input(self._get_taggroups_valuespec(), "choices"):
+            changed_tag_group.tags.append(GroupedHosttag(tag_entry))
 
-            topic = forms.get_input(vs_topic, "topic")
-            # always put at least "/" as prefix to the title, the title
-            # will then be split by the first "/' in future
-            title = '%s/%s' % (topic, title)
 
-            new_choices = forms.get_input(vs_choices, "choices")
-            have_none_tag = False
-            for nr, (id, descr, aux) in enumerate(new_choices):
-                if id or descr:
-                    if not id:
-                        id = None
-                        if have_none_tag:
-                            raise MKUserError("choices_%d_id" % (nr+1), _("Only on tag may be empty."))
-                        have_none_tag = True
-                    # Make sure tag ID is unique within this group
-                    for (n, x) in enumerate(new_choices):
-                        if n != nr and x[0] == id:
-                            raise MKUserError("choices_id_%d" % (nr+1), _("Tags IDs must be unique. You've used <b>%s</b> twice.") % id)
+        if self._is_new_hosttag_group():
+            # Inserts and verifies changed tag group
+            changed_hosttags_config.insert_tag_group(changed_tag_group)
+            changed_hosttags_config.save()
 
-                if id:
-                    # Make sure this ID is not used elsewhere
-                    for entry in configured_host_tags():
-                        tgid = entry[0]
-                        tit  = entry[1]
-                        ch   = entry[2]
-                        # Do not compare the taggroup with itselfs
-                        if tgid != tag_id:
-                            for e in ch:
-                                # Check primary and secondary tags
-                                if id == e[0] or len(e) > 2 and id in e[2]:
-                                    raise MKUserError("choices_id_%d" % (nr+1),
-                                      _("The tag ID '%s' is already being used by the choice "
-                                        "'%s' in the tag group '%s'.") %
-                                        ( id, e[1], tit ))
+            # Make sure, that all tags are active (also manual ones from main.mk)
+            config.load_config()
+            declare_host_tag_attributes()
+            Folder.invalidate_caches()
+            Folder.root_folder().rewrite_hosts_files()
+            add_change("edit-hosttags", _("Created new host tag group '%s'") % changed_tag_group.id)
+            return "hosttags", _("Created new host tag group '%s'") % changed_tag_group.title
+        else:
+            # Updates and verifies changed tag group
+            changed_hosttags_config.update_tag_group(changed_tag_group)
 
-                    # Also check all defined aux tags even if they are not used anywhere
-                    for tag, descr in auxtags:
-                        if id == tag:
-                            raise MKUserError("choices_id_%d" % (nr+1),
-                              _("The tag ID '%s' is already being used as auxiliary tag.") % id)
+            # This is the major effort of WATO when it comes to
+            # host tags: renaming and deleting of tags that might be
+            # in use by folders, hosts and rules. First we create a
+            # kind of "patch" from the old to the new tags. The renaming
+            # of a tag is detected by comparing the titles. Addition
+            # of new tags is not a problem and need not be handled.
+            # Result of this is the dict 'operations': it's keys are
+            # current tag names, its values the corresponding new names
+            # or False in case of tag removals.
+            operations = {}
 
-            if len(new_choices) == 0:
-                raise MKUserError("id_0", _("Please specify at least one tag."))
-            if len(new_choices) == 1 and new_choices[0][0] == None:
-                raise MKUserError("id_0", _("Tags with only one choice must have an ID."))
+            # Detect renaming
+            new_by_title = dict([(tag.title, tag.id)
+                                 for tag in changed_tag_group.tags])
 
-            if new:
-                taggroup = tag_id, title, new_choices
-                hosttags.append(taggroup)
-                save_hosttags(hosttags, auxtags)
-                # Make sure, that all tags are active (also manual ones from main.mk)
+            for former_tag in self._untainted_tag_group.tags:
+                if former_tag.title in new_by_title:
+                    new_id = new_by_title[former_tag.title]
+                    if new_id != former_tag.id:
+                        operations[former_tag.id] = new_id # might be None
+
+            # Detect removal
+            for former_tag in self._untainted_tag_group.tags:
+                if former_tag.id != None \
+                    and former_tag.id not in [ tmp_tag.id for tmp_tag in changed_tag_group.tags ] \
+                    and former_tag.id not in operations:
+                    # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
+                    operations[former_tag.id] = False
+
+
+            # Now check, if any folders, hosts or rules are affected
+            message = rename_host_tags_after_confirmation(changed_tag_group.id, operations)
+            if message:
+                changed_hosttags_config.save()
                 config.load_config()
                 declare_host_tag_attributes()
                 Folder.invalidate_caches()
                 Folder.root_folder().rewrite_hosts_files()
-                add_change("edit-hosttags", _("Created new host tag group '%s'") % tag_id)
-                return "hosttags", _("Created new host tag group '%s'") % title
-            else:
-                new_hosttags = []
-                for entry in hosttags:
-                    if entry[0] == tag_id:
-                        new_hosttags.append((tag_id, title, new_choices))
-                    else:
-                        new_hosttags.append(entry)
-
-                # This is the major effort of WATO when it comes to
-                # host tags: renaming and deleting of tags that might be
-                # in use by folders, hosts and rules. First we create a
-                # kind of "patch" from the old to the new tags. The renaming
-                # of a tag is detected by comparing the titles. Addition
-                # of new tags is not a problem and need not be handled.
-                # Result of this is the dict 'operations': it's keys are
-                # current tag names, its values the corresponding new names
-                # or False in case of tag removals.
-                operations = {}
-
-                # Detect renaming
-                new_by_title = dict([(e[1], e[0]) for e in new_choices])
-                for entry in choices:
-                    tag, tit = entry[:2] # optional third element: aux tags
-                    if tit in new_by_title:
-                        new_tag = new_by_title[tit]
-                        if new_tag != tag:
-                            operations[tag] = new_tag # might be None
-
-                # Detect removal
-                for entry in choices:
-                    tag, tit = entry[:2] # optional third element: aux tags
-                    if tag != None \
-                        and tag not in [ e[0] for e in new_choices ] \
-                        and tag not in operations:
-                        # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
-                        operations[tag] = False
-
-                # Now check, if any folders, hosts or rules are affected
-                message = rename_host_tags_after_confirmation(tag_id, operations)
-                if message:
-                    save_hosttags(new_hosttags, auxtags)
-                    config.load_config()
-                    declare_host_tag_attributes()
-                    Folder.invalidate_caches()
-                    Folder.root_folder().rewrite_hosts_files()
-                    add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, tag_id))
-                    return "hosttags", message != True and message or None
+                add_change("edit-hosttags", _("Edited host tag group %s (%s)") % (message, self._get_taggroup_id()))
+                return "hosttags", message != True and message or None
 
         return "hosttags"
 
 
+    def page(self):
+        html.begin_form("hosttaggroup", method = 'POST')
+        forms.header(_("Edit group") + (self._untainted_tag_group.title and " %s" % self._untainted_tag_group.title or ""))
 
-    html.begin_form("hosttaggroup", method = 'POST')
-    forms.header(_("Edit group") + (tag_id and " %s" % tag_id or ""))
+        # Tag ID
+        forms.section(_("Internal ID"))
+        html.help(_("The internal ID of the tag group is used to store the tag's "
+                    "value in the host properties. It cannot be changed later."))
+        if self._is_new_hosttag_group():
+            html.text_input("tag_id")
+            html.set_focus("tag_id")
+        else:
+            html.write_text(self._untainted_tag_group.id)
 
-    # Tag ID
-    forms.section(_("Internal ID"))
-    html.help(_("The internal ID of the tag group is used to store the tag's "
-                "value in the host properties. It cannot be changed later."))
-    if new:
-        html.text_input("tag_id")
-        html.set_focus("tag_id")
-    else:
-        html.write_text(tag_id)
+        # Title
+        forms.section(_("Title") + "<sup>*</sup>")
+        html.help(_("An alias or description of this tag group"))
+        html.text_input("title", self._untainted_tag_group.title, size = 30)
 
-    # Title
-    forms.section(_("Title") + "<sup>*</sup>")
-    html.help(_("An alias or description of this tag group"))
-    html.text_input("title", title, size = 30)
+        # The (optional) topic
+        forms.section(_("Topic") + "<sup>*</sup>")
+        html.help(_("Different taggroups can be grouped in topics to make the visualization and "
+                    "selections in the GUI more comfortable."))
+        forms.input(self._get_topic_valuespec(), "topic", self._untainted_tag_group.topic)
 
-    # The (optional) topic
-    forms.section(_("Topic") + "<sup>*</sup>")
-    html.help(_("Different taggroups can be grouped in topics to make the visualization and "
-                "selections in the GUI more comfortable."))
-    forms.input(vs_topic, "topic", topic)
+        # Choices
+        forms.section(_("Choices"))
+        html.help(_("The first choice of a tag group will be its default value. "
+                     "If a tag group has only one choice, it will be displayed "
+                     "as a checkbox and set or not set the only tag. If it has "
+                     "more choices you may leave at most one tag id empty. A host "
+                     "with that choice will not get any tag of this group.<br><br>"
+                     "The tag ID must contain only of letters, digits and "
+                     "underscores.<br><br><b>Renaming tags ID:</b> if you want "
+                     "to rename the ID of a tag, then please make sure that you do not "
+                     "change its title at the same time! Otherwise WATO will not "
+                     "be able to detect the renaming and cannot exchange the tags "
+                     "in all folders, hosts and rules accordingly."))
+        forms.input(self._get_taggroups_valuespec(), "choices", self._untainted_tag_group.get_tags_legacy_format())
 
-    # Choices
-    forms.section(_("Choices"))
-    html.help(_("The first choice of a tag group will be its default value. "
-                 "If a tag group has only one choice, it will be displayed "
-                 "as a checkbox and set or not set the only tag. If it has "
-                 "more choices you may leave at most one tag id empty. A host "
-                 "with that choice will not get any tag of this group.<br><br>"
-                 "The tag ID must contain only of letters, digits and "
-                 "underscores.<br><br><b>Renaming tags ID:</b> if you want "
-                 "to rename the ID of a tag, then please make sure that you do not "
-                 "change its title at the same time! Otherwise WATO will not "
-                 "be able to detect the renaming and cannot exchange the tags "
-                 "in all folders, hosts and rules accordingly."))
-    forms.input(vs_choices, "choices", choices)
+        # Button and end
+        forms.end()
+        html.show_localization_hint()
 
-    # Button and end
-    forms.end()
-    html.show_localization_hint()
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
 
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
+
+    def _get_taggroup_id(self):
+        return html.var("edit", html.var("tag_id"))
+
+
+    def _get_taggroups_valuespec(self):
+        host_tags, aux_tags = self._untainted_hosttags_config.get_legacy_format()
+
+        return ListOf(
+            Tuple(
+                elements = [
+                    TextAscii(
+                        title = _("Tag ID"),
+                        size = 16,
+                        regex="^[-a-z0-9A-Z_]*$",
+                        none_is_empty = True,
+                        regex_error = _("Invalid tag ID. Only the characters a-z, A-Z, "
+                                      "0-9, _ and - are allowed.")),
+                    TextUnicode(
+                        title = _("Description") + "*",
+                        allow_empty = False,
+                        size = 40),
+
+                    Foldable(
+                        ListChoice(
+                            title = _("Auxiliary tags"),
+                            # help = _("These tags will implicitely added to a host if the "
+                            #          "user selects this entry in the tag group. Select multiple "
+                            #          "entries with the <b>Ctrl</b> key."),
+                            choices = aux_tags)),
+
+                ],
+                show_titles = True,
+                orientation = "horizontal"),
+
+            add_label = _("Add tag choice"),
+            row_label = "@. Choice")
+
+
+
 
 # Handle renaming and deletion of host tags: find affected
 # hosts, folders and rules. Remove or fix those rules according
@@ -17308,8 +17265,8 @@ modes = {
    "role_matrix"        : (["users"], mode_role_matrix),
    "edit_role"          : (["users"], mode_edit_role),
    "hosttags"           : (["hosttags"], mode_hosttags),
-   "edit_hosttag"       : (["hosttags"], mode_edit_hosttag),
-   "edit_auxtag"        : (["hosttags"], mode_edit_auxtag),
+   "edit_hosttag"       : (["hosttags"], ModeEditHosttagGroup),
+   "edit_auxtag"        : (["hosttags"], ModeEditAuxtag),
    "pattern_editor"     : (["pattern_editor"], mode_pattern_editor),
    "icons"              : (["icons"], mode_icons),
    "download_agents"    : (["download_agents"], mode_download_agents),

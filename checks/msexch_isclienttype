@@ -32,7 +32,7 @@
 
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
-factory_settings['msexch_info_store_defaultlevels'] = {
+factory_settings['msexch_isclienttype_defaultlevels'] = {
     'store_latency': {
         'upper': (40.0, 50.0)
     },
@@ -45,20 +45,24 @@ factory_settings['msexch_info_store_defaultlevels'] = {
 }
 
 
-def check_msexch_isstore(item, params, parsed):
+def check_msexch_isclienttype(item, params, parsed):
     yield wmi_yield_raw_average(parsed, item, "RPCAverageLatency",
                                 label="ms average latency",
                                 perfvar="average_latency",
-                                levels=params['store_latency'])
+                                levels=params['clienttype_latency'])
+    yield wmi_yield_raw_persec(parsed, item, "RPCRequests",
+                               label=" RPC Requests",
+                               perfvar="requests_per_sec",
+                               levels=params['clienttype_requests'])
 
 
-check_info['msexch_isstore'] = {
+check_info['msexch_isclienttype'] = {
     'inventory_function'      : inventory_wmi_table,
-    'check_function'          : check_msexch_isstore,
+    'check_function'          : check_msexch_isclienttype,
     'parse_function'          : parse_wmi_table,
     'has_perfdata'            : True,
-    'service_description'     : "Exchange IS Store %s",
+    'service_description'     : "Exchange IS Client Type %s",
     'includes'                : ['wmi.include'],
     'group'                   : 'msx_info_store',
-    'default_levels_variable' : 'msexch_info_store_defaultlevels'
+    'default_levels_variable' : 'msexch_isclienttype_defaultlevels'
 }

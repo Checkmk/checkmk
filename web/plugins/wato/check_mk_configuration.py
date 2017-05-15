@@ -1683,15 +1683,16 @@ register_rule(group,
                  "the state of the host will stay at its last status.")),
     )
 
-register_rule(
-    group,
-    "host_check_commands",
-    CascadingDropdown(
-        title = _("Host Check Command"),
-        help = _("Usually Check_MK uses a series of PING (ICMP echo request) in order to determine "
-                 "whether a host is up. In some cases this is not possible, however. With this rule "
-                 "you can specify an alternative way of determining the host's state."),
-        choices = [
+
+def _host_check_command_choices():
+    if config.user.may('wato.add_or_modify_executables'):
+        custom_choice = [
+            ( "custom",     _("Use a custom check plugin..."), PluginCommandLine() ),
+        ]
+    else:
+        custom_choice = []
+
+    return [
           ( "ping",       _("PING (active check with ICMP echo request)") ),
           ( "smart",      _("Smart PING (only with Check_MK Micro Core)") ),
           ( "tcp" ,       _("TCP Connect"), Integer(label = _("to port:"), minvalue=1, maxvalue=65535, default_value=80 )),
@@ -1705,8 +1706,19 @@ register_rule(
                 help = _("You can use the macro <tt>$HOSTNAME$</tt> here. It will be replaced "
                          "with the name of the current host."),
             )),
-          ( "custom",     _("Use a custom check plugin..."), PluginCommandLine() ),
-        ],
+        ] + custom_choice
+
+
+
+register_rule(
+    group,
+    "host_check_commands",
+    CascadingDropdown(
+        title = _("Host Check Command"),
+        help = _("Usually Check_MK uses a series of PING (ICMP echo request) in order to determine "
+                 "whether a host is up. In some cases this is not possible, however. With this rule "
+                 "you can specify an alternative way of determining the host's state."),
+        choices = _host_check_command_choices,
         default_value = "ping",
         orientation = "horizontal",
     ),

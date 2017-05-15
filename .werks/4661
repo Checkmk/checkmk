@@ -1,0 +1,10 @@
+Title: msexch_isstore, msexch_isclienttype: Split up check files. Second one needs its own check plugin file if using Nagios core
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.8p23
+Date: 1494865578
+Class: fix
+
+This incompatible change relates only to Check_MK installations using
+Nagios core. In this case please perform a re-discovery on affected hosts.

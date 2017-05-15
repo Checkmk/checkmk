@@ -3307,6 +3307,298 @@ def save_site_global_settings(vars):
 #   |  Code for distributed WATO. Site configuration. Pushing snapshots.   |
 #   '----------------------------------------------------------------------'
 
+class SiteManagement(object):
+    @staticmethod
+    def connection_method_valuespec():
+        # ValueSpecs for the more complex input fields
+        return CascadingDropdown(
+            orientation = "horizontal",
+            choices = SiteManagement.connection_choices(),
+        )
+
+    @staticmethod
+    def connection_choices():
+        conn_choices = [
+            (None,   _("Connect to the local site")),
+            ("tcp",  _("Connect via TCP"), SiteManagement.tcp_port_valuespec()),
+            ("unix", _("Connect via UNIX socket"), TextAscii(
+                label = _("Path:"),
+                size = 40,
+                allow_empty = False)
+            ),
+        ]
+
+        if config.liveproxyd_enabled:
+            conn_choices[2:2] = [
+            ( "proxy", _("Use Livestatus Proxy-Daemon"),
+              Dictionary(
+                  optional_keys = False,
+                  columns = 1,
+                  elements = [
+                      ("socket", Alternative(
+                          title = _("Connect to"),
+                          style = "dropdown",
+                          elements = [
+                              FixedValue(None,
+                                  title = _("Connect to the local site"),
+                                  totext = "",
+                              ),
+                              SiteManagement.tcp_port_valuespec(),
+                          ],
+                      )),
+                      ( "channels",
+                        Integer(
+                            title = _("Number of channels to keep open"),
+                            minvalue = 2,
+                            maxvalue = 50,
+                            default_value = 5)),
+                      ( "heartbeat",
+                        Tuple(
+                            title = _("Regular heartbeat"),
+                            orientation = "float",
+                            elements = [
+                                Integer(label = _("One heartbeat every"), unit=_("sec"),
+                                        minvalue=1, default_value = 5),
+                                Float(label = _("with a timeout of"), unit=_("sec"),
+                                      minvalue=0.1, default_value = 2.0, display_format="%.1f"),
+                       ])),
+                       ( "channel_timeout",
+                         Float(
+                             title = _("Timeout waiting for a free channel"),
+                             minvalue = 0.1,
+                             default_value = 3,
+                             unit = _("sec"),
+                         )
+                       ),
+                       ( "query_timeout",
+                         Float(
+                             title = _("Total query timeout"),
+                             minvalue = 0.1,
+                             unit = _("sec"),
+                             default_value = 120,
+                         )
+                       ),
+                       ( "connect_retry",
+                         Float(
+                            title = _("Cooling period after failed connect/heartbeat"),
+                            minvalue = 0.1,
+                            unit = _("sec"),
+                            default_value = 4.0,
+                       )),
+                       ( "cache",
+                          Checkbox(title = _("Enable Caching"),
+                             label = _("Cache several non-status queries"),
+                              help = _("This option will enable the caching of several queries that "
+                                       "need no current data. This reduces the number of Livestatus "
+                                       "queries to sites and cuts down the response time of remote "
+                                       "sites with large latencies."),
+                              default_value = True,
+                       )),
+                    ]
+                 )
+              )
+            ]
+        return conn_choices
+
+
+    @staticmethod
+    def tcp_port_valuespec():
+        return Tuple(
+                title = _("TCP Port to connect to"),
+                orientation = "float",
+                elements = [
+                    TextAscii(label = _("Host:"), allow_empty = False, size=15),
+                    Integer(label = _("Port:"), minvalue=1, maxvalue=65535, default_value=6557),
+        ])
+
+
+    @staticmethod
+    def user_sync_valuespec():
+        return CascadingDropdown(
+            orientation = "horizontal",
+            choices = [
+                (None, _("Disable automatic user synchronization (use master site users)")),
+                ("all", _("Sync users with all connections")),
+                ("list", _("Sync with the following LDAP connections"), ListChoice(
+                    choices = userdb.connection_choices,
+                    allow_empty = False,
+                )),
+            ])
+
+
+    @staticmethod
+    def validate_configuration(site_id, site_configuration, all_sites):
+        if not re.match("^[-a-z0-9A-Z_]+$", site_id):
+            raise MKUserError("id", _("The site id must consist only of letters, digit and the underscore."))
+
+        if not site_configuration.get("alias"):
+            raise MKUserError("alias", _("Please enter an alias name or description for the site %s.") % site_id)
+
+        if site_configuration.get("url_prefix") and site_configuration.get("url_prefix")[-1] != "/":
+            raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
+
+
+        # Connection
+        if site_configuration.get("socket") == None and site_id != config.omd_site():
+            raise MKUserError("method_sel", _("You can only configure a local site connection for "
+                                              "the local site. The site IDs ('%s' and '%s') are "
+                                              "not equal.") % (site_id, config.omd_site()))
+
+
+        # Timeout
+        if "timeout" in site_configuration:
+            timeout = site_configuration["timeout"]
+            try:
+                int(timeout)
+            except ValueError:
+                raise MKUserError("timeout", _("The timeout %s is not a valid integer number.") % timeout)
+
+
+        # Status host
+        status_host = site_configuration.get("status_host")
+        if status_host:
+            status_host_site, status_host_name = status_host
+            if status_host_site not in all_sites:
+                raise MKUserError("sh_site", _("The site of the status host does not exist."))
+            if status_host_site == site_id:
+                raise MKUserError("sh_site", _("You cannot use the site itself as site of the status host."))
+            if not status_host_name:
+                raise MKUserError("sh_host", _("Please specify the name of the status host."))
+
+
+        if site_configuration.get("replication"):
+            multisiteurl = site_configuration.get("multisiteurl")
+            if not site_configuration.get("multisiteurl"):
+                raise MKUserError("multisiteurl",
+                    _("Please enter the Multisite URL of the slave site."))
+
+            if not multisiteurl.endswith("/check_mk/"):
+                raise MKUserError("multisiteurl",
+                    _("The Multisite URL must end with /check_mk/"))
+
+            if not multisiteurl.startswith("http://") and \
+               not multisiteurl.startswith("https://"):
+                raise MKUserError("multisiteurl",
+                    _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
+
+            if "socket" not in site_configuration:
+                raise MKUserError("replication",
+                    _("You cannot do replication with the local site."))
+
+        # User synchronization
+        user_sync_valuespec = SiteManagement.user_sync_valuespec()
+        user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
+
+
+    @staticmethod
+    def load_sites():
+        try:
+            if not os.path.exists(sites_mk):
+                return config.default_single_site_configuration()
+
+            vars = { "sites" : {} }
+            execfile(sites_mk, vars, vars)
+
+            # Be compatible to old "disabled" value in socket attribute.
+            # Can be removed one day.
+            for site in vars['sites'].values():
+                if site.get('socket') == 'disabled':
+                    site['disabled'] = True
+                    del site['socket']
+
+            if not vars["sites"]:
+                # There seem to be installations out there which have a sites.mk
+                # which has an empty sites dictionary. Apply the default configuration
+                # for these sites too.
+                return config.default_single_site_configuration()
+            else:
+                return vars["sites"]
+
+
+        except Exception, e:
+            if config.debug:
+                raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                              (sites_mk, e))
+            return {}
+
+
+
+    @staticmethod
+    def save_sites(sites, activate=True):
+        make_nagios_directory(multisite_dir)
+        store.save_to_mk_file(sites_mk, "sites", sites)
+
+        # Do not activate when just the site's global settings have
+        # been edited
+        if activate:
+            config.load_config() # make new site configuration active
+            update_distributed_wato_file(sites)
+            declare_site_attribute()
+            Folder.invalidate_caches()
+            need_sidebar_reload()
+
+            if config.liveproxyd_enabled:
+                SiteManagement.save_liveproxyd_config(sites)
+
+            create_nagvis_backends(sites)
+
+            # Call the sites saved hook
+            call_hook_sites_saved(sites)
+
+
+    @staticmethod
+    def delete_site(site_id):
+        all_sites = SiteManagement.load_sites()
+        if site_id not in all_sites:
+            raise MKUserError(None,
+                _("Unable to delete unknown site id: %s") % site_id)
+
+
+        # Make sure that site is not being used by hosts and folders
+        if site_id in Folder.root_folder().all_site_ids():
+            search_url = html.makeactionuri([
+                ("host_search_change_site", "on"),
+                ("host_search_site", site_id),
+                ("host_search",      "1"),
+                ("folder",           ""),
+                ("mode",             "search"),
+                ("filled_in",        "edit_host"),
+            ])
+            raise MKUserError(None,
+                _("You cannot delete this connection. It has folders/hosts "
+                  "assigned to it. You can use the <a href=\"%s\">host "
+                  "search</a> to get a list of the hosts.") % search_url)
+
+
+        del all_sites[site_id]
+        SiteManagement.save_sites(all_sites)
+        clear_site_replication_status(site_id)
+        add_change("edit-sites", _("Deleted site %s") % html.render_tt(site_id),
+                   domains=[ConfigDomainGUI], sites=[default_site()])
+        return None
+
+
+    @staticmethod
+    def save_liveproxyd_config(sites):
+        path = cmk.paths.default_config_dir + "/liveproxyd.mk"
+
+        conf = {}
+        for siteid, siteconf in sites.items():
+            s = siteconf.get("socket")
+            if type(s) == tuple and s[0] == "proxy":
+                conf[siteid] = s[1]
+
+        store.save_to_mk_file(path, "sites", conf)
+
+        try:
+            pidfile = cmk.paths.livestatus_unix_socket + "proxyd.pid"
+            pid = int(file(pidfile).read().strip())
+            os.kill(pid, 10)
+        except Exception, e:
+            html.show_error(_("Warning: cannot reload Livestatus Proxy-Daemon: %s") % e)
+
+
+
 def get_login_secret(create_on_demand = False):
     path = var_dir + "automation_secret.mk"
 
@@ -3322,6 +3614,7 @@ def get_login_secret(create_on_demand = False):
     return secret
 
 
+
 # Returns the ID of our site. This function only works in replication
 # mode and looks for an entry connecting to the local socket.
 def our_site_id():
@@ -3331,77 +3624,6 @@ def our_site_id():
     return None
 
 
-def load_sites():
-    try:
-        if not os.path.exists(sites_mk):
-            return config.default_single_site_configuration()
-
-        vars = { "sites" : {} }
-        execfile(sites_mk, vars, vars)
-
-        # Be compatible to old "disabled" value in socket attribute.
-        # Can be removed one day.
-        for site in vars['sites'].values():
-            if site.get('socket') == 'disabled':
-                site['disabled'] = True
-                del site['socket']
-
-        if not vars["sites"]:
-            # There seem to be installations out there which have a sites.mk
-            # which has an empty sites dictionary. Apply the default configuration
-            # for these sites too.
-            return config.default_single_site_configuration()
-        else:
-            return vars["sites"]
-
-
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                          (sites_mk, e))
-        return {}
-
-
-
-def save_sites(sites, activate=True):
-    make_nagios_directory(multisite_dir)
-    store.save_to_mk_file(sites_mk, "sites", sites)
-
-    # Do not activate when just the site's global settings have
-    # been edited
-    if activate:
-        config.load_config() # make new site configuration active
-        update_distributed_wato_file(sites)
-        declare_site_attribute()
-        Folder.invalidate_caches()
-        need_sidebar_reload()
-
-        if config.liveproxyd_enabled:
-            save_liveproxyd_config(sites)
-
-        create_nagvis_backends(sites)
-
-        # Call the sites saved hook
-        call_hook_sites_saved(sites)
-
-
-def save_liveproxyd_config(sites):
-    path = cmk.paths.default_config_dir + "/liveproxyd.mk"
-
-    conf = {}
-    for siteid, siteconf in sites.items():
-        s = siteconf.get("socket")
-        if type(s) == tuple and s[0] == "proxy":
-            conf[siteid] = s[1]
-
-    store.save_to_mk_file(path, "sites", conf)
-
-    try:
-        pidfile = cmk.paths.livestatus_unix_socket + "proxyd.pid"
-        pid = int(file(pidfile).read().strip())
-        os.kill(pid, 10)
-    except Exception, e:
-        html.show_error(_("Warning: cannot reload Livestatus Proxy-Daemon: %s") % e)
 
 
 def create_nagvis_backends(sites):
@@ -3487,7 +3709,7 @@ def update_distributed_wato_file(sites):
 
 
 def do_site_login(site_id, name, password):
-    sites = load_sites()
+    sites = SiteManagement.load_sites()
     site = sites[site_id]
     if not name:
         raise MKUserError("_name",
@@ -4503,7 +4725,7 @@ class ActivateChangesManager(ActivateChanges):
             else:
                 raise
 
-        sites = load_sites()
+        sites = SiteManagement.load_sites()
         site = sites[site_id]
         config = site.get("globals", {})
 
@@ -6163,7 +6385,7 @@ def call_hook_roles_saved(roles):
     hooks.call("roles-saved", roles)
 
 
-# This hook is executed when the save_sites() function is called
+# This hook is executed when the SiteManagement.save_sites() function is called
 def call_hook_sites_saved(sites):
     hooks.call("sites-saved", sites)
 

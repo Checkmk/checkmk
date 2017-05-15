@@ -82,6 +82,7 @@ def page_api():
         if action not in api_actions:
             raise MKUserError(None, "Unknown API action %s" % html.attrencode(action))
 
+
         for permission in api_actions[action].get("required_permissions", []):
             config.user.need_permission(permission)
 
@@ -96,7 +97,20 @@ def page_api():
             if html.var("request"):
                 request_object = html.var("request")
         else:
-            request_object = html.get_request(exclude_vars=["action", "request_format"])
+            request_object = html.get_request(exclude_vars=["action"])
+
+
+        # Check if the data was sent with the correct data format
+        # Some API calls only allow python code
+        # TODO: convert the api_action dict into an object which handles the validation
+        required_format = api_actions[action].get("required_input_format")
+        if required_format:
+            if required_format != request_object["request_format"]:
+                raise MKUserError(None, "This API call requires a %s-encoded request parameter" % required_format)
+        # The request_format parameter is not forwarded into the API action
+        if "request_format" in request_object:
+            del request_object["request_format"]
+
 
         if api_actions[action].get("locking", True):
             lock_exclusive() # unlock is done automatically

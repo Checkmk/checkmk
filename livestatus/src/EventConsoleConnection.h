@@ -26,30 +26,27 @@
 #define EventConsoleConnection_h
 
 #include "config.h"  // IWYU pragma: keep
+#include <boost/asio/local/stream_protocol.hpp>
 #include <iosfwd>
 #include <string>
-#include "Logger.h"
+class Logger;
 
 class EventConsoleConnection {
 public:
     EventConsoleConnection(Logger *logger, std::string path);
+    ~EventConsoleConnection();
     void run();
-
-protected:
-    bool getline(std::string &line);
 
 private:
     virtual void sendRequest(std::ostream &os) = 0;
-    virtual bool receiveReply() = 0;
+    virtual void receiveReply(std::istream &is) = 0;
 
-    void close();
-    void throwGenericError(const std::string &what_arg);
-    bool writeRequest();
+    std::string prefix(const std::string &message) const;
+    void check(boost::asio::local::stream_protocol::iostream &stream,
+               const std::string &what) const;
 
+    Logger *const _logger;
     const std::string _path;
-    const std::string _name;
-    int _socket;
-    ContextLogger _logger;
 };
 
 #endif  // EventConsoleConnection_h

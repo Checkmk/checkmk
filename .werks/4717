@@ -1,0 +1,19 @@
+Title: Fixed "corrupted package" archive messages when installing DEB packages baked on SLES
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1494926687
+
+When installing debian agent packages baked with the Check_MK Agent Bakery running on a SLES 12
+server this could lead to this message during installation:
+
+dpkg: error processing archive check-mk-agent_1.4.0b5-88de67ef934c3774_all.deb (--install):
+ corrupted filesystem tarfile - corrupted package archive
+
+Background information: The <tt>tar</tt> files built into the debian package were created with
+a tar format that is not supported for the debian package format. We create the packages with
+the <tt>gnu</tt> format now on all platforms.

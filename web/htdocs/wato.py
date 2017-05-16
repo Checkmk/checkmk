@@ -6883,12 +6883,14 @@ def render_global_configuration_variables(group_names, default_values, current_s
                 modified_cls = None
 
             if is_a_checkbox(valuespec):
+                html.open_div(class_=["toggle_switch_container", modified_cls])
                 html.toggle_switch(
                     enabled=value,
                     help=_("Immediately toggle this setting"),
                     href=html.makeactionuri([("_action", "toggle"), ("_varname", varname)]),
                     class_=modified_cls
                 )
+                html.close_div()
 
             else:
                 html.a(HTML(to_text), href=edit_url, class_=modified_cls)

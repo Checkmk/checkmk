@@ -6915,7 +6915,14 @@ def mode_edit_configvar(phase, what = 'globalvars'):
                 elif c == None:
                     return None
 
-            del current_settings[varname]
+            if not html.check_transaction():
+                return
+
+            try:
+                del current_settings[varname]
+            except KeyError:
+                pass
+
             msg = _("Resetted configuration variable %s to its default.") % varname
         else:
             new_value = get_edited_value(valuespec)

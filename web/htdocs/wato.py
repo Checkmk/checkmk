@@ -13368,12 +13368,19 @@ class ModeEditRule(WatoMode):
 
 
     def _set_rule(self):
-        try:
-            rulenr = int(html.var("rulenr"))
-            self._rule = self._ruleset.get_rule(self._folder, rulenr)
-        except (KeyError, TypeError, ValueError, IndexError):
-            raise MKUserError("rulenr", _("You are trying to edit a rule which does "
-                                          "not exist anymore."))
+        if html.var("rulenr"):
+            try:
+                rulenr = int(html.var("rulenr"))
+                self._rule = self._ruleset.get_rule(self._folder, rulenr)
+            except (KeyError, TypeError, ValueError, IndexError):
+                raise MKUserError("rulenr", _("You are trying to edit a rule which does "
+                                              "not exist anymore."))
+        elif html.var("_export_rule"):
+            self._rule = Rule(self._folder, self._ruleset)
+            self._update_rule_from_html_vars()
+
+        else:
+            raise NotImplementedError()
 
 
     def title(self):
@@ -13412,9 +13419,11 @@ class ModeEditRule(WatoMode):
             self._folder.need_permission("write")
         new_rule_folder.need_permission("write")
 
+        if html.var("_export_rule"):
+            return "edit_rule"
+
         if new_rule_folder == self._folder:
             self._rule.folder = new_rule_folder
-
             self._save_rule()
 
         else:
@@ -13530,6 +13539,14 @@ class ModeEditRule(WatoMode):
 
 
     def page(self):
+        if html.var("_export_rule"):
+            self._show_rule_representation()
+
+        else:
+            self._show_rule_editor()
+
+
+    def _show_rule_editor(self):
         if self._ruleset.help():
             html.div(HTML(self._ruleset.help()), class_="info")
 
@@ -13636,39 +13653,63 @@ class ModeEditRule(WatoMode):
             else:
                 raise MKGeneralException("Invalid item type '%s'" % itemtype)
 
-            if itemtype:
-                checked = html.get_checkbox("explicit_services")
-                if checked == None: # read from rule itself
-                    checked = len(self._rule.item_list) == 0 or self._rule.item_list[0] != ""
-                div_id = "item_list"
-                html.checkbox("explicit_services", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
-                             label = _("Specify explicit values"))
-                html.open_div(id_=div_id, style=["display: none;" if not checked else "", "padding: 0px;"])
+            checked = html.get_checkbox("explicit_services")
+            if checked == None: # read from rule itself
+                checked = len(self._rule.item_list) == 0 or self._rule.item_list[0] != ""
+            div_id = "item_list"
+            html.checkbox("explicit_services", checked, onclick="valuespec_toggle_option(this, %r)" % div_id,
+                         label = _("Specify explicit values"))
+            html.open_div(id_=div_id, style=["display: none;" if not checked else "", "padding: 0px;"])
 
-                negate_entries = len(self._rule.item_list) > 0 and self._rule.item_list[0].startswith(ENTRY_NEGATE_CHAR)
-                if negate_entries:
-                    cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in self._rule.item_list[:-1] ] # strip last entry (ALL_SERVICES)
-                else:
-                    cleaned_item_list = self._rule.item_list
+            negate_entries = len(self._rule.item_list) > 0 and self._rule.item_list[0].startswith(ENTRY_NEGATE_CHAR)
+            if negate_entries:
+                cleaned_item_list = [ i.lstrip(ENTRY_NEGATE_CHAR) for i in self._rule.item_list[:-1] ] # strip last entry (ALL_SERVICES)
+            else:
+                cleaned_item_list = self._rule.item_list
 
-                itemenum = self._ruleset.item_enum()
-                if itemenum:
-                    value = [ x.rstrip("$") for x in cleaned_item_list ]
-                    itemspec = ListChoice(choices = itemenum, columns = 3)
-                    itemspec.render_input("item", value)
-                else:
-                    self._vs_service_conditions().render_input("itemlist", cleaned_item_list)
+            itemenum = self._ruleset.item_enum()
+            if itemenum:
+                value = [ x.rstrip("$") for x in cleaned_item_list ]
+                itemspec = ListChoice(choices = itemenum, columns = 3)
+                itemspec.render_input("item", value)
+            else:
+                self._vs_service_conditions().render_input("itemlist", cleaned_item_list)
 
-                html.checkbox("negate_entries", negate_entries, label =
-                             _("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"))
+            html.checkbox("negate_entries", negate_entries, label =
+                         _("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"))
 
-                html.close_div()
+            html.close_div()
 
         forms.end()
+
         html.button("save", _("Save"))
         html.hidden_fields()
         vs_rule_options().set_focus("options")
+        html.button("_export_rule", _("Export"))
+
         html.end_form()
+
+
+    def _show_rule_representation(self):
+        content = "<pre>%s</pre>" % html.render_text(pprint.pformat(self._rule.to_dict_config()))
+
+        html.write(_("This rule representation can be used for Web API calls."))
+        html.br()
+        html.br()
+
+        html.open_center()
+        html.open_table(class_="progress")
+
+        html.open_tr()
+        html.th("Rule representation for Web API")
+        html.close_tr()
+
+        html.open_tr()
+        html.td(html.render_div(content,  id_="rule_representation"), class_="log")
+        html.close_tr()
+
+        html.close_table()
+        html.close_center()
 
 
     def _vs_service_conditions(self,):

@@ -1459,7 +1459,8 @@ class ModeBIEditRule(ModeBI):
             node_type, node_content = node
             node_name = node_content[0]
             pack      = self.pack_containing_rule(node_name)
-            if node_type == 'call' and not self.may_use_rules_in_pack(pack):
+            if node_type == 'call' and pack is not None and \
+               not self.may_use_rules_in_pack(pack):
                packid = (pack['id'], pack['title'])
                rules_without_permissions.setdefault(packid, [])
                rules_without_permissions[packid].append(node_name)

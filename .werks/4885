@@ -1,0 +1,15 @@
+Title: New button to export data structure of configured rule
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499353072
+Class: feature
+
+With this new {{Export}} button you are able to see
+the internal data structure of a configured rule which
+can be used for Web API calls described in werk #4699.
+
+For more information about Check_MK's Web-API see
+https://mathias-kettner.de/checkmk_wato_webapi.html

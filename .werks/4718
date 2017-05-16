@@ -1,0 +1,20 @@
+Title: Fixed memory leak in Check_MK check helpers when started in verbose mode
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1494935598
+Class: fix
+
+When the Check_MK helpers are configured with a higher log level than the default
+Notice log level the Check_MK helpers were leaking memory. This can be configured
+by changing the option "Check_MK check helpers" of the global setting "Logging of the core"
+to e.g. Informational.
+
+In this mode the helper gathers information about some changed variables during runtime
+and the memory usage. It also allows to debug different mechanics of the helpers.
+
+If you enabled this, each reload of the core (not restart) was triggering the memory
+leak in the helpers. In extreme situations this could lead to duplication of the memory
+usage on each reload.

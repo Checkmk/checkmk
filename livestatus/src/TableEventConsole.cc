@@ -27,6 +27,7 @@
 #include <iosfwd>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 #include "Column.h"
 #include "EventConsoleConnection.h"
@@ -59,16 +60,14 @@ private:
         os << std::endl;
     }
 
-    bool receiveReply() override {
+    void receiveReply(std::istream &is) override {
         bool is_header = true;
         vector<string> headers;
         do {
             string line;
-            if (!getline(line)) {
-                return false;
-            }
-            if (line.empty()) {
-                return true;
+            std::getline(is, line);
+            if (!is || line.empty()) {
+                return;
             }
             vector<string> columns = mk::split(line, '\t');
             if (is_header) {
@@ -89,7 +88,6 @@ private:
                 _query->processDataset(Row(&row));
             }
         } while (true);
-        return true;
     }
 
     MonitoringCore *_mc;
@@ -105,8 +103,8 @@ void TableEventConsole::answerQuery(Query *query) {
         try {
             // skip "eventconsole" prefix :-P
             ECTableConnection(core(), name().substr(12), query).run();
-        } catch (const generic_error &ge) {
-            query->invalidRequest(ge.what());
+        } catch (const std::runtime_error &err) {
+            query->invalidRequest(err.what());
         }
     }
 }

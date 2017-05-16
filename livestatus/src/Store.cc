@@ -219,12 +219,11 @@ namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
     ECTableConnection(Logger *logger, string path, string command)
-        : EventConsoleConnection(logger, std::move(path))
-        , _command(move(command)) {}
+        : EventConsoleConnection(logger, move(path)), _command(move(command)) {}
 
 private:
     void sendRequest(std::ostream &os) override { os << _command; }
-    bool receiveReply() override { return true; }
+    void receiveReply(std::istream & /*is*/) override {}
     string _command;
 };
 }  // namespace

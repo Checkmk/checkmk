@@ -25,6 +25,7 @@
 #include "DynamicEventConsoleReplicationColumn.h"
 #include <iosfwd>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 #include "BlobColumn.h"
@@ -51,7 +52,7 @@ public:
 
 private:
     void sendRequest(std::ostream &os) override { os << _command; }
-    bool receiveReply() override { return getline(_result); }
+    void receiveReply(std::istream &is) override { std::getline(is, _result); }
 
     const string _command;
     string _result;
@@ -90,8 +91,8 @@ unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
             ECTableConnection ec(_mc, "REPLICATE " + arguments);
             ec.run();
             result = ec.getResult();
-        } catch (const generic_error &ge) {
-            // Nothing to do here, returning an empty result is OK.
+        } catch (const std::runtime_error &err) {
+            Alert(_mc->loggerLivestatus()) << err.what();
         }
     }
     return make_unique<ReplicationColumn>(name, "replication value", result, -1,

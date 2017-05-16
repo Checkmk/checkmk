@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import socket, time, re, os
+import ast
 
 """MK Livestatus Python API"""
 
@@ -338,7 +339,7 @@ class BaseConnection:
             data = self.receive_data(length)
             if code == "200":
                 try:
-                    return eval(data)
+                    return ast.literal_eval(data)
                 except:
                     raise MKLivestatusSocketError("Malformed output")
             else:

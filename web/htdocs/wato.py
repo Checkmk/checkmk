@@ -4853,7 +4853,8 @@ class ModeAuditLog(WatoMode):
     def buttons(self):
         changelog_button()
         home_button()
-        if self._log_exists() and config.user.may("wato.auditlog") and config.user.may("wato.edit"):
+        if self._log_exists() and config.user.may("wato.clear_auditlog") \
+           and config.user.may("wato.auditlog") and config.user.may("wato.edit"):
             html.context_button(_("Download"),
                 html.makeactionuri([("_action", "csv")]), "download")
             if config.user.may("wato.edit"):
@@ -4868,6 +4869,7 @@ class ModeAuditLog(WatoMode):
     def action(self):
         if html.var("_action") == "clear":
             config.user.need_permission("wato.auditlog")
+            config.user.need_permission("wato.clear_auditlog")
             config.user.need_permission("wato.edit")
             return self._clear_audit_log_after_confirm()
 
@@ -17382,10 +17384,16 @@ def load_plugins(force):
 
     config.declare_permission("wato.auditlog",
          _("Audit Log"),
-         _("Access to the historic audit log. A user with write "
-           "access can delete the audit log. "
+         _("Access to the historic audit log. "
            "The currently pending changes can be seen by all users "
            "with access to WATO."),
+         [ "admin", ])
+
+    config.declare_permission("wato.clear_auditlog",
+         _("Clear audit Log"),
+         _("Clear the entries of the audit log. To be able to clear the audit log "
+           "a user needs the generic WATO permission \"Make changes, perform actions\", "
+           "the \"View audit log\" and this permission."),
          [ "admin", ])
 
     config.declare_permission("wato.hosts",

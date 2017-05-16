@@ -1124,6 +1124,8 @@ class ModeBIRules(ModeBI):
 
 
     def page(self):
+        self.must_be_contact_for_pack()
+
         if not self._pack["aggregations"] and not self._pack["rules"]:
             new_url = self.url_to_pack([("mode", "bi_edit_rule")])
             menu_items = [
@@ -1423,6 +1425,8 @@ class ModeBIEditRule(ModeBI):
 
 
     def page(self):
+        self.must_be_contact_for_pack()
+
         if self._new:
             cloneid = html.var("clone")
             if cloneid:
@@ -1457,13 +1461,15 @@ class ModeBIEditRule(ModeBI):
         rules_without_permissions = {}
         for node in rulepack.get("nodes", []):
             node_type, node_content = node
-            node_name = node_content[0]
-            pack      = self.pack_containing_rule(node_name)
-            if node_type == 'call' and pack is not None and \
-               not self.may_use_rules_in_pack(pack):
-               packid = (pack['id'], pack['title'])
-               rules_without_permissions.setdefault(packid, [])
-               rules_without_permissions[packid].append(node_name)
+            if node_type != 'call':
+                continue
+
+            node_ruleid = node_content[0]
+            pack        = self.pack_containing_rule(node_ruleid)
+            if pack is not None and not self.may_use_rules_in_pack(pack):
+                packid = (pack['id'], pack['title'])
+                rules_without_permissions.setdefault(packid, [])
+                rules_without_permissions[packid].append(node_ruleid)
 
         if rules_without_permissions:
             message = ", ".join([_("BI rules %s from BI pack '%s'") % \

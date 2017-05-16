@@ -1,0 +1,10 @@
+Title: Folder host list: Improved performance for folders with a large number of hosts
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0b8
+Date: 1494943834
+Class: fix
+
+

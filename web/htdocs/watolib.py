@@ -834,7 +834,9 @@ class CREFolder(BaseFolder):
         self._name = name
         self._parent = parent_folder
         self._subfolders = {}
+
         self._choices_for_moving_host = None
+        self._effective_attributes    = None
 
         self._root_dir = root_dir
         if self._root_dir:
@@ -1230,6 +1232,8 @@ class CREFolder(BaseFolder):
 
     def drop_caches(self):
         self._choices_for_moving_host = None
+        self._effective_attributes    = None
+
         for subfolder in self._subfolders.values():
             subfolder.drop_caches()
 
@@ -1435,6 +1439,9 @@ class CREFolder(BaseFolder):
 
 
     def effective_attributes(self):
+        if self._effective_attributes != None:
+            return self._effective_attributes # cached :-)
+
         effective = {}
         for folder in self.parent_folder_chain():
             effective.update(folder.attributes())
@@ -1445,6 +1452,8 @@ class CREFolder(BaseFolder):
             attrname = host_attribute.name()
             if attrname not in effective:
                 effective.setdefault(attrname, host_attribute.default_value())
+
+        self._effective_attributes = effective
 
         return effective
 

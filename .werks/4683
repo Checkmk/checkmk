@@ -1,0 +1,11 @@
+Title: New permission: Clear audit log
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494920680
+Class: feature
+
+With this new permission you can configure read only access to the audit log to
+users.

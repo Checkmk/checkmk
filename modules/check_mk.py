@@ -4615,9 +4615,10 @@ for o,a in opts:
     elif o == '-I':
         seen_I += 1
     elif o == "--checks":
-        check_types = a.split(",")
-        if len(check_types) == 1 and check_types[0] == "@all":
+        if a == "@all":
             check_types = check_info.keys()
+        else:
+            check_types = a.split(",")
 
     elif o == "--cmc-file":
         opt_cmc_relfilename = a

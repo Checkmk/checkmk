@@ -2974,7 +2974,9 @@ def extra_host_attributes(hostname):
         if values:
             if key[0] == "_":
                 key = key.upper()
-            attrs[key] = values[0]
+
+            if values[0] != None:
+                attrs[key] = values[0]
     return attrs
 
 

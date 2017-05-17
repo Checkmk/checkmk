@@ -723,6 +723,7 @@ def ajax_search():
     except MKException, e:
         html.show_error(e)
     except Exception, e:
+        log_exception()
         if config.debug:
             raise
         import traceback

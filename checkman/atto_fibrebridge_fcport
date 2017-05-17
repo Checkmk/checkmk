@@ -1,0 +1,13 @@
+title: Atto Fibrebridge: Fibrechannel ports
+catalog: hw/storagehw/atto
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ Monitors the rate of received and transmitted words.
+
+item:
+ The number of the fibrechannel port.
+
+inventory:
+ One service per fibrechannel port is created.

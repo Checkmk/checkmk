@@ -1,0 +1,10 @@
+Title: atto_fibrebridge_sas, atto_fibrebridge_fcport, atto_fibrebridge_chassis, atto_fibrebridge_chassis.temp: New checks for Atto Fibrebridge devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495026520
+Class: feature
+
+

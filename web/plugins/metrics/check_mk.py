@@ -1994,6 +1994,18 @@ metric_info["fc_tx_frames"] = {
     "color" : "35/b",
 }
 
+metric_info["fc_rx_words"] = {
+    "title" : _("Received Words"),
+    "unit"  : "1/s",
+    "color" : "26/b",
+}
+
+metric_info["fc_tx_words"] = {
+    "title" : _("Transmitted Words"),
+    "unit"  : "1/s",
+    "color" : "31/b",
+}
+
 metric_info["fc_crc_errors"] = {
     "title" : _("Receive CRC errors"),
     "unit"  : "1/s",
@@ -7188,6 +7200,14 @@ graph_info["frames"] = {
     "metrics" : [
         ("fc_tx_frames", "-area"),
         ("fc_rx_frames", "area"),
+    ],
+}
+
+graph_info["words"] = {
+    "title" : _("Words"),
+    "metrics" : [
+        ("fc_tx_words", "-area"),
+        ("fc_rx_words", "area"),
     ],
 }
 

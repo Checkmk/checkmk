@@ -1,0 +1,101 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def parse_atto_fibrebridge_sas(info):
+
+    phy_operstates = {
+        -1  : "unknown",
+        1   : "online",
+        2   : "offline",
+    }
+
+    sas_operstates = {
+        -1  : "unknown",
+        1   : "online",
+        2   : "offline",
+        3   : "degraded," # From the MIB: "Degraded state is entered
+    }                     # when fewer than all four PHYs are online."
+
+    sas_adminstates = {
+        -1  : "unknown",
+        1   : "disabled",
+        2   : "enabled",
+    }
+
+    parsed = {}
+    for line in info:
+        port_info = {}
+        port_info["oper_state"] = sas_operstates[int(line[1])]
+        port_info["admin_state"] = sas_adminstates[int(line[6])]
+
+        for port_number, line_index in enumerate(range(2,6)):
+            port_info["state_phy_%d" % (port_number + 1)] = phy_operstates[int(line[line_index])]
+
+        parsed[line[0]] = port_info
+
+    return parsed
+
+
+def inventory_atto_fibrebridge_sas(parsed):
+    for item, port_info in parsed.items():
+        if port_info["admin_state"] == "enabled":
+            yield item, None
+
+
+def check_atto_fibrebridge_sas(item, _no_params, parsed):
+    port_info = parsed[item]
+    oper_state = port_info["oper_state"]
+
+    operstate_severities = {
+        "unknown"   : 3,
+        "online"    : 0,
+        "degraded"  : 1,
+        "offline"   : 2,
+    }
+
+    yield operstate_severities[oper_state], "Operational state: " + oper_state
+
+    for phy_index in range(1,5):
+        yield 0, "PHY%d operational state: %s" % (phy_index, port_info["state_phy_%d" % phy_index])
+
+
+check_info["atto_fibrebridge_sas"] = {
+    "parse_function"        : parse_atto_fibrebridge_sas,
+    "inventory_function"    : inventory_atto_fibrebridge_sas,
+    "check_function"        : check_atto_fibrebridge_sas,
+    "service_description"   : "SAS Port %s",
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.4547"),
+    "snmp_info"             : (".1.3.6.1.4.1.4547.2.3.3.3.1", [
+                                                            "2",    #sasPortPortNumber
+                                                            "3",    #sasPortOperationalState
+                                                            "4",    #sasPortPhy1State
+                                                            "5",    #sasPortPhy2State
+                                                            "6",    #sasPortPhy3State
+                                                            "7",    #sasPortPhy4State
+                                                            "8",    #sasPortAdminState
+                                                    ]),
+}

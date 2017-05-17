@@ -4691,6 +4691,25 @@ register_check_parameters(
     match_type = "dict",
 )
 
+
+register_check_parameters(
+    subgroup_storage,
+    "fcport_words",
+    _("Atto Fibrebridge FC port"),
+    Dictionary(
+        title = _("Levels for transmitted and received words"),
+        elements = [
+            ("fc_tx_words", Levels(title=_("Tx"), unit=_("words/s"))),
+            ("fc_rx_words", Levels(title=_("Rx"), unit=_("words/s"))),
+        ],
+    ),
+    TextAscii(
+        title = _("Port index"),
+    ),
+    "dict"
+)
+
+
 register_check_parameters(
     subgroup_storage,
     "fs_mount_options",

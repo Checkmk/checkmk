@@ -1,0 +1,5 @@
+# Default include mappings for Check_MK
+[
+  { ref: boost-all.imp },
+  { ref: boost-all-private.imp }
+]

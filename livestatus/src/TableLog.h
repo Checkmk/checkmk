@@ -25,7 +25,6 @@
 #ifndef TableLog_h
 #define TableLog_h
 
-// IWYU pragma: no_include <bits/shared_ptr.h>
 #include "config.h"  // IWYU pragma: keep
 #include <ctime>
 #include <memory>  // IWYU pragma: keep

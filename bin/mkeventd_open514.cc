@@ -30,7 +30,6 @@
    That can then simply use filedescriptor 3 and receive syslog
    messages */
 
-// IWYU pragma: no_include <bits/socket_type.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>

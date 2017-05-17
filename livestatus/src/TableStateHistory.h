@@ -25,7 +25,6 @@
 #ifndef TableStateHistory_h
 #define TableStateHistory_h
 
-// IWYU pragma: no_include <bits/shared_ptr.h>
 #include "config.h"  // IWYU pragma: keep
 #include <map>
 #include <memory>  // IWYU pragma: keep

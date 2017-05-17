@@ -22,6 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// https://github.com/include-what-you-use/include-what-you-use/issues/166
 // IWYU pragma: no_include <ext/alloc_traits.h>
 #include "Logfile.h"
 #include <fcntl.h>

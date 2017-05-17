@@ -22,8 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// IWYU pragma: no_include <experimental/bits/fs_ops.h>
-// IWYU pragma: no_include <experimental/fs_ops.h>
 #include "pnp4nagios.h"
 #include <cstddef>
 #include <system_error>

@@ -287,9 +287,9 @@ class ConfigDomain(object):
 
     def config_file(self, site_specific):
         if site_specific:
-            return "%s/sitespecific.mk" % self.config_dir()
+            return os.path.join(self.config_dir(), "sitespecific.mk")
         else:
-            return "%s/global.mk" % self.config_dir()
+            return os.path.join(self.config_dir(), "global.mk")
 
 
     def activate(self):

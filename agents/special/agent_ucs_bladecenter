@@ -94,7 +94,7 @@ def get_pattern(pattern, line):
 class Server:
     def __init__(self, host_address):
         self.netloc       = host_address
-        self.conn_handle  = httplib.HTTPSConnection(netloc, context = ssl._create_unverified_context())
+        self.conn_handle  = httplib.HTTPSConnection(self.netloc, context = ssl._create_unverified_context())
         self.cookie       = None
 
         if opt_debug:

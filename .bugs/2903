@@ -1,0 +1,8 @@
+Title: rename notification spooler config variable
+Component: notification
+State: open
+Date: 2017-05-17 09:31:20
+Targetversion: 1.5.0
+Class: nastiness
+
+This config variable is named "config" which is really bad in the context of all other config variable names.

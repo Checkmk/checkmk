@@ -22,8 +22,9 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// IWYU pragma: no_include <boost/asio/local/basic_endpoint.hpp>
+// IWYU pragma: no_include <boost/asio/basic_socket_streambuf.hpp>
 #include "EventConsoleConnection.h"
-#include <boost/asio/basic_socket_streambuf.hpp>
 #include <boost/asio/socket_base.hpp>
 #include <boost/system/system_error.hpp>
 #include <ostream>

@@ -163,10 +163,10 @@ liblivestatus_a_CXXFLAGS = -fPIC
 
 livestatus.o: $(liblivestatus_a_OBJECTS)
 # Note: libstdc++fs is only available as a static library, so we are lucky
-	$(CXX) $(LDFLAGS) -shared $^ -o $@ -lstdc++fs -lpthread -static-libstdc++ @BOOST_LDFLAGS@ -lboost_system
+	$(CXX) $(LDFLAGS) -shared $^ -o $@ -lstdc++fs -lpthread -static-libstdc++
 # To make sure we can dlopen() our NEB later
 	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) -c NagiosMockup.cc -o NagiosMockup.o
-	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ -o NagiosMockup
+	$(CXX) $(liblivestatus_a_CXXFLAGS) $(CXXFLAGS) NagiosMockup.o $@ @BOOST_LDFLAGS@ @BOOST_ASIO_LIB@ -o NagiosMockup
 	$(RM) NagiosMockup
 
 all-local: livestatus.o

@@ -148,7 +148,6 @@ AC_DEFINE([_GLIBCXX_REGEX_STATE_LIMIT], [2500],
           [the maximum number of states the regex NFA can have])
 
 AC_DEFINE([BOOST_SYSTEM_NO_DEPRECATED], [1], [we do not want any old stuff])
-AC_DEFINE([BOOST_ERROR_CODE_HEADER_ONLY], [1], [avoid linking with boost_system])
 
 # HACKING ALERT: automake can't really handle optional subdirectories, so we
 # have to do this in a slightly hacky way by using M4's silent includes.

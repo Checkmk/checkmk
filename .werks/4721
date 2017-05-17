@@ -1,0 +1,11 @@
+Title: Improved error handling when a ruleset value can not be rendered on agent bakery page
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1495012484
+
+

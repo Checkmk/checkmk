@@ -25,7 +25,6 @@
 #ifndef Table_h
 #define Table_h
 
-// IWYU pragma: no_include <bits/shared_ptr.h>
 #include "config.h"  // IWYU pragma: keep
 #include <map>
 #include <memory>

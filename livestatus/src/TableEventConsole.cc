@@ -22,7 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// IWYU pragma: no_include <bits/shared_ptr.h>
 #include "TableEventConsole.h"
 #include <iosfwd>
 #include <iostream>

@@ -22,6 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+// https://github.com/include-what-you-use/include-what-you-use/issues/434
 // IWYU pragma: no_include <type_traits>
 #include "StringUtils.h"
 #include <algorithm>

@@ -25,6 +25,7 @@
 // Needed for strdup and S_ISSOCK
 #define _XOPEN_SOURCE 500
 
+// https://github.com/include-what-you-use/include-what-you-use/issues/166
 // IWYU pragma: no_include <ext/alloc_traits.h>
 #include "config.h"
 #include <fcntl.h>

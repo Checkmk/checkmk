@@ -1,5 +1,11 @@
 # Default include mappings for Check_MK
 [
   { ref: boost-all.imp },
-  { ref: boost-all-private.imp }
+  { ref: boost-all-private.imp },
+  { include: ["<bits/shared_ptr.h>", private, "<memory>", public ] },
+  { include: ["<bits/socket_type.h>", private, "<sys/socket.h>", public ] },
+  { include: ["<experimental/bits/fs_ops.h>", private, "<experimental/filesystem>", public ] },
+  { include: ["<experimental/fs_ops.h>", private, "<experimental/filesystem>", public ] },
+  { include: ["<pcap/bpf.h>", private, "<pcap.h>", public ] },
+  { include: ["<pcap/pcap.h>", private, "<pcap.h>", public ] }
 ]

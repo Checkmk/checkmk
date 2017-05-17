@@ -1448,7 +1448,7 @@ class CREFolder(BaseFolder):
 
     def effective_attributes(self):
         if self._effective_attributes != None:
-            return self._effective_attributes # cached :-)
+            return self._effective_attributes.copy() # cached :-)
 
         effective = {}
         for folder in self.parent_folder_chain():
@@ -1461,7 +1461,7 @@ class CREFolder(BaseFolder):
             if attrname not in effective:
                 effective.setdefault(attrname, host_attribute.default_value())
 
-        self._effective_attributes = effective
+        self._effective_attributes = effective.copy()
 
         return effective
 

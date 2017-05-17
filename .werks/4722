@@ -1,0 +1,11 @@
+Title: agent_ucs_bladecenter: Fixed broken special agent
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495029698
+Class: fix
+
+The special agent was broken since march. It failed with the error
+"NameError: global name 'netloc' is not defined".

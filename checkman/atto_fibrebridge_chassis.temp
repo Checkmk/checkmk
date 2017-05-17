@@ -1,0 +1,13 @@
+title: Atto Fibrebridge: Temperature
+catalog: hw/storagehw/atto
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ Monitors the chassis temperature.
+
+item:
+ Chassis
+
+inventory:
+ One service per device is created

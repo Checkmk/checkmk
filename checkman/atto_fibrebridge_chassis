@@ -1,0 +1,10 @@
+title: Atto Fibrebridge: Throughput status
+catalog: hw/storagehw/atto
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ Monitors the throughput status. Possible values are OK and WARN
+
+inventory:
+ One service per device is created

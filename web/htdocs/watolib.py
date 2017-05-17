@@ -260,7 +260,15 @@ class ConfigDomain(object):
 
     @classmethod
     def all_classes(cls):
-        return cls.__subclasses__() # pylint: disable=no-member
+        subclasses = cls.__subclasses__() # pylint: disable=no-member
+
+        # Classes may be registered twice, only store one of the occurances.
+        # TODO(lm): Find the reason for this and solve this issue in the plugin mechanism.
+        classes = {}
+        for subclass in subclasses:
+            classes.setdefault(subclass.__name__, subclass)
+
+        return classes.values()
 
 
     @classmethod
@@ -270,7 +278,7 @@ class ConfigDomain(object):
 
     @classmethod
     def get_class(cls, ident):
-        for domain_class in cls.__subclasses__(): # pylint: disable=no-member
+        for domain_class in cls.all_classes():
             if domain_class.ident == ident:
                 return domain_class
         raise NotImplementedError(_("The domain \"%s\" does not exist") % ident)

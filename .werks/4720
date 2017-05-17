@@ -1,0 +1,12 @@
+Title: The settings of the MK Notify daemon could be lost when saving other global settings
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.4.0b8
+Date: 1495008952
+Class: fix
+
+When a problem occurs during plugin loading  of WATO plugins, which should only occur when
+working with local modifications, it could happen that the global settings of the MK notification
+daemon were lost when editing any global configuration variable.

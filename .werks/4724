@@ -1,0 +1,11 @@
+Title: Web-API: Fixed create_folder parameter of add_host call
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0b8
+Date: 1495091774
+Class: fix
+
+The call was always creating missing folders regardless of the create_folder
+parameter.

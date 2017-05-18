@@ -931,10 +931,11 @@ class CMKWebSession(WebSession):
         assert host["attributes"] == attributes
 
 
-    def get_host(self, hostname):
+    def get_host(self, hostname, effective_attributes=False):
         result = self._api_request("webapi.py?action=get_host", {
             "request": json.dumps({
-                "hostname"   : hostname,
+                "hostname"             : hostname,
+                "effective_attributes" : effective_attributes,
             }),
         })
 
@@ -946,7 +947,7 @@ class CMKWebSession(WebSession):
         return result
 
 
-    def get_all_hosts(self, effective_attributes=0):
+    def get_all_hosts(self, effective_attributes=False):
         result = self._api_request("webapi.py?action=get_all_hosts", {
             "request": json.dumps({
                 "effective_attributes": effective_attributes,
@@ -966,7 +967,7 @@ class CMKWebSession(WebSession):
 
         assert result == None
 
-        hosts = self.get_all_hosts(hostname)
+        hosts = self.get_all_hosts()
         assert hostname not in hosts
 
 

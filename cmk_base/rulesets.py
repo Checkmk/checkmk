@@ -61,15 +61,6 @@ def get_rule_options(entry):
 # for those negated with '!'. Those the host must *not* have!
 # New in 1.1.13: a trailing + means a prefix match
 def hosttags_match_taglist(hosttags, required_tags):
-    cache = cmk_base.config_cache.get_dict("hosttags_match_taglist")
-
-    cache_id = tuple(hosttags), tuple(required_tags)
-
-    try:
-        return cache[cache_id]
-    except KeyError:
-        pass
-
     for tag in required_tags:
         negate, tag = parse_negated(tag)
         if tag and tag[-1] == '+':
@@ -84,10 +75,8 @@ def hosttags_match_taglist(hosttags, required_tags):
             matches = tag in hosttags
 
         if matches == negate:
-            cache[cache_id] = False
             return False
 
-    cache[cache_id] = True
     return True
 
 

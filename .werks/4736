@@ -1,0 +1,10 @@
+Title: ucs_bladecenter_if: Fixed crash if fabric interconnects are aggregated
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495109864
+Class: fix
+
+This check has never supported aggregated fabric interconnects until now.

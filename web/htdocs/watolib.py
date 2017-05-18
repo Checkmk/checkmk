@@ -3279,20 +3279,20 @@ def save_global_settings(vars, site_specific=False):
     for varname, (domain, valuespec, need_restart, allow_reset, in_global_settings) in g_configvars.items():
         if varname not in vars:
             continue
-        per_domain.setdefault(domain, {})[varname] = vars[varname]
+        per_domain.setdefault(domain.ident, {})[varname] = vars[varname]
 
     # The global setting wato_enabled is not registered in the configuration domains
     # since the user must not change it directly. It is set by D-WATO on slave sites.
     if "wato_enabled" in vars:
-        per_domain.setdefault(ConfigDomainGUI, {})["wato_enabled"] = vars["wato_enabled"]
+        per_domain.setdefault(ConfigDomainGUI.ident, {})["wato_enabled"] = vars["wato_enabled"]
     if "userdb_automatic_sync" in vars:
-        per_domain.setdefault(ConfigDomainGUI, {})["userdb_automatic_sync"] = vars["userdb_automatic_sync"]
+        per_domain.setdefault(ConfigDomainGUI.ident, {})["userdb_automatic_sync"] = vars["userdb_automatic_sync"]
 
     for domain in ConfigDomain.enabled_domains():
         if site_specific:
-            domain().save_site_globals(per_domain.get(domain, {}))
+            domain().save_site_globals(per_domain.get(domain.ident, {}))
         else:
-            domain().save(per_domain.get(domain, {}))
+            domain().save(per_domain.get(domain.ident, {}))
 
 
 def save_site_global_settings(vars):

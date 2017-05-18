@@ -7162,7 +7162,6 @@ graph_info["size_of_processes"] = {
     "metrics" : [
         ( "process_resident_size", "area" ),
         ( "process_virtual_size", "stack" ),
-        ( "process_resident_size", "area" ),
         ( "process_mapped_size", "stack" ),
     ],
     "optional_metrics": [ "process_mapped_size" ]

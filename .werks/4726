@@ -1,0 +1,10 @@
+Title: ps: Process memory graph: Removed duplicated "resident size" metric
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0b8
+Date: 1495112951
+Class: fix
+
+

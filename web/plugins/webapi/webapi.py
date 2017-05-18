@@ -201,7 +201,8 @@ def action_get_host(request):
 
     host = Host.host(hostname)
     host.need_permission("read")
-    if html.var("effective_attributes") == "1":
+
+    if int(request.get("effective_attributes")) == 1:
         attributes = host.effective_attributes()
     else:
         attributes = host.attributes()
@@ -221,10 +222,7 @@ api_actions["get_host"] = {
 def action_get_all_hosts(request):
     validate_request_keys(request, optional_keys=["effective_attributes"])
 
-    if html.var("effective_attributes"):
-        effective_attributes = bool(int(html.var("effective_attributes")))
-    else:
-        effective_attributes = False
+    effective_attributes = int(request.get("effective_attributes")) == 1
 
     response = {}
     all_hosts = Folder.root_folder().all_hosts_recursively()

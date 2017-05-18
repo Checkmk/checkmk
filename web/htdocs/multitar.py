@@ -56,7 +56,7 @@ def create(filename, components):
                 basedir = os.path.dirname(abspath)
                 filename = os.path.basename(abspath)
             subtarname = name + ".tar"
-            subdata = os.popen("tar cf - --dereference --force-local -C '%s' '%s'" % \
+            subdata = os.popen("tar cf - --force-local -C '%s' '%s'" % \
                                (basedir, filename)).read()
 
             info = tarfile.TarInfo(subtarname)

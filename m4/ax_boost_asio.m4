@@ -83,6 +83,10 @@ AC_DEFUN([AX_BOOST_ASIO],
 			AC_DEFINE(HAVE_BOOST_ASIO,,[define if the Boost::ASIO library is available])
 			BN=boost_system
 			BOOSTLIBDIR=`echo $BOOST_LDFLAGS | sed -e 's/@<:@^\/@:>@*//'`
+			# NOTE: The AC_LANG_PUSH/POP below is a local modification! Without it, AC_CHECK_LIB
+			# would use the C compiler for compilation and linking of C++ libraries, which is wrong
+			# in general: C++ compilers usually add some magic linking flags etc. behind the scenes.
+			AC_LANG_PUSH([C++])
             if test "x$ax_boost_user_asio_lib" = "x"; then
 				for ax_lib in `ls $BOOSTLIBDIR/libboost_system*.so* $BOOSTLIBDIR/libboost_system*.dylib* $BOOSTLIBDIR/libboost_system*.a* 2>/dev/null | sed 's,.*/,,' | sed -e 's;^lib\(boost_system.*\)\.so.*$;\1;' -e 's;^lib\(boost_system.*\)\.dylib.*$;\1;' -e 's;^lib\(boost_system.*\)\.a.*$;\1;' ` ; do
 				    AC_CHECK_LIB($ax_lib, main, [BOOST_ASIO_LIB="-l$ax_lib" AC_SUBST(BOOST_ASIO_LIB) link_thread="yes" break],
@@ -96,6 +100,7 @@ AC_DEFUN([AX_BOOST_ASIO],
                   done
 
             fi
+			AC_LANG_POP([C++])
             if test "x$ax_lib" = "x"; then
                 AC_MSG_ERROR(Could not find a version of the library!)
             fi

@@ -43,6 +43,91 @@ def test_delete_host(web):
         web.delete_host("test-host-delete")
 
 
+def test_get_host_effective_attributes(web):
+    try:
+        web.add_host("test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
+
+        host = web.get_host("test-host", effective_attributes=False)
+        assert "tag_networking" not in host["attributes"]
+
+        host = web.get_host("test-host", effective_attributes=True)
+        assert "tag_networking" in host["attributes"]
+        assert host["attributes"]["tag_networking"] == "lan"
+    finally:
+        web.delete_host("test-host")
+
+
+def test_get_all_hosts_effective_attributes(web):
+    try:
+        web.add_host("test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        })
+
+        hosts = web.get_all_hosts(effective_attributes=False)
+        host = hosts["test-host"]
+        assert "tag_networking" not in host["attributes"]
+
+        hosts = web.get_all_hosts(effective_attributes=True)
+        host = hosts["test-host"]
+        assert "tag_networking" in host["attributes"]
+        assert host["attributes"]["tag_networking"] == "lan"
+    finally:
+        web.delete_host("test-host")
+
+
+def test_write_host_tags(web, site):
+    try:
+        web.add_host("test-host-dmz", attributes={
+            "ipaddress": "127.0.0.1",
+            "tag_networking": "dmz",
+        })
+
+        web.add_host("test-host-lan", attributes={
+            "ipaddress": "127.0.0.1",
+            "tag_networking": "lan",
+        })
+
+        web.add_host("test-host-lan2", attributes={
+            "ipaddress": "127.0.0.1",
+        })
+
+        hosts = web.get_all_hosts(effective_attributes=True)
+        assert hosts["test-host-dmz"]["attributes"]["tag_networking"] == "dmz"
+        assert hosts["test-host-lan"]["attributes"]["tag_networking"] == "lan"
+        assert hosts["test-host-lan2"]["attributes"]["tag_networking"] == "lan"
+
+        cfg = {
+            "FOLDER_PATH": "/",
+            "all_hosts": [],
+            "ipaddresses": {},
+            "host_attributes": {},
+        }
+
+        exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
+
+        tags_by_host = {}
+        for entry in cfg["all_hosts"]:
+            hostname, tag_txt = entry.split("|", 1)
+            tags_by_host[hostname] = tag_txt.split("|")
+
+
+        assert "dmz" in tags_by_host["test-host-dmz"]
+        assert "lan" not in tags_by_host["test-host-dmz"]
+
+        assert "dmz" not in tags_by_host["test-host-lan"]
+        assert "lan" in tags_by_host["test-host-lan"]
+
+        assert "dmz" not in tags_by_host["test-host-lan2"]
+        assert "lan" in tags_by_host["test-host-lan2"]
+
+    finally:
+        web.delete_host("test-host-lan2")
+        web.delete_host("test-host-lan")
+        web.delete_host("test-host-dmz")
+
+
 @pytest.mark.parametrize(("group_type"), [ "contact", "host", "service" ])
 def test_add_group(web, group_type):
     group_id     = "%s_testgroup_id" % group_type

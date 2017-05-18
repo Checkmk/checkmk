@@ -108,7 +108,7 @@ def action_add_host(request):
     validate_request_keys(request, required_keys=["hostname", "folder"],
                                    optional_keys=["attributes", "nodes", "create_folders"])
 
-    create_folders = int(request.get("create_folders")) == 1
+    create_folders = int(request.get("create_folders", "1")) == 1
 
     hostname      = request.get("hostname")
     folder_path   = request.get("folder")
@@ -199,7 +199,7 @@ def action_get_host(request):
     host = Host.host(hostname)
     host.need_permission("read")
 
-    if int(request.get("effective_attributes")) == 1:
+    if int(request.get("effective_attributes", "0")) == 1:
         attributes = host.effective_attributes()
     else:
         attributes = host.attributes()
@@ -219,7 +219,7 @@ api_actions["get_host"] = {
 def action_get_all_hosts(request):
     validate_request_keys(request, optional_keys=["effective_attributes"])
 
-    effective_attributes = int(request.get("effective_attributes")) == 1
+    effective_attributes = int(request.get("effective_attributes", "0")) == 1
 
     response = {}
     all_hosts = Folder.root_folder().all_hosts_recursively()

@@ -92,7 +92,10 @@ def parse_ucs_bladecenter_if(info):
 
     # Interconnect-Portchannel Members
     for key, values in data.get("fabricDceSwSrvPcEp", {}).items():
-        pc_name = "/".join(values.get("Dn").split("/")[:-1])
+        if len(values.get("Dn").split("/")[:-1]) == 4:
+            pc_name = "/".join(values.get("Dn").split("/")[:-1])
+        else:
+            pc_name = "/".join(values.get("Dn").split("/")[:-2])
         values["portchannel"] = icnt_pc_info[pc_name]
         icnt_pc_info[pc_name].setdefault("members", 0)
         icnt_pc_info[pc_name]["members"] += 1

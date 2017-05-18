@@ -1,0 +1,11 @@
+Title: Web-API: Fixed effective_attributes parameter for get_host/get_all_hosts calls
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0b8
+Date: 1495089250
+Class: fix
+
+The parameter effective_attributes was simply ignored. The calls were always
+returning the explicitly configured attributes.

@@ -1,0 +1,24 @@
+Title: Significant improvement of Check_MK check helper memory usage
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1495108890
+Class: fix
+
+The memory usage of the Check_MK check helpers, especially the growth
+that occures during runtime, has been reduced significantly.
+
+One example which has been measured in a single site with 30 Check_MK
+check helpers configured and a large configuration
+(a lot of hosts, services, tags and rulesets):
+
+Before this change it was executing 1000 service checks per second with
+a total memory usage of about 15 GB.
+
+After this change it is now performing 1100 service checks per second
+with a total memory usage of 3.5(!) GB.
+
+The exact memory reduction highly depends on the Check_MK configuration,
+but should be measurable in all medium to large environments.

@@ -22,6 +22,30 @@ def test_add_host(web):
         web.delete_host("test-host")
 
 
+def test_add_host_folder_create(web):
+    web.add_host("test-host", attributes={
+            "ipaddress": "127.0.0.1",
+        },
+        create_folders=True,
+        folder="asd/eee",
+    )
+
+    web.delete_host("test-host")
+
+
+def test_add_host_no_folder_create(web):
+    with pytest.raises(APIError) as e:
+        web.add_host("test-host", attributes={
+                "ipaddress": "127.0.0.1",
+            },
+            create_folders=False,
+            folder="eins/zwei",
+            expect_error=True,
+        )
+
+    assert "Folder not existing" in "%s" % e
+
+
 def test_get_all_hosts_basic(web):
     try:
         web.add_host("test-host-list", attributes={

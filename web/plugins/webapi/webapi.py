@@ -108,10 +108,7 @@ def action_add_host(request):
     validate_request_keys(request, required_keys=["hostname", "folder"],
                                    optional_keys=["attributes", "nodes", "create_folders"])
 
-    if html.var("create_folders"):
-        create_folders = bool(int(html.var("create_folders")))
-    else:
-        create_folders = True
+    create_folders = int(request.get("create_folders")) == 1
 
     hostname      = request.get("hostname")
     folder_path   = request.get("folder")

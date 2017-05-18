@@ -29,6 +29,9 @@ Check_MK modules and/or cmk_base modules code."""
 
 # TODO: Try to find a better place for them.
 
+import sys
+import itertools
+
 
 # Works with Check_MK version (without tailing .cee and/or .demo)
 def is_daily_build_version(v):
@@ -87,3 +90,44 @@ def parse_check_mk_version(v):
         val = 20000 + num*100
 
     return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, val))
+
+
+def total_size(o, handlers=None):
+    """ Returns the approximate memory footprint an object and all of its contents.
+
+    Automatically finds the contents of the following builtin containers and
+    their subclasses:  tuple, list, dict, set and frozenset.
+    To search other containers, add handlers to iterate over their contents:
+
+        handlers = {SomeContainerClass: iter,
+                    OtherContainerClass: OtherContainerClass.get_elements}
+
+    """
+    if handlers == None:
+        handlers = {}
+
+    dict_handler = lambda d: itertools.chain.from_iterable(d.items())
+    all_handlers = {tuple: iter,
+                    list: iter,
+                    dict: dict_handler,
+                    set: iter,
+                    frozenset: iter,
+                   }
+    all_handlers.update(handlers)     # user handlers take precedence
+    seen = set()                      # track which object id's have already been seen
+    default_size = sys.getsizeof(0)       # estimate sizeof object without __sizeof__
+
+    def sizeof(o):
+        if id(o) in seen: # do not double count the same object
+            return 0
+        seen.add(id(o))
+        s = sys.getsizeof(o, default_size)
+
+
+        for typ, handler in all_handlers.items():
+            if isinstance(o, typ):
+                s += sum(map(sizeof, handler(o)))
+                break
+        return s
+
+    return sizeof(o)

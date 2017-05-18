@@ -28,6 +28,7 @@
 
 from cmk.exceptions import MKGeneralException
 
+import cmk_base.utils
 
 class CacheManager(object):
     def __init__(self):
@@ -64,6 +65,13 @@ class CacheManager(object):
     def clear_all(self):
         for cache in self._caches.values():
             cache.clear()
+
+
+    def dump_sizes(self):
+        sizes = {}
+        for name, cache in self._caches.items():
+            sizes[name] = cmk_base.utils.total_size(cache)
+        return sizes
 
 
 

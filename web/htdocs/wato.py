@@ -13173,63 +13173,72 @@ class ModeEditRuleset(WatoMode):
     def _host_conditions(self, rule):
         if rule.host_list == ALL_HOSTS:
             return
-
-        condition = None
-        if rule.host_list == []:
-            condition = _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
-        else:
-            text_list = []
-
-            if rule.host_list[0][0] == ENTRY_NEGATE_CHAR:
-                host_list = rule.host_list[:-1]
-                is_negate = True
-            else:
-                is_negate = False
-                host_list = rule.host_list
-
-            regex_count = len([x for x in host_list if "~" in x])
-
-            condition = _("Host name ")
-            # Entries are either complete regex or no regex at all
-            if regex_count == len(host_list) or regex_count == 0:
-                is_regex = regex_count > 0
-                if is_regex:
-                    condition += is_negate and _("is not one of regex ") or _("matches one of regex ")
-                else:
-                    condition += is_negate and _("is not one of ") or _("is ")
-
-                for host_spec in host_list:
-                    if not is_regex:
-                        host = Host.host(host_spec)
-                        if host:
-                            host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
-                    text_list.append(html.render_b(host_spec.strip("!").strip("~")))
-            # Mixed entries
-            else:
-                for host_spec in host_list:
-                    is_regex = "~" in host_spec
-                    host_spec = host_spec.strip("!").strip("~")
-                    if not is_regex:
-                        host = Host.host(host_spec)
-                        if host:
-                            host_spec = '<a href="%s">%s</a>' % (html.attrencode(host.edit_url()), host_spec)
-
-                    if is_negate:
-                        expression = "%s" % (is_regex and _("does not match regex ") or _("is not "))
-                    else:
-                        expression = "%s" % (is_regex and _("matches regex ") or _("is "))
-                    text_list.append("%s%s" % (expression, html.render_b(host_spec)))
-
-            if len(text_list) == 1:
-                condition += text_list[0]
-            else:
-                condition += ", ".join([ "%s" % s for s in text_list[:-1] ])
-                condition += _(" or ") + text_list[-1]
-
         # Other cases should not occur, e.g. list of explicit hosts
         # plus ALL_HOSTS.
+        condition = self._render_host_condition_text(rule)
         if condition:
             html.li(condition, class_="condition")
+
+
+    def _render_host_condition_text(self, rule):
+        if rule.host_list == []:
+            return _("This rule does <b>never</b> apply due to an empty list of explicit hosts!")
+
+        condition, text_list = [], []
+
+        if rule.host_list[0][0] == ENTRY_NEGATE_CHAR:
+            host_list = rule.host_list[:-1]
+            is_negate = True
+        else:
+            is_negate = False
+            host_list = rule.host_list
+
+        regex_count = len([x for x in host_list if "~" in x])
+
+        condition.append(_("Host name"))
+
+        if regex_count == len(host_list) or regex_count == 0:
+            # Entries are either complete regex or no regex at all
+            is_regex = regex_count > 0
+            if is_regex:
+                condition.append(_("is not one of regex")
+                                    if is_negate else _("matches one of regex"))
+            else:
+                condition.append(_("is not one of")
+                                    if is_negate else _("is"))
+
+            for host_spec in host_list:
+                if not is_regex:
+                    host = Host.host(host_spec)
+                    if host:
+                        host_spec = html.render_a(host_spec, host.edit_url())
+
+                text_list.append(html.render_b(host_spec.strip("!").strip("~")))
+
+        else:
+            # Mixed entries
+            for host_spec in host_list:
+                is_regex = "~" in host_spec
+                host_spec = host_spec.strip("!").strip("~")
+                if not is_regex:
+                    host = Host.host(host_spec)
+                    if host:
+                        host_spec = html.render_a(host_spec, host.edit_url())
+
+                if is_negate:
+                    expression = "%s" % (is_regex and _("does not match regex") or _("is not"))
+                else:
+                    expression = "%s" % (is_regex and _("matches regex") or _("is "))
+                text_list.append("%s %s" % (expression, html.render_b(host_spec)))
+
+        if len(text_list) == 1:
+            condition.append(text_list[0])
+        else:
+            condition.append(", ".join([ "%s" % s for s in text_list[:-1] ]))
+            condition.append(_(" or ") + text_list[-1])
+
+        return HTML(" ").join(condition)
+
 
 
     def _service_conditions(self, rule):

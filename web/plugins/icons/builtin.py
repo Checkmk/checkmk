@@ -133,7 +133,10 @@ multisite_icons_and_actions['icon_image'] = {
 
 def paint_reschedule(what, row, tags, host_custom_vars):
     if what == "service" and row["service_cached_at"]:
-        return "cannot_reschedule", _("This service is based on cached agent data and cannot be rescheduled"), None
+        output = _("This service is based on cached agent data and cannot be rescheduled.")
+        output += " %s" % render_cache_info(what, row)
+
+        return "cannot_reschedule", output, None
 
     # Reschedule button
     if row[what + "_check_type"] == 2:
@@ -164,7 +167,7 @@ def paint_reschedule(what, row, tags, host_custom_vars):
 
 multisite_icons_and_actions['reschedule'] = {
     'columns':         [ 'check_type', 'active_checks_enabled', 'check_command' ],
-    'service_columns': [ 'cached_at' ],
+    'service_columns': [ 'cached_at', 'cache_interval' ],
     'paint':           paint_reschedule,
     'toplevel':        False,
 }

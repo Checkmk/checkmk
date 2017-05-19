@@ -1121,6 +1121,7 @@ body.main .popup_menu {
     border-color: #9bc #367 #367 #9bc;
     box-shadow:  0.5px 0.5px 16px #467;
     border-radius: 5px;
+    white-space: normal;
 }
 
 body.main .popup_menu img {

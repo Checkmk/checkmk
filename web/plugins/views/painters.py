@@ -791,22 +791,25 @@ multisite_painters["svc_check_age"] = {
     "paint"   : lambda row: paint_checked("service", row),
 }
 
+def render_cache_info(what, row):
+    cached_at = row["service_cached_at"]
+    cache_interval = row["service_cache_interval"]
+    cache_age = time.time() - cached_at
+
+    text = _("Cache generated %s ago, cache interval: %s") % \
+            (age_human_readable(cache_age), age_human_readable(cache_interval))
+
+    if cache_interval:
+        percentage = 100.0 * cache_age / cache_interval
+        text += _(", elapsed cache lifespan: %s") % percent_human_redable(percentage)
+
+    return text
+
 def paint_cache_info(row):
     if not row["service_cached_at"]:
         return "", ""
     else:
-        cached_at = row["service_cached_at"]
-        cache_interval = row["service_cache_interval"]
-        cache_age = time.time() - cached_at
-
-        text = _("Cache generated %s ago, cache interval: %s") % \
-                (age_human_readable(cache_age), age_human_readable(cache_interval))
-
-        if cache_interval:
-            percentage = 100.0 * cache_age / cache_interval
-            text += _(", elapsed cache lifespan: %s") % percent_human_redable(percentage)
-
-        return "", text
+        return "", render_cache_info("service", row)
 
 multisite_painters["svc_check_cache_info"] = {
     "title"   : _("Cached agent data"),

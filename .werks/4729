@@ -1,0 +1,15 @@
+Title: Add service cache information to action menu entry
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495182507
+Class: feature
+
+Services that are based on cached agent data can not be rescheduled
+through the GUI. In case of such a service a message is displayed.
+This message is now showing information about the age of the cache
+like this:
+
+Cache generated 67 m ago, cache interval: 30.0 s, elapsed cache lifespan: 13527.6%

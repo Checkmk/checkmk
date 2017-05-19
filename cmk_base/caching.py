@@ -84,7 +84,7 @@ class Cache(object):
 # for analysis etc.
 class DictCache(dict, Cache):
     def __init__(self, *args, **kwargs):
-        super(Cache, self).__init__(*args, **kwargs)
+        super(DictCache, self).__init__(*args, **kwargs)
         self._num_hits   = 0
         self._num_misses = 0
         self._num_sets   = 0

@@ -1,0 +1,12 @@
+Title: Name of backed packages can now be configured (Linux, UNIX)
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1495201612
+Class: feature
+
+The name of the packages created by the agent bakery can now be
+configured using the ruleset "Name of agent packages". This is
+currently only available for Linux and UNIX packages.

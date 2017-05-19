@@ -1,0 +1,11 @@
+Title: CME: Fixed grouping of hosts in views by customer
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cme
+State: unknown
+Version: 1.4.0b8
+Date: 1495175281
+
+

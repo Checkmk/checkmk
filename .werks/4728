@@ -1,0 +1,13 @@
+Title: Check_MK service: Fixed handling of "State in case of empty agent output"
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1495179272
+
+The Check_MK service was not respecting the state configured in the ruleset
+"Status of Check_MK service" for the case where no data is provided by the
+agent.

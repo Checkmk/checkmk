@@ -1218,13 +1218,20 @@ def do_check(hostname, ipaddress, only_check_types = None):
         save_item_state(hostname)
         if problems:
             output = "%s, " % problems
-            status = exit_spec.get("connection", 2)
+
+            if problems == "Empty output from agent":
+                status = exit_spec.get("empty_output", 2)
+            else:
+                status = exit_spec.get("connection", 2)
+
         elif num_errors > 0 and num_success > 0:
             output = "Missing agent sections: %s - " % ", ".join(error_sections)
             status = exit_spec.get("missing_sections", 1)
+
         elif num_errors > 0:
             output = "Got no information from host, "
             status = exit_spec.get("empty_output", 2)
+
         elif expected_version and agent_version \
              and not is_expected_agent_version(agent_version, expected_version):
             # expected version can either be:
@@ -1243,9 +1250,11 @@ def do_check(hostname, ipaddress, only_check_types = None):
                 expected = expected_version
             output = "unexpected agent version %s (should be %s), " % (agent_version, expected)
             status = exit_spec.get("wrong_version", 1)
+
         elif agent_min_version and agent_version < agent_min_version:
             output = "old plugin version %s (should be at least %s), " % (agent_version, agent_min_version)
             status = exit_spec.get("wrong_version", 1)
+
         else:
             output = ""
             if not is_cluster(hostname) and agent_version != None:

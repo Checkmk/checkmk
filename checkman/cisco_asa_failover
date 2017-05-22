@@ -12,6 +12,8 @@ description:
  The check will report {OK} as long as the correct unit has the role "active" or "standby".
  If a failover has occured, the check will report a {WARNING} status.
 
+ Additionally roles and expected status can be configured now.
+
  If an unknown status is encountered (other than 9 or 10 in the status OIDs)
  it will go to {UNKNOWN}.
 

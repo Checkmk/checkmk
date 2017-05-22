@@ -1,0 +1,18 @@
+title: Cisco ASA: Connections
+agents: snmp
+catalog: hw/network/cisco
+license: GPLv3
+distribution: check_mk
+description:
+
+ The Cisco ASA does have active connections for adsl/sdsl, mangement, etc. This
+ check monitors the expected and actual state of these connections. Also
+ it checks for the IP Address of a connection. The state will be {CRIT}
+ if a connection is down or it has no IP Address assigned.
+
+
+item:
+  One item for each connection is generated.
+
+inventory:
+  The check creates one service for each connection.

@@ -505,6 +505,45 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
+    "cisco_asa_failover",
+    _("Cisco ASA Failover States"),
+    Dictionary(
+        elements = [
+            ("primary",
+            DropdownChoice(
+                title = _("Primary Device"),
+                help = _("The role of the primary device"),
+                choices = [
+                    ( "active", _("Active unit") ),
+                    ( "standby", _("Standby unit") ),
+                ],
+                default_value = "active",
+            )),
+            ("secondary",
+            DropdownChoice(
+                title = _("Secondary Device"),
+                help = _("The role of the secondary device"),
+                choices = [
+                    ( "active", _("Active unit") ),
+                    ( "standby", _("Standby unit") ),
+                ],
+                default_value = "standby",
+            )),
+            ("failover_state",
+            MonitoringState(
+                title = _("Failover state"),
+                help = _("State if conditions above are not satisfied"),
+                default_value = 0,
+            )),
+        ]
+    ),
+    None,
+    "dict",
+)
+
+
+register_check_parameters(
+    subgroup_networking,
     "threepar_ports",
     _("3PAR Ports"),
     Dictionary(

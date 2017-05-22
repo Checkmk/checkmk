@@ -41,6 +41,7 @@ import cmk.paths
 #   |  Declarations of global variables and constants                      |
 #   '----------------------------------------------------------------------'
 
+sites           = {}
 multisite_users = {}
 admin_users     = []
 

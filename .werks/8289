@@ -1,0 +1,16 @@
+Title: wagner_titanus_topsense.smoke: Adapted levels to be more user friendly
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b8
+Date: 1495456395
+
+Adapted levels to be more user friendly:
+<ul>
+ <li>ok: <= 3%</li>
+ <li>warn: > 3% and <= 5%</li>
+ <li>crit: > 5%</li>
+</ul>

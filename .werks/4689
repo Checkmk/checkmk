@@ -1,0 +1,14 @@
+Title: Fixed buffer overflow when importing cmcdump data
+Level: 2
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1495460224
+Class: fix
+
+When importing data from cmcdump into the Check_MK Micro Core, a buffer for
+the long plugin output was too small, leading to a buffer overflow with
+unpredictable consequences.  The affected COMMANDs on the Livestatus
+interface were UPDATE_SHADOW_HOST_STATE and UPDATE_SHADOW_SERVICE_STATE. 
+This has been fixed.

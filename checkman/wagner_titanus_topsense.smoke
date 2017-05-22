@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  Checks the Levels reported by Smoke Detectors of Wagner Titanus Top Sens devices.
 
- The check returns {OK} if the level is 0.000000 % and {CRIT} otherwise.
+ The check returns {CRIT} if the level is above 5.000000 %, {WARN} if the level is blow 5.000000 % and above 3.000000 %, {OK} otherwise.
 
 inventory:
  Creates two checks, one for every Smoke Detector.

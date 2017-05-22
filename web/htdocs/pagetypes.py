@@ -1138,6 +1138,7 @@ class OverridableContainer(Overridable, Container):
                     (type_name, name))
         html.render_icon(type_name)
         html.write_text(title)
+        html.close_a()
         html.close_li()
 
 

@@ -4,6 +4,10 @@
 import pytest
 import time
 import os
+import json
+import base64
+from PIL import Image
+from StringIO import StringIO
 
 from testlib import web, APIError
 
@@ -324,15 +328,62 @@ def test_get_graph(web, site):
         assert site.file_exists("var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"), \
                         "RRD %s is still missing" % "var/check_mk/rrd/test-host-get-graph/Check_MK.rrd"
 
-        # Now we get a graph
-        data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)
-
-        assert len(data["curves"]) == 4
-        assert data["curves"][0]["title"] == "CPU time in user space"
-        assert data["curves"][1]["title"] == "CPU time in operating system"
-        assert data["curves"][2]["title"] == "Time spent waiting for Check_MK agent"
-        assert data["curves"][3]["title"] == "Total execution time"
+        _test_get_graph_api(web)
+        _test_get_graph_image(web)
+        _test_get_graph_notification_image(web)
 
     finally:
         web.delete_host("test-host-get-graph")
         web.activate_changes()
+
+
+def _test_get_graph_api(web):
+    # Now we get a graph
+    data = web.get_regular_graph("test-host-get-graph", "Check_MK", 0)
+
+    assert len(data["curves"]) == 4
+    assert data["curves"][0]["title"] == "CPU time in user space"
+    assert data["curves"][1]["title"] == "CPU time in operating system"
+    assert data["curves"][2]["title"] == "Time spent waiting for Check_MK agent"
+    assert data["curves"][3]["title"] == "Total execution time"
+
+
+def _test_get_graph_image(web):
+    result = web.post("graph_image.py", data={
+        "request": json.dumps({
+            "specification": ["template", {
+                "service_description" : "Check_MK",
+                "site"                : web.site.id,
+                "graph_index"         : 0,
+                "host_name"           : "test-host-get-graph",
+            }],
+        }),
+    })
+
+    content = result.content
+
+    assert content.startswith('\x89PNG')
+
+    try:
+        im = Image.open(StringIO(content))
+    except IOError:
+        raise Exception("Failed to open image: %r" % content)
+
+
+def _test_get_graph_notification_image(web):
+    result = web.get("ajax_graph_images.py?host=test-host-get-graph&service=Check_MK")
+
+    # Provides a json list containing base64 encoded PNG images of the current 24h graphs
+    encoded_graph_list = json.loads(result.text)
+    assert type(encoded_graph_list) == list
+    assert len(encoded_graph_list) > 0
+
+    for encoded_graph_image in encoded_graph_list:
+        graph_image = base64.b64decode(encoded_graph_image)
+
+        assert graph_image.startswith('\x89PNG')
+
+        try:
+            im = Image.open(StringIO(graph_image))
+        except IOError:
+            raise Exception("Failed to open image: %r" % graph_image)

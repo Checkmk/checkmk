@@ -288,14 +288,15 @@ register_notification_parameters(
 # in modules/events.py can't handle complex data structures
 def transform_back_pushover_priority(params):
     if type(params) == tuple:
-        return {"retry"    : params[1][0],
+        return {"priority" : "2",
+                "retry"    : params[1][0],
                 "expire"   : params[1][1],
                 "receipts" : params[1][2]}
     return params
 
 def transform_forth_pushover_priority(params):
     if type(params) == dict:
-        return ("2", (params["retry"], params["expire"], params["receipts"]))
+        return (params['priority'], (params["retry"], params["expire"], params["receipts"]))
     return params
 
 register_notification_parameters("pushover", Dictionary(

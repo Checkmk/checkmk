@@ -124,29 +124,31 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
         ("html",      1),
     ]
 
-    if context.get("PARAMETER_PRIORITY", 0):
+    if context.get("PARAMETER_PRIORITY") in ["-2", "-1", "0", "1"]:
+        params += [("priority", context["PARAMETER_PRIORITY"])]
+
+    elif context.get("PARAMETER_PRIORITY_PRIORITY") == "2":
         params += [
-            ("priority", context["PARAMETER_PRIORITY"]),
+            ("priority", context["PARAMETER_PRIORITY_PRIORITY"]),
             ("expire",   context.get("PARAMETER_PRIORITY_EXPIRE", 0)),
             ("retry",    context.get("PARAMETER_PRIORITY_RETRY", 0)),
         ]
-
-    if context.get("PARAMETER_PRIORITY_RECEIPTS"):
-        params.append( ("receipts", context["PARAMETER_PRIORITY_RECEIPTS"]) )
+        if context.get("PARAMETER_PRIORITY_RECEIPTS"):
+            params.append(("receipts", context["PARAMETER_PRIORITY_RECEIPTS"]))
 
     if context.get("PARAMETER_SOUND", "none") != "none":
-        params.append( ("sound", context["PARAMETER_SOUND"]) )
+        params.append(("sound", context["PARAMETER_SOUND"]))
 
     s = requests.Session()
-    if context.get("PARAMETER_PROXY_URL"):
-        if context["PARAMETER_PROXY_URL"].startswith('https'):
+    if context.get("PARAMETER_PROXY"):
+        if context["PARAMETER_PROXY"].startswith('https'):
             protocol = 'https'
         else:
             protocol = 'http'
-        r = s.get(api_url, params=dict(params), proxies={protocol : context["PARAMETER_PROXY_URL"]})
+        r = s.post(api_url, params=dict(params), proxies={protocol : context["PARAMETER_PROXY"]})
 
     else:
-        r = s.get(api_url, params=dict(params))
+        r = s.post(api_url, params=dict(params))
 
     r_status = r.status_code
     if r_status == '200':

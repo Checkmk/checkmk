@@ -240,8 +240,10 @@ def check_wagner_titanus_topsense_smoke(item, _no_params, info):
         return 3, "Smoke Detector %s not found in SNMP" % item
 
     perfdata = [("smoke_perc", smoke_perc)]
-    if smoke_perc > 0:
+    if smoke_perc > 5:
         status = 2
+    elif smoke_perc > 3:
+        status = 1
     else:
         status = 0
 

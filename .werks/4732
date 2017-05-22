@@ -1,0 +1,16 @@
+Title: systemd: Don't kill child processes of the agent
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1495442408
+
+When running the Check_MK agent via systemd the asynchronous executed
+agent plugins and real time checks were not working correctly since the
+systemd was terminating all child processes after the agent finished.
+
+The systemd configuration has now been changed to let the child processes
+be alive after the agent exited.

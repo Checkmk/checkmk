@@ -481,9 +481,12 @@ def initialize_snmptrap_engine():
     global g_snmp_engine, g_snmp_receiver
     g_snmp_engine = snmp_engine.SnmpEngine()
 
+    # Disable receiving of SNMPv3 INFORM messages. We do not support them (yet)
+    class ECNotificationReceiver(snmp_ntfrcv.NotificationReceiver):
+        pduTypes = (snmp_v1.TrapPDU.tagSet, snmp_v2c.SNMPv2TrapPDU.tagSet)
+
     initialize_snmp_credentials()
-    g_snmp_receiver = snmp_ntfrcv.NotificationReceiver(g_snmp_engine,
-                                                       g_event_server.handle_snmptrap)
+    g_snmp_receiver = ECNotificationReceiver(g_snmp_engine, g_event_server.handle_snmptrap)
 
 
 def initialize_snmp_credentials():
@@ -4780,7 +4783,7 @@ try:
         from pysnmp.entity import engine as snmp_engine
         from pysnmp.entity import config as snmp_config
         from pysnmp.entity.rfc3413 import ntfrcv as snmp_ntfrcv
-        from pysnmp.proto.api import v2c as snmp_v2c
+        from pysnmp.proto.api import v2c as snmp_v2c, v1 as snmp_v1
 
         from pysnmp.proto import api as pysnmp_api
         from pyasn1.codec.ber import decoder as pyasn_decoder

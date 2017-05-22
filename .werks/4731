@@ -1,0 +1,11 @@
+Title: Fixed exception when receiving SNMPv3 INFORM messages: ignore them now
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495441913
+Class: fix
+
+SNMPv3 INFORM messages sent to the Event Console were already dropped, but resulted
+in exceptions written to the mkeventd.log. These exceptions have now been fixed.

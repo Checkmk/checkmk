@@ -913,7 +913,7 @@ class CMKWebSession(WebSession):
         return response["result"]
 
 
-    def add_host(self, hostname, folder="/", attributes=None, create_folders=True, expect_error=False):
+    def add_host(self, hostname, folder="", attributes=None, create_folders=True, expect_error=False):
         result = self._api_request("webapi.py?action=add_host", {
             "request": json.dumps({
                 "hostname"       : hostname,

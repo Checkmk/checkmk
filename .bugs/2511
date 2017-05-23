@@ -1,9 +1,12 @@
 Title: PasswordStore uses id as password instead of real password
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2017-05-19 15:54:27
 Targetversion: 1.4.0
-Class: bug
 
 The password store seems to use the unique id as password instead of the
 stored password. This is reproducible with "Check Email".
+
+2017-05-23 08:37:07: changed state open -> done
+Should work now

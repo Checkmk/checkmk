@@ -2494,8 +2494,6 @@ if cmk.is_managed_edition():
     # TODO: Hack that is needed to resolve circular imports. This will be cleaned up in 1.5 code
     # soon. For the 1.4. we need to stick with this hack. Sorry.
     execfile("%s/plugins/watolib/managed_watolib.py" % cmk.paths.web_dir)
-    Folder = CMEFolder
-    Host   = CMEHost
 else:
     Folder = CREFolder
     Host   = CREHost

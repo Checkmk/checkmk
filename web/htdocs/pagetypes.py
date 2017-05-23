@@ -60,11 +60,6 @@ class Base(object):
         # and saved to files using repr().
         self._ = d
 
-        # Now give all subclasses that chance to add mandatory keys
-        # if they are missing
-        for clazz in inspect.getmro(self.__class__)[::-1]:
-            if "sanitize" in clazz.__dict__:
-                clazz.sanitize(d)
 
     def internal_representation(self):
         return self._
@@ -324,7 +319,7 @@ class PageRenderer(Base):
     # Parameters special for page renderers. These can be added to the sidebar,
     # so we need a topic and a checkbox for the visibility
     @classmethod
-    def parameters(self, clazz):
+    def parameters(self, cls):
         return [(_("General Properties"), [
             ( 1.4, 'topic', TextUnicode(
                 title = _('Topic') + '<sup>*</sup>',
@@ -408,9 +403,9 @@ class PageRenderer(Base):
 #   '----------------------------------------------------------------------'
 
 class Overridable(Base):
-    @classmethod
-    def sanitize(self, d):
-        d.setdefault("public", False)
+    def __init__(self, d):
+        super(Overridable, self).__init__(d)
+        self._.setdefault("public", False)
 
 
     @classmethod
@@ -1080,9 +1075,10 @@ class Overridable(Base):
 #   '----------------------------------------------------------------------'
 
 class Container(Base):
-    @classmethod
-    def sanitize(self, d):
-        d.setdefault("elements", [])
+    def __init__(self, d):
+        super(Container, self).__init__(d)
+        self._.setdefault("elements", [])
+
 
     # Which kind of elements are allowed to be added to this container?
     # Defaulting to all possible elements.
@@ -1090,19 +1086,24 @@ class Container(Base):
     def may_contain(self, element_type_name):
         return True
 
+
     def elements(self):
         return self._["elements"]
 
+
     def add_element(self, element):
         self._["elements"].append(element)
+
 
     def move_element(self, nr, whither):
         el = self._["elements"][nr]
         del self._["elements"][nr]
         self._["elements"][whither:whither] = [ el ]
 
+
     def is_empty(self):
         return not self.elements()
+
 
 
 class OverridableContainer(Overridable, Container):

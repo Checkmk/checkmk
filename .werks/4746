@@ -1,0 +1,11 @@
+Title: Fixed using HW/SW inventory filters in views without inventory painters
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0b9
+Date: 1495538857
+Class: fix
+
+When adding a HW/SW inventory related filter to a view without adding a sorter
+or painter, this resulted in a KeyError exception.

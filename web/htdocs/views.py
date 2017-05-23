@@ -1508,10 +1508,6 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Check that all needed information for configured single contexts are available
     visuals.verify_single_contexts('views', view, datasource.get('link_filters', {}))
 
-    # Af any painter, sorter or filter needs the information about the host's
-    # inventory, then we load it and attach it as column "host_inventory"
-    need_inventory_data = False
-
     # Prepare Filter headers for Livestatus
     # TODO: When this is used by the reporting then *all* filters are
     # active. That way the inventory data will always be loaded. When
@@ -1522,8 +1518,6 @@ def show_view(view, show_heading = False, show_buttons = True,
     for filt in all_active_filters:
         header = filt.filter(tablename)
         filterheaders += header
-        if filt.need_inventory():
-            need_inventory_data = True
 
     # Apply the site hint / filter
     if html.var("site"):
@@ -1578,9 +1572,6 @@ def show_view(view, show_heading = False, show_buttons = True,
     columns      = get_needed_regular_columns(group_cells + cells, sorters, datasource)
     join_columns = get_needed_join_columns(join_cells, sorters, datasource)
 
-    # Inventory data needed to render the view?
-    need_inventory_data = is_inventory_data_needed(group_cells, cells, sorters)
-
     # Fetch data. Some views show data only after pressing [Search]
     if (only_count or (not view.get("mustsearch")) or html.var("filled_in") in ["filter", 'actions', 'confirm', 'painteroptions']):
         # names for additional columns (through Stats: headers)
@@ -1604,8 +1595,9 @@ def show_view(view, show_heading = False, show_buttons = True,
         if join_cells:
             do_table_join(datasource, rows, filterheaders, join_cells, join_columns, only_sites)
 
-        # Add inventory data if one of the painters or filters needs it
-        if need_inventory_data:
+        # If any painter, sorter or filter needs the information about the host's
+        # inventory, then we load it and attach it as column "host_inventory"
+        if is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
             for row in rows:
                  if "host_name" in row:
                      row["host_inventory"] = inventory.host(row["host_name"])
@@ -1737,7 +1729,7 @@ def get_needed_join_columns(join_cells, sorters, datasource):
     return list(join_columns)
 
 
-def is_inventory_data_needed(group_cells, cells, sorters):
+def is_inventory_data_needed(group_cells, cells, sorters, all_active_filters):
     for cell in cells:
         if cell.has_tooltip():
             if cell.tooltip_painter_name().startswith("inv_"):
@@ -1749,6 +1741,10 @@ def is_inventory_data_needed(group_cells, cells, sorters):
 
     for cell in group_cells + cells:
         if cell.painter().get("load_inv"):
+            return True
+
+    for filt in all_active_filters:
+        if filt.need_inventory():
             return True
 
     return False

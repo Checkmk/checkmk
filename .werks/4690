@@ -1,0 +1,13 @@
+Title: Fixed handling of state changes when cmcdump is used
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0b9
+Date: 1495539171
+
+State changes coming in via cmcdump were always considered "hard" state
+changes, leading to superfluous logging in the history file and wrong
+alerts. This has been fixed.

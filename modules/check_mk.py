@@ -56,6 +56,7 @@ import cmk.store as store
 import cmk.paths
 import cmk.render as render
 import cmk.man_pages as man_pages
+import cmk.password_store
 
 import cmk_base
 import cmk_base.console as console
@@ -2828,7 +2829,7 @@ def create_core_config():
         out = file(cmk.paths.nagios_objects_file, "w")
         create_nagios_config(out)
 
-    write_stored_passwords()
+    cmk.password_store.save(stored_passwords)
 
     num_warnings = len(g_configuration_warnings)
     if num_warnings > 10:
@@ -2881,14 +2882,6 @@ def verify_cluster_address_family(hostname):
     if mixed:
         configuration_warning("Cluster '%s' has different primary address families: %s" %
                                                          (hostname, ", ".join(address_families)))
-
-
-def write_stored_passwords():
-    content = ""
-    for ident, pw in stored_passwords.items():
-        content += "%s:%s\n" % (ident, pw["password"])
-
-    store.save_file(cmk.paths.var_dir + "/stored_passwords", content)
 
 
 def get_cluster_nodes_for_config(hostname):

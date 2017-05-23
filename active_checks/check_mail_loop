@@ -29,6 +29,10 @@ import traceback, socket, re
 
 from email.mime.text import MIMEText
 
+import cmk.password_store
+cmk.password_store.replace_passwords()
+
+
 def parse_exception(e):
     e = str(e)
     if e[0] == '{':

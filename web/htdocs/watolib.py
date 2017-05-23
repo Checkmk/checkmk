@@ -87,7 +87,7 @@ g_host_attributes = []
 # Dictionary for quick access
 g_host_attribute = {}
 
-def initialize_before_loading_plugins():
+def load_watolib_plugins():
     if g_rulespecs:
         g_rulespecs.clear()
 
@@ -127,6 +127,10 @@ def initialize_before_loading_plugins():
         backup_paths.append(("dir", "mkeventd", mkeventd_config_dir))
 
     backup_domains.clear()
+
+    load_web_plugins("watolib", globals())
+    return globals()
+
 
 def init_watolib_datastructures():
     if config.wato_use_git:
@@ -2463,14 +2467,8 @@ class CREHost(WithPermissionsAndAttributes):
         self._name = new_name
 
 
-
-if cmk.is_managed_edition():
-    # TODO: Hack that is needed to resolve circular imports. This will be cleaned up in 1.5 code
-    # soon. For the 1.4. we need to stick with this hack. Sorry.
-    execfile("%s/plugins/watolib/managed_watolib.py" % cmk.paths.web_dir)
-else:
-    Folder = CREFolder
-    Host   = CREHost
+Folder = CREFolder
+Host   = CREHost
 
 #.
 #   .--Attributes----------------------------------------------------------.

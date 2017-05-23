@@ -141,13 +141,19 @@ Sub getNetworkAdapter(arrVars)
 
             For Each adapterCfg in AdapterConfigs
                 If entry.name = adapterCfg.Description Then
-                    outPut("Address: " & join(adapterCfg.IPAddress))
-                    outPut("Subnet: " & join(adapterCfg.IPSubnet))
-                    outPut("DefaultGateway: " & join(adapterCfg.DefaultIPGateway))
+                    If not isNull(adapterCfg.IPAddress) Then
+                        outPut("Address: " & join(adapterCfg.IPAddress))
+                    End If
+                    If not isNull(adapterCfg.IPSubnet) Then
+                        outPut("Subnet: " & join(adapterCfg.IPSubnet))
+                    End If
+                    If not isNull(adapterCfg.DefaultIPGateway) Then
+                        outPut("DefaultGateway: " & join(adapterCfg.DefaultIPGateway))
+                    End If
                 End If
             Next
         End If
-  Next
+    Next
 End Sub
 
 Sub RecurseForExecs(strFolderPath)

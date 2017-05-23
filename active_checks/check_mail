@@ -28,6 +28,9 @@ import sys, getopt, os, time, random, poplib, imaplib, email
 import traceback, socket, re
 import base64
 
+import cmk.password_store
+cmk.password_store.replace_passwords()
+
 def parse_exception(e):
     e = str(e)
     if e[0] == '{':

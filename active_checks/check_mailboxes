@@ -37,6 +37,9 @@ import socket
 import traceback
 from optparse import OptionParser
 
+import cmk.password_store
+cmk.password_store.replace_passwords()
+
 
 class Mail(object):
 

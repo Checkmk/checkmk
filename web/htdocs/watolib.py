@@ -66,7 +66,6 @@ import cmk.render as render
 
 if cmk.is_managed_edition():
     import managed
-    import managed_snapshots
 
 replication_paths = []
 backup_paths = []
@@ -2466,10 +2465,11 @@ class CREHost(WithPermissionsAndAttributes):
 
 
 if cmk.is_managed_edition():
-    # TODO: watolib -> import managed_watolib -> import watolib !
-    import managed_watolib
-    Folder = managed_watolib.CMEFolder
-    Host   = managed_watolib.CMEHost
+    # TODO: Hack that is needed to resolve circular imports. This will be cleaned up in 1.5 code
+    # soon. For the 1.4. we need to stick with this hack. Sorry.
+    execfile("%s/plugins/watolib/managed_watolib.py" % cmk.paths.web_dir)
+    Folder = CMEFolder
+    Host   = CMEHost
 else:
     Folder = CREFolder
     Host   = CREHost
@@ -4402,6 +4402,7 @@ class ActivateChangesManager(ActivateChanges):
         finally:
             if cmk.is_managed_edition():
                 # Discards any data which was shared during the snapshot creation
+                import managed_snapshots
                 managed_snapshots.CMESnapshot.discard_cached_data()
 
         unlock_exclusive()
@@ -4447,6 +4448,7 @@ class ActivateChangesManager(ActivateChanges):
             replicate_components.add("mkps")
 
         if cmk.is_managed_edition():
+            import managed_snapshots
             snapshot = managed_snapshots.CMESnapshot(site_id, site_tmp_dir, replicate_components)
             snapshot.create_site_snapshot()
 

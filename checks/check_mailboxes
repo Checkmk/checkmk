@@ -47,7 +47,7 @@ def check_mailboxes_arguments(params):
     args.append(passwordstore_get_cmdline("--password=%s", password))
 
     if 'connect_timeout' in params:
-        args.append('--connect-timeout=%d' % params['connect_timeout'])
+        args.append('--timeout=%d' % params['connect_timeout'])
 
     if 'retrieve_max' in params:
         args.append('--retrieve-max=%d' % params['retrieve_max'])

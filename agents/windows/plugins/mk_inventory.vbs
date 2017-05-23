@@ -156,6 +156,37 @@ Sub getNetworkAdapter(arrVars)
     Next
 End Sub
 
+Sub getRouteTable()
+    Set objClass = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
+    Set Adapters = objClass.ExecQuery("Select * from Win32_NetworkAdapter")
+    Set Routes = objClass.ExecQuery("Select * from Win32_IP4RouteTable")
+
+    Dim indexNames : Set indexNames = CreateObject("Scripting.Dictionary")
+    For Each adapter in Adapters
+        indexNames.Add adapter.InterfaceIndex, adapter.Name
+    Next
+
+    Dim routeTypes : Set routeTypes = CreateObject("Scripting.Dictionary")
+    routeTypes.Add 1, "other"
+    routeTypes.Add 2, "invalid"
+    routeTypes.Add 3, "direct"
+    routeTypes.Add 4, "indirect"
+
+    For Each route in Routes
+        Dim rtType, rtGateway, rtTarget, rtMask, rtDevice
+
+        rtType = routeTypes(route.Type)
+        rtGateway = route.NextHop
+        rtTarget = route.Destination
+        rtMask = route.Mask
+        rtDevice = indexNames(route.InterfaceIndex)
+
+        If rtDevice <> "" Then
+            outPut(rtType & "|" & rtTarget & "|" & rtMask & "|" & rtGateway & "|" & rtDevice)
+        End If
+    Next
+End Sub
+
 Sub RecurseForExecs(strFolderPath)
     Dim objFolder : Set objFolder = fso.GetFolder(strFolderPath)
     Dim objFile
@@ -268,6 +299,10 @@ Call getWMIObject("Win32_VideoController",adapterVars)
 Call startSection("win_networkadapter",58,timeUntil)
 adapterVars = Array("ServiceName", "MACAddress", "AdapterType", "DeviceID", "NetworkAddresses", "Speed")
 Call getNetworkAdapter(adapterVars)
+
+' Route Table
+Call startSection("win_ip_r",124,timeUntil)
+Call getRouteTable()
 
 ' Installed Software
 Call startSection("win_wmi_software",124,timeUntil)

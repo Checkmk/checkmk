@@ -1,0 +1,11 @@
+Title: win_ip_r: inventorizes routes table of Windows hosts
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495552000
+Class: feature
+
+In order to make this inventory plugin run ypu have
+to install the related agent plugin {{mk_inventory.vbs}}.

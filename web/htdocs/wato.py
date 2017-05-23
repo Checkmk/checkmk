@@ -17354,7 +17354,13 @@ def load_plugins(force):
     load_notification_table()
     initialize_global_configvars()
 
-    initialize_before_loading_plugins()
+    # Initialize watolib things which are needed before loading the WATO plugins.
+    # This also loads the watolib plugins. Then the globals of the watolib.py are
+    # loaded into the wato.py namespace. This "repeats" the watolib star import above
+    # together with things from the plugins. What a hack!
+    # TODO: Clearly separate the watolib and wato
+    globals().update(load_watolib_plugins())
+
     register_builtin_host_tags()
 
     # Declare WATO-specific permissions

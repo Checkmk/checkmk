@@ -1,0 +1,13 @@
+title: Nimble Storage: Volumes
+agents: snmp
+catalog: hw/storagehw/nimble
+license: GPL
+distribution: check_mk
+description:
+
+ This check measures the used space by for a volume. The Check behaviour
+ is like a regular filesystem. You can define thresholds as known by other
+ filesystem checks.
+
+inventory:
+ One service for each volume will be created.

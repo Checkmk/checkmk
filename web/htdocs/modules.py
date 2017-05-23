@@ -102,14 +102,13 @@ g_all_modules_loaded = False
 def load_all_plugins():
     global g_all_modules_loaded
 
+    # Optimization: in case of the graph ajax call only check the metrics module. This
+    # improves the performance for these requests.
     # TODO: CLEANUP: Move this to the pagehandlers if this concept works out.
     if html.myfile == "ajax_graph" and g_all_modules_loaded:
         only_modules = ["metrics"]
     else:
         only_modules = None
-
-    g_all_modules_loaded = True
-
 
     need_plugins_reload = local_web_plugins_have_changed()
 
@@ -127,6 +126,10 @@ def load_all_plugins():
     # kind of plugins to register own page types, so we need to wait after all plugins
     # have been loaded to update the pagehandlers
     pagehandlers.update(pagetypes.page_handlers())
+
+    # Mark the modules as loaded after all plugins have been loaded. In case of exceptions
+    # we want them to occur again on subsequent requests too.
+    g_all_modules_loaded = True
 
 
 def get_handler(name, dflt=None):

@@ -1129,7 +1129,12 @@ class RequestHandler(object):
         if exclude_vars == None:
             exclude_vars = []
 
-        request = json.loads(self.var("request", "{}"))
+        try:
+            json_request = self.var("request", "{}")
+            request = json.loads(json_request)
+        except json.JSONDecodeError, e:
+            raise MKUserError("request", _("Failed to parse request: '%s': %s") %
+                                                                (json_request, e))
 
         for key, val in self.all_vars().items():
             if key not in [ "request", "output_format" ] + exclude_vars:

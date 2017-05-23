@@ -1,0 +1,10 @@
+Title: mk_inventory.vbs: fixed getNetworkAdpater function to prevent errors caused by null arrays
+Level: 2
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495541509
+Class: fix
+
+

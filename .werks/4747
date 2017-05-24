@@ -1,0 +1,10 @@
+Title: Fixed resetting global settings to factory defaults
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0b9
+Date: 1495616831
+Class: fix
+
+

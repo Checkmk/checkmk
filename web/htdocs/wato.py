@@ -6952,8 +6952,7 @@ def mode_edit_configvar(phase, what = 'globalvars'):
                     return ""
                 elif c == None:
                     return None
-
-            if not html.check_transaction():
+            elif not html.check_transaction():
                 return
 
             try:

@@ -111,7 +111,7 @@ class RequestTimeout(MKException):
 class Escaper(object):
     def __init__(self):
         super(Escaper, self).__init__()
-        self._unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
+        self._unescaper_text = re.compile(r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
         self._unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
 
 
@@ -417,7 +417,7 @@ class OutputFunnel(object):
             text = "%s" % text
 
         if type(text) not in [str, unicode]: # also possible: type Exception!
-            raise MKGeneralException(HTML(_('Type Error: html.write accepts str and unicode input objects only!')))
+            raise MKGeneralException(_('Type Error: html.write accepts str and unicode input objects only!'))
 
         if self.is_plugged():
             self.plug_text[self.plug_level] += text

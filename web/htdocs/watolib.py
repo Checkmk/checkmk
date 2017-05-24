@@ -2118,7 +2118,7 @@ class SearchFolder(BaseFolder):
                 auth_errors.append(_("<li>Cannot delete hosts in folder %s: %s</li>") % (folder.alias_path(), e))
         self._invalidate_search()
         if auth_errors:
-            raise MKAuthException(HTML(_("Some hosts could not be deleted:<ul>%s</ul>") % "".join(auth_errors)))
+            raise MKAuthException(_("Some hosts could not be deleted:<ul>%s</ul>") % "".join(auth_errors))
 
 
     def move_hosts(self, host_names, target_folder):
@@ -2131,7 +2131,7 @@ class SearchFolder(BaseFolder):
                 auth_errors.append(_("<li>Cannot move hosts from folder %s: %s</li>") % (folder.alias_path(), e))
         self._invalidate_search()
         if auth_errors:
-            raise MKAuthException(HTML(_("Some hosts could not be moved:<ul>%s</ul>") % "".join(auth_errors)))
+            raise MKAuthException(_("Some hosts could not be moved:<ul>%s</ul>") % "".join(auth_errors))
 
 
     # .--------------------------------------------------------------------.

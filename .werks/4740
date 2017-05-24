@@ -1,0 +1,10 @@
+Title: mysql: Fixed crash if instance is not available anymore
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1495620206
+Class: fix
+
+

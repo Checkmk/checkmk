@@ -25,6 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 
+def inventory_wmi_cpuload(parsed):
+    return inventory_wmi_table(parsed, \
+                required_tables = [ "computer_system", "system_perf" ])
+
+
 def check_wmi_cpuload(item, params, parsed):
     # the processor queue length is logically similar to linux cpu load as
     # it states the number of processes waiting to be assigned cpu time.
@@ -51,9 +56,9 @@ def check_wmi_cpuload(item, params, parsed):
 
 
 check_info['wmi_cpuload'] = {
-    'inventory_function'  : inventory_wmi_table,
-    'check_function'      : check_wmi_cpuload,
     'parse_function'      : parse_wmi_table,
+    'inventory_function'  : inventory_wmi_cpuload,
+    'check_function'      : check_wmi_cpuload,
     'has_perfdata'        : True,
     'service_description' : "Processor Queue",
     'includes'            : ['wmi.include', 'cpu_load.include'],

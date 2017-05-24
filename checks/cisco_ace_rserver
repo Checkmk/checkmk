@@ -24,16 +24,33 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Parse an InetAddress type object as defined in the SNMP-FRAMEWORK-MIB
+def parse_framework_mib_inet_address(ip_address_type, ip_address):
+    if ip_address_type == 1:
+        return "%d.%d.%d.%d" % tuple(ip_address)
+    elif ip_address_type == 2:
+        return "%x:%x:%x:%x:%x:%x:%x:%x" % tuple(ip_address)
+    elif ip_address_type == 3:
+        return "%d.%d.%d.%d%%%d%d%d%d" % tuple(ip_address)
+    elif ip_address_type == 4:
+        return "%x:%x:%x:%x:%x:%x:%x:%x%%%d%d%d%d" % tuple(ip_address)
+    elif ip_address_type == 5: # Means DNS name - Reconvert to ASCII string
+        return "".join(map(chr,ip_address))
+    elif ip_address_type == 0: # Unknown address type - represent as hex string
+        return "".join(map(lambda byte: "%x" % byte, ip_address))
+
 
 def inventory_cisco_ace_rserver(info):
-    for name, ip, descr, admin_status, oper_status, conns in info:
+    for name, ip_address_type, ip_address, descr, admin_status, oper_status, conns in info:
+        ip = parse_framework_mib_inet_address(int(ip_address_type), ip_address)
         if name != '':
             item = name
         elif descr != '':
             item = descr
         else:
-            item = socket.inet_ntoa(ip)
+            ip
         yield item, None
+
 
 def check_cisco_ace_rserver(item, _no_params, info):
     admin_stati = {
@@ -62,8 +79,8 @@ def check_cisco_ace_rserver(item, _no_params, info):
         "18": (2, "max load reached"),
     }
 
-    for name, ip, descr, admin_status, oper_status, conns in info:
-        ip_addr = socket.inet_ntoa(ip)
+    for name, ip_address_type, ip_address, descr, admin_status, oper_status, conns in info:
+        ip_addr = parse_framework_mib_inet_address(ip_address_type, ip_address)
 	if name == item or ip_addr == item or descr == item:
             admin_state = admin_stati[admin_status]
             state, state_txt = oper_stati[oper_status]
@@ -82,7 +99,8 @@ check_info['cisco_ace_rserver'] = {
   "service_description" : "ACE RServer %s",
   "snmp_info"           : ( ".1.3.6.1.4.1.9.9.470.1.1.1.1", [ # cesRserverEntry
                               "1",  # cesRserverName
-                              "4",  # cesRserverIpAddress
+                              "3",  # cesRserverIpAddressType
+                              BINARY("4"),  # cesRserverIpAddress
                               "5",  # cesRserverDescription
                               "12", # cesRserverAdminStatus
                               "13", # cesRserverOperStatus

@@ -12,6 +12,7 @@
     * 4741 FIX: dell_powerconnect_temp: Fixed missing reference for computing the temperature
     * 4631 FIX: cisco_ace_rserver: Fix broken IP address parsing...
             NOTE: Please refer to the migration notes!
+    * 4632 FIX: fsc_subsystems: No longer crash when statuscode is missing
 
     WATO:
     * 4680 FIX: Sync of local hierarchy (MKPs) preserves symlinks now...

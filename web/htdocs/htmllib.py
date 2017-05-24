@@ -2613,7 +2613,7 @@ class html(HTMLGenerator, RequestHandler):
             counts = self.get_button_counts()
             weights = counts.items()
             weights.sort(cmp = lambda a,b: cmp(a[1],  b[1]))
-            best = dict(weights[-bestof:])
+            best = dict(weights[-bestof:]) # pylint: disable=invalid-unary-operand-type
             if id_ not in best:
                 display="none"
                 self.context_button_hidden = True

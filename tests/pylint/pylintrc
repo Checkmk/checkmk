@@ -1,8 +1,8 @@
 [MASTER]
 # Setup the python paths needed for our tests
 init-hook='import sys, os; test_path = os.environ.get("TEST_PATH", os.environ["HOME"] + "/git/check_mk/tests"); sys.path.insert(0, test_path) ; import conftest'
-load-plugins=testlib.pylint_cmk,testlib.pylint_checker_wrong_i18n
-#,testlib.pylint_checker_test
+#load-plugins=testlib.pylint_cmk,testlib.pylint_checker_wrong_i18n
+load-plugins=testlib.pylint_cmk,testlib.pylint_checker_localization
 persistent=yes
 # We only want to see errors for the moment. Disable this one day. But prepare to cleanup a lot of stuff.
 errors-only=yes

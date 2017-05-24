@@ -13096,7 +13096,8 @@ class ModeEditRuleset(WatoMode):
 
             self._rule_cells(rule)
 
-        table.end()
+        if last_folder != None:
+            table.end()
 
 
     def _action_url(self, action, folder, rulenr):

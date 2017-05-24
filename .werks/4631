@@ -1,0 +1,14 @@
+Title: cisco_ace_rserver: Fix broken IP address parsing
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.8p23
+Date: 1495630510
+Class: fix
+
+Due to a change in the way SNMP is handled by Check_MK between
+versions 1.2.6 and 1.2.8, OIDs representing the IP address of
+the interface would now no longer be parsed (crash-free but
+incorrectly) and crash. This has been fixed.
+Re-discovery is required if and only if neither a description
+nor a name had been used as an item before.

@@ -10,6 +10,8 @@
     * 4663 FIX: check_mailboxes: Removed useless report_age which causes TypeError: float() argument must be a string or a number
     * 4740 FIX: mysql: Fixed crash if instance is not available anymore
     * 4741 FIX: dell_powerconnect_temp: Fixed missing reference for computing the temperature
+    * 4631 FIX: cisco_ace_rserver: Fix broken IP address parsing...
+            NOTE: Please refer to the migration notes!
 
     WATO:
     * 4680 FIX: Sync of local hierarchy (MKPs) preserves symlinks now...

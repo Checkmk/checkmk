@@ -14,6 +14,7 @@
             NOTE: Please refer to the migration notes!
     * 4632 FIX: fsc_subsystems: No longer crash when statuscode is missing
     * 4633 FIX: jolokia_metrics.uptime: No longer crash when agent info is incomplete
+    * 4742 FIX: wmi_cpuload: Added required tables to prevent crash...
 
     WATO:
     * 4680 FIX: Sync of local hierarchy (MKPs) preserves symlinks now...

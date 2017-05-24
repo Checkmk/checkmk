@@ -1,0 +1,11 @@
+Title: f5_bigip_conns: Fixed crash if empty values
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b9
+Date: 1495636008
+
+

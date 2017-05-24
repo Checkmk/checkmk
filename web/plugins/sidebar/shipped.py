@@ -1307,7 +1307,7 @@ class BookmarkList(pagetypes.Overridable):
 
 
     @classmethod
-    def parameters(self, clazz):
+    def parameters(cls):
         vs_topic = TextUnicode(
             title = _("Topic") + "<sup>*</sup>",
             size = 50,

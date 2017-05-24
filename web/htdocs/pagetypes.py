@@ -25,12 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 # TODO:
-# - The classes here mix two things: 
+# - The classes here mix two things:
 #   a) Manager/Container classes
 #   b) The object classes
 #   This is done by a lot of classmethods where some have even have a
 #   comment "don't override this". It would be much clearer to split
 #   this into separate classes.
+# - The classes are more used as namespaces (lot of classmethods).
+#   It would be easier to understand what's happening here when we
+#   used real instances. We could - for example - add a single instance
+#   per type to the page_types dictionary. Or add some management object
+#   for this
+
 
 import os
 import json

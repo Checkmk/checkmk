@@ -43,7 +43,7 @@ def check_netapp_api_qtree_quota(item, params, parsed):
         return 3, "Qtree not found in agent output"
 
     disk_limit = qtree.get("disk-limit")
-    if not disk_limit.is_digit():
+    if not disk_limit.isdigit():
         return 3, "Qtree has no disk limit set"
 
     size_total = int(disk_limit) / 1024.0

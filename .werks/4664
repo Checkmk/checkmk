@@ -1,0 +1,11 @@
+Title: netapp_api_qtree_quota: Fixed NameError: name 'is_digit' is not defined
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1495618381
+
+

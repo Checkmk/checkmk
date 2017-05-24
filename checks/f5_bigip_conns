@@ -38,7 +38,6 @@ def inventory_f5_bigip_conns(info):
 
 
 def check_f5_bigip_conns(item, params, info):
-    print info
     # Connection rate
     now = time.time()
     total_native_compat_rate = 0

@@ -24,48 +24,43 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Tested with Dell PowerConnect 5448 and 5424 models.
-# Relevant SNMP OIDs:
+# Example:
 # .1.3.6.1.4.1.89.53.15.1.9.1 = INTEGER: 42
 # .1.3.6.1.4.1.89.53.15.1.10.1 = INTEGER: ok(1)
 
 # Temperature is in Celcius by default.
-
-# Status codes:
-# 1 => ok,
-# 2 => unavailable,
-# 3 => nonoperational,
-
-# GENERAL MAPS:
-dell_powerconnect_temp_status_map = { '1': 'ok', '2': 'unavailable', '3': 'nonoperational' }
-dell_powerconnect_temp_status2nagios_map = { '1': 0, '2': 1, '3': 2 }
+# Tested with Dell PowerConnect 5448 and 5424 models.
 
 factory_settings["dell_powerconnect_temp_default_values"] = {
     "levels"    : (35, 40),
 }
 
-# Inventory all of the temperature sensors
 def inventory_dell_powerconnect_temp(checkname, info):
     for temp, state in info:
-        # use default variable as parameter. Note the quotes!
-        return [("Ambient", {})]
+        yield ( "Ambient", {} )
 
-# Execute a check against each sensor.
 def check_dell_powerconnect_temp(_no_item, params, info):
+    translate_status = {
+        '1' : (0, 'ok'),
+        '2' : (1, 'unavailable'),
+        '3' : (2, 'nonoperational'),
+    }
     for temp, state in info:
         return check_temperature(float(temp), params, "dell_powerconnect",
-                                 dev_status=dell_powerconnect_temp_status2nagios_map[state],
-                                 dev_status_name=dell_powerconnect_temp_status_map[state])
+                                 dev_status=translate_status[state][0],
+                                 dev_status_name=translate_status[state][1])
 
 
 check_info["dell_powerconnect_temp"] = {
-    "check_function"          : check_dell_powerconnect_temp,
     "inventory_function"      : inventory_dell_powerconnect_temp,
+    "check_function"          : check_dell_powerconnect_temp,
     "service_description"     : "Temperature %s",
     "default_levels_variable" : "dell_powerconnect_temp_default_values",
     "has_perfdata"            : True,
-    "snmp_info"               : (".1.3.6.1.4.1.89.53.15.1", ["9", "10"]),
-    "snmp_scan_function"      : \
-     lambda oid               : ".1.3.6.1.4.1.674.10895" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info"               : (".1.3.6.1.4.1.89.53.15.1", [
+                                                "9", # RADLAN-Physicaldescription-MIB::rlPhdUnitEnvParamTempSensorValue
+                                                "10" # RADLAN-Physicaldescription-MIB::rlPhdUnitEnvParamTempSensorStatus
+                                ]),
+    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.674.10895"),
     "group"                   : "temperature",
 }

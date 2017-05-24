@@ -1,0 +1,11 @@
+Title: jolokia_metrics.uptime: No longer crash when agent info is incomplete
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b9
+Date: 1495635204
+
+

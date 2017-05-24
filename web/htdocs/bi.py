@@ -276,7 +276,7 @@ class JobWorker(object):
                 aggr_type, aggr_idx, groups = job["id"]
                 log("Compilation finished %r - took %.3f sec" % (job["id"], time.time() - start_time))
             except Exception, e:
-                log("MP-Worker Exception %s" % traceback.format_exception())
+                log("MP-Worker Exception %s" % traceback.format_exc())
                 mp_errors.put("Aggregation error: %s" % traceback.format_exc())
             finally:
                 # Even in an error scenario we consider these hosts as compiled

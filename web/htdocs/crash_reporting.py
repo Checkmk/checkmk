@@ -200,7 +200,7 @@ def handle_report_form(tardata, what):
         html.message(_("Submitting crash report..."))
         html.close_div()
         html.open_div(id_="success_msg", style="display:none")
-        html.message(HTML(_(
+        html.message(_(
             "Your crash report has been submitted (ID: ###ID###). Thanks for your participation, "
             "it is very important for the quality of Check_MK.<br><br>"
             "Please note:"
@@ -216,7 +216,7 @@ def handle_report_form(tardata, what):
             "support email address to send us a mail refering to your crash "
             "report.<br>If you are interested in the details about support, "
             "you find details on <a href=\"http://mathias-kettner.com/"
-            "checkmk_support_contract.html\" target=_blank>our website</a>.")))
+            "checkmk_support_contract.html\" target=_blank>our website</a>."))
         html.close_div()
         html.open_div(id_="fail_msg", style="display:none")
         report_url = mailto_url = html.makeuri([
@@ -259,13 +259,12 @@ def warn_about_local_files(info):
                 files.append(filepath)
 
         if files:
-            html.show_warning(HTML(
-                _("The following files located in the local hierarchy of your site are "
-                  "involved in this exception:")
-               +"<ul>%s</ul>" % "\n".join([ "<li>%s</li>" % f for f in files ])
-               +_("Maybe these files are not compatible with your current Check_MK "
-                  "version. Please verify and only report this crash when you think "
-                  "this should be working.")))
+            warn_text = _("The following files located in the local hierarchy of your site are involved in this exception:")
+            warn_text += html.render_ul(HTML("\n").join(map(html.render_li, files)))
+            warn_text += _("Maybe these files are not compatible with your current Check_MK "
+                           "version. Please verify and only report this crash when you think "
+                           "this should be working.")
+            html.show_warning(warn_text)
 
 
 def show_report_form(what, details):

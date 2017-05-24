@@ -169,8 +169,8 @@ register_configvar(group,
         label = _("enable profile mode"),
         help = _("It is possible to profile the rendering process of Multisite pages. This "
                  "Is done using the Python module cProfile. When enabled two files are placed "
-                 "into the Multisite var directory named <code>multisite.profile</code> and "
-                 "<code>multisite.profile.py</code>. By executing the later file you can get "
+                 "into the Multisite var directory named <tt>multisite.profile</tt> and "
+                 "<tt>multisite.profile.py</tt>. By executing the later file you can get "
                  "runtime statistics about the last processed page."),
        default_value = False
     ),

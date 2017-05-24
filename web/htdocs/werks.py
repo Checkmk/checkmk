@@ -59,7 +59,7 @@ def handle_acknowledgement():
 
         if werk["compatible"] == "incomp_unack":
             acknowledge_werk(werk)
-            html.message(HTML(_("Werk %s - %s has been acknowledged.") % (render_werk_id(werk, with_link=True), render_werk_title(werk))))
+            html.message(_("Werk %s - %s has been acknowledged.") % (render_werk_id(werk, with_link=True), render_werk_title(werk)))
             html.reload_sidebar()
             load_werks() # reload ack states after modification
 

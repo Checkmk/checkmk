@@ -1778,9 +1778,9 @@ def mode_rename_host(phase):
             actions, auth_problems = rename_hosts([(Folder.current(), host.name(), newname)])
             confirm_all_local_changes() # All activated by the underlying rename automation
             html.set_var("host", newname)
-            action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
-            return "edit_host", HTML(_("Renamed host <b>%s</b> into <b>%s</b> at the following places:<br><ul>%s</ul>") % (
-                                 host_name, newname, action_txt))
+            # TODO: TEST
+            action_list =  html.render_ul( HTML().join(map(html.render_li, actions)) )
+            return "edit_host", _("Renamed host <b>%s</b> into <b>%s</b> at the following places:") % (host_name, newname) + html.render_br() + action_list
         elif c == False: # not yet confirmed
             return ""
         return
@@ -4052,10 +4052,10 @@ class ModeBulkDiscovery(WatoMode):
                     reason = failed_hosts[hostname]
                     if reason == None:
                         num_skipped_hosts += 1
-                        result_txt        += _("%s: discovery skipped: host not monitored<br>") % hostname
+                        result_txt += _("%s: discovery skipped: host not monitored<br>") % hostname
                     else:
                         num_failed_hosts += 1
-                        result_txt       += _("%s: discovery failed: %s<br>") % (hostname, failed_hosts[hostname])
+                        result_txt += _("%s: discovery failed: %s<br>") % (hostname, failed_hosts[hostname])
                         if not host.locked():
                             host.set_discovery_failed()
                 else:
@@ -4073,12 +4073,12 @@ class ModeBulkDiscovery(WatoMode):
         except Exception, e:
             result = json.dumps([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"
             if site_id:
-                msg = _("Error during inventory of %s on site %s<div class=exc>%s</div") % \
-                       (", ".join(hostnames), site_id, e)
+                msg = _("Error during inventory of %s on site %s") % (", ".join(hostnames), site_id)
             else:
-                msg = _("Error during inventory of %s<div class=exc>%s</div>") % (", ".join(hostnames), e)
+                msg = _("Error during inventory of %s") % (", ".join(hostnames))
+            msg += html.render_div(e, class_="exc")
             if config.debug:
-                msg += "<br><pre>%s</pre><br>" % html.attrencode(traceback.format_exc().replace("\n", "<br>"))
+                msg += html.render_br() + html.render_pre(traceback.format_exc().replace("\n", "<br>")) + html.render_br()
             result += msg
         html.write(result)
         return ""
@@ -6968,8 +6968,10 @@ def mode_edit_configvar(phase, what = 'globalvars'):
         else:
             new_value = get_edited_value(valuespec)
             current_settings[varname] = new_value
-            msg = HTML(_("Changed global configuration variable %s to %s.") \
-                  % (varname, valuespec.value_to_text(new_value)))
+            msg = _("Changed global configuration variable %s to %s.") \
+                  % (varname, valuespec.value_to_text(new_value))
+            # FIXME: THIS HTML(...) is needed because we do not know what we get from value_to_text!!
+            msg = HTML(msg)
 
         if what == 'mkeventd':
             need_restart = None
@@ -16831,10 +16833,10 @@ def rule_option_elements(disabling=True):
         ( "docu_url",
           TextAscii(
             title = _("Documentation-URL"),
-            help = _("An optional URL pointing to documentation or any other page. This will be displayed "
+            help = HTML(_("An optional URL pointing to documentation or any other page. This will be displayed "
                      "as an icon <img class=icon src='images/button_url.png'> and open a new page when clicked. "
                      "You can use either global URLs (beginning with <tt>http://</tt>), absolute local urls "
-                     "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>)."),
+                     "(beginning with <tt>/</tt>) or relative URLs (that are relative to <tt>check_mk/</tt>).")),
             size = 80,
           ),
         ),

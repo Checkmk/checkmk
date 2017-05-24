@@ -33,6 +33,8 @@ def check_fsc_subsystems(item, params, info):
     for line in info: # , value1, value2 in info:
         name = line[0]
         if name != item: continue
+        if line[1] == u"":
+            return 3, "Status not found in SNMP data"
         status = int(line[1])
         statusname = { 1:'ok', 2:'degraded', 3:'error', 4:'failed', 5:'unknown-init'}.get(status, 'invalid')
         if status == 1 or status == 5:

@@ -1289,12 +1289,12 @@ div.snapin table.master_control td img.iconbutton {
 
 class BookmarkList(pagetypes.Overridable):
     @classmethod
-    def type_name(self):
+    def type_name(cls):
         return "bookmark_list"
 
 
     @classmethod
-    def phrase(self, what):
+    def phrase(cls, what):
         return {
             "title"          : _("Bookmark list"),
             "title_plural"   : _("Bookmark lists"),
@@ -1383,8 +1383,8 @@ class BookmarkList(pagetypes.Overridable):
 
 
     @classmethod
-    def _load(self):
-        self.load_legacy_bookmarks()
+    def _load(cls):
+        cls.load_legacy_bookmarks()
 
 
     @classmethod
@@ -1403,25 +1403,25 @@ class BookmarkList(pagetypes.Overridable):
 
 
     @classmethod
-    def load_legacy_bookmarks(self):
+    def load_legacy_bookmarks(cls):
         # Don't load the legacy bookmarks when there is already a my_bookmarks list
-        if self.has_instance((config.user.id, "my_bookmarks")):
+        if cls.has_instance((config.user.id, "my_bookmarks")):
             return
 
         # Also don't load them when the user has at least one bookmark list
-        for user_id, name in self.instances_dict().keys():
+        for user_id, name in cls.instances_dict().keys():
             if user_id == config.user.id:
                 return
 
-        self.add_default_bookmark_list()
-        bookmark_list = self.instance((config.user.id, "my_bookmarks"))
+        cls.add_default_bookmark_list()
+        bookmark_list = cls.instance((config.user.id, "my_bookmarks"))
 
         for title, url in load_legacy_bookmarks():
             bookmark_list.add_bookmark(title, url)
 
 
     @classmethod
-    def new_bookmark(self, title, url):
+    def new_bookmark(cls, title, url):
         return {
            "title" : title,
            "url"   : url,

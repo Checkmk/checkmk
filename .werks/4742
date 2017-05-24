@@ -1,0 +1,14 @@
+Title: wmi_cpuload: Added required tables to prevent crash
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0b9
+Date: 1495631029
+
+Until now the checkplugin created Services only if there are potential
+instancesi regardless if the needed information to compute these instances
+is available. This has been fixed now - Services are only created, if all
+necessary data is available.

@@ -1,0 +1,11 @@
+Title: check_mailboxes: Removed useless report_age which causes TypeError: float() argument must be a string or a number
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1495617082
+
+

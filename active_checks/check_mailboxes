@@ -242,7 +242,6 @@ def main(options):
             old_mails = imap.mails(mb,  before=(now - options.warn_age) + 86400)
             if old_mails:
                 old_mails = old_mails[:options.retrieve_max]
-                report_age = None
                 status = 0
                 status_icon = ""
                 for mail in old_mails:
@@ -252,7 +251,7 @@ def main(options):
                         status = 2
                         status_icon = "(!!) "
                         break
-                    elif float(age) >= options.warn_age and float(age) > float(report_age):
+                    elif float(age) >= options.warn_age:
                         report_age = age
                         status = 1
                         status_icon = "(!) "

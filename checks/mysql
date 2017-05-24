@@ -94,7 +94,7 @@ def inventory_mysql_version(parsed):
             yield instance, {}
 
 def check_mysql_version(item, _no_params, parsed):
-    if item in parsed:
+    if item in parsed and not len(parsed[item]) == 0:
         values = parsed[item]
         return 0, "Version: " + values['version']
 
@@ -125,7 +125,7 @@ check_info['mysql'] = {
 
 
 def check_mysql_sessions(item, params, parsed):
-    if item in parsed:
+    if item in parsed and not len(parsed[item]) == 0:
         values = parsed[item]
         total_sessions = values["Threads_connected"]
         running_sessions = values["Threads_running"]

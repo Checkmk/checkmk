@@ -32,16 +32,17 @@
 #   comment "don't override this". It would be much clearer to split
 #   this into separate classes.
 
-import os, inspect
-import config, table, forms, userdb
-from lib import *
-from valuespec import *
+import os
+import json
+
 import cmk.store as store
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import config
+import table
+import forms
+import userdb
+from lib import *
+from valuespec import *
 
 #   .--Base----------------------------------------------------------------.
 #   |                        ____                                          |
@@ -83,22 +84,18 @@ class Base(object):
 
     # Implement this function in a subclass in order to add parameters
     # to be editable by the user when editing the details of such page
-    # type. Note: This method does *not* use overriding, but all methods
-    # of this name will be called in all inherited classes and concatenated.
-    # Note:
-    # - self is the original class, e.g. PageRenderer
-    # - cls is the derived class, e.g. GraphCollection
+    # type.
     # Returns a list of entries.
     # Each entry is a pair of a topic and a list of elements.
     # Each element is a triple of order, key and valuespec
     # TODO: Add topic here
     @classmethod
-    def parameters(self, cls):
+    def parameters(cls):
         return [ ( _("General Properties"), [
             ( 1.1, 'name', ID(
                 title = _('Unique ID'),
                 help = _("The ID will be used do identify this page in URLs. If this page has the "
-                         "same ID as a builtin page of the type <i>%s</i> then it will shadow the builtin one.") % self.phrase("title"),
+                         "same ID as a builtin page of the type <i>%s</i> then it will shadow the builtin one.") % cls.phrase("title"),
             )),
             ( 1.2, 'title', TextUnicode(
                 title = _('Title') + '<sup>*</sup>',
@@ -118,28 +115,19 @@ class Base(object):
     # in index.py. That way we do not need to hard code page handlers for all types of
     # PageTypes in plugins/pages. It is simply sufficient to register a PageType and
     # all page handlers will exist :-)
-    # Do *not* override this. It collects all page handlers of our
-    # page type by calling _page_handlers() for each class
     @classmethod
-    def page_handlers(self):
-        # Collect all page handlers from subclasses
-        handlers = {}
-        for cls in inspect.getmro(self)[::-1]:
-            if "_page_handlers" in cls.__dict__:
-                handlers.update(cls._page_handlers(self))
-        return handlers
+    def page_handlers(cls):
+        return {}
 
 
     # Do *not* override this. It collects all editable parameters of our
     # page type by calling parameters() for each class
     @classmethod
-    def collect_parameters(self):
+    def collect_parameters(cls):
         topics = {}
-        for cls in inspect.getmro(self)[::-1]:
-            if "parameters" in cls.__dict__:
-                for topic, elements in cls.parameters(self):
-                    el = topics.setdefault(topic, [])
-                    el += elements
+        for topic, elements in cls.parameters():
+            el = topics.setdefault(topic, [])
+            el += elements
 
         # Sort topics and elements in the topics
         for topic in topics.values():
@@ -323,8 +311,10 @@ class PageRenderer(Base):
     # Parameters special for page renderers. These can be added to the sidebar,
     # so we need a topic and a checkbox for the visibility
     @classmethod
-    def parameters(self, cls):
-        return [(_("General Properties"), [
+    def parameters(cls):
+        parameters = super(PageRenderer, cls).parameters()
+
+        parameters += [(_("General Properties"), [
             ( 1.4, 'topic', TextUnicode(
                 title = _('Topic') + '<sup>*</sup>',
                 size = 50,
@@ -336,12 +326,16 @@ class PageRenderer(Base):
             )),
         ])]
 
+        return parameters
+
 
     @classmethod
-    def _page_handlers(self, cls):
-        return {
+    def page_handlers(cls):
+        handlers = super(PageRenderer, cls).page_handlers()
+        handlers.update({
             cls.type_name(): lambda: cls.page_show(),
-        }
+        })
+        return handlers
 
 
     # Most important: page for showing the page ;-)
@@ -413,24 +407,28 @@ class Overridable(Base):
 
 
     @classmethod
-    def parameters(self, cls):
+    def parameters(cls):
+        parameters = super(Overridable, cls).parameters()
+
         if cls.has_overriding_permission("publish"):
-            return [( _("General Properties"), [
+            parameters += [( _("General Properties"), [
                 ( 2.2, 'public', Checkbox(
                     title = _("Visibility"),
                     label = _('Make available for all users')
                 )),
             ])]
-        else:
-            return []
+
+        return parameters
 
 
     @classmethod
-    def _page_handlers(self, cls):
-        return {
+    def page_handlers(cls):
+        handlers = super(Overridable, cls).page_handlers()
+        handlers.update({
             "%ss" % cls.type_name()     : lambda: cls.page_list(),
             "edit_%s" % cls.type_name() : lambda: cls.page_edit(),
-        }
+        })
+        return handlers
 
 
     def page_header(self):
@@ -1148,6 +1146,16 @@ class OverridableContainer(Overridable, Container):
         html.close_li()
 
 
+    @classmethod
+    def page_handlers(cls):
+        handlers = super(OverridableContainer, cls).page_handlers()
+        handlers.update({
+            # Ajax handler for adding elements to a container
+            "ajax_pagetype_add_element": lambda: cls.ajax_add_element()
+        })
+        return handlers
+
+
     # Callback for the Javascript function pagetype_add_to_container(). The
     # create_info will contain a dictionary that is known to the underlying
     # element. Note: this is being called with the base class object Container,
@@ -1229,12 +1237,9 @@ def all_page_types():
 # page handler table
 def page_handlers():
     page_handlers = {}
-    for page_type in page_types.values():
-        page_handlers.update(page_type.page_handlers())
+    for page_type_class in page_types.values():
+        page_handlers.update(page_type_class.page_handlers())
 
-    # Ajax handler for adding elements to a container
-    # TODO: Shouldn't we move that declaration into the class?
-    page_handlers["ajax_pagetype_add_element"] = lambda: OverridableContainer.ajax_add_element()
     return page_handlers
 
 

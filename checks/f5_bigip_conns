@@ -38,17 +38,29 @@ def inventory_f5_bigip_conns(info):
 
 
 def check_f5_bigip_conns(item, params, info):
+    print info
     # Connection rate
     now = time.time()
     total_native_compat_rate = 0
     conns_dict = {}
 
     for line in info:
-        native_conn_rate = get_rate("native", now, int(line[2]))
-        compat_conn_rate = get_rate("compat", now, int(line[3]))
-        total_native_compat_rate += native_conn_rate + compat_conn_rate
+        if line[2] != "":
+            native_conn_rate = get_rate("native", now, int(line[2]))
+        else:
+            native_conn_rate = 0
 
-        stat_http_req_rate = get_rate("stathttpreqs", now, int(line[4]))
+        if line[3] != "":
+            compat_conn_rate = get_rate("compat", now, int(line[3]))
+        else:
+            compat_conn_rate = 0
+
+            total_native_compat_rate += native_conn_rate + compat_conn_rate
+
+        if line[4] != "":
+            stat_http_req_rate = get_rate("stathttpreqs", now, int(line[4]))
+        else:
+            stat_http_req_rate = None
 
         if line[0] != "":
             conns_dict.setdefault("total", 0)

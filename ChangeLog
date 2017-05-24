@@ -9,6 +9,7 @@
     * 4739 FIX: hp_proliant_da_phydrv: Implemented new possible values
     * 4663 FIX: check_mailboxes: Removed useless report_age which causes TypeError: float() argument must be a string or a number
     * 4740 FIX: mysql: Fixed crash if instance is not available anymore
+    * 4741 FIX: dell_powerconnect_temp: Fixed missing reference for computing the temperature
 
     WATO:
     * 4680 FIX: Sync of local hierarchy (MKPs) preserves symlinks now...

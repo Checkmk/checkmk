@@ -1,0 +1,11 @@
+Title: dell_powerconnect_temp: Fixed missing reference for computing the temperature
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p23
+Date: 1495623507
+
+

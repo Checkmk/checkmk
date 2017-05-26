@@ -1,0 +1,12 @@
+Title: snmp_uptime: Fixed uptime
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1493975963
+Class: fix
+
+On Linux appliances {{.1.3.6.1.2.1.1.3.0}} means uptime of snmpd and
+{{.1.3.6.1.2.1.25.1.1.0}} the system uptime. Use second value if it
+is available.

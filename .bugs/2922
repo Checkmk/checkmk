@@ -1,0 +1,9 @@
+Title: Assign icons to host groups
+Component: multisite
+State: open
+Date: 2017-05-26 16:28:00
+Targetversion: future
+Class: feature
+
+Icons need to be assigned to host groups as well. At the moment customers can assign icons to
+hosts and services. It should be enhanced to host groups as well.

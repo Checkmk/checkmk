@@ -29,8 +29,12 @@ def inventory_snmp_uptime(info):
     if len(info) > 0 and len(info[0]) >= 1:
         return [ (None, {}) ]
 
+
 def check_snmp_uptime(checktype, params, info):
-    uptime = parse_snmp_uptime(info[0][0])
+    if info[0][1]:
+        uptime = parse_snmp_uptime(info[0][1])
+    else:
+        uptime = parse_snmp_uptime(info[0][0])
     return check_uptime_seconds(params, uptime)
 
 
@@ -39,7 +43,12 @@ check_info["snmp_uptime"] = {
     'inventory_function'    :  inventory_snmp_uptime,
     'service_description'   :  'Uptime',
     'has_perfdata'          :  True,
-    'snmp_info'             :  ('.1.3.6.1.2.1.1', ['3.0']), # DISMAN-EVENT-MIB::sysUpTime
+    # On Linux appliances: .1.3.6.1.2.1.1.3.0    means uptime of snmpd
+    #                      .1.3.6.1.2.1.25.1.1.0 means system uptime
+    'snmp_info'             : ('.1.3.6.1.2.1', [
+                                '1.3',      # DISMAN-EVENT-MIB::sysUpTime
+                                '25.1.1',   # HOST-RESOURCES-MIB::hrSystemUptime
+                              ]),
     'snmp_scan_function'    :  lambda oid: oid(".1.3.6.1.2.1.1.1.0") not in [ None, "" ],
     'group'                 :  'uptime',
     'includes'              :  [ 'uptime.include' ],

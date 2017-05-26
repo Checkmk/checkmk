@@ -1,0 +1,15 @@
+Title: Icon upload saves icon with full path
+Component: multisite
+State: open
+Date: 2017-05-26 16:20:45
+Targetversion: 1.2.8
+Class: bug
+
+If a customers uploads its own icons in 1.2.8p18, all icons will be save with the local upload path as
+file name.
+
+For example:
+C:\Users\Username\Documents\Icons\service.png will be stored in Check_MK like
+~/local/share/check_mk/web/htdocs/images/icon/C:\\Users\\Username\\Documents\\Icons\\service.png
+
+Those icons are not shown to the customer.

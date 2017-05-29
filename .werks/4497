@@ -9,12 +9,10 @@ Class: feature
 
 The following match conditions have been added:
 
-<ul>
-<li>Exclude list of services</li>
-<li>Check type</li>
-<li>Plugin output</li>
-<li>Contacts</li>
-<li>Contact groups</li>
-<li>Service level</li>
-<li>Matching during timeperiod</li>
-<ul>
+LI:Exclude list of services
+LI:Check type
+LI:Plugin output
+LI:Contacts
+LI:Contact groups
+LI:Service level
+LI:Matching during timeperiod

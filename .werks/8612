@@ -7,6 +7,6 @@ Version: 1.4.0i1
 Date: 1469099469
 Class: feature
 
-Check_MK now ships it's own system for safely executing commands on remote Linux
-hosts via SSH. Everything is setup with the agent bakery - including SSH key
-exchange. Please refer to the new article in the user manual for details.
+Check_MK now ships it's own system for safely executing commands on remote
+Linux hosts via SSH. Everything is setup with the agent bakery - including SSH
+key exchange. Please refer to the new article in the user manual for details.

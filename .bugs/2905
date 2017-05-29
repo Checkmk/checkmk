@@ -1,0 +1,10 @@
+Title: OMD: LIVESTATUS_TCP_PORT does not check for duplicate ports
+Component: core
+State: open
+Date: 2017-05-29 09:07:26
+Targetversion: 1.5.0
+Class: nastiness
+
+The LIVESTATUS_TCP_PORT OMD hook does not try to prevent port number conflicts. Instead
+of just using the 6557 port as default it should try to check for the already used ports
+and try to gather a free one. Just like the apache port hook.

@@ -193,7 +193,6 @@ def read_bulk_contexts():
     # First comes a section with global variables
     for line in sys.stdin:
         line = line.strip()
-
         if not line:
             in_params = False
             context = {}
@@ -213,6 +212,20 @@ def read_bulk_contexts():
 
     return parameters, contexts
 
+
+def get_bulk_notification_subject(parameters, contexts, hosts):
+    if parameters.get("PARAMETER_BULK_SUBJECT"):
+        return parameters["PARAMETER_BULK_SUBJECT"]
+
+    else:
+        hosts = list(hosts)
+        if len(hosts) == 1:
+            return "Check_MK: %d notifications for %s" % (len(contexts), hosts[0])
+        else:
+            return "Check_MK: %d notifications for %d hosts" % \
+                   (len(contexts), len(hosts))
+
+
 def main():
     if bulk_mode:
         content_txt = ""
@@ -220,20 +233,11 @@ def main():
         hosts = set([])
         for context in contexts:
             context.update(parameters)
-            txt = construct_content(context)
-            content_txt += txt
+            content_txt += construct_content(context)
             mailto = context['CONTACTEMAIL'] # Assume the same in each context
             subject = context['SUBJECT']
             hosts.add(context["HOSTNAME"])
-
-        # Create a useful subject
-        hosts = list(hosts)
-        if len(contexts) > 1:
-            if len(hosts) == 1:
-                subject = "Check_MK: %d notifications for %s" % (len(contexts), hosts[0])
-            else:
-                subject = "Check_MK: %d notifications for %d hosts" % (
-                    len(contexts), len(hosts))
+        subject = get_bulk_notification_subject(parameters, contexts, hosts)
 
     else:
         # gather all options from env

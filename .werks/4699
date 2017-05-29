@@ -1,4 +1,4 @@
-Title: WATO Web-API: now able to configure rulesets
+Title: WATO Web-API: now able to configure rulesets and folders
 Level: 2
 Component: wato
 Compatible: compat
@@ -7,11 +7,11 @@ Version: 1.5.0i1
 Date: 1495550830
 Class: feature
 
+
 You can now configure all rules which are available in the <i>Host & Service Parameters Page</i>
 through the use of two Web-API calls.
 
-
-Important: Right now the interface is only able to speak the python language.<br>
+Important: Right now the rules api interface is only able to speak the python language.<br>
 The existing output_format parameter, as well as the new request parameter <tt>request_format</tt>
 must both be set to <tt>python</tt>. An additional interface language is planned, maybe XML.
 Furthermore, these API calls are intended for admin use only, since they modify the entire
@@ -24,16 +24,42 @@ Each entry of this list is a dictionary which includes information about the tit
 help text and the how often the rule is used.
 
 
-<tt>get_ruleset</tt>br>
+<tt>get_ruleset</tt><br>
 Requires the request key <tt>ruleset_name</tt>, which specifies the ruleset to query.
 This API call returns exactly one complete ruleset of all folders, so you can't query differnt types.
 The response itself has an extra key configuration_hash, which can be used in the following call.
 
 
-<tt>set_ruleset</tt>br>
+<tt>set_ruleset</tt><br>
 The previous call provided a dict with the ruleset configuration. This call expect the same format
 in the request object. You can modify the modify the previously queried dict and send it back through this
 f you also sent the configuration_hash parameter, the Web-API will check if the configuration has changed
 in the meantime. If so, the set_ruleset call will fail. When no configuration_hash parameter is sent,
 no checking will be done.
 
+
+Furthermore you can now also configure WATO folders with these new calls<br>
+<tt>get_folder</tt><br>
+Requires the (physical) folder name in the parameter <i>folder</i> and returns the configured attributes.
+If you want to see the inherited attributes in this folder, you can set the option <i>effective_attributes=1</i>
+Note: The attributes returned with <i>effective_attributes</i> cant be used in a followup add_folder/edit_folder call.
+This call also returns a configuration hash for the folder object, which can be used later on.
+Its purpose is the same, than in the aforementioned set_ruleset call.
+
+
+<tt>add_folder</tt><br>
+Requires the (physical) folder name in the parameter <i>folder</i> and a <i>attributes</i> dictionary containing the folder attributes.
+
+
+<tt>edit_folder</tt><br>
+Requires the (physical) folder name in the parameter <i>folder</i> and a <i>attributes</i> dictionary containing the folder attributes.
+Fails if the folder does not exist.
+
+
+<tt>delete_folder</tt><br>
+Requires the (physical) folder name in the parameter <i>folder</i>.
+Fails if the folder does not exist.
+
+
+<tt>get_all_folders</tt><br>
+Returns a dictionary of all folders. Also supports the <i>effective_attributes</i> parameter.

@@ -777,7 +777,7 @@ class APICallHosttags(APICallCollection):
         response = hosttags_config.get_dict_format()
         add_configuration_hash(response, response) # Looks strange, but is OK
 
-        return hosttags_dict
+        return response
 
 
     def _set(self, request):

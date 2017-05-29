@@ -1,0 +1,13 @@
+Title: cmk-update-agent: Removed implicit dependency on distutils.spawn
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1496044761
+Class: fix
+
+The agent updater was depending on the "distutils.spawn" module which is not
+always installed on all suppored platforms. The program did not work with
+Python installations that don't have the distutils.spawn installed. The
+dependency has been removed now.

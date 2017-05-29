@@ -1,0 +1,13 @@
+Title: mail, asciimail: Added subject for bulk notifications
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496070439
+Class: feature
+
+With this new configuration option you can now customize
+the subject for bulk notifications and overwrite default
+subject 'Check_MK: X notifications for HOST' resp.
+'Check_MK: X notifications for Y hosts'.

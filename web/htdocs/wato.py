@@ -7634,9 +7634,16 @@ def vs_notification_rule(userid = None):
                                    "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
                                    "<tt>NOTIFY_SERVICE_FOO</tt>."),
                     )),
+                    ( "bulk_subject", TextAscii(
+                        title = _("Subject for bulk notifications"),
+                        help = _("Customize the subject for bulk notifications and overwrite "
+                                 "default subject 'Check_MK: X notifications for HOST' resp. "
+                                 "'Check_MK: X notifications for Y hosts'."),
+                        size = 80,
+                    )),
                   ],
                   columns = 1,
-                  optional_keys = False,
+                  optional_keys = ["bulk_subject"],
             ),
           ),
 

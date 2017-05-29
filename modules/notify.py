@@ -1316,6 +1316,9 @@ def do_bulk_notify(contact, plugin, params, plugin_context, bulk):
         ec_contact = plugin_context.get("EC_CONTACT", "")
         bulk_path += ("ec_contact", ec_contact)
 
+    if "bulk_subject" in bulk:
+        plugin_context["PARAMETER_BULK_SUBJECT"] = bulk["bulk_subject"]
+
     # User might have specified _FOO instead of FOO
     bulkby_custom = bulk.get("groupby_custom", [])
     for macroname in bulkby_custom:

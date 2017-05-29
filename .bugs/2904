@@ -1,0 +1,15 @@
+Title: WATO git: Configuration files change without config changes
+Component: wato
+State: open
+Date: 2017-05-29 09:02:34
+Targetversion: 1.5.0
+Class: nastiness
+
+One problem is that the elements of the dictionaries written to the configuration
+files are not sorted. When one element changes it may happen that all other elements
+are also saved in a different order.
+
+We should find a solution for writing out those config files with a deterministic
+order of dict keys. Maybe we can use the pprint module to print out dicts with
+sorted keys. But we need to have a look at the performance since pprint may be
+pretty slow.

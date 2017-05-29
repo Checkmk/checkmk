@@ -103,7 +103,7 @@ class MEIFolderCleaner(object):
             except Exception, e:
                 # TODO: introduce verbose mode for mk_logwatch
                 pass
-
+#.
 
 os_type = "linux"
 try:

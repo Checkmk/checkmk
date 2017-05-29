@@ -106,12 +106,12 @@ def validate_host_attributes(attributes):
 
 
 def compute_config_hash(entity):
-    import bencode, md5
+    import json, md5
     try:
-        entity_encoded = bencode.Bencoder.encode(entity)
+        entity_encoded = json.dumps(entity, sort_keys=True)
         entity_hash    = md5.md5(entity_encoded).hexdigest()
-    except bencode.BencodeException, e:
-        logger.error("%s" % e)
+    except Exception, e:
+        logger.error("Error %s" % e)
         entity_hash = "0"
 
     return entity_hash
@@ -124,6 +124,11 @@ def validate_config_hash(hash_value, entity):
                                   "You need to load the configuration and start another update. "
                                   "If the existing configuration should not be checked, you can "
                                   "remove the configuration_hash value from the request object."))
+
+
+def add_configuration_hash(response, configuration_object):
+    response["configuration_hash"] = compute_config_hash(configuration_object)
+
 
 
 class APICallCollection(object):
@@ -149,6 +154,10 @@ class APICallCollection(object):
 class APICallFolders(APICallCollection):
     def get_api_calls(self):
         return {
+            "get_folder": {
+                "handler"         : self._get,
+                "locking"         : False,
+            },
             "add_folder": {
                 "handler"         : self._add,
                 "locking"         : True,
@@ -156,10 +165,6 @@ class APICallFolders(APICallCollection):
             "edit_folder": {
                 "handler"         : self._edit,
                 "locking"         : True,
-            },
-            "get_folder": {
-                "handler"         : self._get,
-                "locking"         : False,
             },
             "delete_folder": {
                 "handler"         : self._delete,
@@ -172,17 +177,37 @@ class APICallFolders(APICallCollection):
         }
 
 
+    def _get(self, request):
+        validate_request_keys(request, required_keys=["folder"], optional_keys = ["effective_attributes"])
+        folder_path = request["folder"]
+        if not Folder.folder_exists(folder_path):
+            raise MKUserError(None, _("Folder %s does not exist") % folder_path)
+
+        folder = Folder.folder(folder_path)
+        if bool(int(request.get("effective_attributes", "0"))):
+            attributes = folder.effective_attributes()
+        else:
+            attributes = folder.attributes()
+
+        response = {"attributes": attributes}
+        add_configuration_hash(response, attributes)
+        return response
+
+
     def _add(self, request):
-        validate_request_keys(request, required_keys=["folder"],
-                                       optional_keys=["attributes", "alias", "create_parent_folders",
+        validate_request_keys(request, required_keys=["folder", "attributes"],
+                                       optional_keys=["create_parent_folders",
                                                        # "lock", "lock_subfolders"  # Not implemented yet
                                                      ])
 
         folder_path  = request["folder"]
         check_wato_foldername(None, os.path.basename(folder_path), just_name = True)
 
-        folder_alias = request.get("alias", folder_path)
         folder_attributes = request.get("attributes", {})
+        if "alias" in folder_attributes:
+            folder_alias = folder_attributes.pop("alias") or os.path.basename(folder_path)
+        else:
+            folder_alias = os.path.basename(folder_path)
 
         # Validates host and folder attributes, since there are no real folder attributes, at all...
         validate_host_attributes(folder_attributes)
@@ -198,43 +223,43 @@ class APICallFolders(APICallCollection):
 
     def _edit(self, request):
         validate_request_keys(request, required_keys=["folder"],
-                                       optional_keys=["attributes", "alias",
+                                       optional_keys=["attributes", "configuration_hash",
                                                        # "lock", "lock_subfolders"  # Not implemented yet
                                                      ])
         folder_path  = request["folder"]
         if not Folder.folder_exists(folder_path):
             raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
-        folder_alias = request.get("alias", folder_path)
+
+        folder = Folder.folder(folder_path)
+        if "configuration_hash" in request:
+            validate_config_hash(request["configuration_hash"], folder.attributes())
+
         folder_attributes = request.get("attributes", {})
+        if "alias" in folder_attributes:
+            folder_alias = folder_attributes.pop("alias") or os.path.basename(folder_path)
+        else:
+            folder_alias = os.path.basename(folder_path)
+
 
         # Validates host and folder attributes, since there are no real folder attributes, at all...
         validate_host_attributes(folder_attributes)
 
-
-        Folder.folder(folder_path).edit(folder_alias, folder_attributes)
-
-
-    def _get(self, request):
-        validate_request_keys(request, required_keys=["folder"], optional_keys = ["effective_attributes"])
-        folder_path = request["folder"]
-        if not Folder.folder_exists(folder_path):
-            raise MKUserError(None, _("Folder %s does not exist") % folder_path)
-
-        folder = Folder.folder(folder_path)
-        if bool(int(request.get("effective_attributes", "0"))):
-            return folder.effective_attributes()
-        else:
-            return folder.attributes()
+        folder.edit(folder_alias, folder_attributes)
 
 
     def _delete(self, request):
-        validate_request_keys(request, required_keys=["folder"])
+        validate_request_keys(request, required_keys=["folder"],
+                                       optional_keys=["configuration_hash"])
+
         folder_path = request["folder"]
         if not Folder.folder_exists(folder_path):
             raise MKUserError(None, _("Folder %s does not exist") % folder_path)
 
         folder = Folder.folder(folder_path)
+        if "configuration_hash" in request:
+            validate_config_hash(request["configuration_hash"], folder.attributes())
+
         if folder.is_root():
             raise MKUserError(None, _("Unable to delete root folder"))
 
@@ -641,7 +666,10 @@ class APICallRules(APICallCollection):
 
         ruleset_dict = self._get_ruleset_configuration(ruleset_name)
         ruleset_hash = compute_config_hash(ruleset_dict)
-        return {"ruleset": ruleset_dict, "configuration_hash": ruleset_hash}
+
+        response = {"ruleset": ruleset_dict}
+        add_configuration_hash(response, ruleset_dict)
+        return response
 
 
     def _set(self, request):
@@ -746,8 +774,8 @@ class APICallHosttags(APICallCollection):
         hosttags_config = HosttagsConfiguration()
         hosttags_config.load()
 
-        hosttags_dict = hosttags_config.get_dict_format()
-        hosttags_dict["configuration_hash"] = compute_config_hash(hosttags_dict)
+        response = hosttags_config.get_dict_format()
+        add_configuration_hash(response, response) # Looks strange, but is OK
 
         return hosttags_dict
 

@@ -1,0 +1,18 @@
+Title: Host with datasource program should not be force to have an IP address
+Component: core
+State: open
+Date: 2017-05-29 16:43:34
+Targetversion: 1.4.0
+Class: bug
+
+You have a host that is monitored via a datasource program. This
+host has no DNS resolvable name, which is no problem sind Check_MK
+does not need to do a TCP connect.
+
+Nevertheless during the discovery Check_MK trries a DNS lookup
+and fails. But it should known that no IP adress is neccessary
+(since the datasource program command line does not contain <tt>&lt;IP&gt;</tr>.
+During the failed DNS lookup the datasource program is not
+being called.
+
+Better would be to use "" or 0.0.0.0 as an IP address instead.

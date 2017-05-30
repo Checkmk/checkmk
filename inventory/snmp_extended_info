@@ -33,6 +33,17 @@
 # .1.3.6.1.2.1.47.1.1.1.1.13.10
 
 
+# Note: Some bogus devices such as Cisco 2500 Series WLC or
+# Cisco Wide Area Application Services do not have exactly
+# one entry == "0" which means device itself or do not provide
+# any information about physical class.
+# In the first case {{Hardware > System}} will be omitted.
+# In the second case we inventorize these components below physical
+# components table {{Unknown entities}}.
+# In all cases ports are ignored because we have an extra view
+# for them.
+
+
 def inv_snmp_extended_info(info):
     map_type = {
         "1"  : ( "Other",       "others" ),
@@ -49,19 +60,25 @@ def inv_snmp_extended_info(info):
     }
 
     parsed = {}
+    count_parents = 0
     for child, parent, description, child_type, name, serial, model in info:
-        parsed.setdefault(child, (parent, description, child_type, name, serial, model))
-
-    for index, (parent, description, entity_type, name, serial, model) in parsed.items():
-        # device itself
         if parent == "0":
+            count_parents += 1
+        if child_type in map_type:
+            parsed.setdefault(child, (parent, description, child_type, name, serial, model))
+        else:
+            parsed.setdefault(child, (parent, description, "2", name, serial, model))
+
+    node = None
+    for index, (parent, description, entity_type, name, serial, model) in parsed.items():
+        if count_parents == 1 and parent == "0":
             node = inv_tree("hardware.system.")
             if serial:
                 node["serial"] = serial
             if model:
                 node["model"]  = model
-        # backplanes, psus, fans, sensors, modules
-        elif entity_type in ["3", "4", "6", "7", "8", "9"]:
+
+        elif entity_type != "10":
             if parsed.get(parent):
                 location_info = (map_type[parsed[parent][2]][0], parent)
             else:

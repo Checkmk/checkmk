@@ -2,7 +2,7 @@ Title: cmk-update-agent: Better configuration of updater plugin to prevent probl
 Component: checks
 State: open
 Date: 2017-03-22 11:58:23
-Targetversion: 1.2.8
+Targetversion: 1.5.0
 Class: bug
 
 The current standard setings of our cmk-update-agent:

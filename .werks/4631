@@ -5,7 +5,7 @@ Class: fix
 Compatible: incomp
 Edition: cre
 State: unknown
-Version: 1.4.0b9
+Version: 1.4.0
 Date: 1495630510
 
 Due to a change in the way SNMP is handled by Check_MK between

@@ -5,8 +5,8 @@ Class: feature
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.4.0b9
-Date: 1488271633
+Version: 1.5.0i1
+Date: 1496137983
 
 With this new active check you are able to verify successful logins and
 optionally a timestamp of a file or operability of getting/putting a file.

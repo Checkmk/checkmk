@@ -20,6 +20,7 @@
 
     WATO:
     * 4680 FIX: Sync of local hierarchy (MKPs) preserves symlinks now...
+    * 4750 FIX: Ensure uploaded icons are saved with their filename instead of paths...
 
     HW/SW-Inventory:
     * 4660 FIX: win_os: Fixed wrong OS information if eg. ESX is installed on Windows host

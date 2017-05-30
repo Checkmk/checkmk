@@ -1682,7 +1682,7 @@ class html(HTMLGenerator, RequestHandler):
     def render_help(self, text):
         if text and text.strip():
             self.have_help = True
-            style = "display: %s;" % "block" if self.help_visible else "none"
+            style = "display: %s;" % ("block" if self.help_visible else "none")
             c = self.render_div(text.strip(), class_="help", style=style)
             return c
         else:

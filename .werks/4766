@@ -1,0 +1,18 @@
+Title: snmp_extended_info: Inventorizes all available physical components except ports in more robust way
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496139584
+Class: feature
+
+Note: Some bogus devices such as Cisco WLC 2500 Series or
+Cisco Wide Area Application Services either do not have exactly
+one entry == "0" which means device itself or do not provide
+any information about physical class.
+In the first case {{Hardware > System}} will be omitted.
+In the second case we inventorize these components below physical
+components table {{Unknown entities}}.
+In all cases ports are ignored because we have an extra view
+for them.

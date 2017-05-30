@@ -623,6 +623,27 @@ inventory_displayhints.update({
     ".hardware.system.manufacturer"                    : { "title" : _("Manufacturer") },
 
     ".hardware.components."                            : { "title" : _("Physical Components") },
+
+    ".hardware.components.others:"                    : { "title" : _("Other entities"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "view" : "invother_of_host" },
+    ".hardware.components.others:*.index"             : { "title" : _("Index") },
+    ".hardware.components.others:*.name"              : { "title" : _("Name") },
+    ".hardware.components.others:*.description"       : { "title" : _("Description") },
+    ".hardware.components.others:*.serial"            : { "title" : _("Serial Number") },
+    ".hardware.components.others:*.model"             : { "title" : _("Model Name") },
+    ".hardware.components.others:*.location"          : { "title" : _("Location") },
+
+    ".hardware.components.unknowns:"                    : { "title" : _("Unknown entities"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "view" : "invunknown_of_host" },
+    ".hardware.components.unknowns:*.index"             : { "title" : _("Index") },
+    ".hardware.components.unknowns:*.name"              : { "title" : _("Name") },
+    ".hardware.components.unknowns:*.description"       : { "title" : _("Description") },
+    ".hardware.components.unknowns:*.serial"            : { "title" : _("Serial Number") },
+    ".hardware.components.unknowns:*.model"             : { "title" : _("Model Name") },
+    ".hardware.components.unknowns:*.location"          : { "title" : _("Location") },
+
     ".hardware.components.chassis:"                    : { "title" : _("Chassis"), "render" : render_inv_dicttable,
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
                                                            "view" : "invchassis_of_host" },
@@ -643,15 +664,15 @@ inventory_displayhints.update({
     ".hardware.components.backplanes:*.model"          : { "title" : _("Model Name") },
     ".hardware.components.backplanes:*.location"       : { "title" : _("Location") },
 
-    ".hardware.components.fans:"                       : { "title" : _("Fans"), "render" : render_inv_dicttable,
+    ".hardware.components.containers:"                 : { "title" : _("Containers"), "render" : render_inv_dicttable,
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
-                                                           "view" : "invfan_of_host" },
-    ".hardware.components.fans:*.index"                : { "title" : _("Index") },
-    ".hardware.components.fans:*.name"                 : { "title" : _("Name") },
-    ".hardware.components.fans:*.description"          : { "title" : _("Description") },
-    ".hardware.components.fans:*.serial"               : { "title" : _("Serial Number") },
-    ".hardware.components.fans:*.model"                : { "title" : _("Model Name") },
-    ".hardware.components.fans:*.location"             : { "title" : _("Location") },
+                                                           "view" : "invcontainer_of_host" },
+    ".hardware.components.containers:*.index"          : { "title" : _("Index") },
+    ".hardware.components.containers:*.name"           : { "title" : _("Name") },
+    ".hardware.components.containers:*.description"    : { "title" : _("Description") },
+    ".hardware.components.containers:*.serial"         : { "title" : _("Serial Number") },
+    ".hardware.components.containers:*.model"          : { "title" : _("Model Name") },
+    ".hardware.components.containers:*.location"       : { "title" : _("Location") },
 
     ".hardware.components.psus:"                       : { "title" : _("Power Supplies"), "render" : render_inv_dicttable,
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
@@ -662,6 +683,16 @@ inventory_displayhints.update({
     ".hardware.components.psus:*.serial"               : { "title" : _("Serial Number") },
     ".hardware.components.psus:*.model"                : { "title" : _("Model Name") },
     ".hardware.components.psus:*.location"             : { "title" : _("Location") },
+
+    ".hardware.components.fans:"                       : { "title" : _("Fans"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "view" : "invfan_of_host" },
+    ".hardware.components.fans:*.index"                : { "title" : _("Index") },
+    ".hardware.components.fans:*.name"                 : { "title" : _("Name") },
+    ".hardware.components.fans:*.description"          : { "title" : _("Description") },
+    ".hardware.components.fans:*.serial"               : { "title" : _("Serial Number") },
+    ".hardware.components.fans:*.model"                : { "title" : _("Model Name") },
+    ".hardware.components.fans:*.location"             : { "title" : _("Location") },
 
     ".hardware.components.sensors:"                    : { "title" : _("Sensors"), "render" : render_inv_dicttable,
                                                            "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
@@ -686,6 +717,16 @@ inventory_displayhints.update({
     ".hardware.components.modules:*.bootloader"        : { "title" : _("Bootloader") },
     ".hardware.components.modules:*.firmware"          : { "title" : _("Firmware") },
     ".hardware.components.modules:*.type"              : { "title" : _("Type") },
+
+    ".hardware.components.stacks:"                    : { "title" : _("Stacks"), "render" : render_inv_dicttable,
+                                                           "keyorder" : [ "index", "name", "description", "serial", "model", "location" ],
+                                                           "view" : "invstack_of_host" },
+    ".hardware.components.stacks:*.index"             : { "title" : _("Index") },
+    ".hardware.components.stacks:*.name"              : { "title" : _("Name") },
+    ".hardware.components.stacks:*.description"       : { "title" : _("Description") },
+    ".hardware.components.stacks:*.serial"            : { "title" : _("Serial Number") },
+    ".hardware.components.stacks:*.model"             : { "title" : _("Model Name") },
+    ".hardware.components.stacks:*.location"          : { "title" : _("Location") },
 
     ".hardware.storage."                               : { "title" : _("Storage") },
     ".hardware.storage.disks:"                         : { "title" : _("Block Devices"), "render" : render_inv_dicttable },
@@ -1149,11 +1190,17 @@ def _create_view_enabled_check_func(invpath):
 # Now declare Multisite views for a couple of embedded tables
 declare_invtable_view("invswpac",      ".software.packages:",       _("Software package"),   _("Software packages"))
 declare_invtable_view("invinterface",  ".networking.interfaces:",   _("Network interface"),  _("Network interfaces"))
-declare_invtable_view("invbackplane",  ".hardware.components.backplanes:", _("Backplane"),  _("Backplanes"))
-declare_invtable_view("invfan",        ".hardware.components.fans:",       _("Fan"),        _("Fans"))
-declare_invtable_view("invpsu",        ".hardware.components.psus:",       _("Power supply"), _("Power supplies"))
-declare_invtable_view("invsensor",     ".hardware.components.sensors:",    _("Sensor"),     _("Sensors"))
-declare_invtable_view("invmodule",     ".hardware.components.modules:",    _("Module"),     _("Modules"))
+
+declare_invtable_view("invother", ".hardware.components.others:", _("Other entity"), _("Other entities"))
+declare_invtable_view("invunknown", ".hardware.components.unknowns:", _("Unknown entity"), _("Unknown entities"))
+declare_invtable_view("invchassis", ".hardware.components.chassis:", _("Chassis"), _("Chassis"))
+declare_invtable_view("invbackplane", ".hardware.components.backplanes:", _("Backplane"), _("Backplanes"))
+declare_invtable_view("invcontainer", ".hardware.components.containers:", _("Container"), _("Containers"))
+declare_invtable_view("invpsu", ".hardware.components.psus:", _("Power supply"), _("Power supplies"))
+declare_invtable_view("invfan", ".hardware.components.fans:", _("Fan"), _("Fans"))
+declare_invtable_view("invsensor", ".hardware.components.sensors:", _("Sensor"), _("Sensors"))
+declare_invtable_view("invmodule", ".hardware.components.modules:", _("Module"), _("Modules"))
+declare_invtable_view("invstack", ".hardware.components.stacks:", _("Stack"), _("Stacks"))
 
 declare_invtable_view("invorainstance",       ".software.applications.oracle.instance:",        _("Oracle instance"),            _("Oracle instances"))
 declare_invtable_view("invorarecoveryarea",   ".software.applications.oracle.recovery_area:",   _("Oracle recovery area"),       _("Oracle recovery areas"))

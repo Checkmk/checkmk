@@ -1,9 +1,12 @@
 Title: Link from Check_MK-Logo in page titles goes to German home page
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2016-09-27 18:32:21
 Targetversion: 1.2.8
-Class: nastiness
 
 The link should point to mathias-kettner.com for English users and
 mathias-kettner.de for German users.
+
+2017-05-30 07:58:59: changed state open -> done
+fixed

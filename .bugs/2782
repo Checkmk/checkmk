@@ -1,9 +1,12 @@
 Title: snapshot.secret should not be binary
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2015-03-31 10:23:09
 Targetversion: master
-Class: nastiness
 
 The file snapshot.secret that is being created in etc/check_mk should not
 be binary but printable to the terminal. Use some encoding.
+
+2017-05-30 07:55:13: changed state open -> done
+Snapshots have been removed.

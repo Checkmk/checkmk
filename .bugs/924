@@ -1,12 +1,15 @@
 Title: The WATO progress bar in activate changes is sync and might timeout
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2013-06-20 13:58:40
 Targetversion: 1.2.3
-Class: nastiness
 
 The progress bar is updated by a ajax request which waits for the configuration to be activated.
 This is a problem in setups where activating takes more than the timeouts of the system/site apache.
 In that case the progres bar fills up to 100% width but never changes the state to "finished". It
 stays on "activating...". The ajax request is terminated with 502 http code. This seems not to
 be handled correctly in the dialog.
+
+2017-05-30 07:53:53: changed state open -> done
+Has been fixed with new activate changes.

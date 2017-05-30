@@ -1,0 +1,10 @@
+Title: Prevent Check_MK agent updater from running multiple times
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1496131433
+Class: feature
+
+

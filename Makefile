@@ -338,6 +338,9 @@ install:
 	install -m 644 enterprise/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk_enterprise
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
 	install -m 644 werks $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks/werks-cmc
+
+skel:
+	mkdir -p $(SKEL)/var/check_mk/rrd
 endif
 
 ifeq ($(MANAGED),yes)

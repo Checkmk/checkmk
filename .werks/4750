@@ -1,0 +1,19 @@
+Title: Ensure uploaded icons are saved with their filename instead of paths
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1496123348
+
+Uploaded icons may be saved with their full origin path as file name 
+(the location the file is stored on the client) with some browsers. This
+could end up in paths like this:
+
+C:\Users\Username\Documents\Icons\service.png will be stored in Check_MK like
+~/local/share/check_mk/web/htdocs/images/icon/C:\\Users\\Username\\Documents\\Icons\\service.png
+
+These files could not be used by the user after upload. These files are now
+saved with their filename as expected.

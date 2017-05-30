@@ -1051,24 +1051,23 @@ class LivestatusQuicksearch(object):
 
 
     def _determine_search_objects(self):
-        filter_names = set(map(lambda x: "(%s)" % x.get_filter_shortname(), quicksearch_match_plugins))
+        filter_names = set(map(lambda x: "%s" % x.get_filter_shortname(), quicksearch_match_plugins))
         filter_regex = "|".join(filter_names)
 
-        # Goal: "(^| )((hg)|h|(sg)|s|(al)|(tg)|(ad)):"
-        regex = "(^| )(%(filter_regex)s):" % {"filter_regex": filter_regex}
+        # Goal: "((^| )(hg|h|sg|s|al|tg|ad):)"
+        regex = "((^| )(%(filter_regex)s):)" % {"filter_regex": filter_regex}
         found_filters = []
         matches = re.finditer(regex, self._query)
         for match in matches:
-            found_filters.append((match.group(2), match.start()))
+            found_filters.append((match.group(1), match.start()))
 
         if found_filters:
-            # I wasn't able to include the filter text into the regex match..
             filter_spec = {}
             current_string = self._query
             for filter_type, offset in found_filters[-1::-1]:
-                filter_text = to_regex(current_string[offset+len(filter_type)+2:]).strip()
-                filter_spec.setdefault(filter_type.strip(), [])
-                filter_spec[filter_type.strip()].append(filter_text)
+                filter_text = to_regex(current_string[offset+len(filter_type):]).strip()
+                filter_name = filter_type.strip().rstrip(":")
+                filter_spec.setdefault(filter_name, []).append(filter_text)
                 current_string = current_string[:offset]
             self._search_objects.append(LivestatusSearchConductor(filter_spec, "continue"))
         else:
@@ -1121,7 +1120,6 @@ class LivestatusQuicksearch(object):
             if not search_object.num_rows():
                 continue
             elements = search_object.get_elements()
-            logger.error(elements)
             elements.sort(key = lambda x: x["display_text"])
             if show_match_topics:
                 match_topic = search_object.get_match_topic()

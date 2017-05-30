@@ -1,0 +1,15 @@
+Title: Quicksearch: fixed minor parsing issue when using specific filters
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0
+Date: 1496134731
+
+The first character of the entered search text was not evaluated correctly,
+whenever specific filters, e.g. <tt>s: Check_MK</tt> where used.
+This didn't cause much trouble, since the search itself was an infix search.
+
+

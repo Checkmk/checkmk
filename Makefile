@@ -127,7 +127,7 @@ PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs
         check-version clean cppcheck dist documentation format \
         GTAGS headers healspaces help install iwyu mrproper \
         optimize-images packages setup setversion tidy version \
-	am--refresh
+	am--refresh skel
 
 all: dist packages
 

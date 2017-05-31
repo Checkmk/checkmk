@@ -1,0 +1,9 @@
+Title: Agent Updater: Break down by validating certs with SHA-1
+Component: checks
+State: open
+Date: 2017-05-31 11:29:57
+Targetversion: 1.4.0
+Class: bug
+
+If a certificate with SHA-1 is used, the agent updater breaks down during validation
+of this certificate.

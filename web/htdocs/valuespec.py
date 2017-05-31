@@ -968,9 +968,7 @@ class HTTPUrl(TextAscii):
 
 def CheckMKVersion(**args):
     args = args.copy()
-    regex_unstable = "(1\.[1234]\.(1|3|5|7|9|11|13|15)i[1-9](p[0-9]+)?)"
-    regex_stable = "(1\.[1234]\.(0|2|4|6|8|10|12|14)([bp][1-9]?[0-9]+)?)"
-    args["regex"] =  "(" + regex_unstable + "|" + regex_stable + ")$"
+    args["regex"] = "[0-9]+\.[0-9]+\.[0-9]+([bpi][0-9]+|i[0-9]+p[0-9]+)?$"
     args["regex_error"] = _("This is not a valid Check_MK version number")
     return TextAscii(**args)
 

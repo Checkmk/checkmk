@@ -1,0 +1,10 @@
+Title: MKP manager: Fixed creating packages for 1.4.0i* releases
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.4.0p1
+Date: 1496240716
+Class: fix
+
+

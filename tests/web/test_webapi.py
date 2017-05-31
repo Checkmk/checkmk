@@ -48,7 +48,7 @@ def test_add_host_no_folder_create(web):
         )
 
     exc_msg = "%s" % e
-    assert "Folder not existing" in exc_msg
+    assert "Unable to create parent folder" in exc_msg
 
 
 def test_get_all_hosts_basic(web):

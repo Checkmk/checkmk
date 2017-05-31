@@ -1710,7 +1710,7 @@ function init_rowselect() {
 //#   | On dropping, the page is being reloaded for persisting the move.   |
 //#   '--------------------------------------------------------------------
 
-var g_dragging = null;
+var g_element_dragging = null;
 
 function element_drag_start(event, dragger, dragging_tag, base_url)
 {
@@ -1720,7 +1720,7 @@ function element_drag_start(event, dragger, dragging_tag, base_url)
     var button = getButton(event);
 
     // Skip calls when already dragging or other button than left mouse
-    if (g_dragging !== null || button != 'LEFT')
+    if (g_element_dragging !== null || button != 'LEFT')
         return true;
 
     // Find the first parent of the given tag type
@@ -1733,7 +1733,7 @@ function element_drag_start(event, dragger, dragging_tag, base_url)
 
     add_class(dragging, "dragging");
 
-    g_dragging = {
+    g_element_dragging = {
         "dragging" : dragging,
         "moved"    : false,
         "base_url" : base_url,
@@ -1747,7 +1747,7 @@ function element_dragging(event)
     if (!event)
         event = window.event;
 
-    if (g_dragging === null)
+    if (g_element_dragging === null)
         return true;
 
     position_dragging_object(event);
@@ -1755,8 +1755,8 @@ function element_dragging(event)
 
 function position_dragging_object(event)
 {
-    var dragging  = g_dragging.dragging,
-        container = dragging.parentNode;
+    var dragging  = g_element_dragging.dragging,
+        container = g_element_dragging.dragging.parentNode;
 
     var get_previous = function(node) {
         var previous = node.previousElementSibling;
@@ -1776,7 +1776,7 @@ function position_dragging_object(event)
     // Move it up?
     var previous = get_previous(dragging);
     while (previous && mouse_offset_to_middle(previous, event).y < 0) {
-        g_dragging.moved = true;
+        g_element_dragging.moved = true;
         container.insertBefore(dragging, previous);
         previous = get_previous(dragging);
     }
@@ -1784,7 +1784,7 @@ function position_dragging_object(event)
     // Move it down?
     var next = get_next(dragging);
     while (next && mouse_offset_to_middle(next, event).y > 0) {
-        g_dragging.moved = true;
+        g_element_dragging.moved = true;
         container.insertBefore(dragging, next.nextElementSibling);
         next = get_next(dragging);
     }
@@ -1795,21 +1795,21 @@ function element_drag_stop(event)
     if (!event)
         event = window.event;
 
-    if (g_dragging === null)
+    if (g_element_dragging === null)
         return true;
 
     finalize_dragging();
-    g_dragging = null;
+    g_element_dragging = null;
 
     return prevent_default_events(event);
 }
 
 function finalize_dragging()
 {
-    var dragging = g_dragging.dragging;
+    var dragging = g_element_dragging.dragging;
     remove_class(dragging, "dragging");
 
-    if (!g_dragging.moved)
+    if (!g_element_dragging.moved)
         return; // Nothing changed. Fine.
 
     var elements = dragging.parentNode.children;
@@ -1826,7 +1826,7 @@ function finalize_dragging()
     if (has_header)
         index -= 1;
 
-    var url = g_dragging.base_url + "&_index="+encodeURIComponent(index);
+    var url = g_element_dragging.base_url + "&_index="+encodeURIComponent(index);
 
     location.href = url;
 

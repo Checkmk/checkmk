@@ -304,12 +304,15 @@ class Site(object):
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
+            print("[%0.2f] Creating site '%s'" % (time.time(), self.id))
             p = subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
                                   "-V", self.version.version_directory(),
                                   "create",
                                   "--admin-password", "cmk",
                                   "--apache-reload", self.id])
-            assert p.wait() == 0
+            exit_code = p.wait()
+            print("[%0.2f] Executed create command" % time.time())
+            assert exit_code == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
 
         if self.update_with_git:

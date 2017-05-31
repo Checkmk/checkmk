@@ -1,13 +1,49 @@
-Title: WATO rule edit/delete: Rules are referenced by list index (can delete/edit wrong rule)
+Title: ActivateChangesManager: is_running fails if last known process id is used by another process
 Component: wato
 State: open
-Date: 2017-05-09 16:06:49
-Targetversion: 1.5.0
+Date: 2017-05-31 11:26:15
+Targetversion: 1.4.0
 Class: bug
 
-When multiple users edit the same ruleset for example by moving deleting rules they can edit wrong rules
-by accident. This can happen because the rules are identified by their position in the ruleset list which
-is really bad when doing actions with an outdated view.
 
-We either need to store a hash/token of the previous configuration, send it with the edit action and
-compare it when applying a new change or we need to add some permanent identity to the rules.
+The activation folder seems to include some status files for each site.
+
+OMD[heute]:~/tmp/check_mk/wato/activation$ ll
+total 0
+drwxr-xr-x 2 heute heute 80 Mai 31 11:19 9595279f-5c40-436f-930e-42c014f0c002/
+drwxrwxr-x 2 heute heute 80 Mai 31 11:17 9c00befe-14d9-4d9c-abb5-88f0f49a5acb/
+drwxr-xr-x 2 heute heute 60 Mai 30 09:54 bb4f92ae-514c-480b-b55e-b2585be0459a/
+
+
+OMD[heute]:~/tmp/check_mk/wato/activation/9595279f-5c40-436f-930e-42c014f0c002$ cat site_heute.mk
+{'_expected_duration': 10.0,
+ '_phase': 'done',
+ '_pid': 18761,
+ '_site_id': 'heute',
+ '_state': 'success',
+ '_status_details': 'Started at: 10:56:46. Finished at: 10:56:47.',
+ '_status_text': 'Success',
+ '_time_ended': 1496134607.148224,
+ '_time_started': 1496134606.458821,
+ '_time_updated': 1496134607.148224,
+ '_warnings': []}
+
+
+
+If the pid mentioned in this file was already reused by another process, the is_running(...) call fails
+This may happen on "Activate changes", which shows an "[Errno 1] Operation not permitted" error box.
+
+2017-05-31 11:17:39,030 [40] [cmk.web 32556] /heute/check_mk/ajax_start_activation.py Internal error: Traceback (most recent call last):
+  File "/omd/sites/heute/share/check_mk/web/htdocs/wato.py", line 399, in handle_page
+    action_response = self.page()
+  File "/omd/sites/heute/share/check_mk/web/htdocs/wato.py", line 5616, in page
+    activation_id = manager.start(affected_sites, activate_until, comment, activate_foreign)
+  File "/omd/sites/heute/share/check_mk/web/htdocs/watolib.py", line 4520, in start
+    self._do_housekeeping()
+  File "/omd/sites/heute/share/check_mk/web/htdocs/watolib.py", line 4826, in _do_housekeeping
+    delete = not manager.is_running()
+  File "/omd/sites/heute/share/check_mk/web/htdocs/watolib.py", line 4559, in is_running
+    os.kill(site_state["_pid"], 0)
+OSError: [Errno 1] Operation not permitted
+
+

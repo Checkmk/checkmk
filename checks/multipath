@@ -142,6 +142,12 @@ inventory_multipath_rules = []
 # `-+- policy='round-robin 0' prio=0 status=enabled
 #   `- 20:0:0:1   sdi  8:128   active undef running
 
+# Here another one from Dell
+# Dell_Internal_Dual_SD_0123456789AB-0:0 dm-2 Dell    ,Internal Dual SD
+# size=972M features='0' hwhandler='0' wp=rw
+# `-+- policy='service-time 0' prio=0 status=active
+#   `- 1:0:0:0   sdb  8:16    active undef running
+
 # And a completely new situation:
 # <<<multipath>>>
 # Nov 05 17:17:03 | DM multipath kernel driver not loaded
@@ -166,7 +172,7 @@ def parse_multipath(info):
         (regex(r"^[a-zA-Z0-9_]+$"),                               0, None, None), # 3.
         (regex(r"^([0-9a-z]{33}|[0-9a-z]{49})\s?(dm.[0-9]+).*$"), 1, None, 2), # 4.
         (regex(r"^[a-zA-Z0-9_]+(dm-[0-9]+).*$"),                  0, None, 1), # 5. Remove this line in 1.2.0
-        (regex(r"^([-a-zA-Z0-9_ ]+)\s?(dm-[0-9]+).*$"),           1, None, 2), # 6. and 7.
+        (regex(r"^([-a-zA-Z0-9_ :]+)\s?(dm-[0-9]+).*$"),          1, None, 2), # 6. and 7.
     ]
 
     reg_prio = regex("[[ ]prio=")

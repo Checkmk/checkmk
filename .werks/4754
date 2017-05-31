@@ -1,0 +1,13 @@
+Title: Fixed possible "Operation not permitted issue" during activation
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p6
+Date: 1496244281
+
+In case a pid of a former activation process is reused by a process of
+another user a "OSError: [Errno 1] Operation not permitted" exception
+could occur.

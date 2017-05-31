@@ -4310,7 +4310,9 @@ class ActivateChangesManager(ActivateChanges):
                 os.kill(site_state["_pid"], 0)
                 return True # -> running
             except OSError, e:
-                if e.errno == 3:
+                # 3: not running
+                # 1: operation not permitted (another process reused this)
+                if e.errno in [ 3, 1 ]:
                     pass # -> not running
                 else:
                     raise

@@ -1,9 +1,9 @@
 Title: ActivateChangesManager: is_running fails if last known process id is used by another process
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2017-05-31 11:26:15
 Targetversion: 1.4.0
-Class: bug
 
 
 The activation folder seems to include some status files for each site.
@@ -47,3 +47,6 @@ This may happen on "Activate changes", which shows an "[Errno 1] Operation not p
 OSError: [Errno 1] Operation not permitted
 
 
+
+2017-05-31 17:26:25: changed state open -> done
+fixed with werk 4754

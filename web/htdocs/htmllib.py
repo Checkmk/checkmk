@@ -2001,6 +2001,7 @@ class html(HTMLGenerator, RequestHandler):
                                 json.dumps(self.keybindings))
         if self.final_javascript_code:
             self.javascript(self.final_javascript_code)
+        self.javascript("initialize_visibility_detection();")
         self.close_body()
         self.close_html()
 

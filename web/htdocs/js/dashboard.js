@@ -312,6 +312,13 @@ function calculate_dashboard() {
 }
 
 function dashboard_scheduler(initial) {
+    // Stop reload of the dashlets in case the browser window / tab is not visible
+    // for the user. Retry after short time.
+    if (!is_window_active()) {
+        setTimeout(function(){ dashboard_scheduler(initial); }, 250);
+        return;
+    }
+
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
     for(var i = 0; i < refresh_dashlets.length; i++) {

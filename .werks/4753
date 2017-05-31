@@ -1,0 +1,33 @@
+Title: Inactive browser windows/tabs are not updated until focused again
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496242418
+Class: feature
+
+This change should be a performance improvement to reduce the load of the
+sites webserver.
+
+While a Check_MK GUI page is opened in the browser several parts are updating
+themselfs in the background, for example sidebar snapins, dashlets and views.
+
+A lot of users open several instances of the GUI in different browser tabs
+(or windows) and leave them inactive in the background. They open different
+tabs and keep the others in background or even leave their computer running
+and just lock their user session.
+
+In such situation the browser keeps updating the page elements even when no
+one looks at the information.
+
+We have now implemented a mechanism to detect whether or not a page is
+visible or hidden to the user. In later case the updates are stopped until
+the user opens the page again, then the updates are immediately done.
+
+This change should be seamless for the user in most cases because the updates
+are immediately done when the user focuses the page again, but it might happen
+that you see a "grayed out" page for a short time. This grayed out page
+visualizes that the information is outdated. If you should see this for several
+seconds there is something wrong. But you can always tell your browser to
+reload the page which should resolve this.

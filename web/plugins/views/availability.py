@@ -273,7 +273,6 @@ def do_render_availability(what, av_rawdata, av_data, av_mode, av_object, avopti
 
 
 def render_availability_tables(availability_tables, what, avoptions):
-
     if not availability_tables:
         html.message(_("No matching hosts/services."))
         return
@@ -384,7 +383,6 @@ def render_timeline_legend(what):
 
 
 def render_availability_table(group_title, availability_table, what, avoptions):
-
     av_table = availability.layout_availability_table(what, group_title, availability_table, avoptions)
 
     # TODO: If summary line is activated, then sorting should now move that line to the
@@ -547,8 +545,8 @@ def render_bi_availability(title, aggr_rows):
         has_reached_logrow_limit = False
         timeline_containers, fetched_rows = availability.get_timeline_containers(aggr_rows,
                                                                                  avoptions,
-                                                                                 livestatus_limit,
-                                                                                 timewarp)
+                                                                                 timewarp,
+                                                                                 livestatus_limit)
         if livestatus_limit and fetched_rows > livestatus_limit:
             has_reached_logrow_limit = True
 
@@ -557,7 +555,6 @@ def render_bi_availability(title, aggr_rows):
             tree                = timeline_container.aggr_tree
             these_spans         = timeline_container.timeline
             timewarp_tree_state = timeline_container.timewarp_state
-
 
             spans += these_spans
 
@@ -588,18 +585,24 @@ def render_bi_availability(title, aggr_rows):
 
                     html.open_h3()
                     # render icons for back and forth
+                    button_back_shown  = False
+                    button_forth_shown = False
                     if int(these_spans[0]["from"]) == timewarp:
                         html.disabled_icon_button("back_off")
-                    have_forth = False
+                        button_back_shown = True
+
                     previous_span = None
                     for span in these_spans:
-                        if int(span["from"]) == timewarp and previous_span != None:
+                        if not button_back_shown and int(span["from"]) == timewarp and previous_span != None:
                             html.icon_button(html.makeuri([("timewarp", str(int(previous_span["from"])))]), _("Jump one phase back"), "back")
-                        elif previous_span and int(previous_span["from"]) == timewarp and span != these_spans[-1]:
+                            button_back_shown = True
+                        # Multiple followup spans can have the same "from" time
+                        # We only show one forth-arrow with an actual time difference
+                        elif not button_forth_shown and previous_span and int(previous_span["from"]) == timewarp and int(span["from"]) != timewarp:
                             html.icon_button(html.makeuri([("timewarp", str(int(span["from"])))]), _("Jump one phase forth"), "forth")
-                            have_forth = True
+                            button_forth_shown = True
                         previous_span = span
-                    if not have_forth:
+                    if not button_forth_shown:
                         html.disabled_icon_button("forth_off")
 
                     html.write_text(" &nbsp; ")
@@ -615,7 +618,7 @@ def render_bi_availability(title, aggr_rows):
                     html.close_tr()
                     html.close_table()
 
-                    timewarpcode = html.drain()
+                    timewarpcode += html.drain()
 
         # Note: 'spans_by_object' returns two arguments which are used by
         # all availability views but not by BI. There we have to take

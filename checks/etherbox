@@ -39,11 +39,13 @@
 
 # TODO: insert missing snmp output
 
+
 def etherbox_convert(info):
     sensor_data = []
     for i in range(0, len(info[1])):
         sensor_data.append((info[1][i][1], info[2][i][1], info[3][i][1], info[4][i][1] ))
     return sensor_data
+
 
 def inventory_etherbox(info, req_sensor_type):
     sensor_data = etherbox_convert(info)
@@ -54,6 +56,7 @@ def inventory_etherbox(info, req_sensor_type):
         if sensor_type == req_sensor_type:
             yield "%s.%s" % (index, sensor_type), None
 
+
 def etherbox_get_sensor(item, item_type, info):
     sensor_data = etherbox_convert(info)
     item_index, item_type = item.split(".")
@@ -63,6 +66,7 @@ def etherbox_get_sensor(item, item_type, info):
                 raise Exception("Sensor type changed %s" % item)
             return name, value
     raise Exception("Sensor not found")
+
 
 def etherbox_scan(oid):
     # Older firmware version of Etherbox do not answer on
@@ -79,6 +83,17 @@ etherbox_info = [
                  ( ".1.3.6.1.4.1.14848.2.1.2.1.5", [ OID_END, '' ]), # value * 10
                 ]
 
+
+#   .--temperature---------------------------------------------------------.
+#   |      _                                      _                        |
+#   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |     | __/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |     | ||  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   '----------------------------------------------------------------------'
+
+
 def check_etherbox_temp(item, params, info):
     try:
         name, value = etherbox_get_sensor(item, "1", info)
@@ -87,7 +102,8 @@ def check_etherbox_temp(item, params, info):
 
     uom = { "0": "c", "1": "f", "2": "k" }[info[0][0][0]]
     temp = int(value) / 10.0
-    return check_temperature(temp, params, "etherbox_temp_%s" % item, uom)
+    state, infotext, perfdata = check_temperature(temp, params, "etherbox_temp_%s" % item, uom)
+    return state, "[%s] %s" % (name, infotext), perfdata
 
 
 check_info["etherbox.temp"] = {
@@ -101,6 +117,18 @@ check_info["etherbox.temp"] = {
     "includes"              : [ "temperature.include" ],
 }
 
+
+#.
+#   .--humidity------------------------------------------------------------.
+#   |              _                     _     _ _ _                       |
+#   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
+#   |             | '_ \| | | | '_ ` _ \| |/ _` | | __| | | |              |
+#   |             | | | | |_| | | | | | | | (_| | | |_| |_| |              |
+#   |             |_| |_|\__,_|_| |_| |_|_|\__,_|_|\__|\__, |              |
+#   |                                                  |___/               |
+#   '----------------------------------------------------------------------'
+
+
 def check_etherbox_humidity(item, params, info):
     try:
         name, value = etherbox_get_sensor(item, "3", info)
@@ -108,26 +136,27 @@ def check_etherbox_humidity(item, params, info):
         return 3, error.message
 
     state = 0
-    temp = int(value) / 10.0
+    humid = int(value) / 10.0
     levels_info = ""
     if params:
         crit_low, warn_low, warn_high, crit_high = params
         levels_info = " (warn/crit below %.1f/%.1f %%RH / warn/crit at %.1f/%.1f %%RH )" %\
                         (crit_low, warn_low, warn_high, crit_high)
-        if temp <= crit_low:
+        if humid <= crit_low:
             state = 2
-        elif temp >= crit_high:
+        elif humid >= crit_high:
             state = 2
-        elif temp <= warn_low:
+        elif humid <= warn_low:
             state = 1
-        elif temp >= warn_high:
+        elif humid >= warn_high:
             state = 1
     else:
         crit_low, warn_low, warn_high, crit_high = None, None, None, None
 
-    perfdata = [ ("humidity", temp, crit_low, warn_low, warn_high, crit_high) ]
-    infotext = "%s: Humidity %.1f %%RH %s" % (name, temp, levels_info)
+    perfdata = [ ("humidity", humid, crit_low, warn_low, warn_high, crit_high) ]
+    infotext = "[%s] Humidity %.1f %%RH %s" % (name, humid, levels_info)
     return (state, infotext, perfdata)
+
 
 check_info["etherbox.humidity"] = {
     "check_function"        : check_etherbox_humidity,
@@ -138,6 +167,17 @@ check_info["etherbox.humidity"] = {
     "snmp_scan_function"    : etherbox_scan,
     "snmp_info"             : etherbox_info,
 }
+
+
+#.
+#   .--switch contact------------------------------------------------------.
+#   |               _ _       _                       _             _      |
+#   |  _____      _(_) |_ ___| |__     ___ ___  _ __ | |_ __ _  ___| |_    |
+#   | / __\ \ /\ / / | __/ __| '_ \   / __/ _ \| '_ \| __/ _` |/ __| __|   |
+#   | \__ \\ V  V /| | || (__| | | | | (_| (_) | | | | || (_| | (__| |_    |
+#   | |___/ \_/\_/ |_|\__\___|_| |_|  \___\___/|_| |_|\__\__,_|\___|\__|   |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 def check_etherbox_switch_contact(item, params, info):
@@ -157,7 +197,7 @@ def check_etherbox_switch_contact(item, params, info):
             state = 2
             extra_info = ", should be %s" % params
 
-    infotext = "%s: Switch contact %s%s" % (name, switch_state, extra_info)
+    infotext = "[%s] Switch contact %s%s" % (name, switch_state, extra_info)
     return (state, infotext, perfdata)
 
 check_info["etherbox.switch"] = {
@@ -169,6 +209,17 @@ check_info["etherbox.switch"] = {
     "snmp_scan_function"    : etherbox_scan,
     "snmp_info"             : etherbox_info,
 }
+
+
+#.
+#   .--smoke---------------------------------------------------------------.
+#   |                                        _                             |
+#   |                    ___ _ __ ___   ___ | | _____                      |
+#   |                   / __| '_ ` _ \ / _ \| |/ / _ \                     |
+#   |                   \__ \ | | | | | (_) |   <  __/                     |
+#   |                   |___/_| |_| |_|\___/|_|\_\___|                     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 def check_etherbox_smoke(item, no_params, info):
@@ -184,7 +235,8 @@ def check_etherbox_smoke(item, no_params, info):
         extra_info = " - Smoke alarm!"
         state = 2
 
-    return (state, "%s: Smoke sensor%s" % (name, extra_info), perfdata)
+    return (state, "[%s] Smoke sensor%s" % (name, extra_info), perfdata)
+
 
 check_info["etherbox.smoke"] = {
     "check_function"        : check_etherbox_smoke,
@@ -194,4 +246,3 @@ check_info["etherbox.smoke"] = {
     "snmp_scan_function"    : etherbox_scan,
     "snmp_info"             : etherbox_info,
 }
-

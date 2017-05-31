@@ -694,6 +694,13 @@ function sidebar_scheduler() {
     else
         g_seconds_to_update -= 1;
 
+    // Stop reload of the snapins in case the browser window / tab is not visible
+    // for the user. Retry after short time.
+    if (!is_window_active()) {
+        setTimeout(function(){ sidebar_scheduler(); }, 250);
+        return;
+    }
+
     var newcontent = "";
     var to_be_updated = [];
 

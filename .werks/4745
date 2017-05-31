@@ -1,0 +1,11 @@
+Title: multipath: Fixed crash on Dell devices if a colon is on uuid
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p1
+Date: 1496243300
+
+

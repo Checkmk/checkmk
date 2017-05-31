@@ -1,0 +1,12 @@
+Title: msexch_rpcclientaccess: Fixed discovery failure because of an non existing item
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p1
+Date: 1496236131
+
+The checkplugin expected an item for the service description but will never
+get one as only one service will be created.

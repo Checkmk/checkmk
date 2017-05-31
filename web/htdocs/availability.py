@@ -1277,7 +1277,7 @@ def layout_availability_table(what, group_title, availability_table, avoptions):
                        ("av_host", host),
                        ("av_service", service)])
             else:
-                timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_group", host), ("av_aggr_name", service)])
+                timeline_url = html.makeuri([("av_mode", "timeline"), ("av_aggr_group", host), ("aggr_name", service), ("view_name", "aggr_single")])
             urls.append(( "timeline", _("Timeline"), timeline_url ))
             if what != "bi":
                 urls.append(("history", _("Event History"), history_url_of((site, host, service), time_range)))
@@ -1805,9 +1805,9 @@ def compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list)
                                                            timeline_container.tree_state))
 
             timeline_container.tree_state = next_tree_state
-            timeline_container.tree_time  = tree_time
-            if timewarp == tree_time:
-                timeline_container.timewarp_state = tree_state
+            timeline_container.tree_time  = from_time
+            if timewarp == timeline_container.tree_time:
+                timeline_container.timewarp_state = timeline_container.tree_state
 
 
 

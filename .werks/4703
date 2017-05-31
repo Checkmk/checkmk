@@ -1,0 +1,18 @@
+Title: Business intelligence: fixed various display and navigation bugs in timelines page
+Level: 2
+Component: bi
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496238693
+Class: fix
+
+
+<ul>
+<li>Fixed from/until computation error</li>
+<li>No longer hiding timewarped aggregations (BI aggregations at selected timestamps)</li>
+<li>Fixed missing/redundant navigation arrows in the timeline selection</li>
+<li>Disabled support for multiple BI aggregations in timeline page. This feature will be redesigned later on</li>
+</ul>
+
+

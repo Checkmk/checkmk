@@ -8372,6 +8372,188 @@ def notification_script_title(name):
     return user_script_title("notifications", name)
 
 
+class TimeperiodSelection(ElementSelection):
+    def __init__(self, **kwargs):
+        ElementSelection.__init__(self, **kwargs)
+
+    def get_elements(self):
+        timeperiods = load_timeperiods()
+        elements = dict([ ("24X7", _("Always")) ] + \
+           [ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
+        return elements
+
+    def default_value(self):
+        return "24x7"
+
+
+def service_levels():
+    try:
+        return config.mkeventd_service_levels
+    except:
+        return [(0, "(no service level)")]
+
+
+def get_vs_flexible_notifications():
+    # Make sure, that list is not trivially false
+    def validate_only_services(value, varprefix):
+        for s in value:
+            if s and s[0] != '!':
+                return
+        raise MKUserError(varprefix + "_0", _("The list of services will never match"))
+
+    return CascadingDropdown(
+            title = _("Notification Method"),
+            choices = [
+                ( "email", _("Plain Text Email (using configured templates)") ),
+                ( "flexible",
+                  _("Flexible Custom Notifications"),
+                    ListOf(
+                        Foldable(
+                            Dictionary(
+                                optional_keys = [ "service_blacklist", "only_hosts", "only_services", "escalation" , "match_sl"],
+                                columns = 1,
+                                headers = True,
+                                elements = [
+                                    (  "plugin",
+                                       DropdownChoice(
+                                            title = _("Notification Plugin"),
+                                            choices = notification_script_choices,
+                                            default_value = "mail",
+                                        ),
+                                    ),
+                                    ( "parameters",
+                                       ListOfStrings(
+                                        title = _("Plugin Arguments"),
+                                        help = _("You can specify arguments to the notification plugin here. "
+                                                 "Please refer to the documentation about the plugin for what "
+                                                 "parameters are allowed or required here."),
+                                       )
+                                    ),
+                                    (  "disabled",
+                                       Checkbox(
+                                            title = _("Disabled"),
+                                            label = _("Currently disable this notification"),
+                                            default_value = False,
+                                        )
+                                    ),
+                                    ( "timeperiod",
+                                      TimeperiodSelection(
+                                          title = _("Timeperiod"),
+                                          help = _("Do only notifiy alerts within this time period"),
+                                      )
+                                    ),
+                                    ( "escalation",
+                                      Tuple(
+                                          title = _("Restrict to n<sup>th</sup> to m<sup>th</sup> notification (escalation)"),
+                                          orientation = "float",
+                                          elements = [
+                                              Integer(
+                                                  label = _("from"),
+                                                  help = _("Let through notifications counting from this number"),
+                                                  default_value = 1,
+                                                  minvalue = 1,
+                                                  maxvalue = 999999,
+                                              ),
+                                              Integer(
+                                                  label = _("to"),
+                                                  help = _("Let through notifications counting upto this number"),
+                                                  default_value = 999999,
+                                                  minvalue = 1,
+                                                  maxvalue = 999999,
+                                              ),
+                                        ],
+                                      ),
+                                    ),
+                                    ( "match_sl",
+                                      Tuple(
+                                        title = _("Match service level"),
+                                        help = _("Host or Service must be in the following service level to get notification"),
+                                        orientation = "horizontal",
+                                        show_titles = False,
+                                        elements = [
+                                          DropdownChoice(label = _("from:"),  choices = service_levels, prefix_values = True),
+                                          DropdownChoice(label = _(" to:"),  choices = service_levels, prefix_values = True),
+                                        ],
+                                      ),
+                                    ),
+                                  ( "host_events",
+                                     ListChoice(
+                                          title = _("Host Events"),
+                                          choices = [
+                                          ( 'd', _("Host goes down")),
+                                          ( 'u', _("Host gets unreachble")),
+                                          ( 'r', _("Host goes up again")),
+                                          ( 'f', _("Start or end of flapping state")),
+                                          ( 's', _("Start or end of a scheduled downtime ")),
+                                          ( 'x', _("Acknowledgement of host problem")),
+                                        ],
+                                        default_value = [ 'd', 'u', 'r', 'f', 's', 'x' ],
+                                    )
+                                  ),
+                                    ( "service_events",
+                                      ListChoice(
+                                          title = _("Service Events"),
+                                          choices = [
+                                            ( 'w', _("Service goes into warning state")),
+                                            ( 'u', _("Service goes into unknown state")),
+                                            ( 'c', _("Service goes into critical state")),
+                                            ( 'r', _("Service recovers to OK")),
+                                            ( 'f', _("Start or end of flapping state")),
+                                            ( 's', _("Start or end of a scheduled downtime")),
+                                            ( 'x', _("Acknowledgement of service problem")),
+                                        ],
+                                        default_value = [ 'w', 'c', 'u', 'r', 'f', 's', 'x' ],
+                                    )
+                                  ),
+                                  ( "only_hosts",
+                                    ListOfStrings(
+                                        title = _("Limit to the following hosts"),
+                                        help = _("Configure the hosts for this notification. Without prefix, only exact, case sensitive matches, "
+                                                 "<tt>!</tt> for negation and <tt>~</tt> for regex matches."),
+                                        orientation = "horizontal",
+                                        # TODO: Clean this up to use an alternative between TextAscii() and RegExp(). Also handle the negation in a different way
+                                        valuespec = TextAscii(
+                                            size = 20,
+                                        ),
+                                    ),
+                                  ),
+                                  ( "only_services",
+                                    ListOfStrings(
+                                        title = _("Limit to the following services"),
+                                        help = _("Configure regular expressions that match the beginning of the service names here. Prefix an "
+                                                 "entry with <tt>!</tt> in order to <i>exclude</i> that service."),
+                                        orientation = "horizontal",
+                                        # TODO: Clean this up to use an alternative between TextAscii() and RegExp(). Also handle the negation in a different way
+                                        valuespec = TextAscii(
+                                            size = 20,
+                                        ),
+                                        validate = validate_only_services,
+                                    ),
+                                  ),
+                                  ( "service_blacklist",
+                                    ListOfStrings(
+                                        title = _("Blacklist the following services"),
+                                        help = _("Configure regular expressions that match the beginning of the service names here."),
+                                        orientation = "horizontal",
+                                        valuespec = RegExp(
+                                            size = 20,
+                                            mode = RegExp.prefix,
+                                        ),
+                                        validate = validate_only_services,
+                                    ),
+                                  ),
+                                ]
+                            ),
+                            title_function = lambda v: _("Notify by: ") + notification_script_title(v["plugin"]),
+                        ),
+                        title = _("Flexible Custom Notifications"),
+                        add_label = _("Add notification"),
+                    ),
+                ),
+            ]
+        )
+
+
 def get_vs_notification_methods():
     return CascadingDropdown(
         title = _("Notification Method"),
@@ -8475,9 +8657,8 @@ def validate_user_attributes(all_users, user_id, user_attrs, is_new_user = True)
                     _("Your user has no roles. Please assign at least one role."))
 
 
-        vs_notification_method = get_vs_notification_methods()
         notification_method    = user_attrs.get("notification_method")
-        get_vs_notification_methods().validate_value(notification_method, "notification_method")
+        get_vs_flexible_notifications().validate_value(notification_method, "notification_method")
     else:
         fallback_contact = user_attrs.get("fallback_contact")
         if fallback_contact and not email:

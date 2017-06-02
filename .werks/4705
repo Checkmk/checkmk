@@ -1,0 +1,12 @@
+Title: Fixed broken flexible notifications configuration
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496404829
+Class: fix
+
+The user configuration page no longer raises an exception upon <i>Save</i> when
+flexible notifications are enabled.
+

@@ -2048,11 +2048,14 @@ def validate_and_compile_mib(mibname, content):
         from pysmi.searcher.pyfile import PyFileSearcher
         from pysmi.writer.pyfile import PyFileWriter
         from pysmi.reader.localfile import FileReader
-        from pysmi.codegen.pysnmp import PySnmpCodeGen, baseMibs, defaultMibPackages
+        from pysmi.codegen.pysnmp import PySnmpCodeGen
         from pysmi.writer.callback import CallbackWriter
         from pysmi.reader.callback import CallbackReader
         from pysmi.searcher.stub import StubSearcher
         from pysmi.error import PySmiError
+
+        defaultMibPackages = PySnmpCodeGen.defaultMibPackages
+        baseMibs           = PySnmpCodeGen.baseMibs
     except ImportError, e:
         raise Exception(_('You are missing the needed pysmi python module (%s).') % e)
 

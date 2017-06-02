@@ -1,0 +1,11 @@
+Title: Agent Bakery: Selection for package creation
+Component: wato
+State: open
+Date: 2017-06-02 16:35:15
+Targetversion: 1.5.0
+Class: todo
+
+In Agent Bakery are all installation packages create for one installation group.
+Customers want to choose, which packages should be created.
+If a customer is only using Windows and debian based systems, RPM and TGZ is not needed.
+Make a configuration option, where the customer can choose, which packages will be created.

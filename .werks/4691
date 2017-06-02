@@ -1,0 +1,13 @@
+Title: Make Smart Ping more robust
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1496402879
+Class: fix
+
+In some environments, Smart Ping can be confronted with esoteric link-layer
+header types and non-IPv4 packets.  This could lead to incorrectly reported
+Smart Pings, which are normally harmless, but confusing in the presence of
+logging. This has been fixed.

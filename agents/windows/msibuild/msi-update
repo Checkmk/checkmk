@@ -50,6 +50,7 @@ try:
     # Revision (from build_version)
     revision  = sys.argv[3]
 
+    # TODO: complete overhaul of version generation
     # Official version name, e.g
     # 1.2.5i4p1
     # 2015.04.12
@@ -59,6 +60,7 @@ try:
     try:
         major, minor, build = map(lambda x: x.lstrip("0"),
                                   new_version_name.split("-")[0].split(".")[:3])
+        build = build == "" and "0" or build
         if len(major) > 3:
             # Looks like a daily build.. 2015.03.05
             major = major[2:].lstrip("0")

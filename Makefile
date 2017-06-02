@@ -458,6 +458,8 @@ setup:
 	    bear \
 	    build-essential \
 	    figlet \
+	    libboost1.63-dev \
+	    libboost-system1.63-dev \
 	    libpcap-dev \
 	    librrd-dev \
 	    pngcrush \

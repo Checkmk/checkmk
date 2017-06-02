@@ -400,7 +400,7 @@ class APICallHosts(APICallCollection):
 
         host = Host.host(hostname)
         host.need_permission("read")
-        if request.get("effective_attributes") == "1":
+        if bool(int(request.get("effective_attributes", "0"))):
             attributes = host.effective_attributes()
         else:
             attributes = host.attributes()

@@ -1,0 +1,11 @@
+Title: netapp_api_vf_stats: improved computation of CPU utilization, now showing number of processors
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1496741969
+
+

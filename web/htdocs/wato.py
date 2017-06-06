@@ -14522,7 +14522,6 @@ def create_sample_config():
                 "qmail_stats",
             ],
             "inventory_check_interval": 120,
-            "enable_rulebased_notifications": True,
         }
     )
 

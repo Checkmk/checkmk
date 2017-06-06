@@ -1,0 +1,10 @@
+Title: Fixed standard setting for rule based notification in new sites
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.4.0p2
+Date: 1496773819
+Class: fix
+
+Rule based notifications is new standard setting for new created sites.

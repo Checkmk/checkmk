@@ -9741,6 +9741,26 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "cisco_fw_connections",
+    _("Cisco ASA Firewall Connections"),
+    Dictionary(
+        elements = [
+            ("connections", Tuple(
+                help = _("This rule sets limits to the current number of connections through "
+                         "a Cisco ASA firewall."),
+                title = _("Maximum number of firewall connections"),
+                elements = [
+                    Integer(title=_("Warning at")),
+                    Integer(title=_("Critical at")),
+                ],
+            )),
+    ]),
+    None,
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "checkpoint_connections",
     _("Checkpoint Firewall Connections"),
     Tuple(

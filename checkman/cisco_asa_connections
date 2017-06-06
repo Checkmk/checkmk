@@ -1,0 +1,15 @@
+title: Cisco ASA Connections
+agents: snmp
+catalog: hw/network/cisco
+distribution: check_mk
+license: GPLv3
+description:
+ This check monitors the number of connections currently in use by the entire firewall and
+ the highest number of connections in use at any one time since system startup of Cisco ASA
+ devices.
+
+ Upper levels for currently connections can be set. There are no default levels.
+
+inventory:
+ One service will be created.
+

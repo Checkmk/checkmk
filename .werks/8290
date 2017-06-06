@@ -1,0 +1,11 @@
+Title: Fixed new service description selection for new sites
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p2
+Date: 1496773033
+Class: fix
+
+Added missing selection for usage of new service description in
+Global Settings -> Execution of checks -> Use new service description.

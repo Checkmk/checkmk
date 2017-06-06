@@ -66,7 +66,7 @@ def parse_saprouter_cert(info):
         if validity and "NotBefore:" in line:
             parsed[validity].setdefault("not_before", parse_date(line[-5:-1]))
 
-        elif validity and "NotAfter:" in line:
+        elif validity and ("NotAfter:" in line or "NotAfter" in line):
             parsed[validity].setdefault("not_after", parse_date(line[-5:-1]))
 
         elif "sso for user" == " ".join(line[:3]).lower():

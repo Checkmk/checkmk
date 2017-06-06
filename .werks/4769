@@ -1,0 +1,10 @@
+Title: saprouter_cert: More robust detection of "not after" value
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p2
+Date: 1496747804
+Class: fix
+
+

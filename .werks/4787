@@ -1,0 +1,10 @@
+Title: HPE MCS 200: Added new checks for cooling device
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496743098
+Class: feature
+
+

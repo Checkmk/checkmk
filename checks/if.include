@@ -289,7 +289,7 @@ def inventory_if_common(info, has_nodeinfo = False):
 
         # Fix bug in TP Link switches
         ifSpeed = saveint(ifSpeed)
-        if ifSpeed > 9000000 * 100 * 1000:
+        if ifSpeed > 9 * 1000 * 1000 * 1000 * 1000:
             ifSpeed /= 1000000
 
         # compute item now - also for unmonitored ports - in order to see if it is unique.

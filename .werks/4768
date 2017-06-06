@@ -1,0 +1,10 @@
+Title: cisco_asa_connections: New check which monitors number of connections currently in use by Cisco ASA devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496743160
+Class: feature
+
+

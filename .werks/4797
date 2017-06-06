@@ -1,0 +1,13 @@
+Title: Removed deprecated global service discovery setting and added new standard rule
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1496774354
+
+Removed deprecated global service discovery setting for new created sites
+and added a new standard rule which will execute every two hours a service
+discovery.

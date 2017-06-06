@@ -422,7 +422,7 @@ def render_availability_table(group_title, availability_table, what, avoptions):
             table.cell(title, text, css=css, help=help)
 
     if "summary" in av_table:
-        table.row(css="summary")
+        table.row(css="summary", fixed=True)
         if show_urls:
             table.cell("", "") # Empty cell in URLs column
         table.cell("", _("Summary"), css="heading")

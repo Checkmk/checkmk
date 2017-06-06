@@ -1,0 +1,120 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# example output
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.2.1 4
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.2.2 8
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.2.3 7
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.3.1 Temperature In
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.3.2 Warning message
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.3.3 Alarm message
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.4.1 4
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.4.2 4
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.4.3 4
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.5.1 20
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.5.2 0
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.5.3 0
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.6.1 35
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.6.2 0
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.6.3 0
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.7.1 10
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.7.2 0
+# .1.3.6.1.4.1.232.167.2.4.5.2.1.7.3 0
+
+def parse_hp_mcs_sensors(info):
+    parsed = {}
+
+    for line in info:
+        parsed[line[0]] = {
+            "type"   : int(line[1]),
+            "name"   : line[2],
+            "status" : int(line[3]),
+            "value"  : float(line[4]),
+            "high"   : float(line[5]),
+            "low"    : float(line[6]),
+        }
+
+    return parsed
+
+
+def inventory_hp_mcs_sensors(parsed):
+    for key, entry in parsed.iteritems():
+        if int(entry["type"]) in [ 4, 5, 13, 14, 15, \
+                             16, 17, 18, 19, 20]:
+            yield ( entry["name"], {} )
+
+
+def check_hp_mcs_sensors(item, params, parsed):
+    for key, entry in parsed.iteritems():
+        if entry["name"] == item:
+            return check_temperature(entry["value"], params, "hp_mcs_sensors_%s" % key)
+
+
+check_info['hp_mcs_sensors'] = {
+    'parse_function'        : parse_hp_mcs_sensors,
+    'inventory_function'    : inventory_hp_mcs_sensors,
+    'check_function'        : check_hp_mcs_sensors,
+    'service_description'   : 'Sensor %s',
+    'has_perfdata'          : True,
+    'snmp_info'             : ('.1.3.6.1.4.1.232.167.2.4.5.2.1', [
+                                    "1", # CPQWCRM-MIB::waterCoolUnitSensorIndex
+                                    "2", # CPQWCRM-MIB::waterCoolUnitSensorType
+                                    "3", # CPQWCRM-MIB::waterCoolUnitSensorText
+                                    "4", # CPQWCRM-MIB::waterCoolUnitSensorStatus
+                                    "5", # CPQWCRM-MIB::waterCoolUnitSensorValue
+                                    "6", # CPQWCRM-MIB::waterCoolUnitSensorSetHigh
+                                    "7", # CPQWCRM-MIB::waterCoolUnitSensorSetLow
+                              ]),
+    'snmp_scan_function'    : hp_mcs_scan_function,
+    'group'                 : "temperature",
+    'includes'              : [ "temperature.include" ]
+}
+
+factory_settings["hp_mcs_sensors_fan_default_levels"] = {
+            "lower" : (1000, 500),
+}
+
+def inventory_hp_mcs_sensors_fan(parsed):
+    for key, entry in parsed.iteritems():
+        if entry["type"] in [ 9, 10, 11, 26, 27, 28 ]:
+            yield ( entry["name"], {} )
+
+def check_hp_mcs_sensors_fan(item, params, parsed):
+    for key, entry in parsed.iteritems():
+        if entry["name"] == item:
+            return check_fan(entry["value"], params)
+
+
+check_info['hp_mcs_sensors.fan'] = {
+    'inventory_function'      : inventory_hp_mcs_sensors_fan,
+    'check_function'          : check_hp_mcs_sensors_fan,
+    'service_description'     : 'Sensor %s',
+    'has_perfdata'            : True,
+    'group'                   : "hw_fans",
+    'includes'                : [ "hp_mcs.include", "fan.include" ],
+    'default_levels_variable' : "hp_mcs_sensors_fan_default_levels",
+}

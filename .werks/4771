@@ -1,0 +1,11 @@
+Title: MKP manager: Fixed indentation error which led to invalid table with TypeError: 'NoneType' object has no attribute '__getitem__'
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1496828212
+
+

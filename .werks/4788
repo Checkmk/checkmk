@@ -1,0 +1,12 @@
+Title: openhardwaremonitor: New support of current hardware
+Level: 2
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496821715
+Class: fix
+
+Due the update from 0.7.1 to 0.8.0 a new set of hardware is supported. For
+more information please see the official website of the developer:
+http://openhardwaremonitor.org/

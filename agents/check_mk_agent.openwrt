@@ -221,7 +221,7 @@ run_real_time_checks()
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.4.0p2
+echo Version: 1.4.0p3
 echo AgentOS: openwrt
 echo Hostname: $HOSTNAME
 echo AgentDirectory: $MK_CONFDIR

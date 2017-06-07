@@ -14521,6 +14521,7 @@ def create_sample_config():
                 "barracuda_mailqueues",
                 "qmail_stats",
             ],
+            "enable_rulebased_notifications": True,
         }
     )
 

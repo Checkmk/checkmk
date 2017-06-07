@@ -8322,7 +8322,8 @@ def mode_notifications(phase):
     # Check setting of global notifications. Are they enabled? If not, display
     # a warning here. Note: this is a main.mk setting, so we cannot access this
     # directly.
-    if not load_configuration_settings().get("enable_rulebased_notifications", True):
+    current_settings = load_configuration_settings()
+    if not current_settings.get("enable_rulebased_notifications"):
         url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
         html.show_warning(
            _("<b>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
@@ -10271,7 +10272,7 @@ def mode_users(phase):
         html.icon_button(delete_url, _("Delete"), "delete")
 
         notifications_url = folder_preserving_link([("mode", "user_notifications"), ("user", id)])
-        if load_configuration_settings().get("enable_rulebased_notifications", True):
+        if load_configuration_settings().get("enable_rulebased_notifications"):
             html.icon_button(notifications_url, _("Custom notification table of this user"), "notifications")
 
         # ID
@@ -10352,7 +10353,7 @@ def mode_users(phase):
             html.i(_("none"))
 
         # notifications
-        if not load_configuration_settings().get("enable_rulebased_notifications", True):
+        if not load_configuration_settings().get("enable_rulebased_notifications"):
             table.cell(_("Notifications"))
             if not cgs:
                 html.i(_("not a contact"))
@@ -10417,7 +10418,7 @@ def bulk_delete_users_after_confirm(users):
 
 def mode_edit_user(phase):
     # Check if rule based notifications are enabled (via WATO)
-    rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications", True)
+    rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
 
     users   = userdb.load_users(lock = phase == 'action')
     user_id = html.get_unicode_input("edit") # missing -> new user
@@ -14178,7 +14179,7 @@ def page_user_profile(change_pw=False):
     # WATO module due to WATO permission issues. So we cannot show this button
     # right now.
     if not change_pw:
-        rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications", True)
+        rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
         if rulebased_notifications and config.user.may('general.edit_notifications'):
             html.begin_context_buttons()
             url = "wato.py?mode=user_notifications_p"

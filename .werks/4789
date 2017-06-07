@@ -1,0 +1,12 @@
+Title: check_mk_agent.aix: Fixed computation of uptime
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496848241
+Class: fix
+
+once a day the computation of uptime has been wrong. This bug occured only
+1 hour a day, when the output of uptime did contain days and minutes but
+no hours.

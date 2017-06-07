@@ -42,7 +42,7 @@ register_configvar(group,
         help = _("If you enable the new rule based notifications then the current plain text email and "
                  "&quot;flexible notifications&quot; will become inactive. Instead notificatios will "
                  "be configured with the WATO module <i>Notifications</i> on a global base."),
-        default_value = True,
+        default_value = False,
     ),
     domain = "check_mk",
     need_restart = True)

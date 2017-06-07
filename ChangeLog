@@ -1,4 +1,7 @@
 1.2.8p24:
+    Checks & Agents:
+    * 4788 FIX: openhardwaremonitor: New support of current hardware...
+
 
 1.2.8p23:
     Checks & Agents:

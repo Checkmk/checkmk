@@ -1,4 +1,4 @@
-Title: MKP manager: Fixed indentation error which led to invalid table with TypeError: 'NoneType' object has no attribute '__getitem__'
+Title: MKP manager: Fixed broken listing of unpackaged files
 Level: 1
 Component: multisite
 Compatible: compat
@@ -7,4 +7,4 @@ Version: 1.4.0p2
 Date: 1496828212
 Class: fix
 
-
+Reason was an indentation error which led to invalid table with TypeError: 'NoneType' object has no attribute '__getitem__'

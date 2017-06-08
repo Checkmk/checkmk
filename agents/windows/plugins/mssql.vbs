@@ -88,6 +88,7 @@ registry.EnumValues HKLM, "SOFTWARE\Microsoft\Microsoft SQL Server\Instance Name
                           value_names, value_types
 
 If Not IsArray(value_names) Then
+    addOutput("<<<mssql_instance:sep(124)>>>")
     addOutput("ERROR: Failed to gather SQL server instances")
     wscript.quit(1)
 End If

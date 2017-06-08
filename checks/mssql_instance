@@ -37,12 +37,17 @@
 # <<<mssql_instance:sep(124)>>>
 # MSSQL_MICROSOFT##SSEE|state|0|[DBNETLIB][ConnectionOpen (Connect()).]SQL Server existiert nicht oder Zugriff verweigert.
 
+# <<<mssql_instance:sep(124)>>>
+# ERROR: Failed to gather SQL server instances
+
 def parse_mssql_instance(info):
     parsed = {}
 
     for line in info:
-        # Remove the MSSQL_ prefix from the ID for this check
-        if line[0][:6] == "MSSQL_":
+        if line[0].startswith("ERROR:"):
+            continue
+        elif line[0][:6] == "MSSQL_":
+            # Remove the MSSQL_ prefix from the ID for this check
             instance_id = line[0][6:]
         else:
             instance_id = line[0]

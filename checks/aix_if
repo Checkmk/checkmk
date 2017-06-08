@@ -85,6 +85,8 @@ def parse_aix_if(info):
             nic_info[nic]["ifSpeed"] = int(line[3]) * 1000000
         elif  " ".join(line[0:2]) == "Driver Flags:":
             nic_info[nic]["flags"] = line[2:]
+        elif " ".join(line[0:3]) == "KIM Driver Flags:":
+            nic_info[nic]["flags"] = line[3:]
         elif len(line) and ":" not in " ".join(line) and "flags" in nic_info[nic]:
             nic_info[nic]["flags"] += line
 

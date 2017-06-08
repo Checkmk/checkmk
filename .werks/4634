@@ -1,0 +1,13 @@
+Title: aix_if: Make check work with different ifconfig output format
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p3
+Date: 1496911872
+
+On some systems, the operational status information is listed under
+"KIM Driver Flags" instead of simply "Driver Flags", which previously
+could not be parsed correctly by the check. This has been fixed.

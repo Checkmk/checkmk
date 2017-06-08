@@ -4,6 +4,7 @@
     * 4772 FIX: cisco_wlc, cisco_wlc_clients: Added support for Cisco 1850 devices
     * 4790 FIX: Fixed scaling for the average in interface services of pnp4nagios graphs...
     * 4634 FIX: aix_if: Make check work with different ifconfig output format...
+    * 4774 FIX: wmi_cpuload: Expanded missing information handling
 
 
 1.2.8p23:

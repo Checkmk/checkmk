@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#Example output:
+
 #<<<solaris_psrinfo:persist(1405715354)>>>
 #The physical processor has 8 virtual processors (0-7)
 #  SPARC64-VII+ (portid 1024 impl 0x7 ver 0xc1 clock 2660 MHz)
@@ -35,12 +35,30 @@
 #The physical processor has 8 virtual processors (24-31)
 #  SPARC64-VII+ (portid 1048 impl 0x7 ver 0xc1 clock 2660 MHz)
 
+#<<<solaris_psrinfo:persist(1405715354)>>>
+#The physical processor has 10 cores and 80 virtual processors (0-79)
+#  The core has 8 virtual processors (0-7)
+#  The core has 8 virtual processors (8-15)
+#  The core has 8 virtual processors (16-23)
+#  The core has 8 virtual processors (24-31)
+#  The core has 8 virtual processors (32-39)
+#  The core has 8 virtual processors (40-47)
+#  The core has 8 virtual processors (48-55)
+#  The core has 8 virtual processors (56-63)
+#  The core has 8 virtual processors (64-71)
+#  The core has 8 virtual processors (72-79)
+#    SPARC-T5 (chipid 0, clock 3600 MHz)
+
+#<<<solaris_psrinfo:persist(1405715354)>>>
+#The physical processor has 8 virtual processors (0-7)
+#  SPARC-T5 (chipid 0, clock 3600 MHz)
+
 
 def inv_solaris_psrinfo(info):
-    solaris_uname = {}
     node = inv_tree("hardware.cpu.")
-    node["Model"]   = info[1][0]
-    node["Maximum Speed"]   = "%s %s" %(info[1][-2], info[1][-1].strip(')') )
+    node["Model"] = info[-1][0]
+    node["Maximum Speed"] = "%s %s" %(info[-1][-2], info[-1][-1].strip(')') )
+
 
 inv_info['solaris_psrinfo'] = {
    "inv_function"           : inv_solaris_psrinfo,

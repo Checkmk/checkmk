@@ -1,0 +1,10 @@
+Title: mssql_instance: Added error handling if plugin fails to gather SQL server instances
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p3
+Date: 1496911830
+Class: fix
+
+

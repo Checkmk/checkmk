@@ -1,0 +1,11 @@
+Title: Fixed wrong unit in graph for tape utilization
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496916692
+Class: fix
+
+The unit has been percent but the it's actually a counter for used tapes if all
+of them would be completely filled up. Thanks to Peter Husemann for this hint.

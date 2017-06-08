@@ -25,7 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 
-fortigate_ipsecvpn_default_levels = (1, 2)
+factory_settings["fortigate_ipsecvpn"] = {
+    "levels":   (1, 2),
+}
 
 
 def inventory_fortigate_ipsecvpn(info):

@@ -1,0 +1,12 @@
+Title: Button "All Logfiles" in logwatch user interface now works in distributed mode
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p3
+Date: 1496926447
+Class: fix
+
+The problem was that this button would only show the log files that are on
+the same monitoring site as the currently shown log file or host. This problem
+only appeared in a distributed environment.

@@ -1709,6 +1709,7 @@ def get_bi_leaf_history(aggr_rows, time_range, livestatus_limit):
         for site, host, service in bi.find_all_leaves(tree):
             by_host.setdefault(host, set([])).add(service)
             host_service_info.add((host, service and service or ""))
+            host_service_info.add((host, ""))
 
         timeline_container = TimelineContainer(row)
         timeline_container.host_service_info = host_service_info
@@ -1725,7 +1726,7 @@ def get_bi_leaf_history(aggr_rows, time_range, livestatus_limit):
 
     data = sites.live().query(query)
     if not data:
-        return [], None
+        return [], [], None
 
     sites.live().set_prepend_site(False)
     sites.live().set_only_sites(None)
@@ -1757,8 +1758,10 @@ def get_bi_leaf_history(aggr_rows, time_range, livestatus_limit):
     return phases_list, timeline_containers, len(rows)
 
 def compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list):
-    aggr_row_timelines = []
     bi.load_assumptions()
+
+    if not timeline_containers:
+        return timeline_containers
 
     def update_states(states, use_entries, phase_entries):
         for element in use_entries:
@@ -1787,7 +1790,7 @@ def compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list)
 
 
     # Remaining phases, may include some elements
-    for from_time, phase_hst_svc in phases_list:
+    for from_time, phase_hst_svc in phases_list[1:]:
         phase_keys = set(phase_hst_svc.keys())
 
         for timeline_container in timeline_containers:

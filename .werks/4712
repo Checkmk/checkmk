@@ -1,0 +1,15 @@
+Title: BI availability: Fixes bugs related to no configured BIs and BIs only showing services
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1496934799
+
+If you opened the BI availability page without having any BIs configured, an exception was shown.
+
+
+BIs only containing service states, but not the host state of the services host, were incorrectly calculated.
+

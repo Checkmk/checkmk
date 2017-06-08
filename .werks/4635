@@ -1,0 +1,11 @@
+Title: raritan_emx_sensors.temp, raritan_px_sensors: Fix checks for Nagios core, add missing WATO rule to raritan_px_sensors
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p3
+Date: 1496915844
+
+

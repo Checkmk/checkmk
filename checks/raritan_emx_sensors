@@ -75,7 +75,7 @@ check_info['raritan_emx_sensors.temp'] = {
     'service_description'       : 'Temperature %s',
     'has_perfdata'              : True,
     'group'                     : "temperature",
-    'includes'                  : [ "temperature.include" ],
+    'includes'                  : [ "raritan.include", "temperature.include" ],
 }
 
 #.

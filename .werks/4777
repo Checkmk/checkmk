@@ -1,0 +1,11 @@
+Title: esx_vsphere_sensors: Fixed wrong interpretation of ESX sensor health state 'UNKNOWN'
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1496922381
+
+

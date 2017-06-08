@@ -1,0 +1,11 @@
+Title: check_mk_agent.solaris: Now considers top in /usr/bin/ and /usr/local/bin/
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p24
+Date: 1496925621
+
+

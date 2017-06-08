@@ -27,6 +27,7 @@
 printer_io_units = {
      '-1' : 'unknown',
      '0'  : 'unknown',
+     '2'  : 'unknown', # defined by PrtCapacityUnitTC used in newer revs.
      '3'  : '1/10000 in',
      '4'  : 'micrometers',
      '8'  : 'sheets',

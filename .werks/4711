@@ -1,0 +1,14 @@
+Title: mknotifyd: parts of master configuration could be transfered to the slave sites
+Level: 2
+Component: notifications
+Compatible: compat
+Edition: cee
+Version: 1.4.0p3
+Date: 1496914893
+Class: fix
+
+Global configuration settings for the master site, which were configured through the
+<i>Distributed Monitoring</i> page, were transfered to any slave sites.
+This caused problems on the mknotifyd running on the slave sites.
+
+This has been fixed.

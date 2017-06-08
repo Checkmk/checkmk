@@ -1,0 +1,10 @@
+Title: Fixed scaling for the average in interface services of pnp4nagios graphs
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1496911178
+Class: fix
+
+If an interface provides a bandwidth, scaling for the average value was not bandwidth but hard coded. This is now fixed thanks to Jonathan Vogt.

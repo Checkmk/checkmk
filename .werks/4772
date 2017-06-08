@@ -1,0 +1,11 @@
+Title: cisco_wlc, cisco_wlc_clients: Added support for Cisco 1850 devices
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p24
+Date: 1496910713
+
+

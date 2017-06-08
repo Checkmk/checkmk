@@ -11,6 +11,9 @@
     * 4775 FIX: fortigate_sessions: Improved missing or invalid output handling
     * 4792 FIX: Fixed wrong unit in graph for tape utilization...
 
+    HW/SW-Inventory:
+    * 4776 FIX: solaris_psrinfo: Fixed handling of newer output eg. of Solaris SPARC T5
+
 
 1.2.8p23:
     Checks & Agents:

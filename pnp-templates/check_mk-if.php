@@ -143,8 +143,8 @@ if (isset($DS[12])) {
   "DEF:outbytesa=$RRDFILE[13]:$DS[13]:MAX ".
   "CDEF:intraffica=inbytesa,$unit_multiplier,* ".
   "CDEF:outtraffica=outbytesa,$unit_multiplier,* ".
-  "CDEF:inmba=intraffica,1048576,/ ".
-  "CDEF:outmba=outtraffica,1048576,/ ".
+  "CDEF:inmba=intraffica,$scale,/ ".
+  "CDEF:outmba=outtraffica,$scale,/ ".
   "CDEF:minusoutmba=0,outmba,- ".
   "LINE:inmba#00a060:\"in (avg)              \" ".
   "GPRINT:intraffica:LAST:\"%6.1lf %s$unit/s last\" ".

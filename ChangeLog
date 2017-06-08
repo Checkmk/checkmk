@@ -2,6 +2,7 @@
     Checks & Agents:
     * 4788 FIX: openhardwaremonitor: New support of current hardware...
     * 4772 FIX: cisco_wlc, cisco_wlc_clients: Added support for Cisco 1850 devices
+    * 4790 FIX: Fixed scaling for the average in interface services of pnp4nagios graphs...
 
 
 1.2.8p23:

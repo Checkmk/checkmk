@@ -48,13 +48,13 @@ def check_esx_vsphere_sensors(_no_item, params, info):
         health_key = health_key.lower()
         if health_key == "green":
             continue # usually not output by agent anyway
-        infos.append("%s: %s (%s)" % (name, health_label, health_summary))
 
+        infos.append("%s: %s (%s)" % (name, health_label, health_summary))
         sensor_state = 0
         if health_key == "yellow":
             sensor_state = 1
         elif health_key == "unknown":
-            sensor_state = 1
+            sensor_state = 3
         else:
             sensor_state = 2
 
@@ -69,7 +69,7 @@ def check_esx_vsphere_sensors(_no_item, params, info):
                         sensor_state_modified = True
 
         state = max(state, sensor_state)
-        infos[-1] += ["", "(!)", "(!!)", "(!)"][state]
+        infos[-1] += ["", "(!)", "(!!)", "(?)"][state]
         infos[-1] += extra_info
 
     if state > 0 or sensor_state_modified:

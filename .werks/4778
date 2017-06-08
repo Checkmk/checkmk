@@ -1,0 +1,11 @@
+Title: lnx_quotas: Adapted plugin output if TABS are used in fstab
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p24
+Date: 1496927102
+
+

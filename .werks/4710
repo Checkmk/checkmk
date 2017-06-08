@@ -1,0 +1,13 @@
+Title: mknotifyd did not always reload its configuration
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1496914391
+
+The mknotifyd did not automatically detect changes, when they were configured
+through the site specific global settings in the distributed monitoring page.
+A restart of the mknotifyd was required.

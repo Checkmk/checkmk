@@ -266,7 +266,7 @@ then
 
     # the <<<statgrab_mem>>> info is already provided by <<<solaris_mem>>>
     # However, we make an exception if /usr/bin/top is missing (required by solaris_mem)
-    if [ ! -x /usr/bin/top ]
+    if [ ! -x /usr/bin/top ] && [ ! -x /usr/local/bin/top ]
     then
         echo '<<<statgrab_mem>>>'
         egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
@@ -312,10 +312,11 @@ fi
 
 
 # Memory
-if [ -x /usr/bin/top ]
+if [ -x /usr/bin/top ] || [ -x /usr/local/top ]
 then
     echo "<<<solaris_mem>>>"
-    /usr/bin/top | grep '^Memory:'
+    if [ -x /usr/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
+    if [ -x /usr/local/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
 fi
 
 if type prtdiag >/dev/null 2>&1

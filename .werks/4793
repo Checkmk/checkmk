@@ -1,0 +1,12 @@
+Title: chrony: Changed to raw IP address without dns name to avoid empty output
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p3
+Date: 1496922905
+
+The output has been empty if the timeout was reached. This fix speeds up the
+computation time since the reverse DNS lookup for the IP address is skipped.

@@ -1,0 +1,11 @@
+Title: Match for contact groups when core = Nagios does not work
+Component: notification
+State: open
+Date: 2017-06-08 08:10:56
+Targetversion: 1.4.0
+Class: bug
+
+When doing notification rules with matching on contact groups
+we need the list of contactgroups from the core. These doe
+not seem to be present when the core is Nagios so we need
+to fetch them via Livestatus. This is not yet implemented.

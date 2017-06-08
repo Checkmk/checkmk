@@ -515,7 +515,7 @@ fi
 # Time synchronization with Chrony
 if type chronyc > /dev/null 2>&1 ; then
     # Force successful exit code. Otherwise section will be missing if daemon not running
-    run_cached -s chrony 30 "waitmax 5 chronyc tracking || true"
+    run_cached -s chrony 30 "waitmax 5 chronyc -n tracking || true"
 fi
 
 if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]

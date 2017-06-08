@@ -11,6 +11,7 @@
     * 4775 FIX: fortigate_sessions: Improved missing or invalid output handling
     * 4792 FIX: Fixed wrong unit in graph for tape utilization...
     * 4777 FIX: esx_vsphere_sensors: Fixed wrong interpretation of ESX sensor health state 'UNKNOWN'
+    * 4793 FIX: chrony: Changed to raw IP address without dns name to avoid empty output...
     * 4778 FIX: lnx_quotas: Adapted plugin output if TABS are used in fstab
 
     HW/SW-Inventory:

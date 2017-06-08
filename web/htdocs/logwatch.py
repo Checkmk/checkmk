@@ -70,6 +70,10 @@ def page_show():
         show_host_log_list(site, host_name)
 
 
+def button_all_logfiles():
+    html.context_button(_("All Logfiles"), html.makeuri([('site', ''), ('host', ''), ('file', '')]))
+
+
 # Shows a list of all problematic logfiles grouped by host
 def show_log_list():
     html.header(_("All Problematic Logfiles"), stylesheets = stylesheets)
@@ -106,7 +110,7 @@ def show_host_log_list(site, host_name):
 
     html.begin_context_buttons()
     html.context_button(_("Services"), services_url(site, host_name), 'services')
-    html.context_button(_("All Logfiles"), html.makeuri([('site', ''), ('host', ''), ('file', '')]))
+    button_all_logfiles()
     html.context_button(_("Analyze host patterns"), analyse_url(site, host_name), 'analyze')
     ack_button(site, host_name)
     html.end_context_buttons()
@@ -163,7 +167,7 @@ def show_file(site, host_name, file_name):
     html.begin_context_buttons()
     html.context_button(_("Services"), services_url(site, host_name), 'services')
     html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
-    html.context_button(_("All Logfiles"), html.makeuri([('host', ''), ('file', '')]))
+    button_all_logfiles()
     html.context_button(_("Analyze patterns"), analyse_url(site, host_name, file_name), 'analyze')
 
     if html.var('_hidecontext', 'no') == 'yes':
@@ -284,7 +288,7 @@ def do_log_ack(site, host_name, file_name):
     html.header(_("Acknowledge %s") % ack_msg, stylesheets = stylesheets)
 
     html.begin_context_buttons()
-    html.context_button(_("All Logfiles"), html.makeuri([('host', ''), ('file', '')]))
+    button_all_logfiles()
     if host_name:
         html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
     if host_name and file_name:

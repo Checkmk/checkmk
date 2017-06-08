@@ -1,0 +1,10 @@
+Title: fortigate_sessions: Improved missing or invalid output handling
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p3
+Date: 1496916338
+Class: fix
+
+

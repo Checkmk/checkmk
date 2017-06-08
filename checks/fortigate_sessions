@@ -30,12 +30,12 @@ def inventory_fortigate_sessions(info):
     return [(None, "fortigate_sessions_default_levels")]
 
 def check_fortigate_sessions(item, params, info):
-    warn, crit = params
-
-    if not info[0]:
+    try:
+        current = int(info[0][0])
+    except (IndexError, ValueError):
         return
-    current = int(info[0][0])
 
+    warn, crit = params
     state = 0
     icon = ''
     if current >= warn:

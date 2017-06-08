@@ -60,6 +60,9 @@ def parse_netstat(info):
                 proto = "TCP"
             elif proto.startswith("udp"):
                 proto = "UDP"
+            # Ubuntu recently deviced to use "LISTEN" instead of "LISTENING"
+            if connstate == "LISTEN":
+                connstate == "LISTENING"
 
         if len(line) == 5: # handles UDP listeners
             proto, recv_q, send_q, local, remote = line

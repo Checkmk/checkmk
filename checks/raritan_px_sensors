@@ -119,7 +119,8 @@ check_info['raritan_px_sensors'] = {
                                         "34",   # sensorUpperWarn
                                   ]),
     'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.4",
-    'includes'                  : [ "raritan.include" ],
+    'includes'                  : [ "raritan.include", "temperature.include" ],
+    'group'                     : "temperature",
 }
 
 

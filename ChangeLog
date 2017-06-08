@@ -7,6 +7,7 @@
     * 4790 FIX: Fixed scaling for the average in interface services of pnp4nagios graphs...
     * 4634 FIX: aix_if: Make check work with different ifconfig output format...
     * 4774 FIX: wmi_cpuload: Expanded missing information handling
+    * 4635 FIX: raritan_emx_sensors.temp, raritan_px_sensors: Fix checks for Nagios core, add missing WATO rule to raritan_px_sensors
 
 
 1.2.8p23:

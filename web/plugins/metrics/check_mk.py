@@ -1077,7 +1077,7 @@ metric_info["tapes_free"] = {
 
 metric_info["tapes_util"] = {
     "title" : _("Tape utilization"),
-    "unit"  : "%",
+    "unit"  : "count",
     "color" : "#ff8020",
 }
 

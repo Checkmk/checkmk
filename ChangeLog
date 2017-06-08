@@ -9,6 +9,7 @@
     * 4774 FIX: wmi_cpuload: Expanded missing information handling
     * 4635 FIX: raritan_emx_sensors.temp, raritan_px_sensors: Fix checks for Nagios core, add missing WATO rule to raritan_px_sensors
     * 4775 FIX: fortigate_sessions: Improved missing or invalid output handling
+    * 4792 FIX: Fixed wrong unit in graph for tape utilization...
 
 
 1.2.8p23:

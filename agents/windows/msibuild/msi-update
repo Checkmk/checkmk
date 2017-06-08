@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
@@ -23,6 +23,13 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+
+###################################################
+# IMPORTANT: THIS FILE EXISTS TWICE
+# ANY CHANCES HERE ARE ALSO REQUIRED IN THE COUNTERPART
+# check_mk.git ~/share/check_mk/agents/windows/msibuild
+# cmk-omd.git  ~/packages/msitools
+####################################################
 
 import os, sys, uuid, tempfile, shutil, re
 

@@ -55,14 +55,16 @@ def check_tsm_scratch(item, params, info):
             elif tapes <= warn:
                 state = 1
 
-            return state, "Found %d tapes" % tapes
+            return state, "Found %d tapes" % tapes, \
+                        [ ("tapes_free"), tapes, warn, crit ]
 
 
     return 3, "UNKNOWN - Check no implemented"
 
 check_info["tsm_scratch"] = {
-    "check_function"        : check_tsm_scratch,
     "inventory_function"    : inventory_tsm_scratch,
+    "check_function"        : check_tsm_scratch,
     "service_description"   : "Scratch Pool %s",
+    "has_perfdata"          : True,
 }
 

@@ -1,0 +1,12 @@
+Title: netstat: Fixed wrong output if LISTENING connections should be monitored on Ubuntu
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p24
+Date: 1496928598
+
+Ubuntu uses LISTEN instead of LISTENING in netstat. The checkplugin now
+reflects this exception.

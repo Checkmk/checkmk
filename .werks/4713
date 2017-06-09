@@ -1,0 +1,10 @@
+Title: logwatch: fixed missing "Clear log" button for normal user in distributed setup
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p3
+Date: 1497020543
+Class: fix
+
+

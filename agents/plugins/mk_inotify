@@ -136,7 +136,7 @@ if not opt_foreground:
 
     # Save pid of working process.
     file(pid_filename, "w").write("%d" % os.getpid())
-
+#.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |

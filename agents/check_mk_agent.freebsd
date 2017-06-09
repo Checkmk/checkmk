@@ -356,7 +356,7 @@ if type statgrab >/dev/null 2>&1 ; then
     statgrab_vars_mem="mem. swap."
     statgrab_sections="proc disk page"
 
-    statgrab $statgrab_vars     1> /tmp/statgrab.$$
+    statgrab $statgrab_vars | grep -v md 1> /tmp/statgrab.$$
     statgrab $statgrab_vars_mem 1>>/tmp/statgrab.$$
 
 

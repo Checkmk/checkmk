@@ -16,6 +16,7 @@
     * 4778 FIX: lnx_quotas: Adapted plugin output if TABS are used in fstab
     * 4795 FIX: netstat: Fixed wrong output if LISTENING connections should be monitored on Ubuntu...
     * 4779 FIX: check_mk_agent.freebsd, check_mk_agent.solaris: Reduce agent output by excluding mirror devices
+    * 4781 FIX: mk_oracle, mk_oracle.aix: Added support for Oracle 12.2
 
     HW/SW-Inventory:
     * 4776 FIX: solaris_psrinfo: Fixed handling of newer output eg. of Solaris SPARC T5

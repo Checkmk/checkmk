@@ -1,0 +1,11 @@
+Title: mk_oracle, mk_oracle.aix: Added support for Oracle 12.2
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p24
+Date: 1497009246
+
+

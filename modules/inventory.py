@@ -319,43 +319,6 @@ def do_inv_for_realhost(hostname):
         else:
             inv_function(info)
 
-    extend_tree_with_check_mk_inventory_info(hostname)
-
-
-def extend_tree_with_check_mk_inventory_info(hostname):
-    persisted_file = cmk.paths.omd_root + "/var/check_mk/persisted/%s" % hostname
-    try:
-        persisted_data = eval(file(persisted_file).read()).items()
-
-    except IOError, e:
-        if e.errno == 2: # IOError: [Errno 2] No such file or directory
-            return
-        else:
-            raise
-
-    except Exception, e:
-        raise MKGeneralException(_("Cannot parse persisted file of %s: %s") % (hostname, e))
-
-    add_check_mk_inventory_info_to_tree(hostname, persisted_data)
-    console.verbose(tty.green + tty.bold + "check_mk_sections" + " " + tty.normal)
-
-
-def add_check_mk_inventory_info_to_tree(hostname, persisted_data):
-    node = inv_tree_list("software.applications.check_mk.inventory.sections:")
-    section_ages = []
-    for section, sectiondata in persisted_data:
-        when, until = sectiondata[:2]
-        section_ages.append(when)
-
-        node.append({
-            "section" : section,
-            "age"     : when,
-            "until"   : until,
-        })
-
-    node = inv_tree("software.applications.check_mk.inventory.")
-    node["oldest_section"] = min(section_ages)
-
 
 def get_inv_params(hostname, info_type):
     return host_extra_conf_merged(hostname, inv_parameters.get(info_type, []))

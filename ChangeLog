@@ -15,6 +15,7 @@
     * 4794 FIX: check_mk_agent.solaris: Now considers top in /usr/bin/ and /usr/local/bin/
     * 4778 FIX: lnx_quotas: Adapted plugin output if TABS are used in fstab
     * 4795 FIX: netstat: Fixed wrong output if LISTENING connections should be monitored on Ubuntu...
+    * 4779 FIX: check_mk_agent.freebsd, check_mk_agent.solaris: Reduce agent output by excluding mirror devices
 
     HW/SW-Inventory:
     * 4776 FIX: solaris_psrinfo: Fixed handling of newer output eg. of Solaris SPARC T5

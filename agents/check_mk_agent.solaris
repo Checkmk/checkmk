@@ -243,7 +243,7 @@ then
         statgrab_sections="$statgrab_sections net"
     fi
 
-    statgrab $statgrab_vars 1>/tmp/statgrab.$$ 2>/dev/null
+    statgrab $statgrab_vars | grep -v md 1> /tmp/statgrab.$$
     for s in $statgrab_sections
     do
         echo "<<<statgrab_$s>>>"

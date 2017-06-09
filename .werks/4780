@@ -1,0 +1,12 @@
+Title: HW/SW inventory: Removed entries about section ages provided by check_mk_agent; this reverts Werk 3904
+Level: 2
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1497004583
+
+These HW/SW inventory entries filled up inventory archive and slowed
+down the monitoring system. See also Werk 4485.

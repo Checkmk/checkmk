@@ -566,6 +566,10 @@ def may_see(site, host_name):
     if config.user.may("general.see_all"):
         return True
 
+    if site:
+        sites.live().set_only_sites([site])
+
+    # Note: This query won't work in a distributed setup and no site given as argument
     # livestatus connection is setup with AuthUser
     return sites.live().query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)) > 0
 

@@ -95,7 +95,7 @@ def load_failed_notifications(before=None, after=None, stat_only=False, extra_he
         config.user.may("general.see_failed_notifications_24h")
 
     if not may_see_notifications:
-        return None
+        return [0]
 
     query_filters = [
         "class = 3",

@@ -1,0 +1,11 @@
+Title: Fixed "No Data" in Tactical Overview if missing permissions to see failed notifications
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1497013081
+Class: fix
+
+Guest do not have permissions to see failed notifications per default which
+lead into an empty tactical overview. This bug is in Check_MK since June 2016.

@@ -9,4 +9,5 @@ Version: 1.4.0p4
 Date: 1497013081
 
 Guest do not have permissions to see failed notifications per default which
-lead into an empty tactical overview. This bug is in Check_MK since June 2016.
+lead into an empty tactical overview. This bug has been in Check_MK since
+June 2016.

@@ -1,12 +1,21 @@
 #!/bin/bash
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
+
+echo "Copy CRE files..."
 sudo rsync \
     --exclude "*cmc.py" \
     --exclude "*omd_configuration.py" \
-    -varx htdocs plugins /omd/sites/$SITE/share/check_mk/web/
-#    --delete \
-echo "$C files copied"
+    -arx htdocs plugins /omd/sites/$SITE/share/check_mk/web/
+
+# Also deploy all other directories of same type
+if [ ${ALL_EDITIONS:-1} != 0 ]; then
+    for WHAT in enterprise managed; do
+        if [ -e ../$WHAT/web/.f12 ]; then
+            (cd ../$WHAT/web ; ONLY_COPY=1 ALL_EDITIONS=0 bash .f12)
+        fi
+    done
+fi
 
 if [ -z $ONLY_COPY ]; then
     if [ "$SITE" != - ] ; then

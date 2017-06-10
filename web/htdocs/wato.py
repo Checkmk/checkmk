@@ -14721,6 +14721,31 @@ custom_attr_types = [
     ('TextAscii', _('Simple Text')),
 ]
 
+def load_custom_attrs():
+    try:
+        filename = multisite_dir + "custom_attrs.mk"
+        if not os.path.exists(filename):
+            return {}
+
+        vars = {
+            'wato_user_attrs': [],
+            'wato_host_attrs': [],
+        }
+        execfile(filename, vars, vars)
+
+        attrs = {}
+        for what in [ "user", "host" ]:
+            attrs[what] = vars.get("wato_%s_attrs" % what, [])
+        return attrs
+
+    except Exception, e:
+        if config.debug:
+            raise
+        raise MKGeneralException(_("Cannot read configuration file %s: %s") %
+                      (filename, e))
+
+
+
 def save_custom_attrs(attrs):
     output = wato_fileheader()
     for what in [ "user", "host" ]:
@@ -14752,7 +14777,7 @@ def mode_edit_custom_attr(phase, what):
         html.context_button(_("Back"), folder_preserving_link([("mode", "%s_attrs" % what)]), "back")
         return
 
-    all_attrs = userdb.load_custom_attrs()
+    all_attrs = load_custom_attrs()
     attrs = all_attrs.setdefault(what, [])
 
     if not new:
@@ -14914,7 +14939,7 @@ def mode_custom_attrs(phase, what):
         html.context_button(_("New Attribute"), folder_preserving_link([("mode", "edit_%s_attr" % what)]), "new")
         return
 
-    all_attrs = userdb.load_custom_attrs()
+    all_attrs = load_custom_attrs()
     attrs = all_attrs.get(what, {})
 
     if phase == "action":
@@ -14985,9 +15010,7 @@ def declare_custom_host_attrs():
             undeclare_host_attribute(attr_name)
 
     # now declare the custom attributes
-    all_attrs = userdb.load_custom_attrs()
-    attrs = all_attrs.setdefault('host', [])
-    for attr in attrs:
+    for attr in config.wato_host_attrs:
         vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
 
         if attr['add_custom_macro']:

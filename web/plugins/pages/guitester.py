@@ -26,6 +26,6 @@
 
 import guitester
 
-pagehandlers.update({
+register_handlers({
     "guitest_reschedule_all" :  guitester.page_reschedule_all,
 })

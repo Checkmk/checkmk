@@ -26,7 +26,7 @@
 
 import wato
 
-pagehandlers.update({
+register_handlers({
     "wato"                      : wato.page_handler,
 
     "ajax_start_activation"     : lambda: wato.ModeAjaxStartActivation().handle_page(),

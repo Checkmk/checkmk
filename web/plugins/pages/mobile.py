@@ -26,7 +26,7 @@
 
 import mobile
 
-pagehandlers.update({
+register_handlers({
    "mobile"       : mobile.page_index,
    "mobile_view"  : mobile.page_view,
 })

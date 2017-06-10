@@ -125,11 +125,15 @@ def load_all_plugins():
     # Install page handlers created by the pagetypes.py modules. It is allowed for all
     # kind of plugins to register own page types, so we need to wait after all plugins
     # have been loaded to update the pagehandlers
-    pagehandlers.update(pagetypes.page_handlers())
+    register_handlers(pagetypes.page_handlers())
 
     # Mark the modules as loaded after all plugins have been loaded. In case of exceptions
     # we want them to occur again on subsequent requests too.
     g_all_modules_loaded = True
+
+
+def register_handlers(handlers):
+    pagehandlers.update(handlers)
 
 
 def get_handler(name, dflt=None):

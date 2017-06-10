@@ -47,10 +47,8 @@ import inventory
 import notifications
 import valuespec
 
-
 # map URLs to page rendering functions
-
-pagehandlers.update({
+register_handlers({
     "index"                         : main.page_index,
     "login"                         : login.page_login,
     "logout"                        : login.page_logout,

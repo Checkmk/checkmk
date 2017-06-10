@@ -26,6 +26,6 @@
 
 import cron
 
-pagehandlers.update({
+register_handlers({
     "noauth:run_cron" :  cron.page_run_cron,
 })

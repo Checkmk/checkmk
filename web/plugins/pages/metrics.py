@@ -26,6 +26,6 @@
 
 import metrics
 
-pagehandlers.update({
+register_handlers({
     "noauth:pnp_template" : metrics.page_pnp_template,
 })

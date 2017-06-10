@@ -46,7 +46,7 @@ try:
 except ImportError:
     import json
 
-VERSION="1.4.0p5"
+VERSION="1.4.0p6"
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |

@@ -105,7 +105,7 @@ function run_cached() {
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.4.0p5
+echo Version: 1.4.0p6
 echo AgentOS: freebsd
 
 

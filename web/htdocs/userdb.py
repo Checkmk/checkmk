@@ -55,9 +55,6 @@ def load_plugins(force):
     # during runtime, means they need to be loaded during each page request.
     # But delete the old definitions before to also apply removals of attributes
     if user_attributes:
-        for attr_name in user_attributes.keys():
-            if attr_name not in builtin_user_attribute_names:
-                del user_attributes[attr_name]
         declare_custom_user_attrs()
 
     connection_dict.clear()
@@ -1021,36 +1018,14 @@ class GroupChoice(DualListChoice):
 #   | Mange custom attributes of users (in future hosts etc.)              |
 #   '----------------------------------------------------------------------'
 
-# TODO: userdb is a bad place for this when it manages user and host attributes!
-#       Maybe move to own module?
-def load_custom_attrs():
-    try:
-        filename = multisite_dir + "custom_attrs.mk"
-        if not os.path.exists(filename):
-            return {}
-
-        vars = {
-            'wato_user_attrs': [],
-            'wato_host_attrs': [],
-        }
-        execfile(filename, vars, vars)
-
-        attrs = {}
-        for what in [ "user", "host" ]:
-            attrs[what] = vars.get("wato_%s_attrs" % what, [])
-        return attrs
-
-    except Exception, e:
-        if config.debug:
-            raise
-        raise MKGeneralException(_("Cannot read configuration file %s: %s") %
-                      (filename, e))
-
-
 def declare_custom_user_attrs():
-    all_attrs = load_custom_attrs()
-    attrs = all_attrs.setdefault('user', [])
-    for attr in attrs:
+    # First remove all previously registered custom host attributes
+    for attr_name in user_attributes.keys():
+        if attr_name not in builtin_user_attribute_names:
+            del user_attributes[attr_name]
+
+    # now declare the custom attributes
+    for attr in config.wato_user_attrs:
         vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
         declare_user_attribute(attr['name'], vs,
             user_editable = attr['user_editable'],

@@ -1778,8 +1778,15 @@ class CREFolder(BaseFolder):
         self.need_permission("write")
         self.need_unlocked_subfolders()
 
-        # 2. Actual modification
+        # 2. check if hosts have parents
         subfolder = self.subfolder(name)
+        hosts_with_children = self._get_parents_of_hosts(subfolder.all_hosts_recursively().keys())
+        if hosts_with_children:
+            raise MKUserError("delete_host", _("You cannot delete these hosts: %s") % \
+                              ", ".join([_("%s is parent of %s.") % (parent, ", ".join(children))
+                              for parent, children in sorted(hosts_with_children.items())]))
+
+        # 3. Actual modification
         call_hook_folder_deleted(subfolder)
         add_change("delete-folder", _("Deleted folder %s") % subfolder.alias_path(),
             obj=self,
@@ -1885,10 +1892,17 @@ class CREFolder(BaseFolder):
         self.need_unlocked_hosts()
         self.need_permission("write")
 
-        # 2. Delete host specific files (caches, tempfiles, ...)
+        # 2. check if hosts have parents
+        hosts_with_children = self._get_parents_of_hosts(host_names)
+        if hosts_with_children:
+            raise MKUserError("delete_host", _("You cannot delete these hosts: %s") % \
+                              ", ".join([_("%s is parent of %s.") % (parent, ", ".join(children))
+                              for parent, children in sorted(hosts_with_children.items())]))
+
+        # 3. Delete host specific files (caches, tempfiles, ...)
         self._delete_host_files(host_names)
 
-        # 3. Actual modification
+        # 4. Actual modification
         for host_name in host_names:
             host = self.hosts()[host_name]
             del self._hosts[host_name]
@@ -1899,6 +1913,23 @@ class CREFolder(BaseFolder):
 
         self._save_wato_info() # num_hosts has changed
         self.save_hosts()
+
+
+    def _get_parents_of_hosts(self, host_names):
+        # Note: Deletion of chosen hosts which are a parent
+        # is possible if and only if all children are chosen, too.
+        hosts_with_children = {}
+        for child_key, child in Folder.root_folder().all_hosts_recursively().items():
+            for host_name in host_names:
+                if host_name in child.host_names():
+                    hosts_with_children.setdefault(host_name, [])
+                    hosts_with_children[host_name].append(child_key)
+
+        result = {}
+        for parent, children in hosts_with_children.items():
+            if not set(children) < set(host_names):
+                result.setdefault(parent, children)
+        return result
 
 
     # Group the given host names by their site and delete their files
@@ -2186,9 +2217,9 @@ class SearchFolder(BaseFolder):
 
     def delete_hosts(self, host_names):
         auth_errors = []
-        for folder, host_names in self._group_hostnames_by_folder(host_names):
+        for folder, these_host_names in self._group_hostnames_by_folder(host_names):
             try:
-                folder.delete_hosts(host_names)
+                folder.delete_hosts(these_host_names)
             except MKAuthException, e:
                 auth_errors.append(_("<li>Cannot delete hosts in folder %s: %s</li>") % (folder.alias_path(), e))
         self._invalidate_search()

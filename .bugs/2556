@@ -1,0 +1,23 @@
+Title: Rework setting of environment variables in whole OMD context
+Component: core
+State: open
+Date: 2017-06-12 09:45:35
+Targetversion: 1.4.0
+Class: bug
+
+Environment variables should only be set in ~/.profile and
+will then be inherited by all sub- and subsubprocesses. It
+seem that some start scripts explicitely source that file.
+It also seems that in some situations not all variables
+are correctly inherited.
+
+We need to investigate this, clean this up, remove explizit
+sourcing of .profile and streamline this.
+
+All variables should be set just in two places:
+
+1. su - mysite
+2. omd ... mysite
+
+All other scripts such auch etc/init.d/* should simply
+rely on correct inheritance.

@@ -104,6 +104,10 @@ class CMKVersion(object):
             self.version = version
 
 
+    def branch(self):
+        return self._branch
+
+
     def edition(self):
         return self.edition_short == CMKVersion.CRE and "raw" or "enterprise"
 

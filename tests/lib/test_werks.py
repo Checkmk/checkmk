@@ -61,3 +61,25 @@ def test_write_precompiled_werks(tmpdir, site, monkeypatch):
         merged_werks.update(cmc_werks)
 
     assert merged_werks == werks_loaded
+
+
+def test_werk_versions(site):
+    import cmk_base.utils
+
+    # All versions are allowed in master branch. We only want to ensure that version specific
+    # branches don't have werks with newer version numbers.
+    v = cmk.omd_version()
+    if cmk_base.utils.is_daily_build_version(v):
+        branch = cmk_base.utils.branch_of_daily_build(v)
+        if branch == "master":
+            return
+        else:
+            v = branch
+
+    parsed_version = cmk.werks.parse_check_mk_version(v)
+
+    for werk_id, werk in cmk.werks.load().items():
+        parsed_werk_version = cmk.werks.parse_check_mk_version(werk["version"])
+
+        assert parsed_werk_version <= parsed_version, \
+            "Version %s of werk #%d is not allowed in this branch" % (werk["version"], werk_id)

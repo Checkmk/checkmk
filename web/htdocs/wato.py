@@ -1334,7 +1334,6 @@ def mode_edit_host(phase, new, is_cluster):
 
         return action_edit_host(mode, hostname, is_cluster)
 
-
     # Show outcome of host validation. Do not validate new hosts
     errors = None
     if new:

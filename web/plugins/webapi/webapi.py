@@ -625,9 +625,10 @@ class APICallRules(APICallCollection):
         required_permissions = ["wato.rulesets"] # wato.services ?
         return {
             "get_ruleset": {
-                "handler"             : self._get,
-                "required_permissions": required_permissions,
-                "locking"             : True, # locking?
+                "handler"                : self._get,
+                "required_permissions"   : required_permissions,
+                "required_output_format" : "python",
+                "locking"                : True, # locking?
             },
             "set_ruleset": {
                 "handler"               : self._set,
@@ -700,6 +701,17 @@ class APICallRules(APICallCollection):
                     raise MKUserError(None, _("Folder %s does not exist") % folder_path)
                 rule_folder = Folder.folder(folder_path)
                 rule_folder.need_permission("write")
+
+        # Verify all rules
+        rule_vs = Ruleset(ruleset_name).rulespec.valuespec
+        for folder_path, rules in new_ruleset.items():
+            for rule in rules:
+                value = rule["value"]
+                try:
+                    rule_vs.validate_datatype(value, "test_value")
+                    rule_vs.validate_value(value, "test_value")
+                except MKException, e:
+                    raise MKException("ERROR: %s. Affected Rule %r" % (str(e), rule))
 
 
         # Add new rulesets
@@ -866,9 +878,10 @@ class APICallSites(APICallCollection):
         required_permissions = ["wato.sites"]
         return {
             "get_site": {
-                "handler"              : self._get,
-                "required_permissions" : required_permissions,
-                "locking"              : False,
+                "handler"                : self._get,
+                "required_permissions"   : required_permissions,
+                "required_output_format" : "python",
+                "locking"                : False,
             },
             "set_site": {
                 "handler"               : self._set,

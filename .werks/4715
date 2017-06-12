@@ -1,0 +1,10 @@
+Title: Web-API Calls updates. get_ruleset/get_sites: enforce output_format=python. set_ruleset now validates incoming data
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1497280352
+Class: fix
+
+

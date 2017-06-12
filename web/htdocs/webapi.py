@@ -103,14 +103,20 @@ def page_api():
         # Check if the data was sent with the correct data format
         # Some API calls only allow python code
         # TODO: convert the api_action dict into an object which handles the validation
-        required_format = api_actions[action].get("required_input_format")
-        if required_format:
-            if required_format != request_object["request_format"]:
-                raise MKUserError(None, "This API call requires a %s-encoded request parameter" % required_format)
+        required_input_format = api_actions[action].get("required_input_format")
+        if required_input_format:
+            if required_input_format != request_object["request_format"]:
+                raise MKUserError(None, "This API call requires a %s-encoded request parameter" % required_input_format)
+
+        required_output_format = api_actions[action].get("required_output_format")
+        if required_output_format:
+            if required_output_format != html.output_format:
+                raise MKUserError(None, "This API call requires the parameter output_format=%s" % required_output_format)
+
+
         # The request_format parameter is not forwarded into the API action
         if "request_format" in request_object:
             del request_object["request_format"]
-
 
         if api_actions[action].get("locking", True):
             lock_exclusive() # unlock is done automatically

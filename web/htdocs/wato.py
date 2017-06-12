@@ -10331,7 +10331,13 @@ def mode_users(phase):
         locked = user.get("locked", False)
         if user.get("locked", False):
             html.icon(_('The login is currently locked'), 'user_locked')
-        if user.get("disable_notifications", False):
+
+        if "disable_notifications" in user and type(user["disable_notifications"]) == bool:
+            disable_notifications_opts = {"disable" : user["disable_notifications"]}
+        else:
+            disable_notifications_opts = user.get("disable_notifications", {})
+
+        if disable_notifications_opts.get("disable", False):
             html.icon(_('Notifications are disabled'), 'notif_disabled')
 
         # Full name / Alias

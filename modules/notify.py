@@ -117,6 +117,24 @@ $LONGSERVICEOUTPUT$
 """
 
 #.
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
+
+
+def _transform_user_disable_notifications_opts(contact):
+    if "disable_notifications" in contact and type(contact["disable_notifications"]) == bool:
+        return {"disable" : contact["disable_notifications"]}
+    else:
+        return contact.get("disable_notifications", {})
+
+
+#.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -291,9 +309,16 @@ def locally_deliver_raw_context(raw_context, analyse=False):
         # flexible notifications even if they are enabled.
         contact = contacts.get(contactname)
 
-        if contact.get("disable_notifications", False):
-            notify_log("Notifications for %s are disabled in personal settings. Skipping." % contactname)
-            return
+        disable_notifications_opts = _transform_user_disable_notifications_opts(contact)
+        if disable_notifications_opts.get("disable", False):
+            start, end = disable_notifications_opts.get("timerange", (None, None))
+            if start is None or end is None:
+                notify_log("Notifications for %s are disabled in personal settings. Skipping." % contactname)
+                return
+            elif start <= time.time() <= end:
+               notify_log("Notifications for %s are disabled in personal settings from %s to %s. Skipping." % \
+                         (contactname, start, end))
+               return
 
         # Get notification settings for the contact in question - if available.
         if contact:
@@ -691,9 +716,16 @@ def rbn_rule_contacts(rule, context):
             contact = contacts.get(contactname)
 
         if contact:
-            if contact.get("disable_notifications", False):
-                notify_log("   - skipping contact %s: he/she has disabled notifications" % contactname)
-                continue
+            disable_notifications_opts = _transform_user_disable_notifications_opts(contact)
+            if disable_notifications_opts.get("disable", False):
+                start, end = disable_notifications_opts.get("timerange", (None, None))
+                if start is None or end is None:
+                    notify_log("   - skipping contact %s: he/she has disabled notifications" % contactname)
+                    continue
+                elif start <= time.time() <= end:
+                    notify_log("   - skipping contact %s: he/she has disabled notifications from %s to %s." % \
+                              (contactname, start, end))
+                    continue
 
             reason = rbn_match_contact_macros(rule, contactname, contact) or \
                      rbn_match_contact_groups(rule, contactname, contact)

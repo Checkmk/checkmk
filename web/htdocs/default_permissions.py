@@ -107,7 +107,7 @@ def load_plugins(force):
 
     config.declare_permission('general.disable_notifications',
         _('Disable all personal notifications'),
-        _('This permissions provides a checkbox in the personal settings of the user that '
+        _('This permissions provides a checkbox and timerange in the personal settings of the user that '
           'allows him to completely disable all of his notifications. Use with caution.'),
         [ 'admin', ]
     )

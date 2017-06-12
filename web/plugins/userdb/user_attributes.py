@@ -52,16 +52,30 @@ declare_user_attribute(
 )
 
 
+def transform_disable_notification(p):
+    if type(p) is not dict:
+        return {"disable": True}
+    else:
+        return p
+
+
 declare_user_attribute(
     "disable_notifications",
-    Checkbox(
-        title = _("Disable Notifications"),
-        label = _("Temporarily disable <b>all</b> notifications!"),
+    Transform(Dictionary(
+        title=_("Disable Notifications"),
         help = _("When this option is active the you will not get <b>any</b> "
                  "alerts or other notifications via email, SMS or similar. "
                  "This overrides all other notification settings or rules, so make "
-                 "sure that you know what you do."),
-    ),
+                 "sure that you know what you do. Moreover you can customize a timerange "
+                 "within no notifications are generated."),
+        elements = [
+            ("disable", Checkbox(title=_("Temporarily disable <b>all</b> notifications!"), label=_("Disable"))),
+            ("timerange", Tuple(title=_("Customize timerange"), elements = [
+                AbsoluteDate(title=_("From:"), include_time=True),
+                AbsoluteDate(title=_("To:"), include_time=True),
+            ]))
+        ],
+    ), forth = transform_disable_notification),
     permission = "general.disable_notifications",
     domain = "check_mk",
 )

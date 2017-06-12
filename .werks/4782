@@ -1,0 +1,13 @@
+Title: Prevent deletion of parent host
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1497251963
+Class: feature
+
+If you want to delete hosts which have parents, an error is
+raised and the deletion of these hosts won't be executed.
+Either you have to resolve the parent-child relationships
+or all related hosts are chosen.

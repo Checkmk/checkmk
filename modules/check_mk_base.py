@@ -1211,10 +1211,10 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     try:
         load_item_state(hostname)
-        cmk_section_dict, num_success, error_sections, problems = \
+        cmk_info, num_success, error_sections, problems = \
             do_all_checks_on_host(hostname, ipaddress, only_check_types)
 
-        agent_version = cmk_section_dict[u"version"]
+        agent_version = cmk_info["version"]
 
         num_errors = len(error_sections)
         save_item_state(hostname)
@@ -1505,24 +1505,24 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
     submit_aggregated_results(hostname)
 
     if fetch_agent_version:
-        cmk_section_dict = { u"version" : "(unknown)" }
+        cmk_info = { "version" : "(unknown)" }
         try:
             if is_tcp_host(hostname):
                 for line in get_info_for_check(hostname, ipaddress, 'check_mk'):
                     value = " ".join(line[1:]) if len(line) > 1 else None
-                    cmk_section_dict[line[0][:-1].lower()] = value
+                    cmk_info[str(line[0][:-1].lower())] = value
             else:
-                cmk_section_dict[u"version"] = None
+                cmk_info["version"] = None
         except MKAgentError:
             g_broken_agent_hosts.add(hostname)
         except:
             pass
     else:
-        cmk_section_dict[u"version"] = None
+        cmk_info["version"] = None
 
     error_section_list = sorted(list(error_sections))
 
-    return cmk_section_dict, num_success, error_section_list, ", ".join(problems)
+    return cmk_info, num_success, error_section_list, ", ".join(problems)
 
 
 # Create a crash dump with a backtrace and the agent output.

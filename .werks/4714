@@ -1,0 +1,11 @@
+Title: Inventory win_networkadapter: Fixed exception when values were missing
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p6
+Date: 1497259436
+
+

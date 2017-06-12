@@ -568,12 +568,17 @@ def may_see(site, host_name):
     if config.user.may("general.see_all"):
         return True
 
-    if site:
-        sites.live().set_only_sites([site])
+    host_found = False
+    try:
+        if site:
+            sites.live().set_only_sites([site])
+        # Note: This query won't work in a distributed setup and no site given as argument
+        # livestatus connection is setup with AuthUser
+        host_found = sites.live().query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)) > 0
+    finally:
+        sites.live().set_only_sites(None)
 
-    # Note: This query won't work in a distributed setup and no site given as argument
-    # livestatus connection is setup with AuthUser
-    return sites.live().query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host_name)) > 0
+    return host_found
 
 
 # Tackle problem, where some characters are missing in the service

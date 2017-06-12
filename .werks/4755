@@ -1,0 +1,26 @@
+Title: Fixed possible error when processing piggyback monitoring data
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497271655
+Class: fix
+
+An error "OSError: [Errno 2] No such file or directory: '/omd/sites/*/tmp/check_mk/piggyback/'"
+could occur when using piggyback agent data (like it's done when monitoring ESX hosts / vcenters).
+
+The error message was visible in the cmc.log and looked like this:
+
+2017-06-06 06:39:36 [4] Check_MK helper [7231]: : >> File "/omd/sites/mysite/share/check_mk/modules/check_mk_base.py", line 371, in get_host_info
+2017-06-06 06:39:36 [4] Check_MK helper [7231]: : >> ignore_check_interval=True)
+2017-06-06 06:39:36 [4] Check_MK helper [7231]: : >> File "/omd/sites/mysite/share/check_mk/modules/check_mk_base.py", line 506, in get_realhost_info
+2017-06-06 06:39:36 [4] Check_MK helper [7231]: : >> piggy_output = get_piggyback_info(hostname) + get_piggyback_info(ipaddress)
+2017-06-06 06:39:36 [4] Check_MK helper [7231]: : >> File "/omd/sites/mysite/share/check_mk/modules/check_mk_base.py", line 635, in get_piggyback_info
+2017-06-06 06:39:36 [4] Check_MK helper [7231]: : >> for sourcehost, file_path in get_piggyback_files(hostname):
+2017-06-06 06:39:36 [4] Check_MK helper [7231]: : >> File "/omd/sites/mysite/share/check_mk/modules/check_mk_base.py", line 612, in get_piggyback_files
+2017-06-06 06:39:36 [4] Check_MK helper [7231]: : >> for sourcehost in os.listdir(dir):
+2017-06-06 06:39:36 [4] Check_MK helper [7231]: : >> OSError: [Errno 2] No such file or directory: '/omd/sites/mysite/tmp/check_mk/piggyback/backedhost'
+
+This was some kind of race condition when one Check_MK helper cleaned up outdated piggyback files
+while another helper was reading the piggyback data.

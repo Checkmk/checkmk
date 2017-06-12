@@ -31,12 +31,11 @@
 # SCSI protocol interface.
 megaraid_info()
 {
-
     #PDINFO=$(MegaCli -PDlist -a0)
     if [ -z "$1" ]; then
-		PDINFO=$(megacli -PDlist -a0 -NoLog)
+        PDINFO=$(megacli -PDlist -a0 -NoLog)
     else
-		PDINFO=$($1 -PDlist -a0 -NoLog)
+        PDINFO=$($1 -PDlist -a0 -NoLog)
     fi
 
     echo "$PDINFO" | \
@@ -80,18 +79,18 @@ if which smartctl > /dev/null 2>&1 ; then
     # get the serials for all disks on the controller
     #
     if which tw_cli > /dev/null 2>&1 ; then
-	# support for only one controller at the moment
-	TWAC=$(tw_cli show | awk 'NR < 4 { next } { print $1 }' | head -n 1)
+        # support for only one controller at the moment
+        TWAC=$(tw_cli show | awk 'NR < 4 { next } { print $1 }' | head -n 1)
 
-       # - add a trailing zero to handle case of unused slot
-       #   trailing zeros are part of the device links in /dev/disk/by-id/... anyway
-       # - only the last 9 chars seem to be relevant
-       # (hopefully all this doesn't change with new kernels...)
-	eval `tw_cli /$TWAC show drivestatus | grep -E '^p[0-9]' | awk '{print $1 " " $7 "0"}' | while read twaminor serial ; do
-	    twaminor=${twaminor#p}
-	    serial=${serial:(-9)}
-	    serial=AMCC_${serial}00000000000
-	    echo "$serial=$twaminor"
+        # - add a trailing zero to handle case of unused slot
+        #   trailing zeros are part of the device links in /dev/disk/by-id/... anyway
+        # - only the last 9 chars seem to be relevant
+        # (hopefully all this doesn't change with new kernels...)
+        eval `tw_cli /$TWAC show drivestatus | grep -E '^p[0-9]' | awk '{print $1 " " $7 "0"}' | while read twaminor serial ; do
+            twaminor=${twaminor#p}
+            serial=${serial:(-9)}
+            serial=AMCC_${serial}00000000000
+            echo "$serial=$twaminor"
         done`
     else:
         echo "tw_cli not found" >&2
@@ -121,8 +120,8 @@ if which smartctl > /dev/null 2>&1 ; then
             continue
         fi
 
-	# Avoid duplicate entries for same device
-	if [ "${SEEN//.$N./}" != "$SEEN" ] ; then
+        # Avoid duplicate entries for same device
+        if [ "${SEEN//.$N./}" != "$SEEN" ] ; then
             continue
         fi
         SEEN="$SEEN.$N."
@@ -131,32 +130,32 @@ if which smartctl > /dev/null 2>&1 ; then
         DNAME=${D#/dev/disk/by-id/scsi-}
         DNAME=${DNAME#/dev/disk/by-id/ata-}
         # 2012-01-25 Stefan Kaerst CDJ - special option in case vendor is AMCC
-	CMD=
+        CMD=
         if [ "$VEND" == "AMCC" -a -n "$TWAC" ]; then
-	    DNAME=${DNAME#1}
-	    [ -z "${!DNAME}" ] && continue
-	    CMD="smartctl -d 3ware,${!DNAME} -v 9,raw48 -A /dev/twa0"
-	    # create nice device name including model
-	    MODEL=$(tw_cli /$TWAC/p${!DNAME} show model | head -n 1 | awk -F= '{ print $2 }')
-	    MODEL=${MODEL## }
-	    MODEL=${MODEL// /-}
-	    DNAME=${DNAME#AMCC_}
-	    DNAME="AMCC_${MODEL}_${DNAME%000000000000}"
+            DNAME=${DNAME#1}
+            [ -z "${!DNAME}" ] && continue
+            CMD="smartctl -d 3ware,${!DNAME} -v 9,raw48 -A /dev/twa0"
+            # create nice device name including model
+            MODEL=$(tw_cli /$TWAC/p${!DNAME} show model | head -n 1 | awk -F= '{ print $2 }')
+            MODEL=${MODEL## }
+            MODEL=${MODEL// /-}
+            DNAME=${DNAME#AMCC_}
+            DNAME="AMCC_${MODEL}_${DNAME%000000000000}"
         elif [ "$VEND" != "ATA" ] ; then
-	    TEMP=
-	    # create temperature output as expected by checks/smart
-	    # this is a hack, TODO: change checks/smart to support SCSI-disks
-	    eval `smartctl -d scsi -i -A $D | while read a b c d e ; do
-		[ "$a" == Serial ] && echo SN=$c
-		[ "$a" == Current -a "$b" == Drive  -a "$c" == Temperature: ] && echo TEMP=$d
-	    done`
-	    [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP (0 0 0 0)"
-	    DNAME="${VEND}_${MODEL}_${SN}"
-	else
-	    CMD="smartctl -d ata -v 9,raw48 -A $D"
-	fi
+            TEMP=
+            # create temperature output as expected by checks/smart
+            # this is a hack, TODO: change checks/smart to support SCSI-disks
+            eval `smartctl -d scsi -i -A $D | while read a b c d e ; do
+                [ "$a" == Serial ] && echo SN=$c
+                [ "$a" == Current -a "$b" == Drive  -a "$c" == Temperature: ] && echo TEMP=$d
+            done`
+            [ -n "$TEMP" ] && CMD="echo 194 Temperature_Celsius 0x0000 000 000 000 Old_age Always - $TEMP (0 0 0 0)"
+            DNAME="${VEND}_${MODEL}_${SN}"
+        else
+            CMD="smartctl -d ata -v 9,raw48 -A $D"
+        fi
 
-        [ -n "$CMD" ] && $CMD | grep Always | egrep -v '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
+            [ -n "$CMD" ] && $CMD | grep Always | egrep -v '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
     done 2>/dev/null
 
 

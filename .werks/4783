@@ -1,0 +1,12 @@
+Title: User notifications can now temporarily disabled within configured timerange
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1497258136
+Class: feature
+
+So far users could disable notifications "forever" within their user profile.
+Now they have additionaly the possibility to customize a timerange where
+notifications are disabled.

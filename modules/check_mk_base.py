@@ -528,19 +528,46 @@ def add_persisted_info(hostname, info):
 def get_piggyback_files(hostname):
     files = []
     dir = cmk.paths.tmp_dir + "/piggyback/" + hostname
-    if os.path.exists(dir):
-        for sourcehost in os.listdir(dir):
-            if sourcehost not in ['.', '..'] \
-               and not sourcehost.startswith(".new."):
-                file_path = dir + "/" + sourcehost
 
-                if cachefile_age(file_path) > piggyback_max_cachefile_age:
-                    console.verbose("Piggyback file %s is outdated by %d seconds. Deleting it.\n" %
-                        (file_path, cachefile_age(file_path) - piggyback_max_cachefile_age))
-                    os.remove(file_path)
-                    continue
+    # remove_piggyback_info_from() may remove stale piggyback files of one source
+    # host and also the directory "hostname" when the last piggyback file for the
+    # current host was removed. This may cause the os.listdir() to fail. We treat
+    # this as regular case: No piggyback files for the current host.
+    try:
+        source_hosts = os.listdir(dir)
+    except OSError, e:
+        if e.errno == 2: # No such file or directory
+            return files
+        else:
+            raise
 
-                files.append((sourcehost, file_path))
+    for sourcehost in source_hosts:
+        if sourcehost in ['.', '..'] or sourcehost.startswith(".new."):
+            continue
+
+        file_path = dir + "/" + sourcehost
+
+        try:
+            file_age = cachefile_age(file_path)
+        except MKGeneralException, e:
+            continue # File might've been deleted. That's ok.
+
+        # Cleanup outdated files
+        if file_age > piggyback_max_cachefile_age:
+            console.verbose("Piggyback file %s is outdated by %d seconds. Deleting it.\n" %
+                (file_path, file_age - piggyback_max_cachefile_age))
+
+            try:
+                os.remove(file_path)
+            except OSError, e:
+                if e.errno == 2: # No such file or directory
+                    pass # Deleted in the meantime. That's ok.
+                else:
+                    raise
+
+            continue
+
+        files.append((sourcehost, file_path))
     return files
 
 

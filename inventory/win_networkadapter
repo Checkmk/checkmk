@@ -49,6 +49,9 @@ def inv_win_networkadapter(info):
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
 
+        if not value:
+            continue
+
         if first_varname and varname == first_varname:
             # Looks like we have a new instance
             node.append(array)

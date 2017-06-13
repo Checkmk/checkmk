@@ -98,7 +98,7 @@ check_info["f5_bigip_cluster_status"] = {
 }
 
 
-check_info["f5_bigip_cluster_status_v11_2"] = {
+check_info["f5_bigip_cluster_status.v11_2"] = {
     "parse_function"          : parse_f5_bigip_cluster_status,
     "check_function"          : lambda x,y,z: check_f5_bigip_cluster_status(x,y,z, is_v11_2 = True),
     "inventory_function"      : inventory_f5_bigip_cluster_status,

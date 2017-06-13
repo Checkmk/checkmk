@@ -1,0 +1,11 @@
+Title: User notification rules can now be canceled
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1497346214
+Class: fix
+
+Previously, the cancel notification rule did only apply to global notification rules.
+

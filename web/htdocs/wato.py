@@ -14387,7 +14387,6 @@ def create_sample_config():
                 "qmail_stats",
             ],
             "enable_rulebased_notifications": True,
-            "inventory_check_interval": 120,
         }
     )
 
@@ -14453,6 +14452,14 @@ def create_sample_config():
         # Interval for HW/SW-Inventory check
         'extra_service_conf:check_interval': [
           ( 1440, [], ALL_HOSTS, [ "Check_MK HW/SW Inventory$" ], {'description': u'Restrict HW/SW-Inventory to once a day'} ),
+        ],
+
+        # Periodic service discovery
+        'periodic_discovery': [
+            ({'severity_unmonitored': 1,
+              'severity_vanished': 0,
+              'inventory_check_do_scan': True,
+              'check_interval': 120.0}, [], ALL_HOSTS, {'description': u'Perform every two hours a service discovery'} ),
         ],
     }
 

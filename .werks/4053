@@ -1,9 +1,9 @@
-Title: Summary line in BI availability moved when sorting. It is fixed now.
+Title: Fixed moving summary line in BI availability when sorting
 Level: 1
 Component: multisite
 Compatible: compat
 Edition: cre
-Version: 1.4.0p2
+Version: 1.2.8p24
 Date: 1496743605
 Class: fix
 

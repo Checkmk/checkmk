@@ -19,6 +19,9 @@
     * 4779 FIX: check_mk_agent.freebsd, check_mk_agent.solaris: Reduce agent output by excluding mirror devices
     * 4781 FIX: mk_oracle, mk_oracle.aix: Added support for Oracle 12.2
 
+    Multisite:
+    * 4053 FIX: Fixed moving summary line in BI availability when sorting
+
     HW/SW-Inventory:
     * 4776 FIX: solaris_psrinfo: Fixed handling of newer output eg. of Solaris SPARC T5
 

@@ -523,6 +523,11 @@ def user_notification_rules():
     for contactname in contactnames:
         contact = contacts[contactname]
         for rule in contact.get("notification_rules", []):
+            # User notification rules always use allow_disable
+            # This line here is for legacy reasons. Newer versions
+            # already set the allow_disable option in the rule configuration
+            rule["allow_disable"] = True
+
             # Save the owner of the rule for later debugging
             rule["contact"] = contactname
             # We assume that the "contact_..." entries in the

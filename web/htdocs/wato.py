@@ -8085,6 +8085,9 @@ def mode_notification_rule(phase, profilemode):
 
         vs.validate_value(rule, "rule")
 
+        # User rules are always allow_disable
+        rule["allow_disable"] = True
+
         if new and clone_nr >= 0:
             rules[clone_nr:clone_nr] = [ rule ]
         elif new:

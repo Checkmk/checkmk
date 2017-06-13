@@ -22,6 +22,9 @@
     Multisite:
     * 4053 FIX: Fixed moving summary line in BI availability when sorting
 
+    Notifications:
+    * 4828 FIX: User notification rules can now be canceled...
+
     HW/SW-Inventory:
     * 4776 FIX: solaris_psrinfo: Fixed handling of newer output eg. of Solaris SPARC T5
 

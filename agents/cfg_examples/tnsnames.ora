@@ -1,0 +1,15 @@
+# tnsnames.ora Network Configuration File:
+
+# example with the following values:
+# SID = XE
+# HOSTNAME = 127.0.0.1
+# PORT = 1521
+
+XE =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 127.0.0.1)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = XE)
+    )
+  )

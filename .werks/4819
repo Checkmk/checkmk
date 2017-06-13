@@ -1,0 +1,12 @@
+Title: f5_bigip_cluster_status.v11_2: Fixed wrong syntax in naming of the check plugin
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.4.0p6
+Date: 1497349779
+
+This bug led into the discovery error "missing check file". You will need
+to rediscover your checks to get this service working.

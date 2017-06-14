@@ -1,0 +1,10 @@
+Title: heartbeat_crm: Made Check more robust
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1497440024
+Class: fix
+
+

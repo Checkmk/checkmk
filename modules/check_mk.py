@@ -2197,8 +2197,7 @@ def cached_dns_lookup(hostname, family):
         # Update our cached address if that has changed or was missing
         if ipa != cached_ip:
             console.verbose("Updating IPv%d DNS cache for %s: %s\n" % (family, hostname, ipa))
-            ip_lookup_cache[cache_id] = ipa
-            write_ip_lookup_cache()
+            update_ip_lookup_cache(cache_id, ipa)
 
         cache[cache_id] = ipa # Update in-memory-cache
         return ipa
@@ -2273,11 +2272,7 @@ def initialize_ip_lookup_cache():
         ip_lookup_cache.update(data_from_file)
 
         # be compatible to old caches which were created by Check_MK without IPv6 support
-        if ip_lookup_cache and type(ip_lookup_cache.keys()[0]) != tuple:
-            new_cache = {}
-            for key, val in ip_lookup_cache.items():
-                new_cache[(key, 4)] = val
-            ip_lookup_cache = new_cache
+        convert_legacy_ip_lookup_cache(ip_lookup_cache)
     except:
         # TODO: Would be better to log it somewhere to make the failure transparent
         pass
@@ -2285,20 +2280,38 @@ def initialize_ip_lookup_cache():
     return ip_lookup_cache
 
 
-def write_ip_lookup_cache():
+def convert_legacy_ip_lookup_cache(ip_lookup_cache):
+    if not ip_lookup_cache:
+        return
+
+    # New version has (hostname, ip family) as key
+    if type(ip_lookup_cache.keys()[0]) == tuple:
+        return
+
+    new_cache = {}
+    for key, val in ip_lookup_cache.items():
+        new_cache[(key, 4)] = val
+    ip_lookup_cache.clear()
+    ip_lookup_cache.update(new_cache)
+
+
+def update_ip_lookup_cache(cache_id, ipa):
     ip_lookup_cache = cmk_base.config_cache.get_dict("ip_lookup")
 
-
-    cache_path = cmk.paths.var_dir + '/ipaddresses.cache'
     # Read already known data
+    cache_path = cmk.paths.var_dir + '/ipaddresses.cache'
     data_from_file = cmk.store.load_data_from_file(cache_path,
                                                    default={},
                                                    lock=True)
+
+    convert_legacy_ip_lookup_cache(data_from_file)
     ip_lookup_cache.update(data_from_file)
-    # The lock from the previous call is released in the following function
+    ip_lookup_cache[cache_id] = ipa
+
     # (I don't like this)
     # TODO: this file always grows... there should be a cleanup mechanism
     #       maybe on "cmk --update-dns-cache"
+    # The cache_path is already locked from a previous function call..
     cmk.store.save_data_to_file(cache_path, ip_lookup_cache)
 
 

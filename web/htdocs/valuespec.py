@@ -4339,3 +4339,83 @@ class SchedulePeriod(CascadingDropdown):
                   Integer(minvalue=1, maxvalue=28)),
             ] + from_end_choice
         )
+
+
+
+class CAorCAChain(UploadOrPasteTextFile):
+    def __init__(self, **args):
+        args.setdefault("title", _("Certificate Chain (Root / Intermediate Certificate)"))
+        args.setdefault("file_title", _("CRT/PEM File"))
+        UploadOrPasteTextFile.__init__(self, **args)
+
+
+    def from_html_vars(self, varprefix):
+        value = Alternative.from_html_vars(self, varprefix)
+        if type(value) == tuple:
+            value = value[2] # FileUpload sends (filename, mime-type, content)
+        return value
+
+
+    def validate_value(self, value, varprefix):
+        try:
+            self.analyse_cert(value)
+        except Exception, e:
+            # FIXME TODO: Cleanup this general exception catcher
+            raise MKUserError(varprefix, _("Invalid certificate file"))
+
+
+    def analyse_cert(self, value):
+        from OpenSSL import crypto
+        cert = crypto.load_certificate(crypto.FILETYPE_PEM, value)
+        titles = {
+            "C"  : _("Country"),
+            "ST" : _("State or Province Name"),
+            "L"  : _("Locality Name"),
+            "O"  : _("Organization Name"),
+            "CN" : _("Common Name"),
+        }
+        cert_info = {}
+        for what, x509, title in [
+            ( "issuer", cert.get_issuer(), _("Issuer") ),
+            ( "subject", cert.get_subject(), _("Subject") ),
+        ]:
+            cert_info[what] = {}
+            for key, val in x509.get_components():
+                if key in titles:
+                    cert_info[what][titles[key]] = val.decode("utf8")
+        return cert_info
+
+
+    def value_to_text(self, value):
+        cert_info = self.analyse_cert(value)
+        text = "<table>"
+        for what, title in [
+            ( "issuer", _("Issuer") ),
+            ( "subject", _("Subject") ),
+        ]:
+            text += "<tr><td>%s:</td><td>" % title
+            for title, value in sorted(cert_info[what].items()):
+                text += "%s: %s<br>" % (title, value)
+            text += "</tr>"
+        text += "</table>"
+        return text
+
+
+
+# Move this to wato.py or valuespec.py as soon as we need this at least
+# once again somewhere
+def ListOfCAs(**args):
+    args.setdefault("title", _("CAs to accept"))
+    args.setdefault("help", _("Only accepting HTTPS connections with a server which certificate "
+                 "is signed with one of the CAs that are listed here. That way it is guaranteed "
+                 "that it is communicating only with the authentic update server. "
+                 "If you use self signed certificates for you server then enter that certificate "
+                 "here."))
+    args.setdefault("add_label", _("Add new CA certificate or chain"))
+    args.setdefault("empty_text", _("You need to enter at least one CA. Otherwise no SSL connection can be made."))
+    args.setdefault("allow_empty", False)
+    return ListOf(
+        CAorCAChain(),
+        movable = False,
+        **args
+    )

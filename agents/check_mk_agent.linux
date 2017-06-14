@@ -740,6 +740,8 @@ then
 	    echo "[$site]"
             cat $statsfile
             > $statsfile
+            # prevent next section to fail caused by a missing newline at the end of the statsfile
+            echo
         fi
     done
 fi

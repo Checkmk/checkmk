@@ -1,0 +1,14 @@
+Title: omd_apache data collection: fixed issues caused by missing newline at the end of statsfile(s)
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p6
+Date: 1497428804
+
+Sometimes the apache statsfile(s) can miss a newline at the end of the file. This caused the following known issues:
+
+* missing agent section directly after omd_apache section - because the section header was starting in the same line as the omd_apache section's last line
+* crashed omd_apache check because of missing data

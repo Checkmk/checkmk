@@ -1,0 +1,21 @@
+Title: Cleanup environment handling of OMD sites
+Component: core
+State: open
+Date: 2017-06-14 09:56:25
+Targetversion: 1.5.0
+Class: bug
+
+There need to be two places where the defined environment of all processes of a OMD
+site is set:
+
+a) su - omd
+b) omd: set_environment()
+
+su - omd uses the .profile of a site to initialize the environment. Both places
+differ and should be unified. Maybe a single central file needs to be created
+that holds all the environment variable definitions and both places rely on that
+file.
+
+We also should cleanup the different sourcing calls of OMD daemon init scripts.
+The calls ". .profile" should be removed. All subprocesses created within a site
+need to inherit this defined environment.

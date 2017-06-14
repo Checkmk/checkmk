@@ -1,0 +1,20 @@
+Title: Fix possible timeouts when changing configurations or changing user profile properties
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497426322
+Class: fix
+
+Check_MK is using generic functions to perform file IO, for example to save configuration files
+of WATO or saving the user properties of the GUI. With 1.4.0b1 we introduced a change that was
+intended to prevent loss of just written files during hard OS crashes. This change has now
+been reverted because it behaves badly in high IO load situations and might also itself cause
+high IO load in case files are written in a high frequency.
+
+The IO behaviour in this situation has now simply been changed back to the old state before
+1.4.0b1.
+
+In future releases (1.5+) we'll find a solution to improve the handling of OS crash recovery
+situations.

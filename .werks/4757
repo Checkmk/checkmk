@@ -1,0 +1,16 @@
+Title: Fixed possible reflected XSS in webapi.py
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497462847
+Class: security
+
+In the Check_MK 1.4 branch URLs like this could be used for a
+reflected XSS attack:
+
+<tt>http://<test host>/<site>/check_mk/webapi.py?_username=<script>alert("XSS")</script>&_secret=AnythingHere
+
+The error message was interpreted as HTML while it should be a
+plain text error message. This has been fixed now.

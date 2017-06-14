@@ -125,6 +125,9 @@ def init_wato_datastructures(with_wato_lock=False):
     if with_wato_lock:
         lock_exclusive()
 
+    if not os.path.exists(ConfigDomainCACertificates.trusted_cas_file):
+        ConfigDomainCACertificates().activate()
+
     create_sample_config()
     init_watolib_datastructures()
 

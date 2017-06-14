@@ -155,7 +155,9 @@ def save_data_to_file(path, data, pretty=True):
 def save_file(path, content, mode=0660):
     try:
         # Normally the file is already locked (when data has been loaded before with lock=True),
-        # but lock it just to be sure we have the lock on the file
+        # but lock it just to be sure we have the lock on the file.
+        #
+        # Please note that this already creates the file with 0 bytes (in case it is missing).
         aquire_lock(path)
 
         tmp_path = None
@@ -194,6 +196,16 @@ def save_file(path, content, mode=0660):
         os.rename(tmp_path, path)
 
     except Exception, e:
+        # In case an exception happens during saving cleanup the tempfile created for writing
+        try:
+            if tmp_path:
+                os.unlink(tmp_path)
+        except IOError, e:
+            if e.errno == 2: # No such file or directory
+                pass
+            else:
+                raise
+
         # TODO: How to handle debug mode or logging?
         raise MKGeneralException(_("Cannot write configuration file \"%s\": %s") % (path, e))
 

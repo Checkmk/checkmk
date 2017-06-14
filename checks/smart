@@ -43,6 +43,10 @@
 #/dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 
 
+# TODO: Need to completely rework smart check. Use IDs instead of changing
+# descriptions! But be careful: There is no standard neither for IDs nor for
+# descriptions. Only use those, which are common sense.
+
 factory_settings["smart_temp_default_levels"] = {
     "levels": (35, 40)
 }
@@ -107,7 +111,9 @@ smart_stats_fields = [
     'Command_Timeout',
     'End-to-End_Error',
     'Reported_Uncorrect',
-    'UDMA_CRC_Error_Count', ]
+    'Uncorrectable_Error_Cnt',
+    'UDMA_CRC_Error_Count',
+    'CRC_Error_Count', ]
 
 def inventory_smart_stats(info):
     disks = parse_smart_raw_values(info)
@@ -145,7 +151,9 @@ def check_smart_stats(item, params, info):
                   ('',       'Command_Timeout',         'Command timeouts',     ),
                   ('',       'End-to-End_Error',        'End-to-End errors',    ),
                   ('',       'Reported_Uncorrect',      'Uncorrectable errors', ),
-                  ('',       'UDMA_CRC_Error_Count',    'UDMA CRC errors',      )]:
+                  ('',       'Uncorrectable_Error_Cnt', 'Uncorrectable errors', ),
+                  ('',       'UDMA_CRC_Error_Count',    'UDMA CRC errors',      ),
+                  ('',       'CRC_Error_Count',         'UDMA CRC errors',      )]:
         if field in disk:
             value = disk[field]
             infos.append("%s: %d%s" % (descr, value, unit))

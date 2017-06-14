@@ -395,6 +395,68 @@ class ConfigDomainEventConsole(ConfigDomain):
             call_hook_mkeventd_activate_changes()
 
 
+
+class ConfigDomainCACertificates(ConfigDomain):
+    needs_sync       = True
+    needs_activation = True
+    ident            = "ca-certificates"
+
+    trusted_cas_file = "%s/var/ssl/ca-certificates.crt" % cmk.paths.omd_root
+
+    # This is a list of directories that may contain .pem files of trusted CAs.
+    # The contents of all .pem files will be contantenated together and written
+    # to "trusted_cas_file". This is done by the function update_trusted_cas().
+    # On a system only a single directory, the first existing one is processed.
+    system_wide_trusted_ca_search_paths = [
+        "/etc/ssl/certs", # Ubuntu/Debian/SLES
+        "/etc/pki/tls/certs", # CentOS/RedHat
+    ]
+
+    def config_dir(self):
+        return multisite_dir
+
+
+    def config_file(self, site_specific=False):
+        return os.path.join(self.config_dir(), "ca-certificates.mk")
+
+
+    def activate(self):
+        try:
+            self._update_trusted_cas()
+        except Exception, e:
+            log_exception()
+            return ["Failed to create trusted CA file '%s': %s" %
+                        (self.trusted_cas_file, traceback.format_exc())]
+
+
+    def _update_trusted_cas(self):
+        trusted_cas = []
+
+        if config.trusted_certificate_authorities["use_system_wide_cas"]:
+            trusted_cas += self._get_system_wide_trusted_ca_certificates()
+
+        trusted_cas += config.trusted_certificate_authorities["trusted_cas"]
+
+        store.save_file(self.trusted_cas_file, "\n".join(trusted_cas))
+
+
+    def _get_system_wide_trusted_ca_certificates(self):
+        trusted_cas = []
+        for cert_path in self.system_wide_trusted_ca_search_paths:
+            if not os.path.isdir(cert_path):
+                continue
+
+            for entry in os.listdir(cert_path):
+                ext = os.path.splitext(entry)[-1]
+                if ext != ".pem":
+                    continue
+
+                trusted_cas.append(file(os.path.join(cert_path, entry)).read())
+
+            break
+
+        return trusted_cas
+
 #.
 #   .--Hosts & Folders-----------------------------------------------------.
 #   | _   _           _          ___     _____     _     _                 |

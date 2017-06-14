@@ -903,6 +903,42 @@ register_configvar(group,
 )
 
 
+register_configvar(_("Site Management"),
+    "trusted_certificate_authorities",
+    Dictionary(
+        title = _("Trusted certificate authorities for SSL"),
+        help = _("Whenever a server component of Check_MK opens a SSL connection it uses the "
+                 "certificate authorities configured here for verifying the SSL certificate of "
+                 "the destination server. This is used for example when performing WATO "
+                 "replication to slave sites or when special agents are communicating via HTTPS. "
+                 "The CA certificates configured here will be written to the CA bundle %s.") %
+                    site_neutral_path(ConfigDomainCACertificates.trusted_cas_file),
+        elements = [
+            ("use_system_wide_cas", Checkbox(
+                title = _("Use system wide CAs"),
+                help = _("All supported linux distributions provide a mechanism of managing "
+                         "trusted CAs. Depending on your linux distributions the paths where "
+                         "these CAs are stored and the commands to manage the CAs differ. "
+                         "Please checko out the documentation of your linux distribution "
+                         "in case you want to customize trusted CAs system wide. You can "
+                         "choose here to trust the system wide CAs here. Check_MK will search "
+                         "these directories for system wide CAs: %s") %
+                            ", ".join(ConfigDomainCACertificates.system_wide_trusted_ca_search_paths),
+                label = _("Trust system wide configured CAs"),
+                default_value = True,
+            )),
+            ("trusted_cas", ListOfCAs(
+                title = _("Check_MK specific"),
+                allow_empty = True,
+                default_value = [],
+            )),
+        ],
+        optional_keys = False,
+    ),
+    domain = ConfigDomainCACertificates,
+    need_restart = True,
+)
+
 #.
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |

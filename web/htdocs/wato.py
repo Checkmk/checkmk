@@ -9458,10 +9458,11 @@ class ModeDistributedMonitoring(ModeSites):
                 error = "%s" % e
 
             except Exception, e:
+                log_exception()
                 if config.debug:
                     raise
                 html.add_user_error("_name", error)
-                error = str(e)
+                error = (_("Internal error: %s\n%s") % (e, traceback.format_exc())).replace("\n", "\n<br>")
 
         wato_html_head(_("Login into site %s") % html.render_tt(site["alias"]))
         if error:

@@ -1,0 +1,10 @@
+Title: IP lookup cache: Fixed bug were updated ipaddress was overwritten by old cached data
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1497445612
+Class: fix
+
+

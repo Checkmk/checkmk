@@ -1,0 +1,10 @@
+Title: netapp_api_volumes: fixed missing read/write/latency graphs for the various data protocols
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497443386
+Class: fix
+
+

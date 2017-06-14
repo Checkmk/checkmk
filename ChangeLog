@@ -18,6 +18,7 @@
     * 4795 FIX: netstat: Fixed wrong output if LISTENING connections should be monitored on Ubuntu...
     * 4779 FIX: check_mk_agent.freebsd, check_mk_agent.solaris: Reduce agent output by excluding mirror devices
     * 4781 FIX: mk_oracle, mk_oracle.aix: Added support for Oracle 12.2
+    * 4858 FIX: omd_apache data collection: fixed issues caused by missing newline at the end of statsfile(s)...
 
     Multisite:
     * 4053 FIX: Fixed moving summary line in BI availability when sorting

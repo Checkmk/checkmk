@@ -166,8 +166,30 @@ def save_file(path, content, mode=0660):
             os.chmod(tmp_path, mode)
             tmp.write(content)
 
-            tmp.flush()
-            os.fsync(tmp.fileno())
+            # The goal of the fsync would be to ensure that there is a consistent file after a
+            # crash. Without the fsync it may happen that the file renamed below is just an empty
+            # file. That may lead into unexpected situations during loading.
+            #
+            # Don't do a fsync here because this may run into IO performance issues. Even when
+            # we can specify the fsync on a fd, the disk cache may be flushed completely because
+            # the disk does not know anything about fds, only about blocks.
+            #
+            # For Check_MK 1.4 we can not introduce a good solution for this, because the changes
+            # would affect too many parts of Check_MK with possible new issues. For the moment we
+            # stick with the IO behaviour of previous Check_MK versions.
+            #
+            # In the future we'll find a solution to deal better with OS crash recovery situations.
+            # for example like this:
+            #
+            # TODO(lm): The consistency of the file will can be ensured using copies of the
+            # original file which are made before replacing it with the new one. After first
+            # successful loading of the just written fille the possibly existing copies of this
+            # file are deleted.
+            # We can archieve this by calling os.link() before the os.rename() below. Then we need
+            # to define in which situations we want to check out the backup file(s) and in which
+            # cases we can savely delete them.
+            #tmp.flush()
+            #os.fsync(tmp.fileno())
 
         os.rename(tmp_path, path)
 

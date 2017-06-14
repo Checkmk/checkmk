@@ -1,0 +1,11 @@
+Title: smart: Added support for uncommon Descriptions (CRC Error and Uncorrectable errors)
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1497431383
+Class: feature
+
+Now checks also stats if the description of this stat is somewhat different
+from the standard.

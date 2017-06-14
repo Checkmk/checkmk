@@ -3948,18 +3948,9 @@ check_metrics["check-mk-host-tcp"] = {
     "time" : { "name": "response_time" }
 }
 
-check_metrics["check_mk-netapp_api_volumes"] = {
-    "nfs_read_latency"      : { "scale" : m },
-    "nfs_write_latency"     : { "scale" : m },
-    "cifs_read_latency"     : { "scale" : m },
-    "cifs_write_latency"    : { "scale" : m },
-    "san_read_latency"      : { "scale" : m },
-    "san_write_latency"     : { "scale" : m },
-    "fcp_read_latency"      : { "scale" : m },
-    "fcp_write_latency"     : { "scale" : m },
-    "iscsi_read_latency"    : { "scale" : m },
-    "iscsi_write_latency"   : { "scale" : m },
-}
+
+
+
 
 check_metrics["check_mk-citrix_serverload"] = {
     "perf" : { "name" : "citrix_load", "scale" : 0.01 }
@@ -4218,9 +4209,11 @@ check_metrics["check_mk_active-disk_smb"] = {
     "~.*" : { "name" : "fs_used" }
 }
 
+
+df_basic_perfvarnames = ["inodes_used", "fs_size", "growth", "trend",
+                         "fs_provisioning", "uncommitted", "overprovisioned"]
 df_translation = {
-    "~(?!inodes_used|fs_size|growth|trend|fs_provisioning|"
-      "uncommitted|overprovisioned).*$"   : { "name"  : "fs_used", "scale" : MB },
+    "~(?!%s).*$" % "|".join(df_basic_perfvarnames) : { "name"  : "fs_used", "scale" : MB },
     "fs_size" : { "scale" : MB },
     "growth"  : { "name"  : "fs_growth", "scale" : MB / 86400.0 },
     "trend"   : { "name"  : "fs_trend", "scale" : MB / 86400.0 },
@@ -4254,6 +4247,33 @@ check_metrics["check_mk-mongodb_collections"]                   = df_translation
 check_metrics["check_mk-3par_cpgs.usage"]                       = df_translation
 check_metrics["check_mk-3par_capacity"]                         = df_translation
 check_metrics["check_mk-3par_volumes"]                          = df_translation
+
+df_netapp_perfvarnames = list(df_basic_perfvarnames)
+for protocol in [ "nfs", "cifs", "san", "fcp", "iscsi", "nfsv4", "nfsv4_1"]:
+    df_netapp_perfvarnames.append("%s_read_data" % protocol)
+    df_netapp_perfvarnames.append("%s_write_data" % protocol)
+    df_netapp_perfvarnames.append("%s_read_latency" % protocol)
+    df_netapp_perfvarnames.append("%s_write_latency" % protocol)
+
+# TODO: this special regex construct below, needs to be replaced by something managable
+# The current df_translation implementation is unable to automatically detect new parameters
+check_metrics["check_mk-netapp_api_volumes"] = {
+    "~(?!%s).*$" % "|".join(df_netapp_perfvarnames) : { "name"  : "fs_used", "scale" : MB },
+    "fs_size" : { "scale" : MB },
+    "growth"  : { "name"  : "fs_growth", "scale" : MB / 86400.0 },
+    "trend"   : { "name"  : "fs_trend", "scale" : MB / 86400.0 },
+    "nfs_read_latency"      : { "scale" : m },
+    "nfs_write_latency"     : { "scale" : m },
+    "cifs_read_latency"     : { "scale" : m },
+    "cifs_write_latency"    : { "scale" : m },
+    "san_read_latency"      : { "scale" : m },
+    "san_write_latency"     : { "scale" : m },
+    "fcp_read_latency"      : { "scale" : m },
+    "fcp_write_latency"     : { "scale" : m },
+    "iscsi_read_latency"    : { "scale" : m },
+    "iscsi_write_latency"   : { "scale" : m },
+}
+
 
 disk_utilization_translation = { "disk_utilization" : { "scale" : 100.0 } }
 

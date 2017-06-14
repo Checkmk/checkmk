@@ -65,7 +65,7 @@ EOF
     # Occupancy
     echo '<<<tsm_storagepools:sep(9)>>>'
     $dsmcmd <<EOF | sed -n "/^FOO/s//$INST/p"
-SELECT 'FOO', type, stgpool_name, sum(logical_mb) from occupancy group by type, stgpool_name
+SELECT 'FOO' as foo,COALESCE(type,'Unknown') as type,stgpools.stgpool_name, sum(coalesce(logical_mb,0)) as SUM_LOGICAL_MB from occupancy full outer join stgpools on occupancy.stgpool_name=stgpools.stgpool_name group by stgpools.stgpool_name,type
 EOF
 
 }

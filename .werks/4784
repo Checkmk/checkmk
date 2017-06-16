@@ -1,0 +1,13 @@
+Title: oracle_rman: wrong detection of level 1 backup
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497618545
+Class: fix
+
+The behavior of some v$-Views in 12.1 has been changed.
+This could lead to problems when a new Level 0 backup
+was done after a Level 1. The calculation for the last Level
+1 was wrong and has been fixed.

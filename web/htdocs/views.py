@@ -747,7 +747,13 @@ class Cell(object):
 
     def render(self, row):
         row = join_row(row, self)
-        tdclass, content = self.render_content(row)
+
+        try:
+            tdclass, content = self.render_content(row)
+        except:
+            log_exception("Failed to render painter '%s' (Row: %r)" %
+                                        (self._painter_name, row))
+            raise
 
         if tdclass == None:
             tdclass = ""

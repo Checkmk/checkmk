@@ -288,8 +288,10 @@ def format_plugin_output(output, row = None):
     return output
 
 
-def log_exception():
-    logger.error("%s %s: %s" % (html.request_uri(), _('Internal error'), traceback.format_exc()))
+def log_exception(msg=None):
+    if msg is None:
+        msg = _('Internal error')
+    logger.error("%s %s: %s" % (html.request_uri(), msg, traceback.format_exc()))
 
 
 # Escape/strip unwanted chars from (user provided) strings to

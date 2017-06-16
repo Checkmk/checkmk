@@ -406,6 +406,16 @@ ul.closed {
 | Styles for messages-boxes in various situations (called by htmllib.py)   |
 '-------------------------------------------------------------------------*/
 
+div.really, div.success, div.error, div.message, div.warning {
+    margin: 0.25em;
+    border-radius: 1ex;
+    padding: 0.5em 1em;
+    box-shadow: 0 0 3px #444;
+}
+
+div.message {
+    color: black;
+}
 div.really {
     background-color: #fdc400;
     border-color: #800;

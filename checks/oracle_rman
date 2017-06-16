@@ -116,12 +116,24 @@ def check_oracle_rman(item, params, info):
             else:
                 if item == "%s.%s_%s" % (sid,  backuptype, backuplevel):
                     # we got a line from agent
-                    # => use the data from agent
-                    used_incr_0 = False
+                    # is last level 0 younger then current?
+
+                    # 12.1 has a change behavior in v$-views for RMAN...
+                    if int(backupage_level0) <= int(backupage):
+
+                        # use the level instead of current
+                        used_incr_0 = True
+                        backupage = backupage_level0
+
+                    else:
+
+                        # => use the data from agent
+                        used_incr_0 = False
                 else:
                     # use the DB_INCR_0 from agent
                     used_incr_0 = True
-                    sid, end, backupage = sid_level0, end_level0, backupage_level0
+                    if sid_level0 and end_level0 and backupage_level0:
+                        sid, end, backupage = sid_level0, end_level0, backupage_level0
 
         perfdata = []
         state = 2

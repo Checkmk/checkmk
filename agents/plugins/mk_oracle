@@ -198,7 +198,8 @@ sql_tablespaces()
                     WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
                     GROUP BY th.instance, f.file_name, f.tablespace_name, f.status,
                     f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
-                    'TEMP', t.block_size, t.status);
+                    'TEMP', t.block_size, t.status)
+           where d.database_role = 'PRIMARY';
               "
     elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
 

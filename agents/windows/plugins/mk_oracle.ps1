@@ -635,7 +635,7 @@ Function sql_tablespaces {
                     GROUP BY th.instance, f.file_name, f.tablespace_name, f.status,
                     f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
                     'TEMP', t.block_size, t.status)
-                    ;
+                    where d.database_role = 'PRIMARY';
 
 '@
 
@@ -1114,6 +1114,43 @@ echo $query_logswitches
 # SQL for database lock information
 ################################################################################
 Function sql_locks {
+    if ($DBVERSION -gt 101000)
+    {
+        $query_locks = @'
+        select upper(i.instance_name)
+                     || '|' || b.sid
+                     || '|' || b.serial#
+                     || '|' || b.machine
+                     || '|' || b.program
+                     || '|' || b.process
+                     || '|' || b.osuser
+                     || '|' || b.username
+                     || '|' || b.SECONDS_IN_WAIT
+                     || '|' || b.BLOCKING_SESSION_STATUS
+                     || '|' || bs.inst_id
+                     || '|' || bs.sid
+                     || '|' || bs.serial#
+                     || '|' || bs.machine
+                     || '|' || bs.program
+                     || '|' || bs.process
+                     || '|' || bs.osuser
+                     || '|' || bs.username
+              from v\$session b
+              join v\$instance i on 1=1
+              join gv\$session bs on bs.inst_id = b.BLOCKING_INSTANCE
+                                 and bs.sid = b.BLOCKING_SESSION
+              where b.BLOCKING_SESSION is not null
+              ;
+              select upper(i.instance_name)
+                     || '|||||||||||||||||'
+              from v\$instance i
+              ;
+        '@
+        echo $query_locks
+    }
+}
+
+Function sql_locks_old {
      if ($DBVERSION -gt 101000)
      {
           $query_locks = @'

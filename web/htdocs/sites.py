@@ -186,7 +186,7 @@ def _get_enabled_and_disabled_sites():
 
 def update_site_states_from_dead_sites():
     # Get exceptions in case of dead sites
-    for site_id, deadinfo in _live.dead_sites().items():
+    for site_id, deadinfo in live().dead_sites().items():
         status_host_state = deadinfo.get("status_host_state")
         _update_site_status(site_id, {
             "exception"         : deadinfo["exception"],

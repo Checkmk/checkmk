@@ -1258,7 +1258,8 @@ def render_master_control():
                 html.close_td()
                 html.close_tr()
 
-        html.close_table()
+            html.close_table()
+
         if not config.is_single_local_site():
             html.end_foldable_container()
 

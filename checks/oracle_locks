@@ -26,8 +26,8 @@
 
 # <<<oracle_locks>>>
 # TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL
+# newdb|25|15231|ol6131|sqlplus@ol6131 (TNS V1-V3)|13275|oracle|SYS|3782|VALID|1|407|1463|ol6131|sqlplus@ol6131 (TNS V1-V3)|13018|oracle|SYS
 
-# oracle_sid, sid#, serial#, machine, program, process, osuser, ctime object_owner object_name
 
 factory_settings["oracle_locks_defaults"] = {
     "levels"  : (1800, 3600),
@@ -51,8 +51,24 @@ def check_oracle_locks(item, params, info):
             elif isinstance(err, tuple):
                 return err
 
-            sid, sidnr, serial, machine, program, process, osuser, ctime, \
-            object_owner, object_name = line
+            if len(line) == 10:
+
+                # old format from locks_old in current plugin
+                sid, sidnr, serial, machine, program, process, osuser, ctime, \
+                object_owner, object_name = line
+
+            elif len(line) == 18:
+
+                sid, sidnr, serial, machine, program, process, osuser, dbusername, ctime, \
+                block_status, blk_inst_id, blk_sid, blk_serial, blk_machine, blk_program, \
+                blk_process, blk_osuser, blk_dbusername = line
+
+                object_owner = ''
+                object_name = ''
+
+            else:
+
+                raise MKCounterWrapped("Unknow number of items in agent output")
 
             ctime = int(ctime)
 

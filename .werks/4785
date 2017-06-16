@@ -1,0 +1,25 @@
+Title: oracle_locks: New SQL for check
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1497618876
+
+The behavior of this check has been changed. There is no output
+for object_owner and object_name anymore. This has been removed
+for performance reasons. The check is moved from ASYNC to SYNC, due
+to very easy SQL for getting the data. The problem with lot of wrong
+alarms has been solved as well.
+
+The old SQL is still existing for users who wants the object_owner
+and object_name in check result. Please be aware that the old problems
+are still there. Please make sure that the old check is configured
+as ASYNC-Check. Otherwise you risk high performance issues in mk_oracle!
+
+Please define the following lines in mk_oracle.cfg to get the old
+behavior:
+SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance"
+ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable locks_old"

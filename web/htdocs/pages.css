@@ -997,11 +997,7 @@ table.nform tr.bottom td {
 '-------------------------------------------------------------------------*/
 div.really, div.success, div.error, div.message, div.warning {
     margin: 2em 0em;
-    border-radius: 1ex;
     padding: 1em 2em;
-    box-shadow: 0 0 3px #444;
-    /* border-width: 2px;
-    border-style: solid;*/
 }
 
 div.message {

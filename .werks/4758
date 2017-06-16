@@ -1,0 +1,16 @@
+Title: Fixed site status and master control snapin not displaying states of sites
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1497625512
+
+The master control snapin was hiding sites with communication errors completely.
+It is now displaying a box with the occured error message.
+
+The site status snapin was showing the site, but displaying a site as "online"
+while it was reported as "dead" by the livestatus connection. This appeared when
+an error was found in a query, for example when a queried table does not exist.

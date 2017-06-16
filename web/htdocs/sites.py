@@ -166,14 +166,9 @@ def _connect_multiple_sites():
         })
     _live.set_prepend_site(False)
 
-    # Get exceptions in case of dead sites
-    for site_id, deadinfo in _live.dead_sites().items():
-        shs = deadinfo.get("status_host_state")
-        _update_site_status(site_id, {
-            "exception"         : deadinfo["exception"],
-            "status_host_state" : shs,
-            "state"             : _status_host_state_name(shs),
-        })
+    # TODO(lm): Find a better way to make the Livestatus object trigger the update
+    # once self.deadsites is updated.
+    update_site_states_from_dead_sites()
 
 
 def _get_enabled_and_disabled_sites():
@@ -188,6 +183,16 @@ def _get_enabled_and_disabled_sites():
 
     return enabled_sites, disabled_sites
 
+
+def update_site_states_from_dead_sites():
+    # Get exceptions in case of dead sites
+    for site_id, deadinfo in _live.dead_sites().items():
+        status_host_state = deadinfo.get("status_host_state")
+        _update_site_status(site_id, {
+            "exception"         : deadinfo["exception"],
+            "status_host_state" : status_host_state,
+            "state"             : _status_host_state_name(status_host_state),
+        })
 
 
 def _status_host_state_name(shs):

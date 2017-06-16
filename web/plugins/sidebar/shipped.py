@@ -482,9 +482,13 @@ def render_sitestatus():
     if config.is_multisite():
         html.open_table(cellspacing=0, class_="sitestate")
 
+        sites.update_site_states_from_dead_sites()
+
         for sitename, sitealias in config.sorted_sites():
             site = config.site(sitename)
+
             state = sites.state(sitename, {})
+
             if state.get("state") == None:
                 state = "missing"
                 text = _("Missing site")
@@ -1236,6 +1240,17 @@ def render_master_control():
             html.close_td()
             html.close_tr()
         html.close_table()
+        if not config.is_single_local_site():
+            html.end_foldable_container()
+
+    # Also show the dead sites
+    for site_id, site_status in sorted(sites.live().dead_sites().items()):
+        if not config.is_single_local_site():
+            sitealias = config.site(site_id)["alias"]
+            html.begin_foldable_container("master_control", site_id, True, sitealias)
+
+        html.show_error(site_status["exception"])
+
         if not config.is_single_local_site():
             html.end_foldable_container()
 

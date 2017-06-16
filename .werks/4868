@@ -1,0 +1,13 @@
+Title: oracle_tablespace: Restrict data for check from primary
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1497619176
+
+Thwew is a chance for wrong check results in Data-Guard Environments
+with READ ONLY Standby-Databases, when a delay for redo apply has
+been configured.

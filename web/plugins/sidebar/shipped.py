@@ -1205,52 +1205,60 @@ def render_master_control():
         ( "enable_event_handlers",    _("Event handlers" )),
         ( "process_performance_data", _("Performance data" )),
         ( "enable_event_handlers",    _("Alert handlers" )),
-        ]
+    ]
 
-    sites.live().set_prepend_site(True)
-    data = sites.live().query("GET status\nColumns: %s" % " ".join([ i[0] for i in items ]))
-    sites.live().set_prepend_site(False)
+    sites.update_site_states_from_dead_sites()
 
-    for siteline in data:
-        siteid = siteline[0]
+    site_status_info = {}
+    try:
+        sites.live().set_prepend_site(True)
+        for row in sites.live().query("GET status\nColumns: %s" %
+                                        " ".join([ i[0] for i in items ])):
+            site_id, values = row[0], row[1:]
+            site_status_info[site_id] = values
+    finally:
+        sites.live().set_prepend_site(False)
+
+    for site_id, site_alias in config.sorted_sites():
         if not config.is_single_local_site():
-            sitealias = config.site(siteid)["alias"]
-            html.begin_foldable_container("master_control", siteid, True, sitealias)
-        is_cmc = sites.state(siteid)["program_version"].startswith("Check_MK ")
-        html.open_table(class_="master_control")
-        for i, (colname, title) in enumerate(items):
-            # Do not show event handlers on Check_MK Micro Core
-            if is_cmc and title == _("Event handlers"):
-                continue
-            elif not is_cmc and title == _("Alert handlers"):
-                continue
+            html.begin_foldable_container("master_control", site_id, True, site_alias)
 
-            colvalue = siteline[i + 1]
-            url = config.url_prefix() + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (siteid, colname, 1 - colvalue))
-            onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
+        site_state = sites.state(site_id)
+        if site_state["state"] == "dead":
+            html.show_error(site_state["exception"])
 
-            html.open_tr()
-            html.td(title, class_="left")
-            html.open_td()
-            html.toggle_switch(
-                enabled=colvalue,
-                help=_("Switch '%s' to '%s'") % (title, _("off") if colvalue else _("on")),
-                onclick=onclick,
-            )
-            html.close_td()
-            html.close_tr()
+        else:
+            is_cmc = site_state["program_version"].startswith("Check_MK ")
+
+            try:
+                site_info = site_status_info[site_id]
+            except KeyError:
+                site_info = None
+
+            html.open_table(class_="master_control")
+            for i, (colname, title) in enumerate(items):
+                # Do not show event handlers on Check_MK Micro Core
+                if is_cmc and title == _("Event handlers"):
+                    continue
+                elif not is_cmc and title == _("Alert handlers"):
+                    continue
+
+                colvalue = site_info[i]
+                url = config.url_prefix() + ("check_mk/switch_master_state.py?site=%s&switch=%s&state=%d" % (site_id, colname, 1 - colvalue))
+                onclick = "get_url('%s', updateContents, 'snapin_master_control')" % url
+
+                html.open_tr()
+                html.td(title, class_="left")
+                html.open_td()
+                html.toggle_switch(
+                    enabled=colvalue,
+                    help=_("Switch '%s' to '%s'") % (title, _("off") if colvalue else _("on")),
+                    onclick=onclick,
+                )
+                html.close_td()
+                html.close_tr()
+
         html.close_table()
-        if not config.is_single_local_site():
-            html.end_foldable_container()
-
-    # Also show the dead sites
-    for site_id, site_status in sorted(sites.live().dead_sites().items()):
-        if not config.is_single_local_site():
-            sitealias = config.site(site_id)["alias"]
-            html.begin_foldable_container("master_control", site_id, True, sitealias)
-
-        html.show_error(site_status["exception"])
-
         if not config.is_single_local_site():
             html.end_foldable_container()
 

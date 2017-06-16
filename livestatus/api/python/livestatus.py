@@ -70,6 +70,9 @@ class MKLivestatusNotFoundError(MKLivestatusException):
     def __str__(self):
         return "No matching entries found for query %s" % str(self.parameter)
 
+class MKLivestatusTableNotFoundError(MKLivestatusException):
+    pass
+
 # We need some unique value here
 NO_DEFAULT = lambda: None
 
@@ -335,12 +338,18 @@ class BaseConnection:
                 length = int(resp[4:15].lstrip())
             except:
                 raise MKLivestatusSocketError("Malformed output. Livestatus TCP socket might be unreachable.")
+
             data = self.receive_data(length)
+
             if code == "200":
                 try:
                     return eval(data)
                 except:
                     raise MKLivestatusSocketError("Malformed output")
+
+            elif code == "404":
+                raise MKLivestatusTableNotFoundError("Not Found (%s): %s" % (code, data.strip()))
+
             else:
                 raise MKLivestatusQueryError("%s: %s" % (code, data.strip()))
 
@@ -363,6 +372,9 @@ class BaseConnection:
                 return self.recv_response(query, add_headers, timeout_at) # do not send query again -> danger of infinite loop
             else:
                 raise MKLivestatusSocketError(str(e))
+
+        except MKLivestatusTableNotFoundError:
+            raise
 
         except Exception, e:
             raise MKLivestatusSocketError("Unhandled exception: %s" % e)
@@ -708,6 +720,12 @@ class MultiSiteConnection(Helpers):
                 if self.prepend_site:
                     r = [ [sitename] + l for l in r ]
                 result += r
+            #except MKLivestatusTableNotFoundError:
+            #    # In case of multi site queries it may happen that one site knows a table and
+            #    # another site does not have this table because it runs an older version.
+            #    # Don't mark the site as dead site in such a case.
+            #    pass
+
             except Exception, e:
                 self.deadsites[sitename] = {
                     "exception" : e,

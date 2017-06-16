@@ -1,0 +1,14 @@
+Title: HW/SW inventory: fixed missing inventory data from slave sites for new hosts
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p6
+Date: 1497606655
+
+The liveproxyd had problems to transfer inventory data for new hosts to the master site, due to an incorrect cached timestamp.
+
+The data was only updated when either the liveproxd restarted or the hw/sw inventory data of this host changed.
+

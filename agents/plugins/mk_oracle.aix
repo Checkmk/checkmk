@@ -68,12 +68,12 @@ fi
 #   '----------------------------------------------------------------------'
 
 # Sections that run fast and do no caching
-SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance"
+SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance locks"
 
 # Sections that are run in the background and at a larger interval.
 # Note: sections not listed in SYNC_SECTIONS or ASYNC_SECTIONS will not be
 # executed at all!
-ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable locks"
+ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable"
 
 # Sections that are run in the background and at a larger interval.
 # Note: _ASM_ sections are only executed when SID starts with '+'
@@ -192,7 +192,8 @@ sql_tablespaces()
                     WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
                     GROUP BY th.instance, f.file_name, f.tablespace_name, f.status,
                     f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
-                    'TEMP', t.block_size, t.status);
+                    'TEMP', t.block_size, t.status)
+           where d.database_role = 'PRIMARY';
               "
     elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
 
@@ -559,6 +560,42 @@ sql_logswitches()
 }
 
 sql_locks()
+{
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+        echo 'prompt <<<oracle_locks:sep(124)>>>'
+        echo "select upper(i.instance_name)
+                     || '|' || b.sid
+                     || '|' || b.serial#
+                     || '|' || b.machine
+                     || '|' || b.program
+                     || '|' || b.process
+                     || '|' || b.osuser
+                     || '|' || b.username
+                     || '|' || b.SECONDS_IN_WAIT
+                     || '|' || b.BLOCKING_SESSION_STATUS
+                     || '|' || bs.inst_id
+                     || '|' || bs.sid
+                     || '|' || bs.serial#
+                     || '|' || bs.machine
+                     || '|' || bs.program
+                     || '|' || bs.process
+                     || '|' || bs.osuser
+                     || '|' || bs.username
+              from v\$session b
+              join v\$instance i on 1=1
+              join gv\$session bs on bs.inst_id = b.BLOCKING_INSTANCE
+                                 and bs.sid = b.BLOCKING_SESSION
+              where b.BLOCKING_SESSION is not null
+;
+              select upper(i.instance_name)
+                     || '|||||||||||||||||'
+              from v\$instance i
+;
+        "
+    fi
+}
+
+sql_locks_old()
 {
     if [ "$AT_LEAST_ORACLE_101" = 'yes' ] ; then
         echo 'prompt <<<oracle_locks:sep(124)>>>'

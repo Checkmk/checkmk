@@ -153,7 +153,19 @@ def _connect_multiple_sites():
           "Cache: reload\n"
           "Columns: livestatus_version program_version program_start num_hosts num_services"):
 
-        site_id, v1, v2, ps, num_hosts, num_services = response
+        try:
+            site_id, v1, v2, ps, num_hosts, num_services = response
+        except ValueError:
+            e = livestatus.MKLivestatusQueryError(
+                "Invalid response to status query: %s" % response)
+
+            site_id = response[0]
+            _update_site_status(site_id, {
+                "exception"         : e,
+                "status_host_state" : None,
+                "state"             : _status_host_state_name(None),
+            })
+            continue
 
         _update_site_status(site_id, {
             "state"              : "online",

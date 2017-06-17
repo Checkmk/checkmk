@@ -112,7 +112,7 @@ class Escaper(object):
     def __init__(self):
         super(Escaper, self).__init__()
         self._unescaper_text = re.compile(r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
-        self._unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
+        self._unescaper_href = re.compile(r'&lt;a href=(?:&quot;|\')(.*?)(?:&quot;|\')&gt;')
 
 
     # Encode HTML attributes. Replace HTML syntax with HTML text.

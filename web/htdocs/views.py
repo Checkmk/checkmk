@@ -1554,7 +1554,12 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     # Sorting - use view sorters and URL supplied sorters
     if not only_count:
-        sorter_list = parse_url_sorters(html.var('sort', deflt=view["sorters"]))
+        user_sorters = parse_url_sorters(html.var("sort"))
+        if user_sorters:
+            sorter_list = user_sorters
+        else:
+            sorter_list = view["sorters"]
+
         sorters = [ (multisite_sorters[s[0]],) + s[1:] for s in sorter_list
                         if s[0] in multisite_sorters ]
     else:
@@ -2111,7 +2116,7 @@ def show_context_links(thisview, datasource, show_filters,
             view_optiondial_off("num_columns")
 
         if display_options.enabled(display_options.R) and config.user.may("general.view_option_refresh"):
-            choices = [ [x, {0:_("off")}.get(x,str(x) + "s")] + '' for x in config.view_option_refreshes ]
+            choices = [ [x, {0:_("off")}.get(x, str(x) + "s") ] for x in config.view_option_refreshes ]
             view_optiondial(thisview, "refresh", choices, _("Change the refresh rate"))
         else:
             view_optiondial_off("refresh")

@@ -498,7 +498,13 @@ def page_create_visual(what, info_keys, next_url = None):
 
 def get_context_specs(visual, info_handler):
     context_specs = []
-    info_keys = info_handler(visual) if info_handler else infos.keys()
+
+    info_keys = []
+    if info_handler:
+        info_keys = info_handler(visual)
+
+    if not info_keys:
+        info_keys = infos.keys()
 
     single_info_keys = [key for key in info_keys if key in visual['single_infos']]
     multi_info_keys =  [key for key in info_keys if key not in single_info_keys]

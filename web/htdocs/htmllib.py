@@ -108,7 +108,7 @@ class RequestTimeout(MKException):
 
 class Escaper(object):
     _unescaper_text = re.compile(r'&lt;(/?)(h2|b|tt|i|br(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
-    _unescaper_href = re.compile(r'&lt;a href=&quot;(.*?)&quot;&gt;')
+    _unescaper_href = re.compile(r'&lt;a href=(?:&quot;|\')(.*?)(?:&quot;|\')&gt;')
 
     # Encode HTML attributes. Replace HTML syntax with HTML text.
     # For example: replace '"' with '&quot;', '<' with '&lt;'.

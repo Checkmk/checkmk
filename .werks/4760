@@ -1,0 +1,20 @@
+Title: Fixed vanishing CUPS queues services on systems using systemd
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497690367
+Class: fix
+
+When monitoring CUPS queues on linux systems using systemd it happened
+that the agent did not provide CUPS queue information suddenly.
+
+When using systemd the cupsd process is stopped when nothing is using
+the daemon. Systemd is starting the daemon again automatically once
+any process wants use the printer system.
+
+The CUPS part of the Check_MK agent was only executed when the cupsd
+process was running which is wrong for such systems. Additionally the
+agent is now checking whether or not systemd is used and the cups.service
+is enabled and checks the queues if so, even when the cupsd is not running.

@@ -1,0 +1,25 @@
+Title: Fixed multisite setups with sites using Check_MK/Livestatus < 1.4
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1497795538
+
+When updating the central site of a distributed setup to Check_MK 1.4.* and
+leaving the slave sites on older versions the other sites were marked as
+dead sites while rendering the page.
+
+This issue was caused by the tactical overview snapin that tried to calculate
+the numbers for the "Events" of the Event Console. The slave sites using
+older Check_MK versions do not support that kind of query. Once this query
+is made the sites are marked as dead and are also not shown correctly in the
+master control and site status snapin.
+
+A possible workaround would be to update all involved sites to Check_MK
+1.4.
+
+Also affected are sites that use the Nagios core and have the Event Console
+disabled. They still report an error to the GUI. This will be fixed soon.

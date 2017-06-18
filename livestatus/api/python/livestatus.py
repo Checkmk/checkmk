@@ -175,6 +175,35 @@ class Helpers:
         return result
 
 
+
+class Query(object):
+    """This object can be passed to all livestatus methods accepting a livestatus
+    query. The object can be used to hand over the handling code some flags, for
+    example to influence the error handling during query processing."""
+
+    def __init__(self, query, suppress_exceptions=None):
+        super(Query, self).__init__()
+
+        self._query = self._ensure_unicode(query)
+        self.suppress_exceptions = suppress_exceptions or []
+
+
+    def _ensure_unicode(self, thing):
+        try:
+            return unicode(thing)
+        except UnicodeDecodeError:
+            return thing.decode("utf-8")
+
+
+    def __unicode__(self):
+        return self._query
+
+
+    def __str__(self):
+        return self._query.encode("utf-8")
+
+
+
 #.
 #   .--BaseConnection----------------------------------------------------------.
 #   | ____                  ____                            _   _              |
@@ -290,12 +319,16 @@ class BaseConnection:
         self.send_query(query, add_headers)
         return self.recv_response(query, add_headers)
 
-    def send_query(self, query, add_headers = "", do_reconnect=True):
+    def send_query(self, query_obj, add_headers = "", do_reconnect=True):
+        orig_query = query_obj
+
+        query = "%s" % query_obj
         if not self.allow_cache:
             query = remove_cache_regex.sub("", query)
-        orig_query = query
+
         if self.socket == None:
             self.connect()
+
         if not query.endswith("\n"):
             query += "\n"
         query += self.auth_header + self.add_headers
@@ -706,6 +739,11 @@ class MultiSiteConnection(Helpers):
                     "site" : site,
                 }
 
+        if isinstance(query, Query):
+            suppress_exceptions = tuple(query.suppress_exceptions)
+        else:
+            suppress_exceptions = tuple()
+
         # Then retrieve all answers. We will be as slow as the slowest of all
         # connections.
         result = []
@@ -720,11 +758,9 @@ class MultiSiteConnection(Helpers):
                 if self.prepend_site:
                     r = [ [sitename] + l for l in r ]
                 result += r
-            #except MKLivestatusTableNotFoundError:
-            #    # In case of multi site queries it may happen that one site knows a table and
-            #    # another site does not have this table because it runs an older version.
-            #    # Don't mark the site as dead site in such a case.
-            #    pass
+            except suppress_exceptions:
+                stillalive.append( (sitename, site, connection) )
+                continue
 
             except Exception, e:
                 self.deadsites[sitename] = {

@@ -1,7 +1,10 @@
 Title: cmk-update-agent: Needs to protect against parallel executions
 Component: agents
-State: open
+Class: bug
+State: done
 Date: 2016-12-22 11:52:28
 Targetversion: 1.4.0
-Class: bug
 
+
+2017-06-18 16:26:42: changed state open -> done
+This has been fixed recently.

@@ -8354,7 +8354,7 @@ def mode_notifications(phase):
                 table.cell(_("Host"), context.get("HOSTNAME", ""))
                 table.cell(_("Service"), context.get("SERVICEDESC", ""))
                 output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
-                table.cell(_("Plugin output"), output)
+                table.cell(_("Plugin output"), format_plugin_output(output))
             table.end()
 
     # Do analysis

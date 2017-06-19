@@ -1,0 +1,11 @@
+Title: Showing correctly formated plugin output in "analyse notifications table"
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497863188
+Class: fix
+
+The plugin output shown in the "analyse notification table" was not being formatted
+correctly (e.g. state markers were not converted and HTML links were not rendered). 

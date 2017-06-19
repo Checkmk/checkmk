@@ -479,47 +479,46 @@ table.hostmatrix td { border: 1px solid #123a4a; padding: 0; border-spacing: 0; 
 #   '----------------------------------------------------------------------'
 
 def render_sitestatus():
-    if config.is_multisite():
-        html.open_table(cellspacing=0, class_="sitestate")
+    html.open_table(cellspacing=0, class_="sitestate")
 
-        sites.update_site_states_from_dead_sites()
+    sites.update_site_states_from_dead_sites()
 
-        for sitename, sitealias in config.sorted_sites():
-            site = config.site(sitename)
+    for sitename, sitealias in config.sorted_sites():
+        site = config.site(sitename)
 
-            state = sites.state(sitename, {})
+        state = sites.state(sitename, {})
 
-            if state.get("state") == None:
-                state = "missing"
-                text = _("Missing site")
-                title = _("Site %s does not exist") % sitename
+        if state.get("state") == None:
+            state = "missing"
+            text = _("Missing site")
+            title = _("Site %s does not exist") % sitename
 
+        else:
+            if state["state"] == "disabled":
+                switch = "on"
+                text = site["alias"]
+                title = _("Site %s is switched off") % site["alias"]
             else:
-                if state["state"] == "disabled":
-                    switch = "on"
-                    text = site["alias"]
-                    title = _("Site %s is switched off") % site["alias"]
+                switch = "off"
+                text = render_link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
+                ex = state.get("exception")
+                shs = state.get("status_host_state")
+
+                if ex:
+                    title = ex
                 else:
-                    switch = "off"
-                    text = render_link(site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename)
-                    ex = state.get("exception")
-                    shs = state.get("status_host_state")
+                    title = "Site %s is online" % site["alias"]
 
-                    if ex:
-                        title = ex
-                    else:
-                        title = "Site %s is online" % site["alias"]
-
-            html.open_tr()
-            html.open_td(class_="left")
-            html.write(text)
-            html.close_td()
-            html.open_td(class_="state")
-            html.status_label_button(content=state["state"], status=state["state"],
-                help=_("%s this site") % (state["state"] == "disabled" and _("enable") or _("disable")),
-                onclick="switch_site('_site_switch=%s:%s')" % (sitename, switch))
-            html.close_tr()
-        html.close_table()
+        html.open_tr()
+        html.open_td(class_="left")
+        html.write(text)
+        html.close_td()
+        html.open_td(class_="state")
+        html.status_label_button(content=state["state"], status=state["state"],
+            help=_("%s this site") % (state["state"] == "disabled" and _("enable") or _("disable")),
+            onclick="switch_site('_site_switch=%s:%s')" % (sitename, switch))
+        html.close_tr()
+    html.close_table()
 
 
 sidebar_snapins["sitestatus"] = {

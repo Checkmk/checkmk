@@ -690,10 +690,6 @@ class FilterSite(Filter):
         self.enforce = enforce
 
 
-    def visible(self):
-        return config.is_multisite()
-
-
     def display(self):
         html.dropdown("site", self._choices())
 

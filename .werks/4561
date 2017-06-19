@@ -1,0 +1,9 @@
+Title: Agent Updater compatibility fix for older python versions (<2.6)
+Level: 1
+Component: agents
+Compatible: compat
+Version: 1.4.0p6
+Date: 1497860628
+Class: fix
+
+

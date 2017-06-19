@@ -26,6 +26,7 @@
 #define ExternalCmd_h
 
 #include <windows.h>
+#include "types.h"
 
 class ExternalCmd {
 public:
@@ -51,12 +52,12 @@ private:
     DWORD readPipe(HANDLE pipe, char *buffer, size_t buffer_size, bool block);
 
 private:
-    HANDLE _script_stderr{INVALID_HANDLE_VALUE};
-    HANDLE _script_stdout{INVALID_HANDLE_VALUE};
+    WinHandle _script_stderr{INVALID_HANDLE_VALUE};
+    WinHandle _script_stdout{INVALID_HANDLE_VALUE};
     HANDLE _process{INVALID_HANDLE_VALUE};
     HANDLE _job_object{INVALID_HANDLE_VALUE};
-    HANDLE _stdout{INVALID_HANDLE_VALUE};
-    HANDLE _stderr{INVALID_HANDLE_VALUE};
+    WinHandle _stdout{INVALID_HANDLE_VALUE};
+    WinHandle _stderr{INVALID_HANDLE_VALUE};
 };
 
 #endif  // ExternalCmd_h

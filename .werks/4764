@@ -1,0 +1,11 @@
+Title: Fixed internal automation error handling when syncing with 1.2.8 or older
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497885615
+Class: fix
+
+Some "internal automation error" messages were not displayed correctly in the
+activation dialog when an error occured.

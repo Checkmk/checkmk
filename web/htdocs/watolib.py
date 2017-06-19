@@ -4968,6 +4968,12 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         try:
             cmk_configuration_warnings = ast.literal_eval(response_text)
+
+            # In case of an exception it returns a str/unicode message. Wrap the
+            # message in a list to be compatible to regular response
+            if type(cmk_configuration_warnings) in [ str, unicode ]:
+                cmk_configuration_warnings = [ cmk_configuration_warnings ]
+
             return {
                 "check_mk": cmk_configuration_warnings
             }

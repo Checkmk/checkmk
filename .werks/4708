@@ -1,0 +1,16 @@
+Title: Windows Agent/Agent Updater: Fixed race condition which removed the windows service
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1496847511
+
+The agent updater could kill itself during an update, because the MSI installation process
+sent a shutdown signal to the windows service. This shutdown also killed any plugins,
+including the agent updater... This has been fixed by detaching the cmk-update-agent.exe
+file from the process group of the windows agent.
+
+

@@ -710,8 +710,8 @@ class BaseFolder(WithPermissionsAndAttributes):
             breadcrump_element_start(z_index = 100 + num)
             html.open_div(class_=["content"])
             html.open_form(name="folderpath", method="GET")
-            html.sorted_dropdown("folder", [ ("", "") ] + self.subfolder_choices(),
-                                 class_="folderpath", onchange = "folderpath.submit();")
+            html.dropdown("folder", [ ("", "") ] + self.subfolder_choices(),
+                          class_="folderpath", onchange = "folderpath.submit();")
             if keepvarnames == True:
                 html.hidden_fields()
             else:

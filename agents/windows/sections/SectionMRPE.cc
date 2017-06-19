@@ -163,7 +163,6 @@ bool SectionMRPE::produceOutputInner(std::ostream &out,
             int nagios_code = command.exitCode();
             out << nagios_code << " " << plugin_output << "\n";
             crash_log("Script finished");
-            command.closeScriptHandles();
         } catch (const std::exception &e) {
             crash_log("mrpe failed: %s", e.what());
             out << "3 Unable to execute - plugin may be missing.\n";

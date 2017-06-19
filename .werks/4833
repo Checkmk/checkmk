@@ -1,0 +1,10 @@
+Title: Windows Agent: Fixed pipe handle leak whenever plugin/mrpe scripts raised an error
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1497876183
+Class: fix
+
+

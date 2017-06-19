@@ -145,8 +145,6 @@ static int launch_program(script_container *cont) {
                 (char *)HeapAlloc(GetProcessHeap(), 0, buffer_u8.size() + 1);
             memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
         }
-
-        command.closeScriptHandles();
     } catch (const std::exception &e) {
         crash_log("%s", e.what());
         result = CANCELED;

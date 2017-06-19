@@ -359,6 +359,7 @@ public:
 
 // wrapper for windows handles that automatically closes the
 // handle on leaving scope
+// FIXME: duplicate of ManagedHandle?
 class WinHandle {
 public:
     WinHandle(HANDLE hdl = INVALID_HANDLE_VALUE) : _handle(hdl) {}

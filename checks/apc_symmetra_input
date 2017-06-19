@@ -44,6 +44,6 @@ check_info['apc_symmetra_input'] = {
                                   ]),
     "snmp_scan_function"        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
     'has_perfdata'              : True,
-    'group'                     : 'elphase',
+    'group'                     : 'el_inphase',
     'includes'                  : [ 'elphase.include' ],
 }

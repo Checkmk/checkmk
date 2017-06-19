@@ -1,0 +1,10 @@
+Title: apc_symmetra, apc_symmetra_input, apc_symmetra_output: Fixed wrong WATO rulesets
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497883828
+Class: fix
+
+

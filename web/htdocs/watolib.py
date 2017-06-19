@@ -422,7 +422,7 @@ class ConfigDomainCACertificates(ConfigDomain):
 
     def activate(self):
         try:
-            self._update_trusted_cas()
+            return self._update_trusted_cas()
         except Exception, e:
             log_exception()
             return ["Failed to create trusted CA file '%s': %s" %
@@ -430,32 +430,39 @@ class ConfigDomainCACertificates(ConfigDomain):
 
 
     def _update_trusted_cas(self):
-        trusted_cas = []
+        trusted_cas, errors = [], []
 
         if config.trusted_certificate_authorities["use_system_wide_cas"]:
-            trusted_cas += self._get_system_wide_trusted_ca_certificates()
+            trusted, errors = self._get_system_wide_trusted_ca_certificates()
+            trusted_cas += trusted
 
         trusted_cas += config.trusted_certificate_authorities["trusted_cas"]
 
         store.save_file(self.trusted_cas_file, "\n".join(trusted_cas))
+        return errors
 
 
     def _get_system_wide_trusted_ca_certificates(self):
-        trusted_cas = []
+        trusted_cas, errors = [], []
         for cert_path in self.system_wide_trusted_ca_search_paths:
             if not os.path.isdir(cert_path):
                 continue
 
             for entry in os.listdir(cert_path):
-                ext = os.path.splitext(entry)[-1]
-                if ext != ".pem":
-                    continue
+                try:
+                    ext = os.path.splitext(entry)[-1]
+                    if ext != ".pem":
+                        continue
 
-                trusted_cas.append(file(os.path.join(cert_path, entry)).read())
+                    trusted_cas.append(file(os.path.join(cert_path, entry)).read())
+                except IOError:
+                    log_exception()
+                    errors.append("Failed to add certificate '%s' to trusted CA certificates. "
+                                  "See web.log for details." % os.path.join(cert_path, entry))
 
             break
 
-        return trusted_cas
+        return trusted_cas, errors
 
 #.
 #   .--Hosts & Folders-----------------------------------------------------.

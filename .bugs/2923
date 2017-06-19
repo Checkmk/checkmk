@@ -1,9 +1,12 @@
 Title: Persistent comment for hosts is not working
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2017-05-26 16:30:26
 Targetversion: 1.2.8
-Class: bug
 
 If you create a persistent comment for hosts, it is not assigned to this hosts.
 The comment can not be found in Check_MK. The persistent comment for services is working.
+
+2017-06-19 08:50:58: changed state open -> done
+Works.

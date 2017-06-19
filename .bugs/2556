@@ -2,7 +2,7 @@ Title: Rework setting of environment variables in whole OMD context
 Component: core
 State: open
 Date: 2017-06-12 09:45:35
-Targetversion: 1.4.0
+Targetversion: 1.5.0
 Class: bug
 
 Environment variables should only be set in ~/.profile and

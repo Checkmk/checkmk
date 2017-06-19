@@ -1,0 +1,10 @@
+Title: Quicksearch: Malformed regular expressions generated no error message when no specific filters were set
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497856541
+Class: fix
+
+

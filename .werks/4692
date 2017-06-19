@@ -1,0 +1,13 @@
+Title: Correctly handle deactivated event console when Nagios core is used.
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1497866624
+
+This fix avoids log entries and exceptions of the form:
+
+   "[mkeventd at /omd/sites/stable/tmp/run/mkeventd/status] cannot connect: No such file or directory"

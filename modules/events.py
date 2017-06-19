@@ -336,6 +336,12 @@ def complete_raw_context(raw_context, with_dump, event_log):
             raw_context['SERVICEFORURL'] = urllib.quote(raw_context['SERVICEDESC'])
         raw_context['HOSTFORURL'] = urllib.quote(raw_context['HOSTNAME'])
 
+        # Add HTML formated plugin output
+        raw_context["HOSTOUTPUT_HTML"] = format_plugin_output(raw_context["HOSTOUTPUT"])
+        if raw_context["WHAT"] == "SERVICE":
+            raw_context["SERVICEOUTPUT_HTML"] = format_plugin_output(raw_context["SERVICEOUTPUT"])
+            raw_context["LONGSERVICEOUTPUT_HTML"] = format_plugin_output(raw_context["LONGSERVICEOUTPUT"])
+
         convert_context_to_unicode(raw_context)
 
     except Exception, e:
@@ -345,6 +351,23 @@ def complete_raw_context(raw_context, with_dump, event_log):
         event_log("Computed variables:\n"
                    + "\n".join(sorted(["                    %s=%s" % (k, raw_context[k]) for k in raw_context if k not in raw_keys])))
 
+
+
+# There is common code with web/htdocs/lib.py:format_plugin_output(). Please check
+# whether or not that function needs to be changed too
+# TODO(lm): Find a common place to unify this functionality.
+def format_plugin_output(output):
+    ok_marker      = '<b class="stmarkOK">OK</b>'
+    warn_marker    = '<b class="stmarkWARNING">WARN</b>'
+    crit_marker    = '<b class="stmarkCRITICAL">CRIT</b>'
+    unknown_marker = '<b class="stmarkUNKNOWN">UNKN</b>'
+
+    output = output.replace("(!)", warn_marker) \
+              .replace("(!!)", crit_marker) \
+              .replace("(?)", unknown_marker) \
+              .replace("(.)", ok_marker)
+
+    return output
 
 
 def event_match_rule(rule, context):

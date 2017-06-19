@@ -1905,7 +1905,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     # In case of the web service we show errors only on single site installations.
     if config.show_livestatus_errors \
        and display_options.enabled(display_options.W) \
-       and (html.output_format == "html" or not config.is_multisite()):
+       and html.output_format == "html":
         for sitename, info in sites.live().dead_sites().items():
             html.show_error("<b>%s - %s</b><br>%s" %
                 (info["site"]["alias"], _('Livestatus error'), info["exception"]))

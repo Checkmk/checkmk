@@ -412,6 +412,9 @@ class ConfigDomainCACertificates(ConfigDomain):
         "/etc/pki/tls/certs", # CentOS/RedHat
     ]
 
+    _PEM_RE = re.compile(
+        b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?""", re.DOTALL)
+
     def config_dir(self):
         return multisite_dir
 
@@ -443,7 +446,7 @@ class ConfigDomainCACertificates(ConfigDomain):
 
 
     def _get_system_wide_trusted_ca_certificates(self):
-        trusted_cas, errors = [], []
+        trusted_cas, errors = set([]), []
         for cert_path in self.system_wide_trusted_ca_search_paths:
             if not os.path.isdir(cert_path):
                 continue
@@ -451,10 +454,10 @@ class ConfigDomainCACertificates(ConfigDomain):
             for entry in os.listdir(cert_path):
                 try:
                     ext = os.path.splitext(entry)[-1]
-                    if ext != ".pem":
+                    if ext not in [ ".pem", ".crt" ]:
                         continue
 
-                    trusted_cas.append(file(os.path.join(cert_path, entry)).read())
+                    trusted_cas.update(self._get_certificates_from_file(os.path.join(cert_path, entry)))
                 except IOError:
                     log_exception()
                     errors.append("Failed to add certificate '%s' to trusted CA certificates. "
@@ -462,7 +465,12 @@ class ConfigDomainCACertificates(ConfigDomain):
 
             break
 
-        return trusted_cas, errors
+        return list(trusted_cas), errors
+
+    def _get_certificates_from_file(self, path):
+        return [ match.group(0) for match in self._PEM_RE.finditer(open(path).read()) ]
+
+
 
 #.
 #   .--Hosts & Folders-----------------------------------------------------.

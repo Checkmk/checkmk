@@ -642,8 +642,12 @@ public:
         return comments_for_object(toImpl(service)->host_ptr, toImpl(service));
     }
 
-    // TODO(sp) Do we need a separate NEB argument for this?
-    bool mkeventdEnabled() override { return true; }
+    bool mkeventdEnabled() override {
+        if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
+            return config_mkeventd == string("on");
+        }
+        return false;
+    }
 
     string mkeventdSocketPath() override { return fl_mkeventd_socket_path; }
     string mkLogwatchPath() override { return fl_mk_logwatch_path; }

@@ -56,12 +56,13 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     // child process needs to be able to inherit the pipe handles
     security_attributes.bInheritHandle = true;
 
-    if (!CreatePipe(&_stdout, &_script_stdout, &security_attributes, 0)) {
+    if (!CreatePipe(_stdout.ptr(), _script_stdout.ptr(), &security_attributes, 0)) {
         throw win_exception("failed to create pipe");
     }
 
+
     if (with_stderr) {
-        if (!CreatePipe(&_stderr, &_script_stderr, &security_attributes, 0)) {
+        if (!CreatePipe(_stderr.ptr(), _script_stderr.ptr(), &security_attributes, 0)) {
             throw win_exception("failed to create pipe");
         }
     }
@@ -73,8 +74,8 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     GetStartupInfo(&si);
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
-    si.hStdOutput = _script_stdout;
-    si.hStdError = with_stderr ? _script_stdout : _script_stderr;
+    si.hStdOutput = (HANDLE)_script_stdout;
+    si.hStdError = with_stderr ? (HANDLE)_script_stdout : (HANDLE)_script_stderr;
 
     PROCESS_INFORMATION pi;
     ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
@@ -107,8 +108,6 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
 }
 
 ExternalCmd::~ExternalCmd() {
-    ::CloseHandle(_stdout);
-    ::CloseHandle(_stderr);
     if (_job_object != INVALID_HANDLE_VALUE) {
         ::TerminateJobObject(_job_object, 1);
         ::CloseHandle(_job_object);
@@ -116,15 +115,11 @@ ExternalCmd::~ExternalCmd() {
     ::CloseHandle(_process);
 }
 
+
 void ExternalCmd::terminateJob(DWORD exit_code) {
     ::TerminateJobObject(_job_object, exit_code);
     ::CloseHandle(_job_object);
     _job_object = INVALID_HANDLE_VALUE;
-}
-
-void ExternalCmd::closeScriptHandles() {
-    ::CloseHandle(_script_stderr);
-    ::CloseHandle(_script_stdout);
 }
 
 DWORD ExternalCmd::exitCode() {
@@ -135,23 +130,23 @@ DWORD ExternalCmd::exitCode() {
 
 DWORD ExternalCmd::stdoutAvailable() {
     DWORD available;
-    PeekNamedPipe(_stdout, nullptr, 0, nullptr, &available, nullptr);
+    PeekNamedPipe((HANDLE)_stdout, nullptr, 0, nullptr, &available, nullptr);
     return available;
 }
 
 DWORD ExternalCmd::stderrAvailable() {
     DWORD available;
-    PeekNamedPipe(_stderr, nullptr, 0, nullptr, &available, nullptr);
+    PeekNamedPipe((HANDLE)_stderr, nullptr, 0, nullptr, &available, nullptr);
     return available;
 }
 
 DWORD ExternalCmd::readStdout(char *buffer, size_t buffer_size, bool block) {
-    return readPipe(_stdout, buffer, buffer_size, block);
+    return readPipe((HANDLE)_stdout, buffer, buffer_size, block);
 }
 
 DWORD ExternalCmd::readStderr(char *buffer, size_t buffer_size, bool block) {
     if (!with_stderr) {
-        return readPipe(_stderr, buffer, buffer_size, block);
+        return readPipe((HANDLE)_stderr, buffer, buffer_size, block);
     } else {
         return 0;
     }

@@ -31,6 +31,14 @@
 extern bool with_stderr;
 extern HANDLE g_workers_job_object;
 
+
+bool ends_with(std::string const & value, std::string const & ending)
+{
+    if (ending.size() > value.size()) return false;
+    return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
+
 ExternalCmd::ExternalCmd(const char *cmdline) {
     SECURITY_DESCRIPTOR security_descriptor;
     SECURITY_ATTRIBUTES security_attributes;
@@ -73,9 +81,18 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
     std::unique_ptr<char[], decltype(free) *> cmdline_buf(strdup(cmdline),
                                                           free);
+
+    bool detach_process = ends_with(std::string(cmdline), std::string("cmk-update-agent.exe\""));
+
+    DWORD dwCreationFlags = CREATE_NEW_CONSOLE;
+    if (detach_process) {
+        crash_log("Detaching process: %s, %d", cmdline, detach_process);
+        dwCreationFlags = CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS;
+    }
+
     if (!CreateProcess(nullptr, cmdline_buf.get(), nullptr, nullptr, TRUE,
-                       CREATE_NEW_CONSOLE, nullptr, nullptr, &si, &pi)) {
-       throw win_exception(std::string("failed to spawn process ") + cmdline);
+                       dwCreationFlags, nullptr, nullptr, &si, &pi)) {
+        throw win_exception(std::string("failed to spawn process ") + cmdline);
     }
 
     _process = pi.hProcess;
@@ -84,8 +101,10 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     // Create a job object for this process
     // Whenever the process ends all of its childs will terminate, too
     _job_object = CreateJobObject(nullptr, nullptr);
-    AssignProcessToJobObject(_job_object, pi.hProcess);
-    AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
+    if (!detach_process) {
+      AssignProcessToJobObject(_job_object, pi.hProcess);
+      AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
+    }
 }
 
 ExternalCmd::~ExternalCmd() {

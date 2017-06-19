@@ -258,6 +258,9 @@ def paint_host_list(site, hosts):
         h += "<a href=\"%s\">%s</a></div>" % (link, host)
     return "", h
 
+# There is common code with modules/events.py:format_plugin_output(). Please check
+# whether or not that function needs to be changed too
+# TODO(lm): Find a common place to unify this functionality.
 def format_plugin_output(output, row = None):
     import config
     if config.escape_plugin_output:

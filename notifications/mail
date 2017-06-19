@@ -199,6 +199,54 @@ tr.even3 { background-color: #ffefaf; }
     background-color: #00aaff; color: #ffffff;
 }
 
+b.stmarkOK {
+    margin-left: 2px;
+    padding: 1px 3px;
+    border-radius: 4px;
+    font-size: 7pt;
+    border: 1px solid #666;
+    position: relative;
+    top: -1px;
+
+    background-color: #0b3; color: #ffffff;
+}
+
+b.stmarkWARNING {
+    margin-left: 2px;
+    padding: 1px 3px;
+    border-radius: 4px;
+    font-size: 7pt;
+    border: 1px solid #666;
+    position: relative;
+    top: -1px;
+
+    background-color: #ffff00; color: #000000;
+}
+
+b.stmarkCRITICAL {
+    margin-left: 2px;
+    padding: 1px 3px;
+    border-radius: 4px;
+    font-size: 7pt;
+    border: 1px solid #666;
+    position: relative;
+    top: -1px;
+
+    background-color: #ff0000; color: #ffffff;
+}
+
+b.stmarkUNKNOWN {
+    margin-left: 2px;
+    padding: 1px 3px;
+    border-radius: 4px;
+    font-size: 7pt;
+    border: 1px solid #666;
+    position: relative;
+    top: -1px;
+
+    background-color: #ff8800; color: #ffffff;
+}
+
 td.graphs {
     width: 617px;
     padding: 10px;
@@ -275,7 +323,7 @@ body_elements = [
 
   ( "output", "host", True, "normal", "Plugin Output",
     "$HOSTOUTPUT$",
-    "$HOSTOUTPUT$",),
+    "$HOSTOUTPUT_HTML$",),
 
   ( "ack_author", "host", False, "normal", "Acknowledge Author",
     "$HOSTACKAUTHORNAME$",
@@ -296,11 +344,11 @@ body_elements = [
 
   ( "output", "service", True, "normal", "Plugin Output",
     "$SERVICEOUTPUT$",
-    "$SERVICEOUTPUT$",),
+    "$SERVICEOUTPUT_HTML$",),
 
   ( "longoutput", "service", False, "normal", "Additional Output",
     "$LONGSERVICEOUTPUT$",
-    "$LONGSERVICEOUTPUT$",),
+    "$LONGSERVICEOUTPUT_HTML$",),
 
   ( "ack_author", "service", False, "normal", "Acknowledge Author",
     "$SERVICEACKAUTHOR$",
@@ -846,8 +894,10 @@ def render_elements(context, elements):
     for name, whence, forced, nottype, title, txt, html in body_elements:
         if nottype == "alerthandler" and not is_alert_handler:
             continue
+
         if nottype not in ( "alerthandler", "all" ) and is_alert_handler:
             continue
+
         if (whence == "both" or whence == what) and \
             (forced or (name in elements)):
             tmpl_txt += "%-20s %s\n" % (title + ":", txt)

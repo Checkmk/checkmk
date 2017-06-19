@@ -1,0 +1,12 @@
+Title: HTML mails: Fixed wrong rendered state markers in plugin outputs
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1497873346
+
+The plugin output of hosts/services can contain state markers like "(!!)"
+which were not rendered colored like in the Web GUI.

@@ -1,0 +1,13 @@
+Title: windows_updates.vbs: this plugin automatically configured to asynchron execution and 4 hours cached
+Level: 1
+Component: wato
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p6
+Date: 1497963919
+
+You can still overwrite these hardcoded values with the WATO rules <i>Set cache age for plugins and local
+checks</i> and <i>Set execution mode for plugins and local checks</i>.
+

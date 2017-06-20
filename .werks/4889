@@ -1,0 +1,10 @@
+Title: LDAP connections: Fixed exception when using "nested groups" with groups to roles plugin
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p6
+Date: 1497967829
+Class: fix
+
+

@@ -1,0 +1,14 @@
+Title: Fixed missing link to "events of host" view for hosts the user may see
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1497959040
+
+In the "all events" view, there are links on the host names to a view which
+shows all events related to that host. In previous 1.4 versions these links
+were broken when the user was not a contact of these hosts but permitted
+to see the events of all hosts.

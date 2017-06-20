@@ -104,7 +104,7 @@ def check_websphere_mq_channels(item, params, parsed):
 
         yield state, infotext, [('messages', messages, warn, crit, 0, max_messages)]
 
-        if params.get("message_count_perc"):
+        if params.get("message_count_perc") and max_messages > 0:
             warn, crit    = params["message_count_perc"]
             messages_perc = 1.0 * messages / max_messages
             infotext      = get_percent_human_readable(messages_perc)

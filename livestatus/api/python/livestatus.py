@@ -182,11 +182,17 @@ class Query(object):
     query. The object can be used to hand over the handling code some flags, for
     example to influence the error handling during query processing."""
 
+    default_suppressed_exceptions = [MKLivestatusTableNotFoundError]
+
     def __init__(self, query, suppress_exceptions=None):
         super(Query, self).__init__()
 
         self._query = self._ensure_unicode(query)
-        self.suppress_exceptions = suppress_exceptions or []
+
+        if suppress_exceptions == None:
+            self.suppress_exceptions = self.default_suppressed_exceptions
+        else:
+            self.suppress_exceptions = suppress_exceptions
 
 
     def _ensure_unicode(self, thing):
@@ -743,7 +749,7 @@ class MultiSiteConnection(Helpers):
         if isinstance(query, Query):
             suppress_exceptions = tuple(query.suppress_exceptions)
         else:
-            suppress_exceptions = tuple()
+            suppress_exceptions = tuple(Query.default_suppressed_exceptions)
 
         # Then retrieve all answers. We will be as slow as the slowest of all
         # connections.

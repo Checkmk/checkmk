@@ -637,20 +637,9 @@ def get_tactical_overview_data(extra_filter_headers):
                         stat_only=True,
                         extra_headers=extra_filter_headers)
 
-        # Livestatus < 1.4.0 does not know this table. The API will raise a
-        # MKLivestatusTableNotFoundError exception in this case which will mark
-        # the site as dead by default. Adding the exception to the list of
-        # suppressed exception makes livestatus silently ignore this kind of
-        # error. This makes it possible to make livestatus connections with
-        # older Check_MK versions.
-        query = livestatus.Query(
-            event_query,
-            suppress_exceptions=[livestatus.MKLivestatusTableNotFoundError],
-        )
-
         try:
             sites.live().set_auth_domain("ec")
-            event_data = sites.live().query_summed_stats(query)
+            event_data = sites.live().query_summed_stats(event_query)
         except livestatus.MKLivestatusNotFoundError:
             event_data = [0, 0, 0]
         finally:

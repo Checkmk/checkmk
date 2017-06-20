@@ -1,0 +1,13 @@
+Title: Catch communication errors with the event console when the Nagios core is used.
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p6
+Date: 1497965745
+
+When issuing commands to the event console via Livestatus, communication
+errors could result in termination of Nagios.  This has been fixed, the
+error is logged now.

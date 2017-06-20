@@ -185,7 +185,8 @@ class Site(object):
         self.http_address = "127.0.0.1"
         self.url          = "%s://%s/%s/check_mk/" % (self.http_proto, self.http_address, self.id)
 
-        self._apache_port = None # internal cache for the port
+        self._apache_port     = None # internal cache for the port
+        self._livestatus_port = None
 
         #self._gather_livestatus_port()
 
@@ -261,6 +262,16 @@ class Site(object):
             return p.stdout.read()
         else:
             return open("%s/%s" % (self.root, rel_path)).read()
+
+
+    def delete_file(self, rel_path):
+        if not self._is_running_as_site_user():
+            p = self.execute(["rm", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
+            if p.wait() != 0:
+                raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
+            return p.stdout.read()
+        else:
+            return os.unlink("%s/%s" % (self.root, rel_path))
 
 
     def write_file(self, rel_path, content):
@@ -583,6 +594,7 @@ class Site(object):
             self.stop()
 
         self.set_config("LIVESTATUS_TCP", "on")
+        self._gather_livestatus_port()
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
 
         if start_again:

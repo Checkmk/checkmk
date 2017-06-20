@@ -58,10 +58,19 @@ def query_ec_table(datasource, columns, add_columns, query, only_sites, limit, t
 
     _ec_filter_host_information_of_not_permitted_hosts(rows)
 
-    if config.user.may("mkeventd.seeunrelated"):
-        return rows # user is allowed to see all events returned by the core
+    if not config.user.may("mkeventd.seeunrelated"):
+        # user is not allowed to see all events returned by the core
+        rows = [ r for r in rows if r["event_contact_groups"] != [] or r["host_name"] != "" ]
 
-    return [ r for r in rows if r["event_contact_groups"] != [] or r["host_name"] != "" ]
+    # Now we don't need to distinguish anymore between unrelated and related events. We
+    # need the host_name field for rendering the views. Try our best and use the
+    # event_host value as host_name.
+    for row in rows:
+        if not row.get("host_name"):
+            row["host_name"] = row["event_host"]
+
+    return rows
+
 
 
 # Handle the case where a user is allowed to see all events (-> events for hosts he

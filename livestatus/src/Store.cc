@@ -28,6 +28,7 @@
 #include <cstring>
 #include <ctime>
 #include <ostream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 #include "DowntimeOrComment.h"  // IWYU pragma: keep
@@ -251,9 +252,13 @@ bool Store::handleCommand(const string &command) {
             Notice(logger()) << "event console disabled, ignoring command '"
                              << command << "'";
         } else {
-            ECTableConnection(logger(), _mc->mkeventdSocketPath(),
-                              "COMMAND " + command.substr(3))
-                .run();
+            try {
+                ECTableConnection(logger(), _mc->mkeventdSocketPath(),
+                                  "COMMAND " + command.substr(3))
+                    .run();
+            } catch (const std::runtime_error &err) {
+                Alert(logger()) << err.what();
+            }
         }
         return true;
     }

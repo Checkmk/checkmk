@@ -1,0 +1,13 @@
+Title: Liveproxyd: Fixed possible exception in case of temporary load issues
+Level: 1
+Component: liveproxy
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1497955452
+
+When the connection to livestatus is not possible with "Resource temporarily unavailable" error,
+which can happen in high load situations, then the error was not handled correctly.
+

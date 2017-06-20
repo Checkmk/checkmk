@@ -1596,10 +1596,10 @@ def is_manual_check(hostname, check_type, item):
 
 
 def initialize_check_type_caches():
-    snmp_cache = cmk_base.config_cache.get_set("check_type_snmp")
+    snmp_cache = cmk_base.runtime_cache.get_set("check_type_snmp")
     snmp_cache.update(snmp_info.keys())
 
-    tcp_cache = cmk_base.config_cache.get_set("check_type_tcp")
+    tcp_cache = cmk_base.runtime_cache.get_set("check_type_tcp")
     tcp_cache.update(check_info.keys())
 
 
@@ -1609,7 +1609,7 @@ def is_snmp_check(check_name):
     try:
         return cache[check_name]
     except KeyError:
-        snmp_checks = cmk_base.config_cache.get_set("check_type_snmp")
+        snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
 
         result = check_name.split(".")[0] in snmp_checks
         cache[check_name] = result
@@ -1622,8 +1622,8 @@ def is_tcp_check(check_name):
     try:
         return cache[check_name]
     except KeyError:
-        tcp_checks = cmk_base.config_cache.get_set("check_type_tcp")
-        snmp_checks = cmk_base.config_cache.get_set("check_type_snmp")
+        tcp_checks = cmk_base.runtime_cache.get_set("check_type_tcp")
+        snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
 
         result = check_name in tcp_checks \
                   and check_name.split(".")[0] not in snmp_checks # snmp check basename

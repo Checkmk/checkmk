@@ -1,0 +1,11 @@
+Title: Fixed broken management board monitoring when using the Microcore
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.4.0p6
+Date: 1497970657
+Class: fix
+
+Instead of the configured management board address the host address was
+contacted via SNMP which often lead to SNMP timeout messages.

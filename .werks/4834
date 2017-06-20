@@ -1,0 +1,11 @@
+Title: Quicksearch: fixed quoting problem with \ in service description
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p6
+Date: 1497960330
+
+

@@ -739,8 +739,20 @@ def search_open():
     html.http_redirect(url)
 
 
+
+class LivestatusSearchBase(object):
+    def _build_url(self, url_params, restore_regex = False):
+        new_params = []
+        if restore_regex:
+            for key, value in url_params:
+                new_params.append((key, value.replace("\\", "\\\\")))
+        else:
+            new_params.extend(url_params)
+        return html.makeuri(new_params, delvars  = "q", filename = "view.py")
+
+
 # Handles exactly one livestatus query
-class LivestatusSearchConductor(object):
+class LivestatusSearchConductor(LivestatusSearchBase):
     def __init__(self, used_filters, filter_behaviour):
         # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
         # filter_behaviour: "continue"
@@ -890,11 +902,11 @@ class LivestatusSearchConductor(object):
         } [self._livestatus_table]
 
 
-    def get_search_url(self):
+    def get_search_url_params(self):
         exact_match = self.num_rows() == 1
         target_view = self._get_target_view(exact_match = exact_match)
 
-        url_params = []
+        url_params = [("view_name", target_view), ("filled_in", "filter")]
         for plugin in self._used_search_plugins:
             match_info = plugin.get_matches(target_view,
                                             exact_match and self._rows[0] or None,
@@ -906,10 +918,7 @@ class LivestatusSearchConductor(object):
             text, url_filters = match_info
             url_params.extend(url_filters)
 
-        return html.makeuri([("view_name", target_view),
-                             ("filled_in", "filter")] + url_params,
-                             delvars  = "q",
-                             filename = "view.py")
+        return url_params
 
 
     def create_result_elements(self):
@@ -933,10 +942,9 @@ class LivestatusSearchConductor(object):
                 url_params.extend(url_filters)
                 entry["text_tokens"].append((plugin.get_filter_shortname(), text))
 
-            entry["url"]      = html.makeuri([("view_name", target_view),
-                                              ("site", row.get("site"))] + url_params,
-                                              delvars  = "q",
-                                              filename = "view.py")
+            entry["url"]      = self._build_url([("view_name", target_view),
+                                                 ("site", row.get("site"))] + url_params, restore_regex = True)
+
             entry["raw_data"] = row
             self._elements.append(entry)
 
@@ -1014,7 +1022,7 @@ class LivestatusSearchConductor(object):
 
 
 
-class LivestatusQuicksearch(object):
+class LivestatusQuicksearch(LivestatusSearchBase):
     def __init__(self, query):
         self._query = query
         self._search_objects     = []    # Each of these objects do exactly one ls query
@@ -1031,18 +1039,21 @@ class LivestatusQuicksearch(object):
         self._query_data()
 
         # Generate a search page for the topmost search_object with results
-        search_object = None
+        url_params = []
+
+        restore_regex = False
         for search_object in self._search_objects:
             if search_object.num_rows() > 0:
-                use_search_object = search_object
+                url_params.extend(search_object.get_search_url_params())
+                if search_object.num_rows() == 1:
+                    restore_regex = True
                 break
         else:
-            return html.makeuri([("view_name", "allservices"),
-                                 ("filled_in", "filter"), ("service_regex", self._query)],
-                                 delvars  = "q",
-                                 filename = "view.py")
+            url_params.extend([("view_name", "allservices"),
+                               ("filled_in", "filter"),
+                               ("service_regex", self._query)])
 
-        return search_object.get_search_url()
+        return self._build_url(url_params, restore_regex = restore_regex)
 
 
     def _query_data(self):

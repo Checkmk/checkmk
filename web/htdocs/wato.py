@@ -6473,6 +6473,9 @@ def vs_ldap_connection(new, connection_id):
 
 def validate_ldap_connection(value, varprefix):
     for role_id, group_specs in value["active_plugins"].get("groups_to_roles", {}).items():
+        if role_id == "nested":
+            continue # This is the option to enabled/disable nested group handling, not a role to DN entry
+
         for index, group_spec in enumerate(group_specs):
             dn, connection_id = group_spec
 

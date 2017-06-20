@@ -75,8 +75,8 @@ def query_ec_table(datasource, columns, add_columns, query, only_sites, limit, t
 # the "mkeventd.seeall" permissions. So it is simply not possible to do this on
 # core level at the moment.
 def _ec_filter_host_information_of_not_permitted_hosts(rows):
-    if not config.user.may("mkeventd.seeall"):
-        return
+    if config.user.may("mkeventd.seeall"):
+        return # Don't remove anything. The user may see everything
 
     user_groups = set(config.user.contact_groups())
 

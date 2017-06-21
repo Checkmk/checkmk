@@ -92,7 +92,7 @@ from lib import *
 
 multisite_painter_options["pnp_timerange"] = {
     'valuespec' : Timerange(
-        title = _("Graph Timerange"),
+        title = _("Graph time range"),
         default_value = None,
         include_time = True,
     )
@@ -1002,9 +1002,11 @@ def paint_time_graph_cmk(row, cell, show_timeranges=False):
     # a) the painter parameters configured in the view
     # b) the painter options set per user and view
     graph_render_options = cell.painter_parameters().copy()
+
     options = painter_options.get_without_default("graph_render_options")
     if options != None:
         graph_render_options.update(options)
+        del graph_render_options["set_default_time_range"]
 
     if html.is_mobile():
         graph_render_options.update({

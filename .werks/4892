@@ -1,0 +1,14 @@
+Title: Cleanup site changes of deleted sites correctly
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p7
+Date: 1498064706
+Class: fix
+
+When a site was replicated via WATO before and is deleted, the file where
+the pending changes of that site were stored was left in the master site.
+
+The path to the file is "var/check_mk/wato/replication_changes_[site].mk".
+In case you have files for old sites you can savely delete them.

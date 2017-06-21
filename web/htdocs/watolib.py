@@ -3797,6 +3797,8 @@ def clear_site_replication_status(site_id):
         else:
             raise
 
+    ActivateChanges().confirm_site_changes(site_id)
+
 
 def site_replication_status_path(site_id):
     return "%sreplication_status_%s.mk" % (var_dir, site_id)

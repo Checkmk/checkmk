@@ -1,0 +1,10 @@
+Title: netapp_api_if: a grouped interface now reports a WARNING when one of its member interfaces is down
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p7
+Date: 1498051336
+Class: feature
+
+

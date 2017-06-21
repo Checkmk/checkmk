@@ -1,0 +1,11 @@
+Title: Notifications rules: Modifying a rule always set the option "allow users to deactivate this notification"
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p7
+Date: 1498047540
+
+

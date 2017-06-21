@@ -8589,8 +8589,12 @@ def mode_notification_rule(phase, profilemode):
 
         vs.validate_value(rule, "rule")
 
-        # User rules are always allow_disable
-        rule["allow_disable"] = True
+        if userid:
+            # User rules are always allow_disable
+            # The parameter is set just after the validation, since the allow_disable
+            # key isn't in the valuespec. Curiously, the validation does not fail
+            # even the allow_disable key is set before the validate_value...
+            rule["allow_disable"] = True
 
         if new and clone_nr >= 0:
             rules[clone_nr:clone_nr] = [ rule ]

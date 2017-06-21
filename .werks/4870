@@ -1,0 +1,16 @@
+Title: Fixed ineffective graph time range display option
+Level: 1
+Component: metrics
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1497954949
+
+Starting point is having views with configured column
+{{Service Graphs with Timerange Previews}}. Then in
+{{Display options}} which modifies user specific options,
+chosen {{Graph Timerange}} had no effects on displayed graphs.
+The time range could be changed only with {{Set default time range}}
+which is a subset of {{Graph Timerange}}.

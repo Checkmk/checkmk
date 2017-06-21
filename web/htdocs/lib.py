@@ -996,6 +996,23 @@ interface_port_types = {
     228: "cblVectaStar",
     229: "docsCableMCmtsDownstream",
     230: "adsl2",
+    231: "macSecControlledIF",
+    232: "macSecUncontrolledIF",
+    233: "aviciOpticalEther",
+    234: "atmbond",
+    235: "voiceFGDOS",
+    236: "mocaVersion1",
+    237: "ieee80216WMAN",
+    238: "adsl2plus",
+    239: "dvbRcsMacLayer",
+    240: "dvbTdm",
+    241: "dvbRcsTdma",
+    242: "x86Laps",
+    243: "wwanPP",
+    244: "wwanPP2",
+    245: "voiceEBS",
+    245: "ifPwType",
+    258: "vmwareVirtualNic",
 }
 
 # For usage in Dropdown choices an the like

@@ -73,7 +73,7 @@ def netapp_convert_to_if64(info):
 
         if "mac-address" in values:
             if_mac_list.setdefault(values["mac-address"], [])
-            if_mac_list[values["mac-address"]].append(name)
+            if_mac_list[values["mac-address"]].append((name, values.get("state")))
 
 
     nics       = []
@@ -98,7 +98,7 @@ def netapp_convert_to_if64(info):
 
                     max_speed = 0
                     min_speed = 1024**5
-                    for tmp_if in mac_list:
+                    for tmp_if, state in mac_list:
                         if tmp_if == nic_name or "speed" not in interfaces[tmp_if]:
                             continue
                         check_speed = interfaces[tmp_if]["speed"]
@@ -111,7 +111,7 @@ def netapp_convert_to_if64(info):
         # Virtual interfaces is "Up" if at least one physical interface is up
         if "state" not in values:
             if "mac-address" in values:
-                for tmp_if in if_mac_list[values["mac-address"]]:
+                for tmp_if, state in if_mac_list[values["mac-address"]]:
                     if interfaces[tmp_if].get("state") == "1":
                         state = "1"
                         break
@@ -168,13 +168,29 @@ def check_netapp_api_if(item, params, parsed):
 
         ifDescr_cln = cleanup_if_strings(ifDescr)
         ifAlias_cln = cleanup_if_strings(ifAlias)
+        first_member = True
         if if_item_matches(item, ifIndex, ifAlias_cln, ifDescr_cln):
             if ifDescr in extra_info:
                 vif_group = extra_info[ifDescr]
-                yield 0, "Physical interfaces: %s" %\
-                    ", ".join([group for group in vif_group["grouped_if"] if group != ifDescr])
+                member_info = []
+                for member_name, member_state in vif_group["grouped_if"]:
+                    if member_state == None or member_name == ifDescr:
+                        continue # Not a real member or the grouped interface itself
+
+                    if member_state == "2":
+                        state = 1
+                    else:
+                        state = 0
+
+                    if first_member:
+                        yield state, "Physical interfaces: %s(%s)" % (member_name, if_statename(member_state))
+                        first_member = False
+                    else:
+                        yield state, "%s(%s)" % (member_name, if_statename(member_state))
+
                 if "speed_differs" in vif_group:
                     yield 1, "Interfaces do not have the same speed"
+
 
 check_info["netapp_api_if"] = {
     'check_function'          : check_netapp_api_if,

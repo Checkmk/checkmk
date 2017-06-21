@@ -440,9 +440,11 @@ class ConfigDomainCACertificates(ConfigDomain):
 
         # We need to activate this immediately to make syncs to WATO slave sites
         # possible right after changing the option
-        configuration_warnings = self._update_trusted_cas(current_config)
-        if configuration_warnings:
-            raise MKUserError(None, ", ".join(configuration_warnings))
+        #
+        # Since this can be called from any WATO page it is not possible to report
+        # errors to the user here. The self._update_trusted_cas() method logs the
+        # errors - this must be enough for the moment.
+        self._update_trusted_cas(current_config)
 
 
     def activate(self):

@@ -433,9 +433,14 @@ class ConfigDomainCACertificates(ConfigDomain):
     def save(self, settings, site_specific=False):
         super(ConfigDomainCACertificates, self).save(settings, site_specific=site_specific)
 
+        current_config = settings.get("trusted_certificate_authorities", {
+            "use_system_wide_cas": True,
+            "trusted_cas": [],
+        })
+
         # We need to activate this immediately to make syncs to WATO slave sites
         # possible right after changing the option
-        configuration_warnings = self._update_trusted_cas(settings["trusted_certificate_authorities"])
+        configuration_warnings = self._update_trusted_cas(current_config)
         if configuration_warnings:
             raise MKUserError(None, ", ".join(configuration_warnings))
 

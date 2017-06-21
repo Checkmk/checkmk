@@ -258,6 +258,7 @@ def get_number_of_pending_changes():
 class ConfigDomain(object):
     needs_sync         = True
     needs_activation   = True
+    always_activate    = False
     ident              = None
     in_global_settings = True
 
@@ -277,6 +278,11 @@ class ConfigDomain(object):
     @classmethod
     def enabled_domains(cls):
         return [ d for d in cls.all_classes() if d.enabled() ]
+
+
+    @classmethod
+    def get_always_activate_domain_idents(cls):
+        return [ d.ident for d in cls.all_classes() if d.always_activate ]
 
 
     @classmethod
@@ -399,6 +405,7 @@ class ConfigDomainEventConsole(ConfigDomain):
 class ConfigDomainCACertificates(ConfigDomain):
     needs_sync       = True
     needs_activation = True
+    always_activate  = True # Execute this on all sites on all activations
     ident            = "ca-certificates"
 
     trusted_cas_file = "%s/var/ssl/ca-certificates.crt" % cmk.paths.omd_root
@@ -423,23 +430,33 @@ class ConfigDomainCACertificates(ConfigDomain):
         return os.path.join(self.config_dir(), "ca-certificates.mk")
 
 
+    def save(self, settings, site_specific=False):
+        super(ConfigDomainCACertificates, self).save(settings, site_specific=site_specific)
+
+        # We need to activate this immediately to make syncs to WATO slave sites
+        # possible right after changing the option
+        configuration_warnings = self._update_trusted_cas(settings["trusted_certificate_authorities"])
+        if configuration_warnings:
+            raise MKUserError(None, ", ".join(configuration_warnings))
+
+
     def activate(self):
         try:
-            return self._update_trusted_cas()
+            return self._update_trusted_cas(config.trusted_certificate_authorities)
         except Exception, e:
             log_exception()
             return ["Failed to create trusted CA file '%s': %s" %
                         (self.trusted_cas_file, traceback.format_exc())]
 
 
-    def _update_trusted_cas(self):
+    def _update_trusted_cas(self, current_config):
         trusted_cas, errors = [], []
 
-        if config.trusted_certificate_authorities["use_system_wide_cas"]:
+        if current_config["use_system_wide_cas"]:
             trusted, errors = self._get_system_wide_trusted_ca_certificates()
             trusted_cas += trusted
 
-        trusted_cas += config.trusted_certificate_authorities["trusted_cas"]
+        trusted_cas += current_config["trusted_cas"]
 
         store.save_file(self.trusted_cas_file, "\n".join(trusted_cas))
         return errors
@@ -5081,8 +5098,10 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
 
 def execute_activate_changes(domains):
+    domains = set(domains).union(ConfigDomain.get_always_activate_domain_idents())
+
     results = {}
-    for domain in domains:
+    for domain in sorted(domains):
         domain_class = ConfigDomain.get_class(domain)
         warnings = domain_class().activate()
         results[domain] = warnings or []

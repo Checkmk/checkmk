@@ -482,8 +482,8 @@ config.status: ar-lib compile config.guess config.sub install-sh missing depcomp
 	  else \
 	    BOOST_OPT="DUMMY1=" ; \
 	  fi ; \
-	  if test -d "../rrdtool/rrdtool-1.5.4/src/.libs"; then \
-	    RRD_OPT="LDFLAGS=-L$(realpath ../rrdtool/rrdtool-1.5.4/src/.libs)" ; \
+	  if test -d "../rrdtool/rrdtool-1.7.0/src/.libs"; then \
+	    RRD_OPT="LDFLAGS=-L$(realpath ../rrdtool/rrdtool-1.7.0/src/.libs)" ; \
 	  else \
 	    RRD_OPT="DUMMY2=" ; \
 	  fi ; \

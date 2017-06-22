@@ -1,0 +1,10 @@
+Title: Liveproxy daemon: Log level can now be configuration via WATO
+Level: 1
+Component: liveproxy
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1498147944
+Class: feature
+
+

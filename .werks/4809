@@ -1,0 +1,14 @@
+Title: Display the OMD Site and Host Tags in HTML Emails 
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498123688
+Class: feature
+
+The OMD Site and Host Tags can be shown optionally in HTML Emails.
+By default the information is not displayed. To show the information
+it can be enabled under "Host and Service Parameters" or per rule
+in the Notifications menu.
+

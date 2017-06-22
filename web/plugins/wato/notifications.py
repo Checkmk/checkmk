@@ -62,6 +62,8 @@ def html_email_parameter_elements():
             ListChoice(
                 title = _("Information to be displayed in the email body"),
                 choices = [
+                  ( "omdsite",      _("OMD Site") ),
+                  ( "hosttags",     _("Tags of the Host") ),
                   ( "address",      _("IP Address of Host") ),
                   ( "abstime",      _("Absolute Time of Alert") ),
                   ( "reltime",      _("Relative Time of Alert") ),

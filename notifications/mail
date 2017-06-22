@@ -312,6 +312,14 @@ body_elements = [
     "$LONGDATETIME$",
     "$LONGDATETIME$", ),
 
+  ( "omdsite", "both", False, "all", "OMD Site",
+    "$OMD_SITE$",
+    "$OMD_SITE$" ),
+
+  ( "hosttags", "both", False, "all", "Host Tags",
+    "$HOST_TAGS$",
+    "$HOST_TAGS$" ),
+
   ( "notesurl", "both", False, "all", "Custom Host Notes URL",
     "$HOSTNOTESURL$",
     "$HOSTNOTESURL$",),

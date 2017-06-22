@@ -277,7 +277,8 @@ class Site(object):
     def write_file(self, rel_path, content):
         if not self._is_running_as_site_user():
             p = self.execute(["dd", "of=%s/%s" % (self.root, rel_path)],
-                             stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+                             stdout=subprocess.PIPE, stdin=subprocess.PIPE,
+                             stderr=open(os.devnull, "w"))
             p.communicate(content)
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))

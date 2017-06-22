@@ -128,6 +128,10 @@ def load_config():
     # Set default values for all user-changable configuration settings
     load_plugins(True)
 
+    # Initialze sites with default site configuration. Need to do it here to
+    # override possibly deleted sites
+    sites = default_single_site_configuration()
+
     # First load main file
     include("multisite.mk")
 
@@ -633,7 +637,7 @@ def default_single_site_configuration():
             'user_login'   : True,
     }}
 
-sites = default_single_site_configuration()
+sites = {}
 
 def sitenames():
     return sites.keys()

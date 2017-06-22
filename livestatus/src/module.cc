@@ -337,6 +337,9 @@ void start_threads() {
                 // start thread that listens on socket
                 info.name = "main";
                 pthread_create(&info.id, nullptr, main_thread, &info);
+                // Our current thread (i.e. the main one, confusing terminology)
+                // needs thread-local infos for logging, too.
+                tl_info = &info;
             } else {
                 info.name = "client " + to_string(idx);
                 pthread_create(&info.id, &attr, client_thread, &info);

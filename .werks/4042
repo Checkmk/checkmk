@@ -1,11 +1,27 @@
-Title: Fix missing From address in synchronous SMTP notifications
+Title: Use well define From address in email notifications if none is configured
 Level: 1
 Component: notifications
-Compatible: compat
-Version: 1.4.0i3
-Date: 1478523159
 Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1478523159
 
-If you use the new synchronous STMP devlivery for emails and do
-not specify an explicity From address, then the From address
-would be empty. This has been fixed.
+Previously when you didn't configure a From address for you email
+notifications in {{Monitoring configuration|Notifications|Parameters for ASCII Email}}
+or {{Parameters for HTML Email}} the email was created without a
+From address and the local mail delivery agent added that address
+by using its configuration or some default.
+
+This cause a problem in the new synchronous STMP devlivery for emails, since
+there a From address is required.
+
+Check_MK does now not longer rely on the default of the system
+mailer but always falls back to <tt>mysite@fqdn</tt>, where <tt>mysiste</tt>
+is the name of the Check_MK instance and <tt>fqdn</tt> is the fully
+qualified domain name of the monitoring host.
+
+If the change in the From address causes a problem in your setup please
+simply set a From address by creating a global configuration rule in the
+upper settings.

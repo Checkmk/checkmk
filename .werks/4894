@@ -1,0 +1,16 @@
+Title: Fixed still visible sites on "activate changes" page after deletion
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1498112743
+
+When deleting a site from a distributed WATO setup, the site was still
+visible on the activate changes page until the site apache was restarted
+in some cases.
+
+This has now been fixed and the sites are removed immediately from the
+activate changes page.

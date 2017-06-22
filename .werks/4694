@@ -1,0 +1,12 @@
+Title: Reloading the Nagios core works again
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498121005
+Class: fix
+
+Reloading the Nagios core (e.g.  via "cmk -O") resulted in a segmentation
+fault of Nagios, this has been fixed.  This was a regression from the 1.2.8
+series.

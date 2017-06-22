@@ -80,6 +80,12 @@ def get_logger(name):
     return logger.getChild(name)
 
 
+def get_formatter():
+    """Returns a new message formater instance that uses the standard
+    Check_MK log format"""
+    return _logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
+
+
 def setup_console_logging():
     """This method enables all log messages to be written to the console
     without any additional information like date/time, logger-name. Just

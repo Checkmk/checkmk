@@ -36,6 +36,18 @@ AC_REQUIRE_AUX_FILE([compile])
 AC_REQUIRE_AUX_FILE([config.guess])
 AC_REQUIRE_AUX_FILE([config.sub])
 
+# Old (pre-1.6.0) versions of librrd were not thread-safe, so one has to use the
+# thread-safe variant librrd_th explicitly. This in itself is already tragic
+# enough, but to make things worse, you can't write a compile-time check to
+# distinguish these versions. :-/ So we default to the assumption that librrd is
+# thread-safe (which is the case within OMD) and the user of e.g. a standalone
+# version of Livestatus on an old system has to use the configure flag below.
+# Not really nice, but we can't really do much about that.
+AC_ARG_ENABLE([rrd-is-thread-safe],
+    AS_HELP_STRING([--disable-rrd-is-thread-safe], [Use librrd_th instead of librrd]))
+AS_IF([test "x$enable_rrd_is_thread_safe" != "xno"], [RRDLIB_TO_CHECK=rrd],
+      [RRDLIB_TO_CHECK=rrd_th])
+
 # Checks for programs.
 AC_PROG_CC([gcc-6 gcc-5 clang-3.9 clang-3.8 clang-3.7 clang-3.6 clang-3.5 gcc-4.9 gcc clang])
 AC_PROG_CC_C99([], [])
@@ -53,14 +65,14 @@ AC_CHECK_LIB(socket, socket)
 AC_CHECK_LIB(socket, connect)
 AC_CHECK_LIB(socket, shutdown)
 
-# The detection of the right RRD library is a bit tricky: We can't simply put
+# Passing through the right RRD library is a bit tricky: We can't simply put
 # -lrrd_th or -lrrd globally into LIBS. The problem is that our SUID programs
 # icmpsender and icmpreceiver would be linked with that option, too, but because
 # of security reasons the dynamic linker will ignore our LD_LIBRARY_PATH => no
 # RRD library found or even the wrong one... :-/
 RRDLIB=
 old_LIBS=$LIBS
-AC_SEARCH_LIBS([rrd_xport], [rrd_th rrd],
+AC_SEARCH_LIBS([rrd_xport], [$RRDLIB_TO_CHECK],
     [test "$ac_cv_search_rrd_xport" = "none required" || RRDLIB="$ac_cv_search_rrd_xport"],
     [AC_MSG_ERROR([unable to find the rrd_xport function])])
 LIBS=$old_LIBS

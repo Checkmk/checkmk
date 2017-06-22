@@ -1,0 +1,10 @@
+Title: check_bi_aggr: Fixed URL in error messages in case of exceptions during checking
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p7
+Date: 1498131993
+Class: fix
+
+

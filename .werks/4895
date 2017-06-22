@@ -1,0 +1,13 @@
+Title: cmk --convert-rrds: Don't fail when RRDs refered by PNP XMLs are missing
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.4.0p7
+Date: 1498115660
+Class: fix
+
+When using the "cmk --convert-rrds" command it is possible that XML files of PNP4Nagios
+are refering to RRDs that do not exist. Previously the conversion totally failed with an
+error message. It was now converted to a warning message instead. The conversion of other
+RRDs is now continued in case of such errors.

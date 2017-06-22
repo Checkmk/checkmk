@@ -25,9 +25,10 @@
 # Boston, MA 02110-1301 USA.
 
 import logging as _logging
+import cmk.log
 import cmk.paths
 
-logger = _logging.getLogger("cmk.web")
+logger = cmk.log.get_logger("web")
 
 def init_logging():
     _setup_web_log_logging()
@@ -37,9 +38,7 @@ def _setup_web_log_logging():
     handler = _logging.FileHandler("%s/web.log" % cmk.paths.log_dir,
                                    encoding="UTF-8")
 
-    formatter = _logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
-    handler.setFormatter(formatter)
-
+    handler.setFormatter(cmk.log.get_formatter())
     logger.addHandler(handler)
 
 

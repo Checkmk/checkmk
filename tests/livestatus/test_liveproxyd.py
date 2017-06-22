@@ -173,7 +173,6 @@ def test_large_number_of_sites(default_cfg, site):
         site.execute(["cmk", "-O"])
 
         _change_liveproxyd_sites(site, liveproxyd_sites)
-
         live = livestatus.MultiSiteConnection(livestatus_api_sites)
         assert live.dead_sites() == {}
 

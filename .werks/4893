@@ -1,0 +1,16 @@
+Title: Fixed creation of default "local" site
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1498112602
+
+Previous 1.4 versions were creating a new distributed monitoring site
+when there did not exist a site named exactly like the site ID of the
+central site.
+
+WATO now only creates this default site entry when there is no site
+configured at all.

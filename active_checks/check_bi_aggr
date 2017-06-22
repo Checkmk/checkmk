@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import sys, getopt, requests, traceback
+import urllib
 import os
 import time
 
@@ -161,7 +162,7 @@ def init_auth():
 url = "%s/check_mk/view.py" \
       "?view_name=aggr_single_api" \
       "&aggr_name=%s&output_format=python" % \
-      (base_url.rstrip('/'), aggr_name)
+      (base_url.rstrip('/'), urllib.quote(aggr_name))
 
 auth = None
 if auth_mode in ['basic', 'digest', 'kerberos']:
@@ -184,8 +185,8 @@ except requests.URLRequired, e:
     sys.stdout.write("UNKNOWN: %s\n" % e)
     sys.exit(3)
 except Exception, e:
-    sys.stdout.write('ERROR: Exception while opening URL (%s): %s\n' %
-                                            (url, traceback.format_exc()))
+    sys.stdout.write('ERROR: Exception while opening URL: %s - %s\n%s' %
+                                            (url, e, traceback.format_exc()))
     sys.exit(3)
 
 try:

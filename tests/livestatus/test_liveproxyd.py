@@ -173,14 +173,18 @@ def test_large_number_of_sites(default_cfg, site):
         site.execute(["cmk", "-O"])
 
         _change_liveproxyd_sites(site, liveproxyd_sites)
-        live = livestatus.MultiSiteConnection(livestatus_api_sites)
-        assert live.dead_sites() == {}
 
         print livestatus_api_sites.keys()
         def _num_connections_opened():
+            # Need to reconstruct the object on each call because connect is
+            # currently done in constructor :-/
+            live = livestatus.MultiSiteConnection(livestatus_api_sites)
+            assert live.dead_sites() == {}
+
             live.set_prepend_site(True)
             rows = live.query("GET status\nColumns: program_version\n")
             live.set_prepend_site(False)
+
             assert type(rows) == list
             print [ r[0] for r in rows ]
             return len(rows)
@@ -196,6 +200,5 @@ def test_large_number_of_sites(default_cfg, site):
             "Liveproxyd sockets not opened after 60 seconds"
 
     finally:
-        #_use_liveproxyd_for_local_site(site, proto="unix")
-        #site.delete_file("etc/check_mk/conf.d/liveproxyd-test.mk")
-        pass
+        _use_liveproxyd_for_local_site(site, proto="unix")
+        site.delete_file("etc/check_mk/conf.d/liveproxyd-test.mk")

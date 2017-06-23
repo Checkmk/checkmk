@@ -1,0 +1,23 @@
+Title: Fixed issue with Windows Agent Updater file permissions
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p7
+Date: 1498217245
+Class: fix
+
+This Werk fixes the following error occuring when cmk-update-agent is executed
+on windows systems:
+
+ERROR Failed to write state to 'C:\Program Files (x86)\check_mk\config\
+cmk-update-agent.state': [Errno 13] Permission denied: 'C:\\Program Files (x86)\\
+check_mk\\config\\.cmk-update-agent.state.newqebhfk'
+
+To finally fix this error, please:
+ - Update your check_MK site
+ - Re-bake and sign agents
+ - Install the newly baked agent manually or replace the cmk-update-agent.exe
+   on the affected windows host with the one found at 
+   "share/check_mk/agents/windows/plugins/cmk-update-agent.exe" 
+   on the check_MK site user home directory

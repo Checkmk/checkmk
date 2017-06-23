@@ -2,7 +2,6 @@
 
 import os
 import time
-import livestatus
 import pytest
 from testlib import web
 
@@ -88,6 +87,8 @@ def test_omd_toggle(default_cfg, site, use_liveproxyd):
 
 @pytest.mark.parametrize(("proto"), [ "unix", "tcp" ])
 def test_simple_query(default_cfg, site, proto):
+    import livestatus
+
     if proto == "tcp":
         site.open_livestatus_tcp()
 
@@ -124,15 +125,26 @@ def test_simple_query(default_cfg, site, proto):
 
 
 def test_large_number_of_sites(default_cfg, site):
+    import livestatus
+
     _toggle_liveproxyd(site, use_liveproxyd=True)
 
-    site_sockets, num_sites, num_channels = {}, 100, 5
+    # Increase nofiles limit of CMC to prevent that it runs in "too many open files" resource limits
+    exit_code = site.execute(["prlimit", "-p", site.read_file("tmp/run/cmc.pid").strip(), "-n4096"]).wait()
+    assert exit_code == 0
+
+    site_sockets, num_sites, num_channels = {}, 400, 3
     for site_num in range(num_sites):
         # Currently connect to local site
         site_id = "site%03d" % site_num
 
+        if site_num % 2 == 0:
+            to_livestatus = None
+        else:
+            to_livestatus = ('127.0.0.1', 6999)
+
         site_sockets[site_id] = {
-            "to_livestatus" : None,
+            "to_livestatus" : to_livestatus,
             "to_proxy"      : "unix:%s/tmp/run/liveproxy/%s" % (site.root, site_id),
         }
 
@@ -174,7 +186,6 @@ def test_large_number_of_sites(default_cfg, site):
 
         _change_liveproxyd_sites(site, liveproxyd_sites)
 
-        print livestatus_api_sites.keys()
         def _num_connections_opened():
             # Need to reconstruct the object on each call because connect is
             # currently done in constructor :-/
@@ -186,12 +197,11 @@ def test_large_number_of_sites(default_cfg, site):
             live.set_prepend_site(False)
 
             assert type(rows) == list
-            print [ r[0] for r in rows ]
             return len(rows)
 
         # Wait up to 30 seconds for all connections to be established. When opening so
         # many connections to one cmc at the time some connects may fail temporarily
-        timeout = time.time() + 60
+        timeout = time.time() + 90
         while timeout > time.time() and _num_connections_opened() != len(livestatus_api_sites):
             time.sleep(0.5)
 

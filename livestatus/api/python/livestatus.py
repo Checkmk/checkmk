@@ -179,10 +179,7 @@ class Helpers:
 # TODO: Add more functionality to the Query class:
 # - set_prepend_site
 # - set_only_sites
-# - set_limit
-# - set_auth_user
 # - set_auth_domain
-# - set_timeout
 # All these are mostly set for a single query and reset back to another
 # value after the query. But nearly all of these usages does not care
 # about resetting the option in case of an exception. This could be

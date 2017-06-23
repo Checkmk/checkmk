@@ -176,7 +176,17 @@ class Helpers:
         return result
 
 
-
+# TODO: Add more functionality to the Query class:
+# - set_prepend_site
+# - set_only_sites
+# - set_limit
+# - set_auth_user
+# - set_auth_domain
+# - set_timeout
+# All these are mostly set for a single query and reset back to another
+# value after the query. But nearly all of these usages does not care
+# about resetting the option in case of an exception. This could be
+# handled better using the query class
 class Query(object):
     """This object can be passed to all livestatus methods accepting a livestatus
     query. The object can be used to hand over the handling code some flags, for
@@ -507,6 +517,9 @@ class SingleSiteConnection(BaseConnection, Helpers):
 # Keys in the dictionary:
 # socket:   socketurl (obligatory)
 # timeout:  timeout for tcp/unix in seconds
+
+# TODO: Move the connect/disconnect stuff to separate methods. Then make
+# it possible to connect/disconnect duing existance of a single object.
 
 class MultiSiteConnection(Helpers):
     def __init__(self, sites, disabled_sites = None):

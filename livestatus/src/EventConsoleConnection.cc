@@ -26,8 +26,12 @@
 // IWYU pragma: no_include <boost/asio/basic_socket_streambuf.hpp>
 #include "EventConsoleConnection.h"
 #include <boost/asio/socket_base.hpp>
+#include <boost/system/error_code.hpp>
 #include <boost/system/system_error.hpp>
+#include <chrono>
 #include <ostream>
+#include <ratio>
+#include <thread>
 #include <utility>
 #include "Logger.h"
 
@@ -43,7 +47,24 @@ EventConsoleConnection::~EventConsoleConnection() {
 
 void EventConsoleConnection::run() {
     boost::asio::local::stream_protocol::endpoint ep(_path);
-    boost::asio::local::stream_protocol::iostream stream(ep);
+    // Attention, tricky timing-dependent stuff ahead: When we connect very
+    // rapidly, a no_buffer_space (= ENOBUFS) error can happen. This is probably
+    // caused by some internal Boost Kung Fu, remapping EGAIN to ENOBUFS, and
+    // looks like a bug in Boost, but that's a bit unclear. So instead of
+    // relying on Boost to retry under these circumstances, we do it ourselves.
+    boost::asio::local::stream_protocol::iostream stream;
+    while (true) {
+        stream.connect(ep);
+        if (stream.error() !=
+            boost::system::error_code(boost::system::errc::no_buffer_space,
+                                      boost::system::system_category())) {
+            break;
+        }
+        Debug(_logger) << "retrying to connect";
+        stream.clear();
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+
     check(stream, "connect");
     Debug(_logger) << prefix("successfully connected");
 

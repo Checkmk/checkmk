@@ -394,7 +394,7 @@ setversion:
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
-	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/liveproxyd
+	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' enterprise/bin/liveproxyd
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/cmcdump
 	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' enterprise/agents/plugins/cmk-update-agent
 endif

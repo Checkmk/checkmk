@@ -1916,12 +1916,12 @@ class CREFolder(BaseFolder):
 
 
     def _get_parents_of_hosts(self, host_names):
-        # Note: Deletion of chosen hosts which are a parent
+        # Note: Deletion of chosen hosts which are parents
         # is possible if and only if all children are chosen, too.
         hosts_with_children = {}
         for child_key, child in Folder.root_folder().all_hosts_recursively().items():
             for host_name in host_names:
-                if host_name in child.host_names():
+                if host_name in child.parents():
                     hosts_with_children.setdefault(host_name, [])
                     hosts_with_children[host_name].append(child_key)
 

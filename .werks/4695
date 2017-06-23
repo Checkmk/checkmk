@@ -1,0 +1,15 @@
+Title: Make communication with event console more robust
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p7
+Date: 1498217686
+
+When the monitoring core connects to the event console very rapidly, a "No
+buffer space available" error could happen intermittently.  This can be seen
+in the log, and the corresponding command fails, too, e.g. archiving an
+event.  This has been fixed, the connection is simply retried when this
+rare but harmless error happens.

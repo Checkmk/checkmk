@@ -27,7 +27,7 @@
 import os, sys, getopt, livestatus, tempfile, time
 
 # These variable will be substituted at 'make dist' time
-check_mk_version  = '(inofficial)'
+__version__ = "1.4.0p7"
 
 def dump_templates():
     check_interval = ""
@@ -297,7 +297,7 @@ def usage():
 """ % os.path.split(sys.argv[0])[1])
 
 def print_version():
-    sys.stdout.write("This is livedump version %s\n" % check_mk_version)
+    sys.stdout.write("This is livedump version %s\n" % __version__)
 
 #.
 #   .-main-----------------------------------------------------------------.

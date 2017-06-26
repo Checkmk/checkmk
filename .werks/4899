@@ -1,0 +1,10 @@
+Title: Don't fail WATO snapshot creation because of modified temporary files
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p8
+Date: 1498487120
+Class: fix
+
+

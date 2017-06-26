@@ -44,6 +44,9 @@ def create(filename, components):
             what, name, path = component
             excludes = []
 
+        # exclude all temporary files
+        excludes.append(".*new*")
+
         abspath = os.path.abspath(path)
         if os.path.exists(path):
             if what == "dir":

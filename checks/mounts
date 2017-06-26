@@ -24,6 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# See https://utcc.utoronto.ca/~cks/space/blog/linux/NFSStaleUnmounting
+# Output changes from
+# knvmsapprd:/transreorg/sap/trans /transreorg/sap/trans nfs4 rw,relatime,vers=4.0,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=172.24.98.63,local_lock=none,addr=172.24.98.57 0 0
+# to
+# knvmsapprd:/transreorg/sap/trans /transreorg/sap/trans\040(deleted) nfs4 rw,relatime,vers=4.0,rsize=1048576,wsize=1048576,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,clientaddr=172.24.98.63,local_lock=none,addr=172.24.98.57 0 0
+
 
 def inventory_mounts(info):
     inventory = []
@@ -33,11 +39,11 @@ def inventory_mounts(info):
             devices.append(dev)
             opts = options.split(",")
             opts.sort()
-            inventory.append( (mp, opts) )
+            inventory.append( (mp.replace("\\040(deleted)", ""), opts) )
     return inventory
 
-def check_mounts(item, targetopts, info):
 
+def check_mounts(item, targetopts, info):
     # Ignore options that are allowed to change
     def should_ignore_option(option):
         for ignored_option in [ "commit=", "localalloc=", "subvol=", "subvolid=" ]:
@@ -46,7 +52,10 @@ def check_mounts(item, targetopts, info):
         return False
 
     for dev, mp, fstype, options, dump, fsck in info:
-        if item == mp:
+        if item == mp.replace("\\040(deleted)", ""):
+            if mp.endswith("\\040(deleted)"):
+                return 1, "Mount point detected as stale"
+
             opts = options.split(",")
             # Now compute the exact difference.
 
@@ -61,24 +70,22 @@ def check_mounts(item, targetopts, info):
                     missing.append(o)
 
             if not missing and not exceeding:
-                return (0, "mount options exactly as expected")
+                return 0, "Mount options exactly as expected"
 
             infos = []
             if missing:
-                infos.append("missing: %s" % ",".join(missing))
+                infos.append("Missing: %s" % ",".join(missing))
             if exceeding:
-                infos.append("exceeding: %s" % ",".join(exceeding))
+                infos.append("Exceeding: %s" % ",".join(exceeding))
             infotext = ", ".join(infos)
 
             if "ro" in exceeding:
-                return (2, "filesystem has switched to read-only "
-                           "and is probably corrupted(!!), " + infotext)
+                return 2, "Filesystem has switched to read-only and is probably corrupted(!!), %s" % infotext
 
             # Just warn in other cases
-            return (1, infotext)
+            return 1, infotext
 
-    return (3, "filesystem not mounted")
-
+    return 3, "Filesystem not mounted"
 
 
 check_info["mounts"] = {

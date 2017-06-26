@@ -6,6 +6,7 @@
     * 4824 FIX: f5bigip_conns: Fixed crash if Parameters are at 'No Levels'...
     * 4875 FIX: Fixed graph labeling and unit of active HTTP service
     * 4826 FIX: juniper_cpu_util: No crash anymore if information is not provided
+    * 4876 FIX: mounts: Fixed wrong handling of NFS mounts on Linux which are detected as stale...
 
 
 1.2.8p24:

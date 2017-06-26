@@ -80,10 +80,11 @@ def get_logger(name):
     return logger.getChild(name)
 
 
-def get_formatter():
+def get_formatter(format="%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"):
     """Returns a new message formater instance that uses the standard
-    Check_MK log format"""
-    return _logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
+    Check_MK log format by default. You can also set another format
+    if you like."""
+    return _logging.Formatter(format)
 
 
 def setup_console_logging():
@@ -123,25 +124,27 @@ def set_verbosity(verbosity):
         raise NotImplementedError()
 
 
-# TODO: Experimental. Not yet used.
 class LogMixin(object):
     """Inherit from this class to provide logging support.
 
     Makes a logger available via "self.logger" for objects and
     "self.cls_logger" for the class.
     """
-    _logger     = None
-    _cls_logger = None
+    _parent_logger = None
+    _logger        = None
+    _cls_logger    = None
 
     @property
     def logger(self):
         if not self._logger:
-            self._logger = _logging.getLogger('.'.join([__name__, self.__class__.__name__]))
+            parent = self._parent_logger or logger
+            self._logger = parent.getChild('.'.join([self.__class__.__name__]))
         return self._logger
 
 
     @classmethod
     def cls_logger(cls):
         if not cls._cls_logger:
-            cls._cls_logger = _logging.getLogger('.'.join([__name__, cls.__name__]))
+            parent = self._parent_logger or logger
+            cls._cls_logger = parent.getChild('.'.join([cls.__name__]))
         return cls._cls_logger

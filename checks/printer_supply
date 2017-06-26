@@ -76,9 +76,12 @@ def printer_supply_fix_infos(info):
             if line[4]:
                 colors += [ line[4] ]
                 color = line[4]
-            elif line[4] == '':
+            elif line[4] == '' and colors:
                 color = colors[index - len(colors)]
-            line_0 = '%s %s' % (color.title(), line_0)
+            else:
+                color = None
+            if color:
+                line_0 = '%s %s' % (color.title(), line_0)
 
         if " S/N:" in line_0:
             line_0 = line_0[:line_0.find(" S/N:")]

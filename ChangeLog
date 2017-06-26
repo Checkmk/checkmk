@@ -8,6 +8,7 @@
     * 4826 FIX: juniper_cpu_util: No crash anymore if information is not provided
     * 4876 FIX: mounts: Fixed wrong handling of NFS mounts on Linux which are detected as stale...
     * 4827 FIX: domino_info: Fixed crash if some information is missing
+    * 4908 FIX: enterasys_powersupply: Fixed crash if empty output...
 
 
 1.2.8p24:

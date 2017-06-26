@@ -1,0 +1,12 @@
+Title: netapp_api_cpu: Fixed crash if data for node is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p25
+Date: 1498471053
+
+The checkplugin does not crash anymore if the cpu data for a node is
+missing. Instead the state will now change to UNKNOWN.

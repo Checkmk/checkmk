@@ -88,7 +88,13 @@ def check_f5_bigip_conns(item, params, info):
         if val == None:
             infotext += " not configured"
         else:
-            warn, crit = params_values[:2]
+            # The check_parameters are a bit tricky: If thresholds are disabled,
+            # the value is None; otherwise it's a Tuple.
+            # TODO: Refactor the check parameter f5_connections and this check plugin!
+            if params_values == None:
+                warn, crit = (None, None)
+            else:
+                warn, crit = params_values[:2]
             perfdata.append((perfkey, val, warn, crit))
 
             state, extrainfo, extraperf = check_levels(val, dsname, params_values)

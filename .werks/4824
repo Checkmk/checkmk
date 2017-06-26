@@ -1,0 +1,11 @@
+Title: f5bigip_conns: Fixed crash if Parameters are at 'No Levels'
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.5.0i1
+Date: 1498479772
+Class: fix
+
+2016-11-07 the fix 3939 readded performance data into the output. Since
+then the check would crash if the Thresholds for the service has been set to
+"No Levels". This has been fixed now.

@@ -31,13 +31,10 @@
 extern bool with_stderr;
 extern HANDLE g_workers_job_object;
 
-
-bool ends_with(std::string const & value, std::string const & ending)
-{
+bool ends_with(std::string const &value, std::string const &ending) {
     if (ending.size() > value.size()) return false;
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
-
 
 ExternalCmd::ExternalCmd(const char *cmdline) {
     SECURITY_DESCRIPTOR security_descriptor;
@@ -56,13 +53,14 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     // child process needs to be able to inherit the pipe handles
     security_attributes.bInheritHandle = true;
 
-    if (!CreatePipe(_stdout.ptr(), _script_stdout.ptr(), &security_attributes, 0)) {
+    if (!CreatePipe(_stdout.ptr(), _script_stdout.ptr(), &security_attributes,
+                    0)) {
         throw win_exception("failed to create pipe");
     }
 
-
     if (with_stderr) {
-        if (!CreatePipe(_stderr.ptr(), _script_stderr.ptr(), &security_attributes, 0)) {
+        if (!CreatePipe(_stderr.ptr(), _script_stderr.ptr(),
+                        &security_attributes, 0)) {
             throw win_exception("failed to create pipe");
         }
     }
@@ -75,14 +73,16 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
     si.hStdOutput = (HANDLE)_script_stdout;
-    si.hStdError = with_stderr ? (HANDLE)_script_stdout : (HANDLE)_script_stderr;
+    si.hStdError =
+        with_stderr ? (HANDLE)_script_stdout : (HANDLE)_script_stderr;
 
     PROCESS_INFORMATION pi;
     ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
     std::unique_ptr<char[], decltype(free) *> cmdline_buf(strdup(cmdline),
                                                           free);
 
-    bool detach_process = ends_with(std::string(cmdline), std::string("cmk-update-agent.exe\""));
+    bool detach_process =
+        ends_with(std::string(cmdline), std::string("cmk-update-agent.exe\""));
 
     DWORD dwCreationFlags = CREATE_NEW_CONSOLE;
     if (detach_process) {
@@ -102,8 +102,8 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
     // Whenever the process ends all of its childs will terminate, too
     _job_object = CreateJobObject(nullptr, nullptr);
     if (!detach_process) {
-      AssignProcessToJobObject(_job_object, pi.hProcess);
-      AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
+        AssignProcessToJobObject(_job_object, pi.hProcess);
+        AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
     }
 }
 
@@ -114,7 +114,6 @@ ExternalCmd::~ExternalCmd() {
     }
     ::CloseHandle(_process);
 }
-
 
 void ExternalCmd::terminateJob(DWORD exit_code) {
     ::TerminateJobObject(_job_object, exit_code);

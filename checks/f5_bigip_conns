@@ -54,7 +54,10 @@ def check_f5_bigip_conns(item, params, info):
             infotext += " not configured"
 
         else:
-            warn, crit = params.get(what)
+            if params.get(what) != None:
+                warn, crit = params.get(what)
+            else:
+                warn, crit = (None, None)
             perfdata.append((perfkey, val, warn, crit))
 
             state, extrainfo, extraperf = check_levels(int(val), what, params.get(what))

@@ -59,11 +59,16 @@ def create(filename, components):
 
             exclude_args = list(itertools.chain.from_iterable([ ("--exclude", f) for f in excludes ]))
 
-            subdata = subprocess.check_output(
-                [ "tar", "cf", "-", "--force-local" ]
-                + exclude_args
-                + [ "-C", basedir, filename ]
-            )
+            cmd = [ "tar", "cf", "-", "--force-local" ] \
+                  + exclude_args \
+                  + [ "-C", basedir, filename ]
+
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subdata, stderr = p.communicate()
+
+            if p.returncode != 0:
+                raise MKGeneralException("Failed to create tar: %s\nExit code: %d\nOutput: %s" %
+                    (subprocess.list2cmdline(cmd), p.returncode, stderr))
 
             info = tarfile.TarInfo(subtarname)
             info.mtime = time.time()

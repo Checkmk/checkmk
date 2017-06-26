@@ -2,7 +2,7 @@ Title: f5bigip_conns: Fixed crash if Parameters are at 'No Levels'
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.5.0i1
+Version: 1.4.0o8
 Date: 1498479772
 Class: fix
 

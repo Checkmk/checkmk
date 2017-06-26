@@ -1,0 +1,11 @@
+Title: Fixed graph labeling and unit of active HTTP service
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.2.8p25
+Date: 1498482913
+
+

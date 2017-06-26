@@ -3058,9 +3058,9 @@ metric_info["apache_state_keep_alive"] = {
     "color" : "53/b",
 }
 
-metric_info["http_bandwidth"] = {
-    "title" : _("HTTP bandwidth"),
-    "unit"  : "bytes/s",
+metric_info["response_size"] = {
+    "title" : _("Response size"),
+    "unit"  : "bytes",
     "color" : "53/b",
 }
 
@@ -3925,7 +3925,7 @@ check_metrics["check_mk_active-mail_loop"] = {
 
 check_metrics["check_mk_active-http"] = {
     "time" : { "name": "response_time" },
-    "size" : { "name": "http_bandwidth" },
+    "size" : { "name": "response_size" },
 }
 
 check_metrics["check_mk_active-tcp"] = {

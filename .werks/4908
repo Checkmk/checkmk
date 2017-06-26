@@ -1,0 +1,11 @@
+Title: enterasys_powersupply: Fixed crash if empty output
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498491403
+Class: fix
+
+This check will now change the state to UNKNOWN if the output is empty
+instead of crashing completely.

@@ -4118,7 +4118,6 @@ class ModeBulkDiscovery(WatoMode):
                 selection = self._bulk_discovery_params["selection"]
                 self._bulk_discovery_params["selection"] = [False] + list(selection[1:])
 
-            html.write("%s" % self._bulk_discovery_params)
             msgs.append(_("Check_MK service discovery will automatically find and "
                           "configure services to be checked on your hosts."))
             html.open_p()

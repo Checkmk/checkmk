@@ -1,0 +1,11 @@
+Title: printer_supply: Fixed IndexError in case of missing colour information
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p8
+Date: 1498470954
+Class: fix
+
+Some devices such as HP Laser Jet 1200 do not provide colour
+information which caused above error during discovery.

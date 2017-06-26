@@ -9,6 +9,7 @@
     * 4876 FIX: mounts: Fixed wrong handling of NFS mounts on Linux which are detected as stale...
     * 4827 FIX: domino_info: Fixed crash if some information is missing
     * 4908 FIX: enterasys_powersupply: Fixed crash if empty output...
+    * 4909 FIX: arris_cmts_cpu: Fixed crash if thresholds are set
 
 
 1.2.8p24:

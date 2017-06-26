@@ -1,0 +1,15 @@
+Title: netapp_api_volumes: No longer shows service descriptions with UUIDs
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.4.0p8
+Date: 1498476639
+
+The datasource program rule for the netapp agent offers an option to skip
+the performance counters for volumes. When this option was set (default off)
+the service description changed from a <i>vserver_name.volume_name</i> style
+to the <i>uuid</i>. This has been fixed. You can now set the counters "off"
+without the risk of a changed service description.

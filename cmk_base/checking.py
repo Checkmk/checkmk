@@ -300,8 +300,28 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
                     x = info.exc_info()
                     raise x[0], x[1], x[2] # re-raise the original exception to not destory the trace
 
-                result = sanitize_check_result(check_function(item, params, info),
-                                               checks.is_snmp_check(checkname))
+
+                def determine_params(params):
+                    if isinstance(params, dict) and "tp_default_value" in params:
+                        for timeperiod, tp_params in params["tp_values"]:
+                            tp_result = core.timeperiod_active(timeperiod)
+                            if tp_result == True:
+                                return tp_params
+                            elif tp_result == False:
+                                continue
+                            elif tp_result == None:
+                                # Connection error
+                                return params["tp_default_value"]
+                        else:
+                            return params["tp_default_value"]
+                    else:
+                        return params
+
+
+                result = sanitize_check_result(
+                            check_function(item, determine_params(params), info),
+                            checks.is_snmp_check(checkname))
+
                 item_state.raise_counter_wrap()
 
 

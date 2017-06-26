@@ -13717,6 +13717,12 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
         raise MKGeneralException("Check parameter definition for %s has type Dictionary, but match_type %s" %
                                  (checkgroup, match_type))
 
+    # Enclose this valuespec with a TimeperiodValuespec
+    # The given valuespec will be transformed to a list of valuespecs,
+    # whereas each element can be set to a specific timeperiod
+    if valuespec:
+        valuespec = TimeperiodValuespec(valuespec)
+
     # Register rule for discovered checks
     if valuespec and has_inventory: # would be useless rule if check has no parameters
         itemenum = None
@@ -13765,8 +13771,10 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec,
                 FixedValue(None,
                     help = _("This check has no parameters."),
                     totext = "")
+
         if not valuespec.title():
             valuespec._title = _("Parameters")
+
         elements.append(valuespec)
 
         register_rule(

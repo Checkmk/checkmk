@@ -4436,3 +4436,173 @@ def ListOfCAs(**args):
         movable = False,
         **args
     )
+
+
+class TimeperiodSelection(ElementSelection):
+    def __init__(self, **kwargs):
+        ElementSelection.__init__(self, **kwargs)
+
+    def get_elements(self):
+        import watolib
+        timeperiods = watolib.load_timeperiods()
+        elements = dict([ ("24X7", _("Always")) ] + \
+           [ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
+        return elements
+
+    def default_value(self):
+        return "24x7"
+
+
+
+class TimeperiodValuespec(ValueSpec):
+    tp_toggle_var        = "tp_enabled"       # Used by GUI switch
+    tp_default_value_key = "tp_default_value" # Used in value
+    tp_values_key        = "tp_values"        # Used in value
+
+
+    def __init__(self, valuespec):
+        super(TimeperiodValuespec, self).__init__(
+            title = valuespec.title(),
+            help  = valuespec.help()
+        )
+        self._enclosed_valuespec = valuespec
+
+
+    def default_value(self):
+        # If nothing is configured, simply return the default value of the enclosed valuespec
+        return self._enclosed_valuespec.default_value()
+
+
+    def render_input(self, varprefix, value):
+        # The display mode differs when the valuespec is activated
+        vars_copy = html.vars.copy()
+
+        # GUI switch overrules the information stored in the value
+        if html.has_var(self.tp_toggle_var):
+            is_active = self._is_switched_on()
+        else:
+            is_active = self._is_active(value)
+
+        if is_active:
+            mode = _("Disable")
+            vars_copy[self.tp_toggle_var] = "0"
+        else:
+            mode = _("Enable")
+            vars_copy[self.tp_toggle_var] = "1"
+        toggle_url = html.makeuri(vars_copy.items())
+        html.buttonlink(toggle_url, _("%s timespecific parameters") % mode, style=["position: absolute", "right: 18px;"])
+
+        if is_active:
+            value = self._get_timeperiod_value(value)
+            self._get_timeperiod_valuespec().render_input(varprefix, value)
+        else:
+            value = self._get_timeless_value(value)
+            return self._enclosed_valuespec.render_input(varprefix, value)
+
+
+    def value_to_text(self, value):
+        text = ""
+        if self._is_active(value):
+            # TODO/Phantasm: highlight currently active timewindow
+            text += self._get_timeperiod_valuespec().value_to_text(value)
+        else:
+            text += self._enclosed_valuespec.value_to_text(value)
+        return text
+
+
+    def from_html_vars(self, varprefix):
+        parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
+
+        if parameters[self.tp_values_key]:
+            return parameters
+        elif parameters[self.tp_default_value_key]:
+            # If the tp_default_value has any meaningful set, return this
+            return parameters[self.tp_default_value_key]
+        else:
+            # -> Fall back to simple mode
+            # If the tp-valuespec provided no data, it may be really empty, or we simply used the wrong valuespec
+            # to collect the data. Try to fetch the data with the enclosed valuespec
+            # If the second collection result is also empty - no problem, they have the same datatype
+            return self._enclosed_valuespec.from_html_vars(varprefix)
+
+
+    def canonical_value(self):
+        if self._is_active(value):
+            return self._get_timeperiod_valuespec().canonical_value(value, varprefix)
+        else:
+            return self._enclosed_valuespec.canonical_value(value, varprefix)
+
+
+    def validate_datatype(self, value, varprefix):
+        if self._is_active(value):
+            self._get_timeperiod_valuespec().validate_datatype(value, varprefix)
+        else:
+            self._enclosed_valuespec.validate_datatype(value, varprefix)
+
+
+    def validate_value(self, value, varprefix):
+        if self._is_active(value):
+            self._get_timeperiod_valuespec().validate_value(value, varprefix)
+        else:
+            self._enclosed_valuespec.validate_value(value, varprefix)
+
+
+    def _get_timeperiod_valuespec(self):
+        return Dictionary(
+                elements = [
+                    (self.tp_values_key,
+                        ListOf(
+                            Tuple(
+                                elements = [
+                                    TimeperiodSelection(
+                                        title = _("Match only during timeperiod"),
+                                        help = _("Match this rule only during times where the "
+                                                 "selected timeperiod from the monitoring "
+                                                 "system is active."),
+                                    ),
+                                    self._enclosed_valuespec
+                                ]
+                            ),
+                            title = _("Configured timeperiod parameters"),
+                        )
+                    ),
+                    (self.tp_default_value_key,
+                        Transform(
+                            self._enclosed_valuespec,
+                            title = _("Default parameters when no timeperiod matches")
+                        )
+                    ),
+                ],
+                optional_keys = False,
+            )
+
+
+    # Checks whether the tp-mode is switched on through the gui
+    def _is_switched_on(self):
+        return html.var(self.tp_toggle_var) == "1"
+
+
+    # Checks whether the value itself already uses the tp-mode
+    def _is_active(self, value):
+        if isinstance(value, dict) and self.tp_default_value_key in value:
+            return True
+        else:
+            return False
+
+
+    # Returns simply the value or converts a plain value to a tp-value
+    def _get_timeperiod_value(self, value):
+        if isinstance(value, dict) and self.tp_default_value_key in value:
+            return value
+        else:
+            return {self.tp_values_key: [], self.tp_default_value_key: value}
+
+
+    # Returns simply the value or converts tp-value back to a plain value
+    def _get_timeless_value(self, value):
+        if isinstance(value, dict) and self.tp_default_value_key in value:
+            return value.get(self.tp_default_value_key)
+        else:
+            return value
+
+

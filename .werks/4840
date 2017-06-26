@@ -1,0 +1,21 @@
+Title: Check parameters can now be bound to timeperiods
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498812135
+Class: feature
+
+All parameters for discovered services, as well as manual checks, can now be assigned to specific timeperiods.
+This makes it quite easy to configure exceptions, for example, when a data backup is running.
+Each eligible WATO rule offers a button <i>Enable timespecific parameters</i>, which switches the rule into the timespecific mode.
+
+
+In this mode you can configure a list of timeperiods and the related check parameters.
+You can also configure a default check parameter, in case none of given the timeperiods matches.
+
+
+The information, whether a timeperiod is active or not, is taken from the core during the check execution.
+When the core is down/unreachable, the fall default check parameter will be used.
+If a configured timeperiod name is not known, the default parameter will be used, too.

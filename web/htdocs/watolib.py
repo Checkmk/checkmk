@@ -8577,19 +8577,6 @@ def notification_script_title(name):
     return user_script_title("notifications", name)
 
 
-class TimeperiodSelection(ElementSelection):
-    def __init__(self, **kwargs):
-        ElementSelection.__init__(self, **kwargs)
-
-    def get_elements(self):
-        timeperiods = load_timeperiods()
-        elements = dict([ ("24X7", _("Always")) ] + \
-           [ (name, "%s - %s" % (name, tp["alias"])) for (name, tp) in timeperiods.items() ])
-        return elements
-
-    def default_value(self):
-        return "24x7"
-
 
 def service_levels():
     try:

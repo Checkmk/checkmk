@@ -52,7 +52,11 @@ def check_netapp_api_volumes(item, params, parsed):
     volume = parsed.get(item)
 
     if not volume:
-        return 3, "Volume not found in agent output"
+       # Specific error message for legacy checks with an uuid as item
+       if len(item.split("-")) > 4:
+            return 3, "The service description with an UUID is no longer supported. Please do a rediscovery."
+       else:
+            return 3, "Volume not found in agent output"
 
     if volume.get("state") != "online":
         return 1, "Volume is %s" % volume.get("state")

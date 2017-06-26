@@ -34,18 +34,20 @@ def cisco_sensor_item(trial_string, fall_back):
     # -> Depends on the device model
     try:
         # Try to handle all cases found in mkzeug/walks
-        splited = [ x.strip() for x in trial_string.split(',')]
-        if len(splited) == 1:
+        splitted = [ x.strip() for x in trial_string.split(',')]
+        if len(splitted) == 1:
             item = trial_string
         # If the last part contains # or Power, take the complete string
-        elif '#' in splited[-1] or 'Power' in splited[-1]:
-            item = " ".join(splited)
+        elif '#' in splitted[-1] or 'Power' in splitted[-1]:
+            item = " ".join(splitted)
         # If second last part start with Status, remove that part
-        elif splited[-2].startswith("Status") or splited[-2].startswith("PS1"):
-            item = " ".join(splited[:-2])
+        elif splitted[-2].startswith("PS"):
+            item = " ".join(splitted[:-2] + splitted[-2].split(" ")[:-1])
+        elif splitted[-2].startswith("Status"):
+            item = " ".join(splitted[:-2])
         # Take anything, but without last part
         else:
-            item = " ".join(splited[:-1])
+            item = " ".join(splitted[:-1])
         # Maye there a multiple Items, but always the same string.
         # Try to prevent that by adding the fall_back number to the end
         if not item[-1].isdigit():

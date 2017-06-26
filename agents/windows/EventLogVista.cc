@@ -177,8 +177,9 @@ public:
         std::wstring result;
         result.resize(128);
         auto publisher_meta = std::make_unique<ManagedEventHandle>(
-            *_evt, _evt->openPublisherMetadata(nullptr, source().c_str(),
-                                               nullptr, 0, 0));
+            *_evt,
+            _evt->openPublisherMetadata(nullptr, source().c_str(), nullptr, 0,
+                                        0));
         if (publisher_meta->get_handle() != nullptr) {
             for (;;) {
                 DWORD required;
@@ -320,9 +321,10 @@ uint64_t EventLogVista::seek(uint64_t record_id) {
             *_evt, evt().createBookmark(bookmarkXml.c_str()));
 
     _handle = std::make_unique<ManagedEventHandle>(
-        *_evt, evt().subscribe(nullptr, _signal->get_handle(), _path.c_str(),
-                               L"*", bookmark->get_handle(), nullptr, nullptr,
-                               EvtSubscribeStartAfterBookmark));
+        *_evt,
+        evt().subscribe(nullptr, _signal->get_handle(), _path.c_str(), L"*",
+                        bookmark->get_handle(), nullptr, nullptr,
+                        EvtSubscribeStartAfterBookmark));
 
     if (_handle->get_handle() == nullptr) {
         throw win_exception(

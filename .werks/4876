@@ -1,0 +1,20 @@
+Title: mounts: Fixed wrong handling of NFS mounts on Linux which are detected as stale
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1498484953
+
+Such mounts are marked with '\040(deleted)' und therefore discovered
+as new services while the related services report
+{{UNKNOWN - filesystem not mounted}}.
+
+This has been fixed. The service now reports
+{{WARN - Mount point detected as stale}}.
+
+Please see
+https://utcc.utoronto.ca/~cks/space/blog/linux/NFSStaleUnmounting
+for more information.

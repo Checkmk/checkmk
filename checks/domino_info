@@ -33,35 +33,27 @@
 # .1.3.6.1.4.1.334.72.1.1.6.2.4.0 Release 8.5.3FP5 HF89
 
 
-domino_info_states = {
-        '1' : 'up',
-        '2' : 'down',
-        '3' : 'not-responding',
-        '4' : 'crashed',
-        '5' : 'unknown'
-}
-
 def inventory_domino_info(info):
     if info and len(info[0]) != 0:
         yield None, None
 
 def check_domino_info(_no_item, _no_params, info):
-    serverstate, domain, name, release = info
+    translate_status = {
+            '1' : (0, 'up'),
+            '2' : (2, 'down'),
+            '3' : (2, 'not-responding'),
+            '4' : (1, 'crashed'),
+            '5' : (3, 'unknown'),
+    }
+    status, domain, name, release = info[0]
+
+    state, state_readable = translate_status[status]
+    yield state, "Server is %s" % state_readable
+
     if len(domain) > 0:
-        maildomain = domain[0][0]
-    else:
-        maildomain = "-"
-    if int(serverstate[0][0]) > 4:
-        state = 1
-        infotext = "Server is %s" % ( domino_info_states[serverstate[0][0]] )
-    elif int(serverstate[0][0]) > 1:
-        state = 2
-        infotext = "Server is %s" % ( domino_info_states[serverstate[0][0]] )
-    else:
-        state = 0
-        infotext = "Server is %s. Domain: %s, Name: %s, %s" \
-            % ( domino_info_states[serverstate[0][0]], maildomain, name[0][0], release[0][0] )
-    yield state, infotext
+        yield 0, "Domain: %s" % domain
+
+    yield 0, "Name: %s, %s" % (name, release)
 
 check_info['domino_info'] = {
     "check_function"      : check_domino_info,
@@ -70,11 +62,11 @@ check_info['domino_info'] = {
     "service_description" : "Domino Info",
     "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.311.1.1.3") or \
                                     oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.1.10"),
-    "snmp_info"           : [
-                                    [ ".1.3.6.1.4.1.334.72.2", [ 2 ] ], # lnNotesServerState
-                                    [ ".1.3.6.1.4.1.334.72.1.1.4", [ 8 ] ], # lnMailDomain
-                                    [ ".1.3.6.1.4.1.334.72.1.1.6.2", [ 1 ] ], # lnServerName
-                                    [ ".1.3.6.1.4.1.334.72.1.1.6.2", [ 4 ] ], # lnServerNotesVersion
-                            ]
+    "snmp_info"           : (".1.3.6.1.4.1.334.72", [
+                                    "2.2",       # lnNotesServerState
+                                    "1.1.4.8",   # lnMailDomain
+                                    "1.1.6.2.1", # lnServerName
+                                    "1.1.6.2.4", # lnServerNotesVersion
+                            ]),
 }
 

@@ -1,0 +1,13 @@
+Title: mkbackup: Fixed crash if size of backup is not reported because of a failure
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p8
+Date: 1498483587
+
+Previously the check crashed if the size has not been reported. This can
+happen if the backup fails directly from the beginning. This bug has always
+been in this plugin until now.

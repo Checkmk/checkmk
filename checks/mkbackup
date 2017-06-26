@@ -106,8 +106,9 @@ def check_mkbackup(job_state):
             [ ("backup_duration", duration),
               ("backup_avgspeed", job_state["bytes_per_second"]) ]
 
-        yield 0, "Size: %s" % get_bytes_human_readable(job_state["size"]), \
-                [ ("backup_size", job_state["size"]) ]
+        if "size" in job_state:
+            yield 0, "Size: %s" % get_bytes_human_readable(job_state["size"]), \
+                    [ ("backup_size", job_state["size"]) ]
 
         next_run = job_state["next_schedule"]
         if next_run == "disabled":

@@ -48,11 +48,9 @@
 #include <locale.h>
 #include <shellapi.h>
 #include <stdarg.h>
-#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/time.h>
-#include <sys/types.h>
 #include <sys/types.h>
 #include <time.h>
 #include <tlhelp32.h>  // list of processes

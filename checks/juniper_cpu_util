@@ -39,6 +39,8 @@ def inventory_juniper_cpu_util(info):
 def check_juniper_cpu_util(item, params, info):
     for name, util in info:
         if name == item:
+            if util == "":
+                return 3, "Information not available"
             return check_cpu_util(int(util), params)
 
 

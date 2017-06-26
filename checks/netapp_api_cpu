@@ -69,6 +69,8 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
     mode_data = parsed.get(mode)
     if item:
         data = mode_data.get(item)
+        if data == None:
+            return 3, "No data available!"
     else:
         data = mode_data
 

@@ -1,6 +1,8 @@
 1.2.8p25:
     Checks & Agents:
     * 4823 FIX: netapp_api_cpu: Fixed crash if data for node is missing...
+    * 4874 FIX: cisco_power: Improved discovery of power supplies...
+            NOTE: Please refer to the migration notes!
 
 
 1.2.8p24:

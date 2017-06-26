@@ -1,0 +1,14 @@
+Title: cisco_power: Improved discovery of power supplies
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.2.8p25
+Date: 1498476261
+
+Before not all power supplies were discovered or had
+an incorrect description, eg. status code was included.
+This has been fixed now but you have to re-discover on the
+affected hosts.

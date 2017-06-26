@@ -130,7 +130,7 @@ def list_logs(site, host_name, logfile_names):
         table.row()
         file_display = form_file_to_ext(file_name)
         uri = html.makeuri([('site', site), ('host', host_name), ('file', file_display)])
-        logfile_link = html.render_a(file_display, url=uri)
+        logfile_link = html.render_a(file_display, href=uri)
 
         try:
             log_chunks = parse_file(site, host_name, file_name)

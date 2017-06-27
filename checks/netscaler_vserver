@@ -93,8 +93,9 @@ def check_netscaler_vserver(item, params, info):
     if params is None:
         params = {}
 
-    for name, ip, port, svr_type, svr_state,\
-        svr_health, svr_entitytype in info:
+    for name, ip, port, svr_type, svr_state, \
+        svr_health, svr_entitytype, request_rate, \
+        rx_bytes, tx_bytes in info:
         if name == item:
             svr_state, svr_state_readable = \
                 netscaler_vserver_states.get(svr_state, ("unknown", 1))
@@ -124,6 +125,14 @@ def check_netscaler_vserver(item, params, info):
                   netscaler_vserver_types.get(svr_type, "service unknown (%s)" % svr_type),
                   ip, port)
 
+            request_rate = int(request_rate)
+            rx_bytes = int(rx_bytes)
+            tx_bytes = int(tx_bytes)
+            yield 0, "Request rate: %s/s, In: %s/s, Out: %s/s" % \
+                     (request_rate, get_bytes_human_readable(rx_bytes),
+                      get_bytes_human_readable(tx_bytes)), \
+                     [("request_rate", request_rate), ("if_in_octets", rx_bytes), ("if_out_octets", tx_bytes)]
+
 
 check_info["netscaler_vserver"] = {
     "check_function"          : check_netscaler_vserver,
@@ -137,6 +146,9 @@ check_info["netscaler_vserver"] = {
                                             5, # vsvrState
                                            62, # vsvrHealth
                                            64, # vsvrEntityType
+                                           43, # NS-ROOT-MIB::vsvrRequestRate
+                                           44, # NS-ROOT-MIB::vsvrRxBytesRate
+                                           45, # NS-ROOT-MIB::vsvrTxBytesRate
                                         ]),
     "has_perfdata"            : True,
     "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5951.1"),

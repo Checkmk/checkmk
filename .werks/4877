@@ -1,0 +1,10 @@
+Title: netscaler_vserver: Added some performance data such as request rate, received and transmitted byte rates
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498548299
+Class: feature
+
+

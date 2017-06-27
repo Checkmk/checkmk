@@ -31,6 +31,9 @@ from grp import getgrnam
 import ctypes
 import ctypes.util
 
+import cmk.store
+from .exceptions import MKGeneralException
+
 
 def daemonize(user=0, group=0):
     # do the UNIX double-fork magic, see Stevens' "Advanced
@@ -76,6 +79,21 @@ def daemonize(user=0, group=0):
     os.dup2(so, 2)
     os.close(si)
     os.close(so)
+
+
+def lock_with_pid_file(path):
+    """
+    Use this after daemonizing or in foreground mode to ensure there is only
+    one process running.
+    """
+    if not cmk.store.try_aquire_lock(path):
+        raise MKGeneralException("Failed to aquire PID file lock: "
+                                 "Another process is already running")
+
+    # Now that we have the lock we are allowed to write our pid to the file.
+    # The pid can then be used by the init script.
+    with file(path, "w") as f:
+        f.write("%d\n" % os.getpid())
 
 
 def set_cmdline(cmdline):

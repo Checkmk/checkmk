@@ -240,7 +240,7 @@ def save_to_mk_file(path, key, value):
 g_aquired_locks = []
 g_locked_paths  = []
 
-def aquire_lock(path):
+def aquire_lock(path, blocking=True):
     if path in g_locked_paths:
         return True # No recursive locking
 
@@ -252,7 +252,11 @@ def aquire_lock(path):
 
     # Handle the case where the file has been renamed in the meantime
     while True:
-        fcntl.flock(fd, fcntl.LOCK_EX)
+        flags = fcntl.LOCK_EX
+        if not blocking:
+            flags |= fcntl.LOCK_NB
+
+        fcntl.flock(fd, flags)
         fd_new = os.open(path, os.O_RDONLY | os.O_CREAT, 0660)
         if os.path.sameopenfile(fd, fd_new):
             os.close(fd_new)
@@ -263,6 +267,17 @@ def aquire_lock(path):
 
     g_aquired_locks.append((path, fd))
     g_locked_paths.append(path)
+
+
+def try_aquire_lock(path):
+    try:
+        aquire_lock(path, blocking=False)
+        return True
+    except IOError, e:
+        if e.errno == 11: # Resource temporarily unavailable
+            return False
+        else:
+            raise
 
 
 def release_lock(path):

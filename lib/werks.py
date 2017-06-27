@@ -278,5 +278,7 @@ def parse_check_mk_version(v):
     elif rest[0] == 'b':
         num, rest = extract_number(rest[1:])
         val = 20000 + num*100
+    else:
+        raise MKGeneralException("Invalid Check_MK version: %r" % v)
 
     return int('%02d%02d%02d%05d' % (int(major), int(minor), sub, val))

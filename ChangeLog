@@ -11,6 +11,9 @@
     * 4908 FIX: enterasys_powersupply: Fixed crash if empty output...
     * 4909 FIX: arris_cmts_cpu: Fixed crash if thresholds are set
 
+    Multisite:
+    * 4902 SEC: Monitoring history views: Fixed possible XSS when displaying "plugin output"...
+
 
 1.2.8p24:
     Checks & Agents:

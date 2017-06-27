@@ -2146,10 +2146,13 @@ multisite_painters["log_message"] = {
 def paint_log_plugin_output(row):
     output = row["log_plugin_output"]
     comment = row["log_comment"]
+
     if output:
         return "", format_plugin_output(output, row)
+
     elif comment:
-        return "", comment
+        return "", html.attrencode(comment)
+
     else:
         log_type = row["log_type"]
         lst = row["log_state_type"]

@@ -1,0 +1,15 @@
+Title: Monitoring history views: Fixed possible XSS when displaying "plugin output"
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.8p25
+Date: 1498558049
+Class: security
+
+A possible XSS issue has been fixed in the monitoring history views displaying the
+plugin output of hosts or services. In case a host or service problem is being
+acknowledged with HTML code in the acknowlegement comment, this HTML code  was
+not being escaped properly when being displayed in the "plugin output" column.
+
+Only authenticated users that are permitted to acknowledge host or service problems
+could trigger this issue.

@@ -138,10 +138,10 @@ def test_large_number_of_sites(default_cfg, site):
         # Currently connect to local site
         site_id = "site%03d" % site_num
 
-        if site_num % 2 == 0:
-            to_livestatus = None
-        else:
-            to_livestatus = ('127.0.0.1', 6999)
+        #if site_num % 2 == 0:
+        to_livestatus = None
+        #else:
+        #    to_livestatus = ('127.0.0.1', 6999)
 
         site_sockets[site_id] = {
             "to_livestatus" : to_livestatus,
@@ -183,6 +183,12 @@ def test_large_number_of_sites(default_cfg, site):
             "cmc_livestatus_threads = %d\n" % (num_channels*num_sites + 20))
 
         site.execute(["cmk", "-O"])
+
+        # Disable limits of livestatus xinetd service
+        #site.execute(["sed", "-i", "-r",
+        #                "'/^\s+cps\s+=/d;/^\s+instances\s+=/d;/^\s+per_source\s+=/d'",
+        #                "etc/xinetd.d/mk-livestatus"])
+        #site.execute(["omd", "restart", "xinetd"])
 
         _change_liveproxyd_sites(site, liveproxyd_sites)
 

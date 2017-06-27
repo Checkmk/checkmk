@@ -1,0 +1,41 @@
+Title: Reworked Livestatus Proxy to be more scalable
+Level: 2
+Component: liveproxy
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1498556532
+Class: feature
+
+The livestatus proxy daemon has been reworked to use a multi process
+architecture. It now has a master process that mainly cares about
+monitoring the site processes. Each connected site has an own subprocess
+that manages all channels to this site and the clients that use these
+channels to communicate with the sites.
+
+When you have a look at ps/top you should see something like this:
+
+C+:
+OMD[heute]:~$ ps -ef | grep liveproxyd
+UID        PID  PPID  C STIME TTY          TIME CMD
+heute     9261     1  0 11:40 ?        00:00:00 liveproxyd[master]
+heute     9262  9261  0 11:40 ?        00:00:00 liveproxyd[heute_slave_1]
+heute     9263  9261  0 11:40 ?        00:00:00 liveproxyd[heute_slave_2]
+C-:
+
+As you can may see there is the master process that has the process <tt>1</tt>
+as parent process. The site processes have the master as parent.
+
+When one site process terminates for some reason the master will restart it.
+When the master is terminated all site processes will terminate too. In case
+of a restart or config reload the master will restart itself and stop
+all site processes and restart them again.
+
+With this change the load of the livestatus proxy will now spread over
+multiple CPUs.
+
+Side note: There is a new global setting <i>Logging of the Livestatus Proxy</i>
+that can be used to control the detail level of the log entries written to the
+<tt>var/log/liveproxyd.log</tt> log file. In case you experience any issues
+with the livestatus proxy daemon take a look at this log file and maybe increase
+the log level to get more details.

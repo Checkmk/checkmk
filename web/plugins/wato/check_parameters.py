@@ -815,30 +815,39 @@ register_rule(group + '/' + subgroup_inventory,
     title     = _("Network Interface and Switch Port Discovery"),
     valuespec = Dictionary(
         elements = [
-         ( "use_desc",
-           Checkbox(
-                title = _("Use description as service name for network interface checks"),
-                label = _("use description"),
-                help = _("This option lets Check_MK use the interface description as item instead "
-                         "of the port number. If no description is available then the port number is "
-                         "used anyway."))),
-        ( "use_alias",
-          Checkbox(
-                 title = _("Use alias as service name for network interface checks"),
-                     label = _("use alias"),
-                     help = _("This option lets Check_MK use the alias of the port (ifAlias) as item instead "
-                              "of the port number. If no alias is available then the port number is used "
-                              "anyway."))),
-        ( "pad_portnumbers",
-          Checkbox(title = _("Pad port numbers with zeroes"),
-              label = _("pad port numbers"),
-              help = _("If this option is activated then Check_MK will pad port numbers of "
-                       "network interfaces with zeroes so that all port descriptions from "
-                       "all ports of a host or switch have the same length and thus sort "
-                       "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
-                       "padding. You can switch back to the old behaviour by disabling this "
-                       "option. This will retain the old service descriptions and the old "
-                       "performance data."),
+        ( "use_desc", DropdownChoice(
+            choices = [
+                (True,  _('Use description')),
+                (False, _('Do not use description')),
+            ],
+            title = _("Description as service name for network interface checks"),
+            help = _("This option lets Check_MK use the interface description as item instead "
+                     "of the port number. If no description is available then the port number is "
+                     "used anyway.")
+        )),
+        ( "use_alias", DropdownChoice(
+            choices = [
+                (True,  _('Use alias')),
+                (False, _('Do not use alias')),
+            ],
+            title = _("Alias as service name for network interface checks"),
+            help = _("This option lets Check_MK use the alias of the port (ifAlias) as item instead "
+                     "of the port number. If no alias is available then the port number is used "
+                     "anyway.")
+        )),
+        ( "pad_portnumbers", DropdownChoice(
+            choices = [
+                (True,  _('Pad port numbers with zeros')),
+                (False, _('Do not pad')),
+            ],
+            title = _("Port numbers"),
+            help = _("If this option is activated then Check_MK will pad port numbers of "
+                     "network interfaces with zeroes so that all port descriptions from "
+                     "all ports of a host or switch have the same length and thus sort "
+                     "currectly in the GUI. In versions prior to 1.1.13i3 there was no "
+                     "padding. You can switch back to the old behaviour by disabling this "
+                     "option. This will retain the old service descriptions and the old "
+                     "performance data."),
         )),
         ( "match_alias",
           ListOfStrings(
@@ -888,16 +897,18 @@ register_rule(group + '/' + subgroup_inventory,
               toggle_all = True,
               default_value = [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205','229' ],
         )),
-        ( "rmon",
-          Checkbox(
-              title = _("Collect RMON statistics data"),
-              help = _("If you enable this option, for every RMON capable switch port an additional service will "
-                       "be created which is always OK and collects RMON data. This will give you detailed information "
-                       "about the distribution of packet sizes transferred over the port. Note: currently "
-                       "this extra RMON check does not honor the inventory settings for switch ports. In a future "
-                       "version of Check_MK RMON data may be added to the normal interface service and not add "
-                       "an additional service."),
-              label = _("Create extra service with RMON statistics data (if available for the device)"),
+        ( "rmon", DropdownChoice(
+            choices = [
+                (True,  _("Create extra service with RMON statistics data (if available for the device)")),
+                (False, _('Do not create extra services')),
+            ],
+            title = _("Collect RMON statistics data"),
+            help = _("If you enable this option, for every RMON capable switch port an additional service will "
+                     "be created which is always OK and collects RMON data. This will give you detailed information "
+                     "about the distribution of packet sizes transferred over the port. Note: currently "
+                     "this extra RMON check does not honor the inventory settings for switch ports. In a future "
+                     "version of Check_MK RMON data may be added to the normal interface service and not add "
+                     "an additional service."),
         )),
         ],
         help = _('This rule can be used to control the inventory for network ports. '

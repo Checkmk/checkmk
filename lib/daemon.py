@@ -28,6 +28,8 @@ import os
 import sys
 from pwd import getpwnam
 from grp import getgrnam
+import ctypes
+import ctypes.util
 
 
 def daemonize(user=0, group=0):
@@ -74,3 +76,25 @@ def daemonize(user=0, group=0):
     os.dup2(so, 2)
     os.close(si)
     os.close(so)
+
+
+def set_cmdline(cmdline):
+    """
+    Change the process name and process command line on of the running process
+    This works at least with Python 2.x on Linux
+    """
+    libc = ctypes.cdll.LoadLibrary(ctypes.util.find_library('c'))
+
+    argv = ctypes.POINTER(ctypes.c_char_p)()
+    argc = ctypes.c_int()
+    ctypes.pythonapi.Py_GetArgcArgv(ctypes.byref(argc), ctypes.byref(argv))
+    cmdlen = sum([len(argv[i]) for i in range(argc.value)]) + argc.value
+    new_cmdline = ctypes.c_char_p(cmdline.ljust(cmdlen, '\0'))
+
+    # replace the command line, which is available via /proc/<pid>/cmdline.
+    # This is .e.g used by ps
+    libc.memcpy(argv.contents, new_cmdline, cmdlen)
+
+    # replace the prctl name, which is available via /proc/<pid>/status.
+    # This is for example used by top and killall
+    libc.prctl(15, new_cmdline, 0, 0, 0)

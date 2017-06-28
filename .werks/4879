@@ -1,0 +1,11 @@
+Title: akcp_sensor_humidity, akcp_exp_humidity: Fixed wrong order of level evaluation
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1498658323
+
+

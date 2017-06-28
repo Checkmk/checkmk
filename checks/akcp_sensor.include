@@ -106,12 +106,12 @@ def check_akcp_humidity(item, params, info):
 
             if humidity <= crit_lower:
                 return 2, infotext + belowtext, perfdata
+            elif humidity >= crit:
+                return 2, infotext + abovetext, perfdata
             elif humidity <= warn_lower:
                 return 1, infotext + belowtext, perfdata
             elif humidity >= warn:
                 return 1, infotext + abovetext, perfdata
-            elif humidity >= crit:
-                return 2, infotext + abovetext, perfdata
             else:
                 return 0, infotext, perfdata
 

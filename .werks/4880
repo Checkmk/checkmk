@@ -1,0 +1,10 @@
+Title: wut_webtherm: Fixed missing device type and enabled performance data for humidity
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498658718
+class: fix
+
+

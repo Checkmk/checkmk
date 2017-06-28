@@ -130,8 +130,8 @@ def test_large_number_of_sites(default_cfg, site):
     _toggle_liveproxyd(site, use_liveproxyd=True)
 
     # Increase nofiles limit of CMC to prevent that it runs in "too many open files" resource limits
-    exit_code = site.execute(["prlimit", "-p", site.read_file("tmp/run/cmc.pid").strip(), "-n4096"]).wait()
-    assert exit_code == 0
+    #exit_code = site.execute(["prlimit", "-p", site.read_file("tmp/run/cmc.pid").strip(), "-n4096"]).wait()
+    #assert exit_code == 0
 
     site_sockets, num_sites, num_channels = {}, 200, 3
     for site_num in range(num_sites):

@@ -268,16 +268,13 @@ def add_rulebased_macros(raw_context):
 
 # Add a few further helper variables that are useful in notification and alert plugins
 def complete_raw_context(raw_context, with_dump, event_log):
-    import cmk_base.notify as notify
     raw_keys = list(raw_context.keys())
 
     try:
         raw_context["WHAT"] = raw_context.get("SERVICEDESC") and "SERVICE" or "HOST"
         raw_context["MONITORING_HOST"] = socket.gethostname()
-        raw_context["LOGDIR"] = notify.notification_logdir
         raw_context["OMD_ROOT"] = cmk.paths.omd_root
         raw_context["OMD_SITE"] = cmk.omd_site()
-        raw_context["MAIL_COMMAND"] = notify.notification_mail_command
 
         # The Check_MK Micro Core sends the MICROTIME and no other time stamps. We add
         # a few Nagios-like variants in order to be compatible

@@ -273,6 +273,7 @@ def notify_notify(raw_context, analyse=False):
     if notification_logging >= 2:
         notify_log(events.render_context_dump(raw_context))
 
+    _complete_raw_context_with_notification_vars(raw_context)
     events.complete_raw_context(raw_context, with_dump = notification_logging >= 2, event_log = notify_log)
 
     # Spool notification to remote host, if this is enabled
@@ -281,6 +282,13 @@ def notify_notify(raw_context, analyse=False):
 
     if config.notification_spooling != "remote":
         return locally_deliver_raw_context(raw_context, analyse=analyse)
+
+
+# Add some notification specific variables to the context. These are currently
+# not added to alert handler scripts
+def _complete_raw_context_with_notification_vars(raw_context):
+    raw_context["LOGDIR"]       = notification_logdir
+    raw_context["MAIL_COMMAND"] = notification_mail_command
 
 
 # Here we decide which notification implementation we are using.

@@ -100,7 +100,7 @@ check_info["wut_webtherm"] = {
     'check_function'            : check_wut_webtherm,
     'service_description'       : 'Temperature %s',
     'has_perfdata'              : True,
-    'snmp_info'                 : ('.1.3.6.1.4.1.5040.1.2', ['1', '2', '3', '6', '7', '8', '9', '16', '18', '36', '37'], [
+    'snmp_info'                 : ('.1.3.6.1.4.1.5040.1.2', ['1', '2', '3', '6', '7', '8', '9', '16', '18', '36', '37', '42'], [
                                         '1.2.1.1',  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroSensorNo
                                         '1.3.1.1',  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValue
                                         '1.8.1.1',  # WebGraph-Thermo-Hygro-Barometer-MIB::wtWebGraphThermoBaroTempValuePkt
@@ -166,6 +166,7 @@ check_info["wut_webtherm.humidity"] = {
     "check_function"            : check_wut_webtherm_humidity,
     "service_description"       : "Humidity %s",
     "includes"                  : [ "humidity.include" ],
+    'has_perfdata'              : True,
     "group"                     : "humidity",
 }
 

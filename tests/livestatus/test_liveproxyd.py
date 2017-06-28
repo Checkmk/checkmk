@@ -97,7 +97,7 @@ def test_simple_query(default_cfg, site, proto):
 
     live = livestatus.MultiSiteConnection(
         sites={
-            'heute': {
+            site.id: {
                 'alias': u'Der Master',
                 'customer': 'provider',
                 'disable_wato': True,
@@ -108,7 +108,7 @@ def test_simple_query(default_cfg, site, proto):
                 'replicate_ec': False,
                 'replicate_mkps': False,
                 'replication': '', 
-                'socket': "unix:%s/tmp/run/liveproxy/heute" % site.root,
+                'socket': "unix:%s/tmp/run/liveproxy/%s" % (site.root, site.id),
                 'status_host': None,
                 'timeout': 10, 
                 'user_login': True,

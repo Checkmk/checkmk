@@ -28,6 +28,7 @@ import os
 
 import cmk.paths
 import cmk.hostname_translation
+from cmk.exceptions import MKGeneralException
 
 import cmk_base.utils
 import cmk_base.console as console

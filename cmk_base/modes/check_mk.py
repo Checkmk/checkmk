@@ -1406,7 +1406,7 @@ modes.register(Mode(
             short_help="Restrict discovery to certain check types",
             argument=True,
             argument_descr="C",
-            argument_conv=lambda x: check_info.keys() if x == "@all" else x.split(","),
+            argument_conv=lambda x: checks.check_info.keys() if x == "@all" else x.split(","),
         ),
     ]
 ))
@@ -1504,7 +1504,7 @@ modes.register(Mode(
             short_help="Restrict discovery to certain check types",
             argument=True,
             argument_descr="C",
-            argument_conv=lambda x: check_info.keys() if x == "@all" else x.split(","),
+            argument_conv=lambda x: checks.check_info.keys() if x == "@all" else x.split(","),
         ),
         keepalive_option,
         Option(

@@ -68,6 +68,7 @@ def query_ec_table(datasource, columns, add_columns, query, only_sites, limit, t
     for row in rows:
         if not row.get("host_name"):
             row["host_name"] = row["event_host"]
+            row["event_is_unrelated"] = True
 
     return rows
 

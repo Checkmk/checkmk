@@ -49,7 +49,6 @@ from cmk_base.exceptions import MKSNMPError
 #   '----------------------------------------------------------------------'
 
 def walk(hostname, ip, oid, hex_plain = False, context_name = None):
-    import cmk_base.snmp as snmp
     protospec = _snmp_proto_spec(hostname)
     portspec = _snmp_port_spec(hostname)
     command = _snmp_walk_command(hostname)
@@ -90,7 +89,7 @@ def walk(hostname, ip, oid, hex_plain = False, context_name = None):
                     value += " " + nextline
                     if value[-1] == '"':
                         break
-            rowinfo.append((oid, snmp.strip_snmp_value(value, hex_plain)))
+            rowinfo.append((oid, strip_snmp_value(value, hex_plain)))
 
     except StopIteration:
         pass
@@ -254,3 +253,42 @@ def _snmp_base_command(what, hostname):
 #   | Internal helpers for processing SNMP things                          |
 #   '----------------------------------------------------------------------'
 
+def strip_snmp_value(value, hex_plain = False):
+    v = value.strip()
+    if v.startswith('"'):
+        v = v[1:-1]
+        if len(v) > 2 and _is_hex_string(v):
+            return not hex_plain and _convert_from_hex(v) or value
+        else:
+            # Fix for non hex encoded string which have been somehow encoded by the
+            # netsnmp command line tools. An example:
+            # Checking windows systems via SNMP with hr_fs: disk names like c:\
+            # are reported as c:\\, fix this to single \
+            return v.strip().replace('\\\\', '\\')
+    else:
+        return v
+
+def _is_hex_string(value):
+    # as far as I remember, snmpwalk puts a trailing space within
+    # the quotes in case of hex strings. So we require that space
+    # to be present in order make sure, we really deal with a hex string.
+    if value[-1] != ' ':
+        return False
+    hexdigits = "0123456789abcdefABCDEF"
+    n = 0
+    for x in value:
+        if n % 3 == 2:
+            if x != ' ':
+                return False
+        else:
+            if x not in hexdigits:
+                return False
+        n += 1
+    return True
+
+def _convert_from_hex(value):
+    hexparts = value.split()
+    r = ""
+    for hx in hexparts:
+        r += chr(int(hx, 16))
+    return r

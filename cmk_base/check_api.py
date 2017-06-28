@@ -459,11 +459,11 @@ def passwordstore_get_cmdline(fmt, pw):
         return ("store", pw[1], fmt)
 
 
-# Use this function to get the age of the agent data cache file
-# of tcp or snmp hosts or None in case of piggyback data because
-# we do not exactly know the latest agent data. Maybe one time
-# we can handle this. For cluster hosts an exception is raised.
 def get_agent_data_time():
+    """Use this function to get the age of the agent data cache file
+    of tcp or snmp hosts or None in case of piggyback data because
+    we do not exactly know the latest agent data. Maybe one time
+    we can handle this. For cluster hosts an exception is raised."""
     return _agent_cache_file_age(host_name(), check_type())
 
 

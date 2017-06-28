@@ -7,6 +7,7 @@ import cmk_base.checks as checks
 import cmk_base.discovery as discovery
 
 def test_load_checks():
+    reload(checks)
     assert checks.check_info == {}
     checks.load()
     assert len(checks.check_info) > 1000
@@ -55,7 +56,7 @@ def test_cfg(web, site):
     })
 
     site.write_file("etc/check_mk/conf.d/modes-test-host.mk",
-        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ALL_HOSTS))\n")
+        "datasource_programs.append(('cat ~/var/check_mk/agent_output/<HOST>', [], ['modes-test-host']))\n")
 
     site.makedirs("var/check_mk/agent_output/")
     web.activate_changes()
@@ -70,8 +71,21 @@ def test_cfg(web, site):
 
 
 # Test whether or not registration of check configuration variables works
-def test_test_check_1(test_cfg, site, web):
+def test_test_check_1(request, test_cfg, site, web):
+
     test_check_path = "local/share/check_mk/checks/test_check_1"
+
+    def cleanup():
+        if site.file_exists("etc/check_mk/conf.d/test_check_1.mk"):
+            site.delete_file("etc/check_mk/conf.d/test_check_1.mk")
+
+        if site.file_exists("var/check_mk/autochecks/modes-test-host.mk"):
+            site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
+
+        site.delete_file(test_check_path)
+
+    request.addfinalizer(cleanup)
+
     site.write_file(test_check_path, """
 
 test_check_1_default_levels = 10.0, 20.0
@@ -83,20 +97,15 @@ def check(item, params, info):
     return 0, "OK - %r" % (test_check_1_default_levels, )
 
 check_info["test_check_1"] = {
-    "check_function"      : check,
-    "inventory_function"  : inventory,
-    "service_description" : "Testcheck 1",
+    "check_function"          : check,
+    "inventory_function"      : inventory,
+    "service_description"     : "Testcheck 1",
+#    "default_levels_variable" : "test_check_1_default_levels"
 }
 """)
 
     site.write_file("var/check_mk/agent_output/modes-test-host",
                     "<<<test_check_1>>>\n1 2\n")
-
-    # Cleanup eventually left over files from previous tests
-    if site.file_exists("etc/check_mk/conf.d/test_check_1.mk"):
-        site.delete_file("etc/check_mk/conf.d/test_check_1.mk")
-    if site.file_exists("var/check_mk/autochecks/modes-test-host.mk"):
-        site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
 
     checks.load_checks(["%s/%s" % (site.root, test_check_path)])
 
@@ -136,8 +145,17 @@ check_info["test_check_1"] = {
 
 
 # Test whether or not registration of discovery variables work
-def test_test_check_2(test_cfg, site, web):
+def test_test_check_2(request, test_cfg, site, web):
     test_check_path = "local/share/check_mk/checks/test_check_2"
+
+    def cleanup():
+        if site.file_exists("etc/check_mk/conf.d/test_check_2.mk"):
+            site.delete_file("etc/check_mk/conf.d/test_check_2.mk")
+        if site.file_exists("var/check_mk/autochecks/modes-test-host.mk"):
+            site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
+        site.delete_file(test_check_path)
+    request.addfinalizer(cleanup)
+
     site.write_file(test_check_path, """
 
 discover_service = False
@@ -158,12 +176,6 @@ check_info["test_check_2"] = {
 
     site.write_file("var/check_mk/agent_output/modes-test-host",
                     "<<<test_check_2>>>\n1 2\n")
-
-    # Cleanup eventually left over files from previous tests
-    if site.file_exists("etc/check_mk/conf.d/test_check_2.mk"):
-        site.delete_file("etc/check_mk/conf.d/test_check_2.mk")
-    if site.file_exists("var/check_mk/autochecks/modes-test-host.mk"):
-        site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
 
     checks.load_checks(["%s/%s" % (site.root, test_check_path)])
 
@@ -194,8 +206,17 @@ check_info["test_check_2"] = {
 
 
 # Test whether or not factory settings and checkgroup parameters work
-def test_test_check_factory_settings(test_cfg, site, web):
+def test_test_check_factory_settings(request, test_cfg, site, web):
     test_check_path = "local/share/check_mk/checks/test_check_3"
+
+    def cleanup():
+        if site.file_exists("etc/check_mk/conf.d/test_check_3.mk"):
+            site.delete_file("etc/check_mk/conf.d/test_check_3.mk")
+        if site.file_exists("var/check_mk/autochecks/modes-test-host.mk"):
+            site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
+        site.delete_file(test_check_path)
+    request.addfinalizer(cleanup)
+
     site.write_file(test_check_path, """
 
 factory_settings["test_check_3_default_levels"] = {
@@ -219,12 +240,6 @@ check_info["test_check_3"] = {
 
     site.write_file("var/check_mk/agent_output/modes-test-host",
                     "<<<test_check_3>>>\n1 2\n")
-
-    # Cleanup eventually left over files from previous tests
-    if site.file_exists("etc/check_mk/conf.d/test_check_3.mk"):
-        site.delete_file("etc/check_mk/conf.d/test_check_3.mk")
-    if site.file_exists("var/check_mk/autochecks/modes-test-host.mk"):
-        site.delete_file("var/check_mk/autochecks/modes-test-host.mk")
 
     checks.load_checks(["%s/%s" % (site.root, test_check_path)])
 

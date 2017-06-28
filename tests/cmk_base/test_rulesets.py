@@ -51,7 +51,12 @@ def test_service_extra_conf():
 
 def test_all_matching_hosts():
     # TODO: monkeypatch this!
+    import cmk_base
+    reload(cmk_base)
+
     import cmk_base.config as config
+    reload(config)
+
     config.distributed_wato_site = "site1"
     config.all_hosts = ["host1|tag1|tag2", "host2|tag1", "host3|tag1|site:site2"]
     config.collect_hosttags()

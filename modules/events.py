@@ -337,7 +337,8 @@ def complete_raw_context(raw_context, with_dump, event_log):
         raw_context['HOSTFORURL'] = urllib.quote(raw_context['HOSTNAME'])
 
         # Add HTML formated plugin output
-        raw_context["HOSTOUTPUT_HTML"] = format_plugin_output(raw_context["HOSTOUTPUT"])
+        if "HOSTOUTPUT" in raw_context:
+            raw_context["HOSTOUTPUT_HTML"] = format_plugin_output(raw_context["HOSTOUTPUT"])
         if raw_context["WHAT"] == "SERVICE":
             raw_context["SERVICEOUTPUT_HTML"] = format_plugin_output(raw_context["SERVICEOUTPUT"])
             raw_context["LONGSERVICEOUTPUT_HTML"] = format_plugin_output(raw_context["LONGSERVICEOUTPUT"])

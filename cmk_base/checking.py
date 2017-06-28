@@ -375,7 +375,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None, fetch_ag
         cmk_info = { "version" : "(unknown)" }
         try:
             if config.is_tcp_host(hostname):
-                for line in get_info_for_check(hostname, ipaddress, 'check_mk'):
+                for line in agent_data.get_info_for_check(hostname, ipaddress, 'check_mk'):
                     value = " ".join(line[1:]) if len(line) > 1 else None
                     cmk_info[line[0][:-1].lower()] = value
 

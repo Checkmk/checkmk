@@ -470,10 +470,6 @@ def is_tcp_check(check_name):
         return cache[check_name]
     except KeyError:
         tcp_checks = cmk_base.runtime_cache.get_set("check_type_tcp")
-<<<<<<< 4d46d11a9e875b5d76ec359949a862ae3d9618ce
-        snmp_checks = cmk_base.runtime_cache.get_set("check_type_snmp")
-=======
->>>>>>> Fully replaced modules by cmk_base
 
         result = check_name.split(".")[0] in tcp_checks
         cache[check_name] = result

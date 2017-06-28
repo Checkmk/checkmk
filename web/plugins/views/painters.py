@@ -397,8 +397,12 @@ def replace_action_url_macros(url, what, row):
 # what: either "host" or "service"
 # row: the data row of the host or service
 def paint_icons(what, row):
-    if not row["host_name"]:
+    # EC: In case of unrelated events also skip rendering this painter. All the icons
+    # that display a host state are useless in this case. Maybe we make this decision
+    # individually for the single icons one day.
+    if not row["host_name"] or row.get("event_is_unrelated"):
         return "", ""# Host probably does not exist
+
     toplevel_icons = get_icons(what, row, toplevel=True)
 
     # In case of non HTML output, just return the top level icon names

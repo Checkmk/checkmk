@@ -11,6 +11,7 @@
     * 4908 FIX: enterasys_powersupply: Fixed crash if empty output...
     * 4909 FIX: arris_cmts_cpu: Fixed crash if thresholds are set
     * 4879 FIX: akcp_sensor_humidity, akcp_exp_humidity: Fixed wrong order of level evaluation
+    * 4880 FIX: wut_webtherm: Fixed missing device type and enabled performance data for humidity
 
     Multisite:
     * 4902 SEC: Monitoring history views: Fixed possible XSS when displaying "plugin output"...

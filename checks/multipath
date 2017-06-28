@@ -303,9 +303,9 @@ def check_multipath(item, params, parsed):
     uuid = mmap.get('uuid')
 
     if item == uuid and alias:
-        aliasinfo = "(%s):" % alias
+        aliasinfo = "(%s): " % alias
     elif item == alias and uuid:
-        aliasinfo = "(%s):" % uuid
+        aliasinfo = "(%s): " % uuid
     else:
         aliasinfo = ""
 
@@ -315,39 +315,44 @@ def check_multipath(item, params, parsed):
     num_broken      = len(broken_paths)
     num_active      = num_paths - num_broken
 
-    yield 0, "%s paths active: %s, expected paths: %d" % \
-                        (aliasinfo, num_active, num_paths)
+    infotext = "%sPaths active: %s/%s" % \
+               (aliasinfo, num_active, num_paths)
 
     if isinstance(params, tuple):
         warn, crit = params
         warn_num = (warn / 100.0) * num_paths
         crit_num = (crit / 100.0) * num_paths
-        if num_active <= crit_num:
+        if num_active < crit_num:
             state = 2
-        elif num_active <= warn_num:
+        elif num_active < warn_num:
             state = 1
         else:
             state = 0
 
         if state > 0:
-            yield state, "(warn, crit at %d/%d)" % (warn_num, crit_num)
+            infotext += " (warn/crit below %d/%d)" % (warn_num, crit_num)
+        yield state, infotext
+
     else:
         if isinstance(params, int):
             expected_paths = params
         else:
             expected_paths = 2
+
+        infotext += ", Expected paths: %s" % expected_paths
         if num_active < expected_paths:
             state = 2
+            infotext += " (crit below %d)" % expected_paths
         elif num_active > expected_paths:
             state = 1
+            infotext += " (crit at %d)" % expected_paths
         else:
             state = 0
-
-        if state > 0:
-            yield state, "(crit if less than %d)" % expected_paths
+        yield state, infotext
 
     if num_broken > 0:
-        yield 0, "broken paths: %s" % ",".join(broken_paths)
+        yield 0, "Broken paths: %s" % ",".join(broken_paths)
+
 
 check_info["multipath"] = {
     'check_function'            : check_multipath,

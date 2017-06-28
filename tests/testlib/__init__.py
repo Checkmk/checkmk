@@ -12,6 +12,7 @@ import socket
 import pipes
 import subprocess
 import sys
+import shutil
 
 from urlparse import urlparse
 from bs4 import BeautifulSoup
@@ -271,7 +272,16 @@ class Site(object):
             if p.wait() != 0:
                 raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            os.unlink("%s/%s" % self.root, rel_path)
+            os.unlink("%s/%s" % (self.root, rel_path))
+
+
+    def delete_dir(self, rel_path):
+        if not self._is_running_as_site_user():
+            p = self.execute(["rm", "-rf", "%s/%s" % (self.root, rel_path)])
+            if p.wait() != 0:
+                raise Exception("Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait()))
+        else:
+            shutil.rmtree("%s/%s" % (self.root, rel_path))
 
 
     def write_file(self, rel_path, content):

@@ -3,7 +3,7 @@
 
 import os
 import sys
-from testlib import repo_path
+from testlib import repo_path, cmc_path
 import testlib.pylint_cmk as pylint_cmk
 
 def test_pylint_bakery_plugins():
@@ -11,12 +11,10 @@ def test_pylint_bakery_plugins():
 
     f = file(base_path + "/cmk-bakery-plugins.py", "w")
 
-    pylint_cmk.add_file(f, os.path.realpath(repo_path()
-                                            + "/../cmc/cmk_base/cee/agent_bakery_plugins.py"))
+    pylint_cmk.add_file(f, os.path.realpath(os.path.join(cmc_path(), "cmk_base/cee/agent_bakery_plugins.py")))
 
     # Also add bakery plugins
-    for path in pylint_cmk.check_files(os.path.realpath(repo_path()
-                                       + "/../cmc/agents/bakery")):
+    for path in pylint_cmk.check_files(os.path.join(cmc_path(), "agents/bakery")):
         pylint_cmk.add_file(f, path)
 
     f.close()

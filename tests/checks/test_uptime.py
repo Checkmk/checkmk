@@ -19,7 +19,7 @@ def test_uptime_check_basic(check_manager):
     result = check.run_check(None, {}, [["123"]])
     assert len(result) == 3
     assert result[0] == 0
-    assert "up since " in result[1]
+    assert "Up since " in result[1]
     assert result[2] == [("uptime", 123.0)]
 
 
@@ -29,5 +29,5 @@ def test_uptime_check_zero(check_manager):
     result = check.run_check(None, {}, [["0"]])
     assert len(result) == 3
     assert result[0] == 0
-    assert "up since " in result[1]
+    assert "Up since " in result[1]
     assert result[2] == [("uptime", 0.0)]

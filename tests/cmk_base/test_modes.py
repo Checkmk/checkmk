@@ -45,9 +45,14 @@ def test_cfg(web, site):
     #
     print "Cleaning up test config"
 
+    site.delete_dir("var/check_mk/agent_output")
+
+    site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
+
     web.delete_host("modes-test-host")
     web.delete_host("modes-test-host2")
     web.delete_host("modes-test-host3")
+    web.delete_host("modes-test-host4")
 
 #.
 #   .--General options-----------------------------------------------------.
@@ -273,28 +278,46 @@ def test_donate_no_hosts(test_cfg, site):
 #   |                                 |_|                                  |
 #   '----------------------------------------------------------------------'
 
-def test_backup(test_cfg, site):
-    p = site.execute(["cmk", "--backup", "x.tgz"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+def _create_cmk_backup(site):
+    p = site.execute(["cmk", "--backup", "x.tgz"], cwd=site.root,
+                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
-    assert p.wait() == 0
+    assert p.wait() == 0, "Command failed: %r, %r" % (stdout, stderr)
     assert stderr == ""
     assert stdout == ""
     assert site.file_exists("x.tgz")
 
 
-def test_restore(test_cfg, site):
-    # First copy the whole etc/check_mk dir, then restore, then compare
-    assert site.execute(["cp", "-pr", "etc/check_mk", "etc/check_mk.sav"]).wait() == 0
-    assert site.execute(["rm", "etc/check_mk/main.mk"]).wait() == 0
+def test_backup(request, test_cfg, site):
+    def cleanup():
+        site.delete_file("x.tgz")
+    request.addfinalizer(cleanup)
 
-    p = site.execute(["cmk", "--restore", "x.tgz"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    _create_cmk_backup(site)
+
+
+def test_restore(request, test_cfg, site):
+    def cleanup():
+        if site.file_exists("etc/check_mk.sav"):
+            site.delete_dir("etc/check_mk.sav")
+        site.delete_file("x.tgz")
+    request.addfinalizer(cleanup)
+
+    _create_cmk_backup(site)
+
+    # First copy the whole etc/check_mk dir, then restore, then compare
+    assert site.execute(["cp", "-pr", "etc/check_mk", "etc/check_mk.sav"], cwd=site.root).wait() == 0
+    assert site.execute(["rm", "etc/check_mk/main.mk"], cwd=site.root).wait() == 0
+
+    p = site.execute(["cmk", "--restore", "x.tgz"], cwd=site.root,
+                     stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 0
     assert stderr == ""
     assert stdout == ""
 
     p = site.execute(["diff", "-ur", "etc/check_mk", "etc/check_mk.sav"],
-                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=site.root)
     stdout = p.communicate()[0]
     assert p.wait() == 0, "Found differences after restore: %s" % stdout
 
@@ -609,7 +632,7 @@ def test_inventory_as_check_unknown_host(test_cfg, site):
     stdout, stderr = p.communicate()
     assert p.wait() == 1
     assert stderr == ""
-    assert stdout.startswith("WARN - Discovery failed: Name or service not known")
+    assert stdout.startswith("WARN - Discovery failed: Failed to lookup IPv4 address")
 
 
 def test_inventory_as_check(test_cfg, site):

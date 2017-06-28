@@ -31,3 +31,8 @@ try:
     from .cee import *
 except ImportError:
     pass # It's OK in non CEE editions
+
+try:
+    from .cme import *
+except ImportError:
+    pass # It's OK in non CME editions

@@ -1,0 +1,10 @@
+Title: EC views: Hiding wrong icons for events that are not related to a host
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p8
+Date: 1498635111
+Class: fix
+
+This issue was introduced with 1.4.0p6.

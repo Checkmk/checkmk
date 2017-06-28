@@ -1,0 +1,16 @@
+Title: Make sure that a notification has the plugin output available
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498649743
+Class: fix
+
+Plugin output in notifications can be either host-related or service-related.
+Make sure that the resulting notification has always access to the right
+kind.  Previously notifications triggered e.g. by the event console could
+have an empty plugin output.
+
+Note: This was a bug introduced in 1.4.0p6, earlier versions were not
+affected.

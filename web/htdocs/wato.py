@@ -2866,6 +2866,9 @@ class ModeDiscovery(WatoMode):
         if not services:
             return
 
+        def _compile_patterns(services):
+            return [ ("%s$" % s.replace("\\", "\\\\")) for s in services ]
+
         rulesets = AllRulesets()
         rulesets.load()
 
@@ -2874,7 +2877,7 @@ class ModeDiscovery(WatoMode):
         except KeyError:
             ruleset = Ruleset("ignored_services")
 
-        service_patterns = [ ("%s$" % s) for s in services ]
+        service_patterns = _compile_patterns(services)
         self._remove_from_rule_of_host(ruleset, service_patterns, value=not value)
 
         # Check whether or not the service still needs a host specific setting after removing
@@ -2886,7 +2889,7 @@ class ModeDiscovery(WatoMode):
                or value == value_without_host_rule:
                 services.remove(service)
 
-        service_patterns = [ ("%s$" % s) for s in services ]
+        service_patterns = _compile_patterns(services)
         self._update_rule_of_host(ruleset, service_patterns, value=value)
 
         rulesets.save_folder(self._host.folder())

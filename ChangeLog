@@ -10,6 +10,7 @@
     * 4827 FIX: domino_info: Fixed crash if some information is missing
     * 4908 FIX: enterasys_powersupply: Fixed crash if empty output...
     * 4909 FIX: arris_cmts_cpu: Fixed crash if thresholds are set
+    * 4879 FIX: akcp_sensor_humidity, akcp_exp_humidity: Fixed wrong order of level evaluation
 
     Multisite:
     * 4902 SEC: Monitoring history views: Fixed possible XSS when displaying "plugin output"...

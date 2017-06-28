@@ -1,0 +1,10 @@
+Title: multipath: Fixed service details: Number of paths were interpreted as expected paths
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498660809
+Class: fix
+
+

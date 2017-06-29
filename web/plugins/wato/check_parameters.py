@@ -506,7 +506,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_networking,
     "cisco_asa_failover",
-    _("Cisco ASA Failover States"),
+    _("Failover states"),
     Dictionary(
         elements = [
             ("primary",

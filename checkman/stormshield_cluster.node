@@ -1,0 +1,13 @@
+title: Stormshield: Node status
+agents: snmp
+catalog: hw/network/stormshield
+license: GPL
+distribution: check_mk
+description:
+ This check displays if the node is online, the model name, version, serial
+ and it's role in the cluster. The state will change to {CRIT} if the node
+ is not online. Additionally the expected role and the state if this role
+ is not the actual one can be configured.
+
+inventory:
+ Only one service is created

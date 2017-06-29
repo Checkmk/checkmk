@@ -138,9 +138,9 @@ static int launch_program(script_container *cont) {
             reinterpret_cast<unsigned char *>(cont->buffer_work);
         if ((buf_u[0] == 0xFF) && (buf_u[1] == 0xFE)) {
             wchar_t *buffer_u16 =
-                reinterpret_cast<wchar_t *>(cont->buffer_work);
+                reinterpret_cast<wchar_t *>(cont->buffer_work + 2);
             std::string buffer_u8 = to_utf8(buffer_u16);
-            HeapFree(GetProcessHeap(), 0, buffer_u16);
+            HeapFree(GetProcessHeap(), 0, cont->buffer_work);
             cont->buffer_work =
                 (char *)HeapAlloc(GetProcessHeap(), 0, buffer_u8.size() + 1);
             memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);

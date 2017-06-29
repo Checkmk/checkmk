@@ -566,7 +566,7 @@ def test_inventory_verbose(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 def test_inventory_as_check_unknown_host(test_cfg, site):
-    p = site.execute(["cmk", "--inventory-as-check", "xyz"],
+    p = site.execute(["cmk", "--inventory-as-check", "xyz."],
                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 1
@@ -627,7 +627,7 @@ def test_inventory_as_check(test_cfg, site):
 #   '----------------------------------------------------------------------'
 
 def test_inventory_as_check_unknown_host(test_cfg, site):
-    p = site.execute(["cmk", "--check-discovery", "xyz"],
+    p = site.execute(["cmk", "--check-discovery", "xyz."],
                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert p.wait() == 1

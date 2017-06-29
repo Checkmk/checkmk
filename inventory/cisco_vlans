@@ -69,6 +69,9 @@ def parse_multi_vlan(vlan_multi):
             if bit == '1':
                 vlans.append(k*8 + l+1)
 
+    if not vlans:
+        return ""
+
     infotexts = []
     subinfo   = vlans[:1]
     last_vlan = vlans[0]

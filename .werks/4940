@@ -1,4 +1,4 @@
-Title: Handle non-ASCII characters in event console messages
+Title: Handle non-ASCII characters in event console messages submitted via Livestatus
 Level: 1
 Component: ec
 Class: fix
@@ -9,4 +9,5 @@ Version: 1.4.0p8
 Date: 1498736427
 
 Messages containing non-ASCII characters were silently dropped in the event
-console. This has been fixed.
+console when they were sent via Livestatus, e.g. when using the Event Console
+GUI's "Generate Event!" button. This has been fixed.

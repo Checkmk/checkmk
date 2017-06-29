@@ -39,7 +39,7 @@ def check_flapping_arguments(params):
         args += ' -w %d' % int(settings["num_state_changes"][0])
         args += ' -c %d' % int(settings["num_state_changes"][1])
 
-    args += ' %s %s' % (g_hostname, ' '.join([ quote_shell_string(s) for s in svc_patterns ]))
+    args += ' %s %s' % (host_name(), ' '.join([ quote_shell_string(s) for s in svc_patterns ]))
 
     return args
 

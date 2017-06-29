@@ -4473,7 +4473,7 @@ class ActivateChanges(object):
     # these sites are shown on activation page and get change entries
     # added during WATO changes.
     def _activation_sites(self):
-        return [ (site_id, site) for site_id, site in config.configured_sites()
+        return [ (site_id, site) for site_id, site in config.user.authorized_sites().items()
                  if config.site_is_local(site_id)
                     or site.get("replication") ]
 

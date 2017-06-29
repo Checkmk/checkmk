@@ -10370,6 +10370,10 @@ def mode_users(phase):
         else:
             html.i(_("none"))
 
+        #table.cell(_("Sites"))
+        #html.write(vs_authorized_sites().value_to_text(user.get("authorized_sites",
+        #                                                vs_authorized_sites().default_value())))
+
         # notifications
         if not load_configuration_settings().get("enable_rulebased_notifications"):
             table.cell(_("Notifications"))
@@ -10501,6 +10505,8 @@ def mode_edit_user(phase):
     if cmk.is_managed_edition():
         vs_customer = managed.vs_customer()
 
+    vs_sites = vs_authorized_sites()
+
     if phase == "action":
         if not html.check_transaction():
             return "users"
@@ -10582,6 +10588,14 @@ def mode_edit_user(phase):
                 user_attrs["customer"] = customer
             elif "customer" in user_attrs:
                 del user_attrs["customer"]
+
+        authorized_sites = vs_sites.from_html_vars("authorized_sites")
+        vs_sites.validate_value(authorized_sites, "authorized_sites")
+
+        if authorized_sites is not None:
+            user_attrs["authorized_sites"] = authorized_sites
+        elif "authorized_sites" in user_attrs:
+            del user_attrs["authorized_sites"]
 
         # Roles
         user_attrs["roles"] = filter(lambda role: html.get_checkbox("role_" + role),
@@ -10686,6 +10700,11 @@ def mode_edit_user(phase):
         vs_customer.render_input("customer", managed.get_customer_id(user))
 
         html.help(vs_customer.help())
+
+    forms.section(vs_sites.title())
+    vs_sites.render_input("authorized_sites",
+        user.get("authorized_sites", vs_sites.default_value()))
+    html.help(vs_sites.help())
 
     custom_user_attributes('ident')
 
@@ -10925,6 +10944,24 @@ def mode_edit_user(phase):
     html.hidden_fields()
     html.end_form()
 
+
+def vs_authorized_sites():
+    return Alternative(
+        title = _("Authorized sites"),
+        help = _("The sites the user is authorized to see in the GUI."),
+        default_value = None,
+        style = "dropdown",
+        elements = [
+            FixedValue(None,
+                title = _("All sites"),
+                totext = _("May see all sites"),
+            ),
+            DualListChoice(
+                title = _("Specific sites"),
+                choices = config.site_choices,
+            ),
+        ],
+    )
 
 
 def generate_wato_users_elements_function(none_value, only_contacts = False):

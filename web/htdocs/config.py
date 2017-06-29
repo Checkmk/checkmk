@@ -428,6 +428,21 @@ class LoggedInUser(object):
         self.save_file("favorites", list(stars))
 
 
+    def is_site_disabled(self, site_id):
+        siteconf = self.siteconf.get(site_id, {})
+        return siteconf.get("disabled", False)
+
+
+    def authorized_sites(self):
+        authorized_sites = self.get_attribute("authorized_sites")
+        all_sites = allsites()
+        if authorized_sites is None:
+            return all_sites
+        else:
+            return dict([ (site_id, site) for site_id, site in all_sites.items()
+                          if site_id in authorized_sites ])
+
+
     def may(self, pname):
         if pname in self.permissions:
             return self.permissions[pname]
@@ -660,8 +675,8 @@ def configured_sites():
 
 def sorted_sites():
     sitenames = []
-    for sitename, site in allsites().iteritems():
-        sitenames.append((sitename, site['alias']))
+    for site_id, site in user.authorized_sites().items():
+        sitenames.append((site_id, site['alias']))
     sitenames = sorted(sitenames, key=lambda k: k[1], cmp = lambda a,b: cmp(a.lower(), b.lower()))
 
     return sitenames

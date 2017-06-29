@@ -59,6 +59,7 @@ int neb_register_callback(int /*unused*/, void * /*unused*/, int /*unused*/,
 int obsess_over_hosts;
 int obsess_over_services;
 int process_performance_data;
+int process_external_command1(char * /*unused*/) { return 0; }
 time_t program_start;
 int rotate_log_file(time_t /*unused*/) { return 0; }
 int schedule_new_event(int /*unused*/, int /*unused*/, time_t /*unused*/,

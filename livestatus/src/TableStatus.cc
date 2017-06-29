@@ -74,7 +74,8 @@ extern int external_command_buffer_slots;
 #else
 // TODO: check if this data is available in nagios_squeue
 namespace {
-time_t dummy = 0;
+time_t dummy_time = 0;
+int dummy_int = 0;
 }  // namespace
 #endif  // NAGIOS4
 
@@ -166,7 +167,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<TimePointerColumn>(
         "last_command_check",
         "The time of the last check for a command as UNIX timestamp (placeholder)",
-        &dummy));
+        &dummy_time));
 #endif  // NAGIOS4
     addColumn(make_unique<TimePointerColumn>(
         "last_log_rotation", "Time time of the last log file rotation",
@@ -202,15 +203,15 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(make_unique<IntPointerColumn>(
         "external_command_buffer_slots",
         "The size of the buffer for the external commands (placeholder)",
-        &dummy));
+        &dummy_int));
     addColumn(make_unique<IntPointerColumn>(
         "external_command_buffer_usage",
         "The number of slots in use of the external command buffer (placeholder)",
-        &dummy));
+        &dummy_int));
     addColumn(make_unique<IntPointerColumn>(
         "external_command_buffer_max",
         "The maximum number of slots used in the external command buffer (placeholder)",
-        &dummy));
+        &dummy_int));
 #endif  // NAGIOS4
 
     // Livestatus' own status

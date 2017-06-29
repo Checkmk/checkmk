@@ -1,0 +1,17 @@
+Title: Always use DNS when looking up the IP of Graphite servers
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.4.0p8
+Date: 1498724827
+
+There were a few configurations where the IP used for Graphite servers was
+always 127.0.0.1: Simulation mode, using store SNMP walks, and few more
+highly obscure configurations used only for development.  This was wrong,
+the Graphite servers have nothing to do with the monitoring in itself.
+
+This has been fixed, the lookup for Graphite servers is now always being
+done via DNS.

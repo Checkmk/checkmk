@@ -1,0 +1,11 @@
+Title: windows agents: fixed invalid hieroglyphs in agent output, when plugin output includes FF FE byte order mark
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p8
+Date: 1498730806
+
+One candidate for this error was the windows_updates.vbs plugin.

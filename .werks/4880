@@ -1,4 +1,4 @@
-Title: wut_webtherm: Fixed missing device type and enabled performance data for humidity
+Title: wut_webtherm, wut_webtherm.humidity: Fixed missing device type and enabled performance data for humidity
 Level: 1
 Component: checks
 Compatible: compat

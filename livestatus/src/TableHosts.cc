@@ -94,11 +94,13 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_command",
         "Nagios command for active host check of this host",
-        (char *)(&hst.check_command) - ref, indirect_offset, extra_offset));
+        DANGEROUS_OFFSETOF(host, check_command), indirect_offset, extra_offset,
+        -1));
     table->addColumn(make_unique<OffsetStringHostMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command for active host check of this host with the macros expanded",
-        (char *)(&hst.check_command) - ref, indirect_offset, extra_offset));
+        DANGEROUS_OFFSETOF(host, check_command), indirect_offset, extra_offset,
+        -1));
 #else
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_command",
@@ -220,11 +222,11 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
         DANGEROUS_OFFSETOF(host, accept_passive_host_checks), indirect_offset,
         extra_offset, -1));
 #else
-    table->addColumn(
-        new OffsetIntColumn(prefix + "accept_passive_checks",
-                            "Whether passive host checks are accepted (0/1)",
-                            (char *)(&hst.accept_passive_checks) - ref,
-                            indirect_offset, extra_offset));
+    table->addColumn(make_unique<OffsetIntColumn>(
+        prefix + "accept_passive_checks",
+        "Whether passive host checks are accepted (0/1)",
+        DANGEROUS_OFFSETOF(host, accept_passive_checks), indirect_offset,
+        extra_offset, -1));
 #endif  // NAGIOS4
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "event_handler_enabled",
@@ -267,11 +269,13 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "last_notification",
         "Time of the last notification (Unix timestamp)",
-        (char *)(&hst.last_notification) - ref, indirect_offset, extra_offset));
+        DANGEROUS_OFFSETOF(host, last_notification), indirect_offset,
+        extra_offset, -1));
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "next_notification",
         "Time of the next notification (Unix timestamp)",
-        (char *)(&hst.next_notification) - ref, indirect_offset, extra_offset));
+        DANGEROUS_OFFSETOF(host, next_notification), indirect_offset,
+        extra_offset, -1));
 #endif  // NAGIOS4
     table->addColumn(make_unique<OffsetTimeColumn>(
         prefix + "next_check",
@@ -398,7 +402,7 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "obsess_over_host",
         "The current obsess_over_host setting... (0/1)",
-        (char *)(&hst.obsess) - ref, indirect_offset, extra_offset));
+        DANGEROUS_OFFSETOF(host, obsess), indirect_offset, extra_offset, -1));
 #endif  // NAGIOS4
     table->addColumn(make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",

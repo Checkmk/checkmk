@@ -1,0 +1,10 @@
+Title: Logwatch: Show only hosts with problematic log files in "Problematic log file" list
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p8
+Date: 1498724504
+Class: fix
+
+

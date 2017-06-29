@@ -86,6 +86,13 @@ def show_log_list():
     for site, host_name, logs in all_logs():
         if not logs:
             continue
+
+        all_logs_empty = not any([ parse_file(site, host_name, file_name)
+                                for file_name in logs ])
+
+        if all_logs_empty:
+            continue # Logfile vanished
+
         html.h2(html.render_a(host_name, href=html.makeuri([('site', site), ('host', host_name)])))
         list_logs(site, host_name, logs)
     html.footer()

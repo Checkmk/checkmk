@@ -80,20 +80,7 @@ def add_file(f, path):
     f.write(file(path).read())
 
 
-def get_test_dir():
-    base_path = os.environ.get("WORKDIR")
-    if base_path:
-        base_path += "/" + os.path.basename(sys.argv[0])
-        if not os.path.exists(base_path):
-            os.makedirs(base_path)
-    else:
-        base_path = tempfile.mkdtemp(prefix="cmk_pylint")
-
-    print("Prepare check in %s ..." % base_path)
-    return base_path
-
-
-def run_pylint(base_path, check_files=None, cleanup_test_dir=False):
+def run_pylint(base_path, check_files=None): #, cleanup_test_dir=False):
     pylint_args = os.environ.get("PYLINT_ARGS", "")
     if pylint_args:
         pylint_args += " "
@@ -112,11 +99,11 @@ def run_pylint(base_path, check_files=None, cleanup_test_dir=False):
     exit_code = p.wait()
     print("Finished with exit code: %d" % exit_code)
 
-    if exit_code == 0 and cleanup_test_dir:
-        # Don't remove directory when specified via WORKDIR env
-        if not os.environ.get("WORKDIR"):
-            print("Removing build path...")
-            shutil.rmtree(base_path)
+    #if exit_code == 0 and cleanup_test_dir:
+    #    # Don't remove directory when specified via WORKDIR env
+    #    if not os.environ.get("WORKDIR"):
+    #        print("Removing build path...")
+    #        shutil.rmtree(base_path)
 
     return exit_code
 

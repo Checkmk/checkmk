@@ -39,11 +39,9 @@ def get_plugin_files(plugin_dir):
     return sorted(files)
 
 
-def test_pylint_web():
-    base_path = pylint_cmk.get_test_dir()
-
+def test_pylint_web(pylint_test_dir):
     # Make compiled files import eachother by default
-    sys.path.insert(0, base_path)
+    sys.path.insert(0, pylint_test_dir)
 
     modules = glob.glob(cmk_path() + "/web/htdocs/*.py") \
             + glob.glob(cmc_path() + "/web/htdocs/*.py") \
@@ -51,7 +49,7 @@ def test_pylint_web():
 
     for module in modules:
         print("Copy %s to test directory" % module)
-        f = open(base_path + "/" + os.path.basename(module), "w")
+        f = open(pylint_test_dir + "/" + os.path.basename(module), "w")
         pylint_cmk.add_file(f, module)
         f.close()
 
@@ -73,9 +71,9 @@ def test_pylint_web():
                 module_name = plugin_dir
 
             print("[%s] add %s" % (module_name, plugin_path))
-            module = file(base_path + "/" + module_name + ".py", "a")
+            module = file(pylint_test_dir + "/" + module_name + ".py", "a")
             pylint_cmk.add_file(module, plugin_path)
             module.close()
 
-    exit_code = pylint_cmk.run_pylint(base_path, cleanup_test_dir=True)
+    exit_code = pylint_cmk.run_pylint(pylint_test_dir)
     assert exit_code == 0, "PyLint found an error in the web code"

@@ -1,0 +1,19 @@
+Title: Users can be limited to a list of authorized sites now
+Level: 2
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498723224
+Class: feature
+
+It is now possible to configure a list of authorized sites for each user.
+
+This is especially useful when having a huge number of sites configured,
+like several hundred, in a distributed setup. In case you have users that
+have their hosts on only some of these sites, you can set the new authorized
+sites option for these users.
+
+For the users that have authorized sites configured the GUI will only contact
+these sites instead of all sites to build up their views. In large environments
+this will be a huge performance improvement.

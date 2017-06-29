@@ -2022,6 +2022,7 @@ class ListChoice(ValueSpec):
         # Make sure that at least one variable with the prefix is present
         html.hidden_field(varprefix, "1", add_var=True)
 
+
     def value_to_text(self, value):
         self.load_elements()
         d = dict(self._elements)
@@ -2033,6 +2034,7 @@ class ListChoice(ValueSpec):
             return "%s" % html.render_table(html.render_tr(html.render_td(html.render_br().join(    map(lambda x: HTML(x), texts)  ))))
             #OLD: return "<table><tr><td>" + "<br>".join(texts) + "</td></tr></table>"
 
+
     def from_html_vars(self, varprefix):
         self.load_elements()
         value = []
@@ -2042,19 +2044,29 @@ class ListChoice(ValueSpec):
                 value.append(key)
         return value
 
+
     def validate_datatype(self, value, varprefix):
         self.load_elements()
+
         if type(value) != list:
             raise MKUserError(varprefix, _("The datatype must be list, but is %s") % type_name(value))
-        d = dict(self._elements)
+
         for v in value:
-            if v not in d:
+            if self._value_is_invalid(v):
                 raise MKUserError(varprefix, _("%s is not an allowed value") % v)
+
 
     def validate_value(self, value, varprefix):
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _('You have to select at least one element.'))
         ValueSpec.custom_validate(self, value, varprefix)
+
+
+    def _value_is_invalid(self, value):
+        d = dict(self._elements)
+        return value not in d
+
+
 
 # A alternative way of editing list choices
 class MultiSelect(ListChoice):
@@ -2117,6 +2129,10 @@ class DualListChoice(ListChoice):
         if not self._elements:
             html.write_text(_("There are no elements for selection."))
             return
+
+        # Use values from HTTP request in complain mode
+        if value is None:
+            value = self.from_html_vars(varprefix)
 
         selected   = []
         unselected = []

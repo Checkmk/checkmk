@@ -1,0 +1,10 @@
+Title: Host diagnostic: Fixed error when saving host with DNS name as IPv4 address
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p8
+Date: 1498735705
+Class: fix
+
+

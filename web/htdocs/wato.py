@@ -2472,9 +2472,10 @@ def mode_diag_host(phase):
                 title = _('Hostname'),
                 allow_empty = False
             )),
-            ('ipaddress', IPv4Address(
-                title = _('IP address'),
-                allow_empty = False
+            ('ipaddress', HostAddress(
+                title = _("IPv4 Address"),
+                allow_empty = False,
+                allow_ipv6_address = False,
             )),
             ('snmp_community', Password(
                 title = _("SNMPv1/2 community"),

@@ -25,9 +25,11 @@
 #ifndef contact_fwd_h
 #define contact_fwd_h
 
-#ifdef CMC
+#if defined(CMC)
 class Contact;
 typedef Contact contact;
+#elif defined(NAGIOS4)
+typedef struct contact contact;
 #else
 typedef struct contact_struct contact;
 #endif

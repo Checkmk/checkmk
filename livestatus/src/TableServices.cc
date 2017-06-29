@@ -93,11 +93,11 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
 #else
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "check_command", "Nagios command used for active checks",
-        (char *)(&svc.check_command) - ref, indirect_offset));
+        DANGEROUS_OFFSETOF(service, check_command), indirect_offset, -1, -1));
     table->addColumn(make_unique<OffsetStringServiceMacroColumn>(
         prefix + "check_command_expanded",
         "Nagios command used for active checks with the macros expanded",
-        (char *)(&svc.check_command) - ref, indirect_offset));
+        DANGEROUS_OFFSETOF(service, check_command), indirect_offset, -1, -1));
 #endif
     table->addColumn(make_unique<OffsetStringColumn>(
         prefix + "event_handler", "Nagios command used as event handler",
@@ -284,7 +284,8 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "accept_passive_checks",
         "Whether the service accepts passive checks (0/1)",
-        (char *)(&svc.accept_passive_checks) - ref, indirect_offset));
+        DANGEROUS_OFFSETOF(service, accept_passive_checks), indirect_offset, -1,
+        -1));
 #endif  // NAGIOS4
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "event_handler_enabled",
@@ -332,7 +333,7 @@ void TableServices::addColumns(Table *table, MonitoringCore *mc,
     table->addColumn(make_unique<OffsetIntColumn>(
         prefix + "obsess_over_service",
         "Whether 'obsess_over_service' is enabled for the service (0/1)",
-        (char *)(&svc.obsess) - ref, indirect_offset));
+        DANGEROUS_OFFSETOF(service, obsess), indirect_offset, -1, -1));
 #endif  // NAGIOS4
     table->addColumn(make_unique<AttributeListAsIntColumn>(
         prefix + "modified_attributes",

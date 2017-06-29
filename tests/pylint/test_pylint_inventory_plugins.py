@@ -6,10 +6,8 @@ import sys
 from testlib import repo_path
 import testlib.pylint_cmk as pylint_cmk
 
-def test_pylint_inventory_plugins():
-    base_path = pylint_cmk.get_test_dir()
-
-    f = file(base_path + "/cmk-inventory-plugins.py", "w")
+def test_pylint_inventory_plugins(pylint_test_dir):
+    f = file(pylint_test_dir + "/cmk-inventory-plugins.py", "w")
 
     # Fake data structures where checks register (See cmk_base/checks.py)
     f.write("""
@@ -55,5 +53,5 @@ def inv_tree(path, default_value=None):
 
     f.close()
 
-    exit_code = pylint_cmk.run_pylint(base_path, cleanup_test_dir=True)
+    exit_code = pylint_cmk.run_pylint(pylint_test_dir)
     assert exit_code == 0, "PyLint found an error in inventory plugins"

@@ -6,10 +6,8 @@ import sys
 from testlib import repo_path, cmc_path
 import testlib.pylint_cmk as pylint_cmk
 
-def test_pylint_bakery_plugins():
-    base_path = pylint_cmk.get_test_dir()
-
-    f = file(base_path + "/cmk-bakery-plugins.py", "w")
+def test_pylint_bakery_plugins(pylint_test_dir):
+    f = file(pylint_test_dir + "/cmk-bakery-plugins.py", "w")
 
     pylint_cmk.add_file(f, os.path.realpath(os.path.join(cmc_path(), "cmk_base/cee/agent_bakery_plugins.py")))
 
@@ -19,5 +17,5 @@ def test_pylint_bakery_plugins():
 
     f.close()
 
-    exit_code = pylint_cmk.run_pylint(base_path, cleanup_test_dir=True)
+    exit_code = pylint_cmk.run_pylint(pylint_test_dir)
     assert exit_code == 0, "PyLint found an error in agent bakery plugins"

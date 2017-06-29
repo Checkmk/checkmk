@@ -1,0 +1,12 @@
+Title: Handle non-ASCII characters in event console messages
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p8
+Date: 1498736427
+
+Messages containing non-ASCII characters were silently dropped in the event
+console. This has been fixed.

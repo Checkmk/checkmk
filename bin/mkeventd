@@ -3156,7 +3156,7 @@ class StatusServer:
         # TODO: Change the lock type in future?
         # process_raw_lines("%s" % ";".join(arguments))
         with file(g_pipe_path, "w") as pipe:
-            pipe.write("%s\n" % ";".join(arguments))
+            pipe.write(("%s\n" % ";".join(arguments)).encode("utf-8"))
 
 
     def handle_command_changestate(self, arguments):

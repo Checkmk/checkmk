@@ -11,10 +11,8 @@ import testlib.pylint_cmk as pylint_cmk
 # Mark all tests in this file to be pylint checks
 pytestmark = pytest.mark.pylint
 
-def test_pylint_checks():
-    base_path = pylint_cmk.get_test_dir()
-
-    f = file(base_path + "/cmk-checks.py", "w")
+def test_pylint_checks(pylint_test_dir):
+    f = file(pylint_test_dir + "/cmk-checks.py", "w")
 
     # add the modules
     for path in pylint_cmk.ordered_module_files():
@@ -34,6 +32,6 @@ def test_pylint_checks():
 
     f.close()
 
-    exit_code = pylint_cmk.run_pylint(base_path, cleanup_test_dir=True)
+    exit_code = pylint_cmk.run_pylint(pylint_test_dir)
     assert exit_code == 0, "PyLint found an error in checks, inventory " \
                            "or agent bakery plugins"

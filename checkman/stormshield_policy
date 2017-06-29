@@ -1,0 +1,14 @@
+title: Stormshield: Policy status
+agents: snmp
+catalog: hw/network/stormshield
+license: GPL
+distribution: check_mk
+description:
+ This check measures the syncing of a policy. The state will change to {CRIT}
+ if the policy is not synced.
+
+item:
+ The policy name is the item
+
+inventory:
+ One service for each policy is created

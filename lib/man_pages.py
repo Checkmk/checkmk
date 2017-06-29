@@ -131,6 +131,7 @@ catalog_titles = {
             "siemens"     : "Siemens",
             "sophos"      : "Sophos",
             "supermicro"  : "Super Micro Computer",
+            "stormshield" : "STORMSHIELD",
             "tplink"      : "TP-LINK",
             "viprinet"    : "Viprinet",
         "power"       : "Power supplies and PDUs",

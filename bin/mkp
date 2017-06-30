@@ -1,0 +1,2 @@
+#!/bin/sh
+exec check_mk -P "$@"

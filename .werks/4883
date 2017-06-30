@@ -1,0 +1,9 @@
+Title: juniper_trpz_aps_sessions: Fixed performance data handling if running on cluster
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p25
+Date: 1498808308
+Class: fix
+
+

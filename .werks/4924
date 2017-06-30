@@ -1,0 +1,18 @@
+Title: Rulesets: Cloning rules opens the edit dialog
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498804589
+Class: feature
+
+When cloning rules in a WATO ruleset you nearly always want to edit
+the ruleset after cloning.
+
+Previously you had to clone the rule, find the cloned rule in the list
+again and open it for editing. This workflow has now been simplified:
+
+Like in other places of WATO you now click on clone which opens up the
+editor with the values of the origin rule. Once you save the editor
+the rule will be saved with the just edited values.

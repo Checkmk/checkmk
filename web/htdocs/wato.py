@@ -12610,13 +12610,6 @@ class ModeEditRuleset(WatoMode):
             else:
                 return None # browser reload
 
-        elif action == "insert": # Clone a rule
-            if not html.check_transaction():
-                return None # browser reload
-            ruleset.clone_rule(rule)
-            rulesets.save()
-            return
-
         else:
             if not html.check_transaction():
                 return None # browser reload
@@ -12784,8 +12777,18 @@ class ModeEditRuleset(WatoMode):
                 ("rule_folder", folder.path()),
             ])
             html.icon_button(edit_url, _("Edit this rule"), "edit")
-            self._rule_button("insert", _("Insert a copy of this rule in current folder"),
-                        folder, rulenr)
+
+            clone_url = folder_preserving_link([
+                ("mode", "clone_rule"),
+                ("ruleset_back_mode", self._back_mode),
+                ("varname", self._name),
+                ("rulenr", rulenr),
+                ("host", self._hostname),
+                ("item", mk_repr(self._item)),
+                ("rule_folder", folder.path()),
+            ])
+            html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
+
             html.element_dragger("tr", base_url=self._action_url("move_to", folder, rulenr))
             self._rule_button("delete", _("Delete this rule"), folder, rulenr)
 
@@ -13337,8 +13340,7 @@ class ModeEditRule(WatoMode):
 
         else:
             # Move rule to new folder during editing
-            self._ruleset.delete_rule(self._rule)
-            self._rulesets.save()
+            self._remove_from_orig_folder()
 
             # Set new folder
             self._rule.folder = new_rule_folder
@@ -13380,6 +13382,11 @@ class ModeEditRule(WatoMode):
     def _save_rule(self):
         # Just editing without moving to other folder
         self._ruleset.edit_rule(self._rule)
+        self._rulesets.save()
+
+
+    def _remove_from_orig_folder(self):
+        self._ruleset.delete_rule(self._rule)
         self._rulesets.save()
 
 
@@ -13593,6 +13600,32 @@ class ModeEditRule(WatoMode):
                 mode = RegExpUnicode.prefix
             ),
         )
+
+
+
+class ModeCloneRule(ModeEditRule):
+    def __init__(self):
+        super(ModeCloneRule, self).__init__()
+
+
+    def _set_rule(self):
+        super(ModeCloneRule, self)._set_rule()
+
+        self._orig_rule = self._rule
+        self._rule = self._orig_rule.clone()
+
+
+    def _save_rule(self):
+        if self._rule.folder == self._orig_rule.folder:
+            self._ruleset.insert_rule_after(self._rule, self._orig_rule)
+        else:
+            self._ruleset.append_rule(self._rule.folder(), self._rule)
+
+        self._rulesets.save()
+
+
+    def _remove_from_orig_folder(self):
+        pass # Cloned rule is not yet in folder, don't try to remove
 
 
 
@@ -16982,6 +17015,7 @@ modes = {
    "edit_ruleset"       : ([], ModeEditRuleset),
    "new_rule"           : ([], ModeNewRule),
    "edit_rule"          : ([], ModeEditRule),
+   "clone_rule"         : ([], ModeCloneRule),
 
    "host_groups"        : (["groups"], ModeHostgroups),
    "service_groups"     : (["groups"], ModeServicegroups),

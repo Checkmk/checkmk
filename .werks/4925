@@ -1,0 +1,11 @@
+Title: Rule listing: Focussing rules after editing in list
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498807504
+Class: feature
+
+When returning to the list of rules after editing a rule the
+browser is told to focus this rule in the viewport again.

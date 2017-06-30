@@ -12541,6 +12541,28 @@ class ModeEditRuleset(WatoMode):
         else:
             self._hostname = None
 
+        self._just_edited_rule_from_vars()
+
+
+    # After actions like editing or moving a rule there is a rule that the user has been
+    # working before. Focus this rule row again to make multiple actions with a single
+    # rule easier to handle
+    def _just_edited_rule_from_vars(self):
+        if not html.has_var("rule_folder") or not html.has_var("rulenr"):
+            self._just_edited_rule = None
+            return
+
+        rule_folder = Folder.folder(html.var("rule_folder"))
+        rulesets = FolderRulesets(rule_folder)
+        rulesets.load()
+        ruleset = rulesets.get(self._name)
+
+        try:
+            rulenr = int(html.var("rulenr")) # rule number relative to folder
+            self._just_edited_rule = ruleset.get_rule(rule_folder, rulenr)
+        except (IndexError, TypeError, ValueError, KeyError):
+            self._just_edited_rule = None
+
 
     def title(self):
         title = self._rulespec.title
@@ -12715,6 +12737,9 @@ class ModeEditRuleset(WatoMode):
                 css.append("matches_search")
 
             table.row(css=" ".join(css) if css else None)
+
+            if self._just_edited_rule and self._just_edited_rule.folder == rule.folder and self._just_edited_rule.index() == rulenr:
+                html.focus_here()
 
             # Rule matching
             if self._hostname:

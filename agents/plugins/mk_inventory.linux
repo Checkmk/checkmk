@@ -52,10 +52,9 @@ then
 
     # Information about distribution
     echo "<<<lnx_distro:sep(124):persist($UNTIL)>>>"
-    for f in {/etc/{oracle-release,debian_version,lsb-release,redhat-release,SuSE-release},/usr/share/cma/version} ; do
+    for f in {/etc/{oracle-release,debian_version,gentoo-release,lsb-release,redhat-release,SuSE-release},/usr/share/cma/version} ; do
         if [ -e $f ] ; then
             echo -n "$f|" ; tr \\n \| < $f | sed 's/|$//' ; echo
-            break
         fi
     done
 

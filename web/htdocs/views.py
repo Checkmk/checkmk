@@ -2239,7 +2239,7 @@ def query_data(datasource, columns, add_columns, add_headers,
 
 def do_query_data(query, columns, add_columns, merge_column,
                   add_headers, only_sites, limit, auth_domain):
-    query += "Columns: %s\n" % " ".join(columns)
+    query += "Columns: %s\n" % " ".join(columns + add_columns)
     query += add_headers
     sites.live().set_prepend_site(True)
 

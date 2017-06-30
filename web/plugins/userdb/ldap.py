@@ -193,10 +193,20 @@ class LDAPUserConnector(UserConnector):
             if self.is_active_directory():
                 conn.set_option(ldap.OPT_REFERRALS, 0)
 
+            conn.set_option(ldap.OPT_X_TLS_CACERTFILE,
+                            "%s/var/ssl/ca-certificates.crt" % cmk.paths.omd_root)
+
             self.default_bind(conn)
             return conn, None
+
         except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError), e:
-            return None, '%s: %s' % (uri, e[0].get('info', e[0].get('desc', '')))
+            if type(e[0]) == dict:
+                msg = e[0].get('info', e[0].get('desc', ''))
+            else:
+                msg = "%s" % e
+
+            return None, "%s: %s" % (uri, msg)
+
         except MKLDAPException, e:
             return None, "%s" % e
 
@@ -206,7 +216,13 @@ class LDAPUserConnector(UserConnector):
             uri = 'ldaps://'
         else:
             uri = 'ldap://'
-        return uri + '%s:%d' % (server, self._config.get('port', 389))
+
+        if "port" in self._config:
+            port_spec = ":%d" % self._config["port"]
+        else:
+            port_spec = ""
+
+        return uri + server + port_spec
 
 
     def connect(self, enforce_new = False, enforce_server = None):

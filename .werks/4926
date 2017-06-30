@@ -1,0 +1,11 @@
+Title: LDAP: Use Check_MK trusted certificate authorities for validating certificates
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p8
+Date: 1498813939
+Class: fix
+
+When using SSL encrypted SSL connections the trusted certificate authorities configured
+in the global setting are now used.

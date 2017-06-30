@@ -7470,11 +7470,11 @@ class Ruleset(object):
         self._on_change()
 
 
-    def clone_rule(self, rule):
-        index = self._rules[rule.folder.path()].index(rule)
-        self._rules[rule.folder.path()].insert(index, rule.clone())
-        add_change("edit-ruleset",
-              _("Inserted new rule in ruleset '%s'") % self.title(),
+    def insert_rule_after(self, rule, after):
+        index = self._rules[rule.folder.path()].index(after) + 1
+        self._rules[rule.folder.path()].insert(index, rule)
+        add_change("clone-ruleset",
+              _("Cloned rule in ruleset '%s'") % self.title(),
               sites=rule.folder.all_site_ids())
         self._on_change()
 

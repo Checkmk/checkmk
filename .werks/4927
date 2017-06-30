@@ -1,0 +1,12 @@
+Title: LDAP: Use port 636 instead of 389 by default when enabling SSL
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1498814017
+
+When not explicitly setting a port in the LDAP connection the default
+LDAP SSL port 636 is used when enabling SSL.

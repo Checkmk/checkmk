@@ -1,0 +1,21 @@
+Title: lnx_distro: Fixed wrong detected distribution name, vendor and version
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p25
+Date: 1498568114
+
+The agent plugin {{mk_inventory.linux}} collects
+the content of following release files if available:
+"/etc/gentoo-release",
+"/etc/SuSE-release",
+"/etc/oracle-release",
+"/etc/redhat-release",
+"/etc/lsb-release",
+"/etc/debian_version"
+
+The first match in the related inventory plugin {{lnx_distro}}
+determines name, vendor and version. The type is always "Linux".

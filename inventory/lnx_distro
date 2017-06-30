@@ -45,36 +45,34 @@
 
 
 def inv_lnx_distro(info):
-    node = inv_tree("software.os.")
+    parsed = {}
     for line in info:
-        if line[0] == '/etc/lsb-release':
-            inv_lnx_parse_lsb_release(node, line[1:])
-        elif line[0] == '/etc/debian_version':
-            inv_lnx_parse_debian(node, line[1])
-        elif line[0] == '/etc/redhat-release':
-            if line[1].startswith("Oracle"):
-                inv_lnx_parse_oracle_vm_server_release(node, line[1])
-            else:
-                inv_lnx_parse_redhat_release(node, line[1])
-        elif line[0] == '/etc/SuSE-release':
-            inv_lnx_parse_suse_release(node, line[1:])
-        elif line[0] == '/usr/share/cma/version':
-            inv_lnx_parse_cma(node, line[1])
-        elif line[0] == '/etc/oracle-release':
-            inv_lnx_parse_oracle_vm_server_release(node, line[1])
+        parsed.setdefault(line[0], line[1:])
+
+    node = inv_tree("software.os.")
+    node["type"] = "Linux"
+    for file_name, handler in [
+        ("/usr/share/cma/version", inv_lnx_parse_cma),
+        ("/etc/gentoo-release", inv_lnx_parse_gentoo),
+        ("/etc/SuSE-release", inv_lnx_parse_suse),
+        ("/etc/oracle-release", inv_lnx_parse_oracle_vm_server),
+        ("/etc/redhat-release", inv_lnx_parse_redhat),
+        ("/etc/lsb-release", inv_lnx_parse_lsb),
+        ("/etc/debian_version", inv_lnx_parse_debian),
+    ]:
+        if file_name in parsed:
+            handler(node, parsed[file_name])
+            break
 
 
-def inv_lnx_parse_suse_release(node, line):
-    node["type"] = "linux"
-    node["vendor"] = "SuSE"
-
+def inv_lnx_parse_suse(node, line):
     version = line[1].split()[-1]
-
     if len(line) >= 3:
         patchlevel = line[2].split()[-1]
     else:
         patchlevel = "0"
 
+    node["vendor"] = "SuSE"
     node["version"] = "%s.%s" % (version, patchlevel)
     node["name"] = "%s.%s" % (line[0].split('(')[0].strip(), patchlevel)
 
@@ -94,32 +92,31 @@ def inv_lnx_parse_suse_release(node, line):
         node["code_name"] = "Bottle"
 
 
-# <<<lnx_distro:sep(124)>>>
-# /etc/redhat-release|Oracle VM server release x.x.x
-def inv_lnx_parse_oracle_vm_server_release(node, line):
-    node["type"] = "linux"
-    parts = line.split(" ")
+def inv_lnx_parse_redhat(node, line):
+    entry = line[0]
+    if entry.startswith("Oracle"):
+        inv_lnx_parse_oracle_vm_server(node, line)
+    else:
+        parts = entry.split("(")
+        left = parts[0].strip()
+        node["code_name"] = parts[1].rstrip(")")
+        name, _release, version = left.rsplit(None, 2)
+        if name.startswith("Red Hat"):
+            node["vendor"] = "Red Hat"
+        node["version"] = version
+        node["name"] = left
+
+
+def inv_lnx_parse_oracle_vm_server(node, line):
+    parts = line[0].split(" ")
     node["vendor"] = parts.pop(0)
     node["version"] = parts.pop(-1)
     node["name"] = " ".join(parts[:-1])
 
 
-def inv_lnx_parse_redhat_release(node, line):
-    node["type"] = "linux"
-    parts = line.split("(")
-    left = parts[0].strip()
-    node["code_name"] = parts[1].rstrip(")")
-    name, _release, version = left.rsplit(None, 2)
-    if name.startswith("Red Hat"):
-        node["vendor"] = "Red Hat"
-    node["version"] = version
-    node["name"] = left
-
-
-def inv_lnx_parse_lsb_release(node, lines):
-    node["type"] = "linux"
-    for line in lines:
-        varname, value = line.split("=", 1)
+def inv_lnx_parse_lsb(node, line):
+    for entry in line:
+        varname, value = entry.split("=", 1)
         value = value.strip("'").strip('"')
         if varname == "DISTRIB_ID":
             node["vendor"] = value
@@ -131,43 +128,52 @@ def inv_lnx_parse_lsb_release(node, lines):
             node["name"] = value
 
 
+# Do not overwrite Ubuntu information
 def inv_lnx_parse_debian(node, line):
-    node["type"] = "linux"
-    if "name" not in node: # Do not overwrite Ubuntu information
-        node["name"] = "Debian " + line
-        node["vendor"] = "Debian"
-        node["version"] = line
-        if line.startswith("2.0."):
-            node["code_name"] = "Hamm"
-        elif line.startswith("2.1."):
-            node["code_name"] = "Slink"
-        elif line.startswith("2.2."):
-            node["code_name"] = "Potato"
-        elif line.startswith("3.0."):
-            node["code_name"] = "Woody"
-        elif line.startswith("3.1."):
-            node["code_name"] = "Sarge"
-        elif line.startswith("4."):
-            node["code_name"] = "Etch"
-        elif line.startswith("5."):
-            node["code_name"] = "Lenny"
-        elif line.startswith("6."):
-            node["code_name"] = "Squeeze"
-        elif line.startswith("7."):
-            node["code_name"] = "Wheezy"
-        elif line.startswith("8."):
-            node["code_name"] = "Jessie"
+    entry = line[0]
+    node["name"] = "Debian " + entry
+    node["vendor"] = "Debian"
+    node["version"] = entry
+    if entry.startswith("2.0."):
+        node["code_name"] = "Hamm"
+    elif entry.startswith("2.1."):
+        node["code_name"] = "Slink"
+    elif entry.startswith("2.2."):
+        node["code_name"] = "Potato"
+    elif entry.startswith("3.0."):
+        node["code_name"] = "Woody"
+    elif entry.startswith("3.1."):
+        node["code_name"] = "Sarge"
+    elif entry.startswith("4."):
+        node["code_name"] = "Etch"
+    elif entry.startswith("5."):
+        node["code_name"] = "Lenny"
+    elif entry.startswith("6."):
+        node["code_name"] = "Squeeze"
+    elif entry.startswith("7."):
+        node["code_name"] = "Wheezy"
+    elif entry.startswith("8."):
+        node["code_name"] = "Jessie"
 
 
 def inv_lnx_parse_cma(node, line):
-    node["type"] = "linux"
-    node["name"] = "Check_MK Appliance " + line
+    node["name"] = "Check_MK Appliance " + line[1]
     node["vendor"] = "Mathias Kettner GmbH"
-    node["version"] = line
+    node["version"] = line[1]
+    if "code_name" in node:
+        del node["code_name"]
+
+
+def inv_lnx_parse_gentoo(node, line):
+    entry = line[0]
+    node["name"] = entry
+    node["vendor"] = "Gentoo"
+    parts = entry.split(" ")
+    node["version"] = parts.pop(-1)
     if "code_name" in node:
         del node["code_name"]
 
 
 inv_info['lnx_distro'] = {
-   "inv_function"           : inv_lnx_distro,
+   "inv_function": inv_lnx_distro,
 }

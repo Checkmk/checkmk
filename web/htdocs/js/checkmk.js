@@ -847,7 +847,8 @@ function create_pnp_graph(data, params) {
     urlvars = null;
 }
 
-function render_pnp_graphs(container, site, host, service, pnpview, base_url, pnp_url, with_link, add_txt, from_ts, to_ts) {
+function render_pnp_graphs(container, site, host, service, pnpview, base_url, pnp_url, with_link, add_txt, from_ts, to_ts)
+{
     from_ts = (typeof from_ts === 'undefined') ? null : from_ts;
     to_ts   = (typeof to_ts === 'undefined') ? null : to_ts;
 
@@ -867,36 +868,80 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
     get_url(url, pnp_response_handler, data, pnp_error_response_handler, false);
 }
 
-function hover_graph(site, host_name, service)
+function show_hover_graphs(event, site_id, host_name, service_description, pnp_popup_url, force_pnp_graphing)
 {
-    var c = get_url_sync('host_service_graph_popup.py?site='+encodeURIComponent(site)
-                       +'&host_name='+encodeURIComponent(host_name)
-                       +'&service='+encodeURIComponent(service));
+    var event = event || window.event;
 
-    if (c.indexOf('pnp4nagios') !== -1) {
-        // fallback to pnp graph handling (received an URL by the get_url_sync())
-        return fetch_pnp_hover_contents(c);
-    }
+    show_hover_menu(event, "<div class=\"message\">Loading...</div>");
 
-    return c;
+    if (force_pnp_graphing)
+        show_pnp_hover_graphs(pnp_popup_url);
+    else
+        show_check_mk_hover_graphs(site_id, host_name, service_description);
+
+    return prevent_default_events(event);
 }
 
-function fetch_pnp_hover_contents(url)
+function show_check_mk_hover_graphs(site_id, host_name, service)
 {
-    var c = get_url_sync(url);
+    var url = 'host_service_graph_popup.py?site='+encodeURIComponent(site_id)
+                                        +'&host_name='+encodeURIComponent(host_name)
+                                        +'&service='+encodeURIComponent(service);
+
+    call_ajax(url, {
+        response_handler : handle_check_mk_hover_graphs_response,
+        error_handler    : handle_hover_graphs_error,
+        method           : 'GET'
+    });
+}
+
+function show_pnp_hover_graphs(url)
+{
+    call_ajax(url, {
+        response_handler : handle_pnp_hover_graphs_response,
+        error_handler    : handle_hover_graphs_error,
+        method           : 'GET'
+    });
+}
+
+function handle_check_mk_hover_graphs_response(_unused, code)
+{
+    if (code.indexOf('pnp4nagios') !== -1) {
+        // fallback to pnp graph handling (received an URL with the previous ajax call)
+        show_pnp_hover_graphs(code);
+        return;
+    }
+
+    g_hover_menu.innerHTML = code;
+    executeJSbyObject(g_hover_menu);
+}
+
+
+function handle_pnp_hover_graphs_response(_unused, code)
+{
+    // In case of PNP hover graph handling:
     // It is possible that, if using multisite based authentication, pnp sends a 302 redirect
     // to the login page which is transparently followed by XmlHttpRequest. There is no chance
     // to catch the redirect. So we try to check the response content. If it does not contain
     // the expected code, simply display an error message.
-    if (c.indexOf('/image?') === -1) {
+    if (code.indexOf('/image?') === -1) {
         // Error! unexpected response
-        c = '<div class="error"> '
-          + 'ERROR: Received an unexpected response '
-          + 'while trying to display the PNP-Graphs. Maybe there is a problem with the '
-          + 'authentication.</div>';
+        code = '<div class="error"> '
+             + 'ERROR: Received an unexpected response '
+             + 'while trying to display the PNP Graphs. Maybe there is a problem with the '
+             + 'authentication.</div>';
     }
-    return c;
+
+    g_hover_menu.innerHTML = code;
+    executeJSbyObject(g_hover_menu);
 }
+
+
+function handle_hover_graphs_error(_unused, status_code, error_msg)
+{
+    g_hover_menu.innerHTML = '<div class=error>Update failed (' + status_code + ')</div>';
+}
+
 
 //#.
 //#   .-Reschedule---------------------------------------------------------.
@@ -3160,8 +3205,6 @@ function show_hover_menu(event, code)
     // out of sight
     if (hoverTop +g_hover_menu.clientHeight > pageHeight() && hoverTop -g_hover_menu.clientHeight >= 0)
         g_hover_menu.style.top = hoverTop -g_hover_menu.clientHeight - hoverSpacer + 'px';
-
-    return false;
 }
 
 function hover_menu_in_screen(hoverMenu, hoverSpacer)

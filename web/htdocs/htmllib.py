@@ -1545,6 +1545,10 @@ class html(HTMLGenerator, RequestHandler):
         self.focus_object = (self.form_name, varname)
 
 
+    def set_focus_by_id(self, dom_id):
+        self.focus_object = dom_id
+
+
     def set_render_headfoot(self, render):
         self.render_headfoot = render
 
@@ -1926,15 +1930,26 @@ class html(HTMLGenerator, RequestHandler):
 
     def bottom_focuscode(self):
         if self.focus_object:
-            formname, varname = self.focus_object
-            obj = formname + "." + varname
-            js_code = "<!--\n"\
-                      "if (document.%s) {"\
-                      "    document.%s.focus();\n"\
-                      "    document.%s.select();\n"\
-                      "}\n"\
-                      "// -->\n" % (obj, obj, obj)
+            if type(self.focus_object) == tuple:
+                formname, varname = self.focus_object
+                obj_ident = formname + "." + varname
+            else:
+                obj_ident = "getElementById(\"%s\")" % self.focus_object
+
+            js_code = "<!--\n" \
+                      "var focus_obj = document.%s;\n" \
+                      "if (focus_obj) {\n" \
+                      "    focus_obj.focus();\n" \
+                      "    if (focus_obj.select)\n" \
+                      "        focus_obj.select();\n" \
+                      "}\n" \
+                      "// -->\n" % obj_ident
             self.javascript(js_code)
+
+
+    def focus_here(self):
+        self.a("", href="#focus_me", id_="focus_me")
+        self.set_focus_by_id("focus_me")
 
 
     def body_end(self):

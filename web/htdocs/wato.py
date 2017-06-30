@@ -6237,13 +6237,10 @@ def vs_ldap_connection(new, connection_id):
         )),
         ("use_ssl", FixedValue(
             title  = _("Use SSL"),
-            help   = _("Connect to the LDAP server with a SSL encrypted connection. You might need "
-                       "to configure the OpenLDAP installation on your monitoring server to accept "
-                       "the certificates of the LDAP server. This is normally done via system wide "
-                       "configuration of the CA certificate which signed the certificate of the LDAP "
-                       "server. Please refer to the <a target=\"_blank\" "
-                       "href=\"https://mathias-kettner.com/checkmk_multisite_ldap_integration.html\">"
-                       "documentation</a> for details."),
+            help   = _("Connect to the LDAP server with a SSL encrypted connection. The "
+                       "<a href=\"wato.py?mode=edit_configvar&site=&varname=trusted_certificate_authorities\">trusted "
+                       "certificates authorities</a> configured in Check_MK will be used to validate the "
+                       "certificate provided by the LDAP server."),
             value  = True,
             totext = _("Encrypt the network connection using SSL."),
         )),
@@ -6705,6 +6702,7 @@ def mode_edit_ldap_connection(phase):
                 except Exception, e:
                     state = False
                     msg = _('Exception: %s') % html.render_text(e)
+                    log_exception()
 
                 if state:
                     img = html.render_icon("success", _('Success'))

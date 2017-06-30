@@ -61,7 +61,6 @@ then
     for f in {/etc/{oracle-release,debian_version,gentoo-release,lsb-release,redhat-release,SuSE-release},/usr/share/cma/version} ; do
         if [ -e $f ] ; then
             echo -n "$f|" ; tr \\n \| < $f | sed 's/|$//' ; echo
-            break
         fi
     done
 

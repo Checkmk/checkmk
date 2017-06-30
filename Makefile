@@ -174,7 +174,9 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
-	tar czf $(DISTNAME)/bin.tar.gz $(TAROPTS) -C bin $$(cd bin ; ls)
+	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
+	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update
+	gzip $(DISTNAME)/bin.tar
 	pycompile lib ; \
 	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) -C lib \
 	    --transform 's|^|cmk/|g' $$(cd lib ; ls) ; \

@@ -472,8 +472,6 @@ function call_ajax(url, optional_args)
 
     if (args.method == "POST") {
         AJAX.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        AJAX.setRequestHeader("Content-length", args.post_data.length);
-        AJAX.setRequestHeader("Connection", "close");
     }
 
     if (!args.sync) {

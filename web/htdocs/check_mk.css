@@ -739,7 +739,8 @@ div#hover_menu {
     color: #000;
 }
 
-div#hover_menu div.error {
+div#hover_menu div.error,
+div#hover_menu div.message {
     width:350px;
     margin: 0;
 }

@@ -360,7 +360,7 @@ def pnp_icon(row, what):
     if not metrics.cmk_graphs_possible(row["site"]):
         # Directly ask PNP for all data, don't try to use the new graph fetching mechanism
         # to keep the number of single requests low
-        hover_content_func = 'fetch_pnp_hover_contents(\'%s\')' % pnp_popup_url(row, what)
+        force_pnp_graphing = True
     else:
         # Don't show the icon with Check_MK graphing. The hover makes no sense and there is no
         # mobile view for graphs, so the graphs on the bottom of the host/service view are enough
@@ -368,11 +368,18 @@ def pnp_icon(row, what):
         if html.is_mobile():
             return
 
-        hover_content_func = 'hover_graph(\'%s\', \'%s\', \'%s\')' % \
-                                (row['site'], row['host_name'], row.get('service_description', '_HOST_').replace("\\", "\\\\"))
+        force_pnp_graphing = False
 
-    return '<a href="%s" onmouseover="show_hover_menu(event, %s)" ' \
-           'onmouseout="hide_hover_menu()">%s</a>' % (url, hover_content_func, html.render_icon('pnp', ''))
+    return html.render_a(content=html.render_icon('pnp', ''), href=url,
+        onmouseout="hide_hover_menu()",
+        onmouseover="show_hover_graphs(event, %s, %s, %s, %s, %s);" % (
+            json.dumps(row['site']),
+            json.dumps(row["host_name"]),
+            json.dumps(row.get('service_description', '_HOST_')),
+            json.dumps(pnp_popup_url(row, what)),
+            json.dumps(force_pnp_graphing)
+        )
+    )
 
 
 def paint_pnp_graph(what, row, tags, host_custom_vars):

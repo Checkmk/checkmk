@@ -59,9 +59,8 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
 
     while True:
         try:
-            # Invalidate timeperiod cache
-            global g_inactive_timerperiods
-            g_inactive_timerperiods = None
+            # Invalidate timeperiod caches
+            core.cleanup_timeperiod_caches()
 
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next event arrives. We must

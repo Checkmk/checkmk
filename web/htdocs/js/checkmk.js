@@ -1543,7 +1543,7 @@ function toggle_group_rows(checkbox) {
         } else {
             // Found the start of our group. Now search for the end
             if(rows[i].className === 'groupheader') {
-                group_end = i - 1;
+                group_end = i;
                 break;
             }
         }

@@ -177,7 +177,7 @@ def cleanup_globals():
     import cmk_base.item_state
     cmk_base.item_state.cleanup_item_states()
     import cmk_base.core
-    cmk_base.core.cleanup_inactive_timeperiods()
+    cmk_base.core.cleanup_timeperiod_caches()
     import cmk_base.snmp
     cmk_base.snmp.cleanup_host_caches()
     import cmk_base.agent_data

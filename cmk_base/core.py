@@ -35,6 +35,7 @@ import sys
 import cmk.paths
 import cmk.debug
 import cmk.tty as tty
+import livestatus
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.console as console
@@ -42,6 +43,7 @@ import cmk_base.config as config
 import cmk_base.core_config as core_config
 import cmk_base.core_nagios as core_nagios
 from cmk_base.exceptions import MKTimeout
+from cmk_base import config_cache
 
 try:
     import cmk_base.cee.core_cmc as core_cmc
@@ -182,49 +184,53 @@ def do_core_action(action, quiet=False):
 #   | Fetching timeperiods from the core                                   |
 #   '----------------------------------------------------------------------'
 
-g_inactive_timerperiods = None # Cache for current state of timeperiods
-
-# Return plain response from local Livestatus - without any parsing
-# TODO: Use livestatus module
-def simple_livestatus_query(lql):
-    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.connect(cmk.paths.livestatus_unix_socket)
-    # We just get the currently inactive timeperiods. All others
-    # (also non-existing) are considered to be active
-    s.send(lql)
-    s.shutdown(socket.SHUT_WR)
-    response = ""
-    while True:
-        chunk = s.recv(4096)
-        if not chunk:
-            break
-        response += chunk
-    return response
-
-
 # Check if a timeperiod is currently active. We have no other way than
 # doing a Livestatus query. This is not really nice, but if you have a better
 # idea, please tell me...
 def check_timeperiod(timeperiod):
-    global g_inactive_timerperiods
     # Let exceptions happen, they will be handled upstream.
-    if g_inactive_timerperiods == None:
-        try:
-            response = simple_livestatus_query("GET timeperiods\nColumns: name\nFilter: in = 0\n")
-            g_inactive_timerperiods = response.splitlines()
-        except MKTimeout:
+    try:
+        update_timeperiods_cache()
+    except MKTimeout:
+        raise
+
+    except:
+        if cmk.debug.enabled():
             raise
 
-        except:
-            if cmk.debug.enabled():
-                raise
-            else:
-                # If the query is not successful better skip this check then fail
-                return True
+        # If the query is not successful better skip this check then fail
+        return True
 
-    return timeperiod not in g_inactive_timerperiods
+    # Note: This also returns True when the timeperiod is unknown
+    #       The following function timeperiod_active handles this differently
+    return config_cache.get_dict("timeperiods_cache").get(timeperiod, True) == True
 
 
-def cleanup_inactive_timeperiods():
-    global g_inactive_timerperiods
-    g_inactive_timerperiods = None
+# Returns
+# True : match
+# False: no match
+# None : unable to connect to livestatus or timeperiod is unknown
+def timeperiod_active(timeperiod):
+    try:
+        update_inactive_timeperiods()
+        return config_cache.get_dict("timeperiods_cache").get(timeperiod)
+    except: # socket.error / MKTimeout / ?
+        if cmk.debug.enabled():
+            raise
+        return None
+
+
+def update_timeperiods_cache():
+    # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
+    # The value is store within the config cache since we need a fresh start on reload
+    tp_cache = config_cache.get_dict("timeperiods_cache")
+
+    if not tp_cache:
+        response = livestatus.LocalConnection().query("GET timeperiods\nColumns: name in")
+        for tp_name, tp_active in response:
+            tp_cache[tp_name] = bool(tp_active)
+
+
+def cleanup_timeperiod_caches():
+    config_cache.get_dict("timeperiods_cache").clear()
+

@@ -1,0 +1,16 @@
+title: Dell OpenManage: PSU redundancy status
+agents: snmp
+catalog: hw/server/dell
+license: GPL
+distribution: check_mk
+description:
+ This check measures the redundancy status of the PSUs. The state will
+ change to {WARN} if the redundancy is degraded or offline, to {CRIT} if
+ the redundancy is lost and to {UNKNOWN} if the appliance reports "other"
+ or "unknown".
+
+item:
+ The index of a redundancy group is used as item
+
+inventory:
+ One service for each redundancy group is created

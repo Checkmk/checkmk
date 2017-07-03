@@ -1,0 +1,16 @@
+title: Dell OpenManage: PSU unit state
+agents: snmp
+catalog: hw/server/dell
+license: GPL
+distribution: check_mk
+description:
+ The state of a PSU is checked here. The state will change to {WARN} if "Non
+ critical", to {CRIT} if "Critical" or Non recoverable" and to {UNKNOWN}
+ if "other" or "unknown" is reported. Additionally the type and name of the
+ psu is added to the output.
+
+item:
+ The index of the PSU is used as item
+
+inventory:
+ One service for each PSU is created

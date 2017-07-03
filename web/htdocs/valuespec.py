@@ -4546,10 +4546,7 @@ class TimeperiodValuespec(ValueSpec):
 
 
     def canonical_value(self):
-        if self._is_active(value):
-            return self._get_timeperiod_valuespec().canonical_value(value, varprefix)
-        else:
-            return self._enclosed_valuespec.canonical_value(value, varprefix)
+        return self._enclosed_valuespec.canonical_value()
 
 
     def validate_datatype(self, value, varprefix):

@@ -1,0 +1,10 @@
+Title: Fix activation page not reloading after activation in some cases
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p8
+Date: 1499067792
+Class: fix
+
+

@@ -212,7 +212,7 @@ def check_timeperiod(timeperiod):
 # None : unable to connect to livestatus or timeperiod is unknown
 def timeperiod_active(timeperiod):
     try:
-        update_inactive_timeperiods()
+        update_timeperiods_cache()
         return config_cache.get_dict("timeperiods_cache").get(timeperiod)
     except: # socket.error / MKTimeout / ?
         if cmk.debug.enabled():

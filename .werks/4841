@@ -1,0 +1,11 @@
+Title: esx_vsphere_hostsystem.cpu_usage: fixed missing cpu checks when querying vcenter with windows agent
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p8
+Date: 1499075778
+
+

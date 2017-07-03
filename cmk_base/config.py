@@ -126,10 +126,13 @@ def _initialize_default_levels_variables():
 def _load_config(with_conf_d, exclude_parents_mk):
     import cmk_base.checks
     helper_vars = {
-        "FILE_PATH"    : None,
-        "FOLDER_PATH"  : None,
-        "ALL_HOSTS"    : rulesets.ALL_HOSTS,
-        "ALL_SERVICES" : rulesets.ALL_SERVICES,
+        "FILE_PATH"      : None,
+        "FOLDER_PATH"    : None,
+        "PHYSICAL_HOSTS" : rulesets.PHYSICAL_HOSTS,
+        "CLUSTER_HOSTS"  : rulesets.CLUSTER_HOSTS,
+        "ALL_HOSTS"      : rulesets.ALL_HOSTS,
+        "ALL_SERVICES"   : rulesets.ALL_SERVICES,
+        "NEGATE"         : rulesets.NEGATE,
     }
 
     global_dict = globals()

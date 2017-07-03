@@ -8,3 +8,13 @@ Class: bug
 If logwatch detects a new logfile it starts at the end of this file.
 If a logfile is generated daily with a new timestamp the initial lines
 are skipped and error messages might get lost.
+
+The logwatch.cfg needs to be exteded to give the user the option to tell mk_logwatch
+that to start from beginning of new files instead from the end of that file
+
+The option could be named e.g. "fromstart"
+
+Todos:
+
+- Add option parsing (line ~500)
+- Implementation in process_logfile()

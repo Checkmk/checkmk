@@ -1,0 +1,12 @@
+Title: Fixed possible KeyError event_host in EC views since 1.4.0p6
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1499088288
+
+This issue could occure when using customized EC views which did not render or filtr the origin
+event host name.

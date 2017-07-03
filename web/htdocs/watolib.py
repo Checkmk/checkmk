@@ -491,9 +491,16 @@ class ConfigDomainCACertificates(ConfigDomain):
 
         return list(trusted_cas), errors
 
-    def _get_certificates_from_file(self, path):
-        return [ match.group(0) for match in self._PEM_RE.finditer(open(path).read()) ]
 
+    def _get_certificates_from_file(self, path):
+        try:
+            return [ match.group(0) for match in self._PEM_RE.finditer(open(path).read()) ]
+        except IOError, e:
+            if e.errno == 2: # No such file or directory
+                # Silently ignore e.g. dangling symlinks
+                return []
+            else:
+                raise
 
 
 #.

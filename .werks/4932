@@ -1,0 +1,10 @@
+Title: Timeperiod iCalendar import: Fixed broken import of full day entries
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p8
+Date: 1499086053
+Class: fix
+
+

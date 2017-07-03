@@ -8815,7 +8815,7 @@ def validate_ical_file(value, varprefix):
 #   http://tools.ietf.org/html/rfc5545
 # TODO: Let's use some sort of standard module in the future. Maybe we can then also handle
 # times instead of only full day events.
-def parse_ical(ical_blob, horizon=10, times=(None, None, None)):
+def parse_ical(ical_blob, horizon=10):
     ical = {'raw_events': []}
 
     def get_params(key):
@@ -8991,7 +8991,7 @@ def mode_timeperiod_import_ical(phase):
             filename, ty, content = ical['file']
 
             try:
-                data = parse_ical(content, ical['horizon'], ical['times'])
+                data = parse_ical(content, ical['horizon'])
             except Exception, e:
                 if config.debug:
                     raise
@@ -9009,11 +9009,14 @@ def mode_timeperiod_import_ical(phase):
                 index += 1
                 html.set_var('except_%d_0' % index, event['date'])
                 html.set_var('except_indexof_%d' % index, "%d" % index)
-                for n, time_spec in enumerate(ical["times"]):
-                    start_time = ":".join(map(str, time_spec[0]))
-                    end_time   = ":".join(map(str, time_spec[1]))
-                    html.set_var('except_%d_1_%d_from' % (index, n), start_time)
-                    html.set_var('except_%d_1_%d_until' % (index, n), end_time)
+
+                if ical["times"]:
+                    for n, time_spec in enumerate(ical["times"]):
+                        start_time = ":".join(map(lambda x: "%02d" % x, time_spec[0]))
+                        end_time   = ":".join(map(lambda x: "%02d" % x, time_spec[1]))
+                        html.set_var('except_%d_1_%d_from' % (index, n), start_time)
+                        html.set_var('except_%d_1_%d_until' % (index, n), end_time)
+
             return "edit_timeperiod"
         return
 

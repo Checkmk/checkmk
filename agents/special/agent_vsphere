@@ -1490,7 +1490,7 @@ if not error:
                         # Special handling. If the windows may report winperf_processor in the following call
                         # remove summary.quickStats.overallCpuUsage from the output. This would lead to a
                         # duplicate "CPU utlization" service
-                        if opt_agent and key == "summary.quickStats.overallCpuUsage":
+                        if opt_direct and opt_agent and key == "summary.quickStats.overallCpuUsage":
                             postprocess_functions.append(("%s %s" % (key, " ".join(properties[key])), check_winperf_processor))
 
                         output("%s %s" % (key, " ".join(properties[key])))

@@ -12212,19 +12212,19 @@ class ModeRuleEditor(WatoMode):
 
         html.context_button(_("Used Rulesets"), folder_preserving_link([
             ("mode", "rulesets"),
-            ("search_p_ruleset_used", "0"),
+            ("search_p_ruleset_used", DropdownChoice.option_id(True)),
             ("search_p_ruleset_used_USE", "on"),
         ]), "usedrulesets")
 
         html.context_button(_("Ineffective rules"), folder_preserving_link([
             ("mode", "rulesets"),
-            ("search_p_rule_ineffective", "0"),
+            ("search_p_rule_ineffective", DropdownChoice.option_id(True)),
             ("search_p_rule_ineffective_USE", "on")]
         ), "rulesets_ineffective")
 
         html.context_button(_("Deprecated Rulesets"), folder_preserving_link([
             ("mode", "rulesets"),
-            ("search_p_ruleset_deprecated", "0"),
+            ("search_p_ruleset_deprecated", DropdownChoice.option_id(True)),
             ("search_p_ruleset_deprecated_USE", "on")
         ]), "rulesets_deprecated")
 
@@ -12299,12 +12299,8 @@ class ModeRulesets(WatoMode):
         # Transform group argument to the "rule search arguments"
         # Keeping this for compatibility reasons for the moment
         if self._group_name:
-            try:
-                group_names = [ g[0] for g in g_rulespecs.get_group_choices(self._mode) ]
-                rulegroup_index = group_names.index(html.get_unicode_input("group"))
-            except (ValueError, IndexError):
-                raise MKUserError(None, _("Unknown ruleset group"))
-            html.set_var("search_p_ruleset_group", "%d" % rulegroup_index)
+            html.set_var("search_p_ruleset_group",
+                DropdownChoice.option_id(html.get_unicode_input("group")))
             html.set_var("search_p_ruleset_group_USE", "on")
             html.del_var("group")
 

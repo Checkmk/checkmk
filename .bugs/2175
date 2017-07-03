@@ -1,9 +1,9 @@
 Title: DropdownChoice: Selects incorrect value if the list of options changes
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2015-07-02 09:36:51
 Targetversion: future
-Class: bug
 
 1) Go to BI Rule editor
 2) Create new rule, select Call-a-Rule
@@ -20,3 +20,6 @@ text that is displayed in the dropdown (i.e. the titles of the choices).
 We ship that in an URL variable. If that is present and does not match the
 actual choices then we can issue a MKUserError and the user must select
 again.
+
+2017-07-03 08:40:39: changed state open -> done
+Fixed

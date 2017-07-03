@@ -653,10 +653,14 @@ function lock_activation_controls(lock)
     elements = elements.concat(Array.prototype.slice.call(document.getElementsByClassName("activate_site"), 0));
 
     for (var i = 0; i < elements.length; i++) {
+        if (!elements[i])
+            continue;
+
         if (lock)
             add_class(elements[i], "disabled");
         else
             remove_class(elements[i], "disabled");
+
         elements[i].disabled = lock ? "disabled" : false;
     }
 }

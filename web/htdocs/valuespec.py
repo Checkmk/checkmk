@@ -1601,15 +1601,18 @@ class DropdownChoice(ValueSpec):
         self.classtype_info()
         if self._label:
             html.write("%s " % self._label)
-        # Convert values from choices to keys
-        defval = "0"
+
+        choices = self.choices()
+
+        defval = choices[0][0] if choices else None
         options = []
-        for n, entry in enumerate(self.choices()):
+        for entry in self.choices():
             if self._prefix_values:
                 entry = (entry[0], "%s - %s" % entry)
-            options.append((str(n),) + entry[1:])
+
+            options.append(entry)
             if entry[0] == value:
-                defval = str(n)
+                defval = entry[0]
 
         # In complain mode: Use the value received from the HTML variable
         if self._invalid_choice == "complain" and value != None and self._value_is_invalid(value):

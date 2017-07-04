@@ -1,0 +1,10 @@
+Title: apache_status: Bakery can now configure host/DNS names as instance addresses
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1499182940
+Class: feature
+
+

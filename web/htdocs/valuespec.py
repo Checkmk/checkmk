@@ -1679,7 +1679,7 @@ class DropdownChoice(ValueSpec):
 
     @classmethod
     def option_id(cls, val):
-        return "%s" % hash(val)
+        return "%s" % hash(repr(val))
 
 
     def validate_value(self, value, varprefix):

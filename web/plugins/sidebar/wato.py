@@ -26,14 +26,15 @@
 
 import config, wato, views, dashboard
 
-#   +----------------------------------------------------------------------+
+#   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |
 #   |                     \ \      / / \|_   _/ _ \                        |
 #   |                      \ \ /\ / / _ \ | || | | |                       |
 #   |                       \ V  V / ___ \| || |_| |                       |
 #   |                        \_/\_/_/   \_\_| \___/                        |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
+
 def render_wato(mini):
     if not config.wato_enabled:
         html.write_text(_("WATO is disabled."))
@@ -100,14 +101,13 @@ sidebar_snapins["admin_mini"] = {
 """,
 }
 
-#   .----------------------------------------------------------------------.
+#.
+#   .--Foldertree----------------------------------------------------------.
 #   |            _____     _     _           _                             |
 #   |           |  ___|__ | | __| | ___ _ __| |_ _ __ ___  ___             |
 #   |           | |_ / _ \| |/ _` |/ _ \ '__| __| '__/ _ \/ _ \            |
 #   |           |  _| (_) | | (_| |  __/ |  | |_| | |  __/  __/            |
 #   |           |_|  \___/|_|\__,_|\___|_|   \__|_|  \___|\___|            |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
@@ -239,8 +239,18 @@ def render_wato_foldertree():
     dashboard.load_dashboards()
     topic_views  = visuals_by_topic(views.permitted_views().items() + dashboard.permitted_dashboards().items())
     topics = [ (t, t) for t, s in topic_views ]
+
+    html.open_table()
+    html.open_tr()
+    html.td(_('Topic:'), class_="label")
+    html.open_td()
     html.dropdown("topic", topics, deflt=selected_topic, onchange='wato_tree_topic_changed(this)')
-    html.span(_('Topic:'), class_="left")
+    html.close_td()
+    html.close_tr()
+
+    html.open_tr()
+    html.td(_("View:"), class_="label")
+    html.open_td()
 
     for topic, view_list in topic_views:
         targets = []
@@ -261,7 +271,9 @@ def render_wato_foldertree():
         html.dropdown("target_%s" % topic, targets, deflt=default,
                       onchange='wato_tree_target_changed(this)', style=style)
 
-    html.span(_("View:"), class_="left")
+    html.close_td()
+    html.close_tr()
+    html.close_table()
 
     # Now render the whole tree
     if user_folders:
@@ -276,18 +288,21 @@ sidebar_snapins['wato_foldertree'] = {
     'render'      : render_wato_foldertree,
     'allowed'     : [ 'admin', 'user', 'guest' ],
     'styles'      : """
+#snapin_wato_foldertree table {
+    width: 100%;
+    border-spacing: 0;
+}
 #snapin_wato_foldertree select {
-    float: right;
     padding: 0;
-    width:   190px;
+    width:   100%;
     height: 19px;
     margin-bottom: 2px;
 }
-#snapin_wato_foldertree span {
-    margin-top: 1px;
-    display: block;
-    color:  #ffffff;
-    height: 20px;
+#snapin_wato_foldertree table td.label {
+    width: 1px;
+}
+#snapin_wato_foldertree table td {
+    vertical-align: baseline;
 }
 """
 }

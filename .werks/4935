@@ -1,0 +1,11 @@
+Title: Foldertree snapin: Fixed broken layout when using localized GUI
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1499173204
+
+

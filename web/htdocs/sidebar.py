@@ -402,7 +402,9 @@ def render_snapin(name, state):
             refresh_url = url
             html.javascript("get_url(\"%s\", updateContents, \"snapin_%s\")" % (refresh_url, name))
     except Exception, e:
+        log_exception()
         write_snapin_exception(e)
+        snapin_exception(e)
     html.close_div()
     html.close_div()
     return refresh_url
@@ -466,8 +468,6 @@ def ajax_snapin():
 
         with html.plugged():
             try:
-                # For testing purposes uncomment:
-                # raise Exception("Test")
                 snapin["render"]()
             except Exception, e:
                 write_snapin_exception(e)

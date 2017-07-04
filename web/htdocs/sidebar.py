@@ -404,7 +404,6 @@ def render_snapin(name, state):
     except Exception, e:
         log_exception()
         write_snapin_exception(e)
-        snapin_exception(e)
     html.close_div()
     html.close_div()
     return refresh_url

@@ -1,0 +1,13 @@
+Title: Windows Agent / Exchange Monitoring: fixed broken MSExchange checks
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p8
+Date: 1499172445
+
+All MSExchange Checks were missing in the latest version, due to an incorrect performance counter query.
+
+

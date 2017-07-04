@@ -156,6 +156,13 @@ def load_checks(filelist):
                 else:
                     context_ident_list += new_checks
 
+    # Hack to make dependencies between multiple includes work. In case we
+    # need more here we need to find another solution.
+    # TODO(lm): This needs to be cleaned up. Try to move the includes to
+    # python modules that are separated from each other and can refer to
+    # each other.
+    _include_contexts["if64.include"].update(_include_contexts["if.include"])
+
     config.add_check_variables(check_variable_defaults)
 
     # Now convert check_info to new format.

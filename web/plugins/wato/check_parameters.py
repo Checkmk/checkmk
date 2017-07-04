@@ -4569,39 +4569,6 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
-    "lvm_lvs_pools",
-    _("Logical Volume Pools (LVM)"),
-    Dictionary(
-        elements = [
-            ( "levels_meta", Tuple(
-                 title = _("Levels for Meta"),
-                 default_value = (80.0, 90.0),
-                     elements = [
-                         Percentage(title = _("Warning at"), unit = _("%")),
-                         Percentage(title = _("Critical at"), unit = _("%"))
-                     ]
-                 ),
-            ),
-            ( "levels_data", Tuple(
-                 title = _("Levels for Data"),
-                 default_value = (80.0, 90.0),
-                     elements = [
-                         Percentage(title = _("Warning at"), unit = _("%")),
-                         Percentage(title = _("Critical at"), unit = _("%"))
-                     ]
-                 ),
-            ),
-        ]
-    ),
-    TextAscii(
-        title = _("Logical Volume Pool"),
-        allow_empty = True,
-    ),
-    match_type = "dict"
-)
-
-register_check_parameters(
-    subgroup_storage,
     "filehandler",
     _("Filehandler"),
     Dictionary(

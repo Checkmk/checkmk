@@ -463,7 +463,8 @@ class Site(object):
         if site_id == None:
             site_id = self.id
         assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
-                                 "-f", "rm", "--kill", site_id]).wait() == 0
+                                 "-f", "rm", "--apache-reload",
+                                 "--kill", site_id]).wait() == 0
 
 
     def cleanup_old_sites(self, cleanup_pattern):

@@ -1,0 +1,11 @@
+Title: Views: Fixed possible broken table background when using "table" layout with zoomed pages
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p8
+Date: 1499170520
+Class: fix
+
+When using Firefox in the newest version (54 or newer) and zooming the Check_MK GUI pages
+it could happen that the background color of the tables in some views is not displayed.

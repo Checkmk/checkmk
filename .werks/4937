@@ -1,0 +1,12 @@
+Title: SNMP bulk walk: Size of bulks can now be configured
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499198496
+Class: feature
+
+When communicating with hosts using SNMP bulk walks the requested
+bulks had a fixed maximum size of 10 OIDs. This can now be configured
+using the ruleset "Bulk walk: Number of OIDs per bulk".

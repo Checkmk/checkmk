@@ -68,6 +68,7 @@ non_inline_snmp_hosts              = [] # Ruleset to disable Inline-SNMP per hos
                                         # use_inline_snmp is enabled.
 
 snmp_limit_oid_range               = [] # Ruleset to recduce fetched OIDs of a check, only inline SNMP
+snmp_bulk_size                     = [] # Ruleset to customize bulk size
 record_inline_snmp_stats           = False
 snmp_default_community             = 'public'
 snmp_communities                   = []

@@ -2348,7 +2348,7 @@ register_rule(group,
 
 register_rule(group,
     "bulkwalk_hosts",
-    title = _("Hosts using SNMP bulk walk (enforces SNMP v2c)"),
+    title = _("Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"),
     help = _("Most SNMP hosts support SNMP version 2c. However, Check_MK defaults to version 1, "
              "in order to support as many devices as possible. Please use this ruleset in order "
              "to configure SNMP v2c for as many hosts as possible. That version has two advantages: "
@@ -2357,6 +2357,25 @@ register_rule(group,
              "Please be aware, however, that there are some broken devices out there, that support "
              "bulk walk but behave very bad when it is used. When you want to enable v2c while not using "
              "bulk walk, please use the rule set snmpv2c_hosts instead."))
+
+
+register_rule(group,
+    "snmp_bulk_size",
+    Integer(
+        title = _("Bulk walk: Number of OIDs per bulk"),
+        label = _("Number of OIDs to request per bulk: "),
+        minvalue = 10,
+        maxvalue = 100,
+        default_value = 10,
+    ),
+    help = _("This variable allows you to configure the numbr of OIDs Check_MK should request "
+             "at once. This rule only applies to SNMP hosts that are configured to be bulk walk "
+             "hosts."
+             "You may want to use this rule to tune SNMP performance. Be aware: A higher value "
+             "is not always better. It may decrease the transactions between Check_MK and the "
+             "target system, but may increase the OID overhead in case you only need a small "
+             "amount of OIDs."),
+)
 
 register_rule(group,
     "snmp_without_sys_descr",

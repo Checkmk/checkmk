@@ -756,6 +756,14 @@ def is_bulkwalk_host(hostname):
         return False
 
 
+def bulk_walk_size_of(hostname):
+    bulk_sizes = rulesets.host_extra_conf(hostname, snmp_bulk_size)
+    if not bulk_sizes:
+        return 10
+    else:
+        return bulk_sizes[0]
+
+
 def is_snmpv2c_host(hostname):
     return is_bulkwalk_host(hostname) or \
         rulesets.in_binary_hostlist(hostname, snmpv2c_hosts)

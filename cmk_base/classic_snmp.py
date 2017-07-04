@@ -182,16 +182,19 @@ def _snmp_walk_command(hostname):
 # (5) privacy protocol (DES|AES) (-x)
 # (6) privacy protocol pass phrase (-X)
 def _snmp_base_command(what, hostname):
+    options = []
+
     if what == 'get':
         command = [ 'snmpget' ]
     elif what == 'getnext':
         command = [ 'snmpgetnext', '-Cf' ]
     elif config.is_bulkwalk_host(hostname):
         command = [ 'snmpbulkwalk' ]
+
+        options.append("-Cr%d" % config.bulk_walk_size_of(hostname))
     else:
         command = [ 'snmpwalk' ]
 
-    options = []
     credentials = config.snmp_credentials_of(hostname)
 
     if type(credentials) in [ str, unicode ]:

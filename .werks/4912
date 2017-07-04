@@ -1,0 +1,14 @@
+Title: rds_licenses: Fixed exception if agent bakery is used to deploy this plugin
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499151446
+Class: fix
+
+The Agent Bakery threw an exception if someone tried to configure the
+deployment by the ruleset. The reason for this has been a wrong path to
+the plugin.
+
+Thanks to Stephan Glotzbach for reporting this issue!

@@ -400,6 +400,7 @@ def render_snapin(name, state):
             refresh_url = url
             html.javascript("get_url(\"%s\", updateContents, \"snapin_%s\")" % (refresh_url, name))
     except Exception, e:
+        log_exception()
         snapin_exception(e)
     html.close_div()
     html.close_div()

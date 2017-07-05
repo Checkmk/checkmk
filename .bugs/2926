@@ -1,0 +1,10 @@
+Title: Permission for agent registration
+Component: wato
+State: open
+Date: 2017-07-05 08:48:58
+Targetversion: future
+Class: todo
+
+There is the permission missing, that created users can only be used for registration of new update agents.
+Customers want to use it for automatic deployment and the user should only be possible to registrate the host
+for automatic updates.

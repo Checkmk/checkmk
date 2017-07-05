@@ -287,10 +287,6 @@ def check_variable_names():
     return _check_variables.keys()
 
 
-def get_include_context(include_file_name):
-    return _include_contexts[include_file_name]
-
-
 # Some variables are accessed from the generic Check_MK code. E.g. during
 # constructing the parameters of a check before executing the check function,
 # or during loading of the configuration and the autochecks.

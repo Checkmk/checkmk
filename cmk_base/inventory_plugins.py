@@ -64,7 +64,7 @@ def load(): # pylint: disable=function-redefined
             plugin_context = _new_inv_context(f)
             known_plugins = inv_info.keys()
 
-            load_plugin_includes(f, check_context)
+            load_plugin_includes(f, plugin_context)
 
             execfile(f, plugin_context)
             loaded_files.add(file_name)
@@ -110,10 +110,10 @@ def load_plugin_includes(check_file_path, plugin_context):
 
         # inventory plugins may also use check includes. Try to find one.
         if not os.path.exists(include_file_path):
-            include_file_path = check_include_file_path(include_file_name)
+            include_file_path = checks.check_include_file_path(include_file_name)
 
         try:
-            execfile(include_file_path, check_context)
+            execfile(include_file_path, plugin_context)
         except Exception, e:
             console.error("Error in include file %s: %s\n", include_file_path, e)
             if cmk.debug.enabled():

@@ -122,8 +122,9 @@ std::vector<SectionLogwatch::FileEntryType> SectionLogwatch::globMatches(
     bool more = h != INVALID_HANDLE_VALUE;
 
     while (more) {
-        matches.push_back(
-            std::make_pair(path + data.cFileName, data.ftLastWriteTime));
+        if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) // Skip directories
+            matches.push_back(
+                std::make_pair(path + data.cFileName, data.ftLastWriteTime));
         more = FindNextFile(h, &data);
     }
     FindClose(h);

@@ -44,8 +44,8 @@ import cmk_base.check_api as check_api
 # like for example check_exists(...)
 
 _check_contexts                     = {} # The checks are loaded into this dictionary. Each check
-                                        # becomes a separat sub-dictionary, named by the check name
-_include_contexts                   = {} # These are the contexts of the check include files
+                                         # has a separate sub-dictionary, named by the check name.
+                                         # It is populated with the includes and the check itself.
 
 # The following data structures will be filled by the checks
 check_info                         = {} # all known checks
@@ -94,11 +94,7 @@ def get_plugin_paths(*dirs):
     filelist = []
     for dir in dirs:
         filelist += _plugin_pathnames_in_directory(dir)
-
-    # read include files always first, but still in the sorted
-    # order with local ones last (possibly overriding variables)
-    return [ f for f in filelist if f.endswith(".include") ] + \
-           [ f for f in filelist if not f.endswith(".include") ]
+    return filelist
 
 
 # Now read in all checks. Note: this is done *before* reading the
@@ -115,7 +111,6 @@ def load_checks(filelist):
             continue # ignore editor backup / temp files
 
         file_name  = os.path.basename(f)
-        is_include = file_name.endswith(".include")
         if file_name in loaded_files:
             continue # skip already loaded files (e.g. from local)
 
@@ -124,6 +119,8 @@ def load_checks(filelist):
 
             known_vars = check_context.keys()
             known_checks = check_info.keys()
+
+            load_check_includes(f, check_context)
 
             execfile(f, check_context)
             loaded_files.add(file_name)
@@ -136,12 +133,10 @@ def load_checks(filelist):
                 continue
 
         new_checks = set(check_info.keys()).difference(known_checks)
-        if is_include:
-            _include_contexts[file_name] = check_context
-        else:
-            # Now store the check context for all checks found in this file
-            for check_name in new_checks:
-                _check_contexts[check_name] = check_context
+
+        # Now store the check context for all checks found in this file
+        for check_name in new_checks:
+            _check_contexts[check_name] = check_context
 
         # Collect all variables that the check file did introduce compared to the
         # default check context
@@ -171,17 +166,7 @@ def load_checks(filelist):
 
                 # Keep track of which variable needs to be set to which context
                 context_ident_list = _check_variables.setdefault(varname, [])
-                if is_include:
-                    context_ident_list.append(file_name)
-                else:
-                    context_ident_list += new_checks
-
-    # Hack to make dependencies between multiple includes work. In case we
-    # need more here we need to find another solution.
-    # TODO(lm): This needs to be cleaned up. Try to move the includes to
-    # python modules that are separated from each other and can refer to
-    # each other.
-    _include_contexts["if64.include"].update(_include_contexts["if.include"])
+                context_ident_list += new_checks
 
     config.add_check_variables(check_variable_defaults)
 
@@ -214,17 +199,33 @@ def _new_check_context(check_file_path):
     for k, v in check_api._get_check_context():
         context[k] = v
 
-    # Load the definitions of the required include files for this check
-    # Working with imports when specifying the includes would be much cleaner,
-    # sure. But we need to deal with the current check API.
-    if check_file_path and not check_file_path.endswith(".include"):
-        for include_file_name in includes_of_plugin(check_file_path):
-            try:
-                context.update(_include_contexts[include_file_name])
-            except KeyError, e:
-                raise MKGeneralException("The include file %s does not exist" % include_file_name)
-
     return context
+
+
+# Load the definitions of the required include files for this check
+# Working with imports when specifying the includes would be much cleaner,
+# sure. But we need to deal with the current check API.
+def load_check_includes(check_file_path, check_context):
+    for include_file_name in includes_of_plugin(check_file_path):
+        include_file_path = check_include_file_path(include_file_name)
+        try:
+            execfile(include_file_path, check_context)
+        except Exception, e:
+            console.error("Error in check include file %s: %s\n", include_file_path, e)
+            if cmk.debug.enabled():
+                raise
+            else:
+                continue
+
+
+def check_include_file_path(include_file_name):
+    include_file_path = os.path.join(cmk.paths.checks_dir, include_file_name)
+
+    local_path = os.path.join(cmk.paths.local_checks_dir, include_file_name)
+    if os.path.exists(local_path):
+        include_file_path = local_path
+
+    return include_file_path
 
 
 # Parse the check file without executing the code to find the check include
@@ -276,7 +277,7 @@ def _plugin_pathnames_in_directory(path):
         return sorted([
             path + "/" + f
             for f in os.listdir(path)
-            if not f.startswith(".")
+            if not f.startswith(".") and not f.endswith(".include")
         ])
     else:
         return []
@@ -301,10 +302,7 @@ def get_include_context(include_file_name):
 def set_check_variable(varname, value):
     globals()[varname] = value
     for context_ident in _check_variables[varname]:
-        if context_ident.endswith(".include"):
-            _include_contexts[context_ident][varname] = value
-        else:
-            _check_contexts[context_ident][varname] = value
+        _check_contexts[context_ident][varname] = value
 
 
 # FIXME: Clear / unset all legacy variables to prevent confusions in other code trying to

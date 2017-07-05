@@ -57,13 +57,15 @@ def load(): # pylint: disable=function-redefined
             continue # ignore editor backup / temp files
 
         file_name  = os.path.basename(f)
-        is_include = file_name.endswith(".include")
         if file_name in loaded_files:
             continue # skip already loaded files (e.g. from local)
 
         try:
             plugin_context = _new_inv_context(f)
             known_plugins = inv_info.keys()
+
+            load_plugin_includes(f, check_context)
+
             execfile(f, plugin_context)
             loaded_files.add(file_name)
         except Exception, e:
@@ -73,12 +75,9 @@ def load(): # pylint: disable=function-redefined
             else:
                 continue
 
-        if is_include:
-            _include_contexts[file_name] = plugin_context
-        else:
-            # Now store the check context for all plugins found in this file
-            for check_name in set(inv_info.keys()).difference(known_plugins):
-                _plugin_contexts[check_name] = plugin_context
+        # Now store the check context for all plugins found in this file
+        for check_name in set(inv_info.keys()).difference(known_plugins):
+            _plugin_contexts[check_name] = plugin_context
 
 
 def _new_inv_context(plugin_file_path):
@@ -95,21 +94,33 @@ def _new_inv_context(plugin_file_path):
     for k, v in check_api._get_check_context() + _get_inventory_context():
         context[k] = v
 
-    # Load the definitions of the required include files for this check
-    # Working with imports when specifying the includes would be much cleaner,
-    # sure. But we need to deal with the current check API.
-    if plugin_file_path and not plugin_file_path.endswith(".include"):
-        for include_file_name in checks.includes_of_plugin(plugin_file_path):
-            try:
-                context.update(_include_contexts[include_file_name])
-            except KeyError, e:
-                # inventory plugins may also use check includes. Try to find one.
-                try:
-                    context.update(checks.get_include_context(include_file_name))
-                except KeyError, e:
-                    raise MKGeneralException("The include file %s does not exist" % include_file_name)
-
     return context
+
+
+# Load the definitions of the required include files for this check
+# Working with imports when specifying the includes would be much cleaner,
+# sure. But we need to deal with the current check API.
+def load_plugin_includes(check_file_path, plugin_context):
+    for include_file_name in checks.includes_of_plugin(check_file_path):
+        include_file_path = os.path.join(cmk.paths.inventory_dir, include_file_name)
+
+        local_path = os.path.join(cmk.paths.local_inventory_dir, include_file_name)
+        if os.path.exists(local_path):
+            include_file_path = local_path
+
+        # inventory plugins may also use check includes. Try to find one.
+        if not os.path.exists(include_file_path):
+            include_file_path = check_include_file_path(include_file_name)
+
+        try:
+            execfile(include_file_path, check_context)
+        except Exception, e:
+            console.error("Error in include file %s: %s\n", include_file_path, e)
+            if cmk.debug.enabled():
+                raise
+            else:
+                continue
+
 
 
 def is_snmp_plugin(plugin_type):

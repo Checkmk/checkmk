@@ -125,4 +125,5 @@ check_info["ups_modulys_battery.temp"] = {
     "service_description"     : "Temperature %s",
     "group"                   : "temperature",
     "default_levels_variable" : "ups_modulys_battery_temp_default_levels",
+    "includes"                : [ "temperature.include" ],
 }

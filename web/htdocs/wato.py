@@ -9902,12 +9902,13 @@ class ModeEditSite(ModeSites):
         else:
             html.write_text(self._site_id)
 
+        html.help(_("The site ID must be identical (case sensitive) with the instance's exact name."))
         # Alias
         forms.section(_("Alias"))
         html.text_input("alias", self._site.get("alias", ""), size = 60)
         if not self._new:
             html.set_focus("alias")
-        html.help(_("An alias or description of the site"))
+        html.help(_("An alias or description of the site."))
 
 
     def _page_livestatus_settings(self):

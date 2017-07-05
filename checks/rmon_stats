@@ -29,6 +29,7 @@
 # statistics(1). etherStatsTable(1). etherStatsEntry(1)
 # The MIB is called RMON-MIB
 
+inventory_if_rules = []
 
 def inventory_rmon_stats(info):
     settings = host_extra_conf_merged(host_name(), inventory_if_rules)

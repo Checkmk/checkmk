@@ -143,9 +143,29 @@ def load_checks(filelist):
             for check_name in new_checks:
                 _check_contexts[check_name] = check_context
 
+        # Collect all variables that the check file did introduce compared to the
+        # default check context
+        new_check_vars = {}
         for varname in set(check_context.keys()).difference(known_vars):
-            value = check_context[varname]
+            new_check_vars[varname] = check_context[varname]
 
+        # The default_levels_variable of check_info also declares use of a global
+        # variable. Register it here for this context.
+        for check_name in new_checks:
+            # The check_info is not converted yet (convert_check_info()). This means we need
+            # to deal with old style tuple configured checks
+            if type(check_info[check_name]) == tuple:
+                default_levels_varname = check_default_levels.get(check_name)
+            else:
+                default_levels_varname = check_info[check_name].get("default_levels_variable")
+
+            if default_levels_varname:
+                new_check_vars[default_levels_varname] = \
+                    factory_settings.get(default_levels_varname, {})
+
+        # Save check variables for e.g. after config loading that the config can
+        # be added to the check contexts
+        for varname, value in new_check_vars.items():
             if varname[0] != '_' and type(value) not in ignored_variable_types:
                 check_variable_defaults[varname] = value
 

@@ -1,0 +1,10 @@
+Title: ups_modulys_battery.temp: Fixed possible "check_temperature" not found exception
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499248908
+Class: fix
+
+

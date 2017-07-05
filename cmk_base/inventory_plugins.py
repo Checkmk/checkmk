@@ -112,6 +112,11 @@ def load_plugin_includes(check_file_path, plugin_context):
         if not os.path.exists(include_file_path):
             include_file_path = checks.check_include_file_path(include_file_name)
 
+            # In case a check include file is used the plugin context needs to be
+            # prepared with a check plugin context
+            for key, val in checks.new_check_context().items():
+                plugin_context.setdefault(key, val)
+
         try:
             execfile(include_file_path, plugin_context)
         except Exception, e:

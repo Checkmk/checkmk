@@ -115,7 +115,7 @@ def load_checks(filelist):
             continue # skip already loaded files (e.g. from local)
 
         try:
-            check_context = _new_check_context(f)
+            check_context = new_check_context()
 
             known_vars = check_context.keys()
             known_checks = check_info.keys()
@@ -177,7 +177,7 @@ def load_checks(filelist):
 
 
 # Constructs a new check context dictionary. It contains the whole check API.
-def _new_check_context(check_file_path):
+def new_check_context():
     # Add the data structures where the checks register with Check_MK
     context = {
         "check_info"             : check_info,

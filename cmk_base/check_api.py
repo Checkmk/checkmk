@@ -120,6 +120,7 @@ import socket
 import sys
 import os
 import time
+import pprint
 
 from cmk.regex import regex
 import cmk.render as render

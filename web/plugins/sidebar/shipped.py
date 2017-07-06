@@ -2136,7 +2136,9 @@ def render_tag_tree():
         tag_groups = trees[choices[0][0]]["tag_groups"]
 
     tree = compute_tag_tree(tag_groups)
+    html.open_div(class_="tag_tree")
     render_tag_tree_level(tag_groups, [], cwd, _("Virtual Host Tree"), tree)
+    html.close_div()
 
 sidebar_snapins["tag_tree"] = {
     "title" : _("Virtual Host Tree"),
@@ -2168,6 +2170,10 @@ sidebar_snapins["tag_tree"] = {
     height: 16px;
     float: right;
     display: inline-box;
+}
+
+#snapin_tag_tree div.tag_tree {
+    clear: both;
 }
 
 #snapin_tag_tree div.statebullet {

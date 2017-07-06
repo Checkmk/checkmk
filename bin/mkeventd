@@ -4121,6 +4121,11 @@ def add_infos_from_monitoring_host(context, event):
             "CONTACTS"                 : ",".join(host_info["contacts"]),
             "SERVICECONTACTGROUPNAMES" : ",".join(host_info["contact_groups"]),
         })
+
+        # Add custom variables to the notification context
+        for key, val in host_info["custom_variables"].items():
+            context["HOST_%s" % key] = val
+
     else:
         # Host not known in active monitoring. Create articial host context
         # as good as possible.
@@ -4176,13 +4181,14 @@ def find_host_in_monitoring(event_host_name):
             contacts.remove("check-mk-notify")
 
         return {
-            "name"           : row[0],
-            "alias"          : row[1],
-            "address"        : row[2],
-            "tags"           : row[3].get("TAGS", ""),
-            "in_downtime"    : bool(row[4]),
-            "contacts"       : contacts,
-            "contact_groups" : row[6],
+            "name"             : row[0],
+            "alias"            : row[1],
+            "address"          : row[2],
+            "tags"             : row[3].get("TAGS", ""),
+            "custom_variables" : row[3],
+            "in_downtime"      : bool(row[4]),
+            "contacts"         : contacts,
+            "contact_groups"   : row[6],
         }
 
 

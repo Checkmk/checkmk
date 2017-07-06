@@ -1,4 +1,4 @@
-Title: oracle_tablespaces: A service will now go indeed to warn only if left space is below the warn level
+Title: oracle_tablespaces: A service will now indeed change state only if left space is below a threshold level
 Level: 1
 Component: checks
 Compatible: compat

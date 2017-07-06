@@ -1,4 +1,6 @@
 pytest
+pytest-cov
+pytest-mock
 requests
 beautifulsoup4
 pytest-stepwise

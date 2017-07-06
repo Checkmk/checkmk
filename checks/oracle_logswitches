@@ -67,4 +67,5 @@ check_info["oracle_logswitches"] = {
     'service_description':     'ORA %s Logswitches',
     'has_perfdata':            True,
     'group':                   'oracle_logswitches',
+    'includes':                ['oracle.include'],
 }

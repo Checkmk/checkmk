@@ -651,7 +651,7 @@ def ajax_tag_tree():
     html.write("OK")
 
 def ajax_tag_tree_enter():
-    path = html.var("path").split("|") if html.has_var("path") else []
+    path = html.var("path").split("|") if html.var("path") else []
     tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
     tree_conf["cwd"][tree_conf["tree"]] = path
     config.user.save_file("virtual_host_tree", tree_conf)

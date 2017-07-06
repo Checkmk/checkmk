@@ -1,4 +1,4 @@
-Title: Quicksearch: fixed quoting problem with \ in service description
+Title: Quicksearch: Fix Livestatus error when using \ in search expression
 Level: 1
 Component: multisite
 Compatible: compat

@@ -2115,14 +2115,16 @@ def render_tag_tree():
 
     html.begin_form("vtree")
 
-    # Give chance to change one level up, if we are in a subtree
     cwd = tree_conf["cwd"].get(tree_conf["tree"])
+
+    html.dropdown("vtree", choices, deflt="%s" % tree_conf["tree"],
+            onchange='virtual_host_tree_changed(this)', style="width:210px" if cwd else None)
+
+    # Give chance to change one level up, if we are in a subtree
     if cwd:
         upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(cwd[:-1])
         html.icon_button(upurl, _("Go up one tree level"), "back")
 
-    html.dropdown("vtree", choices, deflt="%s" % tree_conf["tree"],
-                  onchange='virtual_host_tree_changed(this)')
     html.br()
     html.end_form()
     html.final_javascript(virtual_host_tree_js)
@@ -2146,9 +2148,6 @@ sidebar_snapins["tag_tree"] = {
     "allowed" : [ "admin", "user", "guest" ],
     "styles" : """
 
-#snapin_tag_tree img.iconbutton {
-}
-
 #snapin_tag_tree select {
     background-color: #6DA1B8;
     border-color: #123A4A;
@@ -2159,6 +2158,16 @@ sidebar_snapins["tag_tree"] = {
     margin-top: -2px;
     padding: 0;
     width: 230px;
+
+    float: right;
+    width: 100%;
+}
+
+#snapin_tag_tree form img.iconbutton {
+    width: 16px;
+    height: 16px;
+    float: right;
+    display: inline-box;
 }
 
 #snapin_tag_tree div.statebullet {
@@ -2176,6 +2185,7 @@ sidebar_snapins["tag_tree"] = {
 #snapin_tag_tree ul > div.statebullet.leaf {
     margin-left: 16px;
 }
+
 #snapin_tag_tree b {
     font-weight: normal;
 }
@@ -2184,19 +2194,6 @@ sidebar_snapins["tag_tree"] = {
     position: relative;
     top: 0px;
     left: 0px;
-}
-#snapin_tag_tree form img.iconbutton {
-    width: 16px;
-    height: 16px;
-    float: none;
-    display: inline-box;
-    position: absolute;
-    top: 9px;
-    left: 14px;
-}
-#snapin_tag_tree select {
-    width: 198px;
-    margin-left: 17px;
 }
 """
 }

@@ -1,0 +1,10 @@
+Title: oracle_tablespaces: A service will now go indeed to warn only if left space is below the warn level
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499333114
+Class: fix
+
+Before the state already changed if the left space has been equal to a threshold level.

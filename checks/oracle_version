@@ -47,5 +47,5 @@ check_info['oracle_version'] = {
     "check_function"      : check_oracle_version,
     "inventory_function"  : inventory_oracle_version,
     "service_description" : "ORA Version %s",
-    "includes"            : [ "oracle.include" ],
+    "includes"            : ["oracle.include"],
 }

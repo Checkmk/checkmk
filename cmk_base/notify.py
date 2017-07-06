@@ -83,8 +83,6 @@ notification_spooldir   = cmk.paths.var_dir + "/notify/spool"
 notification_bulkdir    = cmk.paths.var_dir + "/notify/bulk"
 notification_core_log   = cmk.paths.var_dir + "/notify/nagios.log" # Fallback for history if no CMC running
 notification_log        = cmk.paths.log_dir + "/notify.log"
-notification_logging    = 1
-notification_backlog    = 10 # keep the last 10 notification contexts for reference
 
 notification_log_template = \
     u"$CONTACTNAME$ - $NOTIFICATIONTYPE$ - " \
@@ -176,9 +174,8 @@ def do_notify(options, args):
 
     convert_legacy_configuration()
 
-    global notify_mode, notification_logging
-    if notification_logging == 0:
-        notification_logging = 1 # transform deprecated value 0 to 1
+    global notify_mode
+
     try:
         if not os.path.exists(notification_logdir):
             os.makedirs(notification_logdir)
@@ -253,6 +250,11 @@ def convert_legacy_configuration():
         else:
             config.notification_spooling = "remote"
 
+    # transform deprecated value 0 to 1
+    if config.notification_logging == 0:
+        config.notification_logging = 1
+
+
 # This function processes one raw notification and decides wether it
 # should be spooled or not. In the latter cased a local delivery
 # is being done.
@@ -270,11 +272,11 @@ def notify_notify(raw_context, analyse=False):
 
     # Add some further variable for the conveniance of the plugins
 
-    if notification_logging >= 2:
+    if config.notification_logging >= 2:
         notify_log(events.render_context_dump(raw_context))
 
     _complete_raw_context_with_notification_vars(raw_context)
-    events.complete_raw_context(raw_context, with_dump = notification_logging >= 2, event_log = notify_log)
+    events.complete_raw_context(raw_context, with_dump = config.notification_logging >= 2, event_log = notify_log)
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):
@@ -1618,13 +1620,13 @@ def call_bulk_notification_script(plugin, context_text):
 # backlock already encoded.
 def store_notification_backlog(raw_context):
     path = notification_logdir + "/backlog.mk"
-    if not notification_backlog:
+    if not config.notification_backlog:
         if os.path.exists(path):
             os.remove(path)
         return
 
     try:
-        backlog = eval(file(path).read())[:notification_backlog-1]
+        backlog = eval(file(path).read())[:config.notification_backlog-1]
     except:
         backlog = []
 
@@ -1713,12 +1715,12 @@ def dead_nagios_variable(value):
 
 
 def notify_log(message):
-    if notification_logging >= 1:
+    if config.notification_logging >= 1:
         events.event_log(notification_log, message)
 
 
 def notify_log_debug(message):
-    if notification_logging >= 2:
+    if config.notification_logging >= 2:
         notify_log(message)
 
 def fresh_uuid():

@@ -345,9 +345,9 @@ def check_oracle_tablespaces(item, params, parsed):
     if ts_status != "READONLY" and ts_type == 'PERMANENT':
 
         status = 0
-        if crit is not None and free_space <= crit:
+        if crit is not None and free_space < crit:
             status = 2
-        elif warn is not None and free_space <= warn:
+        elif warn is not None and free_space < warn:
             status = 1
 
         if status:

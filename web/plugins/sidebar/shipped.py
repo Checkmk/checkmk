@@ -1836,7 +1836,8 @@ def compute_tag_tree(taglist):
     try:
         sites.live().set_prepend_site(True)
         query = "GET hosts\n" \
-                "Columns: host_name filename state num_services_ok num_services_warn num_services_crit num_services_unknown custom_variables"
+                "Columns: host_name filename state num_services_ok num_services_warn " \
+                "num_services_crit num_services_unknown custom_variables"
         hosts = sites.live().query(query)
     finally:
         sites.live().set_prepend_site(False)

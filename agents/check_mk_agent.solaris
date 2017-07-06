@@ -250,13 +250,10 @@ then
         grep "^$s\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
     done
 
-    # the <<<statgrab_mem>>> info is already provided by <<<solaris_mem>>>
-    # However, we make an exception if /usr/bin/top is missing (required by solaris_mem)
-    if [ ! -x /usr/bin/top ] && [ ! -x /usr/local/bin/top ]
-    then
-        echo '<<<statgrab_mem>>>'
-        egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
-    fi
+    # <<<statgrab_mem>>> info is preferred over <<<solaris_mem>>>
+    # since solaris_mem is under suspicion to be buggy.
+    echo '<<<statgrab_mem>>>'
+    egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
 
     [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
 fi
@@ -295,11 +292,14 @@ fi
 
 
 # Memory
-if [ -x /usr/bin/top ] || [ -x /usr/local/top ]
-then
-    echo "<<<solaris_mem>>>"
-    if [ -x /usr/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
-    if [ -x /usr/local/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
+# <<<solaris_mem>>> should be used if statgrab is missing and top is available.
+if ! type statgrab &>/dev/null
+    if [ -x /usr/bin/top ] || [ -x /usr/local/top ]
+    then
+        echo "<<<solaris_mem>>>"
+        if [ -x /usr/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
+        if [ -x /usr/local/bin/top ]; then /usr/bin/top | grep '^Memory:'; fi
+    fi
 fi
 
 if type prtdiag >/dev/null 2>&1

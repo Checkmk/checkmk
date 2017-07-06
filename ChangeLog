@@ -15,6 +15,7 @@
     * 4881 FIX: multipath: Fixed service details: Number of paths were interpreted as expected paths
     * 4883 FIX: juniper_trpz_aps_sessions: Fixed performance data handling if running on cluster
     * 4884 FIX: oracle_logswitches: Fixed missing oracle.include
+    * 4914 FIX: statgrab_mem: Plugin is now prioritized over solaris_mem if both is available...
 
     Multisite:
     * 4902 SEC: Monitoring history views: Fixed possible XSS when displaying "plugin output"...

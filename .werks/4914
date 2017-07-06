@@ -1,0 +1,17 @@
+Title: statgrab_mem: Plugin is now prioritized over solaris_mem if both is available
+Level: 1
+Component: checks
+Class: fix
+Compatible: incompat
+Edition: cre
+State: unknown
+Version: 1.2.8p25
+Date: 1499342226
+
+Until now the solaris_mem has been prioritized over statgrab_mem if both are
+available and deliver the same information. This has been changed by this
+werk. Since the memory info from top is under suspicion to be buggy we do
+prefer the mem information from statgrab from now on. The information from
+top will be a fallback only if statgrab is not available.
+
+You may have to rediscover services to benefit from this change.

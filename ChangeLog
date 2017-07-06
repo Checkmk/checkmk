@@ -14,6 +14,7 @@
     * 4880 FIX: wut_webtherm, wut_webtherm.humidity: Fixed missing device type and enabled performance data for humidity
     * 4881 FIX: multipath: Fixed service details: Number of paths were interpreted as expected paths
     * 4883 FIX: juniper_trpz_aps_sessions: Fixed performance data handling if running on cluster
+    * 4884 FIX: oracle_logswitches: Fixed missing oracle.include
 
     Multisite:
     * 4902 SEC: Monitoring history views: Fixed possible XSS when displaying "plugin output"...

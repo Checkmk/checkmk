@@ -1,0 +1,14 @@
+Title: Added missing host custom variables to notifications created by the EC
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499341808
+Class: fix
+
+When creating notifications with the Event Console custom host attributes (HOST_*)
+were not added to the notification context. In notifications created by the core
+the attributes were available. This has been consolidated now, making the EC
+notifications have variables like HOST_MYVAR when having a custom attribute named
+MYVAR.

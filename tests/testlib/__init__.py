@@ -320,6 +320,17 @@ class Site(object):
             return open(self.path(rel_path), "w").write(content)
 
 
+    def create_rel_symlink(self, link_rel_target, rel_link_name):
+        if not self._is_running_as_site_user():
+            p = self.execute(["ln", "-s", link_rel_target, rel_link_name],
+                             stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+            p.communicate()
+            if p.wait() != 0:
+                raise Exception("Failed to create symlink from %s to ./%s. Exit-Code: %d" % (rel_link_name, link_rel_target, p.wait()))
+        else:
+            return os.symlink(link_rel_target, os.path.join(self.root, rel_link_name))
+
+
     def file_exists(self, rel_path):
         if not self._is_running_as_site_user():
             p = self.execute(["test", "-e", self.path(rel_path)], stdout=subprocess.PIPE)

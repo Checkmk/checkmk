@@ -703,6 +703,9 @@ def filter_groups_of_entries(context, avoptions, spans):
     # They need to be able to filter the list of all groups.
     # TODO: Negated filters are not handled here. :(
     if group_by == "service_groups":
+        if "servicegroups" not in context and "optservicegroup" not in context:
+            return
+
         # Extract from context:
         # 'servicegroups': {'servicegroups': 'cpu|disk', 'neg_servicegroups': 'off'},
         # 'optservicegroup': {'optservice_group': '', 'neg_optservice_group': 'off'},
@@ -721,7 +724,9 @@ def filter_groups_of_entries(context, avoptions, spans):
             only_groups.add(group_name)
 
     elif group_by == "host_groups":
-        html.log(repr(context))
+        if "hostgroups" not in context and "opthostgroup" not in context:
+            return
+
         negated = context.get("hostgroups", {}).get("neg_hostgroups") == "on"
         if negated:
             return

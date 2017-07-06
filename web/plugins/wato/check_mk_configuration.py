@@ -452,6 +452,17 @@ def validate_virtual_host_trees(value, varprefix):
             raise MKUserError(varprefix, _("The ID needs to be unique."))
         tree_ids.add(tree["id"])
 
+        # Validate that each element is selected once
+        seen = set()
+        for element in tree["tag_groups"]:
+            if element in seen:
+                raise MKUserError(varprefix,
+                    _("Found '%s' a second time in tree '%s'. Each element can only be "
+                      "choosen once.") % (element, tree["id"]))
+
+            seen.add(element)
+
+
 
 register_configvar(group,
     "virtual_host_trees",
@@ -467,12 +478,12 @@ register_configvar(group,
                         title = _("Title of the tree"),
                         allow_empty = False,
                     )),
-                    ("tag_groups", DualListChoice(
+                    ("tag_groups", ListOf(
+                        DropdownChoice(
+                            choices = virtual_host_tree_choices,
+                        ),
+                        title = _("Tree levels"),
                         allow_empty = False,
-                        custom_order = True,
-                        choices = virtual_host_tree_choices,
-                        rows = 10,
-                        size = 80,
                     )),
                 ],
                 optional_keys = [],

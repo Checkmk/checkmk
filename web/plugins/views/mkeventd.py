@@ -45,6 +45,10 @@ except:
 
 
 def query_ec_table(datasource, columns, add_columns, query, only_sites, limit, tablename):
+    for c in [ "event_contact_groups", "host_contact_groups", "event_host" ]:
+        if c not in columns:
+            columns.append(c)
+
     rows = query_data(datasource, columns, add_columns, query, only_sites, limit,
                       tablename=tablename)
 
@@ -139,8 +143,6 @@ if mkeventd_enabled:
         "keys"        : [],
         "idkeys"      : [ 'site', 'host_name', 'event_id' ],
         "time_filters" : [ "event_first" ],
-        "add_columns"  :[ "event_contact_groups", "host_contact_groups", "event_host" ],
-
     }
 
     multisite_datasources["mkeventd_history"] = {
@@ -151,7 +153,6 @@ if mkeventd_enabled:
         "keys"        : [],
         "idkeys"      : [ 'site', 'host_name', 'event_id', 'history_line' ],
         "time_filters" : [ "history_time" ],
-        "add_columns"  :[ "event_contact_groups", "host_contact_groups", "event_host" ],
     }
 
 

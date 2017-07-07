@@ -1,0 +1,15 @@
+Title: HTML mail notification: Added choices 'Automatic HTTP/s' to URL prefix option
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499412075
+Class: feature
+
+URL prefixes are used for hyperlinks to Check_MK GUI so that
+the recipient of the email can directly visit the host or
+service in question in Check_MK.
+These two new choices specify the URL prefix automatically.
+If you're using more than one site this may be helpful in
+order to avoid configuration of separate rules for each site.

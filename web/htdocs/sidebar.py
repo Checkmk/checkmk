@@ -31,6 +31,7 @@ import urlparse
 import config, views, userdb, pagetypes
 import notify, werks
 import sites
+import modules
 from lib import *
 from log import logger
 import cmk.paths
@@ -61,20 +62,37 @@ def load_plugins(force):
     sidebar_snapins = {}
     global search_plugins
     search_plugins = []
+
+    config.declare_permission_section("sidesnap", _("Sidebar snapins"), do_sort = True)
+
     load_web_plugins("sidebar", globals())
+
+    transform_old_dict_based_snapins()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = current_language
 
-    # Declare permissions: each snapin creates one permission
-    config.declare_permission_section("sidesnap", _("Sidebar snapins"), do_sort = True)
-    for name, snapin in sidebar_snapins.items():
-        config.declare_permission("sidesnap.%s" % name,
-            snapin["title"],
-            snapin["description"],
-            snapin["allowed"])
+
+# Pre Check_MK 1.5 the snapins were declared with dictionaries like this:
+#
+# sidebar_snapins["about"] = {
+#     "title" : _("About Check_MK"),
+#     "description" : _("Version information and Links to Documentation, "
+#                       "Homepage and Download of Check_MK"),
+#     "render" : render_about,
+#     "allowed" : [ "admin", "user", "guest" ],
+# }
+#
+# Convert it to objects to be compatible
+# TODO: Deprecate this one day.
+def transform_old_dict_based_snapins():
+    for snapin_id, snapin in sidebar_snapins.items():
+        if isinstance(snapin, SidebarSnapin):
+            continue # Already new style snapin :)
+
+        register_snapin(snapin_id, GenericSnapin(snapin))
 
 
 # Helper functions to be used by snapins
@@ -309,11 +327,14 @@ def page_side():
         # Performs the initial rendering and might return an optional refresh url,
         # when the snapin contents are refreshed from an external source
         refresh_url = render_snapin(name, state)
-        if sidebar_snapins.get(name).get("refresh", False):
+
+        if sidebar_snapins.get(name).refresh_regularly():
             refresh_snapins.append([name, refresh_url])
-        elif sidebar_snapins.get(name).get("restart", False):
+
+        elif sidebar_snapins.get(name).refresh_on_restart():
             refresh_snapins.append([name, refresh_url])
             restart_snapins.append(name)
+
     html.close_div()
     sidebar_foot()
     html.close_div()
@@ -334,7 +355,7 @@ def page_side():
     html.body_end()
 
 def render_snapin_styles(snapin):
-    styles = snapin.get("styles")
+    styles = snapin.styles()
     if styles:
         html.open_style()
         html.write(styles)
@@ -387,7 +408,7 @@ def render_snapin(name, state):
         toggle_actions = {"onclick"    : "toggle_sidebar_snapin(this,'%s')" % toggle_url,
                           "onmouseover": "this.style.cursor='pointer'",
                           "onmouseout" : "this.style.cursor='auto'"}
-    html.b(HTML(snapin["title"]), class_=["heading"], **toggle_actions)
+    html.b(HTML(snapin.title()), class_=["heading"], **toggle_actions)
 
     # End of header
     html.close_div()
@@ -396,7 +417,7 @@ def render_snapin(name, state):
     html.open_div(class_="content", id_="snapin_%s" % name, style=style)
     refresh_url = ''
     try:
-        url = snapin["render"]()
+        url = snapin.show()
         # Fetch the contents from an external URL. Don't render it on our own.
         if not url is None:
             refresh_url = url
@@ -453,7 +474,7 @@ def ajax_snapin():
         # When restart snapins are about to be refreshed, only render
         # them, when the core has been restarted after their initial
         # rendering
-        if not snapin.get('refresh') and snapin.get('restart'):
+        if not snapin.refresh_regularly() and snapin.refresh_on_restart():
             since = float(html.var('since', 0))
             newest = since
             for site in sites.states().values():
@@ -467,7 +488,7 @@ def ajax_snapin():
 
         with html.plugged():
             try:
-                snapin["render"]()
+                snapin.show()
             except Exception, e:
                 write_snapin_exception(e)
                 e_message = _("Exception during snapin refresh (snapin \'%s\')") % snapname
@@ -536,8 +557,8 @@ def page_add_snapin():
             continue # not allowed for this user
 
         snapin = sidebar_snapins[name]
-        title = snapin["title"]
-        description = snapin.get("description", "")
+        title = snapin.title()
+        description = snapin.description()
         transid = html.get_transid()
         url = 'sidebar_add_snapin.py?name=%s&_transid=%s&pos=top' % (name, transid)
         html.open_div(class_="snapinadder",
@@ -631,30 +652,6 @@ def ajax_switch_masterstate():
         render_master_control()
     else:
         html.write(_("Command %s/%d not found") % (html.attrencode(column), state))
-
-def ajax_tag_tree():
-    new_tree = html.var("conf")
-
-    tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
-
-    if type(tree_conf) == int:
-        tree_conf = {"cwd":{}} # convert from old style
-
-    trees = dict([ (tree["id"], tree) for tree in
-                    wato.transform_virtual_host_trees(config.virtual_host_trees) ])
-
-    if new_tree not in trees:
-        raise MKUserError("conf", _("This virtual host tree does not exist."))
-
-    tree_conf["tree"] = new_tree
-    config.user.save_file("virtual_host_tree", tree_conf)
-    html.write("OK")
-
-def ajax_tag_tree_enter():
-    path = html.var("path").split("|") if html.var("path") else []
-    tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
-    tree_conf["cwd"][tree_conf["tree"]] = path
-    config.user.save_file("virtual_host_tree", tree_conf)
 
 
 def ajax_set_snapin_site():
@@ -1155,3 +1152,90 @@ def generate_search_results(query):
     quicksearch = LivestatusQuicksearch(query)
     return quicksearch.generate_search_url()
 
+
+#.
+#   .--Snapin API----------------------------------------------------------.
+#   |         ____                    _            _    ____ ___           |
+#   |        / ___| _ __   __ _ _ __ (_)_ __      / \  |  _ \_ _|          |
+#   |        \___ \| '_ \ / _` | '_ \| | '_ \    / _ \ | |_) | |           |
+#   |         ___) | | | | (_| | |_) | | | | |  / ___ \|  __/| |           |
+#   |        |____/|_| |_|\__,_| .__/|_|_| |_| /_/   \_\_|  |___|          |
+#   |                          |_|                                         |
+#   +----------------------------------------------------------------------+
+#   | The new snapin API allows encapsulating the whole functionality of a |
+#   | snapin in a single object. This includes page handlers and so on.    |
+#   | All new snapins need to be realized as child of SidebarSnapin() and  |
+#   | use the register_snapin() function to register with the sidebar.     |
+#   '----------------------------------------------------------------------'
+
+def register_snapin(snapin_id, snapin):
+    sidebar_snapins[snapin_id] = snapin
+
+    config.declare_permission("sidesnap.%s" % snapin_id,
+        snapin.title(),
+        snapin.description(),
+        snapin.allowed_roles())
+
+    modules.register_handlers(snapin.page_handlers())
+
+
+
+class SidebarSnapin(object):
+    def title(self):
+        raise NotImplementedError()
+
+
+    def description(self):
+        return ""
+
+
+    def show(self):
+        raise NotImplementedError()
+
+
+    def refresh_regularly(self):
+        return False
+
+
+    def refresh_on_restart(self):
+        return False
+
+
+    def allowed_roles(self):
+        return [ "admin", "user", "guest" ]
+
+
+    def styles(self):
+        return None
+
+
+    def page_handlers(self):
+        return {}
+
+
+
+# Needed for compatiblity with old dict based snapins
+class GenericSnapin(SidebarSnapin):
+    def __init__(self, dict_spec):
+        super(GenericSnapin, self).__init__()
+        self._spec = dict_spec
+
+
+    def title(self):
+        return self._spec["title"]
+
+
+    def description(self):
+        return self._spec.get("description", "")
+
+
+    def show(self):
+        return self._spec["render"]()
+
+
+    def refresh_regularly(self):
+        return self._spec.get("refresh", False)
+
+
+    def styles(self):
+        return self._spec.get("styles")

@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# TODO: Refactor all snapins to the new snapin API and move page handlers
+#       from sidebar.py to the snapin objects that need these pages.
+
 import config
 import views, time, dashboard
 import pagetypes, table
@@ -1831,255 +1834,191 @@ sidebar_snapins["wiki"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def compute_tag_tree(taglist):
-    try:
-        sites.live().set_prepend_site(True)
-        query = "GET hosts\n" \
-                "Columns: host_name filename state num_services_ok num_services_warn " \
-                "num_services_crit num_services_unknown custom_variables"
-        hosts = sites.live().query(query)
-    finally:
-        sites.live().set_prepend_site(False)
+class VirtualHostTree(SidebarSnapin):
+    def title(self):
+        return _("Virtual Host Tree")
 
-    hosts.sort()
 
-    def get_tag_group_value(groupentries, tags):
-        for entry in groupentries:
-            if entry[0] in tags:
-                return entry[0], entry[1] # tag, title
-        # Not found -> try empty entry
-        for entry in groupentries:
-            if entry[0] == None:
-                return None, entry[1]
+    def description(self):
+        return _("This snapin shows tree views of your hosts based on their tag "
+                 "classifications. You can configure which tags to use in your "
+                 "global settings of Multisite."),
 
-        # No empty entry found -> get default (i.e. first entry)
-        return groupentries[0][:2]
 
-    # Prepare list of host tag groups and topics
-    taggroups = {}
-    topics = {}
-    for entry in config.wato_host_tags:
-        grouptitle           = entry[1]
-        if '/' in grouptitle:
-            topic, grouptitle = grouptitle.split("/", 1)
-            topics.setdefault(topic, []).append(entry)
+    def show(self):
+        if not config.virtual_host_trees:
+            url = 'wato.py?varname=virtual_host_trees&mode=edit_configvar'
+            multisite = html.render_a("Multisite", href=url, target="main")
+            html.write_html(_('You have not defined any virtual host trees. You can do this '
+                              'in the global settings for %s.') % multisite)
+            return
 
-        groupname            = entry[0]
-        group                = entry[2]
-        taggroups[groupname] = group
+        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+        if type(tree_conf) == int:
+            tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
 
-    tree = {}
-    for site, host_name, wato_folder, state, num_ok, num_warn, num_crit, num_unknown, custom_variables in hosts:
-        if wato_folder.startswith("/wato/"):
-            folder_path = wato_folder[6:-9]
-            folder_path_components = folder_path.split("/")
-            if wato.Folder.folder_exists(folder_path):
-                folder_titles = wato.get_folder_title_path(folder_path)[1:] # omit main folder
+        trees = dict([ (tree["id"], tree) for tree in
+                        wato.transform_virtual_host_trees(config.virtual_host_trees) ])
+
+        choices = sorted([ (tree["id"], tree["title"]) for tree in trees.values() ],
+                         key=lambda x: x[1])
+
+        html.begin_form("vtree")
+
+        cwd = tree_conf["cwd"].get(tree_conf["tree"])
+
+        html.dropdown("vtree", choices, deflt="%s" % tree_conf["tree"],
+                onchange='virtual_host_tree_changed(this)', style="width:210px" if cwd else None)
+
+        # Give chance to change one level up, if we are in a subtree
+        if cwd:
+            upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(cwd[:-1])
+            html.icon_button(upurl, _("Go up one tree level"), "back")
+
+        html.br()
+        html.end_form()
+        html.final_javascript(self._javascript())
+
+        try:
+            tag_groups = trees[tree_conf["tree"]]["tag_groups"]
+        except KeyError:
+            # Fallback to first host tree in case the wanted does not exist (anymore)
+            tag_groups = trees[choices[0][0]]["tag_groups"]
+
+        tree = self._compute_tag_tree(tag_groups)
+        html.open_div(class_="tag_tree")
+        self._render_tag_tree_level(tag_groups, [], cwd, _("Virtual Host Tree"), tree)
+        html.close_div()
+
+
+    def _render_tag_tree_level(self, taggroups, path, cwd, title, tree):
+        if not self._is_tag_subdir(path, cwd) and not self._is_tag_subdir(cwd, path):
+            return
+
+        if path != cwd and self._is_tag_subdir(path, cwd):
+            bullet = self._tag_tree_bullet(self._tag_tree_worst_state(tree), path, False)
+            if self._tag_tree_has_svc_problems(tree):
+                bullet += html.render_icon_button(self._tag_tree_url(taggroups, path, "svcproblems"),
+                                            _("Show the service problems contained in this branch"),
+                                            "svc_problems", target="main")
+
+            if path:
+                html.begin_foldable_container("tag-tree", ".".join(map(str, path)),
+                                              False, HTML(bullet + title))
+
+        items = tree.items()
+        items.sort()
+
+        for nr, ((title, tag), subtree) in enumerate(items):
+            subpath = path + [tag or ""]
+            url = self._tag_tree_url(taggroups, subpath, "allhosts")
+            if "_num_hosts" in subtree:
+                title += " (%d)" % subtree["_num_hosts"]
+            href = html.render_a(title, href=url, target="main")
+            if "_num_hosts" in subtree:
+                if self._is_tag_subdir(path, cwd):
+                    html.write(self._tag_tree_bullet(subtree["_state"], subpath, True))
+                    if subtree.get("_svc_problems"):
+                        url = self._tag_tree_url(taggroups, subpath, "svcproblems")
+                        html.icon_button(url, _("Show the service problems contained in this branch"),
+                                "svc_problems", target="main")
+                    html.write(href)
+                    html.br()
+            else:
+                self._render_tag_tree_level(taggroups, subpath, cwd, href, subtree)
+
+        if path and path != cwd and self._is_tag_subdir(path, cwd):
+            html.end_foldable_container()
+
+
+    def _is_tag_subdir(self, path, cwd):
+        if not cwd:
+            return True
+        elif not path:
+            return False
+        elif path[0] != cwd[0]:
+            return False
         else:
-            folder_titles = []
+            return self._is_tag_subdir(path[1:], cwd[1:])
 
-        # make state reflect the state of the services + host
-        have_svc_problems = False
-        if state:
-            state += 1 # shift 1->2 (DOWN->CRIT) and 2->3 (UNREACH->UNKNOWN)
-        if num_crit:
-            state = 2
-            have_svc_problems = True
-        elif num_unknown:
-            if state != 2:
-                state = 3
-            have_svc_problems = True
-        elif num_warn:
-            if not state:
-                state = 1
-            have_svc_problems = True
 
-        tags = custom_variables.get("TAGS", []).split()
+    def _tag_tree_bullet(self, state, path, leaf):
+        code = '<div class="tagtree %sstatebullet state%d">&nbsp;</div>' % ((leaf and "leaf " or ""), state)
+        if not leaf:
+            code = '<a title="%s" href="javascript:virtual_host_tree_enter(\'%s\');">%s</a>' % \
+               (_("Display the tree only below this node"), "|".join(path), code)
+        return code + " "
 
-        tree_entry = tree # Start at top node
 
-        # Now go through the levels of the tree. Each level may either be
-        # - a tag group id, or
-        # - "topic:" plus the name of a tag topic. That topic should only contain
-        #   checkbox tags, or:
-        # - "folder:3", where 3 is the folder level (starting at 1)
-        # The problem with the "topic" entries is, that a host may appear several
-        # times!
+    def _tag_tree_url(self, taggroups, taglist, viewname):
+        urlvars = [("view_name", viewname), ("filled_in", "filter")]
+        if viewname == "svcproblems":
+            urlvars += [ ("st1", "on"), ("st2", "on"), ("st3", "on") ]
 
-        current_branches = [ tree ]
+        for nr, (group, tag) in enumerate(zip(taggroups, taglist)):
+            if group.startswith("topic:"):
+                # Find correct tag group for this tag
+                for entry in config.wato_host_tags:
+                    for tagentry in entry[2]:
+                        if tagentry[0] == tag: # Found our tag
+                            taggroup = entry[0]
+                            urlvars.append(("host_tag_%d_grp" % nr, taggroup))
+                            urlvars.append(("host_tag_%d_op" % nr, "is"))
+                            urlvars.append(("host_tag_%d_val" % nr, tag))
+                            break
+            elif group.startswith("folder:"):
+                continue # handled later
+            else:
+                urlvars.append(("host_tag_%d_grp" % nr, group))
+                urlvars.append(("host_tag_%d_op" % nr, "is"))
+                urlvars.append(("host_tag_%d_val" % nr, tag or ""))
 
+        folder_components = {}
         for tag in taglist:
-            new_current_branches = []
-            for tree_entry in current_branches:
-                if tag.startswith("topic:"):
-                    topic = tag[6:]
-                    if topic in topics: # Could have vanished
-                        # Iterate over all host tag groups with that topic
-                        for entry in topics[topic]:
-                            grouptitle  = entry[1].split("/", 1)[1]
-                            group       = entry[2]
-                            for tagentry in group:
-                                tag_value, tag_title = tagentry[:2]
-                                if tag_value in tags:
-                                    new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
+            if tag.startswith("folder:"):
+                level_text, component = tag[7:].split(":")
+                level = int(level_text)
+                folder_components[level] = component
 
-                elif tag.startswith("folder:"):
-                    level = int(tag[7:])
-                    if level <= len(folder_titles):
-                        tag_title = folder_titles[level-1]
-                        tag_value = "folder:%d:%s" % (level, folder_path_components[level-1])
-                    else:
-                        tag_title = _("Hosts in this folder")
-                        tag_value = "folder:%d:" % level
-
-                    new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
+        if folder_components:
+            wato_path = []
+            for i in range(max(folder_components.keys())):
+                level = i + 1
+                if level not in folder_components:
+                    wato_path.append("*")
                 else:
-                    if tag not in taggroups:
-                        continue # Configuration error. User deleted tag group after configuring his tree
-                    tag_value, tag_title = get_tag_group_value(taggroups[tag], tags)
-                    new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
+                    wato_path.append(folder_components[level])
 
-            current_branches = new_current_branches
+            urlvars.append(("wato_folder", "/".join(wato_path)))
 
-        for tree_entry in new_current_branches:
-            if not tree_entry:
-                tree_entry.update({
-                    "_num_hosts" : 0,
-                    "_state"     : 0,
-                })
-            tree_entry["_num_hosts"] += 1
-            tree_entry["_svc_problems"] = tree_entry.get("_svc_problems", False) or have_svc_problems
-            if state == 2 or tree_entry["_state"] == 2:
-                tree_entry["_state"] = 2
-            else:
-                tree_entry["_state"] = max(state, tree_entry["_state"])
-
-    return tree
-
-def tag_tree_worst_state(tree):
-    if not tree.values():
-        return 3
-    if "_state" in tree:
-        return tree["_state"]
-    else:
-        states = map(tag_tree_worst_state, tree.values())
-        for x in states:
-            if x == 2:
-                return 2
-        return max(states)
+        return html.makeuri_contextless(urlvars, "view.py")
 
 
-def tag_tree_has_svc_problems(tree):
-    if "_svc_problems" in tree:
-        return tree["_svc_problems"]
-    else:
-        for x in tree.values():
-            if tag_tree_has_svc_problems(x):
-                return True
-        return False
-
-
-def tag_tree_url(taggroups, taglist, viewname):
-    urlvars = [("view_name", viewname), ("filled_in", "filter")]
-    if viewname == "svcproblems":
-        urlvars += [ ("st1", "on"), ("st2", "on"), ("st3", "on") ]
-
-    for nr, (group, tag) in enumerate(zip(taggroups, taglist)):
-        if group.startswith("topic:"):
-            # Find correct tag group for this tag
-            for entry in config.wato_host_tags:
-                for tagentry in entry[2]:
-                    if tagentry[0] == tag: # Found our tag
-                        taggroup = entry[0]
-                        urlvars.append(("host_tag_%d_grp" % nr, taggroup))
-                        urlvars.append(("host_tag_%d_op" % nr, "is"))
-                        urlvars.append(("host_tag_%d_val" % nr, tag))
-                        break
-        elif group.startswith("folder:"):
-            continue # handled later
+    def _tag_tree_worst_state(self, tree):
+        if not tree.values():
+            return 3
+        if "_state" in tree:
+            return tree["_state"]
         else:
-            urlvars.append(("host_tag_%d_grp" % nr, group))
-            urlvars.append(("host_tag_%d_op" % nr, "is"))
-            urlvars.append(("host_tag_%d_val" % nr, tag or ""))
-
-    folder_components = {}
-    for tag in taglist:
-        if tag.startswith("folder:"):
-            level_text, component = tag[7:].split(":")
-            level = int(level_text)
-            folder_components[level] = component
-
-    if folder_components:
-        wato_path = []
-        for i in range(max(folder_components.keys())):
-            level = i + 1
-            if level not in folder_components:
-                wato_path.append("*")
-            else:
-                wato_path.append(folder_components[level])
-
-        urlvars.append(("wato_folder", "/".join(wato_path)))
-
-    return html.makeuri_contextless(urlvars, "view.py")
-
-def tag_tree_bullet(state, path, leaf):
-    code = '<div class="tagtree %sstatebullet state%d">&nbsp;</div>' % ((leaf and "leaf " or ""), state)
-    if not leaf:
-        code = '<a title="%s" href="javascript:virtual_host_tree_enter(\'%s\');">%s</a>' % \
-           (_("Display the tree only below this node"), "|".join(path), code)
-    return code + " "
+            states = map(self._tag_tree_worst_state, tree.values())
+            for x in states:
+                if x == 2:
+                    return 2
+            return max(states)
 
 
-def is_tag_subdir(path, cwd):
-    if not cwd:
-        return True
-    elif not path:
-        return False
-    elif path[0] != cwd[0]:
-        return False
-    else:
-        return is_tag_subdir(path[1:], cwd[1:])
-
-def render_tag_tree_level(taggroups, path, cwd, title, tree):
-    if not is_tag_subdir(path, cwd) and not is_tag_subdir(cwd, path):
-        return
-
-    if path != cwd and is_tag_subdir(path, cwd):
-        bullet = tag_tree_bullet(tag_tree_worst_state(tree), path, False)
-        if tag_tree_has_svc_problems(tree):
-            bullet += html.render_icon_button(tag_tree_url(taggroups, path, "svcproblems"),
-                                        _("Show the service problems contained in this branch"),
-                                        "svc_problems", target="main")
-
-        if path:
-            html.begin_foldable_container("tag-tree", ".".join(map(str, path)),
-                                          False, HTML(bullet + title))
-
-    items = tree.items()
-    items.sort()
-
-    for nr, ((title, tag), subtree) in enumerate(items):
-        subpath = path + [tag or ""]
-        url = tag_tree_url(taggroups, subpath, "allhosts")
-        if "_num_hosts" in subtree:
-            title += " (%d)" % subtree["_num_hosts"]
-        href = html.render_a(title, href=url, target="main")
-        if "_num_hosts" in subtree:
-            if is_tag_subdir(path, cwd):
-                html.write(tag_tree_bullet(subtree["_state"], subpath, True))
-                if subtree.get("_svc_problems"):
-                    url = tag_tree_url(taggroups, subpath, "svcproblems")
-                    html.icon_button(url, _("Show the service problems contained in this branch"),
-                            "svc_problems", target="main")
-                html.write(href)
-                html.br()
+    def _tag_tree_has_svc_problems(self, tree):
+        if "_svc_problems" in tree:
+            return tree["_svc_problems"]
         else:
-            render_tag_tree_level(taggroups, subpath, cwd, href, subtree)
+            for x in tree.values():
+                if self._tag_tree_has_svc_problems(x):
+                    return True
+            return False
 
-    if path and path != cwd and is_tag_subdir(path, cwd):
-        html.end_foldable_container()
 
-virtual_host_tree_js = """
+    def _javascript(self):
+        return """
 function virtual_host_tree_changed(field)
 {
     var tree_conf = field.value;
@@ -2095,61 +2034,175 @@ function virtual_host_tree_enter(path)
 }
 """
 
-def render_tag_tree():
-    if not config.virtual_host_trees:
-        url = 'wato.py?varname=virtual_host_trees&mode=edit_configvar'
-        multisite = html.render_a("Multisite", href=url, target="main")
-        html.write_html(_('You have not defined any virtual host trees. You can do this '
-                          'in the global settings for %s.') % multisite)
-        return
+    def _compute_tag_tree(self, taglist):
+        try:
+            sites.live().set_prepend_site(True)
+            query = "GET hosts\n" \
+                    "Columns: host_name filename state num_services_ok num_services_warn " \
+                    "num_services_crit num_services_unknown custom_variables"
+            hosts = sites.live().query(query)
+        finally:
+            sites.live().set_prepend_site(False)
 
-    tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
-    if type(tree_conf) == int:
-        tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
+        hosts.sort()
 
-    trees = dict([ (tree["id"], tree) for tree in
-                    wato.transform_virtual_host_trees(config.virtual_host_trees) ])
+        def get_tag_group_value(groupentries, tags):
+            for entry in groupentries:
+                if entry[0] in tags:
+                    return entry[0], entry[1] # tag, title
+            # Not found -> try empty entry
+            for entry in groupentries:
+                if entry[0] == None:
+                    return None, entry[1]
 
-    choices = sorted([ (tree["id"], tree["title"]) for tree in trees.values() ],
-                     key=lambda x: x[1])
+            # No empty entry found -> get default (i.e. first entry)
+            return groupentries[0][:2]
 
-    html.begin_form("vtree")
+        # Prepare list of host tag groups and topics
+        taggroups = {}
+        topics = {}
+        for entry in config.wato_host_tags:
+            grouptitle           = entry[1]
+            if '/' in grouptitle:
+                topic, grouptitle = grouptitle.split("/", 1)
+                topics.setdefault(topic, []).append(entry)
 
-    cwd = tree_conf["cwd"].get(tree_conf["tree"])
+            groupname            = entry[0]
+            group                = entry[2]
+            taggroups[groupname] = group
 
-    html.dropdown("vtree", choices, deflt="%s" % tree_conf["tree"],
-            onchange='virtual_host_tree_changed(this)', style="width:210px" if cwd else None)
+        tree = {}
+        for site, host_name, wato_folder, state, num_ok, num_warn, num_crit, num_unknown, custom_variables in hosts:
+            if wato_folder.startswith("/wato/"):
+                folder_path = wato_folder[6:-9]
+                folder_path_components = folder_path.split("/")
+                if wato.Folder.folder_exists(folder_path):
+                    folder_titles = wato.get_folder_title_path(folder_path)[1:] # omit main folder
+            else:
+                folder_titles = []
 
-    # Give chance to change one level up, if we are in a subtree
-    if cwd:
-        upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(cwd[:-1])
-        html.icon_button(upurl, _("Go up one tree level"), "back")
+            # make state reflect the state of the services + host
+            have_svc_problems = False
+            if state:
+                state += 1 # shift 1->2 (DOWN->CRIT) and 2->3 (UNREACH->UNKNOWN)
+            if num_crit:
+                state = 2
+                have_svc_problems = True
+            elif num_unknown:
+                if state != 2:
+                    state = 3
+                have_svc_problems = True
+            elif num_warn:
+                if not state:
+                    state = 1
+                have_svc_problems = True
 
-    html.br()
-    html.end_form()
-    html.final_javascript(virtual_host_tree_js)
+            tags = custom_variables.get("TAGS", []).split()
 
-    try:
-        tag_groups = trees[tree_conf["tree"]]["tag_groups"]
-    except KeyError:
-        # Fallback to first host tree in case the wanted does not exist (anymore)
-        tag_groups = trees[choices[0][0]]["tag_groups"]
+            tree_entry = tree # Start at top node
 
-    tree = compute_tag_tree(tag_groups)
-    html.open_div(class_="tag_tree")
-    render_tag_tree_level(tag_groups, [], cwd, _("Virtual Host Tree"), tree)
-    html.close_div()
+            # Now go through the levels of the tree. Each level may either be
+            # - a tag group id, or
+            # - "topic:" plus the name of a tag topic. That topic should only contain
+            #   checkbox tags, or:
+            # - "folder:3", where 3 is the folder level (starting at 1)
+            # The problem with the "topic" entries is, that a host may appear several
+            # times!
 
-sidebar_snapins["tag_tree"] = {
-    "title" : _("Virtual Host Tree"),
-    "description" : _("This snapin shows tree views of your hosts based on their tag "
-                      "classifications. You can configure which tags to use in your "
-                      "global settings of Multisite."),
-    "render" : render_tag_tree,
-    "refresh" : True,
-    "allowed" : [ "admin", "user", "guest" ],
-    "styles" : """
+            current_branches = [ tree ]
 
+            for tag in taglist:
+                new_current_branches = []
+                for tree_entry in current_branches:
+                    if tag.startswith("topic:"):
+                        topic = tag[6:]
+                        if topic in topics: # Could have vanished
+                            # Iterate over all host tag groups with that topic
+                            for entry in topics[topic]:
+                                grouptitle  = entry[1].split("/", 1)[1]
+                                group       = entry[2]
+                                for tagentry in group:
+                                    tag_value, tag_title = tagentry[:2]
+                                    if tag_value in tags:
+                                        new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
+
+                    elif tag.startswith("folder:"):
+                        level = int(tag[7:])
+                        if level <= len(folder_titles):
+                            tag_title = folder_titles[level-1]
+                            tag_value = "folder:%d:%s" % (level, folder_path_components[level-1])
+                        else:
+                            tag_title = _("Hosts in this folder")
+                            tag_value = "folder:%d:" % level
+
+                        new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
+                    else:
+                        if tag not in taggroups:
+                            continue # Configuration error. User deleted tag group after configuring his tree
+                        tag_value, tag_title = get_tag_group_value(taggroups[tag], tags)
+                        new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
+
+                current_branches = new_current_branches
+
+            for tree_entry in new_current_branches:
+                if not tree_entry:
+                    tree_entry.update({
+                        "_num_hosts" : 0,
+                        "_state"     : 0,
+                    })
+                tree_entry["_num_hosts"] += 1
+                tree_entry["_svc_problems"] = tree_entry.get("_svc_problems", False) or have_svc_problems
+                if state == 2 or tree_entry["_state"] == 2:
+                    tree_entry["_state"] = 2
+                else:
+                    tree_entry["_state"] = max(state, tree_entry["_state"])
+
+        return tree
+
+
+    def page_handlers(self):
+        return {
+            "sidebar_ajax_tag_tree"       : self._ajax_tag_tree,
+            "sidebar_ajax_tag_tree_enter" : self._ajax_tag_tree_enter,
+        }
+
+
+    def _ajax_tag_tree(self):
+        new_tree = html.var("conf")
+
+        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+
+        if type(tree_conf) == int:
+            tree_conf = {"cwd":{}} # convert from old style
+
+        trees = dict([ (tree["id"], tree) for tree in
+                        wato.transform_virtual_host_trees(config.virtual_host_trees) ])
+
+        if new_tree not in trees:
+            raise MKUserError("conf", _("This virtual host tree does not exist."))
+
+        tree_conf["tree"] = new_tree
+        config.user.save_file("virtual_host_tree", tree_conf)
+        html.write("OK")
+
+
+    def _ajax_tag_tree_enter(self):
+        path = html.var("path").split("|") if html.var("path") else []
+        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+        tree_conf["cwd"][tree_conf["tree"]] = path
+        config.user.save_file("virtual_host_tree", tree_conf)
+
+
+    def refresh_regularly(self):
+        return True
+
+
+    def allowed_roles(self):
+        return [ "admin", "user", "guest" ]
+
+
+    def styles(self):
+        return """
 #snapin_tag_tree select {
     background-color: #6DA1B8;
     border-color: #123A4A;
@@ -2202,4 +2255,5 @@ sidebar_snapins["tag_tree"] = {
     left: 0px;
 }
 """
-}
+
+register_snapin("tag_tree", VirtualHostTree())

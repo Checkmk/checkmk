@@ -1,0 +1,10 @@
+Title: Fixed broken alert statistics view (regression since 1.4.0p8)
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1499407251
+Class: fix
+
+

@@ -1835,6 +1835,12 @@ sidebar_snapins["wiki"] = {
 #   '----------------------------------------------------------------------'
 
 class VirtualHostTree(SidebarSnapin):
+    def _load_trees(self):
+        import wato
+        self._trees = dict([ (tree["id"], tree) for tree in
+                        wato.transform_virtual_host_trees(config.virtual_host_trees) ])
+
+
     def title(self):
         return _("Virtual Host Tree")
 
@@ -1846,6 +1852,7 @@ class VirtualHostTree(SidebarSnapin):
 
 
     def show(self):
+        self._load_trees()
         if not config.virtual_host_trees:
             url = 'wato.py?varname=virtual_host_trees&mode=edit_configvar'
             multisite = html.render_a("Multisite", href=url, target="main")
@@ -1853,22 +1860,20 @@ class VirtualHostTree(SidebarSnapin):
                               'in the global settings for %s.') % multisite)
             return
 
-        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
-        if type(tree_conf) == int:
-            tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
+        tree_id, cwd = self._get_user_settings()
 
-        trees = dict([ (tree["id"], tree) for tree in
-                        wato.transform_virtual_host_trees(config.virtual_host_trees) ])
+        self._show_tree_selection(tree_id, cwd)
+        self._show_tree(tree_id, cwd)
 
-        choices = sorted([ (tree["id"], tree["title"]) for tree in trees.values() ],
-                         key=lambda x: x[1])
 
+    def _show_tree_selection(self, tree_id, cwd):
         html.begin_form("vtree")
 
-        cwd = tree_conf["cwd"].get(tree_conf["tree"])
-
-        html.dropdown("vtree", choices, deflt="%s" % tree_conf["tree"],
-                onchange='virtual_host_tree_changed(this)', style="width:210px" if cwd else None)
+        html.dropdown("vtree", self._tree_choices(),
+            deflt="%s" % tree_id,
+            onchange='virtual_host_tree_changed(this)',
+            style="width:210px" if cwd else None
+        )
 
         # Give chance to change one level up, if we are in a subtree
         if cwd:
@@ -1879,16 +1884,34 @@ class VirtualHostTree(SidebarSnapin):
         html.end_form()
         html.final_javascript(self._javascript())
 
-        try:
-            tag_groups = trees[tree_conf["tree"]]["tag_groups"]
-        except KeyError:
-            # Fallback to first host tree in case the wanted does not exist (anymore)
-            tag_groups = trees[choices[0][0]]["tag_groups"]
+
+    def _show_tree(self, tree_id, cwd):
+        tag_groups = self._trees[tree_id]["tag_groups"]
 
         tree = self._compute_tag_tree(tag_groups)
         html.open_div(class_="tag_tree")
         self._render_tag_tree_level(tag_groups, [], cwd, _("Virtual Host Tree"), tree)
         html.close_div()
+
+
+    def _get_user_settings(self):
+        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+        if type(tree_conf) == int:
+            tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
+
+        cwd = tree_conf["cwd"].get(tree_conf["tree"])
+        tree_id = tree_conf["tree"]
+
+        # Fallback to first defined tree in case the user selected does not exist anymore
+        if tree_id not in self._trees:
+            tree_id, cwd = self._tree_choices()[0][0], {}
+
+        return tree_id, cwd
+
+
+    def _tree_choices(self):
+        return sorted([ (tree["id"], tree["title"]) for tree in self._trees.values() ],
+                         key=lambda x: x[1])
 
 
     def _render_tag_tree_level(self, taggroups, path, cwd, title, tree):
@@ -2168,21 +2191,17 @@ function virtual_host_tree_enter(path)
 
 
     def _ajax_tag_tree(self):
-        new_tree = html.var("conf")
+        self._load_trees()
+        new_tree = html.var("tree_id")
 
-        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+        tree_id, cwd = self._get_user_settings()
 
-        if type(tree_conf) == int:
-            tree_conf = {"cwd":{}} # convert from old style
-
-        trees = dict([ (tree["id"], tree) for tree in
-                        wato.transform_virtual_host_trees(config.virtual_host_trees) ])
-
-        if new_tree not in trees:
+        if new_tree not in self._trees:
             raise MKUserError("conf", _("This virtual host tree does not exist."))
 
-        tree_conf["tree"] = new_tree
-        config.user.save_file("virtual_host_tree", tree_conf)
+        config.user.save_file("virtual_host_tree",
+                {"tree": tree_id, "cwd": {}})
+
         html.write("OK")
 
 

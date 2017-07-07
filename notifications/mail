@@ -779,6 +779,12 @@ def construct_content(context):
         url_prefix = context["PARAMETER_2"]
     elif context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
+    elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
+        url_prefix = context["PARAMETER_URL_PREFIX_MANUAL"]
+    elif context.get("PARAMETER_URL_PREFIX_AUTOMATIC") == "http":
+        url_prefix = "http://%s/%s" % (context["MONITORING_HOST"], context["OMD_SITE"])
+    elif context.get("PARAMETER_URL_PREFIX_AUTOMATIC") == "https":
+        url_prefix = "https://%s/%s" % (context["MONITORING_HOST"], context["OMD_SITE"])
     else:
         url_prefix = None
 
@@ -795,6 +801,7 @@ def construct_content(context):
             service_url = base_url + context['SERVICEURL']
             context['LINKEDSERVICEDESC'] = '<a href="%s">%s</a>' % (service_url, context['SERVICEDESC'])
             context['SERVICELINK']       = '\nLink:     %s' % service_url
+
     else:
         context['LINKEDHOSTNAME']    = context['HOSTNAME']
         context['LINKEDSERVICEDESC'] = context.get('SERVICEDESC', '')

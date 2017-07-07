@@ -24,6 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# We have to transform because 'add_to_event_context'
+# in modules/events.py can't handle complex data structures
+def transform_back_html_mail_url_prefix(p):
+    if type(p) == tuple:
+        return {p[0]: p[1]}
+    elif p == "automatic_http":
+        return {"automatic": "http"}
+    elif p == "automatic_https":
+        return {"automatic": "https"}
+    else:
+        return {"manual": p}
+
+def transform_forth_html_mail_url_prefix(p):
+    if type(p) == dict:
+        k, v = p.items()[0]
+        if k == "automatic":
+            return "%s_%s" % (k, v)
+        else:
+            return ("manual", p)
+    else:
+        return ("manual", p)
+
 def html_email_parameter_elements():
     elements = [
         ( "from",
@@ -87,20 +109,32 @@ def html_email_parameter_elements():
             ),
         ),
         ( "url_prefix",
-            TextAscii(
-                title = _("URL prefix for links to Check_MK"),
-                help = _("If you specify an URL prefix here, then several parts of the "
-                         "email body are armed with hyperlinks to your Check_MK GUI, so "
-                         "that the recipient of the email can directly visit the host or "
-                         "service in question in Check_MK. Specify an absolute URL including "
-                         "the <tt>.../check_mk/</tt>"),
-                regex = "^(http|https)://.*/check_mk/$",
-                regex_error = _("The URL must begin with <tt>http</tt> or "
-                                "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
-                size = 64,
-                default_value = "http://" + socket.gethostname() + "/" + (
-                    config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
-            )
+            Transform(CascadingDropdown(
+                style="dropdown",
+                title=_("URL prefix for links to Check_MK"),
+                help=_("If you use <b>Automatic HTTP/s</b> the URL prefix for "
+                       "host and service links within the notification mail "
+                       "is filled automatically. "
+                       "If you specify an URL prefix here, then several parts of the "
+                       "email body are armed with hyperlinks to your Check_MK GUI. In both cases "
+                       "the recipient of the email can directly visit the host or "
+                       "service in question in Check_MK. Specify an absolute URL including "
+                       "the <tt>.../check_mk/</tt>"),
+                choices=[
+                    ("automatic_http", _("Automatic HTTP")),
+                    ("automatic_https", _("Automatic HTTPs")),
+                    ("manual", _("Specify URL prefix"), TextAscii(
+                        regex = "^(http|https)://.*/check_mk/$",
+                        regex_error = _("The URL must begin with <tt>http</tt> or "
+                                        "<tt>https</tt> and end with <tt>/check_mk/</tt>."),
+                        size = 64,
+                        default_value = "http://" + socket.gethostname() + "/" + (
+                                        config.omd_site() and config.omd_site() + "/" or "") + "check_mk/",
+                    )),
+                ],
+                default_value=html.is_ssl_request() and "automatic_https" or "automatic_http",
+        ), forth=transform_forth_html_mail_url_prefix,
+           back=transform_back_html_mail_url_prefix)
         ),
         ( "no_floating_graphs",
             FixedValue(

@@ -1835,10 +1835,38 @@ sidebar_snapins["wiki"] = {
 #   '----------------------------------------------------------------------'
 
 class VirtualHostTree(SidebarSnapin):
+    def _load(self):
+        self._load_trees()
+        self._load_user_settings()
+
+
     def _load_trees(self):
         import wato
         self._trees = dict([ (tree["id"], tree) for tree in
                         wato.transform_virtual_host_trees(config.virtual_host_trees) ])
+
+
+    def _load_user_settings(self):
+        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+        if type(tree_conf) == int:
+            tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
+
+        tree_id = tree_conf["tree"]
+
+        # Fallback to first defined tree in case the user selected does not exist anymore
+        if tree_id not in self._trees:
+            tree_id = self._tree_choices()[0][0]
+
+        self._cwds              = tree_conf["cwd"]
+        self._current_tree_id   = tree_id
+        self._current_tree_path = self._cwds.get(self._current_tree_id, [])
+
+
+    def _save_user_settings(self):
+        config.user.save_file("virtual_host_tree", {
+            "tree" : self._current_tree_id,
+            "cwd"  : self._cwds
+        })
 
 
     def title(self):
@@ -1852,7 +1880,7 @@ class VirtualHostTree(SidebarSnapin):
 
 
     def show(self):
-        self._load_trees()
+        self._load()
         if not config.virtual_host_trees:
             url = 'wato.py?varname=virtual_host_trees&mode=edit_configvar'
             multisite = html.render_a("Multisite", href=url, target="main")
@@ -1860,24 +1888,22 @@ class VirtualHostTree(SidebarSnapin):
                               'in the global settings for %s.') % multisite)
             return
 
-        tree_id, cwd = self._get_user_settings()
-
-        self._show_tree_selection(tree_id, cwd)
-        self._show_tree(tree_id, cwd)
+        self._show_tree_selection()
+        self._show_tree()
 
 
-    def _show_tree_selection(self, tree_id, cwd):
+    def _show_tree_selection(self):
         html.begin_form("vtree")
 
         html.dropdown("vtree", self._tree_choices(),
-            deflt="%s" % tree_id,
+            deflt="%s" % self._current_tree_id,
             onchange='virtual_host_tree_changed(this)',
-            style="width:210px" if cwd else None
+            style="width:210px" if self._current_tree_path else None
         )
 
         # Give chance to change one level up, if we are in a subtree
-        if cwd:
-            upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(cwd[:-1])
+        if self._current_tree_path:
+            upurl = "javascript:virtual_host_tree_enter('%s')" % "|".join(self._current_tree_path[:-1])
             html.icon_button(upurl, _("Go up one tree level"), "back")
 
         html.br()
@@ -1885,28 +1911,13 @@ class VirtualHostTree(SidebarSnapin):
         html.final_javascript(self._javascript())
 
 
-    def _show_tree(self, tree_id, cwd):
-        tag_groups = self._trees[tree_id]["tag_groups"]
+    def _show_tree(self):
+        tag_groups = self._trees[self._current_tree_id]["tag_groups"]
 
         tree = self._compute_tag_tree(tag_groups)
         html.open_div(class_="tag_tree")
-        self._render_tag_tree_level(tag_groups, [], cwd, _("Virtual Host Tree"), tree)
+        self._render_tag_tree_level(tag_groups, [], self._current_tree_path, _("Virtual Host Tree"), tree)
         html.close_div()
-
-
-    def _get_user_settings(self):
-        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
-        if type(tree_conf) == int:
-            tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
-
-        cwd = tree_conf["cwd"].get(tree_conf["tree"])
-        tree_id = tree_conf["tree"]
-
-        # Fallback to first defined tree in case the user selected does not exist anymore
-        if tree_id not in self._trees:
-            tree_id, cwd = self._tree_choices()[0][0], {}
-
-        return tree_id, cwd
 
 
     def _tree_choices(self):
@@ -2044,9 +2055,8 @@ class VirtualHostTree(SidebarSnapin):
         return """
 function virtual_host_tree_changed(field)
 {
-    var tree_conf = field.value;
-    // Then send the info to python code via ajax call for persistance
-    get_url_sync('sidebar_ajax_tag_tree.py?conf=' + escape(tree_conf));
+    var tree_id = field.value;
+    get_url_sync('sidebar_ajax_tag_tree.py?tree_id=' + escape(tree_id));
     refresh_single_snapin("tag_tree");
 }
 
@@ -2191,25 +2201,24 @@ function virtual_host_tree_enter(path)
 
 
     def _ajax_tag_tree(self):
-        self._load_trees()
+        self._load()
         new_tree = html.var("tree_id")
-
-        tree_id, cwd = self._get_user_settings()
 
         if new_tree not in self._trees:
             raise MKUserError("conf", _("This virtual host tree does not exist."))
 
-        config.user.save_file("virtual_host_tree",
-                {"tree": tree_id, "cwd": {}})
-
+        self._current_tree_id = new_tree
+        self._save_user_settings()
         html.write("OK")
 
 
+    # TODO: Validate path in current tree
     def _ajax_tag_tree_enter(self):
+        self._load()
         path = html.var("path").split("|") if html.var("path") else []
-        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
-        tree_conf["cwd"][tree_conf["tree"]] = path
-        config.user.save_file("virtual_host_tree", tree_conf)
+        self._cwds[self._current_tree_id] = path
+        self._save_user_settings()
+        html.write("OK")
 
 
     def refresh_regularly(self):

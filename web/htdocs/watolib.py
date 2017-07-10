@@ -402,64 +402,6 @@ class ConfigDomainEventConsole(ConfigDomain):
 
 
 
-
-class ConfigDomainLiveproxy(ConfigDomain):
-    needs_sync         = False
-    needs_activation   = False
-    ident              = "liveproxyd"
-    in_global_settings = True
-
-
-    @classmethod
-    def enabled(self):
-        return config.liveproxyd_enabled
-
-
-    def config_file(self, site_specific):
-        return cmk.paths.default_config_dir + "/liveproxyd.mk"
-
-
-    # The load() and save() method only deal with the "global settings" and not
-    # the "sites" option that is saved by editing the sites. This must be merged
-    def load(self):
-        cfg = self.load_full_liveproxyd_config()
-
-        try:
-            del cfg["sites"]
-        except KeyError:
-            pass
-
-        return cfg
-
-
-    def save(self, settings, site_specific=False):
-        if site_specific:
-            raise NotImplementedError()
-
-        cfg = self.load_full_liveproxyd_config()
-        cfg.update(settings)
-        super(ConfigDomainLiveproxy, self).save(cfg, site_specific=site_specific)
-
-        self.activate()
-
-
-    def load_full_liveproxyd_config(self):
-        return store.load_mk_file(self.config_file(site_specific=False), {"sites": {}})
-
-
-    def activate(self):
-        log_audit(None, "liveproxyd-activate",
-                  _("Activating changes of liveproxyd configuration"))
-        try:
-            pidfile = cmk.paths.livestatus_unix_socket + "proxyd.pid"
-            pid = int(file(pidfile).read().strip())
-            os.kill(pid, 10)
-        except Exception, e:
-            log_exception()
-            html.show_error(_("Warning: cannot reload Livestatus Proxy-Daemon: %s") % e)
-
-
-
 class ConfigDomainCACertificates(ConfigDomain):
     needs_sync       = True
     needs_activation = True
@@ -3750,17 +3692,17 @@ class SiteManagement(object):
 
     @staticmethod
     def save_liveproxyd_config(sites):
-        config_domain = ConfigDomainLiveproxy()
-        cfg = config_domain.load()
+    	path = cmk.paths.default_config_dir + "/liveproxyd.mk"
 
-        site_cfg = {}
-        for siteid, siteconf in sites.items():
-            s = siteconf.get("socket")
-            if type(s) == tuple and s[0] == "proxy":
-                site_cfg[siteid] = s[1]
+    	conf = {}
+    	for siteid, siteconf in sites.items():
+    	    s = siteconf.get("socket")
+    	    if type(s) == tuple and s[0] == "proxy":
+    	        conf[siteid] = s[1]
 
-        cfg["sites"] = site_cfg
-        config_domain.save(cfg)
+    	store.save_to_mk_file(path, "sites", conf)
+
+       	ConfigDomainLiveproxy().activate()
 
 
     @staticmethod
@@ -3786,12 +3728,15 @@ class SiteManagement(object):
                   "assigned to it. You can use the <a href=\"%s\">host "
                   "search</a> to get a list of the hosts.") % search_url)
 
+        domains = [ConfigDomainGUI]
+        if config.liveproxyd_enabled:
+            domains = ConfigDomainLiveproxy
 
         del all_sites[site_id]
         SiteManagement.save_sites(all_sites)
         clear_site_replication_status(site_id)
         add_change("edit-sites", _("Deleted site %s") % html.render_tt(site_id),
-                   domains=[ConfigDomainGUI,ConfigDomainLiveproxy], sites=[default_site()])
+                   domains=domains, sites=[default_site()])
         return None
 
 

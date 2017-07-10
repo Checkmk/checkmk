@@ -62,6 +62,8 @@
 # styles are not modular and all defined in check_mk.css. This will
 # change in future.
 
+import traceback
+
 import bi # Needed for BI Icon. For arkane reasons (ask htdocs/module.py) this
           # cannot be imported in views.py directly.
 
@@ -302,7 +304,8 @@ def process_multisite_icons(what, row, tags, custom_vars, toplevel):
                 except Exception, e:
                     if config.debug:
                         raise
-                    result = ("alert", "%s" % e)
+                    result = ("alert", "Exception in icon '%s': %s" %
+                                (icon_id, traceback.format_exc()))
 
                 if result is None:
                     continue
@@ -338,7 +341,6 @@ def process_multisite_icons(what, row, tags, custom_vars, toplevel):
                 icons.append((sort_index, icon_name, title, url))
 
             except Exception, e:
-                import traceback
                 icons.append((sort_index, 'Exception in icon plugin!<br />' + traceback.format_exc()))
     return icons
 

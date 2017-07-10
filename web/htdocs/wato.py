@@ -16928,6 +16928,8 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
 
             if len(values) == 1:
                 defvalue = values[0]
+            elif attr.is_checkbox_tag():
+                defvalue = True
             else:
                 defvalue = attr.default_value()
 

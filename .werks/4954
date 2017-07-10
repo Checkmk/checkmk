@@ -1,0 +1,13 @@
+Title: Host/Folder properties: fixed displaying of inherited checkbox tag group values
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1499679200
+
+The inherited values of tag groups that have only a single tag choice was displayed
+wrong. It was showing a text like it was checked while in fact the inherited values
+was unchecked.

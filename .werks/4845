@@ -1,0 +1,10 @@
+Title: Windows Agent / Fileinfo: now able to read files meta information (size, age) even when file is locked
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499679986
+Class: fix
+
+

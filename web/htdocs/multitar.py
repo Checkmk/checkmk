@@ -29,14 +29,16 @@
 
 import cmk.paths
 import os, tarfile, time, shutil, cStringIO, grp
+import glob
+import fnmatch
 import subprocess
 import traceback
 import itertools
 from lib import *
 from log import logger
 
-def create(filename, components):
-    tar = tarfile.open(filename, "w:gz")
+def create(tar_filename, components):
+    tar = tarfile.open(tar_filename, "w:gz")
     for component in components:
         if len(component) == 4:
             what, name, path, excludes = component
@@ -55,31 +57,37 @@ def create(filename, components):
             else:
                 basedir = os.path.dirname(abspath)
                 filename = os.path.basename(abspath)
-            subtarname = name + ".tar"
 
-            exclude_args = list(itertools.chain.from_iterable([ ("--exclude", f) for f in excludes ]))
+            subtar_buffer = cStringIO.StringIO()
+            with tarfile.TarFile(fileobj=subtar_buffer, mode="w") as subtar_obj:
+                subtar_obj.add(os.path.join(basedir, filename), arcname=filename,
+                                filter=lambda x: filter_subtar_files(x, excludes))
 
-            cmd = [ "tar", "cf", "-", "--force-local" ] \
-                  + exclude_args \
-                  + [ "-C", basedir, filename ]
+            subtar_size = len(subtar_buffer.getvalue())
+            subtar_buffer.seek(0)
 
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            subdata, stderr = p.communicate()
-
-            if p.returncode != 0:
-                raise MKGeneralException("Failed to create tar: %s\nExit code: %d\nOutput: %s" %
-                    (subprocess.list2cmdline(cmd), p.returncode, stderr))
-
-            info = tarfile.TarInfo(subtarname)
+            info = tarfile.TarInfo("%s.tar" % name)
             info.mtime = time.time()
             info.uid = 0
             info.gid = 0
-            info.size = len(subdata)
+            info.size = subtar_size
             info.mode = 0644
             info.type = tarfile.REGTYPE
-            info.name = subtarname
 
-            tar.addfile(info, cStringIO.StringIO(subdata))
+            tar.addfile(info, subtar_buffer)
+
+
+def filter_subtar_files(tarinfo, excludes):
+    filename = os.path.basename(tarinfo.name)
+
+    for exclude in excludes:
+        if filename == exclude:
+            return None
+        elif fnmatch.fnmatchcase(filename, exclude):
+            return None
+
+    return tarinfo
+
 
 def extract_from_buffer(buffer, elements):
     stream = cStringIO.StringIO()
@@ -188,7 +196,6 @@ def extract_domains(tar, domains):
                     exclude_files = []
                     for pattern in domain.get("exclude", []):
                         if "*" in pattern:
-                            import glob
                             exclude_files.extend(glob.glob("%s/%s" % (domain["prefix"], pattern)))
                         else:
                             exclude_files.append("%s/%s" % (domain["prefix"], pattern))

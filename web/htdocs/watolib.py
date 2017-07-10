@@ -2786,6 +2786,10 @@ class Attribute:
         return []
 
 
+    def is_checkbox_tag(self):
+        return False
+
+
 
 # A simple text attribute. It is stored in
 # a Python unicode string
@@ -2907,10 +2911,15 @@ class HostTagAttribute(Attribute):
         tag_id, title, self._taglist = tag_definition
         name = "tag_" + tag_id
         if len(self._taglist) == 1:
-            def_value = True
+            def_value = None
         else:
             def_value = self._taglist[0][0]
         Attribute.__init__(self, name, title, "", def_value)
+
+
+    def is_checkbox_tag(self):
+        return len(self._taglist) == 1
+
 
     def paint(self, value, hostname):
         # Localize the titles. To make the strings available in the scanned localization

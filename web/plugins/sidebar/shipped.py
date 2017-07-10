@@ -1912,9 +1912,9 @@ class VirtualHostTree(SidebarSnapin):
 
 
     def _show_tree(self):
-        tag_groups = self._trees[self._current_tree_id]["tag_groups"]
+        tree_spec = self._trees[self._current_tree_id]["tag_groups"]
 
-        tree = self._compute_tag_tree(tag_groups)
+        tree = self._compute_tag_tree(tree_spec)
         html.open_div(class_="tag_tree")
         self._render_tag_tree_level(tag_groups, [], self._current_tree_path, _("Virtual Host Tree"), tree)
         html.close_div()
@@ -1984,33 +1984,33 @@ class VirtualHostTree(SidebarSnapin):
         return code + " "
 
 
-    def _tag_tree_url(self, taggroups, taglist, viewname):
+    def _tag_tree_url(self, taggroups, tree_spec, viewname):
         urlvars = [("view_name", viewname), ("filled_in", "filter")]
         if viewname == "svcproblems":
             urlvars += [ ("st1", "on"), ("st2", "on"), ("st3", "on") ]
 
-        for nr, (group, tag) in enumerate(zip(taggroups, taglist)):
+        for nr, (group, level_spec) in enumerate(zip(taggroups, tree_spec)):
             if group.startswith("topic:"):
                 # Find correct tag group for this tag
                 for entry in config.wato_host_tags:
                     for tagentry in entry[2]:
-                        if tagentry[0] == tag: # Found our tag
+                        if tagentry[0] == level_spec: # Found our tag
                             taggroup = entry[0]
                             urlvars.append(("host_tag_%d_grp" % nr, taggroup))
                             urlvars.append(("host_tag_%d_op" % nr, "is"))
-                            urlvars.append(("host_tag_%d_val" % nr, tag))
+                            urlvars.append(("host_tag_%d_val" % nr, level_spec))
                             break
             elif group.startswith("folder:"):
                 continue # handled later
             else:
                 urlvars.append(("host_tag_%d_grp" % nr, group))
                 urlvars.append(("host_tag_%d_op" % nr, "is"))
-                urlvars.append(("host_tag_%d_val" % nr, tag or ""))
+                urlvars.append(("host_tag_%d_val" % nr, level_spec or ""))
 
         folder_components = {}
-        for tag in taglist:
-            if tag.startswith("folder:"):
-                level_text, component = tag[7:].split(":")
+        for level_spec in tree_spec:
+            if level_spec.startswith("folder:"):
+                level_text, component = level_spec[7:].split(":")
                 level = int(level_text)
                 folder_components[level] = component
 
@@ -2067,45 +2067,13 @@ function virtual_host_tree_enter(path)
 }
 """
 
-    def _compute_tag_tree(self, taglist):
-        try:
-            sites.live().set_prepend_site(True)
-            query = "GET hosts\n" \
-                    "Columns: host_name filename state num_services_ok num_services_warn " \
-                    "num_services_crit num_services_unknown custom_variables"
-            hosts = sites.live().query(query)
-        finally:
-            sites.live().set_prepend_site(False)
-
-        hosts.sort()
-
-        def get_tag_group_value(groupentries, tags):
-            for entry in groupentries:
-                if entry[0] in tags:
-                    return entry[0], entry[1] # tag, title
-            # Not found -> try empty entry
-            for entry in groupentries:
-                if entry[0] == None:
-                    return None, entry[1]
-
-            # No empty entry found -> get default (i.e. first entry)
-            return groupentries[0][:2]
-
-        # Prepare list of host tag groups and topics
-        taggroups = {}
-        topics = {}
-        for entry in config.wato_host_tags:
-            grouptitle           = entry[1]
-            if '/' in grouptitle:
-                topic, grouptitle = grouptitle.split("/", 1)
-                topics.setdefault(topic, []).append(entry)
-
-            groupname            = entry[0]
-            group                = entry[2]
-            taggroups[groupname] = group
+    def _compute_tag_tree(self, tree_spec):
+        tag_groups, topics = self._get_tag_config()
 
         tree = {}
-        for site, host_name, wato_folder, state, num_ok, num_warn, num_crit, num_unknown, custom_variables in hosts:
+        for site, host_name, wato_folder, state, num_ok, num_warn, \
+            num_crit, num_unknown, custom_variables in self._get_all_hosts():
+
             if wato_folder.startswith("/wato/"):
                 folder_path = wato_folder[6:-9]
                 folder_path_components = folder_path.split("/")
@@ -2114,21 +2082,7 @@ function virtual_host_tree_enter(path)
             else:
                 folder_titles = []
 
-            # make state reflect the state of the services + host
-            have_svc_problems = False
-            if state:
-                state += 1 # shift 1->2 (DOWN->CRIT) and 2->3 (UNREACH->UNKNOWN)
-            if num_crit:
-                state = 2
-                have_svc_problems = True
-            elif num_unknown:
-                if state != 2:
-                    state = 3
-                have_svc_problems = True
-            elif num_warn:
-                if not state:
-                    state = 1
-                have_svc_problems = True
+            state, have_svc_problems = self._calculate_state(state, num_crit, num_unknown, num_warn)
 
             tags = custom_variables.get("TAGS", []).split()
 
@@ -2144,23 +2098,25 @@ function virtual_host_tree_enter(path)
 
             current_branches = [ tree ]
 
-            for tag in taglist:
+            for level_spec in tree_spec:
                 new_current_branches = []
                 for tree_entry in current_branches:
-                    if tag.startswith("topic:"):
-                        topic = tag[6:]
-                        if topic in topics: # Could have vanished
-                            # Iterate over all host tag groups with that topic
-                            for entry in topics[topic]:
-                                grouptitle  = entry[1].split("/", 1)[1]
-                                group       = entry[2]
-                                for tagentry in group:
-                                    tag_value, tag_title = tagentry[:2]
-                                    if tag_value in tags:
-                                        new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
+                    if level_spec.startswith("topic:"):
+                        topic = level_spec[6:]
+                        if topic not in topics:
+                            continue # silently skip not existing topics
 
-                    elif tag.startswith("folder:"):
-                        level = int(tag[7:])
+                        # Iterate over all host tag groups with that topic
+                        for entry in topics[topic]:
+                            grouptitle  = entry[1].split("/", 1)[1]
+                            group       = entry[2]
+                            for tagentry in group:
+                                tag_value, tag_title = tagentry[:2]
+                                if tag_value in tags:
+                                    new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
+
+                    elif level_spec.startswith("folder:"):
+                        level = int(level_spec[7:])
                         if level <= len(folder_titles):
                             tag_title = folder_titles[level-1]
                             tag_value = "folder:%d:%s" % (level, folder_path_components[level-1])
@@ -2170,9 +2126,11 @@ function virtual_host_tree_enter(path)
 
                         new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
                     else:
-                        if tag not in taggroups:
-                            continue # Configuration error. User deleted tag group after configuring his tree
-                        tag_value, tag_title = get_tag_group_value(taggroups[tag], tags)
+                        # It' a tag group
+                        if level_spec not in tag_groups:
+                            continue # silently skip not existant tag groups
+
+                        tag_value, tag_title = self._get_tag_group_value(tag_groups[level_spec], tags)
                         new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
 
                 current_branches = new_current_branches
@@ -2191,6 +2149,72 @@ function virtual_host_tree_enter(path)
                     tree_entry["_state"] = max(state, tree_entry["_state"])
 
         return tree
+
+
+    # Prepare list of host tag groups and topics
+    def _get_tag_config(self):
+        tag_groups = {}
+        topics = {}
+        for entry in config.wato_host_tags:
+            grouptitle           = entry[1]
+            if '/' in grouptitle:
+                topic, grouptitle = grouptitle.split("/", 1)
+                topics.setdefault(topic, []).append(entry)
+
+            groupname            = entry[0]
+            group                = entry[2]
+            tag_groups[groupname] = group
+
+        return tag_groups, config
+
+
+    def _get_all_hosts(self):
+        try:
+            sites.live().set_prepend_site(True)
+            query = "GET hosts\n" \
+                    "Columns: host_name filename state num_services_ok num_services_warn " \
+                    "num_services_crit num_services_unknown custom_variables"
+            hosts = sites.live().query(query)
+        finally:
+            sites.live().set_prepend_site(False)
+
+        return sorted(hosts)
+
+
+    def _calculate_state(self, state, num_crit, num_unknown, num_warn):
+        # make state reflect the state of the services + host
+        have_svc_problems = False
+        if state:
+            state += 1 # shift 1->2 (DOWN->CRIT) and 2->3 (UNREACH->UNKNOWN)
+
+        if num_crit:
+            state = 2
+            have_svc_problems = True
+
+        elif num_unknown:
+            if state != 2:
+                state = 3
+            have_svc_problems = True
+
+        elif num_warn:
+            if not state:
+                state = 1
+            have_svc_problems = True
+
+        return state, have_svc_problems
+
+
+    def _get_tag_group_value(self, groupentries, tags):
+        for entry in groupentries:
+            if entry[0] in tags:
+                return entry[0], entry[1] # tag, title
+        # Not found -> try empty entry
+        for entry in groupentries:
+            if entry[0] == None:
+                return None, entry[1]
+
+        # No empty entry found -> get default (i.e. first entry)
+        return groupentries[0][:2]
 
 
     def page_handlers(self):

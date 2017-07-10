@@ -1989,6 +1989,15 @@ class VirtualHostTree(SidebarSnapin):
         if viewname == "svcproblems":
             urlvars += [ ("st1", "on"), ("st2", "on"), ("st3", "on") ]
 
+        urlvars += self._get_tag_url_vars(tree_spec, node_values)
+        urlvars += self._get_folder_url_vars(node_values)
+
+        return html.makeuri_contextless(urlvars, "view.py")
+
+
+    def _get_tag_url_vars(self, tree_spec, node_values):
+        urlvars = []
+
         tag_tree_spec = [ l for l in tree_spec if not l.startswith("foldertree:")
                             and not l.startswith("folder:") ]
         tag_node_values = [ v for v in node_values if not v.startswith("foldertree:")
@@ -2011,6 +2020,11 @@ class VirtualHostTree(SidebarSnapin):
                 urlvars.append(("host_tag_%d_op" % nr, "is"))
                 urlvars.append(("host_tag_%d_val" % nr, tag or ""))
 
+        return urlvars
+
+
+    def _get_folder_url_vars(self, node_values):
+        urlvars = []
         folder_components = {}
         for level_spec in node_values:
             if level_spec.startswith("folder:") or level_spec.startswith("foldertree:"):
@@ -2028,7 +2042,7 @@ class VirtualHostTree(SidebarSnapin):
 
             urlvars.append(("wato_folder", "/".join(wato_path)))
 
-        return html.makeuri_contextless(urlvars, "view.py")
+        return urlvars
 
 
     def _tag_tree_worst_state(self, tree):

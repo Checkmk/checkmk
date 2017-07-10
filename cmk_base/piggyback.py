@@ -28,6 +28,7 @@ import os
 
 import cmk.paths
 import cmk.hostname_translation
+import cmk.store as store
 from cmk.exceptions import MKGeneralException
 
 import cmk_base.utils
@@ -66,7 +67,7 @@ def get_piggyback_files(hostname):
             raise
 
     for sourcehost in source_hosts:
-        if sourcehost in ['.', '..'] or sourcehost.startswith(".new."):
+        if sourcehost.startswith("."):
             continue
 
         file_path = dir + "/" + sourcehost
@@ -97,16 +98,10 @@ def get_piggyback_files(hostname):
 
 
 def store_piggyback_info(sourcehost, piggybacked):
-    piggyback_path = cmk.paths.tmp_dir + "/piggyback/"
     for backedhost, lines in piggybacked.items():
         console.verbose("Storing piggyback data for %s.\n" % backedhost)
-        dir = piggyback_path + backedhost
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-        out = file(dir + "/.new." + sourcehost, "w")
-        for line in lines:
-            out.write("%s\n" % line)
-        os.rename(dir + "/.new." + sourcehost, dir + "/" + sourcehost)
+        content = "\n".join(lines) + "\n"
+        store.save_file(os.path.join(cmk.paths.tmp_dir, "piggyback", backedhost, sourcehost), content)
 
     # Remove piggybacked information that is not
     # being sent this turn

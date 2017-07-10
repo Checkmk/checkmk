@@ -1,0 +1,39 @@
+Title: Fixed possible exception in cmc.log when working with piggyback data
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1499694823
+
+When monitoring hosts using piggyback data an exception could occur when
+a host is checked by different processes at the same time. This could happen
+e.g. when the running core updates the piggyback data while a manual
+"check_mk -nv [hostname]" call also tries to update this data.
+
+The fixed exception looks like this in cmc.log:
+
+C+:
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >> Traceback (most recent call last):
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>   File "/omd/sites/master/share/check_mk/modules/keepalive.py", line 118, in do_keepalive
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>     status = command_function(command_tuple)
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>   File "/omd/sites/master/share/check_mk/modules/keepalive.py", line 464, in execute_keepalive_command
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>     return mode_function(hostname, ipaddress)
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>   File "/omd/sites/master/share/check_mk/modules/check_mk_base.py", line 1242, in do_check
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>     do_all_checks_on_host(hostname, ipaddress, only_check_types)
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>   File "/omd/sites/master/share/check_mk/modules/check_mk_base.py", line 1526, in do_all_checks_on_host
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>     res = execute_check(checkname, item, params, description, aggrname, address)
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>   File "/omd/sites/master/share/check_mk/modules/check_mk_base.py", line 1415, in execute_check
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>     info = get_info_for_check(hostname, ipaddress, infotype)
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>   File "/omd/sites/master/share/check_mk/modules/check_mk_base.py", line 224, in get_info_for_check
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>     info = apply_parse_function(get_host_info(hostname, ipaddress, section_name, max_cachefile_age, ignore_check_interval), section_name)
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>   File "/omd/sites/master/share/check_mk/modules/check_mk_base.py", line 317, in get_host_info
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>     ignore_check_interval)
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>   File "/omd/sites/master/share/check_mk/modules/check_mk_base.py", line 461, in get_realhost_info
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>     store_piggyback_info(hostname, piggybacked)
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>   File "/omd/sites/master/share/check_mk/modules/check_mk_base.py", line 598, in store_piggyback_info
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >>     os.rename(dir + "/.new." + sourcehost, dir + "/" + sourcehost)
+2017-07-03 19:39:04 [4] [Check_MK helper 2835] >> OSError: [Errno 2] No such file or directory
+C-:

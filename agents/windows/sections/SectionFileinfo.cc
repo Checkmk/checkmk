@@ -141,7 +141,7 @@ void SectionFileinfo::outputFileinfos(std::ostream &out, const char *path) {
 }
 
 bool SectionFileinfo::outputFileinfo(std::ostream &out, const std::string filename) {
-    auto hFile = std::make_unique<ManagedHandle>(CreateFile(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL,
+    auto hFile = std::make_unique<ManagedHandle>(CreateFile(filename.c_str(), 0, FILE_SHARE_READ, NULL,
             OPEN_EXISTING, 0, NULL));
 
     FILETIME ftCreate, ftAccess, ftWrite;

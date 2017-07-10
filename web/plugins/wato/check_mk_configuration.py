@@ -371,10 +371,11 @@ def wato_host_tag_group_choices():
 
 
 def virtual_host_tree_choices():
-    return wato_host_tag_group_choices() + [
-            ( "folder:%d" % l, _("WATO Folder Level %d") % l)
-            for l in range(1, 7)
-        ]
+    return \
+        wato_host_tag_group_choices() \
+        + [ ("foldertree:", _("WATO folder tree")) ] \
+        + [ ( "folder:%d" % l, _("WATO folder level %d") % l) for l in range(1, 7) ]
+
 
 def transform_virtual_host_trees(trees):
     def id_from_title(title):
@@ -387,6 +388,10 @@ def transform_virtual_host_trees(trees):
                 "title"      : tree[0],
                 "tag_groups" : tree[1],
             }
+        else:
+            # Transform existing dicts with old key "tag_groups"
+            if "tag_groups" in tree:
+                tree["tree_spec"] = tree.pop("tag_groups")
 
     return sorted(trees, key = lambda x: x["title"])
 
@@ -400,7 +405,7 @@ def validate_virtual_host_trees(value, varprefix):
 
         # Validate that each element is selected once
         seen = set()
-        for element in tree["tag_groups"]:
+        for element in tree["tree_spec"]:
             if element in seen:
                 raise MKUserError(varprefix,
                     _("Found '%s' a second time in tree '%s'. Each element can only be "
@@ -424,7 +429,7 @@ register_configvar(group,
                         title = _("Title of the tree"),
                         allow_empty = False,
                     )),
-                    ("tag_groups", ListOf(
+                    ("tree_spec", ListOf(
                         DropdownChoice(
                             choices = virtual_host_tree_choices,
                         ),

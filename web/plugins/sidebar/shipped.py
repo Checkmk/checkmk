@@ -1912,11 +1912,11 @@ class VirtualHostTree(SidebarSnapin):
 
 
     def _show_tree(self):
-        tree_spec = self._trees[self._current_tree_id]["tag_groups"]
+        tree_spec = self._trees[self._current_tree_id]["tree_spec"]
 
         tree = self._compute_tag_tree(tree_spec)
         html.open_div(class_="tag_tree")
-        self._render_tag_tree_level(tag_groups, [], self._current_tree_path, _("Virtual Host Tree"), tree)
+        self._render_tag_tree_level(tree_spec, [], self._current_tree_path, _("Virtual Host Tree"), tree)
         html.close_div()
 
 
@@ -1925,14 +1925,14 @@ class VirtualHostTree(SidebarSnapin):
                          key=lambda x: x[1])
 
 
-    def _render_tag_tree_level(self, taggroups, path, cwd, title, tree):
+    def _render_tag_tree_level(self, tree_spec, path, cwd, title, tree):
         if not self._is_tag_subdir(path, cwd) and not self._is_tag_subdir(cwd, path):
             return
 
         if path != cwd and self._is_tag_subdir(path, cwd):
             bullet = self._tag_tree_bullet(self._tag_tree_worst_state(tree), path, False)
             if self._tag_tree_has_svc_problems(tree):
-                bullet += html.render_icon_button(self._tag_tree_url(taggroups, path, "svcproblems"),
+                bullet += html.render_icon_button(self._tag_tree_url(tree_spec, path, "svcproblems"),
                                             _("Show the service problems contained in this branch"),
                                             "svc_problems", target="main")
 
@@ -1940,26 +1940,26 @@ class VirtualHostTree(SidebarSnapin):
                 html.begin_foldable_container("tag-tree", ".".join(map(str, path)),
                                               False, HTML(bullet + title))
 
-        items = tree.items()
-        items.sort()
+        for nr, ((node_title, node_value), subtree) in enumerate(sorted(tree.get("_children", {}).items())):
+            subpath = path + [node_value or ""]
+            url = self._tag_tree_url(tree_spec, subpath, "allhosts")
 
-        for nr, ((title, tag), subtree) in enumerate(items):
-            subpath = path + [tag or ""]
-            url = self._tag_tree_url(taggroups, subpath, "allhosts")
             if "_num_hosts" in subtree:
-                title += " (%d)" % subtree["_num_hosts"]
-            href = html.render_a(title, href=url, target="main")
-            if "_num_hosts" in subtree:
+                node_title += " (%d)" % subtree["_num_hosts"]
+
+            node_title = html.render_a(node_title, href=url, target="main")
+
+            if "_children" not in subtree:
                 if self._is_tag_subdir(path, cwd):
                     html.write(self._tag_tree_bullet(subtree["_state"], subpath, True))
                     if subtree.get("_svc_problems"):
-                        url = self._tag_tree_url(taggroups, subpath, "svcproblems")
+                        url = self._tag_tree_url(tree_spec, subpath, "svcproblems")
                         html.icon_button(url, _("Show the service problems contained in this branch"),
                                 "svc_problems", target="main")
-                    html.write(href)
+                    html.write(node_title)
                     html.br()
             else:
-                self._render_tag_tree_level(taggroups, subpath, cwd, href, subtree)
+                self._render_tag_tree_level(tree_spec, subpath, cwd, node_title, subtree)
 
         if path and path != cwd and self._is_tag_subdir(path, cwd):
             html.end_foldable_container()
@@ -1984,35 +1984,38 @@ class VirtualHostTree(SidebarSnapin):
         return code + " "
 
 
-    def _tag_tree_url(self, taggroups, tree_spec, viewname):
+    def _tag_tree_url(self, tree_spec, node_values, viewname):
         urlvars = [("view_name", viewname), ("filled_in", "filter")]
         if viewname == "svcproblems":
             urlvars += [ ("st1", "on"), ("st2", "on"), ("st3", "on") ]
 
-        for nr, (group, level_spec) in enumerate(zip(taggroups, tree_spec)):
-            if group.startswith("topic:"):
+        tag_tree_spec = [ l for l in tree_spec if not l.startswith("foldertree:")
+                            and not l.startswith("folder:") ]
+        tag_node_values = [ v for v in node_values if not v.startswith("foldertree:")
+                            and not v.startswith("folder:") ]
+
+        for nr, (level_spec, tag) in enumerate(zip(tag_tree_spec, tag_node_values)):
+            if level_spec.startswith("topic:"):
                 # Find correct tag group for this tag
                 for entry in config.wato_host_tags:
                     for tagentry in entry[2]:
-                        if tagentry[0] == level_spec: # Found our tag
+                        if tagentry[0] == tag: # Found our tag
                             taggroup = entry[0]
                             urlvars.append(("host_tag_%d_grp" % nr, taggroup))
                             urlvars.append(("host_tag_%d_op" % nr, "is"))
-                            urlvars.append(("host_tag_%d_val" % nr, level_spec))
+                            urlvars.append(("host_tag_%d_val" % nr, tag))
                             break
-            elif group.startswith("folder:"):
-                continue # handled later
+
             else:
-                urlvars.append(("host_tag_%d_grp" % nr, group))
+                urlvars.append(("host_tag_%d_grp" % nr, level_spec))
                 urlvars.append(("host_tag_%d_op" % nr, "is"))
-                urlvars.append(("host_tag_%d_val" % nr, level_spec or ""))
+                urlvars.append(("host_tag_%d_val" % nr, tag or ""))
 
         folder_components = {}
-        for level_spec in tree_spec:
-            if level_spec.startswith("folder:"):
-                level_text, component = level_spec[7:].split(":")
-                level = int(level_text)
-                folder_components[level] = component
+        for level_spec in node_values:
+            if level_spec.startswith("folder:") or level_spec.startswith("foldertree:"):
+                level, component = level_spec.split(":")[1:]
+                folder_components[int(level)] = component
 
         if folder_components:
             wato_path = []
@@ -2071,84 +2074,109 @@ function virtual_host_tree_enter(path)
         tag_groups, topics = self._get_tag_config()
 
         tree = {}
-        for site, host_name, wato_folder, state, num_ok, num_warn, \
-            num_crit, num_unknown, custom_variables in self._get_all_hosts():
-
-            if wato_folder.startswith("/wato/"):
-                folder_path = wato_folder[6:-9]
-                folder_path_components = folder_path.split("/")
-                if wato.Folder.folder_exists(folder_path):
-                    folder_titles = wato.get_folder_title_path(folder_path)[1:] # omit main folder
-            else:
-                folder_titles = []
-
-            state, have_svc_problems = self._calculate_state(state, num_crit, num_unknown, num_warn)
-
-            tags = custom_variables.get("TAGS", []).split()
-
-            tree_entry = tree # Start at top node
-
-            # Now go through the levels of the tree. Each level may either be
-            # - a tag group id, or
-            # - "topic:" plus the name of a tag topic. That topic should only contain
-            #   checkbox tags, or:
-            # - "folder:3", where 3 is the folder level (starting at 1)
-            # The problem with the "topic" entries is, that a host may appear several
-            # times!
-
-            current_branches = [ tree ]
-
-            for level_spec in tree_spec:
-                new_current_branches = []
-                for tree_entry in current_branches:
-                    if level_spec.startswith("topic:"):
-                        topic = level_spec[6:]
-                        if topic not in topics:
-                            continue # silently skip not existing topics
-
-                        # Iterate over all host tag groups with that topic
-                        for entry in topics[topic]:
-                            grouptitle  = entry[1].split("/", 1)[1]
-                            group       = entry[2]
-                            for tagentry in group:
-                                tag_value, tag_title = tagentry[:2]
-                                if tag_value in tags:
-                                    new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
-
-                    elif level_spec.startswith("folder:"):
-                        level = int(level_spec[7:])
-                        if level <= len(folder_titles):
-                            tag_title = folder_titles[level-1]
-                            tag_value = "folder:%d:%s" % (level, folder_path_components[level-1])
-                        else:
-                            tag_title = _("Hosts in this folder")
-                            tag_value = "folder:%d:" % level
-
-                        new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
-                    else:
-                        # It' a tag group
-                        if level_spec not in tag_groups:
-                            continue # silently skip not existant tag groups
-
-                        tag_value, tag_title = self._get_tag_group_value(tag_groups[level_spec], tags)
-                        new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
-
-                current_branches = new_current_branches
-
-            for tree_entry in new_current_branches:
-                if not tree_entry:
-                    tree_entry.update({
-                        "_num_hosts" : 0,
-                        "_state"     : 0,
-                    })
-                tree_entry["_num_hosts"] += 1
-                tree_entry["_svc_problems"] = tree_entry.get("_svc_problems", False) or have_svc_problems
-                if state == 2 or tree_entry["_state"] == 2:
-                    tree_entry["_state"] = 2
-                else:
-                    tree_entry["_state"] = max(state, tree_entry["_state"])
+        for host_row in self._get_all_hosts():
+            self._add_host_to_tree(tree_spec, tree, host_row, tag_groups, topics)
 
         return tree
+
+
+    def _add_host_to_tree(self, tree_spec, tree, host_row, tag_groups, topics):
+        site, host_name, wato_folder, state, num_ok, num_warn, \
+            num_crit, num_unknown, custom_variables = host_row
+
+        if wato_folder.startswith("/wato/"):
+            folder_path = wato_folder[6:-9]
+            folder_path_components = folder_path.split("/")
+            if wato.Folder.folder_exists(folder_path):
+                folder_titles = wato.get_folder_title_path(folder_path)[1:] # omit main folder
+        else:
+            folder_titles = []
+
+        state, have_svc_problems = self._calculate_state(state, num_crit, num_unknown, num_warn)
+
+        tags = custom_variables.get("TAGS", []).split()
+
+        # Now go through the levels of the tree. Each level may either be
+        # - a tag group id, or
+        # - "topic:" plus the name of a tag topic. That topic should only contain
+        #   checkbox tags, or:
+        # - "folder:3", where 3 is the folder level (starting at 1)
+        # The problem with the "topic" entries is, that a host may appear several
+        # times!
+
+        parent_level_branches = [ tree ]
+
+        for level_spec in tree_spec:
+            this_level_branches = []
+            for tree_entry in parent_level_branches:
+                if level_spec.startswith("topic:"):
+                    topic = level_spec[6:]
+                    if topic not in topics:
+                        continue # silently skip not existing topics
+
+                    # Iterate over all host tag groups with that topic
+                    for entry in topics[topic]:
+                        grouptitle  = entry[1].split("/", 1)[1]
+                        group       = entry[2]
+                        for tagentry in group:
+                            tag_value, tag_title = tagentry[:2]
+                            if tag_value in tags:
+                                this_level_branches.append(tree_entry.setdefault("_children", {}).setdefault((tag_title, tag_value), {}))
+
+                elif level_spec.startswith("folder:"):
+                    level = int(level_spec.split(":", 1)[1])
+
+                    if level <= len(folder_titles):
+                        node_title = folder_titles[level-1]
+                        node_value = "folder:%d:%s" % (level, folder_path_components[level-1])
+                    else:
+                        node_title = _("Hosts in this folder")
+                        node_value = "folder:%d:" % level
+
+                    this_level_branches.append(tree_entry.setdefault("_children", {}).setdefault((node_title, node_value), {}))
+
+                elif level_spec.startswith("foldertree:"):
+                    path_components = []
+                    foldertree_tree_entry = tree_entry
+                    for path_component in folder_path_components:
+                        path_components.append(path_component)
+
+                        level = len(path_components)
+                        if level <= len(folder_titles):
+                            node_title = folder_titles[level-1]
+                            node_value = "foldertree:%d:%s" % (level, path_components[level-1])
+                        else:
+                            node_title = _("Main folder")
+                            node_value = "foldertree:%d:" % level
+
+                        foldertree_tree_entry = foldertree_tree_entry.setdefault("_children", {}).setdefault((node_title, node_value), {})
+
+                        if path_components == folder_path_components: # Direct host parent
+                            this_level_branches.append(foldertree_tree_entry)
+
+                else:
+                    # It' a tag group
+                    if level_spec not in tag_groups:
+                        continue # silently skip not existant tag groups
+
+                    tag_value, tag_title = self._get_tag_group_value(tag_groups[level_spec], tags)
+                    this_level_branches.append(tree_entry.setdefault("_children", {}).setdefault((tag_title, tag_value), {}))
+
+            parent_level_branches = this_level_branches
+
+        # Add the numbers/state of this host to the last level the host is invovled with
+        for tree_entry in this_level_branches:
+            if not tree_entry:
+                tree_entry.update({
+                    "_num_hosts" : 0,
+                    "_state"     : 0,
+                })
+            tree_entry["_num_hosts"] += 1
+            tree_entry["_svc_problems"] = tree_entry.get("_svc_problems", False) or have_svc_problems
+            if state == 2 or tree_entry["_state"] == 2:
+                tree_entry["_state"] = 2
+            else:
+                tree_entry["_state"] = max(state, tree_entry["_state"])
 
 
     # Prepare list of host tag groups and topics

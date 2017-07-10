@@ -1,0 +1,13 @@
+Title: Virtual host trees: The whole WATO folder structure can now be added
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499691375
+Class: feature
+
+Instead of configuring a fixed number of folders to the virtual host tree
+configuration it is now possible to add the "WATO folder tree" to the
+definition which makes the virtual host tree dynamically render all folders
+that have hosts that are part of the virtual host tree definition

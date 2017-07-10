@@ -296,7 +296,7 @@ def _automation_analyse_service(args):
     # 4. active checks
 
     # Compute effective check table, in order to remove SNMP duplicates
-    check_table = check_table.get_check_table(hostname, remove_duplicates = True)
+    table = check_table.get_check_table(hostname, remove_duplicates = True)
 
     # 1. Manual checks
     for nr, (checkgroup, entries) in enumerate(config.static_checks.items()):
@@ -343,7 +343,7 @@ def _automation_analyse_service(args):
                     ct, item, params = entry # new format without host name
                     hn = hostname
 
-                if (ct, item) not in check_table:
+                if (ct, item) not in table:
                     continue # this is a removed duplicate or clustered service
                 descr = config.service_description(hn, ct, item)
                 if hn == hostname and descr == servicedesc:

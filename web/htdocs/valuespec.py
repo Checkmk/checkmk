@@ -1951,24 +1951,30 @@ class RadioChoice(DropdownChoice):
             choices.sort(cmp=lambda a,b: cmp(a[1], b[1]))
         else:
             choices = self._choices
-        for n, entry in enumerate(choices):
+
+        for index, entry in enumerate(choices):
             if self._columns != None:
                 html.open_td()
+
             if len(entry) > 2 and entry[2] != None: # icon!
                 label = html.render_icon(entry[2], entry[1])
             else:
                 label = entry[1]
-            html.radiobutton(varprefix, str(n), value == entry[0], label)
+
+            html.radiobutton(varprefix, self.option_id(entry[0]), value == entry[0], label)
+
             if len(entry) > 3 and entry[3]:
                 html.open_p()
                 html.write(entry[3])
                 html.close_p()
+
             if self._columns != None:
                 html.close_td()
-                if (n+1) % self._columns == 0 and (n+1) < len(self._choices):
+                if (index+1) % self._columns == 0 and (index+1) < len(self._choices):
                     html.tr('')
             else:
                 html.nbsp()
+
         if self._columns != None:
             mod = len(self._choices) % self._columns
             if mod:
@@ -1976,6 +1982,7 @@ class RadioChoice(DropdownChoice):
                     html.td('')
             html.close_tr()
             html.close_table()
+
         html.end_radio_group()
 
 

@@ -1,0 +1,13 @@
+Title: Fixed possible exception during activation when files are modified while activating
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1499674099
+Class: fix
+
+When activating changes via WATO it is packing the current configuration in so called sync
+snapshots. In case the files are modified while being packed an error occured preventing
+the whole activation process. This could especially happen in environments with a larger
+number of active GUI users.

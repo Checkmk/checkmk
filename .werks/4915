@@ -1,0 +1,13 @@
+Title: solaris_mem: Unified graphs and Per-O-Meter with common memory checks
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p25
+Date: 1499693045
+
+The graphs have been different between common memory checks and services
+provided by solaris_mem. This has been changed now. A side effect is the
+Per-O-Meter which is now also available.

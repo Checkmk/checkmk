@@ -60,6 +60,7 @@ def setup_site_and_switch_user():
     sys.stdout.write("===============================================\n")
     sys.stdout.write("Switching to site context\n")
     sys.stdout.write("===============================================\n")
+    sys.stdout.flush()
 
     exit_code = site.switch_to_site_user()
 
@@ -79,7 +80,7 @@ def _get_site_object():
         return os.environ.get("EDITION", testlib.CMKVersion.CEE)
 
     def site_branch():
-        return os.environ.get("BRANCH", "master")
+        return os.environ.get("BRANCH", "1.4.0")
 
     def reuse_site():
         return os.environ.get("REUSE", "1") == "1"

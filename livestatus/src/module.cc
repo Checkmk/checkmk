@@ -207,8 +207,7 @@ void *main_thread(void *data) {
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(g_unix_socket, &fds);
-        int retval =
-            poller.poll(g_unix_socket + 1, &fds, nullptr, nullptr, &tv);
+        int retval = poller.poll(g_unix_socket + 1, &fds, nullptr, &tv);
         if (retval > 0 && FD_ISSET(g_unix_socket, &fds)) {
             int cc = accept(g_unix_socket, nullptr, nullptr);
             if (cc > g_max_fd_ever) {

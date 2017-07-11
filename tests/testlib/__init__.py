@@ -63,6 +63,7 @@ class CMKVersion(object):
 
     CEE   = "cee"
     CRE   = "cre"
+    CME   = "cme"
 
     def __init__(self, version, edition, branch):
         self._version = version
@@ -109,7 +110,24 @@ class CMKVersion(object):
 
 
     def edition(self):
-        return self.edition_short == CMKVersion.CRE and "raw" or "enterprise"
+        if self.edition_short == CMKVersion.CRE:
+            return "raw"
+        elif self.edition_short == CMKVersion.CEE:
+            return "enterprise"
+        elif self.edition_short == CMKVersion.CME:
+            return "managed"
+
+
+    def is_managed_edition(self):
+        return self.edition_short == CMKVersion.CME
+
+
+    def is_enterprise_edition(self):
+        return self.edition_short == CMKVersion.CEE
+
+
+    def is_raw_edition(self):
+        return self.edition_short == CMKVersion.CRE
 
 
     def _needed_distro(self):
@@ -377,7 +395,7 @@ class Site(object):
             cmk_path() + "/.werks",
         ]
 
-        if os.path.exists(cmc_path()):
+        if os.path.exists(cmc_path()) and not self.version.is_raw_edition():
             paths += [
                 cmc_path() + "/bin",
                 cmc_path() + "/modules",
@@ -392,7 +410,7 @@ class Site(object):
                 cmc_path() + "/agents",
             ]
 
-        if os.path.exists(cme_path()):
+        if os.path.exists(cme_path()) and self.version.is_managed_edition():
             paths += [
                 cme_path(),
             ]

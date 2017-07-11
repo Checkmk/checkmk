@@ -1,0 +1,10 @@
+Title: Windows Agent / fileinfo: fixed another issue, where meta information (size,age) was not accessible
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1499780405
+Class: fix
+
+

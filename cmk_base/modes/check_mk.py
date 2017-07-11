@@ -316,8 +316,14 @@ modes.register(Mode(
 def mode_dump_agent(hostname):
     import cmk_base.agent_data as agent_data
     import cmk_base.piggyback as piggyback
+    import cmk_base.ip_lookup as ip_lookup
     try:
-        console.output(agent_data.get_agent_info(hostname, hostname, 999999999))
+        if config.is_cluster(hostname):
+            raise MKBailOut("Can not be used with cluster hosts")
+
+        if config.is_tcp_host(hostname):
+            ipaddress = ip_lookup.lookup_ip_address(hostname)
+            console.output(agent_data.get_agent_info(hostname, ipaddress, 999999999))
         console.output(piggyback.get_piggyback_info(hostname))
     except MKAgentError, e:
         raise MKBailOut("Problem contacting agent: %s" % e)

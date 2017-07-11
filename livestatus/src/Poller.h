@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <sys/select.h>
+#include <algorithm>
 #include <cerrno>
 #include "ChronoUtils.h"
 
@@ -35,10 +36,11 @@ public:
     Poller() {
         FD_ZERO(&_readfds);
         FD_ZERO(&_writefds);
+        _maxfd = -1;
     }
 
     template <typename Rep, typename Period>
-    int poll(int nfds, std::chrono::duration<Rep, Period> timeout) {
+    int poll(std::chrono::duration<Rep, Period> timeout) {
         int retval;
         timeval tv = to_timeval(timeout);
         // I/O primitives can fail when interrupted by a signal, so we should
@@ -46,13 +48,13 @@ public:
         // encapsulated in e.g. glibc's TEMP_FAILURE_RETRY macro, see:
         // https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
         do {
-            retval = select(nfds, &_readfds, &_writefds, nullptr, &tv);
+            retval = select(_maxfd + 1, &_readfds, &_writefds, nullptr, &tv);
         } while (retval == -1 && errno == EINTR);
         return retval;
     }
 
-    void addReadFD(int fd) { FD_SET(fd, &_readfds); }
-    void addWriteFD(int fd) { FD_SET(fd, &_writefds); }
+    void addReadFD(int fd) { addFD(fd, _readfds); }
+    void addWriteFD(int fd) { addFD(fd, _writefds); }
 
     bool isReadFDSet(int fd) const { return FD_ISSET(fd, &_readfds); }
     bool isWriteFDSet(int fd) const { return FD_ISSET(fd, &_writefds); }
@@ -60,6 +62,12 @@ public:
 private:
     fd_set _readfds;
     fd_set _writefds;
+    int _maxfd;
+
+    void addFD(int fd, fd_set &fds) {
+        FD_SET(fd, &fds);
+        _maxfd = std::max(_maxfd, fd);
+    }
 };
 
 #endif  // Poller_h

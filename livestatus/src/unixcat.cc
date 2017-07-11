@@ -61,11 +61,7 @@ ssize_t read_with_timeout(int from, char *buffer, int size,
                           microseconds timeout) {
     Poller poller;
     poller.addReadFD(from);
-    int retval = poller.poll(from + 1, timeout);
-    if (retval > 0) {
-        return read(from, buffer, size);
-    }
-    return -2;
+    return poller.poll(timeout) > 0 ? read(from, buffer, size) : -2;
 }
 
 void *copy_thread(void *info) {

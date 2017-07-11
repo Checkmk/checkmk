@@ -1293,7 +1293,7 @@ def transform_view_to_valuespec_value(view):
 
         else:
             pname, viewname = entry
-            columns.append((pname, viewname, ''))
+            columns.append((pname, viewname, None))
 
 
 def transform_valuespec_value_to_view(view):

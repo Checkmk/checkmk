@@ -61,10 +61,9 @@ void printErrno(const string &msg) {
 ssize_t read_with_timeout(int from, char *buffer, int size,
                           microseconds timeout) {
     Poller poller;
-    fd_set fds;
-    FD_ZERO(&fds);
-    FD_SET(from, &fds);
-    int retval = poller.poll(from + 1, &fds, nullptr, timeout);
+    FD_ZERO(poller.readFDs());
+    FD_SET(from, poller.readFDs());
+    int retval = poller.poll(from + 1, timeout);
     if (retval > 0) {
         return read(from, buffer, size);
     }

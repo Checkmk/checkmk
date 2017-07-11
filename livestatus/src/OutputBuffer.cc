@@ -79,12 +79,11 @@ void OutputBuffer::writeData(ostringstream &os) {
     size_t bytes_to_write = os.tellp();
     while (!_termination_flag && bytes_to_write > 0) {
         Poller poller;
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(_fd, &fds);
+        FD_ZERO(poller.writeFDs());
+        FD_SET(_fd, poller.writeFDs());
 
-        int retval = poller.poll(_fd + 1, nullptr, &fds, milliseconds(100));
-        if (retval > 0 && FD_ISSET(_fd, &fds)) {
+        int retval = poller.poll(_fd + 1, milliseconds(100));
+        if (retval > 0 && FD_ISSET(_fd, poller.writeFDs())) {
             ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
             if (bytes_written == -1) {
                 generic_error ge("could not write " +

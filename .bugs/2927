@@ -1,12 +1,20 @@
 Title: mknotify with distributed monitoring
 Component: wato
-State: open
+Class: bug
+State: wontfix
 Date: 2017-07-05 14:08:01
 Targetversion: 1.4.0
-Class: bug
 
 If you set up a distributed monitoring environment with a central notification instance on master site.
 After activating mknotifyd and activate the listener port on the master, this setting will automatically
 synchronized to all slave sites. A user have to modify each sitespecific global settings to deactivate
 the listener and add the connection to the master.
 This global setting should not be synchronized to all slaves.
+
+2017-07-11 16:58:04: changed state open -> wontfix
+We have introduced the site specific globals for the local site. With this change it is now possible
+to configure individual settings for the central site. The "global settings" now act as what they
+are named: global defaults.
+
+The central site specific option to enable the port listener should be set in the central site
+specific global settings.

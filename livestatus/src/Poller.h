@@ -35,8 +35,7 @@ public:
     Poller() {}
 
     template <typename Rep, typename Period>
-    int poll(int nfds, fd_set *readfds, fd_set *writefds,
-             std::chrono::duration<Rep, Period> timeout) {
+    int poll(int nfds, std::chrono::duration<Rep, Period> timeout) {
         int retval;
         timeval tv = to_timeval(timeout);
         // I/O primitives can fail when interrupted by a signal, so we should
@@ -44,10 +43,17 @@ public:
         // encapsulated in e.g. glibc's TEMP_FAILURE_RETRY macro, see:
         // https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
         do {
-            retval = select(nfds, readfds, writefds, nullptr, &tv);
+            retval = select(nfds, &_readfds, &_writefds, nullptr, &tv);
         } while (retval == -1 && errno == EINTR);
         return retval;
     }
+
+    fd_set *readFDs() { return &_readfds; }
+    fd_set *writeFDs() { return &_writefds; }
+
+private:
+    fd_set _readfds;
+    fd_set _writefds;
 };
 
 #endif  // Poller_h

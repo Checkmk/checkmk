@@ -206,12 +206,11 @@ InputBuffer::Result InputBuffer::readData() {
         }
 
         Poller poller;
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(_fd, &fds);
+        FD_ZERO(poller.readFDs());
+        FD_SET(_fd, poller.readFDs());
 
-        int retval = poller.poll(_fd + 1, &fds, nullptr, milliseconds(200));
-        if (retval > 0 && FD_ISSET(_fd, &fds)) {
+        int retval = poller.poll(_fd + 1, milliseconds(200));
+        if (retval > 0 && FD_ISSET(_fd, poller.readFDs())) {
             ssize_t r = read(_fd, &_readahead_buffer[_write_index],
                              _readahead_buffer.capacity() - _write_index);
             if (r < 0) {

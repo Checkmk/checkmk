@@ -202,12 +202,11 @@ void *main_thread(void *data) {
         do_statistics();
 
         Poller poller;
-        fd_set fds;
-        FD_ZERO(&fds);
-        FD_SET(g_unix_socket, &fds);
+        FD_ZERO(poller.readFDs());
+        FD_SET(g_unix_socket, poller.readFDs());
         int retval =
-            poller.poll(g_unix_socket + 1, &fds, nullptr, milliseconds(2500));
-        if (retval > 0 && FD_ISSET(g_unix_socket, &fds)) {
+            poller.poll(g_unix_socket + 1, milliseconds(2500));
+        if (retval > 0 && FD_ISSET(g_unix_socket, poller.readFDs())) {
             int cc = accept(g_unix_socket, nullptr, nullptr);
             if (cc > g_max_fd_ever) {
                 g_max_fd_ever = cc;

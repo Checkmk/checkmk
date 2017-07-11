@@ -1883,9 +1883,9 @@ class VirtualHostTree(SidebarSnapin):
         self._load()
         if not config.virtual_host_trees:
             url = 'wato.py?varname=virtual_host_trees&mode=edit_configvar'
-            multisite = html.render_a("Multisite", href=url, target="main")
-            html.p(HTML(_('You have not defined any virtual host trees. You can do this '
-                     'in the global settings for %s.') % multisite))
+            multisite_link = html.render_a(_("global settings"), href=url, target="main")
+            html.p(_('You have not defined any virtual host trees. You can do this '
+                     'in the %s.') % multisite_link)
             return
 
         self._show_tree_selection()

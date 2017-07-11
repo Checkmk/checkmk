@@ -94,7 +94,7 @@ void SectionFileinfo::determine_filepaths_simple_search(std::string base_path, s
     std::stringstream ss;
     if (findHandle != INVALID_HANDLE_VALUE) {
         do {
-            if (true || (0 == (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))) {
+            if (0 == (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
                 ss.str("");
                 ss.clear();
                 ss << base_path << "\\" << data.cFileName;
@@ -141,21 +141,18 @@ void SectionFileinfo::outputFileinfos(std::ostream &out, const char *path) {
 }
 
 bool SectionFileinfo::outputFileinfo(std::ostream &out, const std::string filename) {
-    auto hFile = std::make_unique<ManagedHandle>(CreateFile(filename.c_str(), 0, FILE_SHARE_READ, NULL,
-            OPEN_EXISTING, 0, NULL));
-
-    FILETIME ftCreate, ftAccess, ftWrite;
-    if (!GetFileTime(hFile->get_handle(), &ftCreate, &ftAccess, &ftWrite))
-        return false;
-
-    LARGE_INTEGER size;
-    if(!GetFileSizeEx(hFile->get_handle(), &size))
-        return false;
-
-    out << filename.c_str() << "|" << size.QuadPart << "|"
-        << std::fixed << std::setprecision(0)
-        << file_time(&ftWrite) << "\n";
-
-    return true;
+    WIN32_FIND_DATA findData;
+    HANDLE findHandle;
+    if ( (findHandle=FindFirstFile(filename.c_str(), &findData)) != INVALID_HANDLE_VALUE )
+    {
+        unsigned long long size = (unsigned long long)findData.nFileSizeLow +
+                (((unsigned long long)findData.nFileSizeHigh) << 32);
+        out << filename.c_str() << "|" << size << "|"
+            << std::fixed << std::setprecision(0)
+            << file_time(&findData.ftLastWriteTime) << "\n";
+        FindClose(findHandle);
+        return true;
+    }
+    return false;
 }
 

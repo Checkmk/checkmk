@@ -1,0 +1,14 @@
+Title: Web-API: Fixed calls related to groups when using CME
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cme
+State: unknown
+Version: 1.4.0p9
+Date: 1499763203
+
+The WEB API calls related to groups of hosts, services or contacts
+were not dealing with the customer field. This has been added as
+required attribute now when using the CME just like it's done when
+using the GUI.

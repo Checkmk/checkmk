@@ -5,6 +5,7 @@ import pytest
 import time
 import os
 
+import cmk
 from testlib import web, APIError
 
 def test_global_settings(site, web):
@@ -152,43 +153,69 @@ def test_write_host_tags(web, site):
         web.delete_host("test-host-dmz")
 
 
+# TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), [ "contact", "host", "service" ])
 def test_add_group(web, group_type):
     group_id     = "%s_testgroup_id" % group_type
     group_alias  = "%s_testgroup_alias" % group_type
     try:
-        web.add_group(group_type, group_id, {"alias": group_alias})
+        attributes = {"alias": group_alias}
+
+        if cmk.is_managed_edition():
+            attributes["customer"] = "provider"
+
+        web.add_group(group_type, group_id, attributes)
         all_groups = web.get_all_groups(group_type)
 
         assert group_id in all_groups
         assert group_alias == all_groups[group_id]["alias"]
+
+        if cmk.is_managed_edition():
+            assert provider == all_groups[group_id]["provider"]
     finally:
         web.delete_group(group_type, group_id)
 
 
+# TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), [ "contact", "host", "service" ])
 def test_edit_group(web, group_type):
     group_id     = "%s_testgroup_id" % group_type
     group_alias  = "%s_testgroup_alias" % group_type
     group_alias2 = "%s_testgroup_otheralias" % group_type
     try:
-        web.add_group(group_type, group_id, {"alias": group_alias})
-        web.edit_group(group_type, group_id, {"alias": group_alias2})
+        attributes = {"alias": group_alias}
+
+        if cmk.is_managed_edition():
+            attributes["customer"] = "provider"
+
+        web.add_group(group_type, group_id, attributes)
+
+        attributes["alias"] = group_alias2
+        web.edit_group(group_type, group_id, attributes)
 
         all_groups = web.get_all_groups(group_type)
         assert group_id in all_groups
-        assert group_alias2 in all_groups[group_id]["alias"]
+        assert group_alias2 == all_groups[group_id]["alias"]
+
+        if cmk.is_managed_edition():
+            assert "provider" == all_groups[group_id]["customer"]
     finally:
         web.delete_group(group_type, group_id)
 
 
+# TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), [ "contact", "host", "service" ])
 def test_edit_group_missing(web, group_type):
     group_id     = "%s_testgroup_id" % group_type
     group_alias  = "%s_testgroup_alias" % group_type
     group_alias2 = "%s_testgroup_otheralias" % group_type
     try:
-        web.add_group(group_type, group_id, {"alias": group_alias})
+        attributes = {"alias": group_alias}
+
+        if cmk.is_managed_edition():
+            attributes["customer"] = "provider"
+
+        web.add_group(group_type, group_id, attributes)
         try:
             #web.edit_group(group_type, group_id, {"alias": group_alias2}, expect_error = True)
             web.edit_group(group_type, "%s_missing" % group_id, {"alias": group_alias2}, expect_error = True)
@@ -201,14 +228,26 @@ def test_edit_group_missing(web, group_type):
         web.delete_group(group_type, group_id)
 
 
+# TODO: Parameterize test for cme / non cme
 def test_edit_cg_group_with_nagvis_maps(web, site):
     dummy_map_filepath1 = "%s/etc/nagvis/maps/blabla.cfg" % site.root
     dummy_map_filepath2 = "%s/etc/nagvis/maps/bloblo.cfg" % site.root
     try:
         file(dummy_map_filepath1, "w")
         file(dummy_map_filepath2, "w")
-        web.add_group("contact", "nagvis_test", {"alias": "nagvis_test_alias", "nagvis_maps": ["blabla"]})
-        web.edit_group("contact", "nagvis_test", {"alias": "nagvis_test_alias", "nagvis_maps": ["bloblo"]})
+
+        attributes = {
+            "alias": "nagvis_test_alias",
+            "nagvis_maps": ["blabla"]
+        }
+
+        if cmk.is_managed_edition():
+            attributes["customer"] = "provider"
+
+        web.add_group("contact", "nagvis_test", attributes)
+
+        attributes["nagvis_maps"] = ["bloblo"]
+        web.edit_group("contact", "nagvis_test", attributes)
 
         all_groups = web.get_all_groups("contact")
         assert "nagvis_test" in all_groups
@@ -219,13 +258,18 @@ def test_edit_cg_group_with_nagvis_maps(web, site):
         os.unlink(dummy_map_filepath2)
 
 
-
+# TODO: Parameterize test for cme / non cme
 @pytest.mark.parametrize(("group_type"), [ "contact", "host", "service" ])
 def test_delete_group(web, group_type):
     group_id     = "%s_testgroup_id" % group_type
     group_alias  = "%s_testgroup_alias" % group_type
     try:
-        web.add_group(group_type, group_id, {"alias": group_alias})
+        attributes = {"alias": group_alias}
+
+        if cmk.is_managed_edition():
+            attributes["customer"] = "provider"
+
+        web.add_group(group_type, group_id, attributes)
     finally:
         web.delete_group(group_type, group_id)
 

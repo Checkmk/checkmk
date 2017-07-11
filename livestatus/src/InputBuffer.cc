@@ -206,7 +206,7 @@ InputBuffer::Result InputBuffer::readData() {
         }
 
         Poller poller;
-        FD_SET(_fd, poller.readFDs());
+        poller.addReadFD(_fd);
         int retval = poller.poll(_fd + 1, milliseconds(200));
         if (retval > 0 && FD_ISSET(_fd, poller.readFDs())) {
             ssize_t r = read(_fd, &_readahead_buffer[_write_index],

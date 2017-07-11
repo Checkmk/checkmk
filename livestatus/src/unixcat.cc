@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include <pthread.h>
-#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
@@ -61,7 +60,7 @@ void printErrno(const string &msg) {
 ssize_t read_with_timeout(int from, char *buffer, int size,
                           microseconds timeout) {
     Poller poller;
-    FD_SET(from, poller.readFDs());
+    poller.addReadFD(from);
     int retval = poller.poll(from + 1, timeout);
     if (retval > 0) {
         return read(from, buffer, size);

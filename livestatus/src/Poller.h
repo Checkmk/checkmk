@@ -51,6 +51,9 @@ public:
         return retval;
     }
 
+    void addReadFD(int fd) { FD_SET(fd, &_readfds); }
+    void addWriteFD(int fd) { FD_SET(fd, &_writefds); }
+
     fd_set *readFDs() { return &_readfds; }
     fd_set *writeFDs() { return &_writefds; }
 

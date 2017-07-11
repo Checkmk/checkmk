@@ -2174,6 +2174,11 @@ function virtual_host_tree_enter(path)
                         continue # silently skip not existant tag groups
 
                     tag_value, tag_title = self._get_tag_group_value(tag_groups[level_spec], tags)
+
+                    if self._trees[self._current_tree_id].get("exclude_empty_tag_choices", False) \
+                       and tag_value is None:
+                        continue
+
                     this_level_branches.append(tree_entry.setdefault("_children", {}).setdefault((tag_title, tag_value), {}))
 
             parent_level_branches = this_level_branches

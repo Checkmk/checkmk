@@ -54,6 +54,7 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "OutputBuffer.h"
+#include "Poller.h"
 #include "Store.h"
 #include "StringUtils.h"
 #include "TimeperiodsCache.h"
@@ -202,10 +203,12 @@ void *main_thread(void *data) {
         tv.tv_sec = 2;
         tv.tv_usec = 500 * 1000;
 
+        Poller poller;
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(g_unix_socket, &fds);
-        int retval = select(g_unix_socket + 1, &fds, nullptr, nullptr, &tv);
+        int retval =
+            poller.poll(g_unix_socket + 1, &fds, nullptr, nullptr, &tv);
         if (retval > 0 && FD_ISSET(g_unix_socket, &fds)) {
             int cc = accept(g_unix_socket, nullptr, nullptr);
             if (cc > g_max_fd_ever) {

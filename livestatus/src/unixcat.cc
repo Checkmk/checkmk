@@ -34,6 +34,7 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include "Poller.h"
 
 using std::cerr;
 using std::endl;
@@ -55,13 +56,14 @@ void printErrno(const string &msg) {
 }
 
 ssize_t read_with_timeout(int from, char *buffer, int size, int us) {
+    Poller poller;
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(from, &fds);
     struct timeval tv;
     tv.tv_sec = us / 1000000;
     tv.tv_usec = us % 1000000;
-    int retval = select(from + 1, &fds, nullptr, nullptr, &tv);
+    int retval = poller.poll(from + 1, &fds, nullptr, nullptr, &tv);
     if (retval > 0) {
         return read(from, buffer, size);
     }

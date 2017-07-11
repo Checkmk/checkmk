@@ -29,7 +29,6 @@
 #include <cstddef>
 #include <iomanip>
 #include <ratio>
-#include "ChronoUtils.h"
 #include "Logger.h"
 #include "Poller.h"
 
@@ -84,8 +83,7 @@ void OutputBuffer::writeData(ostringstream &os) {
         FD_ZERO(&fds);
         FD_SET(_fd, &fds);
 
-        timeval tv = to_timeval(milliseconds(100));
-        int retval = poller.poll(_fd + 1, nullptr, &fds, &tv);
+        int retval = poller.poll(_fd + 1, nullptr, &fds, milliseconds(100));
         if (retval > 0 && FD_ISSET(_fd, &fds)) {
             ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
             if (bytes_written == -1) {

@@ -29,7 +29,6 @@
 #include <cstring>
 #include <ostream>
 #include <ratio>
-#include "ChronoUtils.h"
 #include "Logger.h"
 #include "Poller.h"
 
@@ -211,8 +210,7 @@ InputBuffer::Result InputBuffer::readData() {
         FD_ZERO(&fds);
         FD_SET(_fd, &fds);
 
-        timeval tv = to_timeval(milliseconds(200));
-        int retval = poller.poll(_fd + 1, &fds, nullptr, &tv);
+        int retval = poller.poll(_fd + 1, &fds, nullptr, milliseconds(200));
         if (retval > 0 && FD_ISSET(_fd, &fds)) {
             ssize_t r = read(_fd, &_readahead_buffer[_write_index],
                              _readahead_buffer.capacity() - _write_index);

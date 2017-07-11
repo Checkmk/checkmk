@@ -429,6 +429,10 @@ register_configvar(group,
                         title = _("Title of the tree"),
                         allow_empty = False,
                     )),
+                    ("exclude_empty_tag_choices", Checkbox(
+                        title = _("Exclude empty tag choices"),
+                        default_value = False,
+                    )),
                     ("tree_spec", ListOf(
                         DropdownChoice(
                             choices = virtual_host_tree_choices,

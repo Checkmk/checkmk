@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OutputBuffer.h"
-#include <sys/select.h>
 #include <unistd.h>
 #include <chrono>
 #include <cstddef>
@@ -81,7 +80,7 @@ void OutputBuffer::writeData(ostringstream &os) {
         Poller poller;
         poller.addWriteFD(_fd);
         int retval = poller.poll(_fd + 1, milliseconds(100));
-        if (retval > 0 && FD_ISSET(_fd, poller.writeFDs())) {
+        if (retval > 0 && poller.isWriteFDSet(_fd)) {
             ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
             if (bytes_written == -1) {
                 generic_error ge("could not write " +

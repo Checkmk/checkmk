@@ -466,17 +466,27 @@ def action_delete_group(request, group_type):
 def get_group_extra_info(request, group_type):
     extra_info = {}
     extra_info["alias"] = request.get("alias")
+
     if group_type == "contact" and "nagvis_maps" in request:
         extra_info["nagvis_maps"] = request["nagvis_maps"]
+
+    if cmk.is_managed_edition():
+        extra_info["customer"] = request["customer"]
+
     return extra_info
 
 
 def validate_group_request_keys(request, group_type):
+    required_keys = ["groupname", "alias"]
+
+    if cmk.is_managed_edition():
+        required_keys.append("customer")
+
     if group_type == "contact":
-        validate_request_keys(request, required_keys=["groupname", "alias"],
+        validate_request_keys(request, required_keys=required_keys,
                                        optional_keys=["nagvis_maps"])
     else:
-        validate_request_keys(request, required_keys=["groupname", "alias"])
+        validate_request_keys(request, required_keys=required_keys)
 
 
 def action_add_group(request, group_type):

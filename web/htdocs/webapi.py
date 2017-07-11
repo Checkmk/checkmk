@@ -32,6 +32,11 @@ import config
 from watolib import *
 from valuespec import *
 
+if cmk.is_managed_edition():
+    import managed
+else:
+    managed = None
+
 try:
     import simplejson as json
 except ImportError:

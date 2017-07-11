@@ -1016,7 +1016,7 @@ if opt_tracefile:
 def get_pattern(pattern, line):
     if not line:
         return []
-    p = re.compile(pattern)
+    p = re.compile(pattern, re.MULTILINE)
     return p.findall(line)
 
 if tracefile:

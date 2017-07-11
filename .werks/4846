@@ -1,0 +1,13 @@
+Title: ESX monitoring: fixed incomplete data, when the xml response from the esx server includes newlines
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499777566
+Class: fix
+
+In most scenarios, the xml response never has a newline.
+There was an instance, where a newline was entered into a comment field.
+This newline broke the xml parser...
+

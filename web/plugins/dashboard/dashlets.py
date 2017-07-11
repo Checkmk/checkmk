@@ -816,7 +816,7 @@ def dashlet_snapin(nr, dashlet):
     html.open_div(id_="snapin_container_%s" % dashlet['snapin'], class_="snapin")
     html.open_div(id_="snapin_%s" % dashlet['snapin'], class_="content")
     sidebar.render_snapin_styles(snapin)
-    snapin['render']()
+    snapin.show()
     html.close_div()
     html.close_div()
     html.close_div()
@@ -826,12 +826,13 @@ def dashlet_snapin(nr, dashlet):
 
 def dashlet_snapin_get_snapins():
     import sidebar # FIXME: HACK, clean this up somehow
-    return sorted([ (k, v['title']) for k, v in sidebar.sidebar_snapins.items() ], key=lambda x: x[1])
+    return sorted([ (k, v.title()) for k, v in sidebar.sidebar_snapins.items() ],
+                    key=lambda x: x[1])
 
 
 def dashlet_snapin_title(dashlet):
     import sidebar # FIXME: HACK, clean this up somehow
-    return sidebar.sidebar_snapins[dashlet['snapin']]['title']
+    return sidebar.sidebar_snapins[dashlet['snapin']].title()
 
 
 dashlet_types["snapin"] = {

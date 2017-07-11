@@ -1876,7 +1876,7 @@ class VirtualHostTree(SidebarSnapin):
     def description(self):
         return _("This snapin shows tree views of your hosts based on their tag "
                  "classifications. You can configure which tags to use in your "
-                 "global settings of Multisite."),
+                 "global settings of Multisite.")
 
 
     def show(self):

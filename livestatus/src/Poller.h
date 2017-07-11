@@ -32,7 +32,10 @@
 
 class Poller {
 public:
-    Poller() {}
+    Poller() {
+        FD_ZERO(&_readfds);
+        FD_ZERO(&_writefds);
+    }
 
     template <typename Rep, typename Period>
     int poll(int nfds, std::chrono::duration<Rep, Period> timeout) {

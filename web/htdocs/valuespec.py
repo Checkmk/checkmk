@@ -1569,7 +1569,7 @@ class DropdownChoice(ValueSpec):
         self._sorted             = kwargs.get("sorted", False)
         self._empty_text         = kwargs.get("empty_text", _("There are no elements defined for this selection yet."))
         self._invalid_choice     = kwargs.get("invalid_choice", "complain") # also possible: "replace"
-        self._invalid_choice_title = kwargs.get("invalid_choice_title", _("Element does not exist anymore"))
+        self._invalid_choice_title = kwargs.get("invalid_choice_title", _("Element '%r' does not exist anymore"))
         self._invalid_choice_error = kwargs.get("invalid_choice_error",
             _("The selected element is not longer available. Please select something else."))
         self._no_preselect       = kwargs.get("no_preselect", False)
@@ -1634,8 +1634,8 @@ class DropdownChoice(ValueSpec):
 
 
     def _get_invalid_choice_title(self, value):
-        if "%s" in self._invalid_choice_title:
-            return self._invalid_choice_title % value
+        if "%s" in self._invalid_choice_title or "%r" in self._invalid_choice_title:
+            return self._invalid_choice_title % (value,)
         else:
             return self._invalid_choice_title
 

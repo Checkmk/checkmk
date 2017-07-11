@@ -173,7 +173,9 @@ def test_add_group(web, group_type):
         if cmk.is_managed_edition():
             assert provider == all_groups[group_id]["provider"]
     finally:
-        web.delete_group(group_type, group_id)
+        all_groups = web.get_all_groups(group_type)
+        if group_id in all_groups:
+            web.delete_group(group_type, group_id)
 
 
 # TODO: Parameterize test for cme / non cme

@@ -69,7 +69,7 @@ def setup_site_and_switch_user():
 
 def _get_site_object():
     def site_version():
-        return os.environ.get("VERSION", testlib.CMKVersion.DEFAULT)
+        return os.environ.get("VERSION", testlib.CMKVersion.DAILY)
 
     def site_edition():
         return os.environ.get("EDITION", testlib.CMKVersion.CEE)

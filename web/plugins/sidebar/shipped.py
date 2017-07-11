@@ -1854,7 +1854,7 @@ class VirtualHostTree(SidebarSnapin):
         tree_id = tree_conf["tree"]
 
         # Fallback to first defined tree in case the user selected does not exist anymore
-        if tree_id not in self._trees:
+        if tree_id not in self._trees and self._trees:
             tree_id = self._tree_choices()[0][0]
 
         self._cwds              = tree_conf["cwd"]
@@ -1884,8 +1884,8 @@ class VirtualHostTree(SidebarSnapin):
         if not config.virtual_host_trees:
             url = 'wato.py?varname=virtual_host_trees&mode=edit_configvar'
             multisite = html.render_a("Multisite", href=url, target="main")
-            html.write_html(_('You have not defined any virtual host trees. You can do this '
-                              'in the global settings for %s.') % multisite)
+            html.p(HTML(_('You have not defined any virtual host trees. You can do this '
+                     'in the global settings for %s.') % multisite))
             return
 
         self._show_tree_selection()
@@ -2352,6 +2352,18 @@ function virtual_host_tree_enter(path)
     position: relative;
     top: 0px;
     left: 0px;
+}
+
+#snapin_tag_tree p {
+    margin: 0;
+}
+
+#snapin_tag_tree p a {
+    text-decoration: underline;
+}
+
+#snapin_tag_tree p a:hover {
+    text-decoration: none;
 }
 """
 

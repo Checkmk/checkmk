@@ -3730,7 +3730,7 @@ class SiteManagement(object):
 
         domains = [ConfigDomainGUI]
         if config.liveproxyd_enabled:
-            domains = ConfigDomainLiveproxy
+            domains.append(ConfigDomainLiveproxy)
 
         del all_sites[site_id]
         SiteManagement.save_sites(all_sites)

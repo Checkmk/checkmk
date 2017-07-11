@@ -1,0 +1,12 @@
+Title: Group changes are added only to affected sites
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cme
+Version: 1.4.0p9
+Date: 1499759323
+Class: fix
+
+Changes for edited groups (of hosts, services or contacts) are not
+added to all sites anymore. Instead only the sites of the associated
+customers get the change now.

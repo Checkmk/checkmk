@@ -7516,7 +7516,7 @@ def add_group(name, group_type, extra_info):
         raise MKUserError("name", _("Sorry, there is already a group with that name"))
 
     _set_group(all_groups, group_type, name, extra_info)
-    add_change("edit-%sgroups" % group_type, _("Create new %s group %s") % (group_type, name))
+    add_group_change(extra_info, "edit-%sgroups" % group_type, _("Create new %s group %s") % (group_type, name))
 
 
 def edit_group(name, group_type, extra_info):
@@ -7528,7 +7528,7 @@ def edit_group(name, group_type, extra_info):
         raise MKUserError("name", _("Unknown group: %s") % name)
 
     _set_group(all_groups, group_type, name, extra_info)
-    add_change("edit-%sgroups" % group_type, _("Updated properties of %s group %s") % (group_type, name))
+    add_group_change(extra_info, "edit-%sgroups" % group_type, _("Updated properties of %s group %s") % (group_type, name))
 
 
 def delete_group(name, group_type):
@@ -7540,17 +7540,25 @@ def delete_group(name, group_type):
     if name not in groups:
         raise MKUserError(None, _("Unknown %s group: %s") % (group_type, name))
 
-
     # Check if still used
     usages = find_usages_of_group(name, group_type)
     if usages:
         raise MKUserError(None, _("Unable to delete group. It is still in use"))
 
-
     # Delete group
-    del groups[name]
+    group = groups.pop(name)
     save_group_information(all_groups)
-    add_change("edit-%sgroups", _("Deleted %s group %s") % (group_type, name))
+    add_group_change(group, "edit-%sgroups", _("Deleted %s group %s") % (group_type, name))
+
+
+# TODO: Consolidate all group change related functions in a class that can be overriden
+# by the CME code for better encapsulation.
+def add_group_change(group, action_name, text):
+    group_sites = None
+    if cmk.is_managed_edition() and not managed.is_global(group["customer"]):
+        group_sites = managed.get_sites_of_customer(group["customer"])
+
+    add_change(action_name, text, sites=group_sites)
 
 
 def save_group_information(all_groups, custom_default_config_dir = None):

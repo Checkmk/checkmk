@@ -12357,7 +12357,7 @@ class ModeRulesets(WatoMode):
         # Keeping this for compatibility reasons for the moment
         if self._group_name:
             html.set_var("search_p_ruleset_group",
-                           DropdownChoice.option_id(html.var("group")))
+                           DropdownChoice.option_id(self._group_name))
             html.set_var("search_p_ruleset_group_USE", "on")
             html.del_var("group")
 

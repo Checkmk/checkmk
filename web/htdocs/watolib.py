@@ -7029,7 +7029,7 @@ class Rulespecs(object):
                 if group_name.startswith(main_group_name + "/"):
                     # TODO: Move this subgroup title calculation to some generic place
                     sub_group_title = group_name.split("/", 1)[1]
-                    choices.append((group_name, u"&nbsp;&nbsp;⌙ %s" % sub_group_title))
+                    choices.append((make_utf8(group_name), u"&nbsp;&nbsp;⌙ %s" % sub_group_title))
 
         return choices
 
@@ -7049,7 +7049,7 @@ class Rulespecs(object):
         group_names = []
 
         for group_name in self._sorted_groups:
-            main_group = group_name.split('/')[0]
+            main_group = make_utf8(group_name.split('/')[0])
             if main_group not in seen:
                 group_names.append(main_group)
                 seen.add(main_group)

@@ -30,9 +30,9 @@
 #include "config.h"
 #include <fcntl.h>
 #include <pthread.h>
-#include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/un.h>
 #include <unistd.h>
 #include <chrono>
@@ -203,7 +203,7 @@ void *main_thread(void *data) {
 
         Poller poller;
         poller.addReadFD(g_unix_socket);
-        int retval = poller.poll(g_unix_socket + 1, milliseconds(2500));
+        int retval = poller.poll(milliseconds(2500));
         if (retval > 0 && poller.isReadFDSet(g_unix_socket)) {
             int cc = accept(g_unix_socket, nullptr, nullptr);
             if (cc > g_max_fd_ever) {

@@ -10899,7 +10899,33 @@ register_check_parameters(
 )
 
 register_check_parameters(
-     subgroup_storage,
+    subgroup_storage,
+    "windows_multipath",
+    _("Windows Multipath Count"),
+    Alternative(
+        help = _("This rules sets the expected number of active paths for a multipath LUN."),
+        title = _("Expected number of active paths"),
+        elements = [
+            Integer(
+                title = _("Expected number of active paths")),
+            Tuple(
+                title = _("Expected percentage of active paths"),
+                elements = [
+                    Integer(
+                        title = _("Expected number of active paths")),
+                    Percentage(
+                        title = _("Warning if less then")),
+                    Percentage(
+                        title = _("Critical if less then")),
+                    ]),
+        ]
+    ),
+    None,
+    "first",
+)
+
+register_check_parameters(
+    subgroup_storage,
     "multipath",
     _("Linux and Solaris Multipath Count"),
     Alternative(

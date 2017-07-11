@@ -1,0 +1,10 @@
+Title: windows_multipath: Now configurable through agent bakery
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499780278
+Class: feature
+
+

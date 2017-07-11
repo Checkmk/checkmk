@@ -30,31 +30,48 @@
 #4
 # (yes, thats all)
 
-
 def inventory_windows_multipath(info):
     if len(info) > 0:
-        num_paths = saveint(info[0][0])
-        if num_paths > 0:
-            return [ (None, num_paths ) ]
+        num_active = int(info[0][0])
+        if num_active> 0:
+            return [ (None, num_active ) ]
     return []
 
 
 def check_windows_multipath(item, params, info):
-    num_paths = saveint(info[0][0])
-    all_paths = params
+    num_active = int(info[0][0])
 
-    # Anything less than 51% of paths is considered crit
-    if num_paths == all_paths:
-        state = 0
-    elif num_paths <= all_paths / 2:
-        state = 2
+    yield 0, "Paths active: %s" % (num_active)
+
+    if isinstance(params, tuple):
+        num_paths, warn, crit = params
+        warn_num = (warn / 100.0) * num_paths
+        crit_num = (crit / 100.0) * num_paths
+        if num_active < crit_num:
+            state = 2
+        elif num_active < warn_num:
+            state = 1
+        else:
+            state = 0
+
+        if state > 0:
+            yield state, "(warn/crit below %d/%d)" % (warn_num, crit_num)
     else:
-        state = 1
+        if isinstance(params, int):
+            num_paths = params
+        else:
+            num_paths = 4
 
-    return (state, "paths reported %d, expected paths %d" % (num_paths, all_paths) + state * "!")
+        yield 0, "Expected paths: %s" % num_paths
+        if num_active < num_paths:
+            yield 2, "(crit below %d)" % num_paths
+        elif num_active > num_paths:
+            yield 1, "(warn at %d)" % num_paths
+
 
 check_info["windows_multipath"]  = {
-    "check_function"     : check_windows_multipath,
-    "inventory_function" : inventory_windows_multipath,
-    "service_description": "Multipath",
+    "inventory_function"        : inventory_windows_multipath,
+    "check_function"            : check_windows_multipath,
+    "service_description"       : "Multipath",
+    "group"                     : "windows_multipath",
 }

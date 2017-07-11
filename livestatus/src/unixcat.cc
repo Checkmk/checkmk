@@ -29,14 +29,17 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <cerrno>
+#include <chrono>
 #include <csignal>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <ratio>
 #include <string>
 #include "Poller.h"
 
 using std::cerr;
+using std::chrono::microseconds;
 using std::endl;
 using std::string;
 using std::to_string;
@@ -60,10 +63,7 @@ ssize_t read_with_timeout(int from, char *buffer, int size, int us) {
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(from, &fds);
-    struct timeval tv;
-    tv.tv_sec = us / 1000000;
-    tv.tv_usec = us % 1000000;
-    int retval = poller.poll(from + 1, &fds, nullptr, &tv);
+    int retval = poller.poll(from + 1, &fds, nullptr, microseconds(us));
     if (retval > 0) {
         return read(from, buffer, size);
     }

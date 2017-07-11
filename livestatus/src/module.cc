@@ -43,6 +43,7 @@
 #include <ctime>
 #include <memory>
 #include <ostream>
+#include <ratio>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -199,15 +200,13 @@ void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     while (!fl_should_terminate) {
         do_statistics();
-        struct timeval tv;
-        tv.tv_sec = 2;
-        tv.tv_usec = 500 * 1000;
 
         Poller poller;
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(g_unix_socket, &fds);
-        int retval = poller.poll(g_unix_socket + 1, &fds, nullptr, &tv);
+        int retval =
+            poller.poll(g_unix_socket + 1, &fds, nullptr, milliseconds(2500));
         if (retval > 0 && FD_ISSET(g_unix_socket, &fds)) {
             int cc = accept(g_unix_socket, nullptr, nullptr);
             if (cc > g_max_fd_ever) {

@@ -27,14 +27,17 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <sys/select.h>
+#include "ChronoUtils.h"
 
 class Poller {
 public:
     Poller() {}
 
+    template <typename Rep, typename Period>
     int poll(int nfds, fd_set *readfds, fd_set *writefds,
-             struct timeval *timeout) {
-        return select(nfds, readfds, writefds, nullptr, timeout);
+             std::chrono::duration<Rep, Period> timeout) {
+        timeval tv = to_timeval(timeout);
+        return select(nfds, readfds, writefds, nullptr, &tv);
     }
 };
 

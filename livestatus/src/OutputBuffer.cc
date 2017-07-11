@@ -79,9 +79,7 @@ void OutputBuffer::writeData(ostringstream &os) {
     size_t bytes_to_write = os.tellp();
     while (!_termination_flag && bytes_to_write > 0) {
         Poller poller;
-        FD_ZERO(poller.writeFDs());
         FD_SET(_fd, poller.writeFDs());
-
         int retval = poller.poll(_fd + 1, milliseconds(100));
         if (retval > 0 && FD_ISSET(_fd, poller.writeFDs())) {
             ssize_t bytes_written = write(_fd, buffer, bytes_to_write);

@@ -27,6 +27,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <sys/select.h>
+#include <cerrno>
 #include "ChronoUtils.h"
 
 class Poller {
@@ -36,8 +37,16 @@ public:
     template <typename Rep, typename Period>
     int poll(int nfds, fd_set *readfds, fd_set *writefds,
              std::chrono::duration<Rep, Period> timeout) {
+        int retval;
         timeval tv = to_timeval(timeout);
-        return select(nfds, readfds, writefds, nullptr, &tv);
+        // I/O primitives can fail when interrupted by a signal, so we should
+        // retry the operation. In the plain C world, this is already
+        // encapsulated in e.g. glibc's TEMP_FAILURE_RETRY macro, see:
+        // https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
+        do {
+            retval = select(nfds, readfds, writefds, nullptr, &tv);
+        } while (retval == -1 && errno == EINTR);
+        return retval;
     }
 };
 

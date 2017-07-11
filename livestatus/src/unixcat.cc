@@ -58,12 +58,13 @@ void printErrno(const string &msg) {
     cerr << msg + ": " + strerror(errno) << endl;
 }
 
-ssize_t read_with_timeout(int from, char *buffer, int size, int us) {
+ssize_t read_with_timeout(int from, char *buffer, int size,
+                          microseconds timeout) {
     Poller poller;
     fd_set fds;
     FD_ZERO(&fds);
     FD_SET(from, &fds);
-    int retval = poller.poll(from + 1, &fds, nullptr, microseconds(us));
+    int retval = poller.poll(from + 1, &fds, nullptr, timeout);
     if (retval > 0) {
         return read(from, buffer, size);
     }
@@ -80,8 +81,8 @@ void *copy_thread(void *info) {
 
     char read_buffer[65536];
     while (true) {
-        ssize_t r =
-            read_with_timeout(from, read_buffer, sizeof(read_buffer), 1000000);
+        ssize_t r = read_with_timeout(from, read_buffer, sizeof(read_buffer),
+                                      microseconds(1000000));
         if (r == -1) {
             printErrno("Error reading from " + to_string(from));
             break;

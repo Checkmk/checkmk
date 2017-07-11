@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "InputBuffer.h"
-#include <sys/select.h>
 #include <unistd.h>
 #include <cctype>
 #include <cstring>
@@ -208,7 +207,7 @@ InputBuffer::Result InputBuffer::readData() {
         Poller poller;
         poller.addReadFD(_fd);
         int retval = poller.poll(_fd + 1, milliseconds(200));
-        if (retval > 0 && FD_ISSET(_fd, poller.readFDs())) {
+        if (retval > 0 && poller.isReadFDSet(_fd)) {
             ssize_t r = read(_fd, &_readahead_buffer[_write_index],
                              _readahead_buffer.capacity() - _write_index);
             if (r < 0) {

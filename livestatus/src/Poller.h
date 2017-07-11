@@ -32,9 +32,9 @@ class Poller {
 public:
     Poller() {}
 
-    int poll(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
+    int poll(int nfds, fd_set *readfds, fd_set *writefds,
              struct timeval *timeout) {
-        return select(nfds, readfds, writefds, exceptfds, timeout);
+        return select(nfds, readfds, writefds, nullptr, timeout);
     }
 };
 

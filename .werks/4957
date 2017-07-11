@@ -1,0 +1,12 @@
+Title: Group headers of views are now displayed in PDF reports
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1499754184
+Class: fix
+
+The often missed group header of view tables has now been added to the
+PDF reports. Especially in views that contain performance graphs these
+headers are useful with the default report settings.

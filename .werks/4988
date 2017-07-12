@@ -1,0 +1,11 @@
+Title: LDAP: Improve error handling in case of authentication failures
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1499855423
+
+

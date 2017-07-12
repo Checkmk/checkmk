@@ -455,7 +455,7 @@ class Site(object):
                 print("Executing .f12 in \"%s\"..." % path)
                 sys.stdout.flush()
                 assert os.system("cd \"%s\" ; "
-                                 "sudo PATH=$PATH ONLY_COPY=1 SITE=%s bash -x .f12" %
+                                 "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s bash -x .f12" %
                                       (path, self.id)) >> 8 == 0
                 print("Executing .f12 in \"%s\" DONE" % path)
                 sys.stdout.flush()

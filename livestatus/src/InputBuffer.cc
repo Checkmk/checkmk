@@ -205,9 +205,9 @@ InputBuffer::Result InputBuffer::readData() {
         }
 
         Poller poller;
-        poller.addReadFD(_fd);
+        poller.addFileDescriptor(_fd, PollEvents::in);
         int retval = poller.poll(milliseconds(200));
-        if (retval > 0 && poller.isReadFDSet(_fd)) {
+        if (retval > 0 && poller.isFileDescriptorSet(_fd, PollEvents::in)) {
             ssize_t r = read(_fd, &_readahead_buffer[_write_index],
                              _readahead_buffer.capacity() - _write_index);
             if (r < 0) {

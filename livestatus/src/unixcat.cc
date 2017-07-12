@@ -60,7 +60,7 @@ void printErrno(const string &msg) {
 ssize_t read_with_timeout(int from, char *buffer, int size,
                           microseconds timeout) {
     Poller poller;
-    poller.addReadFD(from);
+    poller.addFileDescriptor(from, PollEvents::in);
     return poller.poll(timeout) > 0 ? read(from, buffer, size) : -2;
 }
 

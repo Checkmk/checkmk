@@ -69,7 +69,7 @@ protected:
 
     public:
         EventConsoleColumn(Column &column, T default_value,
-                           std::function<T(std::string)> f)
+                           const std::function<T(std::string)> &f)
             : _column(column), _default_value(default_value), _f(f) {}
 
         std::string getRaw(ECRow *row) const {

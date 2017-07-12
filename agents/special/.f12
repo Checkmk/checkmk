@@ -1,4 +1,5 @@
 #!/bin/bash
 SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo cp -r * /omd/sites/$SITE/share/check_mk/agents/special
+sudo cp agent_* /omd/sites/$SITE/share/check_mk/agents/special/
+sudo cp lib/cmk_special_agent_api.py /omd/sites/$SITE/lib/python/

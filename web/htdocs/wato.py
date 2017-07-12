@@ -3084,7 +3084,7 @@ class ModeDiscovery(WatoMode):
             if show_bulk_actions and len(checks) > 10:
                 self._bulk_actions(check_source, collect_headers=False)
 
-            for check in sorted(checks, key=lambda c: c[6]):
+            for check in sorted(checks, key=lambda c: c[6].lower()):
                 self._check_row(check, show_bulk_actions)
 
             if show_bulk_actions:

@@ -1,0 +1,11 @@
+Title: Service discovery view: Fixed sorting service descriptions
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1499861224
+Class: fix
+
+Service descriptions beginning with capitals were sorted primarily
+followed by descriptions beginning with small letters.

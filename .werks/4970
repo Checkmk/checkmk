@@ -1,0 +1,11 @@
+Title: Reporting: Heading of graph elements can now be customized
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1499868737
+Class: feature
+
+There are two options: Either a title is customized for all graphs
+of this element or per graph the related title is used as a header.

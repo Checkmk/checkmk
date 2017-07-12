@@ -1,0 +1,11 @@
+Title: multipath: Fixed wrong output message if state changed to warn because of to much paths
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499865368
+Class: fix
+
+The output message suggested, that the state would be CRIT but actually is
+warn if to much paths are detected.

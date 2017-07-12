@@ -29,7 +29,11 @@
 #include <sys/select.h>
 #include <algorithm>
 #include <cerrno>
+#include "BitMask.h"
 #include "ChronoUtils.h"
+
+enum class PollEvents { in = 1 << 0, out = 1 << 1 };
+IS_BIT_MASK(PollEvents);
 
 class Poller {
 public:
@@ -53,20 +57,37 @@ public:
         return retval;
     }
 
-    void addReadFD(int fd) { addFD(fd, _readfds); }
-    void addWriteFD(int fd) { addFD(fd, _writefds); }
+    void addFileDescriptor(int fd, PollEvents e) {
+        addFileDescriptor(fd, e, PollEvents::in, _readfds);
+        addFileDescriptor(fd, e, PollEvents::out, _writefds);
+    }
 
-    bool isReadFDSet(int fd) const { return FD_ISSET(fd, &_readfds); }
-    bool isWriteFDSet(int fd) const { return FD_ISSET(fd, &_writefds); }
+    bool isFileDescriptorSet(int fd, PollEvents e) const {
+        return isFileDescriptorSet(fd, e, PollEvents::in, _readfds) ||
+               isFileDescriptorSet(fd, e, PollEvents::out, _writefds);
+    }
 
 private:
+#ifdef __clang_analyzer__
+    // Workaround for https://llvm.org/bugs/show_bug.cgi?id=8920
+    fd_set _readfds{};
+    fd_set _writefds{};
+#else
     fd_set _readfds;
     fd_set _writefds;
+#endif
     int _maxfd;
 
-    void addFD(int fd, fd_set &fds) {
-        FD_SET(fd, &fds);
-        _maxfd = std::max(_maxfd, fd);
+    void addFileDescriptor(int fd, PollEvents e, PollEvents mask, fd_set &fds) {
+        if (!is_empty_bit_mask(e & mask)) {
+            FD_SET(fd, &fds);
+            _maxfd = std::max(_maxfd, fd);
+        }
+    }
+
+    bool isFileDescriptorSet(int fd, PollEvents e, PollEvents mask,
+                             const fd_set &fds) const {
+        return !is_empty_bit_mask(e & mask) && FD_ISSET(fd, &fds);
     }
 };
 

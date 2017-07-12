@@ -202,9 +202,10 @@ void *main_thread(void *data) {
         do_statistics();
 
         Poller poller;
-        poller.addReadFD(g_unix_socket);
+        poller.addFileDescriptor(g_unix_socket, PollEvents::in);
         int retval = poller.poll(milliseconds(2500));
-        if (retval > 0 && poller.isReadFDSet(g_unix_socket)) {
+        if (retval > 0 &&
+            poller.isFileDescriptorSet(g_unix_socket, PollEvents::in)) {
             int cc = accept(g_unix_socket, nullptr, nullptr);
             if (cc > g_max_fd_ever) {
                 g_max_fd_ever = cc;

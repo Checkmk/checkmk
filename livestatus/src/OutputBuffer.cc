@@ -78,9 +78,9 @@ void OutputBuffer::writeData(ostringstream &os) {
     size_t bytes_to_write = os.tellp();
     while (!_termination_flag && bytes_to_write > 0) {
         Poller poller;
-        poller.addWriteFD(_fd);
+        poller.addFileDescriptor(_fd, PollEvents::out);
         int retval = poller.poll(milliseconds(100));
-        if (retval > 0 && poller.isWriteFDSet(_fd)) {
+        if (retval > 0 && poller.isFileDescriptorSet(_fd, PollEvents::out)) {
             ssize_t bytes_written = write(_fd, buffer, bytes_to_write);
             if (bytes_written == -1) {
                 generic_error ge("could not write " +

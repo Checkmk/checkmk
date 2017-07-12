@@ -102,6 +102,7 @@ def check_akcp_humidity(item, params, info):
             belowtext = " (warn/crit at %.1f/%.1f%%)" % (warn_lower, crit_lower)
             abovetext = " (warn/crit at %.1f/%.1f%%)"    % (warn, crit)
 
+            # TODO: This is not how the API works!
             perfdata = [ ( "humidity", humidity, crit_lower, warn_lower, warn, crit ) ]
 
             if humidity <= crit_lower:

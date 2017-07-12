@@ -345,7 +345,7 @@ def check_multipath(item, params, parsed):
             infotext += " (crit below %d)" % expected_paths
         elif num_active > expected_paths:
             state = 1
-            infotext += " (crit at %d)" % expected_paths
+            infotext += " (warn at %d)" % expected_paths
         else:
             state = 0
         yield state, infotext

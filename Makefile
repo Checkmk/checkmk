@@ -98,7 +98,8 @@ HEAL_SPACES_IN     := checkman/* cmk_base/* checks/* notifications/* inventory/*
                       check_mk_templates.cfg \
                       agents/check_mk_*agent* agents/*.c \
                       $$(find agents/cfg_examples -type f) \
-                      agents/special/* \
+                      agents/special/agent_* \
+                      agents/special/lib/cmk_special_agents.py \
                       $$(find agents/plugins -type f) \
                       $(wildcard enterprise/cmk_base/cee/*.py \
                                  enterprise/modules/*.py \
@@ -187,6 +188,10 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	    --exclude "cee" \
 	    --exclude "cee.py*" ; \
 	  rm cmk_base/*.pyc
+	pycompile agents/special/lib ; \
+	  tar czf $(DISTNAME)/special_agent_api.tar.gz $(TAROPTS) -C agents/special/lib cmk_special_agent_api.py \
+	    --exclude ".f12"
+	  rm agents/special/lib/*.pyc
 	tar czf $(DISTNAME)/share.tar.gz $(TAROPTS) check_mk_templates.cfg
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
@@ -228,6 +233,7 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 		--exclude "windows/openhardwaremonitor" \
 		--exclude "windows/sections" \
 		--exclude "windows/frozen_binaries" \
+		--exclude "special/lib" \
 		--exclude .f12 $$(cd agents ; ls)
 	cd $(DISTNAME) ; ../scripts/make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)

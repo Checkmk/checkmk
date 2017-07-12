@@ -18,7 +18,8 @@ def is_not_executable(path):
 permissions = [
     # globbing pattern                check function,   excludes
     ('active_checks/*',               is_executable, ['Makefile', 'check_mkevents.cc']),
-    ('agents/special/*',              is_executable, []),
+    ('agents/special/agent_*',        is_executable, []),
+    ('agents/special/lib/*',          is_not_executable, []),
     ('agents/check_mk_agent.*',       is_executable, ['check_mk_agent.spec']),
     ('agents/plugins/*',              is_executable, ['README']),
     ('checks/*',                      is_not_executable, []),

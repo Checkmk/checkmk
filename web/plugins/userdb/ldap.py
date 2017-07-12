@@ -305,7 +305,7 @@ class LDAPUserConnector(UserConnector):
             conn = self._ldap_obj
         self.log('LDAP_BIND %s' % user_dn)
         try:
-            conn.simple_bind_s(user_dn, password)
+            conn.simple_bind_s(user_dn.encode("utf-8"), password)
             self.log('  SUCCESS')
         except ldap.LDAPError, e:
             self.log('  FAILED (%s: %s)' % (e.__class__.__name__, e))
@@ -468,7 +468,7 @@ class LDAPUserConnector(UserConnector):
                         for key, val in obj.iteritems():
                             # Convert all keys to lower case!
                             new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
-                        result.append((dn.lower(), new_obj))
+                        result.append((dn.lower().decode('utf-8'), new_obj))
                     success = True
                 except ldap.NO_SUCH_OBJECT, e:
                     raise MKLDAPException(_('The given base object "%s" does not exist in LDAP (%s))') % (base, e))
@@ -879,6 +879,8 @@ class LDAPUserConnector(UserConnector):
             self.bind(user_dn, password)
             result = username.encode('utf-8')
         except:
+            self.log("  Exception during authentication (User: %s): %s" %
+                                        (username, traceback.format_exc()))
             result = False
 
         self.default_bind(self._ldap_obj)

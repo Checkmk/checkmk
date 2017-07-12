@@ -17,6 +17,7 @@
     * 4883 FIX: juniper_trpz_aps_sessions: Fixed performance data handling if running on cluster
     * 4884 FIX: oracle_logswitches: Fixed missing oracle.include
     * 4914 FIX: statgrab_mem: Plugin is now prioritized over solaris_mem if both is available...
+    * 4887 FIX: cisco_wlc: Fixed crashing check plugin caused by IndexError
 
     Multisite:
     * 4902 SEC: Monitoring history views: Fixed possible XSS when displaying "plugin output"...

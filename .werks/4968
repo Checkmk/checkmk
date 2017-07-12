@@ -1,0 +1,21 @@
+Title: f5_bigip_cluster_status_v11_2: Now has its own check plugin file; This updates werk #4819
+Level: 1
+Component: checks
+Class: fix
+Compatible: incomp
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1499848507
+
+We had to differentiate between F5 version lower and greater than 11.2
+because the datasource/OID had changed. The related check plugins were
+{{f5_bigip_cluster_status}},
+{{f5_bigip_cluster_status.v11_2}}.
+
+Werk #4819 revealed another bug regarding these check plugins:
+if F5 version was greater than 11.2 the SNMP scan function
+in the main-check {{f5_bigip_cluster_status}} returned False and the
+sub-check {{f5_bigip_cluster_status.v11_2}} had no chance to generate
+any service. Thus no service {{BIG-IP Cluster Status}} was discovered
+for F5 devices with version greater than 11.2.

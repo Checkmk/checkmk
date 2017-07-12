@@ -1,0 +1,84 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+factory_settings["f5_bigip_cluster_default_levels"] = {
+    "type" : "active_standby",
+}
+
+
+def scan_f5_bigip_cluster_status(oid, is_v11_2 = False):
+    if not (".1.3.6.1.4.1.3375.2" in oid(".1.3.6.1.2.1.1.2.0") and\
+            "big-ip" in oid(".1.3.6.1.4.1.3375.2.1.4.1.0").lower()):
+        return False
+
+    version = oid(".1.3.6.1.4.1.3375.2.1.4.2.0")
+    if not version:
+        return False
+
+    expected_version = 11.2
+    version_float = float(".".join(version.split(".")[:2]))
+    return (version_float >= expected_version) == is_v11_2
+
+
+def parse_f5_bigip_cluster_status(info):
+    parsed = {}
+    for node, status in info:
+        parsed[node] = status
+    return parsed
+
+
+def inventory_f5_bigip_cluster_status(parsed):
+    if parsed:
+        return [ ( None, None ) ]
+
+
+def check_f5_bigip_cluster_status(_no_item, params, parsed, is_v11_2 = False):
+    if is_v11_2:
+        node_states  = ["unknown", "offline", "forced offline", "standby", "active"]
+        active_value = "4"
+    else:
+        node_states  = ["standby", "active 1", "active 2", "active"]
+        active_value = "3"
+
+    if params["type"] == "active_standby" and parsed.values().count(active_value) > 1:
+        yield 2, "More than 1 node is active: "
+    elif active_value not in parsed.values() and len(parsed) > 1: # Only applies if this check runs on a cluster
+        yield 2, "No active node found: "
+
+    for node in sorted(parsed):
+        node_name  = node and "[%s] " % node or ""
+        node_state = parsed[node]
+        state      = 0
+        if is_v11_2:
+            if node_state in params.get("v11_2_states", []):
+                state = params["v11_2_states"][node_state]
+            else:
+                state = { "0" : 3, "1" : 2, "2" : 2,  "3" : 0,  "4" : 0, }[node_state]
+        yield state, "Node %sis %s" % (node_name, node_states[int(node_state)])
+
+
+

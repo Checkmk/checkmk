@@ -309,7 +309,8 @@ fi
 
 # Memory
 # <<<solaris_mem>>> should be used if statgrab is missing and top is available.
-if ! type statgrab &>/dev/null
+if ! type statgrab &>/dev/null;
+then
     if [ -x /usr/bin/top ] || [ -x /usr/local/top ]
     then
         echo "<<<solaris_mem>>>"

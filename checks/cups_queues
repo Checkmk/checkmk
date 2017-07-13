@@ -96,10 +96,6 @@ def inventory_cups_queues(parsed):
         yield item, {}
 
 def check_cups_queues(item, params, parsed):
-    if item not in parsed:
-        yield 3, "Item not found in agent data"
-        return
-
     data = parsed[item]
     if type(params) == tuple and len(params) == 4:
         params = {"job_count" : (params[0], params[1]),

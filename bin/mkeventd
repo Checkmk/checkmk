@@ -390,7 +390,7 @@ def format_exception():
 
 # Class for debugging locking. Beware: This does not really
 # implement a true locking! It's just for detecting deadlocks!
-class VerboseLock:
+class VerboseLock(object):
     def __init__(self, name):
         self._depth = 0
         self._name = name
@@ -425,7 +425,7 @@ class MKClientError(Exception):
         Exception.__init__(self, t)
 
 
-class Queries:
+class Queries(object):
     def __init__(self, sock):
         self._socket = sock
         self._buffer = ""
@@ -1101,7 +1101,7 @@ def get_logfile_timespan(path):
 #   +----------------------------------------------------------------------+
 #   |  Helper class for performance counting                               |
 #   '----------------------------------------------------------------------'
-class Perfcounters:
+class Perfcounters(object):
     def __init__(self):
         self._lock = thread.allocate_lock()
         # Event counters
@@ -1213,7 +1213,7 @@ class Perfcounters:
 #   |  Verarbeitung und Klassifizierung von eingehenden Events.            |
 #   '----------------------------------------------------------------------'
 
-class EventServer:
+class EventServer(object):
     month_names = { "Jan":1, "Feb":2, "Mar":3, "Apr":4, "May":5, "Jun":6,
                     "Jul":7, "Aug":8, "Sep":9, "Oct":10, "Nov":11, "Dec":12, }
 
@@ -3045,7 +3045,7 @@ class EventServer:
 #   |  Beantworten von Status- und Kommandoanfragen über das UNIX-Socket   |
 #   '----------------------------------------------------------------------'
 
-class StatusServer:
+class StatusServer(object):
     def __init__(self):
         self._socket = None
         self._tcp_socket = None
@@ -3606,7 +3606,7 @@ def run_eventd():
 #   | durch ein Lock vor gleichzeitigen Zugriffen durch die Threads.       |
 #   '----------------------------------------------------------------------'
 
-class EventStatus():
+class EventStatus(object):
 
     def __init__(self):
         self._set_logger()

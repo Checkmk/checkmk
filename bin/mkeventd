@@ -33,20 +33,28 @@
 
 import ast
 import errno
-import socket, os, time, sys, getopt, signal, thread, pprint, re, \
-       select, subprocess, stat, string
+import socket
+import os
+import time
+import sys
+import getopt
+import signal
+import thread
+import pprint
+import re
+import select
+import subprocess
+import stat
+import string
 import traceback
-from cmk.regex import regex, is_regex
+import json
+
+import cmk
 import cmk.defines as defines
 import cmk.daemon
+from cmk.regex import regex, is_regex
+
 import livestatus
-
-try:
-    import simplejson as json
-except ImportError:
-    import json
-
-VERSION="1.5.0i1"
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -4915,7 +4923,7 @@ try:
             usage()
             sys.exit(0)
         elif o in [ '-V', '--version' ]:
-            sys.stdout.write("mkeventd version %s\n" % VERSION)
+            sys.stdout.write("mkeventd version %s\n" % cmk.__version__)
             sys.exit(0)
 
     if opt_snmptrap:
@@ -4945,7 +4953,7 @@ try:
     if not opt_foreground:
         open_logfile()
     log("-" * 65)
-    log("mkeventd version %s starting" % VERSION)
+    log("mkeventd version %s starting" % cmk.__version__)
 
     load_configuration()
 

@@ -594,7 +594,6 @@ def check_timeperiod(tpname):
 #   | It fetches and caches the information during runtine of the EC.      |
 #   '----------------------------------------------------------------------'
 
-# TODO: Reload config on core reload
 class HostConfig(object):
     def __init__(self):
         self._set_logger()
@@ -623,11 +622,15 @@ class HostConfig(object):
 
     def get_by_event_host_name(self, event_host_name, deflt=None):
         try:
+            self._update_from_core()
+        except:
+            self.logger.exception("Failed to get host info from core. Try again later.")
+            return
+
+        try:
             return self._event_host_to_host[event_host_name]
         except KeyError:
             pass # Not cached yet
-
-        self._update_from_core()
 
         # Note: It is important that we use exactly the same algorithm here as in the core
         # (enterprise/core/src/World.cc getHostByDesignation)
@@ -651,9 +654,10 @@ class HostConfig(object):
 
 
     def _update_from_core(self):
-        if self._got_config_from_core:
+        if not self._has_core_config_reloaded():
             return
 
+        self.initialize()
         self.logger.debug("Fetching host config from core")
 
         columns = [
@@ -675,7 +679,25 @@ class HostConfig(object):
             self._hosts_by_lower_address[host["alias"].lower()] = host
 
         self.logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
-        self._got_config_from_core = True
+        self._got_config_from_core = self._get_core_start_time()
+
+
+    def _has_core_config_reloaded(self):
+        if not self._got_config_from_core:
+            return True
+
+        if self._get_core_start_time() > self._got_config_from_core:
+            return True
+
+        return False
+
+
+    def _get_core_start_time(self):
+        query = (
+            "GET status\n"
+            "Columns: program_start\n"
+        )
+        return livestatus.LocalConnection().query_value(query)
 
 
 

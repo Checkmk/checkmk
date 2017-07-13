@@ -1,0 +1,14 @@
+Title: Windows mrpe scripts: strip leading whitespaces in mrpe command
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1499955482
+
+The windows agent did not remove leading whitespaces of the specified command.
+This caused errors whenever the agent directory path was prepended to the mrpe command.
+
+

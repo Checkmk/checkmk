@@ -1,0 +1,11 @@
+Title: zpool: Fixed missing include statement which causes undefined 'df_inventory' error if using Nagios core
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1499938768
+
+

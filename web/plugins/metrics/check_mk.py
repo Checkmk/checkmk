@@ -4242,6 +4242,7 @@ check_metrics["check_mk-fast_lta_volumes"]                      = df_translation
 check_metrics["check_mk-libelle_business_shadow.archive_dir"]   = df_translation
 check_metrics["check_mk-netapp_api_volumes"]                    = df_translation
 check_metrics["check_mk-netapp_api_qtree_quota"]                = df_translation
+check_metrics["check_mk-emc_datadomain_fs"]                     = df_translation
 check_metrics["check_mk-emc_isilon_quota"]                      = df_translation
 check_metrics["check_mk-emc_isilon_ifs"]                        = df_translation
 check_metrics["check_mk-mongodb_collections"]                   = df_translation

@@ -16667,7 +16667,7 @@ def is_a_checkbox(vs):
 def site_neutral_path(path):
     if path.startswith('/omd'):
         parts = path.split('/')
-        parts[3] = '&lt;siteid&gt;'
+        parts[3] = '[SITE_ID]'
         return '/'.join(parts)
     else:
         return path

@@ -2756,18 +2756,51 @@ if mkeventd_enabled:
         domain = ConfigDomainEventConsole,
     )
 
+    def ec_log_level_elements():
+        elements = []
+
+        for component, title, help_txt in [
+                ("cmk.mkeventd",              _("General messages"),
+                 _("Log level for all log messages that are not in one of the categories below")),
+                ("cmk.mkeventd.EventServer",  _("Processing of incoming events"),
+                 _("Log level for the processing of all incoming events")),
+                ("cmk.mkeventd.EventStatus",  _("Event database"),
+                 _("Log level for managing already created events")),
+                ("cmk.mkeventd.StatusServer", _("Status queries"),
+                 _("Log level for handling of incoming queries to the status socket")),
+                ]:
+            elements.append(
+                (component, DropdownChoice(
+                    title = title,
+                    help = help_txt,
+                    choices = [
+                            (cmk.log.CRITICAL, _("Critical") ),
+                            (cmk.log.ERROR,    _("Error") ),
+                            (cmk.log.WARNING,  _("Warning") ),
+                            (cmk.log.INFO,     _("Informational") ),
+                            (cmk.log.VERBOSE,  _("Verbose") ),
+                            (cmk.log.DEBUG,    _("Debug") ),
+                    ],
+                    default_value = cmk.log.INFO,
+                ))
+            )
+        return elements
+
     register_configvar(groups["ec_log"],
         "log_level",
-        DropdownChoice(
-            title = _("Log level"),
-            help = _("You can configure the Event Console to log more details about it's actions. "
-                     "These information are logged into the file <tt>%s</tt>") %
-                                site_neutral_path(cmk.paths.log_dir + "/mkeventd.log"),
-            choices = [
-                (0, _("Normal logging")),
-                (1, _("Verbose logging")),
-            ],
-            default_value = 0,
+        Transform(
+            Dictionary(
+                title = _("Log level"),
+                help = _("You can configure the Event Console to log more details about it's actions. "
+                         "These information are logged into the file <tt>%s</tt>") %
+                                    site_neutral_path(cmk.paths.log_dir + "/mkeventd.log"),
+                elements = ec_log_level_elements,
+                optional_keys = [],
+            ),
+            # Transform old values:
+            # 0 -> normal logging
+            # 1 -> verbose logging
+            forth=lambda x: {"cmk.mkeventd": (cmk.log.INFO if x == 0 else cmk.log.VERBOSE)} if x in (0, 1) else x,
         ),
         domain = ConfigDomainEventConsole,
     )

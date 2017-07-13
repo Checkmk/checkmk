@@ -602,6 +602,7 @@ class HostConfig(object):
 
     def _set_logger(self):
         self.logger = logger.getChild("HostConfig")
+        #self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.HostConfig"])
 
 
     def initialize(self):
@@ -1276,6 +1277,7 @@ class EventServer(object):
 
     def _set_logger(self):
         self.logger = logger.getChild("EventServer")
+        self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.EventServer"])
 
 
     def status_columns(self):
@@ -3096,6 +3098,7 @@ class StatusServer(object):
 
     def _set_logger(self):
         self.logger = logger.getChild("StatusServer")
+        self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.StatusServer"])
 
 
     def open_sockets(self):
@@ -3655,6 +3658,7 @@ class EventStatus(object):
 
     def _set_logger(self):
         self.logger = logger.getChild("EventStatus")
+        self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.EventStatus"])
 
 
     def flush(self):
@@ -4711,9 +4715,19 @@ def load_configuration():
         execfile(path, g_config, g_config)
 
     # If not set by command line, set the log level by configuration
-    # TODO: Change EC log level configuration to new cmk standard log levels
     if opt_verbose == 0:
-        cmk.log.set_verbosity(g_config["log_level"])
+        # Transform old normal/verbose config
+        if g_config["log_level"] in (0, 1):
+            log_level = cmk.log.INFO if g_config["log_level"] == 0 else cmk.log.VERBOSE
+
+            g_config["log_level"] = {
+                "cmk.mkeventd"              : log_level,
+                "cmk.mkeventd.EventServer"  : log_level,
+                "cmk.mkeventd.EventStatus"  : log_level,
+                "cmk.mkeventd.StatusServer" : log_level,
+            }
+
+        logger.setLevel(g_config["log_level"]["cmk.mkeventd"])
 
     # Configure the auto deleting indexes in the DB when mongodb is enabled
     if g_config['archive_mode'] == 'mongodb':
@@ -4753,7 +4767,12 @@ def default_config():
         "actions"               : [],
         "debug_rules"           : False,
         "rule_optimizer"        : True,
-        "log_level"             : 0,
+        "log_level"             : {
+            "cmk.mkeventd"              : cmk.log.INFO,
+            "cmk.mkeventd.EventServer"  : cmk.log.INFO,
+            "cmk.mkeventd.EventStatus"  : cmk.log.INFO,
+            "cmk.mkeventd.StatusServer" : cmk.log.INFO,
+        },
         "log_rulehits"          : False,
         "log_messages"          : False,
         "retention_interval"    : 60,

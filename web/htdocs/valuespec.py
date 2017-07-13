@@ -1204,6 +1204,11 @@ class ListOf(ValueSpec):
         self._text_if_empty = kwargs.get("text_if_empty", _("No entries"))
         self._allow_empty   = kwargs.get("allow_empty", True)
         self._empty_text    = kwargs.get("empty_text") # complain text if empty
+        # Makes a sort button visible that can be used to sort the list in the GUI
+        # (without submitting the form). But this currently only works for list of
+        # tuples that contain input field elements directly. The value of sort_by
+        # refers to the index of the sort values in the tuple
+        self._sort_by       = kwargs.get("sort_by")
         if not self._empty_text:
             self._empty_text = _("Please specify at least one entry")
 
@@ -1244,6 +1249,8 @@ class ListOf(ValueSpec):
 
         html.hidden_field(varprefix + "_indexof_" + self._magic, "",
                           add_var=True, class_="index") # reconstruct order after moving stuff
+        html.hidden_field(varprefix + "_orig_indexof_" + self._magic, "",
+                          add_var=True, class_="orig_index")
         self.del_button(varprefix, self._magic)
         if self._movable:
             self.move_button(varprefix, self._magic, "up")
@@ -1281,6 +1288,8 @@ class ListOf(ValueSpec):
             html.open_td(class_="vlof_buttons")
             html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "",
                               add_var=True, class_="index") # reconstruct order after moving stuff
+            html.hidden_field(varprefix + "_orig_indexof_%d" % (nr+1), "",
+                              add_var=True, class_="orig_index")
             self.del_button(varprefix, nr+1)
             if self._movable:
                 self.move_button(varprefix, nr+1, "up") # visibility fixed by javascript
@@ -1294,6 +1303,11 @@ class ListOf(ValueSpec):
         html.br()
         html.jsbutton(varprefix + "_add", self._add_label,
             "valuespec_listof_add('%s', '%s')" % (varprefix, self._magic))
+        if self._sort_by is not None:
+            html.jsbutton(varprefix + "_sort", _("Sort"),
+                "valuespec_listof_sort(%s, %s, %s)" %
+                (json.dumps(varprefix), json.dumps(self._magic), json.dumps(self._sort_by)))
+
         html.javascript("valuespec_listof_fixarrows(document.getElementById('%s_table').childNodes[0]);" % varprefix)
 
 

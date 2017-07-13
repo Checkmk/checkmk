@@ -1951,7 +1951,7 @@ class VirtualHostTree(SidebarSnapin):
 
             if "_children" not in subtree:
                 if self._is_tag_subdir(path, cwd):
-                    html.write(self._tag_tree_bullet(subtree["_state"], subpath, True))
+                    html.write(self._tag_tree_bullet(subtree.get("_state", 0), subpath, True))
                     if subtree.get("_svc_problems"):
                         url = self._tag_tree_url(tree_spec, subpath, "svcproblems")
                         html.icon_button(url, _("Show the service problems contained in this branch"),
@@ -2185,13 +2185,12 @@ function virtual_host_tree_enter(path)
 
         # Add the numbers/state of this host to the last level the host is invovled with
         for tree_entry in this_level_branches:
-            if not tree_entry:
-                tree_entry.update({
-                    "_num_hosts" : 0,
-                    "_state"     : 0,
-                })
+            tree_entry.setdefault("_num_hosts", 0)
+            tree_entry.setdefault("_state", 0)
+
             tree_entry["_num_hosts"] += 1
             tree_entry["_svc_problems"] = tree_entry.get("_svc_problems", False) or have_svc_problems
+
             if state == 2 or tree_entry["_state"] == 2:
                 tree_entry["_state"] = 2
             else:

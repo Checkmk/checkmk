@@ -1,0 +1,11 @@
+Title: Handle vanished service groups correctly
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1499948890
+Class: fix
+
+When a service group vanished and the "servicesbygroup" table was queried,
+the Micro Core could crash. This has been fixed now.

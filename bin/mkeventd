@@ -401,12 +401,12 @@ class VerboseLock(object):
 
     def __enter__(self):
         self._depth += 1
-        self.logger.debug("%d -> %d" % (self._name, self._depth-1, self._depth))
+        self.logger.debug("%d -> %d" % (self._depth-1, self._depth))
         return self
 
     def __exit__(self, type, value, tb):
         self._depth -= 1
-        self.logger.debug("%d -> %d" % (self._name, self._depth+1, self._depth))
+        self.logger.debug("%d -> %d" % (self._depth+1, self._depth))
 
 
 class MKSignalException(Exception):
@@ -597,6 +597,16 @@ def check_timeperiod(tpname):
 # TODO: Reload config on core reload
 class HostConfig(object):
     def __init__(self):
+        self._set_logger()
+        self.initialize()
+
+
+    def _set_logger(self):
+        self.logger = logger.getChild("HostConfig")
+
+
+    def initialize(self):
+        self.logger.debug("Initializing host config")
         self._event_host_to_host      = {}
 
         self._hosts_by_name           = {}
@@ -644,6 +654,8 @@ class HostConfig(object):
         if self._got_config_from_core:
             return
 
+        self.logger.debug("Fetching host config from core")
+
         columns = [
             "name",
             "alias",
@@ -662,6 +674,7 @@ class HostConfig(object):
             self._hosts_by_lower_alias[host["alias"].lower()]   = host
             self._hosts_by_lower_address[host["alias"].lower()] = host
 
+        self.logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
         self._got_config_from_core = True
 
 
@@ -2047,6 +2060,10 @@ class EventServer(object):
                 g_event_status.remove_event(event)
 
 
+    def reload_configuration(self):
+        self.compile_rules(g_config["rules"], g_config["rule_packs"])
+        self.host_config.initialize()
+
 
     # Precompile regular expressions and similar stuff. Also convert legacy
     # "rules" parameter into new "rule_packs" parameter
@@ -3345,7 +3362,8 @@ class StatusServer(object):
         with lock_configuration:
             load_configuration()
             initialize_snmptrap_handling()
-            g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
+            g_event_server.reload_configuration()
+
         g_status_server.reload_configuration()
         self.logger.info("Reloaded configuration.")
 
@@ -4919,6 +4937,7 @@ try:
         elif o.startswith('--profile-'):
             opt_profile[o[10:]] = True
 
+    cmk.log.open_log(sys.stderr)
     cmk.log.set_verbosity(opt_verbose)
 
     # now handle action options

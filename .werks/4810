@@ -1,0 +1,14 @@
+Title: ps.include: Add levels of CPU utilization for single processes
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499934362
+Class: feature
+
+For the rules "State and Count of Processes" and "Process Discovery"
+the option "Levels on CPU utilization of a single Process" was added.
+It allows to define levels on CPU utilization of a single process.
+CPU Averaging will not be applied to the CPU utilization of a single
+processes.

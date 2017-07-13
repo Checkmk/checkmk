@@ -11975,7 +11975,9 @@ class ModeEditHosttagGroup(ModeEditHosttagConfiguration):
                 orientation = "horizontal"),
 
             add_label = _("Add tag choice"),
-            row_label = "@. Choice")
+            row_label = "@. Choice",
+            sort_by = 1, # sort by description
+        )
 
 
 

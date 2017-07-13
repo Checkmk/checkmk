@@ -2123,6 +2123,59 @@ function valuespec_listof_move(oA, varprefix, nr, where) {
 }
 
 
+function valuespec_listof_sort(varprefix, magic, sort_by) {
+    var table = document.getElementById(varprefix + "_table");
+    var tbody = table.firstChild;
+    var rows = tbody.rows;
+
+    var entries = [];
+    for (var i = 0, td, sort_field_name, fields; i < rows.length; i++) {
+        // Find the index of this row
+        var td = rows[i].cells[0]; /* TD with buttons */
+        if(td.children.length == 0)
+            continue;
+        var index = td.getElementsByClassName("orig_index")[0].value;
+
+        sort_field_name = varprefix + "_" + index + "_" + sort_by;
+
+        // extract the sort field value and add it to the entries list
+        // together with the row to be moved
+        fields = document.getElementsByName(sort_field_name);
+        if (fields.length == 0) {
+            return; // abort sorting
+        }
+
+        entries.push({
+            sort_value : fields[0].value,
+            row_node   : rows[i]
+        });
+    }
+
+    entries.sort(function (a, b) {
+        if (a.sort_value.toLowerCase() < b.sort_value.toLowerCase()) {
+             return -1;
+        }
+        if (a.sort_value.toLowerCase() > b.sort_value.toLowerCase()) {
+            return 1;
+        }
+        return 0;
+    });
+
+    // Remove all rows from the list and then add the rows back to it
+    // in sorted order
+
+    while (tbody.firstChild) {
+        tbody.removeChild(tbody.firstChild);
+    }
+
+    for (var i = 0; i < entries.length; i++) {
+        tbody.appendChild(entries[i].row_node);
+    }
+
+    valuespec_listof_fixarrows(tbody);
+}
+
+
 function valuespec_listof_fixarrows(oTbody) {
     if(!oTbody || typeof(oTbody.rows) == undefined) {
         return;
@@ -2137,7 +2190,12 @@ function valuespec_listof_fixarrows(oTbody) {
             continue;
 
         var oIndex = oTd.getElementsByClassName("index")[0];
-        oIndex.value = "" + (parseInt(i) + 1);
+        if (oIndex.value === "") {
+            // initialization of recently added row
+            var orig_index = oTd.getElementsByClassName("orig_index")[0];
+            orig_index.value = "" + (i+1);
+        }
+        oIndex.value = "" + (i+1);
 
         if (oTd.childNodes.length > 4) { /* movable */
             var buttons = oTd.getElementsByClassName("iconbutton");

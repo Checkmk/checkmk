@@ -18,6 +18,7 @@
     * 4884 FIX: oracle_logswitches: Fixed missing oracle.include
     * 4914 FIX: statgrab_mem: Plugin is now prioritized over solaris_mem if both is available...
     * 4887 FIX: cisco_wlc: Fixed crashing check plugin caused by IndexError
+    * 4972 FIX: mk_inventory.aix: Use MK_VARDIR instead of MK_CONFDIR for the state file
 
     Multisite:
     * 4902 SEC: Monitoring history views: Fixed possible XSS when displaying "plugin output"...

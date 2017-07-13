@@ -26,7 +26,7 @@
 # Run and *send* only once every 4 hours
 INTERVAL=14400
 
-FLAGFILE=$MK_CONFDIR/mk_inventory.last.$REMOTE
+FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
 NOW=$(date +%s)
 UNTIL=$((NOW + INTERVAL + 600))
 

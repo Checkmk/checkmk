@@ -1,0 +1,9 @@
+Title: mk_inventory.aix: Use MK_VARDIR instead of MK_CONFDIR for the state file
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p25
+Date: 1499937340
+Class: fix
+
+

@@ -97,7 +97,7 @@ mrpe_entry *from_string<mrpe_entry *>(const std::string &value) {
         if (env != nullptr) {
             snprintf(result->command_line, sizeof(result->command_line),
                      "%s\\%s", env->agentDirectory().c_str(),
-                     command_line.c_str());
+                     lstrip(command_line.c_str()));
         } else {
             fprintf(stderr, "No environment\n");
             return nullptr;

@@ -312,9 +312,7 @@ register_rule(group,
     ),
     title = _("Check NetApp via WebAPI"),
     help  = _("This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
-              "and allows monitoring via the NetApp Web API. Important: To get this agent running, you need to "
-              "install two additional python files (<tt>NaServer.py</tt>, <tt>NaElement.py</tt>) from the "
-              "NetApp Manageabiltiy SDK into the <tt>~/local/lib/python</tt> directory. To access the data the "
+              "and allows monitoring via the NetApp Web API. To access the data the "
               "user requires permissions to several API classes. They are shown when you call the agent with "
               "<tt>agent_netapp --help</tt>. The agent itself is located in the site directory under "
               "<tt>~/share/check_mk/agents/special</tt>."),

@@ -130,6 +130,8 @@ def check_cups_queues(item, params, parsed):
 
             if state:
                 yield state, "Oldest job is from %s" % oldest_readable
+    else:
+        yield 3, "Queue not found"
 
 
 check_info["cups_queues"] = {

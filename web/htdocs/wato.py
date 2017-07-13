@@ -6383,7 +6383,9 @@ def vs_ldap_connection(new, connection_id):
                      "All user objects in LDAP:<br> "
                      "<tt>(&(objectclass=user)(objectcategory=person))</tt><br> "
                      "Members of a group:<br> "
-                     "<tt>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br>"),
+                     "<tt>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br> "
+                     "Members of a nested group:<br> "
+                     "<tt>(&(objectclass=user)(objectcategory=person)(memberof:1.2.840.113556.1.4.1941:=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br>"),
             size = 80,
             default_value = lambda: userdb.ldap_filter_of_connection(connection_id, 'users', False),
             attrencode = True,

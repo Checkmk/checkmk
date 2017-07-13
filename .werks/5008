@@ -1,0 +1,12 @@
+Title: cups_queues: Fixed crash if previously discovered printer is not available anymore
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1499937834
+Class: fix
+
+The code for this checkplugin has been refactored recently. Since then the
+Services will crash if mentioned conditions are the case because the check
+function assumes all discovered printer to be in the parsed output.

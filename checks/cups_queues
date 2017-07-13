@@ -96,39 +96,40 @@ def inventory_cups_queues(parsed):
         yield item, {}
 
 def check_cups_queues(item, params, parsed):
-    data = parsed[item]
-    if type(params) == tuple and len(params) == 4:
-        params = {"job_count" : (params[0], params[1]),
-                  "job_age"   : (params[2], params[3]),
-        }
+    if item in parsed:
+        data = parsed[item]
+        if type(params) == tuple and len(params) == 4:
+            params = {"job_count" : (params[0], params[1]),
+                      "job_age"   : (params[2], params[3]),
+            }
 
-    if data["status_readable"] in params:
-        state = params[data["status_readable"]]
-        yield state, data["output"]
-    else:
-        yield 3, "Undefinded status output in \"lpr -p\""
-
-    now = time.time()
-    jobs_count = len(data["jobs"])
-    if jobs_count > 0:
-        warn_num, crit_num = params["job_count"]
-        yield 0, "Jobs: %d" % jobs_count, \
-                 [ ("jobs", jobs_count, warn_num, crit_num, 0) ]
-
-        warn_age, crit_age = params["job_age"]
-        now = time.time()
-        oldest = min(data["jobs"])
-        oldest_readable = time.strftime("%c", time.localtime(oldest))
-
-        if oldest < now - crit_age or jobs_count > crit_num:
-            state = 2
-        elif oldest < now - warn_age or jobs_count > warn_num:
-            state = 1
+        if data["status_readable"] in params:
+            state = params[data["status_readable"]]
+            yield state, data["output"]
         else:
-            state = 0
+            yield 3, "Undefinded status output in \"lpr -p\""
 
-        if state:
-            yield state, "Oldest job is from %s" % oldest_readable
+        now = time.time()
+        jobs_count = len(data["jobs"])
+        if jobs_count > 0:
+            warn_num, crit_num = params["job_count"]
+            yield 0, "Jobs: %d" % jobs_count, \
+                     [ ("jobs", jobs_count, warn_num, crit_num, 0) ]
+
+            warn_age, crit_age = params["job_age"]
+            now = time.time()
+            oldest = min(data["jobs"])
+            oldest_readable = time.strftime("%c", time.localtime(oldest))
+
+            if oldest < now - crit_age or jobs_count > crit_num:
+                state = 2
+            elif oldest < now - warn_age or jobs_count > warn_num:
+                state = 1
+            else:
+                state = 0
+
+            if state:
+                yield state, "Oldest job is from %s" % oldest_readable
 
 
 check_info["cups_queues"] = {

@@ -1095,7 +1095,9 @@ process_level_elements = [
     )),
     ( "cpulevels",
       Tuple(
-        title = _("Levels on CPU utilization"),
+        title = _("Levels on total CPU utilization"),
+        help = _("By activating this options you can set levels on the total "
+                 "CPU utilization of all included processes."),
         elements = [
            Percentage(title = _("Warning at"),  default_value = 90, maxvalue = 10000),
            Percentage(title = _("Critical at"), default_value = 98, maxvalue = 10000),
@@ -1105,78 +1107,89 @@ process_level_elements = [
      Integer(
          title = _("CPU Averaging"),
          help = _("By activating averaging, Check_MK will compute the average of "
-                  "the CPU utilization over a given interval. If you have defined "
+                  "the total CPU utilization over a given interval. If you have defined "
                   "alerting levels then these will automatically be applied on the "
                   "averaged value. This helps to mask out short peaks. "),
          unit = _("minutes"),
          minvalue = 1,
          default_value = 15,
-     )
-   ),
-   ( "max_age",
-     Tuple(
-       title = _("Maximum allowed age"),
-       help = _("Alarms you if the age of the process (not the consumed CPU time, but the real time) exceed the configured levels."),
-       elements = [
-           Age(title=_("Warning at"), default_value = 3600),
-           Age(title=_("Critical at"), default_value = 7200),
-       ]
-   )),
-   ( "virtual_levels",
+     )),
+    ( "single_cpulevels",
       Tuple(
-        title = _("Virtual memory usage"),
+        title = _("Levels on CPU utilization of a single process"),
+        help = _("Here you can define levels on the CPU utilization of single "
+                 "processes. For performance reasons CPU Averaging will not be "
+                 "applied to to the levels of single processes."),
         elements = [
-            Filesize(title = _("Warning at"), default_value = 1000 * 1024 * 1024 * 1024),
-            Filesize(title = _("Critical at"), default_value = 2000 * 1024 * 1024 * 1024),
+           Percentage(title = _("Warning at"),  default_value = 90, maxvalue = 10000),
+           Percentage(title = _("Critical at"), default_value = 98, maxvalue = 10000),
         ],
-   )),
-   ( "resident_levels",
+    )),
+    ( "max_age",
       Tuple(
-        title = _("Physical memory usage"),
+        title = _("Maximum allowed age"),
+        help = _("Alarms you if the age of the process (not the consumed CPU "
+                 "time, but the real time) exceed the configured levels."),
         elements = [
-            Filesize(title = _("Warning at"), default_value = 100 * 1024 * 1024),
-            Filesize(title = _("Critical at"), default_value = 200 * 1024 * 1024),
-        ],
-   )),
-   ( "resident_levels_perc",
-     Tuple(
-       title = _("Physical memory usage, in percentage of total RAM"),
-       elements = [
-           Percentage(title = _("Warning at"), default_value = 25.0),
-           Percentage(title = _("Critical at"), default_value = 50.0),
-       ]
-   )),
-   ( "handle_count", Tuple(
-        title = _('Handle Count (Windows only)'),
-        help  = _("The number of object handles in the processes object table. This includes open handles to "
-                  "threads, files and other resources like registry keys."),
+            Age(title=_("Warning at"), default_value = 3600),
+            Age(title=_("Critical at"), default_value = 7200),
+        ]
+    )),
+    ( "virtual_levels",
+       Tuple(
+         title = _("Virtual memory usage"),
+         elements = [
+             Filesize(title = _("Warning at"), default_value = 1000 * 1024 * 1024 * 1024),
+             Filesize(title = _("Critical at"), default_value = 2000 * 1024 * 1024 * 1024),
+         ],
+    )),
+    ( "resident_levels",
+       Tuple(
+         title = _("Physical memory usage"),
+         elements = [
+             Filesize(title = _("Warning at"), default_value = 100 * 1024 * 1024),
+             Filesize(title = _("Critical at"), default_value = 200 * 1024 * 1024),
+         ],
+    )),
+    ( "resident_levels_perc",
+      Tuple(
+        title = _("Physical memory usage, in percentage of total RAM"),
         elements = [
-            Integer(
-                title = _("Warning above"),
-                unit = _("handles"),
-            ),
-            Integer(
-                title = _("Critical above"),
-                unit = _("handles"),
-            ),
+            Percentage(title = _("Warning at"), default_value = 25.0),
+            Percentage(title = _("Critical at"), default_value = 50.0),
+        ]
+    )),
+    ( "handle_count", Tuple(
+         title = _('Handle Count (Windows only)'),
+         help  = _("The number of object handles in the processes object table. This includes open handles to "
+                   "threads, files and other resources like registry keys."),
+         elements = [
+             Integer(
+                 title = _("Warning above"),
+                 unit = _("handles"),
+             ),
+             Integer(
+                 title = _("Critical above"),
+                 unit = _("handles"),
+             ),
+         ],
+    )),
+    ('process_info', DropdownChoice(
+        title = _("Enable per-process details in long-output"),
+        label = _("Enable per-process details"),
+        help  = _("If active, the long output of this service will contain a list of "
+                    "all the matching processes and their details (i.e. PID, CPU usage, memory usage). "
+                    "Please note that HTML output will only work if \"Escape HTML codes in plugin output\" is "
+                    "disabled in global settings. This might expose you to Cross-Site-Scripting (everyone "
+                    "with write-access to checks could get scripts executed on the monitoring site in the context "
+                    "of the user of the monitoring site) so please do this if you understand the consequences."),
+        choices = [
+            (None, _("Disable")),
+            ("text", _("Text output")),
+            ("html", _("HTML output"))
         ],
-   )),
-   ('process_info', DropdownChoice(
-       title = _("Enable per-process details in long-output"),
-       label = _("Enable per-process details"),
-       help  = _("If active, the long output of this service will contain a list of "
-                   "all the matching processes and their details (i.e. PID, CPU usage, memory usage). "
-                   "Please note that HTML output will only work if \"Escape HTML codes in plugin output\" is "
-                   "disabled in global settings. This might expose you to Cross-Site-Scripting (everyone "
-                   "with write-access to checks could get scripts executed on the monitoring site in the context "
-                   "of the user of the monitoring site) so please do this if you understand the consequences."),
-       choices = [
-           (None, _("Disable")),
-           ("text", _("Text output")),
-           ("html", _("HTML output"))
-       ],
-       default_value = "disable",
-   )),
+        default_value = "disable",
+    )),
 ]
 
 # In version 1.2.4 the check parameters for the resulting ps check

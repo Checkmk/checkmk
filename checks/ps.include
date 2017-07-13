@@ -414,9 +414,9 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
                         kernel_perc = kernel_per_sec / 100000.0 / cpu_cores
                         percent_cpu += user_perc + kernel_perc
                         handle_count += handle_c
-                        process.append(("cpu usage (user space)",   (user_perc, "%")))
-                        process.append(("cpu_usage (kernel space)", (kernel_perc, "%")))
-                        process.append(("pid", (pid, "")))
+                        process.append([("cpu usage (user space)",   (user_perc, "%")),
+                                        ("cpu usage (kernel space)", (kernel_perc, "%")),
+                                        ("pid", (pid, ""))])
                     else:
                         # process_info[3] contains the used CPU time and possibly, separated by /, also
                         # the total elapsed time since the birth of the process.
@@ -540,6 +540,32 @@ def check_ps_common(item, params, parsed, cpu_cores = 1, info_name = "processes"
             elif percent_cpu >= warn_cpu:
                 state = max(state, 1)
                 infotext += "(!)"
+
+        if "single_cpulevels" in params:
+            warn_cpu_single, crit_cpu_single = params["single_cpulevels"]
+            for p in processes:
+                cpu_usage, name, pid = 0.0, None, None
+
+                for item, (value, _unit) in p:
+                    if item == "name":
+                        name = value
+                    if item == "pid":
+                        pid = value
+                    elif item.startswith("cpu usage"):
+                        cpu_usage += value
+
+                if cpu_usage >= warn_cpu_single:
+                    process_description = "%s with PID %s" % (name, pid) if pid else name
+                    infotext += ", %.1f%% CPU for %s (warn/crit at %s/%s)" % (
+                        cpu_usage, process_description, warn_cpu_single, crit_cpu_single
+                    )
+
+                if cpu_usage >= crit_cpu_single:
+                    state = 2
+                    infotext +="(!!)"
+                elif cpu_usage >= warn_cpu_single:
+                    state = max(state, 1)
+                    infotext +="(!)"
 
         # only check handle_count if provided by wmic counters
         if handle_count:

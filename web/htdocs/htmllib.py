@@ -1595,7 +1595,11 @@ class html(HTMLGenerator, RequestHandler):
 
     def reload_sidebar(self):
         if not self.has_var("_ajaxid"):
-            self.javascript("reload_sidebar()")
+            self.write_html(self.render_reload_sidebar())
+
+
+    def render_reload_sidebar(self):
+        return self.render_javascript("reload_sidebar()")
 
 
     #

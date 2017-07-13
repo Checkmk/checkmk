@@ -628,7 +628,8 @@ def get_tactical_overview_data(extra_filter_headers):
         # "Unhandled" column
         "Stats: event_phase = open\n"
         "Stats: event_state != 0\n"
-        "StatsAnd: 2\n"
+        "Stats: event_host_in_downtime != 1\n"
+        "StatsAnd: 3\n"
     )
 
     try:
@@ -719,17 +720,18 @@ def render_tactical_overview(extra_filter_headers="", extra_url_variables=None):
                 ],
                 "handled"   : [
                     ("view_name", "ec_events"),
-		    ("event_state_1", "on",),
-		    ("event_state_2", "on",),
-		    ("event_state_3", "on",),
+		    ("event_state_1", "on"),
+		    ("event_state_2", "on"),
+		    ("event_state_3", "on"),
 
                 ],
                 "unhandled" : [
                     ("view_name", "ec_events"),
                     ("event_phase_open", "on"),
-		    ("event_state_1", "on",),
-                    ("event_state_2", "on",),
-                    ("event_state_3", "on",),
+		    ("event_state_1", "on"),
+                    ("event_state_2", "on"),
+                    ("event_state_3", "on"),
+                    ("is_event_host_in_downtime", "0"),
                 ],
                 "stale"     : None,
             },

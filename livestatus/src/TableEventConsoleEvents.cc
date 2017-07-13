@@ -86,6 +86,9 @@ void TableEventConsoleEvents::addColumns(Table *table, MonitoringCore *mc) {
         "Whether or not the host- or rule groups have precedence"));
     table->addColumn(make_unique<StringEventConsoleColumn>(
         "event_ipaddress", "The IP address where the event originated"));
+    table->addColumn(make_unique<IntEventConsoleColumn>(
+        "event_host_in_downtime",
+        "Whether or not the host (if found in core) was in downtime during event creation (0/1)"));
 
     TableHosts::addColumns(table, mc, "host_", DANGEROUS_OFFSETOF(ECRow, _host),
                            -1);

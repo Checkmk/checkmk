@@ -380,6 +380,19 @@ def vs_mkeventd_rule(rule_pack):
             choices = mkeventd.action_choices,
           )
         ),
+        ( "actions_in_downtime",
+          DropdownChoice(
+            title = _("Do actions"),
+            choices = [
+                (True,  _("even when the host is in downtime")),
+                (False, _("only when the host is not in downtime")),
+            ],
+            default_value = True,
+            help = _("With this setting you can prevent actions to be executed when "
+                     "the host is in downtime. This setting applies to events that are "
+                     "related to an existing monitoring host. Other event actions will "
+                     "always be executed."),
+        )),
         ( "cancel_actions",
           ListChoice(
             title = _("Actions when cancelling"),
@@ -834,7 +847,8 @@ def vs_mkeventd_rule(rule_pack):
             ( _("Rule Properties"), [ "id", "description", "comment", "docu_url", "disabled", "customer" ] ),
             ( _("Matching Criteria"), [ "match", "match_host", "match_ipaddress", "match_application", "match_priority", "match_facility",
                                         "match_sl", "match_ok", "cancel_priority", "cancel_application", "match_timeperiod", "invert_matching" ]),
-            ( _("Outcome & Action"), [ "state", "sl", "contact_groups", "actions", "cancel_actions", "cancel_action_phases", "drop", "autodelete" ]),
+            ( _("Outcome & Action"), [ "state", "sl", "contact_groups", "actions", "actions_in_downtime",
+                                       "cancel_actions", "cancel_action_phases", "drop", "autodelete" ]),
             ( _("Counting & Timing"), [ "count", "expect", "delay", "livetime", ]),
             ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),
         ],
@@ -1236,7 +1250,10 @@ def event_simulation_action():
         if not event.get("host"):
             raise MKUserError("event_p_host", _("Please specify a host name"))
         rfc = mkeventd.send_event(event)
-        return None, "Test event generated and sent to Event Console.<br><pre>%s</pre>" % rfc
+        return None, _("Test event generated and sent to Event Console.") \
+                      + html.render_br() \
+                      + html.render_pre(rfc) \
+                      + html.render_reload_sidebar()
 
 
 def rule_pack_with_id(rule_packs, rule_pack_id):

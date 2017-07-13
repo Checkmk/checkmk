@@ -91,6 +91,7 @@ if mkeventd_enabled:
     declare_filter(201, FilterText("event_owner",      _("Owner of event"),                  "event",   "event_owner",        "event_owner",            "~~"))
     declare_filter(221, FilterText("history_who",      _("User that performed action"),      "history", "history_who",        "history_who",            "~~"))
     declare_filter(222, FilterText("history_line",     _("Line number in history logfile"),  "history", "history_line",       "history_line",           "="))
+    declare_filter(223, FilterNagiosFlag("event", "event_host_in_downtime", _("Host in downtime during event creation")))
 
 
     class EventFilterCount(Filter):

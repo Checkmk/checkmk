@@ -104,6 +104,44 @@ def setup_console_logging():
     logger.addHandler(handler)
 
 
+def open_log(log_file_path, fallback_to=None):
+    """Open logfile and fall back to stderr if this is not successfull
+    The opened file() object is returned.
+    """
+    if fallback_to is None:
+        fallback_to = sys.stderr
+
+    logfile = None
+    try:
+        logfile = file(log_file_path, "a")
+        logfile.flush()
+    except Exception, e:
+        if cmk.debug.enabled():
+            raise
+
+        logger.exception("Cannot open log file '%s': %s" % (log_file_path , e))
+
+        if fallback_to:
+            logfile = fallback_to
+
+    if logfile:
+        setup_logging_handler(logfile)
+
+    return logfile
+
+
+def setup_logging_handler(stream):
+    """This method enables all log messages to be written to the given
+    stream file object. The messages are formated in Check_MK standard
+    logging format.
+    """
+    handler = _logging.StreamHandler(stream=stream)
+    handler.setFormatter(get_formatter("%(asctime)s [%(levelno)s] [%(name)s] %(message)s"))
+
+    del logger.handlers[:] # Remove all previously existing handlers
+    logger.addHandler(handler)
+
+
 def set_verbosity(verbosity):
     """Values for "verbosity":
 

@@ -50,11 +50,14 @@ import traceback
 import json
 
 import cmk
+import cmk.log
 import cmk.defines as defines
 import cmk.daemon
 from cmk.regex import regex, is_regex
 
 import livestatus
+
+logger = cmk.log.get_logger("mkeventd")
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -265,7 +268,7 @@ filter_operators = {
 #   '----------------------------------------------------------------------'
 
 def bail_out(reason):
-    log("FATAL ERROR: %s" % reason)
+    logger.error("FATAL ERROR: %s" % reason)
     sys.exit(1)
 
 def make_parentdirs(file_path):
@@ -279,10 +282,6 @@ def process_exists(pid):
         return True
     except:
         return False
-
-def open_logfile():
-    global g_logfile
-    g_logfile = file(g_logfile_path, "a")
 
 
 def drain_pipe(pipe):
@@ -304,28 +303,6 @@ def drain_pipe(pipe):
                 break # Error while reading
         else:
             break # No data available
-
-def log(text):
-    if type(text) == unicode:
-        text = text.encode("utf-8")
-
-    msg = '[%.6f] %s\n' % (time.time(), text)
-
-    try:
-        g_logfile.write(msg)
-        g_logfile.flush()
-    except:
-        sys.stderr.write(msg)
-        sys.stderr.flush()
-
-
-def is_verbose():
-    return opt_verbose or g_config['log_level']
-
-
-def verbose(text):
-    if is_verbose():
-        log(text)
 
 
 def match(pattern, text, complete = True):
@@ -417,17 +394,19 @@ class VerboseLock:
     def __init__(self, name):
         self._depth = 0
         self._name = name
+        self._set_logger()
+
+    def _set_logger(self):
+        self.logger = logger.getChild("VerboseLock(%s)" % self._name)
 
     def __enter__(self):
         self._depth += 1
-        if opt_debug:
-            log("LOCK %s: %d -> %d" % (self._name, self._depth-1, self._depth))
+        self.logger.debug("%d -> %d" % (self._name, self._depth-1, self._depth))
         return self
 
     def __exit__(self, type, value, tb):
         self._depth -= 1
-        if opt_debug:
-            log("LOCK %s: %d -> %d" % (self._name, self._depth+1, self._depth))
+        self.logger.debug("%d -> %d" % (self._name, self._depth+1, self._depth))
 
 
 class MKSignalException(Exception):
@@ -437,7 +416,7 @@ class MKSignalException(Exception):
 
 
 def signal_handler(signum, stack_frame):
-    verbose("Got signal %d." % signum)
+    logger.verbose("Got signal %d." % signum)
     raise MKSignalException(signum)
 
 
@@ -583,18 +562,18 @@ def update_timeperiods():
         g_timeperiods = new_timeperiods
         g_last_timeperiod_update = int(time.time()) / 60
     except Exception, e:
-        log("Cannot update timeperiod information: %s" % e)
+        logger.exception("Cannot update timeperiod information: %s" % e)
         if opt_debug:
             raise
 
 def check_timeperiod(tpname):
     update_timeperiods()
     if not g_timeperiods:
-        log("Warning: no timeperiod information. Assuming %s active" % tpname)
+        logger.warning("No timeperiod information. Assuming %s active" % tpname)
         return True
 
     elif tpname not in g_timeperiods:
-        log("Warning: no such timeperiod %s. Assume to active" % tpname)
+        logger.warning("No such timeperiod %s. Assume to active" % tpname)
         return True
 
     else:
@@ -877,7 +856,7 @@ def get_event_history_from_mongodb(filters, limit):
 
 def log_event_history(event, what, who="", addinfo=""):
     if g_config["debug_rules"]:
-        log("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
+        logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
 
     if g_config['archive_mode'] == 'mongodb':
         log_event_history_to_mongodb(event, what, who, addinfo)
@@ -975,16 +954,16 @@ def expire_logfiles(flush = False):
             if fn.endswith(".log"):
                 path = log_dir + "/" + fn
                 if flush:
-                    log("Flushed log file %s" % path)
+                    logger.info("Flushed log file %s" % path)
                     os.remove(path)
                 elif os.stat(path).st_mtime < min_mtime:
-                    log("Deleting log file %s (lifetime expired after %d days)" %
+                    logger.info("Deleting log file %s (lifetime expired after %d days)" %
                         (path, g_config["history_lifetime"]))
                     os.remove(path)
     except Exception, e:
         if opt_debug:
             raise
-        log("Error expiring log files: %s" % e)
+        logger.exception("Error expiring log files: %s" % e)
 
 def flush_event_history():
     if g_config['archive_mode'] == 'mongodb':
@@ -1061,7 +1040,7 @@ def get_event_history_from_file(filters, limit):
             # any useful entry for us.
             if len(time_filters):
                 if opt_debug:
-                    log("Skipping logfile %s.log because of time filter" % ts)
+                    logger.info("Skipping logfile %s.log because of time filter" % ts)
                 continue # skip this file
 
         new_entries = parse_history_file(path, headers, filters, greptexts, limit)
@@ -1098,7 +1077,7 @@ def parse_history_file(path, headers, filters, greptexts, limit):
             if g_status_server.filter_row(headers, filters, values):
                 entries.append(values)
         except Exception, e:
-            log("Invalid line '%s' in history file %s: %s" % (line, path, e))
+            logger.exception("Invalid line '%s' in history file %s: %s" % (line, path, e))
 
     return entries
 
@@ -1244,6 +1223,7 @@ class EventServer:
         self._syslog_tcp   = None
         self._snmptrap     = None
         self._mib_resolver = None
+        self._set_logger()
 
         self.create_pipe()
         self.open_eventsocket()
@@ -1257,6 +1237,10 @@ class EventServer:
             self._hash_stats.append([ 0 ] * 8 )
 
         self.host_config = HostConfig()
+
+
+    def _set_logger(self):
+        self.logger = logger.getChild("EventServer")
 
 
     def status_columns(self):
@@ -1364,7 +1348,7 @@ class EventServer:
         # We want to be able to receive events from all users on the local system
         os.chmod(g_pipe_path, 0666) # nosec
 
-        log("Created FIFO '%s' for receiving events" % g_pipe_path)
+        self.logger.info("Created FIFO '%s' for receiving events" % g_pipe_path)
 
 
     def open_syslog(self):
@@ -1373,13 +1357,13 @@ class EventServer:
                 if opt_syslog_fd != None:
                     self._syslog = socket.fromfd(opt_syslog_fd, socket.AF_INET, socket.SOCK_DGRAM)
                     os.close(opt_syslog_fd)
-                    log("Opened builtin syslog server on inherited filedescriptor %d" % opt_syslog_fd)
+                    self.logger.info("Opened builtin syslog server on inherited filedescriptor %d" % opt_syslog_fd)
 
                 else:
                     self._syslog = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                     self._syslog.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     self._syslog.bind(("0.0.0.0", 514))
-                    log("Opened builtin syslog server on UDP port 514")
+                    self.logger.info("Opened builtin syslog server on UDP port 514")
             except Exception, e:
                 raise Exception("Cannot start builtin syslog server: %s" % e)
 
@@ -1390,14 +1374,14 @@ class EventServer:
                     self._syslog_tcp = socket.fromfd(opt_syslog_tcp_fd, socket.AF_INET, socket.SOCK_STREAM)
                     self._syslog_tcp.listen(20)
                     os.close(opt_syslog_tcp_fd)
-                    log("Opened builtin syslog-tcp server on inherited filedescriptor %d" % opt_syslog_tcp_fd)
+                    self.logger.info("Opened builtin syslog-tcp server on inherited filedescriptor %d" % opt_syslog_tcp_fd)
 
                 else:
                     self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     self._syslog_tcp.bind(("0.0.0.0", 514))
                     self._syslog_tcp.listen(20)
-                    log("Opened builtin syslog-tcp server on TCP port 514")
+                    self.logger.info("Opened builtin syslog-tcp server on TCP port 514")
             except Exception, e:
                 raise Exception("Cannot start builtin syslog-tcp server: %s" % e)
 
@@ -1407,13 +1391,13 @@ class EventServer:
                 if opt_snmptrap_fd != None:
                     self._snmptrap = socket.fromfd(opt_snmptrap_fd, socket.AF_INET, socket.SOCK_DGRAM)
                     os.close(opt_snmptrap_fd)
-                    log("Opened builtin snmptrap server on inherited filedescriptor %d" % opt_snmptrap_fd)
+                    self.logger.info("Opened builtin snmptrap server on inherited filedescriptor %d" % opt_snmptrap_fd)
 
                 else:
                     self._snmptrap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                     self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     self._snmptrap.bind(("0.0.0.0", 162))
-                    log("Opened builtin snmptrap server on UDP port 162")
+                    self.logger.info("Opened builtin snmptrap server on UDP port 162")
             except Exception, e:
                 raise Exception("Cannot start builtin snmptrap server: %s" % e)
 
@@ -1425,7 +1409,7 @@ class EventServer:
             self._eventsocket.bind(g_eventsocket_path)
             os.chmod(g_eventsocket_path, 0664)
             self._eventsocket.listen(g_config['eventsocket_queue_len'])
-            log("Opened UNIX socket '%s' for receiving events" % g_eventsocket_path)
+            self.logger.info("Opened UNIX socket '%s' for receiving events" % g_eventsocket_path)
         else:
             self._eventsocket = None
 
@@ -1434,7 +1418,7 @@ class EventServer:
         if opt_profile.get("event"):
             import cProfile
             profilefile = omd_root + "/var/mkeventd/event.profile"
-            log("Writing profile of event thread to %s." % profilefile)
+            self.logger.info("Writing profile of event thread to %s." % profilefile)
             try:
                 cProfile.run("g_event_server.run_loop()", profilefile)
             except:
@@ -1442,7 +1426,7 @@ class EventServer:
             finally:
                 file(profilefile + ".py", "w").write("#!/usr/bin/env python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
                 os.chmod(profilefile + ".py", 0755)
-                log("Created profile conversion script %s.py." % profilefile)
+                self.logger.info("Created profile conversion script %s.py." % profilefile)
 
         else:
             self.run_loop()
@@ -1457,7 +1441,7 @@ class EventServer:
                 self.serve()
 
             except Exception:
-                log("EXCEPTION in event server:\n%s" % format_exception())
+                self.logger.exception("Exception in event server:\n%s" % e)
                 if opt_debug:
                     raise
                 time.sleep(1)
@@ -1489,16 +1473,16 @@ class EventServer:
             builder.loadModules()
 
             loaded_mib_module_names = builder.mibSymbols.keys()
-            log('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
-            verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
+            self.logger.info('Loaded %d SNMP MIB modules' % len(loaded_mib_module_names))
+            self.logger.verbose('Found modules: %s' % (', '.join(loaded_mib_module_names)))
 
             # This object maintains various indices built from MIBs data
             self._mib_resolver = MibViewController(builder)
         except SmiError, e:
             if opt_debug:
                 raise
-            log("Exception while loading MIB modules. Proceeding without modules!")
-            log("Exception: %s" % e)
+            self.logger.info("Exception while loading MIB modules. Proceeding without modules!")
+            self.logger.exception("Exception: %s" % e)
 
 
     # Format time difference seconds into approximated
@@ -1545,7 +1529,7 @@ class EventServer:
     def snmptrap_translate_varbinds(self, var_bind_list):
         var_binds = []
         if self._mib_resolver is None:
-            log('Failed to translate OIDs, no modules loaded (see above)')
+            self.logger.warning('Failed to translate OIDs, no modules loaded (see above)')
             return [(str(oid), str(value)) for oid, value in var_bind_list]
 
         def translate(oid, value):
@@ -1574,7 +1558,7 @@ class EventServer:
 
             except SmiError, e:
                 # Failed to translate? add untranslated
-                log('Failed to translate OID %s: %s' % (oid.prettyPrint(), e))
+                self.logger.exception('Failed to translate OID %s: %s' % (oid.prettyPrint(), e))
                 var_binds.append((str(oid), str(value))) # add untranslated
 
         return var_binds
@@ -1583,7 +1567,7 @@ class EventServer:
     # Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
     # and processing. PySNMP is calling self.handle_snmptrap back.
     def process_snmptrap(self, (whole_msg, sender_address)):
-        verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
+        self.logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
         g_snmp_engine.setUserContext(sender_address=sender_address)
         g_snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_engine, (), (), whole_msg)
 
@@ -1604,12 +1588,12 @@ class EventServer:
 
 
     def log_snmptrap_details(self, context_engine_id, context_name, var_binds, ipaddress):
-        if is_verbose():
-            verbose('Trap accepted from %s (ContextEngineId "%s", ContextName "%s")' %
+        if self.logger.is_verbose():
+            self.logger.verbose('Trap accepted from %s (ContextEngineId "%s", ContextName "%s")' %
                  (ipaddress, context_engine_id.prettyPrint(), context_name.prettyPrint()))
 
             for name, val in var_binds:
-                verbose('%-40s = %s' % (name.prettyPrint(), val.prettyPrint()))
+                self.logger.verbose('%-40s = %s' % (name.prettyPrint(), val.prettyPrint()))
 
 
     def create_event_from_trap(self, trap, ipaddress):
@@ -1733,7 +1717,7 @@ class EventServer:
                         # Pending fragments from previos reads that are not terminated
                         # by a \n are ignored.
                         if pipe_fragment:
-                            log("Warning: ignoring incomplete message '%s' from pipe" % pipe_fragment)
+                            self.logger.warning("Ignoring incomplete message '%s' from pipe" % pipe_fragment)
                             pipe_fragment = ""
                     else:
                         # Prepend previous beginning of message to read data
@@ -1763,8 +1747,8 @@ class EventServer:
                     data = self._snmptrap.recvfrom(65535)
                     self.process_raw_data(self.process_snmptrap, data)
                 except Exception:
-                    log('Exception handling a SNMP trap from "%s". Skipping this one.\n%s' %
-                                                          (data[1][0], format_exception()))
+                    self.logger.exception('Exception handling a SNMP trap from "%s". Skipping this one' %
+                                                          (data[1][0]))
 
             # check whether or not spool files are available
             spool_dir = g_state_dir + "/spool"
@@ -1792,7 +1776,7 @@ class EventServer:
         if not is_replication_slave() or g_slave_status["mode"] != "sync":
             handler_func(data)
         elif opt_debug:
-            log("Replication: we are in slave mode, ignoring event")
+            self.logger.info("Replication: we are in slave mode, ignoring event")
         elapsed = time.time() - before
         g_perfcounters.count_time("processing", elapsed)
 
@@ -1806,7 +1790,7 @@ class EventServer:
                 try:
                     self.process_raw_data(self.process_line, (line, address))
                 except Exception:
-                    log('Exception handling a log line (skipping this one): %s' % format_exception())
+                    self.logger.exception('Exception handling a log line (skipping this one): %s' % e)
 
 
     def do_housekeeping(self):
@@ -1840,7 +1824,7 @@ class EventServer:
             if in_downtime:
                 continue # (still) in downtime, don't delete any event
 
-            verbose("Remove event %d (created in downtime, host left downtime)" % event["id"])
+            self.logger.verbose("Remove event %d (created in downtime, host left downtime)" % event["id"])
             g_event_status.remove_event(event)
 
 
@@ -1860,14 +1844,14 @@ class EventServer:
                 # Event belongs to a rule that does not longer exist? It
                 # will never reach its count. Better delete it.
                 if not rule:
-                    log("Deleting orphaned event %d created by obsolete rule %s" %
+                    self.logger.info("Deleting orphaned event %d created by obsolete rule %s" %
                             (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
                     log_event_history(event, "ORPHANED")
                     events_to_delete.append(nr)
 
                 elif not "count" in rule and not "expect" in rule:
-                    log("Count-based event %d belonging to rule %s: rule does not "
+                    self.logger.info("Count-based event %d belonging to rule %s: rule does not "
                         "count/expect anymore. Deleting event." % (event["id"], event["rule_id"]))
                     event["phase"] = "closed"
                     log_event_history(event, "NOCOUNT")
@@ -1888,11 +1872,11 @@ class EventServer:
                         new_tokens = int(elapsed_secs / secs_per_token)
                         if new_tokens:
                             if opt_debug:
-                                log("Rule %s/%s, event %d: got %d new tokens" % (rule["pack"], rule["id"], event["id"], new_tokens))
+                                self.logger.info("Rule %s/%s, event %d: got %d new tokens" % (rule["pack"], rule["id"], event["id"], new_tokens))
                             event["count"] = max(0, event["count"] - new_tokens)
                             event["last_token"] = last_token + new_tokens * secs_per_token # not now! would be unfair
                             if event["count"] == 0:
-                                log("Rule %s/%s, event %d: again without allowed rate, dropping event" %
+                                self.logger.info("Rule %s/%s, event %d: again without allowed rate, dropping event" %
                                     (rule["pack"], rule["id"], event["id"]))
                                 event["phase"] = "closed"
                                 log_event_history(event, "COUNTFAILED")
@@ -1900,7 +1884,7 @@ class EventServer:
 
                     else: # algorithm 'interval'
                         if event["first"] + count["period"] <= now: # End of period reached
-                            log("Rule %s/%s: reached only %d out of %d events within %d seconds. "
+                            self.logger.info("Rule %s/%s: reached only %d out of %d events within %d seconds. "
                                 "Resetting to zero." % (rule["pack"], rule["id"], event["count"], count["count"], count["period"]))
                             event["phase"] = "closed"
                             log_event_history(event, "COUNTFAILED")
@@ -1910,7 +1894,7 @@ class EventServer:
             elif event["phase"] == "delayed":
                 delay_until = event.get("delay_until", 0) # should always be present
                 if now >= delay_until:
-                    log("Delayed event %d of rule %s is now activated." % (event["id"], event["rule_id"]))
+                    self.logger.info("Delayed event %d of rule %s is now activated." % (event["id"], event["rule_id"]))
                     event["phase"] = "open"
                     log_event_history(event, "DELAYOVER")
                     if rule:
@@ -1921,7 +1905,7 @@ class EventServer:
                             events_to_delete.append(nr)
 
                     else:
-                        log("Cannot do rule action: rule %s not present anymore." % event["rule_id"])
+                        self.logger.info("Cannot do rule action: rule %s not present anymore." % event["rule_id"])
 
 
             # Handle events with a limited lifetime
@@ -1931,7 +1915,7 @@ class EventServer:
                     if event["phase"] in allowed_phases:
                         event["phase"] = "closed"
                         events_to_delete.append(nr)
-                        log("Livetime of event %d (rule %s) exceeded. Deleting event." % (
+                        self.logger.info("Livetime of event %d (rule %s) exceeded. Deleting event." % (
                                 event["id"], event["rule_id"]))
                         log_event_history(event, "EXPIRED")
 
@@ -1986,7 +1970,7 @@ class EventServer:
                         if event["count"] < expected_count: # no -> trigger alarm
                             self.handle_absent_event(rule, event["count"], expected_count, event["last"])
                         else: # yes -> everything is fine. Just log.
-                            log("Rule %s/%s has reached %d occurrances (%d required). Starting next period." %
+                            self.logger.info("Rule %s/%s has reached %d occurrances (%d required). Starting next period." %
                                     (rule["pack"], rule["id"], event["count"], expected_count))
                             log_event_history(event, "COUNTREACHED")
                         # Counting event is no longer needed.
@@ -2150,7 +2134,7 @@ class EventServer:
                             raise
                         rule["disabled"] = True
                         count_disabled += 1
-                        log("Ignoring rule '%s/%s' because of an invalid regex (%s)." %
+                        self.logger.exception("Ignoring rule '%s/%s' because of an invalid regex (%s)." %
                                 (rule["pack"], rule["id"], e))
 
                     if g_config["rule_optimizer"]:
@@ -2162,9 +2146,9 @@ class EventServer:
                             count_unspecific += 1
 
 
-        log("Compiled %d active rules (ignoring %d disabled rules)" % (count_rules, count_disabled))
+        self.logger.info("Compiled %d active rules (ignoring %d disabled rules)" % (count_rules, count_disabled))
         if g_config["rule_optimizer"]:
-            log("Rule hash: %d rules - %d hashed, %d unspecific" %
+            self.logger.info("Rule hash: %d rules - %d hashed, %d unspecific" %
                (len(self._rules), len(self._rules) - count_unspecific, count_unspecific))
             for facility in range(32):
                 if facility in self._rule_hash:
@@ -2172,7 +2156,7 @@ class EventServer:
                     for prio, entries in self._rule_hash[facility].items():
                         stats.append("%s(%d)" % (syslog_priorities[prio], len(entries)))
                     if syslog_facilities[facility]:
-                        log(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
+                        self.logger.info(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
 
 
     def hash_rule(self, rule):
@@ -2207,7 +2191,7 @@ class EventServer:
                 prio_hash.setdefault(prio, []).append(rule)
 
     def output_hash_stats(self):
-        log("Top 20 of facility/priority:")
+        self.logger.info("Top 20 of facility/priority:")
         entries = []
         total_count = 0
         for facility in range(32):
@@ -2219,7 +2203,7 @@ class EventServer:
         entries.sort()
         entries.reverse()
         for count, (facility, priority) in entries[:20]:
-            log("  %s/%s - %d (%.2f%%)" % (
+            self.logger.info("  %s/%s - %d (%.2f%%)" % (
                 syslog_facilities[facility], syslog_priorities[priority], count,
                     (100.0 * count / float(total_count))))
 
@@ -2227,9 +2211,9 @@ class EventServer:
         line = line.rstrip()
         if g_config["debug_rules"]:
             if address:
-                log(u"Processing message from %r: '%s'" % (address, line))
+                self.logger.info(u"Processing message from %r: '%s'" % (address, line))
             else:
-                log(u"Processing message '%s'" % line)
+                self.logger.info(u"Processing message '%s'" % line)
 
         event = self.create_event_from_line(line, address)
         self.process_event(event)
@@ -2258,18 +2242,18 @@ class EventServer:
                 result = self.event_rule_matches(rule, event)
 
             except Exception:
-                log('  Exception during matching:\n%s' % format_exception())
+                self.logger.exception('  Exception during matching:\n%s' % e)
                 result = False
 
             if result:
                 g_perfcounters.count("rule_hits")
                 cancelling, groups = result
                 if g_config["debug_rules"]:
-                    log("  matching groups: %s" % ", ".join(groups))
+                    self.logger.info("  matching groups: %s" % ", ".join(groups))
 
                 g_event_status.count_rule_match(rule["id"])
                 if g_config["log_rulehits"]:
-                    log("Rule '%s/%s' hit by message %s/%s - '%s'." % (
+                    self.logger.info("Rule '%s/%s' hit by message %s/%s - '%s'." % (
                         rule["pack"], rule["id"],
                         syslog_facilities[event["facility"]], syslog_priorities[event["priority"]],
                         event["text"]))
@@ -2278,7 +2262,7 @@ class EventServer:
                     if rule["drop"] == "skip_pack":
                         skip_pack = rule["pack"]
                         if g_config["debug_rules"]:
-                            log("  skipping this rule pack (%s)" % skip_pack)
+                            self.logger.info("  skipping this rule pack (%s)" % skip_pack)
                         continue
                     else:
                         g_perfcounters.count("drops")
@@ -2318,7 +2302,7 @@ class EventServer:
                         if existing_event:
                             if "delay" in rule:
                                 if g_config["debug_rules"]:
-                                    log("Event opening will be delayed for %d seconds" % rule["delay"])
+                                    self.logger.info("Event opening will be delayed for %d seconds" % rule["delay"])
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
@@ -2339,7 +2323,7 @@ class EventServer:
                     else:
                         if "delay" in rule:
                             if g_config["debug_rules"]:
-                                log("Event opening will be delayed for %d seconds" % rule["delay"])
+                                self.logger.info("Event opening will be delayed for %d seconds" % rule["delay"])
                             event["delay_until"] = time.time() + rule["delay"]
                             event["phase"] = "delayed"
                         else:
@@ -2426,48 +2410,48 @@ class EventServer:
                 if result == False:
                     result = False, ()
                     if g_config["debug_rules"]:
-                        log("  Rule would not match, but due to inverted matching does.")
+                        self.logger.info("  Rule would not match, but due to inverted matching does.")
                 else:
                     result = False
                     if g_config["debug_rules"]:
-                        log("  Rule would match, but due to inverted matching does not.")
+                        self.logger.info("  Rule would match, but due to inverted matching does not.")
 
             return result
 
     def event_rule_matches_non_inverted(self, rule, event):
         debug = g_config["debug_rules"]
         if debug:
-            log("Trying rule %s/%s..." % (rule["pack"], rule["id"]))
-            log("  Text:   %s" % event["text"])
-            log("  Syslog: %d.%d" % (event["facility"], event["priority"]))
-            log("  Host:   %s" % event["host"])
+            self.logger.info("Trying rule %s/%s..." % (rule["pack"], rule["id"]))
+            self.logger.info("  Text:   %s" % event["text"])
+            self.logger.info("  Syslog: %d.%d" % (event["facility"], event["priority"]))
+            self.logger.info("  Host:   %s" % event["host"])
 
         if False == match(rule.get("match_host"), event["host"], complete=True):
             if debug:
-                log("  did not match because of wrong host '%s' (need '%s')" %
+                self.logger.info("  did not match because of wrong host '%s' (need '%s')" %
                         (event["host"], pattern(rule.get("match_host"))))
             return False
 
         if False == match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
             if debug:
-                log("  did not match because of wrong source IP address '%s' (need '%s')" % (event["ipaddress"], rule.get("match_ipaddress")))
+                self.logger.info("  did not match because of wrong source IP address '%s' (need '%s')" % (event["ipaddress"], rule.get("match_ipaddress")))
             return False
 
         if match(rule.get("match_application"), event["application"], complete=False) == False \
            and "cancel_application" not in rule:
                 if debug:
-                    log("  did not match because of wrong application '%s' (need '%s')" %
+                    self.logger.info("  did not match because of wrong application '%s' (need '%s')" %
                             (event["application"], pattern(rule.get("match_application"))))
                 return False
 
         if "match_facility" in rule and event["facility"] != rule["match_facility"]:
             if debug:
-                log("  did not match because of wrong syslog facility")
+                self.logger.info("  did not match because of wrong syslog facility")
             return False
 
         if "match_timeperiod" in rule and not check_timeperiod(rule["match_timeperiod"]):
             if debug:
-                log("  did not match, because timeperiod %s is not active" % rule["match_timeperiod"])
+                self.logger.info("  did not match, because timeperiod %s is not active" % rule["match_timeperiod"])
             return False
 
         if "match_ok" in rule or "cancel_priority" in rule or "cancel_application" in rule:
@@ -2487,7 +2471,7 @@ class EventServer:
             match_groups = match(rule.get("match_ok", ""), event["text"], complete = False)
             if match_groups != False and cp and cancel_by_application:
                 if debug:
-                    log("  found cancelling event")
+                    self.logger.info("  found cancelling event")
                 if match_groups == True:
                     match_groups = ()
                 return True, match_groups
@@ -2495,7 +2479,7 @@ class EventServer:
         match_groups = match(rule.get("match"), event["text"], complete = False)
         if match_groups == False:
             if debug:
-                log("  did not match because of wrong text")
+                self.logger.info("  did not match because of wrong text")
             return False
 
         if "match_priority" in rule:
@@ -2505,7 +2489,7 @@ class EventServer:
             p = event["priority"]
             if p < prio_from or p > prio_to:
                 if debug:
-                    log("  did not match because of wrong syslog priority")
+                    self.logger.info("  did not match because of wrong syslog priority")
                 return False
 
         if "match_sl" in rule:
@@ -2515,12 +2499,12 @@ class EventServer:
             p = event.get("sl")
             if p == None:
                 if debug:
-                    log("  did not match, because no service level is set in event")
+                    self.logger.info("  did not match, because no service level is set in event")
                 return False
 
             if p < sl_from or p > sl_to:
                 if debug:
-                    log("  did not match because of wrong service level %d (need %d..%d)" %
+                    self.logger.info("  did not match because of wrong service level %d (need %d..%d)" %
                             (p, sl_from, sl_to),)
                 return False
 
@@ -2696,7 +2680,7 @@ class EventServer:
             event["host"] = self.translate_hostname(event["host"])
         except Exception, e:
             if g_config["debug_rules"]:
-                log('Unable to parse host "%s" (%s)' % (event.get("host"), e))
+                self.logger.exception('Unable to parse host "%s" (%s)' % (event.get("host"), e))
             event["host"] = ""
 
     def create_event_from_line(self, line, address):
@@ -2848,7 +2832,7 @@ class EventServer:
 
         except Exception, e:
             if g_config["debug_rules"]:
-                log('Got non-syslog message "%s" (%s)' % (line, e) )
+                self.logger.exception('Got non-syslog message "%s" (%s)' % (line, e) )
             event = {
                 "facility"    : 1,
                 "priority"    : 0,
@@ -2861,7 +2845,7 @@ class EventServer:
             }
 
         if g_config["debug_rules"]:
-            log('Parsed message:\n' +
+            self.logger.info('Parsed message:\n' +
                 ("".join([ " %-15s %s\n" % (k+":",v) for (k,v) in
                 sorted(event.items())])).rstrip())
 
@@ -2908,7 +2892,7 @@ class EventServer:
 
     # protected by lock_eventstatus
     def new_event_respecting_limits(self, event):
-        verbose("Checking limit for message from %s (rule '%s')" % (
+        self.logger.verbose("Checking limit for message from %s (rule '%s')" % (
             event["host"], event["rule_id"]))
 
         with lock_eventstatus:
@@ -2940,7 +2924,7 @@ class EventServer:
         num_already_open = g_event_status.get_num_existing_events_by(ty, event)
         limit  = g_config["event_limit"][ty]["limit"]
         action = g_config["event_limit"][ty]["action"]
-        verbose("  Type: %s, already open events: %d, Limit: %d" % (ty, num_already_open, limit))
+        self.logger.verbose("  Type: %s, already open events: %d, Limit: %d" % (ty, num_already_open, limit))
 
         # Limit not reached: add new event
         if num_already_open < limit:
@@ -2961,11 +2945,11 @@ class EventServer:
         # Limit reached already in the past: Simply drop silently
         if num_already_open > limit:
             # Just log in verbose mode! Otherwise log file will be flooded
-            verbose("  Skip processing because limit is already in effect")
+            self.logger.verbose("  Skip processing because limit is already in effect")
             g_perfcounters.count("overflows")
             return True # Prevent creation and prevent one time actions (below)
 
-        log("  The %s limit has been reached" % ty)
+        self.logger.info("  The %s limit has been reached" % ty)
 
         # This is the event which reached the limit, allow creation of it. Further
         # events will be stopped.
@@ -2974,11 +2958,11 @@ class EventServer:
         overflow_event = self._create_overflow_event(ty, event)
 
         if "overflow" in action:
-            log("  Creating overflow event")
+            self.logger.info("  Creating overflow event")
             g_event_status.new_event(overflow_event)
 
         if "notify" in action:
-            log("  Creating overflow notification")
+            self.logger.info("  Creating overflow notification")
             do_notify(overflow_event)
 
         return False
@@ -3067,7 +3051,13 @@ class StatusServer:
         self._tcp_socket = None
         self._reopen_sockets = False
         self._should_terminate = False
+        self._set_logger()
         self.open_sockets()
+
+
+    def _set_logger(self):
+        self.logger = logger.getChild("StatusServer")
+
 
     def open_sockets(self):
         self.open_unix_socket()
@@ -3096,11 +3086,12 @@ class StatusServer:
                 self._tcp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 self._tcp_socket.bind(("0.0.0.0", self._tcp_port))
                 self._tcp_socket.listen(g_config['socket_queue_len'])
-                log("Going to listen for status queries on TCP port %d" % self._tcp_port)
+                self.logger.info("Going to listen for status queries on TCP port %d" % self._tcp_port)
             except Exception, e:
                 if opt_debug:
                     raise
-                log("Cannot listen on TCP socket port %d: %s" % (self._tcp_port, e))
+                self.logger.exception("Cannot listen on TCP socket port %d: %s" %
+                                                                (self._tcp_port, e))
         else:
             self._tcp_socket = None
             self._tcp_port = 0
@@ -3123,7 +3114,7 @@ class StatusServer:
 
     def reopen_sockets(self):
         if self._unix_socket_queue_len != g_config["socket_queue_len"]:
-            log("socket_queue_len has changed. Reopening UNIX socket.")
+            self.logger.info("socket_queue_len has changed. Reopening UNIX socket.")
             self.close_unix_socket()
             self.open_unix_socket()
 
@@ -3142,18 +3133,18 @@ class StatusServer:
                 if opt_profile.get("status"):
                     import cProfile
                     profilefile = omd_root + "/var/mkeventd/status.profile"
-                    log("Writing profile of status thread to %s." % profilefile)
+                    self.logger.info("Writing profile of status thread to %s." % profilefile)
                     cProfile.run("g_status_server.serve()", profilefile)
                     file(profilefile + ".py", "w").write("#!/usr/bin/env python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
                     os.chmod(profilefile + ".py", 0755)
                 else:
                     self.serve()
             except Exception:
-                log("EXCEPTION in status server:\n%s" % format_exception())
+                self.logger.exception("Exception in status server:\n%s" % e)
                 if opt_debug:
                     raise
                 time.sleep(1)
-        log("Killing myself with signal 15")
+        self.logger.info("Killing myself with signal 15")
         os.kill(os.getpid(), 15)
 
     def serve(self):
@@ -3185,12 +3176,12 @@ class StatusServer:
                     if addr_info:
                         allow_commands = self._tcp_allow_commands
                         if opt_debug:
-                            log("Handle status connection from %s:%d" % addr_info)
+                            self.logger.info("Handle status connection from %s:%d" % addr_info)
                         if self._tcp_access_list != None and addr_info[0] not in \
                             self._tcp_access_list:
                             client_socket.close()
                             client_socket = None
-                            log("Denying access to status socket from %s (allowed ist only %s)" %
+                            self.logger.info("Denying access to status socket from %s (allowed ist only %s)" %
                                     (addr_info[0], ", ".join(self._tcp_access_list)))
                             continue
                     else:
@@ -3201,8 +3192,7 @@ class StatusServer:
                     g_perfcounters.count_time("request", time.time() - before)
 
             except Exception, e:
-                log("Error handling client %s: %s" % (addr_info, e))
-                log(format_exception())
+                self.logger.exception("Error handling client %s: %s" % (addr_info, e))
                 if client_socket:
                     client_socket.close()
                     client_socket = None
@@ -3212,7 +3202,7 @@ class StatusServer:
 
     def handle_client(self, client_socket, allow_commands, client_ip):
         for query in Queries(client_socket):
-            verbose("Client livestatus query: %s" % "\\n".join(query))
+            self.logger.verbose("Client livestatus query: %s" % "\\n".join(query))
             parts = query[0].split(None, 1)
             if len(parts) != 2:
                 raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
@@ -3276,7 +3266,7 @@ class StatusServer:
 
     # All commands are already locked with lock_eventstatus
     def handle_command_request(self, commandline):
-        log("Executing command: %s" % commandline)
+        self.logger.info("Executing command: %s" % commandline)
         parts = commandline.split(";")
         command = parts[0]
         replication_allow_command(command)
@@ -3286,7 +3276,7 @@ class StatusServer:
         elif command == "RELOAD":
             self.handle_command_reload()
         elif command == "SHUTDOWN":
-            log("Going to shut down")
+            self.logger.info("Going to shut down")
             self._should_terminate = True
         elif command == "REOPENLOG":
             self.handle_command_reopenlog()
@@ -3357,13 +3347,13 @@ class StatusServer:
             initialize_snmptrap_handling()
             g_event_server.compile_rules(g_config["rules"], g_config["rule_packs"])
         g_status_server.reload_configuration()
-        log("Reloaded configuration.")
+        self.logger.info("Reloaded configuration.")
 
 
     def handle_command_reopenlog(self):
-        log("Closing this logfile")
-        open_logfile()
-        log("Opened new logfile")
+        self.logger.info("Closing this logfile")
+        cmk.log.open_log(g_logfile_path)
+        self.logger.info("Opened new logfile")
 
 
     # Erase our current state and history!
@@ -3378,7 +3368,7 @@ class StatusServer:
                 load_slave_status()
             except:
                 pass
-        log("Flushed current status and historic events.")
+        self.logger.info("Flushed current status and historic events.")
 
     def handle_command_sync(self):
         g_event_status.save_status()
@@ -3386,10 +3376,10 @@ class StatusServer:
     def handle_command_resetcounters(self, arguments):
         if arguments:
             rule_id = arguments[0]
-            log("Resetting counters of rule " + rule_id)
+            self.logger.info("Resetting counters of rule " + rule_id)
         else:
             rule_id = None # Reset all rule counters
-            log("Resetting all rule counters")
+            self.logger.info("Resetting all rule counters")
         g_event_status.reset_counters(rule_id)
 
     def handle_command_action(self, arguments):
@@ -3415,7 +3405,7 @@ class StatusServer:
                 new_mode)
         g_slave_status["mode"] = new_mode
         save_slave_status()
-        log("Switched replication mode to '%s' by external command." % new_mode)
+        self.logger.info("Switched replication mode to '%s' by external command." % new_mode)
 
 
     def handle_replicate(self, argument, client_ip):
@@ -3423,7 +3413,7 @@ class StatusServer:
         try:
             last_update = int(argument)
             if opt_debug:
-                log("Replication: sync request from %s, last update %d seconds ago" % (
+                self.logger.info("Replication: sync request from %s, last update %d seconds ago" % (
                     client_ip, time.time() - last_update))
 
         except:
@@ -3462,7 +3452,7 @@ class StatusServer:
                     # TODO(sp) Actually filter columns
                     pass
                 else:
-                    log("Ignoring not-implemented header %s" % header)
+                    self.logger.info("Ignoring not-implemented header %s" % header)
 
             except Exception, e:
                 raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
@@ -3591,13 +3581,13 @@ def run_eventd():
 
         except MKSignalException, e:
             if e._signum == 1:
-                log("Received SIGHUP - going to reload configuration")
+                logger.info("Received SIGHUP - going to reload configuration")
             else:
-                log("Signalled to death by signal %d" % e._signum)
+                logger.info("Signalled to death by signal %d" % e._signum)
                 break
 
         except Exception, e:
-            log("EXCEPTION in main thread:\n%s" % format_exception())
+            logger.exception("Exception in main thread:\n%s" % e)
             if opt_debug:
                 raise
             time.sleep(1)
@@ -3619,7 +3609,13 @@ def run_eventd():
 class EventStatus():
 
     def __init__(self):
+        self._set_logger()
         self.flush()
+
+
+    def _set_logger(self):
+        self.logger = logger.getChild("EventStatus")
+
 
     def flush(self):
         self._events = []
@@ -3677,8 +3673,7 @@ class EventStatus():
         current_start = self.interval_start(rule_id, interval)
         next_start = self.next_interval_start(interval, current_start)
         self._interval_starts[rule_id] = next_start
-        if opt_debug:
-            log("Rule %s: next interval starts %s (i.e. now + %.2f sec)" %
+        self.logger.debug("Rule %s: next interval starts %s (i.e. now + %.2f sec)" %
                     (rule_id, next_start, time.time() - next_start))
 
     def pack_status(self):
@@ -3707,7 +3702,7 @@ class EventStatus():
             os.fsync(fd)
         os.rename(path + ".new", path)
         elapsed = time.time() - now
-        verbose("Saved event state to %s in %.3fms." % (path, elapsed * 1000))
+        self.logger.verbose("Saved event state to %s in %.3fms." % (path, elapsed * 1000))
 
     def reset_counters(self, rule_id):
         if rule_id:
@@ -3727,9 +3722,9 @@ class EventStatus():
                 self._rule_stats      = status["rule_stats"]
                 self._interval_starts = status.get("interval_starts", {})
                 self._initialize_event_limit_status()
-                log("Loaded event state from %s." % path)
+                self.logger.info("Loaded event state from %s." % path)
             except Exception, e:
-                log("Error loading event state from %s: %s" % (path, e))
+                self.logger.exception("Error loading event state from %s: %s" % (path, e))
                 raise
 
         # Add new columns
@@ -3794,7 +3789,7 @@ class EventStatus():
             self._events.remove(event)
             self._count_event_remove(event)
         except ValueError:
-            log("Cannot remove event %d: not present" % event["id"])
+            self.logger.exception("Cannot remove event %d: not present" % event["id"])
 
 
     # protected by lock_eventstatus
@@ -3806,13 +3801,13 @@ class EventStatus():
     # protected by lock_eventstatus
     def remove_oldest_event(self, ty, event):
         if ty == "overall":
-            verbose("  Removing oldest event")
+            self.logger.verbose("  Removing oldest event")
             self._remove_event_by_nr(0)
         elif ty == "by_rule":
-            verbose("  Removing oldest event of rule \"%s\"" % event["rule_id"])
+            self.logger.verbose("  Removing oldest event of rule \"%s\"" % event["rule_id"])
             self._remove_oldest_event_of_rule(event["rule_id"])
         elif ty == "by_host":
-            verbose("  Removing oldest event of host \"%s\"" % event["host"])
+            self.logger.verbose("  Removing oldest event of host \"%s\"" % event["host"])
             self._remove_oldest_event_of_host(event["host"])
 
 
@@ -3867,7 +3862,7 @@ class EventStatus():
                         if actions:
                             if previous_phase != "open" \
                                 and rule.get("cancel_action_phases", "always") == "open":
-                                log("Do not execute cancelling actions, event %s's phase is not 'open' but '%s'" %
+                                self.logger.info("Do not execute cancelling actions, event %s's phase is not 'open' but '%s'" %
                                     (event["id"], previous_phase))
                             else:
                                 do_event_actions(actions, event, is_cancelling = True)
@@ -3889,7 +3884,7 @@ class EventStatus():
 
         if event["host"] != host:
             if debug:
-                log("Do not cancel event %d: host is not the same (%s != %s)" %
+                self.logger.info("Do not cancel event %d: host is not the same (%s != %s)" %
                         (event["id"], event["host"], host))
             return False
 
@@ -3901,13 +3896,13 @@ class EventStatus():
                 application = replace_groups(rule["set_application"], application, match_groups)
             if event["application"] != application:
                 if debug:
-                    log("Do not cancel event %d: application is not the same (%s != %s)" %
+                    self.logger.info("Do not cancel event %d: application is not the same (%s != %s)" %
                             (event["id"], event["application"], application))
                 return False
 
         if event["facility"] != new_event["facility"]:
             if debug:
-                log("Do not cancel event %d: syslog facility is not the same (%d != %d)" %
+                self.logger.info("Do not cancel event %d: syslog facility is not the same (%d != %d)" %
                         (event["id"], event["facility"], new_event["facility"]))
 
         # Make sure, that the matching groups are the same. If the OK match
@@ -3917,7 +3912,7 @@ class EventStatus():
         for nr, (prev_group, cur_group) in enumerate(zip(previous_groups, match_groups)):
             if prev_group != cur_group:
                 if debug:
-                    log("Do not cancel event %d: match group number "
+                    self.logger.info("Do not cancel event %d: match group number "
                         "%d does not match (%s != %s)" %
                         (event["id"], nr+1, prev_group, cur_group))
                 return False
@@ -4052,7 +4047,7 @@ def event_has_opened(rule, event):
         event["live_until_phases"] = phases
 
     if rule.get("actions_in_downtime", True) == False and event["host_in_downtime"]:
-        log("Skip actions for event %d: Host is in downtime" % event["id"])
+        logger.info("Skip actions for event %d: Host is in downtime" % event["id"])
         return
 
     do_event_actions(rule.get("actions", []), event, is_cancelling = False)
@@ -4067,10 +4062,12 @@ def do_event_actions(actions, event, is_cancelling):
         else:
             action = g_config["action"].get(aname)
             if not action:
-                log("Cannot execute undefined action '%s'" % aname)
-                log("We have to following actions: %s" % ", ".join(g_config["action"].keys()))
+                logger.info("Cannot execute undefined action '%s'" % aname)
+                logger.info("We have to following actions: %s" %
+                                ", ".join(g_config["action"].keys()))
             else:
-                log("Going to execute action '%s' on event %d" % (action["title"], event["id"]))
+                logger.info("Going to execute action '%s' on event %d" %
+                                        (action["title"], event["id"]))
                 do_event_action(action, event)
 
 
@@ -4095,7 +4092,7 @@ def get_quoted_event(event):
             except Exception, e:
                 # If anything unforeseen happens, we use the intial value
                 new_event[key] = value
-                log("Unable to quote event text %r: %r, %r" % (key,value, e))
+                logger.exception("Unable to quote event text %r: %r, %r" % (key,value, e))
 
     return new_event
 
@@ -4105,7 +4102,7 @@ def escape_null_bytes(s):
 
 def do_event_action(action, event, user=""):
     if action["disabled"]:
-        log("Skipping disabled action %s." % action["id"])
+        logger.info("Skipping disabled action %s." % action["id"])
         return
 
     try:
@@ -4120,11 +4117,11 @@ def do_event_action(action, event, user=""):
             execute_script(escape_null_bytes(substitute_event_tags(settings["script"], get_quoted_event(event))), event)
             log_event_history(event, "SCRIPT", user, action['id'])
         else:
-            log("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
+            logger.error("Cannot execute action %s: invalid action type %s" % (action["id"], action_type))
     except Exception:
         if opt_debug:
             raise
-        log("Error during execution of action %s: %s" % (action["id"], format_exception()))
+        logger.exception("Error during execution of action %s" % action["id"])
 
 
 def get_event_tags(event):
@@ -4170,7 +4167,7 @@ def send_email(to, subject, body):
                      to.encode("utf-8") ]
 
     if g_config["debug_rules"]:
-        log("  Executing: %s" % " ".join(command_utf8))
+        logger.info("  Executing: %s" % " ".join(command_utf8))
 
     p = subprocess.Popen(command_utf8, close_fds=True, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE, stdin=subprocess.PIPE)
@@ -4180,11 +4177,11 @@ def send_email(to, subject, body):
     stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
     exitcode = p.returncode
 
-    log('  Exitcode: %d' % exitcode)
+    logger.info('  Exitcode: %d' % exitcode)
     if exitcode != 0:
-        log("  Error: Failed to send the mail.")
+        logger.info("  Error: Failed to send the mail.")
         for line in (stdout_txt + stderr_txt).splitlines():
-            log("  Output: %s" % line.rstrip())
+            logger.info("  Output: %s" % line.rstrip())
         return False
 
     return True
@@ -4209,9 +4206,9 @@ def execute_script(body, event):
         env = script_env,
     )
     output = p.communicate(body.encode('utf-8'))[0]
-    log('  Exit code: %d' % p.returncode)
+    logger.info('  Exit code: %d' % p.returncode)
     if output:
-        log('  Output: \'%s\'' % output)
+        logger.info('  Output: \'%s\'' % output)
 
 
 #.
@@ -4242,13 +4239,13 @@ def do_notify(event, username=None, is_cancelling=False):
 
     context = create_notification_context(event, username, is_cancelling)
 
-    if is_verbose():
-        verbose("Sending notification via Check_MK with the following context:")
+    if logger.is_verbose():
+        logger.verbose("Sending notification via Check_MK with the following context:")
         for varname, value in sorted(context.items()):
-            verbose("  %-25s: %s" % (varname, value))
+            logger.verbose("  %-25s: %s" % (varname, value))
 
     if context["HOSTDOWNTIME"] != "0":
-        log("Host %s is currently in scheduled downtime. "
+        logger.info("Host %s is currently in scheduled downtime. "
             "Skipping notification of event %s." % (
             context["HOSTNAME"], event["id"]))
         return
@@ -4266,9 +4263,9 @@ def do_notify(event, username=None, is_cancelling=False):
     response = p.communicate(input=context_string)[0]
     status = p.returncode
     if status:
-        log("Error notifying via Check_MK: %s" % response.strip())
+        logger.error("Error notifying via Check_MK: %s" % response.strip())
     else:
-        log("Successfully forwarded notification for event %d to Check_MK" % event["id"])
+        logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
 
 
 def create_notification_context(event, username, is_cancelling):
@@ -4383,7 +4380,7 @@ def add_contact_information_to_context(context, contact_groups):
     contact_names = rbn_groups_contacts(contact_groups)
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
-    verbose("Setting %d contacts %s resulting from rule contact groups %s" % (
+    logger.verbose("Setting %d contacts %s resulting from rule contact groups %s" % (
              len(contact_names), ",".join(contact_names), ",".join(contact_groups)))
 
 
@@ -4419,10 +4416,10 @@ def core_has_notifications_disabled(event):
     try:
         notifications_enabled = livestatus.LocalConnection().query_value("GET status\nColumns: enable_notifications")
         if not notifications_enabled:
-            log("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
+            logger.info("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
             return True
     except Exception, e:
-        log("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
+        logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
 
     return False
 
@@ -4436,7 +4433,7 @@ def fetch_contacts_of_group_from_livestatus(group_name):
         return contacts
 
     except Exception, e:
-        log("Cannot determine contacts of group %s: %s" % (group_name, e))
+        logger.exception("Cannot determine contacts of group %s: %s" % (group_name, e))
         if opt_debug:
             raise
 
@@ -4503,7 +4500,7 @@ def replication_pull():
                     new_state = get_state_from_master()
                     replication_update_state(new_state)
                     if repl_settings.get("logging"):
-                        log("Successfully synchronized with master")
+                        logger.info("Successfully synchronized with master")
                     g_slave_status["last_sync"] = now
                     g_slave_status["success"] = True
 
@@ -4511,17 +4508,17 @@ def replication_pull():
                     # (time frame has already been checked)
                     if mode == "takeover":
                         if g_slave_status["last_master_down"] == None:
-                            log("Replication: master reachable for the first time, "
+                            logger.info("Replication: master reachable for the first time, "
                                 "switching back to slave mode")
                             g_slave_status["mode"] = "sync"
                         else:
-                            log("Replication: master reachable again after %d seconds, "
+                            logger.info("Replication: master reachable again after %d seconds, "
                                 "switching back to sync mode" % (now - g_slave_status["last_master_down"]))
                             g_slave_status["mode"] = "sync"
                     g_slave_status["last_master_down"] = None
 
                 except Exception, e:
-                    log("Replication: cannot sync with master: %s" % e)
+                    logger.warning("Replication: cannot sync with master: %s" % e)
                     g_slave_status["success"] = False
                     if g_slave_status["last_master_down"] == None:
                         g_slave_status["last_master_down"] = now
@@ -4530,15 +4527,15 @@ def replication_pull():
                     if "takeover" in repl_settings and mode != "takeover":
                         if not g_slave_status["last_sync"]:
                             if repl_settings.get("logging"):
-                                log("Replication: no takeover since master was never reached.")
+                                logger.error("Replication: no takeover since master was never reached.")
                         else:
                             offline = now - g_slave_status["last_sync"]
                             if offline < repl_settings["takeover"]:
                                 if repl_settings.get("logging"):
-                                    log("Replication: no takeover yet, still %d seconds to wait" %
+                                    logger.warning("Replication: no takeover yet, still %d seconds to wait" %
                                         (repl_settings["takeover"] - offline))
                             else:
-                                log("Replication: master not reached for %d seconds, taking over!" %
+                                logger.info("Replication: master not reached for %d seconds, taking over!" %
                                     offline)
                                 g_slave_status["mode"] = "takeover"
 
@@ -4577,11 +4574,11 @@ def load_master_config():
         g_config["rules"]      = config["rules"]
         g_config["rule_packs"] = config.get("rule_packs", [])
         g_config["actions"]    = config["actions"]
-        log("Replication: restored %d rule packs and %d actions from %s" %
+        logger.info("Replication: restored %d rule packs and %d actions from %s" %
             (len(g_config["rule_packs"]), len(config["actions"]), path))
     except:
         if is_replication_slave():
-            log("Replication: no previously saved master state available")
+            logger.error("Replication: no previously saved master state available")
 
 
 def get_state_from_master():
@@ -4673,6 +4670,11 @@ def load_configuration():
     for path in [ main_file ] + list_of_files:
         execfile(path, g_config, g_config)
 
+    # If not set by command line, set the log level by configuration
+    # TODO: Change EC log level configuration to new cmk standard log levels
+    if opt_verbose == 0:
+        cmk.log.set_verbosity(g_config["log_level"])
+
     # Configure the auto deleting indexes in the DB when mongodb is enabled
     if g_config['archive_mode'] == 'mongodb':
         update_mongodb_indexes()
@@ -4682,7 +4684,7 @@ def load_configuration():
     # will be overridden by values from the master.
     load_slave_status()
     if is_replication_slave():
-        log("Replication: slave configuration, current mode: %s" %
+        logger.info("Replication: slave configuration, current mode: %s" %
             g_slave_status["mode"])
     load_master_config()
 
@@ -4917,6 +4919,8 @@ try:
         elif o.startswith('--profile-'):
             opt_profile[o[10:]] = True
 
+    cmk.log.set_verbosity(opt_verbose)
+
     # now handle action options
     for o, a in opts:
         if o in [ '-h', '--help' ]:
@@ -4949,11 +4953,11 @@ try:
     if not g_socket_path:
         bail_out("Please specify the path to the socket (using -S).")
 
-    # Prepare logging if running in daemon mode
     if not opt_foreground:
-        open_logfile()
-    log("-" * 65)
-    log("mkeventd version %s starting" % cmk.__version__)
+        cmk.log.open_log(g_logfile_path)
+
+    logger.info("-" * 65)
+    logger.info("mkeventd version %s starting" % cmk.__version__)
 
     load_configuration()
 
@@ -4963,7 +4967,7 @@ try:
             bail_out("Old PID file %s still existing and mkeventd still running with PID %d." %
                 (g_pid_file, old_pid))
         os.remove(g_pid_file)
-        log("Removed orphaned PID file %s (process %d not running anymore)." % (g_pid_file, old_pid))
+        logger.info("Removed orphaned PID file %s (process %d not running anymore)." % (g_pid_file, old_pid))
 
     # Make sure paths exist
     make_parentdirs(g_socket_path)
@@ -4998,7 +5002,7 @@ try:
     if not opt_foreground:
         make_parentdirs(g_pid_file)
         cmk.daemon.daemonize()
-        log("Daemonized with PID %d." % os.getpid())
+        logger.info("Daemonized with PID %d." % os.getpid())
 
     # Create PID file
     file(g_pid_file, "w").write("%d\n" % os.getpid())
@@ -5018,31 +5022,31 @@ try:
     # Remove event pipe and drain it, so that we make sure
     # that processes (syslog, etc) will not hang when trying
     # to write into the pipe.
-    verbose("Cleaning up event pipe")
+    logger.verbose("Cleaning up event pipe")
     pipe = g_event_server.open_pipe()  # Open it
     os.remove(g_pipe_path)             # Remove pipe
     drain_pipe(pipe)                   # Drain any data
     os.close(pipe)                     # Close pipe
 
-    verbose("Saving final event state")
+    logger.verbose("Saving final event state")
     g_event_status.save_status()
 
-    verbose("Cleaning up sockets")
+    logger.verbose("Cleaning up sockets")
     os.remove(g_socket_path)
     if g_eventsocket_path:
         os.remove(g_eventsocket_path)
 
-    verbose("Output hash stats")
+    logger.verbose("Output hash stats")
     g_event_server.output_hash_stats()
 
-    verbose("Closing fds which might be still open")
+    logger.verbose("Closing fds which might be still open")
     for fd in [ opt_syslog_fd, opt_syslog_tcp_fd, opt_snmptrap_fd ]:
         try:
             os.close(fd)
         except:
             pass
 
-    log("Successfully shut down.")
+    logger.info("Successfully shut down.")
     os.remove(g_pid_file)
     sys.exit(0)
 

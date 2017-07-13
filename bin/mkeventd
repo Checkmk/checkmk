@@ -76,11 +76,12 @@ syslog_facilities = [ "kern", "user", "mail", "daemon", "auth", "syslog", "lpr",
 # - deal with convert_history_line() (if not a str column)
 # - make sure that the new column is filled at *every* place where
 #   an event is being created:
-#   * process_snmptrap()
-#   * parse_event()
+#   * create_event_from_trap()
+#   * create_event_from_line()
 #   * handle_absent_event()
+#   * _create_overflow_event()
 # - When loading the status file add the possibly missing column to all
-#   loaded events
+#   loaded events (load_status())
 # - Maybe add matching/rewriting for the new column
 # - write the actual code using the new column
 # web:
@@ -115,6 +116,8 @@ event_columns = [
     ( "event_ipaddress",                  "" ), # introduced in 1.2.7
     ( "event_orig_host",                  "" ),
     ( "event_contact_groups_precedence",  "host" ), # introduced in 1.4.0b1
+    ( "event_core_host",                  "" ), # introduced in 1.5.0i1
+    ( "event_host_in_downtime",           False ), # introduced in 1.5.0i1
 ]
 
 grepping_filters = [
@@ -127,6 +130,7 @@ grepping_filters = [
     'event_rule_id',
     'event_owner',
     'event_ipaddress',
+    'event_core_host',
 ]
 
 history_columns = [
@@ -221,6 +225,9 @@ def convert_history_line(values):
         values[22] = unsplit(values[22]) # event_contact_groups
     else:
         values.append(None)
+
+    if len(values) >= 28:
+        values[27] = values[27] == "1" # event_host_in_downtime
 
 
 
@@ -584,6 +591,94 @@ def check_timeperiod(tpname):
 
     else:
         return g_timeperiods[tpname][1]
+
+
+
+#.
+#   .--Host config---------------------------------------------------------.
+#   |          _   _           _                      __ _                 |
+#   |         | | | | ___  ___| |_    ___ ___  _ __  / _(_) __ _           |
+#   |         | |_| |/ _ \/ __| __|  / __/ _ \| '_ \| |_| |/ _` |          |
+#   |         |  _  | (_) \__ \ |_  | (_| (_) | | | |  _| | (_| |          |
+#   |         |_| |_|\___/|___/\__|  \___\___/|_| |_|_| |_|\__, |          |
+#   |                                                      |___/           |
+#   +----------------------------------------------------------------------+
+#   | Manages the configuration of the hosts of the local monitoring core. |
+#   | It fetches and caches the information during runtine of the EC.      |
+#   '----------------------------------------------------------------------'
+
+# TODO: Reload config on core reload
+class HostConfig(object):
+    def __init__(self):
+        self._event_host_to_host      = {}
+
+        self._hosts_by_name           = {}
+        self._hosts_by_lower_name     = {}
+        self._hosts_by_lower_alias    = {}
+        self._hosts_by_lower_address  = {}
+
+        self._got_config_from_core    = False
+
+
+    def get(self, host_name, deflt=None):
+        return self._hosts_by_name.get(host_name, deflt)
+
+
+    def get_by_event_host_name(self, event_host_name, deflt=None):
+        try:
+            return self._event_host_to_host[event_host_name]
+        except KeyError:
+            pass # Not cached yet
+
+        self._update_from_core()
+
+        # Note: It is important that we use exactly the same algorithm here as in the core
+        # (enterprise/core/src/World.cc getHostByDesignation)
+        #
+        # Host name    : Case insensitive equality (host_name =~ %s)
+        # Host alias   : Case insensitive equality (host_alias =~ %s)
+        # Host address : Case insensitive equality (host_address =~ %s)
+        low_event_host_name = event_host_name.lower()
+
+        host = deflt
+        for search_map in [ self._hosts_by_lower_name, self._hosts_by_lower_address,
+                            self._hosts_by_lower_alias ]:
+            try:
+                host = search_map[low_event_host_name]
+                break
+            except KeyError:
+                continue
+
+        self._event_host_to_host[event_host_name] = host
+        return host
+
+
+    def _update_from_core(self):
+        if self._got_config_from_core:
+            return
+
+        columns = [
+            "name",
+            "alias",
+            "address",
+            "custom_variables",
+            "contacts",
+            "contact_groups",
+        ]
+
+        query = "GET hosts\nColumns: %s" % " ".join(columns)
+        for host in livestatus.LocalConnection().query_table_assoc(query):
+            self._hosts_by_name[host["name"]] = host
+
+            # Lookup maps to improve performance of host searches
+            self._hosts_by_lower_name[host["name"].lower()]     = host
+            self._hosts_by_lower_alias[host["alias"].lower()]   = host
+            self._hosts_by_lower_address[host["alias"].lower()] = host
+
+        self._got_config_from_core = True
+
+
+
 
 #.
 #   .--MongoDB-------------------------------------------------------------.
@@ -1153,6 +1248,8 @@ class EventServer:
         for _unused_facility in range(32):
             self._hash_stats.append([ 0 ] * 8 )
 
+        self.host_config = HostConfig()
+
 
     def status_columns(self):
         columns  = self._general_columns()
@@ -1495,8 +1592,6 @@ class EventServer:
             trap = self.snmptrap_convert_var_binds(var_binds)
 
         event = self.create_event_from_trap(trap, ipaddress)
-
-        self.do_translate_hostname(event)
         self.process_event(event)
 
 
@@ -1711,10 +1806,35 @@ class EventServer:
             with lock_configuration:
                 self.hk_handle_event_timeouts()
                 self.hk_check_expected_messages()
+                self.hk_cleanup_downtime_events()
 
         if g_config['archive_mode'] != 'mongodb':
             with lock_logging:
                 expire_logfiles()
+
+
+    # For all events that have been created in a host downtime check the host
+    # whether or not it is still in downtime. In case the downtime has ended
+    # archive the events that have been created in a downtime.
+    def hk_cleanup_downtime_events(self):
+        host_downtimes = {}
+
+        for event in g_event_status.events():
+            if not event["host_in_downtime"]:
+                continue # only care about events created in downtime
+
+            try:
+                in_downtime = host_downtimes[event["core_host"]]
+            except KeyError:
+                in_downtime = self._is_host_in_downtime(event)
+                host_downtimes[event["core_host"]] = in_downtime
+
+            if in_downtime:
+                continue # (still) in downtime, don't delete any event
+
+            verbose("Remove event %d (created in downtime, host left downtime)" % event["id"])
+            g_event_status.remove_event(event)
+
 
     def hk_handle_event_timeouts(self):
         # 1. Automatically delete all events that are in state "counting"
@@ -2102,9 +2222,13 @@ class EventServer:
                 log(u"Processing message from %r: '%s'" % (address, line))
             else:
                 log(u"Processing message '%s'" % line)
-        self.process_event(self.parse_event(line, address))
+
+        event = self.create_event_from_line(line, address)
+        self.process_event(event)
 
     def process_event(self, event):
+        self.do_translate_hostname(event)
+
         # Log all incoming messages into a syslog-like text file if that is enabled
         if g_config["log_messages"]:
             self.log_message(event)
@@ -2159,6 +2283,12 @@ class EventServer:
                 else:
                     # Remember the rule id that this event originated from
                     event["rule_id"] = rule["id"]
+
+                    # Lookup the monitoring core hosts and add the core host
+                    # name to the event when one can be matched
+                    # For the moment we have no rule/condition matching on this
+                    # field. So we only add the core host info for matched events.
+                    self._add_core_host_to_new_event(event)
 
                     # Attach optional contact group information for visibility
                     # and eventually for notifications
@@ -2235,6 +2365,44 @@ class EventServer:
                 "contact_groups_notify"     : rule["contact_groups"]["notify"],
                 "contact_groups_precedence" : rule["contact_groups"]["precedence"],
             })
+
+
+    def add_core_host_to_event(self, event):
+        matched_host = self.host_config.get_by_event_host_name(event["host"])
+        if not matched_host:
+            event["core_host"] = ""
+            return
+
+        event["core_host"] = matched_host["name"]
+
+
+    def _add_core_host_to_new_event(self, event):
+        self.add_core_host_to_event(event)
+
+        # Add some state dependent information (like host is in downtime etc.)
+        event["host_in_downtime"] = self._is_host_in_downtime(event)
+
+
+    def _is_host_in_downtime(self, event):
+        if not event["core_host"]:
+            return False # Found no host in core: Not in downtime!
+
+        query = (
+            "GET hosts\n"
+            "Columns: scheduled_downtime_depth\n"
+            "Filter: host_name = %s\n" % (event["core_host"])
+        )
+
+        try:
+            return livestatus.LocalConnection().query_value(query) >= 1
+
+        except livestatus.MKLivestatusNotFoundError:
+            return False
+
+        except Exception:
+            if cmk.debug.enabled():
+                raise
+            return False
 
 
     # Checks if an event matches a rule. Returns either False (no match)
@@ -2523,7 +2691,7 @@ class EventServer:
                 log('Unable to parse host "%s" (%s)' % (event.get("host"), e))
             event["host"] = ""
 
-    def parse_event(self, line, address):
+    def create_event_from_line(self, line, address):
         event = {
             # address is either None or a tuple of (ipaddress, port)
             "ipaddress"   : address and address[0] or "",
@@ -2683,8 +2851,6 @@ class EventServer:
                 "pid"         : 0,
                 "time"        : time.time(),
             }
-
-        self.do_translate_hostname(event)
 
         if g_config["debug_rules"]:
             log('Parsed message:\n' +
@@ -2849,6 +3015,10 @@ class EventServer:
                     "been archived." % (g_config["event_limit"]["by_host"]["limit"], event["host"])
                 )
             })
+
+            # Lookup the monitoring core hosts and add the core host
+            # name to the event when one can be matched
+            self._add_core_host_to_new_event(new_event)
 
         elif ty == "by_rule":
             new_event.update({
@@ -3558,6 +3728,10 @@ class EventStatus():
         for event in self._events:
             event.setdefault("ipaddress", "")
 
+            if "core_host" not in event:
+                g_event_server.add_core_host_to_event(event)
+                event["host_in_downtime"] = False
+
 
     # Called on Event Console initialization from status file to initialize
     # the current event limit state -> Sets internal counters which are
@@ -3802,6 +3976,9 @@ class EventStatus():
                     # Counting has been discontinued on this event after a certain time
                     continue
 
+                if ev["host_in_downtime"] != event["host_in_downtime"]:
+                    continue # treat events with different downtime states separately
+
                 found = ev
                 self.count_event_up(found, event)
                 break
@@ -3865,6 +4042,10 @@ def event_has_opened(rule, event):
         livetime, phases = rule["livetime"]
         event["live_until"] = time.time() + livetime
         event["live_until_phases"] = phases
+
+    if rule.get("actions_in_downtime", True) == False and event["host_in_downtime"]:
+        log("Skip actions for event %d: Host is in downtime" % event["id"])
+        return
 
     do_event_actions(rule.get("actions", []), event, is_cancelling = False)
 
@@ -4104,31 +4285,7 @@ def add_contacts_from_rule(context, event):
 
 
 def add_infos_from_monitoring_host(context, event):
-    # Try to find the host_name in the active monitoring
-    # Note: we *could* also use event["ipaddress"] here. But the matching
-    # algorithm in the livestatus event console integration does not do
-    # this either. We want to make the mapping in exactly the same
-    # way here.
-    host_info = find_host_in_monitoring(event["host"])
-
-    if host_info:
-        context.update({
-            "HOSTNAME"                 : host_info["name"],
-            "HOSTALIAS"                : host_info["alias"],
-            "HOSTADDRESS"              : host_info["address"],
-            "HOSTTAGS"                 : host_info["tags"], # ????
-            "HOSTDOWNTIME"             : host_info["in_downtime"] and "1" or "0",
-            "CONTACTS"                 : ",".join(host_info["contacts"]),
-            "SERVICECONTACTGROUPNAMES" : ",".join(host_info["contact_groups"]),
-        })
-
-        # Add custom variables to the notification context
-        for key, val in host_info["custom_variables"].items():
-            context["HOST_%s" % key] = val
-
-    else:
-        # Host not known in active monitoring. Create articial host context
-        # as good as possible.
+    def _add_artificial_context_info():
         context.update({
             "HOSTNAME"                 : event["host"],
             "HOSTALIAS"                : event["host"],
@@ -4139,57 +4296,31 @@ def add_infos_from_monitoring_host(context, event):
             "SERVICECONTACTGROUPNAMES" : "",
         })
 
+    if not event["core_host"]:
+        # Host not known in active monitoring. Create artificial host context
+        # as good as possible.
+        _add_artificial_context_info()
+        return
 
-def find_host_in_monitoring(event_host_name):
-    # Note: It is important that we use exactly the same
-    # algorithm here as in the EventConsoleTable in Livestatus. The actual matchin
-    # algorithm is in the source code of the Check_MK Micro Core (and for Nagios
-    # in the Livestatus sources).
+    host_config = g_event_server.host_config.get(event["core_host"])
+    if not host_config:
+        _add_artificial_context_info() # No config found - Host has vanished?
+        return
 
-    filters = "Filter: host_name =~ %s\n" \
-              "Filter: host_alias =~ %s\n" \
-              "Filter: host_address = %s\n" \
-              "Or: 3\n" % \
-              (event_host_name, event_host_name, event_host_name)
+    context.update({
+        "HOSTNAME"                 : host_config["name"],
+        "HOSTALIAS"                : host_config["alias"],
+        "HOSTADDRESS"              : host_config["address"],
+        "HOSTTAGS"                 : host_config["custom_variables"].get("TAGS", ""),
+        "CONTACTS"                 : ",".join(host_config["contacts"]),
+        "SERVICECONTACTGROUPNAMES" : ",".join(host_config["contact_groups"]),
+    })
 
-    columns = [
-        "name",
-        "alias",
-        "address",
-        "custom_variables",
-        "scheduled_downtime_depth",
-        "contacts",
-        "contact_groups",
-    ]
+    # Add custom variables to the notification context
+    for key, val in host_config["custom_variables"].items():
+        context["HOST_%s" % key] = val
 
-    query = "GET hosts\nColumns: %s\n%s" % (
-       " ".join(columns), filters)
-
-    response = livestatus.LocalConnection().query(query)
-
-    if len(response) > 1:
-        log("Warning: event host name '%s' not unique. Matches: %s" % (
-            event_host_name, ", ".join([row[0] for row in response])))
-        log("Warning: I choose '%s'" % response[0][0])
-
-    if len(response) > 0:
-        row = response[0]
-        contacts = row[5]
-
-        # With Nagios as core there is always the artificial contact "check-mk-notify".
-        if "check-mk-notify" in contacts:
-            contacts.remove("check-mk-notify")
-
-        return {
-            "name"             : row[0],
-            "alias"            : row[1],
-            "address"          : row[2],
-            "tags"             : row[3].get("TAGS", ""),
-            "custom_variables" : row[3],
-            "in_downtime"      : bool(row[4]),
-            "contacts"         : contacts,
-            "contact_groups"   : row[6],
-        }
+    context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"
 
 
 def base_notification_context(event, username, is_cancelling):
@@ -4847,9 +4978,10 @@ try:
     # First do all things that might fail, before daemonizing
     g_perfcounters = Perfcounters()
     g_event_status  = EventStatus()
-    g_event_status.load_status()
     g_status_server = StatusServer()
     g_event_server  = EventServer()
+
+    g_event_status.load_status()
 
     initialize_snmptrap_handling()
 

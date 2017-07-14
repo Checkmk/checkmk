@@ -1363,7 +1363,8 @@ class BackupTargetLocal(BackupTargetType):
 
         # Check write access for the site user
         try:
-            file(os.path.join(value, "write_test_%d" % time.time()), "w")
+            test_file_path = os.path.join(value, "write_test_%d" % time.time())
+            file(test_file_path, "w")
             os.unlink(test_file_path)
         except IOError, e:
             if is_cma():

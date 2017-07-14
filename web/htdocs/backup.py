@@ -36,6 +36,7 @@ import shutil
 import signal
 import socket
 import subprocess
+import time
 
 try:
     import simplejson as json
@@ -1349,9 +1350,8 @@ class BackupTargetLocal(BackupTargetType):
                                            "need to specify an already existing directory."))
 
         # Check write access for the site user
-        test_file_path = os.tempnam(value, "write_test")
         try:
-            file(test_file_path, "w")
+            file(os.path.join(value, "write_test_%d" % time.time()), "w")
             os.unlink(test_file_path)
         except IOError, e:
             if is_cma():

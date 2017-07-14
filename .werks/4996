@@ -1,0 +1,11 @@
+Title: Backup targets: Fixed possible MemoryError exception when editing a target
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1500027168
+Class: fix
+
+When saving a backup target a MemoryException() could occur while checking whether
+or not the target is writable for the current user.

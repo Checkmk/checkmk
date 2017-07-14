@@ -1132,7 +1132,7 @@ class ListOfStrings(ValueSpec):
 
         if self._vertical:
             # TODO: This is a workaround for a bug. This function needs to return str objects right now.
-            s = map(lambda v: html.render_tr(html.render_td(    HTML(self._valuespec.value_to_text(v))  )), value)
+            s = map(lambda v: html.render_tr(html.render_td(HTML(self._valuespec.value_to_text(v)))), value)
             return "%s" % html.render_table(HTML().join(s))
         else:
             return ", ".join([ self._valuespec.value_to_text(v) for v in value ])

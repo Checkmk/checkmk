@@ -1,0 +1,10 @@
+Title: Analyze host rulesets: Fixed rendering of some values (e.g. Count, size and age of files)
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1500021760
+Class: fix
+
+

@@ -2407,7 +2407,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
 
         # We have a setting
         elif valuespec:
-            if ruleset.match_type() in ( "all", "list" ):
+            if ruleset.match_type() == "all":
                 html.write(", ".join([valuespec.value_to_text(e) for e in setting]))
             else:
                 html.write(valuespec.value_to_text(setting))

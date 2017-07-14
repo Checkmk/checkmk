@@ -292,7 +292,7 @@ def render_fake_form(what):
     html.open_td()
     if what == "host":
         html.button("_fake_0", _("Up"))
-        html.button("_fake_2", _("Down"))
+        html.button("_fake_1", _("Down"))
     else:
         html.button("_fake_0", _("OK"))
         html.button("_fake_1", _("Warning"))

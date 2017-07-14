@@ -302,6 +302,9 @@ def main_list(args, format):
     reverse = False
     for a in args:
 
+        if a == "current":
+            a = g_current_version
+
         if a == '-r':
             reverse = True
             continue

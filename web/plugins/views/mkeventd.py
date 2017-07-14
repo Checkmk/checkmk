@@ -57,7 +57,7 @@ def query_ec_table(datasource, columns, add_columns, query, only_sites, limit, t
 
     _ec_filter_host_information_of_not_permitted_hosts(rows)
 
-    if not config.user.may("mkeventd.seeunrelated"):
+    if not config.user.may("mkeventd.seeall") and not config.user.may("mkeventd.seeunrelated"):
         # user is not allowed to see all events returned by the core
         rows = [ r for r in rows if r["event_contact_groups"] != [] or r["host_name"] != "" ]
 

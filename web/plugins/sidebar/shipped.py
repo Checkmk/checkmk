@@ -613,6 +613,13 @@ def get_tactical_overview_data(extra_filter_headers):
         "Filter: host_custom_variable_names < _REALNAME\n" + \
         extra_filter_headers
 
+    # In case the user is not allowed to see unrelated events
+    ec_filters = ""
+    if not config.user.may("mkeventd.seeall") and not config.user.may("mkeventd.seeunrelated"):
+        ec_filters = "Filter: event_contact_groups != \n" \
+                   + "Filter: host_name != \n" \
+                   + "Or: 2\n"
+
     event_query = (
         # "Events" column
         "GET eventconsoleevents\n"
@@ -630,6 +637,7 @@ def get_tactical_overview_data(extra_filter_headers):
         "Stats: event_state != 0\n"
         "Stats: event_host_in_downtime != 1\n"
         "StatsAnd: 3\n"
+        + ec_filters
     )
 
     try:

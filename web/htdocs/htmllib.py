@@ -1726,7 +1726,10 @@ class html(DeprecationWrapper, RequestHandler):
             raise MKUserError(varname, _("The given text is wrong encoded. "
                                          "You need to provide a UTF-8 encoded text."))
 
-    def get_integer_input(self, varname):
+    def get_integer_input(self, varname, deflt=None):
+        if deflt is not None and not self.has_var(varname):
+            return deflt
+
         try:
             return int(self.var(varname))
         except TypeError:

@@ -7250,7 +7250,7 @@ class ModeContactgroups(ModeGroups):
         super(ModeContactgroups, self).buttons()
         html.context_button(_("New contact group"), folder_preserving_link([("mode", "edit_contact_group")]), "new")
         html.context_button(_("Rules"), folder_preserving_link([("mode", "rulesets"),
-                             ("filled_in", "search"), ("search", _("contact group"))]), "rulesets")
+                             ("filled_in", "search"), ("search", "contactgroups")]), "rulesets")
 
 
     def _page_no_groups(self):

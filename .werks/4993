@@ -1,0 +1,16 @@
+Title: Fixed visibility of events for users with limited access to events
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1500018808
+Class: fix
+
+When a user is not permitted to see all events and can only see the events
+of the host he/she is a contact for and maybe also events not related to
+a host existing in the monitoring core the tactical overview snapin counted
+the numbers of open events not correctly.
+
+The event list view was filtering wrong in case a user has the "see all"
+permission and not the "see unrelated" permission.

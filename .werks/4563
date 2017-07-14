@@ -1,0 +1,13 @@
+Title: Fix issue with @ in metric title
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.4.0p9
+Date: 1500015054
+Class: fix
+
+The @ sign is used to append a custom unit when used within metric titles.
+This prevents graphs from being displayed when an @ without a special meaning
+appears within a metric title. The graphing system now checks for an
+existing unit within the metric title and leaves the title untouched otherwise.

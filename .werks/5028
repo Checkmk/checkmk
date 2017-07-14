@@ -1,0 +1,13 @@
+Title: fortigate_sync_status, fortigate_sensors: New checks
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1500033135
+Class: feature
+
+Two new checks were added for Fortigate Firewall devices. The first
+check monitors the synchronization statuses of Fortigate High-Availabity
+Clusters. The second check monitors the overall alarm statuses of
+sensors of Fortigate Firewall devices.

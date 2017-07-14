@@ -5,7 +5,7 @@ Compatible: compat
 Edition: cre
 Version: 1.5.0i1
 Date: 1499693045
-Class: feature
+Class: fix
 
 The graphs have been different between common memory checks and services
 provided by solaris_mem. This has been changed now. A side effect is the

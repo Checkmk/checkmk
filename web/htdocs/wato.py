@@ -8640,8 +8640,8 @@ notification_rule_start_async_repl = False
 def mode_notification_rule(phase, profilemode):
     global notification_rule_start_async_repl
 
-    edit_nr = int(html.var("edit", "-1"))
-    clone_nr = int(html.var("clone", "-1"))
+    edit_nr = html.get_integer_input("edit", -1)
+    clone_nr = html.get_integer_input("clone", -1)
     if profilemode:
         userid = config.user.id
         config.user.need_permission("general.edit_notifications")
@@ -8681,11 +8681,17 @@ def mode_notification_rule(phase, profilemode):
     if new:
         if clone_nr >= 0 and not html.var("_clear"):
             rule = {}
-            rule.update(rules[clone_nr])
+            try:
+                rule.update(rules[clone_nr])
+            except IndexError:
+                raise MKUserError(None, _("This %s does not exist.") % "notification rule")
         else:
             rule = {}
     else:
-        rule = rules[edit_nr]
+        try:
+            rule = rules[edit_nr]
+        except IndexError:
+            raise MKUserError(None, _("This %s does not exist.") % "notification rule")
 
     vs = vs_notification_rule(userid)
 

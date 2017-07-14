@@ -180,7 +180,7 @@ def render_grouped_boxes(rows, view, group_cells, cells, num_columns, show_check
         painted = False
         for cell in group_cells:
             if painted:
-                html.td(",")
+                html.td(",&nbsp;")
             painted = cell.paint(rows_with_ids[0][1])
         html.close_tr()
         html.close_table()
@@ -410,7 +410,7 @@ def render_tiled(rows, view, group_cells, cells, _ignore_num_columns, show_check
                 painted = False
                 for cell in group_cells:
                     if painted:
-                        html.td(',')
+                        html.td(',&nbsp;')
                     painted = cell.paint(row)
 
                 html.close_tr()
@@ -608,7 +608,7 @@ def render_grouped_list(rows, view, group_cells, cells, num_columns, show_checkb
                     painted = False
                     for cell in group_cells:
                         if painted:
-                            html.td(',')
+                            html.td(',&nbsp;')
                         painted = cell.paint(row)
 
                     html.close_tr()

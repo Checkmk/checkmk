@@ -162,8 +162,8 @@ def check_brocade_fcport(item, params, info):
     if_info, link_info, speed_info, if64_info = info
 
     # Accept item, even if port name or ISL state has changed
-    item_index       = int(item.split()[0])
-    portinfo         = [ line for line in if_info if int(line[0]) == item_index + 1]
+    item_index = int(item.split()[0])
+    portinfo = [ line for line in if_info if int(line[0]) == item_index + 1]
     if portinfo == []:
         return 3, "No data found in SNMP output"
 

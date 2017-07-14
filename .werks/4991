@@ -1,0 +1,12 @@
+Title: Fixed the Installed-Size header of baked deb packages
+Level: 1
+Component: agents
+Compatible: compat
+Edition: cee
+Version: 1.4.0p9
+Date: 1500015688
+Class: fix
+
+The debian packages of the agents previously had a fixed Installed-Size
+header of 1 KB which is obviously not correct. The estimated installed
+size is now calculated individually for each package.

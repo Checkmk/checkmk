@@ -26,68 +26,52 @@
 #define Poller_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <sys/select.h>
-#include <algorithm>
+#include <poll.h>
 #include <cerrno>
+#include <string>
+#include <unordered_map>
+#include <vector>
 #include "BitMask.h"
-#include "ChronoUtils.h"
 
 enum class PollEvents { in = 1 << 0, out = 1 << 1 };
 IS_BIT_MASK(PollEvents);
 
 class Poller {
 public:
-    Poller() {
-        FD_ZERO(&_readfds);
-        FD_ZERO(&_writefds);
-        _maxfd = -1;
-    }
-
     template <typename Rep, typename Period>
     int poll(std::chrono::duration<Rep, Period> timeout) {
         int retval;
-        timeval tv = to_timeval(timeout);
         // I/O primitives can fail when interrupted by a signal, so we should
         // retry the operation. In the plain C world, this is already
         // encapsulated in e.g. glibc's TEMP_FAILURE_RETRY macro, see:
         // https://www.gnu.org/software/libc/manual/html_node/Interrupted-Primitives.html
         do {
-            retval = select(_maxfd + 1, &_readfds, &_writefds, nullptr, &tv);
+            retval = ::poll(
+                &_pollfds[0], _pollfds.size(),
+                std::chrono::duration_cast<std::chrono::milliseconds>(timeout)
+                    .count());
         } while (retval == -1 && errno == EINTR);
         return retval;
     }
 
     void addFileDescriptor(int fd, PollEvents e) {
-        addFileDescriptor(fd, e, PollEvents::in, _readfds);
-        addFileDescriptor(fd, e, PollEvents::out, _writefds);
+        _fd_to_pollfd[fd] = _pollfds.size();
+        _pollfds.push_back({fd, toMask(e), 0});
     }
 
     bool isFileDescriptorSet(int fd, PollEvents e) const {
-        return isFileDescriptorSet(fd, e, PollEvents::in, _readfds) ||
-               isFileDescriptorSet(fd, e, PollEvents::out, _writefds);
+        auto it = _fd_to_pollfd.find(fd);
+        return it != _fd_to_pollfd.end() &&
+               (_pollfds[it->second].revents & toMask(e)) != 0;
     }
 
 private:
-#ifdef __clang_analyzer__
-    // Workaround for https://llvm.org/bugs/show_bug.cgi?id=8920
-    fd_set _readfds{};
-    fd_set _writefds{};
-#else
-    fd_set _readfds;
-    fd_set _writefds;
-#endif
-    int _maxfd;
+    std::vector<pollfd> _pollfds;
+    std::unordered_map<int, size_t> _fd_to_pollfd;
 
-    void addFileDescriptor(int fd, PollEvents e, PollEvents mask, fd_set &fds) {
-        if (!is_empty_bit_mask(e & mask)) {
-            FD_SET(fd, &fds);
-            _maxfd = std::max(_maxfd, fd);
-        }
-    }
-
-    bool isFileDescriptorSet(int fd, PollEvents e, PollEvents mask,
-                             const fd_set &fds) const {
-        return !is_empty_bit_mask(e & mask) && FD_ISSET(fd, &fds);
+    static short toMask(PollEvents e) {
+        return (is_empty_bit_mask(e & PollEvents::in) ? 0 : POLLIN) |
+               (is_empty_bit_mask(e & PollEvents::out) ? 0 : POLLOUT);
     }
 };
 

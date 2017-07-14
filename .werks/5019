@@ -1,0 +1,13 @@
+Title: Make it possible to handle a large number of helpers
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1500028263
+Class: fix
+
+Previously, the total number of active check helpers plus Check_MK check
+helpers was limited to roughly 500.  Higher number could lead to Micro Core
+crashes and/or funny behavior.  This has been fixed, the Micro Core limits
+in this area have been removed.

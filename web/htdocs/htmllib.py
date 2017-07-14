@@ -1116,13 +1116,17 @@ class RequestHandler(object):
             raise MKUserError(varname, _("The given text is wrong encoded. "
                                          "You need to provide a UTF-8 encoded text."))
 
-    def get_integer_input(self, varname):
+    def get_integer_input(self, varname, deflt=None):
+        if deflt is not None and not self.has_var(varname):
+            return deflt
+
         try:
             return int(self.var(varname))
         except TypeError:
             raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
         except ValueError:
             raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
+
 
     # Returns a dictionary containing all parameters the user handed over to this request.
     # The concept is that the user can either provide the data in a single "request" variable,

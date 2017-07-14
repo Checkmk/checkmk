@@ -130,21 +130,16 @@ def test_large_number_of_sites(default_cfg, site):
     _toggle_liveproxyd(site, use_liveproxyd=True)
 
     # Increase nofiles limit of CMC to prevent that it runs in "too many open files" resource limits
-    #exit_code = site.execute(["prlimit", "-p", site.read_file("tmp/run/cmc.pid").strip(), "-n4096"]).wait()
-    #assert exit_code == 0
+    exit_code = site.execute(["prlimit", "-p", site.read_file("tmp/run/cmc.pid").strip(), "-n4096"]).wait()
+    assert exit_code == 0
 
-    site_sockets, num_sites, num_channels = {}, 200, 3
+    site_sockets, num_sites, num_channels = {}, 600, 3
     for site_num in range(num_sites):
         # Currently connect to local site
         site_id = "site%03d" % site_num
 
-        #if site_num % 2 == 0:
-        to_livestatus = None
-        #else:
-        #    to_livestatus = ('127.0.0.1', 6999)
-
         site_sockets[site_id] = {
-            "to_livestatus" : to_livestatus,
+            "to_livestatus" : None,
             "to_proxy"      : "unix:%s/tmp/run/liveproxy/%s" % (site.root, site_id),
         }
 

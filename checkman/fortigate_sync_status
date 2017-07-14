@@ -1,0 +1,10 @@
+title: FortiGate firewall cluster monitoring: Sync Status
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the synchronization status of a FortiGate High-Availability cluster. The status 'synchronized' is considered OK and the status 'unsynchronized' CRIT.
+
+inventory:
+ One service per cluster (a master and a slave node together) will be created. No service will be created for standalone firewalls (if only a master node is present).

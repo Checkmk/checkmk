@@ -2381,13 +2381,13 @@ class html(HTMLGenerator, RequestHandler):
         chs = choices[:]
         if sorted:
             # Sort according to display texts, not keys
-            chs.sort(lambda a,b: cmp(a[1].lower(), b[1].lower()))
+            chs.sort(key=lambda a: a[1].lower())
 
         if error:
             self.open_x(class_="inputerror")
 
         self.open_select(name=varname, id_=varname, **attrs)
-        for value, text in choices:
+        for value, text in chs:
             # if both the default in choices and current was '' then selected depended on the order in choices
             selected = (value == current) or (not value and not current)
             self.option(text, value=value if value else "",

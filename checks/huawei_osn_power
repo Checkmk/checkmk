@@ -1,0 +1,69 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# The typical OSN power unit delivers 750 W max
+factory_settings['huawei_osn_power_default_levels'] = {
+        'levels'    : (700, 730),
+}
+
+def inventory_huawei_osn_power(info):
+    for line in info:
+        yield (line[0], None)
+
+
+def check_huawei_osn_power(item, params, info):
+    for line in info:
+        if item == line[0]:
+            state = 0
+            reading = int(line[1])
+            warn, crit = params['levels']
+
+            yield 0, "Current reading: %s W" % reading, \
+                      [ ("power", reading, warn, crit, 0) ]
+
+            if reading >= crit:
+                state = 2
+            elif reading >= warn:
+                state = 1
+
+            if state:
+                yield state, "(warn/crit at %s/%s W)" % (warn, crit)
+
+
+check_info['huawei_osn_power'] = {
+    'inventory_function'        : inventory_huawei_osn_power,
+    'check_function'            : check_huawei_osn_power,
+    'service_description'       : 'Unit %s (Power)',
+    'snmp_info'                 : ('.1.3.6.1.4.1.2011.2.25.4.70.20.20.10.1', [
+                                        '1', # OPTIX-OSN902-FUNCTION-MIB::optixWDMGetPsuBID
+                                        '2', # OPTIX-OSN902-FUNCTION-MIB::optixWDMGetPsuPowerConsumption
+                                  ]),
+    'snmp_scan_function'        : huawei_osn_scan_function,
+    'has_perfdata'              : True,
+    'includes'                  : [ 'huawei_osn.include' ],
+    'default_levels_variable'   : 'huawei_osn_power_default_levels',
+}

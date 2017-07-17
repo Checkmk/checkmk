@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# The dBm should not get too low. So we check only for lower levels
+factory_settings['huawei_osn_laser_default_levels'] = {
+        'levels_low_in' : (-160.0, -180.0),
+        'levels_low_out' : (-35.0, -40.0)
+}
+
+def inventory_huawei_osn_laser(info):
+    for line in info:
+        yield (line[0], None)
+
+
+def check_huawei_osn_laser(item, params, info):
+    def check_state(reading, params):
+        warn, crit = params
+        if reading <= crit:
+            state = 2
+        elif reading <= warn:
+            state = 1
+        else:
+            state = 0
+
+        if state:
+            return state, "(warn/crit below %s/%s dBm)" % (warn, crit)
+        else:
+            return 0, None
+
+    for line in info:
+        if item == line[0]:
+            dbm_in  = float(line[2])/10
+            dbm_out = float(line[1])/10
+
+            warn_in, crit_in = params['levels_low_in']
+            warn_out, crit_out = params['levels_low_out']
+
+            # In
+            yield 0, "In: %.1f dBm" % dbm_in, \
+                     [ ("input_signal_power_dBm", dbm_in, warn_in, crit_in), ]
+            yield check_state(dbm_in, (warn_in, crit_in) )
+
+            # And out
+            yield 0, "Out: %.1f dBm" % dbm_out, \
+                     [ ("output_signal_power_dBm", dbm_out, warn_out, crit_out) ]
+            yield check_state(dbm_out, (warn_out, crit_out) )
+
+            # FEC Correction
+            fec_before = line[3]
+            fec_after = line[4]
+            if not fec_before == "" and not fec_after == "":
+                yield 0, "FEC Correction before/after: %s/%s" % (fec_before, fec_after)
+
+
+check_info['huawei_osn_laser'] = {
+    'inventory_function'        : inventory_huawei_osn_laser,
+    'check_function'            : check_huawei_osn_laser,
+    'service_description'       : 'Laser %s',
+    'snmp_info'                 : ('.1.3.6.1.4.1.2011.2.25.3.40.50.119.10.1', [
+                                        "6.200", # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurPara.w32LaserOutputOfPowerCurrent
+                                        "2.200", # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurMonValue.w32LaserOutputOfPowerCurrent
+                                        "2.203", # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurMonValue.w32LaserInputOfPowerCurrent
+                                        "2.252", # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurMonValue.beforeFECCorrectErrorRatio
+                                        "2.253", # OPTIX-GLOBAL-NGWDM-MIB::laser_groupPer15mCurMonValue.afterFECCorrectErrorRatio
+                                  ]),
+    'snmp_scan_function'        : huawei_osn_scan_function,
+    'has_perfdata'              : True,
+    'includes'                  : [ 'huawei_osn.include' ],
+    'default_levels_variable'   : 'huawei_osn_laser_default_levels',
+    'group'                     : 'huawei_osn_laser',
+}

@@ -122,6 +122,34 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
+    "huawei_osn_laser",
+    _("OSN Laser attenuation"),
+    Dictionary(
+        elements = [
+            ('levels_low_in',
+             Tuple(
+                title = _('Levels for laser input'),
+                default_value = (-160.0, -180.0),
+                elements = [
+                    Integer( title = _("Warning below")),
+                    Integer( title = _("Critical below"))
+            ])),
+            ('levels_low_out',
+             Tuple(
+                title = _('Levels for laser output'),
+                default_value = (-160.0, -180.0),
+                elements = [
+                    Integer( title = _("Warning below")),
+                    Integer( title = _("Critical below"))
+            ])),
+        ]
+    ),
+    TextAscii( title = _("Laser id")),
+    match_type = "dict",
+)
+
+register_check_parameters(
+    subgroup_networking,
     "brocade_optical",
     "Brocade Optical Signal",
     Dictionary(

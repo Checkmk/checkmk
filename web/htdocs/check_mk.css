@@ -260,6 +260,13 @@ input.button.hot:active {
     filter: alpha(opacity=50); /* For IE8 and earlier */
 }
 
+table.data .toggle_switch a {
+    color: #fff;
+}
+
+table.data .toggle_switch {
+    background-color: #999;
+}
 
 
 /* pattern / regex input styling */

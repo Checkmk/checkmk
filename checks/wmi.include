@@ -207,20 +207,30 @@ def inventory_wmi_table(tables, **kwargs):
     potential_instances = None
 
     if isinstance(tables, dict):
-        table_names = kwargs.get('required_tables', tables.keys())
+        required_tables = kwargs.get('required_tables', tables.keys())
+        if not set(required_tables) <= set(tables.keys()):
+            # if table is missing, nothing gets inventorized. This can
+            # only happen if required_tables was set
+            return []
 
-        for table_name in table_names:
-            if table_name not in tables:
-                # if table is missing, nothing gets inventorized. This can
-                # only happen if required_tables was set
-                return []
+        if kwargs.get("skip_intersection", False):
+            # Unfortunately there are tables which do NOT provide any
+            # names. In this case we fallback to old behaviour.
+            #
+            # Eg. wmi_cpuload check plugin:
+            # 'system_perf' section has only counters and comes together
+            # with 'computer_system' which has table names and intersection
+            # of these tables would be empty. Thus no service is discovered.
+            potential_instances = [""]
 
+        else:
             # inventarize one item per instance that exists in all tables
-            table_rows = tables[table_name].row_labels()
-            if potential_instances is None:
-                potential_instances = set(table_rows)
-            else:
-                potential_instances &= set(table_rows)
+            for required_table in required_tables:
+                table_rows = tables[required_table].row_labels()
+                if potential_instances is None:
+                    potential_instances = set(table_rows)
+                else:
+                    potential_instances &= set(table_rows)
     else:
         potential_instances = tables.row_labels()
 

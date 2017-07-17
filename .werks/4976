@@ -1,0 +1,17 @@
+Title: wmi_cpuload: Fixed UNKNOWN service state due to werk #4742
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1500281231
+
+Some agent outputs do not include required sections 'computer_system'
+and 'system_perf' and werk #4742 fixed that. But if required tables
+are specified the wmi.include lib performed an intersection of these
+tables. In case of wmi_cpuload check plugin 'system_perf' section
+has only counters and comes together with 'computer_system' which has
+table names and intersection of these tables would be empty.
+Thus no service is discovered.

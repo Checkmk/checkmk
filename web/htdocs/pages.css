@@ -1222,7 +1222,7 @@ body.main table.footer .popup_menu a:hover {
     color: #000;
 }
 
-#popup_menu .icons div {
+#popup_menu .icons div.icon_container {
     position: absolute;
     overflow-y: auto;
     padding: 5px;
@@ -1232,8 +1232,34 @@ body.main table.footer .popup_menu a:hover {
     bottom: 38px;
 }
 
-#popup_menu .icons a {
+#popup_menu .icons a.icon {
     display: inline-block;
+    cursor: pointer;
+}
+
+#popup_menu .icons.show_names a.icon {
+    width: 100px;
+}
+
+#popup_menu .icons a.icon span {
+    display: none;
+}
+
+#popup_menu .icons.show_names a.icon span {
+    display: inline-block;
+    font-weight: normal;
+
+    text-overflow: ellipsis;
+    width: 62px;
+    overflow: hidden;
+    margin: 0;
+    white-space: nowrap;
+    line-height: 19px;
+    vertical-align: middle;
+}
+
+#popup_menu .icons.show_names a.icon span:hover {
+    text-decoration: underline;
 }
 
 #popup_menu .icons img.icon {
@@ -1241,7 +1267,7 @@ body.main table.footer .popup_menu a:hover {
     height: 20px;
 }
 
-#popup_menu .icons .button {
+#popup_menu .icons div.buttons {
     position: absolute;
     right: 10px;
     bottom: 10px;

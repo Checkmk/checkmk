@@ -4184,7 +4184,7 @@ class IconSelector(ValueSpec):
 
 
     def render_popup_input(self, varprefix, value):
-        html.open_div(class_=["icons"])
+        html.open_div(class_="icons", id_="%s_icons" % varprefix)
 
         icons = self.available_icons()
         available_icons = self.available_icons_by_category(icons)
@@ -4204,19 +4204,36 @@ class IconSelector(ValueSpec):
         empty = ['empty'] if self._allow_empty else []
         for category_name, category_alias, icons in available_icons:
             html.open_div(id_="%s_%s_container" % (varprefix, category_name),
-                          class_=["%s_container" % varprefix],
+                          class_=["icon_container", "%s_container" % varprefix],
                           style="display:none;" if active_category != category_name else None)
 
-            for nr, icon in enumerate(empty + icons):
-                html.write_html(self.render_icon(icon,
-                    onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
-                    title = _('Choose this icon'), id = varprefix + '_i_' + icon))
+            for icon in empty + sorted(icons):
+                html.open_a(
+                    href=None,
+                    class_="icon",
+                    onclick='vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
+                    title=icon,
+                )
+
+                html.write_html(self.render_icon(icon, id=varprefix + '_i_' + icon, title=icon))
+
+                html.span(icon)
+
+                html.close_a()
+
             html.close_div()
+
+        html.open_div(class_="buttons")
+
+        html.jsbutton("_toggle_names", _("Toggle names"),
+            onclick="vs_iconselector_toggle_names(event, %s)" % json.dumps(varprefix))
 
         import config# FIXME: Clean this up. But how?
         if config.user.may('wato.icons'):
             back_param = '&back='+html.urlencode(html.var('back')) if html.has_var('back') else ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
+
+        html.close_div()
 
         html.close_div()
 

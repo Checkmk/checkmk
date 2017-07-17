@@ -210,10 +210,11 @@ void *main_thread(void *data) {
             if (cc > g_max_fd_ever) {
                 g_max_fd_ever = cc;
             }
-            if (fcntl(cc, F_SETFD, FD_CLOEXEC) < 0) {
+            if (fcntl(cc, F_SETFD, FD_CLOEXEC) == -1) {
                 generic_error ge(
                     "cannot set close-on-exec bit on client socket");
-                Warning(fl_logger_livestatus) << ge;
+                Alert(fl_logger_livestatus) << ge;
+                break;
             }
             fl_client_queue->addConnection(cc);  // closes fd
             g_num_queued_connections++;
@@ -395,9 +396,11 @@ bool open_unix_socket() {
     }
 
     // Imortant: close on exec -> check plugins must not inherit it!
-    if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) < 0) {
+    if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) == -1) {
         generic_error ge("cannot set close-on-exec bit on socket");
-        Informational(fl_logger_nagios) << ge;
+        Alert(fl_logger_nagios) << ge;
+        close(g_unix_socket);
+        return false;
     }
 
     // Bind it to its address. This creates the file with the name

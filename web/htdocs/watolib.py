@@ -3117,9 +3117,9 @@ class ContactGroupsAttribute(Attribute):
         self._users = None
         self._loaded_at = None
 
+
     def paint(self, value, hostname):
         value = convert_cgroups_from_tuple(value)
-
         texts = []
         self.load_data()
         items = self._contactgroups.items()
@@ -3134,6 +3134,7 @@ class ContactGroupsAttribute(Attribute):
                       title=_("These contact groups are also used in the monitoring configuration."))
         return "", result
 
+
     def render_input(self, varprefix, value):
         value = convert_cgroups_from_tuple(value)
 
@@ -3146,12 +3147,8 @@ class ContactGroupsAttribute(Attribute):
         # Only show contact groups I'm currently in and contact
         # groups already listed here.
         self.load_data()
-        items = self._contactgroups.items()
-        items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
-        for name, group in items:
-            html.checkbox(varprefix + self._name + "_n_" + name, name in value["groups"])
-            html.a(group['alias'] if group['alias'] else name , href=folder_preserving_link([("mode", "edit_contact_group"), ("edit", name)]))
-            html.br()
+        self._vs_contactgroups().render_input(varprefix + self._name + "_n_", value['groups'])
+
         html.hr()
 
         if is_host:
@@ -3183,8 +3180,8 @@ class ContactGroupsAttribute(Attribute):
         if self._loaded_at == id(html):
             return
         self._loaded_at = id(html)
-
         self._contactgroups = userdb.load_group_information().get("contact", {})
+
 
     def from_html_vars(self, varprefix):
         cgs = []
@@ -3200,6 +3197,7 @@ class ContactGroupsAttribute(Attribute):
             "recurse_use"      : html.get_checkbox(varprefix + self._name + "_recurse_use"),
         }
 
+
     def filter_matches(self, crit, value, hostname):
         value = convert_cgroups_from_tuple(value)
         # Just use the contact groups for searching
@@ -3207,6 +3205,13 @@ class ContactGroupsAttribute(Attribute):
             if contact_group not in value["groups"]:
                 return False
         return True
+
+
+    def _vs_contactgroups(self):
+        cg_choices = sorted([(cg_id, cg_attrs.get("alias", cg_id))
+                            for cg_id, cg_attrs in self._contactgroups.items()],
+                            key=lambda x: x[1])
+        return DualListChoice(choices=cg_choices, rows=40, size=100)
 
 
 def initialize_host_attribute_structures():

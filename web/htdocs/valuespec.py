@@ -4170,13 +4170,18 @@ class IconSelector(ValueSpec):
             content = self.render_icon(value, '', _('Choose another Icon'), id = varprefix + '_img')
         else:
             content = _('Select an Icon')
-        html.popup_trigger(content, varprefix + '_icon_selector', 'icon_selector',
-                           url_vars = [
-                                ('value',       value),
-                                ('varprefix',   varprefix),
-                                ('allow_empty', '1' if self._allow_empty else '0'),
-                                ('back',        html.makeuri([])),
-                            ])
+
+        html.popup_trigger(
+            content, varprefix + '_icon_selector', 'icon_selector',
+            url_vars=[
+                ('value',       value),
+                ('varprefix',   varprefix),
+                ('allow_empty', '1' if self._allow_empty else '0'),
+                ('back',        html.makeuri([])),
+            ],
+            resizable=True,
+        )
+
 
     def render_popup_input(self, varprefix, value):
         html.open_div(class_=["icons"])
@@ -4209,7 +4214,7 @@ class IconSelector(ValueSpec):
             html.close_div()
 
         import config# FIXME: Clean this up. But how?
-        if config.omd_site() and config.user.may('wato.icons'):
+        if config.user.may('wato.icons'):
             back_param = '&back='+html.urlencode(html.var('back')) if html.has_var('back') else ''
             html.buttonlink('wato.py?mode=icons' + back_param, _('Manage'))
 

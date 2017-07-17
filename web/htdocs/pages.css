@@ -1106,7 +1106,6 @@ body.main .popup_menu {
     left: 15px;
     z-index: 50;
 
-    padding: 5px 8px;
     min-width: 300px;
 
     color: #fff;
@@ -1117,6 +1116,32 @@ body.main .popup_menu {
     box-shadow:  0.5px 0.5px 16px #467;
     border-radius: 5px;
     white-space: normal;
+}
+
+body.main .popup_menu div.wrapper {
+    position: relative;
+}
+
+body.main .popup_menu div.content {
+    padding: 5px 8px;
+}
+
+body.main .popup_menu.resizable div.resizer {
+    width: 15px;
+    height: 15px;
+    bottom: 0;
+    right: 0;
+    background-color: #508AA1;
+    position: absolute;
+    pointer-events: none;
+    cursor: se-resize;
+}
+
+body.main div.popup_menu.resizable div.content {
+    resize: both;
+    overflow: auto;
+    min-height: 150px;
+    min-width: 312px;
 }
 
 body.main .popup_menu img {
@@ -1158,6 +1183,14 @@ body.main table.footer .popup_menu a:hover {
     text-decoration: underline;
 }
 
+#popup_menu .icons {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    min-height: 150px;
+    min-width: 312px;
+}
+
 #popup_menu .icons ul {
     list-style: none;
     height: 21px;
@@ -1190,11 +1223,13 @@ body.main table.footer .popup_menu a:hover {
 }
 
 #popup_menu .icons div {
-    clear: left;
-    height: 150px;
+    position: absolute;
     overflow-y: auto;
     padding: 5px;
-    width: 312px;
+    top: 26px;
+    left: 0;
+    right: 0;
+    bottom: 38px;
 }
 
 #popup_menu .icons a {
@@ -1207,8 +1242,9 @@ body.main table.footer .popup_menu a:hover {
 }
 
 #popup_menu .icons .button {
-   float: right;
-   margin: 4px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
 }
 
 /*--Various----------------------------------------------------------------.

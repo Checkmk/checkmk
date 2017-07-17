@@ -27,7 +27,8 @@
 
 def inventory_wmi_cpuload(parsed):
     return inventory_wmi_table(parsed, \
-                required_tables = [ "computer_system", "system_perf" ])
+                required_tables = [ "computer_system", "system_perf" ],
+                skip_intersection=True)
 
 
 def check_wmi_cpuload(item, params, parsed):

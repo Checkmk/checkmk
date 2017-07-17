@@ -1,0 +1,30 @@
+diff -ru heirloom-pkgtools-070227/libpkg/verify.c heirloom-pkgtools-070227-patched/libpkg/verify.c
+--- heirloom-pkgtools-070227/libpkg/verify.c	2007-02-26 01:31:08.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libpkg/verify.c	2009-02-27 09:59:53.000000000 +0100
+@@ -313,18 +313,26 @@
+ 	/*
+ 	 * now word aligned - load one quad-byte word and add up bytes until
+ 	 * less than one quad-byte word left to process
++	 * Note: unsigned long does not necessarily mean quad-byte.
+ 	 */
+ 
+ 	/* LINTED pointer cast may result in improper alignment */
+ 	ulep = ((unsigned long *)uep)-1;
+ 	/* LINTED pointer cast may result in improper alignment */
+ 	while ((unsigned long *)ucp < ulep) {
++		int bytes = sizeof (unsigned long);
+ 		/* LINTED pointer cast may result in improper alignment */
+ 		unsigned long z = *(unsigned long *)ucp;
++		REDO:
+ 		lg += (((int)(z>>24)&0xFF) & WDMSK);
+ 		lg += (((int)(z>>16)&0xFF) & WDMSK);
+ 		lg += (((int)(z>>8)&0xFF) & WDMSK);
+ 		lg += (((int)(z)&0xFF) & WDMSK);
++		bytes -= 4;
++		if (bytes > 0) {
++			z >>= 32;
++			goto REDO;
++		}
+ 		ucp += sizeof (unsigned long);
+ 	}
+ 

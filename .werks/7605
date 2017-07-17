@@ -1,0 +1,24 @@
+Title: Updated dokuwiki plugins
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.4.0i3
+Date: 1478699464
+Class: fix
+
+Updated the shipped dokuwiki plugins. The main reason for this update is the PHP7 support.
+
+These plugins have been updated to the current available versions:
+
+<ul>
+    <li>bookcreator</li>
+    <li>changes</li>
+    <li>dw2pdf</li>
+    <li>include</li>
+    <li>indexmenu</li>
+    <li>pagelist</li>
+</ul>
+
+The plugin "formular" was removed because it has not been updated for a long time and is
+not compatible with PHP7.
+

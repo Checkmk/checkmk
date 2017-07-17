@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="LocalDirectory">
+	<catalog language="EN">
+		<message code="1400" name="FileName" text="The file in which to store the directory"/>
+		<message code="1401" name="NumPasswords" text="The number of passwords to keep"/>
+		<message code="1402" name="PasswordLength" text="The minimum length of a password (in characters)"/>
+		<message code="1403" name="PasswordDays" text="The number of days after which a password expires"/>
+		<message code="1404" name="CSP_E_PSWD_LENGTH" text="The password is too short"/>
+		<message code="1405" name="CSP_E_PSWD_UNIQUE" text="The password matches a historical value"/>
+		<message code="1406" name="CSP_E_PSWD_CHARS" text="The password must contain special characters"/>
+		<message code="1407" name="CSP_E_PSWD_ALPHA" text="The password must contain numbers and letters"/>
+		<message code="1408" name="CSP_E_PSWD_REPEAT" text="The password must contain non-repeating text"/>
+		<message code="1409" name="CSP_E_PSWD_DICT" text="The password was found in the dictionary"/>
+		<message code="1410" name="CSP_E_PSWD_EXPIRED" text="Your password has expired"/>
+		<message code="1411" name="MaxPasswordLength" text="The maximum length of a password (in characters)"/>
+		<message code="1412" name="MixedCaseRequired" text="Are mixed case characters required in passwords?"/>
+		<message code="1413" name="AlphaNumericRequired" text="Are alpha and numeric characters required in passwords?"/>
+		<message code="1414" name="SpecialCharsRequired" text="Are special characters required in passwords?"/>
+		<message code="1415" name="CSP_E_PSWD_NONCOMP" text="The password is not compliant with the policy"/>
+		<message code="1416" name="CSP_E_PSWD_MISSING" text="There is no password present"/>
+		<message code="1417" name="CspNewPassword" text="Enter new password"/>
+		<message code="1418" name="CspConfirmPassword" text="Confirm password"/>
+		<message code="1419" name="TwoCopies" text="Need two copies of the new password to change password"/>
+		<message code="1420" name="NotIdentical" text="The two passwords are different"/>
+		<message code="1421" name="PasswordPolicy" text="The new password does not meet the password complexity policy"/>
+	</catalog>
+	<library language="C++" system="Windows">
+		<file>CSP-LocalDirectory</file>
+		<properties/>
+	</library>
+	<class>
+		<class-id class="LocalDirectory" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newLocalDirectory"/>
+			<function name="Delete" method="deleteLocalDirectory"/>
+			<function name="Options" method="newOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="Authority" version="1"/>
+			<attributes>
+				<attribute name="Type">
+					<value>password</value>
+					<value>CSP</value>
+				</attribute>
+			</attributes>
+		</interface>
+		<interface>
+			<interface-id class="UserAccountManagement" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

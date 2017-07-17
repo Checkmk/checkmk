@@ -1,0 +1,38 @@
+#!/bin/bash
+#
+# return next free port for key
+#
+# usage: $OMD_ROOT/lib/port_is_used APACHE_TCP_PORT 5000
+
+
+port_is_used () {
+    local KEY=$1
+    local PORT=$2
+    for S in $(ls /omd/sites); do
+        if [ ! -d /omd/sites/$S ]; then
+            continue
+        fi
+        conf=/omd/sites/$S/etc/omd/site.conf
+        if [ "${S}" = "${OMD_SITE}" ]; then
+            if [ $(env | grep ^CONFIG_  | grep "=${PORT}$" | grep -v CONFIG_${KEY} | wc -l) -gt 0 ]; then
+                return 0
+            fi
+        else
+            if ! ls $conf >/dev/null 2>&1; then
+                echo "ERROR: Failed to read config of site ${S}. ${KEY} port will possibly be allocated twice" >&2
+                continue
+            fi
+            if [ $(grep -v ^#  < $conf | grep "='${PORT}'" | wc -l) -gt 0 ]; then
+                return 0
+            fi
+        fi
+    done
+    return 1
+}
+
+KEY=$1
+PORT=$2
+while port_is_used "$KEY" "$PORT"; do
+    PORT=$((PORT + 1))
+done
+echo "$PORT"

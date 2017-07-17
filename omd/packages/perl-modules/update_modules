@@ -1,0 +1,87 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Data::Dumper;
+use lib 'lib';
+use BuildHelper;
+
+my @modules;
+my($deps,$files) = BuildHelper::get_all_deps();
+chdir('src') or die("cannot change into src dir: $!");
+if(scalar @ARGV == 0) {
+    @modules = sort glob('*');
+} else {
+    @modules = @ARGV;
+}
+
+my($x,$max) = (1, scalar @modules);
+for my $file (@modules) {
+    printf("*** (%3s/%s) ", $x, $max) if $max > 1;
+    $x++;
+    printf "%-55s", $file;
+
+    if(!-f $file) {
+        my $newfile = BuildHelper::module_to_file($file, $files);
+        if($newfile) {
+            $file = $newfile;
+        } else {
+            die("no idea how to handle $file");
+        }
+    }
+
+    if($file =~ m/^MongoDB/mx) {
+        print "skipped, broken since 0.46 on redhat 5.8\n";
+        next;
+    }
+    if($file =~ m/^ExtUtils\-Depends\-/mx) {
+        print "skipped, cpan points to wrong module\n";
+        next;
+    }
+    if($file =~ m/^File-Temp\-/mx) {
+        print "skipped, broken since 0.22\n";
+        next;
+    }
+    if($file =~ m/^Module-Build\-/mx) {
+        print "skipped, newer version requires dependecies which fail on old platforms\n";
+        next;
+    }
+    if($file =~ m/^GD\-/mx) {
+        print "skipped, requires new Module:Build, see above\n";
+        next;
+    }
+    if($file =~ m/^Moose\-/mx) {
+        print "skipped, breaks Excel::Template::Plus::TT with 'Class::MOP::load_class is deprecated'\n";
+        next;
+    }
+    if($file =~ m/^Nagios\-Plugin\-/mx) {
+        print "skipped\n";
+        next;
+    }
+    if($file =~ m/^ExtUtils\-Manifest\-/mx) {
+        print "skipped, broken symlinks in make distcheck\n";
+        next;
+    }
+
+    my($modname,$modversion) = BuildHelper::file_to_module($file);
+    my $urlpath = BuildHelper::get_url_for_module($modname);
+    my $tarball = $urlpath;
+    $tarball =~ s/^.*\///g;
+    $tarball =~ s/%2B/+/g;
+    $tarball =~ s/0\.29a\.tar\.gz/0.29.tar.gz/g;
+    my($newname,$newversion) = BuildHelper::file_to_module($tarball);
+
+    if(-f $tarball || BuildHelper::version_compare($modversion, $newversion)) {
+        print "no updates\n";
+    } else {
+        print "updated: $newversion\n";
+        my $downloaded = BuildHelper::download_module($modname, 0, 1, 1);
+        if(scalar @{$downloaded} != 1) {
+            die("download failed: ".Dumper($downloaded));
+        }
+        my $new = shift @{$downloaded};
+        `sed -i ../Makefile -e 's|$file|$new|'`;
+        `git rm $file`;
+        `git add $new`;
+    }
+}

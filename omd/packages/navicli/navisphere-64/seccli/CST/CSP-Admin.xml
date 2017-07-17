@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="Administration">
+	<catalog language="EN">
+		<message code="200" name="PassphraseChangeSuccessful" text="Passphrase changed for lockbox %s."/>
+		<message code="201" name="PassphraseChangeFailed" text="Failure changing the passphrase for lockbox %s. [%s] [%d]"/>
+		<message code="202" name="LockboxResetSuccessful" text="System fingerprint reset for lockbox %s."/>
+		<message code="203" name="LockboxResetFailed" text="Failure resetting system fingerprint for lockbox %s. [%s] [%d]"/>
+		<message code="204" name="LockboxSetModeSuccessful" text="Open mode set for lockbox %s."/>
+		<message code="205" name="LockboxSetModeFailed" text="Failure setting open mode for lockbox %s. [%s] [%d]"/>
+		<message code="206" name="SignFileSuccessful" text="HMAC signature generated for file %s in lockbox %s."/>
+		<message code="207" name="SignFileFailed" text="Failure generating HMAC signature for file %s in lockbox %s. [%s] [%d]"/>
+		<message code="208" name="ValidateFileSuccessful" text="HMAC signature validated for file %s in lockbox %s."/>
+		<message code="209" name="ValidateFileFailed" text="Failure validating HMAC signature for file %s in lockbox %s. [%s] [%d]"/>
+		<message code="210" name="InitializationSuccessful" text="Lockbox %s initialized."/>
+		<message code="211" name="InitializationFailed" text="Failure initializing lockbox %s. [%s] [%d]"/>
+		<message code="212" name="ListUsersSuccessful" text="Users listed for account manager %s."/>
+		<message code="213" name="ListUsersFailed" text="Failure listing users from account manager %s. [%s] [%d]"/>
+		<message code="214" name="CreateUserSuccessful" text="User %s created with account manager %s."/>
+		<message code="215" name="CreateUserFailed" text="Failure creating user %s with account manager %s. [%s] [%d]"/>
+		<message code="216" name="DeleteUserSuccessful" text="User %s deleted from account manager %s."/>
+		<message code="217" name="DeleteUserFailed" text="Failure deleting user %s from account manager %s. [%s] [%d]"/>
+		<message code="218" name="CreateGroupSuccessful" text="Group %s created with account manager %s."/>
+		<message code="219" name="CreateGroupFailed" text="Failure creating group %s with account manager %s. [%s] [%d]"/>
+		<message code="220" name="DeleteGroupSuccessful" text="Group %s deleted from account manager %s."/>
+		<message code="221" name="DeleteGroupFailed" text="Failure deleting group %s from account manager %s. [%s] [%d]"/>
+		<message code="222" name="ListGroupsSuccessful" text="Groups listed from account manager %s."/>
+		<message code="223" name="ListGroupsFailed" text="Failure listing groups from account manager %s. [%s] [%d]"/>
+		<message code="224" name="AddGroupMemberSuccessful" text="Member %s added to group %s."/>
+		<message code="225" name="AddGroupMemberFailed" text="Failure adding member %s to group %s. [%s] [%d]"/>
+		<message code="226" name="RemoveGroupMemberSuccessful" text="Member %s removed from group %s."/>
+		<message code="227" name="RemoveGroupMemberFailed" text="Failure removing member %s from group %s. [%s] [%d]"/>
+		<message code="228" name="ListGroupMembersSuccessful" text="Group members viewed for group %s."/>
+		<message code="229" name="ListGroupMembersFailed" text="Failure viewing members of group %s. [%s] [%d]"/>
+		<message code="230" name="ListGroupMembershipsSuccessful" text="Group membership viewed for account %s."/>
+		<message code="231" name="ListGroupMembershipsFailed" text="Failure viewing group membership for account %s. [%s] [%d]"/>
+		<message code="232" name="ConfigSuccessful" text="Object %s %s configured."/>
+		<message code="233" name="ConfigFailed" text="Failure configuring object %s %s. [%s] [%d]"/>
+		<message code="234" name="ValidateConfigSuccessful" text="Configuration object %s %s validated."/>
+		<message code="235" name="ValidateConfigFailed" text="Failure validating configuration object %s %s. [%s] [%d]"/>
+		<message code="236" name="ViewConfigSuccessful" text="Configuration object %s %s viewed."/>
+		<message code="237" name="ViewConfigFailed" text="Failure viewing configuration object %s %s. [%s] [%d]"/>
+		<message code="238" name="DeleteConfigSuccessful" text="Configuration object %s %s deleted."/>
+		<message code="239" name="DeleteConfigFailed" text="Failure deleting configuration object %s %s. [%s] [%d]"/>
+		<message code="240" name="ListConfigsSuccessful" text="Configurations of type %s listed."/>
+		<message code="241" name="ListConfigFailed" text="Failure listing configurations of type %s. [%s] [%d]"/>
+		<message code="243" name="ListTypesFailed" text="Failure listing configuration types. [%s] [%d]"/>
+		<message code="244" name="ChangeKeySuccessful" text="Encryption key changed for lockbox %s."/>
+		<message code="245" name="ChangeKeyFailed" text="Failure changing encryption key for lockbox %s. [%s] [%d]"/>
+		<message code="246" name="ReasonAccessError" text="Unable to access lockbox. Path or passphrase may be wrong."/>
+		<message code="247" name="ReasonWeakPassphrase" text="Passphrase did not meet strength requirements."/>
+		<message code="248" name="ReasonInternalError" text="Internal error."/>
+		<message code="249" name="ReasonInvalidPassphrase" text="Unable to access lockbox. Invalid passphrase."/>
+		<message code="250" name="ReasonInvalidPath" text="Unable to access lockbox. Invalid path."/>
+		<message code="251" name="ReasonInvalidPathOrPassphrase" text="Unable to access lockbox. Invalid path or passphrase."/>
+		<message code="252" name="ReasonFileNotFound" text="File not found."/>
+		<message code="253" name="ReasonSignatureNotFoundInLockbox" text="Signature for file not found in lockbox."/>
+		<message code="254" name="ReasonFilespecContainsDirectoryInfo" text="Filespec contains directory information."/>
+		<message code="255" name="ReasonLockboxModeNotSpecified" text="Lockbox mode required, either -attended or -system."/>
+		<message code="256" name="ReasonUnableToDeleteOldLockbox" text="Unable to delete old lockbox file."/>
+		<message code="257" name="ReasonLockboxAlreadyExists" text="Lockbox file already exists. Overwrite option required."/>
+		<message code="258" name="ReasonKeySplitFail" text="Error generating keys. (For HPUX, SHLIB_PATH and LD_LIBRARY_PATH must be set.)"/>
+		<message code="259" name="ReasonDirNotExistOrAccessDenied" text="Specified directory may not exist or access denied."/>
+		<message code="260" name="ReasonConfigurationAlreadyExists" text="Configuration already exists."/>
+		<message code="261" name="ReasonInvalidCommandOption" text="Invalid command option."/>
+		<message code="262" name="ReasonConfigurationNotFound" text="Configuration not found."/>
+		<message code="263" name="LockboxGetModeSuccessful" text="Open mode viewed for lockbox %s."/>
+		<message code="264" name="LockboxGetModeFailed" text="Failure viewing open mode for lockbox %s. [%s] [%d]"/>
+		<message code="265" name="ReasonDirHasNoXMLFiles" text="The specified directory contains no XML files."/>
+		<message code="266" name="ReasonValidateOptionsFailed" text="The configuration object could not be validated."/>
+	</catalog>
+	<library language="C++" system="Windows">
+		<file/>
+		<properties/>
+	</library>
+	<class>
+		<class-id class="Administration" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+      </functions>
+		<interface>
+			<interface-id class="Administration" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

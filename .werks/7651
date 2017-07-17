@@ -1,0 +1,11 @@
+Title: pnp4nagios: Fixed broken custom time range selection
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1495446351
+
+

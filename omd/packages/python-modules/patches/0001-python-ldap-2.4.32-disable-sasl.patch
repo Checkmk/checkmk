@@ -1,0 +1,11 @@
+--- dest/python-ldap-2.4.32/setup.cfg.sav	2016-06-03 23:20:32.520383426 +0200
++++ dest/python-ldap-2.4.32/setup.cfg	2016-06-03 23:20:39.948681659 +0200
+@@ -1,7 +1,7 @@
+ [_ldap]
+ library_dirs = /usr/lib /usr/lib64 /usr/local/lib /usr/local/lib64
+ include_dirs = /usr/include /usr/include/sasl /usr/local/include /usr/local/include/sasl
+-defines = HAVE_SASL HAVE_TLS HAVE_LIBLDAP_R
++defines = HAVE_TLS HAVE_LIBLDAP_R
+ extra_compile_args = 
+ extra_objects = 
+ libs = ldap_r

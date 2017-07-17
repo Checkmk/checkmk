@@ -1,0 +1,10 @@
+Title: check_icmp: Fixed not using configured ping levels since IPv6 implementation
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1445525306
+
+

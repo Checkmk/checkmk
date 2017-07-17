@@ -1,0 +1,23 @@
+--- mod_python-3.3.1/lib/python/mod_python/importer.py
++++ mod_python-3.3.1/lib/python/mod_python/importer.py
+@@ -29,7 +29,10 @@ import new
+ import types
+ import pdb
+ import imp
+-import md5
++try:
++    from hashlib import md5
++except ImportError:
++    from md5 import md5
+ import time
+ import string
+ import StringIO
+@@ -969,7 +972,7 @@ class _ModuleCache:
+         # name which is a filesystem path. Hope MD5 hex
+         # digest is okay.
+ 
+-        return self._prefix + md5.new(file).hexdigest()
++        return self._prefix + md5(file).hexdigest()
+ 
+ 
+ _global_modules_cache = _ModuleCache()

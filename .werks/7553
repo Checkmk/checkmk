@@ -1,0 +1,9 @@
+Title: BI-Backend: Is now handling the acknowledgement and downtime infos of BI
+Level: 1
+Component: nagvis
+Compatible: compat
+Version: 1.2.7i3
+Date: 1456864378
+Class: feature
+
+

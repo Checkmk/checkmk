@@ -1,0 +1,19 @@
+Title: Fixed issue when switching to the icinga core
+Level: 1
+Component: omd
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476087265
+Class: fix
+
+Failed to use Check_MK with the Icinga core. Switching the core
+resulted in an error and it was not possible to use it.
+
+Error messages were:
+
+OMD[heute]:~$ omd stop
+OMD[heute]:~$ omd config set CORE nagios
+sed: can't read /omd/sites/heute/etc/check_mk/defaults: No such file or directory
+sed: can't read /omd/sites/heute/etc/check_mk/defaults: No such file or directory
+sed: can't read /omd/sites/heute/etc/check_mk/defaults: No such file or directory
+sed: can't read /omd/sites/heute/etc/check_mk/defaults: No such file or directory

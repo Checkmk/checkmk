@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="LOCALIZATIONSERVICE">
+	<library language="C++" system="Windows">
+		<file>CSP-LocalizationService</file>
+		<properties/>
+	</library>
+	<class>
+		<class-id class="LocalizationService" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newLocalizationService"/>
+			<function name="Delete" method="deleteLocalizationService"/>
+			<function name="Options" method="newLocalizationServiceOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="LocalizationService" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

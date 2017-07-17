@@ -1,0 +1,19 @@
+0001-check-icmp-allows-pl-of-101.dif
+    This patch allows to configure check_icmp in a way that a packet loss of
+    100% is not CRITICAL. Consider:
+
+    check_icmp 10.1.1.1 -t1 -w500,80% -c1000,101%
+
+    In this case the user would expect the outcome to be WARN, if 100%
+    packats are lost. An RTA is "nan" in this case. But check_icmp would
+    insist to make the outcome CRITICAL. The patch fixes this.
+
+
+0002-check-icmp-ipv6.dif
+    Adds IPv6 support to check_icmp
+
+
+0003-cmk-password-store.dif
+    Adds support for getting passwords from the Check_MK Password Store
+    instead of having them in plaintext on the command line to various
+    check plugins.

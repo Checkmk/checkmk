@@ -1,0 +1,18 @@
+diff -ur nagios-3.2.1/html/includes/utils.inc.php nagios-3.2.1.new/html/includes/utils.inc.php
+--- nagios-3.2.1/html/includes/utils.inc.php	2009-03-10 21:05:43.000000000 +0100
++++ nagios-3.2.1.new/html/includes/utils.inc.php	2010-07-03 20:14:37.000000000 +0200
+@@ -1,7 +1,13 @@
+ <?php
+ // HELPER UTILITIES
+ 
+-require_once(dirname(__FILE__).'/../config.inc.php');
++// OMD: read site specific configuration file
++// OMD: extract sitename from script filename and find path to
++//      site specific configuration file
++$omd_parts = explode("/", $_SERVER["SCRIPT_FILENAME"]);
++$omd_sitename = $omd_parts[3];
++$omd_site_config_path = "/omd/sites/$omd_sitename/etc/nagios/config.inc.php";
++require_once($omd_site_config_path);
+ 
+ function get_update_information(){
+ 	global $cfg;

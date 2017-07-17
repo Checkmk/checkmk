@@ -1,0 +1,14 @@
+Title: Fixed a threading bug in the RRDTool library and rrdcached
+Level: 2
+Component: packages
+Compatible: compat
+Version: 1.4.0i1
+Date: 1467121600
+Class: fix
+
+Older GLib versions (< 2.32, e.g. the ones shipped with CentOS 5 and 6, SLES11,
+Debian 6) need an explicit initialization to make things thread-safe. RRDTools
+didn't do that, so the Check_MK Micro Core and rrdcached crashed randomly on
+those systems. Now we make sure that GLib is properly initialized before
+calling into it.
+

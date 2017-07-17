@@ -1,0 +1,43 @@
+diff -ru msitools-0.93.orig/configure msitools-0.93/configure
+--- msitools-0.93.orig/configure	2014-09-05 16:12:28.954596188 +0200
++++ msitools-0.93/configure	2014-09-05 16:13:10.903417947 +0200
+@@ -5727,39 +5727,6 @@
+   ;;
+ esac
+ fi
+-INTLTOOL_PERL=$ac_cv_path_INTLTOOL_PERL
+-if test -n "$INTLTOOL_PERL"; then
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: $INTLTOOL_PERL" >&5
+-$as_echo "$INTLTOOL_PERL" >&6; }
+-else
+-  { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
+-$as_echo "no" >&6; }
+-fi
+-
+-
+-if test -z "$INTLTOOL_PERL"; then
+-   as_fn_error $? "perl not found" "$LINENO" 5
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for perl >= 5.8.1" >&5
+-$as_echo_n "checking for perl >= 5.8.1... " >&6; }
+-$INTLTOOL_PERL -e "use 5.8.1;" > /dev/null 2>&1
+-if test $? -ne 0; then
+-   as_fn_error $? "perl 5.8.1 is required for intltool" "$LINENO" 5
+-else
+-   IT_PERL_VERSION=`$INTLTOOL_PERL -e "printf '%vd', $^V"`
+-   { $as_echo "$as_me:${as_lineno-$LINENO}: result: $IT_PERL_VERSION" >&5
+-$as_echo "$IT_PERL_VERSION" >&6; }
+-fi
+-if test "x" != "xno-xml"; then
+-   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for XML::Parser" >&5
+-$as_echo_n "checking for XML::Parser... " >&6; }
+-   if `$INTLTOOL_PERL -e "require XML::Parser" 2>/dev/null`; then
+-       { $as_echo "$as_me:${as_lineno-$LINENO}: result: ok" >&5
+-$as_echo "ok" >&6; }
+-   else
+-       as_fn_error $? "XML::Parser perl module is required for intltool" "$LINENO" 5
+-   fi
+-fi
+ 
+ # Substitute ALL_LINGUAS so we can use it in po/Makefile
+ 

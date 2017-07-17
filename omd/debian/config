@@ -1,0 +1,16 @@
+#!/bin/sh 
+# debconf settings for omd
+
+# Source debconf library.
+. /usr/share/debconf/confmodule
+
+db_version 2.0
+db_title "OMD - Open Monitoring Distribution"
+
+db_get omd/nagios-plugins-suid
+if [ -z "$RET" ]; then
+  db_set omd/nagios-plugins-suid true
+fi
+# db_fset omd/nagios-plugins-suid seen false
+db_input medium omd/nagios-plugins-suid || true
+db_go

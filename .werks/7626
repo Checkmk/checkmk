@@ -1,0 +1,9 @@
+Title: Improved systemd init system detection (Fixes some RH6 installations)
+Level: 1
+Component: distros
+Compatible: compat
+Version: 1.4.0i3
+Date: 1485418628
+Class: fix
+
+

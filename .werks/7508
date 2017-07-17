@@ -1,0 +1,14 @@
+Title: Fixed SNMP timeouts caused by invalid responses from devices
+Level: 1
+Component: inline-snmp
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1447254477
+
+When a SNMP device which has a bug in it's SNMP implementation is responding
+with a value which can not be parsed, e.g. a number which is increasing the
+maximum value of a 32bit integer, the packet was dropped. The SNMP engine
+was retrying to fetch the data and finally timing out. These timeouts
+has been fixed now.

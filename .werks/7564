@@ -1,0 +1,10 @@
+Title: omd backup can now backup non gzipped archives
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1466776869
+
+

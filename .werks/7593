@@ -1,0 +1,16 @@
+Title: omd restore: Fixed issue when backing up / restoring as sites named "nagios"
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i1
+Date: 1475155100
+
+When a site was named exactly like a symlink target, the site restore failed. For
+example there is a symlink "var/icinga" pointing to "nagios" on the same directory
+level. So in case there was a site named "nagios" backed up and restored, the restore
+failed.
+
+This may also occur for other, maybe custom symlinks, linking to files in the same
+directory.

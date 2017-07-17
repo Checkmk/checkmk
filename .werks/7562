@@ -1,0 +1,10 @@
+Title: Orphan historic metrics are now also cleaned up by diskspace cleanup
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1461052368
+
+

@@ -1,0 +1,10 @@
+Title: Fixed broken check_dhcp (regression since 1.4.0i3)
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1484037972
+
+

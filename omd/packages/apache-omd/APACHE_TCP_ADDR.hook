@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Alias: TCP host address for Apache
+# Menu: Web GUI
+# Description:
+#  Configure the TCP host address for the Apache webserver
+#  process of this site. This option is only useful if
+#  APACHE is set to "on" and WEBSERVER is set to "own".
+#
+#  It might be useful to change the host address the site
+#  Apache webserver listes to.
+#
+#  After changing this variable, the man Apache webserver
+#  must be restarted.
+
+
+# Load other config options. This hook needs
+# APACHE_TCP_PORT.
+if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
+    . $OMD_ROOT/etc/omd/site.conf
+else
+    CONFIG_APACHE_TCP_PORT=${CONFIG_APACHE_TCP_PORT:-0}
+fi
+
+case "$1" in
+    default)
+        echo "127.0.0.1"
+    ;;
+    choices)
+        echo "([a-z0-9-]+|(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3}))"
+    ;;
+    set)
+        APACHE_HOST=$2
+        cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
+# This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
+# Better do not edit manually
+Listen $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
+EOF
+        cat <<EOF > $OMD_ROOT/etc/apache/proxy-port.conf
+# This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
+# Better do not edit manually
+<IfModule mod_proxy_http.c>
+  <Proxy http://$APACHE_HOST:$CONFIG_APACHE_TCP_PORT/$OMD_SITE>
+    Order allow,deny
+    allow from all
+  </Proxy>
+
+  <Location /$OMD_SITE>
+    # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
+    # the site apache is down and someone tries to access the page.
+    # "disablereuse=On" prevents the apache from keeping the connection which leads to
+    # wrong devlivered pages sometimes
+    ProxyPass http://$APACHE_HOST:$CONFIG_APACHE_TCP_PORT/$OMD_SITE retry=0 disablereuse=On timeout=120
+    ProxyPassReverse http://$APACHE_HOST:$CONFIG_APACHE_TCP_PORT/$OMD_SITE
+  </Location>
+</IfModule>
+EOF
+    ;;
+    depends)
+        [ "$CONFIG_APACHE_MODE" = own ]
+    ;;
+esac

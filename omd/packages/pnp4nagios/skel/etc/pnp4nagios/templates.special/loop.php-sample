@@ -1,0 +1,28 @@
+<?php
+#
+#
+#
+$this->MACRO['TITLE']   = "The Title"; 
+$this->MACRO['COMMENT'] = "A Comment";
+#
+# Define the Service we want to graph
+$service = '_HOST_';
+#
+# Define a List of Host
+$hosts = array('localhost','node1','node2');
+#
+# The Datasource Name for Graph 1 ( index 0 )
+$ds_name[0] = "RTA Times"; 
+$opt[0]     = "--title \"Stacked RTA Times\"";
+$def[0]     = "";
+#
+# Iterate through the list of hosts
+foreach($hosts as $key=>$host){
+    #
+    # get the data for a given Host/Service
+    $a = $this->tplGetData($host,$service);
+    $def[0]    .= rrd::def("a$key" ,$a['DS'][0]['RRDFILE'], $a['DS'][0]['DS'], "AVERAGE");
+    $def[0]    .= rrd::area("a$key", rrd::color($key), $a['MACRO']['HOSTNAME'], "STACK");
+    $def[0]    .= rrd::gprint("a$key", array("MIN", "MAX", "LAST"), "%.2lf%s");
+}
+?>

@@ -1,0 +1,4 @@
+cleanup_paths = [
+    'var/pnp4nagios/perfdata/*/*.rrd',
+    'var/pnp4nagios/perfdata/*/*.xml',
+]

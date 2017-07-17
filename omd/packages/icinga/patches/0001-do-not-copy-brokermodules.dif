@@ -1,0 +1,126 @@
+From 80bf922a80ae0e3fd090a691e63903da899a85b3 Mon Sep 17 00:00:00 2001
+From: Michael Friedrich <michael.friedrich@netways.de>
+Date: Thu, 5 Jun 2014 14:23:31 +0200
+Subject: [PATCH] Revert "nebmods: fix multiple modules sharing same symbols
+ not receiving callback data"
+
+This reverts commit 524838659e715f1edc57f0ef96d8ab02544347ef.
+
+Conflicts:
+	base/nebmods.c
+---
+ base/nebmods.c       | 52 +++++++++++-----------------------------------------
+ include/nebmodules.h |  1 -
+ 2 files changed, 11 insertions(+), 42 deletions(-)
+
+diff --git a/base/nebmods.c b/base/nebmods.c
+index 4e4371d..635207c 100644
+--- a/base/nebmods.c
++++ b/base/nebmods.c
+@@ -37,7 +37,6 @@ nebmodule *neb_module_list = NULL;
+ nebcallback **neb_callback_list = NULL;
+ 
+ extern char     *temp_path;
+-extern int	daemon_dumps_core;
+ 
+ 
+ /* compat stuff for USE_LTDL */
+@@ -173,8 +172,8 @@ int neb_load_all_modules(void) {
+ int neb_load_module(nebmodule *mod) {
+ 	int (*initfunc)(int, char *, void *);
+ 	int *module_version_ptr = NULL;
+-	int dest_fd, result = OK;
+-	char output_file[PATH_MAX];
++	int result = OK;
++
+ 
+ 	if (mod == NULL || mod->filename == NULL)
+ 		return ERROR;
+@@ -201,24 +200,14 @@ int neb_load_module(nebmodule *mod) {
+ 	   So... the trick is to (1) copy the module to a temp file, (2) dlopen() the temp file, and (3) immediately delete the temp file.
+ 	************/
+ 
+-	/*
+-	 * create a temp copy with a different name,
+-	 * not sharing the global symbol space with
+-	 * other neb modules of the same binary.
+-	 * check https://dev.icinga.org/issues/4199
+-	 */
+-	snprintf(output_file, sizeof(output_file)-1, "%s/icinganebmodXXXXXX", temp_path);
+-	dest_fd = mkstemp(output_file);
+-	result = my_fdcopy(mod->filename, output_file, dest_fd);
+-	close(dest_fd);
+-
+-	if (result == ERROR) {
+-		logit(NSLOG_RUNTIME_ERROR, TRUE, "Error: Failed to safely copy module '%s' to '%s'. The module will not be loaded\n", mod->filename, output_file);
+-		return ERROR;
+-	}
++	/* 2010-01-05 MF: Patch taken from OMD into Icinga Core
++		   OMD: Do not make a copy of the module, but directly load it. This prevents problems with a tmpfs which
++	   is mounted as user. OMD users surely have no problems with modules overwritten by 'cp in runtime. Anyway,
++	   the usual way to install files is 'install', which removes and recreates the file (just as tar, rpm and
++	   many other installation-tools do). */
+ 
+ 	/* load the module (use the temp copy we just made) */
+-	mod->module_handle = dlopen(output_file, RTLD_NOW | RTLD_GLOBAL);
++	mod->module_handle = dlopen(mod->filename, RTLD_NOW | RTLD_GLOBAL);
+ 
+ 	if (mod->module_handle == NULL) {
+ 
+@@ -227,25 +216,12 @@ int neb_load_module(nebmodule *mod) {
+ 		return ERROR;
+ 	}
+ 
+-	/* mark the module as being loaded */
+-	mod->is_currently_loaded = TRUE;
+-
+-	/* delete the temp copy of the module just loaded */
+-	if (unlink(output_file) == -1) {
+-		logit(NSLOG_RUNTIME_ERROR, TRUE, "Error: Could not delete temporary file '%s' used for module '%s'. The module will be unloaded: %s", output_file, mod->filename, strerror(errno));
+-		neb_unload_module(mod, NEBMODULE_FORCE_UNLOAD, NEBMODULE_ERROR_API_VERSION);
+-	}
+-
+-	/* if we're debugging, create a copy for debuggers finding the correct symbols */
+-	if (daemon_dumps_core == TRUE) {
+-		dest_fd = open(output_file, O_CREAT | O_WRONLY, S_IRWXU | S_IRGRP | S_IROTH);
+-		result = my_fdcopy(mod->filename, output_file, dest_fd);
+-		mod->dl_file = strdup(output_file);
+-	}
+-
+ 	/* find module API version */
+ 	module_version_ptr = (int *)dlsym(mod->module_handle, "__neb_api_version");
+ 
++	/* mark the module as being loaded */
++	mod->is_currently_loaded = TRUE;
++
+ 	/* check the module API version */
+ 	if (module_version_ptr == NULL || ((*module_version_ptr) != CURRENT_NEB_API_VERSION)) {
+ 
+@@ -346,12 +322,6 @@ int neb_unload_module(nebmodule *mod, int flags, int reason) {
+ 
+ 	log_debug_info(DEBUGL_EVENTBROKER, 0, "Attempting to unload module '%s': flags=%d, reason=%d\n", mod->filename, flags, reason);
+ 
+-	/* if we're debugging, remove the copied file */
+-	if (daemon_dumps_core == TRUE && mod->dl_file) {
+-		result = unlink(mod->dl_file);
+-		my_free(mod->dl_file);
+-	}
+-
+ 	/* call the de-initialization function if available (and the module was initialized) */
+ 	if (mod->deinit_func && reason != NEBMODULE_ERROR_BAD_INIT) {
+ 
+diff --git a/include/nebmodules.h b/include/nebmodules.h
+index a46a2a4..0d62d37 100644
+--- a/include/nebmodules.h
++++ b/include/nebmodules.h
+@@ -90,7 +90,6 @@ typedef struct nebmodule_struct{
+ 	pthread_t       thread_id;
+ #endif
+ 	struct nebmodule_struct *next;
+-	char		*dl_file;
+         }nebmodule;
+ 
+ 
+-- 
+2.0.0.rc2
+

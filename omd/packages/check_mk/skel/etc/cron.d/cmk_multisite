@@ -1,0 +1,2 @@
+# Run Multisite regular jobs, e.g. scheduled reports
+* * * * * . $OMD_ROOT/etc/omd/site.conf ; curl http://localhost:$CONFIG_APACHE_TCP_PORT/###SITE###/check_mk/run_cron.py >/dev/null 2>&1

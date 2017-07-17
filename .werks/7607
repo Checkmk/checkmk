@@ -1,0 +1,13 @@
+Title: Fixed event console enabled detection right after creating a site
+Level: 1
+Component: omd
+Compatible: compat
+Version: 1.4.0i3
+Date: 1479204650
+Class: fix
+
+On creation the EC is now enabled by default. This is loaded as config
+option into the core. But right after creating a new site this was not
+detected correctly.
+
+Internal: The order of the OMD hooks was wrong.

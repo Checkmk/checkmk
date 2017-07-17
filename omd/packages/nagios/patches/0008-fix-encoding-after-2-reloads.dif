@@ -1,0 +1,10 @@
+--- nagios-3.5.0/common/macros.c.orig	2013-06-07 15:11:04.327006405 +0200
++++ nagios-3.5.0/common/macros.c	2013-06-07 15:11:23.603004838 +0200
+@@ -2585,6 +2585,7 @@
+ 	for(x = 0; x < MACRO_X_COUNT; x++) {
+ 		macro_keys[x].code = x;
+ 		macro_keys[x].name = macro_x_names[x];
++		macro_keys[x].clean_options = 0;
+ 
+ 		/* host/service output/perfdata and author/comment macros should get cleaned */
+ 		if((x >= 16 && x <= 19) || (x >= 49 && x <= 52) || (x >= 99 && x <= 100) || (x >= 124 && x <= 127)) {

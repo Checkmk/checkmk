@@ -1,0 +1,33 @@
+diff -ru mod_python-3.3.1.orig/src/mod_python.c mod_python-3.3.1/src/mod_python.c
+--- mod_python-3.3.1.orig/src/mod_python.c	2006-11-09 07:21:23.000000000 +0100
++++ mod_python-3.3.1/src/mod_python.c	2011-12-21 16:59:16.171960122 +0100
+@@ -1523,6 +1529,13 @@
+     }
+ }
+ 
++
++int mod_python_got_killed;
++void sig_term_during_python(int s)
++{
++    mod_python_got_killed = 1;
++}
++
+ /**
+  ** python_handler
+  **
+@@ -1649,8 +1662,15 @@
+      * This is the C equivalent of
+      * >>> resultobject = obCallBack.Dispatch(request_object, phase)
+      */
++    mod_python_got_killed = 0;
++    sighandler_t orig_handler = signal(SIGTERM, sig_term_during_python);
+     resultobject = PyObject_CallMethod(idata->obcallback, "HandlerDispatch",
+                                        "O", request_obj);
++    signal(SIGTERM, orig_handler);
++    if (mod_python_got_killed) {
++        ap_log_rerror(APLOG_MARK, APLOG_NOTICE, 0, req, "Got SIGTERM while Python running.");
++        exit(0);
++    }
+ 
+     /* clear phase from request object */
+     Py_XDECREF(request_obj->phase);

@@ -1,0 +1,13 @@
+###ROOT###/var/log/apache/stats {
+        missingok
+        rotate 1
+        size 1M
+        compress
+        delaycompress
+        notifempty
+        create 640 ###SITE### ###SITE### 
+        sharedscripts
+        postrotate
+                ###ROOT###/etc/init.d/apache reload >/dev/null
+        endscript
+}

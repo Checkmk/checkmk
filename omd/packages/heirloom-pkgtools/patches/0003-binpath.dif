@@ -1,0 +1,103 @@
+diff -ru heirloom-pkgtools-070227/hdrs/install.h heirloom-pkgtools-070227-patched/hdrs/install.h
+--- heirloom-pkgtools-070227/hdrs/install.h	2007-02-25 15:09:12.000000000 +0100
++++ heirloom-pkgtools-070227-patched/hdrs/install.h	2008-12-31 21:11:13.000000000 +0100
+@@ -83,7 +83,7 @@
+ #endif
+ 
+ #define	OAMBASE	SADMDIR "/sysadm"
+-#define	MAILCMD	BINDIR "/mail"
++#define	MAILCMD	"/bin/mail"
+ #define	DATSTRM	"datastream"
+ /* #define	SHELL	SHELL */
+ #define	PKGINFO	"pkginfo"
+diff -ru heirloom-pkgtools-070227/libinst/psvr4ck.c heirloom-pkgtools-070227-patched/libinst/psvr4ck.c
+--- heirloom-pkgtools-070227/libinst/psvr4ck.c	2007-02-24 22:15:21.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libinst/psvr4ck.c	2008-12-31 21:11:31.000000000 +0100
+@@ -52,7 +52,7 @@
+ 
+ #ifdef	MAILCMD
+ #undef  MAILCMD
+-#define	MAILCMD		BINDIR "/mail"
++#define	MAILCMD		"/bin/mail"
+ #endif	/* MAILCMD */
+ #define	ERR_MAIL	"unable to send electronic mail notification"
+ #define	ERR_OVERWRITE	"unable to determine overwrite list"
+diff -ru heirloom-pkgtools-070227/libpkg/dstream.c heirloom-pkgtools-070227-patched/libpkg/dstream.c
+--- heirloom-pkgtools-070227/libpkg/dstream.c	2007-02-25 19:39:50.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libpkg/dstream.c	2008-12-31 21:12:09.000000000 +0100
+@@ -72,8 +72,8 @@
+ 
+ #define	CMDSIZ	512
+ #define	LSIZE	128
+-#define	DDPROC		BINDIR "/dd"
+-#define	CPIOPROC	BINDIR "/cpio"
++#define	DDPROC		"/bin/dd"
++#define	CPIOPROC	"/bin/cpio"
+ 
+ /* device types */
+ 
+diff -ru heirloom-pkgtools-070227/libpkg/pkgtrans.c heirloom-pkgtools-070227-patched/libpkg/pkgtrans.c
+--- heirloom-pkgtools-070227/libpkg/pkgtrans.c	2007-02-25 19:39:50.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libpkg/pkgtrans.c	2008-12-31 21:13:03.000000000 +0100
+@@ -84,7 +84,7 @@
+ extern int	ds_ginit(char *device);
+ extern int	ds_close(int pkgendflg);
+ 
+-#define	CPIOPROC	BINDIR "/cpio"
++#define	CPIOPROC	"/bin/cpio"
+ 
+ #define	CMDSIZE	512	/* command block size */
+ 
+diff -ru heirloom-pkgtools-070227/libpkg/rrmdir.c heirloom-pkgtools-070227-patched/libpkg/rrmdir.c
+--- heirloom-pkgtools-070227/libpkg/rrmdir.c	2007-02-25 00:18:58.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libpkg/rrmdir.c	2008-12-31 21:12:45.000000000 +0100
+@@ -79,11 +79,11 @@
+ 
+ 	(void) snprintf(path, sizeof (path), "%s/", a_path);
+ 	i = e_ExecCmdList(&status, (char **)NULL, (char *)NULL,
+-		BINDIR "/rm", "rm", "-rf", path, (char *)NULL);
++		"/bin/rm", "rm", "-rf", path, (char *)NULL);
+ 
+ 	if (access(a_path, F_OK) == 0) {
+ 		i = e_ExecCmdList(&status, (char **)NULL, (char *)NULL,
+-			BINDIR "/rmdir", "rmdir", a_path, (char *)NULL);
++			"/bin/rmdir", "rmdir", a_path, (char *)NULL);
+ 	}
+ 
+ 	/* return 0 if last command successful, else return 1 */
+diff -ru heirloom-pkgtools-070227/pkgcmds/pkgcond/main.c heirloom-pkgtools-070227-patched/pkgcmds/pkgcond/main.c
+--- heirloom-pkgtools-070227/pkgcmds/pkgcond/main.c	2007-02-26 01:56:24.000000000 +0100
++++ heirloom-pkgtools-070227-patched/pkgcmds/pkgcond/main.c	2008-12-31 21:13:45.000000000 +0100
+@@ -112,7 +112,7 @@
+ 
+ /* commands to execute */
+ 
+-#define	LS_CMD		BINDIR "/ls"
++#define	LS_CMD		"/bin/ls"
+ 
+ /*
+  * type definition and "types" for testPath()
+diff -ru heirloom-pkgtools-070227/pkgcmds/pkginstall/main.c heirloom-pkgtools-070227-patched/pkgcmds/pkginstall/main.c
+--- heirloom-pkgtools-070227/pkgcmds/pkginstall/main.c	2007-02-26 12:53:33.000000000 +0100
++++ heirloom-pkgtools-070227-patched/pkgcmds/pkginstall/main.c	2008-12-31 21:14:22.000000000 +0100
+@@ -2724,7 +2724,7 @@
+ 		 * don't want to lose this data.
+ 		 */
+ 		r = e_ExecCmdList(&status, (char **)NULL, (char *)NULL,
+-			BINDIR "/cp", "cp", "-r", pkgloc, pkgloc_sav,
++			"/bin/cp", "cp", "-r", pkgloc, pkgloc_sav,
+ 			(char *)NULL);
+ 
+ 		if ((r != 0) || (status == -1) || (WEXITSTATUS(status) != 0)) {
+diff -ru heirloom-pkgtools-070227/pkgcmds/pkgremove/quit.c heirloom-pkgtools-070227-patched/pkgcmds/pkgremove/quit.c
+--- heirloom-pkgtools-070227/pkgcmds/pkgremove/quit.c	2007-02-24 22:15:22.000000000 +0100
++++ heirloom-pkgtools-070227-patched/pkgcmds/pkgremove/quit.c	2008-12-31 21:13:31.000000000 +0100
+@@ -63,7 +63,7 @@
+ #include "libinst.h"
+ #include "messages.h"
+ 
+-#define	MAILCMD	BINDIR "/mail"
++#define	MAILCMD	"/bin/mail"
+ 
+ /* lockinst.c */
+ extern void	unlockinst(void);

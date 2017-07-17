@@ -1,0 +1,14 @@
+diff -Nur dest/cryptography-1.4.orig/src/_cffi_src/openssl/nid.py dest/cryptography-1.4/src/_cffi_src/openssl/nid.py
+--- dest/cryptography-1.4.orig/src/_cffi_src/openssl/nid.py	2016-06-04 19:06:01.000000000 +0200
++++ dest/cryptography-1.4/src/_cffi_src/openssl/nid.py	2016-11-16 17:03:53.298570473 +0100
+@@ -226,8 +226,8 @@
+ """
+ 
+ CUSTOMIZATIONS = """
+-/* OpenSSL 0.9.8g+ */
+-#if OPENSSL_VERSION_NUMBER >= 0x0090807fL
++/* OpenSSL 0.9.8i+ */
++#if OPENSSL_VERSION_NUMBER >= 0x0090809fL
+ static const long Cryptography_HAS_ECDSA_SHA2_NIDS = 1;
+ #else
+ static const long Cryptography_HAS_ECDSA_SHA2_NIDS = 0;

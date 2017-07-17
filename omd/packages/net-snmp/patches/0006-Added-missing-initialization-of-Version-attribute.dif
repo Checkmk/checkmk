@@ -1,0 +1,24 @@
+From f6e1dbbb97775c12439b01816299a26764fb4f0b Mon Sep 17 00:00:00 2001
+From: Sven Panne <sp@mathias-kettner.de>
+Date: Mon, 14 Nov 2016 14:29:00 +0100
+Subject: [PATCH 06/11] Added missing initialization of Version attribute.
+
+---
+ python/netsnmp/client.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/python/netsnmp/client.py b/python/netsnmp/client.py
+index 6fc4b2e..40e5a0c 100644
+--- a/python/netsnmp/client.py
++++ b/python/netsnmp/client.py
+@@ -124,6 +124,7 @@ class Session(object):
+         self.ErrorStr = ''
+         self.ErrorNum = 0
+         self.ErrorInd = 0
++        self.Version = None
+     
+         sess_args = _parse_session_args(args)
+ 
+-- 
+2.7.4
+

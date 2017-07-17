@@ -1,0 +1,94 @@
+Description: Changes to build with Apache 2.4
+ This is a patch of minimal changes to compile mod_python with Apace 2.4.
+ Changes mostly based around:
+ http://httpd.apache.org/docs/2.4/developer/new_api_2_4.html
+ .
+ This does not change any internal properties that mod_python exposes
+ (e.g. it still exposes remote_ip while Apache internally now uses
+ client_ip).
+ .
+ This currently breaks the Request.requires() Python method which will now
+ always return an empty tuple because the function was not rewritten to
+ not use ap_requires() which is no longer available. The above API changes
+ document contains some pointers on what should be done.
+Author: Arthur de Jong <adejong@debian.org>
+Bug-Debian: http://bugs.debian.org/666796
+
+--- a/src/mod_python.c
++++ b/src/mod_python.c
+@@ -561,8 +561,8 @@ static apr_status_t init_mutexes(server_
+ 
+ #if !defined(OS2) && !defined(WIN32) && !defined(BEOS) && !defined(NETWARE)
+             if  (!geteuid()) {
+-                chown(fname, unixd_config.user_id, -1);
+-                unixd_set_global_mutex_perms(mutex[n]);
++                chown(fname, ap_unixd_config.user_id, -1);
++                ap_unixd_set_global_mutex_perms(mutex[n]);
+             }
+ #endif
+         }
+--- a/src/serverobject.c
++++ b/src/serverobject.c
+@@ -191,7 +191,7 @@ static struct PyMemberDef server_rec_mbr
+     {"server_hostname",    T_STRING,  OFF(server_hostname)},
+     {"port",               T_SHORT,   OFF(port)},
+     {"error_fname",        T_STRING,  OFF(error_fname)},
+-    {"loglevel",           T_INT,     OFF(loglevel)},
++    {"loglevel",           T_INT,     OFF(log.level)},
+     {"is_virtual",         T_INT,     OFF(is_virtual)},
+     /* XXX implement module_config ? */
+     /* XXX implement lookup_defaults ? */
+@@ -288,7 +288,9 @@ static PyObject *getmakeobj(serverobject
+ 
+ static PyObject *my_generation(serverobject *self, void *objname)
+ {
+-    return PyInt_FromLong((long)ap_my_generation);
++    int mpm_generation = 0;
++    ap_mpm_query(AP_MPMQ_GENERATION, &mpm_generation);
++    return PyInt_FromLong((long)mpm_generation);
+ }
+ 
+ static PyObject *restart_time(serverobject *self, void *objname)
+--- a/src/connobject.c
++++ b/src/connobject.c
+@@ -287,7 +287,7 @@ static struct memberlist conn_memberlist
+     /* XXX client_socket? */
+     {"local_addr",         T_OBJECT,    0,                       RO},
+     {"remote_addr",        T_OBJECT,    0,                       RO},
+-    {"remote_ip",          T_STRING,    OFF(remote_ip),          RO},
++    {"remote_ip",          T_STRING,    OFF(client_ip),          RO},
+     {"remote_host",        T_STRING,    OFF(remote_host),        RO},
+     {"remote_logname",     T_STRING,    OFF(remote_logname),     RO},
+     {"aborted",            T_INT,       0,                       RO},
+@@ -415,7 +415,7 @@ static PyObject * conn_getattr(connobjec
+         return makesockaddr(self->conn->local_addr);
+     }
+     else if (strcmp(name, "remote_addr") == 0) {
+-        return makesockaddr(self->conn->remote_addr);
++        return makesockaddr(self->conn->client_addr);
+     }
+     else if (strcmp(name, "notes") == 0) {
+         Py_INCREF(self->notes);
+--- a/src/requestobject.c
++++ b/src/requestobject.c
+@@ -1222,7 +1222,11 @@ static PyObject *req_register_cleanup(re
+ 
+ static PyObject * req_requires(requestobject *self)
+ {
++    /* Because we don't have an idea how to do this with Apache 2.4
++       just return an empty result for now. */
++    return Py_BuildValue("()");
+ 
++#ifdef COMMENTED_OUT_BECAUSE_NOT_WORKING_WITH_APACHE_24
+     /* This function returns everything specified after the "requires"
+        as is, without any attempts to parse/organize because
+        "requires" args only need to be grokable by mod_auth if it is
+@@ -1257,6 +1261,7 @@ static PyObject * req_requires(requestob
+     _PyTuple_Resize(&result, ti);
+ 
+     return result;
++#endif /* COMMENTED_OUT_BECAUSE_NOT_WORKING_WITH_APACHE_24 */
+ }
+ 
+ /**
+

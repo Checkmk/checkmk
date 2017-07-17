@@ -1,0 +1,106 @@
+From 1e74ffee8c93f4dde583d45495877cb17b07e504 Mon Sep 17 00:00:00 2001
+From: Sven Panne <sp@mathias-kettner.de>
+Date: Mon, 14 Nov 2016 15:31:46 +0100
+Subject: [PATCH 11/11] Handle responses with invalid variables differently.
+
+Commit 40938a6 changed the way responses containing invalid variable values
+(e.g. integers exceeding the valid range of 32 bits) are handled: Older
+versions were using the invalid data and the responsepackage, newer versions
+drop the whole response, wait for configured retry/timeout, and try again
+until the final timeout is reached.  This leads to non-working SNMP when
+talking to some devices, so we revert to the old behavior.
+
+Note that the handling of ASN_OCTET_STR, ASN_OPAQUE, ASN_NSAP,
+ASN_OBJECT_ID, and ASN_BIT_STR looks a bit fishy now...
+---
+ snmplib/snmp_api.c | 29 +++++++----------------------
+ 1 file changed, 7 insertions(+), 22 deletions(-)
+
+diff --git a/snmplib/snmp_api.c b/snmplib/snmp_api.c
+index 5d10782..6dbc8bf 100644
+--- a/snmplib/snmp_api.c
++++ b/snmplib/snmp_api.c
+@@ -4682,11 +4682,9 @@ snmp_pdu_parse(netsnmp_pdu *pdu, u_char * data, size_t * length)
+         case ASN_INTEGER:
+             vp->val.integer = (long *) vp->buf;
+             vp->val_len = sizeof(long);
+-            p = asn_parse_int(var_val, &len, &vp->type,
++            asn_parse_int(var_val, &len, &vp->type,
+                           (long *) vp->val.integer,
+                           sizeof(*vp->val.integer));
+-            if (!p)
+-                goto fail;
+             break;
+         case ASN_COUNTER:
+         case ASN_GAUGE:
+@@ -4694,11 +4692,9 @@ snmp_pdu_parse(netsnmp_pdu *pdu, u_char * data, size_t * length)
+         case ASN_UINTEGER:
+             vp->val.integer = (long *) vp->buf;
+             vp->val_len = sizeof(u_long);
+-            p = asn_parse_unsigned_int(var_val, &len, &vp->type,
++            asn_parse_unsigned_int(var_val, &len, &vp->type,
+                                    (u_long *) vp->val.integer,
+                                    vp->val_len);
+-            if (!p)
+-                goto fail;
+             break;
+ #ifdef NETSNMP_WITH_OPAQUE_SPECIAL_TYPES
+         case ASN_OPAQUE_COUNTER64:
+@@ -4707,38 +4703,29 @@ snmp_pdu_parse(netsnmp_pdu *pdu, u_char * data, size_t * length)
+         case ASN_COUNTER64:
+             vp->val.counter64 = (struct counter64 *) vp->buf;
+             vp->val_len = sizeof(struct counter64);
+-            p = asn_parse_unsigned_int64(var_val, &len, &vp->type,
++            asn_parse_unsigned_int64(var_val, &len, &vp->type,
+                                      (struct counter64 *) vp->val.
+                                      counter64, vp->val_len);
+-            if (!p)
+-                goto fail;
+             break;
+ #ifdef NETSNMP_WITH_OPAQUE_SPECIAL_TYPES
+         case ASN_OPAQUE_FLOAT:
+             vp->val.floatVal = (float *) vp->buf;
+             vp->val_len = sizeof(float);
+-            p = asn_parse_float(var_val, &len, &vp->type,
++            asn_parse_float(var_val, &len, &vp->type,
+                             vp->val.floatVal, vp->val_len);
+-            if (!p)
+-                goto fail;
+             break;
+         case ASN_OPAQUE_DOUBLE:
+             vp->val.doubleVal = (double *) vp->buf;
+             vp->val_len = sizeof(double);
+-            p = asn_parse_double(var_val, &len, &vp->type,
++            asn_parse_double(var_val, &len, &vp->type,
+                              vp->val.doubleVal, vp->val_len);
+-            if (!p)
+-                goto fail;
+             break;
+         case ASN_OPAQUE_I64:
+             vp->val.counter64 = (struct counter64 *) vp->buf;
+             vp->val_len = sizeof(struct counter64);
+-            p = asn_parse_signed_int64(var_val, &len, &vp->type,
++            asn_parse_signed_int64(var_val, &len, &vp->type,
+                                    (struct counter64 *) vp->val.counter64,
+                                    sizeof(*vp->val.counter64));
+-
+-            if (!p)
+-                goto fail;
+             break;
+ #endif                          /* NETSNMP_WITH_OPAQUE_SPECIAL_TYPES */
+         case ASN_IPADDRESS:
+@@ -4756,10 +4743,8 @@ snmp_pdu_parse(netsnmp_pdu *pdu, u_char * data, size_t * length)
+             if (vp->val.string == NULL) {
+                 goto fail;
+             }
+-            p = asn_parse_string(var_val, &len, &vp->type, vp->val.string,
++            asn_parse_string(var_val, &len, &vp->type, vp->val.string,
+                              &vp->val_len);
+-            if (!p)
+-                goto fail;
+             break;
+         case ASN_OBJECT_ID:
+             vp->val_len = MAX_OID_LEN;
+-- 
+2.7.4
+

@@ -1,0 +1,21 @@
+Title: Changed initial admin credentials (cmkadmin + random password)
+Level: 2
+Component: omd
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1494235550
+
+When creating a new site the initial administrative user omdadmin was always initialized
+with the password omd. This has been changed now.
+
+The initial administrative user is now named <tt>cmkadmin</tt>.
+
+The password of that user is now randomized during site initialization and written to
+the console with the welcome message at the end of the creation. The password can be
+changed at any time using the GUI or the htpasswd command on the command line.
+
+If you want to specify a password during site creation, you can do this by providing
+the option <tt>--admin-password</tt> together with you password as argument.

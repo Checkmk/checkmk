@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="CSP-SM">
+	<catalog language="EN">
+	</catalog>
+	<library language="C++" system="Windows">
+		<file>CSP-SM</file>
+		<properties>
+      </properties>
+	</library>
+	<class>
+		<class-id class="ServiceManager" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newServiceManager"/>
+		</functions>
+	</class>
+</loader>

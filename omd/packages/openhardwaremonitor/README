@@ -1,0 +1,15 @@
+- Release von github als zip laden: https://github.com/openhardwaremonitor/openhardwaremonitor/releases
+
+- Ggf. Abhängigkeiten installieren:
+    - mono-complete
+    - mono-xbuild (eventuell Version > 2.12)
+
+- Makefile auf die Version anpassen (z.B. VERSION = 0.8.0)
+
+- make clean && make build
+
+- In dem erzeugten Verzeichnis wird das Unterverzeichnis Bin/ angelegt. Darin befinden sich die .exe-Dateien.
+    - Beim git push auf das .gitignore achten. Weshalb das so angelegt wurde, entzieht sich meiner Kenntnis...
+      Muss eventuell aufgeräumt werden.
+
+TODO: xbuild ist deprecated und wird wohl durch msbuild ersetzt. Konnte das bisher nicht testen.

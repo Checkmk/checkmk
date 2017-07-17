@@ -1,0 +1,28 @@
+Title: Base URL redirects preserve https protocols now
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1435659455
+
+Default redirects from /[site] and /[site]/ to /[site]/omd/ are
+are now preserving the original requested protocol (http/https).
+When using the apache shared mode (which is the default), having
+the system apache service the pages via HTTPS, you will need to
+configure the system apache to provide the X-Forwarded-Proto
+request header to the site apache, which can be done by
+adding the line 'RequestHeader set X-Forwarded-Proto "https"' to
+the proxy configuration related to the site.
+
+So if you want to secure your site using SSL, you will need
+to configure the following things in the system apache:
+
+a) Enable and configure HTTPS
+b) Redirecting all HTTP requests to HTTPS
+c) Set the request headers X-Forwarded-Proto, e.g.
+
+<Location /[sitename]>
+    RequestHeader set X-Forwarded-Proto "https"
+</Location>

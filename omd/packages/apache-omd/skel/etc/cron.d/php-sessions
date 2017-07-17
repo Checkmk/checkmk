@@ -1,0 +1,2 @@
+# Once a day, at 00:10, search for PHP sessions that are older than 1 day and delete them
+10 0 * * * find $OMD_ROOT/tmp/php/session -name sess_\* -mtime +1 -delete

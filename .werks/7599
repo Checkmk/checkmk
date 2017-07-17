@@ -1,0 +1,14 @@
+Title: mod_fcgid: Now shipping with own mod_fcgid (removed dependency)
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476904222
+Class: feature
+
+Unified implementation of mod_fcgid on all platforms. The mod_fcgid
+apache module is now shipping with Check_MK on all platforms.
+
+With this change we were able to remove the dependency to mod_fcgid
+now which was available only through special package repositories
+on some distributions, like SLES12.

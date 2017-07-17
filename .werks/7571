@@ -1,0 +1,12 @@
+Title: Fixed handling of long FETCH response lines in rrdcached
+Level: 2
+Component: packages
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1456396839
+
+Make sure that the FETCH response lines are always terminated with a
+newline, otherwise chaos will result on the client side, leading e.g. to
+gigabytes of allocations when misinterpreting results.

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="Logging">
+	<catalog language="EN">
+		<message code="2600" name="DestSet" text="DestinationSet"/>
+		<message code="2601" name="DestSetDesc" text="Destination Set"/>
+		<message code="2602" name="DestItem" text="DestinationItem"/>
+		<message code="2603" name="DestItemDesc" text="Destination Item"/>
+		<message code="2604" name="Destination" text="Destination"/>
+		<message code="2605" name="DestinationDesc" text="Destination Name"/>
+		<message code="2606" name="Filter" text="Filter"/>
+		<message code="2607" name="FilterDesc" text="Filter Name"/>
+		<message code="2608" name="Synchronous" text="Synchronous"/>
+		<message code="2609" name="SynchronousDesc" text="Synchronous"/>
+		<message code="2610" name="filterAndOperation" text="Should the filter use an AND operation?"/>
+		<message code="2611" name="filterElementName" text="Element to filter on"/>
+		<message code="2612" name="filterElementOperator" text="Operator for this filter element"/>
+		<message code="2613" name="filterElementValue" text="Filter element value"/>
+		<message code="2615" name="filterElements" text="Filter elements"/>
+		<message code="2616" name="filterElement" text="Filter element"/>
+		<message code="2614" name="CSP_E_POST_UNKNOWN" text="CST Logging Service received log record with a bad catalog ID or Event ID.  The following information is part of the event: %s"/>
+		<message code="2615" name="CSP_LOGGING_RECONFIGURE_START" text="LogService configuration started."/>
+		<message code="2616" name="CSP_LOGGING_RECONFIGURE_FINISH" text="LogService configuration completed."/>
+		<message code="2700" name="AddHostSuccessful" text="Host %s added to authorized host list for lockbox %s."/>
+		<message code="2701" name="AddHostFailed" text="Failure adding host %s to authorized host list for lockbox %s. [%s] [%d]"/>
+		<message code="2702" name="RemoveHostSuccessful" text="Host %s removed from authorized host list for lockbox %s."/>
+		<message code="2703" name="RemoveHostFailed" text="Failure removing host %s from authorized host list for lockbox %s. [%s] [%d]"/>
+		<message code="2704" name="ListHostSuccessful" text="Authorized host list viewed for lockbox %s."/>
+		<message code="2705" name="ListHostsFailed" text="Failure viewing authorized host list for lockbox %s. [%s] [%d]"/>
+      </catalog>
+   <library language="C++" system="Windows">
+      <file>CSP-LogService</file>
+      <properties />
+   </library>
+
+   <class>
+      <class-id class="LogService" version="1"/>
+      <description/>
+      <schema />
+      <functions language="C++">
+         <function name="Create" method="newLogService" />
+         <function name="Delete" method="deleteLogService" />
+         <function name="Options"  method="newLogOptions" />
+      </functions>
+      <interface>
+         <interface-id class="Logging" version="1" />
+         <attributes />
+      </interface>
+   </class>
+  <class>
+    <class-id class="LogRecordFilter" version="1"/>
+    <description/>
+    <schema />
+    <functions language="C++">
+      <function name="Create" method="newLogRecordFilter" />
+      <function name="Delete" method="deleteLogRecordFilter" />
+      <function name="Options"  method="newLogRecordFilterOptions" />
+    </functions>
+    <interface>
+      <interface-id class="Filter" version="1" />
+      <attributes />
+    </interface>
+  </class>
+</loader>

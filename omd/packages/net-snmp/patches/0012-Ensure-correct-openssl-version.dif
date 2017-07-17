@@ -1,0 +1,24 @@
+Subject: Ensure correct openssl version
+
+The dev package does not depend on openssl headers which means 1.0.2 and 1.1.0
+can be installed. If cert_util.h functionality is used by 3rd party then it
+should be ensured that it is linked and compiled against 1.0.2.
+
+Signed-off-by: Sebastian Andrzej Siewior <sebastian@breakpoint.cc>
+---
+ include/net-snmp/library/cert_util.h |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+--- a/include/net-snmp/library/cert_util.h
++++ b/include/net-snmp/library/cert_util.h
+@@ -9,6 +9,10 @@
+ #error "must include <openssl/x509.h> before cert_util.h"
+ #endif
+ 
++#if OPENSSL_VERSION_NUMBER >= 0x10100000
++#error This needs to be compiled against openssl 1.0.2.
++#endif
++
+ #ifdef  __cplusplus
+ extern "C" {
+ #endif

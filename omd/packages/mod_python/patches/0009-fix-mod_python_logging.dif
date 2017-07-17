@@ -1,0 +1,12 @@
+diff -Nur mod_python-3.3.1.orig/lib/python/mod_python/apache.py mod_python-3.3.1/lib/python/mod_python/apache.py
+--- mod_python-3.3.1.orig/lib/python/mod_python/apache.py	2006-10-27 02:54:12.000000000 +0200
++++ mod_python-3.3.1/lib/python/mod_python/apache.py	2016-08-02 08:27:49.014563711 +0200
+@@ -1023,7 +1023,7 @@
+     APLOG_INFO = 6
+     APLOG_DEBUG = 7
+ 
+-APLOG_NOERRNO = 8
++APLOG_NOERRNO = 0
+ 
+ OK = REQ_PROCEED = 0
+ DONE = -2

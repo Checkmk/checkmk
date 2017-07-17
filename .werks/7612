@@ -1,0 +1,9 @@
+Title: python-modules: Added pykerberos and requests-kerberos modules
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.4.0i3
+Date: 1481037661
+Class: feature
+
+These modules will be needed for the check_bi_aggr kerberos integration

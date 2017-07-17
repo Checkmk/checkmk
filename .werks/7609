@@ -1,0 +1,10 @@
+Title: dokuwiki: Removed too large dw2pdf plugin
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1481018948
+
+Please install it manually if you need it.

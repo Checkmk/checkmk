@@ -1,0 +1,12 @@
+diff -Nur python-snap7-0.4.orig/snap7/common.py python-snap7-0.4/snap7/common.py
+--- python-snap7-0.4.orig/snap7/common.py	2014-07-27 20:33:00.000000000 +0200
++++ python-snap7-0.4/snap7/common.py	2015-02-18 10:31:15.711334756 +0100
+@@ -40,7 +40,7 @@
+     def __init__(self, lib_location=None):
+         if self.cdll:
+             return
+-        self.lib_location = lib_location or self.lib_location or find_library('snap7')
++        self.lib_location = lib_location or self.lib_location or 'libsnap7.so'
+         if not self.lib_location:
+             msg = "can't find snap7 library. If installed, try running ldconfig"
+             raise Snap7Exception(msg)

@@ -1,0 +1,38 @@
+#!/bin/sh
+
+. "###ROOT###/.profile"
+
+export PHP_FCGI_MAX_REQUESTS=1000
+
+# If you change this, you also have to change etc/init.d/apache
+php_cgi_bin() {
+    if [ -e /usr/bin/php5-cgi ]; then
+        echo /usr/bin/php5-cgi
+    elif [ -e /usr/bin/php-cgi ]; then
+        echo /usr/bin/php-cgi
+    else
+        echo "ERROR: Failed to locate php binary"
+        exit 1
+    fi
+}
+
+# CentOS 5 and 6 are not handling "-d key=val" flags. The systems
+# php.ini has been copied to etc/apache/php.ini and patched with
+# our needed statements. Load that file instead of the system wide
+# on the affected distros
+DISTRO_CODE=$(grep DISTRO_CODE ###ROOT###/share/omd/distro.info | cut -d'=' -f2 | tr -d ' ')
+if [ $DISTRO_CODE = el5 ] || [ $DISTRO_CODE = el6 ]; then
+    ADD_ARGS=-c ###ROOT###/etc/apache/php.ini
+else
+    ADD_ARGS=
+fi
+
+# Replace with the path to your FastCGI-enabled PHP executable
+exec $(php_cgi_bin) \
+    $ADD_ARGS \
+    -d session.save_handler=files \
+    -d session.save_path=###ROOT###/tmp/php/session \
+    -d upload_tmp_dir=###ROOT###/tmp/php/upload \
+    -d soap.wsdl_cache_dir=###ROOT###/tmp/php/wsdl-cache \
+    -d safe_mode='Off' \
+    -d mysql.default_socket=###ROOT###/tmp/run/mysqld/mysqld.sock

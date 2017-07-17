@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# Alias: TCP port number for MK Livestatus
+# Menu: Distributed Monitoring
+# Description:
+#  If Livestatus is configured to listen on a TCP port, you
+#  can configure that port here.
+
+case "$1" in
+    default)
+        echo "6557"
+    ;;
+    choices)
+        echo "[0-9]{1,5}"
+    ;;
+    set)
+        sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$2'/' $OMD_ROOT/etc/mk-livestatus/xinetd.conf
+    ;;
+    depends)
+        [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
+    ;;
+esac
+

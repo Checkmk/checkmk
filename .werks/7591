@@ -1,0 +1,15 @@
+Title: Debian: Harmonized default version handling with RPM based distros
+Level: 2
+Component: deb
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465131369
+Class: fix
+
+Previous OMD installations were leaving previously set default version
+untouched during installation of a new OMD package on Debian based
+distributions. This was handled differently on Debian and RPM based
+distributions and lead to confusions when using both platforms.
+We decided to unify the behaviour on all distributins and make OMD
+automatically set the default version to the new one during
+installation of a new package.

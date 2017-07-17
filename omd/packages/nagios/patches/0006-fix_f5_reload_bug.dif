@@ -1,0 +1,7 @@
+--- nagios-3.2.2/html/index.php-2010-10-23	2010-10-23 21:07:56.000000000 +0200
++++ nagios-3.2.2/html/index.php	2010-10-23 21:08:32.000000000 +0200
+@@ -1,3 +1,4 @@
++<?php header("Cache-Control: max-age=7200, public"); ?>
+ <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">
+ 
+ <html>

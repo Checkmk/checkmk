@@ -1,0 +1,113 @@
+#!/bin/bash
+#
+# This script determines the Linux distribution we are running
+# on. It output two words: (1) The distro name and (2) the version
+# Example output "UBUNTU 10.04"
+
+# Ubuntu is detected with /etc/lsb-release
+SEP=${1:- }
+if [ -e /etc/lsb-release ]
+then
+    . /etc/lsb-release
+    if [ -n "$DISTRIB_ID" -a -n "$DISTRIB_RELEASE" ] ; then
+        echo "${DISTRIB_ID^^*}$SEP$DISTRIB_RELEASE"
+        exit 0
+    fi
+fi
+
+# Debian: We drop the last two versions: 5.0.4 -> 5
+if [ -e /etc/debian_version ]
+then
+    VERSION=$(cat /etc/debian_version)
+    if [ "${VERSION:1:1}" = . ] ; then
+        VERSION=${VERSION:0:1}
+    fi
+    if [ "${VERSION:0:6}" = "wheezy" ] ; then
+        VERSION="7"
+    fi
+    if [ "${VERSION:0:6}" = "jessie" ] ; then
+        VERSION="8"
+    fi
+    echo "DEBIAN$SEP$VERSION"
+    exit 0
+fi
+
+# RedHat / CentOS
+if [ -e /etc/redhat-release ]
+then
+    # CentOS release 5.4 (Final)
+    VERSION=$(cat /etc/redhat-release)
+    if [ "${VERSION:0:6}" = CentOS ]
+    then
+        if [ "${VERSION:0:24}" = "CentOS Linux release 6.0" ]; then
+            echo "CENTOS${SEP}6"
+            exit 0
+        elif [ "${VERSION:0:22}" = "CentOS Linux release 7" ]; then
+            echo "CENTOS${SEP}7"
+            exit 0
+        fi
+        echo "CENTOS$SEP${VERSION:15:1}"
+        exit 0
+    elif [ "${VERSION:0:24}" = "Red Hat Enterprise Linux" ]
+    then
+        echo "REDHAT$SEP${VERSION:40:1}"
+        exit 0
+    elif [ "${VERSION:0:6}" = "Fedora" ]
+    then
+        [[ $VERSION =~ (Fedora release ([0-9]+)) ]] && REL=${BASH_REMATCH[2]} || exit 0
+        echo "FEDORA$SEP$REL"
+        exit 0
+    fi
+fi
+
+# SLES
+if [ -e /etc/SuSE-release ]
+then
+    # SLES 11
+    VERSION=$(sed -rn 's/^VERSION = (.*)/\1/p' < /etc/SuSE-release)
+    SP=$(sed -rn 's/^PATCHLEVEL = (.*)/\1/p' < /etc/SuSE-release)
+    if [ "$VERSION" = 11 -a "$SP" = 1 ]
+    then
+        echo "SLES$SEP${VERSION}SP1"
+        exit 0
+    elif [ "$VERSION" = 11 -a "$SP" = 2 ]
+    then
+        echo "SLES$SEP${VERSION}SP2"
+        exit 0
+    elif [ "$VERSION" = 11 -a "$SP" = 3 ] 
+    then
+        echo "SLES$SEP${VERSION}SP3"
+        exit 0
+    elif [ "$VERSION" = 11 -a "$SP" = 4 ]
+    then
+        echo "SLES$SEP${VERSION}SP4"
+        exit 0
+    elif [ "$VERSION" = 10 -a "$SP" = 1 ] 
+    then
+        echo "SLES$SEP${VERSION}SP1"
+        exit 0
+    elif [ "$VERSION" = 10 -a "$SP" = 2 ]
+    then
+        echo "SLES$SEP${VERSION}SP2"
+        exit 0
+    elif [ "$VERSION" = 11 ]
+    then
+        echo "SLES$SEP${VERSION}"
+        exit 0
+    elif [ "$VERSION" = 12 ]
+    then
+        echo -n "SLES$SEP${VERSION}"
+        if [ $SP != 0 ]; then
+            echo "SP$SP"
+        else
+            echo
+        fi
+        exit 0
+    elif [ "$VERSION" = 12.1 ]
+    then
+        echo "OPENSUSE$SEP${VERSION}"
+        exit 0
+    fi
+fi
+
+exit 1

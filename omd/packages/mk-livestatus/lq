@@ -1,0 +1,10 @@
+#!/bin/bash
+# Send a Livestatusquery and output the result on stdout. Either
+# specify the query on the command line or send it via standard input.
+
+if [ $# -ge 1 ]
+then
+    echo -e "$@" 
+else
+    cat
+fi | unixcat ~/tmp/run/live

@@ -1,0 +1,21 @@
+diff -ur nagios-3.5.0.orig/base/config.c nagios-3.5.0/base/config.c
+--- nagios-3.5.0.orig/base/config.c	2013-05-13 09:25:24.886709217 +0200
++++ nagios-3.5.0/base/config.c	2013-05-13 09:27:08.952336676 +0200
+@@ -2087,11 +2087,17 @@
+ 			}
+ 		}
+ 
++        if(total_objects > 10){ 
++                logit(NSLOG_VERIFICATION_ERROR,TRUE,"Error: Sorry, in this demo version at most 10 hosts are allowed.");
++                errors++;
++        }
++
+ 
+ 	if(verify_config == TRUE)
+ 		printf("\tChecked %d hosts.\n", total_objects);
+ 
+ 
++
+ 	/*****************************************/
+ 	/* check each host group...              */
+ 	/*****************************************/

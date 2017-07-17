@@ -1,0 +1,5 @@
+cleanup_paths = [
+    'var/mkeventd/history/*.log',
+    'var/mkeventd/messages/*.log',
+    'var/check_mk/inventory_archive/*/*',
+]

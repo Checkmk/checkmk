@@ -1,0 +1,10 @@
+Title: Added missing MySQL-python module (needed by check_sql check)
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1458820847
+
+

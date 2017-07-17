@@ -1,0 +1,101 @@
+#!/bin/bash
+
+# Alias: Monitoring core
+# Menu: Basic
+# Description:
+#  Here you can choose your monitoring core to run. Currently available
+#  are Nagios and Shinken. You also can decide to run no monitoring core in
+#  this instance. This can be useful for instances running a GUI such
+#  as Check_MK Multisite or Thruk which can connect to other monitoring
+#  sites via Livestatus.
+
+# Helper function that creates a symlink only if the
+# target of the link exists
+make_link ()
+{
+    rel_dir=${2%/*}
+    if [ -e "$rel_dir/$1" ] ; then
+        ln -sfn "$1" "$2"
+    fi
+}
+
+case "$1" in
+    default)
+            if [ -e $OMD_ROOT/bin/cmc ] ; then echo "cmc"
+            elif [ -e $OMD_ROOT/bin/nagios ] ; then echo "nagios"
+            elif [ -e $OMD_ROOT/bin/icinga ] ; then echo "icinga"
+            elif [ -e $OMD_ROOT/bin/shinken-arbiter ] ; then echo "shinken"
+            else echo "none"
+            fi
+    ;;
+    choices)
+            [ ! -e $OMD_ROOT/bin/cmc ] || echo "cmc: Check_MK Micro core"
+            [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios"
+            [ ! -e $OMD_ROOT/bin/icinga ] || echo "icinga: Icinga"
+            [ ! -e $OMD_ROOT/bin/shinken-arbiter ] || echo "shinken: Shinken"
+            echo "none: No monitoring core"
+    ;;
+    set)
+        # cleanup the former selection
+        if [ "$2" != "nagios" ] ; then
+            rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
+            rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
+        fi
+        if [ "$2" != "shinken" ] ; then
+            rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
+            rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
+            rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
+        fi
+        if [ "$2" != "cmc" ] ; then
+            rm -f $OMD_ROOT/etc/check_mk/conf.d/microcore.mk
+            # Re-add links to logs
+            if [ ! -L $OMD_ROOT/var/log/livestatus.log ]; then
+                ln -sf ../nagios/livestatus.log $OMD_ROOT/var/log/livestatus.log
+            fi
+            if [ ! -L $OMD_ROOT/var/log/nagios.log ]; then
+                ln -sf ../nagios/nagios.log $OMD_ROOT/var/log/nagios.log
+            fi
+        fi
+
+        rm -f $OMD_ROOT/etc/init.d/core
+
+        # now setup the new selection
+        if [ "$2" == "nagios" ]
+        then
+            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
+            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
+            make_link nagios $OMD_ROOT/etc/init.d/core
+            # Refresh Check_MK Configuration after changing back from CMC
+            if [ -e $OMD_ROOT/var/check_mk/core/config ] ; then
+                cmk -U >/dev/null 2>&1
+            fi
+        elif [ "$2" == "icinga" ]
+        then
+            make_link ../../nagios/apache.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
+            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
+            make_link icinga $OMD_ROOT/etc/init.d/core
+        elif [ "$2" == "shinken" ]
+        then
+            # Thruk is the default interface, but classic is possible
+            make_link ../../shinken/apache-cgi.conf $OMD_ROOT/etc/apache/conf.d/nagios.conf
+            make_link ../../icinga/apache.conf $OMD_ROOT/etc/apache/conf.d/icinga.conf
+            make_link ../../shinken/apache.conf $OMD_ROOT/etc/apache/conf.d/shinken.conf
+            make_link shinken $OMD_ROOT/etc/init.d/core
+        elif [ "$2" == "cmc" ]
+        then
+            make_link cmc $OMD_ROOT/etc/init.d/core
+            echo "# Created by OMD hook CORE. Change with 'omd config'." > $OMD_ROOT/etc/check_mk/conf.d/microcore.mk
+            echo "monitoring_core = 'cmc'"                              >> $OMD_ROOT/etc/check_mk/conf.d/microcore.mk
+            # Make sure that object configuration for core is present. Remove the old one
+            # in advance to prevent problems with old configs during update when new config
+            # creation fails
+            [ -f $OMD_ROOT/var/check_mk/core/config ] && rm -f $OMD_ROOT/var/check_mk/core/config
+            cmk -U >/dev/null
+            # Remove non relevant links to logs
+            [ -L $OMD_ROOT/var/log/livestatus.log ] && rm -f $OMD_ROOT/var/log/livestatus.log
+            [ -L $OMD_ROOT/var/log/nagios.log ] && rm -f $OMD_ROOT/var/log/nagios.log
+            true # make final exit code 0
+        fi
+    ;;
+esac
+

@@ -1,0 +1,9 @@
+Title: Fixed local dokuwiki settings being overwritten during updates
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.2.7i3
+Date: 1460715938
+Class: fix
+
+

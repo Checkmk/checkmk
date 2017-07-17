@@ -1,0 +1,13 @@
+Title: Being more robust against duplicat engineIDs when monitoring SNMPv3 devices
+Level: 1
+Component: inline-snmp
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433506248
+Class: fix
+
+The engineID is defined to be a globally unique identifier of a SNMPv3 device, but it happens
+that users configure the same engineID multiple times for different devices, which made
+Check_MK only talk to one of them and reporting "No Response from host (Timeout 0/-24)" for
+the other devices. This has been changed now that Check_MK disregards the misconfiguration
+and works as usual.

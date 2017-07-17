@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="DestinationODBC">
+  <catalog language="EN">
+    <message code="1" name="dsn" text="Connection string used to connect to the database (substitute %password% for the password)"/>
+    <message code="2" name="password" text="Password for the privileged account"/>
+    <message code="3" name="tablePrefix" text="Optional table name prefix in the database"/>
+    <message code="4" name="minRecords" text="The minimum number of records to store in the database (use 0 for no restriction)"/>
+    <message code="5" name="maxRecords" text="The maximum number of records to store in the database (use 0 for no restriction)"/>
+    <message code="6" name="locale" text="Locale for this destination"/>
+  </catalog>
+	<library language="C++" system="Windows">
+		<file>CSP-DestinationODBC</file>
+		<properties/>
+	</library>
+	<class>
+		<class-id class="DestinationODBC" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newDestination"/>
+			<function name="Delete" method="deleteDestination"/>
+			<function name="Options" method="newDestinationOptions"/>
+			<function name="Validate" method="validateDestinationOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="Destination" version="1"/>
+			<attributes/>
+		</interface>
+		<interface>
+			<interface-id class="Repository" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

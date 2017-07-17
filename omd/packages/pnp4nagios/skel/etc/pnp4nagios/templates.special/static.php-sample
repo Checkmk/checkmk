@@ -1,0 +1,19 @@
+<?php
+#
+# This is a very basic static Template
+#
+#
+# Some Macros 
+$this->MACRO['TITLE'] = "All Ping Times for Cluster Nodes"; 
+$this->MACRO['COMMENT'] = "This is a comment";
+
+#
+# The Name of this Datasource (ds)
+$ds_name[0] = "RTA Times"; 
+
+$opt[0]     = "--title \"Graph Title\" ";
+$def[0]     = "DEF:var1=/usr/local/pnp4nagios/var/perfdata/node1/_HOST_.rrd:1:AVERAGE ";
+$def[0]    .= "DEF:var2=/usr/local/pnp4nagios/var/perfdata/node2/_HOST_.rrd:1:AVERAGE ";
+$def[0]    .= "LINE1:var1".rrd::color(1).":\"Localhost \\n\" ";
+$def[0]    .= "LINE1:var2".rrd::color(2).":\"Node1 \\n\" ";
+?>

@@ -1,0 +1,20 @@
+diff -ru heirloom-pkgtools-070227/libinst/scriptvfy.l heirloom-pkgtools-070227-patched/libinst/scriptvfy.l
+--- heirloom-pkgtools-070227/libinst/scriptvfy.l	2007-02-25 19:39:47.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libinst/scriptvfy.l	2008-12-12 19:27:26.000000000 +0100
+@@ -43,9 +43,16 @@
+ %p 3500
+ %s WHROOT
+ %{
++#define YY_NO_INPUT 1
+ #undef	input
+ #undef	unput
+ FILE *scr_fp;
++#define YYLMAX BUFSIZ
++int yytchar;
++char yysbuf[YYLMAX];
++char *yysptr = yysbuf;
++int yylineno;
++#define U(x) x
+ #define	input()		(((yytchar=yysptr>yysbuf?U(*--yysptr):getc(scr_fp))==10?(yylineno++,yytchar):yytchar)==EOF?0:yytchar)
+ #define	unput(p)	ungetc(p, scr_fp)
+ 

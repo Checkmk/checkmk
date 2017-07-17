@@ -1,0 +1,13 @@
+Title: Improved performance of Check_MK NagVis Maps Snapin
+Level: 2
+Component: nagvis
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1436188027
+
+The NagVis Maps snapin of the Check_MK sidebar was not performing very well
+when a lot of users were accessing the Check_MK GUI at the same time. NagVis
+introduced a new caching for the snapin contents which should decrease the
+loading time of the snapin dramatically.

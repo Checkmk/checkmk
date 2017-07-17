@@ -1,0 +1,15 @@
+diff -Nur nagvis-1.9b18.orig/share/server/core/classes/CorePDOHandler.php nagvis-1.9b18/share/server/core/classes/CorePDOHandler.php
+--- nagvis-1.9b18.orig/share/server/core/classes/CorePDOHandler.php	2017-05-04 20:50:13.000000000 +0200
++++ nagvis-1.9b18/share/server/core/classes/CorePDOHandler.php	2017-05-22 08:52:23.373408968 +0200
+@@ -548,9 +548,9 @@
+ 
+         $this->createVersionTable();
+ 
+-        // If running in OMD create the 'omdadmin' user instead of 'admin'
++        // If running in OMD create the 'cmkadmin' user instead of 'admin'
+         if(GlobalCore::getInstance()->omdSite() !== null) {
+-            $this->queryFatal('-user-add-with-id', array('userId' => 1, 'name' => 'omdadmin', 'password' => '051e0bbcfb79ea2a3ce5c487cc111051aac51ae8'));
++            $this->queryFatal('-user-add-with-id', array('userId' => 1, 'name' => 'cmkadmin', 'password' => '1ba8cc176ec89a6342af40bb217b2e09d860c2d3'));
+         } else {
+             $this->queryFatal('-user-add-with-id', array('userId' => 1, 'name' => 'admin', 'password' => '868103841a2244768b2dbead5dbea2b533940e20'));
+         }

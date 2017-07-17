@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="POSITIONALFORMATTER">
+	<library language="C++" system="Windows">
+		<file>CSP-PositionalFormatter</file>
+		<properties/>
+	</library>
+	<class>
+		<class-id class="PositionalFormatter" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newPositionalFormatter"/>
+			<function name="Delete" method="deletePositionalFormatter"/>
+			<function name="Options" method="newPositionalFormatterOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="Formatter" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

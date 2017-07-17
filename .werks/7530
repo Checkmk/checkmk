@@ -1,0 +1,12 @@
+Title: Add missing empty directories after copying sites with omd cp -N
+Level: 1
+Component: omd
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433859685
+Class: fix
+
+If you copied a site using the option <tt>-N</tt> on <tt>omd cp</tt> then
+several directories would be missing - namely those that contain the omitted
+data (log files, performance data etc.). This has been fixed and the empty
+directories are correctly being created in the copy now.

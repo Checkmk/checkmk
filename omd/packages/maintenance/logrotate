@@ -1,0 +1,27 @@
+#! /bin/sh
+
+#
+# Whenever /etc/cron.daily/logrotate starts to run under a SLES system,
+# it first calls checkproc to make sure that there is no other logrotate
+# process already running. 
+# Under rare circumstances (system-logrotate running at midnight) 
+# the omd-logrotate can be such a rival process. If it is the first to run
+# (even a few microseconds before /etc/cron.daily/logrotate is launched)
+# there will be no more rotation of the logs in /var/log/apache.
+# In a heavily used OMD-system the /var-partition will be filled up very 
+# quickly.
+# checkproc is symlink-aware, so we need to run our own copy of logrotate.
+#
+
+SBIN_LOGROTATE=/usr/sbin/logrotate
+LOCAL_LOGROTATE=$OMD_ROOT/var/tmp/logrotate
+if [ ! -x $LOCAL_LOGROTATE ] || \
+    [ $(stat --dereference --format "%s" $LOCAL_LOGROTATE) -ne \
+         $(stat --dereference --format "%s" $SBIN_LOGROTATE) ]; then
+  DIR=$(dirname $LOCAL_LOGROTATE)
+  if [ ! -d $DIR ]; then
+    mkdir -p $DIR
+  fi
+  cp -f $SBIN_LOGROTATE $LOCAL_LOGROTATE
+fi
+$LOCAL_LOGROTATE $@

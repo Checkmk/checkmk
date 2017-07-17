@@ -1,0 +1,80 @@
+diff -Nur pnp4nagios-0.6.25.orig/share/pnp/application/vendor/fpdf/fpdf.php pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/fpdf.php
+--- pnp4nagios-0.6.25.orig/share/pnp/application/vendor/fpdf/fpdf.php	2015-01-03 14:09:06.000000000 +0100
++++ pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/fpdf.php	2017-05-11 12:07:24.039514703 +0200
+@@ -73,7 +73,7 @@
+ *                               Public methods                                 *
+ *                                                                              *
+ *******************************************************************************/
+-function FPDF($orientation='P', $unit='mm', $size='A4')
++function __construct($orientation='P', $unit='mm', $size='A4')
+ {
+ 	// Some checks
+ 	$this->_dochecks();
+@@ -879,7 +879,7 @@
+ 		$this->y += $h;
+ }
+ 
+-function Image($file, $x=null, $y=null, $w=0, $h=0, $type='', $link='')
++function Image($file, $x=null, $y=null, $w=0, $h=0, $type='', $link='', $align='', $resize=false, $dpi=300, $palign='', $ismask=false, $imgmask=false, $border=0)
+ {
+ 	// Put an image on the page
+ 	if(!isset($this->images[$file]))
+diff -Nur pnp4nagios-0.6.25.orig/share/pnp/application/vendor/fpdf/fpdf_tpl.php pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/fpdf_tpl.php
+--- pnp4nagios-0.6.25.orig/share/pnp/application/vendor/fpdf/fpdf_tpl.php	2015-01-03 14:09:06.000000000 +0100
++++ pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/fpdf_tpl.php	2017-05-11 12:08:02.846515215 +0200
+@@ -266,7 +266,7 @@
+     /**
+      * See FPDF/TCPDF-Documentation ;-)
+      */
+-    function Image($file, $x, $y, $w=0, $h=0, $type='', $link='', $align='', $resize=false, $dpi=300, $palign='', $ismask=false, $imgmask=false, $border=0) {
++    function Image($file, $x=null, $y=null, $w=0, $h=0, $type='', $link='', $align='', $resize=false, $dpi=300, $palign='', $ismask=false, $imgmask=false, $border=0) {
+         if (!is_subclass_of($this, 'TCPDF') && func_num_args() > 7) {
+             $this->Error('More than 7 arguments for the Image method are only available in TCPDF.');
+         }
+diff -Nur pnp4nagios-0.6.25.orig/share/pnp/application/vendor/fpdf/fpdi_pdf_parser.php pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/fpdi_pdf_parser.php
+--- pnp4nagios-0.6.25.orig/share/pnp/application/vendor/fpdf/fpdi_pdf_parser.php	2015-01-03 14:09:06.000000000 +0100
++++ pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/fpdi_pdf_parser.php	2017-05-11 12:09:41.947959592 +0200
+@@ -66,10 +66,10 @@
+      * @param string $filename  Source-Filename
+      * @param object $fpdi      Object of type fpdi
+      */
+-    function fpdi_pdf_parser($filename, &$fpdi) {
++    function __construct($filename, &$fpdi) {
+         $this->fpdi =& $fpdi;
+ 		
+-        parent::pdf_parser($filename);
++        parent::__construct($filename);
+ 
+         // resolve Pages-Dictonary
+         $pages = $this->pdf_resolve_object($this->c, $this->root[1][1]['/Pages']);
+diff -Nur pnp4nagios-0.6.25.orig/share/pnp/application/vendor/fpdf/pdf_context.php pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/pdf_context.php
+--- pnp4nagios-0.6.25.orig/share/pnp/application/vendor/fpdf/pdf_context.php	2015-01-03 14:09:06.000000000 +0100
++++ pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/pdf_context.php	2017-05-11 12:09:16.752609736 +0200
+@@ -35,7 +35,7 @@
+ 
+ 	// Constructor
+ 
+-	function pdf_context(&$f) {
++	function __construct(&$f) {
+ 		$this->file =& $f;
+ 		if (is_string($this->file))
+ 		    $this->_mode = 1;
+@@ -94,4 +94,4 @@
+ 	        return false;
+ 		}
+ 	}
+-}
+\ No newline at end of file
++}
+diff -Nur pnp4nagios-0.6.25.orig/share/pnp/application/vendor/fpdf/pdf_parser.php pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/pdf_parser.php
+--- pnp4nagios-0.6.25.orig/share/pnp/application/vendor/fpdf/pdf_parser.php	2015-01-03 14:09:06.000000000 +0100
++++ pnp4nagios-0.6.25/share/pnp/application/vendor/fpdf/pdf_parser.php	2017-05-11 12:09:01.932992019 +0200
+@@ -91,7 +91,7 @@
+      *
+      * @param string $filename  Source-Filename
+      */
+-	function pdf_parser($filename) {
++	function __construct($filename) {
+         $this->filename = $filename;
+         
+         $this->f = @fopen($this->filename, 'rb');

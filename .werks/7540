@@ -1,0 +1,10 @@
+Title: Added OpenHardwareMonitor as a (soft) dependency for the windows agent
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.2.7i3
+Date: 1453210138
+Class: feature
+
+This adds a stripped down version of OpenHardwareMonitor as a plugin for the windows agent that can
+(soon) be enabled through the bakery to enable monitoring of hardware sensors.

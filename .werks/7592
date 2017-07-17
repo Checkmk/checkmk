@@ -1,0 +1,10 @@
+Title: systemd: Installing omd as systemd service on systems using systemd
+Level: 1
+Component: distros
+Compatible: compat
+Version: 1.4.0i1
+Date: 1475067163
+Class: feature
+
+Not using the SysV init script mechanism anymore on systems which have
+systemd installed. Instead using "omd.service" systemd service.

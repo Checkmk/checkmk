@@ -1,0 +1,14 @@
+Title: rrdcached: added commands to suspend writing to rrd files
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.2.7i3
+Date: 1462804440
+Class: feature
+
+using these commands, one can backup rrd files in a consistent state.
+There are four new commands in total, 2 for suspend, 2 for resume,
+one each applying to individual files (SUSPEND/RESUME) and one each
+for all files at once (SUSPENDALL/RESUMEALL).
+Please note that these mechanisms are independent from each other so
+you can't use RESUMEALL to release files suspended with SUSPEND

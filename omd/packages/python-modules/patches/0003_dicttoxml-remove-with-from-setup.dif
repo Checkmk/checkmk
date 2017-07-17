@@ -1,0 +1,13 @@
+diff -Nur dest/dicttoxml-1.7.4.orig/setup.py dest/dicttoxml-1.7.4/setup.py
+--- dest/dicttoxml-1.7.4.orig/setup.py	2015-04-10 02:23:48.000000000 +0200
++++ dest/dicttoxml-1.7.4/setup.py	2016-06-02 08:43:48.309722094 +0200
+@@ -2,8 +2,7 @@
+ 
+ version = '1.7.4'
+ 
+-with open('README.markdown') as readme:
+-    long_description = readme.read()
++long_description = open('README.markdown').read()
+ 
+ setup(
+     name = 'dicttoxml',

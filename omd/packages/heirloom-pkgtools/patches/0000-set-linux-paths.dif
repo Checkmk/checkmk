@@ -1,0 +1,19 @@
+diff -Nur heirloom-pkgtools-070227.orig/mk.config heirloom-pkgtools-070227/mk.config
+--- heirloom-pkgtools-070227.orig/mk.config	2007-02-27 21:13:42.000000000 +0100
++++ heirloom-pkgtools-070227/mk.config	2017-05-10 12:47:54.521739823 +0200
+@@ -2,12 +2,12 @@
+ # Path to the Heirloom Bourne shell. It is used during compilation
+ # as well as by the package commands.
+ #
+-SHELL = /usr/5bin/sh
++SHELL = /bin/sh
+ 
+ #
+ # A BSD-compatible install command.
+ #
+-INSTALL=/usr/ucb/install
++INSTALL=/usr/bin/install
+ 
+ #
+ # Where the Heirloom Development Tools package has been placed.
+Binary files heirloom-pkgtools-070227.orig/.mk.config.swp and heirloom-pkgtools-070227/.mk.config.swp differ

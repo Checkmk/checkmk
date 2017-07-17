@@ -1,0 +1,156 @@
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/installf/Makefile.mk heirloom-pkgtools-070227/pkgcmds/installf/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/installf/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/installf/Makefile.mk	2017-05-12 11:48:08.321007499 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = installf
+ OBJ = dofinal.o installf.o main.o removef.o ../../version/version.o
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgadd/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgadd/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgadd/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgadd/Makefile.mk	2017-05-12 11:48:11.072933813 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkgadd
+ OBJ = check.o main.o presvr4.o quit.o ../../version/version.o
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgadm/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgadm/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgadm/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgadm/Makefile.mk	2017-05-12 11:48:13.976856055 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkgadm
+ OBJ = addcert.o certs.o listcert.o lock.o main.o pkgadm_contents.o \
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgchk/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgchk/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgchk/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgchk/Makefile.mk	2017-05-12 11:48:16.616785367 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkgchk
+ OBJ = checkmap.o ckentry.o main.o ../../version/version.o
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgcond/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgcond/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgcond/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgcond/Makefile.mk	2017-05-12 11:48:19.160717249 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkgcond
+ OBJ = main.o ../../version/version.o
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkginstall/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkginstall/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkginstall/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkginstall/Makefile.mk	2017-05-12 11:48:25.904536672 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkginstall
+ OBJ = backup.o check.o cppath.o dockspace.o getinst.o instvol.o main.o \
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgmk/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgmk/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgmk/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgmk/Makefile.mk	2017-05-12 11:48:28.776459770 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkgmk
+ OBJ = main.o mkpkgmap.o quit.o splpkgmap.o ../../version/version.o
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgname/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgname/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgname/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgname/Makefile.mk	2017-05-12 11:48:32.596357485 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkgname
+ OBJ = pkgname.o ../../version/version.o
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgparam/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgparam/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgparam/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgparam/Makefile.mk	2017-05-12 11:48:35.064291402 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkgparam
+ OBJ = pkgparam.o ../../version/version.o
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgremove/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgremove/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgremove/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgremove/Makefile.mk	2017-05-12 11:48:41.236126139 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkgremove
+ OBJ = check.o delmap.o main.o predepend.o quit.o special.o wsreg_pkgrm.o ../../version/version.o
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgrm/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgrm/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgrm/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgrm/Makefile.mk	2017-05-12 11:48:44.160047845 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkgrm
+ OBJ = check.o main.o presvr4.o quit.o ../../version/version.o
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgscripts/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgscripts/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgscripts/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgscripts/Makefile.mk	2017-05-12 11:48:46.887974799 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = cmdexec
+ OBJ = cmdexec.o ../../version/version.o
+diff -Nur heirloom-pkgtools-070227.orig/pkgcmds/pkgtrans/Makefile.mk heirloom-pkgtools-070227/pkgcmds/pkgtrans/Makefile.mk
+--- heirloom-pkgtools-070227.orig/pkgcmds/pkgtrans/Makefile.mk	2017-05-12 11:47:35.889875884 +0200
++++ heirloom-pkgtools-070227/pkgcmds/pkgtrans/Makefile.mk	2017-05-12 11:48:50.219885580 +0200
+@@ -6,7 +6,7 @@
+ 
+ PKGLIBS = -L../../libinst -linst -L../../libpkg -lpkg -L../../libgendb -lgendb \
+ 	-L../../libadm -ladm -L../../libpkgdb -lpkgdb \
+-	-L$(CCSDIR)/lib -ll
++	-L$(CCSDIR)/lib -lfl
+ 
+ BIN = pkgtrans
+ OBJ = main.o ../../version/version.o

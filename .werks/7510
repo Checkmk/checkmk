@@ -1,0 +1,14 @@
+Title: msi generation: improved error handling, removed version information from product name
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+Version: 1.2.7i2
+Date: 1433838935
+
+The agent version is no longer displayed in the product name.
+This is because some software management tools have troubles to detect the same
+product family if the name differs.
+
+Additionally the error handling during the msi generation (done by the agent bakery)
+has been improved.

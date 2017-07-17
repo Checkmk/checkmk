@@ -1,0 +1,10 @@
+Title: perl-modules: Added missing modules IO/Socket
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1481642962
+
+

@@ -1,0 +1,11 @@
+1. adding new modules
+   use the download_package.sh script to download new modules from
+   cpan.
+   ex.: ./download_package.sh Module::Install
+   you have to add the tarball in the right order to the Makefile.
+
+2. updating modules
+   use the update_modules.sh script to check for updates
+   ex.: ./update_modules.sh Module-Install-1.00.tar.gz
+   The Makefile will be updated automatically but you are responsible
+   for removing old modules from the git repository.

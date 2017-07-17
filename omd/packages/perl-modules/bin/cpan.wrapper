@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ ! -e $OMD_ROOT/.cpan/CPAN/MyConfig.pm ]; then
+  mkdir -p $OMD_ROOT/.cpan/CPAN
+  cp $OMD_ROOT/lib/perl5/lib/perl5/CPAN/MyConfig.skel $OMD_ROOT/.cpan/CPAN/MyConfig.pm
+fi
+
+exec cpan

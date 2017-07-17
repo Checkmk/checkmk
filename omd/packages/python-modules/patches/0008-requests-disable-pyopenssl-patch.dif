@@ -1,0 +1,31 @@
+diff -ur dest/requests-2.13.0.orig/requests/__init__.py dest/requests-2.13.0/requests/__init__.py
+--- dest/requests-2.13.0.orig/requests/__init__.py	2016-12-01 11:46:15.000000000 +0100
++++ dest/requests-2.13.0/requests/__init__.py	2017-01-16 08:41:43.665427860 +0100
+@@ -47,12 +47,22 @@
+ __license__ = 'Apache 2.0'
+ __copyright__ = 'Copyright 2016 Kenneth Reitz'
+ 
++# LM: Importing the requests module in mod_python breaks the OpenSSL module.
++# e.g. when creating keys for the backup or the agent bakery an error like
++# this occurs:
++#
++# Error ([('rsa routines', 'RSA_setup_blinding', 'BN lib'),
++#        ('rsa routines', 'RSA_EAY_PRIVATE_ENCRYPT', 'internal error')])
++#
++# Quick fix: Disable the problematic part here. Have reported the issue
++# to the official repo. Hope for a better fix.
++#
+ # Attempt to enable urllib3's SNI support, if possible
+-try:
+-    from .packages.urllib3.contrib import pyopenssl
+-    pyopenssl.inject_into_urllib3()
+-except ImportError:
+-    pass
++#try:
++#    from .packages.urllib3.contrib import pyopenssl
++#    pyopenssl.inject_into_urllib3()
++#except ImportError:
++#    pass
+ 
+ import warnings
+ 

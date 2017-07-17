@@ -1,0 +1,6 @@
+#!/bin/bash
+
+for hook in *.hook; do
+    sudo cp -v $hook /omd/versions/default/lib/omd/hooks/${hook%*.hook}
+    sudo chmod +x /omd/versions/default/lib/omd/hooks/${hook%*.hook}
+done

@@ -1,10 +1,13 @@
 Title: Slave sites: Save site specific global settings in sitespecific.mk
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2017-06-14 10:00:17
 Targetversion: 1.5.0
-Class: bug
 
 This is an inconsistency between the master and the slave site. The slave site receives a sitespecfic.mk
 in the sync snapshot and writes the config to the globals.mk. Instead it should save it in the sitespecific.mk
 and show the site specific global settings button on the distributed monitoring page, just like on the master.
+
+2017-07-17 08:14:37: changed state open -> done
+Fixed.

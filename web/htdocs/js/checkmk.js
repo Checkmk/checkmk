@@ -2404,6 +2404,15 @@ function vs_iconselector_toggle(varprefix, category_name) {
     }
 }
 
+function vs_iconselector_toggle_names(event, varprefix) {
+    console.log(varprefix+'_icons');
+    var icons = document.getElementById(varprefix+'_icons');
+    if (has_class(icons, "show_names"))
+        remove_class(icons, "show_names");
+    else
+        add_class(icons, "show_names");
+}
+
 function vs_listofmultiple_add(varprefix) {
     var choice = document.getElementById(varprefix + '_choice');
     var ident = choice.value;

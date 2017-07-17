@@ -1281,15 +1281,15 @@ def transform_view_to_valuespec_value(view):
     for entry in view.get('painters', []):
         if len(entry) == 5:
             pname, viewname, tooltip, join_index, col_title = entry
-            columns.append((pname, join_index, viewname, tooltip, col_title))
+            columns.append((pname, join_index, viewname, tooltip or None, col_title))
 
         elif len(entry) == 4:
             pname, viewname, tooltip, join_index = entry
-            columns.append((pname, join_index, viewname, tooltip, ''))
+            columns.append((pname, join_index, viewname, tooltip or None, ''))
 
         elif len(entry) == 3:
             pname, viewname, tooltip = entry
-            columns.append((pname, viewname, tooltip))
+            columns.append((pname, viewname, tooltip or None))
 
         else:
             pname, viewname = entry

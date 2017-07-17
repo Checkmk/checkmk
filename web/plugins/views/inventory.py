@@ -1055,7 +1055,7 @@ def declare_invtable_column(infoname, name, topic, title, short_title,
     }
     multisite_sorters[column] = {
         "title"    : _("Inventory") + ": " + title,
-        "columns"  : [],
+        "columns" : [ column ],
         "cmp"      : lambda a, b: sortfunc(a.get(column), b.get(column))
     }
 

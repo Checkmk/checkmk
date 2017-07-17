@@ -1,0 +1,11 @@
+Title: huawei_osn_fan, huawei_osn_if, huawei_osn_laser, huawei_osn_power, huawei_osn_temp: Now supporting Huawei OSN devices
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1500275762
+Class: feature
+
+Check_MK now monitors OTN interfaces including the status, consumed power,
+temperature, input/output dBm and fans.

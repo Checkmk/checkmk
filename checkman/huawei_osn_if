@@ -1,0 +1,15 @@
+title: Huawei OSN: Interfaces
+agents: snmp
+catalog: hw/network/huawei
+license: GPL
+distribution: check_mk
+description:
+ This check measures the octets and packets sended/received by
+ an interface. The check plugin will use the common interface check and
+ parameters can be set for most values.
+
+item:
+ The Interface name will be the item
+
+inventory:
+ One service for each interface is created

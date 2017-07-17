@@ -1,0 +1,15 @@
+title: Huawei OSN: Laser
+agents: snmp
+catalog: hw/network/huawei
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the signal strength of laser fibre and additionally
+ the FEC Correction. Thresholds for incoming and outgoing signal strength
+ in dbm can be set.
+
+item:
+ The laser location is the item name
+
+inventory:
+ One service for each laser is created

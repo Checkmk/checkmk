@@ -1,0 +1,21 @@
+title: F5 Big-IP: active/active or passive/active cluster status
+agents: snmp
+catalog: hw/network/f5
+license: GPL
+distribution: check_mk
+description:
+ The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) to identify
+ if the cluster correctly runs in an {active/active} or an {active/passive} setup.
+ You can configure the expected behaviour via a WATO rule.
+ It will issue a warning if the cluster setup differs from the expected setup.
+ This check is expected to be run on cluster hosts, since it evaluates the state of multiple nodes.
+ If you run this check on a cluster node, it will raise no warning if the cluster node state
+ differs from {active}.
+
+ Since version 11.2 you are able to configure the node states. Default values are:
+ unknown will be treated as UNKNOWN, offline as CRIT, forced offline as CRIT,
+ standby as OK and active as OK.
+
+inventory:
+ Creates on service
+

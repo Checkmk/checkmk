@@ -2764,15 +2764,17 @@ class html(HTMLGenerator, RequestHandler):
 
 
     def render_popup_trigger(self, content, ident, what=None, data=None, url_vars=None,
-                             style=None, menu_content=None, cssclass=None, onclose=None):
+                             style=None, menu_content=None, cssclass=None, onclose=None,
+                             resizable=False):
 
-        onclick = 'toggle_popup(event, this, %s, %s, %s, %s, %s, %s);' % \
-                    ("'%s'" % ident,\
-                     "'%s'" % what if what else 'null',\
-                     json.dumps(data) if data else 'null',\
-                     "'%s'" % self.urlencode_vars(url_vars) if url_vars else 'null',\
-                     "'%s'" % menu_content if menu_content else 'null',\
-                     "'%s'" % onclose.replace("'", "\\'") if onclose else 'null')
+        onclick = 'toggle_popup(event, this, %s, %s, %s, %s, %s, %s, %s);' % \
+                    ("'%s'" % ident,
+                     "'%s'" % what if what else 'null',
+                     json.dumps(data) if data else 'null',
+                     "'%s'" % self.urlencode_vars(url_vars) if url_vars else 'null',
+                     "'%s'" % menu_content if menu_content else 'null',
+                     "'%s'" % onclose.replace("'", "\\'") if onclose else 'null',
+                     json.dumps(resizable))
 
         #TODO: Check if HTML'ing content is correct and necessary!
         atag = self.render_a(HTML(content), class_="popup_trigger",

@@ -823,7 +823,9 @@ function create_pnp_graph(data, params) {
                     ['pnpgraph',
                      { 'host': host, 'service': service },
                      { 'timerange': view, 'source': source }],
-                    "add_type=pnpgraph"
+                    "add_type=pnpgraph",
+                    null,
+                    false
                 );
             }
         }(data['host'], data['service'], view, source);
@@ -3023,8 +3025,9 @@ function handle_popup_close(event) {
 //              The static content of the menu is given in the "menu_content" parameter.
 // data:        json data which can be used by actions in popup menus
 // url_vars:    vars are added to ajax_popup_*.py calls for rendering the popup menu
+// resizable:   Allow the user to resize the popup by drag/drop (not persisted)
 var on_popup_close = null;
-function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_content, onclose)
+function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_content, onclose, resizable)
 {
     on_popup_close = onclose;
 
@@ -3045,17 +3048,36 @@ function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_cont
 
     add_event_handler('click', handle_popup_close);
 
-    menu = document.createElement('div');
+    var menu = document.createElement('div');
     menu.setAttribute('id', 'popup_menu');
     menu.className = 'popup_menu';
+
+    if (resizable)
+        add_class(menu, 'resizable');
+
     container.appendChild(menu);
     fix_popup_menu_position(event, menu);
+
+    var wrapper = document.createElement("div");
+    wrapper.className = 'wrapper';
+    menu.appendChild(wrapper)
+
+    var content = document.createElement('div');
+    content.className = 'content';
+    wrapper.appendChild(content);
+
+    if (resizable) {
+        // Add a handle because we can not customize the styling of the default resize handle using css
+        var resize = document.createElement('div');
+        resize.className = "resizer";
+        wrapper.appendChild(resize);
+    }
 
     // update the menus contents using a webservice
     if (what) {
         popup_data = data;
 
-        menu.innerHTML = '<img src="images/icon_reload.png" class="icon reloading">';
+        content.innerHTML = '<img src="images/icon_reload.png" class="icon reloading">';
 
         // populate the menu using a webservice, because the list of dashboards
         // is not known in the javascript code. But it might have been cached
@@ -3066,22 +3088,23 @@ function toggle_popup(event, trigger_obj, ident, what, data, url_vars, menu_cont
         //    menu.innerHTML = popup_contents[ident];
         //else
         var url_vars = !url_vars ? '' : '?'+url_vars;
-        get_url('ajax_popup_'+what+'.py'+url_vars, handle_render_popup_contents, [ident, event]);
+        get_url('ajax_popup_'+what+'.py'+url_vars, handle_render_popup_contents, {
+            ident: ident,
+            content: content,
+            event: event,
+        });
     } else {
-        menu.innerHTML = menu_content;
-        executeJSbyObject(menu);
+        content.innerHTML = menu_content;
+        executeJSbyObject(content);
     }
 }
 
 function handle_render_popup_contents(data, response_text)
 {
-    var ident = data[0];
-    var event = data[1];
-    popup_contents[ident] = response_text;
-    var menu = document.getElementById('popup_menu');
-    if (menu) {
-        menu.innerHTML = response_text;
-        fix_popup_menu_position(event, menu);
+    popup_contents[data.ident] = response_text;
+    if (data.content) {
+        data.content.innerHTML = response_text;
+        fix_popup_menu_position(data.event, data.content);
     }
 }
 

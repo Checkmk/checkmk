@@ -1,0 +1,14 @@
+Title: Improved displaying a large number of contact groups in folder/host properties
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1500302729
+Class: feature
+
+If a large number of contact groups are configured
+these were displayed as a long list of checkboxes
+exceeding screensize.
+Now the available and selected contact groups are
+shown as parallel lists with fixed size and scrolling bar.

@@ -1,0 +1,469 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ConfigurationSet>
+   <configuration>
+      <config-id>
+         <config>DefaultAuthentication</config>
+         <class-id class="CSPAuthenticationService"/>
+      </config-id>
+      <properties>
+        &lt;AuthenticationServiceSettings&gt;&lt;policy&gt;password&lt;/policy&gt;&lt;/AuthenticationServiceSettings&gt;
+      </properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>CSPInternalMessageCatalog</config>
+         <class-id class="CatalogPosix"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;CatalogPosixConfig&gt;
+   &lt;catalogId&gt;CSP&lt;/catalogId&gt;
+   &lt;name&gt;CSP-MessageCatalog&lt;/name&gt;
+   &lt;path&gt;&lt;/path&gt;
+   &lt;locale&gt;en-US&lt;/locale&gt;
+   &lt;defaultCatalog&gt;true&lt;/defaultCatalog&gt;
+   &lt;formatter&gt;
+      &lt;config&gt;SprintfFormatterConfig&lt;/config&gt;
+      &lt;class-id class=&quot;SprintfFormatter&quot;/&gt;
+   &lt;/formatter&gt;
+&lt;/CatalogPosixConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>CSTAdminMessageCatalog</config>
+         <class-id class="CatalogPosix"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;CatalogPosixConfig&gt;
+   &lt;catalogId&gt;CSTAdmin&lt;/catalogId&gt;
+   &lt;name&gt;CSP-MessageCatalog&lt;/name&gt;
+   &lt;path&gt;&lt;/path&gt;
+   &lt;locale&gt;en-US&lt;/locale&gt;
+   &lt;defaultCatalog&gt;true&lt;/defaultCatalog&gt;
+   &lt;formatter&gt;
+      &lt;config&gt;SprintfFormatterConfig&lt;/config&gt;
+      &lt;class-id class=&quot;SprintfFormatter&quot;/&gt;
+   &lt;/formatter&gt;
+&lt;/CatalogPosixConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>PassThru_Nix_Positional</config>
+         <class-id class="CatalogPosix"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;CatalogPosixConfig&gt;
+   &lt;catalogId&gt;POSITIONAL&lt;/catalogId&gt;
+   &lt;name&gt;&lt;/name&gt;
+   &lt;path&gt;&lt;/path&gt;
+   &lt;locale&gt;en-US&lt;/locale&gt;
+   &lt;defaultCatalog&gt;true&lt;/defaultCatalog&gt;
+   &lt;formatter&gt;
+      &lt;config&gt;PositionalFormatterConfig&lt;/config&gt;
+      &lt;class-id class=&quot;PositionalFormatter&quot; version=&quot;1&quot;/&gt;
+   &lt;/formatter&gt;
+&lt;/CatalogPosixConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>PassThru_Nix_Sprintf</config>
+         <class-id class="CatalogPosix"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;CatalogPosixConfig&gt;
+   &lt;catalogId&gt;SPRINTF&lt;/catalogId&gt;
+   &lt;name&gt;&lt;/name&gt;
+   &lt;path&gt;&lt;/path&gt;
+   &lt;locale&gt;en-US&lt;/locale&gt;
+   &lt;defaultCatalog&gt;true&lt;/defaultCatalog&gt;
+   &lt;formatter&gt;
+      &lt;config&gt;SprintfFormatterConfig&lt;/config&gt;
+      &lt;class-id class=&quot;SprintfFormatter&quot; version=&quot;1&quot;/&gt;
+   &lt;/formatter&gt;
+&lt;/CatalogPosixConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>CatalogServiceConfig</config>
+         <class-id class="CatalogService"/>
+      </config-id>
+      <properties></properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>CSPInternalMessageCatalog</config>
+         <class-id class="CatalogWindows"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;CatalogWindowsConfig&gt;
+   &lt;catalogId&gt;CSP&lt;/catalogId&gt;
+   &lt;name&gt;CSP-MessageCatalog&lt;/name&gt;
+   &lt;path&gt;&lt;/path&gt;
+   &lt;locale&gt;en-US&lt;/locale&gt;
+   &lt;defaultCatalog&gt;true&lt;/defaultCatalog&gt;
+   &lt;formatter&gt;
+      &lt;config&gt;SprintfFormatterConfig&lt;/config&gt;
+      &lt;class-id class=&quot;SprintfFormatter&quot;/&gt;
+   &lt;/formatter&gt;
+&lt;/CatalogWindowsConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>CSTAdminMessageCatalog</config>
+         <class-id class="CatalogWindows"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;CatalogWindowsConfig&gt;
+   &lt;catalogId&gt;CSTAdmin&lt;/catalogId&gt;
+   &lt;name&gt;CSP-MessageCatalog&lt;/name&gt;
+   &lt;path&gt;&lt;/path&gt;
+   &lt;locale&gt;en-US&lt;/locale&gt;
+   &lt;defaultCatalog&gt;true&lt;/defaultCatalog&gt;
+   &lt;formatter&gt;
+      &lt;config&gt;SprintfFormatterConfig&lt;/config&gt;
+      &lt;class-id class=&quot;SprintfFormatter&quot;/&gt;
+   &lt;/formatter&gt;
+&lt;/CatalogWindowsConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>PassThru_Win_Positional</config>
+         <class-id class="CatalogWindows"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;CatalogWindowsConfig&gt;
+   &lt;catalogId&gt;POSITIONAL&lt;/catalogId&gt;
+   &lt;name&gt;&lt;/name&gt;
+   &lt;path&gt;&lt;/path&gt;
+   &lt;locale&gt;en-US&lt;/locale&gt;
+   &lt;defaultCatalog&gt;true&lt;/defaultCatalog&gt;
+   &lt;formatter&gt;
+      &lt;config&gt;PositionalFormatterConfig&lt;/config&gt;
+      &lt;class-id class=&quot;PositionalFormatter&quot; version=&quot;1&quot;/&gt;
+   &lt;/formatter&gt;
+&lt;/CatalogWindowsConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>PassThru_Win_Sprintf</config>
+         <class-id class="CatalogWindows"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;CatalogWindowsConfig&gt;
+   &lt;catalogId&gt;SPRINTF&lt;/catalogId&gt;
+   &lt;name&gt;&lt;/name&gt;
+   &lt;path&gt;&lt;/path&gt;
+   &lt;locale&gt;en-US&lt;/locale&gt;
+   &lt;defaultCatalog&gt;true&lt;/defaultCatalog&gt;
+   &lt;formatter&gt;
+      &lt;config&gt;SprintfFormatterConfig&lt;/config&gt;
+      &lt;class-id class=&quot;SprintfFormatter&quot; version=&quot;1&quot;/&gt;
+   &lt;/formatter&gt;
+&lt;/CatalogWindowsConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>CertificateManagementDefault</config>
+         <class-id class="CertificateManagement"/>
+      </config-id>
+      <properties>
+         &lt;CertificateManagementConfig&gt;
+            &lt;storePath&gt;CertificateStore.xml&lt;/storePath&gt;
+         &lt;/CertificateManagementConfig&gt;
+      </properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>PSO-AD-Authority</config>
+         <class-id class="LDAP"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;LDAPAuthorityConfig&gt;
+   &lt;bindDn&gt;DirectoryAdmin@lpso162.lss.emc.com&lt;/bindDn&gt;
+   &lt;bindPassword&gt;tg4SQRZksdyAeMVujXbdHw==$+khf6kUEuTN1TFpEBmianA==&lt;/bindPassword&gt;
+   &lt;serverName&gt;lpso162.lpso162.lss.emc.com&lt;/serverName&gt;
+   &lt;authorityName&gt;PSO-AD-Authority&lt;/authorityName&gt;
+   &lt;ldapDebugLevel&gt;0&lt;/ldapDebugLevel&gt;
+   &lt;protocol&gt;ldaps&lt;/protocol&gt;
+   &lt;portNumber&gt;636&lt;/portNumber&gt;
+   &lt;ldapTimeout&gt;30000&lt;/ldapTimeout&gt;
+   &lt;certificateFile&gt;../../certs/lpso162.cer&lt;/certificateFile&gt;
+   &lt;userSearchPath&gt;Dc=lpso162,Dc=lss,Dc=emc,Dc=com&lt;/userSearchPath&gt;
+   &lt;groupSearchPath&gt;Dc=lpso162,Dc=lss,dc=emc,Dc=com&lt;/groupSearchPath&gt;
+   &lt;userObjectClass&gt;user&lt;/userObjectClass&gt;
+   &lt;userIdAttribute&gt;samaccountname&lt;/userIdAttribute&gt;
+   &lt;groupMemberAttribute&gt;member&lt;/groupMemberAttribute&gt;
+   &lt;groupObjectClass&gt;group&lt;/groupObjectClass&gt;
+   &lt;groupNameAttribute&gt;samaccountname&lt;/groupNameAttribute&gt;
+   &lt;clientCertificate&gt;&lt;/clientCertificate&gt;
+   &lt;clientKeyFile&gt;&lt;/clientKeyFile&gt;
+   &lt;clientKeyPassword&gt;&lt;/clientKeyPassword&gt;
+&lt;/LDAPAuthorityConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>PSO-SunOne-Authority</config>
+         <class-id class="LDAP"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;LDAPAuthorityConfig&gt;
+   &lt;bindDn&gt;cn=Directory Manager&lt;/bindDn&gt;
+   &lt;bindPassword&gt;HQC2AvO+l4DAlVmDPPQFYQ==$2kd9S1h5roQIyZINuHecRQ==&lt;/bindPassword&gt;
+   &lt;serverName&gt;lpso242.lss.emc.com&lt;/serverName&gt;
+   &lt;authorityName&gt;PSO-SunOne-Authority&lt;/authorityName&gt;
+   &lt;ldapDebugLevel&gt;0&lt;/ldapDebugLevel&gt;
+   &lt;protocol&gt;ldap&lt;/protocol&gt;
+   &lt;portNumber&gt;389&lt;/portNumber&gt;
+   &lt;ldapTimeout&gt;30000&lt;/ldapTimeout&gt;
+   &lt;certificateFile&gt;../../certs/lpso242.cer&lt;/certificateFile&gt;
+   &lt;userSearchPath&gt;ou=People,dc=lss,dc=emc,dc=com&lt;/userSearchPath&gt;
+   &lt;groupSearchPath&gt;ou=Groups,dc=lss,dc=emc,dc=com&lt;/groupSearchPath&gt;
+   &lt;userObjectClass&gt;inetOrgPerson&lt;/userObjectClass&gt;
+   &lt;userIdAttribute&gt;uid&lt;/userIdAttribute&gt;
+   &lt;groupMemberAttribute&gt;uniqueMember&lt;/groupMemberAttribute&gt;
+   &lt;groupObjectClass&gt;groupOfUniqueNames&lt;/groupObjectClass&gt;
+   &lt;groupNameAttribute&gt;cn&lt;/groupNameAttribute&gt;
+   &lt;clientCertificate&gt;&lt;/clientCertificate&gt;
+   &lt;clientKeyFile&gt;&lt;/clientKeyFile&gt;
+   &lt;userSearchFilter&gt;(objectClass=*)&lt;/userSearchFilter&gt;
+   &lt;groupSearchFilter&gt;(objectClass=*)&lt;/groupSearchFilter&gt;
+&lt;/LDAPAuthorityConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>FlatLayout</config>
+         <class-id class="LayoutFlat"/>
+      </config-id>
+      <properties></properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>RawLayout</config>
+         <class-id class="LayoutRaw"/>
+      </config-id>
+      <properties></properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>XMLLayout</config>
+         <class-id class="LayoutXML"/>
+      </config-id>
+      <properties></properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>LocalDirectoryTest</config>
+         <class-id class="LocalDirectory"/>
+      </config-id>
+      <properties>
+&lt;LocalDirectoryConfigProperties&gt;
+&lt;filename&gt;LocalDirectoryData.xml&lt;/filename&gt;
+&lt;passwordsExpireAfter&gt;90&lt;/passwordsExpireAfter&gt;
+&lt;minPasswordLength&gt;8&lt;/minPasswordLength&gt;
+&lt;maxPasswordLength&gt;40&lt;/maxPasswordLength&gt;
+&lt;specialCharsRequired&gt;0&lt;/specialCharsRequired&gt;
+&lt;alphanumericMixRequired&gt;1&lt;/alphanumericMixRequired&gt;
+&lt;mixedCaseRequired&gt;1&lt;/mixedCaseRequired&gt;
+&lt;passwordCount&gt;10&lt;/passwordCount&gt;
+&lt;/LocalDirectoryConfigProperties&gt;
+    </properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>LocalizationServiceConfig</config>
+         <class-id class="LocalizationService"/>
+      </config-id>
+      <properties></properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>SeverityErrorAndComponentCSTFilter</config>
+         <class-id class="LogRecordFilter"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;FilterConfig&gt;
+   &lt;filter andoperation=&quot;true&quot;&gt;
+      &lt;element operator=&quot;_ltequals&quot;&gt;
+         &lt;variant value=&quot;3&quot; name=&quot;ControlData.severity&quot; format=&quot;Integer&quot;/&gt;
+      &lt;/element&gt;
+      &lt;element operator=&quot;_equals&quot;&gt;
+         &lt;variant value=&quot;CST&quot; name=&quot;ControlData.component&quot; format=&quot;String&quot;/&gt;
+      &lt;/element&gt;
+   &lt;/filter&gt;
+&lt;/FilterConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>SeverityInfoFilter</config>
+         <class-id class="LogRecordFilter"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;FilterConfig&gt;
+   &lt;filter andoperation=&quot;true&quot;&gt;
+      &lt;element operator=&quot;_ltequals&quot;&gt;
+         &lt;variant value=&quot;6&quot; name=&quot;ControlData.severity&quot; format=&quot;Integer&quot;/&gt;
+      &lt;/element&gt;
+   &lt;/filter&gt;
+&lt;/FilterConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>LogServiceDefault</config>
+         <class-id class="LogService"/>
+      </config-id>
+      <properties>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;LogServiceConfig&gt;
+   &lt;destinationSet name=&quot;Default&quot;/&gt;
+&lt;/LogServiceConfig&gt;</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>OSLogin-Authority</config>
+         <class-id class="OSLogin"/>
+      </config-id>
+      <properties>
+            &lt;OSLoginConfigProperties&gt;
+		&lt;enableDomainLogin&gt;true&lt;/enableDomainLogin&gt;
+            &lt;/OSLoginConfigProperties&gt;
+	</properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>PositionalFormatterConfig</config>
+         <class-id class="PositionalFormatter"/>
+      </config-id>
+      <properties></properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>RoleManagement</config>
+         <class-id class="RoleManagement"/>
+      </config-id>
+      <properties>
+&lt;RoleManagementConfigProperties&gt;&lt;file&gt;RoleData.xml&lt;/file&gt;&lt;/RoleManagementConfigProperties&gt;
+      </properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>SecurID-Authority</config>
+         <class-id class="SecurID"/>
+      </config-id>
+      <properties>
+	&lt;SecurIDConfigProperties&gt;&lt;sdconfPathname&gt;&lt;/sdconfPathname&gt;&lt;/SecurIDConfigProperties&gt;
+      </properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>SprintfFormatterConfig</config>
+         <class-id class="SprintfFormatter"/>
+      </config-id>
+      <properties></properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>TokenService</config>
+         <class-id class="TokenService"/>
+      </config-id>
+      <properties></properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>TrustedUser-Authority</config>
+         <class-id class="TrustedUser"/>
+      </config-id>
+      <properties></properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+   <configuration>
+      <config-id>
+         <config>DefaultUserManagement</config>
+         <class-id class="UserManagementService"/>
+      </config-id>
+      <properties></properties>
+      <description></description>
+      <attributes/>
+      <requires/>
+   </configuration>
+</ConfigurationSet>

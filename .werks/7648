@@ -1,0 +1,16 @@
+Title: Fix fstab appending when file does not end with a newline
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494504749
+Class: fix
+
+When a new site is created an entry for the tmpfs of the site is
+appended to the /etc/fstab. In case the last entry of the file did
+not end with a newline character the appending of this tmpfs entry
+resulted in a broken line.
+
+We now check the previous entry ends with a newline char and ensure
+it is separated with a newline char correctly.

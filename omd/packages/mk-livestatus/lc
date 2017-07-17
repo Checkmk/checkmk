@@ -1,0 +1,5 @@
+#!/bin/bash
+# Execute a monitoring core command via Livestatus, e.g.
+# lc ENABLE_NOTIFICATIONS
+
+echo "COMMAND [$(date +%s)] $*" | unixcat ~/tmp/run/live

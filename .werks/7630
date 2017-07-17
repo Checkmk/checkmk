@@ -1,0 +1,10 @@
+Title: check_sql: Fixed problem connecting to SQL servers using SSL
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.4.0i3
+Date: 1486992753
+Class: fix
+
+The FreeTDS libraries shipped with pymssql were not built with SSL support. Building our
+own FreeTDS with SSL support now.

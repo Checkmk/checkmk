@@ -1,0 +1,15 @@
+Title: Check_MK is now shipping with own Python 2.7.12 interpreter
+Level: 2
+Component: packages
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465131282
+Class: feature
+
+This step has been made to make Python based components, like Check_MK,
+be able to rely on one single Python version independent of the
+distibution OMD is being installed on.
+
+Python scripts should use "#!/usr/bin/env python" as shebang to be
+working within OMD without change. Something like "#!/usr/bin/python"
+would not use the interpreter shipped with OMD.

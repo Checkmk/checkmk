@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="CONFIG">
+	<catalog language="EN">
+		<message code="1800" name="CSP_E_CONFIG_EXISTS" text="Configuration already exists"/>
+		<message code="1801" name="CSP_E_NO_CONFIG" text="Could not find configuration"/>
+	</catalog>
+	<library language="C++" system="Windows">
+		<file>CSP-Configuration</file>
+		<properties>
+      </properties>
+	</library>
+	<class>
+		<class-id class="ConfigurationServiceLocal" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newConfigService"/>
+			<function name="Delete" method="deleteConfigService"/>
+		</functions>
+		<interface>
+			<interface-id class="Configuration" version="1"/>
+			<attributes/>
+		</interface>
+		<interface>
+			<interface-id class="Service" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

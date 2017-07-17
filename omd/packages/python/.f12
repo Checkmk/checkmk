@@ -1,0 +1,2 @@
+make
+sudo make install

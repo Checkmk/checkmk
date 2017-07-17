@@ -1,0 +1,14 @@
+Title: Fixed exception when saving any global setting while having specific diskspace cleanup settings
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1490181668
+
+When having specific "diskspace cleanup" settings set via WATO or configured directly in etc/diskspace.conf,
+this may result in an exception "TypeError ('int' object is not iterable)" when saving unrelated global settings.
+
+As workaround this could be fixed by cleaning up the etc/diskspace.conf file.

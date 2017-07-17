@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="UserManagement">
+	<catalog language="EN">
+		<message code="400" name="CSP_E_USER_EXISTS" text="User already exists"/>
+		<message code="401" name="CSP_E_NO_USER" text="Could not find user"/>
+		<message code="402" name="CSP_E_GROUP_EXISTS" text="Group already exists"/>
+		<message code="403" name="CSP_E_INVALID_USER" text="User account name is invalid"/>
+		<message code="404" name="CSP_E_INVALID_GROUP" text="Group account name is invalid"/>
+		<message code="405" name="CSP_E_NO_GROUP" text="The number of days after which a password expires"/>
+		<message code="406" name="CSP_E_NO_ACCTMGR" text="Could not find account manager for account"/>
+		<message code="407" name="CSP_E_MANY_ACCTMRGS" text="Ambiguous account managers for command"/>
+	</catalog>
+	<library language="C++" system="Windows">
+		<file>CSP-UserManagement</file>
+		<properties>
+      </properties>
+	</library>
+	<class>
+		<class-id class="UserManagementService" version="1"/>
+		<description/>
+		<schema>Value</schema>
+		<functions language="C++">
+			<function name="Create" method="newUserManagementService"/>
+			<function name="Delete" method="deleteUserManagementService"/>
+			<function name="Options" method="newOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="UserManagement" version="1"/>
+			<attributes/>
+		</interface>
+		<interface>
+			<interface-id class="Service" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

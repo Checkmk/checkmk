@@ -1,0 +1,14 @@
+Title: Fixed segfaults when using inline SNMP
+Level: 2
+Component: inline-snmp
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i3
+Date: 1479115259
+
+The Python binding for the netsnmp library did not handle signals correctly,
+which could lead to occasional segfaults.  This was visible in Check_MK when
+inline SNMP was activated, leading to repeated segfaults in the check
+helpers.
+

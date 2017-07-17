@@ -1,0 +1,53 @@
+Index of patches
+
+0001:
+    When loading a broker module, Nagios makes a temporary copy of the
+    module file, loads that with dl_open, and deletes it afterwards.
+    This shall save agains modifications caused by a user overwriting
+    the module with 'cp'. This patch removes that behaviour and loads
+    the module in the traditional way. This prevents problems with tmpfs
+    mounted as non-root (where Nagios places the module copy).
+
+0002:
+    The file include/utils.inc.php includes config.inc.php by going up 
+    one directory in the physical directory tree. This patch changes that
+    behaviour in a way needed for OMD: It is including the site specific
+    config file /omd/sites/###SITE###/etc/ngaios/config.inc.php. The site name
+    is extracted from the script file name (supplied by Apache).
+
+0003:
+    Remove two RSS feeds (promotions) in the classic UI
+
+0004:
+    The web frontend checks the original home page for updates. The check
+    may be makes sense for folks who installed nagios by themselfs, but
+    not within a distribution. This patch removes the update check from
+    main.php
+
+0005:
+   This patch removes a check in the configuration validation that complains
+   when there are no hosts or services. That way OMD does not need a dummy
+   host anymore but can start plain without any host or service. The cgi-bins,
+   Thruk and Multisite do not show any problems. Nor does the Nagios core.
+
+0006:
+    This patches fixed the problem to jump back to the start page
+    whenever you press F5.
+
+0007:
+   This patch rearranges the fields in the nagios struct schedule_downtime
+   to be compatible again with the one livestatus is compiled with
+
+0008:
+   Reloading nagios config causes spaces in notifications to become
+   plus signs
+   http://sourceforge.net/p/nagios/nagioscore/ci/23c59c2b2725ec20934aee6f0b03ba464b708ec1/
+
+0009:
+  Corrected comparison operator in service freshness check logic
+  http://sourceforge.net/p/nagios/nagioscore/ci/6a6bf5320c0d81e60a77478809885d4fd7c362e4/
+
+0010:
+  Adding triggered downtime for child hosts causes a SIGSEGV on
+  restart/reload
+  http://sourceforge.net/p/nagios/nagioscore/ci/76310176f3ec9a37b0b4161dddbbea69b6fa6a73/

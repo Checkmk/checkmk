@@ -1,0 +1,17 @@
+# Custom environment variables
+#
+# Here you can set environment variables. These will
+# be set in interactive mode when logging in as site
+# user and also when starting the OMD processes with
+# omd start.
+#
+# This file has shell syntax, but without 'export'.
+# Better use quotes if your values contain spaces.
+#
+# Example:
+#
+# FOO="bar"
+# FOO2="With some spaces"
+#
+
+

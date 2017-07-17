@@ -1,0 +1,95 @@
+
+
+   OMD - the Open Monitoring Distribution
+      <http://omdistro.org/>
+
+
+For installing Nagios you have a choice: compiling the necessary packages from
+source by yourself. Or you use the precompiled packages from your distribution.
+Self compiling and installing means you have some manual work to do. If you will
+use the packages from your distribution Nagios and other packages may not always
+be up to date.
+
+This is what OMD tries to solve: more current software releases but not all the
+manual work of self compiling. And last but not least: you get the same
+installation paths and directories on all platforms. The plan is to release
+more often than normal linux distribution do. We try to integrate vital patches
+in order to close the gap between releasing the patch and including it in the
+mainstream source.
+
+What OMD contains
+-----------------
+
+OMD is no new Linux distribution. It is a collection of different software
+packages round about Nagios:
+
+  * nagios
+  * NagVis
+  * PNP4Nagios
+  * rrdtool including rrdcached
+  * nagios-plugins
+  * Check_MK
+  * Check_MK Multisite
+  * MK Livestatus
+  * dokuwiki
+  * NSCA
+  * check_nrpe
+  * Thruk
+  * check_oracle_health
+  * check_mysql_health
+  * check_multi
+  * check_webinject
+  * Shinken (still experimental)
+  * MOD Gearman
+  * jmx4perl
+  * others...
+
+Features
+--------
+
+* More than one instance per host
+
+  OMD supports multiple but separated Nagios instances on the same machine,
+  i.e. for one production usage and one test environment.
+
+* Separate omd user per instance
+
+  Each instance has its own user.
+
+* Script based tarball building
+
+  If you decide to compile omd for yourself, you get a single tarball with all
+  necessary paths and binaries. Installing this tarball on hosts is as simple
+  as extracting a common tar file.
+
+* Simple creation of new sites
+
+  OMD create mysite create the site and omd start starts all stuff.
+
+* Supporting different omd version at the same time
+
+  You can install different versions in parallel, i.e. running your production
+  instance with the last hard rock version and using the most current version
+  in your test environment. There is an omd upgrade available, but at this time
+  don't rely on it, it is experimental!
+
+* Platform independent paths
+
+  OMD installs to /opt/omd on all platforms. If you don't like this, you can
+  symlink omd to every location you want.
+
+Licensing
+---------
+OMD is available under the terms of the GNU General Public License of
+version 2.  You find those terms in the file COPYING. Please note, that that
+license only applies to OMD itself (its scripts, patches, configuration files,
+etc.). The licenses of the packages it ships may differ. Please checkout
+those packages for details on their licensing.
+
+Further information
+-------------------
+Visit the OMD homepage at http://omdistro.org for online documentation,
+new releases, information on the mailing lists, etc.
+
+Some german documentation is available under http://mathias-kettner.de/omd.html.
+

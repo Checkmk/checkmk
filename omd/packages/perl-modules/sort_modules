@@ -1,0 +1,57 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use lib 'lib';
+use BuildHelper;
+
+BEGIN {
+    for my $val (qw/PERL5LIB PERL_MB_OPT PERL_LOCAL_LIB_ROOT PERL_MM_OPT/) {
+        delete $ENV{$val} if defined $ENV{$val};
+    }
+};
+
+my($deps,$files) = BuildHelper::get_all_deps();
+my $sorted       = BuildHelper::sort_deps($deps, $files);
+my $last         = pop @{$sorted};
+alarm(5);
+if(defined $ARGV[0] and $ARGV[0] eq '-u') {
+    open(my $out, '>', 'Makefile.new') or die("cannot open Makefile.new: $!");
+    open(my $in, '<', 'Makefile') or die("cannot open Makefile: $!");
+    my $found = 0;
+    while(my $line = <$in>) {
+        if($line =~ m/^MODULES\s=/) {
+            print $out "MODULES = \\\n";
+            for my $file (@{$sorted}) {
+                next if $file =~ m/^ExtUtils\-MakeMaker\-\d+/mx;
+                next if $file =~ m/^parent\-\d+/mx;
+                next if $file =~ m/^version\-\d+/mx;
+                next if $file =~ m/^Module\-CoreList\-\d+/mx;
+                next if $file =~ m/^JSON\-/mx;
+                next if $file =~ m/^Types\-Serialiser\-\d+/mx;
+                next if $file =~ m/^common\-sense\-\d+/mx;
+                printf $out "          %s \\\n", $file;
+            }
+            printf $out "          %s\n", $last if defined $last;
+            print $out "\n";
+            $found = 1;
+        }
+        if($found) {
+            $found = 0 if $line =~ m/^\s*$/;
+        } else {
+            print $out $line;
+        }
+    }
+    close($out);
+    close($in);
+    `mv Makefile.new Makefile`;
+    print "Makefile written\n";
+} else {
+    print "MODULES = \\\n";
+    for my $file (@{$sorted}) {
+        printf "          %s \\\n", $file;
+    }
+    printf "          %s\n", $last if defined $last;
+    print "\n\nuse -u to update Makefile automatically\n";
+}
+exit;

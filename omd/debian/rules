@@ -1,0 +1,128 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper.
+# This file is public domain software, originally written by Joey Hess. 
+#
+# This version is for packages that are architecture dependent.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+_PWD=`pwd`
+
+include Makefile.omd
+-include .config
+
+build: patch build-stamp
+build-stamp:
+	dh_testdir
+	$(MAKE) EDITION=$(EDITION) -j 4 build
+	touch build-stamp
+
+clean: clean-patched unpatch
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp
+
+	$(MAKE) EDITION=$(EDITION) clean
+	rm -f $(_PWD)/debian/postinst
+	rm -f $(_PWD)/debian/preinst
+	rm -f $(_PWD)/debian/prerm
+	rm -f $(_PWD)/debian/postrm
+	rm -f $(_PWD)/debian/init
+	rm -f $(_PWD)/debian/links
+	rm -f $(_PWD)/debian/*.debhelper
+	rm -rf  $(_PWD)/debian/check-mk-*-[0-9].[0-9.]*
+	rm -rf  $(_PWD)/debian/check-mk-*-[1-9][0-9].[0-9.]*
+
+	dh_clean
+
+clean-patched:
+	dh_testdir
+	dh_testroot
+	${MAKE} EDITION=$(EDITION) clean
+
+patch: patch-stamp
+patch-stamp:
+	dpatch apply-all
+	dpatch cat-all >patch-stamp
+
+unpatch:
+	dpatch deapply-all
+	rm -rf patch-stamp debian/patched
+
+install: build
+	dh_testdir
+	dh_testroot
+	dh_prep
+	dh_installdirs
+
+	$(MAKE) EDITION=$(EDITION) DESTDIR=$(_PWD)/debian/`dh_listpackages` pack
+	# -- remove version independent dirs, will be created later by postinst
+	rm -f $(_PWD)/debian/`dh_listpackages`/usr/bin/omd
+	rmdir $(_PWD)/debian/`dh_listpackages`/usr/bin
+	rm -f $(_PWD)/debian/`dh_listpackages`/usr/share/man/man8/omd.8.gz
+	rm -f $(_PWD)/debian/`dh_listpackages`/omd
+	rmdir $(_PWD)/debian/`dh_listpackages`/opt/omd/apache
+	rmdir $(_PWD)/debian/`dh_listpackages`/opt/omd/sites
+	rm -f $(_PWD)/debian/`dh_listpackages`/opt/omd/versions/default
+	rm -rf $(_PWD)/debian/`dh_listpackages`/etc/apache2
+	rm -f $(_PWD)/debian/`dh_listpackages`/etc/init.d/omd
+	rm -f $(_PWD)/debian/`dh_listpackages`/etc/systemd/system/omd.service
+	mv -f $(_PWD)/check-mk-$(EDITION)-bin-$(OMD_VERSION).tar.gz $(_PWD)/..
+
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	    -e 's/###OMD_SERIAL###/$(OMD_SERIAL)/g' \
+	   $(_PWD)/debian/postinst.in > $(_PWD)/debian/postinst
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	   $(_PWD)/debian/preinst.in > $(_PWD)/debian/preinst
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	   $(_PWD)/debian/prerm.in > $(_PWD)/debian/prerm
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	   $(_PWD)/debian/postrm.in > $(_PWD)/debian/postrm
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	   $(_PWD)/debian/init.in > $(_PWD)/debian/init
+	sed -e 's/###OMD_VERSION###/$(OMD_VERSION)/g' \
+	   $(_PWD)/debian/links.in > $(_PWD)/debian/links
+
+# Build architecture-independent files here.
+binary-indep: install
+# We have nothing to do by default.
+
+# Build architecture-dependent files here.
+binary-arch: install
+	dh_testdir
+	dh_testroot
+	dh_installchangelogs
+	dh_installdocs
+	dh_installexamples
+#	dh_install
+#	dh_installmenu
+	dh_installdebconf -n
+#	dh_installlogrotate
+#	dh_installemacsen
+#	dh_installcatalogs
+#	dh_installpam
+#	dh_installmime
+	dh_installinit
+#	dh_installcron
+#	dh_installinfo
+#	dh_installwm
+#	dh_installudev
+#	dh_lintian
+#	dh_bugfiles
+#	dh_undocumented
+	dh_installman
+	dh_link
+	dh_strip --exclude=wkhtmltopdf --exclude=cmc --exclude=waitmax --exclude agent_modbus
+	dh_compress
+	dh_fixperms
+#	dh_perl
+#	dh_makeshlibs
+	dh_installdeb
+#	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install

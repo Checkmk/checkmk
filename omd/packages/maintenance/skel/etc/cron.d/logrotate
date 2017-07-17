@@ -1,0 +1,4 @@
+#
+# Daily Logrotate
+#
+0 0 * * * $OMD_ROOT/bin/logrotate -s $OMD_ROOT/tmp/run/logrotate.state $OMD_ROOT/etc/logrotate.conf >/dev/null 2>&1

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Alias: Default web GUI
+# Menu: Web GUI
+# Description:
+#  Here you can choose your default webinterface to use. You can run several Nagios GUIs at
+#  the same time but only one GUI can be your default. The default GUI is opened when
+#  someone opens your site in a browser without a specific URL.
+
+case "$1" in
+    default)
+            echo "check_mk"
+    ;;
+    choices)
+            echo "welcome: Welcome page which lists all available GUIs"
+            [ -e $OMD_ROOT/share/nagios/htdocs ] && echo "nagios: Classic Nagios webinterface"
+            [ -e $OMD_ROOT/share/icinga/htdocs ] && echo "icinga: Classic Icinga webinterface"
+            [ -e $OMD_ROOT/share/check_mk/web ]  && echo "check_mk: The Check_MK's Multisite GUI"
+            [ -e $OMD_ROOT/share/thruk ]         && echo "thruk: Thruk Monitoring Webinterface"
+            [ -e $OMD_ROOT/share/nagvis ]        && echo "nagvis: NagVis - The visualisation addon for Nagios"
+            echo "none: No default webinterface"
+    ;;
+    depends)
+        [ "$CONFIG_APACHE_MODE" != none ]
+    ;;
+esac

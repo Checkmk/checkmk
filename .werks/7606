@@ -1,0 +1,10 @@
+Title: Shipping with EMC Navisphere command line tools (navisecli)
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.4.0i3
+Date: 1478781143
+Class: feature
+
+It is needed for the Check_MK Navisphere special agent. You now don't
+need to install it manually anymore.

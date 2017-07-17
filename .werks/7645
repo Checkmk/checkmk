@@ -1,0 +1,11 @@
+Title: heirloom-pkgtools: Added pkgmk and pkgtrans to be able to build Solaris pkgs
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494422969
+Class: feature
+
+The Agent Bakery (which is part of the Enterprise Edition) will be able to build Solaris
+"pkg" packages using these commands.

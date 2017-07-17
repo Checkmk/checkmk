@@ -1,0 +1,6 @@
+This directory contains a patch 9999-demo-version.dif. This patch limits the
+number of monitored hosts to 10. Since we also ship the the original unmodified 
+Nagios source code, you are free to remove the patch and recompile Nagios without
+this modification. It is not our intention to deprive you of the rights that 
+you have due to the GPL.
+

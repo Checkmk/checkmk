@@ -4,7 +4,6 @@ your monitoring sites:
 
 All Editions:        share/doc/check_mk/ChangeLog
 Enterprise Edition:  share/doc/check_mk_enterprise/ChangeLog
-Packaging:           share/doc/CHANGELOG
 
 If you want to see the changes of a specific version and maybe filter the
 changes in a flexible way, please check out the list of changes on our

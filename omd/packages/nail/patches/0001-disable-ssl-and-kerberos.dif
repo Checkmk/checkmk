@@ -1,0 +1,32 @@
+--- heirloom-mailx-12.5/makeconfig.orig	2011-04-26 23:23:22.000000000 +0200
++++ heirloom-mailx-12.5/makeconfig	2015-01-27 16:14:02.296251746 +0100
+@@ -326,7 +326,7 @@
+ #define USE_NSS' '-lsmime3 -lnss3 -lssl3 -lnspr4 -lplc4' <<\! || \
+ 		link_check openssl 'for sufficiently recent OpenSSL' \
+ 			'#define USE_SSL
+-#define USE_OPENSSL' '-lssl -lcrypto' <<\%
++#define USE_OPENSSL' '-lDESTROYssl -lcrypto' <<\%
+ #include <nss.h>
+ #include <ssl.h>
+ #include <prinit.h>
+@@ -425,16 +425,16 @@
+ !
+ 
+ <$tmp2.c link_check gssapi 'for GSSAPI in libgss' \
+-		'#define USE_GSSAPI' '-lgss' ||
++		'#define DONT_USE_GSSAPI' '-lgss' ||
+ 	<$tmp2.c link_check gssapi 'for GSSAPI in libgssapi_krb5' \
+-			'#define USE_GSSAPI' '-lgssapi_krb5' ||
++			'#define DONT_USE_GSSAPI' '-lgssapi_krb5' ||
+ 		link_check gssapi 'for GSSAPI in libgssapi_krb5, old-style' \
+-				'#define USE_GSSAPI
++				'#define DONT_USE_GSSAPI
+ #define GSSAPI_OLD_STYLE' '-lgssapi_krb5' <<\! || \
+ 			link_check gssapi 'for GSSAPI in libgssapi' \
+ 				'#define USE_GSSAPI
+ #define	GSSAPI_REG_INCLUDE' '-lgssapi' <<\%
+-#include <gssapi/gssapi.h>
++#include <gssapi/gssapiDESTROY.h>
+ #include <gssapi/gssapi_generic.h>
+ 
+ int main(void)

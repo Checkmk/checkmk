@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="DestinationSyslog">
+  <catalog language="EN">
+    <message code="1" name="location" text="The syslog location to use"/>
+    <message code="2" name="hostname" text="The hostname for remote syslog"/>
+    <message code="3" name="portNumber" text="The port number for remote syslog"/>
+    <message code="4" name="portType" text="The port type for remote syslog"/>
+    <message code="5" name="facility" text="The facility to use for syslog log operations"/>
+    <message code="6" name="locale" text="Locale for this destination"/>
+    <message code="7" name="layout" text="Layout configuration"/>
+    <message code="8" name="chunkSize" text="The record chunk size (in KB) for remote syslog (use 0 for no chunking)"/>
+  </catalog>
+	<library language="C++" system="Windows">
+		<file>CSP-DestinationSyslog</file>
+		<properties/>
+	</library>
+	<class>
+		<class-id class="DestinationSyslog" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newDestination"/>
+			<function name="Delete" method="deleteDestination"/>
+			<function name="Options" method="newDestinationOptions"/>
+			<function name="Validate" method="validateDestinationOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="Destination" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

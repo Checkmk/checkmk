@@ -1,0 +1,29 @@
+--- nagios.b/html/main.php	2013-03-15 12:14:02.000000000 +0100
++++ nagios.a/html/main.php	2013-03-24 13:53:29.000000000 +0100
+@@ -86,13 +86,6 @@
+ 			<li><a href="http://go.nagios.com/nagioscore/certification" target="_blank">Get certified</a></li>
+ 			</ul>
+ 		</div> <!-- end splashbox1 -->
+-		
+-		<!-- corepromo feed -->
+-		<div id="splashbox2" class="splashbox">
+-		<h2>Don't Miss...</h2>
+-		<div id="splashbox2-contents"></div>
+-		</div>
+-		
+ 	</div> <!-- end topsplashbox -->
+ 	
+ 	<div id="bottomsplashbox">
+@@ -109,12 +102,6 @@
+ 
+ 			</ul>
+ 		</div><!-- end splashbox3 -->
+-
+-		<!-- latest news feed -->
+-		<div id="splashbox4" class="splashbox">
+-		<h2>Latest News</h2>
+-		<div id="splashbox4-contents"></div>
+-		</div>
+ 	</div> <!-- end bottomsplashbox -->
+ </div><!--splashboxes-->
+ 

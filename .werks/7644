@@ -1,0 +1,10 @@
+Title: omd restore: Fixed possible crash "linkname ... not found"
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494417984
+Class: fix
+
+

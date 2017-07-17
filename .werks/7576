@@ -1,0 +1,16 @@
+Title: The rrdtool library should never terminate its process.
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1494417051
+Class: fix
+
+Under certain (relatively obscure) circumstances the rrdtool library simply
+terminates its process instead of cleanly reporting an error.  The symptom
+in Check_MK was that when trying to fetch data for graphing, the Micro Core
+sometimes terminated without logging anything.  This has been fixed by
+backporting the fix for the corresponding rrdtool issue:
+
+https://github.com/oetiker/rrdtool-1.x/issues/653

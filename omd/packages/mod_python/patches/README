@@ -1,0 +1,37 @@
+0004:
+    Prepend /omd/versions/X/lib/python to Python path
+
+0005:
+    Handle the case during stopping of Apache where SIGTERM is
+    received while Python is currently running. Normally mod_python
+    will be caught be the signal and end in a deadlock. The patch
+    ignores the signal until the Python interpreter has exited and
+    simply exit the process afterwards.
+
+0006:
+    Stop using the deprecated md5 module. Use hashlib instead.
+    This prevents a deprecation warning exception visible in apache
+    error log.
+    Patch: https://bugzilla.redhat.com/show_bug.cgi?format=multiple&id=526062
+
+0007:
+    Prevents a deprecation warning:
+
+    lib/python/mod_python/util.py:119: DeprecationWarning: object.__init__() takes no parameters
+    str.__init__(self, value)
+
+    After my tests & searches the str.__init__(self, value) is useless and
+    can simply be commented out.
+
+0008:
+   Makes mod_python compile with Apache 2.4 or newer. This patch has been
+   added to make mod_python compile for Ubuntu 13.10. The patch has been
+   taken from the libapache2-mod-python source package.
+   This patch is only applied when apache 2.4 or later is found.
+
+0009
+   Makes logging of mod_python work again with current apache versions.
+
+The other patches are taken with thanks from the FEDORA mod_python
+package and fix compile problems and RedHat 6.1 (and probably
+other distros as well).

@@ -1,0 +1,11 @@
+--- a/configure.orig	2011-10-14 14:34:41.250450291 +0200
++++ b/configure	2011-10-14 14:35:10.660837852 +0200
+@@ -6668,7 +6668,7 @@
+ 				echo "$as_me:$LINENO: checking for SSL libraries" >&5
+ echo $ECHO_N "checking for SSL libraries... $ECHO_C" >&6
+ 		found_ssl=no
+-		for dir in $ssl_lib_dir $ssl_dir /usr/lib64 /usr/lib /usr/local/lib /usr/lib/ssl /usr/ssl/lib /usr/openssl/lib /usr/pkg/lib  /usr/freeware/lib/openssl; do
++		for dir in $ssl_lib_dir $ssl_dir /usr/lib/*-linux-gnu* /usr/lib64 /usr/lib /usr/local/lib /usr/lib/ssl /usr/ssl/lib /usr/openssl/lib /usr/pkg/lib  /usr/freeware/lib/openssl; do
+ 			ssllibdir="$dir"
+ 			if test -f "$dir/libssl.so"; then
+ 				found_ssl=yes

@@ -1,0 +1,14 @@
+Title: Shipping pyOpenSSL for Ubuntu 12.04 (precise)
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.2.7i3
+Date: 1458548991
+Class: fix
+
+This fixes an issue with the agent bakery where agents could not be signed.
+
+Normally Ubuntu 12.04 has pyOpenSSL installed in version 0.12 which has a bug 
+in the sign method (https://bugs.launchpad.net/pyopenssl/+bug/653830).
+
+Shipping pyOpenSSL 0.13.1 now.

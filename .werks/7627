@@ -1,0 +1,18 @@
+Title: Apache: Reduced default maximum apache processes to 64
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.4.0i3
+Date: 1485953604
+Class: fix
+
+The maximum number of concurrent apache processes has been lowered from
+128 to 64. The main reason for this is to prevent out of memory situations
+on a lot of systems in case of high webserver loads.
+
+Most Check_MK systems don't have enough memory in spare to handle 128 apache
+processes and for the most systems the default of 64 should still be way
+enough.
+
+In case you need more than the new default, you can simply change
+etc/apache/apache.conf to increase the number of slots again.

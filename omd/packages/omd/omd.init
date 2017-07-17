@@ -1,0 +1,46 @@
+#!/bin/sh
+# Startskript for OMD sites
+# chkconfig: - 98 1
+# description: OMD Open Monitoring Distribution
+
+
+### BEGIN INIT INFO
+# Provides:          omd
+# Required-Start:    $syslog
+# Required-Stop:     $syslog
+# Should-Start:      ntpdate
+# Default-Start:     ###DEFAULT_RUNLEVELS###
+# Default-Stop:      1
+# Short-Description: OMD sites
+# Description:       Start and stop the sites of the Open Monitoring
+#                    Distribution (OMD)
+### END INIT INFO
+
+case "$1" in
+    start)
+        echo "Starting all OMD monitoring sites:"
+        /usr/bin/omd "$1"
+    ;;
+    stop)
+        echo "Stopping all OMD monitoring sites:"
+        /usr/bin/omd "$1"
+    ;;
+    restart)
+        echo "Restarting all OMD monitoring sites:"
+        /usr/bin/omd "$1"
+    ;;
+    reload)
+        echo "Reloading all OMD monitoring sites:"
+        /usr/bin/omd "$1"
+    ;;
+    status)
+        echo "Checking state of all OMD monitoring sites:"
+        /usr/bin/omd "$1"
+    ;;
+    *)
+        echo "Doing $1 on all OMD monitoring sites:"
+        /usr/bin/omd "$1"
+    ;;
+esac
+
+

@@ -1,0 +1,14 @@
+var/check_mk/web 0775
+var/check_mk/logwatch 0775
+var/check_mk/wato 0775
+var/check_mk/wato/snapshots 0775
+var/check_mk/wato/auth 0775
+var/check_mk/wato/auth/auth.php 0664
+var/check_mk/wato/log 0775
+var/check_mk/backup 0775
+etc/check_mk/conf.d 0775
+etc/check_mk/conf.d/wato 0775
+etc/check_mk/multisite.d 0775
+etc/check_mk/multisite.d/wato 0775
+etc/auth.secret 0660
+etc/init.d/mkeventd 755

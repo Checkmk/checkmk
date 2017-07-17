@@ -1,0 +1,10 @@
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+
+#make build
+install -m 755 msitools-*/.libs/msiinfo $ROOT/bin
+install -m 755 msitools-*/.libs/msibuild $ROOT/bin
+install -m 755 lcab-*/lcab $ROOT/bin
+install -m 755 msi-update $ROOT/bin
+install -m 755 msitools-*/libmsi/.libs/libmsi.so* $ROOT/lib
+install -m 644 *.msi $ROOT/share/check_mk/agents/windows

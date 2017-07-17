@@ -1,0 +1,56 @@
+Check_MK - Your complete IT monitoring solution
+===============================================
+
+Check_MK is available in several editions. The  Check_MK Raw Edition is free
+and 100% open-source. The Check_MK Enterprise Edition includes several
+additional features and professional support from the authors, billed annually.
+A demo version is freely available for testing the Enterprise Edition in a
+non-production environment.
+
+Check_MK can be installed on Linux servers via DEB and RPM packages found on
+our Downloads page. The Enterprise Edition is also available as a virtual or
+physical appliance. The following short installation guides show how you can
+easily set up Check_MK and begin monitoring. 
+
+Please visit our website for more details:
+
+  http://mathias-kettner.com/check_mk.html
+
+
+Getting started
+---------------
+
+Please have a look at the official handbook on how to get started with
+Check_MK. It can be found here: 
+
+  http://mathias-kettner.com/cms_introduction.html
+
+
+Building on your own packages
+-----------------------------
+
+It is highly recommended to use Check_MK packages we provide
+(http://mathias-kettner.com/download).
+
+But if you really want to build your own packages, you need either download the
+source packages from our website or check out the git repository.
+
+To prepare your system for building you need to execute this command:
+
+  make -C omd setup
+
+It will install the missing build dependencies (if you are working on a
+supported Linux distribution).
+
+Then you can either create RPM or DEB packages, depending on your distro.
+To build an RPM execute this:
+
+  make rpm
+
+To create a DEB package execute this:
+
+  DEBFULLNAME="Mr. Buildmaster" DEBEMAIL="mail@buildmaster.com" make deb
+
+Don't forget to insert your name and mail address. As a result your should
+find packages named like this: check-mk-[edition]-[version].[deb|rpm] in
+your current directory.

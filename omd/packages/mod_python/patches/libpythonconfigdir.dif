@@ -1,0 +1,11 @@
+--- mod_python-3.3.1/configure	2013-05-07 16:37:13.377770000 +0200
++++ mod_python-3.3.1/configure	2006-03-11 04:46:52.000000000 +0100
+@@ -222,7 +222,7 @@
+ AC_SUBST(LIBS)
+ 
+ PyLIBP=${PY_STD_LIB}
+-PyLIBPL=${PyLIBP}/config
++PyLIBPL=`ls -d1 ${PyLIBP}/config*/.`
+ PyPYTHONLIBS=${PyLIBPL}/libpython${PyVERSION}.a
+ PyLIBS=`grep "^LIB[[SMC]]=" ${PyLIBPL}/Makefile | cut -f2 -d= | tr '\011\012\015' '   '`
+ PyMODLIBS=`grep "^LOCALMODLIBS=" ${PyLIBPL}/Makefile | cut -f2 -d= | tr '\011\012\015' '   '`

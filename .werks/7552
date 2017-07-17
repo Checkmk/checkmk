@@ -1,0 +1,12 @@
+Title: Silently ignoring deprecated "gadget_type" option now
+Level: 1
+Component: nagvis
+Compatible: compat
+Version: 1.2.7i3
+Date: 1456864328
+Class: fix
+
+Changed handling of deprecated map object attributes: They are silently
+ignored by NagVis now. We inform users about deprecated (useless)
+attributes in the ChangeLog and will mark old options in the documentation,
+but the map loading will not be affected by the deprecated options anymore

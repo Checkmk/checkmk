@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Alias: Webserver mode to use
+# Menu: Web GUI
+# Description:
+#  Here you can choose the mode to run your webserver with. The value "own"
+#  will start an individual Apache process for this site, running as site
+#  user. No root priviledges are required to administer it. The main
+#  Apache redirects request for this site to it via mod_proxy.
+#
+#  The value "none" will not start a webserver nor create a configuration
+#  for the global Apache.
+
+case "$1" in
+    default)
+            if [ ! -z "$CONFIG_WEBSERVER" ]; then
+                echo "$CONFIG_WEBSERVER"
+            else
+                # SLES 10 uses the shared mode by default because the available
+                # version of mod_proxy does not support the ProxyPass directives
+                # which are needed by the "own" mode.
+                if grep DISTRO_CODE $OMD_ROOT/share/omd/distro.info 2>/dev/null | grep sles10 >/dev/null 2>&1; then
+                    echo "shared"
+                else
+                    echo "own";
+                fi
+            fi
+    ;;
+    choices)
+            echo "own: Run an own webserver process for this instance"
+            echo "none: Do not run or configure a webserver"
+    ;;
+    set)
+        # When one configured shared, fallback to own mode
+        if [ "$2" == "own" ] || [ "$2" == "shared" ]; then
+            ln -sfn apache-own.conf $OMD_ROOT/etc/apache/mode.conf
+        elif [ "$2" == "shared" ] ; then
+            echo "DEPRECATION WARNING: the shared apache mode has been removed."
+            exit 1
+        elif [ "$2" == "none" ] ; then
+            rm -f $OMD_ROOT/etc/apache/mode.conf
+            : > $OMD_ROOT/etc/apache/mode.conf
+        fi
+    ;;
+esac
+

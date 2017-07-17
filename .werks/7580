@@ -1,0 +1,9 @@
+Title: Remove PNP4NAGIOS from omd config when core is cmc, don't start npcd then
+Level: 1
+Component: omd
+Compatible: compat
+Version: 1.2.7i3
+Date: 1456483018
+Class: fix
+
+Also the rrdcached is now not being started if now core is being selected.

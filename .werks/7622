@@ -1,0 +1,9 @@
+Title: monitoring-plugins: Setting NAGIOS_PLUGIN_STATE_DIRECTORY and MP_STATE_DIRECTORY environment variables now
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.4.0i3
+Date: 1484235124
+Class: fix
+
+

@@ -1,0 +1,46 @@
+#
+# Adapt the Template if check_command should not be the PNP Template
+#
+# check_command check_nwstat!LOAD5!80%!90%
+# ________0__________|         |    |  |
+# ________1____________________|    |  |
+# ________2_________________________|  |
+# ________3____________________________|
+#
+CUSTOM_TEMPLATE = 0,1
+#
+# Change the RRD Datatype based on the check_command Name.
+# Defaults to GAUGE.
+# 
+# Adjust the whole RRD Database 
+# DATATYPE = COUNTER
+#
+# Adjust every single DS by using a List of Datatypes.
+# DATATYPE = GAUGE,GAUGE,COUNTER,COUNTER
+
+# Use the MIN value for newly created RRD Databases. 
+# This value defaults to 0
+# USE_MIN_ON_CREATE = 1
+#
+# Use the MAX value for newly created RRD Databases.
+# This value defaults to 0
+# USE_MAX_ON_CREATE = 1
+
+# Use a single RRD Database per Service 
+# This Option is only used while creating new RRD Databases
+# RRD_STORAGE_TYPE = SINGLE
+#
+# Use multiple RRD Databases per Service
+# One RRD Database per Datasource.
+# RRD_STORAGE_TYPE = MULTIPLE
+#
+# RRD_STORAGE_TYPE = SINGLE
+
+# RRD Heartbeat in seconds
+# This Option is only used while creating new RRD Databases
+# Existing RRDs can be changed by "rrdtool tune"
+# More on http://oss.oetiker.ch/rrdtool/doc/rrdtune.en.html
+#
+# This value defaults to 8640
+# RRD_HEARTBEAT = 305
+

@@ -1,0 +1,25 @@
+Title: Updated NSCA to be compatible with clients of newer distros
+Level: 1
+Component: packages
+Class: fix
+Compatible: incomp
+State: unknown
+Version: 1.2.7i3
+Date: 1459428947
+
+Some distros ship newer version of send_nsca which are not compatible
+anymore with the old NSCA 2.7 server shipped with Check_MK. So we had
+to update NSCA to 2.9.1.
+
+The version is incompatible in one detail: If you are submitting
+multiple check results at once you can not use new lines (\n) anymore.
+You will have to change it to use the ETB character. This was a subtile
+and not well documented change in NSCA. The help text of send_nsca
+contains the following text:
+
+===
+When submitting multiple simultaneous results, separate each set with the ETB
+character (^W or 0x17)
+===
+
+This commit is related: https://github.com/NagiosEnterprises/nsca/commit/7256213ef1b3b937e991a8ff5d8782de98d5a11b

@@ -1,0 +1,3 @@
+# Needed for bulk notifcations.
+# Only execute cmk --notify when the microcore is currently not enabled.
+* * * * * [ ! -e ###ROOT###/etc/check_mk/conf.d/microcore.mk -a -d ###ROOT###/var/check_mk/notify/bulk ] && cmk --notify send-bulks

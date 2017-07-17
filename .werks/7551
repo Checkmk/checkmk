@@ -1,0 +1,10 @@
+Title: Fixed broken NagVis Maps snapin
+Level: 1
+Component: nagvis
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1455522475
+
+

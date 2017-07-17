@@ -1,0 +1,23 @@
+#
+# Sample Page Config
+#
+# Global Section
+# use_regex [0|1]
+# page_name < your page title >
+# background_pdf <pdf file>
+
+define  page  {
+        use_regex 1
+        page_name Webserver Traffic 
+}
+
+#
+# Define the first Graph
+# 
+define graph {
+        host_name       ^websrv	      # Every host starting with 'websrv'
+        service_desc    ^traffic      # Every service starting with 'traffic'
+	source		0             # OPTIONAL Show only the first image
+}
+
+

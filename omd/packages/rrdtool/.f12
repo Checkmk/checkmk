@@ -1,0 +1,10 @@
+#!/bin/bash
+SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+
+CFLAGS=-g make
+TMPDIR=$(pwd)/destdir
+[ -d $TMPDIR ] && rm -rf destdir || true
+DESTDIR=$TMPDIR make install
+sudo install -m 640 -o $SITE -g $SITE $TMPDIR/omd/versions/*/lib/* /omd/sites/$SITE/lib/
+sudo install -m 750 -o $SITE -g $SITE $TMPDIR/omd/versions/*/bin/* /omd/sites/$SITE/bin/

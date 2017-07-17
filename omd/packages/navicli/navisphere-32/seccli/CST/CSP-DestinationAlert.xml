@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="DestinationAlert">
+	<library language="C++" system="Windows">
+		<file>CSP-DestinationAlert</file>
+		<properties/>
+	</library>
+	<class>
+		<class-id class="DestinationAlert" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newDestination"/>
+			<function name="Delete" method="deleteDestination"/>
+			<function name="Options" method="newDestinationOptions"/>
+			<function name="Validate" method="validateDestinationOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="Destination" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

@@ -1,0 +1,2 @@
+# Once a day, at 00:05, update IP address cache of all Check_MK hosts
+5 0 * * * cmk --update-dns-cache

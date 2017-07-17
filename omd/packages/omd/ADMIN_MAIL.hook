@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Alias: Administrative Mail Address
+# Menu: Basic
+# Description:
+#  Mails sent to the sites user (e.g. by crontab) are forwarded
+#  to this mail address. If you configure none, the mail is
+#  handled normally by the mailer config.
+
+case "$1" in
+    default)
+        if [ -e $OMD_ROOT/.forward ]; then
+            head -n1 $OMD_ROOT/.forward
+        else
+            echo ""
+        fi
+    ;;
+    choices)
+        echo "^([-a-zäöüÄÖÜA-Z0-9_.+%]+@[-a-zäöüÄÖÜA-Z0-9]+(\.[-a-zäöüÄÖÜA-Z0-9]+)*)?$"
+    ;;
+    set)
+        if [ -n "$2" ]; then
+            echo $2 > $OMD_ROOT/.forward
+        else
+            rm -f $OMD_ROOT/.forward
+        fi
+    ;;
+esac

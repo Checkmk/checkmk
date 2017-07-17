@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="SPRINTFFORMATTER">
+	<library language="C++" system="Windows">
+		<file>CSP-SprintfFormatter</file>
+		<properties/>
+	</library>
+	<class>
+		<class-id class="SprintfFormatter" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newSprintfFormatter"/>
+			<function name="Delete" method="deleteSprintfFormatter"/>
+			<function name="Options" method="newSprintfFormatterOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="Formatter" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

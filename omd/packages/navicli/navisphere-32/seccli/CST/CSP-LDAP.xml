@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="LDAP">
+	<catalog language="EN">
+		<message code="1600" name="bindDN" text="Distinguished name to use to connect to the LDAP server"/>
+		<message code="1601" name="bindPassword" text="Password for the privileged account"/>
+		<message code="1602" name="serverName" text="Space-separated list of LDAP server hosts or IP addresses"/>
+		<message code="1603" name="ldapDebugLevel" text="Debug Level for LDAP library"/>
+		<message code="1604" name="protocol" text="Protocol to use: ldap (unsecure) or ldaps (secure over TLS)"/>
+		<message code="1605" name="portNumber" text="Port number for communicating with the LDAP server"/>
+		<message code="1606" name="ldapTimeout" text="Timeout interval (in milliseconds) to use when communicating with the LDAP server"/>
+		<message code="1607" name="userSearchPath" text="Distinguished name at which to begin user searches on the server"/>
+		<message code="1608" name="groupSearchPath" text="Distinguished name at which to begin group searches on the server"/>
+		<message code="1609" name="userObjectClass" text="Object class identifying users in the LDAP hierarchy"/>
+		<message code="1610" name="groupObjectClass" text="Object class identifying groups in the LDAP hierarchy"/>
+		<message code="1611" name="userIdAttribute" text="Attribute that identifies a user login ID"/>
+		<message code="1612" name="groupNameAttribute" text="Attribute that identifies a group name"/>
+		<message code="1613" name="groupMemberAttribute" text="Attribute identifying group membership for a user"/>
+		<message code="1614" name="certificateFile" text="Local path of the file containing the service certificate (LDAPS only)"/>
+		<message code="1615" name="clientCertificate" text="Local path of the file containing the client certificate (LDAPS only)"/>
+		<message code="1616" name="clientKeyFile" text="Local path of the file containing the client private key (LDAPS only)"/>
+		<message code="1617" name="clientKeyPassword" text="The password of the client private key file, if it is encrypted(LDAPS only)"/>
+		<message code="1618" name="LDAP_E_BIND_DN" text="Bind display name or password is empty"/>
+		<message code="1619" name="LDAP_E_BER_OPTION" text="ber_set_option() returned error"/>
+		<message code="1620" name="LDAP_E_SET_OPTION" text="ldap_set_option() returned error"/>
+		<message code="1621" name="LDAP_E_INIT" text="Error from ldap_init()"/>
+		<message code="1622" name="LDAP_E_V3" text="Could not set protocol version to 3"/>
+		<message code="1623" name="LDAP_E_REFERRAL" text="Could not turn off LDAP referrals"/>
+		<message code="1624" name="LDAP_E_TIMEOUT" text="Could not set LDAP timeout"/>
+		<message code="1625" name="LDAP_E_TLS_NEVER" text="Could not set TLS NEVER option"/>
+		<message code="1626" name="LDAP_E_TLS_HARD" text="Could not set TLS hard option"/>
+		<message code="1627" name="LDAP_E_TLS_CERT" text="Could not set bypass certificate option"/>
+		<message code="1628" name="LDAP_E_CERT_FILE" text="Failed to set the certificate file name"/>
+		<message code="1629" name="LDAP_E_CLIENT_CERT" text="Failed to set the client certificate file name"/>
+		<message code="1630" name="LDAP_E_BIND_ERROR" text="LDAP error during bind"/>
+		<message code="1631" name="LDAP_E_SERVER_DOWN" text="LDAP Server is down"/>
+		<message code="1632" name="LDAP_E_TIMED_OUT" text="Timeout while communicating with the LDAP server"/>
+		<message code="1633" name="LDAP_E_INVALID_CHAR" text="The character '*' is not allowed in a user name"/>
+		<message code="1634" name="LDAP_E_NO_USER" text="No entry found for user name"/>
+		<message code="1635" name="LDAP_E_SEARCH_USER" text="Search for user name failed"/>
+		<message code="1636" name="LDAP_E_DUP_USER" text="User name is not unique"/>
+		<message code="1637" name="LDAP_E_EMPTY_NAME" text="An empty user name is not allowed"/>
+		<message code="1638" name="LDAP_E_NULL_USER_DN" text="Null user DN entry"/>
+		<message code="1639" name="CSP_LDAP_E_CLIENT_KEY" text="Failed to set the client key file name"/>
+		<message code="1640" name="CSP_LDAP_E_INVALID_CREDS" text="Invalid LDAP credentials"/>
+		<message code="1641" name="CSP_LDAP_E_ALREADY_STARTED" text="LDAPSession already started"/>
+		<message code="1642" name="CSP_LDAP_E_NOT_STARTED" text="LDAPSession not started"/>
+		<message code="1643" name="CSP_LDAP_E_REBIND" text="Error re-binding to the LDAP Server after authentication"/>
+		<message code="1644" name="CSP_LDAP_BAD_USER_CREDS" text="Invalid username or password"/>
+		<message code="1645" name="CSP_LDAP_NO_USER_SEARCH" text="No LDAP search path for usernames"/>
+		<message code="1646" name="CSP_LDAP_E_NO_SUCH_OBJECT" text="Cannot find named user/group  "/>
+		<message code="1647" name="CSP_LDAP_E_QUERY_GROUPS" text="Error querying for user groups"/>
+		<message code="1648" name="CSP_LDAP_E_NO_SERVER" text="Server name or port not set"/>
+		<message code="1649" name="userSearchFilter" text="User search filter"/>
+		<message code="1650" name="groupSearchFilter" text="Group search filter"/>
+		<message code="1651" name="CSP_LDAP_E_QUERY_FAILED" text="Could not execute query"/>
+	</catalog>
+	<library language="C++" system="Windows">
+		<file>CSP-LDAP</file>
+		<properties/>
+	</library>
+	<class>
+		<class-id class="LDAP" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newAuthority"/>
+			<function name="Delete" method="deleteAuthority"/>
+			<function name="Options" method="newOptions"/>
+			<function name="Validate" method="validateOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="Authority" version="1"/>
+			<attributes>
+				<attribute name="Type">
+					<value>password</value>
+					<value>LDAP</value>
+				</attribute>
+			</attributes>
+		</interface>
+		<interface>
+			<interface-id class="UserAccountManagement" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

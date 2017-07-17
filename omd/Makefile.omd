@@ -1,0 +1,58 @@
+# General settings included by all packages
+
+PERL               := /usr/bin/perl
+P5TMPDIST          := $(shell pwd)/../perl-modules/dist
+
+# Makefile is loaded either from omd/packages/*/Makefile or omd/Makefile
+ifneq (,$(wildcard ../../../omd/distro))
+    REPO_PATH      := $(abspath ../../..)
+else
+    REPO_PATH      := $(abspath ..)
+endif
+
+EDITION            := raw
+EDITION_SHORT      := cre
+ifneq (,$(wildcard $(REPO_PATH)/enterprise))
+    EDITION        := enterprise
+    EDITION_SHORT  := cee
+endif
+ifneq (,$(wildcard $(REPO_PATH)/managed))
+    EDITION        := managed
+    EDITION_SHORT  := cme
+endif
+
+CMK_VERSION        := 1.5.0i1
+OMD_SERIAL         := 38
+# Will be set to ".demo" by cmk build system when building a demo package
+DEMO_SUFFIX        :=
+OMD_VERSION        := $(CMK_VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
+
+OMD_BASE           := /omd
+OMD_PHYSICAL_BASE  := /opt/omd
+OMD_ROOT           := $(OMD_BASE)/versions/$(OMD_VERSION)
+
+default: build
+
+# Determine the distro we are running on and its version
+DISTRO_INFO        := $(shell $(REPO_PATH)/omd/distro)
+DISTRO_NAME        := $(word 1, $(DISTRO_INFO))
+DISTRO_VERSION     := $(word 2, $(DISTRO_INFO))
+
+# Depending on the distro we include a Makefile with distro-
+# specific variables
+include $(REPO_PATH)/omd/distros/$(DISTRO_NAME)_$(DISTRO_VERSION).mk
+
+# Net result -> all Makefiles have now access to the linux distribution
+# specific settings
+
+
+TMP_PYTHON_PATH    := $(REPO_PATH)/omd/packages/python/tmp.python27
+PYTHON_LIB         := $(TMP_PYTHON_PATH)/lib/python2.7
+PYTHON_BIN         := $(TMP_PYTHON_PATH)/bin/python
+PYTHON             := LD_LIBRARY_PATH=$(TMP_PYTHON_PATH)/lib $(PYTHON_BIN)
+
+check-python:
+	@if [ ! -d "$(TMP_PYTHON_PATH)" ]; then \
+	    echo "ERROR: You need to build the \"python\" package first" ; \
+	    exit 1 ; \
+	fi

@@ -1,0 +1,29 @@
+Title: Fixed SSL connection issues in different situations
+Level: 1
+Component: omd
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1497013634
+
+Whenever a server component of Check_MK opens a SSL connection it uses the trusted certificate
+authorities to verify the SSL certificate of the destination server. This is used for example
+when performing WATO replication to slave sites or when special agents are communicating via
+HTTPS.
+
+In older Check_MK versions the system wide trusted CAs were used to do the verification. During
+development of Check_MK 1.4 different parts of Check_MK that establish communications via HTTPS
+have been refactored to use a new library (python requests) which does not care about the system
+wide trusted CAs by default. This lead to SSL verification errors because former verifyable
+certificates were now not verifyable anymore. The error messages were different in this situation,
+one example is: "SSLError: [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed".
+
+The first change is that we have now fixed that to get the old functionality back. Check_MK is
+now searching <tt>/etc/ssl/certs</tt> or </tt>/etc/pki/tls/certs</tt> for system wide trusted
+CAs by default.
+
+The second change is that we have now added a new global setting which you can use to change
+the behaviour: <i>Site Management &gt; Trusted certificate authorities for SSL</i>. You can
+disable trusting system wide trusted CAs and upload your custom CAs if you need it.

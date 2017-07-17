@@ -1,0 +1,15 @@
+Title: omd backup/cp/mv: Excluding more files with --no-logs/--no-past option
+Level: 1
+Component: omd
+Compatible: compat
+Version: 1.5.0i1
+Date: 1490168760
+Class: fix
+
+The --no-logs and --no-past options of the omd backup, omd cp and omd mv commands now
+exclude the following files in additon to the already excluded ones:
+
+var/log/*.log
+var/check_mk/inventory_archive/*/*
+var/check_mk/wato/snapshots/*.tar
+var/check_mk/wato/log/audit.log

@@ -1,0 +1,11 @@
+--- mod_python-3.1.4/src/Makefile.in.cflags
++++ mod_python-3.1.4/src/Makefile.in
+@@ -45,7 +45,7 @@
+ 	@echo
+ 	@echo 'Compiling for DSO.'
+ 	@echo
+-	$(APXS) $(INCLUDES) -c $(SRCS) $(LDFLAGS) $(LIBS) @SOLARIS_HACKS@
++	$(APXS) $(INCLUDES) $(APXS_CFLAGS) -c $(SRCS) $(LDFLAGS) $(LIBS) @SOLARIS_HACKS@
+ 	@rm -f mod_python.so
+ 	@ln -s .libs/mod_python.so mod_python.so
+ clean:

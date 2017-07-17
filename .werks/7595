@@ -1,0 +1,10 @@
+Title: SLES12: Now shipping with missing check_dns active check
+Level: 1
+Component: rpm
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.4.0i2
+Date: 1476179080
+
+

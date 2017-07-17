@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# Alias: TCP port number for Apache
+# Menu: Web GUI
+# Description:
+#  Configure the TCP port used for the Apache webserver
+#  process of this site. This option is only useful if
+#  APACHE is set to "on" and WEBSERVER is set to "own".
+#
+#  After changing this variable, the man Apache webserver
+#  must be restarted.
+
+# Load other config options. This hook needs
+# APACHE_TCP_PORT.
+if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
+    . $OMD_ROOT/etc/omd/site.conf
+else
+    CONFIG_APACHE_TCP_ADDR=${CONFIG_APACHE_TCP_ADDR:-127.0.0.1}
+fi
+
+case "$1" in
+    default)
+        # Scan for a free port number by looking at the
+        # configuration of the other sites...
+        PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT 5000)
+        echo "$PORT"
+    ;;
+    choices)
+        echo "[1-9][0-9]{0,4}"
+    ;;
+    set)
+        PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT $2)
+        cat <<EOF > $OMD_ROOT/etc/apache/listen-port.conf
+# This file is created by 'omd config set APACHE_TCP_PORT'.
+# Better do not edit manually
+Listen $CONFIG_APACHE_TCP_ADDR:$PORT
+EOF
+        cat <<EOF > $OMD_ROOT/etc/apache/proxy-port.conf
+# This file is created by 'omd config set APACHE_TCP_PORT'.
+# Better do not edit manually
+<IfModule mod_proxy_http.c>
+  <Proxy http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE>
+    Order allow,deny
+    allow from all
+  </Proxy>
+
+  <Location /$OMD_SITE>
+    # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
+    # the site apache is down and someone tries to access the page.
+    # "disablereuse=On" prevents the apache from keeping the connection which leads to
+    # wrong devlivered pages sometimes
+    ProxyPass http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE retry=0 disablereuse=On timeout=120
+    ProxyPassReverse http://$CONFIG_APACHE_TCP_ADDR:$PORT/$OMD_SITE
+  </Location>
+</IfModule>
+EOF
+        if [ "$PORT" != "$2" ] ; then
+            echo "Apache port $2 is in use. I've choosen $PORT instead." >&2
+            echo "$PORT"
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_APACHE_MODE" = own ]
+    ;;
+esac

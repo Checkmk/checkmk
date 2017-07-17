@@ -1,0 +1,189 @@
+#!/bin/sh
+#
+### BEGIN INIT INFO
+# Provides:          npcd
+# Required-Start:
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: pnp4nagios NPCD Daemon Version 0.6.5
+# Description:          Nagios Performance Data C Daemon
+### END INIT INFO
+
+# chkconfig: 345 99 01
+#
+# File : npcd
+#
+
+cd ###ROOT###
+. lib/omd/init_profile
+. etc/omd/site.conf
+
+# Not needed when using Check_MK Micro Core
+[ "$CONFIG_CORE" = cmc -o "$CONFIG_CORE" = none ] && exit 5
+
+servicename=npcd
+prefix=###ROOT###
+exec_prefix=###ROOT###
+NpcdBin=###ROOT###/bin/npcd
+NpcdCfgFile=###ROOT###/etc/pnp4nagios/npcd.cfg
+NpcdVarDir=###ROOT###/var/pnp4nagios
+NpcdRunFile=###ROOT###/tmp/pnp4nagios/run/npcd.pid
+NpcdLockDir=###ROOT###/tmp/pnp4nagios/lock
+NpcdLockFile=npcd
+NpcdUser=###SITE###
+NpcdGroup=###SITE###
+
+status_npcd (){
+    pid_npcd
+    if ps -p $NpcdPID > /dev/null 2>&1; then
+        return 0
+    else
+        if test -f $NpcdLockDir/$NpcdLockFile; then
+            return 2
+        else
+            return 1
+        fi
+    fi
+    return 1
+}
+
+printstatus_npcd(){
+    if status_npcd $1 $2; then
+        echo "$servicename (pid $NpcdPID) is running..."
+        exit 0
+    elif test $? = 2; then
+        echo "$servicename is not running but subsystem locked"
+        exit 2
+    else
+        echo "$servicename is not running"
+        exit 1
+    fi
+}
+
+
+killproc_npcd (){
+    kill $2 $NpcdPID
+}
+
+
+pid_npcd (){
+    if [ -f "$NpcdRunFile" ]; then
+        # Handle stale pidfiles
+        TMPPID=`head -n 1 $NpcdRunFile`
+        if ps -p $TMPPID >/dev/null 2>&1; then
+            NpcdPID=$TMPPID
+            return 0
+        fi
+    fi
+
+    # It might happen that there is no pidfile or a stale pidfile but
+    # a process is running. As fallback check the process table for the
+    # oldest process executed by the site user
+    PID=$(pgrep -u $OMD_SITE -o -f $NpcdBin)
+    if [ -n "$PID" ]; then
+        NpcdPID=$PID
+        return 0
+    fi
+    return 1
+}
+
+
+# Source function library
+# Solaris doesn't have an rc.d directory, so do a test first
+if [ -f /etc/rc.d/init.d/functions ]; then
+    . /etc/rc.d/init.d/functions
+elif [ -f /etc/init.d/functions ]; then
+    . /etc/init.d/functions
+fi
+#### OMD ### 
+# Start only if PNP is enabled
+. ###ROOT###/etc/omd/site.conf
+if ( [ "$CONFIG_PNP4NAGIOS" != on ] && [ "$CONFIG_PNP4NAGIOS" != npcd ] ) ; then
+    exit 5
+fi
+
+# Check that npcd exists.
+if [ ! -f $NpcdBin ]; then
+    echo "Executable file $NpcdBin not found.  Exiting."
+    exit 1
+fi
+
+# Check that npcd.cfg exists.
+if [ ! -f $NpcdCfgFile ]; then
+    echo "Configuration file $NpcdCfgFile not found.  Exiting."
+    exit 1
+fi
+          
+# See how we were called.
+__init_hook $0 $1 pre
+case "$1" in
+    start)
+        status_npcd
+        if [ $? -eq 0 ]; then
+            echo "$servicename already started..."
+            exit 1
+        fi
+        echo -n "Starting $servicename..."
+        touch $NpcdRunFile
+        chown $NpcdUser:$NpcdGroup $NpcdRunFile
+        $NpcdBin -d -f $NpcdCfgFile
+        if [ -d $NpcdLockDir ]; then touch $NpcdLockDir/$NpcdLockFile; fi
+        echo "OK"
+	__init_hook $0 $1 post
+        exit 0
+        ;;
+
+    stop)
+        status_npcd
+        if ! [ $? -eq 0 ]; then
+            echo "$servicename was not running... could not stop"
+            exit 0
+        fi
+        echo -n "Stopping $servicename..."
+
+        pid_npcd
+        killproc_npcd npcd
+
+        # now we have to wait for npcd to exit and remove its
+        # own NpcdRunFile, otherwise a following "start" could
+        # happen, and then the exiting npcd will remove the
+        # new NpcdRunFile, allowing multiple npcd daemons
+        # to (sooner or later) run - John Sellens
+        # echo -n 'Waiting for npcd to exit .'
+        for i in 1 2 3 4 5 6 7 8 9 10 ; do
+             if status_npcd > /dev/null; then
+             echo -n '.'
+             sleep 1
+             else
+             break
+             fi
+	done
+        if status_npcd > /dev/null; then
+             echo ''
+             echo 'Warning - $servicename did not exit in a timely manner'
+        else
+             echo 'OK'
+        fi
+        rm -f $NpcdLockDir/$NpcdLockFile 
+	__init_hook $0 $1 post
+	exit 0
+        ;;
+
+    status)
+        printstatus_npcd
+        ;;
+
+    restart|reload)
+        $0 stop
+        $0 start
+        ;;
+
+    *)
+        echo "Usage: $servicename {start|stop|restart|reload|status}"
+        exit 1
+        ;;
+
+esac
+  
+# End of this script

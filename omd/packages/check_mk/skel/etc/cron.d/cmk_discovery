@@ -1,0 +1,2 @@
+# Every 5 minutes autodiscover services marked by discovery check
+*/5 * * * * cmk --discover-marked-hosts

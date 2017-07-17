@@ -1,0 +1,12 @@
+Title: Updated naviseccli to 7.33.8.1.19 to fix segfaults on some platforms
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1497940305
+
+The shipped naviseccli crashed on some distribution, for example Debian linux.
+We have updated it now to version 7.33.8.1.19 to fix this issue.

@@ -1,0 +1,14 @@
+Title: Fixed possible stored XSS using the internal server error handler
+Level: 1
+Component: omd
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1499327039
+
+The internal server error handler was displaying unescaped information from the
+error log of the webserver. When an attacker is able to add HTML code to error
+messages written to the error log of the web server, the internal server error
+handler was not escaping the HTML code when displaying it to the user.

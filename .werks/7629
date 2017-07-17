@@ -1,0 +1,22 @@
+Title: Fixed OpenSSL version warning when used on older distros (e.g. SLES11)
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.4.0i3
+Date: 1486125844
+Class: fix
+
+The warning message could occur e.g. when using the active check "check_bi_aggr"
+or other components on older distros that ship with an old OpenSSL version that
+is not supported anymore by the OpenSSL project.
+
+The message is:
+
+"You are linking against OpenSSL 0.9.8, which is no longer
+
+RuntimeError: You are linking against OpenSSL 0.9.8, which is no longer
+support by the OpenSSL project. You need to upgrade to a newer version
+of OpenSSL."
+
+Basically this is only a warning message, but prevents some components form working
+properly because scripts are producing unexpected output.

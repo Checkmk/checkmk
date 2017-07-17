@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Alias: Nagios Themes
+# Menu: Web GUI
+# Description:
+#  Switch between installed Nagios Themes
+
+case "$1" in
+   default)
+       echo "classicui"
+   ;;
+   choices)
+       echo "classicui: enable ClassicUI"
+       echo "exfoliation: enable Exfoliation Theme"
+   ;;
+   set)
+       if [ "$2" == "classicui" ];then
+           ln -sfn ../../../../../share/nagios/htdocs/themes/$2/stylesheets $OMD_ROOT/local/share/nagios/htdocs/theme/stylesheets
+           ln -sfn ../../../../../share/nagios/htdocs/themes/$2/images $OMD_ROOT/local/share/nagios/htdocs/theme/images
+
+       elif [ "$2" == "exfoliation" ];then
+           ln -sfn ../../../../../share/nagios/htdocs/themes/$2/stylesheets $OMD_ROOT/local/share/nagios/htdocs/theme/stylesheets
+           ln -sfn ../../../../../share/nagios/htdocs/themes/$2/images $OMD_ROOT/local/share/nagios/htdocs/theme/images
+       fi
+   ;;
+   depends)
+       [ "$CONFIG_CORE" = "nagios" ]
+   ;;
+
+esac

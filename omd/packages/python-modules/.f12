@@ -1,0 +1,2 @@
+make
+sudo OMD_ROOT=/omd/versions/default make install

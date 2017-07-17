@@ -1,0 +1,10 @@
+Title: python-modules: Added paramiko module needed for check_sftp
+Level: 1
+Component: packages
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.5.0i1
+Date: 1488279378
+
+

@@ -1,0 +1,7 @@
+###ROOT###/var/log/notify.log {
+	missingok
+	rotate 7
+	compress
+	delaycompress
+	notifempty
+}

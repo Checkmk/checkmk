@@ -1,0 +1,17 @@
+Title: Avoid quadratic time complexity in buffer handling
+Level: 2
+Component: packages
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1456415332
+
+The rrdcached used a naive algorithm for handling its write buffer, leading
+to quadratic time complexity: In an example at hand, more than 130GB of data
+was needlessly shuffled around when trying to fetch a small amount of data
+points. This algorithm has been replaced by one with amortized linear
+complexity, vastly improving performance for various rrdcached operations.
+
+Fixed a few arbitrary length restrictions on the way.
+

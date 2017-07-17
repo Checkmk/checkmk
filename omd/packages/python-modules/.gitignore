@@ -1,0 +1,7 @@
+dest
+tmp.python
+src/pyasn1-[0-9].[0-9].[0-9]/
+src/pysnmp-[0-9].[0-9].[0-9]/
+src/pysmi-[0-9].[0-9].[0-9]/
+src/pysnmp
+src/pysphere-[0-9].[0-9].[0-9]/

@@ -20,8 +20,10 @@ api
 ar-lib
 autom4te.cache/
 ChangeLog
-check_mk-*.spec
 check_mk-*.tar.gz
+check-mk-*.tar.gz
+check-mk-*.build
+check-mk-*.dsc
 clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz
@@ -43,5 +45,4 @@ mkeventd/
 stamp-h1
 tags
 tests/web/data/*
-var/
 .idea/

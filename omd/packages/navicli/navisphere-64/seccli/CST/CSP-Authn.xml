@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="Authentication">
+	<catalog language="EN">
+		<message code="2000" name="CSP_E_AUTHN_CANCELED" text="User canceled authentication request"/>
+		<message code="2001" name="CSP_E_NO_AUTHORITY" text="Could not find authentication authority for the policy"/>
+		<message code="2002" name="CSP_E_NO_PRINCIPAL" text="The input token is NULL"/>
+		<message code="2003" name="CSP_E_NULL_TOKEN" text="The input token is not of an understood type"/>
+		<message code="2004" name="CSP_E_BAD_TOKEN" text="No principal found in token"/>
+		<message code="2005" name="AuthenticationPolicy" text="Enter the steps for the authentication policy"/>
+		<message code="2006" name="TokenDuration" text="How many seconds a token is valid for"/>
+		<message code="2007" name="AuthenticationChoiceCredential" text="Which Authority do you wish to authenticate against?"/>
+		<message code="2008" name="LoginSuccess" text="%s %s authenticated in authority %s/%s"/>
+		<message code="2009" name="LoginFailed" text="%s %s failed to authenticate against authority %s/%s"/>
+		<message code="2010" name="AuthenticationPassed" text="Successfully authenticated Principal %s %s %s/%s"/>
+		<message code="2011" name="AuthenticationFailed" text="Failed to authenticate Principal %s %s %s/%s"/>
+		<message code="2012" name="AuthenticationAborted" text="Aborted authentication  for principal %s %s %s/%s"/>
+		<message code="2013" name="AuthenticationFailedMessage" text="Authentication failed"/>
+		<message code="2014" name="AuthenticationFailedNoContext" text="Authentication failed: No matching session found"/>
+    <message code="2015" name="Issuer" text="The id of the SAML token issuer"/>
+    <message code="2016" name="Audience" text="Comma-separated list of audiences the token is issued for (e.g. domain names)"/>
+    <message code="2017" name="AudienceRestriction" text="Comma-separated list of valid audiences"/>
+    <message code="2018" name="IssuerRestriction" text="Comma-separated list of valid token issuers"/>
+    <message code="2019" name="InclusiveNamespacePrefixList" text="c14a inclusive namespace prefix list"/>
+    <message code="2020" name="CertChainLength" text="Number of certificates to include into the token signature. 0 or less: include the entire chain; 1: only signing cert; 2 or greater: the actual # of certs in the chain"/>
+    <message code="2021" name="IncludeTrustedRootCertificate" text="Indicates whether or not to include trusted root certificate into the token signature"/>
+    <message code="2022" name="TimeToLive" text="How many seconds a token is valid for"/>
+  </catalog>
+	<library language="C++" system="Windows">
+		<file>CSP-AuthenticationService</file>
+		<properties/>
+	</library>
+	<class>
+		<class-id class="CSPAuthenticationService" version="1"/>
+		<description/>
+		<schema>Value</schema>
+		<functions language="C++">
+			<function name="Create" method="newAuthenticationService"/>
+			<function name="Delete" method="deleteAuthenticationService"/>
+			<function name="Options" method="newOptions"/>
+			<function name="Validate" method="validateOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="Authentication" version="1"/>
+			<attributes/>
+		</interface>
+		<interface>
+			<interface-id class="Service" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+	<class>
+		<class-id class="CSPToken" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newToken"/>
+			<function name="Delete" method="deleteToken"/>
+		</functions>
+		<interface>
+			<interface-id class="Token" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+	<class>
+		<class-id class="TokenService" version="1"/>
+		<description/>
+		<schema/>
+		<functions language="C++">
+			<function name="Create" method="newTokenService"/>
+			<function name="Delete" method="deleteTokenService"/>
+			<function name="Options" method="newTokenOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="TokenService" version="1"/>
+			<attributes/>
+		</interface>
+		<interface>
+			<interface-id class="Service" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

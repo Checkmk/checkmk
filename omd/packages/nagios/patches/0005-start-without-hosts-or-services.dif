@@ -1,0 +1,37 @@
+diff -ru nagios-3.4.4.orig//base/config.c nagios-3.4.4/base/config.c
+--- nagios-3.4.4.orig//base/config.c	2013-01-27 11:42:37.761784344 +0100
++++ nagios-3.4.4/base/config.c	2013-01-27 11:43:32.078583379 +0100
+@@ -1770,10 +1770,6 @@
+ 	/*****************************************/
+ 	if(verify_config == TRUE)
+ 		printf("Checking services...\n");
+-	if(get_service_count() == 0) {
+-		logit(NSLOG_VERIFICATION_ERROR, TRUE, "Error: There are no services defined!");
+-		errors++;
+-		}
+ 	total_objects = 0;
+ 	for(temp_service = service_list; temp_service != NULL; temp_service = temp_service->next) {
+ 
+@@ -1935,11 +1931,6 @@
+ 	if(verify_config == TRUE)
+ 		printf("Checking hosts...\n");
+ 
+-	if(get_host_count() == 0) {
+-		logit(NSLOG_VERIFICATION_ERROR, TRUE, "Error: There are no hosts defined!");
+-		errors++;
+-		}
+-
+ 	total_objects = 0;
+ 	for(temp_host = host_list; temp_host != NULL; temp_host = temp_host->next) {
+ 
+@@ -2181,10 +2172,6 @@
+ 	/*****************************************/
+ 	if(verify_config == TRUE)
+ 		printf("Checking contacts...\n");
+-	if(contact_list == NULL) {
+-		logit(NSLOG_VERIFICATION_ERROR, TRUE, "Error: There are no contacts defined!");
+-		errors++;
+-		}
+ 	for(temp_contact = contact_list, total_objects = 0; temp_contact != NULL; temp_contact = temp_contact->next, total_objects++) {
+ 
+ 		/* check service notification commands */

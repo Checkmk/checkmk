@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Alias: Initialize site crontab via etc/init.d/crontab
+# Menu: Basic
+# Description:
+#  Merge all files in etc/cron.d and initialize a site specific crontab.
+
+case "$1" in
+    default)
+        echo "on"
+    ;;
+    choices)
+        echo "on: Initialize site specific crontabs at boot time"
+        echo "off: Don´t create a site specific crontab"
+    ;;
+esac

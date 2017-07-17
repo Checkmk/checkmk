@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Alias: Use multisite cookie auth
+# Menu: Web GUI
+# Description:
+#  Multisite provides a cookie based authentication which can be
+#  used as alternative to the default basic authentication.
+#  The cookie authentication is done by multisite. The cookie can
+#  also be used by other addons like NagVis. This is switched
+#  using this option.
+
+case "$1" in
+   default)
+       echo "on"
+   ;;
+   choices)
+       echo "on: use cookie authentication"
+       echo "off: use basic authentication"
+   ;;
+   set)
+       APACHE_CFG=${OMD_ROOT}/etc/apache/conf.d/cookie_auth.conf
+       NAGVIS_CFG=${OMD_ROOT}/etc/nagvis/conf.d/cookie_auth.ini.php
+       PNP_CFG=${OMD_ROOT}/etc/pnp4nagios/config.d/cookie_auth.php
+       WIKI_CFG=${OMD_ROOT}/etc/dokuwiki/cookie_auth.php
+       if [ "$2" == "on" ]; then
+           cat > $APACHE_CFG <<EOF
+<LocationMatch ^/${OMD_SITE}/(omd|wiki|nagvis|check_mk|pnp4nagios)>
+    Order allow,deny
+    Allow from all
+    Satisfy any
+</LocationMatch>
+EOF
+
+          if [ -d ${NAGVIS_CFG%/*} ]; then
+              cat > $NAGVIS_CFG <<EOF
+[global]
+logonmodule="LogonMultisite"
+logon_multisite_htpasswd="/omd/sites/$OMD_SITE/etc/htpasswd"
+logon_multisite_secret="/omd/sites/$OMD_SITE/etc/auth.secret"
+logon_multisite_serials="/omd/sites/$OMD_SITE/etc/auth.serials"
+EOF
+          fi
+
+          if [ -d ${WIKI_CFG%/*} ]; then
+              cat > $WIKI_CFG <<EOF
+<?php
+// Created by OMD hook MULTISITE_COOKIE_AUTH
+//
+\$conf['useacl'] = 1;
+\$conf['authtype'] = 'authmultisite';
+\$conf['superuser'] = '@admin';
+\$conf['multisite']['authfile'] = '/omd/sites/$OMD_SITE/var/check_mk/wato/auth/auth.php';
+\$conf['multisite']['auth_secret'] = '/omd/sites/$OMD_SITE/etc/auth.secret';
+\$conf['multisite']['auth_serials'] = '/omd/sites/$OMD_SITE/etc/auth.serials';
+\$conf['multisite']['htpasswd'] = '/omd/sites/$OMD_SITE/etc/htpasswd';
+?>
+EOF
+          fi
+
+          if [ -d ${PNP_CFG%/*} ]; then
+              cat > $PNP_CFG <<EOF
+<?php
+// Created by OMD hook MULTISITE_COOKIE_AUTH
+//
+// Using the multisite cookie based authentication when no
+// REMOTE_USER available.
+//
+\$conf['auth_multisite_enabled']    = TRUE;
+\$conf['auth_multisite_htpasswd']   = '/omd/sites/$OMD_SITE/etc/htpasswd';
+\$conf['auth_multisite_secret']     = '/omd/sites/$OMD_SITE/etc/auth.secret';
+\$conf['auth_multisite_serials']    = '/omd/sites/$OMD_SITE/etc/auth.serials';
+\$conf['auth_multisite_login_url']  = '/$OMD_SITE/check_mk/login.py';
+?>
+EOF
+          fi
+
+       else
+          [ -f $APACHE_CFG ] && rm $APACHE_CFG
+          [ -f $NAGVIS_CFG ] && rm $NAGVIS_CFG
+          [ -f $PNP_CFG ] && rm $PNP_CFG
+          [ -f $WIKI_CFG ] && rm $WIKI_CFG
+       fi
+       true
+   ;;
+esac

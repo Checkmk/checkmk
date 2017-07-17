@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use Getopt::Long;
+
+use lib 'lib';
+use BuildHelper;
+
+BEGIN {
+    for my $val (qw/PERL5LIB PERL_MB_OPT PERL_LOCAL_LIB_ROOT PERL_MM_OPT/) {
+        undef $ENV{$val} if defined $ENV{$val};
+    }
+};
+
+####################################
+my $verbose = 0;
+GetOptions ('v|verbose' => \$verbose);
+
+####################################
+my @packages     = glob("../jmx4perl/jmx4perl-*.tar.gz ../thruk/Thruk-*.tar.gz ../check_webinject/Webinject-*.tar.gz");
+my $more_modules = {
+        'App::cpanminus'                => '0',         # OMD
+        'CPAN'                          => '0',         # OMD
+        'File::Copy::Recursive'         => '0',         # required by Thruks inc::Module::Install
+        'Module::Install'               => '1.01',      # OMD
+        'Monitoring::Plugin'            => '0',         # OMD
+        'Nagios::Plugin'                => '0.35',      # OMD
+        'HTML::Lint'                    => '2.06',      # OMD tests
+        'Monitoring::Livestatus'        => '0',         # OMD
+        'Monitoring::Livestatus::Class' => '0.04',      # OMD tests
+        'DBI'                           => '0',         # check_oracle_health / check_mysql_health
+        'DBD::mysql'                    => '4.019',     # check_mysql_health
+        'Gearman::Client'               => '1.11',      # pnp4nagios / gearman
+        'Crypt::Rijndael'               => '1.09',      # pnp4nagios / gearman
+        'Term::ReadLine::Gnu'           => '1.20',      # jmx4perl
+};
+
+####################################
+# get module dependencies
+my($deps,$files) = BuildHelper::get_all_deps(1);
+my $orphaned     = BuildHelper::get_orphaned($deps, $files, $verbose);
+
+####################################
+# remove referenced modules
+for my $p (@packages) {
+    my $meta     = BuildHelper::get_meta($p);
+    my $rem_deps = BuildHelper::get_deps_from_meta($meta, 1);
+    for my $rem_dep (keys %{$rem_deps}) {
+        my $rdep = BuildHelper::module_to_file($rem_dep, $files, $rem_deps->{$rem_dep});
+        my $cv   = BuildHelper::is_core_module($rem_dep, 5.008);
+        if(!$rdep and !BuildHelper::version_compare($cv, $rem_deps->{$rem_dep}) and $rem_dep !~ m/^(Test|Devel)/mx) {
+            print "WARNING: ",$rem_dep, " does not resolve to a file\n";
+        } else {
+            delete $orphaned->{$rdep} if $rdep;
+        }
+    }
+}
+
+####################################
+for my $f (keys %{$files}) {
+    my($m,$v) = BuildHelper::file_to_module($files->{$f});
+    my $cv    = BuildHelper::is_core_module($m, 5.008);
+    if($cv and BuildHelper::version_compare($cv, $v)) {
+        print "WARNING: ",$m, " is a core module (".$cv.") and ",$files->{$m}," should be removed\n";
+    }
+}
+
+# check other modules
+for my $m (keys %{$more_modules}) {
+    if(BuildHelper::is_core_module($m, 5.008)) {
+        print "WARNING: ",$m, " is a core module and should be removed\n";
+        next;
+    }
+    my $mdep = BuildHelper::module_to_file($m, $files, $more_modules->{$m});
+    if(!defined $mdep) {
+        print "WARNING: ",$m, " does not resolve to a file\n";
+    } else {
+        delete $orphaned->{$mdep};
+    }
+}
+
+####################################
+# print result
+for my $file (keys %{$orphaned}) {
+    my($m,$v) = BuildHelper::file_to_module($file);
+    if(!defined $more_modules->{$m}) {
+        print $file, " is orphaned and could probably removed\n";
+    }
+}
+

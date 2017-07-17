@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<loader loader="RoleManagement">
+	<catalog language="EN">
+		<message code="1000" name="FileName" text="The file in which to store the directory"/>
+		<message code="1001" name="CSP_E_ROLE_EXISTS" text="Role already exists"/>
+		<message code="1002" name="CSP_E_NO_ROLE" text="Could not find role"/>
+		<message code="1003" name="CSP_E_ROLE_CREATE_FAIL" text="Failure creating role %s in role database %s. [%s] [%d]"/>
+		<message code="1004" name="CSP_S_ROLE_CREATE_SUCCESS" text="Role %s created in role database %s."/>
+		<message code="1005" name="CSP_E_ROLE_DELETE_FAIL" text="Failure deleting role %s from role database %s. [%s] [%d]"/>
+		<message code="1006" name="CSP_S_ROLE_DELETE_SUCCESS" text="Role %s deleted from role database %s."/>
+		<message code="1007" name="CSP_E_ROLE_LIST_FAIL" text="Failure listing roles from role database %s. [%s] [%d]"/>
+		<message code="1008" name="CSP_S_ROLE_LIST_SUCCESS" text="Roles listed for role database %s."/>
+		<message code="1009" name="CSP_E_ROLE_LISTMEMBERSHIP_FAIL" text="Failure viewing role membership for %s from account manager %s. [%s] [%d]"/>
+		<message code="1010" name="CSP_S_ROLE_LISTMEMBERSHIP_SUCCESS" text="Role membership viewed for %s from account manager %s."/>
+		<message code="1011" name="CSP_E_ROLE_ADDROLEMEMBER_FAIL" text="Failure adding role %s to %s from account manager %s. [%s] [%d]"/>
+		<message code="1012" name="CSP_S_ROLE_ADDROLEMEMBER_SUCCESS" text="Role %s added to %s from account manager %s."/>
+		<message code="1013" name="CSP_E_ROLE_DELETEROLEMEMBER_FAIL" text="Failure removing role %s from %s in account manager %s. [%s] [%d]"/>
+		<message code="1014" name="CSP_S_ROLE_DELETEROLEMEMBER_SUCCESS" text="Role %s removed from %s in account manager %s."/>
+	</catalog>
+	<library language="C++" system="Windows">
+		<file>CSP-RoleManagement</file>
+		<properties>
+      </properties>
+	</library>
+	<class>
+		<class-id class="RoleManagement" version="1"/>
+		<description/>
+		<schema>Value</schema>
+		<functions language="C++">
+			<function name="Create" method="newRoleManagement"/>
+			<function name="Delete" method="deleteRoleManagement"/>
+			<function name="Options" method="newOptions"/>
+		</functions>
+		<interface>
+			<interface-id class="RoleManagement" version="1"/>
+			<attributes/>
+		</interface>
+		<interface>
+			<interface-id class="Service" version="1"/>
+			<attributes/>
+		</interface>
+	</class>
+</loader>

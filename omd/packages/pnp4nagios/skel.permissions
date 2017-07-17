@@ -1,0 +1,2 @@
+etc/init.d/npcd 0755
+etc/init.d/pnp_gearman_worker 0755

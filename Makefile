@@ -21,27 +21,39 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+#
+
+EDITION            := raw
+EDITION_SHORT      := cre
 
 ifneq (,$(wildcard enterprise))
 ENTERPRISE         := yes
+EDITION            := enterprise
+EDITION_SHORT      := cee
 else
 ENTERPRISE         := no
 endif
 
 ifneq (,$(wildcard managed))
 MANAGED            := yes
+EDITION            := managed
+EDITION_SHORT      := cme
 else
 MANAGED            := no
 endif
 
-SHELL              := /bin/bash
 VERSION            := 1.5.0i1
+DEMO_SUFFIX        :=
+OMD_VERSION        := $(VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
+
+SHELL              := /bin/bash
 NAME               := check_mk
 PREFIX             := /usr
 BINDIR             := $(PREFIX)/bin
 CONFDIR            := /etc/$(NAME)
 LIBDIR             := $(PREFIX)/lib/$(NAME)
 DISTNAME           := $(NAME)-$(VERSION)
+DIST_ARCHIVE       := check-mk-$(EDITION)-$(OMD_VERSION).tar.gz
 TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12
 CXX_FLAGS          := -g -O3 -Wall -Wextra
@@ -130,17 +142,22 @@ PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs
         optimize-images packages setup setversion tidy version \
 	am--refresh skel
 
-all: dist packages
-
 help:
-	@echo "make                           --> dist, rpm and deb"
-	@echo "make dist                      --> create TGZ package"
-	@echo "make packages                  --> create packages of agents"
-	@echo "make DESTDIR=/tmp/hirn install --> install directly"
-	@echo "make version                   --> switch to new version"
-	@echo "make headers                   --> create/update fileheades"
-	@echo "make healspaces                --> remove trailing spaces in code"
-	@echo "setup			      --> prepare system for development"
+	@echo "setup			      --> Prepare system for development and building"
+	@echo "make dist                      --> Create source tgz for later building of rpm/deb"
+	@echo "make rpm                       --> Create rpm package"
+	@echo "make deb                       --> Create deb package"
+	@echo "make cma                       --> Create cma package"
+	@echo "make version                   --> Switch to new version"
+
+rpm:
+	$(MAKE) -C omd rpm
+
+deb:
+	$(MAKE) -C omd deb
+
+cma:
+	$(MAKE) -C omd cma
 
 check: check-spaces check-permissions check-binaries check-version
 
@@ -169,26 +186,45 @@ check-version:
 	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
 	    false ; }
 
-dist: $(DISTNAME).tar.gz
+# Would use --exclude-vcs-ignores but that's available from tar 1.29 which
+# is currently not used by most distros
+dist:
+	@EXCLUDES= ; \
+	if [ -d .git ]; then \
+	    git rev-parse --short HEAD > COMMIT ; \
+	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
+		EXCLUDES+=" --exclude $${X%*/}" ; \
+	    done ; \
+	fi ; \
+	tar -cz --wildcards -f $(DIST_ARCHIVE) \
+	    --exclude-vcs \
+	    --exclude $(DIST_ARCHIVE) \
+	    $$EXCLUDES \
+	    --transform 's|^|check-mk-$(EDITION)-$(OMD_VERSION)/|gS' \
+	    * .werks .clang* ; \
+	if [ -f COMMIT ]; then \
+	    rm COMMIT ; \
+	fi
 
-$(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) ChangeLog packages
+# This tar file is only used by "omd/packages/check_mk/Makefile"
+$(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) ChangeLog
 	@echo "Making $(DISTNAME)"
 	rm -rf $(DISTNAME)
 	mkdir -p $(DISTNAME)
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
 	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update
 	gzip $(DISTNAME)/bin.tar
-	pycompile lib ; \
+	python -m compileall lib ; \
 	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) -C lib \
 	    --transform 's|^|cmk/|g' $$(cd lib ; ls) ; \
 	  rm lib/*.pyc
-	pycompile cmk_base ; \
+	python -m compileall cmk_base ; \
 	  tar czf $(DISTNAME)/base.tar.gz $(TAROPTS) cmk_base/* \
 	    --exclude ".f12" \
 	    --exclude "cee" \
 	    --exclude "cee.py*" ; \
 	  rm cmk_base/*.pyc
-	pycompile agents/special/lib ; \
+	python -m compileall agents/special/lib ; \
 	  tar czf $(DISTNAME)/special_agent_api.tar.gz $(TAROPTS) -C agents/special/lib cmk_special_agent_api.py \
 	    --exclude ".f12"
 	  rm agents/special/lib/*.pyc
@@ -252,6 +288,9 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 ChangeLog: .werks/werks
 	PYTHONPATH=. python scripts/create-changelog.py ChangeLog .werks/werks
 
+packages:
+	$(MAKE) -C agents packages
+
 # NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
 # so we do things in a slightly complicated way.
 mk-livestatus-$(VERSION).tar.gz:
@@ -263,136 +302,9 @@ mk-livestatus-$(VERSION).tar.gz:
 	tar czf mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 
-ifeq ($(ENTERPRISE),yes)
-
-enterprise/werks: $(WERKS)
-	PYTHONPATH=. python scripts/precompile-werks.py .werks enterprise/werks cee
-
-enterprise/ChangeLog: enterprise/werks
-	PYTHONPATH=. python scripts/create-changelog.py enterprise/ChangeLog enterprise/werks
-
-dist: cmc-$(VERSION).tar.gz
-
-# We currently fake a package for cmc. Ugly...
-cmc-$(VERSION).tar.gz: config.h enterprise/werks enterprise/ChangeLog
-	$(MAKE) -C livestatus distclean
-	$(MAKE) -C enterprise/core distclean
-	rm -rf cmc-$(VERSION)
-	mkdir cmc-$(VERSION)
-	tar cf - $(TAROPTS) \
-          aclocal.m4 \
-          ar-lib \
-          compile \
-          config.guess \
-          config.h.in \
-          config.sub \
-          configure \
-          depcomp \
-          install-sh \
-          missing \
-          stamp-h1 \
-          .bugs \
-          Makefile \
-          configure.ac \
-          enterprise \
-          livestatus \
-          m4 | tar xf - -C cmc-$(VERSION)
-	mv cmc-$(VERSION)/enterprise/skel{,.permissions} cmc-$(VERSION)
-	mv cmc-$(VERSION)/enterprise/LIVEPROXYD.hook cmc-$(VERSION)
-	cp enterprise/werks cmc-$(VERSION)/werks
-	cp enterprise/ChangeLog cmc-$(VERSION)/ChangeLog-cmc
-	sed -i '1 i\include ../../Makefile.omd' cmc-$(VERSION)/Makefile
-	cd cmc-$(VERSION) \
-	    && tar czf ../cmc-$(VERSION).tar.gz $(TAROPTS) .bugs *
-	rm -rf cmc-$(VERSION)
-
-build: config.h
-	LANG=C $(MAKE) -C livestatus -j3
-	LANG=C $(MAKE) -C enterprise/core -j3
-	$(MAKE) -C enterprise/locale all
-
-install:
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
-	cp -rv enterprise/web/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/web
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/cee
-	install -m 644 enterprise/cmk_base/cee/* $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/cee
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/default_config
-	install -m 644 enterprise/cmk_base/default_config/* $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/default_config
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/modes
-	install -m 644 enterprise/cmk_base/modes/* $(DESTDIR)$(OMD_ROOT)/lib/python/cmk_base/modes
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/alert_handlers
-	install -m 755 enterprise/alert_handlers/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/alert_handlers
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/bakery
-	install -m 644 enterprise/agents/bakery/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/bakery
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/plugins
-	install -m 755 enterprise/agents/mk-remote-alert-handler $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents
-	install -m 755 enterprise/agents/plugins/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/plugins
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/plugins
-	install -m 755 enterprise/agents/windows/plugins/*.exe $(DESTDIR)$(OMD_ROOT)/share/check_mk/agents/windows/plugins
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/reporting/images
-	install -m 644 enterprise/reporting/images/* $(DESTDIR)$(OMD_ROOT)/share/check_mk/reporting/images
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 enterprise/core/src/cmc $(DESTDIR)$(OMD_ROOT)/bin
-	install -m 755 enterprise/bin/* $(DESTDIR)$(OMD_ROOT)/bin
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/cmc
-	install -m 755 enterprise/core/src/checkhelper/checkhelper $(DESTDIR)$(OMD_ROOT)/lib/cmc
-	install -m 755 enterprise/core/src/checkhelper/icmpsender $(DESTDIR)$(OMD_ROOT)/lib/cmc
-	install -m 755 enterprise/core/src/checkhelper/icmpreceiver $(DESTDIR)$(OMD_ROOT)/lib/cmc
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de/LC_MESSAGES
-	install -m 644 enterprise/locale/de/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de/LC_MESSAGES
-	install -m 644 enterprise/locale/de/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	install -m 755 enterprise/active_checks/check_lql_service $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_enterprise
-	install -m 644 enterprise/EULA-* $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_enterprise
-	install -m 644 ChangeLog-cmc $(DESTDIR)$(OMD_ROOT)/share/doc/check_mk_enterprise/ChangeLog
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
-	install -m 644 enterprise/diskspace $(DESTDIR)$(OMD_ROOT)/share/diskspace/check_mk_enterprise
-	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks
-	install -m 644 werks $(DESTDIR)$(OMD_ROOT)/share/check_mk/werks/werks-cmc
-
-skel:
-	mkdir -p $(SKEL)/var/check_mk/rrd
-endif
-
-ifeq ($(MANAGED),yes)
-managed/werks: $(WERKS)
-	PYTHONPATH=. python scripts/precompile-werks.py .werks managed/werks cme
-
-managed/ChangeLog: managed/werks
-	PYTHONPATH=. python scripts/create-changelog.py managed/ChangeLog managed/werks
-
-dist: cme-$(VERSION).tar.gz
-
-cme-$(VERSION).tar.gz: managed/werks managed/ChangeLog
-	rm -rf cme-$(VERSION)
-	mkdir cme-$(VERSION)
-	cp -pr managed cme-$(VERSION)/managed
-	mv cme-$(VERSION)/managed/ChangeLog cme-$(VERSION)/ChangeLog-cme
-	mv cme-$(VERSION)/managed/Makefile.omd cme-$(VERSION)/Makefile
-	cd cme-$(VERSION) \
-	    && tar czf ../cme-$(VERSION).tar.gz $(TAROPTS) *
-	rm -rf cme-$(VERSION)
-
-endif
-
-packages:
-	$(MAKE) -C agents packages
-
 version:
-	[ "$$(head -c 12 /etc/issue)" = "Ubuntu 10.10" \
-          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 11.04" \
-          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 11.10" \
-          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 12.04" \
-          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 12.10" \
-          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 13.04" \
-          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 13.10" \
-          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 14.04" \
-          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.04" \
-          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 15.10" \
-          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 16.04" \
-          -o "$$(head -c 20 /etc/issue)" = "Debian GNU/Linux 6.0" \
-          -o "$$(head -c 18 /etc/issue)" = "Debian GNU/Linux 7" ] \
+	[ "$$(head -c 6 /etc/issue)" = "Ubuntu" \
+          -o "$$(head -c 16 /etc/issue)" = "Debian GNU/Linux" ] \
           || { echo 'You are not on the reference system!' ; exit 1; }
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
 	if [ -n "$$newversion" ] ; then $(MAKE) NEW_VERSION=$$newversion setversion ; fi
@@ -403,12 +315,10 @@ setversion:
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' bin/mkbackup ; \
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' lib/__init__.py bin/mkbench bin/livedump; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
-	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
+	$(MAKE) -C omd NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
-	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' enterprise/bin/liveproxyd
-	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' enterprise/bin/cmcdump
-	sed -i 's/^__version__ = ".*/__version__ = "$(NEW_VERSION)"/' enterprise/agents/plugins/cmk-update-agent
+	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
 
 headers:
@@ -424,7 +334,7 @@ optimize-images:
 	        echo "Optimizing $$F..." ; \
 	        pngcrush -q -rem alla -brute $$F $$F.opt ; \
 	        mv $$F.opt $$F; \
-	    done ; \
+	    done ; 
 	else \
 	    echo "Missing pngcrush, not optimizing images! (run \"make setup\" to fix this)" ; \
 	fi
@@ -450,11 +360,7 @@ clean:
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
 	       .werks/werks \
-	       .werks/cme-werks \
-	       enterprise/.werks/werks \
-	       ChangeLog \
-	       enterprise/ChangeLog \
-	       managed/ChangeLog
+	       ChangeLog
 	find -name "*~" | xargs rm -f
 
 mrproper:
@@ -476,6 +382,8 @@ setup:
 	    librrd-dev \
 	    pngcrush \
 	    slimit
+	$(MAKE) -C tests setup
+	$(MAKE) -C omd setup
 
 ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	  autoreconf --install --include=m4
@@ -487,15 +395,15 @@ config.status: ar-lib compile config.guess config.sub install-sh missing depcomp
 	else \
 	  if test -d ../boost/local ; then \
 	    BOOST_OPT="--with-boost=$(abspath ../boost/local)" ; \
-	  elif test -d ../cmk-omd/packages/boost/local ; then \
-	    BOOST_OPT="--with-boost=$(abspath ../cmk-omd/packages/boost/local)" ; \
+	  elif test -d omd/packages/boost/local ; then \
+	    BOOST_OPT="--with-boost=$(abspath omd/packages/boost/local)" ; \
 	  elif test ! -d /usr/include/boost -a -d /usr/include/boost141/boost ; then \
 	    BOOST_OPT="CPPFLAGS=-I/usr/include/boost141" ; \
 	  else \
 	    BOOST_OPT="DUMMY1=" ; \
 	  fi ; \
-	  if test -d "../rrdtool/rrdtool-1.7.0/src/.libs"; then \
-	    RRD_OPT="LDFLAGS=-L$(realpath ../rrdtool/rrdtool-1.7.0/src/.libs)" ; \
+	  if test -d "omd/packages/rrdtool/rrdtool-1.7.0/src/.libs"; then \
+	    RRD_OPT="LDFLAGS=-L$(realpath omd/packages/rrdtool/rrdtool-1.7.0/src/.libs)" ; \
 	  else \
 	    RRD_OPT="DUMMY2=" ; \
 	  fi ; \

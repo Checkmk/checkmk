@@ -1,0 +1,13 @@
+Title: Set correct bash environment for cronjobs
+Level: 1
+Component: omd
+Compatible: compat
+Version: 1.2.7i3
+Date: 1460720891
+Class: fix
+
+There were certain scenarios were the .profile file was not loaded for crontabs.
+This fix always sets these environment variables for the crontabs
+SHELL=/bin/bash
+BASH_ENV=$OMD_ROOT/.profile
+

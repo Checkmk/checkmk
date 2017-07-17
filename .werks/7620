@@ -1,0 +1,9 @@
+Title: SLES: Added php-openssl as dependency in case you need to make SSL connections
+Level: 1
+Component: distros
+Compatible: compat
+Version: 1.4.0i3
+Date: 1484149755
+Class: fix
+
+

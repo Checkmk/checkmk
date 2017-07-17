@@ -1,0 +1,4 @@
+#
+# Run every hour, 5 minutes after full hour
+#
+5 * * * * diskspace > $OMD_ROOT/var/log/diskspace.log 2>&1

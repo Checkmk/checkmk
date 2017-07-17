@@ -1,0 +1,252 @@
+#####################################################################
+# IDOMOD CONFIG FILE
+#####################################################################
+
+
+# INSTANCE NAME
+# This option identifies the "name" associated with this particular
+# instance of Icinga and is used to seperate data coming from multiple
+# instances.  Defaults to 'default' (without quotes).
+
+instance_name=###SITE###
+
+
+
+# OUTPUT TYPE
+# This option determines what type of output sink the IDO NEB module
+# should use for data output.  Valid options include:
+#   file       = standard text file
+#   tcpsocket  = TCP socket
+#   unixsocket = UNIX domain socket (default)
+
+#output_type=file
+#output_type=tcpsocket
+output_type=unixsocket
+
+
+
+# OUTPUT
+# This option determines the name and path of the file or UNIX domain 
+# socket to which output will be sent if the output type option specified
+# above is "file" or "unixsocket", respectively.  If the output type
+# option is "tcpsocket", this option is used to specify the IP address
+# of fully qualified domain name of the host that the module should
+# connect to for sending output.
+
+#output=/usr/local/icinga/var/ido.dat
+#output=127.0.0.1
+output=###ROOT###/tmp/run/ido.sock
+
+
+
+# TCP PORT
+# This option determines what port the module will connect to in
+# order to send output.  This option is only valid if the output type
+# option specified above is "tcpsocket".
+
+tcp_port=5668
+
+
+
+# ENCRYPTION
+# This option determines if the module will use SSL to encrypt the 
+# network traffic between module and ido2db daemon.
+# Both sides have to enable this feature which depends on SSL Libraries
+# like openssl or kerberos 
+# This option is only valid if the output type
+# option specified above is "tcpsocket".
+#
+# A value of '1' will enable this feature
+
+use_ssl=0
+
+
+
+# OUTPUT BUFFER
+# This option determines the size of the output buffer, which will help
+# prevent data from getting lost if there is a temporary disconnect from
+# the data sink.  The number of items specified here is the number of
+# lines (each of variable size) of output that will be buffered.
+
+output_buffer_items=5000
+
+
+
+# BUFFER FILE
+# This option is used to specify a file which will be used to store the
+# contents of buffered data which could not be sent to the IDO2DB daemon
+# before Icinga shuts down.  Prior to shutting down, the IDO NEB module
+# will write all buffered data to this file for later processing.  When
+# Icinga (re)starts, the IDO NEB module will read the contents of this
+# file and send it to the IDO2DB daemon for processing.
+
+buffer_file=###ROOT###/var/icinga/idomod.tmp
+
+
+
+# FILE ROTATION INTERVAL
+# This option determines how often (in seconds) the output file is
+# rotated by Icinga.  File rotation is handled by Icinga by executing
+# the command defined by the file_rotation_command option.  This
+# option has no effect if the output_type option is a socket.
+
+file_rotation_interval=14400
+
+
+
+# FILE ROTATION COMMAND
+# This option specified the command (as defined in Icinga) that is
+# used to rotate the output file at the interval specified by the
+# file_rotation_interval option.  This option has no effect if the
+# output_type option is a socket.
+#
+# See the file 'misccommands.cfg' for an example command definition
+# that you can use to rotate the log file.
+
+#file_rotation_command=rotate_ido_log
+
+
+
+# FILE ROTATION TIMEOUT
+# This option specified the maximum number of seconds that the file
+# rotation command should be allowed to run before being prematurely
+# terminated.
+
+file_rotation_timeout=60
+
+
+
+# RECONNECT INTERVAL
+# This option determines how often (in seconds) that the IDO NEB
+# module will attempt to re-connect to the output file or socket if
+# a connection to it is lost.
+
+reconnect_interval=15
+
+
+
+# RECONNECT WARNING INTERVAL
+# This option determines how often (in seconds) a warning message will
+# be logged to the Icinga log file if a connection to the output file
+# or socket cannot be re-established.
+
+reconnect_warning_interval=15
+#reconnect_warning_interval=900
+
+
+
+# DATA PROCESSING OPTION
+# This option determines what data the IDO NEB module will process. 
+# Do not mess with this option unless you know what you're doing!!!!
+#
+# Read the source code (module/idoutils/include/idomod.h) and look for 
+# "IDOMOD_PROCESS_" to determine what values to use here.  
+# Values from source code should be OR'ed to get the value to use here.  
+# A value of -1 will cause all data to be processed. 
+
+# Basically you have to calculate from the following values
+#
+#define IDOMOD_PROCESS_PROCESS_DATA                   1
+#define IDOMOD_PROCESS_TIMED_EVENT_DATA               2
+#define IDOMOD_PROCESS_LOG_DATA                       4
+#define IDOMOD_PROCESS_SYSTEM_COMMAND_DATA            8
+#define IDOMOD_PROCESS_EVENT_HANDLER_DATA             16
+#define IDOMOD_PROCESS_NOTIFICATION_DATA              32
+#define IDOMOD_PROCESS_SERVICE_CHECK_DATA             64
+#define IDOMOD_PROCESS_HOST_CHECK_DATA                128
+#define IDOMOD_PROCESS_COMMENT_DATA                   256
+#define IDOMOD_PROCESS_DOWNTIME_DATA                  512
+#define IDOMOD_PROCESS_FLAPPING_DATA                  1024
+#define IDOMOD_PROCESS_PROGRAM_STATUS_DATA            2048
+#define IDOMOD_PROCESS_HOST_STATUS_DATA               4096
+#define IDOMOD_PROCESS_SERVICE_STATUS_DATA            8192
+#define IDOMOD_PROCESS_ADAPTIVE_PROGRAM_DATA          16384
+#define IDOMOD_PROCESS_ADAPTIVE_HOST_DATA             32768
+#define IDOMOD_PROCESS_ADAPTIVE_SERVICE_DATA          65536
+#define IDOMOD_PROCESS_EXTERNAL_COMMAND_DATA          131072
+#define IDOMOD_PROCESS_OBJECT_CONFIG_DATA             262144
+#define IDOMOD_PROCESS_MAIN_CONFIG_DATA               524288
+#define IDOMOD_PROCESS_AGGREGATED_STATUS_DATA         1048576
+#define IDOMOD_PROCESS_RETENTION_DATA                 2097152
+#define IDOMOD_PROCESS_ACKNOWLEDGEMENT_DATA           4194304
+#define IDOMOD_PROCESS_STATECHANGE_DATA               8388608
+#define IDOMOD_PROCESS_CONTACT_STATUS_DATA            16777216
+#define IDOMOD_PROCESS_ADAPTIVE_CONTACT_DATA          33554432
+#
+#define IDOMOD_PROCESS_EVERYTHING                     67108863
+#
+# You may use the Online Calculator by Gerhard Lausser:
+# http://labs.consol.de/nagios/ndo-data-processing-options/
+# (please note that there is a checkbox for everything!)
+#
+# The default setting will remove everything not used by default.
+#	TIMED_EVENT_DATA 	(-2)
+#	SERVICE_CHECK_DATA 	(-64)
+#	HOST_CHECK_DATA 	(-128)
+#
+# 67108863-(2+64+128) = 67108863-194 = 67108669
+
+data_processing_options=67108669
+
+# If you are planning to use NagVis you may want to use the following setting:
+#
+#data_processing_options=4061953
+#
+# You may have to experiment in your environment and find the best value yourself!
+
+
+# CONFIG OUTPUT OPTION
+# This option determines what types of configuration data the IDO
+# NEB module will dump from Icinga.  Values can be OR'ed together.
+# Hint: 2 is the preferred value, doing a restart after initial startup.
+#
+# Values:
+# 	  0 = Don't dump any configuration information
+#         1 = Dump only original config (from config files)
+#         2 = Dump config only after retained information has been restored
+#         3 = Dump both original and retained configuration
+
+config_output_options=2
+
+
+
+# DEBUG LEVEL
+# This option determines how much (if any) debugging information will
+# be written to the debug file.  OR values together to log multiple
+# types of information.
+# Values: -1 = Everything
+#          0 = Nothing
+#          1 = Process info
+#          2 = SQL queries
+
+debug_level=0
+
+
+
+# DEBUG VERBOSITY
+# This option determines how verbose the debug log out will be.
+# Values: 0 = Brief output
+#         1 = More detailed
+#         2 = Very detailed
+
+debug_verbosity=1
+
+
+
+# DEBUG FILE
+# This option determines where the daemon should write debugging information.
+
+debug_file=###ROOT###/var/icinga/idomod.debug
+
+
+
+# MAX DEBUG FILE SIZE
+# This option determines the maximum size (in bytes) of the debug file.  If
+# the file grows larger than this size, it will be renamed with a .old
+# extension.  If a file already exists with a .old extension it will
+# automatically be deleted.  This helps ensure your disk space usage doesn't
+# get out of control when debugging.
+
+# 100M
+max_debug_file_size=100000000
+

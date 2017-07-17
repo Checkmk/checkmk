@@ -1,0 +1,40 @@
+diff -ru heirloom-pkgtools-070227/libinst/mntinfo.c heirloom-pkgtools-070227-patched/libinst/mntinfo.c
+--- heirloom-pkgtools-070227/libinst/mntinfo.c	2007-02-26 01:31:06.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libinst/mntinfo.c	2008-12-31 21:37:15.000000000 +0100
+@@ -91,8 +91,8 @@
+ struct	fstable	**fs_tab = NULL;
+ 
+ #define	PKGDBROOT	VSADMDIR
+-#define	MOUNT		"/sbin/mount"
+-#define	UMOUNT		"/sbin/umount"
++#define	MOUNT		"/bin/mount"
++#define	UMOUNT		"/bin/umount"
+ 
+ #define	setmntent	fopen
+ #define	endmntent	fclose
+diff -ru heirloom-pkgtools-070227/libpkg/pkglibmsgs.h heirloom-pkgtools-070227-patched/libpkg/pkglibmsgs.h
+--- heirloom-pkgtools-070227/libpkg/pkglibmsgs.h	2007-02-24 13:43:01.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libpkg/pkglibmsgs.h	2008-12-31 21:37:48.000000000 +0100
+@@ -268,8 +268,8 @@
+ /* package mount errors and msgs */
+ #define	ERR_FSTYP	"unable to determine fstype for <%s>"
+ #define	ERR_NOTROOT	"You must be \"root\" when using mountable media."
+-#define	MOUNT		"/sbin/mount"
+-#define	UMOUNT		"/sbin/umount"
++#define	MOUNT		"/bin/mount"
++#define	UMOUNT		"/bin/umount"
+ #define	FSTYP		"/usr/sbin/fstyp"
+ 
+ #define	LABEL0	"Insert %%v %d of %d for <%s> package into %%p."
+diff -ru heirloom-pkgtools-070227/libpkg/runcmd.c heirloom-pkgtools-070227-patched/libpkg/runcmd.c
+--- heirloom-pkgtools-070227/libpkg/runcmd.c	2007-02-26 01:31:07.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libpkg/runcmd.c	2008-12-31 21:37:32.000000000 +0100
+@@ -177,7 +177,7 @@
+ 
+ 		/* execute target executable */
+ 
+-		execl("/sbin/sh", "/sbin/sh", "-c", cmd, NULL);
++		execl("/bin/sh", "/bin/sh", "-c", cmd, NULL);
+ 		progerr(pkg_gt("exec of <%s> failed, errno=%d"), cmd, errno);
+ 		_exit(99);
+ 	} else if (pid < 0) {

@@ -1,0 +1,205 @@
+Summary:        Check_MK
+Name:           check-mk-%{edition}-%{pkg_version}
+Version:        SET BY MAKEFILE
+Release:        SET BY MAKEFILE
+License:        GPL
+URL:            http://mathias-kettner.com
+Group:          Application/System
+Source:         check-mk-%{edition}-%{version}.tar.gz
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
+AutoReq:        off
+AutoProv:       off
+Provides:       omd
+Requires:
+
+#%define _missing_doc_files_terminate_build 0
+#%define _unpackaged_files_terminate_build 0
+# disable binary striping
+%global __os_install_post %{nil}
+# disable creating debug packages
+%global debug_package %{nil}
+
+
+%description
+Check_MK is a full featured system monitoring
+solution. This package ships with Check_MK, Nagios,
+the Nagios plugins, Livestatus, Multisite,
+PNP4Nagios, NagVis, and other addons. Please visit
+http://mathias-kettner.com/.
+
+%prep
+%setup -q -n check-mk-%{edition}-%{version}
+
+%build
+cd omd
+make -j 4
+make pack
+
+%install
+mkdir -p $RPM_BUILD_ROOT
+tar xzf omd/check-mk-%{edition}-bin-%{version}.tar.gz -C $RPM_BUILD_ROOT
+# Remove all global symbolic links from package. They are shared
+# among all versions and must be handled in %post und %postun
+# in order to avoid RPM conflicts
+rm -f $RPM_BUILD_ROOT/opt/omd/versions/default
+rm -f $RPM_BUILD_ROOT/omd
+rm -f $RPM_BUILD_ROOT/usr/bin/omd
+rm -f $RPM_BUILD_ROOT/usr/share/man/man8/omd.8.gz
+rm -f $RPM_BUILD_ROOT/@APACHE_CONFDIR@/*
+rm -f $RPM_BUILD_ROOT/etc/init.d/omd
+rm -f $RPM_BUILD_ROOT/etc/systemd/system/omd.service
+
+%files
+%defattr(-,root,root)
+/opt/omd
+%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_icmp
+%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/nagios/plugins/check_dhcp
+%attr(4750,root,omd) /opt/omd/versions/%{version}/bin/mkeventd_open514
+%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/cmc/icmpsender
+%attr(4750,root,omd) /opt/omd/versions/%{version}/lib/cmc/icmpreceiver
+
+%pre
+groupadd -r omd 2>/dev/null || true
+# create symlink if not exists
+if [ ! -e /omd ]
+then
+    ln -sfn /opt/omd /omd
+fi
+
+%post
+# Activate init script for OMD, but only the first
+# time an OMD package is being installed. The admin
+# might have deactivated the script himself and does
+# not want to make it implicitely active again.
+ACTIVATE_INIT=0
+if [ ! -e /omd/versions/default ] ; then
+    ACTIVATE_INIT=1
+fi
+
+echo "New default version is %{version}."
+ln -sfn "%{version}" /omd/versions/default
+ln -sfn /omd/versions/default/bin/omd /usr/bin/omd
+ln -sfn /omd/versions/default/share/man/man8/omd.8.gz /usr/share/man/man8/omd.8.gz
+ln -sfn /omd/versions/default/share/omd/apache.conf @APACHE_CONFDIR@/zzz_omd.conf
+
+IS_SYSTEMD=0
+if [ -d /usr/lib/systemd ] && which systemctl >/dev/null 2>&1; then
+    IS_SYSTEMD=1
+fi
+
+# Detect whether or not manage startup through systemd or SysV
+if [ $IS_SYSTEMD -eq 1 ]; then
+    echo "Installing systemd service: omd.init"
+
+    # Cleanup eventually existing SysV entry
+    if [ -e /etc/init.d/omd ]; then
+        # Check whether or not startup was enabled before and enable it
+        # with systemd again later
+        if chkconfig omd >/dev/null 2>&1; then
+            ACTIVATE_INIT=1
+        fi
+
+        rm -f /etc/init.d/omd
+    fi
+
+    cp /omd/versions/default/share/omd/omd.service /etc/systemd/system/omd.service
+    systemctl daemon-reload
+
+else
+    echo "Installing SysV init script: omd"
+    ln -sfn /omd/versions/default/share/omd/omd.init /etc/init.d/omd
+fi
+
+# If the init script has been marked as to be activated
+# really activate the init script now
+if [ $ACTIVATE_INIT -eq 1 ]; then
+    echo "Activating startup during system boot"
+    if [ $IS_SYSTEMD -eq 1 ]; then
+        systemctl enable omd
+    else
+        chkconfig --add omd
+        chkconfig omd on
+    fi
+fi
+
+# SLES: make sure apache modules are activated
+if which a2enmod >/dev/null 2>&1
+then
+    echo "Makeing sure that Apache modules proxy, http_proxy and rewrite are activated."
+    a2enmod proxy 2>/dev/null || true
+    a2enmod proxy_http 2>/dev/null || true
+    a2enmod rewrite 2>/dev/null || true
+%if 0%{?suse_version} > 1200
+    # Only relevant for SLES12 or newer (having apache 2.4)
+    # This still allows old permission configs like "Order: ..."
+    a2enmod mod_access_compat 2>/dev/null || true
+%endif
+fi
+
+# SLES: make sure that the following file exists:
+if [ -d /etc/apache2/sysconfig.d ]
+then
+    touch /etc/apache2/sysconfig.d/include.conf
+fi
+
+# Make sure, global apache startscript is activated
+chkconfig --add @APACHE_NAME@ >/dev/null 2>&1
+chkconfig @APACHE_NAME@ on    >/dev/null 2>&1
+
+# RHEL / CENTOS >= 6.4, remove symlinks from existing sites in /etc/fstab
+sed -i "s/^tmpfs  \/omd\/sites/tmpfs  \/opt\/omd\/sites/" /etc/fstab
+
+# ensure apache is running
+service @APACHE_NAME@ start >/dev/null 2>&1
+exit 0
+
+%preun
+# ON UNINSTALL: Make sure no sites use that version
+# Do not check this on new release of the same OMD version
+# (I know this has not happend yet in official releases, but might
+#  happen in future? At least I had such a case with my own builds now.)
+if [ $1 = 0 ] ; then
+    for link in /omd/sites/*/version
+    do
+        target=$(readlink $link 2>/dev/null) || continue
+        version=${target##*/}
+        if [ "$version" = %{version} ]
+        then
+            site=${link#/omd/sites/}
+            site=${site%/version}
+            echo "Site $site is still using this version!" >&2
+            exit 1
+        fi
+    done
+fi
+
+
+%postun
+rm -f /omd/versions/default
+v=$(ls -A /omd/versions 2>/dev/null| sort -n | tail -n 1)
+if [ -n "$v" ]
+then
+    echo "New default version is $v"
+    ln -sfn "$v" /omd/versions/default
+else
+    echo "Removing system group 'omd'"
+    groupdel omd
+    echo "Removing global symbolic links"
+    rm -f /usr/bin/omd
+    rm -f /usr/share/man/man8/omd.8.gz
+
+    # Can be either the symlink /etc/init.d/omd or the regular
+    # file /etc/systemd/system/omd.service.
+    if [ -e /etc/init.d/omd ]; then
+        rm -f /etc/init.d/omd
+    elif [ -f /etc/systemd/system/omd.service ]; then
+        rm -f /etc/systemd/system/omd.service
+    fi
+
+    rmdir /opt/omd/versions
+    rm -f @APACHE_CONFDIR@/zzz_omd.conf
+    rm -f /omd
+    # Try to remove empty directories
+    rmdir /opt/omd/sites 2>/dev/null || true
+    rmdir /opt/omd 2>/dev/null || true
+fi

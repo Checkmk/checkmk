@@ -1,0 +1,12 @@
+--- mod_fcgid-2.3.6/modules/fcgid/fcgid_pm_unix.c.orig	2011-01-03 17:25:30.000000000 +0100
++++ mod_fcgid-2.3.6/modules/fcgid/fcgid_pm_unix.c	2011-01-03 17:26:39.000000000 +0100
+@@ -282,7 +282,8 @@
+          * When running children as the configured user, the real uid
+          * is switched.
+          */
+-        if (ap_unixd_config.suexec_enabled) {
++        //if (ap_unixd_config.suexec_enabled) {
++        if (0) {
+             if (getuid() != 0) {
+                 ap_log_error(APLOG_MARK, APLOG_EMERG, 0, main_server,
+                              "mod_fcgid: current user is not root while suexec is enabled, exiting now");

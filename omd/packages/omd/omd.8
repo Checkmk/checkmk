@@ -1,0 +1,456 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH OMD 8 "August  7, 2010"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+omd \- admin interface for OMD, the Open Monitoring Distribution
+.SH SYNOPSIS
+.B omd
+.RI [ command
+.RI [ site... ]
+.RI ]
+.SH DESCRIPTION
+.B OMD - the Open Monitoring Distribution
+is something really new. OMD bundles existing open source software to
+ease the installation procedure of Nagios and many important addons
+like NagVis, PNP4Nagios, rrdtool, nagios-plugins, Check_MK,
+MK Livestatus, Dokuwiki, NSCA, check_nrpe and others.
+
+.B OMD
+supports:
+
+- multiple versions of OMD installed in parallel
+.br
+- multiple instances of Nagios running in parallel (so called "sites")
+
+.PP
+.\" TeX users may be more comfortable with the \fB<whatever>\fP and
+.\" \fI<whatever>\fP escape sequences to invode bold face and italics,
+.\" respectively.
+\fBomd\fP is the administration interface for creating and maintaining
+sites within OMD - the open monitoring distribution.
+.SH COMMANDS
+.TP
+.B omd help
+Show short summary of available commands.
+.TP
+.B omd version [--bare, -b] [SITE]
+Show the default version of your OMD installation. OMD supports
+multiple versions to be installed in parallel.
+The option \fB-b\fP or \fB--bare\fP reduces the output to the plain
+version number (for easier parsing in scripts). If you specify the name
+of a site then that site's version is being displayed instead of the
+default version.
+.TP
+.B omd versions [--bare, -b]
+Show a list of all installed versions of OMD. The option \fB-b\fP or \fB--bare\fP
+makes the output leave out a hint to the default version and easier parseable by
+scripts.
+.TP
+.B omd setversion [VERSION]
+Sets the default OMD version to be used for new sites. Can be called with a target
+version as optional argument or without argument to get a menu of available versions displayed.
+
+This mainly updates the symlink \fB/omd/versions/default\fP. On debian based distributions
+it calls update-alternatives to change the default versions. In this case there is a special
+option \fBauto\fP available to let update-alternatives choose the default OMD version.
+.TP
+.B omd setup
+Prepare operating system for OMD. This includes installing all software
+packages from your linux distribution that the components of OMD need
+to run properly. You need to make sure that a package installation via
+aptitude/zypper/yum is possible.
+
+After installing missing packages a group \fBomd\fP will be created,
+some Apache modules will be activated, the init script \fB/etc/init.d/omd\fP
+will be activated and the SUID bits for some Nagios plugins will be
+correctly configured (for the group omd).
+
+\fBNote:\fP If you have installed OMD via RPM or DEB and have installed
+all packages the omd package depends on, no \fBomd setup\fP is neccessary.
+.TP
+.B omd uninstall
+This deletes all software and data of OMD and its sites. That command is mainly used
+for trying out OMD or testing the installation of OMD. Be aware that
+all your monitoring configuration and data will be lost!
+
+Note: Do not use \fBomd uninstall\fP if you've installed omd via RPM or DEB.
+Better remove all sites via by using \fBomd rm\fP and remove the RPM/DEB
+package afterwards.
+.TP
+.B omd sites [--bare, -b]
+Show a list of all sites and the version of OMD each site uses. If you specify
+the option \fB-b\fP or \fB--bare\fP, then the output leaves out hints to the
+versions, so it is better parseable by scripts.
+.TP
+.B omd create [OPTIONS] SITE
+Create a new site. The name of the site must be at most 16 characters
+long and consist only of letters, digits and underscores. It must not
+begin with a digit.
+
+OMD creates an operating system user and group with the name of the
+site. No user or group with that name must exist prior to the site creation. Then a
+directory \fB/omd/sites/\fPSITE will be created and used as the new
+user's home directory.
+
+You need root permissions for creating a new site.
+
+After creating a new site you can do a \fBsu - \fPSITE and start
+the site with \fBomd start\fP.
+
+The following options can be used:
+
+\fB-u UID\fP Force a specific user id for the new user
+
+\fB-g GID\fP Force a specific group id for the group of the new user
+
+\fB--admin-password PW\fP Set initial password for the \fBcmkadmin\fP user. If you don't
+set this, the password will be generated automatically and printed after site creation.
+
+\fB--no-init\fP Omits the population of the site's home directory and the integration into
+the system Apache (/omd/apache/SITE.conf will be empty).
+
+\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
+
+\fB-t SIZE\fP By default the tmpfs of the site is created to allocate 50% of
+the available RAM at max. When providing the \fB-t\fP option together with the SIZE
+given as absolute value of e.g. \fB500M\fP or percentage value like \fB10%\fP the
+maximum size of the tmpfs can be changed.
+
+.TP
+.B omd init [OPTIONS] SITE
+Initializes a site that has been created with \fBomd create --no-init\fP.
+This includes populating the site's home directory with the default
+configuration files and enabling the site (see \fBomd disable\fP). Afterwards
+the site is in the same state as after an \fBomd create\fP without \fB--no-init\fP.
+
+The following options can be used:
+
+\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
+
+.TP
+.B omd [-f, --force] rm [OPTIONS] SITE
+Remove a site and all of its data. This includes deleting the
+directory \fB/omd/sites/\fPSITE and removing the system user
+and group of that site. This - of course - needs root permissions.
+
+The following options can be used:
+
+The option \fB--kill\fP will automatically kill all processes that
+use the temporary filesystem of the site before unmounting it.
+Otherwise the unmount and the removal of the site will fail.
+
+\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart
+
+.TP
+.B omd disable [--kill] SITE
+Disable a site. First the site will be stopped, if it is running.
+Then the tmpfs will be unmounted and the site will be made unknown
+to the global Apache server (by emptying the file /omd/apache/SITE.conf
+and restarting Apache). You cannot do any init-action like start and
+stop on a disabled site. Disabled sites will be skipped during
+system boot or a manual call to \fB/etc/init.d/omd\fP.
+
+Disabling a site brings OMD into a state where the sites home directory
+\fB/omd/sites/SITE\fP is not being used or referred to by any process
+or program. It can safely be unmounted. This is convenient in
+situations where the site is clustered and the site's home directory
+shall be moved to another cluster node.
+
+Since unmounting the tmpfs will only be possible if no process
+is using it, you can specify \fB--kill\fP to automatically kill
+all such processes before the unmount. This is especially useful if
+omd disable is used in cluster-failover scripts.
+
+Disabling a site needs root permissions.
+
+.TP
+.B omd enable SITE
+Enables a formerly disabled site. The site is not started. This command
+needs root permissions.
+
+.TP
+.B omd mv [OPTIONS] SITE NEWNAME
+Rename a site. The site must be stopped. the NEWNAME must be a valid
+site name as described in "omd create". Root permissions are needed.
+
+The following options can be used:
+
+\fB-u UID\fP Force a specific user id for the new user
+
+\fB-g GID\fP Force a specific group id for the group of the new user
+
+\fB--conflict=HOW\fP non-interactively resolve merge conflicts. See
+section about \fBomd update\fP for details.
+
+\fB-t SIZE\fP By default the tmpfs of the site is created to allocate 50% of
+the available RAM at max. When providing the \fB-t\fP option together with the SIZE
+given as absolute value of e.g. \fB500M\fP or percentage value like \fB10%\fP the
+maximum size of the tmpfs can be changed.
+
+.TP
+.B omd cp [OPTIONS] SITE NEWNAME
+Make a copy of a site. A new site with the name NEWSITE will be created
+as an exact copy of SITE. All occurrances of SITE will be replaced by
+NEWSITE in the sites configuration files.
+
+The following options can be used:
+
+\fB-u UID\fP Force a specific user id for the new user
+
+\fB-g GID\fP Force a specific group id for the group of the new user
+
+\fB--no-rrds\fP Do not copy any performance data from the past. This
+includes RRD and XML files created by PNP4Nagios as well as journal
+files from the RRD caching daemon. This option usually greatly speeds
+up the copying.
+
+\fB--no-logs\fP Do not copy any logfiles from the past. This
+include the Nagios logfiles, which bear the historical events. While
+this does speed up the copying, the new site will have no history
+of past events.
+
+The option \fB-N\fP or \fB--no-past\fP combines both \fB--no-rrds\fP and \fB--no-logs\fP.
+This is very useful especially for copies that are created for testing
+purposes.
+
+\fB--conflict=HOW\fP non-interactively resolve merge conflicts. See
+section about \fBomd update\fP for details.
+
+\fB-t SIZE\fP By default the tmpfs of the site is created to allocate 50% of
+the available RAM at max. When providing the \fB-t\fP option together with the SIZE
+given as absolute value of e.g. \fB500M\fP or percentage value like \fB10%\fP the
+maximum size of the tmpfs can be changed.
+
+.TP
+.B omd [-f, --force] [ -V VERSION ] update [ --conflict=HOW ] SITE
+Update SITE to the current default version of OMD or to the version
+\fBVERSION\fP, if the option \fB-V\fP is specified.  The default version is
+usually the version that was installed most lately. It can be changed
+with \fBomd setversion\fP.
+
+Those configuration files of the site that were initially created
+will be updated if the new version brings changes in these files. OMD tries hard to
+merge your changes with changes due to the new version but might need your
+help in doing so. If a merge conflict occurs, you will be asked for an
+interactive resolution. Note: OMD does \fBno\fP data migration in user-created
+configuration files!
+
+The option \fB-f/--force\fP will skip asking whether the user is sure to
+update. If you have more than two versions of omd installed, you should
+also specify \fB-V\fP if you want to avoid user interaction.
+
+With \fB--conflict\fP (in addition to \fB-f\fP and \fB-V\fP) you can make
+the whole update process non-interactive. There are four possible arguments
+to \fB--conflict\fP:
+
+.B --conflict=keepold
+Whenever your local changes cannot be merged with changes introduced by the
+target version in a file , i.e. when a merge conflict occurs, then keep the current contents
+and permissions of the file unchanged (this is the same as the option \fBr\fPestore
+in the merge dialog or \fBk\fPeep in the dialog for conflicts in permissions and file
+types).
+
+.B --conflict=install
+In case of a merge conflict install the default file of the target version and
+drop your changes.
+
+.B --conflict=abort
+In case of a merge conflict abort the update. Please note that currently there is
+no roll back (yet). Files already updated stay updated. The file that caused the
+conflict will contain merge indicators (>>>>>> and <<<<<<). The version will not
+be switched.
+
+.B --conflict=ask
+This is the default behaviour of interactive conflict resolution.
+
+.TP
+.B omd [-f, --force] start      [SITE] [SERVICE]
+Start a site, i.e. start all activated daemons and services of a site.
+If you call this as root, you need to specify the site to
+be started. If you do not specify a site, then all sites with AUTOSTART=on
+will be started, or all sites at all, if you specify \fB-f\fP or \fB--force\fP.
+If you call this as site user, no site must be specified.
+The current site will be started.
+
+If you add the name of a service, e.g. \fBnagios\fP, then only that
+service is being started. If being called as root, a service can only
+be specified if also a site is specified.
+.TP
+.B omd stop       [SITE] [SERVICE]
+Stop a site. See \fBomd start\fP for details. This stops also sites where
+AUTOSTART=off.
+.TP
+.B omd [-f, --force] restart    [SITE] [SERVICE]
+Restart site. See \fBcmd start\fP for details.
+.TP
+.B omd [-f, --force] reload     [SITE] [SERVICE]
+Reload services of site(s). That is the same as calling all of the sites
+init scripts with the option \fBreload\fP. Refer to \fBomd start\fP for
+how to specify sites.
+.TP
+.B omd status     [SITE] [SERVICE] [-b,--bare] [--auto]
+Show status of site(s). Refer to \fBomd start\fP for
+how to specify sites.
+
+If this is called for one specific site, then the exit code is as follows:
+\fB0\fP if the site is running, \fB1\fP if the site is stopped and \fB2\fP
+if the site is partially running (some services running, some stopped).
+
+The option \fB-b\fP or \fB--bare\fP produces a machine-readable output
+format.
+
+If you add the option \fB--auto\fP then only the status of those sites will
+be displayed, that are set to {AUTOSTART} = {on}.
+.TP
+.B omd config [-f, --force] [SITE] [set|show] [VARIABLE] [VALUE]
+This command is used to view and change the configuration of a site. Each
+site has a list of configuration variables. Those variables configure
+how the addons of the site should work together. Optional addons can be
+switched on and off. TCP portnumbers for externel access can be configured.
+
+\fBomd config\fP [SITE] \fBshow\fP outputs the current settings of
+all variables of a SITE. If you call this as root, you have to specify
+which SITE to inspect. If you call \fBomd\fP as site user, you have to
+leave out SITE.
+
+\fBomd config\fP [SITE] brings you into the interactive configuration
+mode where variables can be viewed, are explained and can be changed.
+The site must be stopped for configuration changes.
+
+Setting and querying variables in batch mode can be done with
+
+\fBomd config [SITE] set VARIABLE VALUE\fP
+.br
+\fBomd config [SITE] show VARIABLE\fP
+
+The option \fB--force\fP will automatically stop the site in case
+it is running before the config change is done and start it afterwards
+again.
+
+.TP
+.B omd [-v] diff [RELBASE] [-b, --bare]
+Shows the differences of files in the current site compared to the files
+delivered with the omd version used by the current site.
+
+Without the optional RELBASE argument it lists changes in ALL files of the
+site. The RELBASE argument may contain a relative path to the sites root
+directory to filter the scope of the diff.
+It is also possible to give a file/link as RELBASE path. In this case only the
+information for this file are shown.
+
+The command lists files which meet at least one criteria: modified content, changed
+types, modified permissions, modified owner, deleted files.
+
+If you specify the option \fB-b\fP or \fB--bare\fP, then the output leaves out things
+to make the output more human readable, so it is better parseable by scripts.
+
+This command also handles the global option \fB-v\fP or \fB--verbose\fP. It shows the
+changes in detail.
+.TP
+.B omd umount [--kill] [SITE]
+Unmounts the ramdisk filesystem (tmpfs) of the given or all sites if no SITE option given.
+
+The ramdisk can only be unmounted when a site is stopped and no processes are currently
+using it (have a directory in it as current directory are have an open file in it).
+If you specify \fB--kill\fP, then omd will kill processes using the filesystem using
+\fBfuser -k\fP.
+.TP
+.B omd [-v] backup [OPTIONS] [SITE] [-|TARBALL_PATH]
+Creates a gzipped backup tarball (.tar.gz) containing the whole site. When executing
+this command as root, you need to specify the name of the site, otherwise your current
+site will be used.
+
+You need to provide either a path where the tarball will be created or specify \fB-\fP
+for streaming the tarball to stdout.
+
+The following options can be used:
+
+\fB--no-rrds\fP Do not copy any performance data from the past. This
+includes RRD and XML files created by PNP4Nagios as well as journal
+files from the RRD caching daemon. This option usually greatly speeds
+up the copying.
+
+\fB--no-logs\fP Do not copy any logfiles from the past. This
+include the Nagios logfiles, which bear the historical events. While
+this does speed up the copying, the new site will have no history
+of past events.
+
+The option \fB-N\fP or \fB--no-past\fP combines both \fB--no-rrds\fP and \fB--no-logs\fP.
+This is very useful especially for copies that are created for testing
+purposes.
+
+\fB--no-compression\fP Disable gzip compression of the backup. In case the size of the
+backup is not relevant and you want to reduce CPU performance during backup, you can
+disable the compression. Especiall when doing a backup/restore to another system across
+a LAN, this may be useful to reduce runtime of the backup.
+
+The site needs to be stopped to be able to create the backup. During the backup the
+ramdisk filesystem (tmpfs) of the site will be unmounted. It's contents are not saved
+in the tarball.
+
+The contents of the ramdisk filesystem (tmpfs) of the site will never be saved in the
+the backup.
+
+When the site is stopped, all files are backed up without any special action. In case
+the site is running, the backup will send SUSPEND/RESUME commands to the rrdcached
+process to temporarily suspend updates of the RRD files currently backed up. So the
+rrdached will keep the new gathered performance data in the memory during the backup
+of an RRD file. After the backup of a single file, it's updates are resumed. During
+the whole backup you can access the RRDs as usual from the GUI.
+.TP
+.B omd restore [OPTIONS] [SITE] [-|TARBALL_PATH]
+Restores a backup which was previously created with \fBomd backup\fP. When executed as
+site user, the current site will be cleaned up and the files from the backup will be
+restored within the site directory.
+
+When executed as root, you can use the command to either create a new site while
+restoring the backup or use and existing site which is then replaced with the backed
+up files.
+
+You need to provide either a path where the backup tarball is located or specify \fB-\fP
+for reading the tarball from stdin.
+
+As root user, when you specify no \fBSITE\fP the restore will be made with the original
+site name. If you like to restore the site with another name, you can specify the new
+name by setting the \fBSITE\fP argument.
+
+You can either restore a backup to overwrite an existing site using the \fB--reuse\fP
+option. Together with the \fB--kill\fP option, the site will be stopped and cleaned up
+before applying the restore.
+
+Additionally the following options can be used:
+
+\fB--apache-reload\fP Issue a reaload of the apache process instead of the default restart.
+
+\fB-u UID\fP Force a specific user id for the new user
+
+\fB-g GID\fP Force a specific group id for the group of the new user
+
+\fB--conflict=HOW\fP non-interactively resolve merge conflicts. See
+section about \fBomd update\fP for details.
+
+\fB-t SIZE\fP By default the tmpfs of the site is created to allocate 50% of
+the available RAM at max. When providing the \fB-t\fP option together with the SIZE
+given as absolute value of e.g. \fB500M\fP or percentage value like \fB10%\fP the
+maximum size of the tmpfs can be changed.
+
+.SH SEE ALSO
+.BR http://www.omdistro.org
+.br
+.SH AUTHOR
+omd was written by Mathias Kettner <mk@mathias-kettner.de>.
+See /usr/share/doc/omd/TEAM for contributors to omd.

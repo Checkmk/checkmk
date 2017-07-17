@@ -1,0 +1,62 @@
+--- mod_fcgid-2.3.6/modules/fcgid/fcgid_proc_unix.c.orig	2011-01-03 17:25:28.000000000 +0100
++++ mod_fcgid-2.3.6/modules/fcgid/fcgid_proc_unix.c	2011-01-03 17:26:27.000000000 +0100
+@@ -76,7 +76,8 @@
+     const char *execuser, *execgroup;
+     const char *argv0;
+ 
+-    if (!ap_unixd_config.suexec_enabled) {
++    //if (!ap_unixd_config.suexec_enabled) {
++    if (1) {
+         return apr_proc_create(newproc, progname, args, env, attr, p);
+     }
+ 
+@@ -140,7 +141,8 @@
+ {
+     ap_unix_identity_t ugid;
+ 
+-    if (!ap_unixd_config.suexec_enabled
++    //if (!ap_unixd_config.suexec_enabled
++    if (1
+         || (procinfo->uid == (uid_t) - 1
+             && procinfo->gid == (gid_t) - 1)) {
+         return apr_proc_create(newproc, progname, args, env, attr, p);
+@@ -267,7 +269,8 @@
+      * 1. Unlink the socket when the process exits
+      * 2. (suexec mode only, in the child cleanup) Switch to the configured uid
+      */
+-    if (ap_unixd_config.suexec_enabled) {
++    //if (ap_unixd_config.suexec_enabled) {
++    if (0) {
+         apr_pool_cleanup_register(procnode->proc_pool,
+                                   procnode, socket_file_cleanup,
+                                   exec_setuid_cleanup);
+@@ -386,7 +389,8 @@
+                                          procattr, procinfo,
+                                          procnode->proc_pool);
+ 
+-    if (ap_unixd_config.suexec_enabled) {
++    //if (ap_unixd_config.suexec_enabled) {
++    if (0) {
+         /* Prior to creating the child process, a child cleanup was registered
+          * to switch the uid in the child.  No-op the child cleanup for this
+          * pool so that it won't run again as other child processes are created.
+@@ -414,7 +418,8 @@
+     /* su as root before sending signal, for suEXEC */
+     apr_status_t rv;
+ 
+-    if (ap_unixd_config.suexec_enabled && seteuid(0) != 0) {
++    //if (ap_unixd_config.suexec_enabled && seteuid(0) != 0) {
++    if (0 && seteuid(0) != 0) {
+ 
+         /* can't gain privileges to send signal (should not occur); do NOT
+          * proceed, as something is broken with current identity
+@@ -423,7 +428,8 @@
+         _exit(1);
+     }
+     rv = apr_proc_kill(&(procnode->proc_id), sig);
+-    if (ap_unixd_config.suexec_enabled && seteuid(ap_unixd_config.user_id) != 0) {
++    //if (ap_unixd_config.suexec_enabled && seteuid(ap_unixd_config.user_id) != 0) {
++    if (0 && seteuid(ap_unixd_config.user_id) != 0) {
+         /* can't drop privileges after signalling (should not occur); do NOT
+          * proceed any further as euid(0)!
+          */

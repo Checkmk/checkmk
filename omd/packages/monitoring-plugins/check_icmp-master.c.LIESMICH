@@ -1,0 +1,3 @@
+Für IPv6 haben  wir check_icmp.c gepatcht. Allerdings auf dem aktuellen Git-Master.
+Daher verwenden wir für unsere Builds zwischenzeitlich mal die Datei anstatt der
+2.1.1.

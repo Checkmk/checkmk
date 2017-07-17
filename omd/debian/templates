@@ -1,0 +1,8 @@
+Template: omd/nagios-plugins-suid
+Type: boolean
+Default: true
+Description: Setting root privileges for some nagios plugins?
+ Some of the nagios-plugins, especially check_icmp and check_dhcp 
+ need root privileges for proper working. 
+ Type 'yes' if you like to set root privileges on those plugins.
+

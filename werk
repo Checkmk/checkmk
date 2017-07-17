@@ -749,6 +749,11 @@ def main_fetch_ids(args):
         # reserved werk ids
         if first_free >= 8000 and first_free < 8780:
             first_free = 8780
+
+        # cmk-omd werk were between 7500 and 7680. Skip over this area for new
+        # reserved werk ids
+        if first_free >= 7500 and first_free < 7680:
+            first_free = 7680
     except:
         first_free = 0
     new_first_free = first_free + num

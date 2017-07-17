@@ -1,0 +1,10 @@
+Title: CentOS 7: Removed not needed dependency to mariadb-server package
+Level: 1
+Component: distros
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1498133733
+Class: fix
+
+

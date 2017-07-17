@@ -1,0 +1,24 @@
+Title: Diskspace cleanup now removes abandoned host files (including RRDs and others)
+Level: 2
+Component: omd
+Compatible: compat
+Version: 1.4.0i1
+Date: 1473847859
+Class: feature
+
+During monitoring there are several dedicated files created for each host.
+There are, for example, the discovered services, performance data and
+different temporary files created. During deletion of a host, these files
+are normally deleted. But there are cases, where the files are left on
+the disk until manual deletion, for example if you move a host from one
+site to another or deleting a host manually from the configuration.
+
+The performance data (RRDs) and HW/SW inventory archive are never deleted
+during host deletion.
+
+We have now added the functionality to cleanup the host related files to
+the diskspace cleanup mechanism. This mechanism is enabled by default and
+cleans up all files of not existing hosts that are older than 1 month by
+default. If you want to disable this automatic deletion or customize the
+time horizon, you can configure it in the global settings of WATO using the
+"Automatic disk space cleanup" option.

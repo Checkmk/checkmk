@@ -1,0 +1,59 @@
+#!/bin/sh
+# Startskript for OMD sites
+
+### BEGIN INIT INFO
+# Provides:          omd-###OMD_VERSION###
+# Required-Start:    $syslog
+# Required-Stop:     $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: OMD sites
+# Description:       Start and stop the sites of the OpenSource Monitoring 
+#                    Distribution (OMD)
+### END INIT INFO
+
+# -- start omd, if not disabled in /etc/default/omd
+AUTOSTART=1
+[ -r /etc/default/omd ] && . /etc/default/omd
+
+VERSION=###OMD_VERSION###
+VER="-V $VERSION"
+MSG="using omd version $VERSION"
+OMD="/omd/versions/$VERSION/bin/omd"
+
+case "$1" in
+    start)
+	if [ "$AUTOSTART" = "1" ]; then
+          echo "Starting all OMD monitoring sites $MSG:"
+          $OMD "$1" $VER
+	else
+	  echo "OMD autostart disabled, skipping ..."
+	fi
+    ;;
+    stop)
+        echo "Stopping all OMD monitoring sites $MSG:"
+        $OMD "$1" $VER
+    ;;
+    restart)
+        echo "Restarting all OMD monitoring sites $MSG:"
+        $OMD "$1" $VER
+    ;;
+    reload)
+        echo "Reloading all OMD monitoring sites $MSG:"
+        $OMD "$1" $VER
+    ;;
+    status)
+        echo "Checking state of all OMD monitoring sites $MSG:"
+        $OMD "$1" $VER
+    ;;
+    '')
+	echo "usage: $PROGNAME start|stop|restart|reload|status"
+	exit 1
+    ;;
+    *)
+        echo "Doing $1 on all OMD monitoring sites $MSG:"
+        $OMD "$1" $VER
+    ;;
+esac
+
+

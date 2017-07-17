@@ -1,0 +1,9 @@
+Title: Fixed problems in legacy graphs when having dashes in cookies
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.5.0i1
+Date: 1488281695
+Class: fix
+
+

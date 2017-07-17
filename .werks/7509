@@ -1,0 +1,11 @@
+Title: New dependency Python OpenSSL
+Level: 1
+Component: packages
+Compatible: compat
+Version: 1.2.7i3
+Date: 1452846171
+Class: fix
+
+The current Check_MK release requires a new dependency to be installed.
+It is the Python OpenSSL module which is named python-openssl on most
+distributions and pyOpenSSL on RedHat/CentOS.

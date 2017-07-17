@@ -1,0 +1,18 @@
+Title: Fixed possible broken Check_MK web cron job when HTTPS is configured
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1458230991
+
+When configuring a system apache for service the webpages via HTTPS and not
+via HTTP, the default Check_MK web cron job which is executed once each minute
+was not executed correctly because it used http://localhost/[siteid] to call 
+the cron job. This URL is only working when the system apache is listening
+on port 80 (HTTP) at least on localhost. 
+
+We have now changed the default cron job to directly use the site apache instead
+of the system apache for calling the cron job. This is working even when the
+system apache is configured to only listen via HTTPS.

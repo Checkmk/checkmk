@@ -1,0 +1,12 @@
+--- dest/pysphere-0.1.7/setup.py	2012-10-02 09:38:26.000000000 +0200
++++ dest/pysphere-0.1.7/setup.py.new	2014-03-06 13:23:31.687202660 +0100
+@@ -62,5 +62,6 @@
+             "Topic :: System :: Systems Administration",
+             "Topic :: Utilities"
+         ],
+-        long_description=long_desc
+-    )
+\ No newline at end of file
++        long_description=long_desc,
++        zip_safe = False
++    )

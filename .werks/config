@@ -16,6 +16,13 @@ components = [
    ( "livestatus",    "Livestatus" ),
    ( "liveproxy",     "Livestatus Proxy" ),
    ( "inv",           "HW/SW Inventory" ),
+
+   ( "omd",           "Site Management" ),
+   ( "rpm",           "RPM Packaging" ),
+   ( "deb",           "DEB Packaging" ),
+   ( "nagvis",        "NagVis" ),
+   ( "packages",      "Other Components" ),
+   ( "distros",       "Linux Distributions" ),
 ]
 
 edition_components = {

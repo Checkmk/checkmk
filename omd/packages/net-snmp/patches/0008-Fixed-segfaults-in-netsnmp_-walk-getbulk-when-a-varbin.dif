@@ -1,0 +1,37 @@
+From 005c1417850ae2cb5b81724f5b19721b967f6c54 Mon Sep 17 00:00:00 2001
+From: Sven Panne <sp@mathias-kettner.de>
+Date: Mon, 14 Nov 2016 14:37:31 +0100
+Subject: [PATCH 08/11] Fixed segfaults in netsnmp_{walk,getbulk} when a
+ varbind could not be constructed.
+
+This could happen e.g. when a signal/CTRL-C has been caught by Python's
+runtime, causing PyObject_CallFunction to return NULL.
+---
+ python/netsnmp/client_intf.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
+index 3e25feb..f468760 100644
+--- a/python/netsnmp/client_intf.c
++++ b/python/netsnmp/client_intf.c
+@@ -2126,6 +2126,8 @@ netsnmp_walk(PyObject *self, PyObject *args)
+               }
+ 
+               varbind = py_netsnmp_construct_varbind();
++              if (varbind == NULL)
++                  break;
+ 
+               if (PyObject_HasAttrString(varbind, "tag")) {
+                   str_buf[0] = '.';
+@@ -2382,6 +2384,8 @@ netsnmp_getbulk(PyObject *self, PyObject *args)
+ 	    vars = vars->next_variable, varbind_ind++) {
+ 
+ 	  varbind = py_netsnmp_construct_varbind();
++          if (varbind == NULL)
++              break;
+ 
+ 	  if (PyObject_HasAttrString(varbind, "tag")) {
+ 	    *str_buf = '.';
+-- 
+2.7.4
+

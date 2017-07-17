@@ -1,0 +1,14 @@
+diff -Nur mod_python-3.3.1.orig/lib/python/mod_python/util.py mod_python-3.3.1/lib/python/mod_python/util.py
+--- mod_python-3.3.1.orig/lib/python/mod_python/util.py	2011-12-30 00:53:57.298287822 +0100
++++ mod_python-3.3.1/lib/python/mod_python/util.py	2011-12-30 01:08:52.474726752 +0100
+@@ -116,7 +116,9 @@
+     # cannot subclass str with a constructor that takes >1 argument)
+     def __init__(self, value):
+         '''Create StringField instance. You'll have to set name yourself.'''
+-        str.__init__(self, value)
++        # This call produces a warning message in at least python 2.6. There seems
++        # to be no real reason to call str.__init__ - so skip it!
++        #str.__init__(self, value)
+         self.value = value
+ 
+     def __getattr__(self, name):

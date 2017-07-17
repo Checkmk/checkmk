@@ -1,0 +1,12 @@
+Title: Fixed potential deadlock when talking to rrdcached
+Level: 1
+Component: packages
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i3
+Date: 1456395107
+
+Previously the FECTH command could cause deadlocks when encountering some
+border cases, caused by incorrect lock handling. This has been fixed now.
+

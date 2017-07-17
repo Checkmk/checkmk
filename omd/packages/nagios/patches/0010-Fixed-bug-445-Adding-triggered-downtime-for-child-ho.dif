@@ -1,0 +1,58 @@
+diff --git a/common/downtime.c b/common/downtime.c
+--- a/common/downtime.c
++++ b/common/downtime.c
+@@ -360,6 +360,14 @@ int register_downtime(int type, unsigned long downtime_id) {
+ 			}
+ 		}
+ 
++	/* If the downtime is triggered and was in effect, mark it as not in 
++		effect so it gets scheduled correctly */
++	if((temp_downtime->triggered_by != 0) && 
++			(TRUE == temp_downtime->is_in_effect)) {
++		was_in_effect = temp_downtime->is_in_effect;
++		temp_downtime->is_in_effect = FALSE;
++		}
++
+ 	if((FALSE == temp_downtime->fixed) && (FALSE == was_in_effect)) {
+ 		/* increment pending flex downtime counter */
+ 		if(temp_downtime->type == HOST_DOWNTIME)
+@@ -1111,6 +1119,39 @@ int add_downtime(int downtime_type, char *host_name, char *svc_description, time
+ static int downtime_compar(const void *p1, const void *p2) {
+ 	scheduled_downtime *d1 = *(scheduled_downtime **)p1;
+ 	scheduled_downtime *d2 = *(scheduled_downtime **)p2;
++
++	/*
++ 		If the start times of two downtimes are equal and one is triggered but
++		but the other is not, the triggered downtime should be later in the
++		list than the untriggered one. This is so they are written to the
++		retention.dat and status.dat in the correct order.
++
++		Previously the triggered downtime always appeared before its 
++		triggering downtime in those files. When the downtimes were read 
++		from those files, either on a core restart or by the CGIs, the 
++		triggered downtime would be discarded because the triggering 
++		downtime did not yet exist.
++
++		The most common case for this is when a downtime is created and 
++		the option is selected to create triggered downtimes on all child 
++		objects. This change in the sort order does NOT resolve the 
++		case where a manually created, triggered downtime is created with 
++		a start time earlier than the triggering downtime.
++
++		This would need to be resolved by comparing the triggered_by value
++		with the downtime ID regardless of the start time. However, this
++		should be a relatively rare case and only caused by intentional
++		scheduling by a human. This change was not implemented because it
++		would cause the downtime list to be out of time order and the
++		implications of this were not well understood.
++	*/
++
++	if(d1->start_time == d2->start_time) {
++		if(( d1->triggered_by == 0 && d2->triggered_by != 0) ||
++				( d1->triggered_by != 0 && d2->triggered_by == 0)) {
++			return d1->triggered_by == 0 ? -1 : 1;
++			}
++		}
+ 	return (d1->start_time < d2->start_time) ? -1 : (d1->start_time - d2->start_time);
+ 	}
+ 

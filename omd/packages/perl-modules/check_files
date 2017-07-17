@@ -1,0 +1,32 @@
+#!/bin/bash
+
+echo "checking for duplicate entries..."
+sort Makefile | uniq -d | grep -v '^\s*$' | grep -v 'echo' | grep -v ' cd '
+
+echo "checking src dir..."
+for file in $(ls -1 src/ | sed 's/\-[0-9\-\.]*\.tar\.gz//g' | sort | uniq -d); do
+    echo "$file is listed twice in src/"
+done
+
+echo "checking for duplicate files..."
+for file in $(grep 'tar.gz' Makefile | awk '{ print $1 }' | sed 's/\-[0-9\-\.]*\.tar\.gz//g' | sort | uniq -d); do
+    echo "$file is listed twice in Makefile"
+done
+
+echo "checking for unused files..."
+for file in $(cd src && ls -1 *.gz *.tgz *.zip 2>/dev/null | grep -v JSON | grep -v common-sense | grep -v ExtUtils-MakeMaker | grep -v Module-CoreList- | grep -v Types-Serialiser- | grep -v parent- | grep -v version-); do
+    if [ $(grep -c "$file" Makefile) = 0 ]; then
+        echo "$file is not used anymore"
+    fi
+done
+
+echo "checking for missing files..."
+for file in $(grep 'tar.gz' Makefile | awk '{ print $1 }' | tr -d ';'); do
+    ls src/$file >/dev/null 2>&1
+    if [ $? -ne 0 ]; then
+        echo "$file is missing but used in Makefile"
+    fi
+done
+
+echo "checking orphaned files..."
+./orphaned_modules ../thruk/Makefile.PL

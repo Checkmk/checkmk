@@ -1,0 +1,44 @@
+Only in monitoring-plugins-2.0: config.log
+diff -ru monitoring-plugins-2.0.orig/plugins-root/check_icmp.c monitoring-plugins-2.0/plugins-root/check_icmp.c
+--- monitoring-plugins-2.0.orig/plugins-root/check_icmp.c	2014-07-06 19:55:03.000000000 +0200
++++ monitoring-plugins-2.0/plugins-root/check_icmp.c	2014-09-11 13:58:42.693502323 +0200
+@@ -940,7 +940,9 @@
+ 			 * conspicuosly as missing entries in perfparse and cacti */
+ 			pl = 100;
+ 			rta = 0;
+-			status = STATE_CRITICAL;
++			if (pl >= crit.pl)
++                            status = STATE_CRITICAL;
++
+ 			/* up the down counter if not already counted */
+ 			if(!(host->flags & FLAG_LOST_CAUSE) && targets_alive) targets_down++;
+ 		}
+@@ -964,7 +966,7 @@
+ 		host = host->next;
+ 	}
+ 	/* this is inevitable */
+-	if(!targets_alive) status = STATE_CRITICAL;
++	if(!targets_alive && crit.pl <= 100) status = STATE_CRITICAL;
+ 	if(min_hosts_alive > -1) {
+ 		if(hosts_ok >= min_hosts_alive) status = STATE_OK;
+ 		else if((hosts_ok + hosts_warn) >= min_hosts_alive) status = STATE_WARNING;
+@@ -980,7 +982,8 @@
+ 		}
+ 		i++;
+ 		if(!host->icmp_recv) {
+-			status = STATE_CRITICAL;
++			if (pl >= crit.pl)
++                            status = STATE_CRITICAL;
+ 			if(host->flags & FLAG_LOST_CAUSE) {
+ 				printf("%s: %s @ %s. rta nan, lost %d%%",
+ 					   host->name,
+@@ -1246,7 +1249,7 @@
+ 	if(!th->rta) return -1;
+ 
+ 	if(th->rta > MAXTTL * 1000000) th->rta = MAXTTL * 1000000;
+-	if(th->pl > 100) th->pl = 100;
++	if(th->pl > 101) th->pl = 101;
+ 
+ 	return 0;
+ }
+Only in monitoring-plugins-2.0/plugins-root: check_icmp.c.orig

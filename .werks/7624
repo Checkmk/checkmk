@@ -1,0 +1,13 @@
+Title: Cleaned up nagios.log/livestatus.log showing up in "omd diff"
+Level: 1
+Component: omd
+Compatible: compat
+Version: 1.4.0i3
+Date: 1485275290
+Class: fix
+
+The files var/log/nagios.log var/nagios/nagios.log var/log/livestatus.log
+and var/nagios/livestatus.log were originally created by the skel/ mechanism,
+but were changed by either nagios itself during runtime and also when changing
+the monitoring core. The files have now been removed from skel/ hierarchy and
+are managed by the CORE hook.

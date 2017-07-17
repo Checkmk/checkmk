@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Alias: Make MK Livestatus accessable via TCP
+# Menu: Distributed Monitoring
+# Description:
+#  MK Livestatus usually listens only on a local UNIX socket -
+#  for reasons of performance and security. This option is used
+#  to make it reachable via TCP on a port configurable with
+#  LIVESTATUS_TCP_PORT.
+
+case "$1" in
+    default)
+        echo "off"
+    ;;
+    choices)
+        echo "on: enable"
+        echo "off: disable"
+    ;;
+    set)
+        if [ "$2" == "on" -a "$CONFIG_CORE" != "shinken" ]
+        then
+ 	    mkdir -p $OMD_ROOT/etc/xinetd.d
+            ln -sfn ../mk-livestatus/xinetd.conf $OMD_ROOT/etc/xinetd.d/mk-livestatus
+        else
+            rm -f $OMD_ROOT/etc/xinetd.d/mk-livestatus
+        fi
+    ;;
+    depends)
+        [ "$CONFIG_CORE" != none ]
+    ;;
+esac

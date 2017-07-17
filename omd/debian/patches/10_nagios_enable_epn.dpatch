@@ -1,0 +1,29 @@
+#! /bin/sh /usr/share/dpatch/dpatch-run
+## 10_nagios_enable_epn.dpatch by  <wob@swobspace.eli.st-elisabeth.de>
+##
+## All lines beginning with `## DP:' are a description of the patch.
+## DP: No description.
+
+@DPATCH@
+diff -urNad omd~/packages/nagios/Makefile omd/packages/nagios/Makefile
+--- omd~/packages/nagios/Makefile	2010-07-18 19:41:13.000000000 +0200
++++ omd/packages/nagios/Makefile	2010-08-27 16:14:00.000000000 +0200
+@@ -13,6 +13,7 @@
+     --datarootdir=$(OMD_ROOT)/share/nagios/htdocs \
+     --with-nagios-user=$$(id -un) \
+     --with-nagios-group=$$(id -gn) \
++    --with-perlcache --enable-embedded-perl \
+ 
+ build: prepare
+ 	for p in patches/*.dif ; do \
+diff -urNad omd~/packages/nagios/skel/etc/nagios/nagios.cfg omd/packages/nagios/skel/etc/nagios/nagios.cfg
+--- omd~/packages/nagios/skel/etc/nagios/nagios.cfg	2010-07-18 13:59:17.000000000 +0200
++++ omd/packages/nagios/skel/etc/nagios/nagios.cfg	2010-08-27 16:15:54.000000000 +0200
+@@ -63,6 +63,7 @@
+ check_for_updates=0
+ date_format=iso8601
+ enable_embedded_perl=0
++use_embedded_perl_implicitly=0
+ use_regexp_matching=0
+ use_true_regexp_matching=0
+ use_large_installation_tweaks=1

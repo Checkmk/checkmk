@@ -1,0 +1,10 @@
+Title: systemd service: Starting after network online target
+Level: 1
+Component: omd
+Compatible: compat
+Version: 1.4.0i2
+Date: 1476876631
+Class: fix
+
+In case of systemd based platforms try to start the sites after the network
+is online.

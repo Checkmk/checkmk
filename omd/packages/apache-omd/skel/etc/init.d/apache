@@ -1,0 +1,205 @@
+#!/bin/bash
+
+cd ###ROOT###
+. .profile
+. lib/omd/init_profile
+. etc/omd/site.conf
+if [ "$CONFIG_APACHE_MODE" == none ]; then
+  exit 5
+fi
+
+# Start httpd in the C locale by default.
+HTTPD_LANG="C"
+
+# This will prevent initlog from swallowing up a pass-phrase prompt if
+# mod_ssl needs a pass-phrase from the user.
+INITLOG_ARGS=""
+
+APACHE_RUN_USER="###SITE###"
+APACHE_RUN_GROUP="###SITE###"
+
+PID_FILE=###ROOT###/tmp/apache/run/apache.pid
+CONFIG_FILE=###ROOT###/etc/apache/apache.conf
+
+apache_bin() {
+    if [ -e /usr/sbin/apache2 ]; then
+        echo /usr/sbin/apache2
+    elif [ -e /usr/sbin/httpd2-prefork ]; then
+        echo /usr/sbin/httpd2-prefork
+    elif [ -e /usr/sbin/httpd ]; then
+        echo /usr/sbin/httpd
+    else
+        echo "ERROR: Failed to locate apache binary"
+        exit 1
+    fi
+}
+
+# If you change this, you also have to change etc/apache/php-wrapper
+php_cgi_bin() {
+    if [ -e /usr/bin/php5-cgi ]; then
+        echo /usr/bin/php5-cgi
+    elif [ -e /usr/bin/php-cgi ]; then
+        echo /usr/bin/php-cgi
+    else
+        echo "ERROR: Failed to locate php binary"
+        exit 1
+    fi
+}
+
+pidof_apache() {
+  # if there is actually an apache2 process whose pid is in PIDFILE,
+  # print it and return 0.
+  if [ -e "$PID_FILE" ]; then
+    PID=$(cat "$PID_FILE")
+    if kill -0 $PID >/dev/null 2>&1; then
+      echo $PID
+      return 0
+    fi
+  else
+    # It might happen that there is no pidfile but a process is running
+    # As fallback check the process table for the oldest apache process
+    # running as this user
+    PID=$(pgrep -u $OMD_SITE -o -f $(apache_bin))
+    if [ -n "$PID" ]; then
+        echo $PID
+        return 0
+    fi
+  fi
+  return 1
+}
+
+apache_wait_stop() {
+  # running ?
+  pid=$(pidof_apache) || true
+  if [ -n "${pid:-}" ]; then
+    kill ${pid:-}
+  else
+    echo -n '(not running)...'
+    return 0
+  fi
+
+  # wait until really stopped
+  if [ -n "${pid:-}" ]; then
+    i=0
+    while kill -0 "${pid:-}" 2> /dev/null;  do
+      if [ $i = '120' ]; then
+        kill_stale_php_cgis
+        return 1
+      else
+        echo -n "."
+        i=$(($i+1))
+        sleep 0.1
+      fi
+     done
+  fi
+  
+  [ -f "$PID_FILE" ] && rm -f "$PID_FILE"
+  kill_stale_php_cgis
+  return 0
+}
+
+apache_wait_start() {
+  if pidof_apache >/dev/null 2>&1; then
+    echo -n '(already running)...'
+    return 0
+  fi
+
+  mkdir -p ###ROOT###/tmp/apache/run
+
+  # (nearly) reproducible problems with apache at boot-time. (alloc_listener: failed to set up sockaddr for 127.0.0.1)
+  # With this ping the problem disappears.
+  # LM: We could remove this here and fix the boot order. Would be a better fix.
+  if test -f /etc/debian_version && test $(cut -f1 -d" " /proc/uptime | cut -f1 -d".") -lt 300; then
+      TRIES=10
+      while [ $TRIES -gt 0 ] && ! ping -n -q -c1 -w1 $CONFIG_APACHE_TCP_ADDR >/dev/null 2>&1;  do
+          TRIES=$(($TRIES-1))
+      done
+  fi
+
+  $(apache_bin) -f "$CONFIG_FILE"
+  
+  i=0
+  while ! pidof_apache >/dev/null 2>&1;  do
+    if [ $i = '10' ]; then
+      return 1
+    else
+      echo -n "."
+      i=$(($i+1))
+      sleep 0.1
+    fi
+  done
+
+  return 0
+}
+
+kill_stale_php_cgis() 
+{
+    i=1
+    killall -e $(php_cgi_bin) -u ###SITE### >/dev/null 2>&1 
+    while killall -e $(php_cgi_bin) -u ###SITE### >/dev/null 2>&1
+    do
+        i=$((i+1))
+        if [ $i -gt 50 ] ; then 
+            return
+        fi
+        sleep 0.1
+    done
+}
+
+do_start() {
+    echo -n "Starting apache..."
+    if apache_wait_start; then
+      __init_hook $0 $1 post 0
+      echo 'OK'
+      return 0
+    else
+      __init_hook $0 $1 post 1
+      echo 'ERROR'
+      return 1
+    fi
+}
+
+do_stop() {
+    echo -n "Stopping apache..."
+    if apache_wait_stop; then
+      __init_hook $0 $1 post 0
+      echo 'OK'
+      return 0
+    else
+      __init_hook $0 $1 post 1
+      echo 'ERROR'
+      return 1
+    fi
+}
+
+__init_hook $0 $1 pre
+case $1 in
+  start)
+    do_start
+  ;;
+  stop)
+    do_stop
+  ;;
+  restart)
+    do_stop
+    do_start
+  ;;
+  reload)
+    echo "Reloading apache"
+    $(apache_bin) -f "$CONFIG_FILE" -k graceful
+    __init_hook $0 $1 post $?
+  ;;
+  status)
+    PID=$(pidof_apache) || true
+    if [ -n "$PID" ]; then
+      echo "Apache is running (pid $PID)."
+      exit 0
+    else
+      echo "Apache is NOT running."
+      exit 1
+    fi
+  ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|reload|status}"
+  ;;
+esac

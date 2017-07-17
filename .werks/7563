@@ -1,0 +1,11 @@
+Title: omd backup: Can now be executed while the site is running
+Level: 2
+Component: omd
+Compatible: compat
+Version: 1.4.0i1
+Date: 1465306327
+Class: feature
+
+In previous versions it was only possible to backup sites while
+they were stopped. Now the backup can be performed while a site
+is online. Take a look at the omd man page for details.

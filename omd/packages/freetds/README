@@ -1,0 +1,3 @@
+We are using 0.95.95 because at this time pymssql is shipping with this version itself.
+We can not use the version shipped with pymssql because we need SSL support. But at least
+we use the version they recommend.

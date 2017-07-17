@@ -1,0 +1,97 @@
+diff -ru heirloom-pkgtools-070227/libpkg/dstream.c heirloom-pkgtools-070227-patched/libpkg/dstream.c
+--- heirloom-pkgtools-070227/libpkg/dstream.c	2007-02-25 19:39:50.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libpkg/dstream.c	2008-12-31 22:03:44.000000000 +0100
+@@ -495,11 +495,7 @@
+ 		return (-1);
+ 	}
+ 	/* this could break, thanks to cpio command limit */
+-#ifndef SUNOS41
+-	(void) sprintf(cmd, "%s -icdumD -C %d", CPIOPROC, (int)BLK_SIZE);
+-#else
+ 	(void) sprintf(cmd, "%s -icdum -C %d", CPIOPROC, (int)BLK_SIZE);
+-#endif
+ 	n = 0;
+ 	for (i = 0; pkg[i]; i++) {
+ 		if (strcmp(pkg[i], "all") == 0)
+@@ -669,11 +665,7 @@
+ 
+ 	while (nskip--) {
+ 		/* skip this one */
+-#ifndef SUNOS41
+-		(void) sprintf(cmd, "%s -ictD -C %d > /dev/null",
+-#else
+ 		(void) sprintf(cmd, "%s -ict -C %d > /dev/null",
+-#endif
+ 		    CPIOPROC, (int)BLK_SIZE);
+ 		if (n = esystem(cmd, ds_fd, -1)) {
+ 			rpterr();
+@@ -716,11 +708,7 @@
+ 			(void) strcpy(ds_volnos, tmpvol);
+ 			ds_curpartcnt += index;
+ 		}
+-#ifndef SUNOS41
+-		(void) sprintf(cmd, "%s -icdumD -C %d",
+-#else
+ 		(void) sprintf(cmd, "%s -icdum -C %d",
+-#endif
+ 		    CPIOPROC, (int)BLK_SIZE);
+ 		if (n = esystem(cmd, ds_fd, -1)) {
+ 			rpterr();
+diff -ru heirloom-pkgtools-070227/libpkg/pkgtrans.c heirloom-pkgtools-070227-patched/libpkg/pkgtrans.c
+--- heirloom-pkgtools-070227/libpkg/pkgtrans.c	2007-02-25 19:39:50.000000000 +0100
++++ heirloom-pkgtools-070227-patched/libpkg/pkgtrans.c	2008-12-31 22:04:53.000000000 +0100
+@@ -1147,26 +1147,16 @@
+ 	(void) lseek(list_fd, 0, SEEK_SET);
+ 
+ 	if (!making_sig) {
+-#ifndef SUNOS41
+-		(void) sprintf(tmp_entry, "%s -ocD -C %d",
+-		    CPIOPROC, (int)BLK_SIZE);
+-#else
+ 		(void) sprintf(tmp_entry, "%s -oc -C %d",
+ 		    CPIOPROC, (int)BLK_SIZE);
+-#endif
+ 	} else {
+ 		/*
+ 		 * when making a signature, we must make sure to follow
+ 		 * symlinks during the cpio so that we don't archive
+ 		 * the links themselves
+ 		 */
+-#ifndef SUNOS41
+-		(void) sprintf(tmp_entry, "%s -ocDL -C %d",
+-		    CPIOPROC, (int)BLK_SIZE);
+-#else
+ 		(void) sprintf(tmp_entry, "%s -ocL -C %d",
+ 		    CPIOPROC, (int)BLK_SIZE);
+-#endif
+ 	}
+ 
+ 	if (making_sig) {
+@@ -1590,13 +1580,8 @@
+ 			}
+ 		}
+ 		if (options & PT_ODTSTREAM) {
+-#ifndef SUNOS41
+-			(void) sprintf(cmd+strlen(cmd),
+-			    " -print | %s -ocD -C %d",
+-#else
+ 			(void) sprintf(cmd+strlen(cmd),
+ 			    " -print | %s -oc -C %d",
+-#endif
+ 				CPIOPROC, (int)BLK_SIZE);
+ 		} else {
+ 			if (statvfs64(dstdir, &svfsb) == -1) {
+@@ -1822,13 +1807,8 @@
+ 			}
+ 		}
+ 
+-#ifndef SUNOS41
+-		(void) sprintf(cmd+strlen(cmd),
+-		    " -print | %s -ocD -C %d",
+-#else
+ 		    (void) sprintf(cmd+strlen(cmd),
+ 			" -print | %s -oc -C %d",
+-#endif
+ 			CPIOPROC, (int)BLK_SIZE);
+ 		/*
+ 		 * execute the command, dumping all standard output

@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+use warnings;
+use strict;
+use lib 'lib';
+use BuildHelper;
+
+BEGIN {
+    for my $val (qw/PERL5LIB PERL_MB_OPT PERL_LOCAL_LIB_ROOT PERL_MM_OPT/) {
+        delete $ENV{$val} if defined $ENV{$val};
+    }
+};
+
+####################################
+# gather list
+my $modules = [];
+for my $module (@ARGV) {
+    if(-d $module) {
+        my $meta = BuildHelper::get_meta_for_dir($module);
+        my $deps = BuildHelper::get_deps_from_meta($meta);
+        push @{$modules}, keys %{$deps};
+    }
+    elsif(-f $module) {
+        my $dir  = BuildHelper::unpack($module);
+        my $meta = BuildHelper::get_meta_for_dir($dir);
+        my $deps = BuildHelper::get_deps_from_meta($meta);
+        push @{$modules}, keys %{$deps};
+    } else {
+        push @{$modules}, $module;
+    }
+}
+
+####################################
+# download modules
+my $downloaded;
+chdir('src') or die("cannot change dir 'src': $!");
+for my $module (@{$modules}) {
+    if($module =~ m/^[\w\.\-\+]+(\.gz|\.zip|\.tgz)$/g) {
+        BuildHelper::download_src($module);
+        print "downloaded $module\n";
+        next;
+    }
+    $module =~ s/\//::/g;
+    $module =~ s/\-/::/g;
+    $module =~ s/\.pm$//g;
+    print $module." is a core module\n" if BuildHelper::is_core_module($module);
+    $downloaded = BuildHelper::download_module($module, undef, 1);
+}
+chdir('..') or die("cannot change dir '..': $!");
+
+exit unless defined $downloaded;
+
+# print result of all downloaded files
+if(scalar @{$downloaded} > 0) {
+    print "\n";
+    print "please add the following tarballs to the Makefile:\n";
+    print join("\n", @{$downloaded});
+    print "\n";
+} else {
+    print "no new packages downloaded\n";
+}

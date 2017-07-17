@@ -1,0 +1,15 @@
+Title: mssql_backup: Set limits for different type of backups
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1500291726
+Class: feature
+
+For the check mssql_backup it is now possible to set limits for
+different types of backups (e.g. database backup, log backup etc.)
+instead of just one limit that is valid for all backups. The
+limits can be set in the rule "MSSQL Time since last Backup".
+If no backup types are supported by the agent the parameter
+"Database Backup" can be used to set a general limit.

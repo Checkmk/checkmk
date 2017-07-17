@@ -48,15 +48,22 @@
 
 # Might be None to have no thresholds or a tuple of two ints
 # (<warn age in seconds>, <crit age in seconds>)
-mssql_backup_default_levels = None
+### mssql_backup_default_levels = None
+factory_settings["mssql_backup_default_levels"] = {
+    "database":             (None, None),
+    "database_diff":        (None, None),
+    "log":                  (None, None),
+    "file_or_filegroup":    (None, None),
+    "file_diff":            (None, None),
+    "partial":              (None, None),
+    "partial_diff":         (None, None),
+    "unspecific":           (None, None)
+}
 
-def inventory_mssql_backup(info):
-    return [ (line[0] + ' ' + line[1], 'mssql_backup_default_levels')
-             for line in info
-             if len(line) in [3, 4, 5] ]
 
-def check_mssql_backup(item, params, info):
-    def backup_type_name(backup_type):
+def parse_mssql_backup(info):
+
+    def get_backup_type_name(backup_type):
         return {
             "D": "database ",
             "I": "database diff ",
@@ -68,54 +75,83 @@ def check_mssql_backup(item, params, info):
             "-": "unspecific ",
         }.get(backup_type, "")
 
-    found_instance = False
+    parsed = []
     for line in info:
         if len(line) not in [3, 4, 5]:
             continue
 
-        last_backup_date = False
-        if len(line) == 3:
-            inst, tablespace, last_backup_timestamp = line
-            backup_type = None
-
+        # read data
+        backup_date = None
+        if len(line) == 5:
+            inst, tablespace, backup_date, backup_time, backup_type = line
         elif len(line) == 4:
-            inst, tablespace, last_backup_date, last_backup_time = line
+            inst, tablespace, backup_date, backup_time = line
+            backup_type = None
+        elif len(line) == 3:
+            inst, tablespace, backup_timestamp = line
             backup_type = None
 
-        elif len(line) == 5:
-            inst, tablespace, last_backup_date, last_backup_time, backup_type = line
+        # construct content
+        db_system = inst + ' ' + tablespace
 
-        if item == inst + ' ' + tablespace:
-            found_instance = True
-            if last_backup_date:
-                # TODO: Timezone issue? Agent should always send UTC timestamp.
-                timestamp = time.mktime(time.strptime(last_backup_date + ' ' + last_backup_time,
-                                                      '%Y-%m-%d %H:%M:%S'))
-            else:
-                timestamp = int(last_backup_timestamp)
+        if backup_date:
+            # TODO: Timezone issue? Agent should always send UTC timestamp.
+            timestamp = time.mktime(time.strptime(
+                backup_date + ' ' + backup_time, '%Y-%m-%d %H:%M:%S')
+            )
+        else:
+            timestamp = int(backup_timestamp)
 
-            state = 0
-            sec_ago = time.time() - timestamp
+        backup_type_name = get_backup_type_name(backup_type)
 
-            age_warn, age_crit = None, None
-            if params is not None:
-                if sec_ago >= params[1]:
-                    state = 2
-                elif sec_ago >= params[0]:
-                    state = 1
-                age_warn, age_crit = params[0], params[1]
+        if backup_type == None:
+            perfkey = "seconds"
+        else:
+            perfkey = "backup_age_%s" % backup_type_name.strip().replace(" ", "_")
 
-            if backup_type == None:
-                perfkey = "seconds"
-            else:
-                perfkey = "backup_age_%s" % backup_type_name(backup_type).strip().replace(" ", "_")
+        parsed.append((db_system, timestamp, backup_type_name, perfkey))
 
-            perfdata = [(perfkey, sec_ago, age_warn, age_crit)]
+    return parsed
 
-            yield state, 'Last %sbackup was at %s (%s ago)' % \
-                (backup_type_name(backup_type),
-                 time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)),
-                 get_age_human_readable(sec_ago)), perfdata
+
+def inventory_mssql_backup(parsed):
+    return [ (line[0], {})
+             for line in parsed
+             if len(line) in [3, 4, 5] ]
+
+
+def check_mssql_backup(item, params, parsed):
+    found_instance = False
+    for db_system, timestamp, backup_type_name, perfkey in parsed:
+        if item != db_system:
+            continue
+        found_instance = True
+
+        if type(params) != dict:
+            params = {"database": params}
+
+        if backup_type_name == "":  # use "database" parameters as default for old agent output
+            age_warn, age_crit = params["database"]
+        else:
+            backup_type_var = backup_type_name.strip().replace(" ", "_")
+            age_warn, age_crit = params.get(backup_type_var, (None, None))
+
+        state = 0
+        sec_ago = time.time() - timestamp
+        if age_warn is not None and age_crit is not None:
+            if sec_ago >= age_crit:
+                state = 2
+            elif sec_ago >= age_warn:
+                state = 1
+
+        perfdata = [(perfkey, sec_ago, age_warn, age_crit)]
+        infotext = 'Last %sbackup was at %s (%s ago)' % (
+            backup_type_name,
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp)),
+            get_age_human_readable(sec_ago)
+        )
+
+        yield state, infotext, perfdata
 
     if not found_instance:
         # Assume general connection problem to the database, which is reported
@@ -124,8 +160,10 @@ def check_mssql_backup(item, params, info):
 
 
 check_info['mssql_backup'] = {
+    'parse_function':      parse_mssql_backup,
     'check_function':      check_mssql_backup,
     'inventory_function':  inventory_mssql_backup,
+    'default_levels_variable': 'mssql_backup_default_levels',
     'service_description': '%s Backup',
     'has_perfdata':        True,
     'group':               'mssql_backup',

@@ -313,8 +313,8 @@ class ConfigDomain(object):
         raise MKGeneralException(_("The domain \"%s\" does not support activation.") % self.ident)
 
 
-    def load(self):
-        filename = self.config_file(site_specific=False)
+    def load(self, site_specific=False):
+        filename = self.config_file(site_specific)
         settings = {}
 
         if not os.path.exists(filename):
@@ -331,6 +331,10 @@ class ConfigDomain(object):
         except Exception, e:
             raise MKGeneralException(_("Cannot read configuration file %s: %s") %
                                     (filename, e))
+
+
+    def load_site_globals(self):
+        return self.load(site_specific=True)
 
 
     def save(self, settings, site_specific=False):
@@ -3408,10 +3412,13 @@ def register_configvar_group(title, order=None):
 # - --> Wir machen eine automation, die alle Konfigurationsvariablen
 #   ausgibt
 
-def load_configuration_settings():
+def load_configuration_settings(site_specific=False):
     settings = {}
     for domain in ConfigDomain.enabled_domains():
-        settings.update(domain().load())
+        if site_specific:
+            settings.update(domain().load_site_globals())
+        else:
+            settings.update(domain().load())
     return settings
 
 
@@ -4167,9 +4174,7 @@ def save_site_globals_on_slave_site(tarcontent):
         multitar.extract_from_buffer(tarcontent, [ ("dir", "sitespecific", tmp_dir) ])
 
         site_globals = store.load_data_from_file(tmp_dir + "/sitespecific.mk", {})
-        current_settings = load_configuration_settings()
-        current_settings.update(site_globals)
-        save_global_settings(current_settings)
+        save_site_global_settings(site_globals)
     finally:
         shutil.rmtree(tmp_dir)
 

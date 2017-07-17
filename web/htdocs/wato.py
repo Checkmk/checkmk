@@ -9597,7 +9597,9 @@ class ModeDistributedMonitoring(ModeSites):
         delete_url = html.makeactionuri([("_delete", site_id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        if has_wato_slave_sites() and (site.get("replication") or config.site_is_local(site_id)):
+        if (has_wato_slave_sites()
+            and (site.get("replication") or config.site_is_local(site_id))) \
+           or is_wato_slave_site():
             globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
             html.icon_button(globals_url, _("Site specific global configuration"), "configuration")
 
@@ -9681,7 +9683,11 @@ class ModeEditSiteGlobals(ModeSites):
         # The site's default values are the current global settings
         self._default_values = check_mk_local_automation("get-configuration", [], get_check_mk_config_var_names())
         self._default_values.update(load_configuration_settings())
-        self._current_settings = self._site.get("globals", {})
+
+        if is_wato_slave_site():
+            self._current_settings = load_configuration_settings(site_specific=True)
+        else:
+            self._current_settings = self._site.get("globals", {})
 
 
     def title(self):
@@ -9754,15 +9760,16 @@ class ModeEditSiteGlobals(ModeSites):
                     "on that site. <b>Note</b>: this only makes sense if the site "
                     "is part of a distributed setup."))
 
-        if not has_wato_slave_sites():
-           html.show_error(_("You can not configure site specific global settings "
-                             "in non distributed setups."))
-           return
+        if not is_wato_slave_site():
+            if not has_wato_slave_sites():
+               html.show_error(_("You can not configure site specific global settings "
+                                 "in non distributed setups."))
+               return
 
-        if not self._site.get("replication") and not config.site_is_local(self._site_id):
-            html.show_error(_("This site is not the master site nor a replication slave. "
-                              "You cannot configure specific settings for it."))
-            return
+            if not self._site.get("replication") and not config.site_is_local(self._site_id):
+                html.show_error(_("This site is not the master site nor a replication slave. "
+                                  "You cannot configure specific settings for it."))
+                return
 
         group_names = global_config_variable_groups(show_all=True)
         render_global_configuration_variables(group_names, self._default_values,

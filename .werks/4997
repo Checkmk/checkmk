@@ -1,0 +1,10 @@
+Title: Fixed visibility of metric toggle switch in graph designer
+Level: 1
+Component: metrics
+Compatible: compat
+Edition: cee
+Version: 1.4.0p9
+Date: 1500276368
+Class: fix
+
+

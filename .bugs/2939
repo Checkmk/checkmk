@@ -1,0 +1,14 @@
+Title: Export WATO folder permissions breaks activate changes in distributed setups
+Component: wato
+State: open
+Date: 2017-07-18 18:46:33
+Targetversion: 1.2.8
+Class: bug
+
+If the option Export WATO permissions is activated and around 1400 users are used in
+user management, it will break activation of changes. It will end in a apache process
+which is running on full power to calculate all the settings for all users.
+
+This option should be blocked if too much users exists or should be better optimized for higer user amounts.
+
+Workaround: Deactivte the option Export WATO permissions

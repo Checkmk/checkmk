@@ -74,7 +74,7 @@ multisite_commands.append({
     "title"       : _("Reschedule active checks"),
     "render"      : lambda: \
         html.button("_resched_checks", _("Reschedule")) == \
-        html.write_text(_("and spread over") + " ") == \
+        html.write_text(" " + _("and spread over") + " ") == \
         html.number_input("_resched_spread", 0, size=3) == \
         html.write_text(" " + _("minutes") + " "),
     "action"      : command_reschedule,

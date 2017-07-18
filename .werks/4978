@@ -1,0 +1,10 @@
+Title: ipmi: Ignore sensors with state 'na'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1500363777
+Class: fix
+
+

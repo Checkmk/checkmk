@@ -193,7 +193,7 @@ def parse_ipmi(info):
 
 inventory_ipmi_rules = []
 factory_settings["ipmi_default_levels"] = {
-    "ignored_sensorstates" : [ "ns", "nr" ]
+    "ignored_sensorstates" : [ "ns", "nr", "na" ]
 }
 
 
@@ -222,7 +222,7 @@ def inventory_ipmi(info):
     elif type(rules[0]) == tuple:
         single_rules = rules[0][1].copy()
         if "ignored_sensorstates" not in single_rules:
-            single_rules["ignored_sensorstates"] = [ "ns", "nr" ]
+            single_rules["ignored_sensorstates"] = [ "ns", "nr", "na" ]
         for sensorname, data in parsed.items():
             if not ipmi_ignore_entry(sensorname, data["status_txt"], single_rules):
                 yield sensorname, {}

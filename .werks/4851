@@ -1,0 +1,13 @@
+Title: Improved WATO service discovery performance
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1500370603
+Class: fix
+
+The function responsible for the service discovery did not properly
+cache the data for later usage. This drastically slowed down the
+service discovery performance for hosts with lots of services.
+

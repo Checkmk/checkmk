@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -25,12 +25,13 @@
 #define _WIN32_WINNT 0x0600
 
 #include "SectionUptime.h"
-#include "../logging.h"
 #include "../dynamic_func.h"
+#include "../Environment.h"
+#include "../LoggerAdaptor.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-SectionUptime::SectionUptime() : Section("uptime") {
+SectionUptime::SectionUptime(const Environment &env, LoggerAdaptor &logger) : Section("uptime", env, logger) {
     GetTickCount64_dyn = DYNAMIC_FUNC(GetTickCount64, L"kernel32.dll");
     if (GetTickCount64_dyn == nullptr) {
         // GetTickCount64 is only available on Vista/2008 and newer
@@ -38,7 +39,7 @@ SectionUptime::SectionUptime() : Section("uptime") {
     }
 }
 
-bool SectionUptime::produceOutputInner(std::ostream &out, const Environment&) {
+bool SectionUptime::produceOutputInner(std::ostream &out) {
     if (GetTickCount64_dyn != nullptr) {
         out << outputTickCount64();
     } else if (_wmi_helper.get() != nullptr) {
@@ -62,7 +63,8 @@ std::string SectionUptime::outputWMI() {
                 return res.get<std::string>(L"SystemUpTime");
             }
         } catch (const wmi::ComException &e) {
-            crash_log("wmi request for SystemUpTime failed: %s", e.what());
+            _logger.crashLog(
+		"wmi request for SystemUpTime failed: %s", e.what());
         }
     }
     // TODO: wmi appears to be unreliable on some systems so maybe switch

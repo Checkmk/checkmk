@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -25,16 +25,12 @@
 #include "SectionSystemtime.h"
 #include <iomanip>
 
-
 extern double current_time();
 
-SectionSystemtime::SectionSystemtime()
-    : Section("systemtime")
-{
-}
+SectionSystemtime::SectionSystemtime(const Environment &env, LoggerAdaptor &logger)
+    : Section("systemtime", env, logger) {}
 
-bool SectionSystemtime::produceOutputInner(std::ostream &out,
-                                    const Environment&) {
+bool SectionSystemtime::produceOutputInner(std::ostream &out) {
     out << std::fixed << std::setprecision(0) << current_time();
     return true;
 }

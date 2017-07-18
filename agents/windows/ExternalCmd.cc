@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -25,7 +25,7 @@
 #include "ExternalCmd.h"
 #include <memory>
 #include "Environment.h"
-#include "logging.h"
+#include "LoggerAdaptor.h"
 #include "types.h"
 
 extern bool with_stderr;
@@ -36,7 +36,8 @@ bool ends_with(std::string const &value, std::string const &ending) {
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
-ExternalCmd::ExternalCmd(const char *cmdline) {
+ExternalCmd::ExternalCmd(const char *cmdline, const LoggerAdaptor &logger)
+    : _logger(logger) {
     SECURITY_DESCRIPTOR security_descriptor;
     SECURITY_ATTRIBUTES security_attributes;
     // initialize security descriptor (Windows NT)
@@ -86,7 +87,7 @@ ExternalCmd::ExternalCmd(const char *cmdline) {
 
     DWORD dwCreationFlags = CREATE_NEW_CONSOLE;
     if (detach_process) {
-        crash_log("Detaching process: %s, %d", cmdline, detach_process);
+        _logger.crashLog("Detaching process: %s, %d", cmdline, detach_process);
         dwCreationFlags = CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS;
     }
 

@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -27,9 +27,11 @@
 
 #include <string>
 
+class LoggerAdaptor;
+
 class Environment {
 public:
-    Environment(bool use_cwd);
+    Environment(bool use_cwd, const LoggerAdaptor &logger);
     ~Environment();
 
     // TODO: this is an evil hack, but currently there is at least one global
@@ -52,7 +54,7 @@ public:
 
     std::string logwatchStatefile() const { return _logwatch_statefile; }
     std::string eventlogStatefile() const { return _eventlog_statefile; }
-
+    
 public:
     static bool isWinNt();
 
@@ -85,6 +87,8 @@ private:
 
     std::string _logwatch_statefile;
     std::string _eventlog_statefile;
+
+    const LoggerAdaptor &_logger;
 };
 
 #endif  // Environment_h

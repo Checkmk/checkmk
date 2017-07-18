@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -25,10 +25,23 @@
 #ifndef Thread_h
 #define Thread_h
 
-#include <windows.h>
+#include <winsock2.h>
 #include <functional>
 #include <memory>
-#include "logging.h"
+#include "types.h"
+
+class Environment;
+class LoggerAdaptor;
+
+struct ThreadData {
+    time_t push_until;
+    bool terminate;
+    const Environment &env;
+    const LoggerAdaptor &logger;
+    bool new_request;
+    sockaddr_storage last_address;
+    Mutex mutex;
+};
 
 class Thread {
 public:

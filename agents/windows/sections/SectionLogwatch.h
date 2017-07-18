@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -78,12 +78,11 @@ class SectionLogwatch : public Section {
     typedef std::pair<std::string, FILETIME> FileEntryType;
 
 public:
-    SectionLogwatch(Configuration &config, const Environment &env);
+    SectionLogwatch(Configuration &config, LoggerAdaptor &logger);
     virtual ~SectionLogwatch();
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
 
 private:
     void init();
@@ -94,7 +93,7 @@ private:
     void cleanupTextfiles();
     void cleanup();
 
-    void loadLogwatchOffsets(const Environment &env);
+    void loadLogwatchOffsets();
     void parseLogwatchStateLine(char *line);
     bool updateFromHint(const char *file_name, logwatch_textfile *textfile);
 

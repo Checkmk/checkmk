@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -22,22 +22,23 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "SectionPS.h"
-#include "../types.h"
-#include "../dynamic_func.h"
-#include "../PerfCounter.h"
-#include "../logging.h"
 #include <windows.h>
 #include <tlhelp32.h>
 #include <iomanip>
+#include "SectionPS.h"
+#include "../dynamic_func.h"
+#include "../Environment.h"
+#include "../LoggerAdaptor.h"
+#include "../PerfCounter.h"
+#include "../types.h"
 
 
 extern double file_time(const FILETIME *filetime);
 extern double current_time();
 
 
-SectionPS::SectionPS(Configuration &config)
-    : Section("ps")
+SectionPS::SectionPS(Configuration &config, LoggerAdaptor &logger)
+    : Section("ps", config.getEnvironment(), logger)
     , _use_wmi(config, "ps", "use_wmi", false)
     , _full_commandline(config, "ps", "full_path", false)
 {
@@ -142,7 +143,7 @@ bool SectionPS::ExtractProcessOwner(HANDLE hProcess_i, std::string &csOwner_o) {
     return false;
 }
 
-bool SectionPS::produceOutputInner(std::ostream &out, const Environment&) {
+bool SectionPS::produceOutputInner(std::ostream &out) {
     if (*_use_wmi) {
         return outputWMI(out);
     } else {
@@ -225,9 +226,9 @@ bool SectionPS::outputWMI(std::ostream &out) {
     } catch (const wmi::ComException &e) {
         // the most likely cause is that the wmi query fails, i.e. because the
         // service is currently offline.
-        crash_log("Exception: %s", e.what());
+        _logger.crashLog("Exception: %s", e.what());
     } catch (const wmi::ComTypeException &e) {
-        crash_log("Exception: %s", e.what());
+        _logger.crashLog("Exception: %s", e.what());
         std::wstring types;
         std::vector<std::wstring> names;
         for (std::vector<std::wstring>::const_iterator iter = names.begin();
@@ -235,7 +236,7 @@ bool SectionPS::outputWMI(std::ostream &out) {
             types += *iter + L"=" +
                      std::to_wstring(result.typeId(iter->c_str())) + L", ";
         }
-        crash_log(
+        _logger.crashLog(
             "Data types are different than expected, please report this and "
             "include the following: %ls",
             types.c_str());
@@ -252,7 +253,8 @@ bool SectionPS::outputNative(std::ostream &out) {
     } catch (const std::runtime_error &e) {
         // the most likely cause is that the wmi query fails, i.e. because the
         // service is currently offline.
-        crash_log("Exception: Error while querying process perfdata: %s", e.what());
+        _logger.crashLog(
+	    "Exception: Error while querying process perfdata: %s", e.what());
     }
 
     WinHandle hProcessSnap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));

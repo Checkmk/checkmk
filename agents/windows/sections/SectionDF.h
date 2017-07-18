@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -27,13 +27,14 @@
 
 #include "../Section.h"
 
+class Environment;
+
 class SectionDF : public Section {
 public:
-    SectionDF();
+    SectionDF(const Environment &env, LoggerAdaptor &logger);
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
 private:
 
     void output_filesystem(std::ostream &out, char *volid);

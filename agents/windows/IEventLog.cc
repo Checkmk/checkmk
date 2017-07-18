@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -25,16 +25,17 @@
 #include "IEventLog.h"
 #include "EventLog.h"
 #include "EventLogVista.h"
-#include "logging.h"
+#include "LoggerAdaptor.h"
 
 std::unique_ptr<IEventLog> open_eventlog(LPCWSTR name_or_path,
-                                         bool try_vista_api) {
+                                         bool try_vista_api,
+					 const LoggerAdaptor &logger) {
     if (try_vista_api) {
         try {
             return std::unique_ptr<IEventLog>(new EventLogVista(name_or_path));
         } catch (const UnsupportedException&) {
-            crash_log("vista-style event-log api not available");
+            logger.crashLog("vista-style event-log api not available");
         }
     }
-    return std::unique_ptr<IEventLog>(new EventLog(name_or_path));
+    return std::unique_ptr<IEventLog>(new EventLog(name_or_path, logger));
 }

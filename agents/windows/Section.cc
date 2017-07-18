@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -22,10 +22,18 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include <sstream>
+#include "Environment.h"
+#include "LoggerAdaptor.h"
 #include "Section.h"
-#include "logging.h"
 
-Section::Section(const char *name) : _name(name != nullptr ? name : "") {}
+
+Section::Section(const char *name,
+                 const Environment &env,
+                 LoggerAdaptor &logger)
+    : _name(name != nullptr ? name : "")
+    , _env(env)
+    , _logger(logger) {}
 
 Section *Section::withHiddenHeader(bool hidden) {
     _show_header = !hidden;
@@ -37,11 +45,11 @@ Section *Section::withRealtimeSupport() {
     return this;
 }
 
-bool Section::produceOutput(std::ostream &out, const Environment &env,
-                            bool nested) {
-    crash_log("<<<%s>>>", _name.c_str());
+bool Section::produceOutput(std::ostream &out, bool nested) {
+    _logger.crashLog("<<<%s>>>", _name.c_str());
+
     std::string output;
-    bool res = generateOutput(env, output);
+    bool res = generateOutput(output);
 
     if (res) {
         const char *left_bracket = nested ? "[" : "<<<";
@@ -66,9 +74,9 @@ bool Section::produceOutput(std::ostream &out, const Environment &env,
     return res;
 }
 
-bool Section::generateOutput(const Environment &env, std::string &buffer) {
+bool Section::generateOutput(std::string &buffer) {
     std::ostringstream inner;
-    bool res = produceOutputInner(inner, env);
+    bool res = produceOutputInner(inner);
     buffer = inner.str();
     return res;
 }

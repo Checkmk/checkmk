@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -24,8 +24,8 @@
 
 #include "SectionGroup.h"
 
-SectionGroup::SectionGroup(const char *name)
-    : Section(name)
+SectionGroup::SectionGroup(const char *name, const Environment &env, LoggerAdaptor &logger)
+    : Section(name, env, logger)
 {
     withHiddenHeader();
 }
@@ -61,8 +61,7 @@ SectionGroup *SectionGroup::withNestedSubtables()
     return this;
 }
 
-bool SectionGroup::produceOutputInner(std::ostream &out,
-                                      const Environment &env) {
+bool SectionGroup::produceOutputInner(std::ostream &out) {
     time_t now = time(nullptr);
     if (_disabled_until > now) {
         return false;
@@ -71,7 +70,7 @@ bool SectionGroup::produceOutputInner(std::ostream &out,
     bool all_failed = true;
 
     for (const auto &table : _subsections) {
-        if (table->produceOutput(out, env, _nested)) {
+        if (table->produceOutput(out, _nested)) {
             all_failed = false;
         }
         else if (_fail_if_missing) {
@@ -82,7 +81,7 @@ bool SectionGroup::produceOutputInner(std::ostream &out,
 
     if (!all_failed) {
         for (const auto &table : _dependent_subsections) {
-            if (table->produceOutput(out, env, _nested)) {
+            if (table->produceOutput(out, _nested)) {
                 all_failed = false;
             }
         }

@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <vector>
 #include "PerfCounterCommon.h"
-#include "logging.h"
 #include "stringutil.h"
 
 // Helper functions to navigate the performance counter data

@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -154,54 +154,6 @@ template <>
 script_async_execution from_string<script_async_execution>(
     const std::string &value);
 
-// States for plugin and local scripts
-enum script_status {
-    SCRIPT_IDLE,
-    SCRIPT_FINISHED,
-    SCRIPT_COLLECT,
-    SCRIPT_ERROR,
-    SCRIPT_TIMEOUT,
-    SCRIPT_NONE,
-};
-
-enum script_type { PLUGIN, LOCAL, MRPE };
-
-// Used by mrpe and local/plugins scripts
-struct runas_include {
-    char path[256];
-    char user[256];
-    script_type type;
-};
-
-struct script_container {
-    ~script_container() {
-        if (worker_thread != INVALID_HANDLE_VALUE) {
-            CloseHandle(worker_thread);
-        }
-        // allocated with HeapAlloc (may be null)
-        HeapFree(GetProcessHeap(), 0, buffer);
-        HeapFree(GetProcessHeap(), 0, buffer_work);
-    }
-    std::string path;         // full path with interpreter, cscript, etc.
-    std::string script_path;  // path of script
-    int max_age;
-    int timeout;
-    int max_retries;
-    int retry_count;
-    time_t buffer_time;
-    char *buffer;
-    char *buffer_work;
-    std::string run_as_user;
-    script_type type;
-    script_execution_mode execution_mode;
-    script_status status;
-    script_status last_problem;
-    volatile bool should_terminate;
-    HANDLE worker_thread;
-    HANDLE job_object;
-    DWORD exit_code;
-};
-
 struct retry_config {
     char *pattern;
     int retries;
@@ -304,7 +256,6 @@ typedef std::vector<ipspec *> only_from_t;
 typedef std::vector<globline_container *> logwatch_globlines_t;
 typedef std::vector<eventlog_config_entry> eventlog_config_t;
 typedef std::vector<mrpe_entry *> mrpe_entries_t;
-typedef std::vector<runas_include *> mrpe_include_t;
 typedef std::vector<eventlog_file_state> eventlog_state_t;
 typedef std::vector<eventlog_hint_t *> eventlog_hints_t;
 typedef std::vector<char *> fileinfo_paths_t;
@@ -312,7 +263,6 @@ typedef std::vector<retry_config *> retry_count_configs_t;
 typedef std::vector<timeout_config *> timeout_configs_t;
 typedef std::vector<cache_config *> cache_configs_t;
 typedef std::vector<execution_mode_config *> execution_mode_configs_t;
-typedef std::vector<runas_include *> script_include_t;
 
 // poor mans binder for a member function. Unnecessary if we ever use a C++11
 // compiler

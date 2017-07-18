@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -38,11 +38,10 @@ class SectionFileinfo : public Section {
         _fileinfo_paths;
 
 public:
-    SectionFileinfo(Configuration &config);
+    SectionFileinfo(Configuration &config, LoggerAdaptor &logger);
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
 private:
     std::vector<std::string> _found_files;
     std::vector<std::string> _temp_files;

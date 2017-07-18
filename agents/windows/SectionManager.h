@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -27,11 +27,14 @@
 
 #include <set>
 #include "Configurable.h"
-#include "Configuration.h"
 #include "Section.h"
 
 std::ostream &operator<<(std::ostream &out,
                          const std::pair<std::string, std::string> &value);
+class Environment;
+class Configuration;
+class LoggerAdaptor;
+
 
 class SectionManager {
     std::vector<std::unique_ptr<Section>> _sections;
@@ -56,15 +59,17 @@ class SectionManager {
     KeyedListConfigurable<std::string> _script_plugin_includes;
 
     ListConfigurable<std::vector<winperf_counter *>> _winperf_counters;
+    const Environment &_env;
+    LoggerAdaptor &_logger;
 
     void addSection(Section *section);
-    void loadStaticSections(Configuration &config, const Environment &env);
+    void loadStaticSections(Configuration &config);
 
 public:
-    SectionManager(Configuration &config, const Environment &env);
+    explicit SectionManager(Configuration &config, LoggerAdaptor &logger);
     ~SectionManager() { _sections.clear(); }
 
-    void emitConfigLoaded(const Environment &env);
+    void emitConfigLoaded();
     void loadDynamicSections();
     const std::vector<std::unique_ptr<Section>> &sections() const {
         return _sections;

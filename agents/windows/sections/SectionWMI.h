@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -41,7 +41,7 @@ class SectionWMI : public Section {
     std::unique_ptr<wmi::Helper> _helper;
 
 public:
-    SectionWMI(const char *name);
+    SectionWMI(const char *name, const Environment &env, LoggerAdaptor &logger);
 
     SectionWMI *withNamespace(const wchar_t *name);
     SectionWMI *withObject(const wchar_t *path);
@@ -52,8 +52,7 @@ protected:
 
     void suspend(int duration);
 
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
 private:
 
     void outputTable(std::ostream &out, wmi::Result &data);

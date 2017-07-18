@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -24,15 +24,16 @@
 
 #include "SectionCheckMK.h"
 #include "../Environment.h"
+#include "../LoggerAdaptor.h"
 #include "../stringutil.h"
-#include <vector>
+#include <algorithm>
+#include <array>
+#include <iterator>
 #include <string>
+#include <vector>
 
 
 extern const char *check_mk_version;
-extern const char *g_connection_log;
-extern const char *g_crash_log;
-extern const char *g_success_log;
 
 struct script_statistics_t {
     int pl_count;
@@ -44,11 +45,14 @@ struct script_statistics_t {
 } g_script_stat;
 
 
-SectionCheckMK::SectionCheckMK(Configuration &config, const Environment &env)
-    : Section("check_mk")
+SectionCheckMK::SectionCheckMK(Configuration &config,
+                               LoggerAdaptor &logger)
+    : Section("check_mk", config.getEnvironment(), logger)
     , _crash_debug(config, "global", "crash_debug", false)
     , _only_from(config, "global", "only_from")
-{
+    , _info_fields(createInfoFields()) {}
+
+std::vector<KVPair> SectionCheckMK::createInfoFields() const {
 #ifdef ENVIRONMENT32
     const char *arch = "32bit";
 #else
@@ -56,34 +60,41 @@ SectionCheckMK::SectionCheckMK(Configuration &config, const Environment &env)
 #endif
 
     // common fields
-    _info_fields = {
-        KVPair("Version", check_mk_version),                                  //
-        KVPair("BuildDate", __DATE__),                                        //
-        KVPair("AgentOS", "windows"),                                         //
-        KVPair("Hostname", env.hostname()),                                   //
-        KVPair("Architecture", arch),                                         //
-        KVPair("WorkingDirectory", env.currentDirectory()),                   //
-        KVPair("ConfigFile", Configuration::configFileName(false, env)),      //
-        KVPair("LocalConfigFile", Configuration::configFileName(true, env)),  //
-        KVPair("AgentDirectory", env.agentDirectory()),                       //
-        KVPair("PluginsDirectory", env.pluginsDirectory()),                   //
-        KVPair("StateDirectory", env.stateDirectory()),                       //
-        KVPair("ConfigDirectory", env.configDirectory()),                     //
-        KVPair("TempDirectory", env.tempDirectory()),                         //
-        KVPair("LogDirectory", env.logDirectory()),                           //
-        KVPair("SpoolDirectory", env.spoolDirectory()),                       //
-        KVPair("LocalDirectory", env.localDirectory())                        //
+    std::vector<KVPair> info_fields = {
+        {"Version", check_mk_version},
+        {"BuildDate", __DATE__},
+        {"AgentOS", "windows"},
+        {"Hostname", _env.hostname()},
+        {"Architecture", arch},
+        {"WorkingDirectory", _env.currentDirectory()},
+        {"ConfigFile", Configuration::configFileName(false, _env)},
+        {"LocalConfigFile", Configuration::configFileName(true, _env)},
+        {"AgentDirectory", _env.agentDirectory()},
+        {"PluginsDirectory", _env.pluginsDirectory()},
+        {"StateDirectory", _env.stateDirectory()},
+        {"ConfigDirectory", _env.configDirectory()},
+        {"TempDirectory", _env.tempDirectory()},
+        {"LogDirectory", _env.logDirectory()},
+        {"SpoolDirectory", _env.spoolDirectory()},
+        {"LocalDirectory", _env.localDirectory()}
     };
 
     if (*_crash_debug) {
-        _info_fields.push_back(KVPair("ConnectionLog", g_connection_log));
-        _info_fields.push_back(KVPair("CrashLog", g_crash_log));
-        _info_fields.push_back(KVPair("SuccessLog", g_success_log));
+        const std::array<std::string, 3> titles{
+            "ConnectionLog", "CrashLog", "SuccessLog"};
+        const auto logFilenames = _logger.getLogFilenames();
+        std::transform(
+            titles.cbegin(), titles.cend(),
+            logFilenames.cbegin(), std::back_inserter(info_fields),
+            [](const std::string &title, const std::string &filename) {
+                return KVPair(title, filename);
+            });
     }
+
+    return info_fields;
 }
 
-bool SectionCheckMK::produceOutputInner(std::ostream &out,
-                                        const Environment&) {
+bool SectionCheckMK::produceOutputInner(std::ostream &out) {
 
     // output static fields
     for (const auto &kv : _info_fields) {

@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -29,22 +29,24 @@
 #include "../Section.h"
 
 class Environment;
+typedef std::pair<std::string, std::string> KVPair;
 
 class SectionCheckMK : public Section {
     Configurable<bool> _crash_debug;
     SplittingListConfigurable<only_from_t, BlockMode::FileExclusive<only_from_t>>
         _only_from;
 
-    typedef std::pair<const char *, std::string> KVPair;
     // static fields
-    std::vector<KVPair> _info_fields;
+    const std::vector<KVPair> _info_fields;
 
 public:
-    SectionCheckMK(Configuration &config, const Environment &env);
+    SectionCheckMK(Configuration &config, LoggerAdaptor &logger);
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
+
+private:
+    std::vector<KVPair> createInfoFields() const;
 };
 
 #endif // SectionCheckMK_h

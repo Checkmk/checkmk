@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -29,20 +29,17 @@
 #include "../Configurable.h"
 #include "../OHMMonitor.h"
 
-
 class Configuration;
-
 
 class SectionOHM : public SectionWMI {
     std::unique_ptr<OHMMonitor> _ohm_monitor;
     std::string _bin_path;
 public:
-    SectionOHM(Configuration &config, const Environment &env);
+    SectionOHM(Configuration &config, LoggerAdaptor &logger);
 
     virtual void startIfAsync();
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
 
 };
 

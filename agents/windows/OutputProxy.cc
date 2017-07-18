@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -25,7 +25,7 @@
 #include "OutputProxy.h"
 #include <winsock2.h>
 #include <cstdarg>
-#include "logging.h"
+#include "LoggerAdaptor.h"
 
 // urgh
 extern volatile bool g_should_terminate;
@@ -47,9 +47,10 @@ void FileOutputProxy::flush(bool) {
     // nop
 }
 
-BufferedSocketProxy::BufferedSocketProxy(SOCKET socket, size_t buffer_size)
-    : _socket(socket) {
-    _buffer.resize(buffer_size);
+BufferedSocketProxy::BufferedSocketProxy(
+    SOCKET socket, const LoggerAdaptor &logger)
+    : _socket(socket), _logger(logger) {
+    _buffer.resize(DEFAULT_BUFFER_SIZE);
 }
 
 void BufferedSocketProxy::setSocket(SOCKET socket) { _socket = socket; }
@@ -99,7 +100,7 @@ void BufferedSocketProxy::flush(bool) {
         }
     }
     if (_length > 0) {
-        verbose("failed to flush entire buffer\n");
+        _logger.verbose("failed to flush entire buffer\n");
     }
 }
 
@@ -116,11 +117,11 @@ bool BufferedSocketProxy::flushInt() {
             } else if (error == WSAEINPROGRESS) {
                 continue;
             } else if (error == WSAEWOULDBLOCK) {
-                verbose("send to socket would block");
+                _logger.verbose("send to socket would block");
                 error = true;
                 break;
             } else {
-                verbose("send to socket failed with error code %d", error);
+                _logger.verbose("send to socket failed with error code %d", error);
                 error = true;
                 break;
             }
@@ -142,8 +143,9 @@ bool BufferedSocketProxy::flushInt() {
 }
 
 EncryptingBufferedSocketProxy::EncryptingBufferedSocketProxy(
-    SOCKET socket, const std::string &passphrase, size_t buffer_size)
-    : BufferedSocketProxy(socket, buffer_size)
+    SOCKET socket, const std::string &passphrase,
+    const LoggerAdaptor &logger)
+    : BufferedSocketProxy(socket, logger)
     , _crypto(passphrase)
     , _written(0) {
     _blockSize = _crypto.blockSize() / 8;

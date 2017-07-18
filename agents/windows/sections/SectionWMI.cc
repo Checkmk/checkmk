@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -25,13 +25,17 @@
 #include "SectionWMI.h"
 #include "../stringutil.h"
 #include "../wmiHelper.h"
+#include <algorithm>
 #include <ctime>
 
 
 // How to fix broken performance counters
 // http://johansenreidar.blogspot.de/2014/01/windows-server-rebuild-all-performance.html
 
-SectionWMI::SectionWMI(const char *name) : Section(name) { withSeparator(','); }
+SectionWMI::SectionWMI(const char *name, const Environment &env, LoggerAdaptor &logger)
+    : Section(name, env, logger) {
+    withSeparator(',');
+}
 
 SectionWMI *SectionWMI::withNamespace(const wchar_t *name) {
     _namespace = name;
@@ -83,7 +87,7 @@ void SectionWMI::suspend(int duration)
     _disabled_until = time(nullptr) + duration;
 }
 
-bool SectionWMI::produceOutputInner(std::ostream &out, const Environment &) {
+bool SectionWMI::produceOutputInner(std::ostream &out) {
     if (_disabled_until > time(nullptr)) {
         return false;
     }

@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -27,6 +27,8 @@
 
 #include <memory>
 #include <string>
+
+class LoggerAdaptor;
 
 class IEventLogRecord {
 public:
@@ -91,7 +93,9 @@ public:
     //        const char *source) const = 0;
 };
 
-std::unique_ptr<IEventLog> open_eventlog(const wchar_t *name_or_path,
-                                         bool try_vista_api);
+std::unique_ptr<IEventLog> open_eventlog(
+    const wchar_t *name_or_path,
+    bool try_vista_api,
+    const LoggerAdaptor &logger);
 
 #endif  // EventLog_h

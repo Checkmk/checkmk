@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -27,9 +27,10 @@
 
 #include <windows.h>
 #include "IEventLog.h"
-#include "logging.h"
 #include "stringutil.h"
 #include "types.h"
+
+class LoggerAdaptor;
 
 class HModuleWrapper {
 public:
@@ -123,7 +124,7 @@ public:
     /**
      * Construct a reader for the named eventlog
      */
-    EventLog(LPCWSTR name);
+    EventLog(LPCWSTR name, const LoggerAdaptor &logger);
 
     virtual ~EventLog();
 
@@ -175,6 +176,7 @@ private:
     DWORD _last_record_read{0};
 
     std::shared_ptr<MessageResolver> _resolver;
+    const LoggerAdaptor &_logger;
 };
 
 #endif  // EventLog_h

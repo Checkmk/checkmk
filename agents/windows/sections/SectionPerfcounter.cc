@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,12 +23,13 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionPerfcounter.h"
+#include "../Environment.h"
+#include "../LoggerAdaptor.h"
 #include "../PerfCounter.h"
 #include "../stringutil.h"
-#include "../logging.h"
 
-SectionPerfcounter::SectionPerfcounter(const char *name)
-    : Section(name)
+SectionPerfcounter::SectionPerfcounter(const char *name, const Environment &env, LoggerAdaptor &logger)
+    : Section(name, env, logger)
 {
     withSeparator(',');
 }
@@ -45,8 +46,7 @@ SectionPerfcounter *SectionPerfcounter::withToggleIfMissing()
     return this;
 }
 
-bool SectionPerfcounter::produceOutputInner(std::ostream &out,
-                                            const Environment &) {
+bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
     try {
         int counter_id = PerfCounterObject::resolve_counter_name(_counter.c_str());
         if (counter_id < 0) {
@@ -84,7 +84,7 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out,
                 << to_utf8(join(instance_values.second, L",").c_str()) << "\n";
         }
     } catch (const std::exception &e) {
-        crash_log("Exception: %s", e.what());
+        _logger.crashLog("Exception: %s", e.what());
         return false;
     }
     return true;

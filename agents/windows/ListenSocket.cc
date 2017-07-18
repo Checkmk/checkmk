@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -28,18 +28,18 @@
 #include <cassert>
 #include <cstring>
 #include <memory>
-#include "logging.h"
+#include "LoggerAdaptor.h"
 #include "stringutil.h"
 
 static const size_t INET6_ADDRSTRLEN = 46;
 
 ListenSocket::ListenSocket(int port, const only_from_t &source_whitelist,
-                           bool supportIPV6)
-    : _source_whitelist(source_whitelist)
+                           bool supportIPV6, const LoggerAdaptor &logger)
+    : _socket(init_listen_socket(port))
+    , _source_whitelist(source_whitelist)
     , _supports_ipv4(true)
-    , _use_ipv6(supportIPV6) {
-    _socket = init_listen_socket(port);
-}
+    , _use_ipv6(supportIPV6)
+    , _logger(logger) {}
 
 ListenSocket::~ListenSocket() { closesocket(_socket); }
 
@@ -109,7 +109,7 @@ SOCKET ListenSocket::init_listen_socket(int port) {
         int error_id = ::WSAGetLastError();
         if (error_id == WSAEAFNOSUPPORT) {
             // this will happen on Win2k and WinXP without the ipv6 patch
-            verbose("IPV6 not supported");
+            _logger.verbose("IPV6 not supported");
             _use_ipv6 = false;
             tmp_s = socket(AF_INET, SOCK_STREAM, 0);
         }
@@ -134,7 +134,7 @@ SOCKET ListenSocket::init_listen_socket(int port) {
         int v6only = 0;
         if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&v6only,
                        sizeof(int)) != 0) {
-            verbose("failed to disable ipv6 only flag");
+            _logger.verbose("failed to disable ipv6 only flag");
             _supports_ipv4 = false;
         }
     } else {

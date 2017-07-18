@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -22,11 +22,12 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "EventLog.h"
-#include <windows.h>
 #include <algorithm>
 #include <map>
 #include <string>
+#include <windows.h>
+#include "EventLog.h"
+#include "LoggerAdaptor.h"
 
 // loads a dll with support for environment variables in the path
 HMODULE load_library_ext(LPCWSTR dllpath) {
@@ -63,6 +64,7 @@ HMODULE load_library_ext(LPCWSTR dllpath) {
 class MessageResolver {
     std::wstring _name;
     std::map<std::wstring, HModuleWrapper> _cache;
+    const LoggerAdaptor &_logger;
 
     std::vector<std::wstring> getMessageFiles(LPCWSTR source) const {
         static const std::wstring base =
@@ -73,7 +75,7 @@ class MessageResolver {
         DWORD ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, regpath.c_str(), 0,
                                   KEY_READ, &key);
         if (ret != ERROR_SUCCESS) {
-            crash_log("failed to open HKLM:%ls", regpath.c_str());
+            _logger.crashLog("failed to open HKLM:%ls", regpath.c_str());
             return std::vector<std::wstring>();
         }
 
@@ -91,7 +93,7 @@ class MessageResolver {
                                    &buffer[0], &size);
         }
         if (res != ERROR_SUCCESS) {
-            crash_log("failed to read at EventMessageFile in HKLM:%ls : %s",
+            _logger.crashLog("failed to read at EventMessageFile in HKLM:%ls : %s",
                       regpath.c_str(), get_win_error_as_string(res).c_str());
             return std::vector<std::wstring>();
         }
@@ -121,7 +123,7 @@ class MessageResolver {
             }
 
             if (!dll) {
-                crash_log("     --> failed to load %ls", dllpath);
+                _logger.crashLog("     --> failed to load %ls", dllpath);
                 return L"";
             }
         } else {
@@ -136,16 +138,16 @@ class MessageResolver {
             FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
         if (dll) dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
 
-        crash_log("Event ID: %lu.%lu",
+        _logger.crashLog("Event ID: %lu.%lu",
                   eventID / 65536,   // "Qualifiers": no idea what *that* is
                   eventID % 65536);  // the actual event id
 
-        crash_log("Formatting Message");
+        _logger.crashLog("Formatting Message");
         DWORD len =
             FormatMessageW(dwFlags, dll, eventID,
                            0,  // accept any language
                            &result[0], result.size(), (char **)parameters);
-        crash_log("Formatting Message - DONE");
+        _logger.crashLog("Formatting Message - DONE");
 
         // this trims the result string or empties it if formatting failed
         result.resize(len);
@@ -153,7 +155,8 @@ class MessageResolver {
     }
 
 public:
-    MessageResolver(const std::wstring &logName) : _name(logName) {}
+    MessageResolver(const std::wstring &logName, const LoggerAdaptor &logger)
+	: _name(logName), _logger(logger) {}
 
     std::wstring resolve(DWORD eventID, LPCWSTR source, LPCWSTR *parameters) {
         std::wstring result;
@@ -250,8 +253,11 @@ public:
     }
 };
 
-EventLog::EventLog(LPCWSTR name)
-    : _name(name), _log(name), _resolver(new MessageResolver(name)) {
+EventLog::EventLog(LPCWSTR name, const LoggerAdaptor &logger)
+    : _name(name)
+    , _log(name)
+    , _resolver(new MessageResolver(name, logger))
+    , _logger(logger) {
     _buffer.resize(INIT_BUFFER_SIZE);
 }
 
@@ -339,7 +345,7 @@ bool EventLog::fillBuffer() {
         flags |= EVENTLOG_SEQUENTIAL_READ;
     }
 
-    crash_log("    . seek to %lu", _record_offset);
+    _logger.crashLog("    . seek to %lu", _record_offset);
 
     DWORD bytes_required;
 

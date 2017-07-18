@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,12 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Thread.h"
-#include <windows.h>
 #include <stdexcept>
+#include "Environment.h"
+#include "LoggerAdaptor.h"
 #include "stringutil.h"
-
-extern void crash_log(const char *format, ...)
-    __attribute__((format(gnu_printf, 1, 2)));
 
 Thread::~Thread() {
     if (_thread_handle != INVALID_HANDLE_VALUE) {
@@ -36,7 +34,8 @@ Thread::~Thread() {
         ::GetExitCodeThread(_thread_handle, &exitCode);
         if (exitCode == STILL_ACTIVE) {
             // baaad
-            crash_log("thread didn't finish, have to kill it");
+            const auto &logger = static_cast<ThreadData*>(_data)->logger;
+            logger.crashLog("thread didn't finish, have to kill it");
             TerminateThread(_thread_handle, 3);
         }
     }

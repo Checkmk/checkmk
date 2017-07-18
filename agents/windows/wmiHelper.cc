@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -29,7 +29,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "logging.h"
+#include "LoggerAdaptor.h"
 #include "stringutil.h"
 
 using namespace wmi;

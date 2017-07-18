@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,13 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionServices.h"
+#include "../stringutil.h"
 #include <windows.h>
 
 
-SectionServices::SectionServices()
-    : Section("services")
-{
-}
+SectionServices::SectionServices(const Environment &env, LoggerAdaptor &logger)
+    : Section("services", env, logger) {}
 
 
 // Determine the start type of a service. Unbelievable how much
@@ -82,8 +81,7 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
     return start_type;
 }
 
-bool SectionServices::produceOutputInner(std::ostream &out,
-                                         const Environment &env) {
+bool SectionServices::produceOutputInner(std::ostream &out) {
     SC_HANDLE scm =
         OpenSCManager(0, 0, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
     if (scm != INVALID_HANDLE_VALUE) {

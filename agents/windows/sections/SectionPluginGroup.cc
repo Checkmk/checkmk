@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,8 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionPluginGroup.h"
-#include "../logging.h"
+#include "../Environment.h"
 #include "../ExternalCmd.h"
+#include "../LoggerAdaptor.h"
 #include <sys/types.h>
 #include <dirent.h>
 
@@ -54,8 +55,9 @@ const char *typeToSection(script_type type) {
 
 static int launch_program(script_container *cont) {
     enum { SUCCESS = 0, CANCELED, BUFFER_FULL, WORKING } result = WORKING;
+    const auto &logger = cont->logger;
     try {
-        ExternalCmd command(cont->path.c_str());
+        ExternalCmd command(cont->path.c_str(), logger);
 
         static const size_t BUFFER_SIZE = 16635;
         char buf[BUFFER_SIZE];  // i/o buffer
@@ -120,7 +122,7 @@ static int launch_program(script_container *cont) {
             }
 
             if (result == BUFFER_FULL) {
-                crash_log("plugin produced more than 2MB output -> dropped");
+               logger.crashLog("plugin produced more than 2MB output -> dropped");
             }
 
             if (cont->exit_code != STILL_ACTIVE) {
@@ -146,7 +148,7 @@ static int launch_program(script_container *cont) {
             memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
         }
     } catch (const std::exception &e) {
-        crash_log("%s", e.what());
+       logger.crashLog("%s", e.what());
         result = CANCELED;
     }
     return result;
@@ -190,6 +192,41 @@ DWORD WINAPI ScriptWorkerThread(LPVOID lpParam) {
     return 0;
 }
 
+script_container::script_container(
+    const std::string &_path, // full path with interpreter, cscript, etc.
+    const std::string &_script_path, // path of script
+    int _max_age,
+    int _timeout,
+    int _max_entries,
+    const std::string &_user,
+    script_type _type,
+    script_execution_mode _execution_mode,
+    LoggerAdaptor &_logger)
+    : path(_path)
+    , script_path(_script_path)
+    , max_age(_max_age)
+    , timeout(_timeout)
+    , max_retries(_max_entries)
+    , buffer_time(0)
+    , buffer(nullptr)
+    , buffer_work(nullptr)
+    , run_as_user(_user)
+    , type(_type)
+    , execution_mode(_execution_mode)
+    , status(SCRIPT_IDLE)
+    , last_problem(SCRIPT_NONE)
+    , should_terminate(0)
+    , logger(_logger) {}
+
+script_container::~script_container() {
+    if (worker_thread != INVALID_HANDLE_VALUE) {
+        CloseHandle(worker_thread);
+    }
+    // allocated with HeapAlloc (may be null)
+    HeapFree(GetProcessHeap(), 0, buffer);
+    HeapFree(GetProcessHeap(), 0, buffer_work);
+}
+
 bool SectionPluginGroup::exists(script_container *cont) {
     DWORD dwAttr = GetFileAttributes(cont->script_path.c_str());
     return !(dwAttr == INVALID_FILE_ATTRIBUTES);
@@ -199,7 +236,7 @@ void SectionPluginGroup::runContainer(script_container *cont) {
     // Return if this script is no longer present
     // However, the script container is preserved
     if (!exists(cont)) {
-        crash_log("script %s no longer exists", cont->script_path.c_str());
+       _logger.crashLog("script %s no longer exists", cont->script_path.c_str());
         return;
     }
 
@@ -215,7 +252,7 @@ void SectionPluginGroup::runContainer(script_container *cont) {
         if (cont->worker_thread != INVALID_HANDLE_VALUE)
             CloseHandle(cont->worker_thread);
 
-        crash_log("invoke script %s", cont->script_path.c_str());
+       _logger.crashLog("invoke script %s", cont->script_path.c_str());
         cont->worker_thread =
             CreateThread(nullptr,             // default security attributes
                          0,                   // use default stack size
@@ -228,7 +265,7 @@ void SectionPluginGroup::runContainer(script_container *cont) {
              *_async_execution == SEQUENTIAL))
             WaitForSingleObject(cont->worker_thread, INFINITE);
 
-        crash_log("finished with status %d (exit code %" PRIudword ")",
+       _logger.crashLog("finished with status %d (exit code %" PRIudword ")",
                   cont->status, cont->exit_code);
     }
 }
@@ -238,7 +275,8 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
     for (const auto &kv : _containers) {
         std::shared_ptr<script_container> cont = kv.second;
         if (!exists(cont.get())) {
-            crash_log("script %s missing", cont->script_path.c_str());
+            _logger.crashLog(
+		"script %s missing", cont->script_path.c_str());
             continue;
         }
 
@@ -336,9 +374,10 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
     }
 }
 
-SectionPluginGroup::SectionPluginGroup(Configuration &config, const std::string &path, script_type type,
-                               const std::string &user)
-    : Section(typeToSection(type))
+SectionPluginGroup::SectionPluginGroup(
+    Configuration &config, const std::string &path, script_type type,
+    LoggerAdaptor &logger, const std::string &user)
+    : Section(typeToSection(type), config.getEnvironment(), logger)
     , _path(path)
     , _type(type)
     , _user(user)
@@ -390,8 +429,7 @@ std::vector<HANDLE> SectionPluginGroup::stopAsync() {
     return result;
 }
 
-bool SectionPluginGroup::produceOutputInner(std::ostream &out,
-                                        const Environment &env) {
+bool SectionPluginGroup::produceOutputInner(std::ostream &out) {
     // gather the data for the sync sections
     collectData(SYNC);
     if (_type == PLUGIN) {
@@ -530,24 +568,16 @@ std::string SectionPluginGroup::deriveCommand(const char *filename) const {
 
 script_container *SectionPluginGroup::createContainer(
     const char *filename) const {
-    script_container *result = new script_container();
-
-    result->path = deriveCommand(filename);
-    result->script_path = _path + "\\" + filename;
-    result->buffer_time = 0;
-    result->buffer = nullptr;
-    result->buffer_work = nullptr;
-    result->type = _type;
-    result->should_terminate = 0;
-    result->run_as_user = _user;
-    result->execution_mode = getExecutionMode(filename);
-    result->timeout = getTimeout(filename);
-    result->max_retries = getMaxRetries(filename);
-    result->max_age = getCacheAge(filename);
-    result->status = SCRIPT_IDLE;
-    result->last_problem = SCRIPT_NONE;
-
-    return result;
+    return new script_container(
+        deriveCommand(filename),
+        _path + "\\" + filename,
+        getCacheAge(filename),
+        getTimeout(filename),
+        getMaxRetries(filename),
+        _user,
+        _type,
+        getExecutionMode(filename),
+        _logger);
 }
 
 void SectionPluginGroup::updateScripts() {
@@ -612,9 +642,10 @@ DWORD WINAPI DataCollectionThread(LPVOID lpParam) {
 }
 
 void SectionPluginGroup::collectData(script_execution_mode mode) {
+    
     if (mode == SYNC) {
-        crash_log("Collecting sync %s data",
-                  _type == PLUGIN ? "plugin" : "local");
+       _logger.crashLog("Collecting sync %s data",
+			 _type == PLUGIN ? "plugin" : "local");
         for (const auto &kv : _containers) {
             if (kv.second->execution_mode == SYNC)
                 runContainer(kv.second.get());
@@ -631,8 +662,8 @@ void SectionPluginGroup::collectData(script_execution_mode mode) {
 
         if (_collection_thread != INVALID_HANDLE_VALUE)
             CloseHandle(_collection_thread);
-        crash_log("Start async thread for collecting %s data",
-                  _type == PLUGIN ? "plugin" : "local");
+       _logger.crashLog("Start async thread for collecting %s data",
+			 _type == PLUGIN ? "plugin" : "local");
         _collection_thread =
             CreateThread(nullptr,               // default security attributes
                          0,                     // use default stack size

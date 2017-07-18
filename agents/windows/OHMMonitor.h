@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -26,7 +26,8 @@
 
 #include <windows.h>
 #include <string>
-#include "Environment.h"
+
+class LoggerAdaptor;
 
 /**
  * Ensure the Open Hardware Monitor is running (if it's available)
@@ -35,9 +36,10 @@ class OHMMonitor {
     std::string _exe_path;
     bool _available;
     HANDLE _current_process{INVALID_HANDLE_VALUE};
+    const LoggerAdaptor &_logger;
 
 public:
-    OHMMonitor(const std::string &bin_path);
+    OHMMonitor(const std::string &bin_path, const LoggerAdaptor &logger);
     ~OHMMonitor();
 
     // this call actually starts OHM if necessary and returns

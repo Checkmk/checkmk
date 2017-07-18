@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -24,8 +24,11 @@
 
 #include "SectionSkype.h"
 #include "SectionPerfcounter.h"
+#include "../stringutil.h"
+#include <windows.h>
 
-SectionSkype::SectionSkype() : SectionGroup("skype") {
+SectionSkype::SectionSkype(const Environment &env, LoggerAdaptor &logger)
+    : SectionGroup("skype", env, logger) {
     withToggleIfMissing();
     withFailIfMissing();
     withNestedSubtables();
@@ -62,19 +65,18 @@ SectionSkype::SectionSkype() : SectionGroup("skype") {
           L"LS:XmppFederationProxy - Streams",
           L"LS:A/V Edge - TCP Counters",
           L"LS:A/V Edge - UDP Counters"}) {
-        withSubSection((new SectionPerfcounter(to_utf8(data_source).c_str()))
+        withSubSection((new SectionPerfcounter(to_utf8(data_source).c_str(), _env, _logger))
                            ->withCounter(data_source));
     }
 
     // TODO the version number in the counter name isn't exactly inspiring
     // trust,
     // but there currently is no support for wildcards.
-    withDependentSubSection((new SectionPerfcounter("ASP.NET Apps v4.0.30319"))
+    withDependentSubSection((new SectionPerfcounter("ASP.NET Apps v4.0.30319", _env, _logger))
                                 ->withCounter(L"ASP.NET Apps v4.0.30319"));
 }
 
-bool SectionSkype::produceOutputInner(std::ostream &out,
-                                      const Environment &env) {
+bool SectionSkype::produceOutputInner(std::ostream &out) {
     LARGE_INTEGER Counter, Frequency;
     QueryPerformanceCounter(&Counter);
     QueryPerformanceFrequency(&Frequency);
@@ -82,6 +84,6 @@ bool SectionSkype::produceOutputInner(std::ostream &out,
     out << "sampletime," << Counter.QuadPart << "," << Frequency.QuadPart
         << "\n";
 
-    return SectionGroup::produceOutputInner(out, env);
+    return SectionGroup::produceOutputInner(out);
 }
 

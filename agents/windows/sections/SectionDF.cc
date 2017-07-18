@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -35,8 +35,8 @@ void char_replace(char what, char into, char *in) {
 }
 
 
-SectionDF::SectionDF()
-    : Section("df")
+SectionDF::SectionDF(const Environment &env, LoggerAdaptor &logger)
+    : Section("df", env, logger)
 {
     withSeparator('\t');
 }
@@ -94,7 +94,7 @@ void SectionDF::output_mountpoints(std::ostream &out, char *volid) {
     }
 }
 
-bool SectionDF::produceOutputInner(std::ostream &out, const Environment &env) {
+bool SectionDF::produceOutputInner(std::ostream &out) {
     TCHAR buffer[4096];
     DWORD len = GetLogicalDriveStrings(sizeof(buffer), buffer);
 

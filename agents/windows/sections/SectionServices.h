@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -26,14 +26,14 @@
 #define SectionServices_h
 
 #include "../Section.h"
+#include <windows.h>
 
 class SectionServices : public Section {
 public:
-    SectionServices();
+    SectionServices(const Environment &env, LoggerAdaptor &logger);
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
 private:
     const char *serviceStartType(SC_HANDLE scm, LPCWSTR service_name);
 };

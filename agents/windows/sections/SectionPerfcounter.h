@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -36,13 +36,12 @@ class SectionPerfcounter : public Section {
     time_t _disabled_until{0};
 
 public:
-    SectionPerfcounter(const char *name);
+    SectionPerfcounter(const char *name, const Environment &env, LoggerAdaptor &logger);
 
     SectionPerfcounter *withCounter(const wchar_t *counter);
     SectionPerfcounter *withToggleIfMissing();
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
 
 };
 

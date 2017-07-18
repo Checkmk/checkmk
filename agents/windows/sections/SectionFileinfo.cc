@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -29,16 +29,15 @@
 extern double current_time();
 extern double file_time(const FILETIME *filetime);
 
-SectionFileinfo::SectionFileinfo(Configuration &config)
-    : Section("fileinfo")
+SectionFileinfo::SectionFileinfo(Configuration &config, LoggerAdaptor &logger)
+    : Section("fileinfo", config.getEnvironment(), logger)
     , _fileinfo_paths(config, "fileinfo", "path")
 {
     withSeparator('|');
 }
 
 
-bool SectionFileinfo::produceOutputInner(std::ostream &out,
-                                         const Environment &env) {
+bool SectionFileinfo::produceOutputInner(std::ostream &out) {
     out << std::fixed << std::setprecision(0) << current_time() << "\n";
 
     for (const std::string &path : *_fileinfo_paths) {

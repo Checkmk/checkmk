@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -32,7 +32,58 @@
 #include <map>
 
 
+class LoggerAdaptor;
 class SectionPlugin;
+
+// States for plugin and local scripts
+typedef enum _script_status {
+    SCRIPT_IDLE,
+    SCRIPT_FINISHED,
+    SCRIPT_COLLECT,
+    SCRIPT_ERROR,
+    SCRIPT_TIMEOUT,
+    SCRIPT_NONE,
+} script_status;
+
+typedef enum _script_type { PLUGIN, LOCAL, MRPE } script_type;
+
+struct script_container {
+    script_container(
+        const std::string &_path, // full path with interpreter, cscript, etc.
+        const std::string &_script_path, // path of script
+        int _max_age,
+        int _timeout,
+        int _max_entries,
+        const std::string &_user,
+        script_type _type,
+        script_execution_mode _execution_mode,
+        LoggerAdaptor &_logger);
+
+    script_container() = delete;
+    script_container(const script_container&) = delete;
+    ~script_container();
+    script_container& operator=(const script_container&) = delete;
+
+    const std::string path;         // full path with interpreter, cscript, etc.
+    const std::string script_path;  // path of script
+    const int max_age;
+    const int timeout;
+    const int max_retries;
+    int retry_count;
+    time_t buffer_time;
+    char *buffer;
+    char *buffer_work;
+    const std::string run_as_user;
+    const script_type type;
+    const script_execution_mode execution_mode;
+    script_status status;
+    script_status last_problem;
+    volatile bool should_terminate;
+    HANDLE worker_thread;
+    HANDLE job_object;
+    DWORD exit_code;
+    LoggerAdaptor &logger;
+};
 
 // not sure why I need these, but the compiler insists
 /*
@@ -42,7 +93,7 @@ std::ostream &operator<<(std::ostream &out, const std::pair<std::string, script_
 
 class SectionPluginGroup : public Section {
     friend DWORD WINAPI DataCollectionThread(LPVOID lpParam);
-    
+
     std::string _path;
     script_type _type;
     std::string _user;
@@ -77,7 +128,8 @@ class SectionPluginGroup : public Section {
 
 public:
     SectionPluginGroup(Configuration &config, const std::string &path,
-                       script_type type, const std::string &user = std::string());
+                       script_type type, LoggerAdaptor &logger,
+                       const std::string &user = std::string());
 
     virtual ~SectionPluginGroup();
 
@@ -86,8 +138,7 @@ public:
     virtual std::vector<HANDLE> stopAsync() override;
 
 protected:
-    virtual bool produceOutputInner(std::ostream &out,
-                                    const Environment &env) override;
+    virtual bool produceOutputInner(std::ostream &out) override;
 private:
 
     void collectData(script_execution_mode mode);

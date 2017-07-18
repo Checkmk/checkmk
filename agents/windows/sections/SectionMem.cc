@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -24,13 +24,14 @@
 
 #include "SectionMem.h"
 #include <iomanip>
+#include <windows.h>
 
-SectionMem::SectionMem()
-    : Section("mem")
+SectionMem::SectionMem(const Environment &env, LoggerAdaptor &logger)
+    : Section("mem", env, logger)
 {
 }
 
-bool SectionMem::produceOutputInner(std::ostream &out, const Environment &env) {
+bool SectionMem::produceOutputInner(std::ostream &out) {
     typedef std::pair<const char*, DWORDLONG> KVPair;
 
     MEMORYSTATUSEX stat;

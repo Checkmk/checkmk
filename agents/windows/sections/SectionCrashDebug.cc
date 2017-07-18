@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -22,32 +22,18 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "../Environment.h"
+#include "../LoggerAdaptor.h"
 #include "SectionCrashDebug.h"
 
-extern bool g_found_crash;
-extern HANDLE g_crashlogMutex;
-extern char g_crash_log[256];
 
-SectionCrashDebug::SectionCrashDebug(Configuration &config)
-    : Section("logwatch")
+SectionCrashDebug::SectionCrashDebug(Configuration &config, LoggerAdaptor &logger)
+    : Section("logwatch", config.getEnvironment(), logger)
     , _crash_debug(config, "global", "crash_debug", false) {}
 
-bool SectionCrashDebug::produceOutputInner(std::ostream &out,
-                                           const Environment &) {
+bool SectionCrashDebug::produceOutputInner(std::ostream &out) {
     if (*_crash_debug) {
-        out << "[[[Check_MK Agent]]]\n";
-        if (g_found_crash) {
-            WaitForSingleObject(g_crashlogMutex, INFINITE);
-            out << "C Check_MK Agent crashed\n";
-            FILE *f = fopen(g_crash_log, "r");
-            char line[1024];
-            while (0 != fgets(line, sizeof(line), f)) {
-                out << "W " << line;
-            }
-            ReleaseMutex(g_crashlogMutex);
-            fclose(f);
-            g_found_crash = false;
-        }
+        _logger.printCrashLog(out);
     }
     return true;
 }

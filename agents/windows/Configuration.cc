@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2015             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -22,15 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "Configuration.h"
 #include <shlwapi.h>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <regex>
+#include "Configuration.h"
+#include "Environment.h"
 #include "Configurable.h"
 #include "PerfCounter.h"
-#include "logging.h"
 #include "stringutil.h"
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>

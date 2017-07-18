@@ -5,7 +5,7 @@
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 // |                                                                  |
-// | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+// | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
 // This file is part of Check_MK.
@@ -23,34 +23,36 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionOHM.h"
-#include "../Configuration.h"
-#include "../OHMMonitor.h"
-#include "../logging.h"
 #include "SectionWMI.h"
+#include "../Configuration.h"
+#include "../Environment.h"
+#include "../LoggerAdaptor.h"
+#include "../OHMMonitor.h"
 
-SectionOHM::SectionOHM(Configuration &config, const Environment &env)
-    : SectionWMI("openhardwaremonitor")
-    , _bin_path(env.binDirectory()) {
+SectionOHM::SectionOHM(Configuration &config, LoggerAdaptor &logger)
+    : SectionWMI("openhardwaremonitor", config.getEnvironment(), logger)
+    , _bin_path(_env.binDirectory()) {
     withNamespace(L"Root\\OpenHardwareMonitor");
     withObject(L"Sensor");
 }
 
 void SectionOHM::startIfAsync() {
     if (_ohm_monitor.get() == nullptr) {
-        _ohm_monitor.reset(new OHMMonitor(_bin_path));
+        _ohm_monitor.reset(new OHMMonitor(_bin_path, _logger));
         _ohm_monitor->checkAvailabe();
     }
 }
 
-bool SectionOHM::produceOutputInner(std::ostream &out, const Environment &env) {
+bool SectionOHM::produceOutputInner(std::ostream &out) {
     bool res = false;
     try {
-        res = SectionWMI::produceOutputInner(out, env);
+        res = SectionWMI::produceOutputInner(out);
     } catch (const wmi::ComException &e) {
         res = false;
     }
     if (!res && !_ohm_monitor->checkAvailabe()) {
-        crash_log("ohm not installed or not runnable -> section disabled");
+        _logger.crashLog(
+	    "ohm not installed or not runnable -> section disabled");
         suspend(3600);
     }
     return res;

@@ -1133,6 +1133,8 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
         ipaddress = ip_lookup.lookup_ip_address(hostname)
 
     table = []
+    parsed_infos = {} # temporary cache for parsed infos
+
     for (check_type, item), (check_source, paramstring) in services.items():
         params = None
         if check_source not in [ 'legacy', 'active', 'custom' ]:
@@ -1169,7 +1171,13 @@ def get_check_preview(hostname, use_caches, do_snmp_scan, on_error):
             try:
                 exitcode = None
                 perfdata = []
-                info = agent_data.get_info_for_check(hostname, ipaddress, infotype)
+
+                if infotype in parsed_infos:
+                    info = parsed_infos[infotype]
+                else:
+                    info = agent_data.get_info_for_check(hostname, ipaddress, infotype)
+                    parsed_infos[infotype] = info
+
             # Handle cases where agent does not output data
             except MKAgentError, e:
                 exitcode = 3

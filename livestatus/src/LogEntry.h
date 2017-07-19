@@ -82,7 +82,6 @@ public:
     LogEntryType _type;
     char *_complete;   // copy of complete unsplit message
     char *_options;    // points into _complete after ':'
-    char *_msg;        // split up with binary zeroes
     char *_text;       // points into msg
     char *_host_name;  // points into msg or is 0
     char *_svc_desc;   // points into msg or is 0
@@ -127,6 +126,7 @@ private:
         std::vector<Param> params;
     };
 
+    char *_msg;  // split up with binary zeroes
     static std::vector<LogDef> log_definitions;
 
     bool assign(Param par, char **scan);

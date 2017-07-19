@@ -1,0 +1,11 @@
+Title: Log levels for the event console are now updated on activation of changes
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1500466164
+Class: fix
+
+Previously, a restart was necessary to propagate the changes.  This has been
+fixed.

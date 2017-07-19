@@ -394,10 +394,7 @@ class VerboseLock(object):
     def __init__(self, name):
         self._depth = 0
         self._name = name
-        self._set_logger()
-
-    def _set_logger(self):
-        self.logger = logger.getChild("VerboseLock(%s)" % self._name)
+        self.logger = logger.getChild("VerboseLock(%s)" % name)
 
     def __enter__(self):
         self._depth += 1
@@ -596,13 +593,8 @@ def check_timeperiod(tpname):
 
 class HostConfig(object):
     def __init__(self):
-        self._set_logger()
-        self.initialize()
-
-
-    def _set_logger(self):
         self.logger = logger.getChild("HostConfig")
-        #self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.HostConfig"])
+        self.initialize()
 
 
     def initialize(self):
@@ -1259,7 +1251,8 @@ class EventServer(object):
         self._syslog_tcp   = None
         self._snmptrap     = None
         self._mib_resolver = None
-        self._set_logger()
+        self.logger = logger.getChild("EventServer")
+        self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.EventServer"])
 
         self.create_pipe()
         self.open_eventsocket()
@@ -1273,11 +1266,6 @@ class EventServer(object):
             self._hash_stats.append([ 0 ] * 8 )
 
         self.host_config = HostConfig()
-
-
-    def _set_logger(self):
-        self.logger = logger.getChild("EventServer")
-        self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.EventServer"])
 
 
     def status_columns(self):
@@ -3092,13 +3080,9 @@ class StatusServer(object):
         self._tcp_socket = None
         self._reopen_sockets = False
         self._should_terminate = False
-        self._set_logger()
-        self.open_sockets()
-
-
-    def _set_logger(self):
         self.logger = logger.getChild("StatusServer")
         self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.StatusServer"])
+        self.open_sockets()
 
 
     def open_sockets(self):
@@ -3652,13 +3636,9 @@ def run_eventd():
 class EventStatus(object):
 
     def __init__(self):
-        self._set_logger()
-        self.flush()
-
-
-    def _set_logger(self):
         self.logger = logger.getChild("EventStatus")
         self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.EventStatus"])
+        self.flush()
 
 
     def flush(self):

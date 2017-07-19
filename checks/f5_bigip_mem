@@ -71,7 +71,9 @@ check_info['f5_bigip_mem'] = {
 }
 
 def inventory_f5_bigip_mem_tmm(parsed):
-    if not float(parsed["tmm"][0]) == 0:
+    mem = parsed["tmm"][0]
+    # Some devices obviously do not deliver this information...
+    if not mem == '' and not float(mem) == 0:
         return [ ( "TMM", {} ) ]
 
 

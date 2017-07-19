@@ -1,0 +1,12 @@
+Title: f5_bigip_mem.tmm: Fixed discovery warning on command line if TMM information is not provided by the device
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1500476578
+Class: fix
+
+The service has not been created and no impact could be noticed in WATO. But on
+command line a warning showed up that there is an esception during discovering
+services based on that check. This has been fixed now.

@@ -1252,7 +1252,6 @@ class EventServer(object):
         self._snmptrap     = None
         self._mib_resolver = None
         self.logger = logger.getChild("EventServer")
-        self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.EventServer"])
 
         self.create_pipe()
         self.open_eventsocket()
@@ -3081,7 +3080,6 @@ class StatusServer(object):
         self._reopen_sockets = False
         self._should_terminate = False
         self.logger = logger.getChild("StatusServer")
-        self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.StatusServer"])
         self.open_sockets()
 
 
@@ -3637,7 +3635,6 @@ class EventStatus(object):
 
     def __init__(self):
         self.logger = logger.getChild("EventStatus")
-        self.logger.setLevel(g_config["log_level"]["cmk.mkeventd.EventStatus"])
         self.flush()
 
 
@@ -4708,6 +4705,9 @@ def load_configuration():
             }
 
         logger.setLevel(g_config["log_level"]["cmk.mkeventd"])
+        logger.getChild("EventServer").setLevel(g_config["log_level"]["cmk.mkeventd.EventServer"])
+        logger.getChild("EventStatus").setLevel(g_config["log_level"]["cmk.mkeventd.EventStatus"])
+        logger.getChild("StatusServer").setLevel(g_config["log_level"]["cmk.mkeventd.StatusServer"])
 
     # Configure the auto deleting indexes in the DB when mongodb is enabled
     if g_config['archive_mode'] == 'mongodb':

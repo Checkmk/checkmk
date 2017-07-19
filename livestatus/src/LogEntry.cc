@@ -57,9 +57,9 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
 
     // make a copy of the message and strip trailing newline
     _msg = strdup(line);
-    _msglen = strlen(line);
-    while (_msglen > 0 && _msg[_msglen - 1] == '\n') {
-        _msg[--_msglen] = '\0';
+    size_t msglen = strlen(line);
+    while (msglen > 0 && _msg[msglen - 1] == '\n') {
+        _msg[--msglen] = '\0';
 
         // keep unsplitted copy of the message (needs lots of memory,
         // maybe we could optimize that one day...)
@@ -80,7 +80,7 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
     }
 
     // [1260722267] xxx - extract timestamp, validate message
-    if (_msglen < 13 || _msg[0] != '[' || _msg[11] != ']') {
+    if (msglen < 13 || _msg[0] != '[' || _msg[11] != ']') {
         _logclass = Class::invalid;
         return;  // ignore invalid lines silently
     }

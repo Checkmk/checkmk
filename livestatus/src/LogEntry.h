@@ -83,7 +83,6 @@ public:
     char *_complete;   // copy of complete unsplit message
     char *_options;    // points into _complete after ':'
     char *_msg;        // split up with binary zeroes
-    unsigned _msglen;  // size of _msg
     char *_text;       // points into msg
     char *_host_name;  // points into msg or is 0
     char *_svc_desc;   // points into msg or is 0

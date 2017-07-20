@@ -1,0 +1,12 @@
+Title: PDF exports: Default graph layout options were not applied
+Level: 1
+Component: reporting
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1500541729
+
+When creating an "intant report" (PDF export of a view) the default graph
+layout options were not applied to the graphs displayed in the report.

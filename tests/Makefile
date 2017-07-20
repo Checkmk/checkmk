@@ -49,6 +49,7 @@ setup:
 	    python-pip \
 	    python-lxml \
 	    python-enchant \
+	    python-lockfile \
 	    chrpath
 	sudo pip install --upgrade pip
 	sudo pip install --upgrade \

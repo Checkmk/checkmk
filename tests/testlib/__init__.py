@@ -12,6 +12,7 @@ import socket
 import pipes
 import subprocess
 import sys
+import lockfile
 
 from urlparse import urlparse
 from bs4 import BeautifulSoup
@@ -326,13 +327,14 @@ class Site(object):
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
-            p = subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
-                                  "-V", self.version.version_directory(),
-                                  "create",
-                                  "--admin-password", "cmk",
-                                  "--apache-reload", self.id])
-            assert p.wait() == 0
-            assert os.path.exists("/omd/sites/%s" % self.id)
+            with lockfile.LockFile("/tmp/cmk-test-create-site.lock"):
+                p = subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
+                                      "-V", self.version.version_directory(),
+                                      "create",
+                                      "--admin-password", "cmk",
+                                      "--apache-reload", self.id])
+                assert p.wait() == 0
+                assert os.path.exists("/omd/sites/%s" % self.id)
 
         if self.update_with_git:
             self._update_with_f12_files()

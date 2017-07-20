@@ -2775,10 +2775,10 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "clr_memory",
-    _(".Net runtime memory levels"),
+    _("DotNet (.Net) runtime memory levels"),
     Dictionary(
         help = _("This rule allows to set the warn and crit levels of the memory "
-                 "metrics of the .Net Runtime"),
+                 "metrics of the DotNet (.Net) Runtime"),
         elements = [
             ( "upper",
              Tuple(
@@ -2792,7 +2792,7 @@ register_check_parameters(
     ),
     TextAscii(
         title = _("Name of the Application"),
-        help = _("The name of the .net application or _Global_"),
+        help = _("The name of the DotNet (.Net) application or _Global_"),
         allow_empty = False,
     ),
     "dict"

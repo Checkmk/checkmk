@@ -1,0 +1,13 @@
+Title: Make sure that the output of the event console active check is valid
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p9
+Date: 1500549613
+
+It was possible that part of the check output looked like (incorrectly
+formatted) performance data, confusing other parts of Check_MK, e.g.  the
+graphing subsystem. This has been fixed.

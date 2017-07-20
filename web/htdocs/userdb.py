@@ -45,6 +45,9 @@ connection_dict = {}
 g_connections   = {}
 auth_logger = logger.getChild("auth")
 
+# declare lobal vars
+multisite_user_connectors = {}
+
 # Load all userdb plugins
 def load_plugins(force):
     global user_attributes
@@ -72,9 +75,9 @@ def load_plugins(force):
     if loaded_with_language == current_language and not force:
         return
 
-    # declare & initialize global vars
-    user_attributes = {}
-    multisite_user_connectors = {}
+    # clear global vars
+    user_attributes.clear()
+    multisite_user_connectors.clear()
 
     load_web_plugins("userdb", globals())
     builtin_user_attribute_names = user_attributes.keys()

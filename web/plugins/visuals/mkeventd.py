@@ -195,3 +195,50 @@ if mkeventd_enabled:
     declare_filter(210, EventFilterDropdown("facility", _("Syslog Facility"), mkeventd.syslog_facilities))
     declare_filter(211, EventFilterDropdown("sl", _("Service Level at least"), mkeventd.service_levels, operator='>='))
     declare_filter(211, EventFilterDropdown("sl_max", _("Service Level at most"), mkeventd.service_levels, operator='<=', column="sl"))
+
+
+    class EventFilterEffectiveContactGroupCombo(FilterGroupCombo):
+        def __init__(self, enforce=False):
+            # TODO: Cleanup hierarchy here. The FilterGroupCombo constructor needs to be refactored
+            FilterGroupCombo.__init__(self,
+                what="event_effective_contact",
+                title=_("Contact group (effective)"),
+                enforce=enforce,
+            )
+            self.what = "contact"
+            self.info = "event"
+            self.link_columns = [ "event_contact_groups", "event_contact_groups_precedence", "host_contact_groups" ]
+
+
+        def filter(self, infoname):
+            if not html.has_var(self.htmlvars[0]):
+                return "" # Skip if filter is not being set at all
+
+            current_value = self.current_value()
+            if not current_value:
+                if not self.enforce:
+                    return ""
+                current_value = sites.live().query_value("GET contactgroups\nCache: reload\nColumns: name\nLimit: 1\n", None)
+
+            if current_value == None:
+                return "" # no {what}group exists!
+
+            if not self.enforce and html.var(self.htmlvars[1]):
+                negate = "!"
+            else:
+                negate = ""
+
+            return "Filter: event_contact_groups_precedence = host\n" \
+                   "Filter: host_contact_groups %s>= %s\n" \
+                   "And: 2\n" \
+                   "Filter: event_contact_groups_precedence = rule\n" \
+                   "Filter: event_contact_groups %s>= %s\n" \
+                   "And: 2\n" \
+                   "Or: 2\n" % (negate, lqencode(current_value),
+                                negate, lqencode(current_value))
+
+
+        def variable_settings(self, row):
+            return []
+
+    declare_filter(212, EventFilterEffectiveContactGroupCombo())

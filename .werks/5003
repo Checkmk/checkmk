@@ -1,0 +1,16 @@
+Title: Fixed missing filtering by effective contact groups of events
+Level: 1
+Component: ec
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1500557807
+Class: fix
+
+Since 1.4 the Event console has the concept of "effective contact groups" for
+an event. The contact groups of an event can either be set by a matched host
+or by the matching rule. Or by both. For the later case there is an option
+to configure the precedence in the rule.
+
+The GUI was not correctly reflecting this feature because there was no painter
+and no filter for the effective contact groups.

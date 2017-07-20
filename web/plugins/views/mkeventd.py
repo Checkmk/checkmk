@@ -431,9 +431,29 @@ if mkeventd_enabled:
 
     multisite_painters["event_contact_groups"] = {
         "title"   : _("Contact groups defined in rule"),
-        "short"   : _("Rule Contact Groups"),
+        "short"   : _("Rule contact groups"),
         "columns" : [ "event_contact_groups" ],
         "paint"   : paint_event_contact_groups,
+    }
+
+    def paint_event_effective_contact_groups(row):
+        if row["event_contact_groups_precedence"] == "host":
+            cgs = row["host_contact_groups"]
+        else:
+            cgs = row["event_contact_groups"]
+
+        if cgs == None:
+            return "", ""
+        elif cgs:
+            return "", ", ".join(sorted(cgs))
+        else:
+            return "", "<i>"  + _("none") + "</i>"
+
+    multisite_painters["event_effective_contact_groups"] = {
+        "title"   : _("Contact groups effective (Host or rule contact groups)"),
+        "short"   : _("Contact groups"),
+        "columns" : [ "event_contact_groups", "event_contact_groups_precedence", "host_contact_groups" ],
+        "paint"   : paint_event_effective_contact_groups,
     }
 
     # Event History
@@ -929,7 +949,7 @@ if mkeventd_enabled:
             ('event_count', None, ''),
             ('event_sl', None, ''),
             ('event_contact', None, ''),
-            ('event_contact_groups', None, ''),
+            ('event_effective_contact_groups', None, ''),
             ('event_application', None, ''),
             ('event_pid', None, ''),
             ('event_priority', None, ''),
@@ -1030,7 +1050,7 @@ if mkeventd_enabled:
             ('event_count', None, ''),
             ('event_sl', None, ''),
             ('event_contact', None, ''),
-            ('event_contact_groups', None, ''),
+            ('event_effective_contact_groups', None, ''),
             ('event_application', None, ''),
             ('event_pid', None, ''),
             ('event_priority', None, ''),
@@ -1161,7 +1181,7 @@ if mkeventd_enabled:
                        ('event_count', None, None),
                        ('event_sl', None, None),
                        ('event_contact', None, None),
-                       ('event_contact_groups', None, None),
+                       ('event_effective_contact_groups', None, None),
                        ('event_application', None, None),
                        ('event_pid', None, None),
                        ('event_priority', None, None),

@@ -50,8 +50,6 @@ multisite_user_connectors = {}
 
 # Load all userdb plugins
 def load_plugins(force):
-    global user_attributes
-    global multisite_user_connectors
     global builtin_user_attribute_names
 
     # Do not cache the custom user attributes. They can be created by the user

@@ -1,8 +1,10 @@
 Title: Remove cmcrushd
 Component: config
-State: open
+Class: nastiness
+State: done
 Date: 2015-09-30 16:37:49
 Targetversion: master
-Class: nastiness
 
 This never really worked well.
+
+2017-07-21 09:18:26: changed state open -> done

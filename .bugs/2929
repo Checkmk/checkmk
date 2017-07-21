@@ -1,10 +1,12 @@
 Title: Command box in views is openable even if the icon is disabled
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2017-07-18 11:29:49
 Targetversion: 1.4.0
-Class: bug
 
 If you have a view with no services then the icon for the 
 command box is diabled. But nevertheless you can open
 the box by clicking on it. This is not good.
+
+2017-07-21 09:10:18: changed state open -> done

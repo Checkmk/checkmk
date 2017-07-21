@@ -2128,7 +2128,7 @@ class html(HTMLGenerator, RequestHandler):
         if is_context_button:
             self.begin_context_buttons() # TODO: Check all calls. If done before, remove this!
 
-        if not onclick:
+        if not onclick and not disabled:
             onclick = "view_toggle_form(this.parentNode, '%s');" % id
 
         if disabled:

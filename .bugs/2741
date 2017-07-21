@@ -1,7 +1,9 @@
 Title: PDF-Export does not render grouping headers for tables
 Component: web
-State: open
+Class: nastiness
+State: done
 Date: 2014-12-17 10:52:36
 Targetversion: next
-Class: nastiness
 
+
+2017-07-21 09:18:04: changed state open -> done

@@ -1031,7 +1031,6 @@ function speedometer_show_speed(last_perc, program_start, scheduled_rate)
         response_handler: function(handler_data, response_body) {
             try {
                 var data = JSON.parse(response_body);
-                console.log(data);
 
                 oDiv = document.getElementById('speedometer');
 
@@ -2173,14 +2172,20 @@ class VirtualHostTree(SidebarSnapin):
 function virtual_host_tree_changed(field)
 {
     var tree_id = field.value;
-    get_url_sync('sidebar_ajax_tag_tree.py?tree_id=' + escape(tree_id));
-    refresh_single_snapin("tag_tree");
+    call_ajax('sidebar_ajax_tag_tree.py?tree_id=' + escape(tree_id), {
+        response_handler : function(handler_data, response_body) {
+            refresh_single_snapin("tag_tree");
+        }
+    });
 }
 
 function virtual_host_tree_enter(path)
 {
-    get_url_sync('sidebar_ajax_tag_tree_enter.py?path=' + escape(path));
-    refresh_single_snapin("tag_tree");
+    call_ajax('sidebar_ajax_tag_tree_enter.py?path=' + escape(path), {
+        response_handler : function(handler_data, response_body) {
+            refresh_single_snapin("tag_tree");
+        }
+    });
 }
 """
 

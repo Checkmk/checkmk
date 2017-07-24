@@ -1,0 +1,127 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# example output
+
+
+def parse_scaleio_mdm(info):
+    # parsing this section is horrible. But I will guide you...
+    parsed = {}
+    id = ""
+    node = ""
+    for line in info:
+        # A subsection starts with one of the following:
+        if line[0].lower() in [ "cluster:", "master mdm:", "slave mdms:", \
+                           "tie-breakers:", "standby mdms:"]:
+            id = line[0].strip(":")
+            parsed[id] = {}
+        # The first subsection is different and entries can be parsed
+        # directly. Hooray!
+        elif id == "Cluster" and id in parsed:
+           nl = []
+           for entry in line:
+               nl.append(entry.split(":"))
+           for l in nl:
+               parsed[id][l[0].replace(" ", "")] = l[1].replace(" ", "")
+        # The other subsections can have several nodes. Each node
+        # starts with his name and has already some more information.
+        # Sometimes there is information about a role inside of the
+        # cluster. This is handled by the entry "Role"!
+        elif id in parsed and "name" in line[0].lower():
+            node = line[0].split(":")[1].replace(" ", "")
+            node_id = line[1].split(":")
+            parsed[id][node] = {
+                    node_id[0].replace(" ", "") : node_id[1].replace(" ", "")
+            }
+            if len(line) == 3:
+                parsed[id][node] = { u"Role" : line[2].replace(" ", "") }
+        # Finally we can add the rest of information to a node in a
+        # subsection. When splitting the lines we sometimes get lines
+        # belonging to the last entry. These information is then added
+        # to the last known entry.
+        elif id in parsed and node in parsed[id] and not id == "Cluster":
+            nl = []
+            for entry in line:
+                nl.append(entry.split(":"))
+            for l in nl:
+                if len(l) > 1:
+                    name = l[0].replace(" ", "")
+                    parsed[id][node][name] = [ l[1].replace(" ", "") ]
+                else:
+                    parsed[id][node][name].append(l[0].replace(" ", ""))
+
+    return parsed
+
+
+def inventory_scaleio_mdm(parsed):
+    for entry in parsed:
+        if entry == "Cluster":
+            yield None, {}
+
+
+def check_scaleio_mdm(item, params, parsed):
+    translate_status = {
+        "Normal"            : 0,
+        "Degraded"          : 1,
+        "Error"             : 2,
+        "Disconnected"      : 2,
+        "Not synchronized"  : 1,
+    }
+    data = get_scaleio_data("Cluster", parsed)
+
+    if data:
+        state    = 0
+        status   = data["State"]
+        active   = data["Active"].split("/")
+        replicas = data["Replicas"].split("/")
+
+        yield translate_status[status], "Mode: %s, State: %s" % (data["Mode"], status)
+
+        if not active[0] == active[1] or \
+           not replicas[0] == replicas[1]:
+            state = 2
+
+        yield state, "Active: %s, Replicas: %s" % \
+                    ("/".join(active), "/".join(replicas))
+
+    for role in [ "Master MDM", "Slave MDMs",
+                  "Tie-Breakers", "Standby MDMs" ]:
+        nodes = []
+        for node in parsed[role]:
+            nodes.append(node)
+            if "Status" in node and not node["Status"] == "Normal":
+                state = translate_status[node["Status"]]
+        yield state, "%s: %s" % (role, ", ".join(nodes))
+
+
+check_info['scaleio_mdm'] = {
+    'parse_function'        : parse_scaleio_mdm,
+    'inventory_function'    : inventory_scaleio_mdm,
+    'check_function'        : check_scaleio_mdm,
+    'service_description'   : 'ScaleIO cluster status',
+    'includes'              : [ 'scaleio.include' ],
+}

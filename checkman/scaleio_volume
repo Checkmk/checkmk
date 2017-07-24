@@ -1,0 +1,14 @@
+title: EMC ScaleIO: Volume size and throughput
+agents: linux
+catalog: os/storage/emc
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the total size and the user r/w of a volume. The ruleset
+ "Levels for disk IO" can be used to set thresholds for read/write throughput.
+
+item:
+ The volume id is used as item
+
+inventory:
+ One service for each volume is created

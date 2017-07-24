@@ -1,0 +1,88 @@
+#!/bin/bash
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Plugin for EMCs ScaleIO software. This plugins needs to be installed
+# on all MDM servers as the information is provdided only by an active
+# MDM member. Also it is recommended to configure a cluster host with
+# these members as nodes in Check_MK and apply the ScaleIO services to
+# this cluster host.
+
+# This plugin needs a configuration file in your MK_CONFDIR. This should
+# be /etc/check_mk in most cases. An example of the mk_scaleio.cfg is
+# the following:
+#
+# SIO_USER=myUser
+# SIO_PASSWORD=myPassword
+
+
+if [ ! "$MK_CONFDIR" ]; then
+    echo "MK_CONFDIR not set!" >&2
+    exit 1
+fi
+
+. $MK_CONFDIR/mk_scaleio.cfg || exit 1
+
+if [ -z "$SIO_USER" -o -z "$SIO_PASSWORD" ]; then
+    echo "Please set SIO_USER and SIO_PASSWORD in $MK_CONFDIR/mk_scalio.cfg" >&2
+    exit 1
+fi
+
+if type scli > /dev/null
+then
+    scli --login --username $SIO_USER --password $SIO_PASSWORD >/dev/null 2>&1
+
+    if [ $? == 1 ]; then
+        # Login fails if MDM server is not master. In this case we do
+        # absolutely nothing but quit this script! The data will be
+        # fetched elsewhere and we do not want to confuse Check_MK.
+        exit 1
+    fi
+
+    # System
+    echo '<<<scaleio_system:sep(9)>>>'
+    scli --query_properties --object_type SYSTEM --all_objects --properties ID,NAME,CAPACITY_ALERT_HIGH_THRESHOLD,CAPACITY_ALERT_CRITICAL_THRESHOLD,MAX_CAPACITY_IN_KB,UNUSED_CAPACITY_IN_KB
+
+    # MDM
+    echo '<<<scaleio_mdm:sep(44)>>>'
+    scli --query_cluster
+
+    # SDS
+    echo '<<<scaleio_sds>>>'
+    scli --query_properties --object_type SDS --all_objects --properties ID,NAME,PROTECTION_DOMAIN_ID,STATE,MEMBERSHIP_STATE,MDM_CONNECTION_STATE,MAINTENANCE_MODE_STATE,MAX_CAPACITY_IN_KB,UNUSED_CAPACITY_IN_KB,
+
+    # Volume
+    echo '<<<scaleio_volume>>>'
+    scli --query_properties --object_type VOLUME --all_objects --properties ID,NAME,SIZE,USER_DATA_READ_BWC,USER_DATA_WRITE_BWC
+
+    # Protection Domain
+    echo '<<<scaleio_pd>>>'
+    scli --query_properties --object_type PROTECTION_DOMAIN --all_objects --properties ID,NAME,STATE,MAX_CAPACITY_IN_KB,UNUSED_CAPACITY_IN_KB
+
+    # Storage Pool
+    echo '<<<scaleio_storage_pool>>>'
+    scli --query_properties --object_type STORAGE_POOL --all_objects --properties ID,NAME,MAX_CAPACITY_IN_KB,UNUSED_CAPACITY_IN_KB,FAILED_CAPACITY_IN_KB,TOTAL_READ_BWC,TOTAL_WRITE_BWC,REBALANCE_READ_BWC,REBALANCE_WRITE_BWC,
+
+    scli --logout >/dev/null 2>&1
+fi

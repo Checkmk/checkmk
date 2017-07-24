@@ -1,0 +1,20 @@
+Title: Livestatus proxy: Connection parameters can now be configured globally
+Level: 1
+Component: liveproxy
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1500908367
+Class: feature
+
+The connection parameters of the Livestatus Proxy can now be configured
+globally to specify a default set of parameters for all sites. Each site
+can now either be configured to use the global defaults or set it's own
+parameters.
+
+For most environments it is sufficient to configure the global defaults
+and make all sites use the defaults.
+
+Using the global defaults makes it a lot easier to maintain the settings
+since you don't need to configure the settings for each site individually
+anymore.

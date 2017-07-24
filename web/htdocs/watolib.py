@@ -3464,113 +3464,43 @@ def save_site_global_settings(vars):
 #   |  Code for distributed WATO. Site configuration. Pushing snapshots.   |
 #   '----------------------------------------------------------------------'
 
-class SiteManagement(object):
-    @staticmethod
-    def connection_method_valuespec():
+class CRESiteManagement(object):
+    @classmethod
+    def connection_method_valuespec(cls):
         # ValueSpecs for the more complex input fields
         return CascadingDropdown(
             orientation = "horizontal",
-            choices = SiteManagement.connection_choices(),
+            choices = cls._connection_choices(),
         )
 
-    @staticmethod
-    def connection_choices():
+    @classmethod
+    def _connection_choices(cls):
         conn_choices = [
             (None,   _("Connect to the local site")),
-            ("tcp",  _("Connect via TCP"), SiteManagement.tcp_port_valuespec()),
+            ("tcp",  _("Connect via TCP"), cls._tcp_port_valuespec()),
             ("unix", _("Connect via UNIX socket"), TextAscii(
                 label = _("Path:"),
                 size = 40,
                 allow_empty = False)
             ),
         ]
-
-        if config.liveproxyd_enabled:
-            conn_choices[2:2] = [
-            ( "proxy", _("Use Livestatus Proxy-Daemon"),
-              Dictionary(
-                  optional_keys = False,
-                  columns = 1,
-                  elements = [
-                      ("socket", Alternative(
-                          title = _("Connect to"),
-                          style = "dropdown",
-                          elements = [
-                              FixedValue(None,
-                                  title = _("Connect to the local site"),
-                                  totext = "",
-                              ),
-                              SiteManagement.tcp_port_valuespec(),
-                          ],
-                      )),
-                      ( "channels",
-                        Integer(
-                            title = _("Number of channels to keep open"),
-                            minvalue = 2,
-                            maxvalue = 50,
-                            default_value = 5)),
-                      ( "heartbeat",
-                        Tuple(
-                            title = _("Regular heartbeat"),
-                            orientation = "float",
-                            elements = [
-                                Integer(label = _("One heartbeat every"), unit=_("sec"),
-                                        minvalue=1, default_value = 5),
-                                Float(label = _("with a timeout of"), unit=_("sec"),
-                                      minvalue=0.1, default_value = 2.0, display_format="%.1f"),
-                       ])),
-                       ( "channel_timeout",
-                         Float(
-                             title = _("Timeout waiting for a free channel"),
-                             minvalue = 0.1,
-                             default_value = 3,
-                             unit = _("sec"),
-                         )
-                       ),
-                       ( "query_timeout",
-                         Float(
-                             title = _("Total query timeout"),
-                             minvalue = 0.1,
-                             unit = _("sec"),
-                             default_value = 120,
-                         )
-                       ),
-                       ( "connect_retry",
-                         Float(
-                            title = _("Cooling period after failed connect/heartbeat"),
-                            minvalue = 0.1,
-                            unit = _("sec"),
-                            default_value = 4.0,
-                       )),
-                       ( "cache",
-                          Checkbox(title = _("Enable Caching"),
-                             label = _("Cache several non-status queries"),
-                              help = _("This option will enable the caching of several queries that "
-                                       "need no current data. This reduces the number of Livestatus "
-                                       "queries to sites and cuts down the response time of remote "
-                                       "sites with large latencies."),
-                              default_value = True,
-                       )),
-                    ]
-                 )
-              )
-            ]
         return conn_choices
 
 
-    @staticmethod
-    def tcp_port_valuespec():
+    @classmethod
+    def _tcp_port_valuespec(cls):
         return Tuple(
-                title = _("TCP Port to connect to"),
-                orientation = "float",
-                elements = [
-                    TextAscii(label = _("Host:"), allow_empty = False, size=15),
-                    Integer(label = _("Port:"), minvalue=1, maxvalue=65535, default_value=6557),
-        ])
+            title = _("TCP Port to connect to"),
+            orientation = "float",
+            elements = [
+                TextAscii(label = _("Host:"), allow_empty = False, size=15),
+                Integer(label = _("Port:"), minvalue=1, maxvalue=65535, default_value=6557),
+            ]
+        )
 
 
-    @staticmethod
-    def user_sync_valuespec():
+    @classmethod
+    def user_sync_valuespec(cls):
         return CascadingDropdown(
             orientation = "horizontal",
             choices = [
@@ -3583,8 +3513,8 @@ class SiteManagement(object):
             ])
 
 
-    @staticmethod
-    def validate_configuration(site_id, site_configuration, all_sites):
+    @classmethod
+    def validate_configuration(cls, site_id, site_configuration, all_sites):
         if not re.match("^[-a-z0-9A-Z_]+$", site_id):
             raise MKUserError("id", _("The site id must consist only of letters, digit and the underscore."))
 
@@ -3643,12 +3573,12 @@ class SiteManagement(object):
                     _("You cannot do replication with the local site."))
 
         # User synchronization
-        user_sync_valuespec = SiteManagement.user_sync_valuespec()
+        user_sync_valuespec = cls.user_sync_valuespec()
         user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
 
 
-    @staticmethod
-    def load_sites():
+    @classmethod
+    def load_sites(cls):
         try:
             if not os.path.exists(sites_mk):
                 return config.default_single_site_configuration()
@@ -3679,8 +3609,8 @@ class SiteManagement(object):
             return {}
 
 
-    @staticmethod
-    def save_sites(sites, activate=True):
+    @classmethod
+    def save_sites(cls, sites, activate=True):
         make_nagios_directory(multisite_dir)
         store.save_to_mk_file(sites_mk, "sites", sites)
 
@@ -3693,33 +3623,15 @@ class SiteManagement(object):
             Folder.invalidate_caches()
             need_sidebar_reload()
 
-            if config.liveproxyd_enabled:
-                SiteManagement.save_liveproxyd_config(sites)
-
             create_nagvis_backends(sites)
 
             # Call the sites saved hook
             call_hook_sites_saved(sites)
 
 
-    @staticmethod
-    def save_liveproxyd_config(sites):
-    	path = cmk.paths.default_config_dir + "/liveproxyd.mk"
-
-    	conf = {}
-    	for siteid, siteconf in sites.items():
-    	    s = siteconf.get("socket")
-    	    if type(s) == tuple and s[0] == "proxy":
-    	        conf[siteid] = s[1]
-
-    	store.save_to_mk_file(path, "sites", conf)
-
-       	ConfigDomainLiveproxy().activate()
-
-
-    @staticmethod
-    def delete_site(site_id):
-        all_sites = SiteManagement.load_sites()
+    @classmethod
+    def delete_site(cls, site_id):
+        all_sites = cls.load_sites()
         if site_id not in all_sites:
             raise MKUserError(None,
                 _("Unable to delete unknown site id: %s") % site_id)
@@ -3740,17 +3652,22 @@ class SiteManagement(object):
                   "assigned to it. You can use the <a href=\"%s\">host "
                   "search</a> to get a list of the hosts.") % search_url)
 
-        domains = [ConfigDomainGUI]
-        if config.liveproxyd_enabled:
-            domains.append(ConfigDomainLiveproxy)
+        domains = cls._affected_config_domains()
 
         del all_sites[site_id]
-        SiteManagement.save_sites(all_sites)
+        cls.save_sites(all_sites)
         clear_site_replication_status(site_id)
         add_change("edit-sites", _("Deleted site %s") % html.render_tt(site_id),
                    domains=domains, sites=[default_site()])
         return None
 
+
+    @classmethod
+    def _affected_config_domains(cls):
+        return [ConfigDomainGUI]
+
+
+SiteManagement = CRESiteManagement
 
 
 def get_login_secret(create_on_demand = False):

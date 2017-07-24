@@ -30,14 +30,19 @@ def inventory_fortigate_sensors(info):
 
 
 def check_fortigate_sensors(item, params, info):
+    amount_of_sensors = []
     sensors_in_alarm = []
-    infotexts = ["%s sensors" % len(info)]
 
     for name, value, dev_status in info:
-        if value != "0" and dev_status == "1":
-            sensors_in_alarm.append(name)
+        # We assume that sensors with value "0" are not connected.
+        # The related MIB includes no other hint for that.
+        if value != "0":
+            amount_of_sensors.append(name)
+            if dev_status == "1":
+                sensors_in_alarm.append(name)
 
-    count_ok_sensors = len(info) - len(sensors_in_alarm)
+    infotexts = ["%s sensors" % len(amount_of_sensors)]
+    count_ok_sensors = len(amount_of_sensors) - len(sensors_in_alarm)
     if count_ok_sensors:
         infotexts.append("%s OK" % count_ok_sensors)
 

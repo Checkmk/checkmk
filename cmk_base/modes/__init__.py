@@ -41,6 +41,7 @@ __all__ = [ os.path.basename(f)[:-3]
 
 class Modes(object):
     def __init__(self):
+        # TODO: This disable is needed because of a pylint bug. Remove one day.
         super(Modes, self).__init__() # pylint: disable=bad-super-call
         self._mode_map        = {}
         self._modes           = []
@@ -219,6 +220,7 @@ class Option(object):
     def __init__(self, long_option, short_help, short_option=None,
             argument=False, argument_descr=None, argument_conv=None,
             argument_optional=False, count=False, handler_function=None):
+        # TODO: This disable is needed because of a pylint bug. Remove one day.
         super(Option, self).__init__() # pylint: disable=bad-super-call
         self.long_option       = long_option
         self.short_help        = short_help
@@ -302,6 +304,7 @@ class Mode(Option):
     def __init__(self, long_option, handler_function, short_help, short_option=None,
                  argument=False, argument_descr=None, argument_conv=None, argument_optional=False,
                  long_help=None, needs_config=True, needs_checks=True, sub_options=None):
+        # TODO: This disable is needed because of a pylint bug. Remove one day.
         # pylint: disable=bad-super-call
         super(Mode, self).__init__(long_option, short_help, short_option, argument,
                 argument_descr, argument_conv, argument_optional,
@@ -313,6 +316,7 @@ class Mode(Option):
 
 
     def short_getopt_specs(self):
+        # TODO: This disable is needed because of a pylint bug. Remove one day.
         specs = super(Mode, self).short_getopt_specs() # pylint: disable=bad-super-call
         for option in self.sub_options:
             specs += option.short_getopt_specs()
@@ -320,6 +324,7 @@ class Mode(Option):
 
 
     def long_getopt_specs(self):
+        # TODO: This disable is needed because of a pylint bug. Remove one day.
         specs = super(Mode, self).long_getopt_specs() # pylint: disable=bad-super-call
         for option in self.sub_options:
             specs += option.long_getopt_specs()

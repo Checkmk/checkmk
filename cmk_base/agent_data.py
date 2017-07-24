@@ -812,6 +812,7 @@ def get_agent_info_program(commandline):
         # On timeout exception try to stop the process to prevent child process "leakage"
         if p:
             os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+            p.wait()
         raise
     except Exception, e:
         raise MKAgentError("Could not execute '%s': %s" % (exepath, e))

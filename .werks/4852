@@ -1,0 +1,15 @@
+Title: Livestatus connections: fixed bug where data from previous connection got reused
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1500885870
+Class: fix
+
+When using persistent connections, there was a risk that the response data from
+previous livestatus queries got intermingled with the data from the latest query.
+
+
+This caused quite a lot of confusing for most of the GUI plugins, which crashed occasionally.
+

@@ -1,0 +1,13 @@
+Title: agent_netapp: Re-enabled some deprecated SSL Ciphers which were used in old 7mode filers
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.4.0p10
+Date: 1500893070
+Class: fix
+
+Our latest builtin python version removed the support for some SSL ciphers,
+because they are considered deprecated/insecure.
+
+These old ciphers are required, because some of the 7mode filers are unable to work with newer ciphers.

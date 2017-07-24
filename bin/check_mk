@@ -77,7 +77,7 @@ modes.process_general_options(opts)
 
 # At least in case the config is needed, the checks are needed too, because
 # the configuration may refer to check config variable names.
-if len(set.intersection(set(modes.non_config_options()),
+if len(set.intersection(set(modes.non_checks_options()),
                         [o[0] for o in opts])) == 0:
     checks.load()
 

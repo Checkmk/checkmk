@@ -1246,17 +1246,18 @@ modes.register(Mode(
 #   '----------------------------------------------------------------------'
 
 def mode_automation(args):
-    import cmk_base.automation as automation
+    import cmk_base.automations as automations
 
     if not args:
-        raise automation.MKAutomationError("You need to provide arguments")
+        raise automations.MKAutomationError("You need to provide arguments")
 
-    automation.do_automation(args[0], args[2:])
+    automations.automations.execute(args[0], args[2:])
 
 modes.register(Mode(
     long_option="automation",
     handler_function=mode_automation,
     needs_config=False,
+    needs_checks=False,
     argument=True,
     argument_descr="COMMAND...",
     argument_optional=True,

@@ -576,53 +576,6 @@ def page_add_snapin():
     html.footer()
 
 
-def ajax_speedometer():
-    try:
-        # Try to get values from last call in order to compute
-        # driftig speedometer-needle and to reuse the scheduled
-        # check reate.
-        last_perc          = float(html.var("last_perc"))
-        scheduled_rate     = float(html.var("scheduled_rate"))
-        last_program_start = int(html.var("program_start"))
-
-        # Get the current rates and the program start time. If there
-        # are more than one site, we simply add the start times.
-        data = sites.live().query_summed_stats("GET status\n"
-               "Columns: service_checks_rate program_start")
-        current_rate = data[0]
-        program_start = data[1]
-
-        # Recompute the scheduled_rate only if it is not known (first call)
-        # or if one of the sites has been restarted. The computed value cannot
-        # change during the monitoring since it just reflects the configuration.
-        # That way we save CPU resources since the computation of the
-        # scheduled checks rate needs to loop over all hosts and services.
-        if last_program_start != program_start:
-            # These days, we configure the correct check interval for Check_MK checks.
-            # We do this correctly for active and for passive ones. So we can simply
-            # use the check_interval of all services. Hosts checks are ignored.
-            #
-            # Manually added services without check_interval could be a problem, but
-            # we have no control there.
-            scheduled_rate = sites.live().query_summed_stats(
-                        "GET services\n"
-                        "Stats: suminv check_interval\n")[0] / 60.0
-
-        percentage = 100.0 * current_rate / scheduled_rate;
-        title = _("Scheduled service check rate: %.1f/s, current rate: %.1f/s, that is "
-                  "%.0f%% of the scheduled rate") % \
-                  (scheduled_rate, current_rate, percentage)
-
-    except Exception, e:
-        scheduled_rate = 0
-        program_start = 0
-        percentage = 0
-        last_perc = 0
-        title = _("No performance data: %s") % e
-
-    html.write(repr([scheduled_rate, program_start, percentage, last_perc, str(title)]))
-
-
 def ajax_switch_masterstate():
     site = html.var("site")
     column = html.var("switch")

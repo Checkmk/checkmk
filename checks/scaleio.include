@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def parse_scaleio(info, section):
+    parsed = {}
+    sys_id = ""
+    for line in info:
+        if line[0].startswith(section):
+            sys_id = line[1].replace(":", "")
+            parsed[sys_id] = {}
+        elif sys_id in parsed:
+            parsed[sys_id][line[0]] = line[1:]
+    return parsed
+
+
+# This converts data into MB for our df.include
+def convert_scaleio_space(unit, value):
+    if unit == "Bytes":
+        return value / 1024 / 1024
+    elif unit == "KB":
+        return value / 1024
+    elif unit == "MB":
+        return value
+    elif unit == "GB":
+        return value * 1024
+    elif unit == "TB":
+        return value * 1024 * 1024
+
+# Values can be in every unit. We need Bytes for
+# diskstat.include
+def convert_to_bytes(tp, unit):
+    if unit == "Bytes":
+        return tp
+    elif unit == "KB":
+        return tp * 1024
+    elif unit == "MB":
+        return tp * 1024 * 1024
+    elif unit == "GB":
+        return tp * 1024 * 1024 * 1024
+    elif unit == "TB":
+        return tp * 1024 * 1024 * 1024 * 1024
+
+def get_disks(item, read_data, write_data):
+    read_tp = convert_to_bytes(int(read_data[-3].strip("(")), \
+                               read_data[-2].strip(")"))
+    write_tp = convert_to_bytes(int(write_data[-3].strip("(")), \
+                                write_data[-2].strip(")"))
+
+    disks = { item : {
+        'node'              : None,
+        'read_ios'          : int(read_data[0]),
+        'read_throughput'   : read_tp,
+        'write_ios'         : int(write_data[0]),
+        'write_throughput'  : write_tp,
+    }}
+    return disks
+
+def get_scaleio_data(item, parsed):
+    data = None
+    for entry in parsed:
+        if entry == item:
+            data = parsed[entry]
+    return data

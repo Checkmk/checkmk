@@ -1,0 +1,120 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# tails. You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# example output
+
+
+def inventory_scaleio_storage_pool(parsed):
+    for entry in parsed:
+        yield entry, {}
+
+
+def check_scaleio_storage_pool(item, params, parsed):
+    data = get_scaleio_data(item, parsed)
+
+    if data:
+        # How will the data be represented? It's magic and the only
+        # indication is the unit. We need to handle this!
+        unit    = data["MAX_CAPACITY_IN_KB"][3].strip(")")
+        total   = convert_scaleio_space(unit,
+                                        int(data["MAX_CAPACITY_IN_KB"][2].strip("(")))
+        free    = convert_scaleio_space(unit,
+                                        int(data["UNUSED_CAPACITY_IN_KB"][2].strip("(")))
+
+        yield df_check_filesystem_list(item, params, [ (item, total, free, 0) ])
+
+        failed_unit  = data["FAILED_CAPACITY_IN_KB"][1]
+        failed_value = int(data["FAILED_CAPACITY_IN_KB"][0])
+        if failed_value > 0:
+            yield 2, "Failed Capacity: %d %s" % (failed_value, failed_unit)
+
+
+check_info['scaleio_storage_pool'] = {
+    'parse_function'        : lambda info: parse_scaleio(info, "STORAGE_POOL"),
+    'inventory_function'    : inventory_scaleio_storage_pool,
+    'check_function'        : check_scaleio_storage_pool,
+    'service_description'   : 'ScaleIO SP capacity %s',
+    'includes'              : [ 'scaleio.include', 'df.include', 'diskstat.include' ],
+    'has_perfdata'          : True,
+    'group'                 : 'filesystem',
+}
+
+
+def inventory_scaleio_storage_pool_totalrw(parsed):
+    for entry in parsed:
+        yield ( entry, {} )
+
+
+def check_scaleio_storage_pool_totalrw(item, params, parsed):
+    data = get_scaleio_data(item, parsed)
+
+    if data:
+        yield 0, "Name: %s" % data["NAME"][0]
+
+        read_data   = data["TOTAL_READ_BWC"]
+        write_data  = data["TOTAL_WRITE_BWC"]
+        for io_type in list(check_diskstat_dict(item, params, \
+                      get_disks(item, read_data, write_data))):
+            yield io_type
+
+
+check_info['scaleio_storage_pool.totalrw'] = {
+    'inventory_function'    : inventory_scaleio_storage_pool_totalrw,
+    'check_function'        : check_scaleio_storage_pool_totalrw,
+    'service_description'   : 'ScaleIO SP total IO %s',
+    'has_perfdata'          : True,
+    'group'                 : 'diskstat',
+
+}
+
+
+def inventory_scaleio_storage_pool_rebalancerw(parsed):
+    for entry in parsed:
+        yield ( entry, {} )
+
+
+def check_scaleio_storage_pool_rebalancerw(item, params, parsed):
+    data = get_scaleio_data(item, parsed)
+
+    if data:
+        yield 0, "Name: %s" % data["NAME"][0]
+
+        read_data = data["REBALANCE_READ_BWC"]
+        write_data = data["REBALANCE_WRITE_BWC"]
+        for io_type in list(check_diskstat_dict(item, params, \
+                      get_disks(item, read_data, write_data))):
+            yield io_type
+
+
+check_info['scaleio_storage_pool.rebalancerw'] = {
+    'inventory_function'    : inventory_scaleio_storage_pool_rebalancerw,
+    'check_function'        : check_scaleio_storage_pool_rebalancerw,
+    'service_description'   : 'ScaleIO SP rebalance IO %s',
+    'has_perfdata'          : True,
+    'group'                 : 'diskstat',
+
+}

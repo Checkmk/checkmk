@@ -1,0 +1,19 @@
+title: EMC ScaleIO: Cluster status
+agents: linux
+catalog: os/storage/emc
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the cluster states of all MD members (MDMs). The
+ cluster mode and health status will be in the output and the state will
+ change to {WARN} if the health status is "Degraded" or "Not synchronized"
+ and to {CRIT} if it is "Error" or "Disconnected".
+
+ Also the number of active and replicated members are in the output. The
+ state will change to {CRIT} if one member is not active or replicated.
+
+ Finally the health status of each member is in the output if it is not
+ "Normal". In this case the state will change accordingly as described above.
+
+inventory:
+ Only one service is created

@@ -1,0 +1,14 @@
+title: EMC ScaleIO: Protection Domain Status
+agents: linux
+catalog: os/storage/emc
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the reported health status of a protection domain. The
+ state will change to {CRIT} if the reported health is not "active".
+
+item:
+ The PD id is used as item
+
+inventory:
+ One service for each PD is created

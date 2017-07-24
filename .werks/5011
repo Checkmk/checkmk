@@ -1,0 +1,15 @@
+Title: scaleio_mdm, scaleio_pd, scaleio_sds, scaleio_storage_pool, scaleio_system, scaleio_volume: New Checks for EMC ScaleIO Appliances
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1500909323
+Class: feature
+
+These new checks enable Check_MK to monitor a EMC ScaleIO infrastructure. Take
+a look into the manpages for further and detailed information.
+
+It is recommended to install the needed plugin on all MDM members and
+configure a cluster host in Check_MK, as the information is only provided
+by the active MDM. All ScaleIO Services should be mapped to this cluster host.

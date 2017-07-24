@@ -37,7 +37,7 @@
 # Updates for openSUSE 12.1 12.1-1.4 | openSUSE-2012-324 | 1       | recommended | needed | util-linux: make mount honor 'noexec' and 'user' option
 # 1 | apache | package | (any)
 # 2 | mysql  | package | (any)
-#
+
 # ...for SLES11:
 # <<<zypper:sep(124)>>>
 # 4 patches needed (2 security patches)
@@ -45,7 +45,7 @@
 # SLES11-SP4-Updates    | slessp4-mysql-12847            | 1       | security    | needed
 # SLES11-SP4-Updates    | slessp4-timezone-12844         | 1       | recommended | needed
 # SLES11-SP4-Updates    | slessp4-wget-12826             | 1       | recommended | needed
-#
+
 # ...new since SLES12:
 # <<<zypper:sep(124)>>>
 # 4 patches needed (1 security patches)
@@ -53,6 +53,13 @@
 # SLES12-SP1-Updates | SUSE-SLE-SERVER-12-SP1-2016-1147 | recommended | moderate  | ---         | needed | Recommended update for dracut
 # SLES12-SP1-Updates | SUSE-SLE-SERVER-12-SP1-2016-1149 | recommended | low       | ---         | needed | Recommended update for gcc48
 # SLES12-SP1-Updates | SUSE-SLE-SERVER-12-SP1-2016-1150 | recommended | low       | ---         | needed | Recommended update for release-notes-sles
+
+# <<<zypper:sep(124)>>>
+# 4 patches needed (1 security patches)
+# SLES12-SP0-Updates | SUSE-SLE-SERVER-12-2016-967  | recommended | low        | needed | Recommended update for timezone
+# SLES12-SP0-Updates | SUSE-SLE-SERVER-12-2016-981  | recommended | moderate   | needed | Recommended update for mdadm
+# SLES12-SP0-Updates | SUSE-SLE-SERVER-12-2016-987  | recommended | low        | needed | Recommended update for procps
+# SLES12-SP0-Updates | SUSE-SLE-SERVER-12-2016-997  | recommended | moderate   | needed | Recommended update for bind
 
 def inventory_zypper(info):
     # the agent section is only present when the agent has
@@ -71,7 +78,7 @@ def check_zypper(_no_item, _no_params, info):
         # 5 patches needed (2 security patches)
         if len(line) >= 5:
             patch_type = None
-            if len(line) >= 6 and line[5].lower().strip() == 'needed': # since SLES12
+            if len(line) >= 7 and line[5].lower().strip() == 'needed': # since SLES12
                 patch_type = line[2].strip()
             elif line[4].lower().strip() == 'needed':
                 patch_type = line[3].strip()

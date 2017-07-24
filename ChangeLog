@@ -21,6 +21,7 @@
     * 4972 FIX: mk_inventory.aix: Use MK_VARDIR instead of MK_CONFDIR for the state file
     * 4980 FIX: mssql_counters.file_sizes: Added readable titles of related metrics...
     * 4981 FIX: fjdarye100_sum, fjdarye101_sum: Fixed precompiling error: No such file or directory: '/omd/sites/SITENAME/share/check_mk/checks/a'
+    * 4982 FIX: zypper: Made check more robust against different SLES 12 service packs
 
     Multisite:
     * 4902 SEC: Monitoring history views: Fixed possible XSS when displaying "plugin output"...

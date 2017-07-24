@@ -141,6 +141,14 @@ class Modes(object):
         return options
 
 
+    def non_checks_options(self):
+        options = []
+        for mode in self._modes:
+            if not mode.needs_checks:
+                options += mode.options()
+        return options
+
+
     def parse_hostname_list(self, args, with_clusters=True, with_foreign_hosts=False):
         if with_foreign_hosts:
             valid_hosts = config.all_configured_realhosts()
@@ -293,13 +301,14 @@ class Option(object):
 class Mode(Option):
     def __init__(self, long_option, handler_function, short_help, short_option=None,
                  argument=False, argument_descr=None, argument_conv=None, argument_optional=False,
-                 long_help=None, needs_config=True, sub_options=None):
+                 long_help=None, needs_config=True, needs_checks=True, sub_options=None):
         # pylint: disable=bad-super-call
         super(Mode, self).__init__(long_option, short_help, short_option, argument,
                 argument_descr, argument_conv, argument_optional,
                 handler_function=handler_function)
         self.long_help        = long_help
         self.needs_config     = needs_config
+        self.needs_checks     = needs_checks
         self.sub_options      = sub_options or []
 
 

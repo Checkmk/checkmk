@@ -9404,9 +9404,10 @@ def find_usages_of_timeperiod(tpname):
 
 
 
-class ModeSites(WatoMode, SiteManagement):
+class ModeSites(WatoMode):
     def __init__(self):
         super(ModeSites, self).__init__()
+        self._site_mgmt = SiteManagement()
 
 
     def buttons(self):
@@ -9445,7 +9446,7 @@ class ModeDistributedMonitoring(ModeSites):
 
 
     def _action_delete(self, delete_id):
-        configured_sites = self.load_sites()
+        configured_sites = self._site_mgmt.load_sites()
         # The last connection can always be deleted. In that case we
         # fall back to non-distributed-WATO and the site attribute
         # will be removed.
@@ -9472,7 +9473,7 @@ class ModeDistributedMonitoring(ModeSites):
                          _("Do you really want to delete the connection to the site %s?") % \
                          html.render_tt(delete_id))
         if c:
-            SiteManagement.delete_site(delete_id)
+            self._site_mgmt.delete_site(delete_id)
             return None
 
         elif c == False:
@@ -9483,7 +9484,7 @@ class ModeDistributedMonitoring(ModeSites):
 
 
     def _action_logout(self, logout_id):
-        configured_sites = self.load_sites()
+        configured_sites = self._site_mgmt.load_sites()
         site = configured_sites[logout_id]
         c = wato_confirm(_("Confirm logout"),
                          _("Do you really want to log out of '%s'?") % \
@@ -9491,7 +9492,7 @@ class ModeDistributedMonitoring(ModeSites):
         if c:
             if "secret" in site:
                 del site["secret"]
-            self.save_sites(configured_sites)
+            self._site_mgmt.save_sites(configured_sites)
             add_change("edit-site", _("Logged out of remote site %s") % html.render_tt(site["alias"]),
                        domains=[ConfigDomainGUI], sites=[default_site()])
             return None, _("Logged out.")
@@ -9504,7 +9505,7 @@ class ModeDistributedMonitoring(ModeSites):
 
 
     def _action_login(self, login_id):
-        configured_sites = self.load_sites()
+        configured_sites = self._site_mgmt.load_sites()
         if html.var("_abort"):
             return "sites"
 
@@ -9520,7 +9521,7 @@ class ModeDistributedMonitoring(ModeSites):
             try:
                 secret = do_site_login(login_id, name, passwd)
                 site["secret"] = secret
-                self.save_sites(configured_sites)
+                self._site_mgmt.save_sites(configured_sites)
                 message = _("Successfully logged into remote site %s.") % html.render_tt(site["alias"])
                 log_audit(None, "edit-site", message)
                 return None, message
@@ -9574,7 +9575,7 @@ class ModeDistributedMonitoring(ModeSites):
                                    "sites, please do not forget to add your local monitoring site also, if "
                                    "you want to display its data."))
 
-        sites = sort_sites(self.load_sites().items())
+        sites = sort_sites(self._site_mgmt.load_sites().items())
         for site_id, site in sites:
             table.row()
 
@@ -9674,7 +9675,7 @@ class ModeEditSiteGlobals(ModeSites):
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
         self._site_id = html.var("site")
-        self._configured_sites = self.load_sites()
+        self._configured_sites = self._site_mgmt.load_sites()
         try:
             self._site = self._configured_sites[self._site_id]
         except KeyError:
@@ -9738,7 +9739,7 @@ class ModeEditSiteGlobals(ModeSites):
                   (varname, _("on") if self._current_settings[varname] else _("off"))
 
             self._site.setdefault("globals", {})[varname] = self._current_settings[varname]
-            self.save_sites(self._configured_sites, activate=False)
+            self._site_mgmt.save_sites(self._configured_sites, activate=False)
 
             add_change("edit-configvar", msg, sites=[self._site_id], need_restart=need_restart)
 
@@ -9784,7 +9785,7 @@ class ModeEditSite(ModeSites):
 
         self._new        = self._site_id == None
         self._new_site   = {}
-        configured_sites = self.load_sites()
+        configured_sites = self._site_mgmt.load_sites()
 
         if self._clone_id:
             self._site = configured_sites[self._clone_id]
@@ -9833,7 +9834,7 @@ class ModeEditSite(ModeSites):
         else:
             self._id = self._site_id
 
-        configured_sites = self.load_sites()
+        configured_sites = self._site_mgmt.load_sites()
         if self._new and self._id in configured_sites:
             raise MKUserError("id", _("This id is already being used by another connection."))
 
@@ -9842,7 +9843,7 @@ class ModeEditSite(ModeSites):
 
         detail_msg = self._set_site_attributes()
         configured_sites[self._id] = self._new_site
-        self.save_sites(configured_sites)
+        self._site_mgmt.save_sites(configured_sites)
 
         if self._new:
             msg = _("Created new connection to site %s") % html.render_tt(self._id)
@@ -9866,7 +9867,7 @@ class ModeEditSite(ModeSites):
 
     def _set_site_attributes(self):
         # Save copy of old site for later
-        configured_sites = self.load_sites()
+        configured_sites = self._site_mgmt.load_sites()
         if not self._new:
             old_site = configured_sites[self._site_id]
 
@@ -9877,8 +9878,9 @@ class ModeEditSite(ModeSites):
         self._new_site["disabled"] = html.get_checkbox("disabled")
 
         # Connection
-        method = self.connection_method_valuespec().from_html_vars("method")
-        self.connection_method_valuespec().validate_value(method, "method")
+        vs_connection = self._site_mgmt.connection_method_valuespec()
+        method = vs_connection.from_html_vars("method")
+        vs_connection.validate_value(method, "method")
         if type(method) == tuple and method[0] in [ "unix", "tcp"]:
             if method[0] == "unix":
                 self._new_site["socket"] = "unix:" + method[1]
@@ -9926,7 +9928,7 @@ class ModeEditSite(ModeSites):
         self._new_site["user_login"] = html.get_checkbox("user_login")
 
         # User synchronization
-        user_sync = self.user_sync_valuespec().from_html_vars("user_sync")
+        user_sync = self._site_mgmt.user_sync_valuespec().from_html_vars("user_sync")
         self._new_site["user_sync"] = user_sync
 
         # Event Console Replication
@@ -9947,7 +9949,7 @@ class ModeEditSite(ModeSites):
                     self._new_site[key] = old_site[key]
 
 
-        self.validate_configuration(self._site_id or self._id, self._new_site, configured_sites)
+        self._site_mgmt.validate_configuration(self._site_id or self._id, self._new_site, configured_sites)
 
 
     def page(self):
@@ -9994,7 +9996,7 @@ class ModeEditSite(ModeSites):
             parts = method.split(":")[1:] # pylint: disable=no-member
             method = ('tcp', (parts[0], int(parts[1])))
 
-        self.connection_method_valuespec().render_input("method", method)
+        self._site_mgmt.connection_method_valuespec().render_input("method", method)
         html.help( _("When connecting to remote site please make sure "
                    "that Livestatus over TCP is activated there. You can use UNIX sockets "
                    "to connect to foreign sites on localhost. Please make sure that this "
@@ -10045,7 +10047,7 @@ class ModeEditSite(ModeSites):
         html.text_input("sh_host", self._sh_host, size=10)
         html.write_text(_(" on monitoring site: "))
 
-        choices = [ ("", _("(no status host)")) ] + [ (sk, si.get("alias", sk)) for (sk, si) in self.load_sites().items() ]
+        choices = [ ("", _("(no status host)")) ] + [ (sk, si.get("alias", sk)) for (sk, si) in self._site_mgmt.load_sites().items() ]
         html.dropdown("sh_site", choices, deflt=self._sh_site, sorted=True)
 
         html.help( _("By specifying a status host for each non-local connection "
@@ -10103,7 +10105,7 @@ class ModeEditSite(ModeSites):
                     'related option is changed in the master site.'))
 
         forms.section(_("Sync with LDAP connections"), simple=True)
-        self.user_sync_valuespec().render_input("user_sync",
+        self._site_mgmt.user_sync_valuespec().render_input("user_sync",
                              self._site.get("user_sync", userdb.user_sync_default_config(self._site_id)))
         html.br()
         html.help(_('By default the users are synchronized automatically in the interval configured '

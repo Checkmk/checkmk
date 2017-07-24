@@ -10776,8 +10776,11 @@ def mode_edit_user(phase):
         html.help(vs_customer.help())
 
     forms.section(vs_sites.title())
-    vs_sites.render_input("authorized_sites",
-        user.get("authorized_sites", vs_sites.default_value()))
+    authorized_sites = user.get("authorized_sites", vs_sites.default_value())
+    if not is_locked("authorized_sites"):
+        vs_sites.render_input("authorized_sites", authorized_sites)
+    else:
+        html.write_html(vs_sites.value_to_text(authorized_sites))
     html.help(vs_sites.help())
 
     custom_user_attributes('ident')

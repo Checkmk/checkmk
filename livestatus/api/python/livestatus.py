@@ -315,7 +315,10 @@ class BaseConnection:
     def disconnect(self):
         self.socket = None
         if self.persist:
-            del persistent_connections[self.socketurl]
+            try:
+                del persistent_connections[self.socketurl]
+            except KeyError:
+                pass
 
     def receive_data(self, size):
         result = ""
@@ -384,6 +387,7 @@ class BaseConnection:
             try:
                 length = int(resp[4:15].lstrip())
             except:
+                self.disconnect()
                 raise MKLivestatusSocketError("Malformed output. Livestatus TCP socket might be unreachable.")
 
             data = self.receive_data(length)
@@ -392,6 +396,7 @@ class BaseConnection:
                 try:
                     return ast.literal_eval(data)
                 except:
+                    self.disconnect()
                     raise MKLivestatusSocketError("Malformed output")
 
             elif code == "404":
@@ -424,6 +429,10 @@ class BaseConnection:
             raise
 
         except Exception, e:
+            # Catches
+            # MKLivestatusQueryError
+            # MKLivestatusSocketError
+            # FIXME: ? self.disconnect()
             raise MKLivestatusSocketError("Unhandled exception: %s" % e)
 
 
@@ -722,6 +731,7 @@ class MultiSiteConnection(Helpers):
                 result += r
                 stillalive.append( (sitename, site, connection) )
             except Exception, e:
+                connection.disconnect()
                 self.deadsites[sitename] = {
                     "exception" : e,
                     "site" : site,
@@ -733,13 +743,15 @@ class MultiSiteConnection(Helpers):
     # of Limit: since all sites are queried in parallel, the Limit: is simply
     # applied to all sites - resulting in possibly more results then Limit requests.
     def query_parallel(self, query, add_headers = ""):
+        stillalive = []
         if self.only_sites != None:
-            active_sites = [ c for c in self.connections if c[0] in self.only_sites ]
+            connect_to_sites = [ c for c in self.connections if c[0] in self.only_sites ]
+            # Unused sites are assumed to be alive
+            stillalive.extend( [ c for c in self.connections if c[0] not in self.only_sites])
         else:
-            active_sites = self.connections
+            connect_to_sites = self.connections
 
         start_time = time.time()
-        stillalive = []
         limit = self.limit
         if limit != None:
             limit_header = "Limit: %d\n" % limit
@@ -747,7 +759,7 @@ class MultiSiteConnection(Helpers):
             limit_header = ""
 
         # First send all queries
-        for sitename, site, connection in active_sites:
+        for sitename, site, connection in connect_to_sites:
             try:
                 connection.send_query(query, add_headers + limit_header)
             except Exception, e:
@@ -764,11 +776,7 @@ class MultiSiteConnection(Helpers):
         # Then retrieve all answers. We will be as slow as the slowest of all
         # connections.
         result = []
-        for sitename, site, connection in self.connections:
-            if self.only_sites != None and sitename not in self.only_sites:
-                stillalive.append( (sitename, site, connection) ) # state unknown, assume still alive
-                continue
-
+        for sitename, site, connection in connect_to_sites:
             try:
                 r = connection.recv_response(query, add_headers + limit_header)
                 stillalive.append( (sitename, site, connection) )
@@ -780,11 +788,11 @@ class MultiSiteConnection(Helpers):
                 continue
 
             except Exception, e:
+                connection.disconnect()
                 self.deadsites[sitename] = {
                     "exception" : e,
                     "site" : site,
                 }
-
 
         self.connections = stillalive
         return result

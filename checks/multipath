@@ -246,22 +246,21 @@ def parse_multipath(info):
 
             # Proceed with next line after init
             continue
-        else:
-            if uuid != None:
-                # Handle special syntax | |- 2:0:0:1 sda  ...
-                if line[0] == '|':
-                    line = line[1:]
-                if reg_prio.search(l):
-                    group['state'] = "".join(line[3:])
-                elif len(line) >= 4 and reg_lun.match(line[1]):
-                    luninfo = "%s(%s)" % (line[1], line[2])
-                    lun_info.append(luninfo)
-                    state = line[4]
-                    if not "active" in state:
-                        broken_paths.append(luninfo)
-                    numpaths += 1
-                    group['numpaths'] = numpaths
-                    paths_info.append(line[2])
+        elif uuid != None:
+            # Handle special syntax | |- 2:0:0:1 sda  ...
+            if line[0] == '|':
+                line = line[1:]
+            if reg_prio.search(l):
+                group['state'] = "".join(line[3:])
+            elif len(line) >= 4 and reg_lun.match(line[1]):
+                luninfo = "%s(%s)" % (line[1], line[2])
+                lun_info.append(luninfo)
+                state = line[4]
+                if not "active" in state:
+                    broken_paths.append(luninfo)
+                numpaths += 1
+                group['numpaths'] = numpaths
+                paths_info.append(line[2])
     return groups
 
 # Get list of UUIDs of all multipath devices

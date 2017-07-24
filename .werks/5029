@@ -1,0 +1,13 @@
+Title: Fix Windows agent crash with logwatch and '*' wildcard
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p25
+Date: 1500908186
+Class: fix
+
+Windows agent crashed due to globbing wildcard '*' bringing
+in directories when using logwatch. Re-implemented the fix
+already done in master also for 1.2.8 (code histories
+diverged due to a large refactoring done in Windows agent
+for 1.4.0).

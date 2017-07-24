@@ -1453,7 +1453,9 @@ class BookmarkList(pagetypes.Overridable):
                 "topic" : v[3],
             }
 
-        return [(_("Bookmarks"), [
+        parameters = super(BookmarkList, cls).parameters()
+
+        parameters += [(_("Bookmarks"), [
             # sort-index, key, valuespec
             (2.5, "default_topic", TextUnicode(
                 title = _("Default Topic") + "<sup>*</sup>",
@@ -1505,6 +1507,8 @@ class BookmarkList(pagetypes.Overridable):
                 ),
             )),
         ])]
+
+        return parameters
 
 
     @classmethod

@@ -874,28 +874,32 @@ class LDAPUserConnector(UserConnector):
     def get_nested_group_memberships(self, filters, filt_attr):
         groups = {}
         for filter_val in filters:
+            matched_groups = {}
+
             if filt_attr == 'cn':
                 result = self.ldap_search(self.get_group_dn(),
                                      '(&%s(cn=%s))' % (self.ldap_filter('groups'), filter_val),
-                                     ['dn'], self._config['group_scope'])
+                                     ['dn', 'cn'], self._config['group_scope'])
                 if not result:
                     continue # Skip groups which can not be found
-                dn = result[0][0]
-                cn = filter_val
+
+                for dn, cn in result:
+                    matched_groups[dn] = cn
             else:
-                dn = filter_val
                 # in case of asking with DNs in nested mode, the resulting objects have the
                 # cn set to None for all objects. We do not need it in that case.
-                cn = None
+                matched_groups[dn] = None
 
-            filt = '(&%s(memberOf:1.2.840.113556.1.4.1941:=%s))' % (self.ldap_filter('users'), dn)
-            groups[dn] = {
-                'members' : [],
-                'cn'      : cn,
-            }
-            for user_dn, obj in self.ldap_search(self.get_user_dn(),
-                                                 filt, ['dn'], self._config['user_scope']):
-                groups[dn]['members'].append(user_dn.lower())
+            for dn, cn in matched_groups.items():
+                filt = '(&%s(memberOf:1.2.840.113556.1.4.1941:=%s))' % \
+                        (self.ldap_filter('users'), dn)
+                groups[dn] = {
+                    'members' : [],
+                    'cn'      : cn,
+                }
+                for user_dn, obj in self.ldap_search(self.get_user_dn(),
+                                                     filt, ['dn'], self._config['user_scope']):
+                    groups[dn]['members'].append(user_dn.lower())
 
         return groups
 

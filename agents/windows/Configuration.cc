@@ -472,14 +472,18 @@ void Configuration::processGlobExpression(glob_token *glob_token,
             *end = 0;
             basename = glob_token->pattern;
         }
-        snprintf(full_filename, sizeof(full_filename), "%s\\%s", basename,
-                 data.cFileName);
-        updateOrCreateLogwatchTextfile(full_filename, glob_token, patterns);
+        if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) { // Skip directories
 
-        while (FindNextFile(h, &data)) {
             snprintf(full_filename, sizeof(full_filename), "%s\\%s", basename,
                      data.cFileName);
             updateOrCreateLogwatchTextfile(full_filename, glob_token, patterns);
+        }
+        while (FindNextFile(h, &data)) {
+            if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) { // Skip directories
+                snprintf(full_filename, sizeof(full_filename), "%s\\%s", basename,
+                         data.cFileName);
+                updateOrCreateLogwatchTextfile(full_filename, glob_token, patterns);
+            }
         }
 
         if (end) *end = '\\';  // repair string

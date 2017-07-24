@@ -1,15 +1,8 @@
-Title: Agent bakery does not use local check plugins
-Component: core
+Title: Contact group inheritance in WATO
+Component: wato
 State: open
-Date: 2017-05-11 11:55:19
-Targetversion: 1.5.0
-Class: feature
+Date: 2017-07-24 14:57:59
+Targetversion: future
+Class: nastiness
 
-To make this possible we need to abstract the source path for such files from the agent
-bakery plugins. We could wrap the paths in a function which detects the real path. Something
-like this:
-
-overridable_file_path("check_mk/agents/plugins/...")
-
-In case a local file is available it is used. Otherwise the regular file
-below share is used.
+See ticket #38 Uni-Leipzig

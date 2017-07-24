@@ -1,0 +1,13 @@
+Title: mssql_counters.file_sizes: Added readable titles of related metrics
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p9
+Date: 1500891539
+
+Previously the titles of the metrics 'data_files', 'log_files_used'
+and 'log_files' were generated automatically and were not readable.
+Now they have readable titles.

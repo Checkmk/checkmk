@@ -37,7 +37,7 @@
 
 check_info["fjdarye100_sum"] = {
     'check_function'        : check_fjdarye_sum,
-    'includes'              : "fjdarye.include",
+    'includes'              : ["fjdarye.include"],
     'inventory_function'    : inventory_fjdarye_sum,
     'service_description'   : 'Summary Status %s',
     # 1: fjdaryUnitStatus

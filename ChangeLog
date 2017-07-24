@@ -20,6 +20,7 @@
     * 4887 FIX: cisco_wlc: Fixed crashing check plugin caused by IndexError
     * 4972 FIX: mk_inventory.aix: Use MK_VARDIR instead of MK_CONFDIR for the state file
     * 4980 FIX: mssql_counters.file_sizes: Added readable titles of related metrics...
+    * 4981 FIX: fjdarye100_sum, fjdarye101_sum: Fixed precompiling error: No such file or directory: '/omd/sites/SITENAME/share/check_mk/checks/a'
 
     Multisite:
     * 4902 SEC: Monitoring history views: Fixed possible XSS when displaying "plugin output"...

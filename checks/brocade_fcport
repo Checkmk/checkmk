@@ -233,22 +233,22 @@ def check_brocade_fcport(item, params, parsed):
     if found_entry is None:
         return 3, "No SNMP data found"
 
-    index = if_entry["index"]
-    txwords = if_entry["txwords"]
-    rxwords = if_entry["rxwords"]
-    txframes = if_entry["txframes"]
-    rxframes = if_entry["rxframes"]
-    notxcredits = if_entry["notxcredits"]
-    rxcrcs = if_entry["rxcrcs"]
-    rxencinframes = if_entry["rxencinframes"]
-    rxencoutframes = if_entry["rxencoutframes"]
-    c3discards = if_entry["c3discards"]
-    brocade_speed = if_entry["brocade_speed"]
-    porttype = if_entry["porttype"]
-    is_isl = if_entry["is_isl"]
-    isl_speed = if_entry["islspeed"]
-    bbcredits = if_entry["bbcredits"]
-    speed = if_entry["ifspeed"]
+    index = found_entry["index"]
+    txwords = found_entry["txwords"]
+    rxwords = found_entry["rxwords"]
+    txframes = found_entry["txframes"]
+    rxframes = found_entry["rxframes"]
+    notxcredits = found_entry["notxcredits"]
+    rxcrcs = found_entry["rxcrcs"]
+    rxencinframes = found_entry["rxencinframes"]
+    rxencoutframes = found_entry["rxencoutframes"]
+    c3discards = found_entry["c3discards"]
+    brocade_speed = found_entry["brocade_speed"]
+    porttype = found_entry["porttype"]
+    is_isl = found_entry["is_isl"]
+    isl_speed = found_entry["islspeed"]
+    bbcredits = found_entry["bbcredits"]
+    speed = found_entry["ifspeed"]
 
     this_time = time.time()
     average = params.get("average") # range in minutes
@@ -375,9 +375,9 @@ def check_brocade_fcport(item, params, parsed):
 
     # P O R T S T A T E
     for dev_state, state_key, state_info, warn_states, state_map in [
-        (if_entry["phystate"], "phystate", "Physical", [1, 6], brocade_fcport_phystates),
-        (if_entry["opstate"], "opstate", "Operational", [1, 3], brocade_fcport_opstates),
-        (if_entry["admstate"], "admstate", "Administrative", [0, 1, 3], brocade_fcport_admstates),
+        (found_entry["phystate"], "phystate", "Physical", [1, 6], brocade_fcport_phystates),
+        (found_entry["opstate"], "opstate", "Operational", [1, 3], brocade_fcport_opstates),
+        (found_entry["admstate"], "admstate", "Administrative", [0, 1, 3], brocade_fcport_admstates),
     ]:
         state = 0
         errorflag = ""

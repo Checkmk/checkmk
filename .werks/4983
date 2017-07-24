@@ -7,4 +7,16 @@ Version: 1.4.0p10
 Date: 1500909872
 Class: fix
 
+Brocade specific SNMP table
+.1.3.6.1.4.1.1588.2.1.1.1.6.2.1
+does not provide speed information for the interfaces.
+Thus this check plugins had to fetch another SNMP table
+.1.3.6.1.2.1.31.1.1.1.15
+from IF-MIB.
+Unfortunately these tables are not directly connected by index
+and the assumed speed information could be wrong for some
+devices.
 
+http://community.brocade.com/t5/Fibre-Channel-SAN/SNMP-FC-port-speed/td-p/64980
+says that "1073741824" from if-table correlates with index 1 from
+brocade-if-table.

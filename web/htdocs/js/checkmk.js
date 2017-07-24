@@ -531,12 +531,6 @@ function get_url(url, handler, data, errorHandler, addAjaxId)
     call_ajax(url, args);
 }
 
-function get_url_sync(url)
-{
-    var AJAX = call_ajax(url, {sync:true});
-    return AJAX.responseText;
-}
-
 function post_url(url, post_params, responseHandler, handler_data, errorHandler)
 {
     var args = {
@@ -1318,9 +1312,19 @@ function toggle_tree_state(tree, name, oContainer, fetch_url) {
     var state;
     if (has_class(oContainer, 'closed')) {
         change_class(oContainer, 'closed', 'open');
+
         if (fetch_url && !oContainer.innerHTML) {
-            oContainer.innerHTML = get_url_sync(fetch_url);
+            call_ajax(fetch_url, {
+                method           : "GET",
+                response_handler : function(handler_data, response_body) {
+                    handler_data.container.innerHTML = response_body;
+                },
+                handler_data     : {
+                    container: oContainer
+                }
+            });
         }
+
         state = 'on';
         if (oContainer.tagName == 'TR') { // handle in-table toggling
             while (oContainer = oContainer.nextElementSibling)
@@ -1353,13 +1357,17 @@ function toggle_foldable_container(treename, id, fetch_url) {
         var oImg = oNform.children[0];
         var oTr = oNform.parentNode.nextElementSibling;
         toggle_tree_state(treename, id, oTr, fetch_url);
-        toggle_folding(oImg, !has_class(oTr, "closed"));
+
+        if (oImg)
+            toggle_folding(oImg, !has_class(oTr, "closed"));
     }
     else {
         var oImg = document.getElementById('treeimg.' + treename + '.' + id);
         var oBox = document.getElementById('tree.' + treename + '.' + id);
         toggle_tree_state(treename, id, oBox, fetch_url);
-        toggle_folding(oImg, !has_class(oBox, "closed"));
+
+        if (oImg)
+            toggle_folding(oImg, !has_class(oBox, "closed"));
     }
 }
 
@@ -1919,7 +1927,10 @@ function count_context_button(oA)
 {
     // Extract view name from id of parent div element
     var id = oA.parentNode.id;
-    get_url_sync("count_context_button.py?id=" + id);
+    var AJAX = call_ajax("count_context_button.py?id=" + id, {
+        sync:true
+    });
+    return AJAX.responseText;
 }
 
 function unhide_context_buttons(oA)
@@ -2784,10 +2795,9 @@ function optiondial_wheel(event) {
 function view_dial_option(oDiv, viewname, option, choices) {
     // prevent double click from select text
     var new_choice = choices[0]; // in case not contained in choices
-    for (var c=0; c<choices.length; c++) {
+    for (var c = 0, choice = null, val = null; c < choices.length; c++) {
         choice = choices[c];
         val = choice[0];
-        title = choice[1];
         if (has_class(oDiv, "val_" + val)) {
             var new_choice = choices[(c + choices.length + g_dial_direction) % choices.length];
             change_class(oDiv, "val_" + val, "val_" + new_choice[0]);
@@ -2796,23 +2806,42 @@ function view_dial_option(oDiv, viewname, option, choices) {
     }
 
     // Start animation
-    step = 0;
-    speed = 10;
+    var step = 0;
+    var speed = 10;
+
     for (var way = 0; way <= 10; way +=1) {
         step += speed;
-        setTimeout("turn_dial('" + option + "', '', " + way + "," + g_dial_direction + ")", step);
-    }
-    for (var way = -10; way <= 0; way +=1) {
-        step += speed;
-        setTimeout("turn_dial('" + option + "', '" + new_choice[1] + "', " + way + "," + g_dial_direction + ")", step);
+        setTimeout(function(option, text, way, direction) {
+            return function() {
+                turn_dial(option, text, way, direction);
+            };
+        }(option, "", way, g_dial_direction), step);
     }
 
-    get_url_sync("ajax_set_viewoption.py?view_name=" + viewname +
-            "&option=" + option + "&value=" + new_choice[0]);
-    if (option == "refresh")
-        set_reload(new_choice[0]);
-    else
-        schedule_reload('', 400.0);
+    for (var way = -10; way <= 0; way +=1) {
+        step += speed;
+        setTimeout(function(option, text, way, direction) {
+            return function() {
+                turn_dial(option, text, way, direction);
+            };
+        }(option, new_choice[1], way, g_dial_direction), step);
+    }
+
+    var url = "ajax_set_viewoption.py?view_name=" + viewname +
+              "&option=" + option + "&value=" + new_choice[0];
+    call_ajax(url, {
+        method           : "GET",
+        response_handler : function(handler_data, response_body) {
+            if (handler_data.option == "refresh")
+                set_reload(handler_data.new_value);
+            else
+                schedule_reload('', 400.0);
+        },
+        handler_data     : {
+            new_value : new_choice[0],
+            option    : option
+        }
+    });
 }
 
 // way ranges from -10 to 10 means centered (normal place)
@@ -2846,16 +2875,26 @@ function view_switch_option(oDiv, viewname, option, choices) {
     }
     new_choice = [ new_value, '' ];
 
-    get_url_sync("ajax_set_viewoption.py?view_name=" + viewname +
-            "&option=" + option + "&value=" + new_choice[0]);
+    var url = "ajax_set_viewoption.py?view_name=" + viewname +
+               "&option=" + option + "&value=" + new_choice[0];
 
-    if (option == "refresh") {
-        set_reload(new_choice[0]);
-    } else if (option == "show_checkboxes") {
-        g_selection_enabled = new_value;
-    }
+    call_ajax(url, {
+        method           : "GET",
+        response_handler : function(handler_data, response_body) {
+            if (handler_data.option == "refresh") {
+                set_reload(handler_data.new_value);
+            } else if (handler_data.option == "show_checkboxes") {
+                g_selection_enabled = handler_data.new_value;
+            }
 
-    handleReload('');
+            handleReload('');
+        },
+        handler_data     : {
+            new_value : new_value,
+            option    : option
+        }
+    });
+
 }
 
 var g_hosttag_groups = {};
@@ -3189,23 +3228,29 @@ function pagetype_add_to_container(page_type, page_name)
 
     close_popup();
 
-    response = get_url_sync('ajax_pagetype_add_element.py'
-                           + '?page_type=' + page_type
-                           + '&page_name=' + page_name
-                           + '&element_type=' + element_type
-                           + '&create_info='  + encodeURIComponent(create_info_json));
     popup_data = null;
 
-    // We get to lines of response. The first is an URL we should be
-    // redirected to. The second is "true" if we should reload the
-    // sidebar.
-    if (response) {
-        var parts = response.split('\n');
-        if (parts[1] == "true")
-            reload_sidebar();
-        if (parts[0])
-            window.location.href = parts[0];
-    }
+    var url = 'ajax_pagetype_add_element.py'
+              + '?page_type=' + page_type
+              + '&page_name=' + page_name
+              + '&element_type=' + element_type
+              + '&create_info='  + encodeURIComponent(create_info_json);
+
+    call_ajax(url, {
+        method           : "GET",
+        response_handler : function(handler_data, response_body) {
+            // We get to lines of response. The first is an URL we should be
+            // redirected to. The second is "true" if we should reload the
+            // sidebar.
+            if (response_body) {
+                var parts = response_body.split('\n');
+                if (parts[1] == "true")
+                    reload_sidebar();
+                if (parts[0])
+                    window.location.href = parts[0];
+            }
+        }
+    });
 }
 
 //#.

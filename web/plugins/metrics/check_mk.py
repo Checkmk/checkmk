@@ -427,6 +427,24 @@ metric_info["file_count"] = {
 
 # database, tablespace
 
+metric_info["data_files"] = {
+    "title" : _("Data files size"),
+    "unit"  : "bytes",
+    "color" : "34/a",
+}
+
+metric_info["log_files_used"] = {
+    "title" : _("Used size of log files"),
+    "unit"  : "bytes",
+    "color" : "25/a",
+}
+
+metric_info["log_files_total"] = {
+    "title" : _("Total size of log files"),
+    "unit"  : "bytes",
+    "color" : "16/a",
+}
+
 metric_info["database_size"] = {
     "title" : _("Database size"),
     "unit"  : "bytes",
@@ -4394,6 +4412,10 @@ check_metrics["check_mk-mssql_counters.sqlstats"] = {
     "batch_requests/sec"        : { "name" : "requests_per_second" },
     "sql_compilations/sec"      : { "name" : "requests_per_second" },
     "sql_re-compilations/sec"   : { "name" : "requests_per_second" },
+}
+
+check_metrics["check_mk-mssql_counters.file_sizes"] = {
+    "log_files": { "name" : "log_files_total" },
 }
 
 check_metrics["check_mk-cisco_mem"] = {

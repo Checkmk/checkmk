@@ -1,0 +1,17 @@
+Title: Datasource programs: Prevent zombie processes in case of timeouts
+Level: 1
+Component: core
+Compatible: compat
+Edition: cre
+Version: 1.4.0p9
+Date: 1500907925
+Class: fix
+
+When using datasource programs (like e.g. special agents or SSH command line calls)
+to get agent data from hosts it may happen that these programs remain open as
+zombie processes. Check_MK has been extended to deal with this situation and clean
+up these processes.
+
+Details: When the program execution takes too long Check_MK sends a SIGTERM to the
+process group of the executed program. After sending the signal Check_MK is now
+waiting for the process to finish.

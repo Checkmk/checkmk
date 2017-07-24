@@ -175,6 +175,17 @@ else:
     except:
         pass
 
+    requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join([
+       "DH+3DES",
+       "DH+HIGH",
+       "ECDH+3DES",
+       "ECDH+HIGH",
+       "RSA+3DES",
+       "RSA+HIGH",
+    ])
+
+
+
     try:
         # lxml was quite promising in our test environment: Uses 2 times less CPU resources
         # Unfortunaly, it is not a builtin module and need to be installed manually with

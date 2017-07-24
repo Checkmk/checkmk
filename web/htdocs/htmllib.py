@@ -2560,13 +2560,15 @@ class html(HTMLGenerator, RequestHandler):
         onclick = "toggle_foldable_container(\'%s\', \'%s\', \'%s\')"\
                     % (treename, id, fetch_url if fetch_url else '')
 
+        img_id = "treeimg.%s.%s" % (treename, id)
+
         if indent == "nform":
             self.open_tr(class_="heading")
             self.open_td(id_="nform.%s.%s" % (treename, id), onclick=onclick, colspan="2")
             if icon:
                 self.img(class_=["treeangle", "title"], src="images/icon_%s.png" % icon)
             else:
-                self.img(class_=["treeangle", "nform", "open" if isopen else "closed"],
+                self.img(id_=img_id, class_=["treeangle", "nform", "open" if isopen else "closed"],
                          src="images/%s_closed.png" % tree_img, align="absbottom")
             self.write_text(title)
             self.close_td()

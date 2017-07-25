@@ -126,7 +126,7 @@ size_t fl_max_cached_messages = 500000;
 static uint32_t fl_max_lines_per_logfile = 1000000;
 size_t fl_max_response_size = 100 * 1024 * 1024;  // limit answer to 10 MB
 int g_thread_running = 0;
-AuthorizationKind g_service_authorization = AuthorizationKind::loose;
+static AuthorizationKind fl_service_authorization = AuthorizationKind::loose;
 AuthorizationKind g_group_authorization = AuthorizationKind::strict;
 Encoding fl_data_encoding = Encoding::utf8;
 
@@ -669,6 +669,10 @@ public:
         return fl_disable_statehist_filtering == 0;
     }
 
+    AuthorizationKind serviceAuthorization() const override {
+        return fl_service_authorization;
+    }
+
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
 private:
@@ -981,9 +985,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 }
             } else if (strcmp(left, "service_authorization") == 0) {
                 if (strcmp(right, "strict") == 0) {
-                    g_service_authorization = AuthorizationKind::strict;
+                    fl_service_authorization = AuthorizationKind::strict;
                 } else if (strcmp(right, "loose") == 0) {
-                    g_service_authorization = AuthorizationKind::loose;
+                    fl_service_authorization = AuthorizationKind::loose;
                 } else {
                     Warning(fl_logger_nagios)
                         << "invalid service authorization mode, "

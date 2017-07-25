@@ -40,7 +40,6 @@ inline contact *unknown_auth_user() {
     return reinterpret_cast<contact *>(0xdeadbeaf);
 }
 #else
-extern AuthorizationKind g_service_authorization;
 extern AuthorizationKind g_group_authorization;
 
 contact *unknown_auth_user();

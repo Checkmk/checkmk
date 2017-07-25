@@ -6859,7 +6859,7 @@ def mode_globalvars(phase):
             return
 
     group_names = global_config_variable_groups()
-    render_global_configuration_variables(group_names, default_values, current_settings, search=search)
+    render_global_configuration_variables(group_names, default_values, {}, current_settings, search=search)
 
 
 def global_config_variable_groups(show_all=False):
@@ -6881,7 +6881,7 @@ def global_config_variable_groups(show_all=False):
     return group_names
 
 
-def render_global_configuration_variables(group_names, default_values, current_settings,
+def render_global_configuration_variables(group_names, default_values, global_settings, current_settings,
                                           search=None, edit_mode="edit_configvar"):
 
     group_names.sort(cmp=lambda a,b: cmp(configvar_order().get(a, 999),
@@ -6932,6 +6932,8 @@ def render_global_configuration_variables(group_names, default_values, current_s
 
             if varname in current_settings:
                 to_text = valuespec.value_to_text(current_settings[varname])
+            elif varname in global_settings:
+                to_text = valuespec.value_to_text(global_settings[varname])
             else:
                 to_text = valuespec.value_to_text(default_value)
 
@@ -6944,9 +6946,15 @@ def render_global_configuration_variables(group_names, default_values, current_s
             if varname in current_settings:
                 value = current_settings[varname]
                 modified_cls = "modified"
+                title = _("This option has been modified.")
+            elif varname in global_settings:
+                value = global_settings[varname]
+                modified_cls = "modified globally"
+                title = _("This option has been modified in global settings.")
             else:
                 value = default_value
                 modified_cls = None
+                title = None
 
             if is_a_checkbox(valuespec):
                 html.open_div(class_=["toggle_switch_container", modified_cls])
@@ -6954,12 +6962,17 @@ def render_global_configuration_variables(group_names, default_values, current_s
                     enabled=value,
                     help=_("Immediately toggle this setting"),
                     href=html.makeactionuri([("_action", "toggle"), ("_varname", varname)]),
-                    class_=modified_cls
+                    class_=modified_cls,
+                    title=title,
                 )
                 html.close_div()
 
             else:
-                html.a(HTML(to_text), href=edit_url, class_=modified_cls)
+                html.a(HTML(to_text),
+                    href=edit_url,
+                    class_=modified_cls,
+                    title=title
+                )
 
         if header_is_painted:
             forms.end()
@@ -7002,10 +7015,13 @@ def mode_edit_configvar(phase, what = 'globalvars'):
 
     if siteid:
         current_settings = site.setdefault("globals", {})
+        global_settings  = load_configuration_settings()
     else:
         current_settings = load_configuration_settings()
+        global_settings  = {}
 
-    is_on_default = varname not in current_settings
+    is_configured = varname in current_settings
+    is_configured_globally = varname in global_settings
 
     if phase == "action":
         if html.var("_reset"):
@@ -7086,19 +7102,31 @@ def mode_edit_configvar(phase, what = 'globalvars'):
     valuespec.set_focus("ve")
     html.help(valuespec.help())
 
-    forms.section(_("Default setting"))
-    if is_on_default:
+    if siteid and is_configured_globally:
+        forms.section(_("Global setting"))
+        html.write_html(valuespec.value_to_text(global_settings[varname]))
+
+    forms.section(_("Factory setting"))
+    html.write_html(valuespec.value_to_text(defvalue))
+
+    forms.section(_("Current state"))
+    if is_configured_globally:
+        html.write_text(_("This variable is configured in <a href=\"%s\">global settings</a>.") %
+                                            ("wato.py?mode=edit_configvar&varname=%s" % varname))
+    elif not is_configured:
         html.write_text(_("This variable is at factory settings."))
     else:
         curvalue = current_settings[varname]
-        if curvalue == defvalue:
+        if is_configured_globally and curvalue == global_settings[varname]:
+            html.write_text(_("Site setting and global setting are identical."))
+        elif curvalue == defvalue:
             html.write_text(_("Your setting and factory settings are identical."))
         else:
             html.write(valuespec.value_to_text(defvalue))
 
     forms.end()
     html.button("save", _("Save"))
-    if allow_reset and not is_on_default:
+    if allow_reset and is_configured:
         curvalue = current_settings[varname]
         html.button("_reset", _("Remove explicit setting") if curvalue == defvalue else _("Reset to default"))
     html.hidden_fields()
@@ -9681,10 +9709,15 @@ class ModeEditSiteGlobals(ModeSites):
         except KeyError:
             raise MKUserError("site", _("This site does not exist."))
 
-        # The site's default values are the current global settings
+        # 1. Check_MK program defaults
+        # Get default settings of all configuration variables of interest in the domain
+        # "check_mk". (this also reflects the settings done in main.mk)
         self._default_values = check_mk_local_automation("get-configuration", [], get_check_mk_config_var_names())
-        self._default_values.update(load_configuration_settings())
 
+        # 2. Values of global settings
+        self._global_settings = load_configuration_settings()
+
+        # 3. Site specific global settings
         if is_wato_slave_site():
             self._current_settings = load_configuration_settings(site_specific=True)
         else:
@@ -9713,7 +9746,7 @@ class ModeEditSiteGlobals(ModeSites):
             return
 
         domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
-        def_value = self._default_values.get(varname, valuespec.default_value())
+        def_value = self._global_setting(varname, self._default_values.get(varname, valuespec.default_value()))
 
         if action == "reset" and not is_a_checkbox(valuespec):
             c = wato_confirm(
@@ -9774,6 +9807,7 @@ class ModeEditSiteGlobals(ModeSites):
 
         group_names = global_config_variable_groups(show_all=True)
         render_global_configuration_variables(group_names, self._default_values,
+                                              self._global_settings,
                                               self._current_settings, search=search)
 
 

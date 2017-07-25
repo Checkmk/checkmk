@@ -1,0 +1,11 @@
+Title: Site specific global settings: Distinguishing between factory and global settings
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1500969257
+Class: feature
+
+When editing site specific globals it the factory settings and possible globally configured
+settings are displayed together with a status information which value is inherited.

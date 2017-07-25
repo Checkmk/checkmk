@@ -839,6 +839,12 @@ div.varname {
     padding: 1px 4px 2px 4px;
 }
 
+.wato div.globalvars td.simple a.modified.globally,
+.wato div.globalvars td.simple div.toggle_switch_container.modified.globally,
+.wato div.globalvars td.content a.modified.globally > table {
+    box-shadow: 3px 3px 5px #8bc7e5 inset;
+}
+
 .wato div.globalvars td.simple div.toggle_switch_container {
     width: 56px;
 }

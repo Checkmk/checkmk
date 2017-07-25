@@ -1785,28 +1785,47 @@ def mode_mkeventd_status(phase):
         html.end_form()
 
 
-def mode_mkeventd_config(phase):
-    search = html.get_unicode_input("search")
-    if search != None:
-        search = search.strip().lower()
+class ModeEventConsoleSettings(ModeGlobalSettings):
+    def __init__(self):
+        super(ModeEventConsoleSettings, self).__init__()
 
-    if phase == 'title':
-        if search:
-            return html.render_text(_("Event Console configuration matching %s") % search)
+        self._default_values = dict([ (varname, vs.default_value())
+                                      for (varname, vs)
+                                      in self._ec_config_variables() ])
+
+        self._current_settings = load_configuration_settings()
+
+
+    def _ec_config_variables(self):
+        config = []
+        for group_title in self._group_names():
+            for entry in configvar_groups()[group_title]:
+                config.append((entry[1], entry[2]))
+
+        return config
+
+
+    def _group_names(self):
+        group_names = [ e[1] for e in ec_config_variable_groups() ]
+        return sorted(group_names, key=lambda a: configvar_order().get(a, 999))
+
+
+    def title(self):
+        if self._search:
+            return html.render_text(_("Event Console configuration matching '%s'") % self._search)
         else:
             return _('Event Console Configuration')
 
-    elif phase == 'buttons':
+
+    def buttons(self):
         home_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
         html.context_button(_("Server Status"), html.makeuri_contextless([("mode", "mkeventd_status")]), "status")
-        return
 
-    config_variables = ec_config_variables()
-    current_settings = load_configuration_settings()
 
-    if phase == "action":
+    # TODO: Consolidate with ModeEditGlobals.action()
+    def action(self):
         varname = html.var("_varname")
         action = html.var("_action")
         if not varname:
@@ -1826,14 +1845,14 @@ def mode_mkeventd_config(phase):
             c = True # no confirmation for direct toggle
 
         if c:
-            if varname in current_settings:
-                current_settings[varname] = not current_settings[varname]
+            if varname in self._current_settings:
+                self._current_settings[varname] = not self._current_settings[varname]
             else:
-                current_settings[varname] = not def_value
+                self._current_settings[varname] = not def_value
             msg = _("Changed Configuration variable %s to %s.") % (varname,
-                current_settings[varname] and _("on") or _("off"))
+                self._current_settings[varname] and _("on") or _("off"))
 
-            save_global_settings(current_settings)
+            save_global_settings(self._current_settings)
 
             add_ec_change("edit-configvar", msg)
 
@@ -1843,15 +1862,15 @@ def mode_mkeventd_config(phase):
                 return "mkeventd_config"
         elif c == False:
             return ""
-        else:
-            return None
 
-    group_names = ec_config_variable_group_names()
-    default_values = dict([ (varname, vs.default_value()) for (varname, vs) in config_variables ])
 
-    render_global_configuration_variables(group_names, default_values,
-                                          current_settings, search=search,
-                                          edit_mode="mkeventd_edit_configvar")
+    def _edit_mode(self):
+        return "mkeventd_edit_configvar"
+
+
+    def page(self):
+        self._show_configuration_variables(self._group_names())
+
 
 
 def ec_config_variable_groups():
@@ -1860,19 +1879,6 @@ def ec_config_variable_groups():
         ("ec_log",  _("Event Console: Logging & Diagnose")),
         ("ec_snmp", _("Event Console: SNMP traps")),
     ]
-
-
-def ec_config_variable_group_names():
-    return [ e[1] for e in ec_config_variable_groups() ]
-
-
-def ec_config_variables():
-    config = []
-    for group_title in ec_config_variable_group_names():
-        for entry in configvar_groups()[group_title]:
-            config.append((entry[1], entry[2]))
-
-    return config
 
 
 def mode_mkeventd_mibs(phase):
@@ -2208,7 +2214,7 @@ if mkeventd_enabled:
     modes["mkeventd_edit_rule"]      = (["mkeventd.edit"], mode_mkeventd_edit_rule)
     modes["mkeventd_edit_rule_pack"] = (["mkeventd.edit"], mode_mkeventd_edit_rule_pack)
     modes["mkeventd_status"]         = ([], mode_mkeventd_status)
-    modes["mkeventd_config"]         = (['mkeventd.config'], mode_mkeventd_config)
+    modes["mkeventd_config"]         = (['mkeventd.config'], ModeEventConsoleSettings)
     modes["mkeventd_edit_configvar"] = (['mkeventd.config'], lambda p: mode_edit_configvar(p, 'mkeventd'))
     modes["mkeventd_mibs"]           = (['mkeventd.config'], mode_mkeventd_mibs)
 

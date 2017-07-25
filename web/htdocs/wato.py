@@ -6812,7 +6812,7 @@ class ModeGlobalSettings(WatoMode):
         self._search = get_search_expression()
 
 
-    def _global_config_variable_groups(self, show_all=False):
+    def _group_names(self, show_all=False):
         group_names = []
 
         for group_name, group_vars in configvar_groups().items():
@@ -6831,7 +6831,11 @@ class ModeGlobalSettings(WatoMode):
         return sorted(group_names, key=lambda a: configvar_order().get(a, 999))
 
 
-    def _render_global_configuration_variables(self, group_names, edit_mode="edit_configvar"):
+    def _edit_mode(self):
+        return "edit_configvar"
+
+
+    def _show_configuration_variables(self, group_names):
         search_form(_("Search for settings:"))
         search = self._search
 
@@ -6869,7 +6873,7 @@ class ModeGlobalSettings(WatoMode):
 
                 default_value = self._default_values.get(varname, valuespec.default_value())
 
-                edit_url = folder_preserving_link([("mode", edit_mode),
+                edit_url = folder_preserving_link([("mode", self._edit_mode()),
                                                    ("varname", varname),
                                                    ("site", html.var("site", ""))])
                 title = HTML('<a href="%s" class=%s title="%s">%s</a>' % \
@@ -6993,8 +6997,8 @@ class ModeEditGlobals(ModeGlobalSettings):
             return ""
 
     def page(self):
-        group_names = self._global_config_variable_groups()
-        self._render_global_configuration_variables(group_names)
+        self._show_configuration_variables(self._group_names())
+
 
 
 def mode_edit_configvar(phase, what = 'globalvars'):
@@ -9818,8 +9822,8 @@ class ModeEditSiteGlobals(ModeSites, ModeGlobalSettings):
                                   "You cannot configure specific settings for it."))
                 return
 
-        group_names = self._global_config_variable_groups(show_all=True)
-        self._render_global_configuration_variables(group_names)
+        group_names = self._group_names(show_all=True)
+        self._show_configuration_variables(group_names)
 
 
 

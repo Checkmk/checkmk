@@ -25,6 +25,7 @@
 #include "TableServiceGroups.h"
 #include <memory>
 #include "Column.h"
+#include "MonitoringCore.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "ServiceListColumn.h"
@@ -156,7 +157,7 @@ bool TableServiceGroups::isAuthorized(Row row, contact *ctc) {
         service *svc = mem->service_ptr;
         return is_authorized_for(core(), ctc, svc->host_ptr, svc);
     };
-    if (g_group_authorization == AuthorizationKind::loose) {
+    if (core()->groupAuthorization() == AuthorizationKind::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"
         for (servicesmember *mem = rowData<servicegroup>(row)->members;
              mem != nullptr; mem = mem->next) {

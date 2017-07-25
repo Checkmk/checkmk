@@ -127,7 +127,7 @@ static uint32_t fl_max_lines_per_logfile = 1000000;
 size_t fl_max_response_size = 100 * 1024 * 1024;  // limit answer to 10 MB
 int g_thread_running = 0;
 static AuthorizationKind fl_service_authorization = AuthorizationKind::loose;
-AuthorizationKind g_group_authorization = AuthorizationKind::strict;
+static AuthorizationKind fl_group_authorization = AuthorizationKind::strict;
 Encoding fl_data_encoding = Encoding::utf8;
 
 // Map to speed up access via name/alias/address
@@ -673,6 +673,10 @@ public:
         return fl_service_authorization;
     }
 
+    AuthorizationKind groupAuthorization() const override {
+        return fl_group_authorization;
+    }
+
     Logger *loggerLivestatus() override { return fl_logger_livestatus; }
 
 private:
@@ -995,9 +999,9 @@ void livestatus_parse_arguments(const char *args_orig) {
                 }
             } else if (strcmp(left, "group_authorization") == 0) {
                 if (strcmp(right, "strict") == 0) {
-                    g_group_authorization = AuthorizationKind::strict;
+                    fl_group_authorization = AuthorizationKind::strict;
                 } else if (strcmp(right, "loose") == 0) {
-                    g_group_authorization = AuthorizationKind::loose;
+                    fl_group_authorization = AuthorizationKind::loose;
                 } else {
                     Warning(fl_logger_nagios)
                         << "invalid group authorization mode, "

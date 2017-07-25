@@ -94,6 +94,7 @@ public:
     virtual bool stateHistoryFilteringEnabled() = 0;
 
     virtual AuthorizationKind serviceAuthorization() const = 0;
+    virtual AuthorizationKind groupAuthorization() const = 0;
 
     virtual Logger *loggerLivestatus() = 0;
 

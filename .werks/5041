@@ -1,0 +1,15 @@
+Title: Removed NAGVIS_URLS OMD config option
+Level: 1
+Component: packages
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1500992110
+Class: fix
+
+The "omd config" option NAGVIS_URL which could be used to make the NagVis icons
+link to different GUIs has been removed because all CMK environments use the CMK
+GUI. A hook for this is not needed.
+
+In case you need to customize your NagVis URLs you can still do it with the
+NagVis configuration.

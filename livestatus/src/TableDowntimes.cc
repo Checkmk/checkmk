@@ -105,5 +105,5 @@ void TableDowntimes::answerQuery(Query *query) {
 
 bool TableDowntimes::isAuthorized(Row row, contact *ctc) {
     auto dtc = rowData<DowntimeOrComment>(row);
-    return is_authorized_for(ctc, dtc->_host, dtc->_service);
+    return is_authorized_for(core(), ctc, dtc->_host, dtc->_service);
 }

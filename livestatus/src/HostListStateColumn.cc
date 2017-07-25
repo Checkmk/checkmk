@@ -55,7 +55,7 @@ int32_t HostListStateColumn::getValue(Row row, contact *auth_user) {
     for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
         if (auth_user == nullptr ||
-            is_authorized_for(auth_user, hst, nullptr)) {
+            is_authorized_for(_mc, auth_user, hst, nullptr)) {
             switch (_logictype) {
                 case Type::num_svc_pending:
                 case Type::num_svc_ok:
@@ -64,12 +64,14 @@ int32_t HostListStateColumn::getValue(Row row, contact *auth_user) {
                 case Type::num_svc_unknown:
                 case Type::num_svc:
                     result += ServiceListStateColumn::getValue(
+                        _mc,
                         static_cast<ServiceListStateColumn::Type>(_logictype),
                         hst->services, auth_user);
                     break;
 
                 case Type::worst_svc_state: {
                     int state = ServiceListStateColumn::getValue(
+                        _mc,
                         static_cast<ServiceListStateColumn::Type>(_logictype),
                         hst->services, auth_user);
                     if (ServiceListStateColumn::svcStateIsWorse(state,

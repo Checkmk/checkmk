@@ -532,71 +532,71 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
 
     table->addColumn(make_unique<HostListColumn>(
         prefix + "parents", "A list of all direct parents of the host",
-        DANGEROUS_OFFSETOF(host, parent_hosts), indirect_offset, false,
-        extra_offset, -1));
+        table->core(), DANGEROUS_OFFSETOF(host, parent_hosts), indirect_offset,
+        false, extra_offset, -1));
     table->addColumn(make_unique<HostListColumn>(
         prefix + "childs", "A list of all direct childs of the host",
-        DANGEROUS_OFFSETOF(host, child_hosts), indirect_offset, false,
-        extra_offset, -1));
+        table->core(), DANGEROUS_OFFSETOF(host, child_hosts), indirect_offset,
+        false, extra_offset, -1));
 
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services of the host",
-        ServiceListStateColumn::Type::num, DANGEROUS_OFFSETOF(host, services),
-        indirect_offset, extra_offset, -1));
+        table->core(), ServiceListStateColumn::Type::num,
+        DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "worst_service_state",
         "The worst soft state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
-        ServiceListStateColumn::Type::worst_state,
+        table->core(), ServiceListStateColumn::Type::worst_state,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_ok",
         "The number of the host's services with the soft state OK",
-        ServiceListStateColumn::Type::num_ok,
+        table->core(), ServiceListStateColumn::Type::num_ok,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_warn",
         "The number of the host's services with the soft state WARN",
-        ServiceListStateColumn::Type::num_warn,
+        table->core(), ServiceListStateColumn::Type::num_warn,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_crit",
         "The number of the host's services with the soft state CRIT",
-        ServiceListStateColumn::Type::num_crit,
+        table->core(), ServiceListStateColumn::Type::num_crit,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_unknown",
         "The number of the host's services with the soft state UNKNOWN",
-        ServiceListStateColumn::Type::num_unknown,
+        table->core(), ServiceListStateColumn::Type::num_unknown,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_pending",
         "The number of the host's services which have not been checked yet (pending)",
-        ServiceListStateColumn::Type::num_pending,
+        table->core(), ServiceListStateColumn::Type::num_pending,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "worst_service_hard_state",
         "The worst hard state of all of the host's services (OK <= WARN <= UNKNOWN <= CRIT)",
-        ServiceListStateColumn::Type::worst_hard_state,
+        table->core(), ServiceListStateColumn::Type::worst_hard_state,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
         "The number of the host's services with the hard state OK",
-        ServiceListStateColumn::Type::num_hard_ok,
+        table->core(), ServiceListStateColumn::Type::num_hard_ok,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_warn",
         "The number of the host's services with the hard state WARN",
-        ServiceListStateColumn::Type::num_hard_warn,
+        table->core(), ServiceListStateColumn::Type::num_hard_warn,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_crit",
         "The number of the host's services with the hard state CRIT",
-        ServiceListStateColumn::Type::num_hard_crit,
+        table->core(), ServiceListStateColumn::Type::num_hard_crit,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_unknown",
         "The number of the host's services with the hard state UNKNOWN",
-        ServiceListStateColumn::Type::num_hard_unknown,
+        table->core(), ServiceListStateColumn::Type::num_hard_unknown,
         DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<HostSpecialIntColumn>(
@@ -649,24 +649,24 @@ void TableHosts::addColumns(Table *table, MonitoringCore *mc,
         -1));
 
     table->addColumn(make_unique<ServiceListColumn>(
-        prefix + "services", "A list of all services of the host", false, false,
-        0, DANGEROUS_OFFSETOF(host, services), indirect_offset, extra_offset,
-        -1));
+        prefix + "services", "A list of all services of the host",
+        table->core(), false, false, 0, DANGEROUS_OFFSETOF(host, services),
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_state",
         "A list of all services of the host together with state and has_been_checked",
-        false, false, 1, DANGEROUS_OFFSETOF(host, services), indirect_offset,
-        extra_offset, -1));
+        table->core(), false, false, 1, DANGEROUS_OFFSETOF(host, services),
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_info",
         "A list of all services including detailed information about each service",
-        false, false, 2, DANGEROUS_OFFSETOF(host, services), indirect_offset,
-        extra_offset, -1));
+        table->core(), false, false, 2, DANGEROUS_OFFSETOF(host, services),
+        indirect_offset, extra_offset, -1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "services_with_fullstate",
         "A list of all services including full state information. The list of entries can grow in future versions.",
-        false, false, 3, DANGEROUS_OFFSETOF(host, services), indirect_offset,
-        extra_offset, -1));
+        table->core(), false, false, 3, DANGEROUS_OFFSETOF(host, services),
+        indirect_offset, extra_offset, -1));
 
     table->addColumn(make_unique<MetricsColumn>(
         prefix + "metrics",
@@ -697,7 +697,7 @@ void TableHosts::answerQuery(Query *query) {
     }
 }
 bool TableHosts::isAuthorized(Row row, contact *ctc) {
-    return is_authorized_for(ctc, rowData<host>(row), nullptr);
+    return is_authorized_for(core(), ctc, rowData<host>(row), nullptr);
 }
 
 Row TableHosts::findObject(const string &objectspec) {

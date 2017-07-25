@@ -51,14 +51,15 @@ servicesmember *ServiceListStateColumn::getMembers(Row row) {
     return nullptr;
 }
 
-int32_t ServiceListStateColumn::getValue(Type logictype, servicesmember *mem,
+int32_t ServiceListStateColumn::getValue(MonitoringCore *mc, Type logictype,
+                                         servicesmember *mem,
                                          contact *auth_user) {
     int32_t result = 0;
 
     for (; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
         if (auth_user == nullptr ||
-            is_authorized_for(auth_user, svc->host_ptr, svc)) {
+            is_authorized_for(mc, auth_user, svc->host_ptr, svc)) {
             Type lt = logictype;
             int state;
             int has_been_checked;
@@ -98,5 +99,5 @@ int32_t ServiceListStateColumn::getValue(Type logictype, servicesmember *mem,
 }
 
 int32_t ServiceListStateColumn::getValue(Row row, contact *auth_user) {
-    return getValue(_logictype, getMembers(row), auth_user);
+    return getValue(_mc, _logictype, getMembers(row), auth_user);
 }

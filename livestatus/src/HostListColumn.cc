@@ -45,7 +45,7 @@ void HostListColumn::output(Row row, RowRenderer &r, contact *auth_user) {
     for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;
         if (auth_user == nullptr ||
-            is_authorized_for(auth_user, hst, nullptr)) {
+            is_authorized_for(_mc, auth_user, hst, nullptr)) {
             if (!_show_state) {
                 l.output(string(hst->name));
             } else {

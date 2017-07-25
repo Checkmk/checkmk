@@ -62,7 +62,7 @@ void TableServicesByGroup::answerQuery(Query *query) {
         bool show_service_group = true;
         if (requires_precheck) {
             for (servicesmember *m = sg->members; m != nullptr; m = m->next) {
-                if (!is_authorized_for(query->authUser(),
+                if (!is_authorized_for(core(), query->authUser(),
                                        m->service_ptr->host_ptr,
                                        m->service_ptr)) {
                     show_service_group = false;
@@ -84,7 +84,7 @@ void TableServicesByGroup::answerQuery(Query *query) {
 
 bool TableServicesByGroup::isAuthorized(Row row, contact *ctc) {
     auto svc = &rowData<servicebygroup>(row)->_service;
-    return is_authorized_for(ctc, svc->host_ptr, svc);
+    return is_authorized_for(core(), ctc, svc->host_ptr, svc);
 }
 
 Row TableServicesByGroup::findObject(const string &objectspec) {

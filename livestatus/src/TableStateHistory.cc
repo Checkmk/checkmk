@@ -961,7 +961,7 @@ bool TableStateHistory::isAuthorized(Row row, contact *ctc) {
     service *svc = entry->_service;
     host *hst = entry->_host;
     return (hst != nullptr || svc != nullptr) &&
-           is_authorized_for(ctc, hst, svc);
+           is_authorized_for(core(), ctc, hst, svc);
 }
 
 shared_ptr<Column> TableStateHistory::column(string colname) {

@@ -71,45 +71,46 @@ void TableHostGroups::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<HostListColumn>(
         prefix + "members",
         "A list of all host names that are members of the hostgroup",
-        DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, false, -1,
-        -1));
+        table->core(), DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset,
+        false, -1, -1));
     table->addColumn(make_unique<HostListColumn>(
         prefix + "members_with_state",
         "A list of all host names that are members of the hostgroup together with state and has_been_checked",
-        DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, true, -1, -1));
+        table->core(), DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset,
+        true, -1, -1));
 
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "worst_host_state",
         "The worst state of all of the groups' hosts (UP <= UNREACHABLE <= DOWN)",
-        HostListStateColumn::Type::worst_hst_state,
+        table->core(), HostListStateColumn::Type::worst_hst_state,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts", "The total number of hosts in the group",
-        HostListStateColumn::Type::num_hst,
+        table->core(), HostListStateColumn::Type::num_hst,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_pending",
-        "The number of hosts in the group that are pending",
+        "The number of hosts in the group that are pending", table->core(),
         HostListStateColumn::Type::num_hst_pending,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_up", "The number of hosts in the group that are up",
-        HostListStateColumn::Type::num_hst_up,
+        table->core(), HostListStateColumn::Type::num_hst_up,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_down",
-        "The number of hosts in the group that are down",
+        "The number of hosts in the group that are down", table->core(),
         HostListStateColumn::Type::num_hst_down,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_hosts_unreach",
-        "The number of hosts in the group that are unreachable",
+        "The number of hosts in the group that are unreachable", table->core(),
         HostListStateColumn::Type::num_hst_unreach,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
 
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services",
-        "The total number of services of hosts in this group",
+        "The total number of services of hosts in this group", table->core(),
         HostListStateColumn::Type::num_svc,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
 
@@ -117,59 +118,59 @@ void TableHostGroups::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "worst_service_state",
         "The worst state of all services that belong to a host of this group (OK <= WARN <= UNKNOWN <= CRIT)",
-        HostListStateColumn::Type::worst_svc_state,
+        table->core(), HostListStateColumn::Type::worst_svc_state,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_pending",
         "The total number of services with the state Pending of hosts in this group",
-        HostListStateColumn::Type::num_svc_pending,
+        table->core(), HostListStateColumn::Type::num_svc_pending,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_ok",
         "The total number of services with the state OK of hosts in this group",
-        HostListStateColumn::Type::num_svc_ok,
+        table->core(), HostListStateColumn::Type::num_svc_ok,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_warn",
         "The total number of services with the state WARN of hosts in this group",
-        HostListStateColumn::Type::num_svc_warn,
+        table->core(), HostListStateColumn::Type::num_svc_warn,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_crit",
         "The total number of services with the state CRIT of hosts in this group",
-        HostListStateColumn::Type::num_svc_crit,
+        table->core(), HostListStateColumn::Type::num_svc_crit,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_unknown",
         "The total number of services with the state UNKNOWN of hosts in this group",
-        HostListStateColumn::Type::num_svc_unknown,
+        table->core(), HostListStateColumn::Type::num_svc_unknown,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
 
     // hard state
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "worst_service_hard_state",
         "The worst state of all services that belong to a host of this group (OK <= WARN <= UNKNOWN <= CRIT)",
-        HostListStateColumn::Type::worst_svc_hard_state,
+        table->core(), HostListStateColumn::Type::worst_svc_hard_state,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_ok",
         "The total number of services with the state OK of hosts in this group",
-        HostListStateColumn::Type::num_svc_hard_ok,
+        table->core(), HostListStateColumn::Type::num_svc_hard_ok,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_warn",
         "The total number of services with the state WARN of hosts in this group",
-        HostListStateColumn::Type::num_svc_hard_warn,
+        table->core(), HostListStateColumn::Type::num_svc_hard_warn,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_crit",
         "The total number of services with the state CRIT of hosts in this group",
-        HostListStateColumn::Type::num_svc_hard_crit,
+        table->core(), HostListStateColumn::Type::num_svc_hard_crit,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<HostListStateColumn>(
         prefix + "num_services_hard_unknown",
         "The total number of services with the state UNKNOWN of hosts in this group",
-        HostListStateColumn::Type::num_svc_hard_unknown,
+        table->core(), HostListStateColumn::Type::num_svc_hard_unknown,
         DANGEROUS_OFFSETOF(hostgroup, members), indirect_offset, -1, -1));
 }
 
@@ -191,7 +192,7 @@ bool TableHostGroups::isAuthorized(Row row, contact *ctc) {
     }
 
     auto has_contact = [=](hostsmember *mem) {
-        return is_authorized_for(ctc, mem->host_ptr, nullptr);
+        return is_authorized_for(core(), ctc, mem->host_ptr, nullptr);
     };
     if (g_group_authorization == AuthorizationKind::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"

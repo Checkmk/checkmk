@@ -588,7 +588,7 @@ public:
     }
 
     bool host_has_contact(Host *host, Contact *contact) override {
-        return is_authorized_for(toImpl(contact), toImpl(host), nullptr);
+        return is_authorized_for(this, toImpl(contact), toImpl(host), nullptr);
     }
 
     ContactGroup *find_contactgroup(const std::string &name) override {

@@ -44,7 +44,9 @@ extern AuthorizationKind g_service_authorization;
 extern AuthorizationKind g_group_authorization;
 
 contact *unknown_auth_user();
-bool is_authorized_for(contact *ctc, host *hst, service *svc);
+class MonitoringCore;
+bool is_authorized_for(MonitoringCore *mc, contact *ctc, host *hst,
+                       service *svc);
 #endif
 
 #endif  // auth_h

@@ -1320,10 +1320,7 @@ def render_master_control():
     finally:
         sites.live().set_prepend_site(False)
 
-    for site_id, site_alias in config.sorted_sites():
-        if not config.is_single_local_site():
-            html.begin_foldable_container("master_control", site_id, True, site_alias)
-
+    def _render_master_control_site(site_id):
         site_state = sites.state(site_id)
         if site_state["state"] == "dead":
             html.show_error(site_state["exception"])
@@ -1361,8 +1358,18 @@ def render_master_control():
 
             html.close_table()
 
+    for site_id, site_alias in config.sorted_sites():
         if not config.is_single_local_site():
-            html.end_foldable_container()
+            html.begin_foldable_container("master_control", site_id, True, site_alias)
+
+        try:
+            _render_master_control_site(site_id)
+        except Exception, e:
+            log_exception()
+            write_snapin_exception(e)
+        finally:
+            if not config.is_single_local_site():
+                html.end_foldable_container()
 
 
 sidebar_snapins["master_control"] = {

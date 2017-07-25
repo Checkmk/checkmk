@@ -326,8 +326,8 @@ body_elements = [
     "$HOSTOUTPUT_HTML$",),
 
   ( "ack_author", "host", False, "normal", "Acknowledge Author",
-    "$HOSTACKAUTHORNAME$",
-    "$HOSTACKAUTHORNAME$",),
+    "$HOSTACKAUTHOR$",
+    "$HOSTACKAUTHOR$",),
 
   ( "ack_comment", "host", False, "normal", "Acknowledge Comment",
     "$HOSTACKCOMMENT$",

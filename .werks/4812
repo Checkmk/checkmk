@@ -1,0 +1,12 @@
+Title: Add missing Acknowledge author to host notifications
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p10
+Date: 1500982341
+
+Due to an error in the notification script no Acknowledge author
+was shown in notification emails.

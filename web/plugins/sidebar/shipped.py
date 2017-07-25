@@ -1325,6 +1325,9 @@ def render_master_control():
         if site_state["state"] == "dead":
             html.show_error(site_state["exception"])
 
+        elif site_state["state"] == "disabled":
+            html.show_info(_("Site is disabled"))
+
         else:
             is_cmc = site_state["program_version"].startswith("Check_MK ")
 

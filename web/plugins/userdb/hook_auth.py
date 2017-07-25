@@ -52,11 +52,6 @@
 # users_with_permission(<PERMISSION>)
 # Returns an array of usernames with the given permission
 #
-# get_folder_permissions(<USERNAME>)
-# Returns an array of all wato folder related permissions of the
-# given user. The keys are the folder paths and the values are an
-# array of "read" and "write" elements with boolean values.
-#
 # may(<USER_NAME>, <PERMISSION>)
 # Returns true/false whether or not the user is permitted
 
@@ -90,7 +85,7 @@ def format_php(data, lvl = 1):
     return s
 
 
-def create_php_file(callee, users, role_permissions, groups, folder_permissions):
+def create_php_file(callee, users, role_permissions, groups):
     # Do not change WATO internal objects
     nagvis_users = copy.deepcopy(users)
 
@@ -110,27 +105,10 @@ def create_php_file(callee, users, role_permissions, groups, folder_permissions)
     # when reading half written files during creating that new file
     file(tempfile, 'w').write('''<?php
 // Created by Multisite UserDB Hook (%s)
-global $mk_users, $mk_roles, $mk_groups, $mk_folders;
+global $mk_users, $mk_roles, $mk_groups;
 $mk_users   = %s;
 $mk_roles   = %s;
 $mk_groups  = %s;
-$mk_folders = %s;
-
-function get_folder_permissions($username) {
-    global $mk_folders;
-    if(!isset($mk_folders[$username])) {
-        return array();
-    } else {
-        $permissions = $mk_folders[$username];
-        foreach ($permissions as $folder => $perms) {
-            if (!isset($perms['read']))
-                $perms['read'] = false;
-            elseif (!isset($perms['write']))
-                $perms['write'] = false;
-        }
-        return $permissions;
-    }
-}
 
 function all_users() {
     global $mk_users;
@@ -230,7 +208,7 @@ function permitted_maps($username) {
 
 ?>
 ''' % (callee, format_php(nagvis_users), format_php(role_permissions),
-       format_php(groups), format_php(folder_permissions)))
+       format_php(groups)))
 
     # Now really replace the file
     os.rename(tempfile, g_auth_base_dir + '/auth.php')
@@ -241,19 +219,13 @@ function permitted_maps($username) {
 def create_auth_file(callee, users):
     make_nagios_directory(g_auth_base_dir)
 
-    if config.export_folder_permissions:
-        import wato # HACK: cleanup!
-        folder_permissions = get_folder_permissions_of_users(users)
-    else:
-        folder_permissions = {}
-
     contactgroups = load_group_information().get('contact', {})
     groups = {}
     for gid, group in contactgroups.items():
         if 'nagvis_maps' in group and group['nagvis_maps']:
             groups[gid] = group['nagvis_maps']
 
-    create_php_file(callee, users, config.get_role_permissions(), groups, folder_permissions)
+    create_php_file(callee, users, config.get_role_permissions(), groups)
 
 
 def get_folder_permissions_of_users(users):

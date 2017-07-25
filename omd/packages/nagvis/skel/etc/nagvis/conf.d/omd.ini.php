@@ -22,10 +22,18 @@ sharedvar="###ROOT###/tmp/nagvis/share/"
 profiles="###ROOT###/var/nagvis/profiles/"
 htmlbase="/###SITE###/nagvis"
 local_htmlbase="/###SITE###/nagvis/local"
-htmlcgi="/###SITE###/nagios/cgi-bin"
+htmlcgi="/###SITE###/check_mk"
 
 [defaults]
 backend="###SITE###"
+hosturl="[htmlcgi]/view.py?view_name=host&site=&host=[host_name]"
+hostgroupurl="[htmlcgi]/view.py?view_name=hostgroup&site=&hostgroup=[hostgroup_name]"
+serviceurl="[htmlcgi]/view.py?view_name=service&site=&host=[host_name]&service=[service_description]"
+servicegroupurl="[htmlcgi]/view.py?view_name=servicegroup&site=&servicegroup=[servicegroup_name]"
+host_downtime_url=""
+host_ack_url=""
+service_downtime_url=""
+service_ack_url=""
 
 [backend_###SITE###]
 backendtype="mklivestatus"

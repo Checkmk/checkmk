@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "auth.h"
+#include "MonitoringCore.h"
 
 contact *unknown_auth_user() { return reinterpret_cast<contact *>(0xdeadbeaf); }
 
@@ -32,17 +33,18 @@ bool host_has_contact(host *hst, contact *ctc) {
            is_escalated_contact_for_host(hst, ctc) != 0;
 }
 
-bool service_has_contact(host *hst, service *svc, contact *ctc) {
+bool service_has_contact(MonitoringCore *mc, host *hst, service *svc,
+                         contact *ctc) {
     return is_contact_for_service(svc, ctc) != 0 ||
            is_escalated_contact_for_service(svc, ctc) != 0 ||
-           (g_service_authorization == AuthorizationKind::loose &&
+           (mc->serviceAuthorization() == AuthorizationKind::loose &&
             host_has_contact(hst, ctc));
 }
 }  // namespace
 
-bool is_authorized_for(MonitoringCore * /*unused*/, contact *ctc, host *hst,
+bool is_authorized_for(MonitoringCore *mc, contact *ctc, host *hst,
                        service *svc) {
     return ctc != unknown_auth_user() &&
            (svc == nullptr ? host_has_contact(hst, ctc)
-                           : service_has_contact(hst, svc, ctc));
+                           : service_has_contact(mc, hst, svc, ctc));
 }

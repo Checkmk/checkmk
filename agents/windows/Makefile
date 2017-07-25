@@ -67,6 +67,18 @@ fix_linebreaks:
 	    fi ; \
 	done
 
+
+# The rules below to build wmitest.exe are a total hack, this Makefile needs a
+# *serious* overhaul... :-P
+%.o: %.cc
+	$(CXX) -c $(COMMON_OPTS) -MMD -MP $<
+
+-include wmitest.d
+-include stringutil.d
+-include wmiHelper.d
+wmitest.exe: wmitest.o stringutil.o wmiHelper.o
+	$(CXX) $(COMMON_OPTS) $^ -o $@ -lwsock32 -lole32 -loleaut32 -lwbemuuid
+
 # -----------------------------------------------------------------------------
 # 1. Create ressource files with version and product information. Note: That file
 # contains a dummy version number, which is later being replaced with the
@@ -198,7 +210,7 @@ nowin.exe: nowin.cc
 	$(CXX) -o $@ $<
 
 clean:
-	rm -f *.o *.exe *~ svn-*.tmp *.rc *.res obj/*.o obj64/*.o obj/sections/*.o obj64/sections/*.o
+	rm -f *.o *.d *.exe *~ svn-*.tmp *.rc *.res obj/*.o obj64/*.o obj/sections/*.o obj64/sections/*.o
 	make -C msibuild clean
 
 mrproper: clean

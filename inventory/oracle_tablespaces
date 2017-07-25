@@ -53,7 +53,7 @@
 def inv_oracle_tablespaces(parsed):
     node = inv_tree_list("software.applications.oracle.tablespaces:")
     tablespaces, error_sids = parsed
-    for (sid, name), attrs in tablespaces.items():
+    for (sid, name), attrs in sorted(tablespaces.items(), key=lambda x: x[0][0]):
         node.append({
             "sid"            : sid,
             "name"           : name,

@@ -27,6 +27,7 @@
 #include "Column.h"
 #include "HostListColumn.h"
 #include "HostListStateColumn.h"
+#include "MonitoringCore.h"
 #include "OffsetStringColumn.h"
 #include "Query.h"
 #include "auth.h"
@@ -194,7 +195,7 @@ bool TableHostGroups::isAuthorized(Row row, contact *ctc) {
     auto has_contact = [=](hostsmember *mem) {
         return is_authorized_for(core(), ctc, mem->host_ptr, nullptr);
     };
-    if (g_group_authorization == AuthorizationKind::loose) {
+    if (core()->groupAuthorization() == AuthorizationKind::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"
         for (hostsmember *mem = rowData<hostgroup>(row)->members;
              mem != nullptr; mem = mem->next) {

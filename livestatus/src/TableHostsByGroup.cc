@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableHostsByGroup.h"
+#include "MonitoringCore.h"
 #include "Query.h"
 #include "TableHostGroups.h"
 #include "TableHosts.h"
@@ -52,10 +53,11 @@ string TableHostsByGroup::name() const { return "hostsbygroup"; }
 string TableHostsByGroup::namePrefix() const { return "host_"; }
 
 void TableHostsByGroup::answerQuery(Query *query) {
-    // When g_group_authorization is set to AuthorizationKind::strict we need to
+    // When groupAuthorization() is set to AuthorizationKind::strict we need to
     // pre-check if every host of this group is visible to the _auth_user
-    bool requires_precheck = query->authUser() != nullptr &&
-                             g_group_authorization == AuthorizationKind::strict;
+    bool requires_precheck =
+        query->authUser() != nullptr &&
+        core()->groupAuthorization() == AuthorizationKind::strict;
 
     for (hostgroup *hg = hostgroup_list; hg != nullptr; hg = hg->next) {
         bool show_host_group = true;

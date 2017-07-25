@@ -23,6 +23,7 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableServicesByGroup.h"
+#include "MonitoringCore.h"
 #include "Query.h"
 #include "TableServiceGroups.h"
 #include "TableServices.h"
@@ -53,10 +54,11 @@ string TableServicesByGroup::name() const { return "servicesbygroup"; }
 string TableServicesByGroup::namePrefix() const { return "service_"; }
 
 void TableServicesByGroup::answerQuery(Query *query) {
-    // When g_group_authorization is set to AuthorizationKind::strict we need to
+    // When groupAuthorization() is set to AuthorizationKind::strict we need to
     // pre-check if every service of this group is visible to the _auth_user
-    bool requires_precheck = (query->authUser() != nullptr) &&
-                             g_group_authorization == AuthorizationKind::strict;
+    bool requires_precheck =
+        query->authUser() != nullptr &&
+        core()->groupAuthorization() == AuthorizationKind::strict;
 
     for (servicegroup *sg = servicegroup_list; sg != nullptr; sg = sg->next) {
         bool show_service_group = true;

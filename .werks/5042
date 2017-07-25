@@ -1,0 +1,27 @@
+Title: Removed export of WATO folder permissions to NagVis
+Level: 1
+Component: wato
+Compatible: incomp
+Edition: cre
+Version: 1.5.0i1
+Date: 1500997952
+Class: fix
+
+In previous versions it was possible to export the WATO folder
+permissions of each user to NagVis. This was only used for maps
+that are named exactly like the WATO folder name. If you don't
+have such NagVis maps you are not affected by this change.
+
+This feature has never been documented officially, 
+
+It was disabled by default and could be enabled with the global
+setting "Export WATO folder permissions".
+
+When having a large amount of users (1000+) and/or a bigger folder
+hierarchy while having the global setting enabled this lead to
+a huge performance impact when editing several things in WATO
+(users, roles, groups, ...) and during activation of changes.
+
+In case you really used this feature, you now need to configure
+the permissions manually e.g. by defining contact groups and
+giving them permissions on the NagVis maps (via WATO).

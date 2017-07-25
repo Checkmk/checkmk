@@ -1205,21 +1205,6 @@ register_configvar(group,
     domain = "multisite"
 )
 
-
-register_configvar(group,
-    "export_folder_permissions",
-    Checkbox(
-        title = _("Export WATO folder permissions"),
-        label = _("Make WATO folder permissions usable e.g. by NagVis"),
-        help = _("It is possible to create maps representing the WATO folder hierarchy within "
-                 "NagVis by naming the maps like the folders are named internally. To make the "
-                 "restriction of access to the maps as comfortable as possible, the permissions "
-                 "configured within WATO can be exported to NagVis."),
-        default_value = False,
-    ),
-    domain = "multisite"
-)
-
 #.
 #   .--Check_MK------------------------------------------------------------.
 #   |              ____ _               _        __  __ _  __              |

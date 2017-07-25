@@ -827,6 +827,7 @@ def get_agent_info_program(commandline):
             os.killpg(os.getpgid(p.pid), signal.SIGTERM)
             p.stdout.close()
             p.stderr.close()
+            p.wait()
         raise
     except Exception, e:
         # The stdout and stderr pipe are not closed correctly on a MKTimeout

@@ -6792,16 +6792,157 @@ def mode_edit_ldap_connection(phase):
 #   | Editor for global settings in main.mk                                |
 #   '----------------------------------------------------------------------'
 
-def mode_globalvars(phase):
-    search = get_search_expression()
+class ModeGlobalSettings(WatoMode):
+    def __init__(self):
+        super(ModeGlobalSettings, self).__init__()
+        self._search = None
 
-    if phase == "title":
-        if search:
-            return _("Global Settings matching %s") % html.render_text(search)
+        # 1. Check_MK program defaults
+        # Get default settings of all configuration variables of interest in the domain
+        # "check_mk". (this also reflects the settings done in main.mk)
+        self._default_values = check_mk_local_automation("get-configuration", [], get_check_mk_config_var_names())
+
+        self._global_settings  = {}
+        self._current_settings = {}
+
+        self._from_vars()
+
+
+    def _from_vars(self):
+        self._search = get_search_expression()
+
+
+    def _global_config_variable_groups(self, show_all=False):
+        group_names = []
+
+        for group_name, group_vars in configvar_groups().items():
+            add = False
+            for domain, varname, valuespec in group_vars:
+                if not show_all and (not configvars()[varname][4]
+                                     or not domain.in_global_settings):
+                    continue # do not edit via global settings
+
+                add = True
+                break
+
+            if add:
+                group_names.append(group_name)
+
+        return sorted(group_names, key=lambda a: configvar_order().get(a, 999))
+
+
+    def _render_global_configuration_variables(self, group_names, edit_mode="edit_configvar"):
+        search_form(_("Search for settings:"))
+        search = self._search
+
+        at_least_one_painted = False
+        html.open_div(class_="globalvars")
+        for group_name in group_names:
+            header_is_painted = False # needed for omitting empty groups
+
+            for domain, varname, valuespec in configvar_groups()[group_name]:
+                if domain == ConfigDomainCore and varname not in self._default_values:
+                    if config.debug:
+                        raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
+                                              "your local Check_MK installation" % varname)
+                    else:
+                        continue
+
+                if not configvar_show_in_global_settings(varname):
+                    continue
+
+                help_text  = valuespec.help() or ''
+                title_text = valuespec.title()
+
+                if search and search not in group_name.lower() \
+                        and search not in domain.ident.lower() \
+                          and search not in varname \
+                          and search not in help_text.lower() \
+                          and search not in title_text.lower():
+                    continue # skip variable when search is performed and nothing matches
+                at_least_one_painted = True
+
+                if not header_is_painted:
+                    # always open headers when searching
+                    forms.header(group_name, isopen=search)
+                    header_is_painted = True
+
+                default_value = self._default_values.get(varname, valuespec.default_value())
+
+                edit_url = folder_preserving_link([("mode", edit_mode),
+                                                   ("varname", varname),
+                                                   ("site", html.var("site", ""))])
+                title = HTML('<a href="%s" class=%s title="%s">%s</a>' % \
+                        (edit_url, '"modified"' if varname in self._current_settings else '""',
+                         html.strip_tags(help_text), title_text))
+
+                if varname in self._current_settings:
+                    to_text = valuespec.value_to_text(self._current_settings[varname])
+                elif varname in self._global_settings:
+                    to_text = valuespec.value_to_text(self._global_settings[varname])
+                else:
+                    to_text = valuespec.value_to_text(default_value)
+
+                # Is this a simple (single) value or not? change styling in these cases...
+                simple = True
+                if '\n' in to_text or '<td>' in to_text:
+                    simple = False
+                forms.section(title, simple=simple)
+
+                if varname in self._current_settings:
+                    value = self._current_settings[varname]
+                    modified_cls = "modified"
+                    title = _("This option has been modified.")
+                elif varname in self._global_settings:
+                    value = self._global_settings[varname]
+                    modified_cls = "modified globally"
+                    title = _("This option has been modified in global settings.")
+                else:
+                    value = default_value
+                    modified_cls = None
+                    title = None
+
+                if is_a_checkbox(valuespec):
+                    html.open_div(class_=["toggle_switch_container", modified_cls])
+                    html.toggle_switch(
+                        enabled=value,
+                        help=_("Immediately toggle this setting"),
+                        href=html.makeactionuri([("_action", "toggle"), ("_varname", varname)]),
+                        class_=modified_cls,
+                        title=title,
+                    )
+                    html.close_div()
+
+                else:
+                    html.a(HTML(to_text),
+                        href=edit_url,
+                        class_=modified_cls,
+                        title=title
+                    )
+
+            if header_is_painted:
+                forms.end()
+        if not at_least_one_painted and search:
+            html.message(_('Did not find any global setting matching your search.'))
+        html.close_div()
+
+
+
+class ModeEditGlobals(ModeGlobalSettings):
+    def __init__(self):
+        super(ModeEditGlobals, self).__init__()
+
+        self._current_settings = load_configuration_settings()
+
+
+    def title(self):
+        if self._search:
+            return _("Global Settings matching '%s'") % html.render_text(self._search)
         else:
             return _("Global Settings")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         global_buttons()
 
         if config.user.may("wato.set_read_only"):
@@ -6810,175 +6951,50 @@ def mode_globalvars(phase):
         if cmk.is_managed_edition():
             cme_global_settings_buttons()
 
-        return
 
-    # Get default settings of all configuration variables of interest in the domain
-    # "check_mk". (this also reflects the settings done in main.mk)
-    default_values = check_mk_local_automation("get-configuration", [], get_check_mk_config_var_names())
-    current_settings = load_configuration_settings()
-
-    if phase == "action":
+    def action(self):
         varname = html.var("_varname")
-        action = html.var("_action")
-        if varname:
-            domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
-            def_value = default_values.get(varname, valuespec.default_value())
-
-            if action == "reset" and not is_a_checkbox(valuespec):
-                c = wato_confirm(
-                    _("Resetting configuration variable"),
-                    _("Do you really want to reset the configuration variable <b>%s</b> "
-                      "back to the default value of <b><tt>%s</tt></b>?") %
-                       (varname, valuespec.value_to_text(def_value)))
-            else:
-                if not html.check_transaction():
-                    return
-                c = True # no confirmation for direct toggle
-
-            if c:
-                if varname in current_settings:
-                    current_settings[varname] = not current_settings[varname]
-                else:
-                    current_settings[varname] = not def_value
-                msg = _("Changed Configuration variable %s to %s.") % (varname,
-                         "on" if current_settings[varname] else "off")
-                save_global_settings(current_settings)
-
-                add_change("edit-configvar", msg, domains=[domain],
-                    need_restart=need_restart)
-
-                if action == "_reset":
-                    return "globalvars", msg
-                else:
-                    return "globalvars"
-            elif c == False:
-                return ""
-            else:
-                return None
-        else:
+        if not varname:
             return
 
-    group_names = global_config_variable_groups()
-    render_global_configuration_variables(group_names, default_values, {}, current_settings, search=search)
+        action = html.var("_action")
 
+        domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
+        def_value = self._default_values.get(varname, valuespec.default_value())
 
-def global_config_variable_groups(show_all=False):
-    group_names = []
+        if action == "reset" and not is_a_checkbox(valuespec):
+            c = wato_confirm(
+                _("Resetting configuration variable"),
+                _("Do you really want to reset the configuration variable <b>%s</b> "
+                  "back to the default value of <b><tt>%s</tt></b>?") %
+                   (varname, valuespec.value_to_text(def_value)))
+        else:
+            if not html.check_transaction():
+                return
+            c = True # no confirmation for direct toggle
 
-    for group_name, group_vars in configvar_groups().items():
-        add = False
-        for domain, varname, valuespec in group_vars:
-            if not show_all and (not configvars()[varname][4]
-                                 or not domain.in_global_settings):
-                continue # do not edit via global settings
-
-            add = True
-            break
-
-        if add:
-            group_names.append(group_name)
-
-    return group_names
-
-
-def render_global_configuration_variables(group_names, default_values, global_settings, current_settings,
-                                          search=None, edit_mode="edit_configvar"):
-
-    group_names.sort(cmp=lambda a,b: cmp(configvar_order().get(a, 999),
-                                         configvar_order().get(b, 999)))
-
-    search_form(_("Search for settings:"))
-
-    at_least_one_painted = False
-    html.open_div(class_="globalvars")
-    for group_name in group_names:
-        header_is_painted = False # needed for omitting empty groups
-
-        for domain, varname, valuespec in configvar_groups()[group_name]:
-            if domain == ConfigDomainCore and varname not in default_values:
-                if config.debug:
-                    raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
-                                          "your local Check_MK installation" % varname)
-                else:
-                    continue
-
-            if not configvar_show_in_global_settings(varname):
-                continue
-
-            help_text  = valuespec.help() or ''
-            title_text = valuespec.title()
-
-            if search and search not in group_name.lower() \
-                    and search not in domain.ident.lower() \
-                      and search not in varname \
-                      and search not in help_text.lower() \
-                      and search not in title_text.lower():
-                continue # skip variable when search is performed and nothing matches
-            at_least_one_painted = True
-
-            if not header_is_painted:
-                # always open headers when searching
-                forms.header(group_name, isopen=search)
-                header_is_painted = True
-
-            default_value = default_values.get(varname, valuespec.default_value())
-
-            edit_url = folder_preserving_link([("mode", edit_mode),
-                                               ("varname", varname),
-                                               ("site", html.var("site", ""))])
-            title = HTML('<a href="%s" class=%s title="%s">%s</a>' % \
-                    (edit_url, '"modified"' if varname in current_settings else '""',
-                     html.strip_tags(help_text), title_text))
-
-            if varname in current_settings:
-                to_text = valuespec.value_to_text(current_settings[varname])
-            elif varname in global_settings:
-                to_text = valuespec.value_to_text(global_settings[varname])
+        if c:
+            if varname in self._current_settings:
+                self._current_settings[varname] = not self._current_settings[varname]
             else:
-                to_text = valuespec.value_to_text(default_value)
+                self._current_settings[varname] = not def_value
+            msg = _("Changed Configuration variable %s to %s.") % (varname,
+                     "on" if self._current_settings[varname] else "off")
+            save_global_settings(self._current_settings)
 
-            # Is this a simple (single) value or not? change styling in these cases...
-            simple = True
-            if '\n' in to_text or '<td>' in to_text:
-                simple = False
-            forms.section(title, simple=simple)
+            add_change("edit-configvar", msg, domains=[domain],
+                need_restart=need_restart)
 
-            if varname in current_settings:
-                value = current_settings[varname]
-                modified_cls = "modified"
-                title = _("This option has been modified.")
-            elif varname in global_settings:
-                value = global_settings[varname]
-                modified_cls = "modified globally"
-                title = _("This option has been modified in global settings.")
+            if action == "_reset":
+                return "globalvars", msg
             else:
-                value = default_value
-                modified_cls = None
-                title = None
+                return "globalvars"
+        elif c == False:
+            return ""
 
-            if is_a_checkbox(valuespec):
-                html.open_div(class_=["toggle_switch_container", modified_cls])
-                html.toggle_switch(
-                    enabled=value,
-                    help=_("Immediately toggle this setting"),
-                    href=html.makeactionuri([("_action", "toggle"), ("_varname", varname)]),
-                    class_=modified_cls,
-                    title=title,
-                )
-                html.close_div()
-
-            else:
-                html.a(HTML(to_text),
-                    href=edit_url,
-                    class_=modified_cls,
-                    title=title
-                )
-
-        if header_is_painted:
-            forms.end()
-    if not at_least_one_painted and search:
-        html.message(_('Did not find any global setting matching your search.'))
-    html.close_div()
+    def page(self):
+        group_names = self._global_config_variable_groups()
+        self._render_global_configuration_variables(group_names)
 
 
 def mode_edit_configvar(phase, what = 'globalvars'):
@@ -9699,7 +9715,7 @@ class ModeDistributedMonitoring(ModeSites):
 
 
 
-class ModeEditSiteGlobals(ModeSites):
+class ModeEditSiteGlobals(ModeSites, ModeGlobalSettings):
     def __init__(self):
         super(ModeEditSiteGlobals, self).__init__()
         self._site_id = html.var("site")
@@ -9709,15 +9725,11 @@ class ModeEditSiteGlobals(ModeSites):
         except KeyError:
             raise MKUserError("site", _("This site does not exist."))
 
-        # 1. Check_MK program defaults
-        # Get default settings of all configuration variables of interest in the domain
-        # "check_mk". (this also reflects the settings done in main.mk)
-        self._default_values = check_mk_local_automation("get-configuration", [], get_check_mk_config_var_names())
-
         # 2. Values of global settings
         self._global_settings = load_configuration_settings()
 
         # 3. Site specific global settings
+
         if is_wato_slave_site():
             self._current_settings = load_configuration_settings(site_specific=True)
         else:
@@ -9739,6 +9751,7 @@ class ModeEditSiteGlobals(ModeSites):
                             ("edit", self._site_id)]), "sites")
 
 
+    # TODO: Consolidate with ModeEditGlobals.action()
     def action(self):
         varname = html.var("_varname")
         action  = html.var("_action")
@@ -9746,7 +9759,7 @@ class ModeEditSiteGlobals(ModeSites):
             return
 
         domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
-        def_value = self._global_setting(varname, self._default_values.get(varname, valuespec.default_value()))
+        def_value = self._global_settings.get(varname, self._default_values.get(varname, valuespec.default_value()))
 
         if action == "reset" and not is_a_checkbox(valuespec):
             c = wato_confirm(
@@ -9805,10 +9818,8 @@ class ModeEditSiteGlobals(ModeSites):
                                   "You cannot configure specific settings for it."))
                 return
 
-        group_names = global_config_variable_groups(show_all=True)
-        render_global_configuration_variables(group_names, self._default_values,
-                                              self._global_settings,
-                                              self._current_settings, search=search)
+        group_names = self._global_config_variable_groups(show_all=True)
+        self._render_global_configuration_variables(group_names)
 
 
 
@@ -17187,7 +17198,7 @@ modes = {
    "random_hosts"       : (["hosts", "random_hosts"], mode_random_hosts),
    "changelog"          : ([], ModeActivateChanges),
    "auditlog"           : (["auditlog"], ModeAuditLog),
-   "globalvars"         : (["global"], mode_globalvars),
+   "globalvars"         : (["global"], ModeEditGlobals),
    "edit_configvar"     : (["global"], mode_edit_configvar),
    "ldap_config"        : (["global"], mode_ldap_config),
    "edit_ldap_connection": (["global"], mode_edit_ldap_connection),

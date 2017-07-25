@@ -669,6 +669,11 @@ public:
         return fl_disable_statehist_filtering == 0;
     }
 
+    // TODO(sp) Unused in Livestatus NEB: Strange & ugly...
+    AuthorizationKind hostAuthorization() const override {
+        return AuthorizationKind::loose;
+    }
+
     AuthorizationKind serviceAuthorization() const override {
         return fl_service_authorization;
     }

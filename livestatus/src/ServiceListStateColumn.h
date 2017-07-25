@@ -70,8 +70,8 @@ public:
         , _logictype(logictype) {}
     int32_t getValue(Row row, contact *auth_user) override;
 #ifdef CMC
-    static int32_t getValue(Type logictype, servicelist_t *mem,
-                            contact *auth_user);
+    static int32_t getValue(MonitoringCore *mc, Type logictype,
+                            servicelist_t *mem, contact *auth_user);
 #else
     static int32_t getValue(MonitoringCore *mc, Type logictype,
                             servicesmember *mem, contact *auth_user);

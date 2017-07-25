@@ -93,6 +93,7 @@ public:
     virtual size_t maxCachedMessages() = 0;
     virtual bool stateHistoryFilteringEnabled() = 0;
 
+    virtual AuthorizationKind hostAuthorization() const = 0;
     virtual AuthorizationKind serviceAuthorization() const = 0;
     virtual AuthorizationKind groupAuthorization() const = 0;
 

@@ -104,5 +104,5 @@ void TableComments::answerQuery(Query *query) {
 
 bool TableComments::isAuthorized(Row row, contact *ctc) {
     auto dtc = rowData<DowntimeOrComment>(row);
-    return is_authorized_for(ctc, dtc->_host, dtc->_service);
+    return is_authorized_for(core(), ctc, dtc->_host, dtc->_service);
 }

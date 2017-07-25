@@ -71,66 +71,66 @@ void TableServiceGroups::addColumns(Table *table, const string &prefix,
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "members",
         "A list of all members of the service group as host/service pairs",
-        true, true, 0, DANGEROUS_OFFSETOF(servicegroup, members),
+        table->core(), true, true, 0, DANGEROUS_OFFSETOF(servicegroup, members),
         indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListColumn>(
         prefix + "members_with_state",
         "A list of all members of the service group with state and has_been_checked",
-        true, true, 1, DANGEROUS_OFFSETOF(servicegroup, members),
+        table->core(), true, true, 1, DANGEROUS_OFFSETOF(servicegroup, members),
         indirect_offset, -1, -1));
 
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "worst_service_state",
         "The worst soft state of all of the groups services (OK <= WARN <= UNKNOWN <= CRIT)",
-        ServiceListStateColumn::Type::worst_state,
+        table->core(), ServiceListStateColumn::Type::worst_state,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services", "The total number of services in the group",
-        ServiceListStateColumn::Type::num,
+        table->core(), ServiceListStateColumn::Type::num,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_ok",
-        "The number of services in the group that are OK",
+        "The number of services in the group that are OK", table->core(),
         ServiceListStateColumn::Type::num_ok,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_warn",
-        "The number of services in the group that are WARN",
+        "The number of services in the group that are WARN", table->core(),
         ServiceListStateColumn::Type::num_warn,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_crit",
-        "The number of services in the group that are CRIT",
+        "The number of services in the group that are CRIT", table->core(),
         ServiceListStateColumn::Type::num_crit,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_unknown",
-        "The number of services in the group that are UNKNOWN",
+        "The number of services in the group that are UNKNOWN", table->core(),
         ServiceListStateColumn::Type::num_unknown,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_pending",
-        "The number of services in the group that are PENDING",
+        "The number of services in the group that are PENDING", table->core(),
         ServiceListStateColumn::Type::num_pending,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_ok",
-        "The number of services in the group that are OK",
+        "The number of services in the group that are OK", table->core(),
         ServiceListStateColumn::Type::num_hard_ok,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_warn",
-        "The number of services in the group that are WARN",
+        "The number of services in the group that are WARN", table->core(),
         ServiceListStateColumn::Type::num_hard_warn,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_crit",
-        "The number of services in the group that are CRIT",
+        "The number of services in the group that are CRIT", table->core(),
         ServiceListStateColumn::Type::num_hard_crit,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
     table->addColumn(make_unique<ServiceListStateColumn>(
         prefix + "num_services_hard_unknown",
-        "The number of services in the group that are UNKNOWN",
+        "The number of services in the group that are UNKNOWN", table->core(),
         ServiceListStateColumn::Type::num_hard_unknown,
         DANGEROUS_OFFSETOF(servicegroup, members), indirect_offset, -1, -1));
 }
@@ -154,7 +154,7 @@ bool TableServiceGroups::isAuthorized(Row row, contact *ctc) {
 
     auto has_contact = [=](servicesmember *mem) {
         service *svc = mem->service_ptr;
-        return is_authorized_for(ctc, svc->host_ptr, svc);
+        return is_authorized_for(core(), ctc, svc->host_ptr, svc);
     };
     if (g_group_authorization == AuthorizationKind::loose) {
         // TODO(sp) Need an iterator here, "loose" means "any_of"

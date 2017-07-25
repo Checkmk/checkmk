@@ -31,6 +31,7 @@
 #include "IntColumn.h"
 #include "ServiceListStateColumn.h"
 #include "contact_fwd.h"
+class MonitoringCore;
 class Row;
 
 #ifdef CMC
@@ -73,10 +74,12 @@ public:
     };
 
     HostListStateColumn(const std::string &name, const std::string &description,
-                        Type logictype, int offset, int indirect_offset,
-                        int extra_offset, int extra_extra_offset)
+                        MonitoringCore *mc, Type logictype, int offset,
+                        int indirect_offset, int extra_offset,
+                        int extra_extra_offset)
         : IntColumn(name, description, indirect_offset, extra_offset,
                     extra_extra_offset)
+        , _mc(mc)
         , _offset(offset)
         , _logictype(logictype) {}
     int32_t getValue(Row row, contact *auth_user) override;
@@ -87,6 +90,7 @@ public:
 #endif
 
 private:
+    MonitoringCore *_mc;
     const int _offset;
     const Type _logictype;
 };

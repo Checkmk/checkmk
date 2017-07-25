@@ -526,7 +526,7 @@ void TableServices::answerQuery(Query *query) {
 
 bool TableServices::isAuthorized(Row row, contact *ctc) {
     auto svc = rowData<service>(row);
-    return is_authorized_for(ctc, svc->host_ptr, svc);
+    return is_authorized_for(core(), ctc, svc->host_ptr, svc);
 }
 
 Row TableServices::findObject(const string &objectspec) {

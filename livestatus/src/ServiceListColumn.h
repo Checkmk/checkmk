@@ -32,6 +32,7 @@
 #include "contact_fwd.h"
 #include "opids.h"
 class Filter;
+class MonitoringCore;
 class Row;
 class RowRenderer;
 
@@ -45,11 +46,13 @@ class Service;
 class ServiceListColumn : public Column {
 public:
     ServiceListColumn(const std::string &name, const std::string &description,
-                      bool hostname_required, bool show_host, int info_depth,
-                      int offset, int indirect_offset, int extra_offset,
+                      MonitoringCore *mc, bool hostname_required,
+                      bool show_host, int info_depth, int offset,
+                      int indirect_offset, int extra_offset,
                       int extra_extra_offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset)
+        , _mc(mc)
         , _hostname_required(hostname_required)
         , _offset(offset)
         , _show_host(show_host)
@@ -65,6 +68,7 @@ public:
 #endif
 
 private:
+    MonitoringCore *_mc;
     bool _hostname_required;
     int _offset;
     bool _show_host;

@@ -50,7 +50,7 @@ void ServiceListColumn::output(Row row, RowRenderer &r, contact *auth_user) {
          mem = mem->next) {
         service *svc = mem->service_ptr;
         if ((auth_user == nullptr) ||
-            is_authorized_for(auth_user, svc->host_ptr, svc)) {
+            is_authorized_for(_mc, auth_user, svc->host_ptr, svc)) {
             // show only service name => no sublist
             if (!_show_host && _info_depth == 0) {
                 l.output(string(svc->description));

@@ -40,7 +40,8 @@ bool service_has_contact(host *hst, service *svc, contact *ctc) {
 }
 }  // namespace
 
-bool is_authorized_for(contact *ctc, host *hst, service *svc) {
+bool is_authorized_for(MonitoringCore * /*unused*/, contact *ctc, host *hst,
+                       service *svc) {
     return ctc != unknown_auth_user() &&
            (svc == nullptr ? host_has_contact(hst, ctc)
                            : service_has_contact(hst, svc, ctc));

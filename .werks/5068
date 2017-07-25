@@ -1,0 +1,17 @@
+Title: Add error message to report in case some sites are not reachable
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1500973145
+Class: feature
+
+When you create a report in a distributed environment with multiple sites
+and not all of the sites are reachable when the report is being created
+then there was simply missing data without any further notice.
+
+No at the end of the report there is added an error message if there
+was a problem with at least one site. That way the reader knows that
+the data might be incomplete.
+

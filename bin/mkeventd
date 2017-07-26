@@ -4875,10 +4875,6 @@ opt_syslog_tcp_fd = None
 opt_snmptrap      = False
 opt_snmptrap_fd   = None
 
-# ASN1 MIB source directory candidates. Non existing dirs are ok
-# Please sync these paths with htdocs/mkeventd.py
-g_mib_dirs = [ '/usr/share/snmp/mibs' ]
-
 # Set default values for options
 omd_root = os.getenv("OMD_ROOT")
 if omd_root:
@@ -4891,12 +4887,6 @@ if omd_root:
     g_logfile_path      = omd_root + "/var/log/mkeventd.log"
     g_state_dir         = omd_root + "/var/mkeventd"
     g_compiled_mibs_dir = omd_root + "/local/share/check_mk/compiled_mibs"
-
-    # Please sync these paths with htdocs/mkeventd.py
-    g_mib_dirs = [
-        omd_root + "/local/share/snmp/mibs",
-        omd_root + "/share/snmp/mibs",
-    ] + g_mib_dirs
 else:
     g_config_dir        = "/etc/check_mk"
     g_socket_path       = None

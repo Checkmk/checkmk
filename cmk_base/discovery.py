@@ -1362,11 +1362,11 @@ def parse_autochecks_file(hostname):
                 continue
 
             # drop everything after potential '#' (from older versions)
-	    i = line.rfind('#')
-	    if i > 0: # make sure # is not contained in string
-		rest = line[i:]
-		if '"' not in rest and "'" not in rest:
-		    line = line[:i].strip()
+            i = line.rfind('#')
+            if i > 0: # make sure # is not contained in string
+                rest = line[i:]
+                if '"' not in rest and "'" not in rest:
+                    line = line[:i].strip()
 
             if line.endswith(","):
                 line = line[:-1]

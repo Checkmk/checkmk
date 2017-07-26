@@ -147,13 +147,13 @@ def set_verbosity(verbosity):
       2: enables DEBUG and above (ALL messages)
     """
     if verbosity == 0:
-    	logger.setLevel(INFO)
+        logger.setLevel(INFO)
 
     elif verbosity == 1:
-    	logger.setLevel(VERBOSE)
+        logger.setLevel(VERBOSE)
 
     elif verbosity == 2:
-    	logger.setLevel(DEBUG)
+        logger.setLevel(DEBUG)
 
     else:
         raise NotImplementedError()

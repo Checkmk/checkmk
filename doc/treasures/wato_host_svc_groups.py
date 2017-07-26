@@ -51,20 +51,20 @@ for line in file(path).readlines():
              attr, value =  line.split(" ", 1)
              attr = attr.strip()
              value = value.strip()
-	     if attr == "hostgroup_name":
-	         next = "hostgroup"
-	         name = value
-	     elif attr == "servicegroup_name":
-	         next = "servicegroup"
-	         name = value
+             if attr == "hostgroup_name":
+                 next = "hostgroup"
+                 name = value
+             elif attr == "servicegroup_name":
+                 next = "servicegroup"
+                 name = value
 
              if alias == True:
-	        if next == "hostgroup":
-	            hostgroups[name] = value
-	        elif next == "servicegroup":
-	            servicegroups[name] = value
-	        alias = False
-	     alias = True
+                if next == "hostgroup":
+                    hostgroups[name] = value
+                elif next == "servicegroup":
+                    servicegroups[name] = value
+                alias = False
+             alias = True
          except:
             pass
 

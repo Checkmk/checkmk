@@ -331,7 +331,7 @@ def release_all_locks():
 #
 #        f = file(self._path, *self._open_args, **self._open_kwargs)
 #
-#    	# Handle the case where the file has been renamed while waiting
+#       # Handle the case where the file has been renamed while waiting
 #        while True:
 #            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
 #            fnew = file(self._path, *self._open_args, **self._open_kwargs)

@@ -57,26 +57,26 @@ def render_hostgroup(name, alias):
     # Name des Serverraums
     make_label(alias, x_hostgroup, g_y, x_therm - x_hostgroup - 20)
     def display_servicegroup(name, x):
-	if live.query_value("GET servicegroups\nStats: name = %s\n" % name) == 1:
-	    print """
+        if live.query_value("GET servicegroups\nStats: name = %s\n" % name) == 1:
+            print """
 define servicegroup {
-	    servicegroup_name = %s
-	    x=%d
-	    y=%d
+            servicegroup_name = %s
+            x=%d
+            y=%d
 }""" % (name, x, g_y)
 
-	    # Einzelauflistung der Thermometer
-	    num = 0
-	    shift = 16
-	    for host, service in live.query("GET services\nFilter: groups >= %s\nColumns: host_name description" % name):
-		num += 1
-		print """
+            # Einzelauflistung der Thermometer
+            num = 0
+            shift = 16
+            for host, service in live.query("GET services\nFilter: groups >= %s\nColumns: host_name description" % name):
+                num += 1
+                print """
 define service {
-	    host_name=%s
-	    service_description=%s
-	    x=%d
-	    y=%d
-	    url=/pnp4nagios/graph?host=%s&srv=%s
+            host_name=%s
+            service_description=%s
+            x=%d
+            y=%d
+            url=/pnp4nagios/graph?host=%s&srv=%s
 }
     """ % (host, service, x + 30 + shift * num, g_y, host, service)
 
@@ -95,9 +95,9 @@ live = livestatus.SingleSiteConnection(socket_path)
 print """
 define global {
     allowed_for_config=nagiosadmin
-	allowed_user=nagiosadmin
-	map_image=demo_background.png
-	iconset=std_medium
+        allowed_user=nagiosadmin
+        map_image=demo_background.png
+        iconset=std_medium
 }
 """
 

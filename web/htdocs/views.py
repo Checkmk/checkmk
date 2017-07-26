@@ -284,7 +284,7 @@ def is_enabled_for(linking_view, view, context_vars):
 #   | Painter options are settings that can be changed per user per view.  |
 #   | These options are controlled throught the painter options form which |
 #   | is accessible through the small monitor icon on the top left of the  |
-#   | views.								   |
+#   | views.                                                               |
 #   '----------------------------------------------------------------------'
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect

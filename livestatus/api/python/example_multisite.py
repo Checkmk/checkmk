@@ -40,20 +40,20 @@ except:
 
 sites = {
   "muc" : {
-	"socket"     : socket_path,
-	"alias"      : "Munich",
+        "socket"     : socket_path,
+        "alias"      : "Munich",
   },
   "sitea" : {
         "alias"      : "Augsburg",
         "socket"     : "tcp:sitea:6557",
         "nagios_url" : "/nagios/",
-	"timeout"    : 2,
+        "timeout"    : 2,
   },
   "siteb" : {
         "alias"      : "Berlin",
         "socket"     : "tcp:siteb:6557",
         "nagios_url" : "/nagios/",
-	"timeout"    : 10,
+        "timeout"    : 10,
   },
 }
 
@@ -69,20 +69,20 @@ print sum(c.query_column("GET hosts\nStats: state >= 0\n"))
 # Detect errors:
 sites = {
   "muc" : {
-	"socket"     : "unix:/var/run/nagios/rw/live",
-	"alias"      : "Munich",
+        "socket"     : "unix:/var/run/nagios/rw/live",
+        "alias"      : "Munich",
   },
   "sitea" : {
         "alias"      : "Augsburg",
         "socket"     : "tcp:sitea:6558", # BROKEN
         "nagios_url" : "/nagios/",
-	"timeout"    : 2,
+        "timeout"    : 2,
   },
   "siteb" : {
         "alias"      : "Berlin",
         "socket"     : "tcp:siteb:6557",
         "nagios_url" : "/nagios/",
-	"timeout"    : 10,
+        "timeout"    : 10,
   },
 }
 

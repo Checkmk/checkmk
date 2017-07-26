@@ -4681,17 +4681,19 @@ def load_configuration():
     global g_config, g_last_config_reload
     g_config = default_config()
 
-    main_file = g_config_dir + "/mkeventd.mk"
+    main_file = os.path.join(g_config_dir, "mkeventd.mk")
     if not os.path.exists(main_file):
         bail_out("Main configuration file %s missing." % main_file)
 
-    list_of_files = reduce(lambda a,b: a+b,
-         [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
-             for d, _unused_sb, fs in os.walk(g_config_dir + "/mkeventd.d" ) ], [])
+    config_files = (
+        os.path.join(dirpath, filename)
+        for dirpath, _dirnames, filenames in os.walk(os.path.join(g_config_dir, "mkeventd.d"))
+        for filename in filenames
+        if filename.endswith(".mk") )
 
-    list_of_files.sort()
-    for path in [ main_file ] + list_of_files:
-        execfile(path, g_config, g_config)
+    for path in [ main_file ] + sorted(config_files):
+        with open(path) as f:
+            exec(f, g_config)
 
     # If not set by command line, set the log level by configuration
     if opt_verbose == 0:

@@ -458,19 +458,6 @@ def set_service(check_type, descr):
     check_api._service_description = descr
 
 
-# Remove illegal characters from a service description
-def sanitize_service_description(descr):
-    cache = cmk_base.config_cache.get_dict("sanitize_service_description")
-
-    try:
-        return cache[descr]
-    except KeyError:
-        new_descr = "".join([ c for c in descr
-                             if c not in config.nagios_illegal_chars ]).rstrip("\\")
-        cache[descr] = new_descr
-        return new_descr
-
-
 def is_snmp_check(check_name):
     cache = cmk_base.runtime_cache.get_dict("is_snmp_check")
 

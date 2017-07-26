@@ -14182,7 +14182,7 @@ def Levels(**kwargs):
           default_value = default_value,
     )
 
-# NOTE: When changing this keep it in sync with cmk.hostname_translation.translate()
+# NOTE: When changing this keep it in sync with cmk.translations.translate_hostname()
 def HostnameTranslation(**kwargs):
     help = kwargs.get("help")
     title = kwargs.get("title")
@@ -14190,86 +14190,111 @@ def HostnameTranslation(**kwargs):
         title = title,
         help = help,
         elements = [
-            ( "case",
-              DropdownChoice(
-                  title = _("Case translation"),
-                  choices = [
-                       ( None,    _("Do not convert case") ),
-                       ( "upper", _("Convert hostnames to upper case") ),
-                       ( "lower", _("Convert hostnames to lower case") ),
-                  ]
-            )),
             ( "drop_domain",
               FixedValue(
                   True,
                   title = _("Convert FQHN"),
                   totext = _("Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"),
             )),
-            ( "regex",
-                Transform(
-                    ListOf(
-                        Tuple(
-                            orientation = "horizontal",
-                            elements    =  [
-                                RegExpUnicode(
-                                    title          = _("Regular expression"),
-                                    help           = _("Must contain at least one subgroup <tt>(...)</tt>"),
-                                    mingroups      = 0,
-                                    maxgroups      = 9,
-                                    size           = 30,
-                                    allow_empty    = False,
-                                    mode           = RegExp.prefix,
-                                    case_sensitive = False,
-                                ),
-                                TextUnicode(
-                                    title       = _("Replacement"),
-                                    help        = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"),
-                                    size        = 30,
-                                    allow_empty = False,
-                                )
-                            ],
-                        ),
-                        title     = _("Multiple regular expressions"),
-                        help      = _("You can add any number of expressions here which are executed succesively until the first match. "
-                                      "Please specify a regular expression in the first field. This expression should at "
-                                      "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                                      "In the second field you specify the translated host name and can refer to the first matched "
-                                      "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>. "
-                                      ""),
-                        add_label = _("Add expression"),
-                        movable   = False,
+        ] + translation_elements("host"))
+
+
+def ServiceDescriptionTranslation(**kwargs):
+    help = kwargs.get("help")
+    title = kwargs.get("title")
+    return Dictionary(
+        title = title,
+        help = help,
+        elements =translation_elements("service"))
+
+
+def translation_elements(what):
+    if what == "host":
+        singular = "hostname"
+        plural = "hostnames"
+
+    elif what == "service":
+        singular = "service description"
+        plural = "service descriptions"
+
+    else:
+        MKGeneralException("No translations found for %s." % what)
+
+    return [
+        ( "case",
+          DropdownChoice(
+              title = _("Case translation"),
+              choices = [
+                   (None,    _("Do not convert case")),
+                   ("upper", _("Convert %s to upper case") % plural),
+                   ("lower", _("Convert %s to lower case") % plural),
+              ]
+        )),
+        ( "regex",
+            Transform(
+                ListOf(
+                    Tuple(
+                        orientation = "horizontal",
+                        elements    =  [
+                            RegExpUnicode(
+                                title          = _("Regular expression"),
+                                help           = _("Must contain at least one subgroup <tt>(...)</tt>"),
+                                mingroups      = 0,
+                                maxgroups      = 9,
+                                size           = 30,
+                                allow_empty    = False,
+                                mode           = RegExp.prefix,
+                                case_sensitive = False,
+                            ),
+                            TextUnicode(
+                                title       = _("Replacement"),
+                                help        = _("Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"),
+                                size        = 30,
+                                allow_empty = False,
+                            )
+                        ],
                     ),
-                    forth = lambda x: type(x) == tuple and [x] or x,
-                )
-            ),
-            ( "mapping",
-              ListOf(
-                  Tuple(
-                      orientation = "horizontal",
-                      elements =  [
-                          TextUnicode(
-                               title = _("Original hostname"),
-                               size = 30,
-                               allow_empty = False,
-                               attrencode = True,
-                          ),
-                          TextUnicode(
-                               title = _("Translated hostname"),
-                               size = 30,
-                               allow_empty = False,
-                               attrencode = True,
-                          ),
-                      ],
-                  ),
-                  title = _("Explicit host name mapping"),
-                  help = _("If case conversion and regular expression do not work for all cases then you can "
-                           "specify explicity pairs of origin host name  and translated host name here. This "
-                           "mapping is being applied <b>after</b> the case conversion and <b>after</b> a regular "
-                           "expression conversion (if that matches)."),
-                  add_label = _("Add new mapping"),
-                  movable = False,
-            )),
-        ])
+                    title     = _("Multiple regular expressions"),
+                    help      = _("You can add any number of expressions here which are executed succesively until the first match. "
+                                  "Please specify a regular expression in the first field. This expression should at "
+                                  "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
+                                  "In the second field you specify the translated %s and can refer to the first matched "
+                                  "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>. "
+                                  "") % singular,
+                    add_label = _("Add expression"),
+                    movable   = False,
+                ),
+                forth = lambda x: type(x) == tuple and [x] or x,
+            )
+        ),
+        ( "mapping",
+          ListOf(
+              Tuple(
+                  orientation = "horizontal",
+                  elements =  [
+                      TextUnicode(
+                           title = _("Original %s") % singular,
+                           size = 30,
+                           allow_empty = False,
+                           attrencode = True,
+                      ),
+                      TextUnicode(
+                           title = _("Translated %s") % singular,
+                           size = 30,
+                           allow_empty = False,
+                           attrencode = True,
+                      ),
+                  ],
+              ),
+              title = _("Explicit %s mapping") % singular,
+              help = _("If case conversion and regular expression do not work for all cases then you can "
+                       "specify explicity pairs of origin {0} and translated {0} here. This "
+                       "mapping is being applied <b>after</b> the case conversion and <b>after</b> a regular "
+                       "expression conversion (if that matches).").format(singular),
+              add_label = _("Add new mapping"),
+              movable = False,
+        )),
+    ]
 
 #.
 #   .--User Profile--------------------------------------------------------.
@@ -16364,7 +16389,7 @@ def add_scanned_hosts_to_folder(folder, found):
 
     entries = []
     for host_name, ipaddress in found:
-        host_name = cmk.hostname_translation.translate(translation, host_name)
+        host_name = cmk.translations.translate_hostname(translation, host_name)
 
         attrs = {
             "ipaddress"       : ipaddress,

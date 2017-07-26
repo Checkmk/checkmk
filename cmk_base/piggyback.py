@@ -27,7 +27,7 @@
 import os
 
 import cmk.paths
-import cmk.hostname_translation
+import cmk.translations
 import cmk.store as store
 from cmk.exceptions import MKGeneralException
 
@@ -134,13 +134,13 @@ def remove_piggyback_info_from(sourcehost, keep=None):
 
 
 def translate_piggyback_host(sourcehost, backedhost):
-    translation = config.get_piggyback_translation(sourcehost)
+    translation = config.get_piggyback_translations(sourcehost)
 
     # To make it possible to match umlauts we need to change the hostname
     # to a unicode string which can then be matched with regexes etc.
     # We assume the incoming name is correctly encoded in UTF-8
     backedhost = config.decode_incoming_string(backedhost)
 
-    translated = cmk.hostname_translation.translate(translation, backedhost)
+    translated = cmk.translations.translate_hostname(translation, backedhost)
 
     return translated.encode('utf-8') # change back to UTF-8 encoded string

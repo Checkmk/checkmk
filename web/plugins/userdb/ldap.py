@@ -1030,7 +1030,7 @@ class LDAPUserConnector(UserConnector):
                     synchronize_profile_to_sites(self, user_id, user)
 
                 if changed:
-		    for key, (old_value, new_value) in sorted(changed.items()):
+                    for key, (old_value, new_value) in sorted(changed.items()):
                         details.append(('Changed %s from %s to %s' % (key, old_value, new_value)))
 
                 if details and config.wato_enabled:

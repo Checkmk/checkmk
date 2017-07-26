@@ -5347,18 +5347,18 @@ class ModeActivateChanges(WatoMode, ActivateChanges):
         for site_id in self.activation_site_ids():
             self.confirm_site_changes(site_id)
 
-	html.header(self.title(), javascripts=["wato"], stylesheets=wato_styles,
-    	            show_body_start=display_options.enabled(display_options.H),
-    	            show_top_heading=display_options.enabled(display_options.T))
-    	html.open_div(class_="wato")
+        html.header(self.title(), javascripts=["wato"], stylesheets=wato_styles,
+                    show_body_start=display_options.enabled(display_options.H),
+                    show_top_heading=display_options.enabled(display_options.T))
+        html.open_div(class_="wato")
 
-	html.begin_context_buttons()
-	home_button()
-	html.end_context_buttons()
+        html.begin_context_buttons()
+        home_button()
+        html.end_context_buttons()
 
-	html.message(_("Successfully discarded all pending changes."))
+        html.message(_("Successfully discarded all pending changes."))
         html.javascript("hide_changes_buttons();")
-	html.footer()
+        html.footer()
 
         return False
 

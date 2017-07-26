@@ -43,4 +43,4 @@ def test_permissions():
             if f.split('/')[-1] in excludes:
                 continue
             assert check_func(f), "%s has wrong permissions (%r)" % \
-							(f, check_func)
+                                                        (f, check_func)

@@ -61,11 +61,11 @@ multisite_builtin_views.update({
    'mobile_searchsvc': mobile_view({
                'datasource': 'services',
                'group_painters': [
-	           ('sitealias', 'sitehosts'),
+                   ('sitealias', 'sitehosts'),
                    ('host', 'host')],
                'hard_filters': [],
                'hard_filtervars': [
-	          ('is_service_in_notification_period', '-1'),
+                  ('is_service_in_notification_period', '-1'),
                   ('optservicegroup', ''),
                   ('is_service_notifications_enabled', '-1'),
                   ('is_host_in_notification_period', '-1'),
@@ -98,9 +98,9 @@ multisite_builtin_views.update({
                    ('svc_plugin_output',   '' ),
                    ('svc_state_age', None, ''),
                  ],
-		   'public': True,
-		   'show_filters': [
-		       'service_in_notification_period',
+                   'public': True,
+                   'show_filters': [
+                       'service_in_notification_period',
                        'service_notifications_enabled',
                        'host_in_notification_period',
                        'in_downtime',
@@ -115,7 +115,7 @@ multisite_builtin_views.update({
                        'output'
                        ],
                'sorters': [
-	           ('site', False),
+                   ('site', False),
                    ('site_host', False),
                    ('svcdescr', False)],
                'title': _('Search'),
@@ -129,7 +129,7 @@ multisite_builtin_views.update({
         'group_painters': [],
         'hard_filters': ['in_downtime'],
         'hard_filtervars': [
-	    ('is_in_downtime', '0'),
+            ('is_in_downtime', '0'),
             ('st0', ''),
             ('st1', 'on'),
             ('st2', 'on'),
@@ -152,14 +152,14 @@ multisite_builtin_views.update({
             ('svc_state_age', None, ''),
         ],
         'show_filters': [
-	    'service_in_notification_period',
+            'service_in_notification_period',
             'service_acknowledged',
             'svcstate',
             'svchardstate',
             'hoststate'
          ],
         'sorters': [
-	    ('svcstate', True),
+            ('svcstate', True),
             ('stateage', False),
             ('svcdescr', False)],
         'title': _('Problems (all)'),
@@ -202,12 +202,12 @@ multisite_builtin_views.update({
             ('svc_state_age', None, ''),
         ],
         'show_filters': [
-	    'service_in_notification_period',
+            'service_in_notification_period',
             'hoststate',
             'svchardstate',
             'svcstate'],
         'sorters': [
-	    ('svcstate', True),
+            ('svcstate', True),
             ('stateage', False),
             ('svcdescr', False)
          ],
@@ -286,7 +286,7 @@ multisite_builtin_views.update({
         ],
         'show_filters': ['svcstate', 'serviceregex'],
         'sorters': [
-	    ('svcstate', True),
+            ('svcstate', True),
             ('stateage', False),
             ('svcdescr', False)],
         'linktitle' : _('Services of this host'),
@@ -362,8 +362,8 @@ multisite_builtin_views.update({
         'mustsearch': True,
         'num_columns': 2,
         'painters': [
-		      ('host_state', None),
-		      ('host', 'mobile_host'),
+                      ('host_state', None),
+                      ('host', 'mobile_host'),
                       ('host_plugin_output', None),
         ],
         'show_filters': [
@@ -382,7 +382,7 @@ multisite_builtin_views.update({
                   'group_painters': [('host_state', None)],
                   'hard_filters': ['host_scheduled_downtime_depth'],
                   'hard_filtervars': [
-		      ('is_host_scheduled_downtime_depth', '0'),
+                      ('is_host_scheduled_downtime_depth', '0'),
                       ('is_host_in_notification_period', '-1'),
                       ('hst0', ''),
                       ('hst1', 'on'),
@@ -398,13 +398,13 @@ multisite_builtin_views.update({
                   'name': 'hostproblems',
                   'num_columns': 2,
                   'painters': [
-		      ('host_state', None),
-		      ('host', 'mobile_host'),
+                      ('host_state', None),
+                      ('host', 'mobile_host'),
                       ('host_plugin_output', None),
                    ],
                   'public': True,
                   'show_filters': [
-		      'host_in_notification_period',
+                      'host_in_notification_period',
                       'hoststate',
                       'hostregex',
                       'opthostgroup',
@@ -421,7 +421,7 @@ multisite_builtin_views.update({
                   'group_painters': [('host_state', None)],
                   'hard_filters': ['host_scheduled_downtime_depth', 'host_acknowledged'],
                   'hard_filtervars': [
-		      ('is_host_scheduled_downtime_depth', '0'),
+                      ('is_host_scheduled_downtime_depth', '0'),
                       ('is_host_in_notification_period', '-1'),
                       ('hst0', ''),
                       ('hst1', 'on'),
@@ -481,7 +481,7 @@ multisite_builtin_views.update({
                    'group_painters': [('log_date', None, '')],
                    'hard_filters': ['log_class'],
                    'hard_filtervars': [
-		       ('logclass0', ''),
+                       ('logclass0', ''),
                        ('logclass1', ''),
                        ('logclass2', ''),
                        ('logclass3', 'on'),
@@ -502,10 +502,10 @@ multisite_builtin_views.update({
                    'name': 'mobile_notifications',
                    'num_columns': 2,
                    'painters': [
-		       ('log_state', None, ''),
-		       ('host', 'mobile_hostsvcnotifications', ''),
-		       ('service_description', 'mobile_svcnotifications',''),
-		       ('log_time', None, ''),
+                       ('log_state', None, ''),
+                       ('host', 'mobile_hostsvcnotifications', ''),
+                       ('service_description', 'mobile_svcnotifications',''),
+                       ('log_time', None, ''),
                        ('log_contact_name', 'mobile_contactnotifications', ''),
                        ('log_type', None, ''),
                        ('log_plugin_output', None, '')],
@@ -690,10 +690,10 @@ multisite_builtin_views.update({
                                'name': 'mobile_svcnotifications',
                                'num_columns': 2,
                                'painters': [('log_time', None, ''),
-                               	    ('log_contact_name', 'mobile_contactnotifications', ''),
-                               	    ('host', None, ''),
-                               	    ('log_state', None, ''),
-                               	    ('log_plugin_output', None, '')],
+                                    ('log_contact_name', 'mobile_contactnotifications', ''),
+                                    ('host', None, ''),
+                                    ('log_state', None, ''),
+                                    ('log_plugin_output', None, '')],
                                'play_sounds': False,
                                'public': True,
                                'show_filters': ['log_plugin_output', 'logtime'],

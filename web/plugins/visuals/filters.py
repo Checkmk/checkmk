@@ -1001,7 +1001,7 @@ declare_filter(270, FilterLogState())
 
 class NotificationPhaseFilter(FilterTristate):
     def __init__(self):
-	FilterTristate.__init__(self, "log_notification_phase", _("Notification phase"), "log", "log_command_name", -1)
+        FilterTristate.__init__(self, "log_notification_phase", _("Notification phase"), "log", "log_command_name", -1)
 
     def double_height(self):
         return True
@@ -1032,23 +1032,23 @@ declare_filter(271, NotificationPhaseFilter())
 
 class BIServiceIsUsedFilter(FilterTristate):
     def __init__(self):
-	FilterTristate.__init__(self, "aggr_service_used", _("Used in BI aggregate"), "service", None)
+        FilterTristate.__init__(self, "aggr_service_used", _("Used in BI aggregate"), "service", None)
 
     def filter(self, infoname):
-	return ""
+        return ""
 
     def filter_table(self, rows):
         current = self.tristate_value()
         if current == -1:
-	    return rows
+            return rows
         new_rows = []
         for row in rows:
-	    is_part = bi.is_part_of_aggregation(
+            is_part = bi.is_part_of_aggregation(
                    "service", row["site"], row["host_name"], row["service_description"])
-	    if (is_part and current == 1) or \
+            if (is_part and current == 1) or \
                (not is_part and current == 0):
-	        new_rows.append(row)
-	return new_rows
+                new_rows.append(row)
+        return new_rows
 
     def filter_code(self, infoname, positive):
         pass

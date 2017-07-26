@@ -5149,14 +5149,14 @@ perfometer_info.append(("stacked", [
 
 perfometer_info.append(("stacked", [
     {
-	    "type"      : "linear",
-	    "segments"  : [ "threads_idle" ],
-	    "total"     : "threads_idle:max",
-	},
+            "type"      : "linear",
+            "segments"  : [ "threads_idle" ],
+            "total"     : "threads_idle:max",
+        },
     {
-	    "type"      : "linear",
-	    "segments"  : [ "threads_busy" ],
-	    "total"     : "threads_busy:max",
+            "type"      : "linear",
+            "segments"  : [ "threads_busy" ],
+            "total"     : "threads_busy:max",
     }
 ]))
 
@@ -5830,14 +5830,14 @@ perfometer_info.append({
 
 perfometer_info.append(("dual", [
     {
-	    "type"      : "linear",
-	    "segments"  : [ "qos_dropped_bytes_rate" ],
-	    "total"     : "qos_dropped_bytes_rate:max"
+            "type"      : "linear",
+            "segments"  : [ "qos_dropped_bytes_rate" ],
+            "total"     : "qos_dropped_bytes_rate:max"
     },
     {
-	    "type"      : "linear",
-	    "segments"  : [ "qos_outbound_bytes_rate" ],
-	    "total"     : "qos_outbound_bytes_rate:max"
+            "type"      : "linear",
+            "segments"  : [ "qos_outbound_bytes_rate" ],
+            "total"     : "qos_outbound_bytes_rate:max"
     }
 ]))
 

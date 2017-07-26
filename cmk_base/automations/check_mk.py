@@ -718,7 +718,7 @@ class AutomationRestart(Automation):
 
             except Exception, e:
                 if backup_path:
-            	    os.rename(backup_path, objects_file)
+                    os.rename(backup_path, objects_file)
                 if cmk.debug.enabled():
                     raise
                 raise MKAutomationError("Error creating configuration: %s" % e)

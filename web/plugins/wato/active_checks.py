@@ -1639,9 +1639,9 @@ register_rule(group,
             TextAscii(
                 title = _("Aggregation Name"),
                 help = _("The name of the aggregation to fetch. It will be added to the service description. You can "
-		         "use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to "
+                         "use macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this parameter to "
                          "make them be replaced by the hosts values. The aggregation name is the title in the "
-			 "top-level-rule of your BI pack."),
+                         "top-level-rule of your BI pack."),
                 allow_empty = False
             ),
             TextAscii(
@@ -1654,7 +1654,7 @@ register_rule(group,
             Password(
                 title = _("Password / Secret"),
                 help = _("Valid automation secret or password for the user, depending on the chosen "
-                         "authentication mode. Be aware that this mode has to be enabled on the monitoring instance. " 			       "Otherwise authentication will fail."),
+                         "authentication mode. Be aware that this mode has to be enabled on the monitoring instance. "                         "Otherwise authentication will fail."),
                 allow_empty = False
             ),
             Dictionary(

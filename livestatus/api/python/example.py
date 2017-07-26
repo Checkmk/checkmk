@@ -52,11 +52,11 @@ try:
    print "\nHosts up: %d" % num_up
 
    stats = conn.query_row(
-	 "GET services\n"
-	 "Stats: state = 0\n"
-	 "Stats: state = 1\n"
-	 "Stats: state = 2\n"
-	 "Stats: state = 3\n")
+         "GET services\n"
+         "Stats: state = 0\n"
+         "Stats: state = 1\n"
+         "Stats: state = 2\n"
+         "Stats: state = 3\n")
    print "Service stats: %d/%d/%d/%d" % tuple(stats)
 
    print "List of commands: %s" % \

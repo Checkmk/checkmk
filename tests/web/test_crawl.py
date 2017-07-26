@@ -241,7 +241,7 @@ class Worker(threading.Thread):
            or "../nagios/" in parsed.path:
             raise InvalidUrl("Skipping non Check_MK URL: %s %s" % (url, parsed))
 
-	# skip current url with link to index
+        # skip current url with link to index
         if "index.py?start_url=" in url:
             raise InvalidUrl("Skipping link to index with current URL: %s" % url)
 

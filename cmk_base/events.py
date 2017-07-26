@@ -110,7 +110,7 @@ def event_keepalive(event_function, log_function, call_every_loop=None, loop_int
                 sys.stdout.flush()
 
 
-	# Fix vor Python 2.4:
+        # Fix vor Python 2.4:
         except SystemExit, e:
             sys.exit(e)
         except Exception, e:

@@ -231,8 +231,8 @@ for hostname in os.listdir(inv_dir):
     fn = inv_dir + hostname
     if os.path.isfile(fn):
         a = eval(open(fn,'r').read())
-	all_data[hostname] = a
-	inventory_date[hostname] =  os.path.getmtime(fn)
+        all_data[hostname] = a
+        inventory_date[hostname] =  os.path.getmtime(fn)
 
 
 # loop over all relations, create an output file for each relation

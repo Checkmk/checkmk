@@ -5428,7 +5428,7 @@ def do_create_snapshot(data):
             # Allow exit codes 0 and 1 (files changed during backup)
             if exit_code not in [0, 1]:
                 raise MKGeneralException("Error while creating backup of %s (Exit Code %d) - %s.\n%s" %
-							(name, exit_code, stderr, command))
+                                                        (name, exit_code, stderr, command))
 
             subtar_size   = os.stat(path_subtar).st_size
             subtar_hash   = sha256(file(path_subtar).read()).hexdigest()

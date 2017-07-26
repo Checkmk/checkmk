@@ -1166,7 +1166,7 @@ def paint_custom_notes(what, row):
             .replace('$URL_PREFIX$',     url_prefix)\
             .replace('$SITE$',           sitename)\
             .replace('$HOSTNAME$',       host)\
-	    .replace('$HOSTNAME_LOWER$', host.lower())\
+            .replace('$HOSTNAME_LOWER$', host.lower())\
             .replace('$HOSTNAME_UPPER$', host.upper())\
             .replace('$HOSTNAME_TITLE$', host[0].upper() + host[1:].lower())\
             .replace('$HOSTADDRESS$',    row["host_address"])\

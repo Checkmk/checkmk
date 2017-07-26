@@ -143,7 +143,7 @@ class CMKVersion(object):
 
     def package_name(self):
         return "check-mk-%s-%s_0.%s_%s.deb" % \
-		(self.edition(), self.version, self._needed_distro(), self._needed_architecture())
+                (self.edition(), self.version, self._needed_distro(), self._needed_architecture())
 
 
     def package_url(self):
@@ -705,7 +705,7 @@ class WebSession(requests.Session):
                  allow_retry=True, **kwargs):
         url = self.url(proto, path)
 
-	if add_transid:
+        if add_transid:
             url = self._add_transid(url)
 
         # Enforce non redirect following in case of expecting one

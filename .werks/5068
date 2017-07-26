@@ -11,7 +11,6 @@ When you create a report in a distributed environment with multiple sites
 and not all of the sites are reachable when the report is being created
 then there was simply missing data without any further notice.
 
-No at the end of the report there is added an error message if there
-was a problem with at least one site. That way the reader knows that
-the data might be incomplete.
-
+Now if there was a problem with at least one site during the report creation
+at the start of the report there will be inserted an extra page with an
+error message. That way the reader knows that the data might be incomplete.

@@ -312,7 +312,8 @@ def do_update(with_precompile):
 #   '----------------------------------------------------------------------'
 
 def active_check_service_description(hostname, act_info, params):
-    return checks.sanitize_service_description(act_info["service_description"](params).replace('$HOSTNAME$', hostname))
+    description = act_info["service_description"](params).replace('$HOSTNAME$', hostname)
+    return config.get_final_service_description(hostname, description)
 
 
 def active_check_arguments(hostname, description, args):

@@ -29,6 +29,7 @@ import sys
 import marshal
 
 import cmk.paths
+import cmk.translations
 from cmk.exceptions import MKGeneralException
 
 import cmk_base
@@ -816,15 +817,6 @@ def contactgroups_of(hostname):
 # Misc
 #
 
-def get_piggyback_translation(hostname):
-    """Get a dict that specifies the actions to be done during the hostname translation"""
-    rules = rulesets.host_extra_conf(hostname, piggyback_translation)
-    translations = {}
-    for rule in rules[::-1]:
-        translations.update(rule)
-    return translations
-
-
 def exit_code_spec(hostname):
     spec = {}
     specs = rulesets.host_extra_conf(hostname, check_mk_exit_status)
@@ -1036,27 +1028,38 @@ def service_description(hostname, check_type, item):
     # One check defines "Pages %s" as a description, but the item
     # can by empty in some cases. Nagios silently drops leading
     # and trailing spaces in the configuration file.
-
-    item_type = type(item)
-    if add_item and item_type in [ str, unicode, int, long ]:
-        # Remove characters from item name that are banned by Nagios
-        if item_type in [ str, unicode ]:
-            item_safe = checks.sanitize_service_description(item)
-        else:
-            item_safe = str(item)
-
+    if add_item and type(item) in [str, unicode, int, long]:
         if "%s" not in descr_format:
             descr_format += " %s"
-
-        descr = descr_format % (item_safe,)
+        descr = descr_format % (item,)
     else:
         descr = descr_format
 
     if "%s" in descr:
         raise MKGeneralException("Found '%%s' in service description (Host: %s, Check type: %s, Item: %s). "
-                                 "Please try to rediscover the service to fix this issue." % (hostname, check_type, item))
+                                 "Please try to rediscover the service to fix this issue." % \
+                                 (hostname, check_type, item))
 
-    return descr.strip()
+    return get_final_service_description(hostname, descr)
+
+
+def get_final_service_description(hostname, description):
+    translations = get_service_translations(hostname)
+    if translations:
+        # Translate
+        description = cmk.translations.translate_service_description(translations, description)
+
+    # Sanitize; Remove illegal characters from a service description
+    description = description.strip()
+    cache = cmk_base.config_cache.get_dict("final_service_description")
+    try:
+        new_description = cache[description]
+    except KeyError:
+        new_description = "".join([c for c in description
+                          if c not in cmk_base.config.nagios_illegal_chars]).rstrip("\\")
+        cache[description] = new_description
+
+    return new_description
 
 
 def service_ignored(hostname, check_type, service_description):
@@ -1102,3 +1105,31 @@ def decode_incoming_string(s, encoding="utf-8"):
         return s.decode(encoding)
     except:
         return s.decode(fallback_agent_output_encoding)
+
+
+def get_piggyback_translations(hostname):
+    """Get a dict that specifies the actions to be done during the hostname translation"""
+    rules = rulesets.host_extra_conf(hostname, piggyback_translation)
+    translations = {}
+    for rule in rules[::-1]:
+        translations.update(rule)
+    return translations
+
+
+def get_service_translations(hostname):
+    translations_cache = cmk_base.config_cache.get_dict("service_description_translations")
+    if hostname in translations_cache:
+        return translations_cache[hostname]
+
+    rules = rulesets.host_extra_conf(hostname, service_description_translation)
+    translations = {}
+    for rule in rules[::-1]:
+        for k, v in rule.items():
+            if isinstance(v, list):
+                translations.setdefault(k, set())
+                translations[k] |= set(v)
+            else:
+                translations[k] = v
+
+    translations_cache[hostname] = translations
+    return translations

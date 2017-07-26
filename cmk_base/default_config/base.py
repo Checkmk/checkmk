@@ -50,6 +50,7 @@ check_max_cachefile_age            = 0 # per default do not use cache files when
 cluster_max_cachefile_age          = 90   # secs.
 piggyback_max_cachefile_age        = 3600  # secs
 piggyback_translation              = [] # Ruleset for translating piggyback host names
+service_description_translation    = [] # Ruleset for translating service descriptions
 simulation_mode                    = False
 fake_dns                           = False
 agent_simulator                    = False

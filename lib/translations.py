@@ -24,19 +24,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 from cmk.regex import regex
 
-def translate(translation, hostname):
+
+def translate_hostname(translation, hostname):
+    return _translate(translation, hostname)
+
+
+def translate_service_description(translation, service_description):
+    if service_description.strip() in \
+        ["Check_MK", "Check_MK Agent",
+         "Check_MK Discovery", "Check_MK inventory",
+         "Check_MK HW/SW Inventory"]:
+        return service_description.strip()
+    return _translate(translation, service_description)
+
+
+def _translate(translation, name):
     # 1. Case conversion
     caseconf = translation.get("case")
     if caseconf == "upper":
-        hostname = hostname.upper()
+        name = name.upper()
     elif caseconf == "lower":
-        hostname = hostname.lower()
+        name = name.lower()
 
     # 2. Drop domain part (not applied to IP addresses!)
-    if translation.get("drop_domain") and not hostname[0].isdigit():
-        hostname = hostname.split(".", 1)[0]
+    if translation.get("drop_domain") and not name[0].isdigit():
+        name = name.split(".", 1)[0]
 
     # 3. Multiple regular expression conversion
     if type(translation.get("regex")) == tuple:
@@ -49,17 +64,17 @@ def translate(translation, hostname):
             expr += '$'
         rcomp = regex(expr)
         # re.RegexObject.sub() by hand to handle non-existing references
-        mo = rcomp.match(hostname)
+        mo = rcomp.match(name)
         if mo:
-            hostname = subst
+            name = subst
             for nr, text in enumerate(mo.groups("")):
-                hostname = hostname.replace("\\%d" % (nr+1), text)
+                name = name.replace("\\%d" % (nr+1), text)
             break
 
     # 4. Explicity mapping
-    for from_host, to_host in translation.get("mapping", []):
-        if from_host == hostname:
-            hostname = to_host
+    for from_name, to_name in translation.get("mapping", []):
+        if from_name == name:
+            name = to_name
             break
 
-    return hostname
+    return name.strip()

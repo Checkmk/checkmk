@@ -2537,6 +2537,27 @@ register_rule(group,
     ),
     match = "dict")
 
+register_rule(group,
+    "service_description_translation",
+    ServiceDescriptionTranslation(
+        title=_("Translation of service descriptions"),
+        help=_("Within this ruleset service descriptions can be translated similar to the ruleset "
+               "<tt>Hostname translation for piggybacked hosts</tt>. Services such as "
+               "<tt>Check_MK</tt>, <tt>Check_MK Agent</tt>, <tt>Check_MK Discovery</tt>, "
+               "<tt>Check_MK inventory</tt>, and <tt>Check_MK HW/SW Inventory</tt> are excluded. "
+               "<b>Attention:</b><ul>"
+               "<li>Downtimes and other configured rules which match these "
+               "services have to be adapted.</li>"
+               "<li>Performance data and graphs will begin from scratch for translated services.</li>"
+               "<li>Especially configured check parameters keep their functionality further on.</li>"
+               "<li>This new ruleset translates also the item part of a service description. "
+               "This means that after such a translation the item may be gone but is used in the "
+               "conditions of the parameters further on if any parameters are configured. "
+               "This might be confusing.</li></ul>"
+               "This rule should only be configured in the early stages."),
+    ),
+    match_type="all")
+
 def get_snmp_checktypes():
    checks = check_mk_local_automation("get-check-information")
    types = [ (cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])

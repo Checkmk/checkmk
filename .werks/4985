@@ -1,0 +1,29 @@
+Title: Service descriptions can be translated
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1501062877
+Class: feature
+
+With the new ruleset {{Translation of service descriptions}}
+service descriptions can be translated similar to the ruleset
+{{Hostname translation for piggybacked hosts}}.
+Services such as "Check_MK", "Check_MK Agent","Check_MK Discovery",
+"Check_MK inventory" and "Check_MK HW/SW Inventory" are excluded.
+
+Attention:
+<ul>
+<li>Downtimes and other configured rules which match these
+services have to be adapted eg. the ruleset {{Disabled services}}. They fit
+old service descriptions.</li>
+<li>Performance data and graphs will begin from scratch for translated services.</li>
+<li>Especially configured check parameters keep their functionality further on.</li>
+<li>This new ruleset translates also the item part of a service description.
+This means that after such a translation the item may be gone but is used in the
+conditions of the parameters further on if any parameters are configured.
+This might be confusing.</li>
+</ul>
+
+This rule should only be configured in the early stages.

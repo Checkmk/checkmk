@@ -269,6 +269,7 @@ define servicedependency {
         if checkname not in checks.check_info:
             continue # simply ignore missing checks
 
+        description = config.get_final_service_description(hostname, description)
         # Make sure, the service description is unique on this host
         if description in used_descriptions:
             cn, it = used_descriptions[description]
@@ -346,7 +347,7 @@ define service {
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
     for command, description, has_perfdata in legchecks:
-        description = checks.sanitize_service_description(description)
+        description = config.get_final_service_description(hostname, description)
         if do_omit_service(hostname, description):
             continue
 
@@ -464,7 +465,7 @@ define service {
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
             #                              we use "check-mk-custom"
             # "has_perfdata"  (optional)   If present and True, we activate perf_data
-            description = checks.sanitize_service_description(entry["service_description"])
+            description = config.get_final_service_description(hostname, entry["service_description"])
             has_perfdata = entry.get("has_perfdata", False)
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")

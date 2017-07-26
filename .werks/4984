@@ -1,0 +1,13 @@
+Title: aix_service_packs: Cleaned up mixture of the latest and all past service packs
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1501058641
+
+Previously the latest service pack was displayed as a single row
+below {{Service Packs}}. Separated the latest service pack from
+all past ones.

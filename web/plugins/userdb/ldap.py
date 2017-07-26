@@ -135,7 +135,7 @@ class LDAPUserConnector(UserConnector):
     connection_suffixes = {}
 
     def __init__(self, config):
-        super(LDAPUserConnector, self).__init__(config)
+        super(LDAPUserConnector, self).__init__(self._transform_config(config))
 
         self._ldap_obj        = None
         self._ldap_obj_config = None
@@ -150,6 +150,22 @@ class LDAPUserConnector(UserConnector):
         self._sync_fail_file = cmk.paths.var_dir + '/web/ldap_%s_sync_fail.mk' % self.id()
 
         self.save_suffix()
+
+
+    def _transform_config(self, config):
+        if config["directory_type"] == "ad":
+            # Enable discovery of nearest DC for legacy configs
+            config["discover_nearest_dc"] = True
+
+        elif type(config["directory_type"]) == tuple and config["directory_type"][0] == "ad":
+            # Convert valuespec data structure to internal one
+            config["discover_nearest_dc"] = config["directory_type"][1]["discover_nearest_dc"]
+            config["directory_type"] = "ad"
+
+        else:
+            config["discover_nearest_dc"] = False
+
+        return config
 
 
     @classmethod
@@ -264,9 +280,27 @@ class LDAPUserConnector(UserConnector):
                 ldap_obj, error_msg = self.connect_server(server)
                 if ldap_obj:
                     self._ldap_obj = ldap_obj
-                    break # got a connection!
                 else:
                     errors.append(error_msg)
+                    continue
+
+                if self._config["discover_nearest_dc"]:
+                    try:
+                        discovered_server = self._discover_nearest_dc(server)
+                        self.log('  DISCOVERY: Detected server %r from %r' % (discovered_server, server))
+
+                        ldap_obj, error_msg = self.connect_server(discovered_server)
+                        if ldap_obj:
+                            self._ldap_obj = ldap_obj
+                            break # got a connection!
+                        else:
+                            errors.append(error_msg)
+                            continue
+
+                    except Exception, e:
+                        self.log('  DISCOVERY: Failed to detect server from %r' % server)
+                        log_exception()
+                        raise
 
             # Got no connection to any server
             if self._ldap_obj is None:
@@ -284,6 +318,79 @@ class LDAPUserConnector(UserConnector):
 
     def disconnect(self):
         self._ldap_obj = None
+
+
+    # Active directory only: This function tries to detect the nearest domain controller of the
+    # AD found when connecting to the given server. It works as follows:
+    #
+    # 1. A connection is established with the configured server. Normally this is the
+    #    DNS name of the AD domain. For this connection a "random DC" is used. In fact
+    #    the given name is locally resolved using DNS and one answered IP is picked.
+    # 2. The authentication with the default credentials is done.
+    # 3. The AD site of the local system is detected.
+    #    This is done by gathering the local IP subnets and searching the AD sites for
+    #    these subnets.
+    # 4. A random DC of the found AD site is used instead of "server".
+    #
+    # In case the detection does not work the "server" that has been handed over to this
+    # function is used.
+    def _discover_nearest_dc(self, server):
+        # First extract the domain part from the user DN
+        domain_dn = self.get_domain_dn()
+
+        subnet_dn = "CN=Subnets,CN=Sites,CN=Configuration,%s" % domain_dn
+
+        subnet_filters = []
+        subnets = self._subnets_of_check_mk_server()
+        self.log('  DISCOVERY:   Search sites for subnets: %r' % subnets)
+        for subnet in subnets:
+            subnet_filters.append("(cn=%s)" % subnet)
+
+        # Perform the search for sites matching the subnets of the monitoring server
+        results = self.ldap_search(subnet_dn,
+            filt='(&(objectclass=subnet)(|%s))' % "".join(subnet_filters),
+            columns=["siteobject"],
+            implicit_connect=False)
+
+        if not results:
+            self.log("  DISCOVERY:   Found no site -> Skipping discovery")
+            return server
+
+        site_dn = None
+        for subnet_dn, attrs in results:
+            site_dn = attrs["siteobject"][0]
+            self.log('  DISCOVERY:   Found site: %s (by %s)' % (site_dn, subnet_dn))
+            break # In case there are multiple, use the first one
+
+        # Get list of DCs for this site
+        results = self.ldap_search("CN=SERVERS,%s" % site_dn,
+            filt="(objectclass=server)",
+            columns=["dnshostname"],
+            implicit_connect=False)
+
+        if not results:
+            self.log("  DISCOVERY:   Found no server -> Skipping discovery")
+            return server
+
+        for server_dn, attrs in results:
+            server = attrs["dnshostname"][0]
+            break # In case there are multiple, use the first one
+
+        return server
+
+
+    def _subnets_of_check_mk_server(self):
+        subnets = []
+
+        import netifaces, ipaddress
+        for network_interface in netifaces.interfaces():
+            for link in netifaces.ifaddresses(network_interface).get(netifaces.AF_INET, []):
+                ip_interface = ipaddress.IPv4Interface("%s/%s" % (link["addr"], link["netmask"]))
+                network_addr = "%s" % ip_interface.network
+                if not network_addr.startswith("127."):
+                    subnets.append(network_addr)
+
+        return subnets
 
 
     # Bind with the default credentials
@@ -354,6 +461,14 @@ class LDAPUserConnector(UserConnector):
         return self.replace_macros(self._config['group_dn'])
 
 
+    def get_user_dn(self):
+        return self.replace_macros(self._config['user_dn'])
+
+
+    def get_domain_dn(self):
+        return "dc=%s" % self.get_user_dn().lower().split("dc=", 1)[1]
+
+
     def get_suffix(self):
         return self._config.get('suffix')
 
@@ -394,7 +509,7 @@ class LDAPUserConnector(UserConnector):
 
 
     def user_base_dn_exists(self):
-        return self.object_exists(self.replace_macros(self._config['user_dn']))
+        return self.object_exists(self.get_user_dn())
 
 
     def group_base_dn_exists(self):
@@ -442,7 +557,7 @@ class LDAPUserConnector(UserConnector):
         return results
 
 
-    def ldap_search(self, base, filt='(objectclass=*)', columns=None, scope='sub'):
+    def ldap_search(self, base, filt='(objectclass=*)', columns=None, scope='sub', implicit_connect=True):
         if columns == None:
             columns = []
 
@@ -457,7 +572,9 @@ class LDAPUserConnector(UserConnector):
         while not success:
             tries_left -= 1
             try:
-                self.connect()
+                if implicit_connect:
+                    self.connect()
+
                 result = []
                 try:
                     for dn, obj in self.ldap_paged_async_search(make_utf8(base),
@@ -591,7 +708,7 @@ class LDAPUserConnector(UserConnector):
         # It's only ok when exactly one entry is found. Returns the DN and user_id
         # as tuple in this case.
         result = self.ldap_search(
-            self.replace_macros(self._config['user_dn']),
+            self.get_user_dn(),
             '(&(%s=%s)%s)' % (user_id_attr, ldap.filter.escape_filter_chars(username),
                               self._config.get('user_filter', '')),
             [user_id_attr],
@@ -657,7 +774,7 @@ class LDAPUserConnector(UserConnector):
             filt = '(&%s%s)' % (filt, add_filter)
 
         result = {}
-        for dn, ldap_user in self.ldap_search(self.replace_macros(self._config['user_dn']),
+        for dn, ldap_user in self.ldap_search(self.get_user_dn(),
                                          filt, columns, self._config['user_scope']):
             if user_id_attr not in ldap_user:
                 raise MKLDAPException(_('The configured User-ID attribute "%s" does not '
@@ -776,7 +893,7 @@ class LDAPUserConnector(UserConnector):
                 'members' : [],
                 'cn'      : cn,
             }
-            for user_dn, obj in self.ldap_search(self.replace_macros(self._config['user_dn']),
+            for user_dn, obj in self.ldap_search(self.get_user_dn(),
                                                  filt, ['dn'], self._config['user_scope']):
                 groups[dn]['members'].append(user_dn.lower())
 

@@ -1342,6 +1342,7 @@ def ajax_sync():
         hook_sync(add_to_changelog = False, raise_exc = True)
         html.write('OK\n')
     except Exception, e:
+        log_exception()
         if config.debug:
             raise
         else:

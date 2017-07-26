@@ -6249,13 +6249,27 @@ def vs_ldap_connection(new, connection_id):
                      'LDAP is not reachable or the local webserver is restarted.'),
             allow_empty = False,
         )),
-        ("directory_type", DropdownChoice(
+        ("directory_type", CascadingDropdown(
             title = _("Directory Type"),
             help  = _("Select the software the LDAP directory is based on. Depending on "
                       "the selection e.g. the attribute names used in LDAP queries will "
                       "be altered."),
             choices = [
-                ("ad",                 _("Active Directory")),
+                ("ad",                 _("Active Directory"), Dictionary(
+                    elements = [
+                        ("discover_nearest_dc", Checkbox(
+                            title = _("Discover nearest DC"),
+                            label = _("Try to discover and use the nearest DC"),
+                            help = _("When using a single LDAP connection from different sites (locations) "
+                                     "it is a good idea to enable this feature. The LDAP code will the ask "
+                                     "the Active Directory for the nearest reachable DC. Especially in "
+                                     "world wide directories where the connection between sites can have a "
+                                     "higher latency it is a good idea to use this option."),
+                            default_value = True,
+                        )),
+                    ],
+                    optional_keys = [],
+                )),
                 ("openldap",           _("OpenLDAP")),
                 ("389directoryserver", _("389 Directory Server")),
             ],
@@ -10382,10 +10396,8 @@ def mode_users(phase):
                 if userdb.hook_sync(add_to_changelog = True, raise_exc = True):
                     return None, _('The user synchronization completed successfully.')
             except Exception, e:
-                if config.debug:
-                    raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
-                else:
-                    raise MKUserError(None, "%s" % e)
+                log_exception()
+                raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
 
         elif html.var("_bulk_delete_users"):
             return bulk_delete_users_after_confirm(users)

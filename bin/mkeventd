@@ -1590,7 +1590,8 @@ class EventServer(object):
 
     # Receives an incoming SNMP trap from the socket and hands it over to PySNMP for parsing
     # and processing. PySNMP is calling self.handle_snmptrap back.
-    def process_snmptrap(self, (whole_msg, sender_address)):
+    def process_snmptrap(self, data):
+        whole_msg, sender_address = data
         self.logger.verbose("Trap received from %s:%d. Checking for acceptance now." % sender_address)
         g_snmp_engine.setUserContext(sender_address=sender_address)
         g_snmp_engine.msgAndPduDsp.receiveMessage(g_snmp_engine, (), (), whole_msg)
@@ -2235,7 +2236,8 @@ class EventServer(object):
                 syslog_facilities[facility], syslog_priorities[priority], count,
                     (100.0 * count / float(total_count))))
 
-    def process_line(self, (line, address)):
+    def process_line(self, data):
+        line, address = data
         line = line.rstrip()
         if g_config["debug_rules"]:
             if address:

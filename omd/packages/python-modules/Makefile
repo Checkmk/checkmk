@@ -47,6 +47,7 @@ MODULES += cffi-1.10.0.tar.gz # needed by e.g. Pillow
 MODULES += Pillow-3.4.2.tar.gz # needed by reportlab (pillow>=2.4.0)
 MODULES += pip-9.0.1.tar.gz # needed by reportlab (pip>=1.4.1)
 MODULES += reportlab-3.3.0.tar.gz # needed by reporting
+MODULES += PyPDF2-1.26.0.tar.gz # needed by reporting
 
 MODULES += npyscreen-4.10.5.tar.gz # needed for mkbench
 MODULES += psutil-5.2.0.tar.gz # needed for mkbench

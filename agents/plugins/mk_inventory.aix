@@ -55,7 +55,7 @@ then
 
         # list the known service packs on a system
         echo "<<<aix_service_packs:persist($UNTIL)>>>"
-        oslevel -s
+        oslevel -sq
     fi
 
     # If you run the prtconf command without any flags, it displays the system model, machine serial,

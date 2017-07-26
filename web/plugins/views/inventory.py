@@ -729,7 +729,7 @@ inventory_displayhints.update({
     ".software.os.install_date"                        : { "title" : _("Install Date"), "paint" : "date" },
     ".software.os.kernel_version"                      : { "title" : _("Kernel Version"), "short" : _("Kernel") },
     ".software.os.arch"                                : { "title" : _("Kernel Architecture"), "short" : _("Architecture") },
-    ".software.os.service_pack"                        : { "title" : _("Service Pack"), "short" : _("Service Pack") },
+    ".software.os.service_pack"                        : { "title" : _("Latest Service Pack"), "short" : _("Service Pack") },
     ".software.os.service_packs:"                      : { "title" : _("Service Packs"), "render" : render_inv_dicttable,
                                                             "keyorder" : [ "name" ] },
     ".software.configuration."                         : { "title" : _("Configuration"), },

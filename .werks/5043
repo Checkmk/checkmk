@@ -1,0 +1,12 @@
+Title: RBN: Improved displaying of notitification context in analyse notification mode
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1501052799
+Class: feature
+
+There is a new icon for toggling the notification context. Once you click on this icon
+the notification context will be displayed below the notification you clicked the icon
+for.

@@ -231,6 +231,15 @@ function mouse_offset_to_middle(obj, event){
     }
 }
 
+function toggle_notification_context(id)
+{
+    var obj = document.getElementById(id);
+    if (has_class(obj, "hidden"))
+        remove_class(obj, "hidden");
+    else
+        add_class(obj, "hidden");
+}
+
 //#.
 //#   .-Events-------------------------------------------------------------.
 //#   |                    _____                 _                         |

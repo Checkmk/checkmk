@@ -1345,7 +1345,8 @@ a.element_dragger:hover {
 }
 
 td.invtree table,
-td.agent_config table.rulesets table {
+td.agent_config table.rulesets table,
+table.data tr.notification_context table {
    border-collapse: collapse;
    border: 0.5px solid black;
    box-shadow: 0.5px 0.5px 1px #ccc;
@@ -1357,7 +1358,9 @@ td.agent_config table.rulesets table td,
 td.invtree table th,
 td.agent_config table.rulesets table td.title,
 table.data.single tr.data td.invtree table td,
-table.data.single tr.data td.invtree table th
+table.data.single tr.data td.invtree table th,
+table.data tr.notification_context table td,
+table.data tr.notification_context table th
 {
     border: 1px solid #888;
     padding: 1px 5px;
@@ -1365,15 +1368,19 @@ table.data.single tr.data td.invtree table th
 }
 
 td.invtree table th,
-td.agent_config table.rulesets table td.title {
+td.agent_config table.rulesets table td.title,
+table.data tr.notification_context table th {
     text-align: left;
 }
+
 td.invtree table td,
-td.agent_config table.rulesets table td {
+td.agent_config table.rulesets table td,
+table.data tr.notification_context table td {
     background-color: #fff;
 }
 
-td.agent_config table.rulesets table td.title {
+td.agent_config table.rulesets table td.title,
+table.data tr.notification_context table th {
     background-color: #999;
     color: #fff;
 }

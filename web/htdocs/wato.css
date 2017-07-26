@@ -1004,6 +1004,18 @@ div.varname {
     width: 280px;
 }
 
+.wato table.data tr.notification_context.hidden {
+    display: none;
+}
+
+table.data tr.notification_context table {
+    margin: 5px;
+}
+
+table.data tr.notification_context table th,
+table.data tr.notification_context table td {
+    font-family: monospace;
+}
 
 /*-------------------------------------------------------------------------.
 |               ____                                                       |

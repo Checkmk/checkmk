@@ -1,0 +1,40 @@
+Title: LDAP: Active Directory connection try to discover the nearest DC now
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1501075431
+Class: feature
+
+The LDAP connection of the Check_MK GUI is now using the configured LDAP
+server to detect the nearest Domain Controller of the current domain. Speaking
+to the nearest domain controller will increase the performance of the LDAP sync.
+
+The discovery is done like this:
+
+<ol>
+<li>
+A connection is established with the configured server. Normally this is the
+DNS name of the AD domain. For this connection a "random DC" is used. In fact
+the given name is locally resolved using DNS and one answered IP is picked.
+</li>
+<li>
+The authentication with the default credentials is done.
+</li>
+<li>
+The AD site of the local system is detected.
+This is done by gathering the local IP subnets and searching the AD sites for
+these subnets.
+</li>
+<li>
+The first DC of the found AD site is used instead of "server".
+</li>
+</ol>
+
+In case the detection does not work the "server" that has been handed over to this
+function is used.
+
+When you experience errors with this enable debug logging for LDAP
+(Global Settings > User Interface > Logging > LDAP) and check out
+the <tt>var/log/web.log</tt> for details.

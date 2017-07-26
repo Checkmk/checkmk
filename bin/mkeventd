@@ -4816,7 +4816,6 @@ def usage():
    -C, --configdir      Path to directory where mkevent.mk lives
    -S, --socket P       Path to unix socket for querying status
    -E, --eventsocket P  Path to unix socket for receiving events (optional)
-   -L, --livestatus P   Path to livestatus socket of monitoring core (optional)
    -P, --pipe P         Path to pipe for receiving events
    --syslog             Enable builtin UDP syslog server
    --syslog-fd FD       Do not open UDP port 514, but inherit it via this FD
@@ -4837,7 +4836,6 @@ The following defaults are set:
   Config dir:       %(g_config_dir)s
   Unix socket:      %(g_socket_path)s
   Event socket:     %(g_eventsocket_path)s
-  Livestatus socket %(g_livestatus_socket)s
   Event Pipe:       %(g_pipe_path)s
   PID file:         %(g_pid_file)s
   Log file:         %(g_logfile_path)s
@@ -4881,7 +4879,6 @@ if omd_root:
     g_config_dir        = omd_root + "/etc/check_mk"
     g_socket_path       = omd_root + "/tmp/run/mkeventd/status"
     g_eventsocket_path  = omd_root + "/tmp/run/mkeventd/eventsocket"
-    g_livestatus_socket = omd_root + "/tmp/run/live"
     g_pipe_path         = omd_root + "/tmp/run/mkeventd/events"
     g_pid_file          = omd_root + "/tmp/run/mkeventd/pid"
     g_logfile_path      = omd_root + "/var/log/mkeventd.log"
@@ -4891,7 +4888,6 @@ else:
     g_config_dir        = "/etc/check_mk"
     g_socket_path       = None
     g_eventsocket_path  = None
-    g_livestatus_socket = None
     g_pipe_path         = None
     g_pid_file          = "/var/run/mkeventd.pid"
     g_logfile_path      = "/var/log/mkeventd.log"
@@ -4899,10 +4895,10 @@ else:
     g_compiled_mibs_dir = "/var/lib/mkeventd/compiled_mibs"
 
 
-short_options = "hvVgS:P:p:C:E:L:"
+short_options = "hvVgS:P:p:C:E:"
 long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "eventsocket=", "pipe=",
                  "pidfile=", "statedir=", "configdir=", "logdir=", "profile-status", "profile-event", "debug-locking",
-                 "syslog", "syslog-fd=", "syslog-tcp", "syslog-tcp-fd=", "snmptrap", "snmptrap-fd=", "livestatus=" ]
+                 "syslog", "syslog-fd=", "syslog-tcp", "syslog-tcp-fd=", "snmptrap", "snmptrap-fd=" ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -4921,8 +4917,6 @@ try:
             g_socket_path = a
         elif o in [ '-E', '--eventsocket' ]:
             g_eventsocket_path = a
-        elif o in [ '-L', '--livestatus' ]:
-            g_livestatus_socket = a
         elif o in [ '-P', '--pipe' ]:
             g_pipe_path = a
         elif o == '--syslog':

@@ -8470,10 +8470,15 @@ def mode_notifications(phase):
                 table.cell("&nbsp;", css="buttons")
 
                 analyse_url = html.makeuri([("analyse", str(nr))])
-                tooltip = "".join(("%s: %s\n" % e) for e in sorted(context.items()))
-                html.icon_button(analyse_url, _("Analyze ruleset with this notification:\n%s") % tooltip, "analyze")
+                html.icon_button(analyse_url, _("Analyze ruleset with this notification"), "analyze")
+
+                html.icon_button(None, _("Show / hide notification context"),
+                                 "toggle_context",
+                                 onclick="toggle_notification_context('notification_context_%d')" % nr)
+
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
+
                 if html.var("analyse") and nr == int(html.var("analyse")):
                     html.icon(_("You are analysing this notification"), "rulematch")
 
@@ -8516,6 +8521,25 @@ def mode_notifications(phase):
                 table.cell(_("Service"), context.get("SERVICEDESC", ""))
                 output = context.get("SERVICEOUTPUT", context.get("HOSTOUTPUT"))
                 table.cell(_("Plugin output"), format_plugin_output(output))
+
+                # Add toggleable notitication context
+                table.row(class_="notification_context hidden",
+                          id_="notification_context_%d" % nr)
+                table.cell(colspan=8)
+
+                html.open_table()
+                for nr, (key, val) in enumerate(sorted(context.items())):
+                    if nr % 2 == 0:
+                        if nr != 0:
+                            html.close_tr()
+                        html.open_tr()
+                    html.th(key)
+                    html.td(val)
+                html.close_table()
+
+                # This dummy row is needed for not destroying the odd/even row highlighting
+                table.row(class_="notification_context hidden")
+
             table.end()
 
     # Do analysis

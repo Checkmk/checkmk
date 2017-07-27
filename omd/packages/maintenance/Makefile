@@ -14,8 +14,6 @@ install:
 	
 	# Create directory for the diskspace plugin
 	mkdir -p $(DESTDIR)$(OMD_ROOT)/share/diskspace
-	
-	install -m 644 wato_omd_configuration.py $(DESTDIR)$(OMD_ROOT)/share/check_mk/web/plugins/wato/omd_configuration.py
 
 skel:
 

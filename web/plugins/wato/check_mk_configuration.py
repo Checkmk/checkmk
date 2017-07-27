@@ -615,10 +615,15 @@ register_configvar(group,
                                             help = _('This URL is opened when clicking on the action / icon. You '
                                                      'can use some macros within the URL which are dynamically '
                                                      'replaced for each object. These are:<br>'
-                                                     '<ul><li>$HOSTNAME$: Contains the name of the host</li>'
+                                                     '<ul>'
+                                                     '<li>$HOSTNAME$: Contains the name of the host</li>'
+                                                     '<li>$HOSTNAME_URL_ENCODED$: Same as above but URL encoded</li>'
                                                      '<li>$SERVICEDESC$: Contains the service description '
                                                      '(in case this is a service)</li>'
-                                                     '<li>$HOSTADDRESS$: Contains the network address of the host</li></ul>'),
+                                                     '<li>$SERVICEDESC_URL_ENCODED$: Same as above but URL encoded</li>'
+                                                     '<li>$HOSTADDRESS$: Contains the network address of the host</li>'
+                                                     '<li>$HOSTADDRESS_URL_ENCODED$: Same as above but URL encoded</li>'
+                                                     '</ul>'),
                                             size = 80,
                                         ),
                                         DropdownChoice(

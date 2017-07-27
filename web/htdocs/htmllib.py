@@ -804,6 +804,11 @@ class HTMLCheck_MK(HTMLGenerator):
     # Changing from the self coded urlencode to urllib.quote
     # is saving more then 90% of the total HTML generating time
     # on more complex pages!
+    #
+    # TODO: Cleanup self.urlencode_vars, self.urlencode and self.urlencode_plus.
+    #       urlencode_vars() should directly use urlencode or urlencode_vars and
+    #       not fallback to self.urlencode on it's own. self.urlencode() should
+    #       work for a single value exacly as urlencode_vars() does for multiple
     def urlencode_vars(self, vars):
         output = []
         for varname, value in sorted(vars):
@@ -834,6 +839,16 @@ class HTMLCheck_MK(HTMLGenerator):
                 c = "%%%02x" % ord(c)
             ret += c
         return ret
+
+
+    # Like urllib.quote() but also replaces spaces and /
+    def urlencode_plus(self, value):
+        if type(value) == unicode:
+            value = value.encode("utf-8")
+        elif value == None:
+            return ""
+
+        return urllib.quote_plus(value)
 
 
     # Escape a variable name so that it only uses allowed charachters for URL variables

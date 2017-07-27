@@ -1,0 +1,11 @@
+Title: Custom icons and actions: Add macros for getting URL encoded values
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.4.0p10
+Date: 1501150437
+Class: fix
+
+The macros $HOSTNAME_URL_ENCODED$, $SERVICEDESC_URL_ENCODED$ and $HOSTADDRESS_URL_ENCODED$
+have been added to get the values of the existing macros in URL encoded format.

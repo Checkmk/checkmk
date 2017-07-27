@@ -25,23 +25,24 @@
 #ifndef SectionOHM_h
 #define SectionOHM_h
 
-#include "SectionWMI.h"
 #include "../Configurable.h"
 #include "../OHMMonitor.h"
+#include "SectionWMI.h"
 
 class Configuration;
 
 class SectionOHM : public SectionWMI {
     std::unique_ptr<OHMMonitor> _ohm_monitor;
     std::string _bin_path;
+
 public:
-    SectionOHM(Configuration &config, LoggerAdaptor &logger);
+    SectionOHM(Configuration &config, LoggerAdaptor &logger,
+               const WinApiAdaptor &winapi);
 
     virtual void startIfAsync();
+
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
-
 };
 
 #endif  // SectionOHM_h
-

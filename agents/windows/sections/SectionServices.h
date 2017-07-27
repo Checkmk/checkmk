@@ -26,17 +26,38 @@
 #define SectionServices_h
 
 #include "../Section.h"
-#include <windows.h>
+
+#ifndef STRICT
+#define STRICT
+#endif  // STRICT
+
+#ifdef STRICT
+#define DECLARE_HANDLE(name) \
+    struct name##__ {        \
+        int unused;          \
+    };                       \
+    typedef struct name##__ *name
+#else
+#define DECLARE_HANDLE(name) typedef HANDLE name
+#endif
+
+#if !defined(_WINSVC_) && !defined(_SC_HANDLE_DEFINED_)
+#define _SC_HANDLE_DEFINED_
+DECLARE_HANDLE(SC_HANDLE);
+#endif  // _WINSVC_ && _SC_HANDLE_DEFINED_
+
+typedef const wchar_t *LPCWSTR;
 
 class SectionServices : public Section {
 public:
-    SectionServices(const Environment &env, LoggerAdaptor &logger);
+    SectionServices(const Environment &env, LoggerAdaptor &logger,
+                    const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
+
 private:
     const char *serviceStartType(SC_HANDLE scm, LPCWSTR service_name);
 };
 
 #endif  // SectionServices_h
-

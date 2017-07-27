@@ -25,23 +25,31 @@
 #ifndef wmiHelper_h
 #define wmiHelper_h
 
+#include <winsock2.h>
 #include <wbemidl.h>
 #include <windows.h>
+#include <cstddef>
 #include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include "WinApiAdaptor.h"
 
-std::string to_utf8(const wchar_t *string);
+class WinApiAdaptor;
+
+// A (re-)declaration of to_utf8 is necessary when used in a template function
+std::string to_utf8(const wchar_t *string, const WinApiAdaptor &winapi);
 
 namespace wmi {
 
 struct ComException : public std::runtime_error {
-    ComException(const std::string &message, HRESULT result);
-    static std::string resolveError(HRESULT result);
+    ComException(const std::string &message, HRESULT result,
+                 const WinApiAdaptor &winapi);
+    static std::string resolveError(HRESULT result,
+                                    const WinApiAdaptor &winapi);
 
 private:
-    static IErrorInfo *getErrorInfo();
+    static IErrorInfo *getErrorInfo(const WinApiAdaptor &winapi);
     std::string toStringHex(HRESULT res);
 };
 
@@ -51,9 +59,10 @@ struct ComTypeException : public std::runtime_error {
 
 class Variant {
     VARIANT _value;
+    const WinApiAdaptor &_winapi;
 
 public:
-    Variant(const VARIANT &val);
+    Variant(const VARIANT &val, const WinApiAdaptor &winapi);
     ~Variant();
 
     template <typename T>
@@ -86,9 +95,10 @@ class ObjectWrapper {
 
 protected:
     std::shared_ptr<IWbemClassObject> _current;
+    const WinApiAdaptor &_winapi;
 
 public:
-    ObjectWrapper(IWbemClassObject *object);
+    ObjectWrapper(IWbemClassObject *object, const WinApiAdaptor &winapi);
 
     ObjectWrapper(const ObjectWrapper &reference);
     ~ObjectWrapper() noexcept;
@@ -115,12 +125,12 @@ private:
 
 template <typename T>
 T ObjectWrapper::get(const wchar_t *key) const {
-    Variant value(getVarByKey(key));
+    Variant value(getVarByKey(key), _winapi);
     try {
         return value.get<T>();
     } catch (const ComTypeException &e) {
         throw ComTypeException(std::string("failed to retrieve ") +
-                               to_utf8(key) + ": " + e.what());
+                               to_utf8(key, _winapi) + ": " + e.what());
     }
 }
 
@@ -129,8 +139,8 @@ class Result : public ObjectWrapper {
     HRESULT _last_error{S_OK};
 
 public:
-    Result();
-    Result(IEnumWbemClassObject *enumerator);
+    Result(const WinApiAdaptor &winapi);
+    Result(IEnumWbemClassObject *enumerator, const WinApiAdaptor &winapi);
     Result(const Result &reference);
     ~Result() noexcept;
 
@@ -158,9 +168,10 @@ class Helper {
     IWbemLocator *_locator;
     IWbemServices *_services;
     std::wstring _path;
+    const WinApiAdaptor &_winapi;
 
 public:
-    Helper(LPCWSTR path = L"Root\\Cimv2");
+    Helper(const WinApiAdaptor &winapi, LPCWSTR path = L"Root\\Cimv2");
 
     Helper(const Helper &reference) = delete;
     Helper &operator=(const Helper &reference) = delete;

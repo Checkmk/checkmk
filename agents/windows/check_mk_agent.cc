@@ -45,15 +45,14 @@
 #include <winsock2.h>
 #include <ctype.h>  // isspace()
 #include <dirent.h>
+#include <inttypes.h>
 #include <locale.h>
-#include <shellapi.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
-#include <tlhelp32.h>  // list of processes
 #include <unistd.h>
 #include <winbase.h>
 #include <windows.h>
@@ -66,23 +65,24 @@
 #include <vector>
 #include "Configurable.h"
 #include "Configuration.h"
+#include "CrashHandler.h"
 #include "Environment.h"
 #include "EventLog.h"
 #include "ExternalCmd.h"
 #include "ListenSocket.h"
+#include "Logger.h"
 #include "OHMMonitor.h"
 #include "OutputProxy.h"
 #include "PerfCounter.h"
 #include "SectionManager.h"
 #include "Thread.h"
-#include "CrashHandler.h"
+#include "WinApi.h"
 #include "dynamic_func.h"
-#include "Logger.h"
 #include "stringutil.h"
 #include "types.h"
 #include "wmiHelper.h"
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
+
+using namespace std;
 
 //  .----------------------------------------------------------------------.
 //  |       ____            _                 _   _                        |
@@ -146,6 +146,12 @@ volatile bool g_should_terminate = false;
 // Gets terminated on shutdown
 HANDLE g_workers_job_object;
 
+// Ugly but there is no (?) way to pass these as parameters to the Windows
+// service stuff. At least, let us *not* make these yet another global variables
+// and access them from other compilation units...
+static const WinApi s_winapi;
+static Logger s_logger(s_winapi);
+
 struct GlobalConfig {
     Configuration parser;
 
@@ -164,24 +170,19 @@ struct GlobalConfig {
 
     GlobalConfig(const Environment &env)
         : parser(env)
-        , port(parser, "global", "port", 6556)
-        , realtime_port(parser, "global", "realtime_port", 6559)
-        , realtime_timeout(parser, "global", "realtime_timeout", 90)
-        , crash_debug(parser, "global", "crash_debug", false)
-        , section_flush(parser, "global", "section_flush", true)
-        , encrypted(parser, "global", "encrypted", false)
-        , encrypted_rt(parser, "global", "encrypted_rt", true)
-        , support_ipv6(parser, "global", "ipv6", true)
-        , passphrase(parser, "global", "passphrase", "")
-        , only_from(parser, "global", "only_from") {}
+        , port(parser, "global", "port", 6556, s_winapi)
+        , realtime_port(parser, "global", "realtime_port", 6559, s_winapi)
+        , realtime_timeout(parser, "global", "realtime_timeout", 90, s_winapi)
+        , crash_debug(parser, "global", "crash_debug", false, s_winapi)
+        , section_flush(parser, "global", "section_flush", true, s_winapi)
+        , encrypted(parser, "global", "encrypted", false, s_winapi)
+        , encrypted_rt(parser, "global", "encrypted_rt", true, s_winapi)
+        , support_ipv6(parser, "global", "ipv6", true, s_winapi)
+        , passphrase(parser, "global", "passphrase", "", s_winapi)
+        , only_from(parser, "global", "only_from", s_winapi) {}
 } * g_config;
 
 SectionManager *g_sections;
-
-// Ugly but there is no (?) way to pass a reference to the logger instance to
-// the Windows service stuff. At least, let us *not* make this another global
-// variable and access it from other compilation units...
-static Logger s_logger;
 
 //  .----------------------------------------------------------------------.
 //  |                  _   _      _                                        |
@@ -208,8 +209,8 @@ double file_time(const FILETIME *filetime) {
 double current_time() {
     SYSTEMTIME systime;
     FILETIME filetime;
-    GetSystemTime(&systime);
-    SystemTimeToFileTime(&systime, &filetime);
+    s_winapi.GetSystemTime(&systime);
+    s_winapi.SystemTimeToFileTime(&systime, &filetime);
     return file_time(&filetime);
 }
 
@@ -239,7 +240,7 @@ void foreach_enabled_section(bool realtime,
 //  | Stuff dealing with the Windows service management.                   |
 //  '----------------------------------------------------------------------'
 
-TCHAR *gszServiceName = (TCHAR *)TEXT(SERVICE_NAME);
+char *gszServiceName = (char *)SERVICE_NAME;
 SERVICE_STATUS serviceStatus;
 SERVICE_STATUS_HANDLE serviceStatusHandle = 0;
 void stop_threads();
@@ -254,7 +255,7 @@ void WINAPI ServiceControlHandler(DWORD controlCode) {
             g_should_terminate = true;
             stop_threads();
             serviceStatus.dwCurrentState = SERVICE_STOP_PENDING;
-            SetServiceStatus(serviceStatusHandle, &serviceStatus);
+            s_winapi.SetServiceStatus(serviceStatusHandle, &serviceStatus);
             return;
 
         case SERVICE_CONTROL_PAUSE:
@@ -272,10 +273,10 @@ void WINAPI ServiceControlHandler(DWORD controlCode) {
                 break;
     }
 
-    SetServiceStatus(serviceStatusHandle, &serviceStatus);
+    s_winapi.SetServiceStatus(serviceStatusHandle, &serviceStatus);
 }
 
-void WINAPI ServiceMain(DWORD, TCHAR *[]) {
+void WINAPI ServiceMain(DWORD, char *[]) {
     // initialise service status
     serviceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
     serviceStatus.dwCurrentState = SERVICE_STOPPED;
@@ -285,19 +286,19 @@ void WINAPI ServiceMain(DWORD, TCHAR *[]) {
     serviceStatus.dwCheckPoint = 0;
     serviceStatus.dwWaitHint = 0;
 
-    serviceStatusHandle =
-        RegisterServiceCtrlHandler(gszServiceName, ServiceControlHandler);
+    serviceStatusHandle = s_winapi.RegisterServiceCtrlHandler(
+        gszServiceName, ServiceControlHandler);
 
     if (serviceStatusHandle) {
         // service is starting
         serviceStatus.dwCurrentState = SERVICE_START_PENDING;
-        SetServiceStatus(serviceStatusHandle, &serviceStatus);
+        s_winapi.SetServiceStatus(serviceStatusHandle, &serviceStatus);
 
         // Service running
         serviceStatus.dwControlsAccepted |=
             (SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN);
         serviceStatus.dwCurrentState = SERVICE_RUNNING;
-        SetServiceStatus(serviceStatusHandle, &serviceStatus);
+        s_winapi.SetServiceStatus(serviceStatusHandle, &serviceStatus);
 
         RunImmediate("service", 0, NULL);
 
@@ -305,7 +306,7 @@ void WINAPI ServiceMain(DWORD, TCHAR *[]) {
         serviceStatus.dwControlsAccepted &=
             ~(SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN);
         serviceStatus.dwCurrentState = SERVICE_STOPPED;
-        SetServiceStatus(serviceStatusHandle, &serviceStatus);
+        s_winapi.SetServiceStatus(serviceStatusHandle, &serviceStatus);
     }
 }
 
@@ -313,49 +314,52 @@ void RunService() {
     SERVICE_TABLE_ENTRY serviceTable[] = {{gszServiceName, ServiceMain},
                                           {0, 0}};
 
-    StartServiceCtrlDispatcher(serviceTable);
+    s_winapi.StartServiceCtrlDispatcher(serviceTable);
 }
 
 void InstallService() {
     SC_HANDLE serviceControlManager =
-        OpenSCManager(0, 0, SC_MANAGER_CREATE_SERVICE);
+        s_winapi.OpenSCManager(0, 0, SC_MANAGER_CREATE_SERVICE);
 
     if (serviceControlManager) {
         char path[_MAX_PATH + 1];
-        if (GetModuleFileName(0, path, sizeof(path) / sizeof(path[0])) > 0) {
+        if (s_winapi.GetModuleFileName(0, path,
+                                       sizeof(path) / sizeof(path[0])) > 0) {
             char quoted_path[1024];
             snprintf(quoted_path, sizeof(quoted_path), "\"%s\"", path);
-            SC_HANDLE service =
-                CreateService(serviceControlManager, gszServiceName,
-                              gszServiceName, SERVICE_ALL_ACCESS,
-                              SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START,
-                              SERVICE_ERROR_IGNORE, quoted_path, 0, 0, 0, 0, 0);
+            SC_HANDLE service = s_winapi.CreateService(
+                serviceControlManager, gszServiceName, gszServiceName,
+                SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
+                SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, quoted_path);
             if (service) {
-                CloseServiceHandle(service);
+                s_winapi.CloseServiceHandle(service);
                 printf(SERVICE_NAME " Installed Successfully\n");
             } else {
-                if (GetLastError() == ERROR_SERVICE_EXISTS)
+                const DWORD lastError = s_winapi.GetLastError();
+                if (lastError == ERROR_SERVICE_EXISTS)
                     printf(SERVICE_NAME " Already Exists.\n");
                 else
                     printf(SERVICE_NAME
                            " Was not Installed Successfully. Error Code %d\n",
-                           (int)GetLastError());
+                           static_cast<int>(lastError));
             }
         }
 
-        CloseServiceHandle(serviceControlManager);
+        s_winapi.CloseServiceHandle(serviceControlManager);
     }
 }
 
 void UninstallService() {
-    SC_HANDLE serviceControlManager = OpenSCManager(0, 0, SC_MANAGER_CONNECT);
+    SC_HANDLE serviceControlManager =
+        s_winapi.OpenSCManager(0, 0, SC_MANAGER_CONNECT);
 
     if (serviceControlManager) {
-        SC_HANDLE service = OpenService(serviceControlManager, gszServiceName,
-                                        SERVICE_QUERY_STATUS | DELETE);
+        SC_HANDLE service =
+            s_winapi.OpenService(serviceControlManager, gszServiceName,
+                                 SERVICE_QUERY_STATUS | DELETE);
         if (service) {
             SERVICE_STATUS serviceStatus;
-            if (QueryServiceStatus(service, &serviceStatus)) {
+            if (s_winapi.QueryServiceStatus(service, &serviceStatus)) {
                 while (in_set(serviceStatus.dwCurrentState,
                               {SERVICE_RUNNING, SERVICE_STOP_PENDING})) {
                     if (serviceStatus.dwCurrentState == SERVICE_STOP_PENDING) {
@@ -364,24 +368,25 @@ void UninstallService() {
                         DWORD waitTime = serviceStatus.dwWaitHint / 10;
                         waitTime =
                             std::max(1000UL, std::min(waitTime, 10000UL));
-                        Sleep(waitTime);
-                        if (!QueryServiceStatus(service, &serviceStatus)) {
+                        s_winapi.Sleep(waitTime);
+                        if (!s_winapi.QueryServiceStatus(service,
+                                                         &serviceStatus)) {
                             break;
                         }
                     } else {
-                        if (ControlService(service, SERVICE_CONTROL_STOP,
-                                           &serviceStatus) == 0) {
+                        if (s_winapi.ControlService(service,
+                                                    SERVICE_CONTROL_STOP,
+                                                    &serviceStatus) == 0) {
                             break;
                         }
                     }
                 }
 
                 if (serviceStatus.dwCurrentState == SERVICE_STOPPED) {
-                    if (DeleteService(service))
+                    if (s_winapi.DeleteService(service))
                         printf(SERVICE_NAME " Removed Successfully\n");
                     else {
-                        DWORD dwError;
-                        dwError = GetLastError();
+                        const DWORD dwError = s_winapi.GetLastError();
                         if (dwError == ERROR_ACCESS_DENIED)
                             printf(
                                 "Access Denied While trying to "
@@ -398,9 +403,9 @@ void UninstallService() {
                     printf(SERVICE_NAME " is still Running.\n");
                 }
             }
-            CloseServiceHandle(service);
+            s_winapi.CloseServiceHandle(service);
         }
-        CloseServiceHandle(serviceControlManager);
+        s_winapi.CloseServiceHandle(serviceControlManager);
     }
 }
 void do_install() { InstallService(); }
@@ -420,7 +425,7 @@ void do_remove() { UninstallService(); }
 
 void wsa_startup() {
     WSADATA wsa;
-    if (0 != WSAStartup(MAKEWORD(2, 0), &wsa)) {
+    if (0 != s_winapi.WSAStartup(MAKEWORD(2, 0), &wsa)) {
         fprintf(stderr, "Cannot initialize winsock.\n");
         exit(1);
     }
@@ -437,10 +442,10 @@ void stop_threads() {
         thread_handles.insert(thread_handles.end(), temp.begin(), temp.end());
     });
 
-    WaitForMultipleObjects(thread_handles.size(), &thread_handles[0], TRUE,
-                           5000);
-    TerminateJobObject(g_workers_job_object, 0);
-    ::CloseHandle(g_workers_job_object);
+    s_winapi.WaitForMultipleObjects(thread_handles.size(), &thread_handles[0],
+                                    TRUE, 5000);
+    s_winapi.TerminateJobObject(g_workers_job_object, 0);
+    s_winapi.CloseHandle(g_workers_job_object);
 }
 
 //   .----------------------------------------------------------------------.
@@ -519,9 +524,10 @@ DWORD WINAPI realtime_check_func(void *data_in) {
 
         if (*g_config->encrypted_rt) {
             out.reset(new EncryptingBufferedSocketProxy(
-			  INVALID_SOCKET, *g_config->passphrase, s_logger));
+                INVALID_SOCKET, *g_config->passphrase, s_logger, s_winapi));
         } else {
-            out.reset(new BufferedSocketProxy(INVALID_SOCKET, s_logger));
+            out.reset(
+                new BufferedSocketProxy(INVALID_SOCKET, s_logger, s_winapi));
         }
 
         timeval before;
@@ -532,7 +538,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
             long duration = (now.tv_sec - before.tv_sec) * 1000 +
                             (now.tv_usec - before.tv_usec) / 1000;
             if (duration < 1000) {
-                ::Sleep(1000 - duration);
+                s_winapi.Sleep(1000 - duration);
             }
             gettimeofday(&before, 0);
 
@@ -544,7 +550,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                     data->new_request = false;
                     // (re-)establish connection if necessary
                     if (current_socket != INVALID_SOCKET) {
-                        closesocket(current_socket);
+                        s_winapi.closesocket(current_socket);
                         out->setSocket(INVALID_SOCKET);
                     }
                     current_address = data->last_address;
@@ -553,7 +559,8 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                         if (current_address.ss_family == AF_INET) {
                             sockaddr_in *addrv4 =
                                 (sockaddr_in *)&current_address;
-                            addrv4->sin_port = htons(*g_config->realtime_port);
+                            addrv4->sin_port =
+                                s_winapi.htons(*g_config->realtime_port);
                             sockaddr_size = sizeof(sockaddr_in);
                         } else {
                             sockaddr_in6 *addrv6 =
@@ -569,9 +576,10 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                                 // able
                                 // to connect.
                                 sockaddr_in temp{0};
-                                temp.sin_port = htons(*g_config->realtime_port);
+                                temp.sin_port =
+                                    s_winapi.htons(*g_config->realtime_port);
                                 temp.sin_family = AF_INET;
-                                memcpy(&temp.sin_addr.s_addr,
+                                memcpy(&temp.sin_addr.S_un.S_addr,
                                        addrv6->sin6_addr.u.Byte + 12, 4);
 
                                 current_address.ss_family = AF_INET;
@@ -590,25 +598,25 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                                 }
 
                                 addrv6->sin6_port =
-                                    htons(*g_config->realtime_port);
+                                    s_winapi.htons(*g_config->realtime_port);
                                 sockaddr_size = sizeof(sockaddr_in6);
                             }
                         }
                         current_ip = ListenSocket::readableIP(&current_address);
 
-                        current_socket = socket(current_address.ss_family,
-                                                SOCK_DGRAM, IPPROTO_UDP);
+                        current_socket = s_winapi.socket(
+                            current_address.ss_family, SOCK_DGRAM, IPPROTO_UDP);
                         if (current_socket == INVALID_SOCKET) {
                             s_logger.crashLog("failed to establish socket: %d",
-                                              (int)::WSAGetLastError());
+                                              (int)s_winapi.WSAGetLastError());
                             return 1;
                         }
-                        if (connect(current_socket,
-                                    (const sockaddr *)&current_address,
-                                    sockaddr_size) == SOCKET_ERROR) {
+                        if (s_winapi.connect(current_socket,
+                                             (const sockaddr *)&current_address,
+                                             sockaddr_size) == SOCKET_ERROR) {
                             s_logger.crashLog("failed to connect: %d",
-                                      (int)::WSAGetLastError());
-                            closesocket(current_socket);
+                                              (int)s_winapi.WSAGetLastError());
+                            s_winapi.closesocket(current_socket);
                             current_socket = INVALID_SOCKET;
                         }
                         out->setSocket(current_socket);
@@ -618,8 +626,10 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                 // send data
                 if (current_socket != INVALID_SOCKET) {
                     // send data
-                    SetEnvironmentVariable("REMOTE_HOST", current_ip.c_str());
-                    SetEnvironmentVariable("REMOTE", current_ip.c_str());
+                    s_winapi.SetEnvironmentVariable("REMOTE_HOST",
+                                                    current_ip.c_str());
+                    s_winapi.SetEnvironmentVariable("REMOTE",
+                                                    current_ip.c_str());
                     char timestamp[11];
                     snprintf(timestamp, 11, "%" PRIdtime, time(NULL));
 
@@ -632,7 +642,7 @@ DWORD WINAPI realtime_check_func(void *data_in) {
                 }
             }
         }
-        closesocket(current_socket);
+        s_winapi.closesocket(current_socket);
 
         return 0;
     } catch (const std::exception &e) {
@@ -645,7 +655,7 @@ void do_adhoc(const Environment &env) {
     g_should_terminate = false;
 
     ListenSocket sock(*g_config->port, *g_config->only_from,
-                      *g_config->support_ipv6, s_logger);
+                      *g_config->support_ipv6, s_logger, s_winapi);
 
     printf("Listening for TCP connections (%s) on port %d\n",
            sock.supportsIPV6()
@@ -661,7 +671,7 @@ void do_adhoc(const Environment &env) {
 
     // Job object for worker jobs. All worker are within this object
     // and receive a terminate when the agent ends
-    g_workers_job_object = CreateJobObject(nullptr, "workers_job");
+    g_workers_job_object = s_winapi.CreateJobObject(nullptr, "workers_job");
 
     // Run all ASYNC scripts on startup, so that their data is available on
     // the first query of a client. Obviously, this slows down the agent
@@ -673,8 +683,9 @@ void do_adhoc(const Environment &env) {
     foreach_enabled_section(
         false, [](Section *section) { section->waitForCompletion(); });
 
-    ThreadData thread_data{0, false, env, s_logger};
-    Thread realtime_checker(realtime_check_func, thread_data);
+    ThreadData thread_data{0,   false,          env, s_logger, false,
+                           {0}, Mutex{s_winapi}};
+    Thread realtime_checker(realtime_check_func, thread_data, s_winapi);
 
     if (g_sections->useRealtimeMonitoring()) {
         thread_data.terminate = false;
@@ -685,14 +696,14 @@ void do_adhoc(const Environment &env) {
 
     if (*g_config->encrypted) {
         out.reset(new EncryptingBufferedSocketProxy(
-		      INVALID_SOCKET, *g_config->passphrase, s_logger));
+            INVALID_SOCKET, *g_config->passphrase, s_logger, s_winapi));
     } else {
-        out.reset(new BufferedSocketProxy(INVALID_SOCKET, s_logger));
+        out.reset(new BufferedSocketProxy(INVALID_SOCKET, s_logger, s_winapi));
     }
 
     while (!g_should_terminate) {
         SOCKET connection = sock.acceptConnection();
-        if ((void *)connection != NULL) {
+        if (connection) {
             if (*g_config->crash_debug) {
                 s_logger.closeCrashLog();
                 s_logger.openCrashLog(env.logDirectory());
@@ -704,7 +715,7 @@ void do_adhoc(const Environment &env) {
 
             std::string ip_hr = sock.readableIP(connection);
             s_logger.crashLog("Accepted client connection from %s.",
-			     ip_hr.c_str());
+                              ip_hr.c_str());
             {  // limit lifetime of mutex lock
                 MutexLock guard(thread_data.mutex);
                 thread_data.new_request = true;
@@ -713,14 +724,14 @@ void do_adhoc(const Environment &env) {
                     time(NULL) + *g_config->realtime_timeout;
             }
 
-            SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
-            SetEnvironmentVariable("REMOTE", ip_hr.c_str());
+            s_winapi.SetEnvironmentVariable("REMOTE_HOST", ip_hr.c_str());
+            s_winapi.SetEnvironmentVariable("REMOTE", ip_hr.c_str());
             try {
                 output_data(*out, env, false, *g_config->section_flush);
             } catch (const std::exception &e) {
                 s_logger.crashLog("unhandled exception: %s", e.what());
             }
-            closesocket(connection);
+            s_winapi.closesocket(connection);
         }
     }
 
@@ -733,10 +744,10 @@ void do_adhoc(const Environment &env) {
     if (realtime_checker.wasStarted()) {
         int res = realtime_checker.join();
         s_logger.crashLog("realtime check thread ended with errror code %d.",
-			 res);
+                          res);
     }
 
-    WSACleanup();
+    s_winapi.WSACleanup();
     s_logger.closeCrashLog();
 }
 
@@ -849,7 +860,7 @@ void do_unpack_plugins(const char *plugin_filename, const Environment &env) {
             char new_dir[1024];
             snprintf(new_dir, sizeof(new_dir), "%s\\%s",
                      env.agentDirectory().c_str(), dirname);
-            CreateDirectory(new_dir, NULL);
+            s_winapi.CreateDirectory(new_dir, NULL);
             fprintf(uninstall_file, "del \"%s\\%s\\%s\"\n",
                     env.agentDirectory().c_str(), dirname, filename);
         } else
@@ -912,7 +923,8 @@ void postProcessOnlyFrom() {
                 static_cast<uint16_t>(spec->ip.v4.address & 0xFFFFu);
             result->ip.v6.address[7] =
                 static_cast<uint16_t>(spec->ip.v4.address >> 16);
-            netmaskFromPrefixIPv6(result->bits, result->ip.v6.netmask);
+            netmaskFromPrefixIPv6(result->bits, result->ip.v6.netmask,
+                                  s_winapi);
             g_config->only_from.add(result);
         }
     }
@@ -922,10 +934,10 @@ void RunImmediate(const char *mode, int argc, char **argv) {
     // base directory structure on current working directory or registered dir
     // (from registry)?
     bool use_cwd = !strcmp(mode, "adhoc") || !strcmp(mode, "test");
-    Environment env(use_cwd, s_logger);
+    Environment env(use_cwd, s_logger, s_winapi);
 
     g_config = new GlobalConfig(env);
-    g_sections = new SectionManager(g_config->parser, s_logger);
+    g_sections = new SectionManager(g_config->parser, s_logger, s_winapi);
 
     // careful: destroying the section manager destroys the wmi helpers created
     // for
@@ -978,20 +990,20 @@ void RunImmediate(const char *mode, int argc, char **argv) {
 }
 
 inline LONG WINAPI exception_handler(LPEXCEPTION_POINTERS ptrs) {
-    return CrashHandler(s_logger).handleCrash(ptrs);
+    return CrashHandler(s_logger, s_winapi).handleCrash(ptrs);
 }
 
 int main(int argc, char **argv) {
     wsa_startup();
 
-    SetUnhandledExceptionFilter(exception_handler);
+    s_winapi.SetUnhandledExceptionFilter(exception_handler);
 
-    SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrl_handler, TRUE);
+    s_winapi.SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrl_handler, TRUE);
 
     if ((argc > 2) && (strcmp(argv[1], "file") && strcmp(argv[1], "unpack"))) {
         // need to parse config so we can display defaults in usage
         bool use_cwd = true;
-        Environment env(use_cwd, s_logger);
+        Environment env(use_cwd, s_logger, s_winapi);
         g_config = new GlobalConfig(env);
         usage();
     }

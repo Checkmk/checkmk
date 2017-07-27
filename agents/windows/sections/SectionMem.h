@@ -25,15 +25,16 @@
 #ifndef SectionMem_h
 #define SectionMem_h
 
+#undef CreateMutex
 #include "../Section.h"
 
 class SectionMem : public Section {
 public:
-    SectionMem(const Environment &env, LoggerAdaptor &logger);
+    SectionMem(const Environment &env, LoggerAdaptor &logger,
+               const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
 };
 
 #endif  // SectionMem_h
-

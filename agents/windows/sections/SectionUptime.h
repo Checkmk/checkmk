@@ -25,13 +25,13 @@
 #ifndef SectionUptime_h
 #define SectionUptime_h
 
-#include <windows.h>
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
-#include "../Section.h"
 #include "../wmiHelper.h"
+#undef CreateMutex
+#include "../Section.h"
 
 class Environment;
 
@@ -42,7 +42,8 @@ class SectionUptime : public Section {
     std::unique_ptr<wmi::Helper> _wmi_helper;
 
 public:
-    SectionUptime(const Environment &env, LoggerAdaptor &logger);
+    SectionUptime(const Environment &env, LoggerAdaptor &logger,
+                  const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
@@ -53,4 +54,3 @@ private:
 };
 
 #endif  // SectionUptime_h
-

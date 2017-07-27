@@ -28,8 +28,9 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "../Section.h"
 #include "../wmiHelper.h"
+#undef CreateMutex
+#include "../Section.h"
 
 class SectionWMI : public Section {
     std::wstring _namespace{L"Root\\cimv2"};
@@ -41,7 +42,8 @@ class SectionWMI : public Section {
     std::unique_ptr<wmi::Helper> _helper;
 
 public:
-    SectionWMI(const char *name, const Environment &env, LoggerAdaptor &logger);
+    SectionWMI(const char *name, const Environment &env, LoggerAdaptor &logger,
+               const WinApiAdaptor &winapi);
 
     SectionWMI *withNamespace(const wchar_t *name);
     SectionWMI *withObject(const wchar_t *path);
@@ -49,14 +51,12 @@ public:
     SectionWMI *withToggleIfMissing();
 
 protected:
-
     void suspend(int duration);
 
     virtual bool produceOutputInner(std::ostream &out) override;
-private:
 
+private:
     void outputTable(std::ostream &out, wmi::Result &data);
 };
 
 #endif  // SectionWMI_h
-

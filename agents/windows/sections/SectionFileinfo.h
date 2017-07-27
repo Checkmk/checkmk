@@ -25,8 +25,8 @@
 #ifndef SectionFileinfo_h
 #define SectionFileinfo_h
 
-#include "../Section.h"
 #include "../Configurable.h"
+#include "../Section.h"
 
 class Configuration;
 
@@ -34,25 +34,28 @@ class SectionFileinfo : public Section {
     typedef std::vector<std::string> PathsT;
 
     ListConfigurable<PathsT, BlockMode::Nop<PathsT>,
-                  AddMode::PriorityAppend<PathsT>>
+                     AddMode::PriorityAppend<PathsT>>
         _fileinfo_paths;
 
 public:
-    SectionFileinfo(Configuration &config, LoggerAdaptor &logger);
+    SectionFileinfo(Configuration &config, LoggerAdaptor &logger,
+                    const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
+
 private:
     std::vector<std::string> _found_files;
     std::vector<std::string> _temp_files;
     void get_directories(const std::string base_path);
     void determine_filepaths(const std::string search_pattern);
-    void determine_filepaths_full_search(const std::string base_path, const std::string search_pattern);
-    void determine_filepaths_simple_search(const std::string base_path, const std::string search_pattern);
+    void determine_filepaths_full_search(const std::string base_path,
+                                         const std::string search_pattern);
+    void determine_filepaths_simple_search(const std::string base_path,
+                                           const std::string search_pattern);
 
     void outputFileinfos(std::ostream &out, const char *path);
     bool outputFileinfo(std::ostream &out, const std::string filename);
 };
 
 #endif  // SectionFileinfo_h
-

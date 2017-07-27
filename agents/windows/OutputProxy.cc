@@ -23,9 +23,9 @@
 // Boston, MA 02110-1301 USA.
 
 #include "OutputProxy.h"
-#include <winsock2.h>
 #include <cstdarg>
 #include "LoggerAdaptor.h"
+#include "WinApiAdaptor.h"
 
 // urgh
 extern volatile bool g_should_terminate;
@@ -47,9 +47,10 @@ void FileOutputProxy::flush(bool) {
     // nop
 }
 
-BufferedSocketProxy::BufferedSocketProxy(
-    SOCKET socket, const LoggerAdaptor &logger)
-    : _socket(socket), _logger(logger) {
+BufferedSocketProxy::BufferedSocketProxy(SOCKET socket,
+                                         const LoggerAdaptor &logger,
+                                         const WinApiAdaptor &winapi)
+    : _socket(socket), _logger(logger), _winapi(winapi) {
     _buffer.resize(DEFAULT_BUFFER_SIZE);
 }
 
@@ -96,7 +97,7 @@ void BufferedSocketProxy::flush(bool) {
             return;
         }
         if (_length > 0) {
-            ::Sleep(100);
+            _winapi.Sleep(100);
         }
     }
     if (_length > 0) {
@@ -108,10 +109,10 @@ bool BufferedSocketProxy::flushInt() {
     bool error = false;
     size_t offset = 0;
     while (!g_should_terminate) {
-        ssize_t result =
-            send(_socket, &_buffer[0] + offset, _length - offset, 0);
+        const int result =
+            _winapi.send(_socket, &_buffer[0] + offset, _length - offset, 0);
         if (result == SOCKET_ERROR) {
-            int error = WSAGetLastError();
+            int error = _winapi.WSAGetLastError();
             if (error == WSAEINTR) {
                 continue;
             } else if (error == WSAEINPROGRESS) {
@@ -121,7 +122,8 @@ bool BufferedSocketProxy::flushInt() {
                 error = true;
                 break;
             } else {
-                _logger.verbose("send to socket failed with error code %d", error);
+                _logger.verbose("send to socket failed with error code %d",
+                                error);
                 error = true;
                 break;
             }
@@ -143,10 +145,10 @@ bool BufferedSocketProxy::flushInt() {
 }
 
 EncryptingBufferedSocketProxy::EncryptingBufferedSocketProxy(
-    SOCKET socket, const std::string &passphrase,
-    const LoggerAdaptor &logger)
-    : BufferedSocketProxy(socket, logger)
-    , _crypto(passphrase)
+    SOCKET socket, const std::string &passphrase, const LoggerAdaptor &logger,
+    const WinApiAdaptor &winapi)
+    : BufferedSocketProxy(socket, logger, winapi)
+    , _crypto(passphrase, winapi)
     , _written(0) {
     _blockSize = _crypto.blockSize() / 8;
     _plain.resize(_blockSize * 8);

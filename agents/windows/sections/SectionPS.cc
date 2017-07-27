@@ -22,37 +22,33 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <windows.h>
-#include <tlhelp32.h>
-#include <iomanip>
 #include "SectionPS.h"
-#include "../dynamic_func.h"
+#include <iomanip>
 #include "../Environment.h"
 #include "../LoggerAdaptor.h"
 #include "../PerfCounter.h"
+#include "../dynamic_func.h"
 #include "../types.h"
-
 
 extern double file_time(const FILETIME *filetime);
 extern double current_time();
 
-
-SectionPS::SectionPS(Configuration &config, LoggerAdaptor &logger)
-    : Section("ps", config.getEnvironment(), logger)
-    , _use_wmi(config, "ps", "use_wmi", false)
-    , _full_commandline(config, "ps", "full_path", false)
-{
+SectionPS::SectionPS(Configuration &config, LoggerAdaptor &logger,
+                     const WinApiAdaptor &winapi)
+    : Section("ps", config.getEnvironment(), logger, winapi)
+    , _use_wmi(config, "ps", "use_wmi", false, winapi)
+    , _full_commandline(config, "ps", "full_path", false, winapi) {
     withSeparator('\t');
 }
 
 SectionPS::process_entry_t SectionPS::getProcessPerfdata() {
     process_entry_t process_info;
 
-    PerfCounterObject counterObject(230);  // process base number
+    PerfCounterObject counterObject(230, _winapi);  // process base number
 
     if (!counterObject.isEmpty()) {
         LARGE_INTEGER Frequency;
-        QueryPerformanceFrequency(&Frequency);
+        _winapi.QueryPerformanceFrequency(&Frequency);
 
         std::vector<PERF_INSTANCE_DEFINITION *> instances =
             counterObject.instances();
@@ -90,27 +86,29 @@ SectionPS::process_entry_t SectionPS::getProcessPerfdata() {
 
 bool SectionPS::ExtractProcessOwner(HANDLE hProcess_i, std::string &csOwner_o) {
     // Get process token
-    WinHandle hProcessToken;
-    if (!OpenProcessToken(hProcess_i, TOKEN_READ, hProcessToken.ptr()) ||
+    WinHandle hProcessToken(_winapi);
+    if (!_winapi.OpenProcessToken(hProcess_i, TOKEN_READ,
+                                  hProcessToken.ptr()) ||
         !hProcessToken)
         return false;
 
     // First get size needed, TokenUser indicates we want user information from
     // given token
     DWORD dwProcessTokenInfoAllocSize = 0;
-    GetTokenInformation(hProcessToken, TokenUser, NULL, 0,
-                        &dwProcessTokenInfoAllocSize);
+    _winapi.GetTokenInformation(hProcessToken, TokenUser, NULL, 0,
+                                &dwProcessTokenInfoAllocSize);
 
     // Call should have failed due to zero-length buffer.
-    if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+    if (_winapi.GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
         // Allocate buffer for user information in the token.
         PTOKEN_USER pUserToken = reinterpret_cast<PTOKEN_USER>(
             new BYTE[dwProcessTokenInfoAllocSize]);
         if (pUserToken != NULL) {
             // Now get user information in the allocated buffer
-            if (GetTokenInformation(hProcessToken, TokenUser, pUserToken,
-                                    dwProcessTokenInfoAllocSize,
-                                    &dwProcessTokenInfoAllocSize)) {
+            if (_winapi.GetTokenInformation(hProcessToken, TokenUser,
+                                            pUserToken,
+                                            dwProcessTokenInfoAllocSize,
+                                            &dwProcessTokenInfoAllocSize)) {
                 // Some vars that we may need
                 SID_NAME_USE snuSIDNameUse;
                 WCHAR szUser[MAX_PATH] = {0};
@@ -119,18 +117,20 @@ bool SectionPS::ExtractProcessOwner(HANDLE hProcess_i, std::string &csOwner_o) {
                 DWORD dwDomainNameLength = MAX_PATH;
 
                 // Retrieve user name and domain name based on user's SID.
-                if (LookupAccountSidW(NULL, pUserToken->User.Sid, szUser,
-                                      &dwUserNameLength, szDomain,
-                                      &dwDomainNameLength, &snuSIDNameUse)) {
+                if (_winapi.LookupAccountSidW(
+                        NULL, pUserToken->User.Sid, szUser, &dwUserNameLength,
+                        szDomain, &dwDomainNameLength, &snuSIDNameUse)) {
                     char info[1024];
                     csOwner_o = "\\\\";
-                    WideCharToMultiByte(CP_UTF8, 0, (WCHAR *)&szDomain, -1,
-                                        info, sizeof(info), NULL, NULL);
+                    _winapi.WideCharToMultiByte(CP_UTF8, 0, (WCHAR *)&szDomain,
+                                                -1, info, sizeof(info), NULL,
+                                                NULL);
                     csOwner_o += info;
 
                     csOwner_o += "\\";
-                    WideCharToMultiByte(CP_UTF8, 0, (WCHAR *)&szUser, -1, info,
-                                        sizeof(info), NULL, NULL);
+                    _winapi.WideCharToMultiByte(CP_UTF8, 0, (WCHAR *)&szUser,
+                                                -1, info, sizeof(info), NULL,
+                                                NULL);
                     csOwner_o += info;
 
                     delete[] pUserToken;
@@ -153,7 +153,8 @@ bool SectionPS::produceOutputInner(std::ostream &out) {
 
 void SectionPS::outputProcess(std::ostream &out, ULONGLONG virtual_size,
                               ULONGLONG working_set_size,
-                              ULONGLONG pagefile_usage, ULONGLONG uptime, ULONGLONG usermode_time,
+                              ULONGLONG pagefile_usage, ULONGLONG uptime,
+                              ULONGLONG usermode_time,
                               ULONGLONG kernelmode_time, DWORD process_id,
                               DWORD process_handle_count, DWORD thread_count,
                               const std::string &user, LPCSTR exe_file) {
@@ -163,16 +164,16 @@ void SectionPS::outputProcess(std::ostream &out, ULONGLONG virtual_size,
         << working_set_size / 1024 << ",0"
         << "," << process_id << "," << pagefile_usage / 1024 << ","
         << usermode_time << "," << kernelmode_time << ","
-        << process_handle_count << "," << thread_count << "," << uptime << ")\t" << exe_file
-        << "\n";
+        << process_handle_count << "," << thread_count << "," << uptime << ")\t"
+        << exe_file << "\n";
 }
 
 bool SectionPS::outputWMI(std::ostream &out) {
     if (_helper.get() == nullptr) {
-        _helper.reset(new wmi::Helper(L"Root\\cimv2"));
+        _helper.reset(new wmi::Helper(_winapi, L"Root\\cimv2"));
     }
 
-    wmi::Result result;
+    wmi::Result result(_winapi);
     try {
         result = _helper->getClass(L"Win32_Process");
         bool more = result.valid();
@@ -180,8 +181,10 @@ bool SectionPS::outputWMI(std::ostream &out) {
         while (more) {
             int processId = result.get<int>(L"ProcessId");
 
-            WinHandle process(OpenProcess(
-                PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId));
+            WinHandle process(
+                _winapi,
+                _winapi.OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+                                    FALSE, processId));
             std::string user = "SYSTEM";
             ExtractProcessOwner(process, user);
             std::wstring process_name;
@@ -194,12 +197,12 @@ bool SectionPS::outputWMI(std::ostream &out) {
 
             if (*_full_commandline && result.contains(L"CommandLine")) {
                 int argc;
-                LPWSTR *argv = CommandLineToArgvW(
+                LPWSTR *argv = _winapi.CommandLineToArgvW(
                     result.get<std::wstring>(L"CommandLine").c_str(), &argc);
                 for (int i = 1; i < argc; ++i) {
                     process_name += std::wstring(L" ") + argv[i];
                 }
-                LocalFree(argv);
+                _winapi.LocalFree(argv);
             }
 
             auto creation_date = result.get<std::wstring>(L"CreationDate");
@@ -212,13 +215,12 @@ bool SectionPS::outputWMI(std::ostream &out) {
             outputProcess(
                 out, std::stoull(result.get<std::string>(L"VirtualSize")),
                 std::stoull(result.get<std::string>(L"WorkingSetSize")),
-                result.get<int>(L"PagefileUsage"),
-                uptime,
+                result.get<int>(L"PagefileUsage"), uptime,
                 std::stoull(result.get<std::wstring>(L"UserModeTime")),
                 std::stoull(result.get<std::wstring>(L"KernelModeTime")),
                 processId, result.get<int>(L"HandleCount"),
                 result.get<int>(L"ThreadCount"), user,
-                to_utf8(process_name.c_str()).c_str());
+                to_utf8(process_name.c_str(), _winapi).c_str());
 
             more = result.next();
         }
@@ -253,27 +255,31 @@ bool SectionPS::outputNative(std::ostream &out) {
     } catch (const std::runtime_error &e) {
         // the most likely cause is that the wmi query fails, i.e. because the
         // service is currently offline.
-        _logger.crashLog(
-	    "Exception: Error while querying process perfdata: %s", e.what());
+        _logger.crashLog("Exception: Error while querying process perfdata: %s",
+                         e.what());
     }
 
-    WinHandle hProcessSnap(CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
+    WinHandle hProcessSnap(
+        _winapi, _winapi.CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0));
     if (hProcessSnap == INVALID_HANDLE_VALUE) {
         return false;
     }
     pe32.dwSize = sizeof(PROCESSENTRY32);
 
-    bool more = Process32First(hProcessSnap, &pe32);
+    bool more = _winapi.Process32First(hProcessSnap, &pe32);
 
     // GetProcessHandleCount is only available winxp upwards
     typedef BOOL WINAPI (*GetProcessHandleCount_type)(HANDLE, PDWORD);
+    LPCWSTR dllName = L"kernel32.dll";
+    LPCSTR funcName = "GetProcessHandleCount";
     GetProcessHandleCount_type GetProcessHandleCount_dyn =
-        DYNAMIC_FUNC(GetProcessHandleCount, L"kernel32.dll");
+        dynamic_func<GetProcessHandleCount_type>(dllName, funcName, _winapi);
 
     while (more) {
         std::string user = "unknown";
         DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
-        WinHandle hProcess(OpenProcess(dwAccess, FALSE, pe32.th32ProcessID));
+        WinHandle hProcess(
+            _winapi, _winapi.OpenProcess(dwAccess, FALSE, pe32.th32ProcessID));
 
         // TODO the following isn't really necessary. We need the process
         // handle only to determine process owner and handle count,
@@ -282,8 +288,8 @@ bool SectionPS::outputNative(std::ostream &out) {
             // Process times
             FILETIME createTime, exitTime, kernelTime, userTime;
             ULARGE_INTEGER kernelmodetime, usermodetime;
-            if (GetProcessTimes(hProcess, &createTime, &exitTime, &kernelTime,
-                                &userTime) != -1) {
+            if (_winapi.GetProcessTimes(hProcess, &createTime, &exitTime,
+                                        &kernelTime, &userTime) != -1) {
                 kernelmodetime.LowPart = kernelTime.dwLowDateTime;
                 kernelmodetime.HighPart = kernelTime.dwHighDateTime;
                 usermodetime.LowPart = userTime.dwLowDateTime;
@@ -318,11 +324,12 @@ bool SectionPS::outputNative(std::ostream &out) {
             // Note: CPU utilization is determined out of usermodetime and
             // kernelmodetime
             outputProcess(out, virtual_size, working_set_size, pagefile_usage,
-                          uptime, usermodetime.QuadPart, kernelmodetime.QuadPart,
-                          pe32.th32ProcessID, processHandleCount,
-                          pe32.cntThreads, user, pe32.szExeFile);
+                          uptime, usermodetime.QuadPart,
+                          kernelmodetime.QuadPart, pe32.th32ProcessID,
+                          processHandleCount, pe32.cntThreads, user,
+                          pe32.szExeFile);
         }
-        more = Process32Next(hProcessSnap, &pe32);
+        more = _winapi.Process32Next(hProcessSnap, &pe32);
     }
     process_perfdata.clear();
 
@@ -330,7 +337,7 @@ bool SectionPS::outputNative(std::ostream &out) {
     // determine the number of cpu cores)
     // We simply fake this entry..
     SYSTEM_INFO sysinfo;
-    GetSystemInfo(&sysinfo);
+    _winapi.GetSystemInfo(&sysinfo);
     outputProcess(out, 0, 0, 0, 0, 0, 0, 0, 0, sysinfo.dwNumberOfProcessors,
                   "SYSTEM", "System Idle Process");
     return true;

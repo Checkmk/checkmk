@@ -31,10 +31,10 @@
 
 std::ostream &operator<<(std::ostream &out,
                          const std::pair<std::string, std::string> &value);
-class Environment;
 class Configuration;
+class Environment;
 class LoggerAdaptor;
-
+class WinApiAdaptor;
 
 class SectionManager {
     std::vector<std::unique_ptr<Section>> _sections;
@@ -61,12 +61,14 @@ class SectionManager {
     ListConfigurable<std::vector<winperf_counter *>> _winperf_counters;
     const Environment &_env;
     LoggerAdaptor &_logger;
+    const WinApiAdaptor &_winapi;
 
     void addSection(Section *section);
     void loadStaticSections(Configuration &config);
 
 public:
-    explicit SectionManager(Configuration &config, LoggerAdaptor &logger);
+    explicit SectionManager(Configuration &config, LoggerAdaptor &logger,
+                            const WinApiAdaptor &winapi);
     ~SectionManager() { _sections.clear(); }
 
     void emitConfigLoaded();

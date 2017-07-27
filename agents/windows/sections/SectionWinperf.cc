@@ -23,36 +23,33 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionWinperf.h"
+#include <algorithm>
+#include <iomanip>
 #include "../Environment.h"
 #include "../LoggerAdaptor.h"
 #include "../PerfCounter.h"
 #include "../stringutil.h"
-#include <algorithm>
-#include <iomanip>
-
 
 extern double current_time();
 
+SectionWinperf::SectionWinperf(const char *name, const Environment &env,
+                               LoggerAdaptor &logger,
+                               const WinApiAdaptor &winapi)
+    : Section((std::string("winperf_") + name).c_str(), env, logger, winapi)
+    , _base(0) {}
 
-SectionWinperf::SectionWinperf(const char *name, const Environment &env, LoggerAdaptor &logger)
-    : Section((std::string("winperf_") + name).c_str(), env, logger)
-    , _base(0)
-{
-}
-
-SectionWinperf *SectionWinperf::withBase(unsigned int base)
-{
+SectionWinperf *SectionWinperf::withBase(unsigned int base) {
     _base = base;
     return this;
 }
 
 bool SectionWinperf::produceOutputInner(std::ostream &out) {
     try {
-        PerfCounterObject counterObject(_base);
+        PerfCounterObject counterObject(_base, _winapi);
 
         if (!counterObject.isEmpty()) {
             LARGE_INTEGER Frequency;
-            QueryPerformanceFrequency(&Frequency);
+            _winapi.QueryPerformanceFrequency(&Frequency);
             out << std::fixed << std::setprecision(2) << current_time() << " "
                 << _base << Frequency.QuadPart << "\n";
 
@@ -63,7 +60,7 @@ bool SectionWinperf::produceOutputInner(std::ostream &out) {
                 out << instances.size() << " instances:";
                 for (std::wstring name : counterObject.instanceNames()) {
                     std::replace(name.begin(), name.end(), L' ', L'_');
-                    out << " " << to_utf8(name.c_str());
+                    out << " " << to_utf8(name.c_str(), _winapi);
                 }
                 out << "\n";
             }
@@ -85,4 +82,3 @@ bool SectionWinperf::produceOutputInner(std::ostream &out) {
         return false;
     }
 }
-

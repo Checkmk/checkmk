@@ -1,5 +1,4 @@
 #include "types.h"
-#include <shlwapi.h>
 #include <algorithm>
 #include <cstring>
 #include <sstream>
@@ -9,22 +8,24 @@
 #include "stringutil.h"
 
 template <>
-bool from_string<bool>(const std::string &value) {
+bool from_string<bool>(const WinApiAdaptor &, const std::string &value) {
     return parse_boolean(value.c_str());
 }
 
 template <>
-int from_string<int>(const std::string &value) {
+int from_string<int>(const WinApiAdaptor &, const std::string &value) {
     return std::stol(value);
 }
 
 template <>
-std::string from_string<std::string>(const std::string &value) {
+std::string from_string<std::string>(const WinApiAdaptor &,
+                                     const std::string &value) {
     return value;
 }
 
 template <>
-ipspec *from_string<ipspec *>(const std::string &value) {
+ipspec *from_string<ipspec *>(const WinApiAdaptor &winapi,
+                              const std::string &value) {
     ipspec *result = new ipspec();
 
     char *slash_pos = strchr(value.c_str(), '/');
@@ -41,8 +42,8 @@ ipspec *from_string<ipspec *>(const std::string &value) {
         if (result->bits == 0) {
             result->bits = 128;
         }
-        stringToIPv6(value.c_str(), result->ip.v6.address);
-        netmaskFromPrefixIPv6(result->bits, result->ip.v6.netmask);
+        stringToIPv6(value.c_str(), result->ip.v6.address, winapi);
+        netmaskFromPrefixIPv6(result->bits, result->ip.v6.netmask, winapi);
 
         // TODO verify that host part is 0
     } else {
@@ -64,7 +65,8 @@ ipspec *from_string<ipspec *>(const std::string &value) {
 }
 
 template <>
-mrpe_entry *from_string<mrpe_entry *>(const std::string &value) {
+mrpe_entry *from_string<mrpe_entry *>(const WinApiAdaptor &winapi,
+                                      const std::string &value) {
     mrpe_entry *result = new mrpe_entry();
     memset(result, 0, sizeof(mrpe_entry));
 
@@ -92,7 +94,7 @@ mrpe_entry *from_string<mrpe_entry *>(const std::string &value) {
         return nullptr;
     }
 
-    if (PathIsRelative(command_line.c_str())) {
+    if (winapi.PathIsRelative(command_line.c_str())) {
         Environment *env = Environment::instance();
         if (env != nullptr) {
             snprintf(result->command_line, sizeof(result->command_line),
@@ -125,7 +127,8 @@ mrpe_entry *from_string<mrpe_entry *>(const std::string &value) {
 }
 
 template <>
-winperf_counter *from_string<winperf_counter *>(const std::string &value) {
+winperf_counter *from_string<winperf_counter *>(const WinApiAdaptor &winapi,
+                                                const std::string &value) {
     size_t colonIdx = value.find_last_of(":");
     if (colonIdx == std::string::npos) {
         fprintf(stderr,
@@ -144,7 +147,8 @@ winperf_counter *from_string<winperf_counter *>(const std::string &value) {
     if (non_digit == base_id.end()) {
         result->id = std::stoi(base_id);
     } else {
-        result->id = PerfCounterObject::resolve_counter_name(base_id.c_str());
+        result->id =
+            PerfCounterObject::resolve_counter_name(winapi, base_id.c_str());
         if (result->id == -1) {
             fprintf(stderr,
                     "No matching performance counter id found for %s.\n",
@@ -158,7 +162,7 @@ winperf_counter *from_string<winperf_counter *>(const std::string &value) {
 
 template <>
 script_execution_mode from_string<script_execution_mode>(
-    const std::string &value) {
+    const WinApiAdaptor &, const std::string &value) {
     if (value == "async")
         return ASYNC;
     else if (value == "sync")
@@ -168,7 +172,7 @@ script_execution_mode from_string<script_execution_mode>(
 
 template <>
 script_async_execution from_string<script_async_execution>(
-    const std::string &value) {
+    const WinApiAdaptor &, const std::string &value) {
     if (value == "parallel")
         return PARALLEL;
     else if (value == "sequential")
@@ -178,7 +182,7 @@ script_async_execution from_string<script_async_execution>(
 
 template <>
 eventlog_config_entry from_string<eventlog_config_entry>(
-    const std::string &value) {
+    const WinApiAdaptor &, const std::string &value) {
     // this parses only what's on the right side of the = in the configuration
     // file
     std::stringstream str(value);
@@ -209,7 +213,7 @@ eventlog_config_entry from_string<eventlog_config_entry>(
     return eventlog_config_entry(level, hide_context ? 1 : 0, "", false);
 }
 
-const char *level_name(int level_id) {
+static const char *level_name(int level_id) {
     switch (level_id) {
         case -1:
             return "off";

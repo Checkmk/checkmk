@@ -28,28 +28,27 @@
 #ifndef EventLogVista_h
 #define EventLogVista_h
 
-#include <windows.h>
-#include <exception>
-#include <string>
-#include <vector>
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
+#include <winsock2.h>
+#include <windows.h>
 #include <winevt.h>
+#include <exception>
+#include <functional>
+#include <string>
+#include <vector>
 #include "IEventLog.h"
 #include "types.h"
+#include "win_error.h"
 
-// forward declaration
 class UnsupportedException : public std::exception {};
+class WinApiAdaptor;
 
 class EventApiModule {
 public:
-    EventApiModule() : _mod(LoadLibraryW(L"wevtapi.dll")){};
+    explicit EventApiModule(const WinApiAdaptor &winapi);
 
-    ~EventApiModule() {
-        if (_mod != nullptr) {
-            FreeLibrary(_mod);
-        }
-    }
+    ~EventApiModule();
 
     //    void *getAddress(const std::string& name) const { return
     //    GetProcAddress(_mod, name.c_str()); }
@@ -57,47 +56,37 @@ public:
 
 private:
     HMODULE _mod;
+    const WinApiAdaptor &_winapi;
 };
 
 struct EvtFunctionMap {
-#define GET_FUNC(func) \
-    ((decltype(&func))GetProcAddress(_mod->get_module(), #func))
+    explicit EvtFunctionMap(const WinApiAdaptor &winapi);
+
     std::unique_ptr<EventApiModule> _mod;
-
-    EvtFunctionMap() : _mod(std::make_unique<EventApiModule>()) {
-        if (_mod->get_module() == nullptr) {
-            return;
-        }
-        this->openLog = GET_FUNC(EvtOpenLog);
-        this->query = GET_FUNC(EvtQuery);
-        this->close = GET_FUNC(EvtClose);
-        this->seek = GET_FUNC(EvtSeek);
-        this->next = GET_FUNC(EvtNext);
-        this->createBookmark = GET_FUNC(EvtCreateBookmark);
-        this->updateBookmark = GET_FUNC(EvtUpdateBookmark);
-        this->createRenderContext = GET_FUNC(EvtCreateRenderContext);
-        this->render = GET_FUNC(EvtRender);
-        this->subscribe = GET_FUNC(EvtSubscribe);
-        this->formatMessage = GET_FUNC(EvtFormatMessage);
-        this->getEventMetadataProperty = GET_FUNC(EvtGetEventMetadataProperty);
-        this->openPublisherMetadata = GET_FUNC(EvtOpenPublisherMetadata);
-        this->getLogInfo = GET_FUNC(EvtGetLogInfo);
-    }
-
-    decltype(&EvtOpenLog) openLog;
-    decltype(&EvtQuery) query;
-    decltype(&EvtClose) close;
-    decltype(&EvtSeek) seek;
-    decltype(&EvtNext) next;
-    decltype(&EvtCreateBookmark) createBookmark;
-    decltype(&EvtUpdateBookmark) updateBookmark;
-    decltype(&EvtCreateRenderContext) createRenderContext;
-    decltype(&EvtRender) render;
-    decltype(&EvtSubscribe) subscribe;
-    decltype(&EvtFormatMessage) formatMessage;
-    decltype(&EvtGetEventMetadataProperty) getEventMetadataProperty;
-    decltype(&EvtOpenPublisherMetadata) openPublisherMetadata;
-    decltype(&EvtGetLogInfo) getLogInfo;
+    const EVT_HANDLE (*openLog)(EVT_HANDLE, LPCWSTR, DWORD);
+    const EVT_HANDLE (*query)(EVT_HANDLE, LPCWSTR, LPCWSTR, DWORD);
+    const WINBOOL (*close)(EVT_HANDLE);
+    const WINBOOL (*seek)(EVT_HANDLE, LONGLONG, EVT_HANDLE, DWORD, DWORD);
+    const WINBOOL (*next)(EVT_HANDLE, DWORD, EVT_HANDLE *, DWORD, DWORD,
+                          PDWORD);
+    const EVT_HANDLE (*createBookmark)(LPCWSTR);
+    const WINBOOL (*updateBookmark)(EVT_HANDLE, EVT_HANDLE);
+    const EVT_HANDLE (*createRenderContext)(DWORD, LPCWSTR *, DWORD);
+    const WINBOOL (*render)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD, PVOID, PDWORD,
+                            PDWORD);
+    const EVT_HANDLE (*subscribe)(EVT_HANDLE, HANDLE, LPCWSTR, LPCWSTR,
+                                  EVT_HANDLE, PVOID, EVT_SUBSCRIBE_CALLBACK,
+                                  DWORD);
+    const WINBOOL (*formatMessage)(EVT_HANDLE, EVT_HANDLE, DWORD, DWORD,
+                                   PEVT_VARIANT, DWORD, DWORD, LPWSTR, PDWORD);
+    const WINBOOL (*getEventMetadataProperty)(EVT_HANDLE,
+                                              EVT_EVENT_METADATA_PROPERTY_ID,
+                                              DWORD, DWORD, PEVT_VARIANT,
+                                              PDWORD);
+    const EVT_HANDLE (*openPublisherMetadata)(EVT_HANDLE, LPCWSTR, LPCWSTR,
+                                              LCID, DWORD);
+    const WINBOOL (*getLogInfo)(EVT_HANDLE, EVT_LOG_PROPERTY_ID, DWORD,
+                                PEVT_VARIANT, PDWORD);
 };
 
 class ManagedEventHandle {
@@ -106,7 +95,7 @@ public:
         : _evt(evt), _handle(handle) {}
 
     ~ManagedEventHandle() {
-        if (_handle != nullptr) {
+        if (_handle && _evt.close) {
             _evt.close(_handle);
         }
     }
@@ -125,15 +114,23 @@ private:
 };
 
 class EventLogWrapper : public ManagedEventHandle {
+    const WinApiAdaptor &_winapi;
+
 public:
     EventLogWrapper(const EvtFunctionMap &evt, EVT_QUERY_FLAGS flags,
-                    const std::wstring &path)
-        : ManagedEventHandle(evt, create_log_handle(evt, flags, path)) {}
+                    const std::wstring &path, const WinApiAdaptor &winapi)
+        : ManagedEventHandle(evt, create_log_handle(evt, flags, path))
+        , _winapi(winapi) {}
 
 private:
     EVT_HANDLE create_log_handle(const EvtFunctionMap &evt,
                                  EVT_QUERY_FLAGS flags,
                                  const std::wstring &path) {
+        if (evt.query == nullptr) {
+            throw win_exception(_winapi,
+                                "EvtQuery function not found in wevtapi.dll");
+        }
+
         EVT_HANDLE handle =
             evt.query(nullptr, path.c_str(), L"*", flags | EvtQueryChannelPath);
 
@@ -143,7 +140,7 @@ private:
         }
 
         if (handle == nullptr) {
-            throw win_exception("failed to open log");
+            throw win_exception(_winapi, "failed to open log");
         }
         return handle;
     }
@@ -153,7 +150,7 @@ class EventLogVista : public IEventLog {
 public:
     // constructor
     // This throws an UnsupportedException if the vista-api is not supported.
-    EventLogVista(LPCWSTR path);
+    EventLogVista(LPCWSTR path, const WinApiAdaptor &winapi);
 
     EventLogVista(const EventLogVista &reference) = delete;
 
@@ -184,6 +181,7 @@ private:
     // HANDLE _bookmark;
     std::vector<HANDLE> _events;
     size_t _next_event{0};
+    const WinApiAdaptor &_winapi;
 };
 
 #endif  // EventLogVista_h

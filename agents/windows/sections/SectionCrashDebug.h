@@ -25,17 +25,18 @@
 #ifndef SectionCrashDebug_h
 #define SectionCrashDebug_h
 
-#include "../Section.h"
 #include "../Configurable.h"
+#include "../Section.h"
 
 class SectionCrashDebug : public Section {
     Configurable<bool> _crash_debug;
+
 public:
-    SectionCrashDebug(Configuration &config, LoggerAdaptor &logger);
+    SectionCrashDebug(Configuration &config, LoggerAdaptor &logger,
+                      const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
 };
 
 #endif  // SectionCrashDebug_h
-

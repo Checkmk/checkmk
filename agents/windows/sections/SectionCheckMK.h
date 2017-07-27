@@ -33,14 +33,16 @@ typedef std::pair<std::string, std::string> KVPair;
 
 class SectionCheckMK : public Section {
     Configurable<bool> _crash_debug;
-    SplittingListConfigurable<only_from_t, BlockMode::FileExclusive<only_from_t>>
+    SplittingListConfigurable<only_from_t,
+                              BlockMode::FileExclusive<only_from_t>>
         _only_from;
 
     // static fields
     const std::vector<KVPair> _info_fields;
 
 public:
-    SectionCheckMK(Configuration &config, LoggerAdaptor &logger);
+    SectionCheckMK(Configuration &config, LoggerAdaptor &logger,
+                   const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
@@ -49,5 +51,4 @@ private:
     std::vector<KVPair> createInfoFields() const;
 };
 
-#endif // SectionCheckMK_h
-
+#endif  // SectionCheckMK_h

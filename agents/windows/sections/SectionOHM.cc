@@ -22,15 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "SectionOHM.h"
-#include "SectionWMI.h"
-#include "../Configuration.h"
 #include "../Environment.h"
 #include "../LoggerAdaptor.h"
 #include "../OHMMonitor.h"
+#include "SectionWMI.h"
+#undef CreateMutex
+#include "../Configuration.h"
+#include "SectionOHM.h"
 
-SectionOHM::SectionOHM(Configuration &config, LoggerAdaptor &logger)
-    : SectionWMI("openhardwaremonitor", config.getEnvironment(), logger)
+SectionOHM::SectionOHM(Configuration &config, LoggerAdaptor &logger,
+                       const WinApiAdaptor &winapi)
+    : SectionWMI("openhardwaremonitor", config.getEnvironment(), logger, winapi)
     , _bin_path(_env.binDirectory()) {
     withNamespace(L"Root\\OpenHardwareMonitor");
     withObject(L"Sensor");
@@ -38,7 +40,7 @@ SectionOHM::SectionOHM(Configuration &config, LoggerAdaptor &logger)
 
 void SectionOHM::startIfAsync() {
     if (_ohm_monitor.get() == nullptr) {
-        _ohm_monitor.reset(new OHMMonitor(_bin_path, _logger));
+        _ohm_monitor.reset(new OHMMonitor(_bin_path, _logger, _winapi));
         _ohm_monitor->checkAvailabe();
     }
 }
@@ -52,7 +54,7 @@ bool SectionOHM::produceOutputInner(std::ostream &out) {
     }
     if (!res && !_ohm_monitor->checkAvailabe()) {
         _logger.crashLog(
-	    "ohm not installed or not runnable -> section disabled");
+            "ohm not installed or not runnable -> section disabled");
         suspend(3600);
     }
     return res;
@@ -60,4 +62,3 @@ bool SectionOHM::produceOutputInner(std::ostream &out) {
     // cycle because it's impossible to predict how long the ohm client
     // takes to start up but it won't be instantanious
 }
-

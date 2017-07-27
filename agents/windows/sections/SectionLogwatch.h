@@ -25,40 +25,44 @@
 #ifndef SectionLogwatch_h
 #define SectionLogwatch_h
 
-#include "../Section.h"
 #include "../Configurable.h"
+#include "../Section.h"
 #include "../types.h"
 
+typedef struct _BY_HANDLE_FILE_INFORMATION BY_HANDLE_FILE_INFORMATION;
 
-typedef std::vector<globline_container*> GlobListT;
+typedef std::vector<globline_container *> GlobListT;
 
 template <>
-globline_container *from_string<globline_container*>(const std::string &value);
+globline_container *from_string<globline_container *>(
+    const WinApiAdaptor &winapi, const std::string &value);
 
 class GlobListConfigurable
     : public ListConfigurable<GlobListT, BlockMode::Nop<GlobListT>,
                               AddMode::PriorityAppendGrouped<GlobListT>> {
-
     typedef ListConfigurable<GlobListT, BlockMode::Nop<GlobListT>,
-                              AddMode::PriorityAppendGrouped<GlobListT>> SuperT;
+                             AddMode::PriorityAppendGrouped<GlobListT>>
+        SuperT;
 
 public:
-    GlobListConfigurable(Configuration &config, const char *section)
-        : SuperT(config, section, "textfile")
-    {
+    GlobListConfigurable(Configuration &config, const char *section,
+                         const WinApiAdaptor &winapi)
+        : SuperT(config, section, "textfile", winapi) {
         config.reg(section, "warn", this);
         config.reg(section, "crit", this);
         config.reg(section, "ignore", this);
         config.reg(section, "ok", this);
     }
 
-    virtual void feed(const std::string &key, const std::string &value) override {
+    virtual void feed(const std::string &key,
+                      const std::string &value) override {
         if (key == "textfile") {
             SuperT::feed(key, value);
         } else {
             SuperT::feedInner(key, value);
         }
     }
+
 private:
 };
 
@@ -78,7 +82,8 @@ class SectionLogwatch : public Section {
     typedef std::pair<std::string, FILETIME> FileEntryType;
 
 public:
-    SectionLogwatch(Configuration &config, LoggerAdaptor &logger);
+    SectionLogwatch(Configuration &config, LoggerAdaptor &logger,
+                    const WinApiAdaptor &winapi);
     virtual ~SectionLogwatch();
 
 protected:
@@ -154,4 +159,3 @@ private:
 };
 
 #endif  // SectionLogwatch_h
-

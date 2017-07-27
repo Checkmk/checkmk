@@ -25,12 +25,12 @@
 #ifndef OutputProxy_h
 #define OutputProxy_h
 
-#include <winsock2.h>
 #include <cstdio>
 #include <vector>
 #include "Crypto.h"
 
 class LoggerAdaptor;
+class WinApiAdaptor;
 
 class OutputProxy {
 public:
@@ -58,6 +58,7 @@ class BufferedSocketProxy : public OutputProxy {
     size_t _length{0};
     size_t _collect_size;
     const LoggerAdaptor &_logger;
+    const WinApiAdaptor &_winapi;
 
 protected:
     std::vector<char> &buffer() { return _buffer; }
@@ -67,8 +68,8 @@ public:
     static const size_t DEFAULT_BUFFER_SIZE = 16384L;
 
 public:
-    BufferedSocketProxy(SOCKET socket,
-			const LoggerAdaptor &logger);
+    BufferedSocketProxy(SOCKET socket, const LoggerAdaptor &logger,
+                        const WinApiAdaptor &winapi);
 
     void setSocket(SOCKET socket);
 
@@ -95,7 +96,8 @@ class EncryptingBufferedSocketProxy : public BufferedSocketProxy {
 
 public:
     EncryptingBufferedSocketProxy(SOCKET socket, const std::string &passphrase,
-				  const LoggerAdaptor &logger);
+                                  const LoggerAdaptor &logger,
+                                  const WinApiAdaptor &winapi);
     virtual void output(const char *format, ...) override;
     // writeBinary is NOT overridden so calls to it are not encrypted!
     virtual void flush(bool last) override;

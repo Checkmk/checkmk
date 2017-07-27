@@ -33,9 +33,7 @@
 // MSVCs
 #include <stdint.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
+class WinApiAdaptor;
 
 char *lstrip(char *s);
 const char *lstrip(const char *s);
@@ -52,9 +50,9 @@ void lowercase(char *s);
 int parse_boolean(const char *value);
 
 std::string to_utf8(const char *input);
-std::string to_utf8(const wchar_t *input);
+std::string to_utf8(const wchar_t *input, const WinApiAdaptor &winapi);
 
-std::wstring to_utf16(const char *input);
+std::wstring to_utf16(const char *input, const WinApiAdaptor &winapi);
 
 // case insensitive compare
 bool ci_equal(const std::string &lhs, const std::string &rhs);
@@ -67,9 +65,11 @@ bool globmatch(const wchar_t *pattern, const wchar_t *astring);
 std::string replaceAll(const std::string &str, const std::string &from,
                        const std::string &to);
 
-void stringToIPv6(const char *value, uint16_t *address);
+void stringToIPv6(const char *value, uint16_t *address,
+                  const WinApiAdaptor &winapi);
 void stringToIPv4(const char *value, uint32_t &address);
-void netmaskFromPrefixIPv6(int bits, uint16_t *netmask);
+void netmaskFromPrefixIPv6(int bits, uint16_t *netmask,
+                           const WinApiAdaptor &winapi);
 void netmaskFromPrefixIPv4(int bits, uint32_t &netmask);
 
 template <typename InputIt, typename SeparatorT>
@@ -94,10 +94,6 @@ std::basic_string<SeparatorT> join(const std::vector<ValueT> &input,
                                    const SeparatorT *sep) {
     return join(input.begin(), input.end(), sep);
 }
-
-#ifdef _WIN32
-std::string get_win_error_as_string(DWORD error_id = ::GetLastError());
-#endif
 
 // to_string and to_wstring supplied in C++11 but not before
 #if _cplusplus < 201103L

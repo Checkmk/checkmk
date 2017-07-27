@@ -4,9 +4,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include "WinApiAdaptor.h"
 
 #ifdef _WIN32
-#include <windows.h>
 #endif
 
 using std::string;
@@ -114,11 +114,11 @@ string to_utf8(const char *input) {
     return std::string(input);
 }
 
-string to_utf8(const wchar_t *input) {
+string to_utf8(const wchar_t *input, const WinApiAdaptor &winapi) {
     string result;
     // preflight: how many bytes to we need?
     int required_size =
-        WideCharToMultiByte(CP_UTF8, 0, input, -1, NULL, 0, NULL, NULL);
+        winapi.WideCharToMultiByte(CP_UTF8, 0, input, -1, NULL, 0, NULL, NULL);
     if (required_size == 0) {
         // conversion failure. What to do?
         return string();
@@ -126,8 +126,8 @@ string to_utf8(const wchar_t *input) {
     result.resize(required_size);
 
     // real conversion
-    WideCharToMultiByte(CP_UTF8, 0, input, -1, &result[0], required_size, NULL,
-                        NULL);
+    winapi.WideCharToMultiByte(CP_UTF8, 0, input, -1, &result[0], required_size,
+                               NULL, NULL);
 
     // strip away the zero termination. This is necessary, otherwise the stored
     // string length
@@ -137,10 +137,11 @@ string to_utf8(const wchar_t *input) {
     return result;
 }
 
-wstring to_utf16(const char *input) {
+wstring to_utf16(const char *input, const WinApiAdaptor &winapi) {
     wstring result;
     // preflight: how many bytes to we need?
-    int required_size = MultiByteToWideChar(CP_UTF8, 0, input, -1, NULL, 0);
+    int required_size =
+        winapi.MultiByteToWideChar(CP_UTF8, 0, input, -1, NULL, 0);
     if (required_size == 0) {
         // conversion failure. What to do?
         return wstring();
@@ -148,7 +149,8 @@ wstring to_utf16(const char *input) {
     result.resize(required_size);
 
     // real conversion
-    MultiByteToWideChar(CP_UTF8, 0, input, -1, &result[0], required_size);
+    winapi.MultiByteToWideChar(CP_UTF8, 0, input, -1, &result[0],
+                               required_size);
 
     // strip away the zero termination. This is necessary, otherwise the stored
     // string length in the string is wrong
@@ -268,28 +270,8 @@ std::string replaceAll(const std::string &str, const std::string &from,
     return result;
 }
 
-#ifdef _WIN32
-std::string get_win_error_as_string(DWORD error_id) {
-    // Get the error message, if any.
-    // DWORD errorMessageID = ::GetLastError();
-    if (error_id == 0) return "No error message has been recorded";
-
-    LPSTR messageBuffer = NULL;
-    size_t size = FormatMessageA(
-        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL, error_id, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        (LPSTR)&messageBuffer, 0, NULL);
-
-    std::string message(messageBuffer, size);
-
-    // Free the buffer.
-    LocalFree(messageBuffer);
-
-    return message + " (" + std::to_string(error_id) + ")";
-}
-
-void stringToIPv6(const char *value, uint16_t *address) {
+void stringToIPv6(const char *value, uint16_t *address,
+                  const WinApiAdaptor &winapi) {
     const char *pos = value;
     std::vector<uint16_t> segments;
     int skip_offset = -1;
@@ -325,7 +307,7 @@ void stringToIPv6(const char *value, uint16_t *address) {
             idx += 8 - segments.size();
         }
 
-        address[idx++] = htons(*iter);
+        address[idx++] = winapi.htons(*iter);
         assert(idx <= 8);
     }
 }
@@ -340,12 +322,13 @@ void stringToIPv4(const char *value, uint32_t &address) {
     address = a + b * 0x100 + c * 0x10000 + d * 0x1000000;
 }
 
-void netmaskFromPrefixIPv6(int bits, uint16_t *netmask) {
+void netmaskFromPrefixIPv6(int bits, uint16_t *netmask,
+                           const WinApiAdaptor &winapi) {
     memset(netmask, 0, sizeof(uint16_t) * 8);
     for (int i = 0; i < 8; ++i) {
         if (bits > 0) {
             int consume_bits = std::min(16, bits);
-            netmask[i] = htons(0xFFFF << (16 - consume_bits));
+            netmask[i] = winapi.htons(0xFFFF << (16 - consume_bits));
             bits -= consume_bits;
         }
     }
@@ -361,5 +344,3 @@ void netmaskFromPrefixIPv4(int bits, uint32_t &netmask) {
     t[1] = s[2];
     t[0] = s[3];
 }
-
-#endif  // WIN32

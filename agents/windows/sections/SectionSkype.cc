@@ -23,12 +23,13 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionSkype.h"
-#include "SectionPerfcounter.h"
+#include "../WinApiAdaptor.h"
 #include "../stringutil.h"
-#include <windows.h>
+#include "SectionPerfcounter.h"
 
-SectionSkype::SectionSkype(const Environment &env, LoggerAdaptor &logger)
-    : SectionGroup("skype", env, logger) {
+SectionSkype::SectionSkype(const Environment &env, LoggerAdaptor &logger,
+                           const WinApiAdaptor &winapi)
+    : SectionGroup("skype", env, logger, winapi) {
     withToggleIfMissing();
     withFailIfMissing();
     withNestedSubtables();
@@ -65,25 +66,27 @@ SectionSkype::SectionSkype(const Environment &env, LoggerAdaptor &logger)
           L"LS:XmppFederationProxy - Streams",
           L"LS:A/V Edge - TCP Counters",
           L"LS:A/V Edge - UDP Counters"}) {
-        withSubSection((new SectionPerfcounter(to_utf8(data_source).c_str(), _env, _logger))
-                           ->withCounter(data_source));
+        withSubSection(
+            (new SectionPerfcounter(to_utf8(data_source, _winapi).c_str(), _env,
+                                    _logger, _winapi))
+                ->withCounter(data_source));
     }
 
     // TODO the version number in the counter name isn't exactly inspiring
     // trust,
     // but there currently is no support for wildcards.
-    withDependentSubSection((new SectionPerfcounter("ASP.NET Apps v4.0.30319", _env, _logger))
+    withDependentSubSection((new SectionPerfcounter("ASP.NET Apps v4.0.30319",
+                                                    _env, _logger, _winapi))
                                 ->withCounter(L"ASP.NET Apps v4.0.30319"));
 }
 
 bool SectionSkype::produceOutputInner(std::ostream &out) {
     LARGE_INTEGER Counter, Frequency;
-    QueryPerformanceCounter(&Counter);
-    QueryPerformanceFrequency(&Frequency);
+    _winapi.QueryPerformanceCounter(&Counter);
+    _winapi.QueryPerformanceFrequency(&Frequency);
 
     out << "sampletime," << Counter.QuadPart << "," << Frequency.QuadPart
         << "\n";
 
     return SectionGroup::produceOutputInner(out);
 }
-

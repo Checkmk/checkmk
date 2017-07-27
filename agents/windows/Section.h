@@ -32,10 +32,11 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "WinApiAdaptor.h"
 
 class Environment;
 class LoggerAdaptor;
-typedef void* HANDLE;
+class WinApiAdaptor;
 
 class Section {
     friend class SectionGroup;
@@ -48,9 +49,11 @@ class Section {
 protected:
     const Environment &_env;
     LoggerAdaptor &_logger;
+    const WinApiAdaptor &_winapi;
 
 public:
-    Section(const char *name, const Environment &env, LoggerAdaptor &logger);
+    Section(const char *name, const Environment &env, LoggerAdaptor &logger,
+            const WinApiAdaptor &winapi);
 
     virtual ~Section() = default;
 

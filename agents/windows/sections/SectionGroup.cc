@@ -24,38 +24,33 @@
 
 #include "SectionGroup.h"
 
-SectionGroup::SectionGroup(const char *name, const Environment &env, LoggerAdaptor &logger)
-    : Section(name, env, logger)
-{
+SectionGroup::SectionGroup(const char *name, const Environment &env,
+                           LoggerAdaptor &logger, const WinApiAdaptor &winapi)
+    : Section(name, env, logger, winapi) {
     withHiddenHeader();
 }
 
-SectionGroup *SectionGroup::withSubSection(Section *section)
-{
+SectionGroup *SectionGroup::withSubSection(Section *section) {
     _subsections.push_back(std::unique_ptr<Section>(section));
     return this;
 }
 
-SectionGroup *SectionGroup::withDependentSubSection(Section *section)
-{
+SectionGroup *SectionGroup::withDependentSubSection(Section *section) {
     _dependent_subsections.push_back(std::unique_ptr<Section>(section));
     return this;
 }
 
-SectionGroup *SectionGroup::withToggleIfMissing()
-{
+SectionGroup *SectionGroup::withToggleIfMissing() {
     _toggle_if_missing = true;
     return this;
 }
 
-SectionGroup *SectionGroup::withFailIfMissing()
-{
+SectionGroup *SectionGroup::withFailIfMissing() {
     _fail_if_missing = true;
     return this;
 }
 
-SectionGroup *SectionGroup::withNestedSubtables()
-{
+SectionGroup *SectionGroup::withNestedSubtables() {
     withHiddenHeader(false);
     _nested = true;
     return this;
@@ -72,8 +67,7 @@ bool SectionGroup::produceOutputInner(std::ostream &out) {
     for (const auto &table : _subsections) {
         if (table->produceOutput(out, _nested)) {
             all_failed = false;
-        }
-        else if (_fail_if_missing) {
+        } else if (_fail_if_missing) {
             all_failed = true;
             break;
         }
@@ -93,4 +87,3 @@ bool SectionGroup::produceOutputInner(std::ostream &out) {
 
     return !all_failed;
 }
-

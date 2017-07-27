@@ -24,19 +24,18 @@
 
 #include "SectionMem.h"
 #include <iomanip>
-#include <windows.h>
+#include "../WinApiAdaptor.h"
 
-SectionMem::SectionMem(const Environment &env, LoggerAdaptor &logger)
-    : Section("mem", env, logger)
-{
-}
+SectionMem::SectionMem(const Environment &env, LoggerAdaptor &logger,
+                       const WinApiAdaptor &winapi)
+    : Section("mem", env, logger, winapi) {}
 
 bool SectionMem::produceOutputInner(std::ostream &out) {
-    typedef std::pair<const char*, DWORDLONG> KVPair;
+    typedef std::pair<const char *, DWORDLONG> KVPair;
 
     MEMORYSTATUSEX stat;
     stat.dwLength = sizeof(stat);
-    GlobalMemoryStatusEx(&stat);
+    _winapi.GlobalMemoryStatusEx(&stat);
 
     // The output imitates that of the Linux agent. That makes
     // a special check for check_mk unneccessary:
@@ -57,8 +56,8 @@ bool SectionMem::produceOutputInner(std::ostream &out) {
              KVPair("VirtualFree:", stat.ullAvailVirtual),
 
          }) {
-        out << std::setw(15) << std::left << kv.first << (kv.second / 1024) << " kB\n";
+        out << std::setw(15) << std::left << kv.first << (kv.second / 1024)
+            << " kB\n";
     }
     return true;
 }
-

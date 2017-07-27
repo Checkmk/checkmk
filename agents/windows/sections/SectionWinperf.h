@@ -28,6 +28,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#undef CreateMutex
 #include "../Section.h"
 
 namespace wmi {
@@ -40,7 +41,8 @@ class SectionWinperf : public Section {
     DWORD _base;
 
 public:
-    SectionWinperf(const char *name, const Environment &env, LoggerAdaptor &logger);
+    SectionWinperf(const char *name, const Environment &env,
+                   LoggerAdaptor &logger, const WinApiAdaptor &winapi);
 
     SectionWinperf *withBase(unsigned int base);
 
@@ -49,4 +51,3 @@ protected:
 };
 
 #endif  // SectionWinperf_h
-

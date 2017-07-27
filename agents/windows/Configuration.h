@@ -27,11 +27,11 @@
 
 #include <map>
 #include "SettingsCollector.h"
+#undef CreateMutex
 #include "types.h"
 
 class ConfigurableBase;
 class Environment;
-
 
 /* Example configuration file:
 
@@ -79,8 +79,8 @@ public:
     void reg(const char *section, const char *key, ConfigurableBase *cfg);
     void deregister(const char *section, const char *key,
                     ConfigurableBase *cfg);
-    inline const Environment& getEnvironment() const { return _environment; }
-    
+    inline const Environment &getEnvironment() const { return _environment; }
+
     static std::string configFileName(bool local, const Environment &env);
 
 private:

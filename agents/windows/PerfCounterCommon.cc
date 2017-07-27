@@ -23,9 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "PerfCounterCommon.h"
-#include <windows.h>
+#include <cstring>
 #include <map>
 #include <vector>
+#include "WinApiAdaptor.h"
 
 template <>
 size_t string_length<char>(const char *s) {
@@ -37,26 +38,28 @@ size_t string_length<wchar_t>(const wchar_t *s) {
     return wcslen(s);
 }
 
-std::vector<wchar_t> retrieve_perf_data(LPCWSTR name, bool local) {
+static std::vector<wchar_t> retrieve_perf_data(const WinApiAdaptor &winapi,
+                                               LPCWSTR name, bool local) {
     std::vector<wchar_t> result;
     DWORD counters_size = 0;
 
     HKEY key = local ? HKEY_PERFORMANCE_NLSTEXT : HKEY_PERFORMANCE_TEXT;
 
     // preflight
-    ::RegQueryValueExW(key, name, nullptr, nullptr, (LPBYTE)&result[0],
-                       &counters_size);
+    winapi.RegQueryValueExW(key, name, nullptr, nullptr, (LPBYTE)&result[0],
+                            &counters_size);
 
     result.resize(counters_size);
     // actual read op
-    ::RegQueryValueExW(key, name, nullptr, nullptr, (LPBYTE)&result[0],
-                       &counters_size);
+    winapi.RegQueryValueExW(key, name, nullptr, nullptr, (LPBYTE)&result[0],
+                            &counters_size);
 
     return result;
 }
 
-std::map<DWORD, std::wstring> perf_id_map(bool local) {
-    std::vector<wchar_t> names = retrieve_perf_data(L"Counter", local);
+std::map<DWORD, std::wstring> perf_id_map(const WinApiAdaptor &winapi,
+                                          bool local) {
+    std::vector<wchar_t> names = retrieve_perf_data(winapi, L"Counter", local);
 
     std::map<DWORD, std::wstring> result;
 
@@ -74,8 +77,9 @@ std::map<DWORD, std::wstring> perf_id_map(bool local) {
     return result;
 }
 
-std::map<std::wstring, DWORD> perf_name_map(bool local) {
-    std::vector<wchar_t> names = retrieve_perf_data(L"Counter", local);
+std::map<std::wstring, DWORD> perf_name_map(const WinApiAdaptor &winapi,
+                                            bool local) {
+    std::vector<wchar_t> names = retrieve_perf_data(winapi, L"Counter", local);
 
     std::map<std::wstring, DWORD> result;
 

@@ -22,18 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "Section.h"
 #include <sstream>
 #include "Environment.h"
 #include "LoggerAdaptor.h"
-#include "Section.h"
 
-
-Section::Section(const char *name,
-                 const Environment &env,
-                 LoggerAdaptor &logger)
+Section::Section(const char *name, const Environment &env,
+                 LoggerAdaptor &logger, const WinApiAdaptor &winapi)
     : _name(name != nullptr ? name : "")
     , _env(env)
-    , _logger(logger) {}
+    , _logger(logger)
+    , _winapi(winapi) {}
 
 Section *Section::withHiddenHeader(bool hidden) {
     _show_header = !hidden;

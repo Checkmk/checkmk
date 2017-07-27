@@ -23,10 +23,13 @@
 // Boston, MA 02110-1301 USA.
 
 #include "ExternalCmd.h"
+#include <cstring>
 #include <memory>
 #include "Environment.h"
 #include "LoggerAdaptor.h"
+#include "WinApiAdaptor.h"
 #include "types.h"
+#include "win_error.h"
 
 extern bool with_stderr;
 extern HANDLE g_workers_job_object;
@@ -36,15 +39,25 @@ bool ends_with(std::string const &value, std::string const &ending) {
     return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
 }
 
-ExternalCmd::ExternalCmd(const char *cmdline, const LoggerAdaptor &logger)
-    : _logger(logger) {
+ExternalCmd::ExternalCmd(const char *cmdline, const Environment &env,
+                         const LoggerAdaptor &logger,
+                         const WinApiAdaptor &winapi)
+    : _script_stderr{winapi, INVALID_HANDLE_VALUE}
+    , _script_stdout{winapi, INVALID_HANDLE_VALUE}
+    , _process{INVALID_HANDLE_VALUE}
+    , _job_object{INVALID_HANDLE_VALUE}
+    , _stdout{winapi, INVALID_HANDLE_VALUE}
+    , _stderr{winapi, INVALID_HANDLE_VALUE}
+    , _logger(logger)
+    , _winapi(winapi) {
     SECURITY_DESCRIPTOR security_descriptor;
     SECURITY_ATTRIBUTES security_attributes;
     // initialize security descriptor (Windows NT)
-    if (Environment::isWinNt()) {
-        InitializeSecurityDescriptor(&security_descriptor,
-                                     SECURITY_DESCRIPTOR_REVISION);
-        SetSecurityDescriptorDacl(&security_descriptor, true, nullptr, false);
+    if (env.isWinNt()) {
+        _winapi.InitializeSecurityDescriptor(&security_descriptor,
+                                             SECURITY_DESCRIPTOR_REVISION);
+        _winapi.SetSecurityDescriptorDacl(&security_descriptor, true, nullptr,
+                                          false);
         security_attributes.lpSecurityDescriptor = &security_descriptor;
     } else {
         security_attributes.lpSecurityDescriptor = nullptr;
@@ -54,23 +67,23 @@ ExternalCmd::ExternalCmd(const char *cmdline, const LoggerAdaptor &logger)
     // child process needs to be able to inherit the pipe handles
     security_attributes.bInheritHandle = true;
 
-    if (!CreatePipe(_stdout.ptr(), _script_stdout.ptr(), &security_attributes,
-                    0)) {
-        throw win_exception("failed to create pipe");
+    if (!_winapi.CreatePipe(_stdout.ptr(), _script_stdout.ptr(),
+                            &security_attributes, 0)) {
+        throw win_exception(_winapi, "failed to create pipe");
     }
 
     if (with_stderr) {
-        if (!CreatePipe(_stderr.ptr(), _script_stderr.ptr(),
-                        &security_attributes, 0)) {
-            throw win_exception("failed to create pipe");
+        if (!_winapi.CreatePipe(_stderr.ptr(), _script_stderr.ptr(),
+                                &security_attributes, 0)) {
+            throw win_exception(_winapi, "failed to create pipe");
         }
     }
 
     // base new process statup info on current process
     STARTUPINFO si;
-    ZeroMemory(&si, sizeof(STARTUPINFO));
+    std::memset(&si, 0, sizeof(STARTUPINFO));
     si.cb = sizeof(STARTUPINFO);
-    GetStartupInfo(&si);
+    _winapi.GetStartupInfo(&si);
     si.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
     si.hStdOutput = (HANDLE)_script_stdout;
@@ -78,7 +91,7 @@ ExternalCmd::ExternalCmd(const char *cmdline, const LoggerAdaptor &logger)
         with_stderr ? (HANDLE)_script_stdout : (HANDLE)_script_stderr;
 
     PROCESS_INFORMATION pi;
-    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+    std::memset(&pi, 0, sizeof(PROCESS_INFORMATION));
     std::unique_ptr<char[], decltype(free) *> cmdline_buf(strdup(cmdline),
                                                           free);
 
@@ -91,52 +104,56 @@ ExternalCmd::ExternalCmd(const char *cmdline, const LoggerAdaptor &logger)
         dwCreationFlags = CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS;
     }
 
-    if (!CreateProcess(nullptr, cmdline_buf.get(), nullptr, nullptr, TRUE,
-                       dwCreationFlags, nullptr, nullptr, &si, &pi)) {
-        throw win_exception(std::string("failed to spawn process ") + cmdline);
+    if (!_winapi.CreateProcess(nullptr, cmdline_buf.get(), nullptr, nullptr,
+                               TRUE, dwCreationFlags, nullptr, nullptr, &si,
+                               &pi)) {
+        throw win_exception(_winapi,
+                            std::string("failed to spawn process ") + cmdline);
     }
 
     _process = pi.hProcess;
-    ::CloseHandle(pi.hThread);
+    _winapi.CloseHandle(pi.hThread);
 
     // Create a job object for this process
     // Whenever the process ends all of its childs will terminate, too
-    _job_object = CreateJobObject(nullptr, nullptr);
+    _job_object = _winapi.CreateJobObject(nullptr, nullptr);
     if (!detach_process) {
-        AssignProcessToJobObject(_job_object, pi.hProcess);
-        AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
+        _winapi.AssignProcessToJobObject(_job_object, pi.hProcess);
+        _winapi.AssignProcessToJobObject(g_workers_job_object, pi.hProcess);
     }
 }
 
 ExternalCmd::~ExternalCmd() {
     if (_job_object != INVALID_HANDLE_VALUE) {
-        ::TerminateJobObject(_job_object, 1);
-        ::CloseHandle(_job_object);
+        _winapi.TerminateJobObject(_job_object, 1);
+        _winapi.CloseHandle(_job_object);
     }
-    ::CloseHandle(_process);
+    _winapi.CloseHandle(_process);
 }
 
 void ExternalCmd::terminateJob(DWORD exit_code) {
-    ::TerminateJobObject(_job_object, exit_code);
-    ::CloseHandle(_job_object);
+    _winapi.TerminateJobObject(_job_object, exit_code);
+    _winapi.CloseHandle(_job_object);
     _job_object = INVALID_HANDLE_VALUE;
 }
 
 DWORD ExternalCmd::exitCode() {
     DWORD res;
-    GetExitCodeProcess(_process, &res);
+    _winapi.GetExitCodeProcess(_process, &res);
     return res;
 }
 
 DWORD ExternalCmd::stdoutAvailable() {
     DWORD available;
-    PeekNamedPipe((HANDLE)_stdout, nullptr, 0, nullptr, &available, nullptr);
+    _winapi.PeekNamedPipe((HANDLE)_stdout, nullptr, 0, nullptr, &available,
+                          nullptr);
     return available;
 }
 
 DWORD ExternalCmd::stderrAvailable() {
     DWORD available;
-    PeekNamedPipe((HANDLE)_stderr, nullptr, 0, nullptr, &available, nullptr);
+    _winapi.PeekNamedPipe((HANDLE)_stderr, nullptr, 0, nullptr, &available,
+                          nullptr);
     return available;
 }
 
@@ -158,11 +175,12 @@ DWORD ExternalCmd::readPipe(HANDLE pipe, char *buffer, size_t buffer_size,
     DWORD available = buffer_size;
     if (!block) {
         // avoid blocking by first peeking.
-        PeekNamedPipe(pipe, nullptr, 0, nullptr, &available, nullptr);
+        _winapi.PeekNamedPipe(pipe, nullptr, 0, nullptr, &available, nullptr);
     }
     if (available > 0) {
-        ReadFile(pipe, buffer, std::min<DWORD>(available, buffer_size - 1),
-                 &bytes_read, nullptr);
+        _winapi.ReadFile(pipe, buffer,
+                         std::min<DWORD>(available, buffer_size - 1),
+                         &bytes_read, nullptr);
         buffer[bytes_read] = '\0';
     }
     return bytes_read;

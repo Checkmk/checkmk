@@ -22,14 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "SectionCrashDebug.h"
 #include "../Environment.h"
 #include "../LoggerAdaptor.h"
-#include "SectionCrashDebug.h"
 
-
-SectionCrashDebug::SectionCrashDebug(Configuration &config, LoggerAdaptor &logger)
-    : Section("logwatch", config.getEnvironment(), logger)
-    , _crash_debug(config, "global", "crash_debug", false) {}
+SectionCrashDebug::SectionCrashDebug(Configuration &config,
+                                     LoggerAdaptor &logger,
+                                     const WinApiAdaptor &winapi)
+    : Section("logwatch", config.getEnvironment(), logger, winapi)
+    , _crash_debug(config, "global", "crash_debug", false, winapi) {}
 
 bool SectionCrashDebug::produceOutputInner(std::ostream &out) {
     if (*_crash_debug) {
@@ -37,4 +38,3 @@ bool SectionCrashDebug::produceOutputInner(std::ostream &out) {
     }
     return true;
 }
-

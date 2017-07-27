@@ -23,11 +23,14 @@
 // Boston, MA 02110-1301 USA.
 
 #include "Environment.h"
-#include <windows.h>
 #include <cassert>
+#include <cstring>
 #include <stdexcept>
+#include <vector>
 #include "LoggerAdaptor.h"
-#include "stringutil.h"
+#include "WinApiAdaptor.h"
+#include "types.h"
+#include "win_error.h"
 
 using namespace std;
 
@@ -38,14 +41,33 @@ static const int MAX_PATH_UNICODE = 32767;
 
 Environment *Environment::s_Instance = nullptr;
 
-Environment::Environment(bool use_cwd, const LoggerAdaptor &logger)
-    : _hostname(), _logger(logger) {
-    determineDirectories(use_cwd);
+Environment::Environment(bool use_cwd, const LoggerAdaptor &logger,
+                         const WinApiAdaptor &winapi)
+    : _logger(logger)
+    , _winapi(winapi)
+    , _hostname(determineHostname())
+    , _current_directory(determineCurrentDirectory())
+    , _agent_directory(determineAgentDirectory(use_cwd))
+    , _plugins_directory(assignDirectory("plugins"))
+    , _config_directory(assignDirectory("config"))
+    , _local_directory(assignDirectory("local"))
+    , _spool_directory(assignDirectory("spool"))
+    , _state_directory(assignDirectory("state"))
+    , _temp_directory(assignDirectory("temp"))
+    , _log_directory(assignDirectory("log"))
+    , _bin_directory(_agent_directory + "\\bin")  // not created if missing
+    , _logwatch_statefile(_state_directory + "\\logstate.txt")
+    , _eventlog_statefile(_state_directory + "\\eventstate.txt") {
+    // Set these directories as environment variables. Some scripts might use
+    // them...
+    _winapi.SetEnvironmentVariable("MK_PLUGINSDIR", _plugins_directory.c_str());
+    _winapi.SetEnvironmentVariable("MK_CONFDIR", _config_directory.c_str());
+    _winapi.SetEnvironmentVariable("MK_LOCALDIR", _local_directory.c_str());
+    _winapi.SetEnvironmentVariable("MK_SPOOLDIR", _spool_directory.c_str());
+    _winapi.SetEnvironmentVariable("MK_STATEDIR", _state_directory.c_str());
+    _winapi.SetEnvironmentVariable("MK_TEMPDIR", _temp_directory.c_str());
+    _winapi.SetEnvironmentVariable("MK_LOGDIR", _log_directory.c_str());
 
-    char buffer[256];
-    if (gethostname(buffer, sizeof(buffer)) == 0) {
-        _hostname = buffer;
-    }
     if (s_Instance == nullptr) {
         s_Instance = this;
     }
@@ -59,107 +81,100 @@ Environment::~Environment() {
 
 Environment *Environment::instance() { return s_Instance; }
 
-void Environment::getAgentDirectory(char *buffer, int size, bool use_cwd) {
-    buffer[0] = 0;
+string Environment::determineHostname() const {
+    const int bufferSize = 256;
+    char buffer[bufferSize] = "\0";
+    return (_winapi.gethostname(buffer, bufferSize) == 0) ? buffer : "";
+}
 
-    HKEY key;
+string Environment::determineCurrentDirectory() const {
+    vector<char> buffer(MAX_PATH_UNICODE, '\0');
+    const DWORD bytesWritten =
+        _winapi.GetCurrentDirectoryA(MAX_PATH_UNICODE, buffer.data());
+
+    if (bytesWritten == 0 || bytesWritten >= MAX_PATH_UNICODE) return "";
+
+    buffer.resize(bytesWritten);
+    return {buffer.begin(), buffer.end()};
+}
+
+string Environment::determineAgentDirectory(bool use_cwd) const {
+    HKEY key = nullptr;
     DWORD ret = -1;
 
     if (!use_cwd) {
-        ret =
-            RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                         "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent",
-                         0, KEY_READ, &key);
+        ret = _winapi.RegOpenKeyEx(
+            HKEY_LOCAL_MACHINE,
+            "SYSTEM\\CurrentControlSet\\Services\\check_mk_agent", 0, KEY_READ,
+            &key);
     }
 
+    // TODO: wrap registry handling properly
+    OnScopeExit close_key([&]() { _winapi.RegCloseKey(key); });
+
     if (ret == ERROR_SUCCESS) {
-        DWORD dsize = size;
-        if (ERROR_SUCCESS == RegQueryValueEx(key, "ImagePath", NULL, NULL,
-                                             (BYTE *)buffer, &dsize)) {
-            char *end = buffer + strlen(buffer);
+        vector<unsigned char> buffer(MAX_PATH_UNICODE, '\0');
+        DWORD dsize = MAX_PATH_UNICODE;
+
+        if (ERROR_SUCCESS ==
+            _winapi.RegQueryValueEx(key, "ImagePath", NULL, NULL, buffer.data(),
+                                    &dsize)) {
+            buffer.resize(dsize);
+            string directory{buffer.begin(), buffer.end()};
             // search backwards for backslash
-            while (end > buffer && *end != '\\') end--;
-            *end =
-                0;  // replace \ with string end => get directory of executable
+            size_t found = directory.find_last_of("/\\");
+            directory = directory.substr(0, found);
 
             // Handle case where name is quoted with double quotes.
             // This is reported to happen on some 64 Bit systems when spaces
             // are in the directory name.
-            if (*buffer == '"') {
-                memmove(buffer, buffer + 1, strlen(buffer));
+            if (directory.front() == '"') {
+                directory.erase(directory.begin());
             }
+
+            return directory;
+        } else {  // Avoid returning null-filled enormous string upon read
+                  // error:
+            return "";
         }
-        RegCloseKey(key);
     } else {
         // If the agent is not installed as service, simply
         // assume the current directory to be the agent
         // directory (for test and adhoc mode)
-        strncpy(buffer, _current_directory.c_str(), size);
-        if (buffer[strlen(buffer) - 1] == '\\')  // Remove trailing backslash
-            buffer[strlen(buffer) - 1] = 0;
+        string directory(_current_directory);
+
+        if (directory.back() == '\\')  // Remove trailing backslash
+            directory.pop_back();
+
+        return directory;
     }
 }
 
-string Environment::assignDirectory(const char *name) {
-    string result(_agent_directory + "\\" + name);
-    if (!CreateDirectoryA(result.c_str(), NULL)) {
-        if (GetLastError() != ERROR_ALREADY_EXISTS) {
-            _logger.crashLog("Failed to create directory %s: %s (%lu)", name,
-                      get_win_error_as_string().c_str(), GetLastError());
+string Environment::assignDirectory(const char *name) const {
+    const string result(_agent_directory + "\\" + name);
+    if (!_winapi.CreateDirectoryA(result.c_str(), NULL)) {
+        const auto lastError = _winapi.GetLastError();
+        if (lastError != ERROR_ALREADY_EXISTS) {
+            _logger.crashLog(
+                "Failed to create directory %s: %s (%lu)", name,
+                get_win_error_as_string(_winapi, lastError).c_str(), lastError);
         }
     }
     return result;
 }
 
-void Environment::determineDirectories(bool use_cwd) {
-    char *buffer = new char[MAX_PATH_UNICODE];
-    try {
-        ::GetCurrentDirectoryA(MAX_PATH_UNICODE, buffer);
-        _current_directory = buffer;
-        getAgentDirectory(buffer, MAX_PATH_UNICODE, use_cwd);
-        _agent_directory = buffer;
-
-        delete[] buffer;
-    } catch (...) {
-        delete[] buffer;
-        throw;
-    }
-
-    _plugins_directory = assignDirectory("plugins");
-    _config_directory = assignDirectory("config");
-    _local_directory = assignDirectory("local");
-    _spool_directory = assignDirectory("spool");
-    _state_directory = assignDirectory("state");
-    _temp_directory = assignDirectory("temp");
-    _log_directory = assignDirectory("log");
-    _bin_directory = _agent_directory + "\\bin";  // not created if missing
-
-    _logwatch_statefile = _state_directory + "\\logstate.txt";
-    _eventlog_statefile = _state_directory + "\\eventstate.txt";
-
-    // Set these directories as environment variables. Some scripts might use
-    // them...
-    SetEnvironmentVariable("MK_PLUGINSDIR", _plugins_directory.c_str());
-    SetEnvironmentVariable("MK_CONFDIR", _config_directory.c_str());
-    SetEnvironmentVariable("MK_LOCALDIR", _local_directory.c_str());
-    SetEnvironmentVariable("MK_SPOOLDIR", _spool_directory.c_str());
-    SetEnvironmentVariable("MK_STATEDIR", _state_directory.c_str());
-    SetEnvironmentVariable("MK_TEMPDIR", _temp_directory.c_str());
-    SetEnvironmentVariable("MK_LOGDIR", _log_directory.c_str());
-}
-
-bool Environment::isWinNt() {
+bool Environment::isWinNt() const {
     OSVERSIONINFO osv;
     osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    ::GetVersionEx(&osv);
+    _winapi.GetVersionEx(&osv);
 
     return (osv.dwPlatformId == VER_PLATFORM_WIN32_NT);
 }
 
-uint16_t Environment::winVersion() {
+uint16_t Environment::winVersion() const {
     OSVERSIONINFO osv;
     osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    ::GetVersionEx(&osv);
+    _winapi.GetVersionEx(&osv);
 
     return ((osv.dwMajorVersion & 0xFF) << 8) | (osv.dwMinorVersion & 0xFF);
 }

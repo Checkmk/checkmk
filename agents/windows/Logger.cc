@@ -22,17 +22,18 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <windows.h>
 #include <cstdarg>
 #include <cstdio>
 #include <string>
 
 #include "Logger.h"
+#include "WinApiAdaptor.h"
 
-Logger::Logger()
+Logger::Logger(const WinApiAdaptor &winapi)
     : _verbose_mode(false)
     , _found_crash(false)
-    , _crashlogMutex(CreateMutex(NULL, FALSE, NULL))
+    , _crashlogMutex(winapi.CreateMutex(NULL, FALSE, NULL))
+    , _winapi(winapi)
     , _crash_log("")
     , _connection_log("")
     , _success_log("")
@@ -94,13 +95,14 @@ void Logger::openCrashLog(const std::string &log_directory) {
     }
 
     // Threads are not allowed to access the crashLog
-    _connectionlog_file = CreateFile(TEXT(_connection_log.c_str()),
-                                      GENERIC_WRITE,    // open for writing
-                                      FILE_SHARE_READ,  // do not share
-                                      NULL,             // no security
-                                      CREATE_ALWAYS,    // existing file only
-                                      FILE_ATTRIBUTE_NORMAL,  // normal file
-                                      NULL);
+    _connectionlog_file =
+        _winapi.CreateFile(_connection_log.c_str(),
+                           GENERIC_WRITE,          // open for writing
+                           FILE_SHARE_READ,        // do not share
+                           NULL,                   // no security
+                           CREATE_ALWAYS,          // existing file only
+                           FILE_ATTRIBUTE_NORMAL,  // normal file
+                           NULL);
     gettimeofday(&_crashlog_start, 0);
     time_t now = time(0);
     struct tm *t = localtime(&now);
@@ -115,9 +117,9 @@ void Logger::closeCrashLog() const {
         lockCrashLog();
         crashLog("Closing crash log (no crash this time)");
 
-        CloseHandle(_connectionlog_file);
-        DeleteFile(_success_log.c_str());
-        MoveFile(_connection_log.c_str(), _success_log.c_str());
+        _winapi.CloseHandle(_connectionlog_file);
+        _winapi.DeleteFile(_success_log.c_str());
+        _winapi.MoveFile(_connection_log.c_str(), _success_log.c_str());
         unlockCrashLog();
     }
 }
@@ -156,8 +158,8 @@ void Logger::crashLog(const char *format, ...) const {
         snprintf(buffer, sizeof(buffer), "%ld.%06ld ", ellapsed_sec,
                  ellapsed_usec);
         DWORD dwBytesToWrite = (DWORD)strlen(buffer);
-        WriteFile(_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten,
-                  NULL);
+        _winapi.WriteFile(_connectionlog_file, buffer, dwBytesToWrite,
+                          &dwBytesWritten, NULL);
 
         va_list ap;
         va_start(ap, format);
@@ -165,23 +167,22 @@ void Logger::crashLog(const char *format, ...) const {
         va_end(ap);
 
         dwBytesToWrite = (DWORD)strlen(buffer);
-        WriteFile(_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten,
-                  NULL);
+        _winapi.WriteFile(_connectionlog_file, buffer, dwBytesToWrite,
+                          &dwBytesWritten, NULL);
 
-        WriteFile(_connectionlog_file, "\r\n", 2, &dwBytesWritten, NULL);
-        FlushFileBuffers(_connectionlog_file);
+        _winapi.WriteFile(_connectionlog_file, "\r\n", 2, &dwBytesWritten,
+                          NULL);
+        _winapi.FlushFileBuffers(_connectionlog_file);
     }
     unlockCrashLog();
 }
 
 void Logger::lockCrashLog() const {
-    ::WaitForSingleObject(_crashlogMutex, INFINITE);
+    _winapi.WaitForSingleObject(_crashlogMutex, INFINITE);
 }
 
-void Logger::unlockCrashLog() const {
-    ::ReleaseMutex(_crashlogMutex);
-}
+void Logger::unlockCrashLog() const { _winapi.ReleaseMutex(_crashlogMutex); }
 
 std::array<std::string, 3> Logger::getLogFilenames() const {
-    return { _crash_log, _connection_log, _success_log };
+    return {_crash_log, _connection_log, _success_log};
 }

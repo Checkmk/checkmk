@@ -22,20 +22,19 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include "SectionSpool.h"
-#include "../Environment.h"
-#include "../LoggerAdaptor.h"
 #include <dirent.h>
 #include <sys/types.h>
-#include <windows.h>
-
+#include "../Environment.h"
+#include "../LoggerAdaptor.h"
+typedef short SHORT;
+#include "../WinApiAdaptor.h"
+#include "SectionSpool.h"
 
 extern double file_time(const FILETIME *filetime);
 
-
-SectionSpool::SectionSpool(const Environment &env, LoggerAdaptor &logger)
-    : Section("spool", env, logger)
-{
+SectionSpool::SectionSpool(const Environment &env, LoggerAdaptor &logger,
+                           const WinApiAdaptor &winapi)
+    : Section("spool", env, logger, winapi) {
     withHiddenHeader();
 }
 
@@ -58,31 +57,32 @@ bool SectionSpool::produceOutputInner(std::ostream &out) {
             char *name = de->d_name;
             if (name[0] == '.') continue;
 
-            snprintf(path, sizeof(path), "%s\\%s", _env.spoolDirectory().c_str(),
-                     name);
+            snprintf(path, sizeof(path), "%s\\%s",
+                     _env.spoolDirectory().c_str(), name);
             int max_age = -1;
             if (isdigit(*name)) max_age = atoi(name);
 
             if (max_age >= 0) {
-                HANDLE h = FindFirstFileEx(path, FindExInfoStandard, &filedata,
-                                           FindExSearchNameMatch, NULL, 0);
+                HANDLE h =
+                    _winapi.FindFirstFileEx(path, FindExInfoStandard, &filedata,
+                                            FindExSearchNameMatch, NULL, 0);
                 if (h != INVALID_HANDLE_VALUE) {
                     double mtime = file_time(&(filedata.ftLastWriteTime));
-                    FindClose(h);
+                    _winapi.FindClose(h);
                     int age = now - mtime;
                     if (age > max_age) {
-                       _logger.crashLog(
+                        _logger.crashLog(
                             "    %s: skipping outdated file: age is %d sec, "
                             "max age is %d sec.",
                             name, age, max_age);
                         continue;
                     }
                 } else {
-                   _logger.crashLog("    %s: cannot determine file age", name);
+                    _logger.crashLog("    %s: cannot determine file age", name);
                     continue;
                 }
             }
-           _logger.crashLog("    %s", name);
+            _logger.crashLog("    %s", name);
 
             // Output file in blocks of 4kb
             FILE *file = fopen(path, "r");
@@ -100,4 +100,3 @@ bool SectionSpool::produceOutputInner(std::ostream &out) {
     }
     return true;
 }
-

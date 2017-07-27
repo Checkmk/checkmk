@@ -26,17 +26,17 @@
 #include <stdexcept>
 #include "Environment.h"
 #include "LoggerAdaptor.h"
-#include "stringutil.h"
+#include "win_error.h"
 
 Thread::~Thread() {
     if (_thread_handle != INVALID_HANDLE_VALUE) {
         DWORD exitCode;
-        ::GetExitCodeThread(_thread_handle, &exitCode);
+        _winapi.GetExitCodeThread(_thread_handle, &exitCode);
         if (exitCode == STILL_ACTIVE) {
             // baaad
-            const auto &logger = static_cast<ThreadData*>(_data)->logger;
+            const auto &logger = static_cast<ThreadData *>(_data)->logger;
             logger.crashLog("thread didn't finish, have to kill it");
-            TerminateThread(_thread_handle, 3);
+            _winapi.TerminateThread(_thread_handle, 3);
         }
     }
 }
@@ -45,13 +45,13 @@ int Thread::join() const {
     if (_thread_handle == INVALID_HANDLE_VALUE) {
         throw std::runtime_error("thread not started");
     }
-    DWORD res = ::WaitForSingleObject(_thread_handle, INFINITE);
+    DWORD res = _winapi.WaitForSingleObject(_thread_handle, INFINITE);
     if (res != WAIT_OBJECT_0) {
-        throw std::runtime_error(get_win_error_as_string());
+        throw std::runtime_error(get_win_error_as_string(_winapi));
     }
 
     DWORD exitCode;
-    ::GetExitCodeThread(_thread_handle, &exitCode);
+    _winapi.GetExitCodeThread(_thread_handle, &exitCode);
     return static_cast<int>(exitCode);
 }
 
@@ -59,9 +59,9 @@ void Thread::start() {
     if (wasStarted()) {
         throw std::runtime_error("thread already started");
     }
-    _thread_handle = ::CreateThread(NULL, 0, _func, _data, 0, NULL);
+    _thread_handle = _winapi.CreateThread(NULL, 0, _func, _data, 0, NULL);
     if (_thread_handle == NULL) {
-        throw std::runtime_error(get_win_error_as_string());
+        throw std::runtime_error(get_win_error_as_string(_winapi));
     }
 }
 

@@ -380,14 +380,6 @@ def replace_groups(text, origtext, groups):
     return text
 
 
-def format_exception():
-    import StringIO
-    txt = StringIO.StringIO()
-    t, v, tb = sys.exc_info()
-    traceback.print_exception(t, v, tb, None, txt)
-    return txt.getvalue()
-
-
 # Class for debugging locking. Beware: This does not really
 # implement a true locking! It's just for detecting deadlocks!
 class VerboseLock(object):
@@ -3124,10 +3116,6 @@ class StatusServer(object):
             self._tcp_allow_commands = False
             self._tcp_access_list = None
 
-    def close_sockets(self):
-        self.close_tcp_socket()
-        self.close_unix_socket()
-
     def close_unix_socket(self):
         if self._socket:
             self._socket.close()
@@ -4447,23 +4435,6 @@ def core_has_notifications_disabled(event):
         logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
 
     return False
-
-
-def fetch_contacts_of_group_from_livestatus(group_name):
-    try:
-        contacts = livestatus.LocalConnection().query_value(
-            "GET contactgroups\nFilter: name = %s\nColumns: members" % group_name)
-        if "check-mk-notify" in contacts: # Remove artifical contact used for rule based notifications
-            contacts.remove("check-mk-notify")
-        return contacts
-
-    except Exception as e:
-        logger.exception("Cannot determine contacts of group %s: %s" % (group_name, e))
-        if opt_debug:
-            raise
-
-    return None # No group match or other failure
-
 
 
 #.

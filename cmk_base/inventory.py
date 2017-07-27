@@ -109,7 +109,7 @@ def do_inv_check(options, hostname):
 
     try:
         inv_tree, old_timestamp = do_inv_for(hostname)
-        num_entries = _count_nodes()
+        num_entries = _count_nodes(g_inv_tree)
         if not num_entries:
             console.output("OK - Found no data\n")
             sys.exit(0)
@@ -164,11 +164,11 @@ def do_inv_for(hostname):
         _do_inv_for_realhost(hostname)
 
     # Remove empty paths
-    _cleanup_inventory_tree()
+    _cleanup_inventory_tree(g_inv_tree)
     old_timestamp = _save_inventory_tree(hostname)
 
     console.verbose("..%s%s%d%s entries" %
-            (tty.bold, tty.yellow, _count_nodes(), tty.normal))
+            (tty.bold, tty.yellow, _count_nodes(g_inv_tree), tty.normal))
 
     _run_inventory_export_hooks(hostname)
     return _get_inventory_tree(), old_timestamp
@@ -330,10 +330,7 @@ def inv_tree(path, default_value=None):
 
 # Removes empty nodes from a (sub)-tree. Returns
 # True if the tree itself is empty
-def _cleanup_inventory_tree(tree=None):
-    if tree == None:
-        tree = g_inv_tree
-
+def _cleanup_inventory_tree(tree):
     if type(tree) == dict:
         for key, value in tree.items():
             if _cleanup_inventory_tree(value):
@@ -353,10 +350,7 @@ def _cleanup_inventory_tree(tree=None):
         return False # cannot clean non-container nodes
 
 
-def _count_nodes(tree=None):
-    if tree == None:
-        tree = g_inv_tree
-
+def _count_nodes(tree):
     if type(tree) == dict:
         return len(tree) + sum([_count_nodes(v) for v in tree.values()])
     elif type(tree) == list:

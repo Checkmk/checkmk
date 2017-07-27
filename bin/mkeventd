@@ -1370,7 +1370,7 @@ class EventServer(object):
             os.mkfifo(g_pipe_path)
 
         # We want to be able to receive events from all users on the local system
-        os.chmod(g_pipe_path, 0666) # nosec
+        os.chmod(g_pipe_path, 0o666) # nosec
 
         self.logger.info("Created FIFO '%s' for receiving events" % g_pipe_path)
 
@@ -1431,7 +1431,7 @@ class EventServer(object):
                 os.remove(g_eventsocket_path)
             self._eventsocket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self._eventsocket.bind(g_eventsocket_path)
-            os.chmod(g_eventsocket_path, 0664)
+            os.chmod(g_eventsocket_path, 0o664)
             self._eventsocket.listen(g_config['eventsocket_queue_len'])
             self.logger.info("Opened UNIX socket '%s' for receiving events" % g_eventsocket_path)
         else:
@@ -1449,7 +1449,7 @@ class EventServer(object):
                 raise
             finally:
                 file(profilefile + ".py", "w").write("#!/usr/bin/env python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
-                os.chmod(profilefile + ".py", 0755)
+                os.chmod(profilefile + ".py", 0o755)
                 self.logger.info("Created profile conversion script %s.py." % profilefile)
 
         else:
@@ -3095,7 +3095,7 @@ class StatusServer(object):
         self._socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self._socket.bind(g_socket_path)
         # Make sure that socket is group writable
-        os.chmod(g_socket_path, 0664)
+        os.chmod(g_socket_path, 0o664)
         self._socket.listen(g_config['socket_queue_len'])
         self._unix_socket_queue_len = g_config['socket_queue_len'] # detect changes in config
 
@@ -3162,7 +3162,7 @@ class StatusServer(object):
                     self.logger.info("Writing profile of status thread to %s." % profilefile)
                     cProfile.run("g_status_server.serve()", profilefile)
                     file(profilefile + ".py", "w").write("#!/usr/bin/env python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
-                    os.chmod(profilefile + ".py", 0755)
+                    os.chmod(profilefile + ".py", 0o755)
                 else:
                     self.serve()
             except Exception:

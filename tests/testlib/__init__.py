@@ -441,7 +441,9 @@ class Site(object):
                 cmc_path() + "/web",
                 cmc_path() + "/alert_handlers",
                 cmc_path() + "/misc",
-                cmc_path() + "/core",
+                # TODO: To be able to build the core correctly we need to build
+                # python/boost/python-modules/rrdtool first. Skip cmc for the moment here
+                #cmc_path() + "/core",
                 cmc_path() + "/agents/bakery",
                 cmc_path() + "/agents/plugins",
                 cmc_path() + "/agents",

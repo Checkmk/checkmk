@@ -940,9 +940,9 @@ def get_logfile(basename):
     if active_history_period == None or timestamp > active_history_period:
 
         # Look if newer files exist
-        timestamps = [ int(f[:-4]) for f in os.listdir(log_dir) \
-                  if f.endswith(".log") ]
-        timestamps.sort()
+        timestamps = sorted(int(f[:-4])
+                            for f in os.listdir(log_dir)
+                            if f.endswith(".log"))
         if len(timestamps) > 0:
             timestamp = max(timestamps[-1], timestamp)
 
@@ -1032,9 +1032,6 @@ def get_event_history_from_file(filters, limit):
     # the first entry and modification time of the file. Only
     # if at least one of both timestamps is accepted then we
     # take that file into account.
-    timestamps = [ int(fn[:-4]) for fn in os.listdir(log_dir)
-                   if fn.endswith(".log") ]
-    timestamps.sort()
     # Use the later logfiles first, to get the newer log entries
     # first. When a limit is reached, the newer entries should
     # be processed in most cases. We assume that now.
@@ -1043,7 +1040,10 @@ def get_event_history_from_file(filters, limit):
     # already be done by the GUI, so we don't do that twice. Skipping
     # this # will lead into some lines of a single file to be limited in
     # wrong order. But this should be better than before.
-    timestamps.reverse()
+    timestamps = sorted((int(fn[:-4])
+                         for fn in os.listdir(log_dir)
+                         if fn.endswith(".log")),
+                        reverse=True)
     for ts in timestamps:
         if limit != None and limit <= 0:
             break

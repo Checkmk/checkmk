@@ -144,7 +144,7 @@ PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs
 
 help:
 	@echo "setup			      --> Prepare system for development and building"
-	@echo "make dist                      --> Create source tgz for later building of rpm/deb"
+	@echo "make dist                      --> Create source tgz for later building of rpm/deb and livestatus tgz"
 	@echo "make rpm                       --> Create rpm package"
 	@echo "make deb                       --> Create deb package"
 	@echo "make cma                       --> Create cma package"
@@ -188,7 +188,7 @@ check-version:
 
 # Would use --exclude-vcs-ignores but that's available from tar 1.29 which
 # is currently not used by most distros
-dist:
+dist: mk-livestatus-$(VERSION).tar.gz
 	@EXCLUDES= ; \
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \

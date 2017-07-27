@@ -243,15 +243,15 @@ def convert_history_line(values):
 
 
 filter_operators = {
-    "="  : (lambda a, b: a == b),
-    ">"  : (lambda a, b: a > b),
-    "<"  : (lambda a, b: a < b),
-    ">=" : (lambda a, b: a >= b),
-    "<=" : (lambda a, b: a <= b),
-    "~"  : (lambda a, b: regex(b).search(a)),
-    "=~" : (lambda a, b: a.lower() == b.lower()),
-    "~~" : (lambda a, b: regex(b.lower()).search(a.lower())),
-    "in" : (lambda a, b: a in b),
+    "=":  (lambda a, b: a == b),
+    ">":  (lambda a, b: a > b),
+    "<":  (lambda a, b: a < b),
+    ">=": (lambda a, b: a >= b),
+    "<=": (lambda a, b: a <= b),
+    "~":  (lambda a, b: regex(b).search(a)),
+    "=~": (lambda a, b: a.lower() == b.lower()),
+    "~~": (lambda a, b: regex(b.lower()).search(a.lower())),
+    "in": (lambda a, b: a in b),
 }
 
 
@@ -796,13 +796,13 @@ def log_event_history_to_mongodb(event, what, who, addinfo):
     # for the first step, we use the integer index for simplicity
     now = time.time()
     g_mongo_db.ec_archive.insert({
-        '_id'     : mongodb_next_id('ec_archive_id'),
-        'dt'      : datetime.datetime.fromtimestamp(now),
-        'time'    : now,
-        'event'   : event,
-        'what'    : what,
-        'who'     : who,
-        'addinfo' : addinfo,
+        '_id':     mongodb_next_id('ec_archive_id'),
+        'dt':      datetime.datetime.fromtimestamp(now),
+        'time':    now,
+        'event':   event,
+        'what':    what,
+        'who':     who,
+        'addinfo': addinfo,
     })
 
 def get_event_history_from_mongodb(filters, limit):
@@ -1134,20 +1134,20 @@ class Perfcounters(object):
         self._lock = thread.allocate_lock()
         # Event counters
         self._counters = {
-            "messages"        : 0,
-            "rule_tries"      : 0,
-            "rule_hits"       : 0,
-            "drops"           : 0,
-            "overflows"       : 0,
-            "events"          : 0,
-            "connects"        : 0,
+            "messages":   0,
+            "rule_tries": 0,
+            "rule_hits":  0,
+            "drops":      0,
+            "overflows":  0,
+            "events":     0,
+            "connects":   0,
         }
 
         # Average processing times
         self._weights = {
-            "processing" : 0.99, # event processing
-            "sync"       : 0.95, # Replication sync
-            "request"    : 0.95, # Client requests
+            "processing": 0.99, # event processing
+            "sync":       0.95, # Replication sync
+            "request":    0.95, # Client requests
         }
 
         self._old_counters = {}
@@ -1242,8 +1242,8 @@ class Perfcounters(object):
 #   '----------------------------------------------------------------------'
 
 class EventServer(object):
-    month_names = { "Jan":1, "Feb":2, "Mar":3, "Apr":4, "May":5, "Jun":6,
-                    "Jul":7, "Aug":8, "Sep":9, "Oct":10, "Nov":11, "Dec":12, }
+    month_names = { "Jan": 1, "Feb": 2, "Mar": 3, "Apr":  4, "May":  5, "Jun":  6,
+                    "Jul": 7, "Aug": 8, "Sep": 9, "Oct": 10, "Nov": 11, "Dec": 12, }
 
 
     def __init__(self):
@@ -1306,7 +1306,7 @@ class EventServer(object):
         headers, row = [], []
 
         self._add_general_status(headers, row)
-        self._add_perfcounter_status(headers,row)
+        self._add_perfcounter_status(headers, row)
         self._add_replication_status(headers, row)
         self._add_event_limit_status(headers, row)
 
@@ -1634,13 +1634,13 @@ class EventServer(object):
         text = scrub_and_decode(', '.join([ '%s: %s' % (item[0], str(item[1])) for item in trap ]))
 
         event = {
-            'time'        : time.time(),
-            'host'        : safe_ipaddress,
-            'ipaddress'   : safe_ipaddress,
-            'priority'    : 5,  # notice
-            'facility'    : 31, # not used by syslog -> we use this for all traps
-            'application' : application,
-            'text'        : text
+            'time':        time.time(),
+            'host':        safe_ipaddress,
+            'ipaddress':   safe_ipaddress,
+            'priority':    5,  # notice
+            'facility':    31, # not used by syslog -> we use this for all traps
+            'application': application,
+            'text':        text
         }
 
         return event
@@ -2045,21 +2045,21 @@ class EventServer(object):
             # Create artifical event from scratch. Make sure that all important
             # fields are defined.
             event = {
-                "rule_id"        : rule["id"],
-                "text"           : text,
-                "phase"          : "open",
-                "count"          : 1,
-                "time"           : now,
-                "first"          : now,
-                "last"           : now,
-                "comment"        : "",
-                "host"           : "",
-                "ipaddress"      : "",
-                "application"    : "",
-                "pid"            : 0,
-                "priority"       : 3,
-                "facility"       : 1, # user
-                "match_groups"   : (),
+                "rule_id":      rule["id"],
+                "text":         text,
+                "phase":        "open",
+                "count":        1,
+                "time":         now,
+                "first":        now,
+                "last":         now,
+                "comment":      "",
+                "host":         "",
+                "ipaddress":    "",
+                "application":  "",
+                "pid":          0,
+                "priority":     3,
+                "facility":     1, # user
+                "match_groups": (),
             }
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, ())
@@ -2106,10 +2106,10 @@ class EventServer(object):
         # Convert legacy_rules into rule_packs
         if not rule_packs:
             rule_packs = [{
-                "id"       : "default",
-                "title"    : "Default rule package",
-                "rules"    : legacy_rules,
-                "disabled" : False,
+                "id":       "default",
+                "title":    "Default rule package",
+                "rules":    legacy_rules,
+                "disabled": False,
             }]
 
         # Loop through all rule packages and with through their rules
@@ -2377,15 +2377,15 @@ class EventServer(object):
     def _add_rule_contact_groups_to_event(self, rule, event):
         if rule.get("contact_groups") is None:
             event.update({
-                "contact_groups"            : None,
-                "contact_groups_notify"     : False,
-                "contact_groups_precedence" : "host",
+                "contact_groups":            None,
+                "contact_groups_notify":     False,
+                "contact_groups_precedence": "host",
             })
         else:
             event.update({
-                "contact_groups"            : rule["contact_groups"]["groups"],
-                "contact_groups_notify"     : rule["contact_groups"]["notify"],
-                "contact_groups_precedence" : rule["contact_groups"]["precedence"],
+                "contact_groups":            rule["contact_groups"]["groups"],
+                "contact_groups_notify":     rule["contact_groups"]["notify"],
+                "contact_groups_precedence": rule["contact_groups"]["precedence"],
             })
 
 
@@ -2716,7 +2716,7 @@ class EventServer(object):
     def create_event_from_line(self, line, address):
         event = {
             # address is either None or a tuple of (ipaddress, port)
-            "ipaddress"   : address and address[0] or "",
+            "ipaddress": address and address[0] or "",
         }
         try:
             # Variant 1: plain syslog message without priority/facility:
@@ -2864,19 +2864,19 @@ class EventServer(object):
             if g_config["debug_rules"]:
                 self.logger.exception('Got non-syslog message "%s" (%s)' % (line, e) )
             event = {
-                "facility"    : 1,
-                "priority"    : 0,
-                "text"        : line,
-                "host"        : "",
-                "ipaddress"   : address and address[0] or "",
-                "application" : "",
-                "pid"         : 0,
-                "time"        : time.time(),
+                "facility":    1,
+                "priority":    0,
+                "text":        line,
+                "host":        "",
+                "ipaddress":   address and address[0] or "",
+                "application": "",
+                "pid":         0,
+                "time":        time.time(),
             }
 
         if g_config["debug_rules"]:
             self.logger.info('Parsed message:\n' +
-                ("".join([ " %-15s %s\n" % (k+":",v) for (k,v) in
+                ("".join([ " %-15s %s\n" % (k+":", v) for (k, v) in
                 sorted(event.items())])).rstrip())
 
         return event
@@ -3001,22 +3001,22 @@ class EventServer(object):
     def _create_overflow_event(self, ty, event):
         now = time.time()
         new_event = {
-            "rule_id"        : None,
-            "phase"          : "open",
-            "count"          : 1,
-            "time"           : now,
-            "first"          : now,
-            "last"           : now,
-            "comment"        : "",
-            "host"           : "",
-            "ipaddress"      : "",
-            "application"    : "Event Console",
-            "pid"            : 0,
-            "priority"       : 2, # crit
-            "facility"       : 1, # user
-            "match_groups"   : (),
-            "state"          : 2, # crit
-            "sl"             : event["sl"],
+            "rule_id":    None,
+            "phase":      "open",
+            "count":       1,
+            "time":        now,
+            "first":       now,
+            "last":        now,
+            "comment":     "",
+            "host":        "",
+            "ipaddress":   "",
+            "application": "Event Console",
+            "pid":          0,
+            "priority":     2, # crit
+            "facility":     1, # user
+            "match_groups": (),
+            "state":        2, # crit
+            "sl":           event["sl"],
         }
         self._add_rule_contact_groups_to_event({}, new_event)
 
@@ -3029,9 +3029,9 @@ class EventServer(object):
 
         elif ty == "by_host":
             new_event.update({
-                "host"      : event["host"],
-                "ipaddress" : event["ipaddress"],
-                "text"      : (
+                "host":       event["host"],
+                "ipaddress":  event["ipaddress"],
+                "text":  (
                     "The host event limit of %d open events has been reached for host \"%s\". "
                     "Not opening any additional event for this host until open events have "
                     "been archived." % (g_config["event_limit"]["by_host"]["limit"], event["host"])
@@ -3044,11 +3044,11 @@ class EventServer(object):
 
         elif ty == "by_rule":
             new_event.update({
-                "rule_id"                   : event["rule_id"],
-                "contact_groups"            : event["contact_groups"],
-                "contact_groups_notify"     : event.get("contact_groups_notify", False),
-                "contact_groups_precedence" : event.get("contact_groups_precedence", "host"),
-                "text"                      : (
+                "rule_id":                   event["rule_id"],
+                "contact_groups":            event["contact_groups"],
+                "contact_groups_notify":     event.get("contact_groups_notify", False),
+                "contact_groups_precedence": event.get("contact_groups_precedence", "host"),
+                "text":  (
                     "The rule event limit of %d open events has been reached for rule \"%s\". "
                     "Not opening any additional event for this rule until open events have "
                     "been archived." %
@@ -3701,10 +3701,10 @@ class EventStatus(object):
 
     def pack_status(self):
         return {
-            "next_event_id"   : self._next_event_id,
-            "events"          : self._events,
-            "rule_stats"      : self._rule_stats,
-            "interval_starts" : self._interval_starts,
+            "next_event_id":   self._next_event_id,
+            "events":          self._events,
+            "rule_stats":      self._rule_stats,
+            "interval_starts": self._interval_starts,
         }
 
     def unpack_status(self, status):
@@ -3953,8 +3953,8 @@ class EventStatus(object):
         # but preserve certain attributes from the original (first)
         # event.
         preserve = {
-            "count" : found.get("count", 1) + 1,
-            "first" : found["first"],
+            "count": found.get("count", 1) + 1,
+            "first": found["first"],
         }
         # When event is already active then do not change
         # comment or contact information anymore
@@ -4115,7 +4115,7 @@ def get_quoted_event(event):
             except Exception as e:
                 # If anything unforeseen happens, we use the intial value
                 new_event[key] = value
-                logger.exception("Unable to quote event text %r: %r, %r" % (key,value, e))
+                logger.exception("Unable to quote event text %r: %r, %r" % (key, value, e))
 
     return new_event
 
@@ -4315,13 +4315,13 @@ def add_contacts_from_rule(context, event):
 def add_infos_from_monitoring_host(context, event):
     def _add_artificial_context_info():
         context.update({
-            "HOSTNAME"                 : event["host"],
-            "HOSTALIAS"                : event["host"],
-            "HOSTADDRESS"              : event["ipaddress"],
-            "HOSTTAGS"                 : "",
-            "HOSTDOWNTIME"             : "0", # Non existing host cannot be in scheduled downtime ;-)
-            "CONTACTS"                 : "?", # Will trigger using fallback contacts
-            "SERVICECONTACTGROUPNAMES" : "",
+            "HOSTNAME":                 event["host"],
+            "HOSTALIAS":                event["host"],
+            "HOSTADDRESS":              event["ipaddress"],
+            "HOSTTAGS":                 "",
+            "HOSTDOWNTIME":             "0", # Non existing host cannot be in scheduled downtime ;-)
+            "CONTACTS":                 "?", # Will trigger using fallback contacts
+            "SERVICECONTACTGROUPNAMES": "",
         })
 
     if not event["core_host"]:
@@ -4336,12 +4336,12 @@ def add_infos_from_monitoring_host(context, event):
         return
 
     context.update({
-        "HOSTNAME"                 : host_config["name"],
-        "HOSTALIAS"                : host_config["alias"],
-        "HOSTADDRESS"              : host_config["address"],
-        "HOSTTAGS"                 : host_config["custom_variables"].get("TAGS", ""),
-        "CONTACTS"                 : ",".join(host_config["contacts"]),
-        "SERVICECONTACTGROUPNAMES" : ",".join(host_config["contact_groups"]),
+        "HOSTNAME":                 host_config["name"],
+        "HOSTALIAS":                host_config["alias"],
+        "HOSTADDRESS":              host_config["address"],
+        "HOSTTAGS":                 host_config["custom_variables"].get("TAGS", ""),
+        "CONTACTS":                 ",".join(host_config["contacts"]),
+        "SERVICECONTACTGROUPNAMES": ",".join(host_config["contact_groups"]),
     })
 
     # Add custom variables to the notification context
@@ -4583,9 +4583,9 @@ def replication_update_state(new_state):
 def save_master_config(new_state):
     path = g_state_dir + "/master_config"
     file(path + ".new", "w").write(repr({
-        "rules"      : new_state["rules"],
-        "rule_packs" : new_state["rule_packs"],
-        "actions"    : new_state["actions"],
+        "rules":      new_state["rules"],
+        "rule_packs": new_state["rule_packs"],
+        "actions":    new_state["actions"],
     }) + "\n")
     os.rename(path + ".new", path)
 
@@ -4648,10 +4648,10 @@ def load_slave_status():
             g_slave_status = ast.literal_eval(file(path).read())
         except:
             g_slave_status = {
-                "last_sync"         : 0, # Time of last successfull sync
-                "last_master_down"  : None,
-                "mode"              : "sync",
-                "average_sync_time" : None,
+                "last_sync":         0, # Time of last successful sync
+                "last_master_down":  None,
+                "mode":              "sync",
+                "average_sync_time": None,
             }
             save_slave_status()
 
@@ -4702,10 +4702,10 @@ def load_configuration():
             log_level = cmk.log.INFO if g_config["log_level"] == 0 else cmk.log.VERBOSE
 
             g_config["log_level"] = {
-                "cmk.mkeventd"              : log_level,
-                "cmk.mkeventd.EventServer"  : log_level,
-                "cmk.mkeventd.EventStatus"  : log_level,
-                "cmk.mkeventd.StatusServer" : log_level,
+                "cmk.mkeventd":              log_level,
+                "cmk.mkeventd.EventServer":  log_level,
+                "cmk.mkeventd.EventStatus":  log_level,
+                "cmk.mkeventd.StatusServer": log_level,
             }
 
         logger.setLevel(g_config["log_level"]["cmk.mkeventd"])
@@ -4731,9 +4731,9 @@ def load_configuration():
         for rule in rule_pack["rules"]:
             if type(rule.get("contact_groups")) == list:
                 rule["contact_groups"] = {
-                    "groups"     : rule["contact_groups"],
-                    "notify"     : False,
-                    "precedence" : "host",
+                    "groups":     rule["contact_groups"],
+                    "notify":     False,
+                    "precedence": "host",
                 }
 
     # Create dictionary for actions for easy access
@@ -4746,38 +4746,38 @@ def load_configuration():
 
 def default_config():
     return {
-        "rules"                 : [], # old pre 1.2.7i1 format. Only used if rule_packs is empty
-        "rule_packs"            : [], # new format with rule packages
-        "actions"               : [],
-        "debug_rules"           : False,
-        "rule_optimizer"        : True,
-        "log_level"             : {
-            "cmk.mkeventd"              : cmk.log.INFO,
-            "cmk.mkeventd.EventServer"  : cmk.log.INFO,
-            "cmk.mkeventd.EventStatus"  : cmk.log.INFO,
-            "cmk.mkeventd.StatusServer" : cmk.log.INFO,
+        "rules":          [], # old pre 1.2.7i1 format. Only used if rule_packs is empty
+        "rule_packs":     [], # new format with rule packages
+        "actions":        [],
+        "debug_rules":    False,
+        "rule_optimizer": True,
+        "log_level":  {
+            "cmk.mkeventd":              cmk.log.INFO,
+            "cmk.mkeventd.EventServer":  cmk.log.INFO,
+            "cmk.mkeventd.EventStatus":  cmk.log.INFO,
+            "cmk.mkeventd.StatusServer": cmk.log.INFO,
         },
-        "log_rulehits"          : False,
-        "log_messages"          : False,
-        "retention_interval"    : 60,
-        "housekeeping_interval" : 60,
-        "statistics_interval"   : 5,
-        "history_lifetime"      : 365 * 24 * 3600,
-        "history_rotation"      : "daily",
-        "remote_status"         : None,
-        "socket_queue_len"      : 10,
-        "eventsocket_queue_len" : 10,
-        "hostname_translation"  : {},
-        "archive_orphans"       : False,
-        "archive_mode"          : "file",
-        "translate_snmptraps"   : False,
-        "snmp_credentials"      : [
+        "log_rulehits":          False,
+        "log_messages":          False,
+        "retention_interval":    60,
+        "housekeeping_interval": 60,
+        "statistics_interval":   5,
+        "history_lifetime":      365 * 24 * 3600,
+        "history_rotation":      "daily",
+        "remote_status":         None,
+        "socket_queue_len":      10,
+        "eventsocket_queue_len": 10,
+        "hostname_translation":  {},
+        "archive_orphans":       False,
+        "archive_mode":          "file",
+        "translate_snmptraps":   False,
+        "snmp_credentials": [
             {
                 "description": "\"public\" default for receiving SNMPv1/v2 traps",
                 "credentials": "public",
             },
         ],
-        "event_limit"           : {
+        "event_limit": {
             'by_host': {
                 'action': 'stop_overflow_notify',
                 'limit': 1000,

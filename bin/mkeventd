@@ -3508,6 +3508,9 @@ class StatusServer(object):
         return rows
 
     def filter_row(self, headers, filters, list_row):
+        # TODO(sp) This is a real performance killer: We should just calculate
+        # the column indices for column names *once*, not doing some dict/list
+        # Kung Fu for every row...
         row = dict(zip(headers, list_row))
         for column, opfunc, argument in filters:
             if not opfunc(row[column], argument):

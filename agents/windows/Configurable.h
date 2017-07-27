@@ -7,8 +7,14 @@
 #include "SettingsCollector.h"
 #include "stringutil.h"
 
+class WinApiAdaptor;
+
 class ConfigurableBase {
+protected:
+    const WinApiAdaptor &_winapi;
+
 public:
+    explicit ConfigurableBase(const WinApiAdaptor &winapi) : _winapi(winapi) {}
     virtual void feed(const std::string &key, const std::string &value) = 0;
     virtual void output(const std::string &key, std::ostream &out) const = 0;
     virtual void startFile() = 0;
@@ -21,8 +27,8 @@ class Configurable : public ConfigurableBase {
 
 public:
     Configurable(Configuration &config, const char *section, const char *key,
-                 const ValueT &def)
-        : _value(def) {
+                 const ValueT &def, const WinApiAdaptor &winapi)
+        : ConfigurableBase(winapi), _value(def) {
         config.reg(section, key, this);
     }
 
@@ -41,7 +47,7 @@ public:
 
     virtual void feed(const std::string &, const std::string &value) override {
         startBlock();
-        _value = from_string<ValueT>(value);
+        _value = from_string<ValueT>(_winapi, value);
     }
 
     virtual void output(const std::string &key,
@@ -62,7 +68,8 @@ class ListConfigurable : public ConfigurableBase {
 
 public:
     ListConfigurable(Configuration &config, const char *section,
-                     const char *key) {
+                     const char *key, const WinApiAdaptor &winapi)
+        : ConfigurableBase(winapi) {
         config.reg(section, key, this);
     }
 
@@ -82,7 +89,7 @@ public:
     virtual void startBlock() { _block_mode.startBlock(_values); }
 
     virtual void feed(const std::string &, const std::string &value) override {
-        this->add(from_string<DataT>(value));
+        this->add(from_string<DataT>(_winapi, value));
     }
 
     virtual void output(const std::string &key,
@@ -138,7 +145,8 @@ class KeyedListConfigurable : public ConfigurableBase {
 
 public:
     KeyedListConfigurable(Configuration &config, const char *section,
-                          const char *key) {
+                          const char *key, const WinApiAdaptor &winapi)
+        : ConfigurableBase(winapi) {
         config.reg(section, key, this);
     }
 
@@ -150,7 +158,8 @@ public:
             key = std::string(var.begin() + pos + 1, var.end());
         }
         startBlock();
-        _add_mode.add(_values, std::make_pair(key, from_string<DataT>(value)));
+        _add_mode.add(_values,
+                      std::make_pair(key, from_string<DataT>(_winapi, value)));
     }
 
     virtual void output(const std::string &key,
@@ -202,8 +211,9 @@ class SplittingListConfigurable
 
 public:
     SplittingListConfigurable(Configuration &config, const char *section,
-                              const char *key, char split_char = ' ')
-        : SuperT(config, section, key), _split_char(split_char) {}
+                              const char *key, const WinApiAdaptor &winapi,
+                              char split_char = ' ')
+        : SuperT(config, section, key, winapi), _split_char(split_char) {}
 
     virtual void feed(const std::string &key,
                       const std::string &value) override {

@@ -30,14 +30,16 @@
 
 #include "LoggerAdaptor.h"
 
-typedef void* HANDLE;
+class WinApiAdaptor;
+
+typedef void *HANDLE;
 
 class Logger : public LoggerAdaptor {
 public:
-    Logger();
+    explicit Logger(const WinApiAdaptor &winapi);
     virtual ~Logger() = default;
-    Logger(const Logger&) = delete;
-    Logger& operator=(const Logger&) = delete;
+    Logger(const Logger &) = delete;
+    Logger &operator=(const Logger &) = delete;
 
 private:
     bool _verbose_mode;
@@ -45,6 +47,7 @@ private:
 
     // Mutex for crash.log
     const HANDLE _crashlogMutex;
+    const WinApiAdaptor &_winapi;
 
     std::string _crash_log;
     std::string _connection_log;
@@ -79,4 +82,4 @@ public:
     virtual std::array<std::string, 3> getLogFilenames() const override;
 };
 
-#endif //Logger_h
+#endif  // Logger_h

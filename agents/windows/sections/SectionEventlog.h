@@ -31,6 +31,8 @@
 #include "../Section.h"
 #include "../types.h"
 
+class WinApiAdaptor;
+
 class EventlogConfigurable
     : public ListConfigurable<eventlog_config_t,
                               BlockMode::Nop<eventlog_config_t>,
@@ -42,11 +44,12 @@ class EventlogConfigurable
 
 public:
     EventlogConfigurable(Configuration &config, const char *section,
-                         const char *key)
-        : SuperT(config, section, key) {}
+                         const char *key, const WinApiAdaptor &winapi)
+        : SuperT(config, section, key, winapi) {}
     virtual void feed(const std::string &var,
                       const std::string &value) override {
-        eventlog_config_entry entry = from_string<eventlog_config_entry>(value);
+        eventlog_config_entry entry =
+            from_string<eventlog_config_entry>(_winapi, value);
         std::istringstream str(var);
         std::string key;
         getline(str, key, ' ');
@@ -59,14 +62,15 @@ public:
 class SectionEventlog : public Section {
     Configurable<bool> _send_initial;
     Configurable<bool> _vista_api;
-    
+
     EventlogConfigurable _config;
 
     eventlog_hints_t _hints;
     eventlog_state_t _state;
 
 public:
-    SectionEventlog(Configuration &config, LoggerAdaptor &logger);
+    SectionEventlog(Configuration &config, LoggerAdaptor &logger,
+                    const WinApiAdaptor &winapi);
     virtual ~SectionEventlog();
 
     virtual void postprocessConfig() override;
@@ -88,4 +92,3 @@ private:
 };
 
 #endif  // SectionEventlog_h
-

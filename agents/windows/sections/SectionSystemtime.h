@@ -28,13 +28,12 @@
 #include "../Section.h"
 
 class SectionSystemtime : public Section {
-
 public:
-    SectionSystemtime(const Environment &env, LoggerAdaptor &logger);
+    SectionSystemtime(const Environment &env, LoggerAdaptor &logger,
+                      const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
 };
 
 #endif  // SectionSystemtime_h
-

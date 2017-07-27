@@ -22,9 +22,11 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <windows.h>
 #include <map>
 #include <vector>
+
+class WinApiAdaptor;
+typedef unsigned long DWORD;
 
 template <typename CharT>
 size_t string_length(const CharT *s);
@@ -53,8 +55,10 @@ const CharT *get_next_multi_sz(const std::vector<CharT> &data, size_t &offset) {
 // returns a map of performance counter indices to the corresponding names.
 // This can be used to resolve fields like CounterNameTitleIndex
 // if local is set, localized names are used, otherwise the names are english
-std::map<DWORD, std::wstring> perf_id_map(bool local);
+std::map<DWORD, std::wstring> perf_id_map(const WinApiAdaptor &winapi,
+                                          bool local);
 
 // returns the map inverse to perf_id_map. This is necessary
 // when one wants to translate between localized and english counter names
-std::map<std::wstring, DWORD> perf_name_map(bool local);
+std::map<std::wstring, DWORD> perf_name_map(const WinApiAdaptor &winapi,
+                                            bool local);

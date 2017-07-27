@@ -25,16 +25,21 @@
 #ifndef EventLog_h
 #define EventLog_h
 
-#include <windows.h>
+#include <map>
 #include "IEventLog.h"
 #include "stringutil.h"
 #include "types.h"
+#include "win_error.h"
 
 class LoggerAdaptor;
+class WinApiAdaptor;
+
+typedef struct HINSTANCE__ *HMODULE;
 
 class HModuleWrapper {
 public:
-    HModuleWrapper(HMODULE &hmodule) : _hmodule(hmodule) {}
+    HModuleWrapper(HMODULE &hmodule, const WinApiAdaptor &winapi)
+        : _hmodule(hmodule), _winapi(winapi) {}
 
     ~HModuleWrapper() { close(); }
 
@@ -44,7 +49,7 @@ public:
         delete;  // Delete assignment operator
 
     HModuleWrapper(HModuleWrapper &&from)
-        : _hmodule(from._hmodule) {  // Move constructor
+        : _hmodule(from._hmodule), _winapi(from._winapi) {  // Move constructor
         from._hmodule = nullptr;
     }
 
@@ -63,18 +68,15 @@ public:
 
 private:
     HMODULE _hmodule;
+    const WinApiAdaptor &_winapi;
 
-    void close() {
-        if (_hmodule != nullptr) {
-            FreeLibrary(_hmodule);
-            _hmodule = nullptr;
-        }
-    }
+    void close();
 };
 
 class EventlogHandle {
 public:
-    explicit EventlogHandle(const std::wstring &name) : _name(name) { open(); }
+    EventlogHandle(const std::wstring &name, const WinApiAdaptor &winapi)
+        : _name(name), _winapi(winapi), _handle(open()) {}
 
     ~EventlogHandle() { close(); }
 
@@ -82,49 +84,53 @@ public:
 
     void reopen() {
         close();
-        open();
+        _handle = open();
     }
 
     bool ReadEventLogW(DWORD dwReadFlags, DWORD dwRecordOffset,
                        std::vector<BYTE> &buffer, DWORD *pnBytesRead,
-                       DWORD *pnMinNumberOfBytesNeeded) {
-        return ::ReadEventLogW(_handle, dwReadFlags, dwRecordOffset, &buffer[0],
-                               buffer.size(), pnBytesRead,
-                               pnMinNumberOfBytesNeeded);
-    }
+                       DWORD *pnMinNumberOfBytesNeeded) const;
+    DWORD GetOldestEventLogRecord(PDWORD record) const;
+    DWORD GetNumberOfEventLogRecords(PDWORD record) const;
 
-    DWORD GetOldestEventLogRecord(PDWORD record) {
-        return ::GetOldestEventLogRecord(_handle, record);
-    }
+private:
+    HANDLE open() const;
 
-    DWORD GetNumberOfEventLogRecords(PDWORD record) {
-        return ::GetNumberOfEventLogRecords(_handle, record);
-    }
-
-    void open() {
-        _handle = OpenEventLogW(nullptr, _name.c_str());
-        if (_handle == nullptr) {
-            throw win_exception(std::string("failed to open eventlog: ") +
-                                to_utf8(_name.c_str()));
-        }
-    }
-
-    void close() { CloseEventLog(_handle); }
+    void close() const;
 
 private:
     std::wstring _name;
+    const WinApiAdaptor &_winapi;
     HANDLE _handle;
 };
 
-// forward declaration
-class MessageResolver;
+class MessageResolver {
+public:
+    MessageResolver(const std::wstring &logName, const LoggerAdaptor &logger,
+                    const WinApiAdaptor &winapi)
+        : _name(logName), _logger(logger), _winapi(winapi) {}
+
+    std::wstring resolve(DWORD eventID, LPCWSTR source,
+                         LPCWSTR *parameters) const;
+
+private:
+    std::vector<std::wstring> getMessageFiles(LPCWSTR source) const;
+    std::wstring resolveInt(DWORD eventID, LPCWSTR dllpath,
+                            LPCWSTR *parameters) const;
+
+    std::wstring _name;
+    mutable std::map<std::wstring, HModuleWrapper> _cache;
+    const LoggerAdaptor &_logger;
+    const WinApiAdaptor &_winapi;
+};
 
 class EventLog : public IEventLog {
 public:
     /**
      * Construct a reader for the named eventlog
      */
-    EventLog(LPCWSTR name, const LoggerAdaptor &logger);
+    EventLog(LPCWSTR name, const LoggerAdaptor &logger,
+             const WinApiAdaptor &winapi);
 
     virtual ~EventLog();
 
@@ -175,8 +181,9 @@ private:
 
     DWORD _last_record_read{0};
 
-    std::shared_ptr<MessageResolver> _resolver;
+    const MessageResolver _resolver;
     const LoggerAdaptor &_logger;
+    const WinApiAdaptor &_winapi;
 };
 
 #endif  // EventLog_h

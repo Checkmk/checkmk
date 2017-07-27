@@ -23,12 +23,12 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionPluginGroup.h"
+#include <dirent.h>
+#include <sys/types.h>
 #include "../Environment.h"
 #include "../ExternalCmd.h"
 #include "../LoggerAdaptor.h"
-#include <sys/types.h>
-#include <dirent.h>
-
+#include "../WinApiAdaptor.h"
 
 extern struct script_statistics_t {
     int pl_count;
@@ -39,17 +39,19 @@ extern struct script_statistics_t {
     int lo_timeouts;
 } g_script_stat;
 
-
 static const size_t HEAP_BUFFER_MAX = 2097152L;
 static const size_t HEAP_BUFFER_DEFAULT = 16384L;
 
-
 const char *typeToSection(script_type type) {
-    switch(type) {
-        case PLUGIN: return "plugins";
-        case LOCAL: return "local";
-        case MRPE: return "mrpe";
-        default: return "unknown";
+    switch (type) {
+        case PLUGIN:
+            return "plugins";
+        case LOCAL:
+            return "local";
+        case MRPE:
+            return "mrpe";
+        default:
+            return "unknown";
     }
 }
 
@@ -57,7 +59,8 @@ static int launch_program(script_container *cont) {
     enum { SUCCESS = 0, CANCELED, BUFFER_FULL, WORKING } result = WORKING;
     const auto &logger = cont->logger;
     try {
-        ExternalCmd command(cont->path.c_str(), logger);
+        const WinApiAdaptor &winapi = cont->winapi;
+        ExternalCmd command(cont->path.c_str(), cont->env, logger, winapi);
 
         static const size_t BUFFER_SIZE = 16635;
         char buf[BUFFER_SIZE];  // i/o buffer
@@ -65,13 +68,13 @@ static int launch_program(script_container *cont) {
         time_t process_start = time(0);
 
         if (cont->buffer_work != NULL) {
-            HeapFree(GetProcessHeap(), 0, cont->buffer_work);
+            winapi.HeapFree(winapi.GetProcessHeap(), 0, cont->buffer_work);
         }
-        cont->buffer_work = (char *)HeapAlloc(
-            GetProcessHeap(), HEAP_ZERO_MEMORY, HEAP_BUFFER_DEFAULT);
+        cont->buffer_work = (char *)winapi.HeapAlloc(
+            winapi.GetProcessHeap(), HEAP_ZERO_MEMORY, HEAP_BUFFER_DEFAULT);
 
         unsigned long current_heap_size =
-            HeapSize(GetProcessHeap(), 0, cont->buffer_work);
+            winapi.HeapSize(winapi.GetProcessHeap(), 0, cont->buffer_work);
 
         int out_offset = 0;
         // outer loop -> wait until the process is finished, reading its output
@@ -98,11 +101,11 @@ static int launch_program(script_container *cont) {
                 while (out_offset + available > current_heap_size) {
                     // Increase heap buffer
                     if (current_heap_size * 2 <= HEAP_BUFFER_MAX) {
-                        cont->buffer_work = (char *)HeapReAlloc(
-                            GetProcessHeap(), HEAP_ZERO_MEMORY,
+                        cont->buffer_work = (char *)winapi.HeapReAlloc(
+                            winapi.GetProcessHeap(), HEAP_ZERO_MEMORY,
                             cont->buffer_work, current_heap_size * 2);
-                        current_heap_size =
-                            HeapSize(GetProcessHeap(), 0, cont->buffer_work);
+                        current_heap_size = winapi.HeapSize(
+                            winapi.GetProcessHeap(), 0, cont->buffer_work);
                     } else {
                         result = BUFFER_FULL;
                         break;
@@ -122,7 +125,8 @@ static int launch_program(script_container *cont) {
             }
 
             if (result == BUFFER_FULL) {
-               logger.crashLog("plugin produced more than 2MB output -> dropped");
+                logger.crashLog(
+                    "plugin produced more than 2MB output -> dropped");
             }
 
             if (cont->exit_code != STILL_ACTIVE) {
@@ -130,7 +134,7 @@ static int launch_program(script_container *cont) {
             }
 
             if (result == WORKING) {
-                Sleep(10);  // 10 milliseconds
+                winapi.Sleep(10);  // 10 milliseconds
             }
         }
 
@@ -141,20 +145,24 @@ static int launch_program(script_container *cont) {
         if ((buf_u[0] == 0xFF) && (buf_u[1] == 0xFE)) {
             wchar_t *buffer_u16 =
                 reinterpret_cast<wchar_t *>(cont->buffer_work + 2);
-            std::string buffer_u8 = to_utf8(buffer_u16);
-            HeapFree(GetProcessHeap(), 0, cont->buffer_work);
-            cont->buffer_work =
-                (char *)HeapAlloc(GetProcessHeap(), 0, buffer_u8.size() + 1);
+            std::string buffer_u8 = to_utf8(buffer_u16, winapi);
+            winapi.HeapFree(winapi.GetProcessHeap(), 0, cont->buffer_work);
+            cont->buffer_work = (char *)winapi.HeapAlloc(
+                winapi.GetProcessHeap(), 0, buffer_u8.size() + 1);
             memcpy(cont->buffer_work, buffer_u8.c_str(), buffer_u8.size() + 1);
         }
     } catch (const std::exception &e) {
-       logger.crashLog("%s", e.what());
+        logger.crashLog("%s", e.what());
         result = CANCELED;
     }
     return result;
 }
 
-DWORD WINAPI ScriptWorkerThread(LPVOID lpParam) {
+DWORD
+#if defined(_WIN32) || defined(_WIN64)
+__attribute__((__stdcall__))
+#endif  // _WIN32 || _WIN64
+ScriptWorkerThread(LPVOID lpParam) {
     script_container *cont = reinterpret_cast<script_container *>(lpParam);
 
     // Execute script
@@ -184,24 +192,22 @@ DWORD WINAPI ScriptWorkerThread(LPVOID lpParam) {
             cont->retry_count--;
     }
 
+    const WinApiAdaptor &winapi = cont->winapi;
     // Cleanup work buffer in case the script ran into a timeout / error
     if (cont->status == SCRIPT_TIMEOUT || cont->status == SCRIPT_ERROR) {
-        HeapFree(GetProcessHeap(), 0, cont->buffer_work);
+        winapi.HeapFree(winapi.GetProcessHeap(), 0, cont->buffer_work);
         cont->buffer_work = NULL;
     }
     return 0;
 }
 
 script_container::script_container(
-    const std::string &_path, // full path with interpreter, cscript, etc.
-    const std::string &_script_path, // path of script
-    int _max_age,
-    int _timeout,
-    int _max_entries,
-    const std::string &_user,
-    script_type _type,
-    script_execution_mode _execution_mode,
-    LoggerAdaptor &_logger)
+    const std::string &_path,  // full path with interpreter, cscript, etc.
+    const std::string &_script_path,  // path of script
+    int _max_age, int _timeout, int _max_entries, const std::string &_user,
+    script_type _type, script_execution_mode _execution_mode,
+    const Environment &_env, LoggerAdaptor &_logger,
+    const WinApiAdaptor &_winapi)
     : path(_path)
     , script_path(_script_path)
     , max_age(_max_age)
@@ -216,19 +222,21 @@ script_container::script_container(
     , status(SCRIPT_IDLE)
     , last_problem(SCRIPT_NONE)
     , should_terminate(0)
-    , logger(_logger) {}
+    , env(_env)
+    , logger(_logger)
+    , winapi(_winapi) {}
 
 script_container::~script_container() {
     if (worker_thread != INVALID_HANDLE_VALUE) {
-        CloseHandle(worker_thread);
+        winapi.CloseHandle(worker_thread);
     }
     // allocated with HeapAlloc (may be null)
-    HeapFree(GetProcessHeap(), 0, buffer);
-    HeapFree(GetProcessHeap(), 0, buffer_work);
+    winapi.HeapFree(winapi.GetProcessHeap(), 0, buffer);
+    winapi.HeapFree(winapi.GetProcessHeap(), 0, buffer_work);
 }
 
-bool SectionPluginGroup::exists(script_container *cont) {
-    DWORD dwAttr = GetFileAttributes(cont->script_path.c_str());
+bool SectionPluginGroup::exists(script_container *cont) const {
+    DWORD dwAttr = _winapi.GetFileAttributes(cont->script_path.c_str());
     return !(dwAttr == INVALID_FILE_ATTRIBUTES);
 }
 
@@ -236,7 +244,8 @@ void SectionPluginGroup::runContainer(script_container *cont) {
     // Return if this script is no longer present
     // However, the script container is preserved
     if (!exists(cont)) {
-       _logger.crashLog("script %s no longer exists", cont->script_path.c_str());
+        _logger.crashLog("script %s no longer exists",
+                         cont->script_path.c_str());
         return;
     }
 
@@ -250,23 +259,22 @@ void SectionPluginGroup::runContainer(script_container *cont) {
         cont->status = SCRIPT_COLLECT;
 
         if (cont->worker_thread != INVALID_HANDLE_VALUE)
-            CloseHandle(cont->worker_thread);
+            _winapi.CloseHandle(cont->worker_thread);
 
-       _logger.crashLog("invoke script %s", cont->script_path.c_str());
+        _logger.crashLog("invoke script %s", cont->script_path.c_str());
         cont->worker_thread =
-            CreateThread(nullptr,             // default security attributes
-                         0,                   // use default stack size
-                         ScriptWorkerThread,  // thread function name
-                         cont,                // argument to thread function
-                         0,                   // use default creation flags
-                         nullptr);            // returns the thread identifier
+            _winapi.CreateThread(nullptr,  // default security attributes
+                                 0,        // use default stack size
+                                 ScriptWorkerThread,  // thread function name
+                                 cont,      // argument to thread function
+                                 0,         // use default creation flags
+                                 nullptr);  // returns the thread identifier
         if (cont->execution_mode == SYNC ||
-            (cont->execution_mode == ASYNC &&
-             *_async_execution == SEQUENTIAL))
-            WaitForSingleObject(cont->worker_thread, INFINITE);
+            (cont->execution_mode == ASYNC && *_async_execution == SEQUENTIAL))
+            _winapi.WaitForSingleObject(cont->worker_thread, INFINITE);
 
-       _logger.crashLog("finished with status %d (exit code %" PRIudword ")",
-                  cont->status, cont->exit_code);
+        _logger.crashLog("finished with status %d (exit code %" PRIudword ")",
+                         cont->status, cont->exit_code);
     }
 }
 
@@ -275,15 +283,14 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
     for (const auto &kv : _containers) {
         std::shared_ptr<script_container> cont = kv.second;
         if (!exists(cont.get())) {
-            _logger.crashLog(
-		"script %s missing", cont->script_path.c_str());
+            _logger.crashLog("script %s missing", cont->script_path.c_str());
             continue;
         }
 
         if (cont->status == SCRIPT_FINISHED) {
             // Free buffer
             if (cont->buffer != NULL) {
-                HeapFree(GetProcessHeap(), 0, cont->buffer);
+                _winapi.HeapFree(_winapi.GetProcessHeap(), 0, cont->buffer);
                 cont->buffer = NULL;
             }
 
@@ -291,9 +298,9 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
             // At this point the buffer must not contain a wide character
             // encoding as the code can't handle it!
             if (strlen(cont->buffer_work) >= 3 &&
-                    (unsigned char)cont->buffer_work[0] == 0xEF &&
-                    (unsigned char)cont->buffer_work[1] == 0xBB &&
-                    (unsigned char)cont->buffer_work[2] == 0xBF) {
+                (unsigned char)cont->buffer_work[0] == 0xEF &&
+                (unsigned char)cont->buffer_work[1] == 0xBB &&
+                (unsigned char)cont->buffer_work[2] == 0xBF) {
                 cont->buffer_work[0] = '\n';
                 cont->buffer_work[1] = '\n';
                 cont->buffer_work[2] = '\n';
@@ -305,7 +312,7 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
                 // Determine chache_info text
                 char cache_info[32];
                 snprintf(cache_info, sizeof(cache_info), ":cached(%d,%d)",
-                        (int)cont->buffer_time, cont->max_age);
+                         (int)cont->buffer_time, cont->max_age);
                 int cache_len = strlen(cache_info) + 1;
 
                 // We need to parse each line and replace any <<<section>>>
@@ -318,11 +325,11 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
                 // plugin output.
                 // TODO: Maybe add a dry run mode. Count the number of
                 // section lines and reserve a fitting extra heap
-                int buffer_heap_size =
-                    HeapSize(GetProcessHeap(), 0, cont->buffer_work);
-                char *cache_buffer =
-                    (char *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                            buffer_heap_size + 262144);
+                int buffer_heap_size = _winapi.HeapSize(
+                    _winapi.GetProcessHeap(), 0, cont->buffer_work);
+                char *cache_buffer = (char *)_winapi.HeapAlloc(
+                    _winapi.GetProcessHeap(), HEAP_ZERO_MEMORY,
+                    buffer_heap_size + 262144);
                 int cache_buffer_offset = 0;
 
                 char *line = strtok(cont->buffer_work, "\n");
@@ -331,78 +338,78 @@ void SectionPluginGroup::outputContainers(std::ostream &out) {
                     int length = strlen(line);
                     int cr_offset = line[length - 1] == '\r' ? 1 : 0;
                     if (length >= 8 && strncmp(line, "<<<<", 4) &&
-                            (!strncmp(line, "<<<", 3) &&
-                             !strncmp(line + length - cr_offset - 3, ">>>",
-                                 3))) {
+                        (!strncmp(line, "<<<", 3) &&
+                         !strncmp(line + length - cr_offset - 3, ">>>", 3))) {
                         // The return value of snprintf seems broken (off by
                         // 3?). Great...
                         write_bytes = length - cr_offset - 3 +
-                            1;  // length - \r - <<< + \0
+                                      1;  // length - \r - <<< + \0
                         snprintf(cache_buffer + cache_buffer_offset,
-                                write_bytes, "%s", line);
+                                 write_bytes, "%s", line);
                         cache_buffer_offset += write_bytes - 1;
 
-                        snprintf(cache_buffer + cache_buffer_offset,
-                                cache_len, "%s", cache_info);
+                        snprintf(cache_buffer + cache_buffer_offset, cache_len,
+                                 "%s", cache_info);
                         cache_buffer_offset += cache_len - 1;
 
                         write_bytes =
                             3 + cr_offset + 1 + 1;  // >>> + \r + \n + \0
                         snprintf(cache_buffer + cache_buffer_offset,
-                                write_bytes, "%s\n",
-                                line + length - cr_offset - 3);
+                                 write_bytes, "%s\n",
+                                 line + length - cr_offset - 3);
                         cache_buffer_offset += write_bytes - 1;
                     } else {
                         write_bytes = length + 1 + 1;  // length + \n + \0
                         snprintf(cache_buffer + cache_buffer_offset,
-                                write_bytes, "%s\n", line);
+                                 write_bytes, "%s\n", line);
                         cache_buffer_offset += write_bytes - 1;
                     }
                     line = strtok(NULL, "\n");
                 }
-                HeapFree(GetProcessHeap(), 0, cont->buffer_work);
+                _winapi.HeapFree(_winapi.GetProcessHeap(), 0,
+                                 cont->buffer_work);
                 cont->buffer = cache_buffer;
             }
             cont->buffer_work = NULL;
             cont->status = SCRIPT_IDLE;
         } else if (cont->retry_count < 0 && cont->buffer != NULL) {
             // Remove outdated cache entries
-            HeapFree(GetProcessHeap(), 0, cont->buffer);
+            _winapi.HeapFree(_winapi.GetProcessHeap(), 0, cont->buffer);
             cont->buffer = NULL;
         }
         if (cont->buffer) out << cont->buffer;
     }
 }
 
-SectionPluginGroup::SectionPluginGroup(
-    Configuration &config, const std::string &path, script_type type,
-    LoggerAdaptor &logger, const std::string &user)
-    : Section(typeToSection(type), config.getEnvironment(), logger)
+SectionPluginGroup::SectionPluginGroup(Configuration &config,
+                                       const std::string &path,
+                                       script_type type, LoggerAdaptor &logger,
+                                       const WinApiAdaptor &winapi,
+                                       const std::string &user)
+    : Section(typeToSection(type), config.getEnvironment(), logger, winapi)
     , _path(path)
     , _type(type)
     , _user(user)
-    , _default_execution_mode(config, "global", "caching_method", SYNC)
-    , _async_execution(config, "global", "async_script_execution", SEQUENTIAL)
-    , _execute_suffixes(config, "global", "execute")
-    , _timeout(config, typeToSection(type), "timeout")
-    , _cache_age(config, typeToSection(type), "cache_age")
-    , _retry_count(config, typeToSection(type), "retry_count")
-    , _execution_mode(config, typeToSection(type), "execution")
-{
+    , _default_execution_mode(config, "global", "caching_method", SYNC, winapi)
+    , _async_execution(config, "global", "async_script_execution", SEQUENTIAL,
+                       winapi)
+    , _execute_suffixes(config, "global", "execute", winapi)
+    , _timeout(config, typeToSection(type), "timeout", winapi)
+    , _cache_age(config, typeToSection(type), "cache_age", winapi)
+    , _retry_count(config, typeToSection(type), "retry_count", winapi)
+    , _execution_mode(config, typeToSection(type), "execution", winapi) {
     if (type == PLUGIN) {
         // plugins don't have a "collective" header
         withHiddenHeader();
     }
 }
 
-SectionPluginGroup::~SectionPluginGroup()
-{
+SectionPluginGroup::~SectionPluginGroup() {
     _containers.clear();
-    CloseHandle(_collection_thread);
+    _winapi.CloseHandle(_collection_thread);
 }
 
-void SectionPluginGroup::startIfAsync()
-{
+void SectionPluginGroup::startIfAsync() {
     updateScripts();
     collectData(ASYNC);
 }
@@ -410,9 +417,9 @@ void SectionPluginGroup::startIfAsync()
 void SectionPluginGroup::waitForCompletion() {
     DWORD dwExitCode = 0;
     while (true) {
-        if (GetExitCodeThread(_collection_thread, &dwExitCode)) {
+        if (_winapi.GetExitCodeThread(_collection_thread, &dwExitCode)) {
             if (dwExitCode != STILL_ACTIVE) break;
-            Sleep(200);
+            _winapi.Sleep(200);
         } else
             break;
     }
@@ -536,8 +543,8 @@ std::string SectionPluginGroup::withInterpreter(const char *path) const {
             "C:\\Windows\\System32\\WindowsPowershell\\v1.0\\powershell.exe";
 
         char dummy;
-        ::SearchPathA(NULL, "powershell.exe", NULL, 1, &dummy, NULL);
-        std::string interpreter = ::GetLastError() != ERROR_FILE_NOT_FOUND
+        _winapi.SearchPathA(NULL, "powershell.exe", NULL, 1, &dummy, NULL);
+        std::string interpreter = _winapi.GetLastError() != ERROR_FILE_NOT_FOUND
                                       ? "powershell.exe"
                                       : fallback;
 
@@ -551,7 +558,7 @@ std::string SectionPluginGroup::withInterpreter(const char *path) const {
 std::string SectionPluginGroup::deriveCommand(const char *filename) const {
     std::string full_path = _path + "\\" + filename;
     // If the path in question is a directory -> continue
-    DWORD dwAttr = GetFileAttributes(full_path.c_str());
+    DWORD dwAttr = _winapi.GetFileAttributes(full_path.c_str());
     if (dwAttr != INVALID_FILE_ATTRIBUTES &&
         (dwAttr & FILE_ATTRIBUTE_DIRECTORY)) {
         return std::string();
@@ -569,15 +576,9 @@ std::string SectionPluginGroup::deriveCommand(const char *filename) const {
 script_container *SectionPluginGroup::createContainer(
     const char *filename) const {
     return new script_container(
-        deriveCommand(filename),
-        _path + "\\" + filename,
-        getCacheAge(filename),
-        getTimeout(filename),
-        getMaxRetries(filename),
-        _user,
-        _type,
-        getExecutionMode(filename),
-        _logger);
+        deriveCommand(filename), _path + "\\" + filename, getCacheAge(filename),
+        getTimeout(filename), getMaxRetries(filename), _user, _type,
+        getExecutionMode(filename), _env, _logger, _winapi);
 }
 
 void SectionPluginGroup::updateScripts() {
@@ -628,8 +629,12 @@ void SectionPluginGroup::updateStatistics() {
     }
 }
 
-DWORD WINAPI DataCollectionThread(LPVOID lpParam) {
-    SectionPluginGroup *self = reinterpret_cast<SectionPluginGroup*>(lpParam);
+DWORD
+#if defined(_WIN32) || defined(_WIN64)
+__attribute__((__stdcall__))
+#endif  // _WIN32 || _WIN64
+DataCollectionThread(LPVOID lpParam) {
+    SectionPluginGroup *self = reinterpret_cast<SectionPluginGroup *>(lpParam);
     do {
         self->_data_collection_retriggered = false;
         for (const auto &kv : self->_containers) {
@@ -642,10 +647,9 @@ DWORD WINAPI DataCollectionThread(LPVOID lpParam) {
 }
 
 void SectionPluginGroup::collectData(script_execution_mode mode) {
-    
     if (mode == SYNC) {
-       _logger.crashLog("Collecting sync %s data",
-			 _type == PLUGIN ? "plugin" : "local");
+        _logger.crashLog("Collecting sync %s data",
+                         _type == PLUGIN ? "plugin" : "local");
         for (const auto &kv : _containers) {
             if (kv.second->execution_mode == SYNC)
                 runContainer(kv.second.get());
@@ -653,7 +657,7 @@ void SectionPluginGroup::collectData(script_execution_mode mode) {
     } else if (mode == ASYNC) {
         // If the thread is still running, just tell it to do another cycle
         DWORD dwExitCode = 0;
-        if (GetExitCodeThread(_collection_thread, &dwExitCode)) {
+        if (_winapi.GetExitCodeThread(_collection_thread, &dwExitCode)) {
             if (dwExitCode == STILL_ACTIVE) {
                 _data_collection_retriggered = true;
                 return;
@@ -661,16 +665,15 @@ void SectionPluginGroup::collectData(script_execution_mode mode) {
         }
 
         if (_collection_thread != INVALID_HANDLE_VALUE)
-            CloseHandle(_collection_thread);
-       _logger.crashLog("Start async thread for collecting %s data",
-			 _type == PLUGIN ? "plugin" : "local");
+            _winapi.CloseHandle(_collection_thread);
+        _logger.crashLog("Start async thread for collecting %s data",
+                         _type == PLUGIN ? "plugin" : "local");
         _collection_thread =
-            CreateThread(nullptr,               // default security attributes
-                         0,                     // use default stack size
-                         DataCollectionThread,  // thread function name
-                         this,                  // argument to thread function
-                         0,                     // use default creation flags
-                         nullptr);              // returns the thread identifier
+            _winapi.CreateThread(nullptr,  // default security attributes
+                                 0,        // use default stack size
+                                 DataCollectionThread,  // thread function name
+                                 this,      // argument to thread function
+                                 0,         // use default creation flags
+                                 nullptr);  // returns the thread identifier
     }
 }
-

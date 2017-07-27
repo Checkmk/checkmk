@@ -22,28 +22,29 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#include "EventLog.h"
 #include <algorithm>
 #include <map>
 #include <string>
-#include <windows.h>
-#include "EventLog.h"
 #include "LoggerAdaptor.h"
+#include "WinApiAdaptor.h"
+
+using std::vector;
+using std::wstring;
 
 // loads a dll with support for environment variables in the path
-HMODULE load_library_ext(LPCWSTR dllpath) {
-    HMODULE dll = nullptr;
-
+static HMODULE load_library_ext(LPCWSTR dllpath, const WinApiAdaptor &winapi) {
     // this should be sufficient most of the time
     static const size_t INIT_BUFFER_SIZE = 128;
 
     std::wstring dllpath_expanded;
     dllpath_expanded.resize(INIT_BUFFER_SIZE, '\0');
-    DWORD required = ExpandEnvironmentStringsW(dllpath, &dllpath_expanded[0],
-                                               dllpath_expanded.size());
+    DWORD required = winapi.ExpandEnvironmentStringsW(
+        dllpath, &dllpath_expanded[0], dllpath_expanded.size());
     if (required > dllpath_expanded.size()) {
         dllpath_expanded.resize(required + 1);
-        required = ExpandEnvironmentStringsW(dllpath, &dllpath_expanded[0],
-                                             dllpath_expanded.size());
+        required = winapi.ExpandEnvironmentStringsW(
+            dllpath, &dllpath_expanded[0], dllpath_expanded.size());
     } else if (required == 0) {
         dllpath_expanded = dllpath;
     }
@@ -55,142 +56,138 @@ HMODULE load_library_ext(LPCWSTR dllpath) {
     // load the library as a datafile without loading refernced dlls. This is
     // quicker but most of all it prevents problems if dependent dlls can't be
     // loaded.
-    dll =
-        LoadLibraryExW(dllpath_expanded.c_str(), nullptr,
-                       DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
-    return dll;
+    return winapi.LoadLibraryExW(
+        dllpath_expanded.c_str(), nullptr,
+        DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
 }
 
-class MessageResolver {
-    std::wstring _name;
-    std::map<std::wstring, HModuleWrapper> _cache;
-    const LoggerAdaptor &_logger;
+void HModuleWrapper::close() {
+    if (_hmodule != nullptr) {
+        _winapi.FreeLibrary(_hmodule);
+        _hmodule = nullptr;
+    }
+}
 
-    std::vector<std::wstring> getMessageFiles(LPCWSTR source) const {
-        static const std::wstring base =
-            std::wstring(L"SYSTEM\\CurrentControlSet\\Services\\EventLog");
-        std::wstring regpath = base + L"\\" + _name + L"\\" + source;
+vector<wstring> MessageResolver::getMessageFiles(LPCWSTR source) const {
+    static const wstring base =
+        wstring(L"SYSTEM\\CurrentControlSet\\Services\\EventLog");
+    wstring regpath = base + L"\\" + _name + L"\\" + source;
 
-        HKEY key;
-        DWORD ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE, regpath.c_str(), 0,
-                                  KEY_READ, &key);
-        if (ret != ERROR_SUCCESS) {
-            _logger.crashLog("failed to open HKLM:%ls", regpath.c_str());
-            return std::vector<std::wstring>();
-        }
+    HKEY key;
+    DWORD ret = _winapi.RegOpenKeyExW(HKEY_LOCAL_MACHINE, regpath.c_str(), 0,
+                                      KEY_READ, &key);
+    if (ret != ERROR_SUCCESS) {
+        _logger.crashLog("failed to open HKLM:%ls", regpath.c_str());
+        return vector<wstring>();
+    }
 
-        OnScopeExit close_key([&]() { RegCloseKey(key); });
+    // TODO: wrap registry handling properly
+    OnScopeExit close_key([&]() { _winapi.RegCloseKey(key); });
 
-        DWORD size = 64;
-        std::vector<BYTE> buffer(size);
-        // first try with fixed-size buffer
-        DWORD res = ::RegQueryValueExW(key, L"EventMessageFile", nullptr,
+    DWORD size = 64;
+    vector<BYTE> buffer(size);
+    // first try with fixed-size buffer
+    DWORD res = _winapi.RegQueryValueExW(key, L"EventMessageFile", nullptr,
+                                         nullptr, &buffer[0], &size);
+    if (res == ERROR_MORE_DATA) {
+        buffer.resize(size);
+        // actual read
+        res = _winapi.RegQueryValueExW(key, L"EventMessageFile", nullptr,
                                        nullptr, &buffer[0], &size);
-        if (res == ERROR_MORE_DATA) {
-            buffer.resize(size);
-            // actual read
-            res = RegQueryValueExW(key, L"EventMessageFile", nullptr, nullptr,
-                                   &buffer[0], &size);
-        }
-        if (res != ERROR_SUCCESS) {
-            _logger.crashLog("failed to read at EventMessageFile in HKLM:%ls : %s",
-                      regpath.c_str(), get_win_error_as_string(res).c_str());
-            return std::vector<std::wstring>();
-        }
-
-        // result may be multiple dlls
-        std::vector<std::wstring> result;
-        std::wstringstream str(reinterpret_cast<wchar_t *>(&buffer[0]));
-        std::wstring dll_path;
-        while (std::getline(str, dll_path, L';')) {
-            result.push_back(dll_path);
-        }
-        return result;
+    }
+    if (res != ERROR_SUCCESS) {
+        _logger.crashLog("failed to read at EventMessageFile in HKLM:%ls : %s",
+                         regpath.c_str(),
+                         get_win_error_as_string(_winapi, res).c_str());
+        return vector<wstring>();
     }
 
-    std::wstring resolveInt(DWORD eventID, LPCWSTR dllpath,
-                            LPCWSTR *parameters) {
-        HMODULE dll = nullptr;
+    // result may be multiple dlls
+    vector<wstring> result;
+    std::wstringstream str(reinterpret_cast<wchar_t *>(&buffer[0]));
+    wstring dll_path;
+    while (std::getline(str, dll_path, L';')) {
+        result.push_back(dll_path);
+    }
+    return result;
+}
 
-        if (dllpath) {
-            auto iter = _cache.find(dllpath);
-            if (iter == _cache.end()) {
-                dll = load_library_ext(dllpath);
-                _cache.emplace(std::wstring(dllpath),
-                               std::move(HModuleWrapper(dll)));
-            } else {
-                dll = iter->second.getHModule();
-            }
+wstring MessageResolver::resolveInt(DWORD eventID, LPCWSTR dllpath,
+                                    LPCWSTR *parameters) const {
+    HMODULE dll = nullptr;
 
-            if (!dll) {
-                _logger.crashLog("     --> failed to load %ls", dllpath);
-                return L"";
-            }
+    if (dllpath) {
+        auto iter = _cache.find(dllpath);
+        if (iter == _cache.end()) {
+            dll = load_library_ext(dllpath, _winapi);
+            _cache.emplace(wstring(dllpath),
+                           std::move(HModuleWrapper(dll, _winapi)));
         } else {
-            dll = nullptr;
+            dll = iter->second.getHModule();
         }
 
-        std::wstring result;
-        // maximum supported size
-        result.resize(8192);
-
-        DWORD dwFlags =
-            FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
-        if (dll) dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
-
-        _logger.crashLog("Event ID: %lu.%lu",
-                  eventID / 65536,   // "Qualifiers": no idea what *that* is
-                  eventID % 65536);  // the actual event id
-
-        _logger.crashLog("Formatting Message");
-        DWORD len =
-            FormatMessageW(dwFlags, dll, eventID,
-                           0,  // accept any language
-                           &result[0], result.size(), (char **)parameters);
-        _logger.crashLog("Formatting Message - DONE");
-
-        // this trims the result string or empties it if formatting failed
-        result.resize(len);
-        return result;
+        if (!dll) {
+            _logger.crashLog("     --> failed to load %ls", dllpath);
+            return L"";
+        }
+    } else {
+        dll = nullptr;
     }
 
-public:
-    MessageResolver(const std::wstring &logName, const LoggerAdaptor &logger)
-	: _name(logName), _logger(logger) {}
+    wstring result;
+    // maximum supported size
+    result.resize(8192);
 
-    std::wstring resolve(DWORD eventID, LPCWSTR source, LPCWSTR *parameters) {
-        std::wstring result;
-        for (const std::wstring &dllpath : getMessageFiles(source)) {
-            result = resolveInt(eventID, dllpath.c_str(), parameters);
-            if (!result.empty()) {
-                break;
-            }
-        }
+    DWORD dwFlags = FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
+    if (dll) dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
 
-        if (result.empty()) {
-            // failed to resolve message, create an output_message
-            // that simply concatenates all parameters
-            for (int i = 0; parameters[i] != nullptr; ++i) {
-                if (i > 0) {
-                    result += L" ";
-                }
-                result += parameters[i];
-            }
+    _logger.crashLog("Event ID: %lu.%lu",
+                     eventID / 65536,   // "Qualifiers": no idea what *that* is
+                     eventID % 65536);  // the actual event id
+
+    _logger.crashLog("Formatting Message");
+    DWORD len =
+        _winapi.FormatMessageW(dwFlags, dll, eventID,
+                               0,  // accept any language
+                               &result[0], result.size(), (char **)parameters);
+    _logger.crashLog("Formatting Message - DONE");
+
+    // this trims the result string or empties it if formatting failed
+    result.resize(len);
+    return result;
+}
+
+wstring MessageResolver::resolve(DWORD eventID, LPCWSTR source,
+                                 LPCWSTR *parameters) const {
+    wstring result;
+    for (const wstring &dllpath : getMessageFiles(source)) {
+        result = resolveInt(eventID, dllpath.c_str(), parameters);
+        if (!result.empty()) {
+            break;
         }
-        std::replace_if(result.begin(), result.end(),
-                        [](wchar_t ch) { return ch == '\n' || ch == '\r'; },
-                        ' ');
-        return result;
     }
-};
+
+    if (result.empty()) {
+        // failed to resolve message, create an output_message
+        // that simply concatenates all parameters
+        for (int i = 0; parameters[i] != nullptr; ++i) {
+            if (i > 0) {
+                result += L" ";
+            }
+            result += parameters[i];
+        }
+    }
+    std::replace_if(result.begin(), result.end(),
+                    [](wchar_t ch) { return ch == '\n' || ch == '\r'; }, ' ');
+    return result;
+}
 
 class EventLogRecord : public IEventLogRecord {
     EVENTLOGRECORD *_record;
-    std::shared_ptr<MessageResolver> _resolver;
+    const MessageResolver &_resolver;
 
 public:
-    EventLogRecord(EVENTLOGRECORD *record,
-                   const std::shared_ptr<MessageResolver> &resolver)
+    EventLogRecord(EVENTLOGRECORD *record, const MessageResolver &resolver)
         : _record(record), _resolver(resolver) {}
 
     virtual uint64_t recordId() const override {
@@ -209,8 +206,8 @@ public:
         return _record->TimeGenerated;
     }
 
-    virtual std::wstring source() const override {
-        return std::wstring(reinterpret_cast<LPCWSTR>(_record + 1));
+    virtual wstring source() const override {
+        return wstring(reinterpret_cast<LPCWSTR>(_record + 1));
     }
 
     virtual Level level() const override {
@@ -232,10 +229,10 @@ public:
         }
     }
 
-    virtual std::wstring message() const override {
+    virtual wstring message() const override {
         // prepare array of zero terminated strings to be inserted
         // into message template.
-        std::vector<LPCWSTR> strings;
+        vector<LPCWSTR> strings;
         LPCWSTR string = (WCHAR *)(((char *)_record) + _record->StringOffset);
         for (int i = 0; i < _record->NumStrings; ++i) {
             strings.push_back(string);
@@ -248,16 +245,46 @@ public:
         // end marker in array
         strings.push_back(nullptr);
 
-        return _resolver->resolve(_record->EventID, source().c_str(),
-                                  &strings[0]);
+        return _resolver.resolve(_record->EventID, source().c_str(),
+                                 &strings[0]);
     }
 };
 
-EventLog::EventLog(LPCWSTR name, const LoggerAdaptor &logger)
+bool EventlogHandle::ReadEventLogW(DWORD dwReadFlags, DWORD dwRecordOffset,
+                                   vector<BYTE> &buffer, DWORD *pnBytesRead,
+                                   DWORD *pnMinNumberOfBytesNeeded) const {
+    return _winapi.ReadEventLogW(_handle, dwReadFlags, dwRecordOffset,
+                                 &buffer[0], buffer.size(), pnBytesRead,
+                                 pnMinNumberOfBytesNeeded);
+}
+
+DWORD EventlogHandle::GetOldestEventLogRecord(PDWORD record) const {
+    return _winapi.GetOldestEventLogRecord(_handle, record);
+}
+
+DWORD EventlogHandle::GetNumberOfEventLogRecords(PDWORD record) const {
+    return _winapi.GetNumberOfEventLogRecords(_handle, record);
+}
+
+HANDLE EventlogHandle::open() const {
+    HANDLE handle = _winapi.OpenEventLogW(nullptr, _name.c_str());
+    if (handle == nullptr) {
+        throw win_exception(_winapi,
+                            std::string("failed to open eventlog: ") +
+                                to_utf8(_name.c_str(), _winapi));
+    }
+    return handle;
+}
+
+void EventlogHandle::close() const { _winapi.CloseEventLog(_handle); }
+
+EventLog::EventLog(LPCWSTR name, const LoggerAdaptor &logger,
+                   const WinApiAdaptor &winapi)
     : _name(name)
-    , _log(name)
-    , _resolver(new MessageResolver(name, logger))
-    , _logger(logger) {
+    , _log(name, winapi)
+    , _resolver(name, logger, winapi)
+    , _logger(logger)
+    , _winapi(winapi) {
     _buffer.resize(INIT_BUFFER_SIZE);
 }
 
@@ -268,7 +295,7 @@ void EventLog::reset() {
     _buffer_offset = _buffer_used;  // enforce that a new chunk is fetched
 }
 
-std::wstring EventLog::getName() const { return _name; }
+wstring EventLog::getName() const { return _name; }
 
 uint64_t EventLog::seek(uint64_t record_number) {
     DWORD oldest_record, record_count;
@@ -353,7 +380,7 @@ bool EventLog::fillBuffer() {
                            &bytes_required)) {
         return true;
     } else {
-        DWORD error = GetLastError();
+        DWORD error = _winapi.GetLastError();
         if (error == ERROR_HANDLE_EOF) {
             // end of log, all good
             return false;
@@ -371,8 +398,9 @@ bool EventLog::fillBuffer() {
             }  // otherwise treat this like any other error
         }
 
-        throw win_exception(
-            std::string("Can't read eventlog ") + to_utf8(_name.c_str()),
-            error);
+        throw win_exception(_winapi,
+                            std::string("Can't read eventlog ") +
+                                to_utf8(_name.c_str(), _winapi),
+                            error);
     }
 }

@@ -25,14 +25,13 @@
 #ifndef SectionPluginGroup_h
 #define SectionPluginGroup_h
 
+#include <map>
+#include <string>
+#include "../Configurable.h"
 #include "../Section.h"
 #include "../types.h"
-#include "../Configurable.h"
-#include <string>
-#include <map>
 
-
-class LoggerAdaptor;
+class Environment;
 class SectionPlugin;
 
 // States for plugin and local scripts
@@ -49,20 +48,17 @@ typedef enum _script_type { PLUGIN, LOCAL, MRPE } script_type;
 
 struct script_container {
     script_container(
-        const std::string &_path, // full path with interpreter, cscript, etc.
-        const std::string &_script_path, // path of script
-        int _max_age,
-        int _timeout,
-        int _max_entries,
-        const std::string &_user,
-        script_type _type,
-        script_execution_mode _execution_mode,
-        LoggerAdaptor &_logger);
+        const std::string &_path,  // full path with interpreter, cscript, etc.
+        const std::string &_script_path,  // path of script
+        int _max_age, int _timeout, int _max_entries, const std::string &_user,
+        script_type _type, script_execution_mode _execution_mode,
+        const Environment &_env, LoggerAdaptor &_logger,
+        const WinApiAdaptor &_winapi);
 
     script_container() = delete;
-    script_container(const script_container&) = delete;
+    script_container(const script_container &) = delete;
     ~script_container();
-    script_container& operator=(const script_container&) = delete;
+    script_container &operator=(const script_container &) = delete;
 
     const std::string path;         // full path with interpreter, cscript, etc.
     const std::string script_path;  // path of script
@@ -82,17 +78,25 @@ struct script_container {
     HANDLE worker_thread;
     HANDLE job_object;
     DWORD exit_code;
+    const Environment &env;
     LoggerAdaptor &logger;
+    const WinApiAdaptor &winapi;
 };
 
 // not sure why I need these, but the compiler insists
 /*
-std::ostream &operator<<(std::ostream &out, const std::pair<std::string, int> &var);
-std::ostream &operator<<(std::ostream &out, const std::pair<std::string, script_execution_mode> &var);
+std::ostream &operator<<(std::ostream &out, const std::pair<std::string, int>
+&var);
+std::ostream &operator<<(std::ostream &out, const std::pair<std::string,
+script_execution_mode> &var);
 */
 
 class SectionPluginGroup : public Section {
-    friend DWORD WINAPI DataCollectionThread(LPVOID lpParam);
+    friend DWORD
+#if defined(_WIN32) || defined(_WIN64)
+        __attribute__((__stdcall__))
+#endif  // _WIN32 || _WIN64
+        DataCollectionThread(LPVOID lpParam);
 
     std::string _path;
     script_type _type;
@@ -101,14 +105,16 @@ class SectionPluginGroup : public Section {
     HANDLE _collection_thread;
     std::atomic<bool> _data_collection_retriggered{false};
 
-    typedef std::map<std::string, std::shared_ptr<script_container>> containers_t;
+    typedef std::map<std::string, std::shared_ptr<script_container>>
+        containers_t;
     containers_t _containers;
 
     Configurable<script_execution_mode> _default_execution_mode;
     Configurable<script_async_execution> _async_execution;
 
-    SplittingListConfigurable<std::vector<std::string>,
-                              BlockMode::BlockExclusive<std::vector<std::string>>>
+    SplittingListConfigurable<
+        std::vector<std::string>,
+        BlockMode::BlockExclusive<std::vector<std::string>>>
         _execute_suffixes;
 
     KeyedListConfigurable<int> _timeout;
@@ -129,6 +135,7 @@ class SectionPluginGroup : public Section {
 public:
     SectionPluginGroup(Configuration &config, const std::string &path,
                        script_type type, LoggerAdaptor &logger,
+                       const WinApiAdaptor &winapi,
                        const std::string &user = std::string());
 
     virtual ~SectionPluginGroup();
@@ -139,18 +146,18 @@ public:
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
-private:
 
+private:
     void collectData(script_execution_mode mode);
     void runContainer(script_container *cont);
     void outputContainers(std::ostream &out);
 
     void updateStatistics();
 
-    static bool exists(script_container *cont);
+    bool exists(script_container *cont) const;
     bool fileInvalid(const char *filename) const;
     std::string deriveCommand(const char *filename) const;
-    script_container *createContainer(const char *filename) const;
+    inline script_container *createContainer(const char *filename) const;
     void updateScripts();
     std::string withInterpreter(const char *path) const;
 
@@ -158,8 +165,6 @@ private:
     int getCacheAge(const char *name) const;
     int getMaxRetries(const char *name) const;
     script_execution_mode getExecutionMode(const char *name) const;
-
 };
 
 #endif  // SectionPluginGroup_h
-

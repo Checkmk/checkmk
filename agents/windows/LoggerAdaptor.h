@@ -22,7 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #ifndef LoggerAdaptor_h
 #define LoggerAdaptor_h
 
@@ -34,15 +33,15 @@ class LoggerAdaptor {
 public:
     LoggerAdaptor() = default;
     virtual ~LoggerAdaptor() = default;
-    LoggerAdaptor(const LoggerAdaptor&) = delete;
-    LoggerAdaptor& operator=(const LoggerAdaptor&) = delete;
+    LoggerAdaptor(const LoggerAdaptor &) = delete;
+    LoggerAdaptor &operator=(const LoggerAdaptor &) = delete;
 
     // log messages to stdout if verbose mode is active
     virtual void verbose(const char *format, ...) const = 0;
-    
+
     // log messages to the crash log file if crashLog is active
     virtual void crashLog(const char *format, ...) const = 0;
-    
+
     virtual void openCrashLog(const std::string &log_directory) = 0;
     virtual void closeCrashLog() const = 0;
     virtual void printCrashLog(std::ostream &out) = 0;
@@ -52,4 +51,4 @@ public:
     virtual std::array<std::string, 3> getLogFilenames() const = 0;
 };
 
-#endif // LoggerAdaptor_h
+#endif  // LoggerAdaptor_h

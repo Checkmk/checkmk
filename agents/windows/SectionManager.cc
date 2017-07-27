@@ -1,6 +1,6 @@
+#include "SectionManager.h"
 #include "Configuration.h"
 #include "Environment.h"
-#include "SectionManager.h"
 #include "sections/SectionCheckMK.h"
 #include "sections/SectionCrashDebug.h"
 #include "sections/SectionDF.h"
@@ -21,16 +21,18 @@
 #include "sections/SectionWMI.h"
 #include "sections/SectionWinperf.h"
 
-SectionManager::SectionManager(Configuration &config, LoggerAdaptor &logger)
-    : _ps_use_wmi(config, "ps", "use_wmi", false)
-    , _enabled_sections(config, "global", "sections")
-    , _disabled_sections(config, "global", "disabled_sections")
-    , _realtime_sections(config, "global", "realtime_sections")
-    , _script_local_includes(config, "local", "include")
-    , _script_plugin_includes(config, "plugin", "include")
-    , _winperf_counters(config, "winperf", "counters")
+SectionManager::SectionManager(Configuration &config, LoggerAdaptor &logger,
+                               const WinApiAdaptor &winapi)
+    : _ps_use_wmi(config, "ps", "use_wmi", false, winapi)
+    , _enabled_sections(config, "global", "sections", winapi)
+    , _disabled_sections(config, "global", "disabled_sections", winapi)
+    , _realtime_sections(config, "global", "realtime_sections", winapi)
+    , _script_local_includes(config, "local", "include", winapi)
+    , _script_plugin_includes(config, "plugin", "include", winapi)
+    , _winperf_counters(config, "winperf", "counters", winapi)
     , _env(config.getEnvironment())
-    , _logger(logger) {
+    , _logger(logger)
+    , _winapi(winapi) {
     loadStaticSections(config);
 }
 
@@ -72,89 +74,110 @@ bool SectionManager::useRealtimeMonitoring() const {
 void SectionManager::loadDynamicSections() {
     for (winperf_counter *counter : *_winperf_counters) {
         if (counter->id != -1) {
-            addSection((new SectionWinperf(counter->name.c_str(), _env, _logger))
+            addSection((new SectionWinperf(counter->name.c_str(), _env, _logger,
+                                           _winapi))
                            ->withBase(counter->id));
         }
     }
 }
 
 void SectionManager::loadStaticSections(Configuration &config) {
-    addSection(new SectionCrashDebug(config, _logger));
-    addSection(new SectionCheckMK(config, _logger));
-    addSection(new SectionUptime(_env, _logger));
-    addSection((new SectionDF(_env, _logger))->withRealtimeSupport());
-    addSection(new SectionPS(config, _logger));
-    addSection((new SectionMem(_env, _logger))->withRealtimeSupport());
-    addSection(new SectionFileinfo(config, _logger));
-    addSection(new SectionServices(_env, _logger));
+    addSection(new SectionCrashDebug(config, _logger, _winapi));
+    addSection(new SectionCheckMK(config, _logger, _winapi));
+    addSection(new SectionUptime(_env, _logger, _winapi));
+    addSection((new SectionDF(_env, _logger, _winapi))->withRealtimeSupport());
+    addSection(new SectionPS(config, _logger, _winapi));
+    addSection((new SectionMem(_env, _logger, _winapi))->withRealtimeSupport());
+    addSection(new SectionFileinfo(config, _logger, _winapi));
+    addSection(new SectionServices(_env, _logger, _winapi));
 
-    addSection((new SectionWinperf("if", _env, _logger))->withBase(510));
-    addSection((new SectionWinperf("phydisk", _env, _logger))->withBase(234));
-    addSection((new SectionWinperf("processor", _env, _logger))
+    addSection(
+        (new SectionWinperf("if", _env, _logger, _winapi))->withBase(510));
+    addSection(
+        (new SectionWinperf("phydisk", _env, _logger, _winapi))->withBase(234));
+    addSection((new SectionWinperf("processor", _env, _logger, _winapi))
                    ->withBase(238)
                    ->withRealtimeSupport());
 
-    addSection(new SectionEventlog(config, _logger));
-    addSection(new SectionLogwatch(config, _logger));
+    addSection(new SectionEventlog(config, _logger, _winapi));
+    addSection(new SectionLogwatch(config, _logger, _winapi));
 
-    addSection((new SectionWMI("dotnet_clrmemory", _env, _logger))
+    addSection((new SectionWMI("dotnet_clrmemory", _env, _logger, _winapi))
                    ->withObject(L"Win32_PerfRawData_NETFramework_NETCLRMemory")
                    ->withToggleIfMissing());
 
-    addSection((new SectionGroup("wmi_cpuload", _env, _logger))
+    addSection((new SectionGroup("wmi_cpuload", _env, _logger, _winapi))
                    ->withToggleIfMissing()
                    ->withNestedSubtables()
                    ->withSubSection(
-                       (new SectionWMI("system_perf", _env, _logger))
+                       (new SectionWMI("system_perf", _env, _logger, _winapi))
                            ->withObject(L"Win32_PerfRawData_PerfOS_System"))
-	       ->withSubSection((new SectionWMI("computer_system", _env, _logger))
+                   ->withSubSection((new SectionWMI("computer_system", _env,
+                                                    _logger, _winapi))
                                         ->withObject(L"Win32_ComputerSystem"))
                    ->withSeparator(','));
 
     addSection(
-        (new SectionGroup("msexch", _env, _logger))
+        (new SectionGroup("msexch", _env, _logger, _winapi))
             ->withToggleIfMissing()
-	->withSubSection((new SectionWMI("msexch_activesync", _env, _logger))
-                                 ->withObject(L"Win32_PerfRawData_MSExchangeActiveSync_MSExchangeActiveSync"))
-            ->withSubSection((new SectionWMI("msexch_availability", _env, _logger))
-                                 ->withObject(L"Win32_PerfRawData_MSExchangeAvailabilityService"))
             ->withSubSection(
-                (new SectionWMI("msexch_owa", _env, _logger))->withObject(L"Win32_PerfRawData_MSExchangeOWA_MSExchangeOWA"))
-            ->withSubSection((new SectionWMI("msexch_autodiscovery", _env, _logger))
-                                 ->withObject(L"Win32_PerfRawData_MSExchangeAutodiscover_MSExchangeAutodiscover"))
-            ->withSubSection((new SectionWMI("msexch_isclienttype", _env, _logger))
-                                 ->withObject(L"Win32_PerfRawData_MSExchangeISClientType_MSExchangeISClientType"))
-            ->withSubSection((new SectionWMI("msexch_isstore", _env, _logger))
-                                 ->withObject(L"Win32_PerfRawData_MSExchangeISStore_MSExchangeISStore"))
-            ->withSubSection((new SectionWMI("msexch_rpcclientaccess", _env, _logger))
-                                 ->withObject(L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"))
+                (new SectionWMI("msexch_activesync", _env, _logger, _winapi))
+                    ->withObject(
+                        L"Win32_PerfRawData_MSExchangeActiveSync_MSExchangeActiveSync"))
+            ->withSubSection(
+                (new SectionWMI("msexch_availability", _env, _logger, _winapi))
+                    ->withObject(
+                        L"Win32_PerfRawData_MSExchangeAvailabilityService"))
+            ->withSubSection(
+                (new SectionWMI("msexch_owa", _env, _logger, _winapi))
+                    ->withObject(
+                        L"Win32_PerfRawData_MSExchangeOWA_MSExchangeOWA"))
+            ->withSubSection(
+                (new SectionWMI("msexch_autodiscovery", _env, _logger, _winapi))
+                    ->withObject(
+                        L"Win32_PerfRawData_MSExchangeAutodiscover_MSExchangeAutodiscover"))
+            ->withSubSection(
+                (new SectionWMI("msexch_isclienttype", _env, _logger, _winapi))
+                    ->withObject(
+                        L"Win32_PerfRawData_MSExchangeISClientType_MSExchangeISClientType"))
+            ->withSubSection(
+                (new SectionWMI("msexch_isstore", _env, _logger, _winapi))
+                    ->withObject(
+                        L"Win32_PerfRawData_MSExchangeISStore_MSExchangeISStore"))
+            ->withSubSection(
+                (new SectionWMI("msexch_rpcclientaccess", _env, _logger,
+                                _winapi))
+                    ->withObject(
+                        L"Win32_PerfRawData_MSExchangeRpcClientAccess_MSExchangeRpcClientAccess"))
             ->withHiddenHeader()
             ->withSeparator(','));
 
-    addSection(new SectionSkype(_env, _logger));
+    addSection(new SectionSkype(_env, _logger, _winapi));
 
-    addSection((new SectionWMI("wmi_webservices", _env, _logger))
+    addSection((new SectionWMI("wmi_webservices", _env, _logger, _winapi))
                    ->withObject(L"Win32_PerfRawData_W3SVC_WebService")
                    ->withToggleIfMissing());
 
-    addSection((new SectionOHM(config, _logger))
+    addSection((new SectionOHM(config, _logger, _winapi))
                    ->withColumns({L"Index", L"Name", L"Parent", L"SensorType",
                                   L"Value"}));
 
-    addSection(new SectionPluginGroup(config, _env.localDirectory(), LOCAL, _logger));
+    addSection(new SectionPluginGroup(config, _env.localDirectory(), LOCAL,
+                                      _logger, _winapi));
     for (const auto &include : *_script_local_includes) {
-        addSection(new SectionPluginGroup(config, include.second, LOCAL, _logger,
-                                          include.first));
+        addSection(new SectionPluginGroup(config, include.second, LOCAL,
+                                          _logger, _winapi, include.first));
     }
 
-    addSection(new SectionPluginGroup(config, _env.pluginsDirectory(), PLUGIN, _logger));
+    addSection(new SectionPluginGroup(config, _env.pluginsDirectory(), PLUGIN,
+                                      _logger, _winapi));
     for (const auto &include : *_script_plugin_includes) {
-        addSection(new SectionPluginGroup(config, include.second, PLUGIN, _logger,
-                                          include.first));
+        addSection(new SectionPluginGroup(config, include.second, PLUGIN,
+                                          _logger, _winapi, include.first));
     }
 
-    addSection(new SectionSpool(_env, _logger));
-    addSection(new SectionMRPE(config, _logger));
+    addSection(new SectionSpool(_env, _logger, _winapi));
+    addSection(new SectionMRPE(config, _logger, _winapi));
 
-    addSection(new SectionSystemtime(_env, _logger));
+    addSection(new SectionSystemtime(_env, _logger, _winapi));
 }

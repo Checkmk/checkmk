@@ -31,15 +31,15 @@ class Environment;
 
 class SectionDF : public Section {
 public:
-    SectionDF(const Environment &env, LoggerAdaptor &logger);
+    SectionDF(const Environment &env, LoggerAdaptor &logger,
+              const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
-private:
 
+private:
     void output_filesystem(std::ostream &out, char *volid);
     void output_mountpoints(std::ostream &out, char *volid);
 };
 
 #endif  // SectionDF_h
-

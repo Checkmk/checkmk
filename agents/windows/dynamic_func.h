@@ -26,14 +26,15 @@
 // This can be used for functions that may not exist in windows versions
 // we still support
 
-#include <windows.h>
+#include "WinApiAdaptor.h"
 
 template <typename FuncT>
-FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName) {
-    HMODULE mod = LoadLibraryW(dllName);
+FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName,
+                   const WinApiAdaptor &winapi) {
+    HMODULE mod = winapi.LoadLibraryW(dllName);
     if (mod != nullptr) {
-        FARPROC proc = GetProcAddress(mod, funcName);
-        CloseHandle(mod);
+        FARPROC proc = winapi.GetProcAddress(mod, funcName);
+        winapi.CloseHandle(mod);
         if (proc != nullptr) {
             return (FuncT)proc;
         }
@@ -52,7 +53,8 @@ FuncT dynamic_func(LPCWSTR dllName, LPCSTR funcName) {
 // the
 // functions directly
 
-#define DYNAMIC_FUNC(func, dllName) dynamic_func<func##_type>(dllName, #func)
+#define DYNAMIC_FUNC(funcName, dllName, winapi) \
+    dynamic_func<funcName_type>(dllName, funcName, winapi)
 
-#define DYNAMIC_FUNC_DECL(func, dllName) \
-    dynamic_func<decltype(&func)>(dllName, #func)
+#define DYNAMIC_FUNC_DECL(func, dllName, winapi) \
+    dynamic_func<decltype(&func)>(dllName, #func, winapi)

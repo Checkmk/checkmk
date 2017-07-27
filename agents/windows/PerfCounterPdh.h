@@ -34,7 +34,6 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <pdh.h>
-#include <windows.h>
 #include <map>
 #include <string>
 #include <utility>

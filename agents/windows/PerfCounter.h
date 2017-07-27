@@ -25,9 +25,16 @@
 #ifndef PerfCounter_h
 #define PerfCounter_h
 
-#include <windows.h>
 #include <string>
 #include <vector>
+#include "WinApiAdaptor.h"
+
+typedef uint64_t ULONGLONG;
+
+typedef struct _PERF_COUNTER_DEFINITION PERF_COUNTER_DEFINITION;
+typedef struct _PERF_INSTANCE_DEFINITION PERF_INSTANCE_DEFINITION;
+typedef struct _PERF_COUNTER_BLOCK PERF_COUNTER_BLOCK;
+typedef struct _PERF_OBJECT_TYPE PERF_OBJECT_TYPE;
 
 // Wrapper for a single counter
 // Attention: objects of this type become invalid when
@@ -40,6 +47,7 @@ class PerfCounter {
                        // If the counter has instances we don't need this
                        // as the instance definition contains a pointer to
                        // the instance-specific data
+    const WinApiAdaptor &_winapi;
 
 public:
     std::string typeName() const;
@@ -49,7 +57,8 @@ public:
     DWORD offset() const;
 
 private:
-    PerfCounter(PERF_COUNTER_DEFINITION *counter, BYTE *datablock);
+    PerfCounter(PERF_COUNTER_DEFINITION *counter, BYTE *datablock,
+                const WinApiAdaptor &winapi);
     ULONGLONG extractValue(PERF_COUNTER_BLOCK *block) const;
 };
 
@@ -60,12 +69,16 @@ class PerfCounterObject {
     std::vector<BYTE> _buffer;
     PERF_OBJECT_TYPE *_object;
     BYTE *_datablock;
+    const WinApiAdaptor &_winapi;
 
 public:
     typedef std::vector<std::pair<DWORD, std::wstring>> CounterList;
 
 public:
-    PerfCounterObject(unsigned counter_base_number);
+    PerfCounterObject(const char *counter_name, const WinApiAdaptor &winapi);
+
+    PerfCounterObject(unsigned counter_base_number,
+                      const WinApiAdaptor &winapi);
 
     bool isEmpty() const;
 
@@ -74,17 +87,17 @@ public:
     std::vector<PerfCounter> counters() const;
     std::vector<std::wstring> counterNames() const;
 
-    static std::vector<BYTE> retrieveCounterData(const wchar_t *counterList);
-
-    static CounterList object_list(const char *language);
-
-    static int resolve_counter_name(const wchar_t *name,
+    static int resolve_counter_name(const WinApiAdaptor &winapi,
+                                    const wchar_t *name,
                                     const wchar_t *language = NULL);
 
-    static int resolve_counter_name(const char *name,
+    static int resolve_counter_name(const WinApiAdaptor &winapi,
+                                    const char *name,
                                     const char *language = NULL);
 
 private:
+    std::vector<BYTE> retrieveCounterData(const wchar_t *counterList);
+
     PERF_OBJECT_TYPE *findObject(DWORD counter_index);
 };
 

@@ -22,19 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+#define __STDC_FORMAT_MACROS
 #include "SectionEventlog.h"
+#include <inttypes.h>
+#include <cstring>
+#include <ctime>
 #include "../Environment.h"
 #include "../LoggerAdaptor.h"
+#include "../WinApiAdaptor.h"
 #include "../stringutil.h"
-#define __STDC_FORMAT_MACROS
-#include <ctime>
-#include <inttypes.h>
 
-SectionEventlog::SectionEventlog(Configuration &config, LoggerAdaptor &logger)
-    : Section("logwatch", config.getEnvironment(), logger)
-    , _send_initial(config, "logwatch", "sendall", false)
-    , _vista_api(config, "logwatch", "vista_api", false)
-    , _config(config, "logwatch", "logname") {
+SectionEventlog::SectionEventlog(Configuration &config, LoggerAdaptor &logger,
+                                 const WinApiAdaptor &winapi)
+    : Section("logwatch", config.getEnvironment(), logger, winapi)
+    , _send_initial(config, "logwatch", "sendall", false, winapi)
+    , _vista_api(config, "logwatch", "vista_api", false, winapi)
+    , _config(config, "logwatch", "logname", winapi) {
     // register a second key-name
     config.reg("logwatch", "logfile", &_config);
 }
@@ -82,12 +85,10 @@ void SectionEventlog::loadEventlogOffsets(const std::string &statefile) {
     }
 }
 
-void SectionEventlog::saveEventlogOffsets(
-    const std::string &statefile) {
+void SectionEventlog::saveEventlogOffsets(const std::string &statefile) {
     FILE *file = fopen(statefile.c_str(), "w");
     if (file == nullptr) {
-        fprintf(stderr, "failed to open %s for writing\n",
-                statefile.c_str());
+        fprintf(stderr, "failed to open %s for writing\n", statefile.c_str());
         return;
     }
     for (eventlog_file_state &state : _state) {
@@ -145,30 +146,31 @@ void SectionEventlog::process_eventlog_entry(std::ostream &out,
     strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
 
     // source is the application that produced the event
-    std::string source_name = to_utf8(event.source().c_str());
+    std::string source_name = to_utf8(event.source().c_str(), _winapi);
     std::replace(source_name.begin(), source_name.end(), ' ', '_');
 
     out << type_char << " " << timestamp << " " << event.eventQualifiers()
         << "." << event.eventId() << " " << source_name << " "
-        << to_utf8(event.message().c_str()) << "\n";
+        << to_utf8(event.message().c_str(), _winapi) << "\n";
 }
 
 void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
-                                      uint64_t &first_record, int level,
-                                      int hide_context) {
-   _logger.crashLog(" - event log \"%ls\":", logname);
+                                     uint64_t &first_record, int level,
+                                     int hide_context) {
+    _logger.crashLog(" - event log \"%ls\":", logname);
 
     try {
         std::unique_ptr<IEventLog> log(
-            open_eventlog(logname, *_vista_api, _logger));
+            open_eventlog(logname, *_vista_api, _logger, _winapi));
         {
-           _logger.crashLog("   . successfully opened event log");
+            _logger.crashLog("   . successfully opened event log");
 
-            out << "[[[" << to_utf8(logname) << "]]]\n";
+            out << "[[[" << to_utf8(logname, _winapi) << "]]]\n";
             int worst_state = 0;
             // record_number is the last event we read, so we want to seek past
             // it
-            bool record_maxxed = std::numeric_limits<uint64_t>::max() == first_record;
+            bool record_maxxed =
+                std::numeric_limits<uint64_t>::max() == first_record;
             first_record = log->seek(first_record + (record_maxxed ? 0 : 1));
 
             uint64_t last_record = first_record;
@@ -182,15 +184,16 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
                 worst_state = std::max(worst_state, state.second);
 
                 last_record = record->recordId();
-                record      = log->read();
+                record = log->read();
             }
 
-           _logger.crashLog("    . worst state: %d", worst_state);
+            _logger.crashLog("    . worst state: %d", worst_state);
 
             // second pass - if there were, print everything
             if (worst_state >= level) {
                 log->reset();
-                bool record_maxxed = std::numeric_limits<uint64_t>::max() == first_record;
+                bool record_maxxed =
+                    std::numeric_limits<uint64_t>::max() == first_record;
                 log->seek(first_record + (record_maxxed ? 0 : 1));
 
                 std::shared_ptr<IEventLogRecord> record = log->read();
@@ -206,7 +209,7 @@ void SectionEventlog::outputEventlog(std::ostream &out, LPCWSTR logname,
             first_record = last_record;
         }
     } catch (const std::exception &e) {
-       _logger.crashLog("failed to read event log: %s\n", e.what());
+        _logger.crashLog("failed to read event log: %s\n", e.what());
         out << "[[[" << logname << ":missing]]]\n";
     }
 }
@@ -237,8 +240,8 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
     snprintf(regpath, sizeof(regpath),
              "SYSTEM\\CurrentControlSet\\Services\\Eventlog");
     HKEY key;
-    DWORD ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath, 0,
-                             KEY_ENUMERATE_SUB_KEYS, &key);
+    DWORD ret = _winapi.RegOpenKeyEx(HKEY_LOCAL_MACHINE, regpath, 0,
+                                     KEY_ENUMERATE_SUB_KEYS, &key);
 
     bool success = true;
     if (ret == ERROR_SUCCESS) {
@@ -247,8 +250,8 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
         DWORD len;
         while (true) {
             len = sizeof(buffer);
-            DWORD r =
-                RegEnumKeyEx(key, i, buffer, &len, NULL, NULL, NULL, NULL);
+            DWORD r = _winapi.RegEnumKeyEx(key, i, buffer, &len, NULL, NULL,
+                                           NULL, NULL);
             if (r == ERROR_SUCCESS)
                 registerEventlog(buffer);
             else if (r != ERROR_MORE_DATA) {
@@ -262,11 +265,12 @@ bool SectionEventlog::find_eventlogs(std::ostream &out) {
             }
             i++;
         }
-        RegCloseKey(key);
+        _winapi.RegCloseKey(key);
     } else {
         success = false;
+        const auto lastError = _winapi.GetLastError();
         out << "ERROR: Cannot open registry key " << regpath
-            << " for enumeration: error code " << GetLastError() << "\n";
+            << " for enumeration: error code " << lastError << "\n";
     }
 
     // enable the vista-style logs if that api is enabled
@@ -334,8 +338,9 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
                     }
                 }
                 if (level != -1) {
-                    outputEventlog(out, to_utf16(state.name.c_str()).c_str(),
-                                   state.record_no, level, hide_context);
+                    outputEventlog(
+                        out, to_utf16(state.name.c_str(), _winapi).c_str(),
+                        state.record_no, level, hide_context);
                 }
             }
         }
@@ -344,4 +349,3 @@ bool SectionEventlog::produceOutputInner(std::ostream &out) {
     first_run = false;
     return true;
 }
-

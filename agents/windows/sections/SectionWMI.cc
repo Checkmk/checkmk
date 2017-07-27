@@ -23,17 +23,19 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionWMI.h"
-#include "../stringutil.h"
-#include "../wmiHelper.h"
 #include <algorithm>
 #include <ctime>
+#include "../stringutil.h"
+#include "../wmiHelper.h"
 
+#define SUCCEEDED(hr) ((HRESULT)(hr) >= 0)
 
 // How to fix broken performance counters
 // http://johansenreidar.blogspot.de/2014/01/windows-server-rebuild-all-performance.html
 
-SectionWMI::SectionWMI(const char *name, const Environment &env, LoggerAdaptor &logger)
-    : Section(name, env, logger) {
+SectionWMI::SectionWMI(const char *name, const Environment &env,
+                       LoggerAdaptor &logger, const WinApiAdaptor &winapi)
+    : Section(name, env, logger, winapi) {
     withSeparator(',');
 }
 
@@ -62,7 +64,7 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
     if (!data.valid()) {
         return;
     }
-    out << to_utf8(join(data.names(), L",").c_str()) << "\n";
+    out << to_utf8(join(data.names(), L",").c_str(), _winapi) << "\n";
 
     // output data
     bool more = true;
@@ -73,7 +75,7 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
                        [&data](const std::wstring &name) {
                            return data.get<std::wstring>(name.c_str());
                        });
-        out << to_utf8(join(values, L",").c_str());
+        out << to_utf8(join(values, L",").c_str(), _winapi);
 
         more = data.next();
         if (more) {
@@ -82,8 +84,7 @@ void SectionWMI::outputTable(std::ostream &out, wmi::Result &data) {
     }
 }
 
-void SectionWMI::suspend(int duration)
-{
+void SectionWMI::suspend(int duration) {
     _disabled_until = time(nullptr) + duration;
 }
 
@@ -93,10 +94,10 @@ bool SectionWMI::produceOutputInner(std::ostream &out) {
     }
 
     if (_helper.get() == nullptr) {
-        _helper.reset(new wmi::Helper(_namespace.c_str()));
+        _helper.reset(new wmi::Helper(_winapi, _namespace.c_str()));
     }
 
-    wmi::Result result;
+    wmi::Result result(_winapi);
 
     if (_columns.empty()) {
         // no columns set, return everything
@@ -110,7 +111,8 @@ bool SectionWMI::produceOutputInner(std::ostream &out) {
     bool success = result.valid() || SUCCEEDED(result.last_error());
 
     if (_toggle_if_missing && !success) {
-        // in the past, wmi tables were toggled permanently if they were missing,
+        // in the past, wmi tables were toggled permanently if they were
+        // missing,
         // but testing occasionally shouldn't hurt.
         suspend(3600);
     }
@@ -119,4 +121,3 @@ bool SectionWMI::produceOutputInner(std::ostream &out) {
 
     return success;
 }
-

@@ -25,9 +25,9 @@
 #ifndef SectionGroup_h
 #define SectionGroup_h
 
-#include "../Section.h"
 #include <ctime>
 #include <memory>
+#include "../Section.h"
 
 class Environment;
 
@@ -48,7 +48,8 @@ class SectionGroup : public Section {
     time_t _disabled_until{0};
 
 public:
-    SectionGroup(const char *name, const Environment &env, LoggerAdaptor &logger);
+    SectionGroup(const char *name, const Environment &env,
+                 LoggerAdaptor &logger, const WinApiAdaptor &winapi);
     SectionGroup *withNestedSubtables();
     /**
      * add a section that will be printed as part of this group
@@ -70,4 +71,3 @@ protected:
 };
 
 #endif  // SectionGroup_h
-

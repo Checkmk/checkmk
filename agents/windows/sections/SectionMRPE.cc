@@ -23,14 +23,16 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionMRPE.h"
+#include <cstring>
 #include "../Environment.h"
 #include "../ExternalCmd.h"
 #include "../LoggerAdaptor.h"
 
-SectionMRPE::SectionMRPE(Configuration &config, LoggerAdaptor &logger)
-    : Section("mrpe", config.getEnvironment(), logger)
-    , _entries(config, "mrpe", "check")
-    , _includes(config, "mrpe", "include") {}
+SectionMRPE::SectionMRPE(Configuration &config, LoggerAdaptor &logger,
+                         const WinApiAdaptor &winapi)
+    : Section("mrpe", config.getEnvironment(), logger, winapi)
+    , _entries(config, "mrpe", "check", winapi)
+    , _includes(config, "mrpe", "include", winapi) {}
 
 void SectionMRPE::updateIncludes() {
     for (unsigned int i = 0; i < _included_entries.size(); ++i)
@@ -45,7 +47,7 @@ void SectionMRPE::updateIncludes() {
         std::tie(user, path) = user_path;
         file = fopen(path.c_str(), "r");
         if (!file) {
-           _logger.crashLog("Include file not found %s", path.c_str());
+            _logger.crashLog("Include file not found %s", path.c_str());
             continue;
         }
 
@@ -66,7 +68,8 @@ void SectionMRPE::updateIncludes() {
             char *s = l;
             while (*s && *s != '=') s++;
             if (*s != '=') {
-               _logger.crashLog("Invalid line %d in %s.", lineno, path.c_str());
+                _logger.crashLog("Invalid line %d in %s.", lineno,
+                                 path.c_str());
                 continue;
             }
             *s = 0;
@@ -82,7 +85,7 @@ void SectionMRPE::updateIncludes() {
                 char *service_description = next_word(&value);
                 char *command_line = value;
                 if (!command_line || !command_line[0]) {
-                   _logger.crashLog(
+                    _logger.crashLog(
                         "Invalid line %d in %s. Invalid command specification",
                         lineno, path.c_str());
                     continue;
@@ -119,11 +122,12 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
     all_entries.insert(all_entries.end(), _entries->begin(), _entries->end());
     all_entries.insert(all_entries.end(), _included_entries.begin(),
                        _included_entries.end());
-    
+
     for (mrpe_entry *entry : all_entries) {
-        out << "(" << entry->plugin_name << ") " << entry->service_description << " ";
-       _logger.crashLog("%s (%s) %s ", entry->run_as_user, entry->plugin_name,
-                  entry->service_description);
+        out << "(" << entry->plugin_name << ") " << entry->service_description
+            << " ";
+        _logger.crashLog("%s (%s) %s ", entry->run_as_user, entry->plugin_name,
+                         entry->service_description);
 
         char modified_command[1024];
         char run_as_prefix[512];
@@ -131,12 +135,12 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
         if (strlen(entry->run_as_user) > 0)
             snprintf(run_as_prefix, sizeof(run_as_prefix), "runas /User:%s ",
                      entry->run_as_user);
-        snprintf(modified_command, sizeof(modified_command), "%s%s", run_as_prefix,
-                 entry->command_line);
+        snprintf(modified_command, sizeof(modified_command), "%s%s",
+                 run_as_prefix, entry->command_line);
 
         try {
-            ExternalCmd command(modified_command, _logger);
-           _logger.crashLog("Script started -> collecting data");
+            ExternalCmd command(modified_command, _env, _logger, _winapi);
+            _logger.crashLog("Script started -> collecting data");
             std::string buffer;
             buffer.resize(8192);
             char *buf_start = &buffer[0];
@@ -145,7 +149,7 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
                 DWORD read = command.readStdout(
                     pos, buffer.size() - (pos - buf_start), false);
                 pos += read;
-                Sleep(10);
+                _winapi.Sleep(10);
             }
             command.readStdout(pos, buffer.size() - (pos - buf_start), false);
 
@@ -162,13 +166,12 @@ bool SectionMRPE::produceOutputInner(std::ostream &out) {
                            });
             int nagios_code = command.exitCode();
             out << nagios_code << " " << plugin_output << "\n";
-           _logger.crashLog("Script finished");
+            _logger.crashLog("Script finished");
         } catch (const std::exception &e) {
-           _logger.crashLog("mrpe failed: %s", e.what());
+            _logger.crashLog("mrpe failed: %s", e.what());
             out << "3 Unable to execute - plugin may be missing.\n";
             continue;
         }
     }
     return true;
 }
-

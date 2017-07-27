@@ -23,27 +23,27 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionLogwatch.h"
+#include <cassert>
+#include <regex>
 #include "../Environment.h"
 #include "../LoggerAdaptor.h"
 #include "../types.h"
-#include <cassert>
-#include <regex>
 #define __STDC_FORMAT_MACROS
 #include <inttypes.h>
+#include "../WinApiAdaptor.h"
 
-SectionLogwatch::SectionLogwatch(Configuration &config, LoggerAdaptor &logger)
-    : Section("logwatch", config.getEnvironment(), logger)
-    , _globlines(config, "logfiles")
-{
+static const size_t UNICODE_BUFFER_SIZE = 8192;
+
+SectionLogwatch::SectionLogwatch(Configuration &config, LoggerAdaptor &logger,
+                                 const WinApiAdaptor &winapi)
+    : Section("logwatch", config.getEnvironment(), logger, winapi)
+    , _globlines(config, "logfiles", winapi) {
     _globlines.setGroupFunction(&SectionLogwatch::addConditionPattern);
 
     loadLogwatchOffsets();
 }
 
-SectionLogwatch::~SectionLogwatch()
-{
-    cleanup();
-}
+SectionLogwatch::~SectionLogwatch() { cleanup(); }
 
 void SectionLogwatch::init() {
     for (const auto &globline : *_globlines) {
@@ -117,22 +117,22 @@ std::vector<SectionLogwatch::FileEntryType> SectionLogwatch::globMatches(
     }
 
     WIN32_FIND_DATA data;
-    HANDLE h = FindFirstFileEx(pattern, FindExInfoStandard, &data,
-                               FindExSearchNameMatch, nullptr, 0);
+    HANDLE h = _winapi.FindFirstFileEx(pattern, FindExInfoStandard, &data,
+                                       FindExSearchNameMatch, nullptr, 0);
 
     bool more = h != INVALID_HANDLE_VALUE;
 
     while (more) {
-        if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) // Skip directories
+        if (!(data.dwFileAttributes &
+              FILE_ATTRIBUTE_DIRECTORY))  // Skip directories
             matches.push_back(
                 std::make_pair(path + data.cFileName, data.ftLastWriteTime));
-        more = FindNextFile(h, &data);
+        more = _winapi.FindNextFile(h, &data);
     }
-    FindClose(h);
+    _winapi.FindClose(h);
 
     return matches;
 }
-
 
 logwatch_textfile *SectionLogwatch::getLogwatchTextfile(const char *name) {
     for (logwatch_textfile *textfile : _textfiles) {
@@ -156,7 +156,6 @@ void SectionLogwatch::updateOrCreateLogwatchTextfile(
 void SectionLogwatch::updateOrCreateRotatedLogfile(
     const std::vector<std::string> &filenames, glob_token *token,
     condition_patterns_t &patterns) {
-
     assert(filenames.size() > 0);
 
     logwatch_textfile *textfile = getLogwatchTextfile(token->pattern);
@@ -198,7 +197,7 @@ void SectionLogwatch::saveOffsets(const std::string &logwatch_statefile) {
     FILE *file = fopen(logwatch_statefile.c_str(), "w");
     if (!file) {
         _logger.crashLog("Cannot open %s for writing: %s (%d).\n",
-			  logwatch_statefile.c_str(), strerror(errno), errno);
+                         logwatch_statefile.c_str(), strerror(errno), errno);
         // not stopping the agent from crashing. This way the user at least
         // notices something went wrong.
         // FIXME: unless there aren't any textfiles configured to be monitored
@@ -218,7 +217,6 @@ void SectionLogwatch::saveOffsets(const std::string &logwatch_statefile) {
 // Can be called in dry-run mode (write_output = false). This tries to detect
 // CRIT or WARN patterns
 // If write_output is set to true any data found is written to the out socket
-#define UNICODE_BUFFER_SIZE 8192
 int fill_unicode_bytebuffer(FILE *file, char *buffer, int offset) {
     int bytes_to_read = UNICODE_BUFFER_SIZE - offset;
     int read_bytes = fread(buffer + offset, 1, bytes_to_read, file);
@@ -226,13 +224,10 @@ int fill_unicode_bytebuffer(FILE *file, char *buffer, int offset) {
 }
 
 int find_crnl_end(char *buffer) {
-    int index = 0;
-    while (true) {
-        if (index >= UNICODE_BUFFER_SIZE) return -1;
+    for (size_t index = 0; index < UNICODE_BUFFER_SIZE; index += 2) {
         if (buffer[index] == 0x0d && index < UNICODE_BUFFER_SIZE - 2 &&
             buffer[index + 2] == 0x0a)
             return index + 4;
-        index += 2;
     }
     return -1;
 }
@@ -240,16 +235,16 @@ int find_crnl_end(char *buffer) {
 SectionLogwatch::ProcessTextfileResponse
 SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
                                         std::ostream &out, bool write_output) {
-    _logger.verbose(
-	"Checking UNICODE file %s\n", textfile->paths.front().c_str());
+    _logger.verbose("Checking UNICODE file %s\n",
+                    textfile->paths.front().c_str());
     ProcessTextfileResponse response;
     char output_buffer[UNICODE_BUFFER_SIZE];
     char unicode_block[UNICODE_BUFFER_SIZE];
 
     condition_pattern *pattern = 0;
-    int buffer_level = 0;   // Current bytes in buffer
-    bool cut_line = false;  // Line does not fit in buffer
-    int crnl_end_offset;    // Byte index of CRLF in unicode block
+    int buffer_level = 0;     // Current bytes in buffer
+    bool cut_line = false;    // Line does not fit in buffer
+    int crnl_end_offset = 0;  // Byte index of CRLF in unicode block
     int old_buffer_level = 0;
 
     memset(unicode_block, 0, UNICODE_BUFFER_SIZE);
@@ -277,10 +272,11 @@ SectionLogwatch::processTextfileUnicode(FILE *file, logwatch_textfile *textfile,
 
         // Convert unicode to utf-8
         memset(output_buffer, 0, UNICODE_BUFFER_SIZE);
-        WideCharToMultiByte(CP_UTF8, 0, (wchar_t *)unicode_block,
-                            cut_line ? (UNICODE_BUFFER_SIZE - 2) / 2
-                                     : (crnl_end_offset - 4) / 2,
-                            output_buffer, sizeof(output_buffer), NULL, NULL);
+        _winapi.WideCharToMultiByte(CP_UTF8, 0, (wchar_t *)unicode_block,
+                                    cut_line ? (UNICODE_BUFFER_SIZE - 2) / 2
+                                             : (crnl_end_offset - 4) / 2,
+                                    output_buffer, sizeof(output_buffer), NULL,
+                                    NULL);
 
         // Check line
         char state = '.';
@@ -428,7 +424,8 @@ SectionLogwatch::ProcessTextfileResponse SectionLogwatch::processTextfile(
         return processTextfileDefault(file, textfile, out, write_output);
 }
 
-void SectionLogwatch::processTextfile(std::ostream &out, logwatch_textfile *textfile) {
+void SectionLogwatch::processTextfile(std::ostream &out,
+                                      logwatch_textfile *textfile) {
     if (textfile->missing) {
         out << "[[[" << textfile->name << ":missing]]]\n";
         return;
@@ -492,21 +489,21 @@ bool SectionLogwatch::produceOutputInner(std::ostream &out) {
 
 bool SectionLogwatch::getFileInformation(const char *filename,
                                          BY_HANDLE_FILE_INFORMATION *info) {
-    HANDLE hFile =
-        CreateFile(filename,      // file to open
-                   GENERIC_READ,  // open for reading
-                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                   nullptr,                // default security
-                   OPEN_EXISTING,          // existing file only
-                   FILE_ATTRIBUTE_NORMAL,  // normal file
-                   nullptr);               // no attr. template
+    HANDLE hFile = _winapi.CreateFile(
+        filename,      // file to open
+        GENERIC_READ,  // open for reading
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        nullptr,                // default security
+        OPEN_EXISTING,          // existing file only
+        FILE_ATTRIBUTE_NORMAL,  // normal file
+        nullptr);               // no attr. template
 
     if (hFile == INVALID_HANDLE_VALUE) {
         return false;
     }
 
-    bool res = GetFileInformationByHandle(hFile, info);
-    CloseHandle(hFile);
+    bool res = _winapi.GetFileInformationByHandle(hFile, info);
+    _winapi.CloseHandle(hFile);
     return res;
 }
 
@@ -514,8 +511,8 @@ std::vector<std::string> SectionLogwatch::sortedByTime(
     const std::vector<FileEntryType> &entries) {
     std::vector<FileEntryType> sorted(entries);
     std::sort(sorted.begin(), sorted.end(),
-              [](const FileEntryType &lhs, const FileEntryType &rhs) {
-                  return CompareFileTime(&lhs.second, &rhs.second) < 0;
+              [&](const FileEntryType &lhs, const FileEntryType &rhs) {
+                  return _winapi.CompareFileTime(&lhs.second, &rhs.second) < 0;
               });
     std::vector<std::string> result;
     for (const FileEntryType &ent : sorted) {
@@ -528,7 +525,7 @@ void SectionLogwatch::updateLogwatchTextfile(logwatch_textfile *textfile) {
     BY_HANDLE_FILE_INFORMATION fileinfo;
     if (!getFileInformation(textfile->paths.front().c_str(), &fileinfo)) {
         _logger.verbose("Cant open file with CreateFile %s\n",
-			textfile->paths.front().c_str());
+                        textfile->paths.front().c_str());
         return;
     }
 
@@ -539,14 +536,14 @@ void SectionLogwatch::updateLogwatchTextfile(logwatch_textfile *textfile) {
 
     if (file_id != textfile->file_id) {  // file has been changed
         _logger.verbose("File %s: id has changed from %" PRIu64,
-                textfile->paths.front().c_str(), textfile->file_id);
+                        textfile->paths.front().c_str(), textfile->file_id);
         _logger.verbose(" to %" PRIu64 "\n", file_id);
         textfile->offset = 0;
         textfile->file_id = file_id;
     } else if (textfile->file_size <
                textfile->offset) {  // file has been truncated
         _logger.verbose("File %s: file has been truncated\n",
-                textfile->paths.front().c_str());
+                        textfile->paths.front().c_str());
         textfile->offset = 0;
     }
 
@@ -601,7 +598,8 @@ logwatch_textfile *SectionLogwatch::addNewLogwatchTextfile(
     return new_textfile;
 }
 
-bool SectionLogwatch::updateCurrentRotatedTextfile(logwatch_textfile *textfile) {
+bool SectionLogwatch::updateCurrentRotatedTextfile(
+    logwatch_textfile *textfile) {
     const std::string &current_file = textfile->paths.front();
 
     BY_HANDLE_FILE_INFORMATION fileinfo;
@@ -663,7 +661,7 @@ void SectionLogwatch::eraseFilesOlder(std::vector<std::string> &file_names,
 }
 
 void SectionLogwatch::updateRotatedLogfile(const char *pattern,
-                                         logwatch_textfile *textfile) {
+                                           logwatch_textfile *textfile) {
     textfile->paths = sortedByTime(globMatches(pattern));
     eraseFilesOlder(textfile->paths, textfile->file_id);
 
@@ -680,7 +678,6 @@ void SectionLogwatch::updateRotatedLogfile(const char *pattern,
 logwatch_textfile *SectionLogwatch::addNewRotatedLogfile(
     const char *pattern, const std::vector<std::string> &filenames,
     glob_token *token, condition_patterns_t &patterns) {
-
     assert(filenames.size() > 0);
 
     logwatch_textfile *textfile = new logwatch_textfile();
@@ -705,7 +702,7 @@ logwatch_textfile *SectionLogwatch::addNewRotatedLogfile(
         if (!token->from_start) {
             // keep only the newest file and start reading at the end of it
             textfile->paths.erase(textfile->paths.begin(),
-                    textfile->paths.end() - 1);
+                                  textfile->paths.end() - 1);
         }
 
         BY_HANDLE_FILE_INFORMATION fileinfo;
@@ -772,14 +769,13 @@ void SectionLogwatch::loadLogwatchOffsets() {
     }
 }
 
-
-
 // Add a new globline from the config file:
 // C:/Testfile | D:/var/log/data.log D:/tmp/art*.log
 // This globline is split into tokens which are processed by
 // process_glob_expression
 template <>
-globline_container *from_string<globline_container*>(const std::string &value) {
+globline_container *from_string<globline_container *>(
+    const WinApiAdaptor &, const std::string &value) {
     // Each globline receives its own pattern container
     // In case new files matching the glob pattern are we
     // we already have all state,regex patterns available
@@ -817,4 +813,3 @@ globline_container *from_string<globline_container*>(const std::string &value) {
     }
     return new_globline;
 }
-

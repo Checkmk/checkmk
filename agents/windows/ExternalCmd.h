@@ -25,14 +25,16 @@
 #ifndef ExternalCmd_h
 #define ExternalCmd_h
 
-#include <windows.h>
 #include "types.h"
 
+class Environment;
 class LoggerAdaptor;
+class WinApiAdaptor;
 
 class ExternalCmd {
 public:
-    ExternalCmd(const char *cmdline, const LoggerAdaptor &logger);
+    ExternalCmd(const char *cmdline, const Environment &env,
+                const LoggerAdaptor &logger, const WinApiAdaptor &winapi);
 
     ~ExternalCmd();
 
@@ -54,13 +56,14 @@ private:
     DWORD readPipe(HANDLE pipe, char *buffer, size_t buffer_size, bool block);
 
 private:
-    WinHandle _script_stderr{INVALID_HANDLE_VALUE};
-    WinHandle _script_stdout{INVALID_HANDLE_VALUE};
-    HANDLE _process{INVALID_HANDLE_VALUE};
-    HANDLE _job_object{INVALID_HANDLE_VALUE};
-    WinHandle _stdout{INVALID_HANDLE_VALUE};
-    WinHandle _stderr{INVALID_HANDLE_VALUE};
+    WinHandle _script_stderr;
+    WinHandle _script_stdout;
+    HANDLE _process;
+    HANDLE _job_object;
+    WinHandle _stdout;
+    WinHandle _stderr;
     const LoggerAdaptor &_logger;
+    const WinApiAdaptor &_winapi;
 };
 
 #endif  // ExternalCmd_h

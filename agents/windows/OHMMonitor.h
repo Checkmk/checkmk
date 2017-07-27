@@ -24,10 +24,12 @@
 
 #pragma once
 
+#include <winsock2.h>
 #include <windows.h>
 #include <string>
 
 class LoggerAdaptor;
+class WinApiAdaptor;
 
 /**
  * Ensure the Open Hardware Monitor is running (if it's available)
@@ -37,9 +39,11 @@ class OHMMonitor {
     bool _available;
     HANDLE _current_process{INVALID_HANDLE_VALUE};
     const LoggerAdaptor &_logger;
+    const WinApiAdaptor &_winapi;
 
 public:
-    OHMMonitor(const std::string &bin_path, const LoggerAdaptor &logger);
+    OHMMonitor(const std::string &bin_path, const LoggerAdaptor &logger,
+               const WinApiAdaptor &winapi);
     ~OHMMonitor();
 
     // this call actually starts OHM if necessary and returns

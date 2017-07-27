@@ -29,13 +29,16 @@
 
 std::unique_ptr<IEventLog> open_eventlog(LPCWSTR name_or_path,
                                          bool try_vista_api,
-					 const LoggerAdaptor &logger) {
+                                         const LoggerAdaptor &logger,
+                                         const WinApiAdaptor &winapi) {
     if (try_vista_api) {
         try {
-            return std::unique_ptr<IEventLog>(new EventLogVista(name_or_path));
-        } catch (const UnsupportedException&) {
+            return std::unique_ptr<IEventLog>(
+                new EventLogVista(name_or_path, winapi));
+        } catch (const UnsupportedException &) {
             logger.crashLog("vista-style event-log api not available");
         }
     }
-    return std::unique_ptr<IEventLog>(new EventLog(name_or_path, logger));
+    return std::unique_ptr<IEventLog>(
+        new EventLog(name_or_path, logger, winapi));
 }

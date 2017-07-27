@@ -28,31 +28,31 @@
 #include "../PerfCounter.h"
 #include "../stringutil.h"
 
-SectionPerfcounter::SectionPerfcounter(const char *name, const Environment &env, LoggerAdaptor &logger)
-    : Section(name, env, logger)
-{
+SectionPerfcounter::SectionPerfcounter(const char *name, const Environment &env,
+                                       LoggerAdaptor &logger,
+                                       const WinApiAdaptor &winapi)
+    : Section(name, env, logger, winapi) {
     withSeparator(',');
 }
 
-SectionPerfcounter *SectionPerfcounter::withCounter(const wchar_t *counter)
-{
+SectionPerfcounter *SectionPerfcounter::withCounter(const wchar_t *counter) {
     _counter = counter;
     return this;
 }
 
-SectionPerfcounter *SectionPerfcounter::withToggleIfMissing()
-{
+SectionPerfcounter *SectionPerfcounter::withToggleIfMissing() {
     _toggle_if_missing = true;
     return this;
 }
 
 bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
     try {
-        int counter_id = PerfCounterObject::resolve_counter_name(_counter.c_str());
+        int counter_id =
+            PerfCounterObject::resolve_counter_name(_winapi, _counter.c_str());
         if (counter_id < 0) {
             return false;
         }
-        PerfCounterObject counter_object(counter_id);
+        PerfCounterObject counter_object(counter_id, _winapi);
         std::vector<std::wstring> instance_names =
             counter_object.instanceNames();
         std::vector<PERF_INSTANCE_DEFINITION *> instances =
@@ -72,7 +72,9 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
             }
         }
 
-        out << "instance," << to_utf8(join(counter_object.counterNames(), L",").c_str())
+        out << "instance,"
+            << to_utf8(join(counter_object.counterNames(), L",").c_str(),
+                       _winapi)
             << "\n";
         for (const auto &instance_values : value_map) {
             std::wstring instance_name = L"\"\"";
@@ -80,8 +82,9 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
                 instance_names.size()) {
                 instance_name = instance_names[instance_values.first];
             }
-            out << to_utf8(instance_name.c_str()) << ","
-                << to_utf8(join(instance_values.second, L",").c_str()) << "\n";
+            out << to_utf8(instance_name.c_str(), _winapi) << ","
+                << to_utf8(join(instance_values.second, L",").c_str(), _winapi)
+                << "\n";
         }
     } catch (const std::exception &e) {
         _logger.crashLog("Exception: %s", e.what());
@@ -89,4 +92,3 @@ bool SectionPerfcounter::produceOutputInner(std::ostream &out) {
     }
     return true;
 }
-

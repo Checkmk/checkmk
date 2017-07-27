@@ -25,18 +25,17 @@
 #ifndef SectionSkype_h
 #define SectionSkype_h
 
+#undef CreateMutex
 #include "../Section.h"
 #include "SectionGroup.h"
 
 class SectionSkype : public SectionGroup {
-
 public:
-    SectionSkype(const Environment &env, LoggerAdaptor &logger);
+    SectionSkype(const Environment &env, LoggerAdaptor &logger,
+                 const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
-
 };
 
 #endif  // SectionSkype_h
-

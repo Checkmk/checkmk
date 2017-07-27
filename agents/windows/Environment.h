@@ -28,10 +28,12 @@
 #include <string>
 
 class LoggerAdaptor;
+class WinApiAdaptor;
 
 class Environment {
 public:
-    Environment(bool use_cwd, const LoggerAdaptor &logger);
+    Environment(bool use_cwd, const LoggerAdaptor &logger,
+                const WinApiAdaptor &winapi);
     ~Environment();
 
     // TODO: this is an evil hack, but currently there is at least one global
@@ -54,41 +56,42 @@ public:
 
     std::string logwatchStatefile() const { return _logwatch_statefile; }
     std::string eventlogStatefile() const { return _eventlog_statefile; }
-    
+
 public:
-    static bool isWinNt();
+    bool isWinNt() const;
 
     // return windows version as a combined value, with major version in the
     // upper 8 bits
     // and minor in the lower bits, i.e. 0x0501 for windows xp (32-bit)
-    static uint16_t winVersion();
+    uint16_t winVersion() const;
 
 private:
-    void getAgentDirectory(char *buffer, int size, bool use_cwd);
-    void determineDirectories(bool use_cwd);
-    std::string assignDirectory(const char *name);
+    std::string determineHostname() const;
+    std::string determineCurrentDirectory() const;
+    std::string determineAgentDirectory(bool use_cwd) const;
+    std::string assignDirectory(const char *name) const;
 
 private:
     static Environment *s_Instance;
 
-    std::string _hostname;
-
-    std::string _agent_directory;
-    std::string _current_directory;
-
-    std::string _plugins_directory;
-    std::string _config_directory;
-    std::string _local_directory;
-    std::string _spool_directory;
-    std::string _state_directory;
-    std::string _temp_directory;
-    std::string _log_directory;
-    std::string _bin_directory;
-
-    std::string _logwatch_statefile;
-    std::string _eventlog_statefile;
-
     const LoggerAdaptor &_logger;
+    const WinApiAdaptor &_winapi;
+
+    const std::string _hostname;
+
+    const std::string _current_directory;
+    const std::string _agent_directory;
+    const std::string _plugins_directory;
+    const std::string _config_directory;
+    const std::string _local_directory;
+    const std::string _spool_directory;
+    const std::string _state_directory;
+    const std::string _temp_directory;
+    const std::string _log_directory;
+    const std::string _bin_directory;
+
+    const std::string _logwatch_statefile;
+    const std::string _eventlog_statefile;
 };
 
 #endif  // Environment_h

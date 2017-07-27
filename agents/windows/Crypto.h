@@ -1,14 +1,19 @@
 #ifndef Crypto_h
 #define Crypto_h
 
+#include <winsock2.h>
 #include <windows.h>
 #include <string>
 #include <vector>
+#include "WinApiAdaptor.h"
+
+class WinApiAdaptor;
 
 class Crypto {
     HCRYPTPROV _provider;
     HCRYPTKEY _key;
     ALG_ID _algorithm;
+    const WinApiAdaptor &_winapi;
 
 private:
     // algorithm can't currently be changed
@@ -27,11 +32,12 @@ private:
     };
 
 public:
-    Crypto();
+    explicit Crypto(const WinApiAdaptor &winapi);
 
-    Crypto(const std::string &password, KeyLength key_length = KEY_LEN_DEFAULT);
+    Crypto(const std::string &password, const WinApiAdaptor &winapi,
+           KeyLength key_length = KEY_LEN_DEFAULT);
 
-    Crypto(const BYTE *key, DWORD key_size);
+    Crypto(const BYTE *key, DWORD key_size, const WinApiAdaptor &winapi);
 
     ~Crypto();
 
@@ -47,6 +53,7 @@ public:
     void random(BYTE *buffer, size_t buffer_size);
 
 private:
+    void checked(BOOL result, const char *failMessage) const;
     HCRYPTPROV initContext();
     void releaseContext();
 

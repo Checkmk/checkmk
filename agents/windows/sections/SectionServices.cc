@@ -22,14 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
+typedef short SHORT;
 #include "SectionServices.h"
+#include "../WinApiAdaptor.h"
 #include "../stringutil.h"
-#include <windows.h>
+//#include "../check_mk_agent_def.h"
 
-
-SectionServices::SectionServices(const Environment &env, LoggerAdaptor &logger)
-    : Section("services", env, logger) {}
-
+SectionServices::SectionServices(const Environment &env, LoggerAdaptor &logger,
+                                 const WinApiAdaptor &winapi)
+    : Section("services", env, logger, winapi) {}
 
 // Determine the start type of a service. Unbelievable how much
 // code is needed for that...
@@ -38,21 +39,21 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
     // Query the start type of the service
     const char *start_type = "invalid1";
     SC_HANDLE schService;
-    LPQUERY_SERVICE_CONFIG lpsc;
-    schService = OpenServiceW(scm, service_name, SERVICE_QUERY_CONFIG);
+    LPQUERY_SERVICE_CONFIGW lpsc;
+    schService = _winapi.OpenServiceW(scm, service_name, SERVICE_QUERY_CONFIG);
     if (schService) {
         start_type = "invalid2";
         DWORD dwBytesNeeded, cbBufSize;
-        if (!QueryServiceConfig(schService, NULL, 0, &dwBytesNeeded)) {
+        if (!_winapi.QueryServiceConfig(schService, NULL, 0, &dwBytesNeeded)) {
             start_type = "invalid3";
-            DWORD dwError = GetLastError();
+            DWORD dwError = _winapi.GetLastError();
             if (dwError == ERROR_INSUFFICIENT_BUFFER) {
                 start_type = "invalid4";
                 cbBufSize = dwBytesNeeded;
-                lpsc =
-                    (LPQUERY_SERVICE_CONFIG)LocalAlloc(LMEM_FIXED, cbBufSize);
-                if (QueryServiceConfig(schService, lpsc, cbBufSize,
-                                       &dwBytesNeeded)) {
+                lpsc = (LPQUERY_SERVICE_CONFIGW)_winapi.LocalAlloc(LMEM_FIXED,
+                                                                   cbBufSize);
+                if (_winapi.QueryServiceConfig(schService, lpsc, cbBufSize,
+                                               &dwBytesNeeded)) {
                     switch (lpsc->dwStartType) {
                         case SERVICE_AUTO_START:
                             start_type = "auto";
@@ -73,31 +74,31 @@ const char *SectionServices::serviceStartType(SC_HANDLE scm,
                             start_type = "other";
                     }
                 }
-                LocalFree(lpsc);
+                _winapi.LocalFree(lpsc);
             }
         }
-        CloseServiceHandle(schService);
+        _winapi.CloseServiceHandle(schService);
     }
     return start_type;
 }
 
 bool SectionServices::produceOutputInner(std::ostream &out) {
-    SC_HANDLE scm =
-        OpenSCManager(0, 0, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
+    SC_HANDLE scm = _winapi.OpenSCManager(
+        0, 0, SC_MANAGER_CONNECT | SC_MANAGER_ENUMERATE_SERVICE);
     if (scm != INVALID_HANDLE_VALUE) {
         DWORD bytes_needed = 0;
         DWORD num_services = 0;
         // first determine number of bytes needed
-        EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
-                              SERVICE_STATE_ALL, NULL, 0, &bytes_needed,
-                              &num_services, 0, 0);
-        if (GetLastError() == ERROR_MORE_DATA && bytes_needed > 0) {
+        _winapi.EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
+                                      SERVICE_STATE_ALL, NULL, 0, &bytes_needed,
+                                      &num_services, 0, 0);
+        if (_winapi.GetLastError() == ERROR_MORE_DATA && bytes_needed > 0) {
             BYTE *buffer = (BYTE *)malloc(bytes_needed);
             if (buffer) {
-                if (EnumServicesStatusExW(scm, SC_ENUM_PROCESS_INFO,
-                                          SERVICE_WIN32, SERVICE_STATE_ALL,
-                                          buffer, bytes_needed, &bytes_needed,
-                                          &num_services, 0, 0)) {
+                if (_winapi.EnumServicesStatusExW(
+                        scm, SC_ENUM_PROCESS_INFO, SERVICE_WIN32,
+                        SERVICE_STATE_ALL, buffer, bytes_needed, &bytes_needed,
+                        &num_services, 0, 0)) {
                     ENUM_SERVICE_STATUS_PROCESSW *service =
                         (ENUM_SERVICE_STATUS_PROCESSW *)buffer;
                     for (unsigned i = 0; i < num_services; i++) {
@@ -141,17 +142,16 @@ bool SectionServices::produceOutputInner(std::ostream &out) {
                             if (*w == L' ') *w = L'_';
                         }
 
-                        out << to_utf8(service->lpServiceName) << " " << state_name
-                            << "/" << start_type << " "
-                            << to_utf8(service->lpDisplayName) << "\n";
+                        out << to_utf8(service->lpServiceName, _winapi) << " "
+                            << state_name << "/" << start_type << " "
+                            << to_utf8(service->lpDisplayName, _winapi) << "\n";
                         ++service;
                     }
                 }
                 free(buffer);
             }
         }
-        CloseServiceHandle(scm);
+        _winapi.CloseServiceHandle(scm);
     }
     return true;
 }
-

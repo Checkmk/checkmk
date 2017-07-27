@@ -26,17 +26,40 @@
 #define CrashHandler_h
 
 #include <string>
-#include <windows.h>
+
+#ifndef WINAPI
+
+#if defined(_WIN32) || defined(_WIN64)
+#define WINAPI __attribute__((__stdcall__))
+#else
+#define WINAPI
+#endif  // _WIN32 || _WIN64
+
+#endif  // WINAPI
+
+typedef long LONG;
+typedef void *PVOID;
+
+#if defined(_WIN64)
+typedef int64_t LONG_PTR;
+#else
+typedef long LONG_PTR;
+#endif
+
+typedef struct _EXCEPTION_POINTERS *LPEXCEPTION_POINTERS;
+typedef struct _CONTEXT CONTEXT;
 
 class LoggerAdaptor;
+class WinApiAdaptor;
 
 class CrashHandler {
     const LoggerAdaptor &_logger;
-    
+    const WinApiAdaptor &_winapi;
+
 public:
-    explicit CrashHandler(const LoggerAdaptor &logger);
-    CrashHandler(const CrashHandler&) = delete;
-    CrashHandler& operator=(const CrashHandler&) = delete;
+    CrashHandler(const LoggerAdaptor &logger, const WinApiAdaptor &winapi);
+    CrashHandler(const CrashHandler &) = delete;
+    CrashHandler &operator=(const CrashHandler &) = delete;
 
     LONG WINAPI handleCrash(LPEXCEPTION_POINTERS ptrs) const;
 
@@ -44,7 +67,7 @@ private:
 #ifdef __x86_64
     void dumpRegisters(CONTEXT *c) const;
     void logBacktrace(PVOID exc_address) const;
-#endif // __x86_64
+#endif  // __x86_64
 };
 
 #endif  // CrashHandler_h

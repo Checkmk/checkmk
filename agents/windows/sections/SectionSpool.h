@@ -25,17 +25,18 @@
 #ifndef SectionSpool_h
 #define SectionSpool_h
 
+#undef CreateMutex
 #include "../Section.h"
 
 class SectionSpool : public Section {
 public:
-    SectionSpool(const Environment &env, LoggerAdaptor &logger);
+    SectionSpool(const Environment &env, LoggerAdaptor &logger,
+                 const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
-private:
 
+private:
 };
 
 #endif  // SectionSpool_h
-

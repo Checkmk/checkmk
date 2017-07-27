@@ -25,13 +25,13 @@
 #ifndef Thread_h
 #define Thread_h
 
-#include <winsock2.h>
 #include <functional>
 #include <memory>
 #include "types.h"
 
 class Environment;
 class LoggerAdaptor;
+class WinApiAdaptor;
 
 struct ThreadData {
     time_t push_until;
@@ -51,6 +51,7 @@ private:
     ThreadFunc _func;
     HANDLE _thread_handle{INVALID_HANDLE_VALUE};
     void *_data;
+    const WinApiAdaptor &_winapi;
 
 private:
     Thread(const Thread &) = delete;
@@ -59,8 +60,8 @@ private:
 public:
     // the caller keeps ownership
     template <typename T>
-    Thread(ThreadFunc func, T &data)
-        : _func(func), _data(static_cast<void *>(&data)) {}
+    Thread(ThreadFunc func, T &data, const WinApiAdaptor &winapi)
+        : _func(func), _data(static_cast<void *>(&data)), _winapi(winapi) {}
 
     ~Thread();
 

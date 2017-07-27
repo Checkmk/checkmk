@@ -23,9 +23,10 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionDF.h"
-#include "../stringutil.h"
+#include <cstring>
 #include <iomanip>
-
+#include "../WinApiAdaptor.h"
+#include "../stringutil.h"
 
 void char_replace(char what, char into, char *in) {
     while (*in) {
@@ -34,28 +35,28 @@ void char_replace(char what, char into, char *in) {
     }
 }
 
-
-SectionDF::SectionDF(const Environment &env, LoggerAdaptor &logger)
-    : Section("df", env, logger)
-{
+SectionDF::SectionDF(const Environment &env, LoggerAdaptor &logger,
+                     const WinApiAdaptor &winapi)
+    : Section("df", env, logger, winapi) {
     withSeparator('\t');
 }
 
 void SectionDF::output_filesystem(std::ostream &out, char *volid) {
     static const int KiloByte = 1024;
 
-    TCHAR fsname[128];
-    TCHAR volume[512];
+    char fsname[128];
+    char volume[512];
     DWORD dwSysFlags = 0;
-    if (!GetVolumeInformation(volid, volume, sizeof(volume), 0, 0, &dwSysFlags,
-                              fsname, sizeof(fsname)))
+    if (!_winapi.GetVolumeInformation(volid, volume, sizeof(volume), 0, 0,
+                                      &dwSysFlags, fsname, sizeof(fsname)))
         fsname[0] = 0;
 
     ULARGE_INTEGER free_avail, total, free;
     free_avail.QuadPart = 0;
     total.QuadPart = 0;
     free.QuadPart = 0;
-    int returnvalue = GetDiskFreeSpaceEx(volid, &free_avail, &total, &free);
+    int returnvalue =
+        _winapi.GetDiskFreeSpaceEx(volid, &free_avail, &total, &free);
     if (returnvalue > 0) {
         double perc_used = 0;
         if (total.QuadPart > 0)
@@ -66,42 +67,39 @@ void SectionDF::output_filesystem(std::ostream &out, char *volid) {
         else
             strncpy(volume, volid, sizeof(volume));
 
-        out << volume << "\t"
-            << fsname << "\t"
-            << (total.QuadPart / KiloByte) << "\t"
-            << (total.QuadPart - free_avail.QuadPart) / KiloByte << "\t"
-            << (free_avail.QuadPart / KiloByte) << "\t"
-            << std::fixed << std::setprecision(0) << perc_used << "\t"
-            << volid
-            << "\n";
+        out << volume << "\t" << fsname << "\t" << (total.QuadPart / KiloByte)
+            << "\t" << (total.QuadPart - free_avail.QuadPart) / KiloByte << "\t"
+            << (free_avail.QuadPart / KiloByte) << "\t" << std::fixed
+            << std::setprecision(0) << perc_used << "\t" << volid << "\n";
     }
 }
 
 void SectionDF::output_mountpoints(std::ostream &out, char *volid) {
     char mountpoint[512];
-    HANDLE hPt =
-        FindFirstVolumeMountPoint(volid, mountpoint, sizeof(mountpoint));
+    HANDLE hPt = _winapi.FindFirstVolumeMountPoint(volid, mountpoint,
+                                                   sizeof(mountpoint));
     if (hPt != INVALID_HANDLE_VALUE) {
         while (true) {
-            TCHAR combined_path[1024];
+            char combined_path[1024];
             snprintf(combined_path, sizeof(combined_path), "%s%s", volid,
                      mountpoint);
             output_filesystem(out, combined_path);
-            if (!FindNextVolumeMountPoint(hPt, mountpoint, sizeof(mountpoint)))
+            if (!_winapi.FindNextVolumeMountPoint(hPt, mountpoint,
+                                                  sizeof(mountpoint)))
                 break;
         }
-        FindVolumeMountPointClose(hPt);
+        _winapi.FindVolumeMountPointClose(hPt);
     }
 }
 
 bool SectionDF::produceOutputInner(std::ostream &out) {
-    TCHAR buffer[4096];
-    DWORD len = GetLogicalDriveStrings(sizeof(buffer), buffer);
+    char buffer[4096];
+    DWORD len = _winapi.GetLogicalDriveStrings(sizeof(buffer), buffer);
 
-    TCHAR *end = buffer + len;
-    TCHAR *drive = buffer;
+    char *end = buffer + len;
+    char *drive = buffer;
     while (drive < end) {
-        UINT drvType = GetDriveType(drive);
+        UINT drvType = _winapi.GetDriveType(drive);
         if (drvType == DRIVE_FIXED)  // only process local harddisks
         {
             output_filesystem(out, drive);
@@ -131,4 +129,3 @@ bool SectionDF::produceOutputInner(std::ostream &out) {
 
     return true;
 }
-

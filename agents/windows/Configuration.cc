@@ -22,18 +22,17 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <shlwapi.h>
+#include "Configuration.h"
+#include <inttypes.h>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <regex>
-#include "Configuration.h"
-#include "Environment.h"
 #include "Configurable.h"
+#include "Environment.h"
 #include "PerfCounter.h"
 #include "stringutil.h"
 #define __STDC_FORMAT_MACROS
-#include <inttypes.h>
 
 Configuration::Configuration(const Environment &env) : _environment(env) {}
 

@@ -25,23 +25,24 @@
 #ifndef SectionMRPE_h
 #define SectionMRPE_h
 
-#include "../Section.h"
 #include "../Configurable.h"
+#include "../Section.h"
 
 class SectionMRPE : public Section {
     ListConfigurable<mrpe_entries_t> _entries;
     KeyedListConfigurable<std::string> _includes;
 
     mrpe_entries_t _included_entries;
+
 public:
-    SectionMRPE(Configuration &config, LoggerAdaptor &logger);
+    SectionMRPE(Configuration &config, LoggerAdaptor &logger,
+                const WinApiAdaptor &winapi);
 
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
-private:
 
+private:
     void updateIncludes();
 };
 
 #endif  // SectionMRPE_h
-

@@ -27,15 +27,14 @@
 
 #include <limits.h>
 #include <stdint.h>
-#include <windows.h>
 #include <functional>
 #include <stdexcept>
 #include <string>
 #include <vector>
-#include "stringutil.h"
+#undef CreateMutex
+#include "WinApiAdaptor.h"
 #undef _WIN32_WINNT
 #define _WIN32_WINNT 0x0600
-#include <winevt.h>
 
 #if (__SIZEOF_POINTER__ == 8)
 #define PRIdword "d"
@@ -46,6 +45,12 @@
 #define PRIudword "lu"
 #define PRIdtime "ld"
 #endif
+
+#ifndef INVALID_HANDLE_VALUE
+#define INVALID_HANDLE_VALUE ((HANDLE)(LONG_PTR)-1)
+#endif  // INVALID_HANDLE_VALUE
+
+typedef short SHORT;
 
 static const unsigned int SECTION_CHECK_MK = 0x00000001;
 static const unsigned int SECTION_UPTIME = 0x00000002;
@@ -78,15 +83,16 @@ static const unsigned int SECTION_WINPERF =
     SECTION_WINPERF_CONFIG;
 
 template <typename T>
-T from_string(const std::string &input);
+T from_string(const WinApiAdaptor &winapi, const std::string &input);
 
 template <>
-bool from_string<bool>(const std::string &value);
+bool from_string<bool>(const WinApiAdaptor &winapi, const std::string &value);
 template <>
-int from_string<int>(const std::string &value);
+int from_string<int>(const WinApiAdaptor &winapi, const std::string &value);
 
 template <>
-std::string from_string<std::string>(const std::string &value);
+std::string from_string<std::string>(const WinApiAdaptor &winapi,
+                                     const std::string &value);
 
 // Needed for only_from
 struct ipspec {
@@ -105,7 +111,8 @@ struct ipspec {
 };
 
 template <>
-ipspec *from_string<ipspec *>(const std::string &value);
+ipspec *from_string<ipspec *>(const WinApiAdaptor &winapi,
+                              const std::string &value);
 
 // Configuration for section [winperf]
 struct winperf_counter {
@@ -114,7 +121,8 @@ struct winperf_counter {
 };
 
 template <>
-winperf_counter *from_string<winperf_counter *>(const std::string &value);
+winperf_counter *from_string<winperf_counter *>(const WinApiAdaptor &winapi,
+                                                const std::string &value);
 
 // Configuration entries from [logwatch] for individual logfiles
 struct eventlog_config_entry {
@@ -133,7 +141,7 @@ struct eventlog_config_entry {
 
 template <>
 eventlog_config_entry from_string<eventlog_config_entry>(
-    const std::string &value);
+    const WinApiAdaptor &winapi, const std::string &value);
 
 std::ostream &operator<<(std::ostream &out, const eventlog_config_entry &val);
 
@@ -145,14 +153,14 @@ enum script_execution_mode {
 
 template <>
 script_execution_mode from_string<script_execution_mode>(
-    const std::string &value);
+    const WinApiAdaptor &winapi, const std::string &value);
 
 // How delayed scripts are executed
 enum script_async_execution { PARALLEL, SEQUENTIAL };
 
 template <>
 script_async_execution from_string<script_async_execution>(
-    const std::string &value);
+    const WinApiAdaptor &winapi, const std::string &value);
 
 struct retry_config {
     char *pattern;
@@ -219,7 +227,8 @@ struct mrpe_entry {
 };
 
 template <>
-mrpe_entry *from_string<mrpe_entry *>(const std::string &value);
+mrpe_entry *from_string<mrpe_entry *>(const WinApiAdaptor &winapi,
+                                      const std::string &value);
 
 // Our memory of what event logs we know and up to
 // which record entry we have seen its messages so
@@ -288,14 +297,17 @@ private:
 
 class Mutex {
     HANDLE _mutex;
+    const WinApiAdaptor &_winapi;
 
 public:
-    Mutex() { _mutex = CreateMutex(NULL, FALSE, NULL); }
-    ~Mutex() { CloseHandle(_mutex); }
+    explicit Mutex(const WinApiAdaptor &winapi) : _winapi(winapi) {
+        _mutex = _winapi.CreateMutex(NULL, FALSE, NULL);
+    }
+    ~Mutex() { _winapi.CloseHandle(_mutex); }
 
-    void lock() { WaitForSingleObject(_mutex, INFINITE); }
+    void lock() { _winapi.WaitForSingleObject(_mutex, INFINITE); }
 
-    void unlock() { ::ReleaseMutex(_mutex); }
+    void unlock() { _winapi.ReleaseMutex(_mutex); }
 };
 
 class MutexLock {
@@ -312,13 +324,15 @@ public:
 // FIXME: duplicate of ManagedHandle?
 class WinHandle {
 public:
-    WinHandle(HANDLE hdl = INVALID_HANDLE_VALUE) : _handle(hdl) {}
+    explicit WinHandle(const WinApiAdaptor &winapi,
+                       HANDLE hdl = INVALID_HANDLE_VALUE)
+        : _handle(hdl), _winapi(winapi) {}
 
     WinHandle(const WinHandle &reference) = delete;
 
     ~WinHandle() {
         if (_handle != INVALID_HANDLE_VALUE) {
-            ::CloseHandle(_handle);
+            _winapi.CloseHandle(_handle);
         }
     }
 
@@ -326,7 +340,7 @@ public:
 
     WinHandle &operator=(HANDLE hdl) {
         if (_handle != INVALID_HANDLE_VALUE) {
-            ::CloseHandle(_handle);
+            _winapi.CloseHandle(_handle);
         }
         _handle = hdl;
         return *this;
@@ -338,12 +352,7 @@ public:
 
 private:
     HANDLE _handle;
-};
-
-struct win_exception : public std::runtime_error {
-    win_exception(const std::string &msg, DWORD error_code = ::GetLastError())
-        : std::runtime_error(msg + "; " + get_win_error_as_string(error_code)) {
-    }
+    const WinApiAdaptor &_winapi;
 };
 
 class OnScopeExit {
@@ -360,11 +369,12 @@ inline uint64_t to_u64(DWORD low, DWORD high) {
 
 class ManagedHandle {
 public:
-    ManagedHandle(HANDLE handle) : _handle(handle) {}
+    ManagedHandle(HANDLE handle, const WinApiAdaptor &winapi)
+        : _handle(handle), _winapi(winapi) {}
 
     ~ManagedHandle() {
         if (_handle != nullptr) {
-            CloseHandle(_handle);
+            _winapi.CloseHandle(_handle);
             _handle = nullptr;
         }
     }
@@ -375,7 +385,7 @@ public:
         delete;  // Delete assignment operator
 
     ManagedHandle(ManagedHandle &&from)
-        : _handle(from._handle) {  // Move constructor
+        : _handle(from._handle), _winapi(from._winapi) {  // Move constructor
         from._handle = nullptr;
     }
 
@@ -394,6 +404,7 @@ public:
 
 private:
     HANDLE _handle;
+    const WinApiAdaptor &_winapi;
 };
 
 #endif  // types_h

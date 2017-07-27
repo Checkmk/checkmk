@@ -23,19 +23,22 @@
 // Boston, MA 02110-1301 USA.
 
 #include "wmiHelper.h"
+
 #include <comdef.h>
 #include <oleauto.h>
 #include <ios>
 #include <iostream>
 #include <sstream>
 #include <string>
+
 #include "LoggerAdaptor.h"
 #include "stringutil.h"
 
 using namespace wmi;
 using namespace std;
 
-std::string ComException::resolveError(HRESULT result) {
+std::string ComException::resolveError(HRESULT result,
+                                       const WinApiAdaptor &winapi) {
     switch (static_cast<ULONG>(result)) {
         case WBEM_E_INVALID_NAMESPACE:
             return string("Invalid Namespace");
@@ -46,20 +49,22 @@ std::string ComException::resolveError(HRESULT result) {
         case WBEM_E_INVALID_QUERY:
             return string("Invalid Query");
         default:
-            return to_utf8(_com_error(result, getErrorInfo()).ErrorMessage());
+            return to_utf8(
+                _com_error(result, getErrorInfo(winapi)).ErrorMessage());
     }
 }
 
-ComException::ComException(const string &message, HRESULT result)
-    : runtime_error(message + string(": ") + resolveError(result) +
+ComException::ComException(const string &message, HRESULT result,
+                           const WinApiAdaptor &winapi)
+    : runtime_error(message + string(": ") + resolveError(result, winapi) +
                     string(" (") + toStringHex(result) + string(")")) {}
 
 ComTypeException::ComTypeException(const string &message)
     : runtime_error(message) {}
 
-IErrorInfo *ComException::getErrorInfo() {
+IErrorInfo *ComException::getErrorInfo(const WinApiAdaptor &winapi) {
     IErrorInfo *result;
-    GetErrorInfo(0, &result);
+    winapi.GetErrorInfo(0, &result);
     return result;
 }
 
@@ -69,9 +74,10 @@ string ComException::toStringHex(HRESULT res) {
     return out.str();
 }
 
-Variant::Variant(const VARIANT &val) : _value(val) {}
+Variant::Variant(const VARIANT &val, const WinApiAdaptor &winapi)
+    : _value(val), _winapi(winapi) {}
 
-Variant::~Variant() { VariantClear(&_value); }
+Variant::~Variant() { _winapi.VariantClear(&_value); }
 
 void releaseInterface(IUnknown *ptr) {
     if (ptr != nullptr) {
@@ -79,11 +85,12 @@ void releaseInterface(IUnknown *ptr) {
     }
 }
 
-ObjectWrapper::ObjectWrapper(IWbemClassObject *object)
-    : _current(object, releaseInterface) {}
+ObjectWrapper::ObjectWrapper(IWbemClassObject *object,
+                             const WinApiAdaptor &winapi)
+    : _current(object, releaseInterface), _winapi(winapi) {}
 
 ObjectWrapper::ObjectWrapper(const ObjectWrapper &reference)
-    : _current(reference._current) {}
+    : _current(reference._current), _winapi(reference._winapi) {}
 
 bool ObjectWrapper::contains(const wchar_t *key) const {
     VARIANT value;
@@ -92,7 +99,7 @@ bool ObjectWrapper::contains(const wchar_t *key) const {
         return false;
     }
     bool not_null = value.vt != VT_NULL;
-    VariantClear(&value);
+    _winapi.VariantClear(&value);
     return not_null;
 }
 
@@ -103,7 +110,7 @@ int ObjectWrapper::typeId(const wchar_t *key) const {
         return 0;
     }
     int type_id = value.vt;
-    VariantClear(&value);
+    _winapi.VariantClear(&value);
     return type_id;
 }
 
@@ -114,22 +121,24 @@ VARIANT ObjectWrapper::getVarByKey(const wchar_t *key) const {
     HRESULT res = _current->Get(key, 0, &value, nullptr, nullptr);
     if (FAILED(res)) {
         throw ComException(
-            std::string("Failed to retrieve key: ") + to_utf8(key), res);
+            std::string("Failed to retrieve key: ") + to_utf8(key, _winapi),
+            res, _winapi);
     }
 
     return value;
 }
 
-Result::Result()
-    : ObjectWrapper(nullptr), _enumerator(nullptr, releaseInterface) {}
+Result::Result(const WinApiAdaptor &winapi)
+    : ObjectWrapper(nullptr, winapi), _enumerator(nullptr, releaseInterface) {}
 
 Result::Result(const Result &reference)
     : ObjectWrapper(reference)
     , _enumerator(reference._enumerator)
     , _last_error(reference._last_error) {}
 
-Result::Result(IEnumWbemClassObject *enumerator)
-    : ObjectWrapper(nullptr), _enumerator(enumerator, releaseInterface) {
+Result::Result(IEnumWbemClassObject *enumerator, const WinApiAdaptor &winapi)
+    : ObjectWrapper(nullptr, winapi)
+    , _enumerator(enumerator, releaseInterface) {
     if (!next()) {
         // if the first enumeration fails the result is empty
         // we abstract away two possible reasons:
@@ -162,21 +171,21 @@ vector<wstring> Result::names() const {
         nullptr, WBEM_FLAG_ALWAYS | WBEM_FLAG_NONSYSTEM_ONLY, nullptr, &names);
 
     if (FAILED(res)) {
-        throw ComException("Failed to retrieve field names", res);
+        throw ComException("Failed to retrieve field names", res, _winapi);
     }
 
     long lLower, lUpper;
     BSTR propName = nullptr;
-    SafeArrayGetLBound(names, 1, &lLower);
-    SafeArrayGetUBound(names, 1, &lUpper);
+    _winapi.SafeArrayGetLBound(names, 1, &lLower);
+    _winapi.SafeArrayGetUBound(names, 1, &lUpper);
 
     for (long i = lLower; i <= lUpper; ++i) {
-        res = SafeArrayGetElement(names, &i, &propName);
+        res = _winapi.SafeArrayGetElement(names, &i, &propName);
         result.push_back(wstring(propName));
-        SysFreeString(propName);
+        _winapi.SysFreeString(propName);
     }
 
-    SafeArrayDestroy(names);
+    _winapi.SafeArrayDestroy(names);
     return result;
 }
 
@@ -193,7 +202,7 @@ bool Result::next() {
     if (FAILED(res)) {
         // in this case the "current" object isn't changed to guarantee that the
         // Result remains valid
-        // throw ComException("Failed to retrieve element", res);
+        // throw ComException("Failed to retrieve element", res, _winapi);
         _last_error = res;
         return false;
     }
@@ -270,7 +279,7 @@ template <>
 string Variant::get() const {
     switch (_value.vt) {
         case VT_BSTR:
-            return to_utf8(_value.bstrVal);
+            return to_utf8(_value.bstrVal, _winapi);
         default:
             throw ComTypeException(string("wrong value type requested: ") +
                                    to_string(_value.vt));
@@ -341,24 +350,24 @@ wstring Variant::get() const {
 
 class COMManager {
 public:
-    static void init() {
+    static void init(const WinApiAdaptor &winapi) {
         // this is apparently thread safe in C++11 and in gcc even before that
         // see §6.4 in C++11 standard or §6.7 in C++14
-        static COMManager s_Instance;
+        static COMManager s_Instance(winapi);
     }
 
-    ~COMManager() { CoUninitialize(); }
+    ~COMManager() { _winapi.CoUninitialize(); }
 
 private:
-    COMManager() {
+    explicit COMManager(const WinApiAdaptor &winapi) : _winapi(winapi) {
         // Dr.Memory reports a memory leak here, despite the fact CoUninitialize
         // does get called. Am I doing something wrong?
-        HRESULT res = CoInitializeEx(0, COINIT_MULTITHREADED);
+        HRESULT res = _winapi.CoInitializeEx(0, COINIT_MULTITHREADED);
         if (FAILED(res)) {
-            throw ComException("Failed to initialize COM", res);
+            throw ComException("Failed to initialize COM", res, _winapi);
         }
 
-        res = CoInitializeSecurity(
+        res = _winapi.CoInitializeSecurity(
             nullptr,                      // security descriptor
             -1,                           // authentication
             nullptr,                      // authentication services
@@ -370,15 +379,18 @@ private:
             nullptr                       // reserved
             );
         if (FAILED(res)) {
-            throw ComException("Failed to initialize COM security", res);
+            throw ComException("Failed to initialize COM security", res,
+                               _winapi);
         }
     }
 
 private:
+    const WinApiAdaptor &_winapi;
 };
 
-Helper::Helper(LPCWSTR path) : _locator(nullptr), _path(path) {
-    COMManager::init();
+Helper::Helper(const WinApiAdaptor &winapi, LPCWSTR path)
+    : _locator(nullptr), _path(path), _winapi(winapi) {
+    COMManager::init(winapi);
 
     _locator = getWBEMLocator();
     _services = connectServer(_locator);
@@ -396,11 +408,12 @@ Helper::~Helper() {
 IWbemLocator *Helper::getWBEMLocator() {
     IWbemLocator *locator = nullptr;
 
-    HRESULT res = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
-                                   IID_IWbemLocator, (LPVOID *)&locator);
+    HRESULT res =
+        _winapi.CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
+                                 IID_IWbemLocator, (LPVOID *)&locator);
 
     if (FAILED(res)) {
-        throw ComException("Failed to create locator object", res);
+        throw ComException("Failed to create locator object", res, _winapi);
     }
     return locator;
 }
@@ -408,36 +421,36 @@ IWbemLocator *Helper::getWBEMLocator() {
 IWbemServices *Helper::connectServer(IWbemLocator *locator) {
     IWbemServices *services = nullptr;
 
-    HRESULT res = locator->ConnectServer(_bstr_t(_path.c_str()),  // WMI path
-                                         nullptr,                 // user name
-                                         nullptr,   // user password
-                                         0,         // locale
-                                         0,         // security flags
-                                         0,         // authority
-                                         0,         // context object
-                                         &services  // services proxy
+    HRESULT res = locator->ConnectServer(BSTR(_path.c_str()),  // WMI path
+                                         nullptr,              // user name
+                                         nullptr,              // user password
+                                         0,                    // locale
+                                         0,                    // security flags
+                                         0,                    // authority
+                                         0,                    // context object
+                                         &services             // services proxy
                                          );
 
     if (FAILED(res)) {
-        throw ComException("Failed to connect", res);
+        throw ComException("Failed to connect", res, _winapi);
     }
     return services;
 }
 
 void Helper::setProxyBlanket(IWbemServices *services) {
-    HRESULT res =
-        CoSetProxyBlanket(services,                // the proxy to set
-                          RPC_C_AUTHN_WINNT,       // authentication service
-                          RPC_C_AUTHZ_NONE,        // authorization service
-                          nullptr,                 // server principal name
-                          RPC_C_AUTHN_LEVEL_CALL,  // authentication level
-                          RPC_C_IMP_LEVEL_IMPERSONATE,  // impersonation level
-                          nullptr,                      // client identity
-                          EOAC_NONE                     // proxy capabilities
-                          );
+    HRESULT res = _winapi.CoSetProxyBlanket(
+        services,                     // the proxy to set
+        RPC_C_AUTHN_WINNT,            // authentication service
+        RPC_C_AUTHZ_NONE,             // authorization service
+        nullptr,                      // server principal name
+        RPC_C_AUTHN_LEVEL_CALL,       // authentication level
+        RPC_C_IMP_LEVEL_IMPERSONATE,  // impersonation level
+        nullptr,                      // client identity
+        EOAC_NONE                     // proxy capabilities
+        );
 
     if (FAILED(res)) {
-        throw ComException("Failed to set proxy blanket", res);
+        throw ComException("Failed to set proxy blanket", res, _winapi);
     }
 }
 
@@ -448,28 +461,29 @@ Result Helper::query(LPCWSTR query) {
     // data is available. WBEM_FLAG_FORWARD_ONLY allows wmi to free the memory
     // of results already iterated, thus reducing memory usage
     HRESULT res = _services->ExecQuery(
-        _bstr_t(L"WQL"), _bstr_t(query),
+        BSTR(L"WQL"), BSTR(query),
         WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr,
         &enumerator);
 
     if (FAILED(res)) {
-        throw ComException(
-            string("Failed to execute query \"") + to_utf8(query) + "\"", res);
+        throw ComException(string("Failed to execute query \"") +
+                               to_utf8(query, _winapi) + "\"",
+                           res, _winapi);
     }
-    return Result(enumerator);
+    return Result(enumerator, _winapi);
 }
 
 Result Helper::getClass(LPCWSTR className) {
     IEnumWbemClassObject *enumerator = nullptr;
     HRESULT res = _services->CreateInstanceEnum(
-        _bstr_t(className),
-        WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY, nullptr,
-        &enumerator);
+        BSTR(className), WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+        nullptr, &enumerator);
     if (FAILED(res)) {
-        throw ComException(
-            string("Failed to enum class \"") + to_utf8(className) + "\"", res);
+        throw ComException(string("Failed to enum class \"") +
+                               to_utf8(className, _winapi) + "\"",
+                           res, _winapi);
     }
-    return Result(enumerator);
+    return Result(enumerator, _winapi);
 }
 
 ObjectWrapper Helper::call(ObjectWrapper &result, LPCWSTR method) {
@@ -480,19 +494,19 @@ ObjectWrapper Helper::call(ObjectWrapper &result, LPCWSTR method) {
     BSTR className;
     HRESULT res = result._current->GetMethodOrigin(method, &className);
     if (FAILED(res)) {
-        throw ComException(
-            string("Failed to determine method origin: ") + to_utf8(method),
-            res);
+        throw ComException(string("Failed to determine method origin: ") +
+                               to_utf8(method, _winapi),
+                           res, _winapi);
     }
 
     // please don't ask me why ExecMethod needs the method name in a writable
     // buffer...
-    BSTR methodName = SysAllocString(method);
+    BSTR methodName = _winapi.SysAllocString(method);
 
     res = _services->ExecMethod(className, methodName, 0, nullptr,
                                 result._current.get(), &outParams, nullptr);
 
-    SysFreeString(methodName);
+    _winapi.SysFreeString(methodName);
 
-    return ObjectWrapper(outParams);
+    return ObjectWrapper(outParams, _winapi);
 }

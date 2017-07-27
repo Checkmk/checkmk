@@ -25,23 +25,24 @@
 #ifndef ListenSocket_h
 #define ListenSocket_h
 
-#include <winsock2.h>
-#include <ws2ipdef.h>
 #include <string>
 #include "types.h"
 
 class LoggerAdaptor;
+class WinApiAdaptor;
 
 class ListenSocket {
+    const LoggerAdaptor &_logger;
+    const WinApiAdaptor &_winapi;
     SOCKET _socket;
     only_from_t _source_whitelist;
     bool _supports_ipv4;
     bool _use_ipv6;
-    const LoggerAdaptor &_logger;
 
 public:
     ListenSocket(int port, const only_from_t &source_whitelist,
-                 bool supportIPV6, const LoggerAdaptor &logger);
+                 bool supportIPV6, const LoggerAdaptor &logger,
+                 const WinApiAdaptor &winapi);
     ~ListenSocket();
 
     bool supportsIPV4() const;
@@ -51,13 +52,14 @@ public:
 
     sockaddr_storage address(SOCKET connection) const;
 
-    static std::string readableIP(SOCKET connection);
+    std::string readableIP(SOCKET connection) const;
     static std::string readableIP(const sockaddr_storage *address);
 
 private:
     SOCKET init_listen_socket(int port);
     bool check_only_from(sockaddr *ip);
     sockaddr *create_sockaddr(int *addr_len);
+    SOCKET RemoveSocketInheritance(SOCKET oldsocket) const;
 };
 
 #endif  // ListenSocket_h

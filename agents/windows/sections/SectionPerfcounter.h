@@ -28,6 +28,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#undef CreateMutex
 #include "../Section.h"
 
 class SectionPerfcounter : public Section {
@@ -36,14 +37,14 @@ class SectionPerfcounter : public Section {
     time_t _disabled_until{0};
 
 public:
-    SectionPerfcounter(const char *name, const Environment &env, LoggerAdaptor &logger);
+    SectionPerfcounter(const char *name, const Environment &env,
+                       LoggerAdaptor &logger, const WinApiAdaptor &winapi);
 
     SectionPerfcounter *withCounter(const wchar_t *counter);
     SectionPerfcounter *withToggleIfMissing();
+
 protected:
     virtual bool produceOutputInner(std::ostream &out) override;
-
 };
 
 #endif  // SectionPerfcounter_h
-

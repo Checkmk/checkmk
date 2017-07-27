@@ -24,39 +24,42 @@
 
 #include "OHMMonitor.h"
 #include "LoggerAdaptor.h"
+#include "WinApiAdaptor.h"
 #include "types.h"
 
-OHMMonitor::OHMMonitor(const std::string &bin_path, const LoggerAdaptor &logger)
+OHMMonitor::OHMMonitor(const std::string &bin_path, const LoggerAdaptor &logger,
+                       const WinApiAdaptor &winapi)
     : _exe_path(bin_path + "\\OpenHardwareMonitorCLI.exe")
-    , _logger(logger) {
-    _available =
-        ::GetFileAttributesA(_exe_path.c_str()) != INVALID_FILE_ATTRIBUTES;
+    , _logger(logger)
+    , _winapi(winapi) {
+    _available = (_winapi.GetFileAttributes(_exe_path.c_str()) !=
+                  INVALID_FILE_ATTRIBUTES);
 }
 
 OHMMonitor::~OHMMonitor() {
     if (_current_process != INVALID_HANDLE_VALUE) {
         DWORD exitCode = 0;
-        if (!::GetExitCodeProcess(_current_process, &exitCode)) {
+        if (!_winapi.GetExitCodeProcess(_current_process, &exitCode)) {
             // invalid handle
-            ::CloseHandle(_current_process);
+            _winapi.CloseHandle(_current_process);
         } else {
             if (exitCode == STILL_ACTIVE) {
                 // shut down ohm process
-                ::TerminateProcess(_current_process, 0);
+                _winapi.TerminateProcess(_current_process, 0);
             }
-            ::CloseHandle(_current_process);
+            _winapi.CloseHandle(_current_process);
         }
     }
 }
 
-HANDLE dev_null() {
+HANDLE dev_null(const WinApiAdaptor &winapi) {
     SECURITY_ATTRIBUTES secattr = {};
     secattr.nLength = sizeof(SECURITY_ATTRIBUTES);
     secattr.lpSecurityDescriptor = NULL;
     secattr.bInheritHandle = TRUE;
-    return ::CreateFile(TEXT("nul:"), GENERIC_READ | GENERIC_WRITE,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE, &secattr,
-                        OPEN_EXISTING, 0, nullptr);
+    return winapi.CreateFile("nul:", GENERIC_READ | GENERIC_WRITE,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE, &secattr,
+                             OPEN_EXISTING, 0, nullptr);
 }
 
 bool OHMMonitor::checkAvailabe() {
@@ -66,40 +69,40 @@ bool OHMMonitor::checkAvailabe() {
 
     if (_current_process != INVALID_HANDLE_VALUE) {
         DWORD exitCode = 0;
-        if (!::GetExitCodeProcess(_current_process, &exitCode)) {
+        if (!_winapi.GetExitCodeProcess(_current_process, &exitCode)) {
             // handle invalid???
             _logger.crashLog("ohm process handle invalid");
-            ::CloseHandle(_current_process);
+            _winapi.CloseHandle(_current_process);
             _current_process = INVALID_HANDLE_VALUE;
         } else {
             if (exitCode != STILL_ACTIVE) {
                 _logger.crashLog("OHM process ended with exit code %" PRIudword,
-                          exitCode);
-                ::CloseHandle(_current_process);
+                                 exitCode);
+                _winapi.CloseHandle(_current_process);
                 _current_process = INVALID_HANDLE_VALUE;
             }
         }
     }
 
     if (_current_process == INVALID_HANDLE_VALUE) {
-        STARTUPINFOA si = {};
-        si.cb = sizeof(STARTUPINFOA);
+        STARTUPINFO si = {};
+        si.cb = sizeof(STARTUPINFO);
         si.dwFlags |= STARTF_USESTDHANDLES;
-        si.hStdOutput = si.hStdError = dev_null();
+        si.hStdOutput = si.hStdError = dev_null(_winapi);
 
-        OnScopeExit close_stdout([&si]() { CloseHandle(si.hStdOutput); });
+        OnScopeExit close_stdout([&]() { _winapi.CloseHandle(si.hStdOutput); });
 
         PROCESS_INFORMATION pi = {};
 
-        if (!::CreateProcessA(_exe_path.c_str(), nullptr, nullptr, nullptr,
-                              TRUE, 0, nullptr, nullptr, &si, &pi)) {
+        if (!_winapi.CreateProcess(_exe_path.c_str(), nullptr, nullptr, nullptr,
+                                   TRUE, 0, nullptr, nullptr, &si, &pi)) {
             _logger.crashLog("failed to run %s", _exe_path.c_str());
             return false;
         } else {
             _current_process = pi.hProcess;
             _logger.crashLog("started %s (pid %lu)", _exe_path.c_str(),
-                      pi.dwProcessId);
-            ::CloseHandle(pi.hThread);
+                             pi.dwProcessId);
+            _winapi.CloseHandle(pi.hThread);
         }
     }
     return true;

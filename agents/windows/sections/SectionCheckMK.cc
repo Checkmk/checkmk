@@ -23,15 +23,15 @@
 // Boston, MA 02110-1301 USA.
 
 #include "SectionCheckMK.h"
-#include "../Environment.h"
-#include "../LoggerAdaptor.h"
-#include "../stringutil.h"
 #include <algorithm>
 #include <array>
+#include <cstring>
 #include <iterator>
 #include <string>
 #include <vector>
-
+#include "../Environment.h"
+#include "../LoggerAdaptor.h"
+#include "../stringutil.h"
 
 extern const char *check_mk_version;
 
@@ -44,12 +44,11 @@ struct script_statistics_t {
     int lo_timeouts;
 } g_script_stat;
 
-
-SectionCheckMK::SectionCheckMK(Configuration &config,
-                               LoggerAdaptor &logger)
-    : Section("check_mk", config.getEnvironment(), logger)
-    , _crash_debug(config, "global", "crash_debug", false)
-    , _only_from(config, "global", "only_from")
+SectionCheckMK::SectionCheckMK(Configuration &config, LoggerAdaptor &logger,
+                               const WinApiAdaptor &winapi)
+    : Section("check_mk", config.getEnvironment(), logger, winapi)
+    , _crash_debug(config, "global", "crash_debug", false, winapi)
+    , _only_from(config, "global", "only_from", winapi)
     , _info_fields(createInfoFields()) {}
 
 std::vector<KVPair> SectionCheckMK::createInfoFields() const {
@@ -76,16 +75,15 @@ std::vector<KVPair> SectionCheckMK::createInfoFields() const {
         {"TempDirectory", _env.tempDirectory()},
         {"LogDirectory", _env.logDirectory()},
         {"SpoolDirectory", _env.spoolDirectory()},
-        {"LocalDirectory", _env.localDirectory()}
-    };
+        {"LocalDirectory", _env.localDirectory()}};
 
     if (*_crash_debug) {
-        const std::array<std::string, 3> titles{
-            "ConnectionLog", "CrashLog", "SuccessLog"};
+        const std::array<std::string, 3> titles{"ConnectionLog", "CrashLog",
+                                                "SuccessLog"};
         const auto logFilenames = _logger.getLogFilenames();
         std::transform(
-            titles.cbegin(), titles.cend(),
-            logFilenames.cbegin(), std::back_inserter(info_fields),
+            titles.cbegin(), titles.cend(), logFilenames.cbegin(),
+            std::back_inserter(info_fields),
             [](const std::string &title, const std::string &filename) {
                 return KVPair(title, filename);
             });
@@ -95,7 +93,6 @@ std::vector<KVPair> SectionCheckMK::createInfoFields() const {
 }
 
 bool SectionCheckMK::produceOutputInner(std::ostream &out) {
-
     // output static fields
     for (const auto &kv : _info_fields) {
         out << kv.first << ": " << kv.second << "\n";
@@ -103,14 +100,10 @@ bool SectionCheckMK::produceOutputInner(std::ostream &out) {
 
     out << "ScriptStatistics:"
         << " Plugin"
-        << " C:" << g_script_stat.pl_count
-        << " E:" << g_script_stat.pl_errors
-        << " T:" << g_script_stat.pl_timeouts
-        << " Local"
-        << " C:" << g_script_stat.lo_count
-        << " E:" << g_script_stat.lo_errors
-        << " T:" << g_script_stat.lo_timeouts
-        << "\n";
+        << " C:" << g_script_stat.pl_count << " E:" << g_script_stat.pl_errors
+        << " T:" << g_script_stat.pl_timeouts << " Local"
+        << " C:" << g_script_stat.lo_count << " E:" << g_script_stat.lo_errors
+        << " T:" << g_script_stat.lo_timeouts << "\n";
 
     // reset script statistics for next round
     memset(&g_script_stat, 0, sizeof(g_script_stat));
@@ -126,8 +119,7 @@ bool SectionCheckMK::produceOutputInner(std::ostream &out) {
                     << join(is->ip.v6.address, is->ip.v6.address + 7, ":")
                     << "/" << is->bits;
             } else {
-                out << " "
-                    << (is->ip.v4.address & 0xff) << "."
+                out << " " << (is->ip.v4.address & 0xff) << "."
                     << (is->ip.v4.address >> 8 & 0xff) << "."
                     << (is->ip.v4.address >> 16 & 0xff) << "."
                     << (is->ip.v4.address >> 24 & 0xff) << "/" << is->bits;
@@ -136,4 +128,3 @@ bool SectionCheckMK::produceOutputInner(std::ostream &out) {
     }
     return true;
 }
-

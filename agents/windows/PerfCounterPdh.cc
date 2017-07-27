@@ -25,11 +25,10 @@
 #include "PerfCounterPdh.h"
 #include <pdhmsg.h>
 #include <stdio.h>
-#include <windows.h>
 #include <ctime>
 #include <sstream>
 #include "PerfCounterCommon.h"
-#include "stringutil.h"
+#include "win_error.h"
 
 std::wstring resolve_perf_id(int id) {
     std::wstring result;

@@ -25,17 +25,21 @@
 #define _WIN32_WINNT 0x0600
 
 #include "SectionUptime.h"
-#include "../dynamic_func.h"
 #include "../Environment.h"
 #include "../LoggerAdaptor.h"
+#include "../dynamic_func.h"
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 
-SectionUptime::SectionUptime(const Environment &env, LoggerAdaptor &logger) : Section("uptime", env, logger) {
-    GetTickCount64_dyn = DYNAMIC_FUNC(GetTickCount64, L"kernel32.dll");
+SectionUptime::SectionUptime(const Environment &env, LoggerAdaptor &logger,
+                             const WinApiAdaptor &winapi)
+    : Section("uptime", env, logger, winapi) {
+    LPCWSTR dllName = L"kernel32.dll";
+    LPCSTR funcName = "GetTickCount64";
+    GetTickCount64_dyn =
+        dynamic_func<GetTickCount64_type>(dllName, funcName, _winapi);
     if (GetTickCount64_dyn == nullptr) {
         // GetTickCount64 is only available on Vista/2008 and newer
-        _wmi_helper.reset(new wmi::Helper(L"Root\\cimv2"));
+        _wmi_helper.reset(new wmi::Helper(_winapi, L"Root\\cimv2"));
     }
 }
 
@@ -63,12 +67,11 @@ std::string SectionUptime::outputWMI() {
                 return res.get<std::string>(L"SystemUpTime");
             }
         } catch (const wmi::ComException &e) {
-            _logger.crashLog(
-		"wmi request for SystemUpTime failed: %s", e.what());
+            _logger.crashLog("wmi request for SystemUpTime failed: %s",
+                             e.what());
         }
     }
     // TODO: wmi appears to be unreliable on some systems so maybe switch
     // to another fallback?
     return "0";
 }
-

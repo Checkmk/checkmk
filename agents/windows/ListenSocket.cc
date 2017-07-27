@@ -29,34 +29,37 @@
 #include <cstring>
 #include <memory>
 #include "LoggerAdaptor.h"
-#include "stringutil.h"
+#include "WinApiAdaptor.h"
+#include "win_error.h"
 
 static const size_t INET6_ADDRSTRLEN = 46;
 
 ListenSocket::ListenSocket(int port, const only_from_t &source_whitelist,
-                           bool supportIPV6, const LoggerAdaptor &logger)
-    : _socket(init_listen_socket(port))
+                           bool supportIPV6, const LoggerAdaptor &logger,
+                           const WinApiAdaptor &winapi)
+    : _logger(logger)
+    , _winapi(winapi)
+    , _socket(init_listen_socket(port))
     , _source_whitelist(source_whitelist)
     , _supports_ipv4(true)
-    , _use_ipv6(supportIPV6)
-    , _logger(logger) {}
+    , _use_ipv6(supportIPV6) {}
 
-ListenSocket::~ListenSocket() { closesocket(_socket); }
+ListenSocket::~ListenSocket() { _winapi.closesocket(_socket); }
 
 bool ListenSocket::supportsIPV4() const { return _supports_ipv4; }
 
 bool ListenSocket::supportsIPV6() const { return _use_ipv6; }
 
-SOCKET RemoveSocketInheritance(SOCKET oldsocket) {
+SOCKET ListenSocket::RemoveSocketInheritance(SOCKET oldsocket) const {
     HANDLE newhandle;
     // FIXME: this may not work on some setups!
     //   sockets are no simple handles, they may have additional information
     //   attached by layered
     //   service providers. This drops all of that information!
     //   Also, sockets are supposedly non-inheritable anyway
-    DuplicateHandle(GetCurrentProcess(), (HANDLE)oldsocket, GetCurrentProcess(),
-                    &newhandle, 0, FALSE,
-                    DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS);
+    _winapi.DuplicateHandle(_winapi.GetCurrentProcess(), (HANDLE)oldsocket,
+                            _winapi.GetCurrentProcess(), &newhandle, 0, FALSE,
+                            DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS);
     return (SOCKET)newhandle;
 }
 
@@ -87,7 +90,8 @@ bool ListenSocket::check_only_from(sockaddr *ip) {
             }
         } else {
             uint32_t significant_bits =
-                ((sockaddr_in *)ip)->sin_addr.s_addr & only_from->ip.v4.netmask;
+                ((sockaddr_in *)ip)->sin_addr.S_un.S_addr &
+                only_from->ip.v4.netmask;
             if (significant_bits == only_from->ip.v4.address) {
                 return true;
             }
@@ -104,19 +108,21 @@ SOCKET ListenSocket::init_listen_socket(int port) {
     // Now we duplicate this handle and explicitly say that inheritance is
     // forbidden
     // and use the duplicate from now on
-    SOCKET tmp_s = socket(_use_ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
+    SOCKET tmp_s =
+        _winapi.socket(_use_ipv6 ? AF_INET6 : AF_INET, SOCK_STREAM, 0);
     if (tmp_s == INVALID_SOCKET) {
-        int error_id = ::WSAGetLastError();
+        int error_id = _winapi.WSAGetLastError();
         if (error_id == WSAEAFNOSUPPORT) {
             // this will happen on Win2k and WinXP without the ipv6 patch
             _logger.verbose("IPV6 not supported");
             _use_ipv6 = false;
-            tmp_s = socket(AF_INET, SOCK_STREAM, 0);
+            tmp_s = _winapi.socket(AF_INET, SOCK_STREAM, 0);
         }
         if (tmp_s == INVALID_SOCKET) {
-            error_id = ::WSAGetLastError();
+            error_id = _winapi.WSAGetLastError();
             fprintf(stderr, "Cannot create socket: %s (%d)\n",
-                    get_win_error_as_string(error_id).c_str(), error_id);
+                    get_win_error_as_string(_winapi, error_id).c_str(),
+                    error_id);
             exit(1);
         }
     }
@@ -126,30 +132,30 @@ SOCKET ListenSocket::init_listen_socket(int port) {
     std::unique_ptr<SOCKADDR> addr(create_sockaddr(&addr_size));
 
     int optval = 1;
-    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval,
-               sizeof(optval));
+    _winapi.setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (const char *)&optval,
+                       sizeof(optval));
     if (_use_ipv6) {
-        ((SOCKADDR_IN6 *)addr.get())->sin6_port = htons(port);
+        ((SOCKADDR_IN6 *)addr.get())->sin6_port = _winapi.htons(port);
 
         int v6only = 0;
-        if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&v6only,
-                       sizeof(int)) != 0) {
+        if (_winapi.setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&v6only,
+                               sizeof(int)) != 0) {
             _logger.verbose("failed to disable ipv6 only flag");
             _supports_ipv4 = false;
         }
     } else {
-        ((SOCKADDR_IN *)addr.get())->sin_port = htons(port);
-        ((SOCKADDR_IN *)addr.get())->sin_addr.s_addr = ADDR_ANY;
+        ((SOCKADDR_IN *)addr.get())->sin_port = _winapi.htons(port);
+        ((SOCKADDR_IN *)addr.get())->sin_addr.S_un.S_addr = ADDR_ANY;
     }
 
-    if (SOCKET_ERROR == bind(s, addr.get(), addr_size)) {
-        int error_id = ::WSAGetLastError();
+    if (SOCKET_ERROR == _winapi.bind(s, addr.get(), addr_size)) {
+        int error_id = _winapi.WSAGetLastError();
         fprintf(stderr, "Cannot bind socket to port %d: %s (%d)\n", port,
-                get_win_error_as_string(error_id).c_str(), error_id);
+                get_win_error_as_string(_winapi, error_id).c_str(), error_id);
         exit(1);
     }
 
-    if (SOCKET_ERROR == listen(s, 5)) {
+    if (SOCKET_ERROR == _winapi.listen(s, 5)) {
         fprintf(stderr, "Cannot listen to socket\n");
         exit(1);
     }
@@ -160,14 +166,14 @@ SOCKET ListenSocket::init_listen_socket(int port) {
 sockaddr_storage ListenSocket::address(SOCKET connection) const {
     sockaddr_storage addr;
     int addrlen = sizeof(sockaddr_storage);
-    getpeername(connection, (sockaddr *)&addr, &addrlen);
+    _winapi.getpeername(connection, (sockaddr *)&addr, &addrlen);
     return addr;
 }
 
-std::string ListenSocket::readableIP(SOCKET connection) {
+std::string ListenSocket::readableIP(SOCKET connection) const {
     sockaddr_storage addr;
     int addrlen = sizeof(sockaddr_storage);
-    getpeername(connection, (sockaddr *)&addr, &addrlen);
+    _winapi.getpeername(connection, (sockaddr *)&addr, &addrlen);
     return readableIP(&addr);
 }
 
@@ -220,10 +226,10 @@ SOCKET ListenSocket::acceptConnection() {
 
     // FIXME: every failed connect resets the timeout so technically this may
     // never return
-    while (1 == select(1, &fds, NULL, NULL, &timeout)) {
+    while (1 == _winapi.select(1, &fds, NULL, NULL, &timeout)) {
         int addr_len = 0;
         std::unique_ptr<sockaddr> remote_addr(create_sockaddr(&addr_len));
-        connection = accept(_socket, remote_addr.get(), &addr_len);
+        connection = _winapi.accept(_socket, remote_addr.get(), &addr_len);
         connection = RemoveSocketInheritance(connection);
         if (connection != INVALID_SOCKET) {
             bool allowed = check_only_from(remote_addr.get());
@@ -231,7 +237,7 @@ SOCKET ListenSocket::acceptConnection() {
             if (allowed) {
                 return connection;
             } else {
-                closesocket(connection);
+                _winapi.closesocket(connection);
             }
         }
     }

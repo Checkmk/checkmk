@@ -387,9 +387,19 @@ def get_icons(what, row, toplevel):
 
 
 def replace_action_url_macros(url, what, row):
-    url = url.replace('$HOSTNAME$', row['host_name']).replace('$HOSTADDRESS$', row['host_address'])
+    macros = {
+        "HOSTNAME"    : row['host_name'],
+        "HOSTADDRESS" : row['host_address'],
+    }
     if what == 'service':
-        url = url.replace('$SERVICEDESC$', row['service_description'])
+        macros.update({
+            "SERVICEDESC": row['service_description'],
+        })
+
+    for key, val in macros.items():
+        url = url.replace("$%s$" % key, val)
+        url = url.replace("$%s_URL_ENCODED$" % key, html.urlencode_plus(val))
+
     return url
 
 

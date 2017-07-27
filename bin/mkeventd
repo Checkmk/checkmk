@@ -345,7 +345,7 @@ def match_ipv4_network(pattern, ipaddress_text):
     # first network_bits of network and ipaddress must be
     # identical. Create a bitmask.
     bitmask = 0
-    for n in range(32):
+    for n in xrange(32):
         bitmask = bitmask << 1
         if n < network_bits:
             bit = 1
@@ -1179,7 +1179,7 @@ class Perfcounters(object):
                 duration = now - self._last_statistics
             else:
                 duration = 0
-            for name, value in self._counters.items():
+            for name, value in self._counters.iteritems():
                 if duration:
                     delta = value - self._old_counters[name]
                     rate = delta / duration
@@ -1212,7 +1212,7 @@ class Perfcounters(object):
         with self._lock:
             headers = []
             row = []
-            for name, value in self._counters.items():
+            for name, value in self._counters.iteritems():
                 rate_name = name.rstrip("s") + "_rate"
                 average_rate_name = "average_" + name.rstrip("s") + "_rate"
                 headers.append("status_" + name)
@@ -1222,7 +1222,7 @@ class Perfcounters(object):
                 row.append(self._rates.get(name, 0.0))
                 row.append(self._average_rates.get(name, 0.0))
 
-            for name in self._weights.keys():
+            for name in self._weights.iterkeys():
                 headers.append("status_average_%s_time" % name)
                 row.append(self._times.get(name, 0.0))
 
@@ -1261,7 +1261,7 @@ class EventServer(object):
 
         self._rules = []
         self._hash_stats = []
-        for _unused_facility in range(32):
+        for _unused_facility in xrange(32):
             self._hash_stats.append([ 0 ] * 8 )
 
         self.host_config = HostConfig()
@@ -1695,7 +1695,7 @@ class EventServer(object):
                 client_sockets[client_socket.fileno()] = (client_socket, address, "")
 
             # Read data from existing event unix socket connections
-            for fd, (cs, address, previous_data) in client_sockets.items():
+            for fd, (cs, address, previous_data) in client_sockets.iteritems():
                 if fd in readable:
                     # Receive next part of data
                     try:
@@ -2179,10 +2179,10 @@ class EventServer(object):
         if g_config["rule_optimizer"]:
             self.logger.info("Rule hash: %d rules - %d hashed, %d unspecific" %
                (len(self._rules), len(self._rules) - count_unspecific, count_unspecific))
-            for facility in range(32):
+            for facility in xrange(32):
                 if facility in self._rule_hash:
                     stats = []
-                    for prio, entries in self._rule_hash[facility].items():
+                    for prio, entries in self._rule_hash[facility].iteritems():
                         stats.append("%s(%d)" % (syslog_priorities[prio], len(entries)))
                     if syslog_facilities[facility]:
                         self.logger.info(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
@@ -2194,7 +2194,7 @@ class EventServer(object):
         if facility and not rule.get("invert_matching"):
             self.hash_rule_facility(rule, facility)
         else:
-            for facility in range(32): # all syslog facilities
+            for facility in xrange(32): # all syslog facilities
                 self.hash_rule_facility(rule, facility)
 
 
@@ -2204,7 +2204,7 @@ class EventServer(object):
             if key in rule:
                 prio_from, prio_to = rule[key]
                 # Beware: from > to!
-                for p in range(prio_to, prio_from + 1):
+                for p in xrange(prio_to, prio_from + 1):
                     needed_prios[p] = True
             elif key == "match_priority": # all priorities match
                 needed_prios = [True] * 8 # needed to check this rule for all event priorities
@@ -2223,8 +2223,8 @@ class EventServer(object):
         self.logger.info("Top 20 of facility/priority:")
         entries = []
         total_count = 0
-        for facility in range(32):
-            for priority in range(8):
+        for facility in xrange(32):
+            for priority in xrange(8):
                 count = self._hash_stats[facility][priority]
                 if count:
                     total_count += count
@@ -2877,7 +2877,7 @@ class EventServer(object):
         if g_config["debug_rules"]:
             self.logger.info('Parsed message:\n' +
                 ("".join([ " %-15s %s\n" % (k+":", v) for (k, v) in
-                sorted(event.items())])).rstrip())
+                sorted(event.iteritems())])).rstrip())
 
         return event
 
@@ -2899,7 +2899,7 @@ class EventServer(object):
 
     def get_hosts_with_active_event_limit(self):
         hosts = []
-        for hostname, num_existing_events in g_event_status.num_existing_events_by_host.items():
+        for hostname, num_existing_events in g_event_status.num_existing_events_by_host.iteritems():
             if num_existing_events >= g_config["event_limit"]["by_host"]["limit"]:
                 hosts.append(hostname)
         return hosts
@@ -2907,7 +2907,7 @@ class EventServer(object):
 
     def get_rules_with_active_event_limit(self):
         rule_ids = []
-        for rule_id, num_existing_events in g_event_status.num_existing_events_by_rule.items():
+        for rule_id, num_existing_events in g_event_status.num_existing_events_by_rule.iteritems():
             if rule_id == None:
                 continue # Ignore rule unrelated overflow events. They have no rule id associated.
             if num_existing_events >= g_config["event_limit"]["by_rule"]["limit"]:
@@ -4046,7 +4046,7 @@ class EventStatus(object):
 
 
     def get_rule_stats(self):
-        return [ e[0] for e in rule_columns ], sorted(self._rule_stats.items(), key=lambda x: x[0])
+        return [ e[0] for e in rule_columns ], sorted(self._rule_stats.iteritems(), key=lambda x: x[0])
 
 #.
 #   .--Actions-------------------------------------------------------------.
@@ -4100,7 +4100,7 @@ def do_event_actions(actions, event, is_cancelling):
 def get_quoted_event(event):
     new_event = {}
     fields_to_quote = [ "application", "match_groups", "text", "comment", "contact" ]
-    for key, value in event.items():
+    for key, value in event.iteritems():
         if key not in fields_to_quote:
             new_event[key] = value
         else:
@@ -4175,7 +4175,7 @@ def get_event_tags(event):
 
 
 def substitute_event_tags(text, event):
-    for key, value in get_event_tags(event).items():
+    for key, value in get_event_tags(event).iteritems():
         text = text.replace('$%s$' % key.upper(), value)
     return text
 
@@ -4213,7 +4213,7 @@ def send_email(to, subject, body):
 def execute_script(body, event):
     script_env = os.environ.copy()
 
-    for key, value in get_event_tags(event).items():
+    for key, value in get_event_tags(event).iteritems():
         if type(key) == unicode:
             key = key.encode("utf-8")
         if type(value) == unicode:
@@ -4264,7 +4264,7 @@ def do_notify(event, username=None, is_cancelling=False):
 
     if logger.is_verbose():
         logger.verbose("Sending notification via Check_MK with the following context:")
-        for varname, value in sorted(context.items()):
+        for varname, value in sorted(context.iteritems()):
             logger.verbose("  %-25s: %s" % (varname, value))
 
     if context["HOSTDOWNTIME"] != "0":
@@ -4277,8 +4277,7 @@ def do_notify(event, username=None, is_cancelling=False):
     # Send notification context via stdin.
     context_string = to_utf8("".join([
         "%s=%s\n" % (varname, value.replace("\n", "\\n"))
-        for (varname, value)
-        in context.items() ]))
+        for (varname, value) in context.iteritems() ]))
 
     p = subprocess.Popen(["cmk", "--notify", "stdin"], stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
@@ -4345,7 +4344,7 @@ def add_infos_from_monitoring_host(context, event):
     })
 
     # Add custom variables to the notification context
-    for key, val in host_config["custom_variables"].items():
+    for key, val in host_config["custom_variables"].iteritems():
         context["HOST_%s" % key] = val
 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"

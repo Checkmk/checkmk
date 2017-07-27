@@ -275,56 +275,60 @@ class Site(object):
         return subprocess.call(cmd)
 
 
+    def path(self, rel_path):
+        return os.path.join(self.root, rel_path)
+
+
     def read_file(self, rel_path):
         if not self._is_running_as_site_user():
-            p = self.execute(["cat", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
+            p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE)
             if p.wait() != 0:
                 raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
             return p.stdout.read()
         else:
-            return open("%s/%s" % (self.root, rel_path)).read()
+            return open(self.path(rel_path)).read()
 
 
     def delete_file(self, rel_path):
         if not self._is_running_as_site_user():
-            p = self.execute(["rm", "-f", "%s/%s" % (self.root, rel_path)])
+            p = self.execute(["rm", "-f", self.path(rel_path)])
             if p.wait() != 0:
                 raise Exception("Failed to delete file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            os.unlink("%s/%s" % (self.root, rel_path))
+            os.unlink(self.path(rel_path))
 
 
     def delete_dir(self, rel_path):
         if not self._is_running_as_site_user():
-            p = self.execute(["rm", "-rf", "%s/%s" % (self.root, rel_path)])
+            p = self.execute(["rm", "-rf", self.path(rel_path)])
             if p.wait() != 0:
                 raise Exception("Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            shutil.rmtree("%s/%s" % (self.root, rel_path))
+            shutil.rmtree(self.path(rel_path))
 
 
     def write_file(self, rel_path, content):
         if not self._is_running_as_site_user():
-            p = self.execute(["tee", "%s/%s" % (self.root, rel_path)],
+            p = self.execute(["tee", self.path(rel_path)],
                              stdin=subprocess.PIPE, stdout=open(os.devnull, "w"))
             p.communicate(content)
             p.stdin.close()
             if p.wait() != 0:
                 raise Exception("Failed to write file %s. Exit-Code: %d" % (rel_path, p.wait()))
         else:
-            return open("%s/%s" % (self.root, rel_path), "w").write(content)
+            return open(self.path(rel_path), "w").write(content)
 
 
     def file_exists(self, rel_path):
         if not self._is_running_as_site_user():
-            p = self.execute(["test", "-e", "%s/%s" % (self.root, rel_path)], stdout=subprocess.PIPE)
+            p = self.execute(["test", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
             return p.wait() == 0
         else:
-            return os.path.exists("%s/%s" % (self.root, rel_path))
+            return os.path.exists(self.path(rel_path))
 
 
     def makedirs(self, rel_path):
-        p = self.execute(["mkdir", "-p", "%s/%s" % (self.root, rel_path)])
+        p = self.execute(["mkdir", "-p", self.path(rel_path)])
         return p.wait() == 0
 
 

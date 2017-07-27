@@ -288,7 +288,7 @@ def drain_pipe(pipe):
     while True:
         try:
             readable = select.select([ pipe ], [], [], 0.1)[0]
-        except select.error, e:
+        except select.error as e:
             if e[0] == errno.EINTR:
                 continue
             raise
@@ -558,7 +558,7 @@ def update_timeperiods():
             new_timeperiods[tpname] = (alias, bool(isin))
         g_timeperiods = new_timeperiods
         g_last_timeperiod_update = int(time.time()) / 60
-    except Exception, e:
+    except Exception as e:
         logger.exception("Cannot update timeperiod information: %s" % e)
         if opt_debug:
             raise
@@ -988,7 +988,7 @@ def expire_logfiles(flush = False):
                     logger.info("Deleting log file %s (lifetime expired after %d days)" %
                         (path, g_config["history_lifetime"]))
                     os.remove(path)
-    except Exception, e:
+    except Exception as e:
         if opt_debug:
             raise
         logger.exception("Error expiring log files: %s" % e)
@@ -1104,7 +1104,7 @@ def parse_history_file(path, headers, filters, greptexts, limit):
             values = [line_no] + parts
             if g_status_server.filter_row(headers, filters, values):
                 entries.append(values)
-        except Exception, e:
+        except Exception as e:
             logger.exception("Invalid line '%s' in history file %s: %s" % (line, path, e))
 
     return entries
@@ -1388,7 +1388,7 @@ class EventServer(object):
                     self._syslog.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     self._syslog.bind(("0.0.0.0", 514))
                     self.logger.info("Opened builtin syslog server on UDP port 514")
-            except Exception, e:
+            except Exception as e:
                 raise Exception("Cannot start builtin syslog server: %s" % e)
 
     def open_syslog_tcp(self):
@@ -1406,7 +1406,7 @@ class EventServer(object):
                     self._syslog_tcp.bind(("0.0.0.0", 514))
                     self._syslog_tcp.listen(20)
                     self.logger.info("Opened builtin syslog-tcp server on TCP port 514")
-            except Exception, e:
+            except Exception as e:
                 raise Exception("Cannot start builtin syslog-tcp server: %s" % e)
 
     def open_snmptrap(self):
@@ -1422,7 +1422,7 @@ class EventServer(object):
                     self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                     self._snmptrap.bind(("0.0.0.0", 162))
                     self.logger.info("Opened builtin snmptrap server on UDP port 162")
-            except Exception, e:
+            except Exception as e:
                 raise Exception("Cannot start builtin snmptrap server: %s" % e)
 
     def open_eventsocket(self):
@@ -1502,7 +1502,7 @@ class EventServer(object):
 
             # This object maintains various indices built from MIBs data
             self._mib_resolver = MibViewController(builder)
-        except SmiError, e:
+        except SmiError as e:
             if opt_debug:
                 raise
             self.logger.info("Exception while loading MIB modules. Proceeding without modules!")
@@ -1580,7 +1580,7 @@ class EventServer(object):
 
                 var_binds.append((translated_oid, translated_value))
 
-            except SmiError, e:
+            except SmiError as e:
                 # Failed to translate? add untranslated
                 self.logger.exception('Failed to translate OID %s: %s' % (oid.prettyPrint(), e))
                 var_binds.append((str(oid), str(value))) # add untranslated
@@ -1676,7 +1676,7 @@ class EventServer(object):
         while True:
             try:
                 readable = select.select(listen_list + client_sockets.keys(), [], [], select_timeout)[0]
-            except select.error, e:
+            except select.error as e:
                 if e[0] == errno.EINTR:
                     continue
                 raise
@@ -2158,7 +2158,7 @@ class EventServer(object):
                                     else:
                                         rule['state'][1][key] = value
 
-                    except Exception, e:
+                    except Exception as e:
                         if opt_debug:
                             raise
                         rule["disabled"] = True
@@ -2708,7 +2708,7 @@ class EventServer(object):
     def do_translate_hostname(self, event):
         try:
             event["host"] = self.translate_hostname(event["host"])
-        except Exception, e:
+        except Exception as e:
             if g_config["debug_rules"]:
                 self.logger.exception('Unable to parse host "%s" (%s)' % (event.get("host"), e))
             event["host"] = ""
@@ -2860,7 +2860,7 @@ class EventServer(object):
             if "|" in event["host"]:
                 event["host"], event["ipaddress"] = event["host"].split("|", 1)
 
-        except Exception, e:
+        except Exception as e:
             if g_config["debug_rules"]:
                 self.logger.exception('Got non-syslog message "%s" (%s)' % (line, e) )
             event = {
@@ -3113,7 +3113,7 @@ class StatusServer(object):
                 self._tcp_socket.bind(("0.0.0.0", self._tcp_port))
                 self._tcp_socket.listen(g_config['socket_queue_len'])
                 self.logger.info("Going to listen for status queries on TCP port %d" % self._tcp_port)
-            except Exception, e:
+            except Exception as e:
                 if opt_debug:
                     raise
                 self.logger.exception("Cannot listen on TCP socket port %d: %s" %
@@ -3189,7 +3189,7 @@ class StatusServer(object):
 
                 try:
                     readable = select.select(listen_list, [], [], 0.2)[0]
-                except select.error, e:
+                except select.error as e:
                     if e[0] == errno.EINTR:
                         continue
                     raise
@@ -3217,7 +3217,7 @@ class StatusServer(object):
                                        addr_info and addr_info[0] or "")
                     g_perfcounters.count_time("request", time.time() - before)
 
-            except Exception, e:
+            except Exception as e:
                 self.logger.exception("Error handling client %s: %s" % (addr_info, e))
                 if client_socket:
                     client_socket.close()
@@ -3264,7 +3264,7 @@ class StatusServer(object):
 
                 try:
                     self._answer_query(client_socket, output_format, response)
-                except socket.error, e:
+                except socket.error as e:
                     if e.errno == 32: # Broken pipe -> ignore this
                         pass
 
@@ -3481,7 +3481,7 @@ class StatusServer(object):
                 else:
                     self.logger.info("Ignoring not-implemented header %s" % header)
 
-            except Exception, e:
+            except Exception as e:
                 raise MKClientError("Invalid header line '%s': %s" % (line.rstrip(), e))
 
         if table == "events":
@@ -3606,14 +3606,14 @@ def run_eventd():
                 next_replication = now + g_config["replication"]["interval"]
 
 
-        except MKSignalException, e:
+        except MKSignalException as e:
             if e._signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
             else:
                 logger.info("Signalled to death by signal %d" % e._signum)
                 break
 
-        except Exception, e:
+        except Exception as e:
             logger.exception("Exception in main thread:\n%s" % e)
             if opt_debug:
                 raise
@@ -3746,7 +3746,7 @@ class EventStatus(object):
                 self._interval_starts = status.get("interval_starts", {})
                 self._initialize_event_limit_status()
                 self.logger.info("Loaded event state from %s." % path)
-            except Exception, e:
+            except Exception as e:
                 self.logger.exception("Error loading event state from %s: %s" % (path, e))
                 raise
 
@@ -4112,7 +4112,7 @@ def get_quoted_event(event):
                 else:
                     new_value = quote_shell_string(value)
                 new_event[key] = new_value
-            except Exception, e:
+            except Exception as e:
                 # If anything unforeseen happens, we use the intial value
                 new_event[key] = value
                 logger.exception("Unable to quote event text %r: %r, %r" % (key,value, e))
@@ -4441,7 +4441,7 @@ def core_has_notifications_disabled(event):
         if not notifications_enabled:
             logger.info("Notifications are currently disabled. Skipped notification for event %d" % event["id"])
             return True
-    except Exception, e:
+    except Exception as e:
         logger.info("Cannot determine whether notifcations are enabled in core: %s. Assuming YES." % e)
 
     return False
@@ -4455,7 +4455,7 @@ def fetch_contacts_of_group_from_livestatus(group_name):
             contacts.remove("check-mk-notify")
         return contacts
 
-    except Exception, e:
+    except Exception as e:
         logger.exception("Cannot determine contacts of group %s: %s" % (group_name, e))
         if opt_debug:
             raise
@@ -4540,7 +4540,7 @@ def replication_pull():
                             g_slave_status["mode"] = "sync"
                     g_slave_status["last_master_down"] = None
 
-                except Exception, e:
+                except Exception as e:
                     logger.warning("Replication: cannot sync with master: %s" % e)
                     g_slave_status["success"] = False
                     if g_slave_status["last_master_down"] == None:
@@ -4622,13 +4622,13 @@ def get_state_from_master():
                 break
 
         return ast.literal_eval(response_text)
-    except SyntaxError, e:
+    except SyntaxError as e:
         raise Exception("Invalid response from event daemon: <pre>%s</pre>" % response_text)
 
-    except IOError, e:
+    except IOError as e:
         raise Exception("Master not responding: %s" % e)
 
-    except Exception, e:
+    except Exception as e:
         raise Exception("Cannot connect to event daemon: %s" % e)
 
 
@@ -5078,7 +5078,7 @@ try:
     os.remove(g_pid_file)
     sys.exit(0)
 
-except Exception, e:
+except Exception as e:
     if opt_debug:
         raise
     bail_out(traceback.format_exc())

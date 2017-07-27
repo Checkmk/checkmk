@@ -9688,7 +9688,16 @@ class ModeDistributedMonitoring(ModeSites):
             and (site.get("replication") or config.site_is_local(site_id))) \
            or is_wato_slave_site():
             globals_url = folder_preserving_link([("mode", "edit_site_globals"), ("site", site_id)])
-            html.icon_button(globals_url, _("Site specific global configuration"), "configuration")
+
+            has_site_globals = bool(site.get("globals"))
+            title = _("Site specific global configuration")
+            if has_site_globals:
+                icon = "site_globals_modified"
+                title += " (%s)" % (_("%d specific settings") % len(site.get("globals")))
+            else:
+                icon = "site_globals"
+
+            html.icon_button(globals_url, title, icon)
 
 
     def _page_basic_settings(self, site_id, site):

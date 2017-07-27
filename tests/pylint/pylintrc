@@ -36,7 +36,9 @@ enable=unreachable,dangerous-default-value,duplicate-key,using-constant-test,dup
 # ldap
 #   The Python ldap module gets a lot of constants from the C API which can not be found by pylint.
 #   This results in a lot of these errors: "Module 'ldap' has no 'OPT_REFERRALS' member".
-ignored-modules = rrdtool,ldap
+# netifaces
+#   Can not check methods / attributes of the netifaces C module
+ignored-modules = rrdtool,ldap,netifaces
 
 [REPORTS]
 output-format=cmk_colorized

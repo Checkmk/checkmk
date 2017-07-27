@@ -143,10 +143,11 @@ build: check-python check-freetds
 		fi ; \
 		cd $$PKG ; \
 	        $(PYTHON) setup.py build ; \
-	        $(PYTHON) setup.py install --home=$(TMP_INSTALL_PATH) \
+	        $(PYTHON) setup.py install \
+		    --root=$(TMP_INSTALL_PATH) \
 	            --prefix='' \
-	            --install-platlib=$(TMP_INSTALL_PATH)/lib \
-	            --install-purelib=$(TMP_INSTALL_PATH)/lib ; \
+	            --install-platlib=/lib \
+	            --install-purelib=/lib ; \
 	        cd .. ; \
 	    done
 
@@ -165,10 +166,11 @@ install:
 	    for M in $$(ls); do \
 		echo "Installing $$M..." ; \
 		cd $$M ; \
-	        $(PYTHON) setup.py install --home=$(DESTDIR)$(OMD_ROOT) \
+	        $(PYTHON) setup.py install \
+		    --root=$(DESTDIR)$(OMD_ROOT) \
 	            --prefix='' \
-	            --install-platlib=$(DESTDIR)$(OMD_ROOT)/lib/python \
-	            --install-purelib=$(DESTDIR)$(OMD_ROOT)/lib/python ; \
+	            --install-platlib=/lib/python \
+	            --install-purelib=/lib/python ; \
 	        cd .. ; \
 	    done
 # Cleanup some unwanted files (example scripts)
@@ -183,8 +185,6 @@ install:
 		sed -i "1s|^#!.*python|#!/usr/bin/env python|" $$F; \
 	    fi ; \
 	done
-# Cleanup build time paths in easy-install.pth
-	sed -i 's|^/.*/\(.*\.egg\)$$|./\1|g' $(DESTDIR)$(OMD_ROOT)/lib/python/easy-install.pth
 
 skel:
 

@@ -2741,7 +2741,7 @@ class ModeDiscovery(WatoMode):
         self._host.need_permission("read")
 
         if config.user.may("wato.services"):
-            self._cache_options   = [ '@scan' ] if html.var("_scan") else [ '@noscan' ]
+            self._cache_options   = [ '@scan' ] if html.var("scan") else [ '@noscan' ]
 
             if html.has_var("_show_checkboxes"):
                 config.user.save_file("discovery_checkboxes", html.var("_show_checkboxes") == "1")
@@ -2758,7 +2758,7 @@ class ModeDiscovery(WatoMode):
 
     def title(self):
         title = _("Services of host %s") % self._host_name
-        if html.var("_scan"):
+        if html.var("scan"):
             title += _(" (live scan)")
         else:
             title += _(" (might be cached data)")
@@ -3045,7 +3045,7 @@ class ModeDiscovery(WatoMode):
                 raise
             retry_link = html.render_a(
                 content=_("Retry discovery while ignoring this error (Result might be incomplete)."),
-                href=html.makeuri([("ignoreerrors", "1"), ("_scan", html.var("_scan"))])
+                href=html.makeuri([("ignoreerrors", "1"), ("scan", html.var("scan"))])
             )
             html.show_warning("<b>%s</b>: %s<br><br>%s" %
                               (_("Service discovery failed for this host"), e, retry_link))
@@ -3053,9 +3053,6 @@ class ModeDiscovery(WatoMode):
 
         html.begin_form("checks", method = "POST")
         self._show_action_buttons(check_table)
-
-        if html.var("_scan"):
-            html.hidden_field("_scan", "on", add_var=True)
 
         table.begin(css="data", searchable=False, limit=None, sortable=False)
 
@@ -3355,7 +3352,6 @@ class ModeDiscovery(WatoMode):
         if not check_table and self._cache_options != []:
             check_table = check_mk_automation(self._host.site_id(), "try-inventory",
                                               [ '@scan', self._host_name ])
-            html.set_var("_scan", "on")
 
         return sorted(check_table)
 
@@ -3389,7 +3385,7 @@ class ModeDiscovery(WatoMode):
         if self._already_has_services(check_table):
             html.button("_refresh", _("Automatic refresh (tabula rasa)"))
 
-        html.buttonlink(html.makeuri([("_scan", "yes")]), _("Full scan"),
+        html.buttonlink(html.makeuri([("scan", "yes")]), _("Full scan"),
                   title=_("Fetch new data from the host and ignore caches"))
 
 

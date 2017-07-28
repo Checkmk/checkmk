@@ -1,0 +1,18 @@
+Title: Service discovery: Fixed handling of "full scan" of new SNMP hosts
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p10
+Date: 1501242052
+Class: fix
+
+When opening the service discovery page for new hosts that are not monitored via
+SNMP yet the page is mostly empty. To get services a click on "full scan" is needed.
+Then the host will really be contacted via SNMP.
+
+When doing some specific actions now, like enabling checkboxes or just adding a single
+service instead of all no service was shown on the following page.
+
+The full scan mode is now being used for all actions on a discovery page after enabling
+it.

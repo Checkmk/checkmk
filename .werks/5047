@@ -1,0 +1,13 @@
+Title: EC views: Fixed "Events of host X" views of unrelated events
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p10
+Date: 1501236224
+
+When clicking on the host name of an unrelated event (one that has no host in the monitoring core)
+the target page was not showing any event since Check_MK 1.4. The events are now correctly filtered
+by the original event host instead of the host name of the found core host.

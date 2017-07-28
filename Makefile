@@ -223,10 +223,13 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	    --transform 's|^|cmk/|g' $$(cd lib ; ls) ; \
 	  rm lib/*.pyc
 	python -m compileall cmk_base ; \
-	  tar czf $(DISTNAME)/base.tar.gz $(TAROPTS) cmk_base/* \
-	    --exclude ".f12" \
+	  tar czf $(DISTNAME)/base.tar.gz \
+	    $(TAROPTS) \
 	    --exclude "cee" \
-	    --exclude "cee.py*" ; \
+	    --exclude "cee.py*" \
+	    --exclude "cme" \
+	    --exclude "cme.py*" \
+	    cmk_base/* ; \
 	  rm cmk_base/*.pyc
 	python -m compileall agents/special/lib ; \
 	  tar czf $(DISTNAME)/special_agent_api.tar.gz $(TAROPTS) -C agents/special/lib cmk_special_agent_api.py \

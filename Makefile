@@ -188,6 +188,7 @@ check-version:
 
 # Would use --exclude-vcs-ignores but that's available from tar 1.29 which
 # is currently not used by most distros
+# Would also use --exclude-vcs, but this is also not available 
 dist: mk-livestatus-$(VERSION).tar.gz
 	@EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -197,7 +198,10 @@ dist: mk-livestatus-$(VERSION).tar.gz
 	    done ; \
 	fi ; \
 	tar -cz --wildcards -f $(DIST_ARCHIVE) \
-	    --exclude-vcs \
+	    --exclude .git \
+	    --exclude .gitignore \
+	    --exclude .gitmodules \
+	    --exclude .gitattributes \
 	    --exclude $(DIST_ARCHIVE) \
 	    $$EXCLUDES \
 	    --transform 's|^|check-mk-$(EDITION)-$(OMD_VERSION)/|gS' \

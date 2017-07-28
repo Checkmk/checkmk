@@ -7,8 +7,8 @@ DISTNAME = $(NAME)-$(CMK_VERSION)
 .PHONY: skel
 
 build: clean
-	if [ ! -f ../../../$(DISTNAME).tar.gz ]; then
-	    $(MAKE) -C ../../.. $(DISTNAME).tar.gz
+	if [ ! -f ../../../$(DISTNAME).tar.gz ]; then \
+	    $(MAKE) -C ../../.. $(DISTNAME).tar.gz ; \
 	fi
 	tar xzf $(REPO_PATH)/$(DISTNAME).tar.gz
 	cd $(DISTNAME) ; \

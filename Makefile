@@ -410,6 +410,7 @@ ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	  autoreconf --install --include=m4
 
 config.status: $(DIST_DEPS)
+	@echo "Build $@ (newer targets: $?)"
 	@if test -f config.status; then \
 	  echo "update config.status by reconfiguring in the same conditions" ; \
 	  ./config.status --recheck; \

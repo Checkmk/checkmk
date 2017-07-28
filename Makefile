@@ -94,6 +94,8 @@ BEAR               := bear
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
+DIST_DEPS          := ar-lib compile config.guess config.sub install-sh missing depcomp configure
+
 
 LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
@@ -190,12 +192,12 @@ check-version:
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: mk-livestatus-$(VERSION).tar.gz $(DISTNAME).tar.gz config.h.in configure
+dist: mk-livestatus-$(VERSION).tar.gz $(DISTNAME).tar.gz config.h.in $(DIST_DEPS)
 	@EXCLUDES= ; \
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
-		if [[ $$X != aclocal.m4 && $$X != config.h.in  && $$X != configure && $$X != $(DISTNAME).tar.gz ]]; then \
+	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != $(DISTNAME).tar.gz ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
 		fi ; \
 	    done ; \
@@ -407,7 +409,7 @@ setup:
 ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	  autoreconf --install --include=m4
 
-config.status: ar-lib compile config.guess config.sub install-sh missing depcomp configure
+config.status: $(DIST_DEPS)
 	@if test -f config.status; then \
 	  echo "update config.status by reconfiguring in the same conditions" ; \
 	  ./config.status --recheck; \

@@ -188,7 +188,8 @@ check-version:
 
 # Would use --exclude-vcs-ignores but that's available from tar 1.29 which
 # is currently not used by most distros
-# Would also use --exclude-vcs, but this is also not available 
+# Would also use --exclude-vcs, but this is also not available
+# And --transform is also missing ...
 dist: mk-livestatus-$(VERSION).tar.gz
 	@EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -197,18 +198,27 @@ dist: mk-livestatus-$(VERSION).tar.gz
 		EXCLUDES+=" --exclude $${X%*/}" ; \
 	    done ; \
 	fi ; \
-	tar -cz --wildcards -f $(DIST_ARCHIVE) \
+	if [ -d check-mk-$(EDITION)-$(OMD_VERSION) ]; then \
+	    rm -rf check-mk-$(EDITION)-$(OMD_VERSION) ; \
+	fi ; \
+	mkdir check-mk-$(EDITION)-$(OMD_VERSION) ; \
+	tar -c --wildcards \
+	    $(TAROPTS) \
+	    --exclude check-mk-$(EDITION)-$(OMD_VERSION) \
 	    --exclude .git \
 	    --exclude .gitignore \
 	    --exclude .gitmodules \
 	    --exclude .gitattributes \
 	    --exclude $(DIST_ARCHIVE) \
 	    $$EXCLUDES \
-	    --transform 's|^|check-mk-$(EDITION)-$(OMD_VERSION)/|gS' \
-	    * .werks .clang* ; \
+	    * .werks .clang* | tar x -C check-mk-$(EDITION)-$(OMD_VERSION) ; \
 	if [ -f COMMIT ]; then \
 	    rm COMMIT ; \
-	fi
+	fi ; \
+	tar -cz --wildcards -f $(DIST_ARCHIVE) \
+	    $(TAROPTS) \
+	    check-mk-$(EDITION)-$(OMD_VERSION) ; \
+	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 # This tar file is only used by "omd/packages/check_mk/Makefile"
 $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MINI) ChangeLog
@@ -219,9 +229,9 @@ $(DISTNAME).tar.gz: mk-livestatus-$(VERSION).tar.gz .werks/werks $(JAVASCRIPT_MI
 	tar rf $(DISTNAME)/bin.tar $(TAROPTS) -C agents/windows/msibuild msi-update
 	gzip $(DISTNAME)/bin.tar
 	python -m compileall lib ; \
-	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) -C lib \
-	    --transform 's|^|cmk/|g' $$(cd lib ; ls) ; \
-	  rm lib/*.pyc
+	  tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
+	    cmk/* ; \
+	  rm cmk/*.pyc
 	python -m compileall cmk_base ; \
 	  tar czf $(DISTNAME)/base.tar.gz \
 	    $(TAROPTS) \

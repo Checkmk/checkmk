@@ -1504,6 +1504,22 @@ def show_view(view, show_heading = False, show_buttons = True,
         if html.has_var('servicegroup') and not html.has_var("optservice_group"):
             html.set_var("optservice_group", html.var("servicegroup"))
 
+    # TODO: Another hack :( Just like the above one: When opening the view "ec_events_of_host",
+    # which is of single context "host" using a host name of a unrelated event, the list of
+    # events is always empty since the single context filter "host" is sending a "host_name = ..."
+    # filter to livestatus which is not matching a "unrelated event". Instead the filter event_host
+    # needs to be used.
+    # Another idea: We could change these views to non single context views, but then we would not
+    # be able to show the buttons to other host related views, which is also bad. So better stick
+    # with the current mode.
+    if view["datasource"] in [ "mkeventd_events", "mkeventd_history" ] and "host" in view["single_infos"]:
+        # Remove the original host name filter
+        use_filters = [ f for f in use_filters if f.name != "host" ]
+
+        # Set the value for the event host filter
+        if not html.has_var("event_host"):
+            html.set_var("event_host", html.var("host"))
+
     # Now populate the HTML vars with context vars from the view definition. Hard
     # coded default values are treated differently:
     #
@@ -1513,6 +1529,7 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     # Check that all needed information for configured single contexts are available
     visuals.verify_single_contexts('views', view, datasource.get('link_filters', {}))
+
 
     # Prepare Filter headers for Livestatus
     # TODO: When this is used by the reporting then *all* filters are

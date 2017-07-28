@@ -24,7 +24,6 @@ def test_hooks(site):
         "MULTISITE_AUTHORISATION",
         "MULTISITE_COOKIE_AUTH",
         "NAGIOS_THEME",
-        "NAGVIS_URLS",
         "NSCA",
         "NSCA_TCP_PORT",
         "PNP4NAGIOS",

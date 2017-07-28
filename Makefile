@@ -190,12 +190,14 @@ check-version:
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: mk-livestatus-$(VERSION).tar.gz
+dist: mk-livestatus-$(VERSION).tar.gz config.h.in configure
 	@EXCLUDES= ; \
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
-		EXCLUDES+=" --exclude $${X%*/}" ; \
+		if [[ $$X != aclocal.m4 && $$X != config.h.in  && $$X != configure ]]; then \
+		    EXCLUDES+=" --exclude $${X%*/}" ; \
+		fi ; \
 	    done ; \
 	fi ; \
 	if [ -d check-mk-$(EDITION)-$(OMD_VERSION) ]; then \

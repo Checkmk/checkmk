@@ -1,11 +1,11 @@
 #!/bin/bash
 SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
+echo "Update site $SITE..."
 
 echo "Copy CRE files..."
 sudo rsync \
     --exclude "*cmc.py" \
-    --exclude "*omd_configuration.py" \
     -arx htdocs plugins /omd/sites/$SITE/share/check_mk/web/
 
 # Also deploy all other directories of same type

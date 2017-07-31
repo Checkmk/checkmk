@@ -6834,11 +6834,7 @@ class ModeGlobalSettings(WatoMode):
         super(ModeGlobalSettings, self).__init__()
         self._search = None
 
-        # 1. Check_MK program defaults
-        # Get default settings of all configuration variables of interest in the domain
-        # "check_mk". (this also reflects the settings done in main.mk)
-        self._default_values = check_mk_local_automation("get-configuration", [], get_check_mk_config_var_names())
-
+        self._default_values   = ConfigDomain.get_all_default_globals()
         self._global_settings  = {}
         self._current_settings = {}
 
@@ -6908,7 +6904,7 @@ class ModeGlobalSettings(WatoMode):
                     forms.header(group_name, isopen=search)
                     header_is_painted = True
 
-                default_value = self._default_values.get(varname, valuespec.default_value())
+                default_value = self._default_values[varname]
 
                 edit_url = folder_preserving_link([("mode", self._edit_mode()),
                                                    ("varname", varname),
@@ -7001,7 +6997,7 @@ class ModeEditGlobals(ModeGlobalSettings):
         action = html.var("_action")
 
         domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
-        def_value = self._default_values.get(varname, valuespec.default_value())
+        def_value = self._default_values[varname]
 
         if action == "reset" and not is_a_checkbox(valuespec):
             c = wato_confirm(
@@ -7132,21 +7128,16 @@ def mode_edit_configvar(phase, what = 'globalvars'):
             else:
                 return "globalvars"
 
-    check_mk_vars = check_mk_local_automation("get-configuration", [], [varname])
 
-    if varname in current_settings:
-        value = current_settings[varname]
-    else:
-        if siteid:
-            globalsettings = load_configuration_settings()
-            check_mk_vars.update(globalsettings)
-        value = check_mk_vars.get(varname, valuespec.default_value())
+    default_values  = ConfigDomain.get_all_default_globals()
 
     if siteid:
-        defvalue = check_mk_vars.get(varname, valuespec.default_value())
+        global_settings = load_configuration_settings()
     else:
-        defvalue = valuespec.default_value()
+        global_settings = {}
 
+    defvalue = default_values[varname]
+    value    = current_settings.get(varname, global_settings.get(varname, defvalue))
 
     html.begin_form("value_editor", method="POST")
     forms.header(valuespec.title())
@@ -9833,7 +9824,7 @@ class ModeEditSiteGlobals(ModeSites, ModeGlobalSettings):
             return
 
         domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
-        def_value = self._global_settings.get(varname, self._default_values.get(varname, valuespec.default_value()))
+        def_value = self._global_settings.get(varname, self._default_values[varname])
 
         if action == "reset" and not is_a_checkbox(valuespec):
             c = wato_confirm(
@@ -10266,10 +10257,6 @@ def sort_sites(sitelist):
                cmp(a[1].get("alias"), b[1].get("alias"))
     sitelist.sort(cmp = custom_sort)
     return sitelist
-
-
-def get_check_mk_config_var_names():
-    return [ varname for (varname, var) in configvars().items() if var[0] == ConfigDomainCore ]
 
 
 #.

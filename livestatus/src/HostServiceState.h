@@ -86,12 +86,7 @@ public:
     time_t _last_known_time;
 
     std::string _debug_info;
-
-    // NOTE: _log_output is the *only* pointer in this class to an object we
-    // own, all other pointers are to foreign objects. This ownership is
-    // unfortunate and complicates things quite a lot, see the corresponding
-    // TODO in TableStateHistory::updateHostServiceState.
-    char *_log_output;
+    std::string _log_output;
 
     // maybe "": -> no period known, we assume "always"
     std::string _notification_period;
@@ -103,7 +98,6 @@ public:
     std::string _service_description;  // Fallback if service no longer exists
 
     HostServiceState();
-    ~HostServiceState();
 #ifdef CMC
     void computePerStateDurations();
 #endif

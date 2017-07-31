@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "HostServiceState.h"
-#include <cstdlib>
 
 HostServiceState::HostServiceState()
     : _is_host(false)
@@ -53,15 +52,8 @@ HostServiceState::HostServiceState()
     , _may_no_longer_exist(false)
     , _has_vanished(false)
     , _last_known_time(0)
-    , _log_output(nullptr)
     , _host(nullptr)
     , _service(nullptr) {}
-
-HostServiceState::~HostServiceState() {
-    if (_log_output != nullptr) {
-        free(_log_output);
-    }
-}
 
 #ifdef CMC
 void HostServiceState::computePerStateDurations() {

@@ -162,7 +162,7 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         "service_description", "Description of the service",
         DANGEROUS_OFFSETOF(HostServiceState, _service_description), -1, -1,
         -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "log_output", "Logfile output relevant for this state",
         DANGEROUS_OFFSETOF(HostServiceState, _log_output), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
@@ -662,10 +662,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 hst->_state = -1;
                 hst->_until = hst->_time;
                 hst->_debug_info = "UNMONITORED";
-                if (hst->_log_output != nullptr) {
-                    free(hst->_log_output);
-                }
-                hst->_log_output = nullptr;
+                hst->_log_output = "";
             }
 
             hst->_time = _until - 1;
@@ -710,10 +707,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         hs_state->_in_notification_period = 0;
         hs_state->_in_service_period = 0;
         hs_state->_is_flapping = 0;
-        if (hs_state->_log_output != nullptr) {
-            free(hs_state->_log_output);
-        }
-        hs_state->_log_output = nullptr;
+        hs_state->_log_output = "";
 
         // Apply latest notification period information and set the host_state
         // to unmonitored
@@ -877,28 +871,14 @@ int TableStateHistory::updateHostServiceState(Query *query,
     }
 
     if (entry->_type != LogEntryType::timeperiod_transition) {
-        if (hs_state->_log_output != nullptr) {
-            free(hs_state->_log_output);
-        }
-
         if ((entry->_type == LogEntryType::state_host_initial ||
              entry->_type == LogEntryType::state_service_initial) &&
             (entry->_check_output != nullptr &&
-             (strcmp(entry->_check_output, "(null)") == 0))) {
-            hs_state->_log_output = nullptr;
-
+             strcmp(entry->_check_output, "(null)") == 0)) {
+            hs_state->_log_output = "";
         } else {
-            // TODO(sp): Do we really need to strdup? How are the lifetimes of
-            // entry and hs_state related? This is highly unclear. This strdup
-            // complicates things like hell, because HostServiceState owns
-            // _log_output because of it. If this is really needed (hopefully
-            // not), we should better change the type from a naked pointer to a
-            // unique_ptr, but this would mean introducing yet another Column
-            // subclass, because the Column framework is not flexible at all
-            // regarding the types it handles.
-            hs_state->_log_output = entry->_check_output != nullptr
-                                        ? strdup(entry->_check_output)
-                                        : nullptr;
+            hs_state->_log_output =
+                entry->_check_output == nullptr ? "" : entry->_check_output;
         }
     }
 

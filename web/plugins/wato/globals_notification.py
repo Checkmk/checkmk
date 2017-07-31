@@ -42,7 +42,6 @@ register_configvar(group,
         help = _("If you enable the new rule based notifications then the current plain text email and "
                  "&quot;flexible notifications&quot; will become inactive. Instead notificatios will "
                  "be configured with the WATO module <i>Notifications</i> on a global base."),
-        default_value = False,
     ),
     domain = "check_mk",
     need_restart = True)
@@ -74,7 +73,6 @@ register_configvar(group,
                  "only notifications sent out by the local notification system can be "
                  "tracked. If you have a distributed environment you need to do the analysis "
                  "directly on the remote sites - unless you use a central spooling."),
-        default_value = 10,
     ),
     domain = "check_mk")
 
@@ -85,7 +83,6 @@ register_configvar(group,
         help = _("If you are using rule based notifications with and <i>Bulk Notifications</i> "
                  "then Check_MK will check for ripe notification bulks to be sent out "
                  "at latest every this interval."),
-        default_value = 10,
         minvalue = 1,
     ),
     domain = "check_mk",
@@ -96,7 +93,6 @@ register_configvar(group,
     Age(
         title = _("Notification plugin timeout"),
         help = _("After the configured time notification plugins are being interrupted."),
-        default_value = 60,
         minvalue = 1,
     ),
     domain = "check_mk")
@@ -109,7 +105,6 @@ register_configvar(group,
                 ( 1, _("Normal logging")),
                 ( 2, _("Full dump of all variables and command"))
             ],
-            default_value = 1,
         ),
         forth = lambda x: x == 0 and 1 or x, # transform deprecated value 0 (no logging) to 1
         title = _("Notification log level"),
@@ -150,12 +145,6 @@ register_configvar(group,
                  "Event Console when you forward notifications to it and will override the "
                  "setting of the matching rule."),
         allow_empty = False,
-        default_value = [
-                (0,  _("(no Service level)")),
-                (10, _("Silver")),
-                (20, _("Gold")),
-                (30, _("Platinum")),
-        ],
     ),
     domain = "multisite",
     allow_reset = False,

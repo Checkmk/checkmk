@@ -53,6 +53,7 @@ import cmk
 import cmk.log
 import cmk.defines as defines
 import cmk.daemon
+import cmk.event_console
 from cmk.regex import regex, is_regex
 
 import livestatus
@@ -4452,7 +4453,7 @@ def core_has_notifications_disabled(event):
 #   |  Functions for doing replication, master and slave parts.            |
 #   '----------------------------------------------------------------------'
 def is_replication_slave():
-    repl_settings = g_config.get("replication")
+    repl_settings = g_config["replication"]
     return repl_settings and not repl_settings.get("disabled")
 
 def replication_allow_command(command):
@@ -4655,7 +4656,7 @@ def load_slave_status():
 
 def load_configuration():
     global g_config, g_last_config_reload
-    g_config = default_config()
+    g_config = cmk.event_console.default_config()
 
     main_file = os.path.join(g_config_dir, "mkeventd.mk")
     if not os.path.exists(main_file):
@@ -4718,56 +4719,6 @@ def load_configuration():
         g_config["action"][action["id"]] = action
 
     g_last_config_reload = time.time()
-
-
-def default_config():
-    return {
-        "rules":          [], # old pre 1.2.7i1 format. Only used if rule_packs is empty
-        "rule_packs":     [], # new format with rule packages
-        "actions":        [],
-        "debug_rules":    False,
-        "rule_optimizer": True,
-        "log_level":  {
-            "cmk.mkeventd":              cmk.log.INFO,
-            "cmk.mkeventd.EventServer":  cmk.log.INFO,
-            "cmk.mkeventd.EventStatus":  cmk.log.INFO,
-            "cmk.mkeventd.StatusServer": cmk.log.INFO,
-        },
-        "log_rulehits":          False,
-        "log_messages":          False,
-        "retention_interval":    60,
-        "housekeeping_interval": 60,
-        "statistics_interval":   5,
-        "history_lifetime":      365 * 24 * 3600,
-        "history_rotation":      "daily",
-        "remote_status":         None,
-        "socket_queue_len":      10,
-        "eventsocket_queue_len": 10,
-        "hostname_translation":  {},
-        "archive_orphans":       False,
-        "archive_mode":          "file",
-        "translate_snmptraps":   False,
-        "snmp_credentials": [
-            {
-                "description": "\"public\" default for receiving SNMPv1/v2 traps",
-                "credentials": "public",
-            },
-        ],
-        "event_limit": {
-            'by_host': {
-                'action': 'stop_overflow_notify',
-                'limit': 1000,
-            },
-            'by_rule': {
-                'action': 'stop_overflow_notify',
-                'limit': 1000,
-            },
-            'overall': {
-                'action': 'stop_overflow_notify',
-                'limit': 10000
-            }
-        },
-    }
 
 
 def snmptrap_translation_enabled():

@@ -105,7 +105,7 @@ register_configvar(group,
              help = _("When Multisite is running in debug mode, internal Python error messages "
                       "are being displayed and various debug information in other places is "
                       "also available."),
-            default_value = False),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -118,7 +118,6 @@ register_configvar(group,
                  "into the Multisite var directory named <tt>multisite.profile</tt> and "
                  "<tt>multisite.profile.py</tt>. By executing the later file you can get "
                  "runtime statistics about the last processed page."),
-       default_value = False
     ),
     domain = "multisite"
 )
@@ -129,7 +128,7 @@ register_configvar(group,
              label = _("enable debug of Livestatus queries"),
              help = _("With this option turned on all Livestatus queries made by Multisite "
                       "in order to render views are being displayed."),
-            default_value = False),
+    ),
     domain = "multisite")
 
 
@@ -142,7 +141,7 @@ register_configvar(group,
                       "output but try to make larger segments. This saves bandwidth "
                       "especially when using HTTPS. On the backside there might be "
                       "a higher latency for the beginning of pages being displayed."),
-            default_value = True),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -154,7 +153,6 @@ register_configvar(group,
                   'open view. When a view is re-opened a new selection is used. The old one remains on the '
                   'server until the livetime is exceeded.'),
         minvalue = 1,
-        default_value = 3600,
     ),
     domain = "multisite",
 )
@@ -166,7 +164,7 @@ register_configvar(group,
              help = _("This option controls whether error messages from unreachable sites are shown in the output of "
                       "views. Those error messages shall alert you that not all data from all sites has been shown. "
                       "Other people - however - find those messages distracting. "),
-             default_value = True),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -177,7 +175,7 @@ register_configvar(group,
                       "in a Multisite status view if that view has been configured for sounds. "
                       "From the views shipped in with Multisite all problem views have sounds "
                       "enabled."),
-             default_value = False),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -189,7 +187,6 @@ register_configvar(group,
             minvalue = 1,
             maxvalue = 100,
             size = 2),
-        default_value = 5,
         title = _("Number of context buttons to show"),
         label = _("Show only most frequently used buttons"),
         help = _("If this option is enabled, then Multisite only show the most "
@@ -205,7 +202,7 @@ register_configvar(group,
                      "limit, a warning is being displayed and no further data is being shown. "
                      "A normal user can override this limit with one mouse click."),
             minvalue = 1,
-            default_value = 1000),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -216,7 +213,7 @@ register_configvar(group,
                      "the hard limit. The purpose of the hard limit is to secure the server "
                      "against useless queries with huge result sets."),
             minvalue = 1,
-            default_value = 5000),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -227,7 +224,7 @@ register_configvar(group,
                      "That list is limited in size so that the dropdown will not get "
                      "too large when you have a huge number of lists. "),
             minvalue = 1,
-            default_value = 80),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -258,7 +255,6 @@ register_configvar(group,
             ],
         ),
         title = _("Quicksearch search order"),
-        default_value = [("h", "continue"), ("al", "continue"), ("ad", "continue"), ("s", "continue")],
         add_label = _("Add search filter")
     ),
     domain = "multisite")
@@ -270,7 +266,6 @@ register_configvar(group,
                      "\"Users\" configuration page, can be configured to show "
                      "only a limited number of rows when accessing the pages."),
             minvalue = 1,
-            default_value = 100,
             unit = _('rows')),
     domain = "multisite")
 
@@ -281,7 +276,6 @@ register_configvar(group,
                        "is shown in the main (right) frame. You can replace this with any other "
                        "URL you like here."),
               size = 80,
-              default_value = "dashboard.py",
               attrencode = True),
     domain = "multisite")
 
@@ -292,7 +286,6 @@ register_configvar(group,
                        "using OMD then you can embed a <tt>%s</tt>. This will be replaced by the name "
                        "of the OMD site."),
               size = 80,
-              default_value = u"Check_MK %s",
               attrencode = True),
     domain = "multisite")
 
@@ -307,7 +300,6 @@ register_configvar(group,
             ('yyyy-mm-dd', _("YYYY-MM-DD")),
             ('dd.mm.yyyy', _("DD.MM.YYYY")),
         ],
-        default_value = None
     ),
     domain = "multisite")
 
@@ -320,7 +312,7 @@ register_configvar(group,
                       "If you are really sure what you are doing and need to have HTML codes, like "
                       "links rendered, disable this option. Be aware, you might open the way "
                       "for several injection attacks."),
-            default_value = True),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -328,7 +320,6 @@ register_configvar(group,
     TextAscii(title = _("Mail Address for Crash reports"),
               help = _("This Address will be used as default receiver address for crash reports"),
               size = 80,
-              default_value = "feedback@check-mk.org",
               attrencode = True),
     domain = "multisite")
 
@@ -339,7 +330,7 @@ register_configvar(group,
              help = _("When enabled a rule editor icon is displayed for each "
                       "service in the multisite views. It is only displayed if the user "
                       "does have the permission to edit rules."),
-            default_value = True),
+    ),
     domain = "multisite")
 
 
@@ -467,7 +458,6 @@ register_configvar(group,
                    "monitoring core has not executed the check within this time, an error "
                    "will be displayed and the page not reloaded."),
           minvalue = 1.0,
-          default_value = 10.0,
           unit = "sec",
           display_format = "%.1f"),
     domain = "multisite")
@@ -480,7 +470,6 @@ register_configvar(group,
                    "value means that all snapnis which request a regular refresh are updated "
                    "in this interval."),
           minvalue = 10.0,
-          default_value = 30.0,
           unit = "sec",
           display_format = "%.1f"),
     domain = "multisite")
@@ -490,7 +479,6 @@ register_configvar(group,
     Optional(
         Float(
             minvalue = 10.0,
-            default_value = 60.0,
             unit = "sec",
             display_format = "%.1f"
         ),
@@ -536,7 +524,7 @@ register_configvar(group,
     "bi_use_legacy_compilation",
     Checkbox(title = _("Use legacy compilation for BI aggregations (slower)"),
              label = _("Use legacy BI compilation"),
-             default_value = False),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -551,7 +539,7 @@ register_configvar(group,
                 "to change the precompilation to be executed on demand. BI only precompiles the "
                 "aggregations which are really requested by the users."
              ),
-             default_value = True),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -587,7 +575,6 @@ register_configvar(group,
                   'current check result has been gathered one and a half check intervals of an object. '
                   'This would mean 90 seconds in case of a check which is checked each 60 seconds.'),
         minvalue = 1,
-        default_value = 1.5,
     ),
     domain = "multisite",
 )
@@ -612,7 +599,6 @@ register_configvar(group,
             title = _("Custom localizations"),
             movable = False,
             totext = _("%d translations"),
-            default_value = sorted(config.user_localizations.items()),
         ),
         forth = lambda d: sorted(d.items()),
         back = lambda l: dict(l),
@@ -731,13 +717,6 @@ register_configvar(group,
         title = _("Custom Downtime Timeranges"),
         movable = True,
         totext = _("%d timeranges"),
-        default_value = [
-            {'title': _("2 hours"),    'end': 2 * 60 * 60},
-            {'title': _("Today"),      'end': 'next_day'},
-            {'title': _("This week"),  'end': 'next_week'},
-            {'title': _("This month"), 'end': 'next_month'},
-            {'title': _("This year"),  'end': 'next_year'},
-        ]
     ),
     domain = "multisite",
 )
@@ -849,7 +828,6 @@ register_configvar(group,
                  "memberships by the users. You can define a default group to use for filtering "
                  "which is used when a user opens the network topology view."),
         none_label = _("Show all hosts when opening the network topology view"),
-        default_value = None,
     ),
     domain = "multisite"
 )
@@ -933,7 +911,7 @@ register_configvar(group,
                      "will be created. You can also create snapshots manually. WATO will delete old "
                      "snapshots when the maximum number of snapshots is reached."),
              minvalue = 1,
-             default_value = 50),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -971,7 +949,7 @@ register_configvar(group,
                       "are not shown. They will automatically be derived from the name of the folder "
                       "when a new folder is being created. Disable this option if you want to see and "
                       "set the filenames manually."),
-             default_value = True),
+    ),
     domain = "multisite")
 
 
@@ -983,7 +961,7 @@ register_configvar(group,
                       "of unverified snapshots represents a security risk, since the content of a snapshot is executed "
                       "during runtime. Any manipulations in the content - either willingly or unwillingly (XSS attack) "
                       "- pose a serious security risk."),
-             default_value = False),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -991,7 +969,7 @@ register_configvar(group,
     Checkbox(title = _("Hide hosttags in WATO folder view"),
              label = _("hide hosttags"),
              help = _("When enabled, hosttags are no longer shown within the WATO folder view"),
-             default_value = False),
+    ),
     domain = "multisite")
 
 
@@ -1001,7 +979,7 @@ register_configvar(group,
              label = _("hide variable names"),
              help = _("When enabled, internal configuration variable names of Check_MK are hidden "
                       "from the user (for example in the rule editor)"),
-             default_value = True),
+    ),
     domain = "multisite")
 
 
@@ -1010,7 +988,7 @@ register_configvar(group,
     Checkbox(title = _("Hide help text of rules in list views"),
              label = _("hide help text"),
              help = _("When disabled, WATO shows the help texts of rules also in the list views."),
-             default_value = True),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -1022,7 +1000,7 @@ register_configvar(group,
                       "on your Nagios server. The version history currently cannot be viewed "
                       "via the web GUI. Please use git command line tools within your Check_MK "
                       "configuration directory."),
-             default_value = False),
+    ),
     domain = "multisite")
 
 register_configvar(group,
@@ -1032,7 +1010,7 @@ register_configvar(group,
              help = _("When enabled, a subfolder is not shown, when the user does not have sufficient "
                       "permissions to this folder and all of its subfolders. However, the subfolder is "
                       "shown if the user has permissions to any of its subfolder."),
-             default_value = False),
+    ),
     domain = "multisite")
 
 #.
@@ -1205,7 +1183,6 @@ register_configvar(group,
         label = _("Save the time of the latest user activity"),
         help = _("When enabled, the time of the last access is stored for each user. The last "
                  "activity is shown on the users page."),
-        default_value = False
     ),
     domain = "multisite"
 )
@@ -1389,7 +1366,6 @@ register_configvar(group,
                  "immediate update then simply disable the cache once, activate the changes and "
                  "enabled it again. OMD based installations automatically update the cache once "
                  "a day."),
-        default_value = True,
     ),
     need_restart = True
 )
@@ -1406,7 +1382,6 @@ register_configvar(group,
                  "should increase the performance of SNMP checks in a significant way. The inline "
                  "SNMP mode is a feature which improves the performance for large installations and "
                  "only available via our subscription."),
-        default_value = False
     ),
     need_restart = True
 )
@@ -1421,7 +1396,6 @@ register_configvar(group,
                  "at <tt>var/check_mk/snmp.stats</tt>.<br><br>"
                  "<i>Please note:</i> Only enable this for a short period, because it will "
                  "decrease the performance of your monitoring."),
-        default_value = False
     ),
     need_restart = True
 )
@@ -1459,7 +1433,8 @@ register_configvar(group,
             (2, _("Critical") ),
             (3, _("Unknown") ),
             ],
-        default_value = 1))
+    )
+)
 
 register_configvar(group,
     "inventory_check_do_scan",
@@ -1480,7 +1455,6 @@ register_configvar(group,
                  "configuration of a host via WATO - may it be via manual changes or a bulk "
                  "discovery - the service discovery check is automatically rescheduled in order "
                  "to reflect the new service state correctly immediately."),
-        default_value = True,
     ))
 
 

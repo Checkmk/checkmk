@@ -434,6 +434,11 @@ class ConfigDomainEventConsole(ConfigDomain):
             call_hook_mkeventd_activate_changes()
 
 
+    def default_globals(self):
+        import cmk.event_console
+        return cmk.event_console.default_config()
+
+
 
 class ConfigDomainCACertificates(ConfigDomain):
     needs_sync       = True

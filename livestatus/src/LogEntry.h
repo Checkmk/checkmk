@@ -80,11 +80,11 @@ public:
     time_t _time;
     Class _logclass;
     LogEntryType _type;
-    char *_complete;   // copy of complete unsplit message
-    char *_options;    // points into _complete after ':'
-    char *_text;       // points into msg
-    char *_host_name;  // points into msg or is 0
-    char *_svc_desc;   // points into msg or is 0
+    std::string _complete;  // copy of complete unsplit message
+    const char *_options;   // points into _complete after ':'
+    char *_text;            // points into msg
+    char *_host_name;       // points into msg or is 0
+    char *_svc_desc;        // points into msg or is 0
     const char *_command_name;
     char *_contact_name;
     int _state;

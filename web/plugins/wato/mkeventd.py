@@ -1789,20 +1789,8 @@ class ModeEventConsoleSettings(ModeGlobalSettings):
     def __init__(self):
         super(ModeEventConsoleSettings, self).__init__()
 
-        self._default_values = dict([ (varname, vs.default_value())
-                                      for (varname, vs)
-                                      in self._ec_config_variables() ])
-
+        self._default_values   = ConfigDomainEventConsole().default_globals()
         self._current_settings = load_configuration_settings()
-
-
-    def _ec_config_variables(self):
-        config = []
-        for group_title in self._group_names():
-            for entry in configvar_groups()[group_title]:
-                config.append((entry[1], entry[2]))
-
-        return config
 
 
     def _group_names(self):
@@ -2440,7 +2428,6 @@ if mkeventd_enabled:
             help = _("In this interval the event daemon will save its state "
                      "to disk, so that you won't lose your current event "
                      "state in case of a crash."),
-            default_value = 60,
         ),
         domain = ConfigDomainEventConsole,
     )
@@ -2452,7 +2439,6 @@ if mkeventd_enabled:
                      "be seen on a regular base, for events that time out and yet for "
                      "count periods that elapse. Here you can specify the regular interval "
                      "for that job."),
-            default_value = 60,
         ),
         domain = ConfigDomainEventConsole,
     )
@@ -2464,7 +2450,6 @@ if mkeventd_enabled:
                      "rule hits, and other stuff. These values are updated in the interval "
                      "configured here and are available in the sidebar snapin <i>Event Console "
                      "Performance</i>"),
-            default_value = 5,
         ),
         domain = ConfigDomainEventConsole,
     )
@@ -2478,7 +2463,7 @@ if mkeventd_enabled:
                           "directory. The logfile rotation is analog to that of the history logfiles. "
                           "Please note that if you have lots of incoming messages then these "
                           "files can get very large."),
-                default_value = False),
+        ),
         domain = ConfigDomainEventConsole,
     )
 
@@ -2487,7 +2472,7 @@ if mkeventd_enabled:
         Checkbox(title = _("Optimize rule execution"),
                  label = _("enable optimized rule execution"),
                  help = _("This option turns on a faster algorithm for matching events to rules. "),
-                default_value = True),
+        ),
         domain = ConfigDomainEventConsole,
     )
 
@@ -2506,7 +2491,7 @@ if mkeventd_enabled:
                           "a rule will be archived into the event history anyway (Messages "
                           "that do match a rule will be archived always, as long as they are not "
                           "explicitely dropped are being aggregated by counting.)"),
-                 default_value = False),
+        ),
         domain = ConfigDomainEventConsole,
     )
 
@@ -2624,8 +2609,7 @@ if mkeventd_enabled:
                 ( "daily", _("daily")),
                 ( "weekly", _("weekly"))
             ],
-            default_value = "daily",
-            ),
+        ),
         domain = ConfigDomainEventConsole,
     )
 
@@ -2635,7 +2619,6 @@ if mkeventd_enabled:
             title = _("Event history lifetime"),
             help = _("After this number of days old logfile of event history "
                      "will be deleted."),
-            default_value = 365,
             unit = _("days"),
             minvalue = 1,
         ),
@@ -2652,7 +2635,6 @@ if mkeventd_enabled:
                      "be queued before being processed. This setting defines the number of unaccepted "
                      "connections to be queued before refusing new connections."),
             minvalue = 1,
-            default_value = 10,
             label = "max.",
             unit = _("pending connections"),
         ),
@@ -2669,7 +2651,6 @@ if mkeventd_enabled:
                      "This setting defines the number of unaccepted "
                      "connections to be queued before refusing new connections."),
             minvalue = 1,
-            default_value = 10,
             label = "max.",
             unit = _("pending connections"),
         ),
@@ -2740,12 +2721,6 @@ if mkeventd_enabled:
             help = _("When you want to process SNMP traps with the Event Console it is "
                      "necessary to configure the credentials to decrypt the incoming traps."),
             text_if_empty = _("SNMP traps not configured"),
-            default_value = [
-                {
-                    "description": _("\"public\" default for receiving SNMPv1/v2 traps"),
-                    "credentials": "public",
-                },
-            ],
         ),
         domain = ConfigDomainEventConsole,
     )
@@ -2819,7 +2794,7 @@ if mkeventd_enabled:
                           "(by normal hit, cancelling, counting or dropping) a log entry will be written "
                           "into the log file of the Event Console. Please be aware that this might lead to "
                           "a large number of log entries. "),
-                default_value = False),
+        ),
         domain = ConfigDomainEventConsole,
     )
 
@@ -2834,7 +2809,6 @@ if mkeventd_enabled:
                      "then this timeout will be applied."),
             minvalue = 1,
             maxvalue = 120,
-            default_value = 10,
             unit = "sec",
         ),
         domain = ConfigDomainEventConsole,
@@ -2850,7 +2824,7 @@ if mkeventd_enabled:
                           "native Python code generator. Enabling this option switches to <tt>pprint</tt>, "
                           "which nicely indents everything. While this is a bit slower for large "
                           "rulesets it makes debugging and manual editing simpler."),
-                default_value = False),
+        ),
         domain = ConfigDomainEventConsole,
     )
 
@@ -2872,8 +2846,6 @@ register_configvar(group,
                  "matching those messages in order to have events created. <b>Note (2)</b>: "
                  "If you are using the Check_MK Micro Core then this setting is deprecated. "
                  "Please use the notification plugin <i>Forward Notification to Event Console</i> instead."),
-        default_value = '',
-
     ),
     domain = ConfigDomainGUI,
     need_restart = True)
@@ -2906,7 +2878,6 @@ register_configvar(group,
                  "the following syslog facility will be set for these messages. Choosing "
                  "a unique facility makes creation of rules easier."),
         choices = mkeventd.syslog_facilities,
-        default_value = 16, # local0
     ),
     domain = ConfigDomainGUI,
     need_restart = True)

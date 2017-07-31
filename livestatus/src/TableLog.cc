@@ -33,6 +33,7 @@
 #include "LogEntry.h"
 #include "Logfile.h"
 #include "OffsetIntColumn.h"
+#include "OffsetSStringColumn.h"
 #include "OffsetStringColumn.h"
 #include "OffsetTimeColumn.h"
 #include "Query.h"
@@ -67,7 +68,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
         DANGEROUS_OFFSETOF(LogEntry, _logclass), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "message", "The complete message line including the timestamp",
         DANGEROUS_OFFSETOF(LogEntry, _complete), -1, -1, -1));
     addColumn(make_unique<OffsetStringColumn>(

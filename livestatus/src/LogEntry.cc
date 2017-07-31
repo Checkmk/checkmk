@@ -60,24 +60,21 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
     size_t msglen = strlen(line);
     while (msglen > 0 && _msg[msglen - 1] == '\n') {
         _msg[--msglen] = '\0';
-
-        // keep unsplitted copy of the message (needs lots of memory,
-        // maybe we could optimize that one day...)
     }
-    _complete = strdup(_msg);
+
+    // keep unsplit copy of the message (needs lots of memory, maybe we could
+    // optimize that one day...)
+    _complete = _msg;
 
     // pointer to options (everything after ':')
-    _options = _complete;
-    while (*_options != 0 && *_options != ':') {
-        _options++;
+    size_t pos = _complete.find(':');
+    if (pos != string::npos) {
+        pos = _complete.find_first_not_of(' ', pos + 1);
     }
-    if (*_options != 0)  // line contains colon
-    {
-        _options++;  // skip ':'
-        while (*_options == ' ') {
-            _options++;  // skip space after ':'
-        }
+    if (pos == string::npos) {
+        pos = _complete.size();
     }
+    _options = &_complete[pos];
 
     // [1260722267] xxx - extract timestamp, validate message
     if (msglen < 13 || _msg[0] != '[' || _msg[11] != ']') {
@@ -98,10 +95,7 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
     // rest is Class::INFO
 }
 
-LogEntry::~LogEntry() {
-    free(_msg);
-    free(_complete);
-}
+LogEntry::~LogEntry() { free(_msg); }
 
 bool LogEntry::assign(Param par, char **scan) {
     switch (par) {

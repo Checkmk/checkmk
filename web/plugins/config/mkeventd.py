@@ -26,7 +26,7 @@
 
 mkeventd_enabled                = False
 mkeventd_pprint_rules           = False
-mkeventd_notify_contactgroup    = None
+mkeventd_notify_contactgroup    = ''
 mkeventd_notify_facility        = 16
 mkeventd_notify_remotehost      = None
 mkeventd_connect_timeout        = 10

@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,24 +25,25 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_mcafee_webgateway_info(info):
-    if info:
-        return [ (None, None) ]
+# TODO together with 'mcafee_emailgateway_agent'
+# only info check?
 
 
-def check_mcafee_webgateway_info(_no_item, _no_params, info):
-    version, revision = info[0]
-    return 0, "Product version: %s, Revision: %s" % (version, revision)
+def check_mcafee_emailgateway_av_mcafee(item, params, info):
+    eng_version, dat_version, extra_dat_version = info[0]
+    return 0, "Engine version: %s, DAT version: %s (%s)" % \
+              (eng_version, dat_version, extra_dat_version)
 
 
-check_info['mcafee_webgateway_info'] = {
-    'inventory_function'    : inventory_mcafee_webgateway_info,
-    'check_function'        : check_mcafee_webgateway_info,
-    'service_description'   : 'Web gateway info',
-    'snmp_info'             : ('.1.3.6.1.4.1.1230.2.7.1', [
-                                    "3",    # MCAFEE-MWG-MIB::kProductVersion
-                                    "9",    # MCAFEE-MWG-MIB::kRevision
+check_info['mcafee_emailgateway_av_mcafee'] = {
+    'inventory_function'    : inventory_mcafee_gateway_generic,
+    'check_function'        : check_mcafee_emailgateway_av_mcafee,
+    'service_description'   : 'AV McAfee',
+    'snmp_info'             : ('.1.3.6.1.4.1.1230.2.4.1.2.3.6', [
+                                '1',    # av-mcafee-engine-version
+                                '2',    # av-mcafee-dat-version
+                                '3',    # av-mcafee-extra-dat-version
                               ]),
-    'snmp_scan_function'    : scan_mcafee_webgateway,
-    'includes'              : [ 'mcafee_gateway.include' ],
+    'snmp_scan_function'    : scan_mcafee_emailgateway,
+    'includes'              : ['mcafee_gateway.include'],
 }

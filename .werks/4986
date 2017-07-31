@@ -1,0 +1,10 @@
+Title: mcafee_emailgateway_agent, mcafee_emailgateway_av_authentium, mcafee_emailgateway_av_mcafee, mcafee_emailgateway_bridge, mcafee_emailgateway_cpuload, mcafee_emailgateway_entities, mcafee_emailgateway_smtp, mcafee_emailgateway_spam_mcafee: New checks for McAfee Email Gateway
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1501484024
+Class: feature
+
+

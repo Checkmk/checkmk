@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,24 +25,26 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_mcafee_webgateway_info(info):
-    if info:
-        return [ (None, None) ]
+# TODO params?
 
 
-def check_mcafee_webgateway_info(_no_item, _no_params, info):
-    version, revision = info[0]
-    return 0, "Product version: %s, Revision: %s" % (version, revision)
+def check_mcafee_emailgateway_smtp(item, params, info):
+    total_connections, total_bytes, kernel_mode_blocked, kernel_mode_active = map(int, info[0])
+    return 0, "Total connections: %s (%s), Kernel blocked: %s, Kernel active: %s" % \
+              (total_connections, get_bytes_human_readable(total_bytes),
+               kernel_mode_blocked, kernel_mode_active)
 
 
-check_info['mcafee_webgateway_info'] = {
-    'inventory_function'    : inventory_mcafee_webgateway_info,
-    'check_function'        : check_mcafee_webgateway_info,
-    'service_description'   : 'Web gateway info',
-    'snmp_info'             : ('.1.3.6.1.4.1.1230.2.7.1', [
-                                    "3",    # MCAFEE-MWG-MIB::kProductVersion
-                                    "9",    # MCAFEE-MWG-MIB::kRevision
+check_info['mcafee_emailgateway_smtp'] = {
+    'inventory_function'    : inventory_mcafee_gateway_generic,
+    'check_function'        : check_mcafee_emailgateway_smtp,
+    'service_description'   : 'SMTP',
+    'snmp_info'             : ('.1.3.6.1.4.1.1230.2.4.1.2.3.3', [
+                                '1',    # smtp-total-connections
+                                '2',    # smtp-total-bytes
+                                '3',    # smtp-kernelmodeblocking-blocked
+                                '4',    # smtp-kernelmodeblocking-active
                               ]),
-    'snmp_scan_function'    : scan_mcafee_webgateway,
-    'includes'              : [ 'mcafee_gateway.include' ],
+    'snmp_scan_function'    : scan_mcafee_emailgateway,
+    'includes'              : ['mcafee_gateway.include', 'cpu_util.include'],
 }

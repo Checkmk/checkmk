@@ -1,0 +1,14 @@
+Title: Fixed timperiod history calculation
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p10
+Date: 1501499838
+
+The parsing of the monitoring history had a bug, expecting an incorrect
+"TIMEPERIOD_TRANSITION:" instead of the correct "TIMERPERIOD TRANSISION:",
+which could lead to incorrect availibility calculations later (when the
+Nagios core is used).

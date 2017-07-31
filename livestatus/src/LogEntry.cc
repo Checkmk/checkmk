@@ -218,7 +218,7 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions  // NOLINT
          LogEntryType::flapping_service,
          {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
      ////////////////
-     LogDef{"TIMEPERIOD_TRANSITION: ",
+     LogDef{"TIMEPERIOD TRANSITION: ",
             Class::state,
             LogEntryType::timeperiod_transition,
             {}},

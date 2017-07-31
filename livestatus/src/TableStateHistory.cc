@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableStateHistory.h"
-#include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <deque>
@@ -31,7 +30,9 @@
 #include <mutex>
 #include <ostream>
 #include <set>
+#include <stdexcept>
 #include <utility>
+#include <vector>
 #include "Column.h"
 #include "ColumnFilter.h"
 #include "Filter.h"
@@ -274,6 +275,28 @@ public:
     void visit(VariadicFilter & /*unused*/) override {}
 
     bool _value = true;
+};
+
+class TimeperiodTransition {
+public:
+    explicit TimeperiodTransition(const string &str) {
+        auto fields = mk::split(str, ';');
+        if (fields.size() != 3) {
+            throw std::invalid_argument("expected 3 arguments");
+        }
+        _name = fields[0];
+        _from = std::stoi(fields[1]);
+        _to = std::stoi(fields[2]);
+    }
+
+    string name() const { return _name; }
+    int from() const { return _from; }
+    int to() const { return _to; }
+
+private:
+    string _name;
+    int _from;
+    int _to;
 };
 }  // namespace
 
@@ -600,29 +623,18 @@ void TableStateHistory::answerQuery(Query *query) {
                 break;
             }
             case LogEntryType::timeperiod_transition: {
-                char *save_ptr;
-                char *buffer = strdup(entry->_options);
-                char *tp_name = strtok_r(buffer, ";", &save_ptr);
-                char *tp_state = strtok_r(nullptr, ";", &save_ptr);
-                if (tp_state != nullptr) {
-                    tp_state = strtok_r(nullptr, ";", &save_ptr);
-                }
-
-                if (tp_state == nullptr) {
-                    // This line is broken...
+                try {
+                    TimeperiodTransition tpt(entry->_options);
+                    _notification_periods[tpt.name()] = tpt.to();
+                    for (auto &it_hst : state_info) {
+                        updateHostServiceState(query, entry, it_hst.second,
+                                               only_update);
+                    }
+                } catch (const std::logic_error &e) {
                     Warning(logger())
                         << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
                         << entry->_complete;
-                    free(buffer);
-                    break;
                 }
-
-                _notification_periods[tp_name] = atoi(tp_state);
-                for (auto &it_hst : state_info) {
-                    updateHostServiceState(query, entry, it_hst.second,
-                                           only_update);
-                }
-                free(buffer);
                 break;
             }
             case LogEntryType::log_initial_states: {
@@ -834,38 +846,36 @@ int TableStateHistory::updateHostServiceState(Query *query,
             break;
         }
         case LogEntryType::timeperiod_transition: {
-            char *save_ptr;
-            char *buffer = strdup(entry->_options);
-            string tp_name = strtok_r(buffer, ";", &save_ptr);
-            strtok_r(nullptr, ";", &save_ptr);
-            char *tp_state = strtok_r(nullptr, ";", &save_ptr);
-
-            // if no _host pointer is available the initial status of
-            // _in_notification_period (1) never changes
-            if ((hs_state->_host != nullptr) &&
-                (tp_name == hs_state->_notification_period)) {
-                int new_status = atoi(tp_state);
-                if (new_status != hs_state->_in_notification_period) {
-                    if (!only_update) {
-                        process(query, hs_state);
+            try {
+                TimeperiodTransition tpt(entry->_options);
+                // if no _host pointer is available the initial status of
+                // _in_notification_period (1) never changes
+                if (hs_state->_host != nullptr &&
+                    tpt.name() == hs_state->_notification_period) {
+                    if (tpt.to() != hs_state->_in_notification_period) {
+                        if (!only_update) {
+                            process(query, hs_state);
+                        }
+                        hs_state->_debug_info = "TIMEPERIOD ";
+                        hs_state->_in_notification_period = tpt.to();
                     }
-                    hs_state->_debug_info = "TIMEPERIOD ";
-                    hs_state->_in_notification_period = new_status;
                 }
-            }
-            // same for service period
-            if ((hs_state->_host != nullptr) &&
-                (tp_name == hs_state->_service_period)) {
-                int new_status = atoi(tp_state);
-                if (new_status != hs_state->_in_service_period) {
-                    if (!only_update) {
-                        process(query, hs_state);
+                // same for service period
+                if (hs_state->_host != nullptr &&
+                    tpt.name() == hs_state->_service_period) {
+                    if (tpt.to() != hs_state->_in_service_period) {
+                        if (!only_update) {
+                            process(query, hs_state);
+                        }
+                        hs_state->_debug_info = "TIMEPERIOD ";
+                        hs_state->_in_service_period = tpt.to();
                     }
-                    hs_state->_debug_info = "TIMEPERIOD ";
-                    hs_state->_in_service_period = new_status;
                 }
+            } catch (const std::logic_error &e) {
+                Warning(logger())
+                    << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
+                    << entry->_complete;
             }
-            free(buffer);
             break;
         }
     }

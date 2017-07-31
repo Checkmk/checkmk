@@ -298,6 +298,14 @@ class ConfigDomain(object):
         return True
 
 
+    @classmethod
+    def get_all_default_globals(cls):
+        settings = {}
+        for domain in ConfigDomain.enabled_domains():
+            settings.update(domain().default_globals())
+        return settings
+
+
     def config_dir(self):
         raise NotImplementedError()
 
@@ -352,6 +360,19 @@ class ConfigDomain(object):
         self.save(settings, site_specific=True)
 
 
+    def default_globals(self):
+        settings = {}
+        for varname, var in configvars().items():
+            domain, valuespec = var[:2]
+            if domain == self.__class__:
+                settings[varname] = valuespec.default_value()
+        return settings
+
+
+    def _get_global_config_var_names(self):
+        return [ varname for (varname, var) in configvars().items() if var[0] == self.__class__ ]
+
+
 
 class ConfigDomainCore(ConfigDomain):
     needs_sync       = True
@@ -366,6 +387,10 @@ class ConfigDomainCore(ConfigDomain):
         return check_mk_local_automation(config.wato_activation_method)
 
 
+    def default_globals(self):
+        return check_mk_local_automation("get-configuration", [], self._get_global_config_var_names())
+
+
 
 class ConfigDomainGUI(ConfigDomain):
     needs_sync       = True
@@ -378,6 +403,10 @@ class ConfigDomainGUI(ConfigDomain):
 
     def activate(self):
         pass
+
+
+    def default_globals(self):
+        return config.default_config
 
 
 

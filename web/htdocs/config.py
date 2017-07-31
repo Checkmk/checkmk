@@ -24,7 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os, pprint, glob
+import os
+import pprint
+import glob
+import copy
+
 import i18n
 import log
 from lib import *
@@ -53,6 +57,9 @@ config_dir = cmk.paths.var_dir + "/web"
 
 # Detect modification in configuration
 modification_timestamps = []
+
+# Stores the initial configuration values
+default_config = {}
 
 # Global table of available permissions. Plugins may add their own
 # permissions by calling declare_permission()
@@ -116,6 +123,7 @@ def include(filename):
     except Exception, e:
         raise MKConfigError(_("Cannot read configuration file %s: %s:") % (filename, e))
 
+
 # Load multisite.mk and all files in multisite.d/. This will happen
 # for *each* HTTP request.
 # FIXME: Optimize this to cache the config etc. until either the config files or plugins
@@ -126,8 +134,12 @@ def load_config():
     global modification_timestamps, sites
     modification_timestamps = []
 
+
     # Set default values for all user-changable configuration settings
+    vars_before_plugins = all_nonfunction_vars()
     load_plugins(True)
+    vars_after_plugins = all_nonfunction_vars()
+    load_default_config(vars_before_plugins, vars_after_plugins)
 
     # Initialze sites with default site configuration. Need to do it here to
     # override possibly deleted sites
@@ -156,6 +168,11 @@ def load_config():
         sites = default_single_site_configuration()
 
 
+def load_default_config(vars_before_plugins, vars_after_plugins):
+    new_vars = vars_after_plugins.difference(vars_before_plugins)
+    default_config.update(dict([ (k, copy.deepcopy(globals()[k])) for k in new_vars ]))
+
+
 def reporting_available():
     try:
         # Check the existance of one arbitrary config variable from the
@@ -176,6 +193,11 @@ def combined_graphs_available():
 
 def hide_language(lang):
     return lang in hide_languages
+
+
+def all_nonfunction_vars():
+    return set([ name for name,value in globals().items()
+                 if name[0] != '_' and type(value) != type(lambda:0) ])
 
 
 def get_language(default=None):

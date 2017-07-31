@@ -1,0 +1,13 @@
+Title: mk_jolokia: Can now be configured to use the local machine's FQDN to access Jolokia
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1501508004
+Class: feature
+
+Previously, the Jolokia server could be configured via an IP address or an explicit FQDN.
+When using HTTPS on a large number of devices, configuring "localhost" or 127.0.0.1
+would lead to certificate errors unless one configured the FQDN for each host individually.
+This is unreasonably tedious, and can be avoided using this feature.

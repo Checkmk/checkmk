@@ -1,0 +1,15 @@
+title: McAfee Email gateway: Bridge status and traffic
+agents: snmp
+catalog: app/mcafee
+license: GPL
+distribution: check_mk
+description:
+ This check reports the bridge states, TCP, UDP and ICMP statistics
+ of McAfee Email gateways which support the MCAFEE-MEG MIB.
+ The check state is OK if the bridge present state is present, otherwise
+ WARN.
+ The check is OK if the bridge is UP, otherwise CRIT.
+ Upper levels can be set for TCP/UDP/ICMP traffic.
+
+inventory:
+ One service is created.

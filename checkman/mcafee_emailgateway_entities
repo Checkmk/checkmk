@@ -1,0 +1,25 @@
+title: McAfee Email gateway: Entities
+agents: snmp
+catalog: app/mcafee
+license: GPL
+distribution: check_mk
+description:
+ This check reports the health status of miscellaneous
+ entities and services such as
+ Temperature, Voltage, Power Supplies, Cooling,
+ Other Modules, UPS, Bridge, RAID, AV DAT, AV Engine,
+ Spam DAT, Spam Engine, Config Antirelay,
+ Encryption, SMTP, POP3, EPO, TQM-Server, GTI Message,
+ GTM Feedback, GTI File, RBL, R-Syslog, Remote Syslog,
+ LDAP, Remove LDAP, SNMPd, Remove DNS, NTP, WEBMC,
+ Eventhandler, SMTP Retryer, Spam Updater, Postgres, RMD Merge.
+ of McAfee Email gateways which support the MCAFEE-MEG MIB.
+
+ The state is OK if the device reports healthy, WARN if the state is
+ operational but requires attention, requires attention, end of life reached,
+ near end of life, disabled, not applicable, CRIT if it is corrupt dats,
+ corrupt configuration, requires immediate attention, critical and
+ UNKNOWN otherwise.
+
+inventory:
+ One service is created.

@@ -3769,6 +3769,24 @@ metric_info["edge_tcp_packets_dropped"] = {
     "color": "42/a"
 }
 
+metric_info["tcp_packets_received"] = {
+    "title": _("Received TCP packets"),
+    "unit": "1/s",
+    "color": "21/a",
+}
+
+metric_info["udp_packets_received"] = {
+    "title": _("Received UDP packets"),
+    "unit": "1/s",
+    "color": "23/a",
+}
+
+metric_info["icmp_packets_received"] = {
+    "title": _("Received ICMP packets"),
+    "unit": "1/s",
+    "color": "25/a",
+}
+
 metric_info["dataproxy_connections_throttled"] = {
     "title": _("DATAPROXY - Throttled Server Connections"),
     "unit": "count",

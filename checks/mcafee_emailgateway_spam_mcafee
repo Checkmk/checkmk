@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2016             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2017             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -25,15 +25,23 @@
 # Boston, MA 02110-1301 USA.
 
 
-# There are a few different fields in the related MIB:
-# Statistics, HTTP, HTTPs, FTP, Miscellaneous
-# Future extensions: each field one check
-# mcafee_webgateway_http, mcafee_webgateway_https, mcafee_webgateway_ftp
+# TODO together with other mcafee-emailgateway-info checks?
 
 
-def scan_mcafee_webgateway(oid):
-    return 'mcafee web gateway' in oid('.1.3.6.1.2.1.1.1.0').lower()
+def check_mcafee_emailgateway_spam_mcafee(item, params, info):
+    eng_version, rules_version = info[0]
+    return 0, "Engine version: %s, Rules version: %s" % \
+              (eng_version, rules_version)
 
 
-def inventory_mcafee_webgateway_generic(info):
-    return [ (None, {}) ]
+check_info['mcafee_emailgateway_spam_mcafee'] = {
+    'inventory_function'    : inventory_mcafee_gateway_generic,
+    'check_function'        : check_mcafee_emailgateway_spam_mcafee,
+    'service_description'   : 'Spam McAfee',
+    'snmp_info'             : ('.1.3.6.1.4.1.1230.2.4.1.2.3.6', [
+                                '10',   # spam-mcafee-engine-version
+                                '11',   # spam-mcafee-rules-version
+                              ]),
+    'snmp_scan_function'    : scan_mcafee_emailgateway,
+    'includes'              : ['mcafee_gateway.include'],
+}

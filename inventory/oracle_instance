@@ -55,7 +55,6 @@ def inv_oracle_instance(info):
             "openmode"         : openmode,
             "logmode"          : logmode,
             "logins"           : logins,
-            "db_uptime"        : up_seconds,
             "db_creation_time" : db_creation_time,
         })
 

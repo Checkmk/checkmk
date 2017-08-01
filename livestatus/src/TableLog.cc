@@ -78,35 +78,35 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(make_unique<OffsetStringColumn>(
         "options", "The part of the message after the ':'",
         DANGEROUS_OFFSETOF(LogEntry, _options), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "comment", "A comment field used in various message types",
         DANGEROUS_OFFSETOF(LogEntry, _comment), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "plugin_output",
         "The output of the check, if any is associated with the message",
         DANGEROUS_OFFSETOF(LogEntry, _check_output), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "state", "The state of the host or service in question",
         DANGEROUS_OFFSETOF(LogEntry, _state), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "state_type", "The type of the state (varies on different log classes)",
         DANGEROUS_OFFSETOF(LogEntry, _state_type), -1, -1, -1));
     addColumn(make_unique<OffsetIntColumn>(
         "attempt", "The number of the check attempt",
         DANGEROUS_OFFSETOF(LogEntry, _attempt), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
         DANGEROUS_OFFSETOF(LogEntry, _svc_desc), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "host_name",
         "The name of the host the log entry is about (might be empty)",
         DANGEROUS_OFFSETOF(LogEntry, _host_name), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "contact_name",
         "The name of the contact the log entry is about (might be empty)",
         DANGEROUS_OFFSETOF(LogEntry, _contact_name), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "command_name",
         "The name of the command of the log entry (e.g. for notifications)",
         DANGEROUS_OFFSETOF(LogEntry, _command_name), -1, -1, -1));

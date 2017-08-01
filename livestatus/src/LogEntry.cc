@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "LogEntry.h"
-#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <unordered_map>
@@ -39,15 +38,8 @@ using std::unordered_map;
 LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line) {
     // TODO(sp) Fix classifyLogMessage() below to always set all fields and
     // remove this set-me-to-zero-to-be-sure-block.
-    _host_name = nullptr;
-    _svc_desc = nullptr;
-    _command_name = nullptr;
-    _contact_name = nullptr;
     _state = 0;
-    _state_type = nullptr;
     _attempt = 0;
-    _check_output = nullptr;
-    _comment = nullptr;
     _host = nullptr;
     _service = nullptr;
     _contact = nullptr;
@@ -92,7 +84,7 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line) {
 
 LogEntry::~LogEntry() { free(_msg); }
 
-bool LogEntry::assign(Param par, const char *field) {
+bool LogEntry::assign(Param par, const string &field) {
     switch (par) {
         case Param::HostName:
             this->_host_name = field;
@@ -101,21 +93,19 @@ bool LogEntry::assign(Param par, const char *field) {
             this->_svc_desc = field;
             break;
         case Param::HostState:
-            this->_state =
-                static_cast<int>(parseHostState(field == nullptr ? "" : field));
+            this->_state = static_cast<int>(parseHostState(field));
             break;
         case Param::ServiceState:
-            this->_state = static_cast<int>(
-                parseServiceState(field == nullptr ? "" : field));
+            this->_state = static_cast<int>(parseServiceState(field));
             break;
         case Param::State:
-            this->_state = field == nullptr ? 0 : atoi(field);
+            this->_state = atoi(field.c_str());
             break;
         case Param::StateType:
             this->_state_type = field;
             break;
         case Param::Attempt:
-            this->_attempt = field == nullptr ? 0 : atoi(field);
+            this->_attempt = atoi(field.c_str());
             break;
         case Param::Comment:
             this->_comment = field;
@@ -293,7 +283,11 @@ void LogEntry::classifyLogMessage() {
             _text = next_token(&scan, ':');
             ++scan;
             for (Param par : def.params) {
-                assign(par, next_token(&scan, ';'));
+                const char *field = next_token(&scan, ';');
+                if (field == nullptr) {
+                    field = "";
+                }
+                assign(par, field);
             }
             return;
         }
@@ -340,20 +334,20 @@ void LogEntry::classifyLogMessage() {
 // fields. :-P
 void LogEntry::applyWorkarounds() {
     if (_logclass != Class::hs_notification ||  // no need for any workaround
-        _state_type == nullptr) {               // extremely broken line
+        _state_type.empty()) {                  // extremely broken line
         return;
     }
 
-    if (strcmp(_state_type, "check-mk-notify") == 0) {
+    if (_state_type == "check-mk-notify") {
         // Ooops, we encounter one of our own buggy lines...
         std::swap(_state_type, _command_name);
     }
 
-    if (_state_type == nullptr) {
+    if (_state_type.empty()) {
         return;  // extremely broken line, even after a potential swap
     }
 
-    _state = (_svc_desc == nullptr)
+    _state = _svc_desc.empty()
                  ? static_cast<int>(parseHostState(_state_type))
                  : static_cast<int>(parseServiceState(_state_type));
 }
@@ -407,23 +401,23 @@ HostState LogEntry::parseHostState(const string &str) {
 
 unsigned LogEntry::updateReferences(MonitoringCore *mc) {
     unsigned updated = 0;
-    if (_host_name != nullptr) {
+    if (!_host_name.empty()) {
         // Older Nagios headers are not const-correct... :-P
-        _host = find_host(const_cast<char *>(_host_name));
+        _host = find_host(const_cast<char *>(_host_name.c_str()));
         updated++;
     }
-    if (_svc_desc != nullptr) {
+    if (!_svc_desc.empty()) {
         // Older Nagios headers are not const-correct... :-P
-        _service = find_service(const_cast<char *>(_host_name),
-                                const_cast<char *>(_svc_desc));
+        _service = find_service(const_cast<char *>(_host_name.c_str()),
+                                const_cast<char *>(_svc_desc.c_str()));
         updated++;
     }
-    if (_contact_name != nullptr) {
+    if (!_contact_name.empty()) {
         // Older Nagios headers are not const-correct... :-P
-        _contact = find_contact(const_cast<char *>(_contact_name));
+        _contact = find_contact(const_cast<char *>(_contact_name.c_str()));
         updated++;
     }
-    if (_command_name != nullptr) {
+    if (!_command_name.empty()) {
         _command = mc->find_command(_command_name);
         updated++;
     }

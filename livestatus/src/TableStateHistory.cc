@@ -23,7 +23,6 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TableStateHistory.h"
-#include <cstring>
 #include <ctime>
 #include <deque>
 #include <memory>
@@ -88,9 +87,9 @@ constexpr unsigned classmask_statehist =
 
 #ifndef CMC
 namespace {
-string getCustomVariable(customvariablesmember *cvm, const char *name) {
+string getCustomVariable(customvariablesmember *cvm, const string &name) {
     for (; cvm != nullptr; cvm = cvm->next) {
-        if (strcmp(cvm->variable_name, name) == 0) {
+        if (cvm->variable_name == name) {
             return cvm->variable_value == nullptr ? "" : cvm->variable_value;
         }
     }
@@ -466,7 +465,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // Create state object that we also need for filtering right
                     // now
                     state = new HostServiceState();
-                    state->_is_host = entry->_svc_desc == nullptr;
+                    state->_is_host = entry->_svc_desc.empty();
                     state->_host = entry->_host;
                     state->_service = entry->_service;
 #ifdef CMC
@@ -485,7 +484,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // No state found. Now check if this host/services is
                     // filtered out.  Note: we currently do not filter out hosts
                     // since they might be needed for service states
-                    if (entry->_svc_desc != nullptr) {
+                    if (!entry->_svc_desc.empty()) {
                         bool filtered_out = false;
                         for (auto filter : object_filter) {
                             if (!filter->accepts(Row(state), query->authUser(),
@@ -801,7 +800,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         }
         case LogEntryType::downtime_alert_host: {
             int downtime_active =
-                strncmp(entry->_state_type, "STARTED", 7) == 0 ? 1 : 0;
+                starts_with(entry->_state_type, "STARTED") ? 1 : 0;
 
             if (hs_state->_in_host_downtime != downtime_active) {
                 if (!only_update) {
@@ -820,7 +819,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         }
         case LogEntryType::downtime_alert_service: {
             int downtime_active =
-                strncmp(entry->_state_type, "STARTED", 7) == 0 ? 1 : 0;
+                starts_with(entry->_state_type, "STARTED") ? 1 : 0;
             if (hs_state->_in_downtime != downtime_active) {
                 if (!only_update) {
                     process(query, hs_state);
@@ -833,7 +832,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         case LogEntryType::flapping_host:
         case LogEntryType::flapping_service: {
             int flapping_active =
-                strncmp(entry->_state_type, "STARTED", 7) == 0 ? 1 : 0;
+                starts_with(entry->_state_type, "STARTED") ? 1 : 0;
             if (hs_state->_is_flapping != flapping_active) {
                 if (!only_update) {
                     process(query, hs_state);
@@ -883,12 +882,10 @@ int TableStateHistory::updateHostServiceState(Query *query,
     if (entry->_type != LogEntryType::timeperiod_transition) {
         if ((entry->_type == LogEntryType::state_host_initial ||
              entry->_type == LogEntryType::state_service_initial) &&
-            (entry->_check_output != nullptr &&
-             strcmp(entry->_check_output, "(null)") == 0)) {
+            entry->_check_output == "(null)") {
             hs_state->_log_output = "";
         } else {
-            hs_state->_log_output =
-                entry->_check_output == nullptr ? "" : entry->_check_output;
+            hs_state->_log_output = entry->_check_output;
         }
     }
 

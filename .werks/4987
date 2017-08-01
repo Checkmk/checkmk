@@ -1,0 +1,10 @@
+Title: oracle_instance: Removed uptime from inventory plugin in sense of werk #4485
+Level: 1
+Component: inv
+Compatible: compat
+Edition: cre
+Version: 1.4.0p10
+Date: 1501591071
+Class: fix
+
+

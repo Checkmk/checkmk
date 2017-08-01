@@ -80,18 +80,18 @@ public:
     time_t _time;
     Class _logclass;
     LogEntryType _type;
-    std::string _complete;  // copy of complete unsplit message
-    const char *_options;   // points into _complete after ':'
-    char *_text;            // points into msg
-    char *_host_name;       // points into msg or is 0
-    char *_svc_desc;        // points into msg or is 0
+    std::string _complete;   // copy of complete unsplit message
+    const char *_options;    // points into _complete after ':'
+    char *_text;             // points into msg
+    const char *_host_name;  // points into msg or is 0
+    const char *_svc_desc;   // points into msg or is 0
     const char *_command_name;
-    char *_contact_name;
+    const char *_contact_name;
     int _state;
     const char *_state_type;
     int _attempt;
-    char *_check_output;
-    char *_comment;
+    const char *_check_output;
+    const char *_comment;
 
     host *_host;
     service *_service;
@@ -129,7 +129,7 @@ private:
     char *_msg;  // split up with binary zeroes
     static std::vector<LogDef> log_definitions;
 
-    bool assign(Param par, char **scan);
+    bool assign(Param par, const char *field);
     void applyWorkarounds();
     void classifyLogMessage();
 };

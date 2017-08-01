@@ -92,43 +92,42 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line) {
 
 LogEntry::~LogEntry() { free(_msg); }
 
-bool LogEntry::assign(Param par, char **scan) {
+bool LogEntry::assign(Param par, const char *field) {
     switch (par) {
         case Param::HostName:
-            this->_host_name = next_token(scan, ';');
+            this->_host_name = field;
             break;
         case Param::SvcDesc:
-            this->_svc_desc = next_token(scan, ';');
+            this->_svc_desc = field;
             break;
         case Param::HostState:
             this->_state =
-                static_cast<int>(parseHostState(safe_next_token(scan, ';')));
+                static_cast<int>(parseHostState(field == nullptr ? "" : field));
             break;
         case Param::ServiceState:
-            this->_state =
-                static_cast<int>(parseServiceState(safe_next_token(scan, ';')));
+            this->_state = static_cast<int>(
+                parseServiceState(field == nullptr ? "" : field));
             break;
         case Param::State:
-            // numeric state
-            this->_state = atoi(safe_next_token(scan, ';'));
+            this->_state = field == nullptr ? 0 : atoi(field);
             break;
         case Param::StateType:
-            this->_state_type = next_token(scan, ';');
+            this->_state_type = field;
             break;
         case Param::Attempt:
-            this->_attempt = atoi(safe_next_token(scan, ';'));
+            this->_attempt = field == nullptr ? 0 : atoi(field);
             break;
         case Param::Comment:
-            this->_comment = next_token(scan, ';');
+            this->_comment = field;
             break;
         case Param::CommandName:
-            this->_command_name = next_token(scan, ';');
+            this->_command_name = field;
             break;
         case Param::ContactName:
-            this->_contact_name = next_token(scan, ';');
+            this->_contact_name = field;
             break;
         case Param::CheckOutput:
-            this->_check_output = next_token(scan, ';');
+            this->_check_output = field;
             break;
     }
 
@@ -294,7 +293,7 @@ void LogEntry::classifyLogMessage() {
             _text = next_token(&scan, ':');
             ++scan;
             for (Param par : def.params) {
-                assign(par, &scan);
+                assign(par, next_token(&scan, ';'));
             }
             return;
         }
@@ -409,15 +408,19 @@ HostState LogEntry::parseHostState(const string &str) {
 unsigned LogEntry::updateReferences(MonitoringCore *mc) {
     unsigned updated = 0;
     if (_host_name != nullptr) {
-        _host = find_host(_host_name);
+        // Older Nagios headers are not const-correct... :-P
+        _host = find_host(const_cast<char *>(_host_name));
         updated++;
     }
     if (_svc_desc != nullptr) {
-        _service = find_service(_host_name, _svc_desc);
+        // Older Nagios headers are not const-correct... :-P
+        _service = find_service(const_cast<char *>(_host_name),
+                                const_cast<char *>(_svc_desc));
         updated++;
     }
     if (_contact_name != nullptr) {
-        _contact = find_contact(_contact_name);
+        // Older Nagios headers are not const-correct... :-P
+        _contact = find_contact(const_cast<char *>(_contact_name));
         updated++;
     }
     if (_command_name != nullptr) {

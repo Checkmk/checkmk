@@ -1960,7 +1960,11 @@ def config_change():
 
 def read_config_change_commands():
     settings = []
-    for line in sys.stdin.read():
+    for l in sys.stdin:
+        line = l.strip()
+        if not line:
+            continue
+
         try:
             key, value = line.split("=", 1)
             settings.append((key, value))
@@ -2065,6 +2069,9 @@ omd config               - interactive configuration menu
 omd config show          - show current settings of all configuration variables
 omd config show VAR      - show current setting of variable VAR
 omd config set VAR VALUE - set VAR to VALUE
+omd config change        - change multiple at once. Provide newline separated
+                           KEY=value pairs via stdin. The site is restarted
+                           automatically once in case it's currently runnig.
 """)
 
 def config_show(args):

@@ -90,6 +90,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
             do_all_checks_on_host(hostname, ipaddress, only_check_types)
 
         agent_version = cmk_info["version"]
+        agent_os = cmk_info.get("agentos")
 
         num_errors = len(error_sections)
 
@@ -137,9 +138,12 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
         else:
             output = ""
-            if not config.is_cluster(hostname) and agent_version != None:
-                output += "Agent version %s, " % agent_version
             status = 0
+
+        if not config.is_cluster(hostname) and agent_version != None:
+            output += "Agent version %s, " % agent_version
+        if not config.is_cluster(hostname) and agent_os != None:
+            output += "Agent OS %s, " % agent_os
 
     except MKTimeout:
         raise

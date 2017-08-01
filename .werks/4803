@@ -1,0 +1,10 @@
+Title: Always display agent version and OS in Check_MK service if available
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1501574646
+Class: feature
+
+

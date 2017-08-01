@@ -82,7 +82,7 @@ public:
     LogEntryType _type;
     std::string _complete;  // copy of complete unsplit message
     const char *_options;   // points into _complete after ':'
-    char *_text;            // points into msg
+    std::string _text;
     std::string _host_name;
     std::string _svc_desc;
     std::string _command_name;
@@ -98,8 +98,8 @@ public:
     contact *_contact;
     Command _command;
 
-    LogEntry(MonitoringCore *mc, unsigned lineno, const char *line);
-    ~LogEntry();
+    // NOTE: line gets modified!
+    LogEntry(MonitoringCore *mc, unsigned lineno, char *line);
     unsigned updateReferences(MonitoringCore *mc);
     static ServiceState parseServiceState(const std::string &str);
     static HostState parseHostState(const std::string &str);
@@ -126,12 +126,11 @@ private:
         std::vector<Param> params;
     };
 
-    char *_msg;  // split up with binary zeroes
     static std::vector<LogDef> log_definitions;
 
     bool assign(Param par, const std::string &field);
     void applyWorkarounds();
-    void classifyLogMessage();
+    void classifyLogMessage(const std::string &text);
 };
 
 #endif  // LogEntry_h

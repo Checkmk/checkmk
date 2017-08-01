@@ -3415,9 +3415,12 @@ def configvar_show_in_global_settings(varname):
         return False
 
 
-# domain is one of "check_mk", "multisite" or "nagios"
-def register_configvar(group, varname, valuespec, domain="check_mk",
-                       need_restart=False, allow_reset=True, in_global_settings=True):
+# domain is one of the ConfigDomain classes
+def register_configvar(group, varname, valuespec, domain=None,
+                       need_restart=None, allow_reset=True, in_global_settings=True):
+
+    if domain is None:
+        domain = ConfigDomainCore
 
     # New API is to hand over the class via domain argument. But not all calls have been
     # migrated. Perform the translation here.

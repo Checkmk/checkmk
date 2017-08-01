@@ -886,7 +886,6 @@ register_configvar(_("Site Management"),
         optional_keys = False,
     ),
     domain = ConfigDomainCACertificates,
-    need_restart = True,
 )
 
 #.
@@ -1260,7 +1259,6 @@ register_configvar(group,
         ],
         render_orientation = "vertical",
     ),
-    need_restart = True
 )
 
 
@@ -1272,7 +1270,7 @@ register_configvar(group,
                    "Note: This does <b>not</b> limit the time the agent needs to "
                    "generate its output."),
           minvalue = 1.0),
-    need_restart = True)
+)
 
 
 register_configvar(group,
@@ -1283,7 +1281,7 @@ register_configvar(group,
                       "No hosts will be contacted, no DNS lookups will take place and data is read "
                       "from cache files that have been created during normal operation or have "
                       "been copied here from another monitoring site.")),
-    need_restart = True)
+)
 
 register_configvar(group,
     "restart_locking",
@@ -1297,9 +1295,9 @@ register_configvar(group,
             ('abort', _("Abort with an error")),
             ('wait' , _("Wait until the other has finished") ),
             (None ,   _("Disable locking") ),
-            ]),
-    need_restart = False
-    )
+        ],
+    ),
+)
 
 register_configvar(group,
     "agent_simulator",
@@ -1308,8 +1306,7 @@ register_configvar(group,
              help = _("When using stored SNMP walks you can place inline code generating "
                       "dynamic simulation data. This feature can be activated here. There "
                       "is a big chance that you will never need this feature...")),
-    need_restart = True)
-
+)
 
 register_configvar(group,
     "delay_precompile",
@@ -1331,7 +1328,7 @@ register_configvar(group,
                      "checking a cluster. Per default this is enabled and set to 90 seconds. "
                      "If your check cycle is set to a larger value than one minute then "
                      "you should increase this accordingly.")),
-    need_restart = True)
+)
 
 register_configvar(group,
     "piggyback_max_cachefile_age",
@@ -1339,7 +1336,7 @@ register_configvar(group,
             help = _("The maximum age for piggy back data from another host to be valid for monitoring. "
                      "Older files are deleted before processing them. Please make sure that this age is "
                      "at least as large as you normal check interval for piggy hosts.")),
-    need_restart = True)
+)
 
 
 
@@ -1351,7 +1348,7 @@ register_configvar(group,
                       "for the Check_MK output, giving information regarding the process times. "
                       "It provides the following fields: user_time, system_time, children_user_time "
                       "and children_system_time")),
-    need_restart = True)
+)
 
 register_configvar(group,
     "use_dns_cache",
@@ -1367,7 +1364,6 @@ register_configvar(group,
                  "enabled it again. OMD based installations automatically update the cache once "
                  "a day."),
     ),
-    need_restart = True
 )
 
 register_configvar(group,
@@ -1383,7 +1379,6 @@ register_configvar(group,
                  "SNMP mode is a feature which improves the performance for large installations and "
                  "only available via our subscription."),
     ),
-    need_restart = True
 )
 
 register_configvar(group,
@@ -1397,7 +1392,6 @@ register_configvar(group,
                  "<i>Please note:</i> Only enable this for a short period, because it will "
                  "decrease the performance of your monitoring."),
     ),
-    need_restart = True
 )
 
 group = _("Service discovery")
@@ -1419,7 +1413,7 @@ register_configvar(group,
                  "automatic rediscovery. Rules in that rule set will override the global "
                  "settings done here.") % "wato.py?mode=edit_ruleset&varname=periodic_discovery",
     ),
-    need_restart = True)
+)
 
 register_configvar(group,
     "inventory_check_severity",

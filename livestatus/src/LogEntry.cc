@@ -88,9 +88,7 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
     if (classifyLogMessage()) {
         updateReferences(mc);
     } else {
-        handleTextEntry() || handleProgrammEntry();  // Performance killer
-                                                     // strstr in
-                                                     // handleProgrammEntry!
+        handleEntry();
     }
     // rest is Class::INFO
 }
@@ -339,40 +337,36 @@ void LogEntry::applyWorkarounds() {
                  : static_cast<int>(parseServiceState(_state_type));
 }
 
-bool LogEntry::handleTextEntry() {
+void LogEntry::handleEntry() {
     if (strncmp(_text, "LOG VERSION: 2.0", 16) == 0) {
         _logclass = Class::program;
         _type = LogEntryType::log_version;
-        return true;
+        return;
     }
-    if ((strncmp(_text, "logging initial states", 22) == 0) ||
-        (strncmp(_text, "logging intitial states", 23) == 0)) {
+    if (strncmp(_text, "logging initial states", 22) == 0 ||
+        strncmp(_text, "logging intitial states", 23) == 0) {
         _logclass = Class::program;
         _type = LogEntryType::log_initial_states;
-        return true;
+        return;
     }
-    return false;
-}
-
-bool LogEntry::handleProgrammEntry() {
-    if ((strstr(_text, "starting...") != nullptr) ||
-        (strstr(_text, "active mode...") != nullptr)) {
+    if (strstr(_text, "starting...") != nullptr ||
+        strstr(_text, "active mode...") != nullptr) {
         _logclass = Class::program;
         _type = LogEntryType::core_starting;
-        return true;
+        return;
     }
-    if ((strstr(_text, "shutting down...") != nullptr) ||
-        (strstr(_text, "Bailing out") != nullptr) ||
-        (strstr(_text, "standby mode...") != nullptr)) {
+    if (strstr(_text, "shutting down...") != nullptr ||
+        strstr(_text, "Bailing out") != nullptr ||
+        strstr(_text, "standby mode...") != nullptr) {
         _logclass = Class::program;
         _type = LogEntryType::core_stopping;
-        return true;
+        return;
     }
     if (strstr(_text, "restarting...") != nullptr) {
         _logclass = Class::program;
-        return true;
+        _type = LogEntryType::none;
+        return;
     }
-    return false;
 }
 
 namespace {

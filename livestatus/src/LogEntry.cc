@@ -315,7 +315,7 @@ bool LogEntry::classifyLogMessage() {
         }
     }
 
-    return true;
+    return false;
 }
 
 // The NotifyHelper class has a long, tragic history: Through a long series of

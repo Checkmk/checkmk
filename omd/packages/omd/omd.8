@@ -316,7 +316,7 @@ format.
 If you add the option \fB--auto\fP then only the status of those sites will
 be displayed, that are set to {AUTOSTART} = {on}.
 .TP
-.B omd config [-f, --force] [SITE] [set|show] [VARIABLE] [VALUE]
+.B omd config [-f, --force] [SITE] [set|show|change] [VARIABLE] [VALUE]
 This command is used to view and change the configuration of a site. Each
 site has a list of configuration variables. Those variables configure
 how the addons of the site should work together. Optional addons can be
@@ -340,6 +340,18 @@ Setting and querying variables in batch mode can be done with
 The option \fB--force\fP will automatically stop the site in case
 it is running before the config change is done and start it afterwards
 again.
+
+In addition to \fBomd config set\fP there is this option to set multiple
+variables at once:
+
+\fBomd config [SITE] change\fP
+
+To change configuration options, you need to provide newline separated
+KEY=value pairs via stdin, for example like this:
+
+\fBecho -e "CORE=cmc\\nAUTOSTART=on" | omd config change\fP
+
+The site is restarted automatically once in case it's currently runnig.
 
 .TP
 .B omd [-v] diff [RELBASE] [-b, --bare]

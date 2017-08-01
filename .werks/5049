@@ -1,0 +1,15 @@
+Title: omd config: New mode "change" for bulk changing config options
+Level: 1
+Component: omd
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1501577104
+Class: feature
+
+It is now possible to change multiple configuration settings via command
+line using the command "omd config change". This can be used like this:
+
+echo -e "CORE=cmc\nAUTOSTART=on" | omd config change
+
+The site is restarted automatically once in case it's currently runnig.

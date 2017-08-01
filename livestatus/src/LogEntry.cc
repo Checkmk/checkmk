@@ -29,13 +29,12 @@
 #include <utility>
 #include "MonitoringCore.h"
 #include "StringUtils.h"
-#include "strutil.h"
 
 using mk::starts_with;
 using std::string;
 using std::unordered_map;
 
-LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line) {
+LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, char *line) {
     // TODO(sp) Fix classifyLogMessage() below to always set all fields and
     // remove this set-me-to-zero-to-be-sure-block.
     _state = 0;
@@ -43,19 +42,17 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line) {
     _host = nullptr;
     _service = nullptr;
     _contact = nullptr;
-
     _lineno = lineno;
 
     // make a copy of the message and strip trailing newline
-    _msg = strdup(line);
-    size_t msglen = strlen(line);
-    while (msglen > 0 && _msg[msglen - 1] == '\n') {
-        _msg[--msglen] = '\0';
+    size_t linelen = strlen(line);
+    while (linelen > 0 && line[linelen - 1] == '\n') {
+        line[--linelen] = '\0';
     }
 
     // keep unsplit copy of the message (needs lots of memory, maybe we could
     // optimize that one day...)
-    _complete = _msg;
+    _complete = line;
 
     // pointer to options (everything after ':')
     size_t pos = _complete.find(':');
@@ -68,21 +65,19 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line) {
     _options = &_complete[pos];
 
     // [1260722267] xxx - extract timestamp, validate message
-    if (msglen < 13 || _msg[0] != '[' || _msg[11] != ']') {
+    if (linelen < 13 || line[0] != '[' || line[11] != ']') {
         _logclass = Class::invalid;
         _type = LogEntryType::none;
         return;  // ignore invalid lines silently
     }
-    _msg[11] = 0;  // zero-terminate time stamp
-    _time = atoi(_msg + 1);
-    _text = _msg + 13;  // also skip space after timestamp
+    line[11] = 0;  // zero-terminate time stamp
+    _time = atoi(line + 1);
 
-    classifyLogMessage();
+    // also skip space after timestamp
+    classifyLogMessage(line + 13);
     applyWorkarounds();
     updateReferences(mc);
 }
-
-LogEntry::~LogEntry() { free(_msg); }
 
 bool LogEntry::assign(Param par, const string &field) {
     switch (par) {
@@ -126,172 +121,173 @@ bool LogEntry::assign(Param par, const string &field) {
 
 // False positive in clang-tidy-4.0, see https://reviews.llvm.org/D27048
 std::vector<LogEntry::LogDef> LogEntry::log_definitions  // NOLINT
-    {LogDef{"INITIAL HOST STATE: ",
+    {LogDef{"INITIAL HOST STATE",
             Class::alert,
             LogEntryType::alert_host,
             {Param::HostName, Param::HostState, Param::StateType,
              Param::Attempt, Param::CheckOutput}},
      ////////////////
-     LogDef{"CURRENT HOST STATE: ",
+     LogDef{"CURRENT HOST STATE",
             Class::state,
             LogEntryType::state_host_initial,
             {Param::HostName, Param::HostState, Param::StateType,
              Param::Attempt, Param::CheckOutput}},
      ////////////////
-     LogDef{"HOST ALERT: ",
+     LogDef{"HOST ALERT",
             Class::state,
             LogEntryType::state_host,
             {Param::HostName, Param::HostState, Param::StateType,
              Param::Attempt, Param::CheckOutput}},
      ////////////////
-     LogDef{"HOST DOWNTIME ALERT: ",
+     LogDef{"HOST DOWNTIME ALERT",
             Class::alert,
             LogEntryType::downtime_alert_host,
             {Param::HostName, Param::StateType, Param::Comment}},
      ////////////////
-     LogDef{"HOST ACKNOWLEDGE ALERT: ",
+     LogDef{"HOST ACKNOWLEDGE ALERT",
             Class::alert,
             LogEntryType::acknowledge_alert_host,
             {Param::HostName, Param::StateType, Param::ContactName,
              Param::Comment}},
      ////////////////
-     LogDef{"HOST FLAPPING ALERT: ",
+     LogDef{"HOST FLAPPING ALERT",
             Class::alert,
             LogEntryType::flapping_host,
             {Param::HostName, Param::StateType, Param::Comment}},
      ////////////////
-     LogDef{"INITIAL SERVICE STATE: ",
+     LogDef{"INITIAL SERVICE STATE",
             Class::state,
             LogEntryType::state_service_initial,
             {Param::HostName, Param::SvcDesc, Param::ServiceState,
              Param::StateType, Param::Attempt, Param::CheckOutput}},
      ////////////////
-     LogDef{"CURRENT SERVICE STATE: ",
+     LogDef{"CURRENT SERVICE STATE",
             Class::state,
             LogEntryType::state_service,
             {Param::HostName, Param::SvcDesc, Param::ServiceState,
              Param::StateType, Param::Attempt, Param::CheckOutput}},
      ////////////////
-     LogDef{"SERVICE ALERT: ",
+     LogDef{"SERVICE ALERT",
             Class::alert,
             LogEntryType::alert_service,
             {Param::HostName, Param::SvcDesc, Param::ServiceState,
              Param::StateType, Param::Attempt, Param::CheckOutput}},
      ////////////////
      LogDef{
-         "SERVICE DOWNTIME ALERT: ",
+         "SERVICE DOWNTIME ALERT",
          Class::alert,
          LogEntryType::downtime_alert_service,
          {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
      ////////////////
-     LogDef{"SERVICE ACKNOWLEDGE ALERT: ",
+     LogDef{"SERVICE ACKNOWLEDGE ALERT",
             Class::alert,
             LogEntryType::acknowledge_alert_service,
             {Param::HostName, Param::SvcDesc, Param::StateType,
              Param::ContactName, Param::Comment}},
      ////////////////
      LogDef{
-         "SERVICE FLAPPING ALERT: ",
+         "SERVICE FLAPPING ALERT",
          Class::alert,
          LogEntryType::flapping_service,
          {Param::HostName, Param::SvcDesc, Param::StateType, Param::Comment}},
      ////////////////
-     LogDef{"TIMEPERIOD TRANSITION: ",
+     LogDef{"TIMEPERIOD TRANSITION",
             Class::state,
             LogEntryType::timeperiod_transition,
             {}},
      ////////////////
-     LogDef{"HOST NOTIFICATION: ",
+     LogDef{"HOST NOTIFICATION",
             Class::hs_notification,
             LogEntryType::none,
             {Param::ContactName, Param::HostName, Param::StateType,
              Param::CommandName, Param::CheckOutput}},
      ////////////////
-     LogDef{"SERVICE NOTIFICATION: ",
+     LogDef{"SERVICE NOTIFICATION",
             Class::hs_notification,
             LogEntryType::none,
             {Param::ContactName, Param::HostName, Param::SvcDesc,
              Param::StateType, Param::CommandName, Param::CheckOutput}},
      ////////////////
-     LogDef{"HOST NOTIFICATION RESULT: ",
+     LogDef{"HOST NOTIFICATION RESULT",
             Class::hs_notification,
             LogEntryType::none,
             {Param::ContactName, Param::HostName, Param::StateType,
              Param::CommandName, Param::CheckOutput, Param::Comment}},
      ////////////////
      LogDef{
-         "SERVICE NOTIFICATION RESULT: ",
+         "SERVICE NOTIFICATION RESULT",
          Class::hs_notification,
          LogEntryType::none,
          {Param::ContactName, Param::HostName, Param::SvcDesc, Param::StateType,
           Param::CommandName, Param::CheckOutput, Param::Comment}},
      ////////////////
-     LogDef{"HOST NOTIFICATION PROGRESS: ",
+     LogDef{"HOST NOTIFICATION PROGRESS",
             Class::hs_notification,
             LogEntryType::none,
             {Param::ContactName, Param::HostName, Param::StateType,
              Param::CommandName, Param::CheckOutput}},
      ////////////////
-     LogDef{"SERVICE NOTIFICATION PROGRESS: ",
+     LogDef{"SERVICE NOTIFICATION PROGRESS",
             Class::hs_notification,
             LogEntryType::none,
             {Param::ContactName, Param::HostName, Param::SvcDesc,
              Param::StateType, Param::CommandName, Param::CheckOutput}},
      ////////////////
-     LogDef{"HOST ALERT HANDLER STARTED: ",
+     LogDef{"HOST ALERT HANDLER STARTED",
             Class::alert_handlers,
             LogEntryType::none,
             {Param::HostName, Param::CommandName}},
      ////////////////
-     LogDef{"SERVICE ALERT HANDLER STARTED: ",
+     LogDef{"SERVICE ALERT HANDLER STARTED",
             Class::alert_handlers,
             LogEntryType::none,
             {Param::HostName, Param::SvcDesc, Param::CommandName}},
      ////////////////
-     LogDef{"HOST ALERT HANDLER STOPPED: ",
+     LogDef{"HOST ALERT HANDLER STOPPED",
             Class::alert_handlers,
             LogEntryType::none,
             {Param::HostName, Param::CommandName, Param::ServiceState,
              Param::CheckOutput}},
      ////////////////
-     LogDef{"SERVICE ALERT HANDLER STOPPED: ",
+     LogDef{"SERVICE ALERT HANDLER STOPPED",
             Class::alert_handlers,
             LogEntryType::none,
             {Param::HostName, Param::SvcDesc, Param::CommandName,
              Param::ServiceState, Param::CheckOutput}},
      ////////////////
      LogDef{
-         "PASSIVE SERVICE CHECK: ",
+         "PASSIVE SERVICE CHECK",
          Class::passivecheck,
          LogEntryType::none,
          {Param::HostName, Param::SvcDesc, Param::State, Param::CheckOutput}},
      ////////////////
-     LogDef{"PASSIVE HOST CHECK: ",
+     LogDef{"PASSIVE HOST CHECK",
             Class::passivecheck,
             LogEntryType::none,
             {Param::HostName, Param::State, Param::CheckOutput}},
      ////////////////
-     LogDef{"EXTERNAL COMMAND: ", Class::ext_command, LogEntryType::none, {}}};
+     LogDef{"EXTERNAL COMMAND", Class::ext_command, LogEntryType::none, {}}};
 
-void LogEntry::classifyLogMessage() {
-    string text = _text;
+void LogEntry::classifyLogMessage(const string &text) {
     for (const auto &def : log_definitions) {
-        if (starts_with(text, def.prefix)) {
+        if (starts_with(text, def.prefix) &&
+            text.compare(def.prefix.size(), 2, ": ") == 0) {
+            _text = def.prefix;
             _logclass = def.log_class;
             _type = def.log_type;
-            char *scan = _text;
-            _text = next_token(&scan, ':');
-            ++scan;
+            // TODO(sp) Use boost::tokenizer instead of this index fiddling
+            size_t pos = def.prefix.size() + 2;
             for (Param par : def.params) {
-                const char *field = next_token(&scan, ';');
-                if (field == nullptr) {
-                    field = "";
-                }
-                assign(par, field);
+                size_t sep_pos = text.find(';', pos);
+                size_t end_pos =
+                    sep_pos == string::npos ? text.size() : sep_pos;
+                assign(par, text.substr(pos, end_pos - pos));
+                pos = sep_pos == string::npos ? text.size() : (sep_pos + 1);
             }
             return;
         }
     }
+    _text = text;
     if (starts_with(text, "LOG VERSION: 2.0")) {
         _logclass = Class::program;
         _type = LogEntryType::log_version;

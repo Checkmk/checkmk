@@ -192,7 +192,7 @@ long Logfile::freeMessages(unsigned logclasses) {
     return freed;
 }
 
-bool Logfile::processLogLine(uint32_t lineno, const char *linebuffer,
+bool Logfile::processLogLine(uint32_t lineno, char *linebuffer,
                              unsigned logclasses) {
     auto entry = make_unique<LogEntry>(_mc, lineno, linebuffer);
     // ignored invalid lines

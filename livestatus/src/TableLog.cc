@@ -71,7 +71,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(make_unique<OffsetSStringColumn>(
         "message", "The complete message line including the timestamp",
         DANGEROUS_OFFSETOF(LogEntry, _complete), -1, -1, -1));
-    addColumn(make_unique<OffsetStringColumn>(
+    addColumn(make_unique<OffsetSStringColumn>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
         DANGEROUS_OFFSETOF(LogEntry, _text), -1, -1, -1));

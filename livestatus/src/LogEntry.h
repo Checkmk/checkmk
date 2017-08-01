@@ -131,8 +131,7 @@ private:
 
     bool assign(Param par, char **scan);
     void applyWorkarounds();
-    bool classifyLogMessage();
-    void handleEntry();
+    void classifyLogMessage();
 };
 
 #endif  // LogEntry_h

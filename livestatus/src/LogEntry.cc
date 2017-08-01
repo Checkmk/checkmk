@@ -36,10 +36,9 @@ using mk::starts_with;
 using std::string;
 using std::unordered_map;
 
-LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
-    : _logclass(Class::info), _type(LogEntryType::none) {
-    // TODO(sp) Fix all handleFooEntry() member functions below to always set
-    // all fields and remove this set-me-to-zero-to-be-sure-block.
+LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line) {
+    // TODO(sp) Fix classifyLogMessage() below to always set all fields and
+    // remove this set-me-to-zero-to-be-sure-block.
     _host_name = nullptr;
     _svc_desc = nullptr;
     _command_name = nullptr;
@@ -79,18 +78,16 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
     // [1260722267] xxx - extract timestamp, validate message
     if (msglen < 13 || _msg[0] != '[' || _msg[11] != ']') {
         _logclass = Class::invalid;
+        _type = LogEntryType::none;
         return;  // ignore invalid lines silently
     }
     _msg[11] = 0;  // zero-terminate time stamp
     _time = atoi(_msg + 1);
     _text = _msg + 13;  // also skip space after timestamp
 
-    if (classifyLogMessage()) {
-        updateReferences(mc);
-    } else {
-        handleEntry();
-    }
-    // rest is Class::INFO
+    classifyLogMessage();
+    applyWorkarounds();
+    updateReferences(mc);
 }
 
 LogEntry::~LogEntry() { free(_msg); }
@@ -287,7 +284,7 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions  // NOLINT
      ////////////////
      LogDef{"EXTERNAL COMMAND: ", Class::ext_command, LogEntryType::none, {}}};
 
-bool LogEntry::classifyLogMessage() {
+void LogEntry::classifyLogMessage() {
     string text = _text;
     for (const auto &def : log_definitions) {
         if (starts_with(text, def.prefix)) {
@@ -296,18 +293,43 @@ bool LogEntry::classifyLogMessage() {
             char *scan = _text;
             _text = next_token(&scan, ':');
             ++scan;
-
             for (Param par : def.params) {
                 assign(par, &scan);
             }
-
-            applyWorkarounds();
-
-            return true;
+            return;
         }
     }
-
-    return false;
+    if (starts_with(text, "LOG VERSION: 2.0")) {
+        _logclass = Class::program;
+        _type = LogEntryType::log_version;
+        return;
+    }
+    if (starts_with(text, "logging initial states") ||
+        starts_with(text, "logging intitial states")) {
+        _logclass = Class::program;
+        _type = LogEntryType::log_initial_states;
+        return;
+    }
+    if (text.find("starting...") != string::npos ||
+        text.find("active mode...") != string::npos) {
+        _logclass = Class::program;
+        _type = LogEntryType::core_starting;
+        return;
+    }
+    if (text.find("shutting down...") != string::npos ||
+        text.find("Bailing out") != string::npos ||
+        text.find("standby mode...") != string::npos) {
+        _logclass = Class::program;
+        _type = LogEntryType::core_stopping;
+        return;
+    }
+    if (text.find("restarting...") != string::npos) {
+        _logclass = Class::program;
+        _type = LogEntryType::none;
+        return;
+    }
+    _logclass = Class::info;
+    _type = LogEntryType::none;
 }
 
 // The NotifyHelper class has a long, tragic history: Through a long series of
@@ -335,38 +357,6 @@ void LogEntry::applyWorkarounds() {
     _state = (_svc_desc == nullptr)
                  ? static_cast<int>(parseHostState(_state_type))
                  : static_cast<int>(parseServiceState(_state_type));
-}
-
-void LogEntry::handleEntry() {
-    if (strncmp(_text, "LOG VERSION: 2.0", 16) == 0) {
-        _logclass = Class::program;
-        _type = LogEntryType::log_version;
-        return;
-    }
-    if (strncmp(_text, "logging initial states", 22) == 0 ||
-        strncmp(_text, "logging intitial states", 23) == 0) {
-        _logclass = Class::program;
-        _type = LogEntryType::log_initial_states;
-        return;
-    }
-    if (strstr(_text, "starting...") != nullptr ||
-        strstr(_text, "active mode...") != nullptr) {
-        _logclass = Class::program;
-        _type = LogEntryType::core_starting;
-        return;
-    }
-    if (strstr(_text, "shutting down...") != nullptr ||
-        strstr(_text, "Bailing out") != nullptr ||
-        strstr(_text, "standby mode...") != nullptr) {
-        _logclass = Class::program;
-        _type = LogEntryType::core_stopping;
-        return;
-    }
-    if (strstr(_text, "restarting...") != nullptr) {
-        _logclass = Class::program;
-        _type = LogEntryType::none;
-        return;
-    }
 }
 
 namespace {

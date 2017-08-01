@@ -1,0 +1,12 @@
+Title: Fixed parsing of monitoring history.
+Level: 1
+Component: livestatus
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1501576667
+Class: fix
+
+A few kind of lines in the monitoring history were not correctly parsed,
+including core start/stops.  This could lead e.g.  to incorrect availibility
+calculations later.  This has been fixed.

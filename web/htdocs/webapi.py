@@ -28,8 +28,9 @@ import traceback
 
 from lib import *
 import config
+import watolib
+import userdb
 
-from watolib import *
 from valuespec import *
 
 if cmk.is_managed_edition():
@@ -92,7 +93,7 @@ def page_api():
             config.user.need_permission(permission)
 
         # Initialize host and site attributes
-        init_watolib_datastructures()
+        watolib.init_watolib_datastructures()
 
         # Prepare request_object
         # Most of the time the request is given as json
@@ -124,10 +125,10 @@ def page_api():
             del request_object["request_format"]
 
         if api_actions[action].get("locking", True):
-            lock_exclusive() # unlock is done automatically
+            watolib.lock_exclusive() # unlock is done automatically
 
-        if is_read_only_mode_enabled() and not may_override_read_only_mode():
-            raise MKUserError(None, read_only_message())
+        if watolib.is_read_only_mode_enabled() and not watolib.may_override_read_only_mode():
+            raise MKUserError(None, watolib.read_only_message())
 
         action_response = api_actions[action]["handler"](request_object)
         response = { "result_code": 0, "result": action_response }

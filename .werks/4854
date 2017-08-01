@@ -1,0 +1,12 @@
+Title: WATO Web-API: The liveproxyd configuration was not correctly updated when a site got configured
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1501586506
+Class: fix
+
+This caused strange side effects, whereas a site was correctly configured in the
+distributed monitoring page, but always considered <i>dead</i> from the liveproxyd's perspective.
+

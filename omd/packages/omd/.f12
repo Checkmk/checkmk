@@ -1,0 +1,27 @@
+#!/bin/bash
+SITE=${SITE:-$(cat ../../../.site || true)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+
+# Little install helper used during development and test
+sudo cp -v index.py /omd/sites/$SITE/share/omd/htdocs/index.py 
+sudo cp -v logout.php /omd/sites/$SITE/share/omd/htdocs/logout.php
+sudo cp -v img/* /omd/sites/$SITE/share/omd/htdocs/img/
+sudo rm -vf /omd/sites/$SITE/share/man/man8/omd.8.gz
+sudo cp -v omd.8 /omd/sites/$SITE/share/man/man8/omd.8
+sudo gzip /omd/sites/$SITE/share/man/man8/omd.8
+for hook in *.hook; do
+    sudo cp -v $hook /omd/sites/$SITE/lib/omd/hooks/${hook%*.hook}
+    sudo chmod +x /omd/sites/$SITE/lib/omd/hooks/${hook%*.hook}
+done
+sudo mkdir -p /omd/sites/$SITE/lib/omd/scripts/post-create
+sudo cp -v omd.service /omd/sites/$SITE/share/omd
+
+OLD_VERSION=$(sed -rn < /omd/sites/$SITE/bin/omd 's/^OMD_VERSION = "(.*)"$/\1/p')
+echo $OLD_VERSION
+
+
+echo "Keeping version number in 'omd' at $OLD_VERSION"
+sudo cp -v omd /omd/sites/$SITE/bin/omd
+sudo sed -i "s|###OMD_VERSION###|$OLD_VERSION|g" /omd/sites/$SITE/bin/omd
+sudo sed -i "s|#!/omd/versions/.*/bin/python|#!/omd/versions/$OLD_VERSION/bin/python|g" /omd/sites/$SITE/bin/omd
+sudo sed -i "s/OMD_VERSION =.*/OMD_VERSION = "'"'"$OLD_VERSION"'"/' /omd/sites/$SITE/bin/omd

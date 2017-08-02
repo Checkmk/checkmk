@@ -25,6 +25,7 @@
 #include "LogEntry.h"
 #include <cstdlib>
 #include <cstring>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include "MonitoringCore.h"
@@ -50,8 +51,6 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, char *line) {
         line[--linelen] = '\0';
     }
 
-    // keep unsplit copy of the message (needs lots of memory, maybe we could
-    // optimize that one day...)
     _complete = line;
 
     // pointer to options (everything after ':')
@@ -64,17 +63,22 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, char *line) {
     }
     _options = &_complete[pos];
 
-    // [1260722267] xxx - extract timestamp, validate message
-    if (linelen < 13 || line[0] != '[' || line[11] != ']') {
+    // 0123456789012345678901234567890
+    // [1234567890] FOO BAR: blah blah
+    constexpr size_t timestamp_prefix_length = 13;
+    try {
+        if (_complete.size() < timestamp_prefix_length || _complete[0] != '[' ||
+            _complete[11] != ']' || _complete[12] != ' ') {
+            throw std::invalid_argument("timestamp delimiter");
+        }
+        _time = std::stoi(_complete.substr(1, 10));
+    } catch (const std::logic_error &e) {
         _logclass = Class::invalid;
         _type = LogEntryType::none;
         return;  // ignore invalid lines silently
     }
-    line[11] = 0;  // zero-terminate time stamp
-    _time = atoi(line + 1);
 
-    // also skip space after timestamp
-    classifyLogMessage(line + 13);
+    classifyLogMessage(line + timestamp_prefix_length);
     applyWorkarounds();
     updateReferences(mc);
 }

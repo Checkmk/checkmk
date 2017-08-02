@@ -133,7 +133,7 @@ AC_TYPE_UINT64_T
 AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
-AC_CHECK_FUNCS([memmove select socket strcasecmp strdup strerror strtoul])
+AC_CHECK_FUNCS([memmove select socket strcasecmp strerror strtoul])
 
 AC_ARG_WITH(nagios4,AC_HELP_STRING([--with-nagios4],[enabled compilation for nagios 4]), [
     CPPFLAGS="${CFLAGS} -DNAGIOS4"

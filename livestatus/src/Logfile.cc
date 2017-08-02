@@ -158,6 +158,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until,
 void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
                         time_t since, time_t until, unsigned logclasses) {
     vector<char> linebuffer(65536);
+    // TODO(sp) We should really use C++ I/O here...
     while (fgets(&linebuffer[0], linebuffer.size(), file) != nullptr) {
         if (_lineno >= _mc->maxLinesPerLogFile()) {
             Error(logger()) << "more than " << _mc->maxLinesPerLogFile()
@@ -165,6 +166,13 @@ void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
             return;
         }
         _lineno++;
+        // remove trailing newline (should be nuked, see above)
+        for (auto &ch : linebuffer) {
+            if (ch == '\0' || ch == '\n') {
+                ch = '\0';
+                break;
+            }
+        }
         if (processLogLine(_lineno, &linebuffer[0], missing_types)) {
             logcache->handleNewMessage(this, since, until,
                                        logclasses);  // memory management
@@ -192,9 +200,9 @@ long Logfile::freeMessages(unsigned logclasses) {
     return freed;
 }
 
-bool Logfile::processLogLine(uint32_t lineno, char *linebuffer,
+bool Logfile::processLogLine(uint32_t lineno, const char *line,
                              unsigned logclasses) {
-    auto entry = make_unique<LogEntry>(_mc, lineno, linebuffer);
+    auto entry = make_unique<LogEntry>(_mc, lineno, line);
     // ignored invalid lines
     if (entry->_logclass == LogEntry::Class::invalid) {
         return false;

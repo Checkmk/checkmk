@@ -174,8 +174,7 @@ void Logfile::loadRange(FILE *file, unsigned missing_types, LogCache *logcache,
             }
         }
         if (processLogLine(_lineno, &linebuffer[0], missing_types)) {
-            logcache->handleNewMessage(this, since, until,
-                                       logclasses);  // memory management
+            logcache->handleNewMessage(this, since, until, logclasses);
         }
     }
 }
@@ -200,9 +199,9 @@ long Logfile::freeMessages(unsigned logclasses) {
     return freed;
 }
 
-bool Logfile::processLogLine(uint32_t lineno, const char *line,
+bool Logfile::processLogLine(uint32_t lineno, string line,
                              unsigned logclasses) {
-    auto entry = make_unique<LogEntry>(_mc, lineno, line);
+    auto entry = make_unique<LogEntry>(_mc, lineno, std::move(line));
     // ignored invalid lines
     if (entry->_logclass == LogEntry::Class::invalid) {
         return false;

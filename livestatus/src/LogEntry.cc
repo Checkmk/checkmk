@@ -34,17 +34,16 @@ using mk::starts_with;
 using std::string;
 using std::unordered_map;
 
-LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line) {
-    // TODO(sp) Fix classifyLogMessage() below to always set all fields and
-    // remove this set-me-to-zero-to-be-sure-block.
-    _state = 0;
-    _attempt = 0;
-    _host = nullptr;
-    _service = nullptr;
-    _contact = nullptr;
-    _lineno = lineno;
-    _complete = line;
-
+// TODO(sp) Fix classifyLogMessage() below to always set all fields and remove
+// this set-me-to-zero-to-be-sure-block.
+LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
+    : _lineno(lineno)
+    , _complete(line)
+    , _state(0)
+    , _attempt(0)
+    , _host(nullptr)
+    , _service(nullptr)
+    , _contact(nullptr) {
     // pointer to options (everything after ':')
     size_t pos = _complete.find(':');
     if (pos != string::npos) {

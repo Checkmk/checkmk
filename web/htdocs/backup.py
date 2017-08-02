@@ -843,6 +843,7 @@ class PageEditBackupJob(object):
 class PageAbstractBackupJobState(object):
     def __init__(self):
         super(PageAbstractBackupJobState, self).__init__()
+        self._job   = None
         self._ident = None
 
 

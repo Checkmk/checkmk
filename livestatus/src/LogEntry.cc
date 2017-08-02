@@ -36,9 +36,9 @@ using std::unordered_map;
 
 // TODO(sp) Fix classifyLogMessage() below to always set all fields and remove
 // this set-me-to-zero-to-be-sure-block.
-LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
+LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, string line)
     : _lineno(lineno)
-    , _complete(line)
+    , _complete(std::move(line))
     , _state(0)
     , _attempt(0)
     , _host(nullptr)
@@ -69,7 +69,7 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line)
         return;  // ignore invalid lines silently
     }
 
-    classifyLogMessage(line + timestamp_prefix_length);
+    classifyLogMessage(&_complete[timestamp_prefix_length]);
     applyWorkarounds();
     updateReferences(mc);
 }

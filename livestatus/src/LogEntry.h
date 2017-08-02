@@ -99,7 +99,7 @@ public:
     Command _command;
 
     // NOTE: line gets modified!
-    LogEntry(MonitoringCore *mc, unsigned lineno, const char *line);
+    LogEntry(MonitoringCore *mc, unsigned lineno, std::string line);
     unsigned updateReferences(MonitoringCore *mc);
     static ServiceState parseServiceState(const std::string &str);
     static HostState parseHostState(const std::string &str);

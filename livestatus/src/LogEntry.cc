@@ -24,7 +24,6 @@
 
 #include "LogEntry.h"
 #include <cstdlib>
-#include <cstring>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -35,7 +34,7 @@ using mk::starts_with;
 using std::string;
 using std::unordered_map;
 
-LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, char *line) {
+LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, const char *line) {
     // TODO(sp) Fix classifyLogMessage() below to always set all fields and
     // remove this set-me-to-zero-to-be-sure-block.
     _state = 0;
@@ -44,13 +43,6 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, char *line) {
     _service = nullptr;
     _contact = nullptr;
     _lineno = lineno;
-
-    // make a copy of the message and strip trailing newline
-    size_t linelen = strlen(line);
-    while (linelen > 0 && line[linelen - 1] == '\n') {
-        line[--linelen] = '\0';
-    }
-
     _complete = line;
 
     // pointer to options (everything after ':')

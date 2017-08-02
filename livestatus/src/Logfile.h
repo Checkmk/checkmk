@@ -93,8 +93,7 @@ public:
 private:
     void loadRange(FILE *file, unsigned missing_types, LogCache *, time_t since,
                    time_t until, unsigned logclasses);
-    // NOTE: linebuffer gets modified!
-    bool processLogLine(uint32_t, char *linebuffer, unsigned);
+    bool processLogLine(uint32_t lineno, const char *line, unsigned logclasses);
     uint64_t makeKey(time_t, unsigned);
     Logger *logger() const;
 };

@@ -1,0 +1,19 @@
+Title: Fixed parsing of some host-related monitoring history entries.
+Level: 1
+Component: livestatus
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p10
+Date: 1501658483
+
+Some log lines in the monitoring history were classified incorrectly,
+leading to possibly wrong results in e.g.  availibility calculations.  This
+has been fixed.
+
+The affected kind of lines were:
+
+   INITIAL HOST STATE
+   CURRENT HOST STATE
+   HOST ALERT

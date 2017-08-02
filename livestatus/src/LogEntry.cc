@@ -149,20 +149,20 @@ bool LogEntry::assign(Param par, char **scan) {
 // False positive in clang-tidy-4.0, see https://reviews.llvm.org/D27048
 std::vector<LogEntry::LogDef> LogEntry::log_definitions  // NOLINT
     {LogDef{"INITIAL HOST STATE: ",
-            Class::alert,
-            LogEntryType::alert_host,
-            {Param::HostName, Param::HostState, Param::StateType,
-             Param::Attempt, Param::CheckOutput}},
-     ////////////////
-     LogDef{"CURRENT HOST STATE: ",
             Class::state,
             LogEntryType::state_host_initial,
             {Param::HostName, Param::HostState, Param::StateType,
              Param::Attempt, Param::CheckOutput}},
      ////////////////
-     LogDef{"HOST ALERT: ",
+     LogDef{"CURRENT HOST STATE: ",
             Class::state,
             LogEntryType::state_host,
+            {Param::HostName, Param::HostState, Param::StateType,
+             Param::Attempt, Param::CheckOutput}},
+     ////////////////
+     LogDef{"HOST ALERT: ",
+            Class::alert,
+            LogEntryType::alert_host,
             {Param::HostName, Param::HostState, Param::StateType,
              Param::Attempt, Param::CheckOutput}},
      ////////////////

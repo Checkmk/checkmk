@@ -840,19 +840,10 @@ class PageEditBackupJob(object):
 
 
 
-class PageBackupJobState(object):
+class PageAbstractBackupJobState(object):
     def __init__(self):
-        super(PageBackupJobState, self).__init__()
-        job_ident = html.var("job")
-        if job_ident != None:
-            try:
-                self._job = self.jobs().get(job_ident)
-            except KeyError:
-                raise MKUserError("job", _("This backup job does not exist."))
-
-            self._ident = job_ident
-        else:
-            raise MKUserError("job", _("You need to specify a backup job."))
+        super(PageAbstractBackupJobState, self).__init__()
+        self._ident = None
 
 
     def jobs(self):
@@ -915,6 +906,25 @@ class PageBackupJobState(object):
         html.write("<td class=\"log\"><pre>%s</pre></td></tr>" % html.attrencode(state["output"]))
 
         html.write("</table>")
+
+
+class PageBackupJobState(PageAbstractBackupJobState):
+    def __init__(self):
+        super(PageBackupJobState, self).__init__()
+        self._from_vars()
+
+
+    def _from_vars(self):
+        job_ident = html.var("job")
+        if job_ident != None:
+            try:
+                self._job = self.jobs().get(job_ident)
+            except KeyError:
+                raise MKUserError("job", _("This backup job does not exist."))
+
+            self._ident = job_ident
+        else:
+            raise MKUserError("job", _("You need to specify a backup job."))
 
 
 #.
@@ -1819,7 +1829,7 @@ class PageBackupRestore(object):
 
 
 
-class PageBackupRestoreState(PageBackupJobState):
+class PageBackupRestoreState(PageAbstractBackupJobState):
     def __init__(self):
         super(PageBackupRestoreState, self).__init__()
         self._job = RestoreJob(None, None) # TODO: target_ident and backup_ident needed?

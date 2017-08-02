@@ -1,0 +1,18 @@
+Title: Fixed backup/restore of encrypted backups
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1501684381
+
+It was not possible to perform encrypted backups since version 1.4.0b5. An error
+message "NotImplementedError("Use module Crypto.Cipher.PKCS1_OAEP instead“)" was
+displayed in the log when trying to create such a backup.
+
+Workaround: Disable encrypted backups and perform unencrypted ones.
+
+Encrypted backups created with previous versions need to be restored with 1.4.0b4
+or older.

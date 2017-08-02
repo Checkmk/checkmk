@@ -28,11 +28,13 @@
 #include <unordered_map>
 #include <utility>
 #include "MonitoringCore.h"
-#include "StringUtils.h"
 
-using mk::starts_with;
 using std::string;
 using std::unordered_map;
+
+// 0123456789012345678901234567890
+// [1234567890] FOO BAR: blah blah
+static constexpr size_t timestamp_prefix_length = 13;
 
 // TODO(sp) Fix classifyLogMessage() below to always set all fields and remove
 // this set-me-to-zero-to-be-sure-block.
@@ -54,9 +56,6 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, string line)
     }
     _options = &_complete[pos];
 
-    // 0123456789012345678901234567890
-    // [1234567890] FOO BAR: blah blah
-    constexpr size_t timestamp_prefix_length = 13;
     try {
         if (_complete.size() < timestamp_prefix_length || _complete[0] != '[' ||
             _complete[11] != ']' || _complete[12] != ' ') {
@@ -69,7 +68,7 @@ LogEntry::LogEntry(MonitoringCore *mc, unsigned lineno, string line)
         return;  // ignore invalid lines silently
     }
 
-    classifyLogMessage(&_complete[timestamp_prefix_length]);
+    classifyLogMessage();
     applyWorkarounds();
     updateReferences(mc);
 }
@@ -263,57 +262,66 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions  // NOLINT
      ////////////////
      LogDef{"EXTERNAL COMMAND", Class::ext_command, LogEntryType::none, {}}};
 
-void LogEntry::classifyLogMessage(const string &text) {
+// A bit verbose, but we avoid unnecessary string copies below.
+void LogEntry::classifyLogMessage() {
     for (const auto &def : log_definitions) {
-        if (starts_with(text, def.prefix) &&
-            text.compare(def.prefix.size(), 2, ": ") == 0) {
-            _text = def.prefix;
+        if (textStartsWith(def.prefix) &&
+            _complete.compare(timestamp_prefix_length + def.prefix.size(), 2,
+                              ": ") == 0) {
+            _text = &def.prefix[0];
             _logclass = def.log_class;
             _type = def.log_type;
             // TODO(sp) Use boost::tokenizer instead of this index fiddling
-            size_t pos = def.prefix.size() + 2;
+            size_t pos = timestamp_prefix_length + def.prefix.size() + 2;
             for (Param par : def.params) {
-                size_t sep_pos = text.find(';', pos);
+                size_t sep_pos = _complete.find(';', pos);
                 size_t end_pos =
-                    sep_pos == string::npos ? text.size() : sep_pos;
-                assign(par, text.substr(pos, end_pos - pos));
-                pos = sep_pos == string::npos ? text.size() : (sep_pos + 1);
+                    sep_pos == string::npos ? _complete.size() : sep_pos;
+                assign(par, _complete.substr(pos, end_pos - pos));
+                pos =
+                    sep_pos == string::npos ? _complete.size() : (sep_pos + 1);
             }
             return;
         }
     }
-    _text = text;
-    if (starts_with(text, "LOG VERSION: 2.0")) {
+    _text = &_complete[timestamp_prefix_length];
+    if (textStartsWith("LOG VERSION: 2.0")) {
         _logclass = Class::program;
         _type = LogEntryType::log_version;
         return;
     }
-    if (starts_with(text, "logging initial states") ||
-        starts_with(text, "logging intitial states")) {
+    if (textStartsWith("logging initial states") ||
+        textStartsWith("logging intitial states")) {
         _logclass = Class::program;
         _type = LogEntryType::log_initial_states;
         return;
     }
-    if (text.find("starting...") != string::npos ||
-        text.find("active mode...") != string::npos) {
+    if (textContains("starting...") || textContains("active mode...")) {
         _logclass = Class::program;
         _type = LogEntryType::core_starting;
         return;
     }
-    if (text.find("shutting down...") != string::npos ||
-        text.find("Bailing out") != string::npos ||
-        text.find("standby mode...") != string::npos) {
+    if (textContains("shutting down...") || textContains("Bailing out") ||
+        textContains("standby mode...")) {
         _logclass = Class::program;
         _type = LogEntryType::core_stopping;
         return;
     }
-    if (text.find("restarting...") != string::npos) {
+    if (textContains("restarting...")) {
         _logclass = Class::program;
         _type = LogEntryType::none;
         return;
     }
     _logclass = Class::info;
     _type = LogEntryType::none;
+}
+
+bool LogEntry::textStartsWith(const string &what) {
+    return _complete.compare(timestamp_prefix_length, what.size(), what) == 0;
+}
+
+bool LogEntry::textContains(const string &what) {
+    return _complete.find(what, timestamp_prefix_length) != string::npos;
 }
 
 // The NotifyHelper class has a long, tragic history: Through a long series of

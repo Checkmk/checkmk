@@ -82,7 +82,7 @@ public:
     LogEntryType _type;
     std::string _complete;  // copy of complete unsplit message
     const char *_options;   // points into _complete after ':'
-    std::string _text;
+    const char *_text;      // points into _complete or into static data
     std::string _host_name;
     std::string _svc_desc;
     std::string _command_name;
@@ -130,7 +130,9 @@ private:
 
     bool assign(Param par, const std::string &field);
     void applyWorkarounds();
-    void classifyLogMessage(const std::string &text);
+    void classifyLogMessage();
+    bool textStartsWith(const std::string &what);
+    bool textContains(const std::string &what);
 };
 
 #endif  // LogEntry_h

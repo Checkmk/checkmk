@@ -1,0 +1,11 @@
+Title: lnx_distro: Detects version and name of Check_MK Appliance correctly
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1501678510
+
+

@@ -2,6 +2,9 @@
     Core & Setup:
     * 5038 FIX: Datasource programs: Prevent zombie processes in case of timeouts...
 
+    Checks & Agents:
+    * 5078 FIX: lnx_distro: Detects version and name of Check_MK Appliance correctly
+
 
 1.2.8p25:
     Checks & Agents:

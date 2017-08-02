@@ -53,7 +53,7 @@ from tarfile import TarFile, ReadError
 from hashlib import md5
 
 from OpenSSL import crypto
-from Crypto.Cipher import AES
+from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.PublicKey import RSA
 import Crypto.Util.number
 
@@ -836,7 +836,10 @@ class BackupStream(MKBackupStream):
 
             # Write out a file version marker and  the encrypted secret key, preceded by 
             # a length indication. All separated by \0.
-            return "%d\0%d\0%s\0" % (1, len(encrypted_secret_key), encrypted_secret_key)
+            # Version 1: Encrypted secret key written with pubkey.encrypt(). Worked with
+            #            early versions of 1.4 until moving from PyCryto to PyCryptodome
+            # Version 2: Use PKCS1_OAEP for encrypting the encrypted_secret_key.
+            return "%d\0%d\0%s\0" % (2, len(encrypted_secret_key), encrypted_secret_key)
 
 
     def _read_chunk(self):
@@ -878,16 +881,13 @@ class BackupStream(MKBackupStream):
 
 
     # logic from http://stackoverflow.com/questions/6309958/encrypting-a-file-with-rsa-in-python
+    # Since our packages moved from PyCrypto to PyCryptodome we need to change this to use PKCS1_OAEP.
     def _derive_key(self, pubkey, key_length):
         secret_key = os.urandom(key_length)
 
-        # Padding (see explanations below)
-        plaintext_length = (Crypto.Util.number.size(pubkey.n) - 2) / 8
-        padding = '\xff' + os.urandom(16)
-        padding += '\0' * (plaintext_length - len(padding) - len(secret_key))
-
         # Encrypt the secret key with the RSA public key
-        encrypted_secret_key = pubkey.encrypt(padding + secret_key, None)[0]
+        cipher_rsa = PKCS1_OAEP.new(pubkey)
+        encrypted_secret_key = cipher_rsa.encrypt(secret_key)
 
         return secret_key, encrypted_secret_key
 
@@ -898,8 +898,8 @@ class RestoreStream(MKBackupStream):
         if not self._encrypt():
             return
 
-        encrypted_secret_key = self._read_encrypted_secret_key()
-        secret_key = self._decrypt_secret_key(encrypted_secret_key)
+        file_version, encrypted_secret_key = self._read_encrypted_secret_key()
+        secret_key = self._decrypt_secret_key(file_version, encrypted_secret_key)
         self._cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
 
 
@@ -945,8 +945,8 @@ class RestoreStream(MKBackupStream):
             return buf
 
         file_version = read_field()
-        if file_version != "1":
-            raise MKGeneralException("Failed to process backup file (invalid version)")
+        if file_version not in [ "1", "2" ]:
+            raise MKGeneralException("Failed to process backup file (invalid version %r)" % file_version)
 
         try:
             key_len = int(read_field())
@@ -961,7 +961,7 @@ class RestoreStream(MKBackupStream):
         if self._stream.read(1) != "\0":
             raise MKGeneralException("Failed to parse the encrypted backup file (header broken)")
 
-        return encrypted_secret_key
+        return file_version, encrypted_secret_key
 
 
     def _get_encryption_private_key(self):
@@ -988,10 +988,17 @@ class RestoreStream(MKBackupStream):
             raise MKGeneralException("Failed to load private key (wrong passphrase?)")
 
 
-    def _decrypt_secret_key(self, encrypted_secret_key):
+    def _decrypt_secret_key(self, file_version, encrypted_secret_key):
         private_key = self._get_encryption_private_key()
-        secret_key_with_padding = private_key.decrypt(encrypted_secret_key)
-        return secret_key_with_padding[-32:]
+
+        if file_version == "1":
+            raise MKGeneralException("You can not restore this backup using your current Check_MK "
+                                     "version. You need to use a Check_MK 1.4 version that has "
+                                     "been released before 2017-03-24. The last compatible "
+                                     "release is 1.4.0b4.")
+        else:
+            cipher_rsa = PKCS1_OAEP.new(private_key)
+            return cipher_rsa.decrypt(encrypted_secret_key)
 
 
 # Returns the base path for the backup to work with. In backup mode, this is

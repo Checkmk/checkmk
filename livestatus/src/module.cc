@@ -22,7 +22,7 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-// Needed for strdup and S_ISSOCK
+// Needed for S_ISSOCK
 #define _XOPEN_SOURCE 500
 
 // https://github.com/include-what-you-use/include-what-you-use/issues/166
@@ -909,7 +909,9 @@ void livestatus_parse_arguments(const char *args_orig) {
         return;  // no arguments, use default options
     }
 
-    char *args = strdup(args_orig);
+    // TODO(sp) Nuke next_field and friends. Use C++ strings everywhere.
+    vector<char> args_buf(args_orig, args_orig + strlen(args_orig) + 1);
+    char *args = &args_buf[0];
     while (char *token = next_field(&args)) {
         /* find = */
         char *part = token;
@@ -1078,8 +1080,6 @@ void livestatus_parse_arguments(const char *args_orig) {
     Warning(fl_logger_nagios)
         << "fl_socket_path=[" << fl_socket_path
         << "], fl_mkeventd_socket_path=[" << fl_mkeventd_socket_path << "]";
-
-    // free(args); won't free, since we use pointers?
 }
 
 void omd_advertize() {

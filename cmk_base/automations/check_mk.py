@@ -519,39 +519,30 @@ class AutomationAnalyseServices(Automation):
 
         # 2. Load all autochecks of the host in question and try to find
         # our service there
-        try:
-            path = "%s/%s.mk" % (cmk.paths.autochecks_dir, hostname)
-            if os.path.exists(path):
-                for entry in eval(file(path).read()):
-                    if len(entry) == 4: # old format
-                        hn, ct, item, params = entry
-                    else:
-                        ct, item, params = entry # new format without host name
-                        hn = hostname
+        for entry in discovery.read_autochecks_of(hostname):
+            ct, item, params = entry # new format without host name
 
-                    if (ct, item) not in table:
-                        continue # this is a removed duplicate or clustered service
-                    descr = config.service_description(hn, ct, item)
-                    if hn == hostname and descr == servicedesc:
-                        dlv = checks.check_info[ct].get("default_levels_variable")
-                        if dlv:
-                            fs = checks.factory_settings.get(dlv, None)
-                        else:
-                            fs = None
+            if (ct, item) not in table:
+                continue # this is a removed duplicate or clustered service
 
-                        return {
-                            "origin"           : "auto",
-                            "checktype"        : ct,
-                            "checkgroup"       : checks.check_info[ct].get("group"),
-                            "item"             : item,
-                            "inv_parameters"   : params,
-                            "factory_settings" : fs,
-                            "parameters"       :
-                                checks.compute_check_parameters(hostname, ct, item, params),
-                        }
-        except:
-            if cmk.debug.enabled():
-                raise
+            descr = config.service_description(hostname, ct, item)
+            if descr == servicedesc:
+                dlv = checks.check_info[ct].get("default_levels_variable")
+                if dlv:
+                    fs = checks.factory_settings.get(dlv, None)
+                else:
+                    fs = None
+
+                return {
+                    "origin"           : "auto",
+                    "checktype"        : ct,
+                    "checkgroup"       : checks.check_info[ct].get("group"),
+                    "item"             : item,
+                    "inv_parameters"   : params,
+                    "factory_settings" : fs,
+                    "parameters"       :
+                        checks.compute_check_parameters(hostname, ct, item, params),
+                }
 
         # 3. Classical checks
         for nr, entry in enumerate(config.custom_checks):

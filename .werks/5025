@@ -1,0 +1,13 @@
+Title: Make communication with smartping helpers more robust
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1501763656
+Class: fix
+
+When the communication between the Micro Core and the smartping helpers
+(icmpsender/icmpreceiver) fails, we restart the latter, but we forgot to
+flush an internal buffer.  In some cases this could lead to more
+communication problems later. This has been fixed.

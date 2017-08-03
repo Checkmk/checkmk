@@ -1,0 +1,13 @@
+Title: mssql_blocked_sessions: Put details about session ID, blocking ID, wait data and type into longoutput
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1501745629
+Class: feature
+
+Previously above details were displayed in service details
+which causes overcrowding. Now a summary about which session
+IDs are blocked by how much blocking IDs is shown and etails
+can be found in the long output of the service.

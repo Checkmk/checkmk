@@ -34,20 +34,17 @@
 # sessions independent of instances anymore. Use same service description
 # schema as "mssql_instance".
 
-factory_settings['mssql_blocked_sessions_default_levels'] = {
-        'state' : 2,
-}
+
+factory_settings['mssql_blocked_sessions_default_levels'] = {'state': 2}
+
 
 def inventory_mssql_blocked_sessions(info):
     return [(None, {})]
 
+
 def check_mssql_blocked_sessions(_no_item, params, info):
-    if not info:
-        yield 0, "No blocked sessions"
-        return
-
-    state = params['state']
-
+    summary = {}
+    details = []
     ignored_waittypes = set()
     for line in info:
         if "blocked" in line[0].lower():
@@ -59,6 +56,7 @@ def check_mssql_blocked_sessions(_no_item, params, info):
             ignored_waittypes.add(wait_type)
             continue
 
+        state = 0
         if params.has_key('waittime'):
             warn, crit = params['waittime']
             wait_duration_sec = float(wait_duration_ms) / 1000
@@ -66,14 +64,27 @@ def check_mssql_blocked_sessions(_no_item, params, info):
                 state = 2
             elif wait_duration_sec >= warn:
                 state = 1
-            else:
-                state = 0
 
-        yield state, "Session %s blocked by %s (Wait %s ms, Type: %s)" % \
-              (session_id, blocking_session_id, wait_duration_ms, wait_type)
+        summary.setdefault(session_id, set())
+        summary[session_id].add(blocking_session_id)
+        details.append((state, "Session %s blocked by %s (Wait %s ms, Type: %s)" % \
+                       (session_id, blocking_session_id, wait_duration_ms, wait_type)))
+
+    if summary:
+        yield params['state'], "Summary: %s" % \
+              ", ".join(["%s blocked by %s ID(s)" % (k, len(v))
+              for k,v in summary.items()])
+
+        fst_state, fst_infotext = details[0]
+        yield fst_state, "\nDetails:\n%s" % fst_infotext
+        for state, infotext in details[1:]:
+            yield state, "\n%s" % infotext
+
+    else:
+        yield 0, "No blocked sessions"
 
     if ignored_waittypes:
-        yield 0, "Ignored wait types: %s" % ", ".join(ignored_waittypes)
+        yield 0, "\nIgnored wait types: %s" % ", ".join(ignored_waittypes)
 
 
 check_info['mssql_blocked_sessions'] = {

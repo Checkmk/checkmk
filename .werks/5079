@@ -1,0 +1,9 @@
+Title: windows_tasks: Adapted man page; Some OK states were missing
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p26
+Date: 1501739058
+Class: fix
+
+

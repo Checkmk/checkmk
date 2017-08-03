@@ -1,0 +1,10 @@
+Title: Reporting: Fixed converting old title format into new one
+Level: 1
+Component: reporting
+Compatible: compat
+Edition: cee
+Version: 1.4.0p10
+Date: 1501752255
+Class: fix
+
+

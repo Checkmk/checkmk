@@ -55,7 +55,8 @@
 #- '-2147216609': instance of this task already running -> being taken care of by the separate monitor
 #- '-2147750687': task already running -> being taken care of by the separate monitor
 
-def windows_tasks_convert(info):
+
+def parse_windows_tasks(info):
     data = {}
     last_task = False
     for line in info:
@@ -69,48 +70,58 @@ def windows_tasks_convert(info):
             data[last_task] = {}
     return data
 
-def inventory_windows_tasks(info):
-    info = windows_tasks_convert(info)
-    return [ (n, None) for n, v in info.items() if v.get('Scheduled Task State') == "Enabled"]
 
-def check_windows_tasks(item, _no_params, info):
-    info = windows_tasks_convert(info)
-    for name, values in info.items():
-        if name == item:
-            last_result = saveint(values['Last Result'])
-            state = 0
-            label = ""
-            msg = []
-            if last_result not in [ 0, 1, 267009, 267014, 267045, -2147216609, -2147750687 ]:
-                state = 2
-                label = "(!!)"
-            msg.append("Service in state: %s%s" % ( last_result, label ) )
-            if last_result == 267009:
-                msg[-1] += " (currently running)"
-            elif last_result == 267014:
-                msg[-1] += " (terminated by user)"
-            elif last_result == 267045:
-                msg[-1] += " (queued)"
-            elif last_result == -2147216609:
-                msg[-1] += " (an instance of the task already running)"
-            elif last_result == -2147750687:
-                msg[-1] += " (task already running)"
+def inventory_windows_tasks(parsed):
+    return [(n, None) for n, v in parsed.items()
+            if v.get('Scheduled Task State') == "Enabled"]
 
-            if values['Scheduled Task State'] != 'Enabled':
-                msg.append("Task not Enabled(!!)")
-                state = 2
 
-            if "Last Run Time" in values:
-                msg.append("last run time: %s" % values["Last Run Time"])
+def check_windows_tasks(item, _no_params, parsed):
+    if item not in parsed:
+        yield 3, "Task not found on server"
+        return
 
-            if "Next Run Time" in values:
-                msg.append("next run time: %s" % values["Next Run Time"])
+    map_codes = {
+        "267009": "currently running",
+        "267014": "terminated by user",
+        "267045": "queued",
+        "-2147216609": "an instance of the task already running",
+        "-2147750687": "task already running",
+    }
 
-            return state, ", ".join(msg)
+    data = parsed[item]
+    last_result = data['Last Result']
+    if last_result in map_codes:
+        infotext = "Service Status: %s (%s)" % (map_codes[last_result], last_result)
+    else:
+        infotext = "Service status: %s" % last_result
 
-    return 3, "Task not found on server"
+    state = 0
+    if last_result not in [
+        "0", "1", "267009", "267014", "267045",
+        "-2147216609", "-2147750687",
+    ]:
+        state = 2
+    yield state, infotext
+
+    if data['Scheduled Task State'] != 'Enabled':
+        yield 2, "Task not enabled"
+
+    additional_infos = []
+    for key, title in [
+        ("Last Run Time", "Last run time"),
+        ("Next Run Time", "Next run time"),
+    ]:
+        if key in data:
+            additional_infos.append("%s: %s" % (title, data[key]))
+
+    if additional_infos:
+        yield 0, ", ".join(additional_infos)
+
+
 
 check_info["windows_tasks"] = {
+    "parse_function"        : parse_windows_tasks,
     "check_function"        : check_windows_tasks,
     "inventory_function"    : inventory_windows_tasks,
     "service_description"   : "Task %s",

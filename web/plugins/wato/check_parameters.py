@@ -10691,15 +10691,19 @@ register_check_parameters(
                 elements = [
                     Age(title = _("Warning if older than"), default_value = 86400 * 7),
                     Age(title = _("Critical if older than"), default_value = 86400 * 14)
-                ])
-            ),
+            ])),
             ("last_analyze", Tuple(
                 title = _("Time since the last ANALYZE"),
                 elements = [
                     Age(title = _("Warning if older than"), default_value = 86400 * 7),
                     Age(title = _("Critical if older than"), default_value = 86400 * 14)
-                ])
-            ),
+            ])),
+            ("never_analyze_vacuum", Tuple(
+                title = _("Age of never analyzed/vacuumed tables"),
+                elements = [
+                    Age(title = _("Warning if older than"), default_value = 86400 * 7),
+                    Age(title = _("Critical if older than"), default_value = 86400 * 14)
+            ])),
         ]
     ),
     TextAscii(

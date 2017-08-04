@@ -90,10 +90,6 @@ Logfile::Logfile(MonitoringCore *mc, fs::path path, bool watch)
 Logfile::~Logfile() { flush(); }
 
 void Logfile::flush() {
-    for (auto &entry : _entries) {
-        delete entry.second;
-    }
-
     _entries.clear();
     _logclasses_read = 0;
 }
@@ -186,9 +182,8 @@ long Logfile::freeMessages(unsigned logclasses) {
     // usual post-increment idiom, see Scott Meyers' "Effective STL", item 9
     // ("Choose carefully among erasing options.").
     for (auto it = _entries.begin(); it != _entries.end();) {
-        LogEntry *entry = it->second;
-        if (((1u << static_cast<int>(entry->_logclass)) & logclasses) != 0u) {
-            delete entry;
+        if (((1u << static_cast<int>(it->second->_logclass)) & logclasses) !=
+            0u) {
             _entries.erase(it++);
             freed++;
         } else {
@@ -224,10 +219,10 @@ logfile_entries_t *Logfile::getEntriesFromQuery(Query * /*unused*/,
                                                 LogCache *logcache,
                                                 time_t since, time_t until,
                                                 unsigned logclasses) {
-    updateReferences();  // Make sure existing references to objects point to
-                         // correct world
-    load(logcache, since, until,
-         logclasses);  // make sure all messages are present
+    // Make sure existing references to objects point to correct world
+    updateReferences();
+    // make sure all messages are present
+    load(logcache, since, until, logclasses);
     return &_entries;
 }
 
@@ -239,10 +234,10 @@ bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since,
     load(logcache, since, until, logclasses);
     uint64_t sincekey = makeKey(since, 0);
     for (auto it = _entries.lower_bound(sincekey); it != _entries.end(); ++it) {
-        LogEntry *entry = it->second;
         // end found or limit exceeded?
-        if (entry->_time >= until || !query->processDataset(Row(entry))) {
-            return false;  // limit exceeded
+        if (it->second->_time >= until ||
+            !query->processDataset(Row(it->second.get()))) {
+            return false;
         }
     }
     return true;
@@ -250,20 +245,18 @@ bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since,
 
 bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
                                  time_t until, unsigned logclasses) {
-    updateReferences();  // Make sure existing references to objects point to
-                         // correct world
-    load(logcache, since, until,
-         logclasses);  // make sure all messages are present
+    // Make sure existing references to objects point to correct world
+    updateReferences();
+    // make sure all messages are present
+    load(logcache, since, until, logclasses);
     uint64_t untilkey = makeKey(until, 999999999);
     auto it = _entries.upper_bound(untilkey);
     while (it != _entries.begin()) {
         --it;
-        LogEntry *entry = it->second;
-        if (entry->_time < since) {
-            return false;  // end found
-        }
-        if (!query->processDataset(Row(entry))) {
-            return false;  // limit exceeded
+        // end found or limit exceeded?
+        if (it->second->_time < since ||
+            !query->processDataset(Row(it->second.get()))) {
+            return false;
         }
     }
     return true;

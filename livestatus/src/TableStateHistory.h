@@ -69,7 +69,7 @@ private:
     logfile_entries_t *_entries;
     logfile_entries_t::iterator _it_entries;
 
-    LogEntry *getPreviousLogentry();
+    void getPreviousLogentry();
     LogEntry *getNextLogentry();
     void process(Query *query, HostServiceState *hs_state);
     int updateHostServiceState(Query *query, const LogEntry *entry,

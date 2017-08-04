@@ -30,6 +30,7 @@
 #include <cstdio>
 #include <ctime>
 #include <map>
+#include <memory>
 #include <string>
 #include "FileSystem.h"
 class LogCache;
@@ -39,13 +40,12 @@ class MonitoringCore;
 class Query;
 
 #ifdef CMC
-#include <memory>
 #include <vector>
 class World;
 #endif
 
-typedef std::map<uint64_t, LogEntry *>
-    logfile_entries_t;  // key is time_t . lineno
+// key is time_t . lineno
+using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
 
 class Logfile {
 private:

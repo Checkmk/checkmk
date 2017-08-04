@@ -59,6 +59,7 @@ public:
     class ContactGroup;
     class Host;
     class Service;
+    class TimePeriod;
 
     virtual ~MonitoringCore() = default;
 

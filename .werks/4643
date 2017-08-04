@@ -4,7 +4,7 @@ Component: checks
 Compatible: compat
 Edition: cre
 Version: 1.5.0i1
-Date: 1494333205
+Date: 1501858734
 Class: feature
 
 This special agent requires username and password. The matching host will be used as target and the following services will be created:

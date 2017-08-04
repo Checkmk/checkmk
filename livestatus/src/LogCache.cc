@@ -30,6 +30,7 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 
+using std::make_unique;
 using std::string;
 using std::chrono::system_clock;
 
@@ -61,8 +62,6 @@ void LogCache::setMaxCachedMessages(unsigned long m) {
 }
 #endif
 
-LogCache::~LogCache() { forgetLogfiles(); }
-
 bool LogCache::logCachePreChecks() {
     if (_logfiles.empty() ||
         _mc->last_logfile_rotation() > _last_index_update) {
@@ -77,9 +76,6 @@ bool LogCache::logCachePreChecks() {
 
 void LogCache::forgetLogfiles() {
     Notice(logger()) << "flushing log file index";
-    for (auto &logfile : _logfiles) {
-        delete logfile.second;
-    }
     _logfiles.clear();
     num_cached_log_messages = 0;
 }
@@ -102,21 +98,20 @@ void LogCache::updateLogfileIndex() {
 }
 
 void LogCache::scanLogfile(const fs::path &path, bool watch) {
-    auto logfile = new Logfile(_mc, path, watch);
+    auto logfile = make_unique<Logfile>(_mc, path, watch);
     time_t since = logfile->since();
-    if (since != 0) {
-        // make sure that no entry with that 'since' is existing yet.
-        // under normal circumstances this never happens. But the
-        // user might have copied files around.
-        if (_logfiles.find(since) == _logfiles.end()) {
-            _logfiles.emplace(since, logfile);
-        } else {
-            Warning(logger()) << "ignoring duplicate log file " << path;
-            delete logfile;
-        }
-    } else {
-        delete logfile;
+    if (since == 0) {
+        return;
     }
+    // make sure that no entry with that 'since' is existing yet.  Under normal
+    // circumstances this never happens, but the user might have copied files
+    // around.
+    if (_logfiles.find(since) != _logfiles.end()) {
+        Warning(logger()) << "ignoring duplicate log file " << path;
+        return;
+    }
+
+    _logfiles.emplace(since, std::move(logfile));
 }
 
 /* This method is called each time a log message is loaded
@@ -147,16 +142,15 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
 
     // [1] Begin by deleting old logfiles
     // Begin deleting with the oldest logfile available
-    _logfiles_t::iterator it;
+    logfiles_t::iterator it;
     for (it = _logfiles.begin(); it != _logfiles.end(); ++it) {
-        Logfile *log = it->second;
-        if (log == logfile) {
+        if (it->second.get() == logfile) {
             // Do not touch the logfile the Query is currently accessing
             break;
         }
-        if (log->numEntries() > 0) {
-            num_cached_log_messages -= log->numEntries();
-            log->flush();  // drop all messages of that file
+        if (it->second->numEntries() > 0) {
+            num_cached_log_messages -= it->second->numEntries();
+            it->second->flush();  // drop all messages of that file
             if (static_cast<unsigned long>(num_cached_log_messages) <=
                 _max_cached_messages) {
                 // remember the number of log messages in cache when
@@ -176,13 +170,12 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     // Starting from the current logfile (wo broke out of the
     // previous loop just when 'it' pointed to that)
     for (; it != _logfiles.end(); ++it) {
-        Logfile *log = it->second;
-        if (log->numEntries() > 0 && (log->classesRead() & ~logclasses) != 0) {
+        if (it->second->numEntries() > 0 &&
+            (it->second->classesRead() & ~logclasses) != 0) {
             Debug(logger()) << "freeing classes " << ~logclasses << " of file "
-                            << log->path();
-            long freed = log->freeMessages(~logclasses);  // flush only messages
-                                                          // not needed for
-                                                          // current query
+                            << it->second->path();
+            // flush only messages not needed for current query
+            long freed = it->second->freeMessages(~logclasses);
             num_cached_log_messages -= freed;
             if (static_cast<unsigned long>(num_cached_log_messages) <=
                 _max_cached_messages) {
@@ -197,12 +190,11 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t /*unused*/,
     // flushing logfiles from the oldest to the newest starting
     // at the file just after (i.e. newer than) the current logfile
     for (it = ++queryit; it != _logfiles.end(); ++it) {
-        Logfile *log = it->second;
-        if (log->numEntries() > 0) {
-            Debug(logger()) << "flush newer log, " << log->numEntries()
+        if (it->second->numEntries() > 0) {
+            Debug(logger()) << "flush newer log, " << it->second->numEntries()
                             << " number of entries";
-            num_cached_log_messages -= log->numEntries();
-            log->flush();
+            num_cached_log_messages -= it->second->numEntries();
+            it->second->flush();
             if (static_cast<unsigned long>(num_cached_log_messages) <=
                 _max_cached_messages) {
                 _num_at_last_check = num_cached_log_messages;

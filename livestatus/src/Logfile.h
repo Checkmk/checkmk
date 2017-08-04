@@ -33,8 +33,8 @@
 #include <memory>
 #include <string>
 #include "FileSystem.h"
+#include "LogEntry.h"  // IWYU pragma: keep
 class LogCache;
-class LogEntry;
 class Logger;
 class MonitoringCore;
 class Query;
@@ -63,7 +63,6 @@ private:
 
 public:
     Logfile(MonitoringCore *mc, fs::path path, bool watch);
-    ~Logfile();
 
     std::string path() { return _path; }
 #ifdef CMC

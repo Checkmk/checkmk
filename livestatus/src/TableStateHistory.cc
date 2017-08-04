@@ -224,19 +224,18 @@ string TableStateHistory::name() const { return "statehist"; }
 
 string TableStateHistory::namePrefix() const { return "statehist_"; }
 
-LogEntry *TableStateHistory::getPreviousLogentry() {
+void TableStateHistory::getPreviousLogentry() {
     while (_it_entries == _entries->begin()) {
         // open previous logfile
         if (_it_logs == _log_cache->logfiles()->begin()) {
-            return nullptr;
+            return;
         }
         --_it_logs;
         _entries = _it_logs->second->getEntriesFromQuery(
             _query, _log_cache, _since, _until, classmask_statehist);
         _it_entries = _entries->end();
     }
-
-    return (--_it_entries)->second;
+    --_it_entries;
 }
 
 LogEntry *TableStateHistory::getNextLogentry() {
@@ -254,7 +253,7 @@ LogEntry *TableStateHistory::getNextLogentry() {
             _query, _log_cache, _since, _until, classmask_statehist);
         _it_entries = _entries->begin();
     }
-    return _it_entries->second;
+    return _it_entries->second.get();
 }
 
 // TODO(sp) IsObjectFilter in TableCachedStatehist recurses into sub-filters,
@@ -369,15 +368,13 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     // Determine initial logentry
-    LogEntry *entry;
     _entries = _it_logs->second->getEntriesFromQuery(
         query, _log_cache, _since, _until, classmask_statehist);
     if (!_entries->empty() && _it_logs != newest_log) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--_it_entries != _entries->begin()) {
-            entry = _it_entries->second;
-            if (entry->_time >= _since) {
+            if (_it_entries->second->_time >= _since) {
                 _it_entries = _entries->begin();
             }
         }
@@ -389,7 +386,7 @@ void TableStateHistory::answerQuery(Query *query) {
     bool only_update = true;
     bool in_nagios_initial_states = false;
 
-    while (nullptr != (entry = getNextLogentry())) {
+    while (LogEntry *entry = getNextLogentry()) {
         if (_abort_query) {
             break;
         }

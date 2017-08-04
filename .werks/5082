@@ -1,0 +1,17 @@
+Title: gude_powerbanks: Adapted discovery of powerbanks
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1501832832
+
+Devices with OID_END=38 are 12 port power switches with two powerbanks.
+Means each powerbank has 6 outlets. Here we can use ChanStatus in order
+to find out if one powerbank is enabled/used.
+
+Devices with OID_END=19 are simple switch outlets: 1 Port and 1 powerbank
+Once it's plugged in, the state is "on". Thus we use PortState in
+discovering function.

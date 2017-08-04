@@ -53,10 +53,14 @@ def parse_gude_powerbanks(info):
         current_str, volt_str, freq_str, appower_str in info[1]:
 
         oid, idx = oid_idx.split(".")
+        device_state = None
         if oid in ["19"]:
             device_state = map_port_states[ports[oid_idx]]
         if oid in ["38"]:
             device_state = map_channel_states[device_state]
+
+        if device_state is None:
+            continue
 
         parsed.setdefault(idx, {
             "device_state" : device_state

@@ -145,19 +145,20 @@ def parse_brocade_fcport(info):
         if_table = [x + ["", x[-2]] for x in if_info]
 
     parsed = []
+
     for index, phystate, opstate, admstate, txwords, rxwords, txframes, \
         rxframes, notxcredits, rxcrcs, rxencinframes, rxencoutframes, \
         c3discards, brocade_speed, portname, porttype, ifspeed in if_table:
 
         # Since FW v8.0.1b [rx/tx]words are no longer available
-        bbcredits = 0
+        bbcredits = None
         if txwords == "" or rxwords == "":
             fcmgmt_portstats = []
-            for oidend, tx_elements, rx_elements, bbcredits in if64_info:
+            for oidend, tx_elements, rx_elements, bbcredits_64 in if64_info:
                 if index == int(oidend.split(".")[-1]):
                     fcmgmt_portstats = [ binstring_to_int(tx_elements),
                                          binstring_to_int(rx_elements),
-                                         binstring_to_int(bbcredits) ]
+                                         binstring_to_int(bbcredits_64) ]
                     break
             if fcmgmt_portstats:
                 txwords = fcmgmt_portstats[0]
@@ -196,7 +197,6 @@ def parse_brocade_fcport(info):
             })
         except: # missing vital data. Skipping this port
             continue
-
     return parsed
 
 
@@ -391,7 +391,7 @@ def check_brocade_fcport(item, params, parsed):
                 summarystate = 2
         output.append("%s: %s%s" % (state_info, state_map[dev_state], errorflag))
 
-    if bbcredits:
+    if bbcredits is not None:
         bbcredit_rate = get_rate("brocade_fcport.bbcredit.%s" % (item), this_time, bbcredits)
         perfdata.append( ("fc_bbcredit_zero", bbcredit_rate) )
 

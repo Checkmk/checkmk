@@ -155,7 +155,7 @@ void TableLog::answerQuery(Query *query) {
        the Limit: header produces more reasonable results. */
 
     /* NEW CODE - NEWEST FIRST */
-    _logfiles_t::iterator it;
+    logfiles_t::iterator it;
     it = _log_cache->logfiles()->end();  // it now points beyond last log file
     --it;  // switch to last logfile (we have at least one)
 
@@ -171,9 +171,8 @@ void TableLog::answerQuery(Query *query) {
     }
 
     while (true) {
-        Logfile *log = it->second;
-        if (!log->answerQueryReverse(query, _log_cache, since, until,
-                                     classmask)) {
+        if (!it->second->answerQueryReverse(query, _log_cache, since, until,
+                                            classmask)) {
             break;  // end of time range found
         }
         if (it == _log_cache->logfiles()->begin()) {

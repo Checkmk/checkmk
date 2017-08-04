@@ -87,8 +87,6 @@ Logfile::Logfile(MonitoringCore *mc, fs::path path, bool watch)
     _since = atoi(line + 1);
 }
 
-Logfile::~Logfile() { flush(); }
-
 void Logfile::flush() {
     _entries.clear();
     _logclasses_read = 0;

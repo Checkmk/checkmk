@@ -27,12 +27,16 @@
 
 #include "config.h"  // IWYU pragma: keep
 #include <map>
-#include <memory>  // IWYU pragma: keep
+#include <memory>
 #include <string>
 #include "LogCache.h"
 #include "Logfile.h"
 #include "Table.h"
+#ifdef CMC
+#include "cmc.h"
+#else
 #include "contact_fwd.h"
+#endif
 class Column;
 class HostServiceState;
 class LogEntry;
@@ -65,7 +69,7 @@ private:
     std::map<std::string, int> _notification_periods;
 
     // Helper functions to traverse through logfiles
-    _logfiles_t::iterator _it_logs;
+    logfiles_t::iterator _it_logs;
     logfile_entries_t *_entries;
     logfile_entries_t::iterator _it_entries;
 

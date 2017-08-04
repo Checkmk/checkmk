@@ -5,6 +5,7 @@
     Checks & Agents:
     * 5078 FIX: lnx_distro: Detects version and name of Check_MK Appliance correctly
     * 5079 FIX: windows_tasks: Adapted man page; Some OK states were missing
+    * 5083 FIX: oracle_locks: Do not discover if data is incomplete...
 
 
 1.2.8p25:

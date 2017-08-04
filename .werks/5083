@@ -1,0 +1,12 @@
+Title: oracle_locks: Do not discover if data is incomplete
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p26
+Date: 1501841718
+Class: fix
+
+One error line may look like
+Couldnt find /PATH/TO/sqlnet.ora
+which was inventorize as an item and causes
+an IndexError during check period.

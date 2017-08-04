@@ -49,7 +49,7 @@ def parse_gude_powerbanks(info):
 
     ports = dict(info[0])
     parsed = {}
-    for oid_idx, device_state, energy_str, active_power_str, \
+    for oid_idx, dev_state, energy_str, active_power_str, \
         current_str, volt_str, freq_str, appower_str in info[1]:
 
         oid, idx = oid_idx.split(".")
@@ -57,7 +57,7 @@ def parse_gude_powerbanks(info):
         if oid in ["19"]:
             device_state = map_port_states[ports[oid_idx]]
         if oid in ["38"]:
-            device_state = map_channel_states[device_state]
+            device_state = map_channel_states[dev_state]
 
         if device_state is None:
             continue

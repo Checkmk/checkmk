@@ -37,8 +37,7 @@ class Row;
 class RowRenderer;
 
 #ifdef CMC
-#include <unordered_set>
-class Service;
+#include "Host.h"
 #else
 #include "nagios.h"
 #endif
@@ -62,7 +61,7 @@ public:
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
 #ifdef CMC
-    std::unordered_set<Service *> *getMembers(Row row);
+    Host::services_t *getMembers(Row row);
 #else
     servicesmember *getMembers(Row row);
 #endif

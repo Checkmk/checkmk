@@ -34,9 +34,7 @@ class MonitoringCore;
 class Row;
 
 #ifdef CMC
-#include <unordered_set>
-class Service;
-typedef std::unordered_set<Service *> servicelist_t;
+#include "Host.h"
 #else
 #include "nagios.h"
 #endif
@@ -71,7 +69,7 @@ public:
     int32_t getValue(Row row, contact *auth_user) override;
 #ifdef CMC
     static int32_t getValue(MonitoringCore *mc, Type logictype,
-                            servicelist_t *mem, contact *auth_user);
+                            Host::services_t *mem, contact *auth_user);
 #else
     static int32_t getValue(MonitoringCore *mc, Type logictype,
                             servicesmember *mem, contact *auth_user);

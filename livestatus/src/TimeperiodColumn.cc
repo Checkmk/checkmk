@@ -40,8 +40,8 @@ TimeperiodColumn::TimeperiodColumn(const string& name,
 
 int32_t TimeperiodColumn::getValue(Row row, contact* /* auth_user */) {
     if (auto tp = columnData<timeperiod>(row)) {
-        // no timeperiod set -> Nagios assumes 7x24
-        return (tp == nullptr || g_timeperiods_cache->inTimeperiod(tp)) ? 1 : 0;
+        return g_timeperiods_cache->inTimeperiod(tp) ? 1 : 0;
     }
+    // no timeperiod set -> Nagios assumes 7x24
     return 0;
 }

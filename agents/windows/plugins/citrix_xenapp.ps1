@@ -1,14 +1,15 @@
-$computer = "localhost"
+Add-PSSnapin Citrix*
 
 ### Citrix XenApp Serverload
-$loadObject = Get-WmiObject -Namespace 'Root\Citrix' -class 'MetaFrame_Server_LoadLevel' -ComputerName $computer -ErrorAction Stop
+$load = Get-XAServerLoad -ServerName $env:computername | Select-Object -ExpandProperty load
 "<<<citrix_serverload>>>"
-$loadObject.LoadLevel
-$computer = "localhost"
+$load
 
 ### Citrix XenApp Sessions
-$serverObject = Get-WmiObject -Namespace root\citrix -Class Metaframe_Server -ComputerName $computer
+$disc = (Get-XASession -ServerName $env:computername  |Where {$_.State -eq "Disconnected" }).count
+$activ = (Get-XASession -ServerName $env:computername  |Where {$_.State -eq "Active" }).count
+$all = ($disc + $activ)
 "<<<citrix_sessions>>>"
-"sessions {0}" -f $serverObject.NumberOfSessions
-"active_sessions {0}" -f $serverObject.NumberOfActiveSessions
-"inactive_sessions {0}" -f $serverObject.NumberOfDisconnectedSessions
+"sessions {0}" -f $all
+"active_sessions {0}" -f $activ
+"inactive_sessions {0}" -f $disc

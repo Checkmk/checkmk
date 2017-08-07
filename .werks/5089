@@ -1,0 +1,9 @@
+Title: citrix_xenapp.ps1: Refactored; now uses powershell commands for Citrix environment instead of WMI objects which caused runtime errors
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p26
+Date: 1502083451
+Class: fix
+
+

@@ -353,4 +353,11 @@ def wipe_directory(path):
             if os.path.isdir(p):
                 shutil.rmtree(p)
             else:
-                os.remove(p)
+		try:
+                    os.remove(p)
+                except OSError as e:
+                    if e.errno == 2:  # no such file or directory
+                        continue
+                    else:
+                        raise
+

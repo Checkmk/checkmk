@@ -61,7 +61,7 @@ def check_dell_idrac_power(item, params, info):
             yield state, "Redundancy status: %s" % state_readable
 
 
-check_info['dell_idrac_power'] = {
+check_info['dell_om_power'] = {
     'inventory_function'    : inventory_dell_idrac_power,
     'check_function'        : check_dell_idrac_power,
     'service_description'   : 'Power Supply Redundancy %s',
@@ -118,7 +118,7 @@ def check_dell_idrac_power_unit(item, _no_params, info):
             yield state, "Status: %s, Type: %s, Name: %s" % \
                             ( state_readable, psu_type_readable, location )
 
-check_info['dell_idrac_power.unit'] = {
+check_info['dell_om_power.unit'] = {
     'inventory_function'    : inventory_dell_idrac_power_unit,
     'check_function'        : check_dell_idrac_power_unit,
     'service_description'   : 'Power Supply %s',

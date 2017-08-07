@@ -63,7 +63,7 @@ def check_dell_idrac_fans(item, params, info):
             yield check_fan(value, params)
 
 
-check_info["dell_idrac_fans"] = {
+check_info["dell_om_fans"] = {
     "check_function"        : check_dell_idrac_fans,
     "inventory_function"    : inventory_dell_idrac_fans,
     "service_description"   : "Fan %s",

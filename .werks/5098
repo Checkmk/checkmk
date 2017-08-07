@@ -1,0 +1,12 @@
+Title: Fix sporadic exception during activation
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.4.0p10
+Date: 1502090720
+Class: fix
+
+In some case a race condition could lead to an OSError exception 
+during activation due to vanished files.
+This has been fixed.

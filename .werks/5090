@@ -1,0 +1,12 @@
+Title: mssql_databases: Database status is now configurable
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1502085314
+Class: feature
+
+The following states are configurable:
+ONLINE, OFFLINE, RESTORING, RECOVERING,
+RECOVERY PENDING, SUSPECT, EMERGENCY

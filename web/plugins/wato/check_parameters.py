@@ -2573,6 +2573,19 @@ register_check_parameters(
     _("MSSQL Databases properties"),
     Dictionary(
         elements = [
+            ("map_db_states", Dictionary(
+                elements = [
+                    ("ONLINE",  MonitoringState(title=_("Database Online"))),
+                    ("OFFLINE", MonitoringState(title=_("Database Offline"))),
+                    ("RESTORING", MonitoringState(title=_("Database Files are restored"))),
+                    ("RECOVERING", MonitoringState(title=_("Database is being recovered"))),
+                    ("RECOVERY PENDING", MonitoringState(title=_("Database must be recovered"))),
+                    ("SUSPECT", MonitoringState(title=_("Database Suspect"))),
+                    ("EMERGENCY", MonitoringState(title=_("Database changed to emergency"))),
+                ],
+                title = _('Map Database States'),
+                optional_keys = [],
+            )),
             ("map_auto_close_state", Dictionary(
                 elements = [
                     ( "on",  MonitoringState(title=_("Auto close on"), default_value=1) ),

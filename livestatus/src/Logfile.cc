@@ -209,7 +209,7 @@ bool Logfile::processLogLine(uint32_t lineno, string line,
                         << entry->_complete;
         return false;
     }
-    _entries.emplace(key, entry.release());
+    _entries[key] = std::move(entry);
     return true;
 }
 

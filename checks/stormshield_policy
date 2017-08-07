@@ -54,5 +54,5 @@ check_info['stormshield_policy'] = {
                                     '5', # STORMSHIELD-POLICY-MIB::snsPolicySync
                               ]),
     'snmp_scan_function'    : stormshield_scan_function,
-    'includes'              : [ 'stormshield.inlude' ],
+    'includes'              : [ 'stormshield.include' ],
 }

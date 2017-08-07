@@ -34,14 +34,14 @@ def inventory_hp_mcs_system(info):
 
 def check_hp_mcs_system(item, _no_params, info):
     translate_status = {
-        "00" : (2, "Not available" ),
-        "01" : (3, "Other"         ),
-        "02" : (0, "OK"            ),
-        "03" : (1, "Degraded"      ),
-        "04" : (2, "Failed"        ),
+        0 : (2, "Not available" ),
+        1 : (3, "Other"         ),
+        2 : (0, "OK"            ),
+        3 : (1, "Degraded"      ),
+        4 : (2, "Failed"        ),
     }
     serial = info[0][2]
-    idx1, status, idx2, dev_type = info[0][1].split(" ")
+    idx1, status, idx2, dev_type = info[0][1]
     state, state_readable = translate_status[status]
     if state:
         yield state, "Status: %s" % state_readable

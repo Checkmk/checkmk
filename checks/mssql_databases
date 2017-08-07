@@ -36,6 +36,7 @@
 # MSSQL_MSSQL46 NOC_CONFIG_T ONLINE FULL 0 0^M
 # MSSQL_MSSQL46 tempdb ONLINE SIMPLE 0 0^M
 # MSSQL_MSSQL46 test_autoclose ONLINE FULL 1 0^M
+# MSSQL_MSSQL46 test_autoclose RECOVERY PENDING FULL 1 0^M
 
 
 def parse_mssql_databases(info):
@@ -44,9 +45,16 @@ def parse_mssql_databases(info):
                'Recovery', 'auto_close', 'auto_shrink']
 
     for line in info:
+        if line == headers:
+            continue
+
         if len(line) == 6:
             data = dict(zip(headers, line))
-            parsed.setdefault("%s %s" % (data["Instance"], data["DBname"]), data)
+        elif len(line) == 7:
+            data = dict(zip(headers, line[:2] + ["%s %s" % (line[2], line[3])] + line[-3:]))
+        else:
+            continue
+        parsed.setdefault("%s %s" % (data["Instance"], data["DBname"]), data)
 
     return parsed
 
@@ -61,7 +69,8 @@ def check_mssql_databases(item, params, parsed):
 
     if item in parsed:
         data = parsed[item]
-        yield 0, 'Status: %s, Recovery: %s' % (data["Status"], data["Recovery"])
+        db_state = params.get("map_db_states", {}).get(data["Status"], 0)
+        yield db_state, 'Status: %s, Recovery: %s' % (data["Status"], data["Recovery"])
 
         for what in ["close", "shrink"]:
             state, state_readable = map_states[data["auto_%s" % what]]

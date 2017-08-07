@@ -10994,7 +10994,6 @@ def mode_edit_user(phase):
 
         forms.section(_("Notification Method"))
         get_vs_flexible_notifications().render_input("notification_method", user.get("notification_method"))
-        custom_user_attributes('notify')
 
     else:
         forms.section(_("Fallback notifications"), simple=True)
@@ -11008,6 +11007,8 @@ def mode_edit_user(phase):
                  "from the Event Console.<br><br>Notification fallback can also configured in the global "
                  "setting <a href=\"wato.py?mode=edit_configvar&varname=notification_fallback_email\">"
                     "Fallback email address for notifications</a>."))
+
+    custom_user_attributes('notify')
 
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user)

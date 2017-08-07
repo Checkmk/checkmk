@@ -1,0 +1,11 @@
+Title: Fix custom user attributes un user form
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.5.0i1
+Date: 1502105090
+
+if rule based notification are enabled the custom user attributes of type "Notification" will not be displayed in user form.

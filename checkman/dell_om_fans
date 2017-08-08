@@ -4,10 +4,14 @@ catalog: hw/server/dell
 license: GPL
 distribution: check_mk
 description:
+ The states of a fan is checked here. Also the name of the fan is added to the
+ output. The state will change to {WARN} if "Non critical upper" or "Non
+ critical lower" is reported by the appliance. The state will change to {CRIT}
+ if one of the following: "Critical upper", "Non recoverable upper", "Critical
+ lower", "Non recoverable lower", "Failed". For "Other" and "Unknown" the state
+ will be {uNKNOWN}.
 
- The states of a fan is checked here. Also the name of the fan is added to the output. The state will change to {WARN} if "Non critical upper" or "Non critical lower" is reported by the appliance. The state will change to {CRIT} if one of the following: "Critical upper", "Non recoverable upper", "Critical lower", "Non recoverable lower", "Failed". For "Other" and "Unknown" the state will be {uNKNOWN}.
-
-Thresholds can be also defined by the common ruleset for fans.
+ Thresholds can be also defined by the common ruleset for fans.
 
 item:
  The fan index is the item

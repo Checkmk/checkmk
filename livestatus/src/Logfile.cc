@@ -94,8 +94,6 @@ void Logfile::flush() {
 
 void Logfile::load(LogCache *logcache, time_t since, time_t until,
                    unsigned logclasses) {
-    // HIER KOENNTE ICH FLUSHEN, WENN g_active_world nicht mehr stimmt
-
     unsigned missing_types = logclasses & ~_logclasses_read;
     FILE *file = nullptr;
     // The current logfile has the _watch flag set to true.

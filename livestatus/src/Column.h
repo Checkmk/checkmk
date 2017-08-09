@@ -38,8 +38,9 @@ class Logger;
 class RowRenderer;
 
 template <typename T>
-T *offset_cast(void *ptr, size_t offset) {
-    return reinterpret_cast<T *>(reinterpret_cast<char *>(ptr) + offset);
+const T *offset_cast(const void *ptr, size_t offset) {
+    return reinterpret_cast<const T *>(reinterpret_cast<const char *>(ptr) +
+                                       offset);
 }
 
 enum class ColumnType { int_, double_, string, list, time, dict, blob, null };

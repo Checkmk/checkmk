@@ -3147,7 +3147,7 @@ class ContactGroupsAttribute(Attribute):
         # Only show contact groups I'm currently in and contact
         # groups already listed here.
         self.load_data()
-        self._vs_contactgroups().render_input(varprefix + self._name + "_n_", value['groups'])
+        self._vs_contactgroups().render_input(varprefix + self._name, value['groups'])
 
         html.hr()
 
@@ -3184,11 +3184,10 @@ class ContactGroupsAttribute(Attribute):
 
 
     def from_html_vars(self, varprefix):
-        cgs = []
         self.load_data()
-        for name in self._contactgroups:
-            if html.get_checkbox(varprefix + self._name + "_n_" + name):
-                cgs.append(name)
+
+        cgs = self._vs_contactgroups().from_html_vars(varprefix + self._name)
+
         return {
             "groups"           : cgs,
             "recurse_perms"    : html.get_checkbox(varprefix + self._name + "_recurse_perms"),

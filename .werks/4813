@@ -1,0 +1,18 @@
+Title: All recipents of an email are visible in notifications
+Level: 2
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1502272993
+Class: feature
+
+Notification multiplexing can now be used for HTML and ASCII emails.
+By default it is enabled on new and existing Check_MK installations.
+If notification multiplexing is enabled only one notification is generated
+even if multiple recipients are going to be notified. Therefore, a
+user can see and reply to all recipients of a notification.
+Furthermore, the notification system will be more performant if graphs
+are present in the notification the since only one notification is
+generated. The notification multiplexing can be disabled in the section
+Notification Method of a notification rule. 

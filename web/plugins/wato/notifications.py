@@ -158,6 +158,17 @@ def html_email_parameter_elements():
                 default = "oldest_first"
             )
         ),
+        ( "disable_multiplexing",
+            FixedValue(
+                True,
+                title = _("Send seperate notifications to every recipient"),
+                totext = _("A seperate notification is send to every recipient. Recipients "
+                           "cannot see which other recipients were notified."),
+                help = _("Per default only one notification is generated for all recipients. "
+                         "Therefore, all recipients can see who was notified and reply to "
+                         "all other recipients."),
+            )
+        ),
         ]
 
     try:
@@ -263,7 +274,18 @@ $LONGSERVICEOUTPUT$
                     title = _("Notification sort order for bulk notifications"),
                     default = "oldest_first"
                 )
-            )
+            ),
+            ( "disable_multiplexing",
+                FixedValue(
+                    True,
+                    title = _("Send seperate notifications to every recipient"),
+                    totext = _("A seperate notification is send to every recipient. Recipients "
+                            "cannot see which other recipients were notified."),
+                    help = _("Per default only one notification is generated for all recipients. "
+                            "Therefore, all recipients can see who was notified and reply to "
+                            "all other recipients."),
+                )
+            ),
         ]
     )
 )

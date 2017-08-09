@@ -483,6 +483,8 @@ def multipart_mail(target, subject, from_address, reply_to, content_txt, content
 
     if reply_to:
         m['Reply-To'] = reply_to
+    elif len(target.split(",")) > 1:
+        m['Reply-To'] = target
 
     return m
 

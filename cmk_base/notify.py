@@ -408,13 +408,14 @@ def notify_keepalive():
 
 def notify_rulebased(raw_context, analyse=False):
     # First step: go through all rules and construct our table of
-    # notification plugins to call. This is a dict from (user, plugin) to
-    # a pair if (locked, parameters). If locked is True, then a user
+    # notification plugins to call. This is a dict from (users, plugin) to
+    # a triple of (locked, parameters, bulk). If locked is True, then a user
     # cannot cancel this notification via his personal notification rules.
     # Example:
     # notifications = {
-    #  ( "hh", "email" ) : ( False, [] ),
-    #  ( "hh", "sms"   ) : ( True, [ "0171737337", "bar" ] ),
+    #  ( (aa, hh, ll), "email" ) : ( False, [], None ),
+    #  ( (hh,), "sms"   ) : ( True, [ "0171737337", "bar", {
+    #       'groupby': 'host', 'interval': 60} ] ),
     # }
 
     notifications = {}
@@ -435,6 +436,7 @@ def notify_rulebased(raw_context, analyse=False):
             notify_log(" -> matches!")
             num_rule_matches += 1
             contacts = rbn_rule_contacts(rule, raw_context)
+            contactstxt = ", ".join(contacts)
 
             # Handle old-style and new-style rules
             if "notify_method" in rule: # old-style
@@ -442,33 +444,28 @@ def notify_rulebased(raw_context, analyse=False):
                 plugin_parameters = rule["notify_method"] # None: do cancel, [ str ]: plugin parameters
             else:
                 plugin, plugin_parameters = rule["notify_plugin"]
+            plugintxt = plugin or "plain email"
 
-            bulk   = rule.get("bulk")
-
-            if plugin_parameters == None: # cancelling
-                for contact in contacts:
-                    key = contact, plugin
-                    if key in notifications:
-                        locked, plugin_parameters, bulk = notifications[key]
-                        if locked and "contact" in rule:
-                            notify_log("   - cannot cancel notification of %s via %s: it is locked" % key)
-                        else:
-                            notify_log("   - cancelling notification of %s via %s" % key)
-                            del notifications[key]
-            else:
+            key = contacts, plugin
+            if plugin_parameters is None and key in notifications: # cancelling
+                locked, plugin_parameters, bulk = notifications[key]
+                if locked and "contact" in rule:
+                    notify_log("   - cannot cancel notification of %s via %s: it is locked" % (contactstxt, plugintxt))
+                else:
+                    notify_log("   - cancelling notification of %s via %s" % (contactstxt, plugintxt))
+                    del notifications[key]
+            elif contacts:
+                if key in notifications:
+                    locked = notifications[key][0]
+                    if locked and "contact" in rule:
+                        notify_log("   - cannot modify notification of %s via %s: it is locked" % (contactstxt, plugintxt))
+                        continue
+                    notify_log("   - modifying notification of %s via %s" % (contactstxt, plugintxt))
+                else:
+                    notify_log("   - adding notification of %s via %s" % (contactstxt, plugintxt))
+                bulk   = rule.get("bulk")
                 final_parameters = rbn_finalize_plugin_parameters(raw_context["HOSTNAME"], plugin, plugin_parameters)
-                for contact in contacts:
-                    key = contact, plugin
-                    plugintxt = plugin or "plain email"
-                    if key in notifications:
-                        locked = notifications[key][0]
-                        if locked and "contact" in rule:
-                            notify_log("   - cannot modify notification of %s via %s: it is locked" % (contact, plugintxt))
-                            continue
-                        notify_log("   - modifying notification of %s via %s" % (contact, plugintxt))
-                    else:
-                        notify_log("   - adding notification of %s via %s" % (contact, plugintxt))
-                    notifications[key] = ( not rule.get("allow_disable"), final_parameters, bulk )
+                notifications[key] = ( not rule.get("allow_disable"), final_parameters, bulk )
 
             rule_info.append(("match", rule, ""))
 
@@ -476,44 +473,57 @@ def notify_rulebased(raw_context, analyse=False):
 
     if not notifications:
         if num_rule_matches:
-            notify_log("%d rules matched, but no notification has been created." %
-                                                                    num_rule_matches)
+            notify_log("%d rules matched, but no notification has been created." % num_rule_matches)
         elif not analyse:
             fallback_contacts = rbn_fallback_contacts()
             if fallback_contacts:
                 notify_log("No rule matched, notifying fallback contacts")
-                for fallback_contact in fallback_contacts:
-                    notify_log("  Sending plain email to %s" % fallback_contact["email"])
-                    plugin_context = create_plugin_context(raw_context, [])
-                    rbn_add_contact_information(plugin_context, fallback_contact)
-                    notify_via_email(plugin_context)
+                fallback_emails = [fc["email"] for fc in fallback_contacts]
+                notify_log("  Sending plain email to %s" % fallback_emails)
+
+                plugin_context = create_plugin_context(raw_context, [])
+                rbn_add_contact_information(plugin_context, fallback_contacts)
+                notify_via_email(plugin_context)
             else:
                 notify_log("No rule matched, would notify fallback contacts, but none configured")
-
     else:
         # Now do the actual notifications
         notify_log("Executing %d notifications:" % len(notifications))
         entries = notifications.items()
         entries.sort()
-        for (contact, plugin), (locked, params, bulk) in entries:
-            if analyse:
-                verb = "would notify"
-            else:
-                verb = "notifying"
-            notify_log("  * %s %s via %s, parameters: %s, bulk: %s" % (
-                  verb, contact, (plugin or "plain email"), params and ", ".join(params) or "(no parameters)",
-                  bulk and "yes" or "no"))
-            plugin_info.append((contact, plugin, params, bulk)) # for analysis
+        for (contacts, plugin), (locked, params, bulk) in entries:
+            verb = "would notify" if analyse else "notifying"
+            contactstxt = ", ".join(contacts)
+            plugintxt = plugin or "plain email"
+            paramtxt = ", ".join(params) if params else "(no parameters)"
+            bulktxt = "yes" if bulk else "no"
+            notify_log("  * %s %s via %s, parameters: %s, bulk: %s" %
+                (verb, contactstxt, plugintxt, paramtxt, bulktxt)
+            )
+
             try:
                 plugin_context = create_plugin_context(raw_context, params)
-                rbn_add_contact_information(plugin_context, contact)
-                if not analyse:
-                    if bulk:
-                        do_bulk_notify(contact, plugin, params, plugin_context, bulk)
+                rbn_add_contact_information(plugin_context, contacts)
+
+                split_contexts = (params.get("disable_multiplexing") or
+                                  plugin not in ["", "mail", "asciimail"] or
+                                  bulk)
+                if not split_contexts:
+                    plugin_contexts = [plugin_context]
+                else:
+                    plugin_contexts = rbn_split_plugin_context(plugin_context)
+
+                for context in plugin_contexts:
+                    plugin_info.append((context["CONTACTNAME"], plugin, params, bulk))
+
+                    if analyse:
+                        continue
+                    elif bulk:
+                        do_bulk_notify(plugin, params, context, bulk)
                     elif config.notification_spooling in ("local", "both"):
-                        create_spoolfile({"context": plugin_context, "plugin": plugin})
+                        create_spoolfile({"context": context, "plugin": plugin})
                     else:
-                        call_notification_script(plugin, plugin_context)
+                        call_notification_script(plugin, context)
 
             except Exception, e:
                 if cmk.debug.enabled():
@@ -588,25 +598,55 @@ def rbn_fake_email_contact(email):
     }
 
 
-def rbn_add_contact_information(plugin_context, contact):
-    if type(contact) == dict:
-        for what in [ "name", "alias", "email", "pager" ]:
-            plugin_context["CONTACT" + what.upper()] = contact.get(what, "")
-        for key in contact.keys():
-            if key[0] == '_':
-                plugin_context["CONTACT" + key.upper()] = unicode(contact[key])
-    else:
-        if contact.startswith("mailto:"): # Fake contact
+def rbn_add_contact_information(plugin_context, contacts):
+    # TODO tb: Make contacts a reliable type. Righ now contacts can be
+    # a list of dicts or a list of strings.
+    contact_dicts = []
+    keys = {"name", "alias", "email", "pager"}
+
+    for contact in contacts:
+        if type(contact) is dict:
+            contact_dict = contact
+        elif contact.startswith("mailto:"): # Fake contact
             contact_dict = {
                 "name"  : contact[7:],
                 "alias" : "Email address " + contact,
                 "email" : contact[7:],
-                "pager" : "" }
+                "pager" : ""
+            }
         else:
             contact_dict = config.contacts.get(contact, { "alias" : contact })
             contact_dict["name"] = contact
 
-        rbn_add_contact_information(plugin_context, contact_dict)
+        contact_dicts.append(contact_dict)
+        keys.update([key for key in contact_dict.keys() if key.startswith("_")])
+
+    for key in keys:
+        context_key = "CONTACT" + key.upper()
+        items = [contact.get(key, "") for contact in contact_dicts]
+        plugin_context[context_key] = ",".join(items)
+
+
+def rbn_split_plugin_context(plugin_context):
+    """Takes a plugin_context containing multiple contacts and returns
+    a list of plugin_contexts with a context for each contact"""
+    num_contacts = len(plugin_context["CONTACTNAME"].split(","))
+    if num_contacts <= 1:
+        return [plugin_context]
+
+    contexts = []
+    keys_to_split = {"CONTACTNAME", "CONTACTALIAS", "CONTACTEMAIL", "CONTACTPAGER"}
+    keys_to_split.update(
+        [key for key in plugin_context.keys() if key.startswith("CONTACT_")]
+    )
+
+    for i in range(num_contacts):
+        context = plugin_context.copy()
+        for key in keys_to_split:
+            context[key] = context[key].split(",")[i]
+        contexts.append(context)
+
+    return contexts
 
 
 def rbn_match_rule(rule, context):
@@ -753,7 +793,7 @@ def rbn_rule_contacts(rule, context):
 
         all_enabled.append(contactname)
 
-    return all_enabled
+    return tuple(all_enabled)  # has to be hashable
 
 
 def rbn_match_contact_macros(rule, contactname, contact):
@@ -1089,7 +1129,7 @@ def notify_via_email(plugin_context):
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
-    # available. If e.g. nail detects a non-Ascii character in the mail body and
+    # available. If e.g. mail detects a non-Ascii character in the mail body and
     # the specified encoding is not available, it will silently not send the mail!
     # Our resultion in future: use /usr/sbin/sendmail directly.
     # Our resultion in the present: look with locale -a for an existing UTF encoding
@@ -1327,7 +1367,7 @@ def handle_spoolfile(spoolfile):
 #   |  notifications on cmk --notify bulk.                                 |
 #   '----------------------------------------------------------------------'
 
-def do_bulk_notify(contact, plugin, params, plugin_context, bulk):
+def do_bulk_notify(plugin, params, plugin_context, bulk):
     # First identify the bulk. The following elements identify it:
     # 1. contact
     # 2. plugin
@@ -1340,6 +1380,7 @@ def do_bulk_notify(contact, plugin, params, plugin_context, bulk):
     # bulking options, then they will use the same bulk.
 
     what = plugin_context["WHAT"]
+    contact = plugin_context["CONTACTNAME"]
     bulk_path = (contact, plugin, str(bulk["interval"]), str(bulk["count"]))
     bulkby = bulk["groupby"]
 

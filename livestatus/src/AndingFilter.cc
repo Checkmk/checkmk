@@ -52,7 +52,7 @@ bool AndingFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
 const string *AndingFilter::findValueForIndexing(
     const string &column_name) const {
     for (const auto &filter : _subfilters) {
-        if (const string *value = filter->valueForIndexing(column_name)) {
+        if (auto value = filter->valueForIndexing(column_name)) {
             return value;
         }
     }

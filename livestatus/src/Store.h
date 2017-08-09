@@ -142,7 +142,7 @@ private:
     void addTable(Table *table);
     Table *findTable(const std::string &name);
 #ifdef CMC
-    Config *config() const;
+    const Config *config() const;
     uint32_t horizon() const;
 #else
     void logRequest(const std::string &line,

@@ -84,7 +84,7 @@ public:
         , _logictype(logictype) {}
     int32_t getValue(Row row, contact *auth_user) override;
 #ifdef CMC
-    std::unordered_set<Host *> *getMembers(Row row);
+    const std::unordered_set<Host *> *getMembers(Row row);
 #else
     hostsmember *getMembers(Row row);
 #endif

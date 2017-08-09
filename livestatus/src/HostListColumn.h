@@ -58,7 +58,7 @@ public:
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
 #ifdef CMC
-    std::unordered_set<Host *> *getMembers(Row row);
+    const std::unordered_set<Host *> *getMembers(Row row);
 #else
     hostsmember *getMembers(Row row);
 #endif

@@ -517,7 +517,7 @@ for inst in instances:
         inst["instance"] = str(inst["port"])
     inst["instance"] = inst["instance"].replace(" ", "_")
 
-    if inst.get("server") == "use fqdn":
+    if inst.get("server") == ("use fqdn",):
         inst["server"] = socket.getfqdn()
 
     query_instance(inst)

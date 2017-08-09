@@ -94,7 +94,7 @@ def get_check_content(check_name, has_parse=False, is_snmp=False):
     if is_snmp:
         snmp_content = \
           "    'snmp_info'             : ('', []),\n" + \
-          "    'snmp_scan_function'    : lambda oid: False,\n"
+          "    'snmp_scan_function'    : lambda oid: True,\n"
     else:
         snmp_content = ""
 

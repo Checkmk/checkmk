@@ -42,7 +42,7 @@ inline contact *unknown_auth_user() {
 #else
 contact *unknown_auth_user();
 class MonitoringCore;
-bool is_authorized_for(MonitoringCore *mc, contact *ctc, host *hst,
+bool is_authorized_for(MonitoringCore *mc, const contact *ctc, const host *hst,
                        service *svc);
 #endif
 

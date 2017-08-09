@@ -587,7 +587,7 @@ public:
                                                    : fromImpl(it->second);
     }
 
-    bool host_has_contact(Host *host, Contact *contact) override {
+    bool host_has_contact(const Host *host, const Contact *contact) override {
         return is_authorized_for(this, toImpl(contact), toImpl(host), nullptr);
     }
 
@@ -596,10 +596,12 @@ public:
         return fromImpl(::find_contactgroup(const_cast<char *>(name.c_str())));
     }
 
-    bool is_contact_member_of_contactgroup(ContactGroup *group,
-                                           Contact *contact) override {
-        return ::is_contact_member_of_contactgroup(toImpl(group),
-                                                   toImpl(contact)) != 0;
+    bool is_contact_member_of_contactgroup(const ContactGroup *group,
+                                           const Contact *contact) override {
+        // Older Nagios headers are not const-correct... :-P
+        return ::is_contact_member_of_contactgroup(
+                   const_cast<contactgroup *>(toImpl(group)),
+                   const_cast<::contact *>(toImpl(contact))) != 0;
     }
 
     system_clock::time_point last_logfile_rotation() override {
@@ -630,20 +632,21 @@ public:
         return commands;
     }
 
-    vector<DowntimeData> downtimes_for_host(Host *host) const override {
+    vector<DowntimeData> downtimes_for_host(const Host *host) const override {
         return downtimes_for_object(toImpl(host), nullptr);
     }
 
     vector<DowntimeData> downtimes_for_service(
-        Service *service) const override {
+        const Service *service) const override {
         return downtimes_for_object(toImpl(service)->host_ptr, toImpl(service));
     }
 
-    vector<CommentData> comments_for_host(Host *host) const override {
+    vector<CommentData> comments_for_host(const Host *host) const override {
         return comments_for_object(toImpl(host), nullptr);
     }
 
-    vector<CommentData> comments_for_service(Service *service) const override {
+    vector<CommentData> comments_for_service(
+        const Service *service) const override {
         return comments_for_object(toImpl(service)->host_ptr, toImpl(service));
     }
 
@@ -687,26 +690,29 @@ public:
 private:
     void *implInternal() const override { return fl_store; }
 
-    static contact *toImpl(Contact *c) {
-        return reinterpret_cast<contact *>(c);
+    static const contact *toImpl(const Contact *c) {
+        return reinterpret_cast<const contact *>(c);
     }
 
-    static contactgroup *toImpl(ContactGroup *g) {
-        return reinterpret_cast<contactgroup *>(g);
+    static const contactgroup *toImpl(const ContactGroup *g) {
+        return reinterpret_cast<const contactgroup *>(g);
     }
 
     static ContactGroup *fromImpl(contactgroup *g) {
         return reinterpret_cast<ContactGroup *>(g);
     }
 
-    static host *toImpl(Host *h) { return reinterpret_cast<host *>(h); }
+    static const host *toImpl(const Host *h) {
+        return reinterpret_cast<const host *>(h);
+    }
     static Host *fromImpl(host *h) { return reinterpret_cast<Host *>(h); }
 
-    static service *toImpl(Service *h) {
-        return reinterpret_cast<service *>(h);
+    static const service *toImpl(const Service *h) {
+        return reinterpret_cast<const service *>(h);
     }
 
-    vector<DowntimeData> downtimes_for_object(::host *h, ::service *s) const {
+    vector<DowntimeData> downtimes_for_object(const ::host *h,
+                                              const ::service *s) const {
         vector<DowntimeData> result;
         for (const auto &entry : fl_store->_downtimes) {
             auto *dt = static_cast<Downtime *>(entry.second.get());
@@ -717,7 +723,8 @@ private:
         return result;
     }
 
-    vector<CommentData> comments_for_object(::host *h, ::service *s) const {
+    vector<CommentData> comments_for_object(const ::host *h,
+                                            const ::service *s) const {
         vector<CommentData> result;
         for (const auto &entry : fl_store->_comments) {
             auto *co = static_cast<Comment *>(entry.second.get());

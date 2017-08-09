@@ -66,9 +66,9 @@ public:
     virtual Host *getHostByDesignation(const std::string &designation) = 0;
     virtual ContactGroup *find_contactgroup(const std::string &name) = 0;
 
-    virtual bool host_has_contact(Host *host, Contact *contact) = 0;
-    virtual bool is_contact_member_of_contactgroup(ContactGroup *group,
-                                                   Contact *contact) = 0;
+    virtual bool host_has_contact(const Host *host, const Contact *contact) = 0;
+    virtual bool is_contact_member_of_contactgroup(const ContactGroup *group,
+                                                   const Contact *contact) = 0;
 
     virtual std::chrono::system_clock::time_point last_logfile_rotation() = 0;
     virtual uint32_t maxLinesPerLogFile() const = 0;
@@ -76,11 +76,13 @@ public:
     virtual Command find_command(std::string name) const = 0;
     virtual std::vector<Command> commands() const = 0;
 
-    virtual std::vector<DowntimeData> downtimes_for_host(Host *) const = 0;
+    virtual std::vector<DowntimeData> downtimes_for_host(
+        const Host *) const = 0;
     virtual std::vector<DowntimeData> downtimes_for_service(
-        Service *) const = 0;
-    virtual std::vector<CommentData> comments_for_host(Host *) const = 0;
-    virtual std::vector<CommentData> comments_for_service(Service *) const = 0;
+        const Service *) const = 0;
+    virtual std::vector<CommentData> comments_for_host(const Host *) const = 0;
+    virtual std::vector<CommentData> comments_for_service(
+        const Service *) const = 0;
 
     virtual bool mkeventdEnabled() = 0;
 

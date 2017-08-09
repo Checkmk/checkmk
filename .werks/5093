@@ -1,0 +1,11 @@
+Title: dell_poweredge_temp: Fixed device levels handling if they are empty
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p10
+Date: 1502294014
+
+

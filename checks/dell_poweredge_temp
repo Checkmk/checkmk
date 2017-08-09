@@ -44,13 +44,18 @@ def inventory_dell_poweredge_temp(info):
 def check_dell_poweredge_temp(item, params, info):
     for chassisIndex, Index, StateSettings, Status, Reading, LocationName, \
         UpperCritical, UpperNonCritical, LowerNonCritical, LowerCritical in info:
-
         if item == dell_poweredge_temp_makeitem(chassisIndex, Index, LocationName):
             temp = int(Reading) / 10.0
-            warn = int(UpperNonCritical) / 10.0
-            crit = int(UpperCritical) / 10.0
-            lower_warn = int(LowerNonCritical) / 10.0
-            lower_crit = int(LowerCritical) / 10.0
+
+            if UpperNonCritical and UpperCritical:
+                levels = (int(UpperNonCritical) / 10.0, int(UpperCritical) / 10.0)
+            else:
+                levels = None, None
+            if LowerNonCritical and LowerCritical:
+                lower_levels = int(LowerNonCritical) / 10.0, int(LowerCritical) / 10.0
+            else:
+                lower_levels = None, None
+
             state_table = {
                  "1" : ("other",               1),
                  "2" : ("unknown",             1),
@@ -67,8 +72,7 @@ def check_dell_poweredge_temp(item, params, info):
             if state:
                 yield state, state_txt
             yield check_temperature(temp, params, "dell_poweredge_temp_%s" % item,
-                                    dev_levels=(warn, crit),
-                                    dev_levels_lower=(lower_warn, lower_crit))
+                                    dev_levels=levels, dev_levels_lower=lower_levels)
 
 
 

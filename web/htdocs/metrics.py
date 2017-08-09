@@ -544,7 +544,7 @@ def translate_metrics(perf_data, check_command):
         for index, key in [ (3, "warn"), (4, "crit"), (5, "min"), (6, "max") ]:
             if len(entry) < index + 1:
                 break
-            elif entry[index]:
+            elif entry[index] is not None:
                 try:
                     new_entry["scalar"][key] = entry[index] * translation_entry["scale"]
                 except:
@@ -676,7 +676,6 @@ def evaluate_rpn(expression, translated_metrics):
 
 
 def evaluate_literal(expression, translated_metrics):
-
     if type(expression) == int:
         return float(expression), unit_info["count"], None
 

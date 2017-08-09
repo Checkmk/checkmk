@@ -7,6 +7,7 @@
     * 5079 FIX: windows_tasks: Adapted man page; Some OK states were missing
     * 5083 FIX: oracle_locks: Do not discover if data is incomplete...
     * 5089 FIX: citrix_xenapp.ps1: Refactored; now uses powershell commands for Citrix environment instead of WMI objects which caused runtime errors
+    * 5091 FIX: Perfometer: Allow zero as maximal value; Fixed unsupported operand type for /: 'float' and 'NoneType'
 
 
 1.2.8p25:

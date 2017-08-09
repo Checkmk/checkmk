@@ -1,0 +1,9 @@
+Title: Perfometer: Allow zero as maximal value; Fixed unsupported operand type for /: 'float' and 'NoneType'
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p26
+Date: 1502264949
+Class: fix
+
+

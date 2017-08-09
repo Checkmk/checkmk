@@ -478,7 +478,7 @@ conffile = os.getenv("MK_CONFDIR", "/etc/check_mk") + "/jolokia.cfg"
 if os.path.exists(conffile):
     execfile(conffile)
 
-if server == "use fqdn":
+if server == ("use fqdn",):
     server = socket.getfqdn()
 
 if instance == None:

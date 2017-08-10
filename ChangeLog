@@ -9,6 +9,7 @@
     * 5089 FIX: citrix_xenapp.ps1: Refactored; now uses powershell commands for Citrix environment instead of WMI objects which caused runtime errors
     * 5091 FIX: Perfometer: Allow zero as maximal value; Fixed unsupported operand type for /: 'float' and 'NoneType'
     * 5093 FIX: dell_poweredge_temp: Fixed device levels handling if they are empty
+    * 5095 FIX: "Round trip average" graph: Added warn and crit lines
 
 
 1.2.8p25:

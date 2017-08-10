@@ -6773,6 +6773,10 @@ graph_info.append({
         ( "rtmin", "area" ),
         ( "rta", "line" ),
     ],
+    "scalars": [
+        "rta:warn",
+        "rta:crit",
+    ]
 })
 
 graph_info.append({

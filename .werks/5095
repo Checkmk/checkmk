@@ -1,0 +1,9 @@
+Title: "Round trip average" graph: Added warn and crit lines
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p26
+Date: 1502370019
+Class: fix
+
+

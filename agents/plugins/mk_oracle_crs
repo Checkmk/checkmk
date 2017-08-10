@@ -81,7 +81,6 @@ function printcrsdata() {
 
     echo "<<<oracle_crs_version:sep(124)>>>"
     crs_version=$($CRSCTL query crs releaseversion)
-    crs_version_short=$(echo $crs_version | cut -d"[" -f2- | cut -d"." -f-2)
     echo $crs_version
 
     echo "<<<oracle_crs_voting>>>"
@@ -93,7 +92,8 @@ function printcrsdata() {
 
     echo "nodename|"$OLS_NODENAME
 
-    if [ $crs_version_short = '11.2' ] ; then
+    crs_version_short=$(echo $crs_version | cut -d"[" -f2- | cut -d"." -f-2 | sed 's/\.//')
+    if [ $(($crs_version_short)) -ge 112 ] ; then
         $CRSCTL stat res -v -n $OLS_NODENAME -init | grep -E $resourcefilter | sed "s/^/csslocal\|/"
         for nodelist in $($OLSNODES)
         do

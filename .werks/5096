@@ -1,0 +1,9 @@
+Title: mk_oracle_crs: crs_stat command is deprecated since Oracle 11gR2; Now the plugin handles that correctly
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p26
+Date: 1502373102
+Class: fix
+
+

@@ -10,6 +10,7 @@
     * 5091 FIX: Perfometer: Allow zero as maximal value; Fixed unsupported operand type for /: 'float' and 'NoneType'
     * 5093 FIX: dell_poweredge_temp: Fixed device levels handling if they are empty
     * 5095 FIX: "Round trip average" graph: Added warn and crit lines
+    * 5096 FIX: mk_oracle_crs: crs_stat command is deprecated since Oracle 11gR2; Now the plugin handles that correctly
 
 
 1.2.8p25:

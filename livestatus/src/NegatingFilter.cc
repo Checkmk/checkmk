@@ -33,12 +33,13 @@ using std::unique_ptr;
 NegatingFilter::NegatingFilter(unique_ptr<Filter> filter)
     : _filter(move(filter)) {}
 
-void NegatingFilter::accept(FilterVisitor &v) { v.visit(*this); }
+void NegatingFilter::accept(FilterVisitor &v) const { v.visit(*this); }
 
 #ifdef CMC
 const unique_ptr<Filter> &NegatingFilter::subfilter() const { return _filter; }
 #endif
 
-bool NegatingFilter::accepts(Row row, contact *auth_user, int timezone_offset) {
+bool NegatingFilter::accepts(Row row, contact *auth_user,
+                             int timezone_offset) const {
     return !_filter->accepts(row, auth_user, timezone_offset);
 }

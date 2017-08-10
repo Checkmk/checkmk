@@ -38,7 +38,7 @@ enum class LogicalOperator { and_, or_ };
 class VariadicFilter : public Filter {
 public:
     static std::unique_ptr<VariadicFilter> make(LogicalOperator logicOp);
-    void accept(FilterVisitor &v) override;
+    void accept(FilterVisitor &v) const override;
     void addSubfilter(std::unique_ptr<Filter> f);
     std::unique_ptr<Filter> stealLastSubfiler();
     void combineFilters(int count, LogicalOperator andor);

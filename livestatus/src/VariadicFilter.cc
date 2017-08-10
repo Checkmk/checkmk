@@ -43,7 +43,7 @@ unique_ptr<VariadicFilter> VariadicFilter::make(LogicalOperator logicOp) {
     return nullptr;  // unreachable
 }
 
-void VariadicFilter::accept(FilterVisitor &v) { v.visit(*this); }
+void VariadicFilter::accept(FilterVisitor &v) const { v.visit(*this); }
 
 void VariadicFilter::addSubfilter(unique_ptr<Filter> f) {
     _subfilters.push_back(move(f));

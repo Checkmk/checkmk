@@ -40,8 +40,9 @@ class Row;
 class NegatingFilter : public Filter {
 public:
     explicit NegatingFilter(std::unique_ptr<Filter> filter);
-    void accept(FilterVisitor &v) override;
-    bool accepts(Row row, contact *auth_user, int timezone_offset) override;
+    void accept(FilterVisitor &v) const override;
+    bool accepts(Row row, contact *auth_user,
+                 int timezone_offset) const override;
     const std::unique_ptr<Filter> &subfilter() const;
 
 private:

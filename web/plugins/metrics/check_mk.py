@@ -7362,6 +7362,10 @@ graph_info["round_trip_average"] = {
         ( "rtmin", "area" ),
         ( "rta",   "line" ),
     ],
+    "scalars": [
+        "rta:warn",
+        "rta:crit",
+    ]
 }
 
 for idx in range(1, MAX_NUMBER_HOPS):

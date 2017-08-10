@@ -41,7 +41,7 @@ public:
     CustomVarsValuesColumn(std::string name, std::string description,
                            int offset, int indirect_offset, int extra_offset,
                            int extra_extra_offset);
-    ColumnType type() override;
+    ColumnType type() const override;
     void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;

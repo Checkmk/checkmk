@@ -40,7 +40,7 @@ CustomVarsValuesColumn::CustomVarsValuesColumn(string name, string description,
     : CustomVarsColumn(std::move(name), std::move(description), offset,
                        indirect_offset, extra_offset, extra_extra_offset) {}
 
-ColumnType CustomVarsValuesColumn::type() { return ColumnType::list; }
+ColumnType CustomVarsValuesColumn::type() const { return ColumnType::list; }
 
 void CustomVarsValuesColumn::output(Row row, RowRenderer &r,
                                     contact * /* auth_user */) {

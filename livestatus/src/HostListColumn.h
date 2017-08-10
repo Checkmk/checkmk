@@ -53,7 +53,7 @@ public:
         , _mc(mc)
         , _offset(offset)
         , _show_state(show_state) {}
-    ColumnType type() override { return ColumnType::list; }
+    ColumnType type() const override { return ColumnType::list; }
     void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;

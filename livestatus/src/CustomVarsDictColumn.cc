@@ -40,7 +40,7 @@ CustomVarsDictColumn::CustomVarsDictColumn(string name, string description,
     : CustomVarsColumn(std::move(name), std::move(description), offset,
                        indirect_offset, extra_offset, extra_extra_offset) {}
 
-ColumnType CustomVarsDictColumn::type() { return ColumnType::dict; }
+ColumnType CustomVarsDictColumn::type() const { return ColumnType::dict; }
 
 void CustomVarsDictColumn::output(Row row, RowRenderer &r,
                                   contact * /* auth_user */) {

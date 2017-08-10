@@ -42,7 +42,7 @@ public:
                  extra_extra_offset) {}
     virtual std::unique_ptr<std::vector<char>> getBlob(Row row) = 0;
     void output(Row row, RowRenderer &r, contact *auth_user) override;
-    ColumnType type() override { return ColumnType::blob; }
+    ColumnType type() const override { return ColumnType::blob; }
 };
 
 #endif  // BlobColumn_h

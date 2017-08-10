@@ -44,7 +44,7 @@ public:
                  extra_extra_offset) {}
     virtual double getValue(Row data) = 0;
     void output(Row row, RowRenderer &r, contact *auth_user) override;
-    ColumnType type() override { return ColumnType::double_; }
+    ColumnType type() const override { return ColumnType::double_; }
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
     std::unique_ptr<Aggregator> createAggregator(

@@ -46,7 +46,7 @@ public:
 
     void output(Row row, RowRenderer &r, contact *auth_user) override;
 
-    ColumnType type() override { return ColumnType::time; }
+    ColumnType type() const override { return ColumnType::time; }
 
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;

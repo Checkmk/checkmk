@@ -44,7 +44,7 @@ bool ServiceListStateColumn::svcStateIsWorse(int32_t state1, int32_t state2) {
     return (state1 > state2);  // both or WARN or UNKNOWN
 }
 
-servicesmember *ServiceListStateColumn::getMembers(Row row) {
+servicesmember *ServiceListStateColumn::getMembers(Row row) const {
     if (auto p = columnData<void>(row)) {
         return *offset_cast<servicesmember *>(p, _offset);
     }
@@ -98,6 +98,6 @@ int32_t ServiceListStateColumn::getValue(MonitoringCore *mc, Type logictype,
     return result;
 }
 
-int32_t ServiceListStateColumn::getValue(Row row, contact *auth_user) {
+int32_t ServiceListStateColumn::getValue(Row row, contact *auth_user) const {
     return getValue(_mc, _logictype, getMembers(row), auth_user);
 }

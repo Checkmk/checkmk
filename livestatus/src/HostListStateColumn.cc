@@ -43,14 +43,14 @@ static inline bool hst_state_is_worse(int32_t state1, int32_t state2) {
     return false;  // both are UNREACHABLE
 }
 
-hostsmember *HostListStateColumn::getMembers(Row row) {
+hostsmember *HostListStateColumn::getMembers(Row row) const {
     if (auto p = columnData<void>(row)) {
         return *offset_cast<hostsmember *>(p, _offset);
     }
     return nullptr;
 }
 
-int32_t HostListStateColumn::getValue(Row row, contact *auth_user) {
+int32_t HostListStateColumn::getValue(Row row, contact *auth_user) const {
     int32_t result = 0;
     for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;

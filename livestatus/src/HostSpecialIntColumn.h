@@ -45,7 +45,7 @@ public:
                     extra_extra_offset)
         , _mc(mc)
         , _type(hsic_type) {}
-    int32_t getValue(Row row, contact* auth_user) override;
+    int32_t getValue(Row row, contact* auth_user) const override;
 
 private:
     MonitoringCore* _mc;

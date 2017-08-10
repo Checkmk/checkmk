@@ -66,14 +66,14 @@ public:
         , _mc(mc)
         , _offset(offset)
         , _logictype(logictype) {}
-    int32_t getValue(Row row, contact *auth_user) override;
+    int32_t getValue(Row row, contact *auth_user) const override;
 #ifdef CMC
     static int32_t getValue(MonitoringCore *mc, Type logictype,
                             const Host::services_t *mem, contact *auth_user);
 #else
     static int32_t getValue(MonitoringCore *mc, Type logictype,
                             servicesmember *mem, contact *auth_user);
-    servicesmember *getMembers(Row row);
+    servicesmember *getMembers(Row row) const;
 #endif
     static bool svcStateIsWorse(int32_t state1, int32_t state2);
 

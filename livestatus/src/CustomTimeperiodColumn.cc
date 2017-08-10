@@ -31,7 +31,8 @@ extern TimeperiodsCache *g_timeperiods_cache;
 
 // Get the name of a timeperiod from a custom variable and lookup the current
 // state of that period
-int32_t CustomTimeperiodColumn::getValue(Row row, contact * /* auth_user */) {
+int32_t CustomTimeperiodColumn::getValue(Row row,
+                                         contact * /* auth_user */) const {
     for (customvariablesmember *cvm = getCVM(row); cvm != nullptr;
          cvm = cvm->next) {
         if (cvm->variable_name == _varname) {
@@ -42,7 +43,7 @@ int32_t CustomTimeperiodColumn::getValue(Row row, contact * /* auth_user */) {
     return 1;  // assume 7X24
 }
 
-customvariablesmember *CustomTimeperiodColumn::getCVM(Row row) {
+customvariablesmember *CustomTimeperiodColumn::getCVM(Row row) const {
     if (auto p = columnData<void>(row)) {
         return *offset_cast<customvariablesmember *>(p, _offset);
     }

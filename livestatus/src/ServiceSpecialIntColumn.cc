@@ -27,7 +27,8 @@
 #include "nagios.h"
 #include "pnp4nagios.h"
 
-int32_t ServiceSpecialIntColumn::getValue(Row row, contact* /* auth_user */) {
+int32_t ServiceSpecialIntColumn::getValue(Row row,
+                                          contact* /* auth_user */) const {
     if (auto svc = columnData<service>(row)) {
         switch (_type) {
             case Type::pnp_graph_present:

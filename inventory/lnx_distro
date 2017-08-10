@@ -46,13 +46,21 @@
 
 def inv_lnx_distro(info):
     parsed = {}
+    filename = None
     for line in info:
-        parsed.setdefault(line[0], line[1:])
+        if line[0].startswith("[[[") and line[0].endswith("]]]"):
+            filename = line[0][3:-3]
+        elif filename is not None:
+            parsed.setdefault(filename, line)
+        elif filename is None:
+            # stay compatible to older versions of output
+            parsed.setdefault(line[0], line[1:])
 
     node = inv_tree("software.os.")
     node["type"] = "Linux"
     for file_name, handler in [
         ("/usr/share/cma/version", inv_lnx_parse_cma),
+        ("/etc/os-release", inv_lnx_parse_os),
         ("/etc/gentoo-release", inv_lnx_parse_gentoo),
         ("/etc/SuSE-release", inv_lnx_parse_suse),
         ("/etc/oracle-release", inv_lnx_parse_oracle_vm_server),
@@ -63,6 +71,19 @@ def inv_lnx_distro(info):
         if file_name in parsed:
             handler(node, parsed[file_name])
             break
+
+
+def inv_lnx_parse_os(node, line):
+    for entry in line:
+        k, v = map(lambda x: x.replace('"', ''), entry.split("=", 1))
+        if k == "VERSION_ID":
+            node["version"] = v
+        elif k == "PRETTY_NAME":
+            node["name"] = v
+        elif k == "VERSION_CODENAME":
+            node["code_name"] = v.title()
+        elif k == "ID":
+            node["vendor"] = v.title()
 
 
 def inv_lnx_parse_suse(node, line):

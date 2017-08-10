@@ -38,7 +38,7 @@ public:
         : DoubleColumn(name, description, indirect_offset, extra_offset,
                        extra_extra_offset)
         , _offset(offset) {}
-    double getValue(Row row);
+    double getValue(Row row) override;
 
 protected:
     const int _offset;

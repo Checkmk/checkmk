@@ -34,7 +34,7 @@ public:
                         const double *number)
         : DoubleColumn(name, description, -1, -1, -1), _number(number) {}
 
-    double getValue(Row) { return *_number; }
+    double getValue(Row) override { return *_number; }
 
 private:
     const double *const _number;

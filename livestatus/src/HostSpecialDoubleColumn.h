@@ -41,7 +41,7 @@ public:
         : DoubleColumn(name, description, indirect, extra_offset,
                        extra_extra_offset)
         , _type(hsdc_type) {}
-    double getValue(Row row) override;
+    double getValue(Row row) const override;
 
 private:
     Type _type;

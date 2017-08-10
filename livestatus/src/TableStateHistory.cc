@@ -261,7 +261,7 @@ LogEntry *TableStateHistory::getNextLogentry() {
 namespace {
 class IsObjectFilter : public FilterVisitor {
 public:
-    void visit(ColumnFilter &f) override {
+    void visit(const ColumnFilter &f) override {
         if (_value) {
             auto column_name = f.column()->name();
             _value = starts_with(column_name, string("current_")) ||
@@ -269,8 +269,8 @@ public:
                      starts_with(column_name, string("service_"));
         }
     }
-    void visit(NegatingFilter & /*unused*/) override {}
-    void visit(VariadicFilter & /*unused*/) override {}
+    void visit(const NegatingFilter & /*unused*/) override {}
+    void visit(const VariadicFilter & /*unused*/) override {}
 
     bool _value = true;
 };

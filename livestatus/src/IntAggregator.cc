@@ -69,7 +69,7 @@ void IntAggregator::consume(Row row, contact *auth_user,
     }
 }
 
-void IntAggregator::output(RowRenderer &r) {
+void IntAggregator::output(RowRenderer &r) const {
     switch (getOperation()) {
         case StatsOperation::sum:
         case StatsOperation::min:

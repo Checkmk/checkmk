@@ -74,7 +74,7 @@ void DoubleAggregator::consume(Row row, contact* /* auth_user */,
     }
 }
 
-void DoubleAggregator::output(RowRenderer& r) {
+void DoubleAggregator::output(RowRenderer& r) const {
     switch (getOperation()) {
         case StatsOperation::sum:
         case StatsOperation::min:

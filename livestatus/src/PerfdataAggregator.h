@@ -44,7 +44,7 @@ public:
     PerfdataAggregator(StatsOperation operation, StringColumn *column)
         : Aggregator(operation), _column(column) {}
     void consume(Row row, contact *auth_user, int timezone_offset) override;
-    void output(RowRenderer &r) override;
+    void output(RowRenderer &r) const override;
 
 private:
     struct perf_aggr {

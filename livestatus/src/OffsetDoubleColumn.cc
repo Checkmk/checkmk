@@ -26,7 +26,7 @@
 #include "Column.h"
 #include "Row.h"
 
-double OffsetDoubleColumn::getValue(Row row) {
+double OffsetDoubleColumn::getValue(Row row) const {
     if (auto p = columnData<void>(row)) {
         return *offset_cast<double>(p, _offset);
     }

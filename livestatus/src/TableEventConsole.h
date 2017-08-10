@@ -122,7 +122,7 @@ protected:
             : DoubleColumn(name, description, -1, -1, -1)
             , _ecc(*this, 0, [](std::string x) { return atof(x.c_str()); }) {}
 
-        double getValue(Row row) override { return _ecc.getValue(row); }
+        double getValue(Row row) const override { return _ecc.getValue(row); }
     };
 
     class TimeEventConsoleColumn : public TimeColumn {

@@ -30,7 +30,7 @@
 
 extern int interval_length;
 
-double ServiceSpecialDoubleColumn::getValue(Row row) {
+double ServiceSpecialDoubleColumn::getValue(Row row) const {
     if (auto svc = columnData<service>(row)) {
         switch (_type) {
             case Type::staleness: {

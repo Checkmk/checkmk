@@ -29,7 +29,7 @@
 
 extern int interval_length;
 
-double HostSpecialDoubleColumn::getValue(Row row) {
+double HostSpecialDoubleColumn::getValue(Row row) const {
     if (auto hst = columnData<host>(row)) {
         switch (_type) {
             case Type::staleness: {

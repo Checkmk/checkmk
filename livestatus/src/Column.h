@@ -59,7 +59,7 @@ public:
         return static_cast<T *>(shiftPointer(row));
     }
 
-    virtual ColumnType type() = 0;
+    virtual ColumnType type() const = 0;
 
     // TODO(sp) Get rid of the contact* paramter once IntColumn::getValue is
     // fixed, it is just an artifact.

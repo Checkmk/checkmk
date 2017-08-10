@@ -54,7 +54,7 @@ public:
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset) {}
 #endif
-    ColumnType type() override { return ColumnType::list; }
+    ColumnType type() const override { return ColumnType::list; }
     void output(Row row, RowRenderer &r, contact *auth_user) override;
 };
 

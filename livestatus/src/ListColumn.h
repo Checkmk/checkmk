@@ -46,7 +46,7 @@ public:
                int indirect_offset, int extra_offset, int extra_extra_offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset) {}
-    ColumnType type() override { return ColumnType::list; }
+    ColumnType type() const override { return ColumnType::list; }
     virtual std::unique_ptr<Contains> makeContains(const std::string &name) = 0;
     virtual bool isEmpty(Row row) = 0;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,

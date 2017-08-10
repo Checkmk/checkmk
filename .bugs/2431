@@ -1,0 +1,8 @@
+Title: Duplicate for git bug 2430 for 1.4.0
+Component: multisite
+State: open
+Date: 2017-08-10 13:47:36
+Targetversion: 1.4.0
+Class: bug
+
+same issue as git bug #2430. 1.4.0 is also affected here.

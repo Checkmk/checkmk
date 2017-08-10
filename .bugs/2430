@@ -1,9 +1,8 @@
-Title: Views in dashlets do use display options
+Title: RRDTool is unable to process variable definitions containing "-"
 Component: multisite
 State: open
-Date: 2016-02-17 14:33:10
-Targetversion: future
-Class: nastiness
+Date: 2017-08-10 13:39:12
+Targetversion: 1.2.8
+Class: bug
 
-Example: change time format in "normal" view to absolute.
-Embedded "normal" view in dashlet still uses old (defautl) format.
+RRDTool earlier than 1.5.6 cant cope with a hyphen within variable definitions like DEF:foo-bar=some_file.rrd. This is a problem for pnp-templates that define a DEF that can possibly contain a hypen, e.g. originating from an arbitrary metric name

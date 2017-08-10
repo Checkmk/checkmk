@@ -42,9 +42,9 @@ public:
     void addSubfilter(std::unique_ptr<Filter> f);
     std::unique_ptr<Filter> stealLastSubfiler();
     void combineFilters(int count, LogicalOperator andor);
-    size_t size() { return _subfilters.size(); }
-    auto begin() { return _subfilters.begin(); }
-    auto end() { return _subfilters.end(); }
+    size_t size() const { return _subfilters.size(); }
+    auto begin() const { return _subfilters.begin(); }
+    auto end() const { return _subfilters.end(); }
     void findIntLimits(const std::string &colum_nname, int *lower, int *upper,
                        int timezone_offset) const override;
 

@@ -33,9 +33,9 @@ class VariadicFilter;
 class FilterVisitor {
 public:
     virtual ~FilterVisitor() {}
-    virtual void visit(ColumnFilter &) = 0;
-    virtual void visit(NegatingFilter &) = 0;
-    virtual void visit(VariadicFilter &) = 0;
+    virtual void visit(const ColumnFilter &) = 0;
+    virtual void visit(const NegatingFilter &) = 0;
+    virtual void visit(const VariadicFilter &) = 0;
 };
 
 #endif  // FilterVisitor_h

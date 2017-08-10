@@ -36,7 +36,7 @@ NegatingFilter::NegatingFilter(unique_ptr<Filter> filter)
 void NegatingFilter::accept(FilterVisitor &v) { v.visit(*this); }
 
 #ifdef CMC
-const unique_ptr<Filter> &NegatingFilter::subfilter() { return _filter; }
+const unique_ptr<Filter> &NegatingFilter::subfilter() const { return _filter; }
 #endif
 
 bool NegatingFilter::accepts(Row row, contact *auth_user, int timezone_offset) {

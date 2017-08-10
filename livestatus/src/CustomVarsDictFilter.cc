@@ -71,7 +71,7 @@ CustomVarsDictFilter::CustomVarsDictFilter(CustomVarsColumn *column,
 }
 
 bool CustomVarsDictFilter::accepts(Row row, contact * /* auth_user */,
-                                   int /* timezone_offset */) {
+                                   int /* timezone_offset */) const {
     string act_string = _column->getVariable(row, _ref_varname);
     switch (_relOp) {
         case RelationalOperator::equal:

@@ -32,7 +32,7 @@
 
 class ColumnFilter : public Filter {
 public:
-    void accept(FilterVisitor &v) override { v.visit(*this); }
+    void accept(FilterVisitor &v) const override { v.visit(*this); }
     virtual Column *column() const = 0;
     Logger *logger() const { return column()->logger(); }
 };

@@ -43,7 +43,7 @@ ListFilter::ListFilter(ListColumn *column, RelationalOperator relOp,
     , _empty_ref(isEmptyValue) {}
 
 bool ListFilter::accepts(Row row, contact * /* auth_user */,
-                         int /* timezone_offset */) {
+                         int /* timezone_offset */) const {
     switch (_relOp) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:

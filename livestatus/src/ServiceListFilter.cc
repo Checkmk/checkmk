@@ -64,7 +64,7 @@ ServiceListFilter::ServiceListFilter(ServiceListColumn *column,
 }
 
 bool ServiceListFilter::accepts(Row row, contact * /* auth_user */,
-                                int /* timezone_offset */) {
+                                int /* timezone_offset */) const {
     // data points to a primary data object. We need to extract
     // a pointer to a service list
     servicesmember *mem = _column->getMembers(row);

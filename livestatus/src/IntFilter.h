@@ -37,7 +37,8 @@ class Row;
 class IntFilter : public ColumnFilter {
 public:
     IntFilter(IntColumn *column, RelationalOperator relOp, std::string value);
-    bool accepts(Row row, contact *auth_user, int timezone_offset) override;
+    bool accepts(Row row, contact *auth_user,
+                 int timezone_offset) const override;
     IntColumn *column() const override;
     void findIntLimits(const std::string &column_name, int *lower, int *upper,
                        int timezone_offset) const override;

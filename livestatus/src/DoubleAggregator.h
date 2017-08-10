@@ -47,7 +47,7 @@ public:
         , _aggr(0)
         , _sumq(0) {}
     void consume(Row row, contact *contact, int timezone_offset) override;
-    void output(RowRenderer &r) override;
+    void output(RowRenderer &r) const override;
 
 private:
     DoubleColumn *const _column;

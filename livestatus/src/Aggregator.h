@@ -48,7 +48,7 @@ public:
     // fixed, it is just an artifact.
     virtual void consume(Row row, contact *auth_user, int timezone_offset) = 0;
 
-    virtual void output(RowRenderer &r) = 0;
+    virtual void output(RowRenderer &r) const = 0;
 
 private:
     const StatsOperation _operation;

@@ -54,7 +54,7 @@ public:
                                          const std::string &value) override;
 
     // API of IntColumn
-    int32_t getValue(Row row, contact *auth_user) override;
+    int32_t getValue(Row row, contact *auth_user) const override;
 
     static std::string refValueFor(const std::string &value, Logger *logger);
 

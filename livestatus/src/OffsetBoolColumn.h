@@ -39,7 +39,7 @@ public:
                      int extra_extra_offset)
         : OffsetIntColumn(name, description, offset, indirect_offset,
                           extra_offset, extra_extra_offset) {}
-    int32_t getValue(Row row, contact* auth_user) override;
+    int32_t getValue(Row row, contact* auth_user) const override;
 };
 
 #endif  // OffsetBoolColumn_h

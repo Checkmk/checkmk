@@ -50,7 +50,7 @@ public:
                                          const std::string &) override;
 
     // API of IntColumn
-    int32_t getValue(Row row, contact *auth_user) override;
+    int32_t getValue(Row row, contact *auth_user) const override;
 
 private:
     const int _offset;

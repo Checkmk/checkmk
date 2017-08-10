@@ -34,7 +34,7 @@ public:
                      const int* number)
         : IntColumn(name, description, -1, -1, -1), _number(number) {}
 
-    int32_t getValue(Row /* row */, contact* /* auth_user */) override {
+    int32_t getValue(Row /* row */, contact* /* auth_user */) const override {
         return *_number;
     }
 

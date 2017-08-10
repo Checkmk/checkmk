@@ -61,7 +61,7 @@ map<string, unsigned long> known_attributes = {
 using modified_atttibutes = bitset<32>;
 }  // namespace
 
-int32_t AttributeListColumn::getValue(Row row, contact * /*unused*/) {
+int32_t AttributeListColumn::getValue(Row row, contact * /*unused*/) const {
     if (auto p = columnData<void>(row)) {
         return static_cast<int32_t>(*offset_cast<unsigned long>(p, _offset));
     }

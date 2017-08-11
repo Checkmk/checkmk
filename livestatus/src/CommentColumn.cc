@@ -78,7 +78,9 @@ unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
     return make_unique<ContainsCommentID>(id, this);
 }
 
-bool CommentColumn::isEmpty(Row row) { return comments_for_row(row).empty(); }
+bool CommentColumn::isEmpty(Row row) const {
+    return comments_for_row(row).empty();
+}
 
 vector<CommentData> CommentColumn::comments_for_row(Row row) const {
     if (auto data = columnData<void>(row)) {

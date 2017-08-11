@@ -28,23 +28,23 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "ColumnFilter.h"
-#include "HostListColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class HostListColumn;
 class Row;
 
 class HostListFilter : public ColumnFilter {
 public:
-    HostListFilter(HostListColumn *column, RelationalOperator relOp,
+    HostListFilter(const HostListColumn *column, RelationalOperator relOp,
                    std::string value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
-    HostListColumn *column() const override;
+    std::string columnName() const override;
 
 private:
-    HostListColumn *_column;
-    RelationalOperator _relOp;
-    std::string _ref_value;
+    const HostListColumn *_column;
+    const RelationalOperator _relOp;
+    const std::string _ref_value;
 };
 
 #endif  // HostListFilter_h

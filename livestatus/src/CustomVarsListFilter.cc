@@ -25,13 +25,14 @@
 #include "CustomVarsListFilter.h"
 #include <algorithm>
 #include <sstream>
+#include "CustomVarsColumn.h"
 #include "Logger.h"
 #include "Row.h"
 
 using std::move;
 using std::string;
 
-CustomVarsListFilter::CustomVarsListFilter(CustomVarsColumn *column,
+CustomVarsListFilter::CustomVarsListFilter(const CustomVarsColumn *column,
                                            RelationalOperator relOp,
                                            string value)
     : _column(column), _relOp(relOp), _ref_text(move(value)) {}
@@ -54,7 +55,7 @@ bool CustomVarsListFilter::accepts(Row row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational(logger())
+            Informational(_column->logger())
                 << "Sorry. Operator " << _relOp
                 << " for custom variable list columns not implemented.";
             return false;
@@ -62,4 +63,4 @@ bool CustomVarsListFilter::accepts(Row row, contact * /* auth_user */,
     return false;  // unreachable
 }
 
-CustomVarsColumn *CustomVarsListFilter::column() const { return _column; }
+string CustomVarsListFilter::columnName() const { return _column->name(); }

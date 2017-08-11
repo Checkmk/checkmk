@@ -27,13 +27,14 @@
 #include <cstring>
 #include <sstream>
 #include "Row.h"
+#include "StringColumn.h"
 
 using std::move;
 using std::regex;
 using std::regex_search;
 using std::string;
 
-StringFilter::StringFilter(StringColumn *column, RelationalOperator relOp,
+StringFilter::StringFilter(const StringColumn *column, RelationalOperator relOp,
                            string value)
     : _column(column), _relOp(relOp), _ref_string(move(value)) {
     switch (_relOp) {
@@ -95,7 +96,7 @@ const string *StringFilter::valueForIndexing(const string &column_name) const {
         case RelationalOperator::not_equal:
             // TODO(sp) The cast looks very dubious, but the whole void* story
             // is quite dangerous...
-            return column_name == _column->name() ? &_ref_string : nullptr;
+            return column_name == columnName() ? &_ref_string : nullptr;
         case RelationalOperator::matches:
         case RelationalOperator::doesnt_match:
         case RelationalOperator::equal_icase:
@@ -111,4 +112,4 @@ const string *StringFilter::valueForIndexing(const string &column_name) const {
     return nullptr;  // unreachable
 }
 
-StringColumn *StringFilter::column() const { return _column; }
+string StringFilter::columnName() const { return _column->name(); }

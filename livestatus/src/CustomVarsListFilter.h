@@ -28,23 +28,23 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "ColumnFilter.h"
-#include "CustomVarsColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class CustomVarsColumn;
 class Row;
 
 class CustomVarsListFilter : public ColumnFilter {
 public:
-    CustomVarsListFilter(CustomVarsColumn *column, RelationalOperator relOp,
-                         std::string value);
+    CustomVarsListFilter(const CustomVarsColumn *column,
+                         RelationalOperator relOp, std::string value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
-    CustomVarsColumn *column() const override;
+    std::string columnName() const override;
 
 private:
-    CustomVarsColumn *_column;
-    RelationalOperator _relOp;
-    std::string _ref_text;
+    const CustomVarsColumn *_column;
+    const RelationalOperator _relOp;
+    const std::string _ref_text;
 };
 
 #endif  // CustomVarsListFilter_h

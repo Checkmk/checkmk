@@ -29,25 +29,25 @@
 #include <regex>
 #include <string>
 #include "ColumnFilter.h"
-#include "StringColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Row;
+class StringColumn;
 
 class StringFilter : public ColumnFilter {
 public:
-    StringFilter(StringColumn *column, RelationalOperator relOp,
+    StringFilter(const StringColumn *column, RelationalOperator relOp,
                  std::string value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
     const std::string *valueForIndexing(
         const std::string &column_name) const override;
-    StringColumn *column() const override;
+    std::string columnName() const override;
 
 private:
-    StringColumn *_column;
-    RelationalOperator _relOp;
-    std::string _ref_string;
+    const StringColumn *_column;
+    const RelationalOperator _relOp;
+    const std::string _ref_string;
     std::regex _regex;
 };
 

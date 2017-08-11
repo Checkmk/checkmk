@@ -29,22 +29,22 @@
 #include <regex>
 #include <string>
 #include "ColumnFilter.h"
-#include "CustomVarsColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class CustomVarsColumn;
 class Row;
 
 class CustomVarsDictFilter : public ColumnFilter {
 public:
-    CustomVarsDictFilter(CustomVarsColumn *column, RelationalOperator relOp,
-                         const std::string &value);
+    CustomVarsDictFilter(const CustomVarsColumn *column,
+                         RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
-    CustomVarsColumn *column() const override;
+    std::string columnName() const override;
 
 private:
-    CustomVarsColumn *_column;
-    RelationalOperator _relOp;
+    const CustomVarsColumn *_column;
+    const RelationalOperator _relOp;
     std::regex _regex;
     std::string _ref_string;
     std::string _ref_varname;

@@ -263,7 +263,7 @@ class IsObjectFilter : public FilterVisitor {
 public:
     void visit(const ColumnFilter &f) override {
         if (_value) {
-            auto column_name = f.column()->name();
+            auto column_name = f.columnName();
             _value = starts_with(column_name, string("current_")) ||
                      starts_with(column_name, string("host_")) ||
                      starts_with(column_name, string("service_"));

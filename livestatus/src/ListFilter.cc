@@ -32,7 +32,7 @@ using std::move;
 using std::string;
 using std::unique_ptr;
 
-ListFilter::ListFilter(ListColumn *column, RelationalOperator relOp,
+ListFilter::ListFilter(const ListColumn *column, RelationalOperator relOp,
                        string element,
                        unique_ptr<ListColumn::Contains> predicate,
                        bool isEmptyValue)
@@ -48,7 +48,7 @@ bool ListFilter::accepts(Row row, contact * /* auth_user */,
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
             if (!_empty_ref) {
-                Informational(logger())
+                Informational(_column->logger())
                     << "Sorry, equality for lists implemented only "
                        "for emptyness";
             }
@@ -66,8 +66,9 @@ bool ListFilter::accepts(Row row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational(logger()) << "Sorry. Operator " << _relOp
-                                    << " for list columns not implemented.";
+            Informational(_column->logger())
+                << "Sorry. Operator " << _relOp
+                << " for list columns not implemented.";
             return false;
     }
     return false;  // unreachable
@@ -76,7 +77,7 @@ bool ListFilter::accepts(Row row, contact * /* auth_user */,
 const string *ListFilter::valueForIndexing(const string &column_name) const {
     switch (_relOp) {
         case RelationalOperator::greater_or_equal:
-            return column_name == _column->name() ? &_element : nullptr;
+            return column_name == columnName() ? &_element : nullptr;
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
         case RelationalOperator::matches:
@@ -93,4 +94,4 @@ const string *ListFilter::valueForIndexing(const string &column_name) const {
     return nullptr;  // unreachable
 }
 
-ListColumn *ListFilter::column() const { return _column; }
+string ListFilter::columnName() const { return _column->name(); }

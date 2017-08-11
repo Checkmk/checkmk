@@ -49,7 +49,7 @@ public:
         , _with_info(with_info) {}
     void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(Row row) override;
+    bool isEmpty(Row row) const override;
 
 private:
     MonitoringCore *_mc;

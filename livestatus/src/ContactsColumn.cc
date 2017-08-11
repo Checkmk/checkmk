@@ -60,4 +60,6 @@ unique_ptr<ListColumn::Contains> ContactsColumn::makeContains(
     return make_unique<ContainsContact>(name, this);
 }
 
-bool ContactsColumn::isEmpty(Row row) { return contactNames(row).empty(); }
+bool ContactsColumn::isEmpty(Row row) const {
+    return contactNames(row).empty();
+}

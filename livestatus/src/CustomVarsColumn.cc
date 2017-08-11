@@ -62,7 +62,7 @@ unordered_map<string, string> CustomVarsColumn::getCVM(Row row) const {
 #endif
 }
 
-string CustomVarsColumn::getVariable(Row row, const string &varname) {
+string CustomVarsColumn::getVariable(Row row, const string &varname) const {
     auto cvm = getCVM(row);
     auto it = cvm.find(varname);
     return it == cvm.end() ? "" : it->second;

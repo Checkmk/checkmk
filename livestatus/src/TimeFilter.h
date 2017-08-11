@@ -33,7 +33,7 @@ class IntColumn;
 
 class TimeFilter : public IntFilter {
 public:
-    TimeFilter(IntColumn *column, RelationalOperator relOp,
+    TimeFilter(const IntColumn *column, RelationalOperator relOp,
                const std::string &value)
         : IntFilter(column, relOp, value) {}
 

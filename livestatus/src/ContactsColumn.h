@@ -44,7 +44,7 @@ public:
 
     void output(Row row, RowRenderer& r, contact* auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string& name) override;
-    bool isEmpty(Row row) override;
+    bool isEmpty(Row row) const override;
 
 private:
     virtual std::unordered_set<std::string> contactNames(Row row) const = 0;

@@ -33,7 +33,7 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-hostsmember *HostListColumn::getMembers(Row row) {
+hostsmember *HostListColumn::getMembers(Row row) const {
     if (auto p = columnData<void>(row)) {
         return *offset_cast<hostsmember *>(p, _offset);
     }

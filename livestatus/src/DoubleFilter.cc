@@ -25,12 +25,13 @@
 #include "DoubleFilter.h"
 #include <cstdlib>
 #include <ostream>
+#include "DoubleColumn.h"
 #include "Logger.h"
 #include "Row.h"
 
 using std::string;
 
-DoubleFilter::DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
+DoubleFilter::DoubleFilter(const DoubleColumn *column, RelationalOperator relOp,
                            const string &value)
     : _column(column), _relOp(relOp), _ref_value(atof(value.c_str())) {}
 
@@ -56,11 +57,12 @@ bool DoubleFilter::accepts(Row row, contact * /* auth_user */,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Informational(logger()) << "Sorry. Operator " << _relOp
-                                    << " for float columns not implemented.";
+            Informational(_column->logger())
+                << "Sorry. Operator " << _relOp
+                << " for float columns not implemented.";
             return false;
     }
     return false;  // unreachable
 }
 
-DoubleColumn *DoubleFilter::column() const { return _column; }
+string DoubleFilter::columnName() const { return _column->name(); }

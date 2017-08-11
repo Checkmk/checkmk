@@ -66,9 +66,11 @@ unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
         find_servicegroup(const_cast<char *>(name.c_str())), this);
 }
 
-bool ServiceGroupsColumn::isEmpty(Row row) { return getData(row) == nullptr; }
+bool ServiceGroupsColumn::isEmpty(Row row) const {
+    return getData(row) == nullptr;
+}
 
-objectlist *ServiceGroupsColumn::getData(Row row) {
+objectlist *ServiceGroupsColumn::getData(Row row) const {
     if (auto p = columnData<void>(row)) {
         return *offset_cast<objectlist *>(p, _offset);
     }

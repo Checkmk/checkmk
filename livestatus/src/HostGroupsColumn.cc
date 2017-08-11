@@ -66,9 +66,11 @@ unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
         find_hostgroup(const_cast<char *>(name.c_str())), this);
 }
 
-bool HostGroupsColumn::isEmpty(Row row) { return getData(row) == nullptr; }
+bool HostGroupsColumn::isEmpty(Row row) const {
+    return getData(row) == nullptr;
+}
 
-objectlist *HostGroupsColumn::getData(Row row) {
+objectlist *HostGroupsColumn::getData(Row row) const {
     if (auto data = columnData<void>(row)) {
         return *offset_cast<objectlist *>(data, _offset);
     }

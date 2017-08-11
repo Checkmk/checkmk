@@ -36,7 +36,7 @@ class Row;
 
 class ListFilter : public ColumnFilter {
 public:
-    ListFilter(ListColumn *column, RelationalOperator relOp,
+    ListFilter(const ListColumn *column, RelationalOperator relOp,
                std::string element,
                std::unique_ptr<ListColumn::Contains> predicate,
                bool isEmptyValue);
@@ -44,14 +44,14 @@ public:
                  int timezone_offset) const override;
     const std::string *valueForIndexing(
         const std::string &column_name) const override;
-    ListColumn *column() const override;
+    std::string columnName() const override;
 
 private:
-    ListColumn *_column;
-    RelationalOperator _relOp;
-    std::string _element;
-    std::unique_ptr<ListColumn::Contains> _predicate;
-    bool _empty_ref;  // distinct from unknown ref
+    const ListColumn *_column;
+    const RelationalOperator _relOp;
+    const std::string _element;
+    const std::unique_ptr<ListColumn::Contains> _predicate;
+    const bool _empty_ref;  // distinct from unknown ref
 };
 
 #endif  // ListFilter_h

@@ -55,7 +55,7 @@ unique_ptr<Filter> CustomVarsDictColumn::createFilter(RelationalOperator relOp,
     return make_unique<CustomVarsDictFilter>(this, relOp, value);
 }
 
-bool CustomVarsDictColumn::contains(Row row, const string &value) {
+bool CustomVarsDictColumn::contains(Row row, const string &value) const {
     for (const auto &it : getCVM(row)) {
         if (it.second == value) {
             return true;

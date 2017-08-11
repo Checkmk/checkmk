@@ -26,6 +26,7 @@
 #include <ostream>
 #include "Logger.h"
 #include "Row.h"
+#include "ServiceListColumn.h"
 #include "nagios.h"
 
 using std::string;
@@ -34,7 +35,7 @@ namespace {
 constexpr char hostservice_separator = '|';
 }  // namespace
 
-ServiceListFilter::ServiceListFilter(ServiceListColumn *column,
+ServiceListFilter::ServiceListFilter(const ServiceListColumn *column,
                                      bool hostname_required,
                                      RelationalOperator relOp,
                                      const string &value)
@@ -50,7 +51,7 @@ ServiceListFilter::ServiceListFilter(ServiceListColumn *column,
     auto pos = value.find(hostservice_separator);
     if (pos == string::npos) {
         if (_hostname_required) {
-            Informational(logger())
+            Informational(column->logger())
                 << "Invalid reference value for service "
                    "list membership. Must be 'hostname"
                 << string(1, hostservice_separator) << "servicename'";
@@ -104,11 +105,12 @@ bool ServiceListFilter::accepts(Row row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational(logger()) << "Sorry. Operator " << _relOp
-                                    << " for service lists not implemented.";
+            Informational(_column->logger())
+                << "Sorry. Operator " << _relOp
+                << " for service lists not implemented.";
             return false;
     }
     return false;  // unreachable
 }
 
-ServiceListColumn *ServiceListFilter::column() const { return _column; }
+string ServiceListFilter::columnName() const { return _column->name(); }

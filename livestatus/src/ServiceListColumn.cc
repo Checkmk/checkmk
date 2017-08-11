@@ -37,7 +37,7 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-servicesmember *ServiceListColumn::getMembers(Row row) {
+servicesmember *ServiceListColumn::getMembers(Row row) const {
     if (auto p = columnData<void>(row)) {
         return *offset_cast<servicesmember *>(p, _offset);
     }

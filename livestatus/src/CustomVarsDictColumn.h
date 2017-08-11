@@ -45,7 +45,7 @@ public:
     void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
-    bool contains(Row row, const std::string &value) override;
+    bool contains(Row row, const std::string &value) const override;
 };
 
 #endif  // CustomVarsDictColumn_h

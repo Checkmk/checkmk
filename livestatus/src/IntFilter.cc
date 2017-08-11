@@ -26,16 +26,18 @@
 #include <cstdlib>
 #include <ostream>
 #include <utility>
+#include "IntColumn.h"
 #include "Logger.h"
 #include "Row.h"
 
 using std::move;
 using std::string;
 
-IntFilter::IntFilter(IntColumn *column, RelationalOperator relOp, string value)
+IntFilter::IntFilter(const IntColumn *column, RelationalOperator relOp,
+                     string value)
     : _column(column), _relOp(relOp), _ref_string(move(value)) {}
 
-IntColumn *IntFilter::column() const { return _column; }
+string IntFilter::columnName() const { return _column->name(); }
 
 // overridden by TimeFilter in order to apply timezone offset from Localtime:
 // header
@@ -81,7 +83,7 @@ bool IntFilter::accepts(Row row, contact *auth_user,
 
 void IntFilter::findIntLimits(const string &column_name, int *lower, int *upper,
                               int timezone_offset) const {
-    if (column_name != _column->name()) {
+    if (column_name != columnName()) {
         return;  // wrong column
     }
     if (*lower >= *upper) {
@@ -135,8 +137,9 @@ void IntFilter::findIntLimits(const string &column_name, int *lower, int *upper,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency(logger()) << "Invalid relational operator " << _relOp
-                                << " in IntFilter::findIntLimits";
+            Emergency(_column->logger())
+                << "Invalid relational operator " << _relOp
+                << " in IntFilter::findIntLimits";
             return;
     }
 }
@@ -145,7 +148,7 @@ bool IntFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
                                 int timezone_offset) const {
     int32_t ref_value = convertRefValue(timezone_offset);
 
-    if (column_name != _column->name()) {
+    if (column_name != columnName()) {
         return false;  // wrong column
     }
 
@@ -194,8 +197,9 @@ bool IntFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency(logger()) << "Invalid relational operator " << _relOp
-                                << " in IntFilter::optimizeBitmask";
+            Emergency(_column->logger())
+                << "Invalid relational operator " << _relOp
+                << " in IntFilter::optimizeBitmask";
             return false;
     }
     return false;  // unreachable

@@ -69,9 +69,11 @@ unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
                                              this);
 }
 
-bool ContactGroupsColumn::isEmpty(Row row) { return getData(row) == nullptr; }
+bool ContactGroupsColumn::isEmpty(Row row) const {
+    return getData(row) == nullptr;
+}
 
-contactgroupsmember *ContactGroupsColumn::getData(Row row) {
+contactgroupsmember *ContactGroupsColumn::getData(Row row) const {
     if (auto data = columnData<void>(row)) {
         return *offset_cast<contactgroupsmember *>(data, _offset);
     }

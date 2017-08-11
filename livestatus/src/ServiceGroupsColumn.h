@@ -44,12 +44,12 @@ public:
         , _offset(offset) {}
     void output(Row row, RowRenderer &r, contact *auth_user) override;
     std::unique_ptr<Contains> makeContains(const std::string &name) override;
-    bool isEmpty(Row row) override;
+    bool isEmpty(Row row) const override;
 
 private:
     int _offset;
 
-    objectlist *getData(Row row);
+    objectlist *getData(Row row) const;
 };
 
 #endif  // ServiceGroupsColumn_h

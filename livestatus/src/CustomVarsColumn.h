@@ -37,8 +37,8 @@ public:
                      int indirect_offset, int extra_offset,
                      int extra_extra_offset);
     virtual ~CustomVarsColumn();
-    virtual bool contains(Row row, const std::string &value) = 0;
-    std::string getVariable(Row row, const std::string &varname);
+    virtual bool contains(Row row, const std::string &value) const = 0;
+    std::string getVariable(Row row, const std::string &varname) const;
 
 protected:
     const int _offset;  // within data structure (differs from host/service)

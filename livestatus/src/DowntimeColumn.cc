@@ -73,7 +73,9 @@ unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
     return make_unique<ContainsDowntimeID>(id, this);
 }
 
-bool DowntimeColumn::isEmpty(Row row) { return downtimes_for_row(row).empty(); }
+bool DowntimeColumn::isEmpty(Row row) const {
+    return downtimes_for_row(row).empty();
+}
 
 vector<DowntimeData> DowntimeColumn::downtimes_for_row(Row row) const {
     if (auto data = columnData<void>(row)) {

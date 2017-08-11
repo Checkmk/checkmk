@@ -187,7 +187,9 @@ protected:
             return std::make_unique<ContainsElem>(name, _ecc);
         }
 
-        bool isEmpty(Row row) override { return _ecc.getValue(row).empty(); }
+        bool isEmpty(Row row) const override {
+            return _ecc.getValue(row).empty();
+        }
     };
 
     bool isAuthorizedForEvent(Row row, contact *ctc);

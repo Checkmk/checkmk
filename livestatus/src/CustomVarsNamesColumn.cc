@@ -56,7 +56,7 @@ unique_ptr<Filter> CustomVarsNamesColumn::createFilter(RelationalOperator relOp,
     return make_unique<CustomVarsListFilter>(this, relOp, value);
 }
 
-bool CustomVarsNamesColumn::contains(Row row, const string &value) {
+bool CustomVarsNamesColumn::contains(Row row, const string &value) const {
     auto cvm = getCVM(row);
     return cvm.find(value) != cvm.end();
 }

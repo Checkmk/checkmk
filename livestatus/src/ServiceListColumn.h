@@ -61,9 +61,9 @@ public:
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
 #ifdef CMC
-    const Host::services_t *getMembers(Row row);
+    const Host::services_t *getMembers(Row row) const;
 #else
-    servicesmember *getMembers(Row row);
+    servicesmember *getMembers(Row row) const;
 #endif
 
 private:

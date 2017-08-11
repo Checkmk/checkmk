@@ -33,8 +33,7 @@
 class ColumnFilter : public Filter {
 public:
     void accept(FilterVisitor &v) const override { v.visit(*this); }
-    virtual Column *column() const = 0;
-    Logger *logger() const { return column()->logger(); }
+    virtual std::string columnName() const = 0;
 };
 
 #endif  // ColumnFilter_h

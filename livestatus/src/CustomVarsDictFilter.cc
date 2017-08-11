@@ -26,6 +26,7 @@
 #include <cstring>
 #include <sstream>
 #include <tuple>
+#include "CustomVarsColumn.h"
 #include "Row.h"
 #include "StringUtils.h"
 
@@ -36,7 +37,7 @@ using std::regex_search;
 using std::string;
 using std::tie;
 
-CustomVarsDictFilter::CustomVarsDictFilter(CustomVarsColumn *column,
+CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsColumn *column,
                                            RelationalOperator relOp,
                                            const string &value)
     : _column(column), _relOp(relOp) {
@@ -100,4 +101,4 @@ bool CustomVarsDictFilter::accepts(Row row, contact * /* auth_user */,
     return false;  // unreachable
 }
 
-CustomVarsColumn *CustomVarsDictFilter::column() const { return _column; }
+string CustomVarsDictFilter::columnName() const { return _column->name(); }

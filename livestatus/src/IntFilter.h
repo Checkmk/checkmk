@@ -29,26 +29,27 @@
 #include <cstdint>
 #include <string>
 #include "ColumnFilter.h"
-#include "IntColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class IntColumn;
 class Row;
 
 class IntFilter : public ColumnFilter {
 public:
-    IntFilter(IntColumn *column, RelationalOperator relOp, std::string value);
+    IntFilter(const IntColumn *column, RelationalOperator relOp,
+              std::string value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
-    IntColumn *column() const override;
     void findIntLimits(const std::string &column_name, int *lower, int *upper,
                        int timezone_offset) const override;
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                          int timezone_offset) const override;
+    std::string columnName() const override;
 
 private:
-    IntColumn *_column;
-    RelationalOperator _relOp;
-    std::string _ref_string;
+    const IntColumn *_column;
+    const RelationalOperator _relOp;
+    const std::string _ref_string;
 
     virtual bool adjustWithTimezoneOffset() const;
     int32_t convertRefValue(int timezone_offset) const;

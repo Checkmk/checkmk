@@ -28,23 +28,23 @@
 #include "config.h"  // IWYU pragma: keep
 #include <string>
 #include "ColumnFilter.h"
-#include "DoubleColumn.h"
 #include "contact_fwd.h"
 #include "opids.h"
+class DoubleColumn;
 class Row;
 
 class DoubleFilter : public ColumnFilter {
 public:
-    DoubleFilter(DoubleColumn *column, RelationalOperator relOp,
+    DoubleFilter(const DoubleColumn *column, RelationalOperator relOp,
                  const std::string &value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
-    DoubleColumn *column() const override;
+    std::string columnName() const override;
 
 private:
-    DoubleColumn *_column;
-    RelationalOperator _relOp;
-    double _ref_value;
+    const DoubleColumn *_column;
+    const RelationalOperator _relOp;
+    const double _ref_value;
 };
 
 #endif  // DoubleFilter_h

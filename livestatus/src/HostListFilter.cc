@@ -25,6 +25,7 @@
 #include "HostListFilter.h"
 #include <ostream>
 #include <utility>
+#include "HostListColumn.h"
 #include "Logger.h"
 #include "Row.h"
 #include "nagios.h"
@@ -32,8 +33,8 @@
 using std::move;
 using std::string;
 
-HostListFilter::HostListFilter(HostListColumn *column, RelationalOperator relOp,
-                               string value)
+HostListFilter::HostListFilter(const HostListColumn *column,
+                               RelationalOperator relOp, string value)
     : _column(column), _relOp(relOp), _ref_value(move(value)) {}
 
 bool HostListFilter::accepts(Row row, contact * /* auth_user */,
@@ -80,11 +81,12 @@ bool HostListFilter::accepts(Row row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational(logger()) << "Sorry. Operator " << _relOp
-                                    << " for host lists not implemented.";
+            Informational(_column->logger())
+                << "Sorry. Operator " << _relOp
+                << " for host lists not implemented.";
             return false;
     }
     return false;  // unreachable
 }
 
-HostListColumn *HostListFilter::column() const { return _column; }
+string HostListFilter::columnName() const { return _column->name(); }

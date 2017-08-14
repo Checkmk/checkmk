@@ -1,0 +1,22 @@
+title: Brocade FibreChannel Switches: SFPs
+catalog: hw/storagehw/brocade
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the power level in dBm of brocade SFPs, as well as current and voltage.
+
+item:
+ The item is the port-number as two-digit or three-digit string (on switches
+ with 100 or more ports) as printed on the switch (note: the SNMP-index of
+ port {00} is {1}!). For ISL ports (inter-switch-links), an {ISL} is appended
+ to the item, e.g. {00 ISL}. This allows you to create rules which select
+ different check parameters for ISL and normal ports without specifying each
+ individual port. Also, if you have configured port names, they will appear
+ in the check item (and thus the service description). This can be turned
+ off.
+
+inventory:
+  The inventory creates checks for all operational ports. What this exactly means
+  can be configured (see CONFIGURATION VARIABLES).
+

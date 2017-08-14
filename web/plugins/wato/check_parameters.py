@@ -8828,6 +8828,58 @@ register_check_parameters(
     match_type = "dict",
 )
 
+cpu_util_common_elements = [
+    ( "levels_single",
+       Tuple(
+           title = _("Levels on single cores"),
+           elements = [
+                 Percentage(title = _("Warning at"), default_value = 90.0),
+                 Percentage(title = _("Critical at"), default_value = 95.0)],
+           help = _("Here you can set levels on the CPU utilization on single cores"),
+        )
+    ),
+    ( "core_util_time_total",
+      Tuple(
+          title = _("Levels over an extended time period on total CPU utilization"),
+          elements = [
+              Percentage(title = _("High utilization at "), default_value = 100.0),
+              Age(title = _("Warning after "), default_value = 5 * 60),
+              Age(title = _("Critical after "), default_value = 15 * 60),
+          ],
+          help = _("With this configuration, check_mk will alert if the total CPU is "
+                   "exceeding a utilization threshold over an extended period of time. "
+                   "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!")
+        )
+    ),
+    ( "core_util_time",
+        Tuple(
+            title = _("Levels over an extended time period on a single core CPU utilization"),
+            elements = [
+                Percentage(title = _("High utilization at "), default_value = 100.0),
+                Age(title = _("Warning after "), default_value = 5 * 60),
+                Age(title = _("Critical after "), default_value = 15 * 60),
+            ],
+            help = _("A single thread fully utilizing a single core (potentially due to a bug) "
+                    "may go unnoticed when only monitoring the total utilization of the CPU. "
+                    "With this configuration, check_mk will alert if a single core is "
+                    "exceeding a utilization threshold over an extended period of time."
+                    "This is currently only supported on linux and windows agents "
+                    "as well as devices monitored through the host-resource mib")
+        )
+    ),
+    ( "core_util_graph",
+        Checkbox(
+            title = _("Graphs for individual cores"),
+            label = _("Enable performance graph for utilization of individual cores"),
+            help  = _("This adds another graph to the performance CPU utilization "
+                    "details page, showing utilization of individual cores. "
+                    "Please note that this graph may be impractical on "
+                    "device with very many cores. "
+                    "This is currently only supported on linux and windows agents "
+                    "as well as devices monitored through the host-resource mib")
+        ),
+    ),
+]
 
 register_check_parameters(
     subgroup_os,
@@ -8839,15 +8891,6 @@ register_check_parameters(
                  "implementing the Host Resources MIB. The utilization "
                  "ranges from 0 to 100 - regardless of the number of CPUs."),
         elements = [
-            ( "levels",
-                Levels(
-                    title = _("Levels"),
-                    unit = "%",
-                    default_levels = (85, 90),
-                    default_difference = (5, 8),
-                    default_value = None,
-                ),
-            ),
             ( "average",
               Integer(
                   title = _("Averaging"),
@@ -8858,36 +8901,16 @@ register_check_parameters(
                   default_value = 15,
                   label = _("Compute average over last "),
             )),
-            ( "core_util_time",
-                Tuple(
-                    title = _("Alert on high utilization over an extended time period on a single "
-                              "core"),
-                    elements = [
-                        Percentage(title = _("High utilization at "), default_value = 100.0),
-                        Age(title = _("Warning after "), default_value = 5 * 60),
-                        Age(title = _("Critical after "), default_value = 15 * 60),
-                    ],
-                    help = _("A single thread fully utilizing a single core (potentially due to a bug) "
-                            "may go unnoticed when only monitoring the total utilization of the CPU. "
-                            "With this configuration, check_mk will alert if a single core is "
-                            "exceeding a utilization threshold over an extended period of time."
-                            "This is currently only supported on linux and windows agents "
-                            "as well as devices monitored through the host-resource mib")
-                )
-            ),
-            ( "core_util_graph",
-                Checkbox(
-                    title = _("Graphs for individual cores"),
-                    label = _("Enable performance graph for utilization of individual cores"),
-                    help  = _("This adds another graph to the performance CPU utilization "
-                            "details page, showing utilization of individual cores. "
-                            "Please note that this graph may be impractical on "
-                            "device with very many cores. "
-                            "This is currently only supported on linux and windows agents "
-                            "as well as devices monitored through the host-resource mib")
+            ( "levels",
+                Levels(
+                    title = _("Levels on total CPU utilization"),
+                    unit = "%",
+                    default_levels = (85, 90),
+                    default_difference = (5, 8),
+                    default_value = None,
                 ),
             ),
-        ]
+        ] + cpu_util_common_elements,
     ),
     None,
     match_type = "dict",
@@ -8900,21 +8923,9 @@ register_check_parameters(
     Transform(
         Dictionary(
             elements = [
-                ( "util",
-                   Tuple(
-                       title = _("Alert on too high CPU utilization"),
-                       elements = [
-                             Percentage(title = _("Warning at a utilization of"), default_value = 90.0),
-                             Percentage(title = _("Critical at a utilization of"), default_value = 95.0)],
-
-                       help = _("Here you can set levels on the total CPU utilization, i.e. the sum of "
-                                "<i>system</i>, <i>user</i> and <i>iowait</i>. The levels are always applied "
-                                "on the average utiliazation since the last check - which is usually one minute."),
-                    )
-                ),
                 ( "iowait",
                    Tuple(
-                       title = _("Alert on too high disk wait (IO wait)"),
+                       title = _("Levels on disk wait (IO wait)"),
                        elements = [
                              Percentage(title = _("Warning at a disk wait of"), default_value = 30.0),
                              Percentage(title = _("Critical at a disk wait of"), default_value = 50.0)],
@@ -8927,33 +8938,18 @@ register_check_parameters(
                                 "the the bottleneck of your server is IO. Please note that depending on the "
                                 "applications being run this might or might not be totally normal.")),
                 ),
-                ( "core_util_time",
-                  Tuple(
-                      title = _("Alert on high utilization over an extended time period on a single core"),
-                      elements = [
-                          Percentage(title = _("High utilization at "), default_value = 100.0),
-                          Age(title = _("Warning after "), default_value = 5 * 60),
-                          Age(title = _("Critical after "), default_value = 15 * 60),
-                      ],
-                      help = _("A single thread fully utilizing a single core (potentially due to a bug) "
-                               "may go unnoticed when only monitoring the total utilization of the CPU. "
-                               "With this configuration, check_mk will alert if a single core is "
-                               "exceeding a utilization threshold over an extended period of time. "
-                               "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!")
+                ( "util",
+                   Tuple(
+                       title = _("Levels on total CPU utilization"),
+                       elements = [
+                             Percentage(title = _("Warning at a utilization of"), default_value = 90.0),
+                             Percentage(title = _("Critical at a utilization of"), default_value = 95.0)],
+                       help = _("Here you can set levels on the total CPU utilization, i.e. the sum of "
+                                "<i>system</i>, <i>user</i> and <i>iowait</i>. The levels are always applied "
+                                "on the average utiliazation since the last check - which is usually one minute."),
                     )
                 ),
-                ( "core_util_graph",
-                  Checkbox(
-                      title = _("Graphs for individual cores"),
-                      label = _("Enable performance graph for utilization of individual cores"),
-                      help  = _("This adds another graph to the performance CPU utilization "
-                                "details page, showing utilization of individual cores. "
-                                "Please note that this graph may be impractical on "
-                                "device with very many cores. "
-                                "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!")
-                  ),
-                ),
-            ]
+            ] + cpu_util_common_elements,
         ),
         forth = lambda old: type(old) != dict and { "iowait" : old } or old,
     ),

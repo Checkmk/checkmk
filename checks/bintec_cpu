@@ -45,7 +45,6 @@ def check_bintec_cpu(_no_item, params, info):
 
     for res in check_cpu_util(util, params):
         state, infotext, perfdata = res
-        #print 
         yield state, "total: %s" % infotext, perfdata
 
     yield 0, "user: %.1f%%, system: %.1f%%, streams: %.1f%%" % \

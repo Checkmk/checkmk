@@ -1,0 +1,10 @@
+Title: cpu_util.include: Alert on high utilization over an extended time period on total CPU and alert on too high CPU utilization on single cores
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1502714964
+Class: feature
+
+

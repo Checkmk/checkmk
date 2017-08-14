@@ -53,7 +53,7 @@ def cpu_util_core_name(orig, core_counter):
     return "cpu_core_util_%s" % num, core_counter
 
 
-def check_cpu_util(util, params, this_time = None, cores = None):
+def check_cpu_util(util, params, this_time=None, cores=None):
     # Convert legacy param style to new dict style
     if this_time == None:
         this_time = time.time()
@@ -61,9 +61,7 @@ def check_cpu_util(util, params, this_time = None, cores = None):
     if params == None:
         params = {}
     elif type(params) == tuple:
-        params = {
-            "levels" : params,
-        }
+        params = {"levels" : params,}
 
     infotext = "%.1f%% used" % util
 
@@ -76,7 +74,6 @@ def check_cpu_util(util, params, this_time = None, cores = None):
     else:
         check_against = util
         perfvar = "util"
-
 
     levels = params.get("levels")
     if type(levels) == tuple:
@@ -95,6 +92,11 @@ def check_cpu_util(util, params, this_time = None, cores = None):
     perfdata += extraperf # reference curve for predictive levels
     yield state, infotext, perfdata
 
+    if "core_util_time_total" in params:
+        threshold, warn, crit = params["core_util_time_total"]
+        for res in cpu_util_time(this_time, "total", util, threshold, warn, crit):
+            yield res
+
     if cores and ("core_util_graph" in params or "core_util_time" in params):
         core_counter = 0
         for core, total_perc in cores:
@@ -103,21 +105,22 @@ def check_cpu_util(util, params, this_time = None, cores = None):
                 yield 0, None, [(core_name, total_perc)]
 
             if "core_util_time" in params:
-                threshold, warn_core, crit_core = params["core_util_time"]
-                core_state_name = "cpu.util.core.high.%s" % core
-                if total_perc > threshold:
-                    timestamp = get_item_state(core_state_name, 0)
-                    high_load_duration = (this_time - timestamp)
-                    if timestamp == 0:
-                        set_item_state(core_state_name, this_time)
-                    elif high_load_duration > crit_core:
-                        yield 2, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
-                            (core, high_load_duration / 60, warn_core / 60, crit_core / 60), None
-                    elif high_load_duration > warn_core:
-                        yield 1, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
-                            (core, high_load_duration / 60, warn_core / 60, crit_core / 60), None
-                else:
-                    clear_item_state(core_state_name)
+                threshold, warn, crit = params["core_util_time"]
+                for res in cpu_util_time(this_time, core, total_perc, threshold, warn, crit):
+                    yield res
+
+            if "levels_single" in params:
+                warn, crit = params["levels_single"]
+                state = 0
+                if total_perc >= crit:
+                    state = 2
+                if total_perc >= warn:
+                    state = 1
+                if state > 0:
+                    yield state, "Core %s: %s (warn/crit at %s/%s)" % \
+                          (core, get_percent_human_readable(total_perc),
+                                 get_percent_human_readable(warn),
+                                 get_percent_human_readable(crit)), []
 
 
 # This one can handle user, system and wait. values is a list of:
@@ -205,20 +208,24 @@ def check_cpu_util_unix(values, params, cores = None):
 
     yield state, "total: %.1f%%" % util_total_perc + levelstext
 
-    if cores and\
-            ("core_util_graph" in params or \
-             "core_util_time" in params):
+    if "core_util_time_total" in params:
+        threshold, warn, crit = params["core_util_time_total"]
+        for res in cpu_util_time(this_time, "total", util_total_perc, threshold, warn, crit):
+            yield res
+
+    if cores and \
+       ("core_util_graph" in params or
+        "core_util_time" in params or \
+        "levels_single" in params):
         core_counter = 0
         cores_padded = [line + [0] * (11 - len(line)) for line in cores]
         for core, user, nice, system, _idle, iowait,\
             irq, softirq, steal, guest, guest_nice in cores_padded:
 
             total = user + nice + system + iowait + irq + softirq + steal + guest + guest_nice
-
             prev_total = get_item_state("cpu.util.%s.total" % core, 0)
             total_diff = total - prev_total
             set_item_state("cpu.util.%s.total" % core, total)
-
             total_perc = ((100.0 * total_diff) / sum_jiffies) * len(cores)
 
             if "core_util_graph" in params:
@@ -226,19 +233,46 @@ def check_cpu_util_unix(values, params, cores = None):
                 yield 0, None, [(core_name, total_perc)]
 
             if "core_util_time" in params:
-                threshold, warn_core, crit_core = params["core_util_time"]
-                core_state_name = "cpu.util.core.high.%s" % core
-                if total_perc > threshold:
-                    timestamp = get_item_state(core_state_name, 0)
-                    high_load_duration = (this_time - timestamp)
-                    if timestamp == 0:
-                        set_item_state(core_state_name, this_time)
-                    elif high_load_duration > crit_core:
-                        yield 2, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
-                            (core, high_load_duration / 60, warn_core / 60, crit_core / 60)
-                    elif high_load_duration > warn_core:
-                        yield 1, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
-                            (core, high_load_duration / 60, warn_core / 60, crit_core / 60)
-                else:
-                    clear_item_state(core_state_name)
+                threshold, warn, crit = params["core_util_time"]
+                for res in cpu_util_time(this_time, core, total_perc, threshold, warn, crit):
+                    yield res
 
+            if "levels_single" in params:
+                warn, crit = params["levels_single"]
+                state = 0
+                if total_perc >= crit:
+                    state = 2
+                if total_perc >= warn:
+                    state = 1
+                if state > 0:
+                    yield state, "Core %s: %s (warn/crit at %s/%s)" % \
+                          (core, get_percent_human_readable(total_perc),
+                                 get_percent_human_readable(warn),
+                                 get_percent_human_readable(crit)), []
+
+
+#   .--helper--------------------------------------------------------------.
+#   |                    _          _                                      |
+#   |                   | |__   ___| |_ __   ___ _ __                      |
+#   |                   | '_ \ / _ \ | '_ \ / _ \ '__|                     |
+#   |                   | | | |  __/ | |_) |  __/ |                        |
+#   |                   |_| |_|\___|_| .__/ \___|_|                        |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
+
+
+def cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
+    core_state_name = "cpu.util.core.high.%s" % core
+    if perc > threshold:
+        timestamp = get_item_state(core_state_name, 0)
+        high_load_duration = (this_time - timestamp)
+        if timestamp == 0:
+            set_item_state(core_state_name, this_time)
+        elif high_load_duration > crit_core:
+            yield 2, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
+                  (core, high_load_duration / 60, warn_core / 60, crit_core / 60), []
+        elif high_load_duration > warn_core:
+            yield 1, "%s is under high load for %s minutes (warn/crit at %s/%s minutes)" %\
+                  (core, high_load_duration / 60, warn_core / 60, crit_core / 60), []
+    else:
+        clear_item_state(core_state_name)

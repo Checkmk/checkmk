@@ -1,0 +1,12 @@
+Title: brocade_fcport: Fix limiting discovered ports by operational and physical status
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.4.0p10
+Date: 1502723516
+
+Previously, any rule set aiming to influence this would simply have no effect,
+as the defaults were always used. This has been fixed.

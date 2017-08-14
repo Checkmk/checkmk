@@ -1,0 +1,11 @@
+title: Stormshield: Sync status
+agents: snmp
+catalog: hw/network/stormshield
+license: GPL
+distribution: check_mk
+description:
+ This check measures the sync status in a cluster environment. The state will change to {CRIT}
+ if the cluster nodes are not synced.
+
+inventory:
+ Only one service is created

@@ -147,8 +147,8 @@ def inventory_brocade_fcport(info):
             is_isl = line[0] in isl_ports
 
             if admstate in admstates and \
-                opstate in brocade_fcport_inventory_opstates  and \
-                phystate in brocade_fcport_inventory_phystates:
+                opstate in opstates  and \
+                phystate in phystates:
 
                 inventory.append(( brocade_fcport_getitem(info[0], index, portname, is_isl, uses_portname, shows_isl),
                    '{ "phystate": [%d], "opstate": [%d], "admstate": [%d] }'

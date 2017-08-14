@@ -11,6 +11,7 @@
     * 5093 FIX: dell_poweredge_temp: Fixed device levels handling if they are empty
     * 5095 FIX: "Round trip average" graph: Added warn and crit lines
     * 5096 FIX: mk_oracle_crs: crs_stat command is deprecated since Oracle 11gR2; Now the plugin handles that correctly
+    * 4804 FIX: brocade_fcport: Fix limiting discovered ports by operational and physical status...
 
 
 1.2.8p25:

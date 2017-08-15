@@ -8,6 +8,14 @@ description:
  in storage systems from Fujitsu which support the
  FJDARY-E60.MIB like the ETERNUS DX60 and DX80.
 
+ The check goes CRIT if the current state is not equal the state
+ during discovery; otherwise OK.
+ Moreover you can configure using the device states. In this case
+ the expected state is ignored and the check status will be CRIT
+ if the disk is broken, WARN if it is not available, not supported,
+ readying, recovering, partbroken, spare, notexist or copying,
+ OK otherise.
+
 item:
  The index of the device enclosure in the SNMP table. It is of type
  integer. The first module has an index of {0}.

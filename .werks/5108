@@ -1,0 +1,10 @@
+Title: fjdarye100_disks, fjdarye100_disks.summary, fjdarye101_disks, fjdarye101_disks.summary, fjdarye500_disks, fjdarye500_disks.summary, fjdarye60_disks, fjdarye60_disks.summary: Now device states can be used instead of expected state
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1502784690
+Class: feature
+
+

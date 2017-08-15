@@ -11595,14 +11595,48 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
+    "raid_summary",
+    _("RAID: summary state"),
+    Dictionary(
+        elements=[
+            ("use_device_states", DropdownChoice(
+                title=_("Use device states and overwrite expected status"),
+                choices=[
+                    (False, _("Ignore")),
+                    (True, _("Use device states")),
+                ],
+                default_value=True,
+            )),
+        ]
+    ),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_storage,
     "raid_disk",
     _("RAID: state of a single disk"),
-    TextAscii(
-        title = _("Target state"),
-        help = _("State the disk is expected to be in. Typical good states "
-            "are online, host spare, OK and the like. The exact way of how "
-            "to specify a state depends on the check and hard type being used. "
-            "Please take examples from discovered checks for reference.")),
+    Transform(Dictionary(
+        elements=[
+            ("expected_state",
+                TextAscii(
+                    title=_("Expected state"),
+                    help=_("State the disk is expected to be in. Typical good states "
+                           "are online, host spare, OK and the like. The exact way of how "
+                           "to specify a state depends on the check and hard type being used. "
+                           "Please take examples from discovered checks for reference.")),
+            ),
+            ("use_device_states", DropdownChoice(
+                title=_("Use device states and overwrite expected status"),
+                choices=[
+                    (False, _("Ignore")),
+                    (True, _("Use device states")),
+                ],
+                default_value=True,
+            )),
+        ]), forth = lambda x: type(x) is str and {"expected_state": x} or x,
+    ),
     TextAscii(
         title = _("Number or ID of the disk"),
         help = _("How the disks are named depends on the type of hardware being "

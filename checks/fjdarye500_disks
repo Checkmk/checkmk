@@ -25,24 +25,24 @@
 # Boston, MA 02110-1301 USA.
 
 
-check_info['fjdarye500_disks.summary'] = {
-    'inventory_function'        : inventory_fjdarye_disks_summary,
-    'check_function'            : check_fjdarye_disks_summary,
-    'service_description'       : 'Disk Summary',
-    'snmp_info'                 : ('.1.3.6.1.4.1.211.1.21.1.150.2.19.2.1', [ 1, 3 ]),
-    'snmp_scan_function'        : lambda oid: \
-                                   oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
-    'includes'                  : [ "fjdarye.include" ],
+check_info['fjdarye500_disks'] = {
+    'parse_function'        : parse_fjdarye_disks,
+    'inventory_function'    : inventory_fjdarye_disks,
+    'check_function'        : check_fjdarye_disks,
+    'service_description'   : 'Disk %s',
+    'snmp_info'             : ('.1.3.6.1.4.1.211.1.21.1.150.2.19.2.1', [1, 3]),
+    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
+    'group'                 : 'raid_disk',
+    'includes'              : [ "fjdarye.include" ],
 }
 
 
-check_info['fjdarye500_disks'] = {
-    'inventory_function'        : inventory_fjdarye_disks,
-    'check_function'            : check_fjdarye_disks,
-    'service_description'       : 'Disk %s',
-    'snmp_info'                 : ('.1.3.6.1.4.1.211.1.21.1.150.2.19.2.1', [ 1, 3 ]),
-    'snmp_scan_function'        : lambda oid: \
-                                   oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
-    'includes'                  : [ "fjdarye.include" ],
-    'group'                     : 'raid_disk',
+check_info['fjdarye500_disks.summary'] = {
+    'inventory_function'    : inventory_fjdarye_disks_summary,
+    'check_function'        : check_fjdarye_disks_summary,
+    'service_description'   : 'Disk Summary',
+    'snmp_info'             : ('.1.3.6.1.4.1.211.1.21.1.150.2.19.2.1', [1, 3]),
+    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
+    'group'                 : 'raid_summary',
+    'includes'              : [ "fjdarye.include" ],
 }

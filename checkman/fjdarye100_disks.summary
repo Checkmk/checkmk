@@ -10,6 +10,14 @@ description:
  FJDARY-E100.MIB like the ETERNUS DX80 S2.
  This is an adaption of the corresponding fjdarye60 check.
 
+ The check goes CRIT if the current state is not equal the state
+ during discovery; otherwise OK.
+ Moreover you can configure using the device states. In this case
+ the expected state is ignored and the check status will be CRIT
+ if one disk is broken, WARN if one is not available, not supported,
+ readying, recovering, partbroken, spare, notexist or copying,
+ OK otherise.
+
 item:
  {None}
 

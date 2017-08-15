@@ -54,72 +54,174 @@ def check_fjdarye_item(index, _no_param, info):
             return(code, "Status is %s" % (fjdarye_item_status[status]))
     return(3, 'No status for item %d present' % index )
 
-# --------------------------------------------------------------------------------
-# disk checks:
-# available(1), broken(2), notavailable(3), notsupported(4), present(5),
-# readying(6), recovering(7), partbroken(64), spare(65), formatting(66),
-# unformatted(67), notexist(68), copying(69)
-fjdarye_disks_status = { 1: 'available', 2: 'broken', 3: 'notavailable',
-    4: 'notsupported', 5: 'present', 6: 'readying', 7: 'recovering',
-    64: 'partbroken', 65: 'spare', 66: 'formatting', 67: 'unformated',
-    68: 'notexist', 69: 'copying' }
 
-# 1. Summary version of check -> all disks into one service
-def fjdarye_disks_summary(info):
-    # compute the number of disks in each state.
+#.
+#   .--single disks--------------------------------------------------------.
+#   |               _             _            _ _     _                   |
+#   |           ___(_)_ __   __ _| | ___    __| (_)___| | _____            |
+#   |          / __| | '_ \ / _` | |/ _ \  / _` | / __| |/ / __|           |
+#   |          \__ \ | | | | (_| | |  __/ | (_| | \__ \   <\__ \           |
+#   |          |___/_|_| |_|\__, |_|\___|  \__,_|_|___/_|\_\___/           |
+#   |                       |___/                                          |
+#   +----------------------------------------------------------------------+
+#   |                          disks main check                            |
+#   '----------------------------------------------------------------------'
+
+
+fjdarye_disks_status = {
+    "1": (0, 'available'),
+    "2": (2, 'broken'),
+    "3": (1, 'notavailable'),
+    "4": (1, 'notsupported'),
+    "5": (0, 'present'),
+    "6": (1, 'readying'),
+    "7": (1, 'recovering'),
+    "64": (1, 'partbroken'),
+    "65": (1, 'spare'),
+    "66": (0, 'formatting'),
+    "67": (0, 'unformated'),
+    "68": (1, 'notexist'),
+    "69": (1, 'copying'),
+}
+
+
+def parse_fjdarye_disks(info):
+    parsed = {}
+    for idx, disk_state in info:
+        state, state_readable = fjdarye_disks_status.get(disk_state, (3, "unknown[%s]" % disk_state))
+        parsed.setdefault(int(idx), {
+            "state": state,
+            "state_readable": state_readable,
+            "state_disk": disk_state,
+        })
+    return parsed
+
+
+def inventory_fjdarye_disks(parsed):
+    return [(idx, repr(attrs["state_readable"]))
+            for idx, attrs in parsed.items()
+            if attrs["state_disk"] != "3"]
+
+
+def check_fjdarye_disks(item, params, parsed):
+    if type(params) is str:
+        params = {"expected_state": params}
+
+    if item in parsed:
+        attrs = parsed[item]
+        state_readable = attrs["state_readable"]
+        expected_state = params.get("expected_state")
+        check_state = 0
+        infotext = "Status: %s" % state_readable
+        if params.get("use_device_states"):
+            check_state = attrs["state"]
+            if check_state > 0:
+                infotext += " (use device states)"
+        elif expected_state and state_readable != expected_state:
+            check_state = 2
+            infotext += " (expected: %s)" % expected_state
+        return check_state, infotext
+
+    return 3, "No status for disk number %s present" % item
+
+
+#.
+#   .--summary disks-------------------------------------------------------.
+#   |                                                                      |
+#   |           ___ _   _ _ __ ___  _ __ ___   __ _ _ __ _   _             |
+#   |          / __| | | | '_ ` _ \| '_ ` _ \ / _` | '__| | | |            |
+#   |          \__ \ |_| | | | | | | | | | | | (_| | |  | |_| |            |
+#   |          |___/\__,_|_| |_| |_|_| |_| |_|\__,_|_|   \__, |            |
+#   |                                                    |___/             |
+#   |                            _ _     _                                 |
+#   |                         __| (_)___| | _____                          |
+#   |                        / _` | / __| |/ / __|                         |
+#   |                       | (_| | \__ \   <\__ \                         |
+#   |                        \__,_|_|___/_|\_\___/                         |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def fjdarye_disks_summary(parsed):
     states = {}
-    for _index, state in info:
-        state = int(state)
-        statename = fjdarye_disks_status[state]
-        if state != 3:
-            states[statename] = states.get(statename, 0) + 1
+    for idx, attrs in parsed.items():
+        if attrs["state_disk"] != "3":
+            states.setdefault(attrs["state_readable"], 0)
+            states[attrs["state_readable"]] += 1
     return states
 
-def inventory_fjdarye_disks_summary(info):
-    current_state = fjdarye_disks_summary(info)
+
+def inventory_fjdarye_disks_summary(parsed):
+    current_state = fjdarye_disks_summary(parsed)
     if len(current_state) > 0:
         return [ (None, current_state) ]
 
-def fjdarye_disks_printstates(state):
-    return ", ".join(["%s: %s" % (s,c) for (s,c) in state.items()])
 
-def check_fjdarye_disks_summary(index, expected_status, info):
-    current_state = fjdarye_disks_summary(info)
+def fjdarye_disks_printstates(states):
+    return ", ".join(["%s: %s" % (s.title(), c) for s, c in states.items()])
+
+
+def check_fjdarye_disks_summary(index, params, parsed):
+    map_states = {
+        'available': 0,
+        'broken': 2,
+        'notavailable': 1,
+        'notsupported': 1,
+        'present': 0,
+        'readying': 1,
+        'recovering': 1,
+        'partbroken': 1,
+        'spare': 1,
+        'formatting': 0,
+        'unformated': 0,
+        'notexist': 1,
+        'copying': 1,
+    }
+
+    use_devices_states = False
+    if "use_device_states" in params:
+        use_devices_states = params["use_device_states"]
+        del params["use_device_states"]
+    expected_state = params
+
+    current_state = fjdarye_disks_summary(parsed)
     infotext = fjdarye_disks_printstates(current_state)
-    if current_state == expected_status:
-        return (0, infotext)
+    if use_devices_states:
+        state = 0
+        for state_readable in current_state:
+            state = max(state, map_states.get(state_readable, 3))
+        infotext += " (ignore expected state)"
+        return state, infotext
+
+    if current_state == expected_state:
+        return 0, infotext
 
     result = 1
-    for ename, ecount in expected_status.items():
+    for ename, ecount in expected_state.items():
         if current_state.get(ename, 0) < ecount:
             result = 2
             break
 
-    return (result, infotext + \
-            " (expected was: %s)" % fjdarye_disks_printstates(expected_status))
+    return result, "%s (expected: %s)" % (infotext, fjdarye_disks_printstates(expected_state))
 
-# --------------------------------------------------------------------------------
-# 2. Single disk version of check -> one check for each disk
-def inventory_fjdarye_disks(info):
-    return [ (int(index), repr(fjdarye_disks_status[int(status)])) for index, status in info if int(status) != 3 ]
 
-def check_fjdarye_disks(index, expected_status, info):
-    for line in info:
-        if int(line[0]) == index:
-            status = fjdarye_disks_status[int(line[1])]
+#.
+#   .--rluns---------------------------------------------------------------.
+#   |                            _                                         |
+#   |                       _ __| |_   _ _ __  ___                         |
+#   |                      | '__| | | | | '_ \/ __|                        |
+#   |                      | |  | | |_| | | | \__ \                        |
+#   |                      |_|  |_|\__,_|_| |_|___/                        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
-            if status == expected_status:
-                return (0, "Status is %s" % status)
-            else:
-                return (2, "Status is %s (expected status is %s)" % (status, expected_status))
-
-    return (3, "No status for disk number %d present" % index)
 
 def inventory_fjdarye_rluns(info):
     for line in info:
         rawdata = line[1]
         if rawdata[3] == u'\xa0': # RLUN is present
             yield line[0], "", None
+
 
 def check_fjdarye_rluns(item, _no_params, info):
     for line in info:
@@ -140,8 +242,13 @@ def check_fjdarye_rluns(item, _no_params, info):
             else:
                 return (2, "RLUN in unknown state %02x" % ord(rawdata[2]) )
 
+
+#.
+
+
 fjdarye_sum_status = { 1: 'unknown', 2: 'unused', 3: 'ok',
                          4: 'warning', 5: 'failed' }
+
 
 def inventory_fjdarye_sum(info):
     if len(info[0]) == 1:

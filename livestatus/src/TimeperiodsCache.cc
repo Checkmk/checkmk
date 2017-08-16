@@ -40,7 +40,7 @@ TimeperiodsCache::TimeperiodsCache(Logger *logger)
 
 TimeperiodsCache::~TimeperiodsCache() = default;
 
-void TimeperiodsCache::logCurrentTimeperiods() {
+void TimeperiodsCache::logCurrentTimeperiods() const {
     lock_guard<mutex> lg(_cache_lock);
     time_t now = time(nullptr);
     // Loop over all timeperiods and compute if we are
@@ -100,7 +100,7 @@ void TimeperiodsCache::update(time_t now) {
     }
 }
 
-bool TimeperiodsCache::inTimeperiod(const char *tpname) {
+bool TimeperiodsCache::inTimeperiod(const char *tpname) const {
     for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
         if (strcmp(tpname, tp->name) == 0) {
             return inTimeperiod(tp);
@@ -109,7 +109,7 @@ bool TimeperiodsCache::inTimeperiod(const char *tpname) {
     return true;  // unknown timeperiod is assumed to be 7X24
 }
 
-bool TimeperiodsCache::inTimeperiod(timeperiod *tp) {
+bool TimeperiodsCache::inTimeperiod(timeperiod *tp) const {
     lock_guard<mutex> lg(_cache_lock);
     auto it = _cache.find(tp);
     bool is_in;

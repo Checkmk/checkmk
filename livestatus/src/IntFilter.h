@@ -36,7 +36,7 @@ class Row;
 
 class IntFilter : public ColumnFilter {
 public:
-    IntFilter(const IntColumn *column, RelationalOperator relOp,
+    IntFilter(const IntColumn &column, RelationalOperator relOp,
               std::string value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
@@ -47,7 +47,7 @@ public:
     std::string columnName() const override;
 
 private:
-    const IntColumn *_column;
+    const IntColumn &_column;
     const RelationalOperator _relOp;
     const std::string _ref_string;
 

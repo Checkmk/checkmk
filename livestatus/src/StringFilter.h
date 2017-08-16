@@ -36,7 +36,7 @@ class StringColumn;
 
 class StringFilter : public ColumnFilter {
 public:
-    StringFilter(const StringColumn *column, RelationalOperator relOp,
+    StringFilter(const StringColumn &column, RelationalOperator relOp,
                  std::string value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
@@ -45,7 +45,7 @@ public:
     std::string columnName() const override;
 
 private:
-    const StringColumn *_column;
+    const StringColumn &_column;
     const RelationalOperator _relOp;
     const std::string _ref_string;
     std::regex _regex;

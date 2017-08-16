@@ -36,14 +36,14 @@ class Row;
 
 class CustomVarsDictFilter : public ColumnFilter {
 public:
-    CustomVarsDictFilter(const CustomVarsColumn *column,
+    CustomVarsDictFilter(const CustomVarsColumn &column,
                          RelationalOperator relOp, const std::string &value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
     std::string columnName() const override;
 
 private:
-    const CustomVarsColumn *_column;
+    const CustomVarsColumn &_column;
     const RelationalOperator _relOp;
     std::regex _regex;
     std::string _ref_string;

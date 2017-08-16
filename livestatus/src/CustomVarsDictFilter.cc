@@ -37,7 +37,7 @@ using std::regex_search;
 using std::string;
 using std::tie;
 
-CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsColumn *column,
+CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsColumn &column,
                                            RelationalOperator relOp,
                                            const string &value)
     : _column(column), _relOp(relOp) {
@@ -73,7 +73,7 @@ CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsColumn *column,
 
 bool CustomVarsDictFilter::accepts(Row row, contact * /* auth_user */,
                                    int /* timezone_offset */) const {
-    string act_string = _column->getVariable(row, _ref_varname);
+    string act_string = _column.getVariable(row, _ref_varname);
     switch (_relOp) {
         case RelationalOperator::equal:
             return act_string == _ref_string;
@@ -101,4 +101,4 @@ bool CustomVarsDictFilter::accepts(Row row, contact * /* auth_user */,
     return false;  // unreachable
 }
 
-string CustomVarsDictFilter::columnName() const { return _column->name(); }
+string CustomVarsDictFilter::columnName() const { return _column.name(); }

@@ -31,13 +31,13 @@
 
 using std::string;
 
-DoubleFilter::DoubleFilter(const DoubleColumn *column, RelationalOperator relOp,
+DoubleFilter::DoubleFilter(const DoubleColumn &column, RelationalOperator relOp,
                            const string &value)
     : _column(column), _relOp(relOp), _ref_value(atof(value.c_str())) {}
 
 bool DoubleFilter::accepts(Row row, contact * /* auth_user */,
                            int /* timezone_offset */) const {
-    double act_value = _column->getValue(row);
+    double act_value = _column.getValue(row);
     switch (_relOp) {
         case RelationalOperator::equal:
             return act_value == _ref_value;
@@ -57,7 +57,7 @@ bool DoubleFilter::accepts(Row row, contact * /* auth_user */,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Informational(_column->logger())
+            Informational(_column.logger())
                 << "Sorry. Operator " << _relOp
                 << " for float columns not implemented.";
             return false;
@@ -65,4 +65,4 @@ bool DoubleFilter::accepts(Row row, contact * /* auth_user */,
     return false;  // unreachable
 }
 
-string DoubleFilter::columnName() const { return _column->name(); }
+string DoubleFilter::columnName() const { return _column.name(); }

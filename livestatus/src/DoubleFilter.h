@@ -35,14 +35,14 @@ class Row;
 
 class DoubleFilter : public ColumnFilter {
 public:
-    DoubleFilter(const DoubleColumn *column, RelationalOperator relOp,
+    DoubleFilter(const DoubleColumn &column, RelationalOperator relOp,
                  const std::string &value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
     std::string columnName() const override;
 
 private:
-    const DoubleColumn *_column;
+    const DoubleColumn &_column;
     const RelationalOperator _relOp;
     const double _ref_value;
 };

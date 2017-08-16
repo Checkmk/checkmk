@@ -81,7 +81,7 @@ void AttributeListColumn::output(Row row, RowRenderer &r,
 
 unique_ptr<Filter> AttributeListColumn::createFilter(RelationalOperator relOp,
                                                      const string &value) {
-    return make_unique<IntFilter>(this, relOp, refValueFor(value, logger()));
+    return make_unique<IntFilter>(*this, relOp, refValueFor(value, logger()));
 }
 
 // static

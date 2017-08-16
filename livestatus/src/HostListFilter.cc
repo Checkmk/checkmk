@@ -33,7 +33,7 @@
 using std::move;
 using std::string;
 
-HostListFilter::HostListFilter(const HostListColumn *column,
+HostListFilter::HostListFilter(const HostListColumn &column,
                                RelationalOperator relOp, string value)
     : _column(column), _relOp(relOp), _ref_value(move(value)) {}
 
@@ -41,7 +41,7 @@ bool HostListFilter::accepts(Row row, contact * /* auth_user */,
                              int /* timezone_offset */) const {
     // data points to a primary data object. We need to extract a pointer to a
     // host list
-    hostsmember *mem = _column->getMembers(row);
+    hostsmember *mem = _column.getMembers(row);
 
     // test for empty list
     if (_ref_value.empty()) {
@@ -81,7 +81,7 @@ bool HostListFilter::accepts(Row row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational(_column->logger())
+            Informational(_column.logger())
                 << "Sorry. Operator " << _relOp
                 << " for host lists not implemented.";
             return false;
@@ -89,4 +89,4 @@ bool HostListFilter::accepts(Row row, contact * /* auth_user */,
     return false;  // unreachable
 }
 
-string HostListFilter::columnName() const { return _column->name(); }
+string HostListFilter::columnName() const { return _column.name(); }

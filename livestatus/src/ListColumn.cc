@@ -34,6 +34,6 @@ ListColumn::Contains::~Contains() = default;
 
 unique_ptr<Filter> ListColumn::createFilter(RelationalOperator relOp,
                                             const string &value) {
-    return make_unique<ListFilter>(this, relOp, value, makeContains(value),
+    return make_unique<ListFilter>(*this, relOp, value, makeContains(value),
                                    value.empty());
 }

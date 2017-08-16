@@ -34,7 +34,7 @@ using std::regex;
 using std::regex_search;
 using std::string;
 
-StringFilter::StringFilter(const StringColumn *column, RelationalOperator relOp,
+StringFilter::StringFilter(const StringColumn &column, RelationalOperator relOp,
                            string value)
     : _column(column), _relOp(relOp), _ref_string(move(value)) {
     switch (_relOp) {
@@ -62,7 +62,7 @@ StringFilter::StringFilter(const StringColumn *column, RelationalOperator relOp,
 
 bool StringFilter::accepts(Row row, contact * /* auth_user */,
                            int /* timezone_offset */) const {
-    string act_string = _column->getValue(row);
+    string act_string = _column.getValue(row);
     switch (_relOp) {
         case RelationalOperator::equal:
             return act_string == _ref_string;
@@ -112,4 +112,4 @@ const string *StringFilter::valueForIndexing(const string &column_name) const {
     return nullptr;  // unreachable
 }
 
-string StringFilter::columnName() const { return _column->name(); }
+string StringFilter::columnName() const { return _column.name(); }

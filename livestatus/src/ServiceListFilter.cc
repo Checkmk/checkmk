@@ -35,7 +35,7 @@ namespace {
 constexpr char hostservice_separator = '|';
 }  // namespace
 
-ServiceListFilter::ServiceListFilter(const ServiceListColumn *column,
+ServiceListFilter::ServiceListFilter(const ServiceListColumn &column,
                                      bool hostname_required,
                                      RelationalOperator relOp,
                                      const string &value)
@@ -51,7 +51,7 @@ ServiceListFilter::ServiceListFilter(const ServiceListColumn *column,
     auto pos = value.find(hostservice_separator);
     if (pos == string::npos) {
         if (_hostname_required) {
-            Informational(column->logger())
+            Informational(column.logger())
                 << "Invalid reference value for service "
                    "list membership. Must be 'hostname"
                 << string(1, hostservice_separator) << "servicename'";
@@ -68,7 +68,7 @@ bool ServiceListFilter::accepts(Row row, contact * /* auth_user */,
                                 int /* timezone_offset */) const {
     // data points to a primary data object. We need to extract
     // a pointer to a service list
-    servicesmember *mem = _column->getMembers(row);
+    servicesmember *mem = _column.getMembers(row);
 
     // test for empty list
     if (_ref_host.empty()) {
@@ -105,7 +105,7 @@ bool ServiceListFilter::accepts(Row row, contact * /* auth_user */,
         case RelationalOperator::doesnt_match_icase:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            Informational(_column->logger())
+            Informational(_column.logger())
                 << "Sorry. Operator " << _relOp
                 << " for service lists not implemented.";
             return false;
@@ -113,4 +113,4 @@ bool ServiceListFilter::accepts(Row row, contact * /* auth_user */,
     return false;  // unreachable
 }
 
-string ServiceListFilter::columnName() const { return _column->name(); }
+string ServiceListFilter::columnName() const { return _column.name(); }

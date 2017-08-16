@@ -38,7 +38,7 @@ void DoubleColumn::output(Row row, RowRenderer &r, contact * /* auth_user */) {
 }
 
 unique_ptr<Filter> DoubleColumn::createFilter(RelationalOperator relOp,
-                                              const string &value) {
+                                              const string &value) const {
     return make_unique<DoubleFilter>(*this, relOp, value);
 }
 

@@ -33,7 +33,7 @@ using std::unique_ptr;
 ListColumn::Contains::~Contains() = default;
 
 unique_ptr<Filter> ListColumn::createFilter(RelationalOperator relOp,
-                                            const string &value) {
+                                            const string &value) const {
     return make_unique<ListFilter>(*this, relOp, value, makeContains(value),
                                    value.empty());
 }

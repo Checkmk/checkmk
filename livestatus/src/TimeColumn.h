@@ -48,8 +48,8 @@ public:
 
     ColumnType type() const override { return ColumnType::time; }
 
-    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
-                                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const override;
     std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation) const override;
 };

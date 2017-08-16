@@ -65,8 +65,8 @@ public:
     // fixed, it is just an artifact.
     virtual void output(Row row, RowRenderer &r, contact *auth_user) = 0;
 
-    virtual std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
-                                                 const std::string &value);
+    virtual std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const;
     virtual std::unique_ptr<Aggregator> createAggregator(
         StatsOperation operation) const;
 

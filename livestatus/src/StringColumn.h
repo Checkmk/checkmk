@@ -44,8 +44,8 @@ public:
     virtual std::string getValue(Row row) const = 0;
     void output(Row row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() const override { return ColumnType::string; }
-    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
-                                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const override;
 };
 
 #endif  // StringColumn_h

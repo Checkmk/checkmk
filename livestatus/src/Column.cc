@@ -55,7 +55,7 @@ void *Column::shiftPointer(Row row) const {
 }
 
 unique_ptr<Filter> Column::createFilter(RelationalOperator /*unused*/,
-                                        const std::string & /*unused*/) {
+                                        const std::string & /*unused*/) const {
     throw runtime_error("filtering on column " + _name + " not supported");
 }
 

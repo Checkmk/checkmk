@@ -83,7 +83,7 @@ void ServiceListColumn::output(Row row, RowRenderer &r, contact *auth_user) {
 }
 
 unique_ptr<Filter> ServiceListColumn::createFilter(RelationalOperator relOp,
-                                                   const string &value) {
+                                                   const string &value) const {
     return make_unique<ServiceListFilter>(*this, _hostname_required, relOp,
                                           value);
 }

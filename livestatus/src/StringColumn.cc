@@ -37,6 +37,6 @@ void StringColumn::output(Row row, RowRenderer &r, contact * /* auth_user */) {
 }
 
 unique_ptr<Filter> StringColumn::createFilter(RelationalOperator relOp,
-                                              const string &value) {
+                                              const string &value) const {
     return make_unique<StringFilter>(*this, relOp, value);
 }

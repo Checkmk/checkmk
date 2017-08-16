@@ -50,8 +50,8 @@ public:
     // API of Column
     ColumnType type() const override { return ColumnType::list; }
     void output(Row row, RowRenderer &r, contact *auth_user) override;
-    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
-                                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const override;
 
     // API of IntColumn
     int32_t getValue(Row row, const contact *auth_user) const override;

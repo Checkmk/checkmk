@@ -47,7 +47,7 @@ public:
 
     /// API of Column
     std::unique_ptr<Filter> createFilter(RelationalOperator,
-                                         const std::string &) override;
+                                         const std::string &) const override;
 
     // API of IntColumn
     int32_t getValue(Row row, const contact *auth_user) const override;

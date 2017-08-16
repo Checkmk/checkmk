@@ -55,40 +55,36 @@ int32_t ServiceListStateColumn::getValue(MonitoringCore *mc, Type logictype,
                                          servicesmember *mem,
                                          const contact *auth_user) {
     int32_t result = 0;
-
     for (; mem != nullptr; mem = mem->next) {
         service *svc = mem->service_ptr;
         if (auth_user == nullptr ||
             is_authorized_for(mc, auth_user, svc->host_ptr, svc)) {
-            Type lt = logictype;
-            int state;
-            int has_been_checked;
+            int service_state;
+            Type lt;
             if (static_cast<int>(logictype) >= 60) {
-                state = svc->last_hard_state;
-                lt = static_cast<Type>(static_cast<int>(lt) - 64);
+                service_state = svc->last_hard_state;
+                lt = static_cast<Type>(static_cast<int>(logictype) - 64);
             } else {
-                state = svc->current_state;
+                service_state = svc->current_state;
+                lt = logictype;
             }
-
-            has_been_checked = svc->has_been_checked;
-
             switch (lt) {
                 case Type::worst_state:
-                    if (svcStateIsWorse(state, result)) {
-                        result = state;
+                    if (svcStateIsWorse(service_state, result)) {
+                        result = service_state;
                     }
                     break;
                 case Type::num:
                     result++;
                     break;
                 case Type::num_pending:
-                    if (has_been_checked == 0) {
+                    if (svc->has_been_checked == 0) {
                         result++;
                     }
                     break;
                 default:
-                    if (has_been_checked != 0 &&
-                        state == static_cast<int>(lt)) {
+                    if (svc->has_been_checked != 0 &&
+                        service_state == static_cast<int>(lt)) {
                         result++;
                     }
                     break;

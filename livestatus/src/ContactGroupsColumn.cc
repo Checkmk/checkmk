@@ -41,11 +41,11 @@ void ContactGroupsColumn::output(Row row, RowRenderer &r,
 }
 
 unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
-    const string &name) {
+    const string &name) const {
     class ContainsContactGroup : public Contains {
     public:
         ContainsContactGroup(MonitoringCore::ContactGroup *element,
-                             ContactGroupsColumn *column)
+                             const ContactGroupsColumn *column)
             : _element(element), _column(column) {}
 
         bool operator()(Row row) override {
@@ -62,7 +62,7 @@ unique_ptr<ListColumn::Contains> ContactGroupsColumn::makeContains(
 
     private:
         MonitoringCore::ContactGroup *const _element;
-        ContactGroupsColumn *_column;
+        const ContactGroupsColumn *const _column;
     };
 
     return make_unique<ContainsContactGroup>(_mc->find_contactgroup(name),

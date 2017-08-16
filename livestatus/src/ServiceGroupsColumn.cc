@@ -41,10 +41,11 @@ void ServiceGroupsColumn::output(Row row, RowRenderer &r,
 }
 
 unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
-    const string &name) {
+    const string &name) const {
     class ContainsServiceGroup : public Contains {
     public:
-        ContainsServiceGroup(servicegroup *element, ServiceGroupsColumn *column)
+        ContainsServiceGroup(servicegroup *element,
+                             const ServiceGroupsColumn *column)
             : _element(element), _column(column) {}
 
         bool operator()(Row row) override {
@@ -59,7 +60,7 @@ unique_ptr<ListColumn::Contains> ServiceGroupsColumn::makeContains(
 
     private:
         servicegroup *const _element;
-        ServiceGroupsColumn *_column;
+        const ServiceGroupsColumn *const _column;
     };
 
     return make_unique<ContainsServiceGroup>(

@@ -54,10 +54,10 @@ void CommentColumn::output(Row row, RowRenderer &r, contact * /* auth_user */) {
 }
 
 unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
-    const string &name) {
+    const string &name) const {
     class ContainsCommentID : public Contains {
     public:
-        ContainsCommentID(unsigned long element, CommentColumn *column)
+        ContainsCommentID(unsigned long element, const CommentColumn *column)
             : _element(element), _column(column) {}
 
         bool operator()(Row row) override {
@@ -71,7 +71,7 @@ unique_ptr<ListColumn::Contains> CommentColumn::makeContains(
 
     private:
         const unsigned long _element;
-        CommentColumn *_column;
+        const CommentColumn *const _column;
     };
 
     unsigned long id = strtoul(name.c_str(), nullptr, 10);

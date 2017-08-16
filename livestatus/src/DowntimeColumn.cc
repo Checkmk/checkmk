@@ -49,10 +49,10 @@ void DowntimeColumn::output(Row row, RowRenderer &r,
 }
 
 unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
-    const string &name) {
+    const string &name) const {
     class ContainsDowntimeID : public Contains {
     public:
-        ContainsDowntimeID(unsigned long element, DowntimeColumn *column)
+        ContainsDowntimeID(unsigned long element, const DowntimeColumn *column)
             : _element(element), _column(column) {}
 
         bool operator()(Row row) override {
@@ -66,7 +66,7 @@ unique_ptr<ListColumn::Contains> DowntimeColumn::makeContains(
 
     private:
         const unsigned long _element;
-        DowntimeColumn *_column;
+        const DowntimeColumn *const _column;
     };
 
     unsigned long id = strtoul(name.c_str(), nullptr, 10);

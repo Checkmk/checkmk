@@ -41,10 +41,10 @@ void ContactsColumn::output(Row row, RowRenderer &r,
 }
 
 unique_ptr<ListColumn::Contains> ContactsColumn::makeContains(
-    const string &name) {
+    const string &name) const {
     class ContainsContact : public ListColumn::Contains {
     public:
-        ContainsContact(string name, ContactsColumn *column)
+        ContainsContact(string name, const ContactsColumn *column)
             : _name(move(name)), _column(column) {}
 
         bool operator()(Row row) override {
@@ -54,7 +54,7 @@ unique_ptr<ListColumn::Contains> ContactsColumn::makeContains(
 
     private:
         string _name;
-        ContactsColumn *_column;
+        const ContactsColumn *const _column;
     };
 
     return make_unique<ContainsContact>(name, this);

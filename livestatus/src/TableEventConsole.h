@@ -170,7 +170,7 @@ protected:
         }
 
         std::unique_ptr<Contains> makeContains(
-            const std::string &name) override {
+            const std::string &name) const override {
             class ContainsElem : public Contains {
             public:
                 ContainsElem(const std::string &name,

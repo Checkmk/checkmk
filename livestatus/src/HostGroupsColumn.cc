@@ -41,10 +41,10 @@ void HostGroupsColumn::output(Row row, RowRenderer &r,
 }
 
 unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
-    const string &name) {
+    const string &name) const {
     class ContainsHostGroup : public Contains {
     public:
-        ContainsHostGroup(hostgroup *element, HostGroupsColumn *column)
+        ContainsHostGroup(hostgroup *element, const HostGroupsColumn *column)
             : _element(element), _column(column) {}
 
         bool operator()(Row row) override {
@@ -59,7 +59,7 @@ unique_ptr<ListColumn::Contains> HostGroupsColumn::makeContains(
 
     private:
         hostgroup *const _element;
-        HostGroupsColumn *_column;
+        const HostGroupsColumn *const _column;
     };
 
     return make_unique<ContainsHostGroup>(

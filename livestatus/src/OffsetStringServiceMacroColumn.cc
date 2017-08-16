@@ -25,13 +25,13 @@
 #include "OffsetStringServiceMacroColumn.h"
 #include "Row.h"
 
-host *OffsetStringServiceMacroColumn::getHost(Row row) {
+host *OffsetStringServiceMacroColumn::getHost(Row row) const {
     if (auto svc = getService(row)) {
         return svc->host_ptr;
     }
     return nullptr;
 }
 
-service *OffsetStringServiceMacroColumn::getService(Row row) {
+service *OffsetStringServiceMacroColumn::getService(Row row) const {
     return columnData<service>(row);
 }

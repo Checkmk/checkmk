@@ -40,7 +40,8 @@ hostsmember *HostListColumn::getMembers(Row row) const {
     return nullptr;
 }
 
-void HostListColumn::output(Row row, RowRenderer &r, contact *auth_user) {
+void HostListColumn::output(Row row, RowRenderer &r,
+                            const contact *auth_user) const {
     ListRenderer l(r);
     for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;

@@ -48,7 +48,8 @@ public:
         , _is_service(is_service)
         , _with_info(with_info)
         , _with_extra_info(with_extra_info) {}
-    void output(Row row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r,
+                const contact *auth_user) const override;
     std::unique_ptr<Contains> makeContains(
         const std::string &name) const override;
     bool isEmpty(Row row) const override;

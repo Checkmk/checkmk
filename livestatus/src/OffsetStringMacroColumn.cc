@@ -38,7 +38,7 @@ using std::unique_ptr;
 extern char *macro_user[MAX_USER_MACROS];
 
 void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
-                                     contact * /*unused*/) {
+                                     const contact * /*unused*/) const {
     string raw = getValue(row);
     host *hst = getHost(row);
     service *svc = getService(row);
@@ -80,7 +80,8 @@ unique_ptr<Filter> OffsetStringMacroColumn::createFilter(
 }
 
 const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
-                                                 host *hst, service *svc) {
+                                                 host *hst,
+                                                 service *svc) const {
     // host macros
     if (strcmp(macroname, "HOSTNAME") == 0) {
         return hst->name;
@@ -155,7 +156,7 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
 }
 
 const char *OffsetStringMacroColumn::expandCustomVariables(
-    const char *varname, customvariablesmember *custvars) {
+    const char *varname, customvariablesmember *custvars) const {
     for (; custvars != nullptr; custvars = custvars->next) {
         if (strcasecmp(varname, custvars->variable_name) == 0) {
             return custvars->variable_value;

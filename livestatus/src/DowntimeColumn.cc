@@ -34,7 +34,7 @@ using std::unique_ptr;
 using std::vector;
 
 void DowntimeColumn::output(Row row, RowRenderer &r,
-                            contact * /* auth_user */) {
+                            const contact * /* auth_user */) const {
     ListRenderer l(r);
     for (const auto &downtime : downtimes_for_row(row)) {
         if (_with_info) {

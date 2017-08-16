@@ -32,7 +32,7 @@ using std::string;
 using std::unique_ptr;
 
 void HostGroupsColumn::output(Row row, RowRenderer &r,
-                              contact * /* auth_user */) {
+                              const contact * /* auth_user */) const {
     ListRenderer l(r);
     for (objectlist *list = getData(row); list != nullptr; list = list->next) {
         auto sg = static_cast<hostgroup *>(list->object_ptr);

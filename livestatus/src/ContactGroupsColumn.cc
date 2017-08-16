@@ -33,7 +33,7 @@ using std::string;
 using std::unique_ptr;
 
 void ContactGroupsColumn::output(Row row, RowRenderer &r,
-                                 contact * /* auth_user */) {
+                                 const contact * /* auth_user */) const {
     ListRenderer l(r);
     for (auto cgm = getData(row); cgm != nullptr; cgm = cgm->next) {
         l.output(string(cgm->group_ptr->group_name));

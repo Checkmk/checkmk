@@ -49,7 +49,8 @@ public:
 
     // API of Column
     ColumnType type() const override { return ColumnType::list; }
-    void output(Row row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r,
+                const contact *auth_user) const override;
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
 

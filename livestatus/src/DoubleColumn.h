@@ -43,7 +43,8 @@ public:
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset) {}
     virtual double getValue(Row data) const = 0;
-    void output(Row row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r,
+                const contact *auth_user) const override;
     ColumnType type() const override { return ColumnType::double_; }
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;

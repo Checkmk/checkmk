@@ -35,7 +35,8 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-void CommentColumn::output(Row row, RowRenderer &r, contact * /* auth_user */) {
+void CommentColumn::output(Row row, RowRenderer &r,
+                           const contact * /* auth_user */) const {
     ListRenderer l(r);
     for (const auto &comment : comments_for_row(row)) {
         if (_with_info) {

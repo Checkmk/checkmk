@@ -44,7 +44,7 @@ CustomVarsNamesColumn::CustomVarsNamesColumn(string name, string description,
 ColumnType CustomVarsNamesColumn::type() const { return ColumnType::list; }
 
 void CustomVarsNamesColumn::output(Row row, RowRenderer &r,
-                                   contact * /* auth_user */) {
+                                   const contact * /* auth_user */) const {
     ListRenderer l(r);
     for (const auto &it : getCVM(row)) {
         l.output(it.first);

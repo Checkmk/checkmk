@@ -42,7 +42,8 @@ public:
                  extra_extra_offset)
         , _mc(mc) {}
     ColumnType type() const override { return ColumnType::list; }
-    void output(Row row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r,
+                const contact *auth_user) const override;
 
 private:
     MonitoringCore *_mc;

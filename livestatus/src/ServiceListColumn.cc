@@ -44,7 +44,8 @@ servicesmember *ServiceListColumn::getMembers(Row row) const {
     return nullptr;
 }
 
-void ServiceListColumn::output(Row row, RowRenderer &r, contact *auth_user) {
+void ServiceListColumn::output(Row row, RowRenderer &r,
+                               const contact *auth_user) const {
     ListRenderer l(r);
     for (servicesmember *mem = getMembers(row); mem != nullptr;
          mem = mem->next) {
@@ -88,7 +89,8 @@ unique_ptr<Filter> ServiceListColumn::createFilter(RelationalOperator relOp,
                                           value);
 }
 
-int ServiceListColumn::inCustomTimeperiod(service *svc, const char *varname) {
+int ServiceListColumn::inCustomTimeperiod(service *svc,
+                                          const char *varname) const {
     for (customvariablesmember *cvm = svc->custom_variables; cvm != nullptr;
          cvm = cvm->next) {
         if (strcmp(cvm->variable_name, varname) == 0) {

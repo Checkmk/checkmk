@@ -40,7 +40,7 @@
 using std::string;
 
 void LogwatchListColumn::output(Row row, RowRenderer &r,
-                                contact * /* auth_user */) {
+                                const contact * /* auth_user */) const {
     ListRenderer l(r);
     auto logwatch_path = _mc->mkLogwatchPath();
     if (logwatch_path.empty()) {

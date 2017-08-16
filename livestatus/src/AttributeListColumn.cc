@@ -70,7 +70,7 @@ int32_t AttributeListColumn::getValue(Row row,
 }
 
 void AttributeListColumn::output(Row row, RowRenderer &r,
-                                 contact * /* auth_user */) {
+                                 const contact * /* auth_user */) const {
     ListRenderer l(r);
     modified_atttibutes values(getValue(row, nullptr));
     for (const auto &entry : known_attributes) {

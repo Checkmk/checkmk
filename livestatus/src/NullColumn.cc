@@ -27,6 +27,6 @@
 #include "Row.h"
 
 void NullColumn::output(Row /* row */, RowRenderer& r,
-                        contact* /* auth_user */) {
+                        const contact* /* auth_user */) const {
     r.output(Null());
 }

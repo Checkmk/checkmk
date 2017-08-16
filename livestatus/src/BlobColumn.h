@@ -40,8 +40,9 @@ public:
                int indirect_offset, int extra_offset, int extra_extra_offset)
         : Column(name, description, indirect_offset, extra_offset,
                  extra_extra_offset) {}
-    virtual std::unique_ptr<std::vector<char>> getBlob(Row row) = 0;
-    void output(Row row, RowRenderer &r, contact *auth_user) override;
+    virtual std::unique_ptr<std::vector<char>> getBlob(Row row) const = 0;
+    void output(Row row, RowRenderer &r,
+                const contact *auth_user) const override;
     ColumnType type() const override { return ColumnType::blob; }
 };
 

@@ -37,7 +37,8 @@ public:
     NullColumn(const std::string &name, const std::string &description)
         : Column(name, description, -1, -1, -1) {}
     ColumnType type() const override { return ColumnType::null; }
-    void output(Row row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r,
+                const contact *auth_user) const override;
 };
 
 #endif  // NullColumn_h

@@ -43,7 +43,7 @@ CustomVarsDictColumn::CustomVarsDictColumn(string name, string description,
 ColumnType CustomVarsDictColumn::type() const { return ColumnType::dict; }
 
 void CustomVarsDictColumn::output(Row row, RowRenderer &r,
-                                  contact * /* auth_user */) {
+                                  const contact * /* auth_user */) const {
     DictRenderer d(r);
     for (const auto &it : getCVM(row)) {
         d.output(it.first, it.second);

@@ -33,7 +33,7 @@ using std::string;
 using std::unique_ptr;
 
 void ContactsColumn::output(Row row, RowRenderer &r,
-                            contact * /* auth_user */) {
+                            const contact * /* auth_user */) const {
     ListRenderer l(r);
     for (const auto &name : contactNames(row)) {
         l.output(name);

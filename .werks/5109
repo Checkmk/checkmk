@@ -1,0 +1,10 @@
+Title: dell_poweredge_status: Monitors ExpressServiceCode which is supported by DELL devices such as DELL PE R430 or 730 series
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1502894472
+Class: feature
+
+

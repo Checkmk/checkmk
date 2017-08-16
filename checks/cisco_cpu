@@ -27,13 +27,16 @@
 # oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.5.1") is depreceated by
 # oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), we recognize both for now
 
+
 cisco_cpu_default_levels = (80.0, 90.0)
+
 
 def inventory_cisco_cpu(info):
     if info and \
     (info[0][0].isdigit() or \
     info[0][1].isdigit()):
         return [( None, 'cisco_cpu_default_levels') ]
+
 
 def check_cisco_cpu(item, params, info):
     # Value of info could be (None, None) or ("", "").
@@ -58,6 +61,7 @@ def check_cisco_cpu(item, params, info):
         infotext += " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
 
     return state, infotext, [("util", util, warn, crit, 0, 100)]
+
 
 check_info["cisco_cpu"] = {
     "check_function"        : check_cisco_cpu,

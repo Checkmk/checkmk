@@ -48,7 +48,7 @@ int32_t IntFilter::convertRefValue(int timezone_offset) const {
            (adjustWithTimezoneOffset() ? timezone_offset : 0);
 }
 
-bool IntFilter::accepts(Row row, contact *auth_user,
+bool IntFilter::accepts(Row row, const contact *auth_user,
                         int timezone_offset) const {
     int32_t act_value = _column.getValue(row, auth_user);
     int32_t ref_value = convertRefValue(timezone_offset);

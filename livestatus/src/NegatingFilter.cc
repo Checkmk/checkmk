@@ -39,7 +39,7 @@ void NegatingFilter::accept(FilterVisitor &v) const { v.visit(*this); }
 const unique_ptr<Filter> &NegatingFilter::subfilter() const { return _filter; }
 #endif
 
-bool NegatingFilter::accepts(Row row, contact *auth_user,
+bool NegatingFilter::accepts(Row row, const contact *auth_user,
                              int timezone_offset) const {
     return !_filter->accepts(row, auth_user, timezone_offset);
 }

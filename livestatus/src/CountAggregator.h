@@ -42,7 +42,8 @@ class CountAggregator : public Aggregator {
 public:
     explicit CountAggregator(Filter *filter)
         : Aggregator(StatsOperation::count), _filter(filter), _count(0) {}
-    void consume(Row row, contact *auth_user, int timezone_offset) override;
+    void consume(Row row, const contact *auth_user,
+                 int timezone_offset) override;
     void output(RowRenderer &r) const override;
 
 private:

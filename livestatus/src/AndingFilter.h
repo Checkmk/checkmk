@@ -39,7 +39,7 @@ class Row;
 
 class AndingFilter : public VariadicFilter {
 public:
-    bool accepts(Row row, contact *auth_user,
+    bool accepts(Row row, const contact *auth_user,
                  int timezone_offset) const override;
     bool optimizeBitmask(const std::string &column_name, uint32_t *mask,
                          int timezone_offset) const override;

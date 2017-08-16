@@ -42,7 +42,7 @@ ListFilter::ListFilter(const ListColumn &column, RelationalOperator relOp,
     , _predicate(move(predicate))
     , _empty_ref(isEmptyValue) {}
 
-bool ListFilter::accepts(Row row, contact * /* auth_user */,
+bool ListFilter::accepts(Row row, const contact * /* auth_user */,
                          int /* timezone_offset */) const {
     switch (_relOp) {
         case RelationalOperator::equal:

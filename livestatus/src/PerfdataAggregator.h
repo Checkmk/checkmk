@@ -43,7 +43,8 @@ class PerfdataAggregator : public Aggregator {
 public:
     PerfdataAggregator(StatsOperation operation, StringColumn *column)
         : Aggregator(operation), _column(column) {}
-    void consume(Row row, contact *auth_user, int timezone_offset) override;
+    void consume(Row row, const contact *auth_user,
+                 int timezone_offset) override;
     void output(RowRenderer &r) const override;
 
 private:

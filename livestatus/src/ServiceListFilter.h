@@ -37,7 +37,7 @@ class ServiceListFilter : public ColumnFilter {
 public:
     ServiceListFilter(const ServiceListColumn &column, bool hostname_required,
                       RelationalOperator relOp, const std::string &value);
-    bool accepts(Row row, contact *auth_user,
+    bool accepts(Row row, const contact *auth_user,
                  int timezone_offset) const override;
     std::string columnName() const override;
 

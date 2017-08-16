@@ -27,7 +27,7 @@
 #include "Renderer.h"
 #include "Row.h"
 
-void CountAggregator::consume(Row row, contact* auth_user,
+void CountAggregator::consume(Row row, const contact* auth_user,
                               int timezone_offset) {
     // _filter is 0 --> no filter, accept all rows
     if (_filter == nullptr ||

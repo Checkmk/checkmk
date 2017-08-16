@@ -35,14 +35,14 @@ class Row;
 
 class HostListFilter : public ColumnFilter {
 public:
-    HostListFilter(const HostListColumn *column, RelationalOperator relOp,
+    HostListFilter(const HostListColumn &column, RelationalOperator relOp,
                    std::string value);
     bool accepts(Row row, contact *auth_user,
                  int timezone_offset) const override;
     std::string columnName() const override;
 
 private:
-    const HostListColumn *_column;
+    const HostListColumn &_column;
     const RelationalOperator _relOp;
     const std::string _ref_value;
 };

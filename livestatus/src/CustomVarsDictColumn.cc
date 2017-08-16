@@ -52,7 +52,7 @@ void CustomVarsDictColumn::output(Row row, RowRenderer &r,
 
 unique_ptr<Filter> CustomVarsDictColumn::createFilter(RelationalOperator relOp,
                                                       const string &value) {
-    return make_unique<CustomVarsDictFilter>(this, relOp, value);
+    return make_unique<CustomVarsDictFilter>(*this, relOp, value);
 }
 
 bool CustomVarsDictColumn::contains(Row row, const string &value) const {

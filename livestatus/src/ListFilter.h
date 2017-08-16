@@ -36,7 +36,7 @@ class Row;
 
 class ListFilter : public ColumnFilter {
 public:
-    ListFilter(const ListColumn *column, RelationalOperator relOp,
+    ListFilter(const ListColumn &column, RelationalOperator relOp,
                std::string element,
                std::unique_ptr<ListColumn::Contains> predicate,
                bool isEmptyValue);
@@ -47,7 +47,7 @@ public:
     std::string columnName() const override;
 
 private:
-    const ListColumn *_column;
+    const ListColumn &_column;
     const RelationalOperator _relOp;
     const std::string _element;
     const std::unique_ptr<ListColumn::Contains> _predicate;

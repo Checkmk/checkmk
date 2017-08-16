@@ -41,7 +41,7 @@ void TimeColumn::output(Row row, RowRenderer &r, contact *auth_user) {
 
 unique_ptr<Filter> TimeColumn::createFilter(RelationalOperator relOp,
                                             const string &value) {
-    return make_unique<TimeFilter>(this, relOp, value);
+    return make_unique<TimeFilter>(*this, relOp, value);
 }
 
 unique_ptr<Aggregator> TimeColumn::createAggregator(StatsOperation operation) {

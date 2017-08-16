@@ -37,7 +37,7 @@ using std::unique_ptr;
 unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
     RelationalOperator relOp, const string &value) {
     return make_unique<IntFilter>(
-        this, relOp, AttributeListColumn::refValueFor(value, logger()));
+        *this, relOp, AttributeListColumn::refValueFor(value, logger()));
 }
 
 int32_t AttributeListAsIntColumn::getValue(Row row,

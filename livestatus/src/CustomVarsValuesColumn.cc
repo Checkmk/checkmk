@@ -52,7 +52,7 @@ void CustomVarsValuesColumn::output(Row row, RowRenderer &r,
 
 unique_ptr<Filter> CustomVarsValuesColumn::createFilter(
     RelationalOperator relOp, const string &value) {
-    return make_unique<CustomVarsListFilter>(this, relOp, value);
+    return make_unique<CustomVarsListFilter>(*this, relOp, value);
 }
 
 bool CustomVarsValuesColumn::contains(Row row, const string &value) const {

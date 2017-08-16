@@ -33,11 +33,11 @@
 using std::move;
 using std::string;
 
-IntFilter::IntFilter(const IntColumn *column, RelationalOperator relOp,
+IntFilter::IntFilter(const IntColumn &column, RelationalOperator relOp,
                      string value)
     : _column(column), _relOp(relOp), _ref_string(move(value)) {}
 
-string IntFilter::columnName() const { return _column->name(); }
+string IntFilter::columnName() const { return _column.name(); }
 
 // overridden by TimeFilter in order to apply timezone offset from Localtime:
 // header
@@ -50,7 +50,7 @@ int32_t IntFilter::convertRefValue(int timezone_offset) const {
 
 bool IntFilter::accepts(Row row, contact *auth_user,
                         int timezone_offset) const {
-    int32_t act_value = _column->getValue(row, auth_user);
+    int32_t act_value = _column.getValue(row, auth_user);
     int32_t ref_value = convertRefValue(timezone_offset);
     switch (_relOp) {
         case RelationalOperator::equal:
@@ -137,7 +137,7 @@ void IntFilter::findIntLimits(const string &column_name, int *lower, int *upper,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency(_column->logger())
+            Emergency(_column.logger())
                 << "Invalid relational operator " << _relOp
                 << " in IntFilter::findIntLimits";
             return;
@@ -197,7 +197,7 @@ bool IntFilter::optimizeBitmask(const string &column_name, uint32_t *mask,
         case RelationalOperator::not_equal_icase:
         case RelationalOperator::matches_icase:
         case RelationalOperator::doesnt_match_icase:
-            Emergency(_column->logger())
+            Emergency(_column.logger())
                 << "Invalid relational operator " << _relOp
                 << " in IntFilter::optimizeBitmask";
             return false;

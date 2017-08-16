@@ -53,7 +53,7 @@ void CustomVarsNamesColumn::output(Row row, RowRenderer &r,
 
 unique_ptr<Filter> CustomVarsNamesColumn::createFilter(RelationalOperator relOp,
                                                        const string &value) {
-    return make_unique<CustomVarsListFilter>(this, relOp, value);
+    return make_unique<CustomVarsListFilter>(*this, relOp, value);
 }
 
 bool CustomVarsNamesColumn::contains(Row row, const string &value) const {

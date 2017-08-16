@@ -60,5 +60,5 @@ void HostListColumn::output(Row row, RowRenderer &r, contact *auth_user) {
 
 unique_ptr<Filter> HostListColumn::createFilter(RelationalOperator relOp,
                                                 const string &value) {
-    return make_unique<HostListFilter>(this, relOp, value);
+    return make_unique<HostListFilter>(*this, relOp, value);
 }

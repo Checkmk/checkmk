@@ -39,7 +39,7 @@ void IntColumn::output(Row row, RowRenderer &r, contact *auth_user) {
 
 unique_ptr<Filter> IntColumn::createFilter(RelationalOperator relOp,
                                            const string &value) {
-    return make_unique<IntFilter>(this, relOp, value);
+    return make_unique<IntFilter>(*this, relOp, value);
 }
 
 unique_ptr<Aggregator> IntColumn::createAggregator(StatsOperation operation) {

@@ -162,7 +162,7 @@ protected:
         _column_t getValue(Row row) { return _ecc.getValue(row); }
 
         void output(Row row, RowRenderer &r,
-                    contact * /* auth_user */) override {
+                    const contact * /* auth_user */) const override {
             ListRenderer l(r);
             for (const auto &elem : _ecc.getValue(row)) {
                 l.output(elem);

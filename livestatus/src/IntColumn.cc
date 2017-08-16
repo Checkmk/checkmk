@@ -33,7 +33,8 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void IntColumn::output(Row row, RowRenderer &r, contact *auth_user) {
+void IntColumn::output(Row row, RowRenderer &r,
+                       const contact *auth_user) const {
     r.output(getValue(row, auth_user));
 }
 

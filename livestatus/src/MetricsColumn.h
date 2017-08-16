@@ -55,7 +55,8 @@ public:
                  extra_extra_offset) {}
 #endif
     ColumnType type() const override { return ColumnType::list; }
-    void output(Row row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r,
+                const contact *auth_user) const override;
 };
 
 #endif  // MetricsColumn_h

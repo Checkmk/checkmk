@@ -57,7 +57,8 @@ public:
         , _show_host(show_host)
         , _info_depth(info_depth) {}
     ColumnType type() const override { return ColumnType::list; };
-    void output(Row row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r,
+                const contact *auth_user) const override;
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
 #ifdef CMC
@@ -74,7 +75,7 @@ private:
     int _info_depth;
 
 #ifndef CMC
-    int inCustomTimeperiod(service *svc, const char *varname);
+    int inCustomTimeperiod(service *svc, const char *varname) const;
 #endif
 };
 

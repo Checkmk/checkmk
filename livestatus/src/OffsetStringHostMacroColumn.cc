@@ -25,10 +25,10 @@
 #include "OffsetStringHostMacroColumn.h"
 #include "Row.h"
 
-host *OffsetStringHostMacroColumn::getHost(Row row) {
+host *OffsetStringHostMacroColumn::getHost(Row row) const {
     return columnData<host>(row);
 }
 
-service *OffsetStringHostMacroColumn::getService(Row /*unused*/) {
+service *OffsetStringHostMacroColumn::getService(Row /*unused*/) const {
     return nullptr;
 }

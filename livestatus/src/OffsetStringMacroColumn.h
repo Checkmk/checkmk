@@ -46,18 +46,20 @@ public:
                              extra_offset, extra_extra_offset) {}
     // reimplement several functions from StringColumn
 
-    void output(Row row, RowRenderer &r, contact *auth_user) override;
+    void output(Row row, RowRenderer &r,
+                const contact *auth_user) const override;
     std::unique_ptr<Filter> createFilter(
         RelationalOperator relOp, const std::string &value) const override;
 
     // overriden by host and service macro columns
-    virtual host *getHost(Row) = 0;
-    virtual service *getService(Row) = 0;
+    virtual host *getHost(Row) const = 0;
+    virtual service *getService(Row) const = 0;
 
 private:
-    const char *expandMacro(const char *macroname, host *hst, service *svc);
+    const char *expandMacro(const char *macroname, host *hst,
+                            service *svc) const;
     const char *expandCustomVariables(const char *varname,
-                                      customvariablesmember *custvars);
+                                      customvariablesmember *custvars) const;
 };
 
 #endif  // OffsetStringMacroColumn_h

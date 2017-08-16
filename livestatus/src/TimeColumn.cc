@@ -35,7 +35,8 @@ using std::make_unique;
 using std::string;
 using std::unique_ptr;
 
-void TimeColumn::output(Row row, RowRenderer &r, contact *auth_user) {
+void TimeColumn::output(Row row, RowRenderer &r,
+                        const contact *auth_user) const {
     r.output(system_clock::from_time_t(getValue(row, auth_user)));
 }
 

@@ -52,14 +52,14 @@ public:
         RelationalOperator relOp, const std::string &value) const override;
 
     // overriden by host and service macro columns
-    virtual host *getHost(Row) const = 0;
-    virtual service *getService(Row) const = 0;
+    virtual const host *getHost(Row) const = 0;
+    virtual const service *getService(Row) const = 0;
 
 private:
-    const char *expandMacro(const char *macroname, host *hst,
-                            service *svc) const;
-    const char *expandCustomVariables(const char *varname,
-                                      customvariablesmember *custvars) const;
+    const char *expandMacro(const char *macroname, const host *hst,
+                            const service *svc) const;
+    const char *expandCustomVariables(
+        const char *varname, const customvariablesmember *custvars) const;
 };
 
 #endif  // OffsetStringMacroColumn_h

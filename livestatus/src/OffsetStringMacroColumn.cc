@@ -40,8 +40,8 @@ extern char *macro_user[MAX_USER_MACROS];
 void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
                                      const contact * /*unused*/) const {
     string raw = getValue(row);
-    host *hst = getHost(row);
-    service *svc = getService(row);
+    const host *hst = getHost(row);
+    const service *svc = getService(row);
 
     // search for macro names, beginning with $
     string result;
@@ -80,8 +80,8 @@ unique_ptr<Filter> OffsetStringMacroColumn::createFilter(
 }
 
 const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
-                                                 host *hst,
-                                                 service *svc) const {
+                                                 const host *hst,
+                                                 const service *svc) const {
     // host macros
     if (strcmp(macroname, "HOSTNAME") == 0) {
         return hst->name;
@@ -156,7 +156,7 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname,
 }
 
 const char *OffsetStringMacroColumn::expandCustomVariables(
-    const char *varname, customvariablesmember *custvars) const {
+    const char *varname, const customvariablesmember *custvars) const {
     for (; custvars != nullptr; custvars = custvars->next) {
         if (strcasecmp(varname, custvars->variable_name) == 0) {
             return custvars->variable_value;

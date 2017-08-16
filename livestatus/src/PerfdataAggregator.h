@@ -41,7 +41,7 @@ class StringColumn;
 
 class PerfdataAggregator : public Aggregator {
 public:
-    PerfdataAggregator(StatsOperation operation, StringColumn *column)
+    PerfdataAggregator(StatsOperation operation, const StringColumn *column)
         : Aggregator(operation), _column(column) {}
     void consume(Row row, const contact *auth_user,
                  int timezone_offset) override;
@@ -54,7 +54,7 @@ private:
         double _sumq;
     };
 
-    StringColumn *const _column;
+    const StringColumn *const _column;
     std::map<std::string, perf_aggr> _aggr;
 
     void consumeVariable(const std::string &varname, double value);

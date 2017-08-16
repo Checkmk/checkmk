@@ -40,7 +40,7 @@ class RowRenderer;
 
 class DoubleAggregator : public Aggregator {
 public:
-    DoubleAggregator(StatsOperation operation, DoubleColumn *column)
+    DoubleAggregator(StatsOperation operation, const DoubleColumn *column)
         : Aggregator(operation)
         , _column(column)
         , _count(0)
@@ -50,7 +50,7 @@ public:
     void output(RowRenderer &r) const override;
 
 private:
-    DoubleColumn *const _column;
+    const DoubleColumn *const _column;
     std::uint32_t _count;
     double _aggr;
     double _sumq;

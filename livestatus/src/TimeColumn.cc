@@ -44,6 +44,7 @@ unique_ptr<Filter> TimeColumn::createFilter(RelationalOperator relOp,
     return make_unique<TimeFilter>(*this, relOp, value);
 }
 
-unique_ptr<Aggregator> TimeColumn::createAggregator(StatsOperation operation) const {
+unique_ptr<Aggregator> TimeColumn::createAggregator(
+    StatsOperation operation) const {
     return make_unique<IntAggregator>(operation, this);
 }

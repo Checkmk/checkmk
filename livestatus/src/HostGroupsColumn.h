@@ -43,7 +43,8 @@ public:
                      extra_extra_offset)
         , _offset(offset) {}
     void output(Row row, RowRenderer &r, contact *auth_user) override;
-    std::unique_ptr<Contains> makeContains(const std::string &name) override;
+    std::unique_ptr<Contains> makeContains(
+        const std::string &name) const override;
     bool isEmpty(Row row) const override;
 
 private:

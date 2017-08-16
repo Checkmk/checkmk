@@ -37,15 +37,15 @@ public:
     explicit TimeperiodsCache(Logger *logger);
     ~TimeperiodsCache();
     void update(time_t now);
-    bool inTimeperiod(timeperiod *tp);
-    bool inTimeperiod(const char *tpname);
-    void logCurrentTimeperiods();
+    bool inTimeperiod(timeperiod *tp) const;
+    bool inTimeperiod(const char *tpname) const;
+    void logCurrentTimeperiods() const;
 
 private:
     Logger *const _logger;
     time_t _cache_time;
     std::map<timeperiod *, bool> _cache;
-    std::mutex _cache_lock;
+    mutable std::mutex _cache_lock;
 
     void logTransition(char *name, int from, int to);
 };

@@ -42,6 +42,6 @@ unique_ptr<Filter> IntColumn::createFilter(RelationalOperator relOp,
     return make_unique<IntFilter>(*this, relOp, value);
 }
 
-unique_ptr<Aggregator> IntColumn::createAggregator(StatsOperation operation) {
+unique_ptr<Aggregator> IntColumn::createAggregator(StatsOperation operation) const {
     return make_unique<IntAggregator>(operation, this);
 }

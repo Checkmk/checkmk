@@ -51,7 +51,7 @@ public:
     std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                          const std::string &value) override;
     std::unique_ptr<Aggregator> createAggregator(
-        StatsOperation operation) override;
+        StatsOperation operation) const override;
 };
 
 #endif  // TimeColumn_h

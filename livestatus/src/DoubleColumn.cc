@@ -43,6 +43,6 @@ unique_ptr<Filter> DoubleColumn::createFilter(RelationalOperator relOp,
 }
 
 unique_ptr<Aggregator> DoubleColumn::createAggregator(
-    StatsOperation operation) {
+    StatsOperation operation) const {
     return make_unique<DoubleAggregator>(operation, this);
 }

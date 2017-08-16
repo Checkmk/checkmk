@@ -41,7 +41,7 @@ public:
                              extra_offset, extra_extra_offset) {}
 
     std::unique_ptr<Aggregator> createAggregator(
-        StatsOperation operation) override;
+        StatsOperation operation) const override;
 };
 
 #endif  // OffsetPerfdataColumn_h

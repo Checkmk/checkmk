@@ -29,6 +29,6 @@ using std::make_unique;
 using std::unique_ptr;
 
 unique_ptr<Aggregator> OffsetPerfdataColumn::createAggregator(
-    StatsOperation operation) {
+    StatsOperation operation) const {
     return make_unique<PerfdataAggregator>(operation, this);
 }

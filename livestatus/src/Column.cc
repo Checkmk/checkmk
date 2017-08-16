@@ -59,6 +59,6 @@ unique_ptr<Filter> Column::createFilter(RelationalOperator /*unused*/,
     throw runtime_error("filtering on column " + _name + " not supported");
 }
 
-unique_ptr<Aggregator> Column::createAggregator(StatsOperation /*unused*/) {
+unique_ptr<Aggregator> Column::createAggregator(StatsOperation /*unused*/) const {
     return nullptr;
 }

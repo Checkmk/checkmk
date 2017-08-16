@@ -68,7 +68,7 @@ public:
     virtual std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
                                                  const std::string &value);
     virtual std::unique_ptr<Aggregator> createAggregator(
-        StatsOperation operation);
+        StatsOperation operation) const;
 
     Logger *logger() const { return _logger; }
 

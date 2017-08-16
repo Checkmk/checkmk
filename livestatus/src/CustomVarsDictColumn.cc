@@ -50,8 +50,8 @@ void CustomVarsDictColumn::output(Row row, RowRenderer &r,
     }
 }
 
-unique_ptr<Filter> CustomVarsDictColumn::createFilter(RelationalOperator relOp,
-                                                      const string &value) {
+unique_ptr<Filter> CustomVarsDictColumn::createFilter(
+    RelationalOperator relOp, const string &value) const {
     return make_unique<CustomVarsDictFilter>(*this, relOp, value);
 }
 

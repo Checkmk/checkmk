@@ -51,8 +51,8 @@ void CustomVarsNamesColumn::output(Row row, RowRenderer &r,
     }
 }
 
-unique_ptr<Filter> CustomVarsNamesColumn::createFilter(RelationalOperator relOp,
-                                                       const string &value) {
+unique_ptr<Filter> CustomVarsNamesColumn::createFilter(
+    RelationalOperator relOp, const string &value) const {
     return make_unique<CustomVarsListFilter>(*this, relOp, value);
 }
 

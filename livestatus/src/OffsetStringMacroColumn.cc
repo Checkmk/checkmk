@@ -73,7 +73,7 @@ void OffsetStringMacroColumn::output(Row row, RowRenderer &r,
 }
 
 unique_ptr<Filter> OffsetStringMacroColumn::createFilter(
-    RelationalOperator /*unused */, const string & /*unused*/) {
+    RelationalOperator /*unused */, const string & /*unused*/) const {
     Informational(logger())
         << "Sorry. No filtering on macro columns implemented yet";
     return VariadicFilter::make(LogicalOperator::and_);

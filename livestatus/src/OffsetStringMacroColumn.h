@@ -47,8 +47,8 @@ public:
     // reimplement several functions from StringColumn
 
     void output(Row row, RowRenderer &r, contact *auth_user) override;
-    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
-                                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const override;
 
     // overriden by host and service macro columns
     virtual host *getHost(Row) = 0;

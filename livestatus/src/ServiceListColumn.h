@@ -58,8 +58,8 @@ public:
         , _info_depth(info_depth) {}
     ColumnType type() const override { return ColumnType::list; };
     void output(Row row, RowRenderer &r, contact *auth_user) override;
-    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
-                                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const override;
 #ifdef CMC
     const Host::services_t *getMembers(Row row) const;
 #else

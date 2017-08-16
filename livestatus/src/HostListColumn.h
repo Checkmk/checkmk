@@ -55,8 +55,8 @@ public:
         , _show_state(show_state) {}
     ColumnType type() const override { return ColumnType::list; }
     void output(Row row, RowRenderer &r, contact *auth_user) override;
-    std::unique_ptr<Filter> createFilter(RelationalOperator relOp,
-                                         const std::string &value) override;
+    std::unique_ptr<Filter> createFilter(
+        RelationalOperator relOp, const std::string &value) const override;
 #ifdef CMC
     const std::unordered_set<Host *> *getMembers(Row row) const;
 #else

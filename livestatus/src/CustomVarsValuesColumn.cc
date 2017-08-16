@@ -51,7 +51,7 @@ void CustomVarsValuesColumn::output(Row row, RowRenderer &r,
 }
 
 unique_ptr<Filter> CustomVarsValuesColumn::createFilter(
-    RelationalOperator relOp, const string &value) {
+    RelationalOperator relOp, const string &value) const {
     return make_unique<CustomVarsListFilter>(*this, relOp, value);
 }
 

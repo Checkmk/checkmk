@@ -42,7 +42,7 @@ public:
     virtual ~Filter();
     virtual void accept(FilterVisitor &) const = 0;
 
-    virtual bool accepts(Row row, contact *auth_user,
+    virtual bool accepts(Row row, const contact *auth_user,
                          int timezone_offset) const = 0;
     virtual const std::string *valueForIndexing(
         const std::string &column_name) const;

@@ -37,7 +37,7 @@ CustomVarsListFilter::CustomVarsListFilter(const CustomVarsColumn &column,
                                            string value)
     : _column(column), _relOp(relOp), _ref_text(move(value)) {}
 
-bool CustomVarsListFilter::accepts(Row row, contact * /* auth_user */,
+bool CustomVarsListFilter::accepts(Row row, const contact * /* auth_user */,
                                    int /* timezone_offset */) const {
     bool is_member = _column.contains(row, _ref_text);
     switch (_relOp) {

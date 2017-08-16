@@ -60,7 +60,7 @@ StringFilter::StringFilter(const StringColumn &column, RelationalOperator relOp,
     }
 }
 
-bool StringFilter::accepts(Row row, contact * /* auth_user */,
+bool StringFilter::accepts(Row row, const contact * /* auth_user */,
                            int /* timezone_offset */) const {
     string act_string = _column.getValue(row);
     switch (_relOp) {

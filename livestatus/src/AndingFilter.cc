@@ -29,7 +29,7 @@
 
 using std::string;
 
-bool AndingFilter::accepts(Row row, contact *auth_user,
+bool AndingFilter::accepts(Row row, const contact *auth_user,
                            int timezone_offset) const {
     for (const auto &filter : _subfilters) {
         if (!filter->accepts(row, auth_user, timezone_offset)) {

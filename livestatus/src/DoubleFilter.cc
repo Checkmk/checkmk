@@ -35,7 +35,7 @@ DoubleFilter::DoubleFilter(const DoubleColumn &column, RelationalOperator relOp,
                            const string &value)
     : _column(column), _relOp(relOp), _ref_value(atof(value.c_str())) {}
 
-bool DoubleFilter::accepts(Row row, contact * /* auth_user */,
+bool DoubleFilter::accepts(Row row, const contact * /* auth_user */,
                            int /* timezone_offset */) const {
     double act_value = _column.getValue(row);
     switch (_relOp) {

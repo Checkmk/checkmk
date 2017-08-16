@@ -37,7 +37,7 @@ HostListFilter::HostListFilter(const HostListColumn &column,
                                RelationalOperator relOp, string value)
     : _column(column), _relOp(relOp), _ref_value(move(value)) {}
 
-bool HostListFilter::accepts(Row row, contact * /* auth_user */,
+bool HostListFilter::accepts(Row row, const contact * /* auth_user */,
                              int /* timezone_offset */) const {
     // data points to a primary data object. We need to extract a pointer to a
     // host list

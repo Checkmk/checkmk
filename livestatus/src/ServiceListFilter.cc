@@ -64,7 +64,7 @@ ServiceListFilter::ServiceListFilter(const ServiceListColumn &column,
     }
 }
 
-bool ServiceListFilter::accepts(Row row, contact * /* auth_user */,
+bool ServiceListFilter::accepts(Row row, const contact * /* auth_user */,
                                 int /* timezone_offset */) const {
     // data points to a primary data object. We need to extract
     // a pointer to a service list

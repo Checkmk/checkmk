@@ -71,7 +71,7 @@ CustomVarsDictFilter::CustomVarsDictFilter(const CustomVarsColumn &column,
     }
 }
 
-bool CustomVarsDictFilter::accepts(Row row, contact * /* auth_user */,
+bool CustomVarsDictFilter::accepts(Row row, const contact * /* auth_user */,
                                    int /* timezone_offset */) const {
     string act_string = _column.getVariable(row, _ref_varname);
     switch (_relOp) {

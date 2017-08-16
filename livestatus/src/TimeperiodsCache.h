@@ -39,15 +39,15 @@ public:
     void update(time_t now);
     bool inTimeperiod(timeperiod *tp) const;
     bool inTimeperiod(const char *tpname) const;
-    void logCurrentTimeperiods() const;
+    void logCurrentTimeperiods();
 
 private:
     Logger *const _logger;
     time_t _cache_time;
-    std::map<timeperiod *, bool> _cache;
+    std::map<const timeperiod *, bool> _cache;
     mutable std::mutex _cache_lock;
 
-    void logTransition(char *name, int from, int to);
+    void logTransition(char *name, int from, int to) const;
 };
 
 #endif  // TimeperiodsCache_h

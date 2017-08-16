@@ -40,7 +40,7 @@ TimeperiodsCache::TimeperiodsCache(Logger *logger)
 
 TimeperiodsCache::~TimeperiodsCache() = default;
 
-void TimeperiodsCache::logCurrentTimeperiods() const {
+void TimeperiodsCache::logCurrentTimeperiods() {
     lock_guard<mutex> lg(_cache_lock);
     time_t now = time(nullptr);
     // Loop over all timeperiods and compute if we are
@@ -128,7 +128,7 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp) const {
     return is_in;
 }
 
-void TimeperiodsCache::logTransition(char *name, int from, int to) {
+void TimeperiodsCache::logTransition(char *name, int from, int to) const {
     Informational(_logger) << "TIMEPERIOD TRANSITION: " << name << ";" << from
                            << ";" << to;
 }

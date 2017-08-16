@@ -27,7 +27,8 @@
 #include "Column.h"
 #include "Row.h"
 
-int32_t OffsetTimeColumn::getValue(Row row, contact* /* auth_user */) const {
+int32_t OffsetTimeColumn::getValue(Row row,
+                                   const contact* /* auth_user */) const {
     if (auto p = columnData<void>(row)) {
         return static_cast<int32_t>(*offset_cast<time_t>(p, _offset));
     }

@@ -38,7 +38,8 @@ TimeperiodColumn::TimeperiodColumn(const string& name,
     : IntColumn(name, description, indirect_offset, extra_offset,
                 extra_extra_offset) {}
 
-int32_t TimeperiodColumn::getValue(Row row, contact* /* auth_user */) const {
+int32_t TimeperiodColumn::getValue(Row row,
+                                   const contact* /* auth_user */) const {
     if (auto tp = columnData<timeperiod>(row)) {
         return g_timeperiods_cache->inTimeperiod(tp) ? 1 : 0;
     }

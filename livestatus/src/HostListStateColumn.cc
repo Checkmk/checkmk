@@ -50,7 +50,7 @@ hostsmember *HostListStateColumn::getMembers(Row row) const {
     return nullptr;
 }
 
-int32_t HostListStateColumn::getValue(Row row, contact *auth_user) const {
+int32_t HostListStateColumn::getValue(Row row, const contact *auth_user) const {
     int32_t result = 0;
     for (hostsmember *mem = getMembers(row); mem != nullptr; mem = mem->next) {
         host *hst = mem->host_ptr;

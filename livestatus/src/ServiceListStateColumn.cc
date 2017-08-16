@@ -53,7 +53,7 @@ servicesmember *ServiceListStateColumn::getMembers(Row row) const {
 
 int32_t ServiceListStateColumn::getValue(MonitoringCore *mc, Type logictype,
                                          servicesmember *mem,
-                                         contact *auth_user) {
+                                         const contact *auth_user) {
     int32_t result = 0;
 
     for (; mem != nullptr; mem = mem->next) {
@@ -98,6 +98,7 @@ int32_t ServiceListStateColumn::getValue(MonitoringCore *mc, Type logictype,
     return result;
 }
 
-int32_t ServiceListStateColumn::getValue(Row row, contact *auth_user) const {
+int32_t ServiceListStateColumn::getValue(Row row,
+                                         const contact *auth_user) const {
     return getValue(_mc, _logictype, getMembers(row), auth_user);
 }

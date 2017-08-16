@@ -108,7 +108,8 @@ protected:
                 return static_cast<int32_t>(atol(x.c_str()));
             }) {}
 
-        int32_t getValue(Row row, contact * /* auth_user */) const override {
+        int32_t getValue(Row row,
+                         const contact * /* auth_user */) const override {
             return _ecc.getValue(row);
         }
     };
@@ -136,7 +137,8 @@ protected:
                 return static_cast<int32_t>(atof(x.c_str()));
             }) {}
 
-        int32_t getValue(Row row, contact * /* auth_user */) const override {
+        int32_t getValue(Row row,
+                         const contact * /* auth_user */) const override {
             return _ecc.getValue(row);
         }
     };

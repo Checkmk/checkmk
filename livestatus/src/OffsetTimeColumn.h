@@ -41,7 +41,7 @@ public:
                      extra_extra_offset)
         , _offset(offset) {}
 
-    int32_t getValue(Row row, contact* auth_user) const override;
+    int32_t getValue(Row row, const contact* auth_user) const override;
 
 protected:
     const int _offset;

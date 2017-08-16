@@ -46,7 +46,7 @@ public:
                     extra_extra_offset)
         , _offset(offset)
         , _varname(varname) {}
-    int32_t getValue(Row row, contact *auth_user) const override;
+    int32_t getValue(Row row, const contact *auth_user) const override;
 
 private:
     customvariablesmember *getCVM(Row row) const;

@@ -32,7 +32,7 @@
 using std::string;
 
 int32_t HostSpecialIntColumn::getValue(Row row,
-                                       contact* /* auth_user */) const {
+                                       const contact* /* auth_user */) const {
     if (auto hst = columnData<host>(row)) {
         switch (_type) {
             case Type::real_hard_state:

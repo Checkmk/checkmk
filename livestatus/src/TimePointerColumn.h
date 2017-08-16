@@ -39,7 +39,8 @@ public:
                       const time_t *number)
         : TimeColumn(name, description, -1, -1, -1), _number(number) {}
 
-    int32_t getValue(Row /* row */, contact * /* auth_user */) const override {
+    int32_t getValue(Row /* row */,
+                     const contact * /* auth_user */) const override {
         return static_cast<int32_t>(*_number);
     }
 

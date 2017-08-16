@@ -47,7 +47,7 @@ public:
     // TODO(sp) Get rid of the contact* parameter, it doesn't really belong here
     // and is only used in ServiceListStateColumn and HostListStateColumn for
     // questionable purposes...
-    virtual int32_t getValue(Row row, contact *auth_user) const = 0;
+    virtual int32_t getValue(Row row, const contact *auth_user) const = 0;
 
     void output(Row row, RowRenderer &r, contact *auth_user) override;
     ColumnType type() const override { return ColumnType::int_; }

@@ -41,7 +41,7 @@ unique_ptr<Filter> AttributeListAsIntColumn::createFilter(
 }
 
 int32_t AttributeListAsIntColumn::getValue(Row row,
-                                           contact * /*unused*/) const {
+                                           const contact * /*unused*/) const {
     if (auto p = columnData<void>(row)) {
         return static_cast<int32_t>(*offset_cast<unsigned long>(p, _offset));
     }

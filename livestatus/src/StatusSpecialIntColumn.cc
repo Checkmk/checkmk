@@ -30,7 +30,7 @@
 using std::string;
 
 int32_t StatusSpecialIntColumn::getValue(Row /* row */,
-                                         contact* /* auth_user */) const {
+                                         const contact* /* auth_user */) const {
     switch (_type) {
         case Type::mk_inventory_last:
             // Check_MK Inventory touches the file ".last" after each inventory

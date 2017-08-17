@@ -41,7 +41,7 @@ TimeperiodsCache::TimeperiodsCache(Logger *logger)
 TimeperiodsCache::~TimeperiodsCache() = default;
 
 void TimeperiodsCache::logCurrentTimeperiods() {
-    lock_guard<mutex> lg(_cache_lock);
+    lock_guard<mutex> lg(_mutex);
     time_t now = time(nullptr);
     // Loop over all timeperiods and compute if we are
     // currently in. Detect the case where no time periods
@@ -61,7 +61,7 @@ void TimeperiodsCache::logCurrentTimeperiods() {
 }
 
 void TimeperiodsCache::update(time_t now) {
-    lock_guard<mutex> lg(_cache_lock);
+    lock_guard<mutex> lg(_mutex);
 
     // update cache only once a minute. The timeperiod
     // definitions have 1 minute as granularity, so a
@@ -110,7 +110,7 @@ bool TimeperiodsCache::inTimeperiod(const char *tpname) const {
 }
 
 bool TimeperiodsCache::inTimeperiod(timeperiod *tp) const {
-    lock_guard<mutex> lg(_cache_lock);
+    lock_guard<mutex> lg(_mutex);
     auto it = _cache.find(tp);
     bool is_in;
     if (it != _cache.end()) {

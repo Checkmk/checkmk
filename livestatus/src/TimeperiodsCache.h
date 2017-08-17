@@ -43,9 +43,11 @@ public:
 
 private:
     Logger *const _logger;
+
+    // The mutex protects _cache_time and _cache.
+    mutable std::mutex _mutex;
     time_t _cache_time;
     std::map<const timeperiod *, bool> _cache;
-    mutable std::mutex _cache_lock;
 
     void logTransition(char *name, int from, int to) const;
 };

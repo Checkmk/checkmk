@@ -1,0 +1,8 @@
+Title: faulty reference to php5 in debian 9 and nagvis
+Component: multisite
+State: open
+Date: 2017-08-17 14:45:04
+Targetversion: 1.2.8
+Class: bug
+
+php5-cgi reference is not available in Debian 9. It's just php-cgi or php7-cgi.

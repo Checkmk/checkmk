@@ -1,0 +1,12 @@
+Title: Fixed possible core dumps during config reload
+Level: 1
+Component: core
+Compatible: compat
+Edition: cee
+Version: 1.5.0i1
+Date: 1502963971
+Class: fix
+
+Some race conditions during a config reload could lead to various erratic
+behavior of the Check_MK Micro Core, including core dumps.  This has been
+fixed.

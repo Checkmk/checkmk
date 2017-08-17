@@ -1,0 +1,10 @@
+Title: appdynamics_memory: Fixed crashing if max. available for heap or non-heap memory is zero
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.8p26
+Date: 1502947847
+
+

@@ -405,7 +405,7 @@ def inventory_if_common(info, has_nodeinfo = False):
 
             # Prepare single interfaces
             if not is_only_in_group:
-                if ifIndex in global_seen:
+                if item in global_seen:
                     continue
 
                 if item in seen_items: # duplicate

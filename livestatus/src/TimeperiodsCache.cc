@@ -23,8 +23,8 @@
 // Boston, MA 02110-1301 USA.
 
 #include "TimeperiodsCache.h"
-#include <cstring>
 #include <ostream>
+#include <ratio>
 #include <string>
 #include <utility>
 #include "Logger.h"
@@ -32,24 +32,22 @@
 using std::lock_guard;
 using std::mutex;
 using std::string;
+using std::chrono::system_clock;
+using std::chrono::minutes;
 
 extern timeperiod *timeperiod_list;
 
-TimeperiodsCache::TimeperiodsCache(Logger *logger)
-    : _logger(logger), _cache_time(0) {}
-
-TimeperiodsCache::~TimeperiodsCache() = default;
+TimeperiodsCache::TimeperiodsCache(Logger *logger) : _logger(logger) {}
 
 void TimeperiodsCache::logCurrentTimeperiods() {
     lock_guard<mutex> lg(_mutex);
-    time_t now = time(nullptr);
-    // Loop over all timeperiods and compute if we are
-    // currently in. Detect the case where no time periods
-    // are known (yet!). This might be the case when a timed
-    // event broker message arrives *before* the start of the
-    // event loop.
+    // Loop over all timeperiods and compute if we are currently in. Detect the
+    // case where no time periods are known (yet!). This might be the case when
+    // a timed event broker message arrives *before* the start of the event
+    // loop.
+    auto now = system_clock::to_time_t(system_clock::now());
     for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
-        bool is_in = 0 == check_time_against_period(now, tp);
+        bool is_in = check_time_against_period(now, tp) == 0;
         // check previous state and log transition if state has changed
         auto it = _cache.find(tp);
         if (it == _cache.end()) {  // first entry
@@ -60,26 +58,22 @@ void TimeperiodsCache::logCurrentTimeperiods() {
     }
 }
 
-void TimeperiodsCache::update(time_t now) {
+void TimeperiodsCache::update(system_clock::time_point now) {
     lock_guard<mutex> lg(_mutex);
-
-    // update cache only once a minute. The timeperiod
-    // definitions have 1 minute as granularity, so a
-    // 1sec resultion is not needed.
-    int minutes = now / 60;
-    if (minutes == _cache_time) {
+    // Update cache only once a minute. The timeperiod definitions have a
+    // 1-minute granularity, so a 1-second resultion is not needed.
+    if (now < _last_update + minutes(1)) {
         return;
     }
+    _last_update = now;
 
-    // Loop over all timeperiods and compute if we are
-    // currently in. Detect the case where no time periods
-    // are known (yet!). This might be the case when a timed
-    // event broker message arrives *before* the start of the
-    // event loop.
-    int num_periods = 0;
+    // Loop over all timeperiods and compute if we are currently in. Detect the
+    // case where no time periods are known (yet!). This might be the case when
+    // a timed event broker message arrives *before* the start of the event
+    // loop.
     for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
-        bool is_in = 0 == check_time_against_period(now, tp);
-
+        bool is_in =
+            check_time_against_period(system_clock::to_time_t(now), tp) == 0;
         // check previous state and log transition if state has changed
         auto it = _cache.find(tp);
         if (it == _cache.end()) {  // first entry
@@ -89,43 +83,33 @@ void TimeperiodsCache::update(time_t now) {
             logTransition(tp->name, it->second ? 1 : 0, is_in ? 1 : 0);
             it->second = is_in;
         }
-
-        num_periods++;
     }
-    if (num_periods > 0) {
-        _cache_time = minutes;
-    } else {
+    if (timeperiod_list != nullptr) {
         Informational(_logger)
             << "Timeperiod cache not updated, there are no timeperiods (yet)";
     }
 }
 
-bool TimeperiodsCache::inTimeperiod(const char *tpname) const {
+bool TimeperiodsCache::inTimeperiod(const string &tpname) const {
     for (timeperiod *tp = timeperiod_list; tp != nullptr; tp = tp->next) {
-        if (strcmp(tpname, tp->name) == 0) {
+        if (tpname == tp->name) {
             return inTimeperiod(tp);
         }
     }
     return true;  // unknown timeperiod is assumed to be 7X24
 }
 
-bool TimeperiodsCache::inTimeperiod(timeperiod *tp) const {
+bool TimeperiodsCache::inTimeperiod(const timeperiod *tp) const {
     lock_guard<mutex> lg(_mutex);
     auto it = _cache.find(tp);
-    bool is_in;
-    if (it != _cache.end()) {
-        is_in = it->second;
-    } else {
+    if (it == _cache.end()) {
+        // Problem: check_time_against_period is not thread safe, so we can't
+        // use it here.
         Informational(_logger) << "No timeperiod information available for "
                                << tp->name << ". Assuming out of period.";
-        is_in = false;
-        // Problem: The method check_time_against_period is to a high
-        // degree not thread safe. In the current situation Icinga is
-        // very probable to hang up forever.
-        // time_t now = time(0);
-        // is_in = 0 == check_time_against_period(now, tp);
+        return false;
     }
-    return is_in;
+    return it->second;
 }
 
 void TimeperiodsCache::logTransition(char *name, int from, int to) const {

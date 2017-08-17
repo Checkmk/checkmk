@@ -32,7 +32,6 @@
 #include <pthread.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <sys/un.h>
 #include <unistd.h>
 #include <chrono>
@@ -575,7 +574,7 @@ int broker_event(int event_type __attribute__((__unused__)), void *data) {
             Informational(fl_logger_nagios) << "logging initial states";
         }
     }
-    g_timeperiods_cache->update(ts->timestamp.tv_sec);
+    g_timeperiods_cache->update(from_timeval(ts->timestamp));
     return 0;
 }
 
@@ -758,7 +757,7 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
         case NEBTYPE_PROCESS_EVENTLOOPSTART:
-            g_timeperiods_cache->update(time(nullptr));
+            g_timeperiods_cache->update(from_timeval(ps->timestamp));
             start_threads();
             break;
         default:

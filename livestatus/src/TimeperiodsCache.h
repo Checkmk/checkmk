@@ -26,27 +26,27 @@
 #define TimeperiodsCache_h
 
 #include "config.h"  // IWYU pragma: keep
-#include <ctime>
+#include <chrono>
 #include <map>
 #include <mutex>
+#include <string>
 #include "nagios.h"
 class Logger;
 
 class TimeperiodsCache {
 public:
     explicit TimeperiodsCache(Logger *logger);
-    ~TimeperiodsCache();
-    void update(time_t now);
-    bool inTimeperiod(timeperiod *tp) const;
-    bool inTimeperiod(const char *tpname) const;
+    void update(std::chrono::system_clock::time_point now);
+    bool inTimeperiod(const timeperiod *tp) const;
+    bool inTimeperiod(const std::string &tpname) const;
     void logCurrentTimeperiods();
 
 private:
     Logger *const _logger;
 
-    // The mutex protects _cache_time and _cache.
+    // The mutex protects _last_update and _cache.
     mutable std::mutex _mutex;
-    time_t _cache_time;
+    std::chrono::system_clock::time_point _last_update;
     std::map<const timeperiod *, bool> _cache;
 
     void logTransition(char *name, int from, int to) const;

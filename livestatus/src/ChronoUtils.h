@@ -64,6 +64,12 @@ inline timeval to_timeval(std::chrono::duration<Rep, Period> dur) {
     return tv;
 }
 
+inline std::chrono::system_clock::time_point from_timeval(const timeval &tv) {
+    return std::chrono::system_clock::time_point(
+        std::chrono::seconds(tv.tv_sec) +
+        std::chrono::microseconds(tv.tv_usec));
+}
+
 inline std::chrono::system_clock::time_point parse_time_t(
     const std::string &str) {
     return std::chrono::system_clock::from_time_t(atoi(str.c_str()));

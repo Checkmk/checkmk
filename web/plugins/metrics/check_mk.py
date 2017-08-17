@@ -192,6 +192,13 @@ unit_info["db"] = {
 }
 
 # 'Percent obscuration per meter'-Obscuration for any atmospheric phenomenon, e.g. smoke, dust, snow
+unit_info["ppm"] = {
+    "title"  : _("ppm"),
+    "symbol" : _("ppm"),
+    "description" : _("Parts per Million"),
+    "render" : lambda v : physical_precision(v, 3, _("ppm")),
+}
+
 unit_info["%/m"] = {
     "title"     : _("Percent Per Meter"),
     "symbol"    : _("%/m"),
@@ -2791,6 +2798,11 @@ metric_info["backup_age"] = {
     "color" : "34/a",
 }
 
+metric_info["parts_per_million"] = {
+    "color": "42/a",
+    "title" : _("Parts per Million"),
+    "unit" : "ppm",
+}
 
 metric_info["checkpoint_age"] = {
     "title" : _("Time since last checkpoint"),
@@ -4928,6 +4940,13 @@ check_metrics["check_mk-fortigate_sessions_base"] = {
 # dual        -> two Perf-O-Meters next to each other, the first one from right to left
 # stacked     -> two Perf-O-Meters of type linear, logarithmic or dual, stack vertically
 # The label of dual and stacked is taken from the definition of the contained Perf-O-Meters
+
+perfometer_info.append({
+    "type"       : "logarithmic",
+    "metric"     : "parts_per_million",
+    "half_value" : 50.0,
+    "exponent"   : 2,
+})
 
 perfometer_info.append({
     "type"     : "linear",

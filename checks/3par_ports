@@ -62,9 +62,9 @@ def translate_protocol_3par_ports(number):
     return protocols[number]
 
 def inventory_3par_ports(parsed):
-    for entry in parsed['members']:
+    for entry in parsed.get('members', {}):
         # Only create an item if not "FREE" (type = 3)
-        if not entry['type'] == 3:
+        if not entry.get('type', 3) == 3:
             item = "%s Node %s Slot %s Port %s" % \
                         (translate_protocol_3par_ports(entry['protocol']), \
                                                        entry['portPos']['node'],
@@ -108,7 +108,7 @@ def check_3par_ports(item, params, parsed):
         4 : "PEER",
     }
 
-    for entry in parsed['members']:
+    for entry in parsed.get('members', {}):
         if item == "%s Node %s Slot %s Port %s" % (translate_protocol_3par_ports(entry['protocol']), \
                                                    entry['portPos']['node'],
                                                    entry['portPos']['slot'],

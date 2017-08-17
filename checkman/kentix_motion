@@ -1,0 +1,11 @@
+title: Kentix MultiSensor: Motion
+agents: snmp
+catalog: hw/environment/kentix
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature measured by the
+ Kentix MultiSensor-LAN.
+
+ You can specify the times when it alarms by the rule.
+ By default all motions will become an alarm.

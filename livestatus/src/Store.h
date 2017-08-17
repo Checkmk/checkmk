@@ -136,6 +136,8 @@ private:
     std::map<std::string, Table *> _tables;
 
 #ifndef CMC
+    // Nagios is not thread-safe, so this mutex protects calls to
+    // process_external_command1 / submit_external_command.
     std::mutex _command_mutex;
 #endif
 

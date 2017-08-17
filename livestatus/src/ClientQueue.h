@@ -39,10 +39,12 @@ public:
     void terminate();
 
 private:
-    std::deque<int> _queue;
+    // The mutext protects _queue and _should_terminate, and it works together
+    // with the condition variable.
     std::mutex _mutex;
-    std::condition_variable _cond;
+    std::deque<int> _queue;
     bool _should_terminate;
+    std::condition_variable _cond;
 };
 
 #endif  // ClientQueue_h

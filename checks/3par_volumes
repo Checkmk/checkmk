@@ -26,7 +26,7 @@
 
 
 def inventory_3par_volumes(parsed):
-    for entry in parsed['members']:
+    for entry in parsed.get('members', {}):
         if not entry['policies']['system'] == True and \
                 "name" in entry:
             yield ( entry['name'], {} )
@@ -48,13 +48,8 @@ def check_3par_volumes(item, params, parsed):
         6 : "TDVV",
     }
 
-    for entry in parsed['members']:
-        # Avoid crashing of complete check if a LUN does
-        # not exist anymore or is not available at the moment
-        if not "name" in entry:
-            continue
-
-        if entry['name'] == item:
+    for entry in parsed.get('members', {}):
+        if entry.get('name') == item:
             total = entry['sizeMiB']
             usr_free = total - entry['userSpace']['usedMiB']
             yield df_check_filesystem_list(item, params, [ (item, total, usr_free, 0) ])

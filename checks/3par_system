@@ -33,11 +33,11 @@ def inventory_3par_system(parsed):
 def check_3par_system(item, _no_params, parsed):
     state = 0
 
-    serial = parsed['serialNumber']
-    model = parsed['model']
-    sys_version = parsed['systemVersion']
-    cluster_nodes = parsed['clusterNodes']
-    online_nodes = parsed['onlineNodes']
+    serial = parsed.get('serialNumber', "N/A")
+    model = parsed.get('model', "N/A")
+    sys_version = parsed.get('systemVersion', "N/A")
+    cluster_nodes = parsed.get('clusterNodes', 0)
+    online_nodes = parsed.get('onlineNodes', 0)
 
     yield state, 'Model: %s, Version: %s, Serial number: %s, Online nodes: %s/%s' % \
         (model, sys_version, serial, len(online_nodes), len(cluster_nodes))

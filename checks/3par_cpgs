@@ -28,7 +28,7 @@ def count_3par_vvs(line):
     return line['numFPVVs'] + line['numTDVVs'] + line['numTPVVs']
 
 def inventory_3par_cpgs(parsed):
-    for entry in parsed['members']:
+    for entry in parsed.get('members', {}):
         if "name" in entry and count_3par_vvs(entry) > 0:
            yield (entry['name'], {})
 
@@ -40,11 +40,8 @@ def check_3par_cpgs(item, params, parsed):
         3: (2, "Failed"),
     }
 
-    for entry in parsed['members']:
-        if not "name" in entry:
-            continue
-
-        if entry['name'] == item:
+    for entry in parsed.get('members', {}):
+        if entry.get('name') == item:
             state, state_readable = states[entry['state']]
             yield state, "%s, %s VVs" % (state_readable,
                                          count_3par_vvs(entry))
@@ -60,15 +57,15 @@ check_info['3par_cpgs'] = {
 
 
 def inventory_3par_cpgs_usage(parsed):
-    for entry in parsed['members']:
+    for entry in parsed.get('members', {}):
         if count_3par_vvs(entry) > 0:
             for fs in ["SAUsage", "SDUsage", "UsrUsage"]:
                 yield ("%s %s" % (entry['name'], fs), {})
 
 def check_3par_cpgs_usage(item, params, parsed):
-    for entry in parsed['members']:
+    for entry in parsed.get('members', {}):
         for fs in ["SAUsage", "SDUsage", "UsrUsage"]:
-            if "%s %s" % (entry['name'], fs) == item:
+            if "%s %s" % (entry.get('name'), fs) == item:
                 total = entry[fs]['totalMiB']
                 free = entry[fs]['totalMiB']-entry[fs]['usedMiB']
                 yield df_check_filesystem_list(item, params, [ (item, total, free, 0) ])

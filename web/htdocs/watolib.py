@@ -3210,7 +3210,7 @@ class ContactGroupsAttribute(Attribute):
         cg_choices = sorted([(cg_id, cg_attrs.get("alias", cg_id))
                             for cg_id, cg_attrs in self._contactgroups.items()],
                             key=lambda x: x[1])
-        return DualListChoice(choices=cg_choices, rows=40, size=100)
+        return DualListChoice(choices=cg_choices, rows=20, size=100)
 
 
 def initialize_host_attribute_structures():

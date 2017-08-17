@@ -34,29 +34,39 @@ def inventory_appdynamics_memory(info):
     for line in info:
         yield ' '.join(line[0:2]), {}
 
+
 def check_appdynamics_memory(item, params, info):
     for line in info:
         if item == ' '.join(line[0:2]):
             mb = 1024 * 1024.0
+
+            if item.endswith('Non-Heap'):
+                mem_type = 'nonheap'
+            elif item.endswith('Heap'):
+                mem_type = 'heap'
+            else:
+                mem_type = '' # Should not happen...
 
             values = {}
             for metric in line[2:]:
                 name, value = metric.split(':')
                 values[name] = int(value)
 
-            used            = values['Current Usage (MB)'] * mb
-            max_available   = values['Max Available (MB)'] * mb
-            committed       = values['Committed (MB)'] * mb
+            used        = values.get('Current Usage (MB)', 0) * mb
+            committed   = values.get('Committed (MB)', 0) * mb
 
-            free = max_available - used
-            used_percent = 100.0 * used / max_available
+            try:
+                max_available = values['Max Available (MB)'] * mb
+            except KeyError:
+                max_available = -1 # Java 8 has no maximum for Non-Heap
 
-            if item.endswith('Non-Heap'):
-                what = "nonheap"
+            if max_available > 0:
+                free = max_available - used
+                used_percent = 100.0 * used / max_available
+
+                warn, crit = params.get(mem_type, (None, None))
             else:
-                what = "heap"
-
-            warn, crit = params.get(what, (None, None))
+                warn, crit = (None, None)
 
             if type(crit) == float:
                 crit_label = '%.2f%%' % crit
@@ -84,19 +94,26 @@ def check_appdynamics_memory(item, params, info):
 
             levels_label = ''
             if state > 0:
-                levels_label = ' (warn/crit at %s/%s)' % (warn_label, crit_label)
+                levels_label = ' (levels at %s/%s)' % (warn_label, crit_label)
 
-            perfdata = [('mem_%s' % what, used, warn, crit, 0, max_available)]
-            yield state, 'Used: %s of %s (%.2f%%)%s' % (
-                    get_bytes_human_readable(used),
-                    get_bytes_human_readable(max_available),
-                    used_percent,
-                    levels_label,
-                ), perfdata
+            if max_available > 0:
+                perfdata = [('mem_%s' % mem_type, used, warn, crit, 0, max_available)]
+                yield state, 'Used: %s of %s (%.2f%%)%s' % (
+                        get_bytes_human_readable(used),
+                        get_bytes_human_readable(max_available),
+                        used_percent,
+                        levels_label,
+                    ), perfdata
+            else:
+                perfdata = [('mem_%s' % mem_type, used)]
+                yield state, 'Used: %s' % get_bytes_human_readable(used), perfdata
 
-
-            perfdata = [('mem_%s_committed' % what, committed, None, None, 0, max_available)]
+            if max_available > 0:
+                perfdata = [('mem_%s_committed' % mem_type, committed, None, None, 0, max_available)]
+            else:
+                perfdata = [('mem_%s_committed' % mem_type, committed)]
             yield 0, 'Committed: %s' % get_bytes_human_readable(committed), perfdata
+
 
 check_info['appdynamics_memory'] = {
   'inventory_function'  : inventory_appdynamics_memory,

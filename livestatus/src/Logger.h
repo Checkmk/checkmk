@@ -121,6 +121,7 @@ public:
     SharedStreamHandler(std::mutex &mutex, std::ostream &os);
 
 private:
+    // The mutex protects the _os.
     std::mutex &_mutex;
     std::ostream &_os;
 
@@ -132,6 +133,7 @@ public:
     explicit StreamHandler(std::ostream &os);
 
 private:
+    // The mutex protects the output stream, see SharedStreamHandler.
     std::mutex _mutex;
 };
 
@@ -249,6 +251,7 @@ public:
 private:
     static LogManager _global_log_manager;
 
+    // The mutex protects _known_loggers.
     std::mutex _mutex;
     std::unordered_map<std::string, std::unique_ptr<Logger>> _known_loggers;
 

@@ -2,6 +2,6 @@ help:
 	@echo "see make in tests/ directory"
 
 setup:
-	sudo pip install --upgrade pylint==1.6.4
+	sudo pip install --upgrade -r requirements.txt
 	sudo apt-get install \
 	    enchant

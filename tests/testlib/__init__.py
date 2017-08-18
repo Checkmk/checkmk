@@ -371,10 +371,12 @@ class Site(object):
                 assert exit_code == 0
                 assert os.path.exists("/omd/sites/%s" % self.id)
 
+            self._enable_mod_python_debug()
+
+        self._install_test_python_modules()
+
         if self.update_with_git:
             self._update_with_f12_files()
-
-        self._enable_mod_python_debug()
 
 
     # When using the Git version, the original version files will be
@@ -479,6 +481,18 @@ class Site(object):
         self.write_file(path,
             content.replace("PythonHandler index",
                             "PythonHandler index\n        PythonDebug On"))
+
+
+    def _install_test_python_modules(self):
+        for file_name in os.listdir("/usr/local/lib/python2.7/dist-packages"):
+            target_path = self.path("local/lib/python/"+file_name)
+            if not os.path.exists(target_path):
+                assert os.system("sudo ln -s /usr/local/lib/python2.7/dist-packages/%s %s" %
+                              (file_name, target_path)) >> 8 == 0
+	#assert self.execute(["pip", "install",
+        #              "-r", os.path.join(cmk_path(), "tests", "requirements.txt"),
+        #              "-r", os.path.join(cmk_path(), "tests", "pylint", "requirements.txt"),
+        #            ]).wait() == 0
 
 
     def rm_if_not_reusing(self):
@@ -626,7 +640,7 @@ class Site(object):
         if "WORKSPACE" in os.environ:
             env_var_str = "WORKSPACE='%s' " % os.environ["WORKSPACE"]
 
-        cmd = env_var_str + subprocess.list2cmdline(sys.argv + [ cmk_path() + "/tests" ])
+        cmd = env_var_str + subprocess.list2cmdline(["python"] + sys.argv + [ cmk_path() + "/tests" ])
         args = [ "/usr/bin/sudo",  "--", "/bin/su", "-l", self.id, "-c", cmd ]
         return subprocess.call(args)
 

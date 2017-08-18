@@ -2,11 +2,6 @@
 # call using
 # > py.test -s -k test_HTML_generator.py
 
-# enable imports from web directory
-from testlib import cmk_path
-import sys
-sys.path.insert(0, "%s/web/htdocs" % cmk_path())
-
 # external imports
 import re
 

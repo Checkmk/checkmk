@@ -136,18 +136,26 @@ fi
 # Check for hanging NFS mounts. This needs a GNU stat installed in the PATH
 if type stat >/dev/null 2>&1 ; then
     echo '<<<nfsmounts>>>'
-     mount | grep ' nfs' | awk '{print $3;}' | \
+    mount | grep ' nfs' | awk '{print $3;}' | \
         while read MP
 	do
-	    waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
-		echo "$MP hanging 0 0 0 0"
+        if [ ! -r $MP ]; then
+            echo "$MP Permission denied"
+        else
+	        waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
+		    echo "$MP hanging 0 0 0 0"
+        fi
 	done
     echo '<<<cifsmounts>>>'
-     mount | grep ' cifs' | awk '{print $3;}' | \
+    mount | grep ' cifs' | awk '{print $3;}' | \
         while read MP
 	do
-	    waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
-		echo "$MP hanging 0 0 0 0"
+        if [ ! -r $MP ]; then
+            echo "$MP Permission denied"
+        else
+	        waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
+		    echo "$MP hanging 0 0 0 0"
+        fi
 	done
 fi
 

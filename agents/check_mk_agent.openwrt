@@ -278,13 +278,15 @@ then
         sed 's/\\040/ /g' |
         while read MP
 	do
-	 if [ $STAT_VERSION != $STAT_BROKE ]; then
-	    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
-		echo "$MP hanging 0 0 0 0"
-	 else
-	    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
-	    printf '\n'|| echo "$MP hanging 0 0 0 0"
-	 fi
+         if [ ! -r $MP ]; then
+            echo "$MP Permission denied"
+	    if [ $STAT_VERSION != $STAT_BROKE ]; then
+	        waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
+	            echo "$MP hanging 0 0 0 0"
+	    else
+	        waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
+	            printf '\n'|| echo "$MP hanging 0 0 0 0"
+	    fi
 	done
 
     echo '<<<cifsmounts>>>'
@@ -292,12 +294,14 @@ then
         sed 's/\\040/ /g' |
         while read MP
         do
-         if [ $STAT_VERSION != $STAT_BROKE ]; then
+         if [ ! -r $MP ]; then
+            echo "$MP Permission denied"
+         elif [ $STAT_VERSION != $STAT_BROKE ]; then
             waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
                 echo "$MP hanging 0 0 0 0"
          else
             waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
-            printf '\n'|| echo "$MP hanging 0 0 0 0"
+                printf '\n'|| echo "$MP hanging 0 0 0 0"
          fi
         done
 fi

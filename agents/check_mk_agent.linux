@@ -300,28 +300,32 @@ then
         sed 's/\\040/ /g' |
         while read MP
 	do
-	 if [ $STAT_VERSION != $STAT_BROKE ]; then
-	    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
-		echo "$MP hanging 0 0 0 0"
-	 else
-	    waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
-	    printf '\n'|| echo "$MP hanging 0 0 0 0"
-	 fi
+        if [ ! -r $MP ]; then
+            echo "$MP Permission denied"
+	    elif [ $STAT_VERSION != $STAT_BROKE ]; then
+	        waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
+	        echo "$MP hanging 0 0 0 0"
+	    else
+	        waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
+	            printf '\n'|| echo "$MP hanging 0 0 0 0"
+	    fi
 	done
 
     echo '<<<cifsmounts>>>'
     sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
         sed 's/\\040/ /g' |
         while read MP
-        do
-         if [ $STAT_VERSION != $STAT_BROKE ]; then
+    do
+        if [ ! -r $MP ]; then
+            echo "$MP Permission denied"
+        elif [ $STAT_VERSION != $STAT_BROKE ]; then
             waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" || \
                 echo "$MP hanging 0 0 0 0"
-         else
+        else
             waitmax -s 9 2 stat -f -c "$MP ok %b %f %a %s" "$MP" && \
-            printf '\n'|| echo "$MP hanging 0 0 0 0"
-         fi
-        done
+                printf '\n'|| echo "$MP hanging 0 0 0 0"
+        fi
+    done
 fi
 
 # Check mount options. Filesystems may switch to 'ro' in case

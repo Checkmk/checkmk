@@ -31,6 +31,7 @@
 
 
 check_info["cifsmounts"] = {
+    'parse_function':          parse_network_fs_mounts,
     'check_function':          check_network_fs_mounts,
     'inventory_function':      inventory_network_fs_mounts,
     'service_description':     'CIFS mount %s',

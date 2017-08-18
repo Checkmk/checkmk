@@ -1817,6 +1817,101 @@ register_check_parameters(
     match_type = "dict",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "sshd_config",
+    _("SSH daemon configuration"),
+    Dictionary(
+        elements = [
+            ("PermitRootLogin",
+            DropdownChoice(
+                title = _("Permit root login"),
+                choices = [
+                    ('yes',                     _('Yes')),
+                    ('without-password',        _('Without password')),
+                    ('forced-commands-only',    _('Forced commands only')),
+                    ('no',                      _('No')),
+                ],
+                default_value = "without-password",
+            )),
+            ("Protocol",
+            DropdownChoice(
+                title = _("Allowed protocols"),
+                choices = [
+                    ('1',   _('Version 1')),
+                    ('2',   _('Version 2')),
+                    ('1,2', _('Version 1 and 2')),
+                ],
+                default_value = "2",
+            )),
+            ("Port",
+            ListOfIntegers(
+                title = _("Allowed Ports"),
+                minvalue = 0,
+                maxvalue = 65535,
+                orientation = "horizontal",
+                default_value = [22],
+            )),
+            ("PasswordAuthentication",
+            DropdownChoice(
+                title = _("Allow password authentication"),
+                help = _("Specifies whether password authentication is allowed"),
+                choices = [
+                    ('yes', _('Yes')),
+                    ('no',  _('No')),
+                ],
+                default_value = "no",
+            )),
+            ("PermitEmptyPasswords",
+            DropdownChoice(
+                title = _("Permit empty passwords"),
+                help = _("If password authentication is used this option "
+                       "specifies wheter the server allows login to accounts "
+                       "with empty passwords"),
+                choices = [
+                    ('yes', _('Yes')),
+                    ('no',  _('No')),
+                ],
+                default_value = "no",
+            )),
+            ("ChallengeResponseAuthentication",
+            DropdownChoice(
+                title = _("Allow challenge-response authentication"),
+                choices = [
+                    ('yes', _('Yes')),
+                    ('no',  _('No')),
+                ],
+                default_value = "no",
+            )),
+            ("X11Forwarding",
+            DropdownChoice(
+                title = _("Permit X11 forwarding"),
+                choices = [
+                    ('yes', _('Yes')),
+                    ('no',  _('No')),
+                ],
+                default_value = "no",
+            )),
+            ("UsePAM",
+            DropdownChoice(
+                title = _("Use pluggable authentication module"),
+                choices = [
+                    ('yes', _('Yes')),
+                    ('no',  _('No')),
+                ],
+                default_value = "no",
+            )),
+            ("Ciphers",
+            ListOfStrings(
+                title = _("Allowed Ciphers"),
+                orientation = "horizontal",
+            )),
+        ]
+    ),
+    None,
+    match_type = "dict",
+)
+
 websphere_mq_common_elements = [
     ("message_count",
         OptionalDropdownChoice(

@@ -1,0 +1,9 @@
+pytest
+requests
+beautifulsoup4
+pytest-stepwise
+dill
+html5lib
+bandit
+lockfile
+lxml

@@ -47,17 +47,7 @@ test-bandit-ci:
 setup:
 	sudo apt-get install \
 	    python-pip \
-	    python-lxml \
-	    python-enchant \
-	    python-lockfile \
 	    chrpath
 	sudo pip install --upgrade pip
-	sudo pip install --upgrade \
-	    pytest \
-	    requests \
-	    beautifulsoup4 \
-	    pytest-stepwise \
-	    dill \
-	    html5lib \
-	    bandit
+	sudo pip install --upgrade -r requirements.txt
 	$(MAKE) -C pylint setup

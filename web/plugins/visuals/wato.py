@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import wato
+import watolib
 import sites
 import cmk.paths
 
@@ -38,11 +38,11 @@ class FilterWatoFile(Filter):
         # This filter is also available on slave sites with disabled WATO
         # To determine if this site is a slave we check the existance of the distributed_wato.mk
         # file and the absence of any site configuration
-        return (config.wato_enabled or wato.is_wato_slave_site())
+        return (config.wato_enabled or watolib.is_wato_slave_site())
 
 
     def load_wato_data(self):
-        self.tree = wato.Folder.root_folder()
+        self.tree = watolib.Folder.root_folder()
         self.path_to_tree = {} # will be filled by self.folder_selection
         self.selection = self.folder_selection(self.tree, "", 0)
         self.last_wato_data_update = time.time()

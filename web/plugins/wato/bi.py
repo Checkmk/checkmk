@@ -154,7 +154,7 @@ class ModeBI(WatoMode):
 
 
     def save_config(self):
-        output = wato_fileheader()
+        output = watolib.wato_fileheader()
         for pack_id, pack in sorted(self._packs.items()):
             converted_pack = self._convert_pack_to_bi(pack)
             output += "bi_packs[%r] = %s\n\n" % (
@@ -374,7 +374,7 @@ class ModeBI(WatoMode):
 
 
     def _add_change(self, action_name, text):
-        add_change(action_name, text, domains=[ConfigDomainGUI], sites=config.get_login_sites())
+        add_change(action_name, text, domains=[watolib.ConfigDomainGUI], sites=config.get_login_sites())
 
 
     # .--------------------------------------------------------------------.
@@ -525,7 +525,7 @@ class ModeBI(WatoMode):
                             ( 'child',      _("The found hosts' childs") ),
                             ( 'child_with', _("The found hosts' childs (with child filtering)"),
                                 Tuple(elements = [
-                                    HostTagCondition(
+                                    watolib.HostTagCondition(
                                         title = _("Child Host Tags:")
                                     ),
                                     self._host_valuespec(_("Child host name:")),
@@ -544,7 +544,7 @@ class ModeBI(WatoMode):
                           'The place holder <tt>$HOSTNAME$</tt> contains the name of the child '
                           'host and <tt>$2$</tt> the name of the parent host.'),
                     ),
-                    HostTagCondition(
+                    watolib.HostTagCondition(
                         title = _("Host Tags:")
                     ),
                     self._host_valuespec(_("Host name:")),
@@ -563,7 +563,7 @@ class ModeBI(WatoMode):
           ( "foreach_service", _("Create nodes based on a service search"),
              Tuple(
                  elements = [
-                    HostTagCondition(
+                    watolib.HostTagCondition(
                         title = _("Host Tags:")
                     ),
                     self._host_valuespec(_("Host name:")),
@@ -2101,7 +2101,7 @@ class BIHostRenamer(ModeBI):
     def rename_host_in_aggregation(self, aggregation, oldname, newname):
         node = aggregation["node"]
         if node[0] == 'call':
-            if rename_host_in_list(aggregation["node"][1][1], oldname, newname):
+            if watolib.rename_host_in_list(aggregation["node"][1][1], oldname, newname):
                 return 1
         return 0
 
@@ -2115,6 +2115,6 @@ class BIHostRenamer(ModeBI):
                     nodes[nr] = (node[0], ( newname, ) + node[1][1:])
                     renamed = 1
             elif node[0] == "call":
-                if rename_host_in_list(node[1][1], oldname, newname):
+                if watolib.rename_host_in_list(node[1][1], oldname, newname):
                     renamed = 1
         return renamed

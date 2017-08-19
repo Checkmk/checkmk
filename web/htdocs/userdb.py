@@ -1306,8 +1306,8 @@ def execute_userdb_job():
 def user_sync_default_config(site_name):
     global_user_sync = transform_userdb_automatic_sync(config.userdb_automatic_sync)
     if global_user_sync == "master":
-        import wato # FIXME: Cleanup!
-        if config.site_is_local(site_name) and not wato.is_wato_slave_site():
+        import watolib
+        if config.site_is_local(site_name) and not watolib.is_wato_slave_site():
             user_sync_default = "all"
         else:
             user_sync_default = None
@@ -1330,8 +1330,8 @@ def userdb_sync_job_enabled():
     if cfg == None:
         return False # not enabled at all
 
-    import wato # FIXME: Cleanup!
-    if cfg == "master" and wato.is_wato_slave_site():
+    import watolib
+    if cfg == "master" and watolib.is_wato_slave_site():
         return False
 
     return True

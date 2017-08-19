@@ -26,7 +26,7 @@
 
 import cmk.paths
 
-backup_domains.update({
+watolib.backup_domains.update({
     "check_mk": {
       "group"       : _("Configuration"),
       "title"       : _("Hosts, Services, Groups, Timeperiods, Business Intelligence and Monitoring Configuration"),

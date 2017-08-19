@@ -351,7 +351,7 @@ def wato_host_tag_group_choices():
     by_topic = {}
     for entry in config.wato_host_tags:
         tgid = entry[0]
-        topic, tit = parse_hosttag_title(entry[1])
+        topic, tit = watolib.parse_hosttag_title(entry[1])
         choices.append((tgid, tit))
         by_topic.setdefault(topic, []).append(entry)
 
@@ -878,7 +878,7 @@ register_configvar(_("Site Management"),
                  "the destination server. This is used for example when performing WATO "
                  "replication to slave sites or when special agents are communicating via HTTPS. "
                  "The CA certificates configured here will be written to the CA bundle %s.") %
-                    site_neutral_path(ConfigDomainCACertificates.trusted_cas_file),
+                    site_neutral_path(watolib.ConfigDomainCACertificates.trusted_cas_file),
         elements = [
             ("use_system_wide_cas", Checkbox(
                 title = _("Use system wide CAs"),
@@ -889,7 +889,7 @@ register_configvar(_("Site Management"),
                          "in case you want to customize trusted CAs system wide. You can "
                          "choose here to trust the system wide CAs here. Check_MK will search "
                          "these directories for system wide CAs: %s") %
-                            ", ".join(ConfigDomainCACertificates.system_wide_trusted_ca_search_paths),
+                            ", ".join(watolib.ConfigDomainCACertificates.system_wide_trusted_ca_search_paths),
                 label = _("Trust system wide configured CAs"),
             )),
             ("trusted_cas", ListOfCAs(
@@ -899,7 +899,7 @@ register_configvar(_("Site Management"),
         ],
         optional_keys = False,
     ),
-    domain = ConfigDomainCACertificates,
+    domain = watolib.ConfigDomainCACertificates,
 )
 
 #.
@@ -2573,7 +2573,7 @@ register_rule(group,
     match_type="all")
 
 def get_snmp_checktypes():
-   checks = check_mk_local_automation("get-check-information")
+   checks = watolib.check_mk_local_automation("get-check-information")
    types = [ (cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
              for (cn, c) in checks.items() if c['snmp'] ]
    types.sort()

@@ -2350,6 +2350,17 @@ def validate_host_uniqueness(varname, host_name):
                  (host_name, host.folder().url(), host.folder().alias_path()))
 
 
+# Return a list with all the titles of the paths'
+# components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]
+def get_folder_title_path(path, with_links=False):
+    # In order to speed this up, we work with a per HTML-request cache
+    cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
+    cache = html.set_cache_default(cache_name, {})
+    if path not in cache:
+        cache[path] = Folder.folder(path).title_path(with_links)
+    return cache[path]
+
+
 #.
 #   .--Search Folder-------------------------------------------------------.
 #   |    ____                      _       _____     _     _               |
@@ -9036,6 +9047,201 @@ def edit_users(changed_users):
     userdb.save_users(all_users)
 
 
+#.
+#   .--Network Scan--------------------------------------------------------.
+#   |   _   _      _                      _      ____                      |
+#   |  | \ | | ___| |___      _____  _ __| | __ / ___|  ___ __ _ _ __      |
+#   |  |  \| |/ _ \ __\ \ /\ / / _ \| '__| |/ / \___ \ / __/ _` | '_ \     |
+#   |  | |\  |  __/ |_ \ V  V / (_) | |  |   <   ___) | (_| (_| | | | |    |
+#   |  |_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\ |____/ \___\__,_|_| |_|    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | The WATO folders network scan for new hosts.                         |
+#   '----------------------------------------------------------------------'
+
+def do_network_scan_automation():
+    folder_path = html.var("folder")
+    if folder_path == None:
+        raise MKGeneralException(_("Folder path is missing"))
+    folder = Folder.folder(folder_path)
+
+    return do_network_scan(folder)
+
+
+automation_commands["network-scan"] = do_network_scan_automation
+
+# This is executed in the site the host is assigned to.
+# A list of tuples is returned where each tuple represents a new found host:
+# [(hostname, ipaddress), ...]
+def do_network_scan(folder):
+    ip_addresses = _ip_addresses_to_scan(folder)
+    return _scan_ip_addresses(folder, ip_addresses)
+
+
+def _ip_addresses_to_scan(folder):
+    ip_range_specs = folder.attribute("network_scan")["ip_ranges"]
+    exclude_specs = folder.attribute("network_scan")["exclude_ranges"]
+
+    to_scan = _ip_addresses_of_ranges(ip_range_specs)
+    exclude = _ip_addresses_of_ranges(exclude_specs)
+
+    # Remove excludes from to_scan list
+    to_scan.difference_update(exclude)
+
+    # Reduce by all known host addresses
+    # FIXME/TODO: Shouldn't this filtering be done on the central site?
+    to_scan.difference_update(_known_ip_addresses())
+
+    # And now apply the IP regex patterns to exclude even more addresses
+    to_scan.difference_update(_excludes_by_regexes(to_scan, exclude_specs))
+
+    return to_scan
+
+
+def _ip_addresses_of_ranges(ip_ranges):
+    addresses = set([])
+
+    for ty, spec in ip_ranges:
+        if ty == "ip_range":
+            addresses.update(_ip_addresses_of_range(spec))
+
+        elif ty == "ip_network":
+            addresses.update(_ip_addresses_of_network(spec))
+
+        elif ty == "ip_list":
+            addresses.update(spec)
+
+    return addresses
+
+
+FULL_IPV4 = (2 ** 32) - 1
+
+
+def _ip_addresses_of_range(spec):
+    first_int, last_int = map(_ip_int_from_string, spec)
+
+    addresses = []
+
+    if first_int > last_int:
+        return addresses # skip wrong config
+
+    while first_int <= last_int:
+        addresses.append(_string_from_ip_int(first_int))
+        first_int += 1
+        if first_int - 1 == FULL_IPV4: # stop on last IPv4 address
+            break
+
+    return addresses
+
+
+def _ip_int_from_string(ip_str):
+    packed_ip = 0
+    octets = ip_str.split(".")
+    for oc in octets:
+        packed_ip = (packed_ip << 8) | int(oc)
+    return packed_ip
+
+
+def _string_from_ip_int(ip_int):
+    octets = []
+    for _ in xrange(4):
+        octets.insert(0, str(ip_int & 0xFF))
+        ip_int >>=8
+    return ".".join(octets)
+
+
+def _ip_addresses_of_network(spec):
+    net_addr, net_bits = spec
+
+    ip_int   = _ip_int_from_string(net_addr)
+    mask_int = _mask_bits_to_int(int(net_bits))
+    first = ip_int & (FULL_IPV4 ^ mask_int)
+    last = ip_int | (1 << (32 - int(net_bits))) - 1
+
+    return [ _string_from_ip_int(i) for i in range(first + 1, last - 1) ]
+
+
+def _mask_bits_to_int(n):
+    return (1 << (32 - n)) - 1
+
+
+# This will not scale well. Do you have a better idea?
+def _known_ip_addresses():
+    addresses = []
+    for hostname, host in Host.all().items():
+        address = host.attribute("ipaddress")
+        if address:
+            addresses.append(address)
+    return addresses
+
+
+def _excludes_by_regexes(addresses, exclude_specs):
+    patterns = []
+    for ty, spec in exclude_specs:
+        if ty == "ip_regex_list":
+            for p in spec:
+                patterns.append(re.compile(p))
+
+    if not patterns:
+        return []
+
+    excludes = []
+    for address in addresses:
+        for p in patterns:
+            if p.match(address):
+                excludes.append(address)
+                break # one match is enough, exclude this.
+
+    return excludes
+
+
+# Start ping threads till max parallel pings let threads do their work till all are done.
+# let threds also do name resolution. Return list of tuples (hostname, address).
+def _scan_ip_addresses(folder, ip_addresses):
+    num_addresses = len(ip_addresses)
+
+    # dont start more threads than needed
+    parallel_pings = min(folder.attribute("network_scan").get("max_parallel_pings", 100), num_addresses)
+
+    # Initalize all workers
+    threads = []
+    found_hosts = []
+    import threading
+    for t_num in range(parallel_pings):
+        t = threading.Thread(target = _ping_worker, args = [ip_addresses, found_hosts])
+        t.daemon = True
+        threads.append(t)
+        t.start()
+
+    # Now wait for all workers to finish
+    for t in threads:
+        t.join()
+
+    return found_hosts
+
+
+def _ping_worker(addresses, hosts):
+    while True:
+        try:
+            ipaddress = addresses.pop()
+        except KeyError:
+            break
+
+        if _ping(ipaddress):
+            try:
+                host_name = socket.gethostbyaddr(ipaddress)[0]
+            except socket.error:
+                host_name = ipaddress
+
+            hosts.append((host_name, ipaddress))
+
+
+def _ping(address):
+    return subprocess.Popen(['ping', '-c2', '-w2', address],
+                            stdout=open(os.devnull, "a"),
+                            stderr=subprocess.STDOUT,
+                            close_fds=True).wait() == 0
+
 
 #.
 #   .--MIXED STUFF---------------------------------------------------------.
@@ -9048,6 +9254,31 @@ def edit_users(changed_users):
 #   +----------------------------------------------------------------------+
 #   | CLEAN THIS UP LATER                                                  |
 #   '----------------------------------------------------------------------'
+
+
+def add_replication_paths(paths):
+    replication_paths.extend(paths)
+
+
+def register_automation_command(cmd, func):
+    automation_commands[cmd] = func
+
+
+def automation_command_exists(cmd):
+    return cmd in automation_commands
+
+
+def execute_automation_command(cmd):
+    return automation_commands[cmd]()
+
+
+def site_neutral_path(path):
+    if path.startswith('/omd'):
+        parts = path.split('/')
+        parts[3] = '[SITE_ID]'
+        return '/'.join(parts)
+    else:
+        return path
 
 
 def has_agent_bakery():
@@ -9106,9 +9337,6 @@ def is_sidebar_reload_needed():
 def folder_preserving_link(add_vars):
     return Folder.current().url(add_vars)
 
-
-def make_action_link(vars):
-    return folder_preserving_link(vars + [("_transid", html.get_transid())])
 
 def lock_exclusive():
     aquire_lock(cmk.paths.default_config_dir + "/multisite.mk")
@@ -9237,6 +9465,7 @@ def must_be_in_contactgroups(cgspec):
                  ( c, ", ".join(user_cgs)))
 
 
+# TODO: Move to Folder()?
 def check_wato_foldername(htmlvarname, name, just_name = False):
     if not just_name and Folder.current().has_subfolder(name):
         raise MKUserError(htmlvarname, _("A folder with that name already exists."))
@@ -9248,6 +9477,7 @@ def check_wato_foldername(htmlvarname, name, just_name = False):
         raise MKUserError(htmlvarname, _("Invalid folder name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
 
+# TODO: Move to Folder()?
 def create_wato_foldername(title, in_folder = None):
     if in_folder == None:
         in_folder = Folder.current()
@@ -9263,6 +9493,7 @@ def create_wato_foldername(title, in_folder = None):
     return name
 
 
+# TODO: Move to Folder()?
 def convert_title_to_filename(title):
     converted = ""
     for c in title.lower():

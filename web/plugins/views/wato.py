@@ -24,7 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, wato
+import config
+import watolib
 
 
 multisite_painters["host_filename"] = {
@@ -40,7 +41,7 @@ def get_wato_folder(row, how, with_links = True):
         return ""
     wato_path = filename[6:-9]
     try:
-        title_path = wato.get_folder_title_path(wato_path, with_links)
+        title_path = watolib.get_folder_title_path(wato_path, with_links)
     except MKGeneralException:
         # happens when a path can not be resolved using the local WATO.
         # e.g. when having an independent site with different folder

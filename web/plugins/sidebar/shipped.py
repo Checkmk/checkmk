@@ -31,6 +31,7 @@ import config
 import views, time, dashboard
 import pagetypes, table
 import sites
+import watolib
 
 import livestatus
 import notifications
@@ -2237,8 +2238,8 @@ function virtual_host_tree_enter(path)
         if wato_folder.startswith("/wato/"):
             folder_path = wato_folder[6:-9]
             folder_path_components = folder_path.split("/")
-            if wato.Folder.folder_exists(folder_path):
-                folder_titles = wato.get_folder_title_path(folder_path)[1:] # omit main folder
+            if watolib.Folder.folder_exists(folder_path):
+                folder_titles = watolib.get_folder_title_path(folder_path)[1:] # omit main folder
         else:
             folder_titles = []
 

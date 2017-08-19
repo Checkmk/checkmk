@@ -228,14 +228,15 @@ def create_auth_file(callee, users):
     create_php_file(callee, users, config.get_role_permissions(), groups)
 
 
+# TODO: Dead code?
 def get_folder_permissions_of_users(users):
     users = load_users()
-    import wato
+    import watolib
 
     permissions = {}
     for username in users.iterkeys():
         perms = {}
-        for folder_path, folder in wato.Folder.all_folders().iteritems():
+        for folder_path, folder in watolib.Folder.all_folders().iteritems():
             readable = folder.user_may(username, "read")
             writable = folder.user_may(username, "write")
 

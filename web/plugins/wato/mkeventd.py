@@ -1691,7 +1691,7 @@ def mode_mkeventd_edit_rule(phase):
 
 def add_ec_change(what, message):
     add_change(what, message, domains=[ConfigDomainEventConsole],
-               sites=get_event_console_sync_sites())
+               sites=watolib.get_event_console_sync_sites())
 
 
 def mkeventd_changes_button():
@@ -1733,7 +1733,7 @@ def mode_mkeventd_status(phase):
                         new_mode)
             if c:
                 mkeventd.execute_command("SWITCHMODE", [new_mode], config.omd_site())
-                log_audit(None, "mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode)
+                watolib.log_audit(None, "mkeventd-switchmode", _("Switched replication slave mode to %s") % new_mode)
                 return None, _("Switched to %s mode") % new_mode
             elif c == False:
                 return ""
@@ -1790,7 +1790,7 @@ class ModeEventConsoleSettings(ModeGlobalSettings):
         super(ModeEventConsoleSettings, self).__init__()
 
         self._default_values   = ConfigDomainEventConsole().default_globals()
-        self._current_settings = load_configuration_settings()
+        self._current_settings = watolib.load_configuration_settings()
 
 
     def _group_names(self):
@@ -1818,7 +1818,7 @@ class ModeEventConsoleSettings(ModeGlobalSettings):
         action = html.var("_action")
         if not varname:
             return
-        domain, valuespec, need_restart, allow_reset, in_global_settings = configvars()[varname]
+        domain, valuespec, need_restart, allow_reset, in_global_settings = watolib.configvars()[varname]
         def_value = valuespec.default_value()
 
         if action == "reset" and not isinstance(valuespec, Checkbox):
@@ -1840,7 +1840,7 @@ class ModeEventConsoleSettings(ModeGlobalSettings):
             msg = _("Changed Configuration variable %s to %s.") % (varname,
                 self._current_settings[varname] and _("on") or _("off"))
 
-            save_global_settings(self._current_settings)
+            watolib.save_global_settings(self._current_settings)
 
             add_ec_change("edit-configvar", msg)
 
@@ -1882,11 +1882,11 @@ class ModeEventConsoleEditGlobalSetting(ModeEditGlobalSetting):
 
 
     def buttons(self):
-        html.context_button(_("Abort"), folder_preserving_link([("mode", "mkeventd_config")]), "abort")
+        html.context_button(_("Abort"), watolib.folder_preserving_link([("mode", "mkeventd_config")]), "abort")
 
 
     def _affected_sites(self):
-        return get_event_console_sync_sites()
+        return watolib.get_event_console_sync_sites()
 
 
 

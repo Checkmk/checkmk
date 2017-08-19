@@ -42,9 +42,11 @@
 #   | Some basic declarations and module loading etc.                      |
 #   '----------------------------------------------------------------------'
 
-import config
 import time
 import copy
+
+import config
+import watolib
 
 import cmk.paths
 import log
@@ -66,6 +68,7 @@ try:
         ldap_compat = True
 except:
     pass
+
 from lib import *
 
 # LDAP attributes are case insensitive, we only use lower case!
@@ -1005,7 +1008,6 @@ class LDAPUserConnector(UserConnector):
 
         ldap_users = self.get_users()
 
-        import wato
         users = load_users(lock = True)
 
         changes = []
@@ -1102,7 +1104,7 @@ class LDAPUserConnector(UserConnector):
         self._logger.info('SYNC FINISHED - Duration: %0.3f sec', duration)
 
         if changes:
-            wato.add_change("edit-users", "<br>\n".join(changes), add_user=False)
+            watolib.add_change("edit-users", "<br>\n".join(changes), add_user=False)
 
         # delete the fail flag file after successful sync
         try:
@@ -1939,7 +1941,7 @@ def synchronize_profile_to_sites(connection, user_id, profile):
             result = "Site is dead"
         else:
             try:
-                result = wato.push_user_profile_to_site(site, user_id, profile)
+                result = watolib.push_user_profile_to_site(site, user_id, profile)
             except Exception, e:
                 result = "%s" % e
 
@@ -1950,7 +1952,7 @@ def synchronize_profile_to_sites(connection, user_id, profile):
             connection._logger.debug('  FAILED [%s]: %s' % (site_id, result))
             # Add pending entry to make sync possible later for admins
             if config.wato_enabled:
-                wato.add_change("edit-users", _('Password changed (sync failed: %s)') % result,
+                watolib.add_change("edit-users", _('Password changed (sync failed: %s)') % result,
                     add_user=False, sites=[site_id], need_restart=False)
 
     connection._logger.debug('  Disabled: %d, Succeeded: %d, Failed: %d' %

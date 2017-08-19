@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, wato, views, dashboard
+import watolib
 
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |
@@ -57,7 +58,7 @@ def render_wato(mini):
             else:
                 iconlink(title, url, icon)
 
-    num_pending = wato.get_number_of_pending_changes()
+    num_pending = watolib.get_number_of_pending_changes()
     if num_pending:
         footnotelinks([(_("%d changes") % num_pending, "wato.py?mode=changelog")])
         html.div('', class_="clear")
@@ -121,7 +122,7 @@ def compute_foldertree():
     hosts.sort()
 
     def get_folder(path, num = 0):
-        folder = wato.Folder.folder(path)
+        folder = watolib.Folder.folder(path)
         return {
             'title':      folder.title() or path.split('/')[-1],
             '.path':      path,
@@ -146,7 +147,7 @@ def compute_foldertree():
         for num_parts in range(0, len(path_parts)):
             this_folder_path = '/'.join(path_parts[:num_parts])
 
-            if wato.Folder.folder_exists(this_folder_path):
+            if watolib.Folder.folder_exists(this_folder_path):
                 if this_folder_path not in user_folders:
                     user_folders[this_folder_path] = get_folder(this_folder_path, num)
                 else:
@@ -223,7 +224,7 @@ def sort_by_title(folders):
 
 
 def render_wato_foldertree():
-    if not wato.is_wato_slave_site():
+    if not watolib.is_wato_slave_site():
         if not config.wato_enabled:
             html.write_text(_("WATO is disabled."))
             return False

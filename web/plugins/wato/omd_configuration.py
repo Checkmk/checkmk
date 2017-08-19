@@ -173,7 +173,7 @@ register_configvar(group,
 #   '----------------------------------------------------------------------'
 
 # TODO: Diskspace cleanup does not support site specific globals!
-class ConfigDomainDiskspace(ConfigDomain):
+class ConfigDomainDiskspace(watolib.ConfigDomain):
     needs_sync       = True
     needs_activation = False
     ident            = "diskspace"
@@ -309,7 +309,9 @@ register_configvar(group,
 )
 
 
-replication_paths.append(("file", "diskspace", ConfigDomainDiskspace.diskspace_config))
+add_replication_paths([
+    ("file", "diskspace", ConfigDomainDiskspace.diskspace_config),
+])
 
 
 #.
@@ -324,7 +326,7 @@ replication_paths.append(("file", "diskspace", ConfigDomainDiskspace.diskspace_c
 #   | Manage settings of the site apache                                   |
 #   '----------------------------------------------------------------------'
 
-class ConfigDomainApache(ConfigDomain):
+class ConfigDomainApache(watolib.ConfigDomain):
     needs_sync       = True
     needs_activation = True
     ident            = "apache"
@@ -353,7 +355,7 @@ class ConfigDomainApache(ConfigDomain):
     def _write_config_file(self):
         config = self._get_effective_config()
 
-        output = wato_fileheader()
+        output = watolib.wato_fileheader()
 
         if config:
             output += "ServerLimit %d\n" % config["process_tuning"]["number_of_processes"]
@@ -428,7 +430,7 @@ register_configvar(group,
 #   | Use these options to tune the performance of the rrdcached           |
 #   '----------------------------------------------------------------------'
 
-class ConfigDomainRRDCached(ConfigDomain):
+class ConfigDomainRRDCached(watolib.ConfigDomain):
     needs_sync       = True
     needs_activation = True
     ident            = "rrdcached"
@@ -457,7 +459,7 @@ class ConfigDomainRRDCached(ConfigDomain):
     def _write_config_file(self):
         config = self._get_effective_config()
 
-        output = wato_fileheader()
+        output = watolib.wato_fileheader()
         for key, val in sorted(config.get("tuning", {}).items()):
             output += "%s=%d\n" % (key, val)
 

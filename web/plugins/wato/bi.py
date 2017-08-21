@@ -1315,13 +1315,16 @@ class ModeBIRules(ModeBI):
     def page(self):
         self.must_be_contact_for_pack()
         if not self._pack["aggregations"] and not self._pack["rules"]:
-            new_url = self.url_to_pack([("mode", "bi_edit_rule")])
-            menu_items = [
-                (new_url, _("Create aggregation rule"), "new", "bi_rules",
-                  _("Rules are the nodes in BI aggregations. "
-                    "Each aggregation has one rule as its root."))
-            ]
-            render_main_menu(menu_items)
+            menu = MainMenu()
+            menu.add_item(
+                mode_or_url = self.url_to_pack([("mode", "bi_edit_rule")]),
+                title = _("Create aggregation rule"),
+                icon = "new",
+                permission = "bi_rules",
+                subtitle = _("Rules are the nodes in BI aggregations. "
+                             "Each aggregation has one rule as its root."),
+            )
+            menu.show()
             return
 
         html.begin_form("bulk_delete_form", method = "POST")

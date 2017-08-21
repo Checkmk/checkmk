@@ -589,6 +589,7 @@ def delete_subfolder_after_confirm(folder, subfolder_name):
 
 def show_empty_folder_menu(folder):
     menu_items = []
+
     if not folder.locked_hosts():
         menu_items.extend([
         ("newhost", _("Create new host"), "new", "hosts",
@@ -596,13 +597,14 @@ def show_empty_folder_menu(folder):
         ("newcluster", _("Create new cluster"), "new_cluster", "hosts",
           _("Use Check_MK clusters if an item can move from one host "
             "to another at runtime"))])
+
     if not folder.locked_subfolders():
         menu_items.extend([
         ("newfolder", _("Create new folder"), "newfolder", "hosts",
           _("Folders group your hosts, can inherit attributes and can have permissions."))
         ])
-    render_main_menu(menu_items)
 
+    MainMenu(menu_items).show()
 
 
 def show_subfolders_of(folder):
@@ -3462,37 +3464,47 @@ class ModeAjaxExecuteCheck(WatoWebApiMode):
 #   | Dialog for searching for hosts                                       |
 #   '----------------------------------------------------------------------'
 
-def mode_search(phase):
-    if phase == "title":
-        return _("Search for hosts below %s") % watolib.Folder.current().title()
+class ModeSearch(WatoMode):
+    def __init__(self):
+        super(ModeSearch, self).__init__()
+        self._folder = watolib.Folder.current()
 
-    elif phase == "buttons":
+
+    def title(self):
+        return _("Search for hosts below %s") % self._folder.title()
+
+
+    def buttons(self):
         global_buttons()
-        html.context_button(_("Folder"), watolib.Folder.current().url(), "back")
-        return
+        html.context_button(_("Folder"), self._folder.url(), "back")
 
-    elif phase == "action":
+
+    def action(self):
         return "folder"
 
-    watolib.Folder.current().show_breadcrump()
 
-    ## # Show search form
-    html.begin_form("edit_host", method="GET")
-    html.prevent_password_auto_completion()
-    forms.header(_("General Properties"))
-    forms.section(_("Hostname"))
-    html.text_input("host_search_host")
-    html.set_focus("host_search_host")
+    def page(self):
+        self._folder.show_breadcrump()
 
-    # Attributes
-    configure_attributes(False, {}, "host_search", parent = None, varprefix="host_search_")
+        # Show search form
+        html.begin_form("edit_host", method="GET")
+        html.prevent_password_auto_completion()
+        forms.header(_("General Properties"))
+        forms.section(_("Hostname"))
+        html.text_input("host_search_host")
+        html.set_focus("host_search_host")
 
-    # Button
-    forms.end()
-    html.button("_local", _("Search in %s") % watolib.Folder.current().title(), "submit")
-    html.hidden_field("host_search", "1")
-    html.hidden_fields()
-    html.end_form()
+        # Attributes
+        configure_attributes(False, {}, "host_search",
+                             parent=None,
+                             varprefix="host_search_")
+
+        # Button
+        forms.end()
+        html.button("_local", _("Search in %s") % self._folder.title(), "submit")
+        html.hidden_field("host_search", "1")
+        html.hidden_fields()
+        html.end_form()
 
 
 #.
@@ -6008,40 +6020,51 @@ def get_edited_value(valuespec):
 #   | timeperiods, users, etc.                                             |
 #   '----------------------------------------------------------------------'
 
-def mode_main(phase):
-    if phase == "title":
+class ModeMain(WatoMode):
+    def title(self):
         return _("WATO - Check_MK's Web Administration Tool")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         changelog_button()
-        return
 
-    elif phase == "action":
-        return
 
-    render_main_menu(modules)
+    def page(self):
+        MainMenu(get_modules()).show()
 
-def render_main_menu(some_modules, columns = 2):
-    html.open_div(class_="mainmenu")
-    for nr, (mode_or_url, title, icon, permission, subtitle) in enumerate(some_modules):
-        if permission:
-            if "." not in permission:
-                permission = "wato." + permission
-            if not config.user.may(permission) and not config.user.may("wato.seeall"):
-                continue
 
-        if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
-            url = mode_or_url
-        else:
-            url = watolib.folder_preserving_link([("mode", mode_or_url)])
 
-        html.open_a(href=url, onfocus="if (this.blur) this.blur();")
-        html.img("images/icon_%s.png" % icon)
-        html.div(title, class_="title")
-        html.div(subtitle, class_="subtitle")
-        html.close_a()
+class MainMenu(object):
+    def __init__(self, items=None, columns=2):
+        self._items   = items or []
+        self._columns = columns
 
-    html.close_div()
+
+    def add_item(self, mode_or_url, title, icon, permission, subtitle):
+        self._items.append((mode_or_url, title, icon, permission, subtitle))
+
+
+    def show(self):
+        html.open_div(class_="mainmenu")
+        for nr, (mode_or_url, title, icon, permission, subtitle) in enumerate(self._items):
+            if permission:
+                if "." not in permission:
+                    permission = "wato." + permission
+                if not config.user.may(permission) and not config.user.may("wato.seeall"):
+                    continue
+
+            if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
+                url = mode_or_url
+            else:
+                url = watolib.folder_preserving_link([("mode", mode_or_url)])
+
+            html.open_a(href=url, onfocus="if (this.blur) this.blur();")
+            html.icon(title, icon)
+            html.div(title, class_="title")
+            html.div(subtitle, class_="subtitle")
+            html.close_a()
+
+        html.close_div()
 
 #.
 #   .--LDAP Config---------------------------------------------------------.
@@ -7399,8 +7422,15 @@ class ModeContactgroups(ModeGroups):
 
 
     def _page_no_groups(self):
-        render_main_menu([("edit_contact_group", _("Create new contact group"), "new",
-         "users", _("Contact groups are needed for assigning hosts and services to people (contacts)"))])
+        menu = MainMenu()
+        menu.add_item(
+            mode_or_url="edit_contact_group",
+            title=_("Create new contact group"),
+            icon="new",
+            permission="users",
+            subtitle=_("Contact groups are needed for assigning hosts and services to people (contacts)")
+        )
+        menu.show()
 
 
     def _collect_additional_data(self):
@@ -8857,22 +8887,26 @@ def load_notification_scripts():
 #   | Modes for managing Nagios' timeperiod definitions.                   |
 #   '----------------------------------------------------------------------'
 
-def mode_timeperiods(phase):
-    if phase == "title":
-        return _("Time Periods")
+class ModeTimeperiods(WatoMode):
+    def __init__(self):
+        super(ModeTimeperiods, self).__init__()
+        self._timeperiods = watolib.load_timeperiods()
 
-    elif phase == "buttons":
+
+    def title(self):
+        return _("Timeperiods")
+
+
+    def buttons(self):
         global_buttons()
         html.context_button(_("New Timeperiod"), watolib.folder_preserving_link([("mode", "edit_timeperiod")]), "new")
         html.context_button(_("Import iCalendar"), watolib.folder_preserving_link([("mode", "import_ical")]), "ical")
-        return
 
-    timeperiods = watolib.load_timeperiods()
 
-    if phase == "action":
+    def action(self):
         delname = html.var("_delete")
         if delname and html.transaction_valid():
-            usages = find_usages_of_timeperiod(delname)
+            usages = self._find_usages_of_timeperiod(delname)
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % \
                             (_("You cannot delete this timeperiod."),
@@ -8886,50 +8920,71 @@ def mode_timeperiods(phase):
                   _("Do you really want to delete the time period '%s'? I've checked it: "
                     "it is not being used by any rule or user profile right now.") % delname)
             if c:
-                del timeperiods[delname]
-                watolib.save_timeperiods(timeperiods)
-                add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
+                del self._timeperiods[delname]
+                watolib.save_timeperiods(self._timeperiods)
+                watolib.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
             elif c == False:
                 return ""
-        return None
 
 
-    table.begin("timeperiods", empty_text = _("There are no timeperiods defined yet."))
-    names = timeperiods.keys()
-    names.sort()
-    for name in names:
-        table.row()
+    # Check if a timeperiod is currently in use and cannot be deleted
+    # Returns a list of occurrances.
+    # Possible usages:
+    # - 1. rules: service/host-notification/check-period
+    # - 2. user accounts (notification period)
+    # - 3. excluded by other timeperiods
+    def _find_usages_of_timeperiod(self, tpname):
+        # Part 1: Rules
+        used_in = []
 
-        timeperiod = timeperiods[name]
-        edit_url     = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", name)])
-        delete_url   = make_action_link([("mode", "timeperiods"), ("_delete", name)])
+        rulesets = watolib.AllRulesets()
+        rulesets.load()
 
-        table.cell(_("Actions"), css="buttons")
-        html.icon_button(edit_url, _("Properties"), "edit")
-        html.icon_button(delete_url, _("Delete"), "delete")
+        for varname, ruleset in rulesets.get_rulesets().items():
+            if not isinstance(ruleset.valuespec(), TimeperiodSelection):
+                continue
 
-        table.cell(_("Name"), html.attrencode(name))
-        table.cell(_("Alias"), html.attrencode(timeperiod.get("alias", "")))
-    table.end()
+            for folder, rulenr, rule in ruleset.get_rules():
+                if rule.value == tpname:
+                    used_in.append(("%s: %s" % (_("Ruleset"), ruleset.title()),
+                                   watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
+                    break
+
+        # Part 2: Users
+        for userid, user in userdb.load_users().items():
+            tp = user.get("notification_period")
+            if tp == tpname:
+                used_in.append(("%s: %s" % (_("User"), userid),
+                    watolib.folder_preserving_link([("mode", "edit_user"), ("edit", userid)])))
+
+        # Part 3: Other Timeperiods
+        for tpn, tp in watolib.load_timeperiods().items():
+            if tpname in tp.get("exclude", []):
+                used_in.append(("%s: %s (%s)" % (_("Timeperiod"), tp.get("alias", tpn),
+                        _("excluded")),
+                        watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)])))
+
+        return used_in
 
 
+    def page(self):
+        table.begin("timeperiods", empty_text = _("There are no timeperiods defined yet."))
+        for name in sorted(self._timeperiods.keys()):
+            table.row()
+
+            timeperiod = self._timeperiods[name]
+            edit_url     = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", name)])
+            delete_url   = make_action_link([("mode", "timeperiods"), ("_delete", name)])
+
+            table.cell(_("Actions"), css="buttons")
+            html.icon_button(edit_url, _("Properties"), "edit")
+            html.icon_button(delete_url, _("Delete"), "delete")
+
+            table.text_cell(_("Name"), name)
+            table.text_cell(_("Alias"), timeperiod.get("alias", ""))
+        table.end()
 
 
-class ExceptionName(TextAscii):
-    def __init__(self, **kwargs):
-        kwargs["regex"] = "^[-a-z0-9A-Z /]*$"
-        kwargs["regex_error"] = _("This is not a valid Nagios timeperiod day specification.")
-        kwargs["allow_empty"] = False
-        super(ExceptionName, self).__init__(**kwargs)
-
-    def validate_value(self, value, varprefix):
-        if value in [ "monday", "tuesday", "wednesday", "thursday",
-                       "friday", "saturday", "sunday" ]:
-            raise MKUserError(varprefix, _("You cannot use weekday names (%s) in exceptions") % value)
-        if value in [ "name", "alias", "timeperiod_name", "register", "use", "exclude" ]:
-            raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
-        TextAscii.validate_value(self, value, varprefix)
-        ValueSpec.custom_validate(self, value, varprefix)
 
 class MultipleTimeRanges(ValueSpec):
     def __init__(self, **kwargs):
@@ -8969,507 +9024,527 @@ class MultipleTimeRanges(ValueSpec):
             self._rangevs.validate_value(v, varprefix + "_%d" % c)
         ValueSpec.custom_validate(self, value, varprefix)
 
-# Check, if timeperiod tpa excludes or is tpb
-def timeperiod_excludes(timeperiods, tpa_name, tpb_name):
-    if tpa_name == tpb_name:
-        return True
-
-    tpa = timeperiods[tpa_name]
-    for ex in tpa.get("exclude", []):
-        if ex == tpb_name:
-            return True
-        if timeperiod_excludes(timeperiods, ex, tpb_name):
-            return True
-    return False
-
-def validate_ical_file(value, varprefix):
-    filename, ty, content = value
-    if not filename.endswith('.ics'):
-        raise MKUserError(varprefix, _('The given file does not seem to be a valid iCalendar file. '
-                                       'It needs to have the file extension <tt>.ics</tt>.'))
-
-    if not content.startswith('BEGIN:VCALENDAR'):
-        raise MKUserError(varprefix, _('The file does not seem to be a valid iCalendar file.'))
-
-    if not content.startswith('END:VCALENDAR'):
-        raise MKUserError(varprefix, _('The file does not seem to be a valid iCalendar file.'))
-
-# Returns a dictionary in the format:
-# {
-#   'name'   : '...',
-#   'descr'  : '...',
-#   'events' : [
-#       {
-#           'name': '...',
-#           'date': '...',
-#       },
-#   ],
-# }
-#
-# Relevant format specifications:
-#   http://tools.ietf.org/html/rfc2445
-#   http://tools.ietf.org/html/rfc5545
-# TODO: Let's use some sort of standard module in the future. Maybe we can then also handle
-# times instead of only full day events.
-def parse_ical(ical_blob, horizon=10):
-    ical = {'raw_events': []}
-
-    def get_params(key):
-        if ';' in key:
-            return dict([ p.split('=', 1) for p in key.split(';')[1:] ])
-        return {}
-
-    def parse_date(params, val):
-        # First noprmalize the date value to make it easier parsable later
-        if 'T' not in val and params.get('VALUE') == 'DATE':
-            val += 'T000000' # add 00:00:00 to date specification
-
-        return list(time.strptime(val, '%Y%m%dT%H%M%S'))
-
-    # First extract the relevant information from the file
-    in_event = False
-    event    = {}
-    for l in ical_blob.split('\n'):
-        line = l.strip()
-        if not line:
-            continue
-        try:
-            key, val = line.split(':', 1)
-        except ValueError:
-            raise Exception('Failed to parse line: "%s"' % line)
-
-        if key == 'X-WR-CALNAME':
-            ical['name'] = val
-        elif key == 'X-WR-CALDESC':
-            ical['descr'] = val
-
-        elif line == 'BEGIN:VEVENT':
-            in_event = True
-            event = {} # create new event
-
-        elif line == 'END:VEVENT':
-            # Finish the current event
-            ical['raw_events'].append(event)
-            in_event = False
-
-        elif in_event:
-            if key.startswith('DTSTART'):
-                params = get_params(key)
-                event['start'] = parse_date(params, val)
-
-            elif key.startswith('DTEND'):
-                params = get_params(key)
-                event['end'] = parse_date(params, val)
-
-            elif key == 'RRULE':
-                event['recurrence'] = dict([ p.split('=', 1) for p in val.split(';') ])
-
-            elif key == 'SUMMARY':
-                event['name'] = val
-
-    def next_occurrence(start, now, freq):
-        # convert struct_time to list to be able to modify it,
-        # then set it to the next occurence
-        t = start[:]
-
-        if freq == 'YEARLY':
-            t[0] = now[0]+1 # add 1 year
-        elif freq == 'MONTHLY':
-            if now[1] + 1 > 12:
-                t[0] = now[0]+1
-                t[1] = now[1] + 1 - 12
-            else:
-                t[0] = now[0]
-                t[1] = now[1] + 1
-        else:
-            raise Exception('The frequency "%s" is currently not supported' % freq)
-        return t
-
-
-    def resolve_multiple_days(event, cur_start_time):
-        if time.strftime('%Y-%m-%d', cur_start_time) \
-            == time.strftime('%Y-%m-%d', event["end"]):
-            # Simple case: a single day event
-            return [{
-                'name'  : event['name'],
-                'date'  : time.strftime('%Y-%m-%d', cur_start_time),
-            }]
-
-        # Resolve multiple days
-        resolved, cur_timestamp, day = [], time.mktime(cur_start_time), 1
-        # day < 100 is just some plausibilty check. In case such an event
-        # is needed eventually remove this
-        while cur_timestamp < time.mktime(event["end"]) and day < 100:
-            resolved.append({
-                "name" : "%s %s" % (event["name"], _(" (day %d)") % day),
-                "date" : time.strftime("%Y-%m-%d", time.localtime(cur_timestamp)),
-            })
-            cur_timestamp += 86400
-            day += 1
-
-        return resolved
-
-    # Now resolve recurring events starting from 01.01 of current year
-    # Non-recurring events are simply copied
-    resolved = []
-    now  = list(time.strptime(str(time.localtime().tm_year-1), "%Y"))
-    last = now[:]
-    last[0] += horizon+1 # update year to horizon
-    for event in ical['raw_events']:
-        if 'recurrence' in event and event['start'] < now:
-            rule     = event['recurrence']
-            freq     = rule['FREQ']
-            interval = int(rule.get('INTERVAL', 1))
-            cur      = now
-            while cur < last:
-                cur = next_occurrence(event['start'], cur, freq)
-                resolved += resolve_multiple_days(event, cur)
-        else:
-            resolved += resolve_multiple_days(event, event["start"])
-
-    ical['events'] = sorted(resolved)
-
-    return ical
 
 # Displays a dialog for uploading an ical file which will then
 # be used to generate timeperiod exceptions etc. and then finally
 # open the edit_timeperiod page to create a new timeperiod using
 # these information
-def mode_timeperiod_import_ical(phase):
-    if phase == "title":
+class ModeTimeperiodImportICal(WatoMode):
+    def title(self):
         return _("Import iCalendar File to create a Timeperiod")
 
-    elif phase == "buttons":
-        html.context_button(_("All Timeperiods"), watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
-        return
 
-    vs_ical = Dictionary(
-        title = _('Import iCalendar File'),
-        render = "form",
-        optional_keys = None,
-        elements = [
-            ('file', FileUpload(
-                title = _('iCalendar File'),
-                help = _("Select an iCalendar file (<tt>*.ics</tt>) from your PC"),
-                allow_empty = False,
-                custom_validate = validate_ical_file,
-            )),
-            ('horizon', Integer(
-                title = _('Time horizon for repeated events'),
-                help = _("When the iCalendar file contains definitions of repeating events, these repeating "
-                         "events will be resolved to single events for the number of years you specify here."),
-                minvalue = 0,
-                maxvalue = 50,
-                default_value = 10,
-                unit = _('years'),
-                allow_empty = False,
-            )),
-            ('times', Optional(
-                MultipleTimeRanges(
-                    default_value = [None, None, None],
-                ),
-                title = _('Use specific times'),
-                label = _('Use specific times instead of whole day'),
-                help = _("When you specify explicit time definitions here, these will be added to each "
-                         "date which is added to the resulting time period. By default the whole day is "
-                         "used."),
-            )),
-        ]
-    )
+    def buttons(self):
+        html.context_button(_("All Timeperiods"),
+            watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
 
-    ical = {}
 
-    if phase == "action":
-        if html.check_transaction():
-            ical = vs_ical.from_html_vars("ical")
-            vs_ical.validate_value(ical, "ical")
+    def _vs_ical(self):
+        return Dictionary(
+            title = _('Import iCalendar File'),
+            render = "form",
+            optional_keys = None,
+            elements = [
+                ('file', FileUpload(
+                    title = _('iCalendar File'),
+                    help = _("Select an iCalendar file (<tt>*.ics</tt>) from your PC"),
+                    allow_empty = False,
+                    custom_validate = self._validate_ical_file,
+                )),
+                ('horizon', Integer(
+                    title = _('Time horizon for repeated events'),
+                    help = _("When the iCalendar file contains definitions of repeating events, these repeating "
+                             "events will be resolved to single events for the number of years you specify here."),
+                    minvalue = 0,
+                    maxvalue = 50,
+                    default_value = 10,
+                    unit = _('years'),
+                    allow_empty = False,
+                )),
+                ('times', Optional(
+                    MultipleTimeRanges(
+                        default_value = [None, None, None],
+                    ),
+                    title = _('Use specific times'),
+                    label = _('Use specific times instead of whole day'),
+                    help = _("When you specify explicit time definitions here, these will be added to each "
+                             "date which is added to the resulting time period. By default the whole day is "
+                             "used."),
+                )),
+            ]
+        )
 
-            filename, ty, content = ical['file']
+
+    def _validate_ical_file(self, value, varprefix):
+        filename, ty, content = value
+        if not filename.endswith('.ics'):
+            raise MKUserError(varprefix, _('The given file does not seem to be a valid iCalendar file. '
+                                           'It needs to have the file extension <tt>.ics</tt>.'))
+
+        if not content.startswith('BEGIN:VCALENDAR'):
+            raise MKUserError(varprefix, _('The file does not seem to be a valid iCalendar file.'))
+
+        if not content.startswith('END:VCALENDAR'):
+            raise MKUserError(varprefix, _('The file does not seem to be a valid iCalendar file.'))
+
+
+    def action(self):
+        if not html.check_transaction():
+            return
+
+        vs_ical = self._vs_ical()
+        ical = vs_ical.from_html_vars("ical")
+        vs_ical.validate_value(ical, "ical")
+
+        filename, ty, content = ical['file']
+
+        try:
+            data = self._parse_ical(content, ical['horizon'])
+        except Exception, e:
+            if config.debug:
+                raise
+            raise MKUserError('ical_file', _('Failed to parse file: %s') % e)
+
+        html.set_var('alias', data.get('descr', data.get('name', filename)))
+
+        for day in [ "monday", "tuesday", "wednesday", "thursday",
+                     "friday", "saturday", "sunday" ]:
+            html.set_var('%s_0_from' % day, '')
+            html.set_var('%s_0_until' % day, '')
+
+        html.set_var('except_count', "%d" % len(data['events']))
+        for index, event in enumerate(data['events']):
+            index += 1
+            html.set_var('except_%d_0' % index, event['date'])
+            html.set_var('except_indexof_%d' % index, "%d" % index)
+
+            if ical["times"]:
+                for n, time_spec in enumerate(ical["times"]):
+                    start_time = ":".join(map(lambda x: "%02d" % x, time_spec[0]))
+                    end_time   = ":".join(map(lambda x: "%02d" % x, time_spec[1]))
+                    html.set_var('except_%d_1_%d_from' % (index, n), start_time)
+                    html.set_var('except_%d_1_%d_until' % (index, n), end_time)
+
+        return "edit_timeperiod"
+
+
+    # Returns a dictionary in the format:
+    # {
+    #   'name'   : '...',
+    #   'descr'  : '...',
+    #   'events' : [
+    #       {
+    #           'name': '...',
+    #           'date': '...',
+    #       },
+    #   ],
+    # }
+    #
+    # Relevant format specifications:
+    #   http://tools.ietf.org/html/rfc2445
+    #   http://tools.ietf.org/html/rfc5545
+    # TODO: Let's use some sort of standard module in the future. Maybe we can then also handle
+    # times instead of only full day events.
+    def _parse_ical(self, ical_blob, horizon=10):
+        ical = {'raw_events': []}
+
+        def get_params(key):
+            if ';' in key:
+                return dict([ p.split('=', 1) for p in key.split(';')[1:] ])
+            return {}
+
+        def parse_date(params, val):
+            # First noprmalize the date value to make it easier parsable later
+            if 'T' not in val and params.get('VALUE') == 'DATE':
+                val += 'T000000' # add 00:00:00 to date specification
+
+            return list(time.strptime(val, '%Y%m%dT%H%M%S'))
+
+        # First extract the relevant information from the file
+        in_event = False
+        event    = {}
+        for l in ical_blob.split('\n'):
+            line = l.strip()
+            if not line:
+                continue
+            try:
+                key, val = line.split(':', 1)
+            except ValueError:
+                raise Exception('Failed to parse line: %r' % line)
+
+            if key == 'X-WR-CALNAME':
+                ical['name'] = val
+            elif key == 'X-WR-CALDESC':
+                ical['descr'] = val
+
+            elif line == 'BEGIN:VEVENT':
+                in_event = True
+                event = {} # create new event
+
+            elif line == 'END:VEVENT':
+                # Finish the current event
+                ical['raw_events'].append(event)
+                in_event = False
+
+            elif in_event:
+                if key.startswith('DTSTART'):
+                    params = get_params(key)
+                    event['start'] = parse_date(params, val)
+
+                elif key.startswith('DTEND'):
+                    params = get_params(key)
+                    event['end'] = parse_date(params, val)
+
+                elif key == 'RRULE':
+                    event['recurrence'] = dict([ p.split('=', 1) for p in val.split(';') ])
+
+                elif key == 'SUMMARY':
+                    event['name'] = val
+
+        def next_occurrence(start, now, freq):
+            # convert struct_time to list to be able to modify it,
+            # then set it to the next occurence
+            t = start[:]
+
+            if freq == 'YEARLY':
+                t[0] = now[0]+1 # add 1 year
+            elif freq == 'MONTHLY':
+                if now[1] + 1 > 12:
+                    t[0] = now[0]+1
+                    t[1] = now[1] + 1 - 12
+                else:
+                    t[0] = now[0]
+                    t[1] = now[1] + 1
+            else:
+                raise Exception('The frequency "%s" is currently not supported' % freq)
+            return t
+
+        def resolve_multiple_days(event, cur_start_time):
+            if time.strftime('%Y-%m-%d', cur_start_time) \
+                == time.strftime('%Y-%m-%d', event["end"]):
+                # Simple case: a single day event
+                return [{
+                    'name'  : event['name'],
+                    'date'  : time.strftime('%Y-%m-%d', cur_start_time),
+                }]
+
+            # Resolve multiple days
+            resolved, cur_timestamp, day = [], time.mktime(cur_start_time), 1
+            # day < 100 is just some plausibilty check. In case such an event
+            # is needed eventually remove this
+            while cur_timestamp < time.mktime(event["end"]) and day < 100:
+                resolved.append({
+                    "name" : "%s %s" % (event["name"], _(" (day %d)") % day),
+                    "date" : time.strftime("%Y-%m-%d", time.localtime(cur_timestamp)),
+                })
+                cur_timestamp += 86400
+                day += 1
+
+            return resolved
+
+        # Now resolve recurring events starting from 01.01 of current year
+        # Non-recurring events are simply copied
+        resolved = []
+        now  = list(time.strptime(str(time.localtime().tm_year-1), "%Y"))
+        last = now[:]
+        last[0] += horizon+1 # update year to horizon
+        for event in ical['raw_events']:
+            if 'recurrence' in event and event['start'] < now:
+                rule     = event['recurrence']
+                freq     = rule['FREQ']
+                interval = int(rule.get('INTERVAL', 1))
+                cur      = now
+                while cur < last:
+                    cur = next_occurrence(event['start'], cur, freq)
+                    resolved += resolve_multiple_days(event, cur)
+            else:
+                resolved += resolve_multiple_days(event, event["start"])
+
+        ical['events'] = sorted(resolved)
+
+        return ical
+
+
+    def page(self):
+        html.p(_('This page can be used to generate a new timeperiod definition based '
+                 'on the appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally used '
+                 'to import events like holidays, therefore only single whole day appointments are '
+                 'handled by this import.'))
+
+        html.begin_form("import_ical", method="POST")
+        self._vs_ical().render_input("ical", {})
+        forms.end()
+        html.button("upload", _("Import"))
+        html.hidden_fields()
+        html.end_form()
+
+
+
+class ModeEditTimeperiod(WatoMode):
+    def __init__(self):
+        super(ModeEditTimeperiod, self).__init__()
+        self._from_vars()
+
+
+    def _from_vars(self):
+        self._timeperiods = watolib.load_timeperiods()
+        self._name = html.var("edit") # missing -> new group
+
+        if self._name == None:
+            self._new  = True
+            self._timeperiod = {}
+        else:
+            self._new  = False
 
             try:
-                data = parse_ical(content, ical['horizon'])
-            except Exception, e:
-                if config.debug:
-                    raise
-                raise MKUserError('ical_file', _('Failed to parse file: %s') % e)
+                self._timeperiod = self._timeperiods[self._name]
+            except KeyError:
+                raise MKUserError(None, _("This timeperiod does not exist."))
 
-            html.set_var('alias', data.get('descr', data.get('name', filename)))
 
-            for day in [ "monday", "tuesday", "wednesday", "thursday",
-                         "friday", "saturday", "sunday" ]:
-                html.set_var('%s_0_from' % day, '')
-                html.set_var('%s_0_until' % day, '')
+    def _convert_from_range(self, rng):
+        # ("00:30", "10:17") -> ((0,30),(10,17))
+        return tuple(map(self._convert_from_tod, rng))
 
-            html.set_var('except_count', "%d" % len(data['events']))
-            for index, event in enumerate(data['events']):
-                index += 1
-                html.set_var('except_%d_0' % index, event['date'])
-                html.set_var('except_indexof_%d' % index, "%d" % index)
-
-                if ical["times"]:
-                    for n, time_spec in enumerate(ical["times"]):
-                        start_time = ":".join(map(lambda x: "%02d" % x, time_spec[0]))
-                        end_time   = ":".join(map(lambda x: "%02d" % x, time_spec[1]))
-                        html.set_var('except_%d_1_%d_from' % (index, n), start_time)
-                        html.set_var('except_%d_1_%d_until' % (index, n), end_time)
-
-            return "edit_timeperiod"
-        return
-
-    html.p(_('This page can be used to generate a new timeperiod definition based '
-             'on the appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally used '
-             'to import events like holidays, therefore only single whole day appointments are '
-             'handled by this import.'))
-
-    html.begin_form("import_ical", method="POST")
-    vs_ical.render_input("ical", ical)
-    forms.end()
-    html.button("upload", _("Import"))
-    html.hidden_fields()
-    html.end_form()
-
-def mode_edit_timeperiod(phase):
-    num_columns = 3
-    timeperiods = watolib.load_timeperiods()
-    name = html.var("edit") # missing -> new group
-    new = name == None
-
-    # ValueSpec for the list of Exceptions
-    vs_ex = ListOf(
-        Tuple(
-            orientation = "horizontal",
-            show_titles = False,
-            elements = [
-                ExceptionName(),
-                MultipleTimeRanges()]
-        ),
-        movable = False,
-        add_label = _("Add Exception"))
-
-    # ValueSpec for excluded Timeperiods. We offer the list of
-    # all other timeperiods - but only those that do not
-    # exclude the current timeperiod (in order to avoid cycles)
-    other_tps = []
-    for tpname, tp in timeperiods.items():
-        if not timeperiod_excludes(timeperiods, tpname, name):
-            other_tps.append((tpname, tp.get("alias") or name))
-
-    vs_excl = ListChoice(choices=other_tps)
 
     # convert Check_MK representation of range to ValueSpec-representation
-    def convert_from_tod(tod):
+    def _convert_from_tod(self, tod):
         # "00:30" -> (0, 30)
         return tuple(map(int, tod.split(":")))
 
-    def convert_from_range(range):
-        # ("00:30", "10:17") -> ((0,30),(10,17))
-        return tuple(map(convert_from_tod, range))
 
-    def convert_to_tod(value):
+    def _convert_to_range(self, value):
+        return tuple(map(self._convert_to_tod, value))
+
+
+    def _convert_to_tod(self, value):
         return "%02d:%02d" % value
 
-    def convert_to_range(value):
-        return tuple(map(convert_to_tod, value))
 
-    def timeperiod_ranges(vp, keyname, new):
-        ranges = timeperiod.get(keyname, [])
+    def title(self):
+        if self._new:
+            return _("Create new time period")
+        else:
+            return _("Edit time period")
+
+
+    def buttons(self):
+        html.context_button(_("All Timeperiods"), watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
+
+
+    def _vs_exceptions(self):
+        return ListOf(
+            Tuple(
+                orientation = "horizontal",
+                show_titles = False,
+                elements = [
+                    TextAscii(
+                        regex = "^[-a-z0-9A-Z /]*$",
+                        regex_error = _("This is not a valid Nagios timeperiod day specification."),
+                        allow_empty = False,
+                        validate = self._validate_timeperiod_exception,
+                    ),
+                    MultipleTimeRanges()
+                ],
+            ),
+            movable = False,
+            add_label = _("Add Exception")
+        )
+
+
+    def _validate_timeperiod_exception(self, value, varprefix):
+        if value in [ "monday", "tuesday", "wednesday", "thursday",
+                       "friday", "saturday", "sunday" ]:
+            raise MKUserError(varprefix, _("You cannot use weekday names (%s) in exceptions") % value)
+
+        if value in [ "name", "alias", "timeperiod_name", "register", "use", "exclude" ]:
+            raise MKUserError(varprefix, _("<tt>%s</tt> is a reserved keyword."))
+
+
+    def _vs_excludes(self):
+        return ListChoice(choices=self._other_timeperiods())
+
+
+    def _other_timeperiods(self):
+        # ValueSpec for excluded Timeperiods. We offer the list of
+        # all other timeperiods - but only those that do not
+        # exclude the current timeperiod (in order to avoid cycles)
+        other_tps = []
+        for tpname, tp in self._timeperiods.items():
+            if not self._timeperiod_excludes(tpname):
+                other_tps.append((tpname, tp.get("alias") or self._name))
+        return other_tps
+
+
+    # Check, if timeperiod tpa excludes or is tpb
+    def _timeperiod_excludes(self, tpa_name):
+        if tpa_name == self._name:
+            return True
+
+        tpa = self._timeperiods[tpa_name]
+        for ex in tpa.get("exclude", []):
+            if ex == self._name:
+                return True
+
+            if self._timeperiod_excludes(ex):
+                return True
+
+        return False
+
+
+    def action(self):
+        if not html.check_transaction():
+            return
+
+        alias = html.get_unicode_input("alias").strip()
+        if not alias:
+            raise MKUserError("alias", _("Please specify an alias name for your timeperiod."))
+
+        unique, info = watolib.is_alias_used("timeperiods", self._name, alias)
+        if not unique:
+            raise MKUserError("alias", info)
+
+        self._timeperiod.clear()
+
+        # extract time ranges of weekdays
+        for weekday, weekday_name in self._weekdays_by_name():
+            ranges = self._get_ranges(weekday)
+            if ranges:
+                self._timeperiod[weekday] = ranges
+            elif weekday in self._timeperiod:
+                del self._timeperiod[weekday]
+
+        # extract ranges for custom days
+        vs_ex = self._vs_exceptions()
+        exceptions = vs_ex.from_html_vars("except")
+        vs_ex.validate_value(exceptions, "except")
+        for exname, ranges in exceptions:
+            self._timeperiod[exname] = map(self._convert_to_range, ranges)
+
+        # extract excludes
+        vs_excl = self._vs_excludes()
+        excludes = vs_excl.from_html_vars("exclude")
+        vs_excl.validate_value(excludes, "exclude")
+        if excludes:
+            self._timeperiod["exclude"] = excludes
+
+        if self._new:
+            name = html.var("name")
+            if len(name) == 0:
+                raise MKUserError("name", _("Please specify a name of the new timeperiod."))
+            if not re.match("^[-a-z0-9A-Z_]*$", name):
+                raise MKUserError("name", _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+            if name in self._timeperiods:
+                raise MKUserError("name", _("This name is already being used by another timeperiod."))
+            if name == "24X7":
+                raise MKUserError("name", _("The time period name 24X7 cannot be used. It is always autmatically defined."))
+            self._timeperiods[name] = self._timeperiod
+            watolib.add_change("edit-timeperiods", _("Created new time period %s") % name)
+        else:
+            watolib.add_change("edit-timeperiods", _("Modified time period %s") % self._name)
+
+        self._timeperiod["alias"] = alias
+        watolib.save_timeperiods(self._timeperiods)
+        return "timeperiods"
+
+
+    def _get_ranges(self, varprefix):
+        value = MultipleTimeRanges().from_html_vars(varprefix)
+        MultipleTimeRanges().validate_value(value, varprefix)
+        return map(self._convert_to_range, value)
+
+
+    def page(self):
+        html.begin_form("timeperiod", method="POST")
+        forms.header(_("Timeperiod"))
+
+        # Name
+        forms.section(_("Internal name"), simple = not self._new)
+        if self._new:
+            html.text_input("name")
+            html.set_focus("name")
+        else:
+            html.write_text(self._name)
+
+        # Alias
+        if not self._new:
+            alias = self._timeperiod.get("alias", "")
+        else:
+            alias = ""
+
+        forms.section(_("Alias"))
+        html.help(_("An alias or description of the timeperiod"))
+        html.text_input("alias", alias, size = 81)
+        if not self._new:
+            html.set_focus("alias")
+
+        # Week days
+        forms.section(_("Weekdays"))
+        html.help("For each weekday you can setup no, one or several "
+                   "time ranges in the format <tt>23:39</tt>, in which the time period "
+                   "should be active.")
+        html.open_table(class_="timeperiod")
+
+        for weekday, weekday_alias in self._weekdays_by_name():
+            ranges = self._timeperiod.get(weekday)
+            html.open_tr()
+            html.td(weekday_alias, class_="name")
+            self._timeperiod_ranges(weekday, weekday)
+            html.close_tr()
+        html.close_table()
+
+        # Exceptions
+        forms.section(_("Exceptions (from weekdays)"))
+        html.help(_("Here you can specify exceptional time ranges for certain "
+                    "dates in the form YYYY-MM-DD which are used to define more "
+                    "specific definitions to override the times configured for the matching "
+                    "weekday."))
+
+        exceptions = []
+        for k in self._timeperiod:
+            if k not in [ w[0] for w in self._weekdays_by_name() ] and k not in [ "alias", "exclude" ]:
+                exceptions.append((k, map(self._convert_from_range, self._timeperiod[k])))
+        exceptions.sort()
+        self._vs_exceptions().render_input("except", exceptions)
+
+        # Excludes
+        if self._other_timeperiods():
+            forms.section(_("Exclude"))
+            html.help(_('You can use other timeperiod definitions to exclude the times '
+                        'defined in the other timeperiods from this current timeperiod.'))
+            self._vs_excludes().render_input("exclude", self._timeperiod.get("exclude", []))
+
+
+        forms.end()
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
+
+
+    def _timeperiod_ranges(self, vp, keyname):
+        ranges = self._timeperiod.get(keyname, [])
         value = []
-        for range in ranges:
-            value.append(convert_from_range(range))
-        if len(value) == 0 and new:
-            value.append(((0,0),(24,0)))
+        for rng in ranges:
+            value.append(self._convert_from_range(rng))
+
+        if len(value) == 0 and self._new:
+            value.append(((0,0), (24,0)))
 
         html.open_td()
         MultipleTimeRanges().render_input(vp, value)
         html.close_td()
 
-    def get_ranges(varprefix):
-        value = MultipleTimeRanges().from_html_vars(varprefix)
-        MultipleTimeRanges().validate_value(value, varprefix)
-        return map(convert_to_range, value)
 
-    if phase == "title":
-        if new:
-            return _("Create new time period")
-        else:
-            return _("Edit time period")
-
-    elif phase == "buttons":
-        html.context_button(_("All Timeperiods"), watolib.folder_preserving_link([("mode", "timeperiods")]), "back")
-        return
-
-    if new:
-        timeperiod = {}
-    else:
-        timeperiod = timeperiods.get(name, {})
-
-    weekdays_by_name = [
-      ( "monday",    _("Monday") ),
-      ( "tuesday",   _("Tuesday") ),
-      ( "wednesday", _("Wednesday") ),
-      ( "thursday",  _("Thursday") ),
-      ( "friday",    _("Friday") ),
-      ( "saturday",  _("Saturday") ),
-      ( "sunday",    _("Sunday") ),
-    ]
-
-    if phase == "action":
-        if html.check_transaction():
-            alias = html.get_unicode_input("alias").strip()
-            if not alias:
-                raise MKUserError("alias", _("Please specify an alias name for your timeperiod."))
-
-            unique, info = watolib.is_alias_used("timeperiods", name, alias)
-            if not unique:
-                raise MKUserError("alias", info)
-
-            timeperiod.clear()
-
-            # extract time ranges of weekdays
-            for weekday, weekday_name in weekdays_by_name:
-                ranges = get_ranges(weekday)
-                if ranges:
-                    timeperiod[weekday] = ranges
-                elif weekday in timeperiod:
-                    del timeperiod[weekday]
-
-            # extract ranges for custom days
-            exceptions = vs_ex.from_html_vars("except")
-            vs_ex.validate_value(exceptions, "except")
-            for exname, ranges in exceptions:
-                timeperiod[exname] = map(convert_to_range, ranges)
-
-            # extract excludes
-            excludes = vs_excl.from_html_vars("exclude")
-            vs_excl.validate_value(excludes, "exclude")
-            if excludes:
-                timeperiod["exclude"] = excludes
-
-            if new:
-                name = html.var("name")
-                if len(name) == 0:
-                    raise MKUserError("name", _("Please specify a name of the new timeperiod."))
-                if not re.match("^[-a-z0-9A-Z_]*$", name):
-                    raise MKUserError("name", _("Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-                if name in timeperiods:
-                    raise MKUserError("name", _("This name is already being used by another timeperiod."))
-                if name == "24X7":
-                    raise MKUserError("name", _("The time period name 24X7 cannot be used. It is always autmatically defined."))
-                timeperiods[name] = timeperiod
-                add_change("edit-timeperiods", _("Created new time period %s") % name)
-            else:
-                add_change("edit-timeperiods", _("Modified time period %s") % name)
-            timeperiod["alias"] = alias
-            watolib.save_timeperiods(timeperiods)
-            return "timeperiods"
-        return
-
-    html.begin_form("timeperiod", method="POST")
-    forms.header(_("Timeperiod"))
-
-    # Name
-    forms.section(_("Internal name"), simple = not new)
-    if new:
-        html.text_input("name")
-        html.set_focus("name")
-    else:
-        html.write_text(name)
-
-    # Alias
-    if not new:
-        alias = timeperiods[name].get("alias", "")
-    else:
-        alias = ""
-
-    forms.section(_("Alias"))
-    html.help(_("An alias or description of the timeperiod"))
-    html.text_input("alias", alias, size = 81)
-    if not new:
-        html.set_focus("alias")
-
-    # Week days
-    forms.section(_("Weekdays"))
-    html.help("For each weekday you can setup no, one or several "
-               "time ranges in the format <tt>23:39</tt>, in which the time period "
-               "should be active.")
-    html.open_table(class_="timeperiod")
-
-    for weekday, weekday_alias in weekdays_by_name:
-        ranges = timeperiod.get(weekday)
-        html.open_tr()
-        html.td(weekday_alias, class_="name")
-        timeperiod_ranges(weekday, weekday, new)
-        html.close_tr()
-    html.close_table()
-
-    # Exceptions
-    forms.section(_("Exceptions (from weekdays)"))
-    html.help(_("Here you can specify exceptional time ranges for certain "
-                "dates in the form YYYY-MM-DD which are used to define more "
-                "specific definitions to override the times configured for the matching "
-                "weekday."))
-
-    exceptions = []
-    for k in timeperiod:
-        if k not in [ w[0] for w in weekdays_by_name ] and k not in [ "alias", "exclude" ]:
-            exceptions.append((k, map(convert_from_range, timeperiod[k])))
-    exceptions.sort()
-    vs_ex.render_input("except", exceptions)
-
-    # Excludes
-    if other_tps:
-        forms.section(_("Exclude"))
-        html.help(_('You can use other timeperiod definitions to exclude the times '
-                    'defined in the other timeperiods from this current timeperiod.'))
-        vs_excl.render_input("exclude", timeperiod.get("exclude", []))
-
-
-    forms.end()
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
-
-
-# Check if a timeperiod is currently in use and cannot be deleted
-# Returns a list of occurrances.
-# Possible usages:
-# - 1. rules: service/host-notification/check-period
-# - 2. user accounts (notification period)
-# - 3. excluded by other timeperiods
-def find_usages_of_timeperiod(tpname):
-
-    # Part 1: Rules
-    used_in = []
-
-    rulesets = watolib.AllRulesets()
-    rulesets.load()
-
-    for varname, ruleset in rulesets.get_rulesets().items():
-        if not isinstance(ruleset.valuespec(), TimeperiodSelection):
-            continue
-
-        for folder, rulenr, rule in ruleset.get_rules():
-            if rule.value == tpname:
-                used_in.append(("%s: %s" % (_("Ruleset"), ruleset.title()),
-                               watolib.folder_preserving_link([("mode", "edit_ruleset"), ("varname", varname)])))
-                break
-
-    # Part 2: Users
-    for userid, user in userdb.load_users().items():
-        tp = user.get("notification_period")
-        if tp == tpname:
-            used_in.append(("%s: %s" % (_("User"), userid),
-                watolib.folder_preserving_link([("mode", "edit_user"), ("edit", userid)])))
-
-    # Part 3: Other Timeperiods
-    for tpn, tp in watolib.load_timeperiods().items():
-        if tpname in tp.get("exclude", []):
-            used_in.append(("%s: %s (%s)" % (_("Timeperiod"), tp.get("alias", tpn),
-                    _("excluded")),
-                    watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)])))
-
-    return used_in
-
+    def _weekdays_by_name(self):
+        return [
+           ( "monday",    _("Monday") ),
+           ( "tuesday",   _("Tuesday") ),
+           ( "wednesday", _("Wednesday") ),
+           ( "thursday",  _("Thursday") ),
+           ( "friday",    _("Friday") ),
+           ( "saturday",  _("Saturday") ),
+           ( "sunday",    _("Sunday") ),
+        ]
 
 #.
 #   .--Multisite Connections-----------------------------------------------.
@@ -10364,12 +10439,16 @@ def automation_push_profile():
 #   | Mode for managing users and contacts.                                |
 #   '----------------------------------------------------------------------'
 
+class ModeUsers(WatoMode):
+    def __init__(self):
+        super(ModeUsers, self).__init__()
 
-def mode_users(phase):
-    if phase == "title":
+
+    def title(self):
         return _("Users")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         global_buttons()
         html.context_button(_("New User"), watolib.folder_preserving_link([("mode", "edit_user")]), "new")
         html.context_button(_("Custom Attributes"), watolib.folder_preserving_link([("mode", "user_attrs")]), "custom_attr")
@@ -10378,14 +10457,9 @@ def mode_users(phase):
         if config.user.may("general.notify"):
             html.context_button(_("Notify Users"), 'notify.py', "notification")
         html.context_button(_("LDAP Connections"), watolib.folder_preserving_link([("mode", "ldap_config")]), "ldap")
-        return
 
-    roles = userdb.load_roles()
-    users = userdb.load_users(lock = phase == 'action' and html.var('_delete'))
-    timeperiods = watolib.load_timeperiods()
-    contact_groups = userdb.load_group_information().get("contact", {})
 
-    if phase == "action":
+    def action(self):
         if html.var('_delete'):
             delid = html.get_unicode_input("_delete")
             c = wato_confirm(_("Confirm deletion of user %s") % delid,
@@ -10404,203 +10478,210 @@ def mode_users(phase):
                 raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
 
         elif html.var("_bulk_delete_users"):
-            return bulk_delete_users_after_confirm(users)
+            return self._bulk_delete_users_after_confirm()
 
-        return None
 
-    visible_custom_attrs = [
-        (name, attr)
-        for name, attr
-        in userdb.get_user_attributes()
-        if attr.get('show_in_table', False)
-    ]
+    def _bulk_delete_users_after_confirm(self):
+        selected_users = []
+        users = userdb.load_users()
+        for varname in html.all_varnames_with_prefix("_c_user_"):
+            if html.get_checkbox(varname):
+                user = varname.split("_c_user_")[-1]
+                if user in users:
+                    selected_users.append(user)
 
-    entries = users.items()
-    entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
+        if selected_users:
+            c = wato_confirm(_("Confirm deletion of %d users") % len(selected_users),
+                             _("Do you really want to delete %d users?") % len(selected_users))
+            if c:
+                watolib.delete_users(selected_users)
+            elif c == False:
+                return ""
 
-    html.begin_form("bulk_delete_form", method = "POST")
 
-    table.begin("users", None, empty_text = _("No users are defined yet."))
-    online_threshold = time.time() - config.user_online_maxage
-    for id, user in entries:
-        table.row()
+    def page(self):
+        visible_custom_attrs = [
+            (name, attr)
+            for name, attr
+            in userdb.get_user_attributes()
+            if attr.get('show_in_table', False)
+        ]
 
-        # Checkboxes
-        table.cell(html.render_input("_toggle_group", type_="button",
-                    class_="checkgroup", onclick="toggle_all_rows();",
-                    value='X'), sortable=False, css="checkbox")
+        users = userdb.load_users()
 
-        if id != config.user.id:
-            html.checkbox("_c_user_%s" % id)
+        entries = users.items()
+        entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
 
-        user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
-        connection = userdb.get_connection(user_connection_id)
+        html.begin_form("bulk_delete_form", method = "POST")
 
-        # Buttons
-        table.cell(_("Actions"), css="buttons")
-        if connection: # only show edit buttons when the connector is available and enabled
-            edit_url = watolib.folder_preserving_link([("mode", "edit_user"), ("edit", id)])
-            html.icon_button(edit_url, _("Properties"), "edit")
+        roles = userdb.load_roles()
+        timeperiods = watolib.load_timeperiods()
+        contact_groups = userdb.load_group_information().get("contact", {})
 
-            clone_url = watolib.folder_preserving_link([("mode", "edit_user"), ("clone", id)])
-            html.icon_button(clone_url, _("Create a copy of this user"), "clone")
+        table.begin("users", None, empty_text = _("No users are defined yet."))
+        online_threshold = time.time() - config.user_online_maxage
+        for id, user in entries:
+            table.row()
 
-        delete_url = make_action_link([("mode", "users"), ("_delete", id)])
-        html.icon_button(delete_url, _("Delete"), "delete")
+            # Checkboxes
+            table.cell(html.render_input("_toggle_group", type_="button",
+                        class_="checkgroup", onclick="toggle_all_rows();",
+                        value='X'), sortable=False, css="checkbox")
 
-        notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"), ("user", id)])
-        if watolib.load_configuration_settings().get("enable_rulebased_notifications"):
-            html.icon_button(notifications_url, _("Custom notification table of this user"), "notifications")
+            if id != config.user.id:
+                html.checkbox("_c_user_%s" % id)
 
-        # ID
-        table.cell(_("ID"), id)
+            user_connection_id = userdb.cleanup_connection_id(user.get('connector'))
+            connection = userdb.get_connection(user_connection_id)
 
-        # Online/Offline
-        if config.save_user_access_times:
-            last_seen = user.get('last_seen', 0)
-            if last_seen >= online_threshold:
-                title = _('Online')
-                img_txt = 'online'
-            elif last_seen != 0:
-                title = _('Offline')
-                img_txt = 'offline'
-            elif last_seen == 0:
-                title = _('Never logged in')
-                img_txt = 'inactive'
+            # Buttons
+            table.cell(_("Actions"), css="buttons")
+            if connection: # only show edit buttons when the connector is available and enabled
+                edit_url = watolib.folder_preserving_link([("mode", "edit_user"), ("edit", id)])
+                html.icon_button(edit_url, _("Properties"), "edit")
 
-            title += ' (%s %s)' % (render.date(last_seen), render.time_of_day(last_seen))
-            table.cell(_("Act."))
-            html.icon(title, img_txt)
+                clone_url = watolib.folder_preserving_link([("mode", "edit_user"), ("clone", id)])
+                html.icon_button(clone_url, _("Create a copy of this user"), "clone")
 
-            table.cell(_("Last seen"))
-            if last_seen != 0:
-                html.write_text("%s %s" % (render.date(last_seen), render.time_of_day(last_seen)))
-            else:
-                html.write_text(_("Never logged in"))
+            delete_url = make_action_link([("mode", "users"), ("_delete", id)])
+            html.icon_button(delete_url, _("Delete"), "delete")
 
-        if cmk.is_managed_edition():
-            table.cell(_("Customer"), managed.get_customer_name(user))
+            notifications_url = watolib.folder_preserving_link([("mode", "user_notifications"), ("user", id)])
+            if watolib.load_configuration_settings().get("enable_rulebased_notifications"):
+                html.icon_button(notifications_url, _("Custom notification table of this user"), "notifications")
 
-        # Connection
-        if connection:
-            table.cell(_("Connection"), '%s (%s)' % (connection.short_title(), user_connection_id))
-            locked_attributes = userdb.locked_attributes(user_connection_id)
-        else:
-            table.cell(_("Connection"), "%s (%s) (%s)" %
-                    (_("UNKNOWN"), user_connection_id, _("disabled")), css="error")
-            locked_attributes = []
+            # ID
+            table.cell(_("ID"), id)
 
-        # Authentication
-        if "automation_secret" in user:
-            auth_method = _("Automation")
-        elif user.get("password") or 'password' in locked_attributes:
-            auth_method = _("Password")
-        else:
-            auth_method = "<i>%s</i>" % _("none")
-        table.cell(_("Authentication"), auth_method)
+            # Online/Offline
+            if config.save_user_access_times:
+                last_seen = user.get('last_seen', 0)
+                if last_seen >= online_threshold:
+                    title = _('Online')
+                    img_txt = 'online'
+                elif last_seen != 0:
+                    title = _('Offline')
+                    img_txt = 'offline'
+                elif last_seen == 0:
+                    title = _('Never logged in')
+                    img_txt = 'inactive'
 
-        table.cell(_("State"))
-        locked = user.get("locked", False)
-        if user.get("locked", False):
-            html.icon(_('The login is currently locked'), 'user_locked')
+                title += ' (%s %s)' % (render.date(last_seen), render.time_of_day(last_seen))
+                table.cell(_("Act."))
+                html.icon(title, img_txt)
 
-        if "disable_notifications" in user and type(user["disable_notifications"]) == bool:
-            disable_notifications_opts = {"disable" : user["disable_notifications"]}
-        else:
-            disable_notifications_opts = user.get("disable_notifications", {})
-
-        if disable_notifications_opts.get("disable", False):
-            html.icon(_('Notifications are disabled'), 'notif_disabled')
-
-        # Full name / Alias
-        table.cell(_("Alias"), html.attrencode(user.get("alias", "")))
-
-        # Email
-        table.cell(_("Email"), user.get("email", ""))
-
-        # Roles
-        table.cell(_("Roles"))
-        if user.get("roles", []):
-            role_links = [ (watolib.folder_preserving_link([("mode", "edit_role"), ("edit", role)]), roles[role].get("alias"))
-                                for role in user["roles"] ]
-            html.write_html(HTML(", ").join(html.render_a(alias, href=link) for (link, alias) in role_links))
-
-        # contact groups
-        table.cell(_("Contact groups"))
-        cgs = user.get("contactgroups", [])
-        if cgs:
-            cg_aliases = [contact_groups[c]['alias'] if c in contact_groups else c for c in cgs]
-            cg_urls    = [watolib.folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)]) for c in cgs]
-            html.write_html(HTML(", ").join(html.render_a(content, href=url) for (content, url) in zip(cg_aliases, cg_urls)))
-        else:
-            html.i(_("none"))
-
-        #table.cell(_("Sites"))
-        #html.write(vs_authorized_sites().value_to_text(user.get("authorized_sites",
-        #                                                vs_authorized_sites().default_value())))
-
-        # notifications
-        if not watolib.load_configuration_settings().get("enable_rulebased_notifications"):
-            table.cell(_("Notifications"))
-            if not cgs:
-                html.i(_("not a contact"))
-            elif not user.get("notifications_enabled", True):
-                html.write_text(_("disabled"))
-            elif "" == user.get("host_notification_options", "") \
-                and "" == user.get("service_notification_options", ""):
-                html.write_text(_("all events disabled"))
-            else:
-                tp = user.get("notification_period", "24X7")
-                if tp != "24X7" and tp not in timeperiods:
-                    tp = tp + _(" (invalid)")
-                elif tp != "24X7":
-                    url = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tp)])
-                    tp = html.render_a(timeperiods[tp].get("alias", tp), href=url)
+                table.cell(_("Last seen"))
+                if last_seen != 0:
+                    html.write_text("%s %s" % (render.date(last_seen), render.time_of_day(last_seen)))
                 else:
-                    tp = _("Always")
-                html.write(tp)
+                    html.write_text(_("Never logged in"))
 
-        # the visible custom attributes
-        for name, attr in visible_custom_attrs:
-            vs = attr['valuespec']
-            table.cell(_u(vs.title()))
-            html.write(vs.value_to_text(user.get(name, vs.default_value())))
+            if cmk.is_managed_edition():
+                table.cell(_("Customer"), managed.get_customer_name(user))
 
-    table.end()
+            # Connection
+            if connection:
+                table.cell(_("Connection"), '%s (%s)' % (connection.short_title(), user_connection_id))
+                locked_attributes = userdb.locked_attributes(user_connection_id)
+            else:
+                table.cell(_("Connection"), "%s (%s) (%s)" %
+                        (_("UNKNOWN"), user_connection_id, _("disabled")), css="error")
+                locked_attributes = []
 
-    html.button("_bulk_delete_users", _("Bulk Delete"), "submit", style="margin-top:10px")
-    html.hidden_fields()
-    html.end_form()
+            # Authentication
+            if "automation_secret" in user:
+                auth_method = _("Automation")
+            elif user.get("password") or 'password' in locked_attributes:
+                auth_method = _("Password")
+            else:
+                auth_method = "<i>%s</i>" % _("none")
+            table.cell(_("Authentication"), auth_method)
 
-    if not userdb.load_group_information().get("contact", {}):
-        url = "wato.py?mode=contact_groups"
-        html.open_div(class_="info")
-        html.write(_("Note: you haven't defined any contact groups yet. If you <a href='%s'>"
-                     "create some contact groups</a> you can assign users to them und thus "
-                     "make them monitoring contacts. Only monitoring contacts can receive "
-                     "notifications.") % url)
-        html.write(" you can assign users to them und thus "
-                    "make them monitoring contacts. Only monitoring contacts can receive "
-                    "notifications.")
-        html.close_div()
+            table.cell(_("State"))
+            locked = user.get("locked", False)
+            if user.get("locked", False):
+                html.icon(_('The login is currently locked'), 'user_locked')
 
+            if "disable_notifications" in user and type(user["disable_notifications"]) == bool:
+                disable_notifications_opts = {"disable" : user["disable_notifications"]}
+            else:
+                disable_notifications_opts = user.get("disable_notifications", {})
 
+            if disable_notifications_opts.get("disable", False):
+                html.icon(_('Notifications are disabled'), 'notif_disabled')
 
-def bulk_delete_users_after_confirm(users):
-    selected_users = []
-    for varname in html.all_varnames_with_prefix("_c_user_"):
-        if html.get_checkbox(varname):
-            user = varname.split("_c_user_")[-1]
-            if user in users:
-                selected_users.append(user)
+            # Full name / Alias
+            table.text_cell(_("Alias"), user.get("alias", ""))
 
-    if selected_users:
-        c = wato_confirm(_("Confirm deletion of %d users") % len(selected_users),
-                         _("Do you really want to delete %d users?") % len(selected_users))
-        if c:
-            watolib.delete_users(selected_users)
-        elif c == False:
-            return ""
+            # Email
+            table.text_cell(_("Email"), user.get("email", ""))
+
+            # Roles
+            table.cell(_("Roles"))
+            if user.get("roles", []):
+                role_links = [ (watolib.folder_preserving_link([("mode", "edit_role"), ("edit", role)]), roles[role].get("alias"))
+                                    for role in user["roles"] ]
+                html.write_html(HTML(", ").join(html.render_a(alias, href=link) for (link, alias) in role_links))
+
+            # contact groups
+            table.cell(_("Contact groups"))
+            cgs = user.get("contactgroups", [])
+            if cgs:
+                cg_aliases = [contact_groups[c]['alias'] if c in contact_groups else c for c in cgs]
+                cg_urls    = [watolib.folder_preserving_link([("mode", "edit_contact_group"), ("edit", c)]) for c in cgs]
+                html.write_html(HTML(", ").join(html.render_a(content, href=url) for (content, url) in zip(cg_aliases, cg_urls)))
+            else:
+                html.i(_("none"))
+
+            #table.cell(_("Sites"))
+            #html.write(vs_authorized_sites().value_to_text(user.get("authorized_sites",
+            #                                                vs_authorized_sites().default_value())))
+
+            # notifications
+            if not watolib.load_configuration_settings().get("enable_rulebased_notifications"):
+                table.cell(_("Notifications"))
+                if not cgs:
+                    html.i(_("not a contact"))
+                elif not user.get("notifications_enabled", True):
+                    html.write_text(_("disabled"))
+                elif "" == user.get("host_notification_options", "") \
+                    and "" == user.get("service_notification_options", ""):
+                    html.write_text(_("all events disabled"))
+                else:
+                    tp = user.get("notification_period", "24X7")
+                    if tp != "24X7" and tp not in timeperiods:
+                        tp = tp + _(" (invalid)")
+                    elif tp != "24X7":
+                        url = watolib.folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tp)])
+                        tp = html.render_a(timeperiods[tp].get("alias", tp), href=url)
+                    else:
+                        tp = _("Always")
+                    html.write(tp)
+
+            # the visible custom attributes
+            for name, attr in visible_custom_attrs:
+                vs = attr['valuespec']
+                table.cell(_u(vs.title()))
+                html.write(vs.value_to_text(user.get(name, vs.default_value())))
+
+        table.end()
+
+        html.button("_bulk_delete_users", _("Bulk Delete"), "submit", style="margin-top:10px")
+        html.hidden_fields()
+        html.end_form()
+
+        if not userdb.load_group_information().get("contact", {}):
+            url = "wato.py?mode=contact_groups"
+            html.open_div(class_="info")
+            html.write(_("Note: you haven't defined any contact groups yet. If you <a href='%s'>"
+                         "create some contact groups</a> you can assign users to them und thus "
+                         "make them monitoring contacts. Only monitoring contacts can receive "
+                         "notifications.") % url)
+            html.write(" you can assign users to them und thus "
+                        "make them monitoring contacts. Only monitoring contacts can receive "
+                        "notifications.")
+            html.close_div()
+
 
 
 def mode_edit_user(phase):
@@ -11186,48 +11267,80 @@ class UserSelection(DropdownChoice):
 #   | configuration of all roles.                                          |
 #   '----------------------------------------------------------------------'
 
-def mode_roles(phase):
-    if phase == "title":
+class RoleManagement(object):
+    def __init__(self):
+        super(RoleManagement, self).__init__()
+        self._roles = userdb.load_roles()
+
+
+    def _save_roles(self):
+        # Reflect the data in the roles dict kept in the config module Needed
+        # for instant changes in current page while saving modified roles.
+        # Otherwise the hooks would work with old data when using helper
+        # functions from the config module
+        config.roles.update(self._roles)
+
+        make_nagios_directory(multisite_dir)
+        store.save_to_mk_file(multisite_dir + "roles.mk", "roles", self._roles)
+
+        watolib.call_hook_roles_saved(self._roles)
+
+
+    # Adapt references in users. Builtin rules cannot
+    # be renamed and are not handled here. If new_id is None,
+    # the role is being deleted
+    def _rename_user_role(self, id, new_id):
+        users = userdb.load_users(lock = True)
+        for user in users.values():
+            if id in user["roles"]:
+                user["roles"].remove(id)
+                if new_id:
+                    user["roles"].append(new_id)
+        userdb.save_users(users)
+
+
+
+class ModeRoles(RoleManagement, WatoMode):
+    def title(self):
         return _("Roles & Permissions")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         global_buttons()
         html.context_button(_("Matrix"), watolib.folder_preserving_link([("mode", "role_matrix")]), "matrix")
-        return
 
-    roles = userdb.load_roles()
-    users = userdb.load_users()
 
-    if phase == "action":
+    def action(self):
         if html.var("_delete"):
             delid = html.var("_delete")
 
-            if delid not in roles:
+            if delid not in self._roles:
                 raise MKUserError(None, _("This role does not exist."))
 
-            if html.transaction_valid() and roles[delid].get('builtin'):
+            if html.transaction_valid() and self._roles[delid].get('builtin'):
                 raise MKUserError(None, _("You cannot delete the builtin roles!"))
 
             c = wato_confirm(_("Confirm deletion of role %s") % delid,
                              _("Do you really want to delete the role %s?") % delid)
             if c:
-                rename_user_role(delid, None) # Remove from existing users
-                del roles[delid]
-                save_roles(roles)
-                add_change("edit-roles", _("Deleted role '%s'") % delid, sites=config.get_login_sites())
+                self._rename_user_role(delid, None) # Remove from existing users
+                del self._roles[delid]
+                self._save_roles()
+                watolib.add_change("edit-roles", _("Deleted role '%s'") % delid, sites=config.get_login_sites())
             elif c == False:
                 return ""
+
         elif html.var("_clone"):
             if html.check_transaction():
                 cloneid = html.var("_clone")
 
                 try:
-                    cloned_role = roles[cloneid]
+                    cloned_role = self._roles[cloneid]
                 except KeyError:
                     raise MKUserError(None, _("This role does not exist."))
 
                 newid = cloneid
-                while newid in roles:
+                while newid in self._roles:
                     newid += "x"
 
                 new_role = {}
@@ -11242,88 +11355,89 @@ def mode_roles(phase):
                     new_role["builtin"] = False
                     new_role["basedon"] = cloneid
 
-                roles[newid] = new_role
-                save_roles(roles)
-                add_change("edit-roles", _("Created new role '%s'") % newid,
+                self._roles[newid] = new_role
+                self._save_roles()
+                watolib.add_change("edit-roles", _("Created new role '%s'") % newid,
                            sites=config.get_login_sites())
-        return
-
-    table.begin("roles")
-
-    # Show table of builtin and user defined roles
-    entries = roles.items()
-    entries.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
-
-    for id, role in entries:
-        table.row()
-
-        # Actions
-        table.cell(_("Actions"), css="buttons")
-        edit_url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", id)])
-        clone_url = make_action_link([("mode", "roles"), ("_clone", id)])
-        delete_url = make_action_link([("mode", "roles"), ("_delete", id)])
-        html.icon_button(edit_url, _("Properties"), "edit")
-        html.icon_button(clone_url, _("Clone"), "clone")
-        if not role.get("builtin"):
-            html.icon_button(delete_url, _("Delete this role"), "delete")
-
-        # ID
-        table.cell(_("Name"), html.attrencode(id))
-
-        # Alias
-        table.cell(_("Alias"), html.attrencode(role["alias"]))
-
-        # Type
-        table.cell(_("Type"), _("builtin") if role.get("builtin") else _("custom"))
-
-        # Modifications
-        table.cell(_("Modifications"), "<span title='%s'>%s</span>" % (
-            _("That many permissions do not use the factory defaults."), len(role["permissions"])))
-
-        # Users
-        table.cell(_("Users"),
-          HTML(", ").join([ html.render_a(user.get("alias", user_id), watolib.folder_preserving_link([("mode", "edit_user"), ("edit", user_id)]))
-            for (user_id, user) in users.items() if (id in user["roles"])]))
 
 
-    # Possibly we could also display the following information
-    # - number of set permissions (needs loading users)
-    # - number of users with this role
-    table.end()
+    def page(self):
+        table.begin("roles")
+
+        users = userdb.load_users()
+        for id, role in sorted(self._roles.items(), key = lambda a: (a[1]["alias"],a[0])):
+            table.row()
+
+            # Actions
+            table.cell(_("Actions"), css="buttons")
+            edit_url = watolib.folder_preserving_link([("mode", "edit_role"), ("edit", id)])
+            clone_url = make_action_link([("mode", "roles"), ("_clone", id)])
+            delete_url = make_action_link([("mode", "roles"), ("_delete", id)])
+            html.icon_button(edit_url, _("Properties"), "edit")
+            html.icon_button(clone_url, _("Clone"), "clone")
+            if not role.get("builtin"):
+                html.icon_button(delete_url, _("Delete this role"), "delete")
+
+            # ID
+            table.text_cell(_("Name"), id)
+
+            # Alias
+            table.text_cell(_("Alias"), role["alias"])
+
+            # Type
+            table.cell(_("Type"), _("builtin") if role.get("builtin") else _("custom"))
+
+            # Modifications
+            table.cell(_("Modifications"), "<span title='%s'>%s</span>" % (
+                _("That many permissions do not use the factory defaults."), len(role["permissions"])))
+
+            # Users
+            table.cell(_("Users"),
+              HTML(", ").join([ html.render_a(user.get("alias", user_id), watolib.folder_preserving_link([("mode", "edit_user"), ("edit", user_id)]))
+                for (user_id, user) in users.items() if (id in user["roles"])]))
+
+
+        # Possibly we could also display the following information
+        # - number of set permissions (needs loading users)
+        # - number of users with this role
+        table.end()
 
 
 
+class ModeEditRole(RoleManagement, WatoMode):
+    def __init__(self):
+        super(ModeEditRole, self).__init__()
+
+        # Make sure that all dynamic permissions are available (e.g. those for custom
+        # views)
+        config.load_dynamic_permissions()
+        self._from_vars()
 
 
-def mode_edit_role(phase):
-    role_id = html.var("edit")
+    def _from_vars(self):
+        self._role_id = html.var("edit")
 
-    if phase == "title":
-        return _("Edit user role %s") % role_id
+        try:
+            self._role = self._roles[self._role_id]
+        except KeyError:
+            raise MKGeneralException(_("This role does not exist."))
 
-    elif phase == "buttons":
+
+    def title(self):
+        return _("Edit user role %s") % self._role_id
+
+
+    def buttons(self):
         html.context_button(_("All Roles"), watolib.folder_preserving_link([("mode", "roles")]), "back")
-        return
 
-    # Make sure that all dynamic permissions are available (e.g. those for custom
-    # views)
-    config.load_dynamic_permissions()
-    roles = userdb.load_roles()
 
-    try:
-        role = roles[role_id]
-    except KeyError:
-        raise MKGeneralException(_("This role does not exist."))
-
-    search = get_search_expression()
-
-    if phase == "action":
+    def action(self):
         if html.form_submitted("search"):
             return
 
         alias = html.get_unicode_input("alias")
 
-        unique, info = watolib.is_alias_used("roles", role_id, alias)
+        unique, info = watolib.is_alias_used("roles", self._role_id, alias)
         if not unique:
             raise MKUserError("alias", info)
 
@@ -11332,21 +11446,21 @@ def mode_edit_role(phase):
             raise MKUserError("id", _("Please specify an ID for the new role."))
         if not re.match("^[-a-z0-9A-Z_]*$", new_id):
             raise MKUserError("id", _("Invalid role ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
-        if new_id != role_id:
-            if new_id in roles:
+        if new_id != self._role_id:
+            if new_id in self._roles:
                 raise MKUserError("id", _("The ID is already used by another role"))
 
-        role["alias"] = alias
+        self._role["alias"] = alias
 
         # based on
-        if not role.get("builtin"):
+        if not self._role.get("builtin"):
             basedon = html.var("basedon")
             if basedon not in config.builtin_role_ids:
                 raise MKUserError("basedon", _("Invalid valid for based on. Must be id of builtin rule."))
-            role["basedon"] = basedon
+            self._role["basedon"] = basedon
 
         # Permissions
-        permissions = role["permissions"]
+        permissions = self._role["permissions"]
         for var_name in html.all_varnames_with_prefix("perm_"):
             try:
                 perm = config.permissions_by_name[var_name[5:]]
@@ -11365,195 +11479,165 @@ def mode_edit_role(phase):
                 except KeyError:
                     pass # Already at defaults
 
-        if role_id != new_id:
-            roles[new_id] = role
-            del roles[role_id]
-            rename_user_role(role_id, new_id)
+        if self._role_id != new_id:
+            self._roles[new_id] = self._role
+            del self._roles[self._role_id]
+            self._rename_user_role(self._role_id, new_id)
 
-        save_roles(roles)
-        add_change("edit-roles", _("Modified user role '%s'") % new_id, sites=config.get_login_sites())
+        self._save_roles()
+        watolib.add_change("edit-roles", _("Modified user role '%s'") % new_id,
+                            sites=config.get_login_sites())
         return "roles"
 
-    search_form(_("Search for permissions: "), "edit_role")
 
-    html.begin_form("role", method="POST")
+    def page(self):
+        search = get_search_expression()
+        search_form(_("Search for permissions: "), "edit_role")
 
-    # ID
-    forms.header(_("Basic Properties"))
-    forms.section(_("Internal ID"), simple = "builtin" in role)
-    if role.get("builtin"):
-        html.write_text("%s (%s)" % (role_id, _("builtin role")))
-        html.hidden_field("id", role_id)
-    else:
-        html.text_input("id", role_id)
-        html.set_focus("id")
+        html.begin_form("role", method="POST")
 
-    # Alias
-    forms.section(_("Alias"))
-    html.help(_("An alias or description of the role"))
-    html.text_input("alias", role.get("alias", ""), size = 50)
+        # ID
+        forms.header(_("Basic Properties"))
+        forms.section(_("Internal ID"), simple = "builtin" in self._role)
+        if self._role.get("builtin"):
+            html.write_text("%s (%s)" % (self._role_id, _("builtin role")))
+            html.hidden_field("id", self._role_id)
+        else:
+            html.text_input("id", self._role_id)
+            html.set_focus("id")
 
-    # Based on
-    if not role.get("builtin"):
-        forms.section(_("Based on role"))
-        html.help(_("Each user defined role is based on one of the builtin roles. "
-                    "When created it will start with all permissions of that role. When due to a software "
-                    "update or installation of an addons new permissions appear, the user role will get or "
-                    "not get those new permissions based on the default settings of the builtin role it's "
-                    "based on."))
-        choices = [ (i, r["alias"]) for i, r in roles.items() if r.get("builtin") ]
-        html.dropdown("basedon", choices, deflt=role.get("basedon", "user"), sorted=True)
+        # Alias
+        forms.section(_("Alias"))
+        html.help(_("An alias or description of the role"))
+        html.text_input("alias", self._role.get("alias", ""), size = 50)
 
+        # Based on
+        if not self._role.get("builtin"):
+            forms.section(_("Based on role"))
+            html.help(_("Each user defined role is based on one of the builtin roles. "
+                        "When created it will start with all permissions of that role. When due to a software "
+                        "update or installation of an addons new permissions appear, the user role will get or "
+                        "not get those new permissions based on the default settings of the builtin role it's "
+                        "based on."))
+            choices = [ (i, r["alias"]) for i, r in self._roles.items() if r.get("builtin") ]
+            html.dropdown("basedon", choices, deflt=self._role.get("basedon", "user"), sorted=True)
 
-    forms.end()
+        forms.end()
 
-    html.h2(_("Permissions"))
+        html.h2(_("Permissions"))
 
-    # Permissions
-    base_role_id = role.get("basedon", role_id)
+        # Permissions
+        base_role_id = self._role.get("basedon", self._role_id)
 
-    html.help(
-       _("When you leave the permissions at &quot;default&quot; then they get their "
-         "settings from the factory defaults (for builtin roles) or from the "
-         "factory default of their base role (for user define roles). Factory defaults "
-         "may change due to software updates. When choosing another base role, all "
-         "permissions that are on default will reflect the new base role."))
+        html.help(
+           _("When you leave the permissions at &quot;default&quot; then they get their "
+             "settings from the factory defaults (for builtin roles) or from the "
+             "factory default of their base role (for user define roles). Factory defaults "
+             "may change due to software updates. When choosing another base role, all "
+             "permissions that are on default will reflect the new base role."))
 
-    # Loop all permission sections, but sorted plz
-    for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
-                                                 key = lambda x: x[1][0], reverse = True):
-        # Loop all permissions
-        permlist = config.permissions_by_order[:]
-        if do_sort:
-            permlist.sort(cmp = lambda a,b: cmp(a["title"], b["title"]))
+        # Loop all permission sections, but sorted plz
+        for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
+                                                     key = lambda x: x[1][0], reverse = True):
+            # Loop all permissions
+            permlist = config.permissions_by_order[:]
+            if do_sort:
+                permlist.sort(cmp = lambda a,b: cmp(a["title"], b["title"]))
 
-        # Now filter by permission section and the optional search term
-        filtered_perms = []
-        for perm in permlist:
-            pname = perm["name"]
-            this_section = pname.split(".")[0]
-            if section != this_section:
-                continue # Skip permissions of other sections
+            # Now filter by permission section and the optional search term
+            filtered_perms = []
+            for perm in permlist:
+                pname = perm["name"]
+                this_section = pname.split(".")[0]
+                if section != this_section:
+                    continue # Skip permissions of other sections
 
-            if search and (search not in perm["title"].lower() and search not in pname.lower()):
+                if search and (search not in perm["title"].lower() and search not in pname.lower()):
+                    continue
+
+                filtered_perms.append(perm)
+
+            if not filtered_perms:
                 continue
 
-            filtered_perms.append(perm)
+            forms.header(section_title, isopen=search != None)
+            for perm in filtered_perms:
+                pname = perm["name"]
 
-        if not filtered_perms:
-            continue
+                forms.section(perm["title"])
 
-        forms.header(section_title, isopen=search != None)
-        for perm in filtered_perms:
-            pname = perm["name"]
+                pvalue = self._role["permissions"].get(pname)
+                def_value = base_role_id in perm["defaults"]
 
-            forms.section(perm["title"])
+                choices = [ ( "yes", _("yes")),
+                            ( "no", _("no")),
+                            ( "default", _("default (%s)") % (def_value and _("yes") or _("no") )) ]
+                deflt = { True: "yes", False: "no" }.get(pvalue, "default")
 
-            pvalue = role["permissions"].get(pname)
-            def_value = base_role_id in perm["defaults"]
+                html.dropdown("perm_" + pname, choices, deflt=deflt, style="width: 130px;")
+                html.help(perm["description"])
 
-            choices = [ ( "yes", _("yes")),
-                        ( "no", _("no")),
-                        ( "default", _("default (%s)") % (def_value and _("yes") or _("no") )) ]
-            deflt = { True: "yes", False: "no" }.get(pvalue, "default")
-
-            html.dropdown("perm_" + pname, choices, deflt=deflt, style="width: 130px;")
-            html.help(perm["description"])
-
-    forms.end()
-    html.button("save", _("Save"))
-    html.hidden_fields()
-    html.end_form()
-
-def make_unicode(s):
-    if type(s) != unicode: # assume utf-8 encoded bytestring
-        return s.decode("utf-8")
-    else:
-        return s
-
-def save_roles(roles):
-    # Reflect the data in the roles dict kept in the config module Needed
-    # for instant changes in current page while saving modified roles.
-    # Otherwise the hooks would work with old data when using helper
-    # functions from the config module
-    config.roles.update(roles)
-
-    make_nagios_directory(multisite_dir)
-    store.save_to_mk_file(multisite_dir + "roles.mk", "roles", roles)
-
-    watolib.call_hook_roles_saved(roles)
+        forms.end()
+        html.button("save", _("Save"))
+        html.hidden_fields()
+        html.end_form()
 
 
-# Adapt references in users. Builtin rules cannot
-# be renamed and are not handled here. If new_id is None,
-# the role is being deleted
-def rename_user_role(id, new_id):
-    users = userdb.load_users(lock = True)
-    for user in users.values():
-        if id in user["roles"]:
-            user["roles"].remove(id)
-            if new_id:
-                user["roles"].append(new_id)
-    userdb.save_users(users)
 
-def mode_role_matrix(phase):
-    if phase == "title":
+class ModeRoleMatrix(WatoMode):
+    def title(self):
         return _("Role & Permission Matrix")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         global_buttons()
         html.context_button(_("Back"), watolib.folder_preserving_link([("mode", "roles")]), "back")
-        return
 
-    elif phase == "action":
-        return
 
-    # Show table of builtin and user defined roles, sorted by alias
-    roles = userdb.load_roles()
-    role_list = roles.items()
-    role_list.sort(cmp = lambda a,b: cmp((a[1]["alias"],a[0]), (b[1]["alias"],b[0])))
+    def page(self):
+        role_list = sorted(userdb.load_roles().items(), key = lambda a: (a[1]["alias"],a[0]))
 
-    # Loop all permission sections, but sorted plz
-    for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
-                                                 key = lambda x: x[1][0], reverse = True):
+        # Loop all permission sections, but sorted plz
+        for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
+                                                     key = lambda x: x[1][0], reverse = True):
 
-        html.begin_foldable_container("perm_matrix", section, section == "general", section_title, indent = True)
+            html.begin_foldable_container("perm_matrix", section, section == "general", section_title, indent = True)
 
-        table.begin(section)
+            table.begin(section)
 
-        # Loop all permissions
-        permlist = config.permissions_by_order[:]
-        if do_sort:
-            permlist.sort(cmp = lambda a,b: cmp(a["title"], b["title"]))
+            # Loop all permissions
+            permlist = config.permissions_by_order[:]
+            if do_sort:
+                permlist.sort(cmp = lambda a,b: cmp(a["title"], b["title"]))
 
-        for perm in permlist:
-            pname = perm["name"]
-            this_section = pname.split(".")[0]
-            if section != this_section:
-                continue # Skip permissions of other sections
+            for perm in permlist:
+                pname = perm["name"]
+                this_section = pname.split(".")[0]
+                if section != this_section:
+                    continue # Skip permissions of other sections
 
-            table.row()
-            table.cell(_("Permission"), perm["title"], css="wide")
-            html.help(perm["description"])
-            for role_id, role in role_list:
-                base_on_id = role.get('basedon', role_id)
-                pvalue = role["permissions"].get(pname)
-                if pvalue is None:
-                    if base_on_id in perm["defaults"]:
-                        icon_name = "perm_yes_default"
+                table.row()
+                table.cell(_("Permission"), perm["title"], css="wide")
+                html.help(perm["description"])
+                for role_id, role in role_list:
+                    base_on_id = role.get('basedon', role_id)
+                    pvalue = role["permissions"].get(pname)
+                    if pvalue is None:
+                        if base_on_id in perm["defaults"]:
+                            icon_name = "perm_yes_default"
+                        else:
+                            icon_name = None
                     else:
-                        icon_name = None
-                else:
-                    icon_name = "perm_%s" % (pvalue and "yes" or "no")
+                        icon_name = "perm_%s" % (pvalue and "yes" or "no")
 
-                table.cell(role_id, css="center")
-                if icon_name:
-                    html.icon(None, icon_name)
+                    table.cell(role_id, css="center")
+                    if icon_name:
+                        html.icon(None, icon_name)
 
-        table.end()
-        html.end_foldable_container()
+            table.end()
+            html.end_foldable_container()
 
-    html.close_table()
+        html.close_table()
 
 #.
 #   .--Host-Tags-----------------------------------------------------------.
@@ -11568,25 +11652,29 @@ def mode_role_matrix(phase):
 #   | assigned to hosts and that is the basis of the rules.                |
 #   '----------------------------------------------------------------------'
 
-def mode_hosttags(phase):
-    if phase == "title":
+class ModeHostTags(WatoMode):
+    def __init__(self):
+        super(ModeHostTags, self).__init__()
+        self._hosttags, self._auxtags = watolib.load_hosttags()
+        self._builtin_hosttags, self._builtin_auxtags = watolib.load_builtin_hosttags()
+
+
+    def title(self):
         return _("Host tag groups")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         global_buttons()
         html.context_button(_("New Tag group"), watolib.folder_preserving_link([("mode", "edit_hosttag")]), "new")
         html.context_button(_("New Aux tag"), watolib.folder_preserving_link([("mode", "edit_auxtag")]), "new")
-        return
 
-    hosttags, auxtags = watolib.load_hosttags()
-    builtin_hosttags, builtin_auxtags = watolib.load_builtin_hosttags()
 
-    if phase == "action":
+    def action(self):
         # Deletion of tag groups
         del_id = html.var("_delete")
         if del_id:
             operations = None
-            for e in hosttags:
+            for e in self._hosttags:
                 if e[0] == del_id:
                     # In case of tag group deletion, the operations is a pair of tag_id
                     # and list of choice-ids.
@@ -11605,8 +11693,8 @@ def mode_hosttags(phase):
                     return None
 
             if message:
-                hosttags = [ e for e in hosttags if e[0] != del_id ]
-                watolib.save_hosttags(hosttags, auxtags)
+                self._hosttags = [ e for e in self._hosttags if e[0] != del_id ]
+                watolib.save_hosttags(self._hosttags, self._auxtags)
                 watolib.Folder.invalidate_caches()
                 watolib.Folder.root_folder().rewrite_hosts_files()
                 add_change("edit-hosttags", _("Removed host tag group %s (%s)") % (message, del_id))
@@ -11616,10 +11704,10 @@ def mode_hosttags(phase):
         del_nr = html.var("_delaux")
         if del_nr:
             nr = int(del_nr)
-            del_id = auxtags[nr][0]
+            del_id = self._auxtags[nr][0]
 
             # Make sure that this aux tag is not begin used by any tag group
-            for entry in hosttags:
+            for entry in self._hosttags:
                 choices = entry[2]
                 for e in choices:
                     if len(e) > 2:
@@ -11640,16 +11728,16 @@ def mode_hosttags(phase):
                     return None
 
             if message:
-                del auxtags[nr]
+                del self._auxtags[nr]
                 # Remove auxiliary tag from all host tags
-                for e in hosttags:
+                for e in self._hosttags:
                     choices = e[2]
                     for choice in choices:
                         if len(choice) > 2:
                             if del_id in choice[2]:
                                 choice[2].remove(del_id)
 
-                watolib.save_hosttags(hosttags, auxtags)
+                watolib.save_hosttags(self._hosttags, self._auxtags)
                 watolib.Folder.invalidate_caches()
                 watolib.Folder.root_folder().rewrite_hosts_files()
                 add_change("edit-hosttags", _("Removed auxiliary tag %s (%s)") % (message, del_id))
@@ -11664,111 +11752,112 @@ def mode_hosttags(phase):
                 else:
                     move_nr = -move_nr
                     dir = -1
-                moved = hosttags[move_nr]
-                del hosttags[move_nr]
-                hosttags[move_nr+dir:move_nr+dir] = [moved]
-                watolib.save_hosttags(hosttags, auxtags)
-                config.wato_host_tags = hosttags
-                add_change("edit-hosttags", _("Changed order of host tag groups"))
-        return
-
-    if not hosttags + auxtags:
-        render_main_menu([
-            ("edit_hosttag", _("Create new tag group"), "new", "hosttags",
-                _("Each host tag group will create one dropdown choice in the host configuration.")),
-            ("edit_auxtag", _("Create new auxiliary tag"), "new", "hosttags",
-                _("You can have these tags automatically added if certain primary tags are set.")),
-            ])
-
-    else:
-        render_host_tag_list(hosttags, builtin_hosttags)
-        render_aux_tag_list(auxtags, builtin_auxtags)
+                moved = self._hosttags[move_nr]
+                del self._hosttags[move_nr]
+                self._hosttags[move_nr+dir:move_nr+dir] = [moved]
+                watolib.save_hosttags(self._hosttags, self._auxtags)
+                config.wato_host_tags = self._hosttags
+                watolib.add_change("edit-hosttags", _("Changed order of host tag groups"))
 
 
-def render_host_tag_list(hosttags, builtin_hosttags):
-    table.begin("hosttags", _("Host tag groups"),
-                help = (_("Host tags are the basis of Check_MK's rule based configuration. "
-                         "If the first step you define arbitrary tag groups. A host "
-                         "has assigned exactly one tag out of each group. These tags can "
-                         "later be used for defining parameters for hosts and services, "
-                         "such as <i>disable notifications for all hosts with the tags "
-                         "<b>Network device</b> and <b>Test</b></i>.")),
-                empty_text = _("You haven't defined any tag groups yet."),
-                searchable = False, sortable = False)
+    def page(self):
+        if not self._hosttags + self._auxtags:
+            MainMenu([
+                ("edit_hosttag", _("Create new tag group"), "new", "hosttags",
+                    _("Each host tag group will create one dropdown choice in the host configuration.")),
+                ("edit_auxtag", _("Create new auxiliary tag"), "new", "hosttags",
+                    _("You can have these tags automatically added if certain primary tags are set.")),
+                ]).show()
 
-    if not hosttags + builtin_hosttags:
-        table.end()
-        return
+        else:
+            self._render_host_tag_list()
+            self._render_aux_tag_list()
 
-    for tag_type, tag_list in [ ('custom', hosttags),
-                                ('builtin', builtin_hosttags), ]:
-        for nr, entry in enumerate(tag_list):
-            tag_id, title, choices = entry[:3] # fourth: tag dependency information
-            topic, title = map(_u, watolib.parse_hosttag_title(title))
-            table.row()
-            table.cell(_("Actions"), css="buttons")
-            if tag_type == "builtin":
-                html.i("(builtin)")
-            else:
-                edit_url     = watolib.folder_preserving_link([("mode", "edit_hosttag"), ("edit", tag_id)])
-                delete_url   = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
-                if nr == 0:
-                    html.empty_icon_button()
+
+    def _render_host_tag_list(self):
+        table.begin("hosttags", _("Host tag groups"),
+                    help = (_("Host tags are the basis of Check_MK's rule based configuration. "
+                             "If the first step you define arbitrary tag groups. A host "
+                             "has assigned exactly one tag out of each group. These tags can "
+                             "later be used for defining parameters for hosts and services, "
+                             "such as <i>disable notifications for all hosts with the tags "
+                             "<b>Network device</b> and <b>Test</b></i>.")),
+                    empty_text = _("You haven't defined any tag groups yet."),
+                    searchable = False, sortable = False)
+
+        if not self._hosttags + self._builtin_hosttags:
+            table.end()
+            return
+
+        for tag_type, tag_list in [ ('custom', self._hosttags),
+                                    ('builtin', self._builtin_hosttags), ]:
+            for nr, entry in enumerate(tag_list):
+                tag_id, title, choices = entry[:3] # fourth: tag dependency information
+                topic, title = map(_u, watolib.parse_hosttag_title(title))
+                table.row()
+                table.cell(_("Actions"), css="buttons")
+                if tag_type == "builtin":
+                    html.i("(builtin)")
                 else:
-                    html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
-                                _("Move this tag group one position up"), "up")
-                if nr == len(tag_list) - 1:
-                    html.empty_icon_button()
-                else:
-                    html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
-                                _("Move this tag group one position down"), "down")
-                html.icon_button(edit_url,   _("Edit this tag group"), "edit")
-                html.icon_button(delete_url, _("Delete this tag group"), "delete")
+                    edit_url     = watolib.folder_preserving_link([("mode", "edit_hosttag"), ("edit", tag_id)])
+                    delete_url   = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
+                    if nr == 0:
+                        html.empty_icon_button()
+                    else:
+                        html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
+                                    _("Move this tag group one position up"), "up")
+                    if nr == len(tag_list) - 1:
+                        html.empty_icon_button()
+                    else:
+                        html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
+                                    _("Move this tag group one position down"), "down")
+                    html.icon_button(edit_url,   _("Edit this tag group"), "edit")
+                    html.icon_button(delete_url, _("Delete this tag group"), "delete")
 
-            table.cell(_("ID"), tag_id)
-            table.cell(_("Title"), title)
-            table.cell(_("Topic"), topic or '')
-            table.cell(_("Type"), (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
-            table.cell(_("Choices"), str(len(choices)))
-            table.cell(_("Demonstration"), sortable=False)
-            html.begin_form("tag_%s" % tag_id)
-            watolib.host_attribute("tag_%s" % tag_id).render_input("", None)
-            html.end_form()
-    table.end()
-
-
-
-def render_aux_tag_list(auxtags, builtin_auxtags):
-    table.begin("auxtags", _("Auxiliary tags"),
-                help = _("Auxiliary tags can be attached to other tags. That way "
-                         "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
-                         "get also the tag <tt>tcp</tt>. This makes the configuration of "
-                         "your hosts easier."),
-                empty_text = _("You haven't defined any auxiliary tags."),
-                searchable = False)
-
-    if not auxtags:
+                table.cell(_("ID"), tag_id)
+                table.cell(_("Title"), title)
+                table.cell(_("Topic"), topic or '')
+                table.cell(_("Type"), (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
+                table.cell(_("Choices"), str(len(choices)))
+                table.cell(_("Demonstration"), sortable=False)
+                html.begin_form("tag_%s" % tag_id)
+                watolib.host_attribute("tag_%s" % tag_id).render_input("", None)
+                html.end_form()
         table.end()
-        return
 
-    for tag_type, tag_list in [ ('custom', auxtags),
-                                ('builtin', builtin_auxtags), ]:
-        for nr, (tag_id, title) in enumerate(tag_list):
-            table.row()
-            topic, title = watolib.parse_hosttag_title(title)
-            table.cell(_("Actions"), css="buttons")
-            if tag_type == "builtin":
-                html.i("(builtin)")
-            else:
-                edit_url     = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", nr)])
-                delete_url   = make_action_link([("mode", "hosttags"), ("_delaux", nr)])
-                html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
-                html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
-            table.cell(_("ID"), tag_id)
 
-            table.cell(_("Title"), _u(title))
-            table.cell(_("Topic"), _u(topic) or '')
-    table.end()
+    def _render_aux_tag_list(self):
+        table.begin("auxtags", _("Auxiliary tags"),
+                    help = _("Auxiliary tags can be attached to other tags. That way "
+                             "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
+                             "get also the tag <tt>tcp</tt>. This makes the configuration of "
+                             "your hosts easier."),
+                    empty_text = _("You haven't defined any auxiliary tags."),
+                    searchable = False)
+
+        if not self._auxtags:
+            table.end()
+            return
+
+        for tag_type, tag_list in [ ('custom', self._auxtags),
+                                    ('builtin', self._builtin_auxtags), ]:
+            for nr, (tag_id, title) in enumerate(tag_list):
+                table.row()
+                topic, title = watolib.parse_hosttag_title(title)
+                table.cell(_("Actions"), css="buttons")
+                if tag_type == "builtin":
+                    html.i("(builtin)")
+                else:
+                    edit_url     = watolib.folder_preserving_link([("mode", "edit_auxtag"), ("edit", nr)])
+                    delete_url   = make_action_link([("mode", "hosttags"), ("_delaux", nr)])
+                    html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
+                    html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
+                table.cell(_("ID"), tag_id)
+
+                table.cell(_("Title"), _u(title))
+                table.cell(_("Topic"), _u(topic) or '')
+        table.end()
+
 
 
 class ModeEditHosttagConfiguration(WatoMode):
@@ -12404,7 +12493,7 @@ class ModeRuleEditor(WatoMode):
 
         search_form(mode="rulesets")
 
-        menu = []
+        menu = MainMenu()
         for groupname in watolib.g_rulespecs.get_main_groups():
             url = watolib.folder_preserving_link([("mode", "rulesets"), ("group", groupname),
                              ("host", self._only_host)])
@@ -12419,8 +12508,14 @@ class ModeRuleEditor(WatoMode):
             else:
                 help_text = None
 
-            menu.append((url, rulegroup.title, icon, "rulesets", help_text))
-        render_main_menu(menu)
+            menu.add_item(
+                mode_or_url=url,
+                title=rulegroup.title,
+                icon=icon,
+                permission="rulesets",
+                subtitle=help_text
+            )
+        menu.show()
 
 
 # TODO: Cleanup all calls using title and remove the argument
@@ -15393,324 +15488,353 @@ def man_page_catalog_topics():
 ]
 
 
-def mode_check_plugins(phase):
-    search = get_search_expression()
-    topic  = html.var("topic")
-    if topic and not search:
-        path = tuple(topic.split("/")) # e.g. [ "hw", "network" ]
-        if not re.match("^[a-zA-Z0-9_./]+$", topic):
-            raise Exception("Invalid topic")
-    else:
-        path = tuple()
+class ModeCheckPlugins(WatoMode):
+    def __init__(self):
+        super(ModeCheckPlugins, self).__init__()
+        self._from_vars()
 
-    for comp in path:
-        ID().validate_value(comp, None) # Beware against code injection!
+    def _from_vars(self):
+        self._search = get_search_expression()
+        self._topic  = html.var("topic")
+        if self._topic and not self._search:
+            if not re.match("^[a-zA-Z0-9_./]+$", self._topic):
+                raise Exception("Invalid topic")
 
-    manpages = get_check_catalog(path)
-    titles = man_pages.man_page_catalog_titles()
+            self._path = tuple(self._topic.split("/")) # e.g. [ "hw", "network" ]
+        else:
+            self._path = tuple()
 
-    has_second_level = None
-    if topic and not search:
-        for t, has_second_level, title, helptext in man_page_catalog_topics():
-            if t == path[0]:
-                topic_title = title
-                break
-        if len(path) == 2:
-            topic_title = titles.get(path[1], path[1])
+        for comp in self._path:
+            ID().validate_value(comp, None) # Beware against code injection!
 
-    if phase == "title":
-        if topic and not search:
-            heading = "%s - %s" % ( _("Catalog of Check Plugins"), topic_title )
-        elif search:
-            heading = html.render_text("%s: %s" % (_("Check plugins matching"), search))
+        self._manpages = self._get_check_catalog()
+        self._titles = man_pages.man_page_catalog_titles()
+
+        self._has_second_level = None
+        if self._topic and not self._search:
+            for t, has_second_level, title, helptext in man_page_catalog_topics():
+                if t == self._path[0]:
+                    self._has_second_level = has_second_level
+                    self._topic_title = title
+                    break
+
+            if len(self._path) == 2:
+                self._topic_title = self._titles.get(self._path[1], self._path[1])
+
+
+    def title(self):
+        if self._topic and not self._search:
+            heading = "%s - %s" % ( _("Catalog of Check Plugins"), self._topic_title )
+        elif self._search:
+            heading = html.render_text("%s: %s" % (_("Check plugins matching"), self._search))
         else:
             heading = _("Catalog of Check Plugins")
         return heading
 
-    elif phase == "buttons":
+
+    def buttons(self):
         global_buttons()
-        if topic:
-            if len(path) == 2:
-                back_url = html.makeuri([("topic", path[0])])
+        if self._topic:
+            if len(self._path) == 2:
+                back_url = html.makeuri([("topic", self._path[0])])
             else:
                 back_url = html.makeuri([("topic", "")])
             html.context_button(_("Back"), back_url, "back")
-        return
-
-    elif phase == "action":
-        return
-
-    html.help(_("This catalog of check plugins gives you a complete listing of all plugins "
-                "that are shipped with your Check_MK installation. It also allows you to "
-                "access the rule sets for configuring the parameters of the checks and to "
-                "manually create services in case you cannot or do not want to rely on the "
-                "automatic service discovery."))
-
-    search_form( "%s: " % _("Search for check plugins"), "check_plugins" )
-
-    # The maxium depth of the catalog paths is 3. The top level is being rendered
-    # like the WATO main menu. The second and third level are being rendered like
-    # the global settings.
-
-    if topic and not search:
-        render_manpage_topic( manpages, titles, has_second_level, path, topic_title )
-
-    elif search:
-        for path, manpages in get_manpages_after_search( manpages, search ):
-            render_manpage_list( manpages, titles, path, titles.get( path, path ) )
-
-    else:
-        menu_items = []
-        for topic, has_second_level, title, helptext in man_page_catalog_topics():
-            menu_items.append((
-                html.makeuri([("topic", topic)]), title, "plugins_" + topic, None, helptext))
-        render_main_menu(menu_items)
 
 
-def get_manpages_after_search( manpages, search ):
-    this_search = search
-    collection  = {}
+    def page(self):
+        html.help(_("This catalog of check plugins gives you a complete listing of all plugins "
+                    "that are shipped with your Check_MK installation. It also allows you to "
+                    "access the rule sets for configuring the parameters of the checks and to "
+                    "manually create services in case you cannot or do not want to rely on the "
+                    "automatic service discovery."))
 
-    # searches in {"name" : "asd", "title" : "das", ...}
-    def get_matched_entry( entry ):
-        if type( entry ) == dict:
-            name = entry.get( "name", "" )
-            if type( name ) == str:
-                name = name.decode( "utf8" )
+        search_form( "%s: " % _("Search for check plugins"), "check_plugins" )
 
-            title = entry.get( "title", "" )
-            if type( title ) == str:
-                title = title.decode( "utf8" )
-            if this_search in name.lower() or this_search in title.lower():
-                return entry
+        # The maxium depth of the catalog paths is 3. The top level is being rendered
+        # like the WATO main menu. The second and third level are being rendered like
+        # the global settings.
 
-        return None
+        if self._topic and not self._search:
+            self._render_manpage_topic()
 
-    def check_entries( key, entries ):
-        if type( entries ) == list:
-            these_matches = []
-            for entry in entries:
-                match = get_matched_entry( entry )
-                if match:
-                    these_matches.append( match )
+        elif self._search:
+            for path, manpages in self._get_manpages_after_search():
+                self._render_manpage_list(manpages, path, self._titles.get(path, path))
 
-            if these_matches:
-                collection.setdefault( key, [] )
-                collection[key] += these_matches
-
-        elif type(entries) == dict:
-            for key, subentries in entries.items():
-                check_entries( key, subentries )
-
-    for key, entries in manpages.items():
-        check_entries( key, entries )
-
-    return collection.items()
-
-
-def get_check_catalog(args):
-    def path_prefix_matches(p, op):
-        if op and not p:
-            return False
-        elif not op:
-            return True
         else:
-            return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
-
-    def strip_manpage_entry(entry):
-        return dict([ (k,v) for (k,v) in entry.items() if k in [
-            "name", "agents", "title"
-        ]])
-
-    tree = {}
-    if len(args) > 0:
-        only_path = tuple(args)
-    else:
-        only_path = ()
-
-    for path, entries in man_pages.load_man_page_catalog().items():
-        if not path_prefix_matches(path, only_path):
-            continue
-        subtree = tree
-        for component in path[:-1]:
-            subtree = subtree.setdefault(component, {})
-        subtree[path[-1]] = map(strip_manpage_entry, entries)
-
-    for p in only_path:
-        tree = tree[p]
-
-    return tree
+            menu = MainMenu()
+            for topic, has_second_level, title, helptext in man_page_catalog_topics():
+                menu.add_item(
+                    mode_or_url=html.makeuri([("topic", topic)]),
+                    title=title,
+                    icon="plugins_" + topic,
+                    permission=None,
+                    subtitle=helptext)
+            menu.show()
 
 
-def render_manpage_topic(manpages, titles, has_second_level, path, topic_title):
-    if type(manpages) == list:
-        render_manpage_list(manpages, titles, path[-1], topic_title)
-    else:
-        # For some topics we render a second level in the same optic as the first level
-        if len(path) == 1 and has_second_level:
-            menu_items = []
-            for path_comp, subnode in manpages.items():
-                url = html.makeuri([("topic", "%s/%s" % (path[0], path_comp))])
-                title = titles.get(path_comp, path_comp)
-                helptext = get_check_plugin_stats(subnode)
-                menu_items.append((url, title, "check_plugins", None, helptext))
-            render_main_menu(menu_items)
+    def _get_manpages_after_search(self):
+        collection  = {}
 
-        # For the others we directly display the tables
+        # searches in {"name" : "asd", "title" : "das", ...}
+        def get_matched_entry( entry ):
+            if type( entry ) == dict:
+                name = entry.get( "name", "" )
+                if type( name ) == str:
+                    name = name.decode( "utf8" )
+
+                title = entry.get( "title", "" )
+                if type( title ) == str:
+                    title = title.decode( "utf8" )
+                if self._search in name.lower() or self._search in title.lower():
+                    return entry
+
+            return None
+
+        def check_entries( key, entries ):
+            if type( entries ) == list:
+                these_matches = []
+                for entry in entries:
+                    match = get_matched_entry( entry )
+                    if match:
+                        these_matches.append( match )
+
+                if these_matches:
+                    collection.setdefault( key, [] )
+                    collection[key] += these_matches
+
+            elif type(entries) == dict:
+                for key, subentries in entries.items():
+                    check_entries( key, subentries )
+
+        for key, entries in self._manpages.items():
+            check_entries( key, entries )
+
+        return collection.items()
+
+
+    def _get_check_catalog(self):
+        def path_prefix_matches(p, op):
+            if op and not p:
+                return False
+            elif not op:
+                return True
+            else:
+                return p[0] == op[0] and path_prefix_matches(p[1:], op[1:])
+
+        def strip_manpage_entry(entry):
+            return dict([ (k,v) for (k,v) in entry.items() if k in [
+                "name", "agents", "title"
+            ]])
+
+        tree = {}
+        if len(self._path) > 0:
+            only_path = tuple(self._path)
         else:
+            only_path = ()
+
+        for path, entries in man_pages.load_man_page_catalog().items():
+            if not path_prefix_matches(path, only_path):
+                continue
+            subtree = tree
+            for component in path[:-1]:
+                subtree = subtree.setdefault(component, {})
+            subtree[path[-1]] = map(strip_manpage_entry, entries)
+
+        for p in only_path:
+            tree = tree[p]
+
+        return tree
+
+
+    def _render_manpage_topic(self):
+        if type(self._manpages) == list:
+            self._render_manpage_list(self._manpages, self._path[-1], self._topic_title)
+            return
+
+        if len(self._path) == 1 and self._has_second_level:
+            # For some topics we render a second level in the same optic as the first level
+            menu = MainMenu()
+            for path_comp, subnode in self._manpages.items():
+                url = html.makeuri([("topic", "%s/%s" % (self._path[0], path_comp))])
+                title = self._titles.get(path_comp, path_comp)
+                helptext = self._get_check_plugin_stats(subnode)
+
+                menu.add_item(
+                    mode_or_url=url,
+                    title=title,
+                    icon="check_plugins",
+                    permission=None,
+                    subtitle=helptext,
+                )
+            menu.show()
+
+        else:
+            # For the others we directly display the tables
             entries = []
-            for path_comp, subnode in manpages.items():
-                title = titles.get(path_comp, path_comp)
+            for path_comp, subnode in self._manpages.items():
+                title = self._titles.get(path_comp, path_comp)
                 entries.append((title, subnode, path_comp))
+
             entries.sort(cmp = lambda a,b: cmp(a[0].lower(), b[0].lower()))
+
             for title, subnode, path_comp in entries:
-                render_manpage_list(subnode, titles, path_comp, title)
+                self._render_manpage_list(subnode, path_comp, title)
 
 
-def get_check_plugin_stats(subnode):
-    if type(subnode) == list:
-        num_cats = 1
-        num_plugins = len(subnode)
-    else:
-        num_cats = len(subnode)
-        num_plugins = 0
-        for subcat in subnode.values():
-            num_plugins += len(subcat)
+    def _get_check_plugin_stats(self, subnode):
+        if type(subnode) == list:
+            num_cats = 1
+            num_plugins = len(subnode)
+        else:
+            num_cats = len(subnode)
+            num_plugins = 0
+            for subcat in subnode.values():
+                num_plugins += len(subcat)
 
-    text = ""
-    if num_cats > 1:
-        text += "%d %s<br>" % (num_cats, _("sub categories"))
-    text += "%d %s" % (num_plugins, _("check plugins"))
-    return text
-
-
-def render_manpage_list(manpage_list, titles, path_comp, heading):
-    def translate(t):
-        return titles.get(t, t)
-
-    html.h2(heading)
-    table.begin(searchable=False, sortable=False, css="check_catalog")
-    for entry in sorted(manpage_list, cmp=lambda a,b: cmp(a["title"], b["title"])):
-        if type(entry) != dict:
-            continue
-        table.row()
-        url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]), ("back", html.makeuri([]))])
-        table.cell(_("Type of Check"), html.render_a(entry["title"], href=url), css="title")
-        table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
-        table.cell(_("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
-    table.end()
+        text = ""
+        if num_cats > 1:
+            text += "%d %s<br>" % (num_cats, _("sub categories"))
+        text += "%d %s" % (num_plugins, _("check plugins"))
+        return text
 
 
-def mode_check_manpage(phase):
-    check_type = html.var("check_type")
+    def _render_manpage_list(self, manpage_list, path_comp, heading):
+        def translate(t):
+            return self._titles.get(t, t)
 
-    if phase == "title":
+        html.h2(heading)
+        table.begin(searchable=False, sortable=False, css="check_catalog")
+        for entry in sorted(manpage_list, cmp=lambda a,b: cmp(a["title"], b["title"])):
+            if type(entry) != dict:
+                continue
+            table.row()
+            url = html.makeuri([("mode", "check_manpage"), ("check_type", entry["name"]), ("back", html.makeuri([]))])
+            table.cell(_("Type of Check"), "<a href='%s'>%s</a>" % (url, entry["title"]), css="title")
+            table.cell(_("Plugin Name"), "<tt>%s</tt>" % entry["name"], css="name")
+            table.cell(_("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents")
+        table.end()
+
+
+
+class ModeCheckManPage(WatoMode):
+    def __init__(self):
+        super(ModeCheckManPage, self).__init__()
+        self._from_vars()
+
+
+    def _from_vars(self):
+        self._check_type = html.var("check_type")
+
         # TODO: There is one check "sap.value-groups" which will be renamed to "sap.value_groups".
         # As long as the old one is available, allow a minus here.
-        if not re.match("^[-a-zA-Z0-9_.]+$", check_type):
-            raise Exception("Invalid check type")
+        if not re.match("^[-a-zA-Z0-9_.]+$", self._check_type):
+            raise MKUserError(None, "Invalid check type")
 
         # TODO: remove call of automation and then the automation. This can be done once the check_info
         # data is also available in the "cmk." module because the get-check-manpage automation not only
         # fetches the man page. It also contains info from check_info. What a hack.
-        manpage = watolib.check_mk_local_automation("get-check-manpage", [ check_type ])
-        if manpage == None:
+        self._manpage = watolib.check_mk_local_automation("get-check-manpage", [ self._check_type ])
+        if self._manpage == None:
             raise MKUserError(None, _("There is no manpage for this check."))
 
-        html.set_cache("manpage", manpage)
-        return _("Check plugin manual page") + " - " + manpage["header"]["title"]
 
-    elif phase == "buttons":
+    def title(self):
+        return _("Check plugin manual page") + " - " + self._manpage["header"]["title"]
+
+
+    def buttons(self):
         global_buttons()
-        manpage = html.get_cached("manpage")
-        path = manpage["header"]["catalog"]
+        path = self._manpage["header"]["catalog"]
+
         if html.var("back"):
             back_url = html.var("back")
             html.context_button(_("Back"), back_url, "back")
+
         html.context_button(_("All Check Plugins"), html.makeuri_contextless([("mode", "check_plugins")]), "check_plugins")
-        if check_type.startswith("check_"):
-            command = "check_mk_active-" + check_type[6:]
+
+        if self._check_type.startswith("check_"):
+            command = "check_mk_active-" + self._check_type[6:]
         else:
-            command = "check_mk-" + check_type
+            command = "check_mk-" + self._check_type
+
         url = html.makeuri_contextless([("view_name", "searchsvc"), ("check_command", command), ("filled_in", "filter")], filename="view.py")
         html.context_button(_("Find usage"), url, "status")
-        return
-
-    elif phase == "action":
-        return
-    manpage = html.get_cached("manpage")
 
 
+    # TODO
     # We could simply detect on how many hosts and services this plugin
     # is currently in use (Livestatus query) and display this information
-    # together with a link for searching. Then we can remove the dump context
+    # together with a link for searching. Then we can remove the dumb context
     # button, that will always be shown - even if the plugin is not in use.
+    def page(self):
+        html.open_table(class_=["data", "headerleft"])
 
-    html.open_table(class_=["data", "headerleft"])
-
-    html.open_tr()
-    html.th(_("Title"))
-    html.open_td()
-    html.b(manpage["header"]["title"])
-    html.close_td()
-    html.close_tr()
-
-    html.open_tr()
-    html.th(_("Name of plugin"))
-    html.open_td()
-    html.tt(check_type)
-    html.close_td()
-    html.close_tr()
-
-    html.open_tr()
-    html.th(_("Description"))
-    html.td(manpage_text(manpage["header"]["description"]))
-    html.close_tr()
-
-    def show_ruleset(varname):
-        if watolib.g_rulespecs.exists(varname):
-            rulespec = watolib.g_rulespecs.get(varname)
-            url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
-            param_ruleset = html.render_a(rulespec.title, url)
-            html.open_tr()
-            html.th(_("Parameter rule set"))
-            html.open_td()
-            html.icon_button(url, _("Edit parameter rule set for this check type"), "check_parameters")
-            html.write_text(' %s' % param_ruleset)
-            html.close_td()
-            html.close_tr()
-            html.open_tr()
-            html.th(_("Example for Parameters"))
-            html.open_td()
-            vs = rulespec.valuespec
-            vs.render_input("dummy", vs.default_value())
-            html.close_td()
-            html.close_tr()
-
-    if manpage["type"] == "check_mk":
         html.open_tr()
-        html.th(_("Service name"))
-        html.td(HTML(manpage["service_description"].replace("%s", "&#9744;")))
+        html.th(_("Title"))
+        html.open_td()
+        html.b(self._manpage["header"]["title"])
+        html.close_td()
         html.close_tr()
 
-        if manpage.get("group"):
-            group = manpage["group"]
-            varname = "checkgroup_parameters:" + group
+        html.open_tr()
+        html.th(_("Name of plugin"))
+        html.open_td()
+        html.tt(self._check_type)
+        html.close_td()
+        html.close_tr()
+
+        html.open_tr()
+        html.th(_("Description"))
+        html.td(self._manpage_text(self._manpage["header"]["description"]))
+        html.close_tr()
+
+        def show_ruleset(varname):
+            if watolib.g_rulespecs.exists(varname):
+                rulespec = watolib.g_rulespecs.get(varname)
+                url = html.makeuri_contextless([("mode", "edit_ruleset"), ("varname", varname)])
+                param_ruleset = html.render_a(rulespec.title, url)
+                html.open_tr()
+                html.th(_("Parameter rule set"))
+                html.open_td()
+                html.icon_button(url, _("Edit parameter rule set for this check type"), "check_parameters")
+                html.write_text(' %s' % param_ruleset)
+                html.close_td()
+                html.close_tr()
+                html.open_tr()
+                html.th(_("Example for Parameters"))
+                html.open_td()
+                vs = rulespec.valuespec
+                vs.render_input("dummy", vs.default_value())
+                html.close_td()
+                html.close_tr()
+
+        if self._manpage["type"] == "check_mk":
+            html.open_tr()
+            html.th(_("Service name"))
+            html.td(HTML(self._manpage["service_description"].replace("%s", "&#9744;")))
+            html.close_tr()
+
+            if self._manpage.get("group"):
+                group = self._manpage["group"]
+                varname = "checkgroup_parameters:" + group
+                show_ruleset(varname)
+
+        else:
+            varname = "active_checks:" + self._check_type[6:]
             show_ruleset(varname)
 
-    else:
-        varname = "active_checks:" + check_type[6:]
-        show_ruleset(varname)
+        html.close_table()
 
-    html.close_table()
 
-def manpage_text(text):
-    html_code = text.replace("<br>", "\n")\
-                    .replace("<", "&lt;")\
-                    .replace(">", "&gt;")
-    html_code = re.sub("{(.*?)}", "<tt>\\1</tt>", html_code)
-    html_code = re.sub("\n\n+", "<p>", html_code)
-    return html_code
+    def _manpage_text(self, text):
+        html_code = text.replace("<br>", "\n")\
+                        .replace("<", "&lt;")\
+                        .replace(">", "&gt;")
+        html_code = re.sub("{(.*?)}", "<tt>\\1</tt>", html_code)
+        html_code = re.sub("\n\n+", "<p>", html_code)
+        return html_code
 
 
 #.
@@ -15723,77 +15847,57 @@ def manpage_text(text):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def validate_icon(value, varprefix):
-    file_name = value[0]
-    if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (cmk.paths.omd_root, file_name)) \
-       or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.paths.omd_root, file_name)):
-        raise MKUserError(varprefix, _('Your icon conflicts with a Check_MK builtin icon. Please '
-                                       'choose another name for your icon.'))
-
-
-def upload_icon(icon_info):
-    # Add the icon category to the PNG comment
-    from PIL import Image, PngImagePlugin
-    from StringIO import StringIO
-    im = Image.open(StringIO(icon_info['icon'][2]))
-    im.info['Comment'] = icon_info['category']
-    meta = PngImagePlugin.PngInfo()
-    for k,v in im.info.iteritems():
-        if k not in ('interlace', 'gamma', 'dpi', 'transparency', 'aspect'):
-            meta.add_text(k, v, 0)
-
-    # and finally save the image
-    dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.paths.omd_root
-    make_nagios_directories(dest_dir)
-    try:
-        file_name = os.path.basename(icon_info['icon'][0])
-        im.save(dest_dir+'/'+file_name, 'PNG', pnginfo=meta)
-    except IOError, e:
-        # Might happen with interlaced PNG files and PIL version < 1.1.7
-        raise MKUserError(None, _('Unable to upload icon: %s') % e)
-
-
-
-def load_custom_icons():
-    s = IconSelector()
-    return s.available_icons(only_local=True)
-
-
-def mode_icons(phase):
-    if phase == 'title':
+class ModeIcons(WatoMode):
+    def title(self):
         return _('Manage Icons')
 
-    elif phase == 'buttons':
+
+    def buttons(self):
         back_url = html.var("back")
         if back_url:
             html.context_button(_("Back"), back_url, "back")
         else:
             home_button()
-        return
 
-    vs_upload = Dictionary(
-        title = _('Icon'),
-        optional_keys = False,
-        render = "form",
-        elements = [
-            ('icon', ImageUpload(
-                title = _('Icon'),
-                allow_empty = False,
-                max_size = (80, 80),
-                validate = validate_icon,
-            )),
-            ('category', DropdownChoice(
-                title = _('Category'),
-                choices = IconSelector._categories,
-                no_preselect = True,
-            ))
-        ]
-    )
 
-    if phase == 'action':
+    def _load_custom_icons(self):
+        s = IconSelector()
+        return s.available_icons(only_local=True)
+
+
+    def _vs_upload(self):
+        return Dictionary(
+            title = _('Icon'),
+            optional_keys = False,
+            render = "form",
+            elements = [
+                ('icon', ImageUpload(
+                    title = _('Icon'),
+                    allow_empty = False,
+                    max_size = (80, 80),
+                    validate = self._validate_icon,
+                )),
+                ('category', DropdownChoice(
+                    title = _('Category'),
+                    choices = IconSelector._categories,
+                    no_preselect = True,
+                ))
+            ]
+        )
+
+
+    def _validate_icon(self, value, varprefix):
+        file_name = value[0]
+        if os.path.exists("%s/share/check_mk/web/htdocs/images/icon_%s" % (cmk.paths.omd_root, file_name)) \
+           or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.paths.omd_root, file_name)):
+            raise MKUserError(varprefix, _('Your icon conflicts with a Check_MK builtin icon. Please '
+                                           'choose another name for your icon.'))
+
+
+    def action(self):
         if html.has_var("_delete"):
             icon_name = html.var("_delete")
-            if icon_name in load_custom_icons():
+            if icon_name in self._load_custom_icons():
                 c = wato_confirm(_("Confirm Icon deletion"),
                                  _("Do you really want to delete the icon <b>%s</b>?") % icon_name)
                 if c:
@@ -15805,38 +15909,59 @@ def mode_icons(phase):
                     return
 
         elif html.has_var("_do_upload"):
+            vs_upload = self._vs_upload()
             icon_info = vs_upload.from_html_vars('_upload_icon')
             vs_upload.validate_value(icon_info, '_upload_icon')
-            upload_icon(icon_info)
-        return
+            self._upload_icon(icon_info)
 
-    html.h3(_("Upload Icon"))
-    if not config.omd_site():
-        html.message(_("Sorry, you can mange your icons only within OMD environments."))
-        return
 
-    html.p(_("Allowed are single PNG image files with a maximum size of 80x80 px."))
+    def _upload_icon(self, icon_info):
+        # Add the icon category to the PNG comment
+        from PIL import Image, PngImagePlugin
+        from StringIO import StringIO
+        im = Image.open(StringIO(icon_info['icon'][2]))
+        im.info['Comment'] = icon_info['category']
+        meta = PngImagePlugin.PngInfo()
+        for k,v in im.info.iteritems():
+            if k not in ('interlace', 'gamma', 'dpi', 'transparency', 'aspect'):
+                meta.add_text(k, v, 0)
 
-    html.begin_form('upload_form', method='POST')
-    vs_upload.render_input('_upload_icon', None)
-    html.button('_do_upload', _('Upload'), 'submit')
+        # and finally save the image
+        dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.paths.omd_root
+        make_nagios_directories(dest_dir)
+        try:
+            file_name = os.path.basename(icon_info['icon'][0])
+            im.save(dest_dir+'/'+file_name, 'PNG', pnginfo=meta)
+        except IOError, e:
+            # Might happen with interlaced PNG files and PIL version < 1.1.7
+            raise MKUserError(None, _('Unable to upload icon: %s') % e)
 
-    html.hidden_fields()
-    html.end_form()
 
-    icons = sorted(load_custom_icons().items())
-    table.begin("icons", _("Custom Icons"))
-    for icon_name, category_name in icons:
-        table.row()
+    def page(self):
+        html.h3(_("Upload Icon"))
+        html.p(_("Allowed are single PNG image files with a maximum size of 80x80 px."))
 
-        table.cell(_("Actions"), css="buttons")
-        delete_url = make_action_link([("mode", "icons"), ("_delete", icon_name)])
-        html.icon_button(delete_url, _("Delete this Icon"), "delete")
+        html.begin_form('upload_form', method='POST')
+        self._vs_upload().render_input('_upload_icon', None)
+        html.button('_do_upload', _('Upload'), 'submit')
 
-        table.cell(_("Icon"), html.render_icon(icon_name), css="buttons")
-        table.cell(_("Name"), icon_name)
-        table.cell(_("Category"), IconSelector.category_alias(category_name))
-    table.end()
+        html.hidden_fields()
+        html.end_form()
+
+        icons = sorted(self._load_custom_icons().items())
+        table.begin("icons", _("Custom Icons"))
+        for icon_name, category_name in icons:
+            table.row()
+
+            table.cell(_("Actions"), css="buttons")
+            delete_url = make_action_link([("mode", "icons"), ("_delete", icon_name)])
+            html.icon_button(delete_url, _("Delete this Icon"), "delete")
+
+            table.cell(_("Icon"), html.render_icon(icon_name), css="buttons")
+            table.cell(_("Name"), icon_name)
+            table.cell(_("Category"), IconSelector.category_alias(category_name))
+        table.end()
+
 
 #.
 #   .--Passwords-----------------------------------------------------------.
@@ -16149,134 +16274,132 @@ class ModeEditPassword(WatoMode, PasswordStore):
 #   | Simple download page for the builtin agents and plugins              |
 #   '----------------------------------------------------------------------'
 
-def download_table(title, file_titles, paths):
-    forms.header(title)
-    forms.container()
-    for path in paths:
-        os_path  = path
-        relpath  = path.replace(cmk.paths.agents_dir+'/', '')
-        filename = path.split('/')[-1]
-        title = file_titles.get(os_path, filename)
-
-        file_size = os.stat(os_path).st_size
-
-        # FIXME: Rename classes etc. to something generic
-        html.open_div(class_="ruleset")
-        html.open_div(style="width:300px;", class_="text")
-        html.a(title, href="agents/%s" % relpath)
-        html.span("." * 100, class_="dots")
-        html.close_div()
-        html.div(file_size_human_readable(file_size), style="width:50px;", class_="rulecount")
-        html.close_div()
-        html.close_div()
-    forms.end()
-
-def mode_download_agents(phase):
-    if phase == "title":
+class ModeDownloadAgents(WatoMode):
+    def title(self):
         return _("Agents and Plugins")
 
-    elif phase == "buttons":
+
+    def buttons(self):
         global_buttons()
         if 'agents' in modes:
             html.context_button(_("Baked agents"), watolib.folder_preserving_link([("mode", "agents")]), "download_agents")
         html.context_button(_("Release Notes"), "version.py", "mk")
-        return
 
-    elif phase == "action":
-        return
 
-    html.open_div(class_="rulesets")
-    packed = glob.glob(cmk.paths.agents_dir + "/*.deb") \
-            + glob.glob(cmk.paths.agents_dir + "/*.rpm") \
-            + glob.glob(cmk.paths.agents_dir + "/windows/c*.msi")
+    def page(self):
+        html.open_div(class_="rulesets")
+        packed = glob.glob(cmk.paths.agents_dir + "/*.deb") \
+                + glob.glob(cmk.paths.agents_dir + "/*.rpm") \
+                + glob.glob(cmk.paths.agents_dir + "/windows/c*.msi")
 
-    download_table(_("Packaged Agents"), {}, packed)
+        self._download_table(_("Packaged Agents"), {}, packed)
 
-    titles = {
-        ''                         : _('Linux/Unix Agents'),
-        '/plugins'                 : _('Linux/Unix Agents - Plugins'),
-        '/cfg_examples'            : _('Linux/Unix Agents - Example Configurations'),
-        '/cfg_examples/systemd'    : _('Linux Agent - Example configuration using with systemd'),
-        '/windows'                 : _('Windows Agent'),
-        '/windows/plugins'         : _('Windows Agent - Plugins'),
-        '/windows/mrpe'            : _('Windows Agent - MRPE Scripts'),
-        '/windows/cfg_examples'    : _('Windows Agent - Example Configurations'),
-        '/windows/ohm'             : _('Windows Agent - OpenHardwareMonitor (headless)'),
-        '/z_os'                    : _('z/OS'),
-        '/sap'                     : _('SAP R/3'),
-    }
+        titles = {
+            ''                         : _('Linux/Unix Agents'),
+            '/plugins'                 : _('Linux/Unix Agents - Plugins'),
+            '/cfg_examples'            : _('Linux/Unix Agents - Example Configurations'),
+            '/cfg_examples/systemd'    : _('Linux Agent - Example configuration using with systemd'),
+            '/windows'                 : _('Windows Agent'),
+            '/windows/plugins'         : _('Windows Agent - Plugins'),
+            '/windows/mrpe'            : _('Windows Agent - MRPE Scripts'),
+            '/windows/cfg_examples'    : _('Windows Agent - Example Configurations'),
+            '/windows/ohm'             : _('Windows Agent - OpenHardwareMonitor (headless)'),
+            '/z_os'                    : _('z/OS'),
+            '/sap'                     : _('SAP R/3'),
+        }
 
-    banned_paths = [
-        '/bakery',
-        '/special',
-        '/windows/msibuild',
-        '/windows/msibuild/patches',
-        '/windows/sections',
-    ]
-
-    file_titles = {}
-    other_sections = []
-    for root, dirs, files in os.walk(cmk.paths.agents_dir):
-        file_paths = []
-        relpath = root.split('agents')[1]
-        if relpath not in banned_paths:
-            title = titles.get(relpath, relpath)
-            for filename in files:
-                if filename == "CONTENTS":
-                    file_titles.update(read_agent_contents_file(root))
-
-                path = root + '/' + filename
-                if path not in packed and 'deprecated' not in path:
-                    file_paths.append(path)
-
-            other_sections.append((title, file_paths))
-
-    other_sections.sort()
-
-    for title, file_paths in other_sections:
-        useful_file_paths = [
-            p for p in file_paths
-            if file_titles.get(p, "") != None \
-                and not p.endswith("/CONTENTS")
+        banned_paths = [
+            '/bakery',
+            '/special',
+            '/windows/msibuild',
+            '/windows/msibuild/patches',
+            '/windows/sections',
         ]
-        file_titles.update(read_plugin_inline_comments(useful_file_paths))
-        if useful_file_paths:
-            download_table(title, file_titles, sorted(useful_file_paths))
-    html.close_div()
+
+        file_titles = {}
+        other_sections = []
+        for root, dirs, files in os.walk(cmk.paths.agents_dir):
+            file_paths = []
+            relpath = root.split('agents')[1]
+            if relpath not in banned_paths:
+                title = titles.get(relpath, relpath)
+                for filename in files:
+                    if filename == "CONTENTS":
+                        file_titles.update(self._read_agent_contents_file(root))
+
+                    path = root + '/' + filename
+                    if path not in packed and 'deprecated' not in path:
+                        file_paths.append(path)
+
+                other_sections.append((title, file_paths))
+
+        other_sections.sort()
+
+        for title, file_paths in other_sections:
+            useful_file_paths = [
+                p for p in file_paths
+                if file_titles.get(p, "") != None \
+                    and not p.endswith("/CONTENTS")
+            ]
+            file_titles.update(self._read_plugin_inline_comments(useful_file_paths))
+            if useful_file_paths:
+                self._download_table(title, file_titles, sorted(useful_file_paths))
+        html.close_div()
 
 
+    def _download_table(self, title, file_titles, paths):
+        forms.header(title)
+        forms.container()
+        for path in paths:
+            os_path  = path
+            relpath  = path.replace(cmk.paths.agents_dir+'/', '')
+            filename = path.split('/')[-1]
+            title = file_titles.get(os_path, filename)
 
-def read_plugin_inline_comments(file_paths):
-    comment_prefixes = [ "# ", "REM ", "$!# " ]
-    windows_bom = "\xef\xbb\xbf"
-    file_titles = {}
-    for path in file_paths:
-        first_bytes = file(path).read(500)
-        if first_bytes.startswith(windows_bom):
-            first_bytes = first_bytes[len(windows_bom):]
-        first_lines = first_bytes.splitlines()
-        for line in first_lines:
-            for prefix in comment_prefixes:
-                if line.startswith(prefix) and len(line) > len(prefix) and line[len(prefix)].isalpha():
-                    file_titles[path] = line[len(prefix):].strip()
+            file_size = os.stat(os_path).st_size
+
+            # FIXME: Rename classes etc. to something generic
+            html.open_div(class_="ruleset")
+            html.open_div(style="width:300px;", class_="text")
+            html.a(title, href="agents/%s" % relpath)
+            html.span("." * 100, class_="dots")
+            html.close_div()
+            html.div(render.bytes(file_size), style="width:50px;", class_="rulecount")
+            html.close_div()
+            html.close_div()
+        forms.end()
+
+
+    def _read_plugin_inline_comments(self, file_paths):
+        comment_prefixes = [ "# ", "REM ", "$!# " ]
+        windows_bom = "\xef\xbb\xbf"
+        file_titles = {}
+        for path in file_paths:
+            first_bytes = file(path).read(500)
+            if first_bytes.startswith(windows_bom):
+                first_bytes = first_bytes[len(windows_bom):]
+            first_lines = first_bytes.splitlines()
+            for line in first_lines:
+                for prefix in comment_prefixes:
+                    if line.startswith(prefix) and len(line) > len(prefix) and line[len(prefix)].isalpha():
+                        file_titles[path] = line[len(prefix):].strip()
+                        break
+                if path in file_titles:
                     break
-            if path in file_titles:
-                break
-    return file_titles
+        return file_titles
 
 
-def read_agent_contents_file(root):
-    file_titles = {}
-    for line in file(root + "/CONTENTS"):
-        line = line.strip()
-        if line and not line.startswith("#"):
-            file_name, title = line.split(None, 1)
-            if title == "(hide)":
-                file_titles[root + "/" + file_name] = None
-            else:
-                file_titles[root + "/" + file_name] = title
-    return file_titles
-
+    def _read_agent_contents_file(self, root):
+        file_titles = {}
+        for line in file(root + "/CONTENTS"):
+            line = line.strip()
+            if line and not line.startswith("#"):
+                file_name, title = line.split(None, 1)
+                if title == "(hide)":
+                    file_titles[root + "/" + file_name] = None
+                else:
+                    file_titles[root + "/" + file_name] = title
+        return file_titles
 
 #.
 #   .--Network Scan--------------------------------------------------------.
@@ -17098,7 +17221,7 @@ def monitoring_macro_help():
 # for each permission in the list.
 modes = {
    # ident,               permissions, handler function
-   "main"               : ([], mode_main),
+   "main"               : ([], ModeMain),
    "folder"             : (["hosts"], mode_folder),
    "newfolder"          : (["hosts", "manage_folders"], lambda phase: mode_editfolder(phase, True)),
    "editfolder"         : (["hosts" ], lambda phase: mode_editfolder(phase, False)),
@@ -17114,7 +17237,7 @@ modes = {
    "inventory"          : (["hosts"], ModeDiscovery),
    "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
    "object_parameters"  : (["hosts", "rulesets"], mode_object_parameters),
-   "search"             : (["hosts"], mode_search),
+   "search"             : (["hosts"], ModeSearch),
    "bulkinventory"      : (["hosts", "services"], ModeBulkDiscovery),
    "bulkedit"           : (["hosts", "edit_hosts"], mode_bulk_edit),
    "bulkcleanup"        : (["hosts", "edit_hosts"], mode_bulk_cleanup),
@@ -17127,8 +17250,8 @@ modes = {
    "ldap_config"        : (["global"], mode_ldap_config),
    "edit_ldap_connection": (["global"], mode_edit_ldap_connection),
    "static_checks"      : (["rulesets"], ModeStaticChecksRulesets),
-   "check_plugins"      : ([], mode_check_plugins),
-   "check_manpage"      : ([], mode_check_manpage),
+   "check_plugins"      : ([], ModeCheckPlugins),
+   "check_manpage"      : ([], ModeCheckManPage),
 
    "ruleeditor"         : (["rulesets"], ModeRuleEditor),
    "rule_search"        : (["rulesets"], ModeRuleSearch),
@@ -17149,25 +17272,25 @@ modes = {
    "user_notifications" : (["users"], lambda phase: mode_user_notifications(phase, False)),
    "notification_rule_p": (None, lambda phase: mode_notification_rule(phase, True)), # for personal settings
    "user_notifications_p":(None, lambda phase: mode_user_notifications(phase, True)), # for personal settings
-   "timeperiods"        : (["timeperiods"], mode_timeperiods),
-   "edit_timeperiod"    : (["timeperiods"], mode_edit_timeperiod),
-   "import_ical"        : (["timeperiods"], mode_timeperiod_import_ical),
+   "timeperiods"        : (["timeperiods"], ModeTimeperiods),
+   "edit_timeperiod"    : (["timeperiods"], ModeEditTimeperiod),
+   "import_ical"        : (["timeperiods"], ModeTimeperiodImportICal),
    "sites"              : (["sites"], ModeDistributedMonitoring),
    "edit_site"          : (["sites"], ModeEditSite),
    "edit_site_globals"  : (["sites"], ModeEditSiteGlobals),
-   "users"              : (["users"], mode_users),
+   "users"              : (["users"], ModeUsers),
    "edit_user"          : (["users"], mode_edit_user),
    "user_attrs"         : (["users"], lambda phase: mode_custom_attrs(phase, "user")),
    "edit_user_attr"     : (["users"], lambda phase: mode_edit_custom_attr(phase, "user")),
-   "roles"              : (["users"], mode_roles),
-   "role_matrix"        : (["users"], mode_role_matrix),
-   "edit_role"          : (["users"], mode_edit_role),
-   "hosttags"           : (["hosttags"], mode_hosttags),
+   "roles"              : (["users"], ModeRoles),
+   "role_matrix"        : (["users"], ModeRoleMatrix),
+   "edit_role"          : (["users"], ModeEditRole),
+   "hosttags"           : (["hosttags"], ModeHostTags),
    "edit_hosttag"       : (["hosttags"], ModeEditHosttagGroup),
    "edit_auxtag"        : (["hosttags"], ModeEditAuxtag),
    "pattern_editor"     : (["pattern_editor"], mode_pattern_editor),
-   "icons"              : (["icons"], mode_icons),
-   "download_agents"    : (["download_agents"], mode_download_agents),
+   "icons"              : (["icons"], ModeIcons),
+   "download_agents"    : (["download_agents"], ModeDownloadAgents),
    "backup"             : (["backups"], ModeBackup),
    "backup_targets"     : (["backups"], ModeBackupTargets),
    "backup_job_state"   : (["backups"], ModeBackupJobState),
@@ -17492,6 +17615,10 @@ def load_plugins(force):
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = current_language
+
+
+def get_modules():
+    return modules
 
 
 #.

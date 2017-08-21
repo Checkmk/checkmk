@@ -1,0 +1,7 @@
+-I.
+-I../..
+-I..
+-DHAVE_CONFIG_H
+-std=c++14
+-Wall
+-Wextra

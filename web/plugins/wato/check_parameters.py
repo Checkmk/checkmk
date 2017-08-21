@@ -3671,7 +3671,7 @@ register_check_parameters(
         title = _("Process Name"),
         help = _("This name will be used in the description of the service"),
         allow_empty = False,
-        regex = "^[a-zA-Z_0-9 _.-]*$",
+        regex = "^[a-zA-Z_0-9 _.-/]*$",
         regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
                         "dot and hyphon for your service description"),
     ),

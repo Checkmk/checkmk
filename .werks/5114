@@ -1,0 +1,9 @@
+Title: ps, ps.perf: Allow "/" in process name in manual checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.8p26
+Date: 1503318885
+Class: fix
+
+

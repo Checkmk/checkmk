@@ -420,7 +420,7 @@ def inventory_if_common(info, has_nodeinfo = False):
 
                     if ifSpeed != "" and if_inventory_monitor_speed:
                         params["speed"] = int(ifSpeed)
-                    local_seen.add(ifIndex)
+                    local_seen.add(item)
                     pre_inventory.append( (item, "%r" % params, int(ifIndex)) )
 
         global_seen = global_seen.union(local_seen)

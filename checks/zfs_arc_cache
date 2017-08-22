@@ -253,7 +253,7 @@
 def parse_zfs_arc_cache(info):
     parsed = {}
     for line in info:
-        if not (len(line) <= 2 or line[1] == "=" or line[2].isdigit()):
+        if not (len(line) >= 3 and line[1] == "=" and line[2].isdigit()):
             continue
 
         factor = 1

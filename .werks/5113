@@ -1,0 +1,11 @@
+Title: cifsmounts, nfsmounts: Fixed wrong reported error message if user has not right permissions on mount point
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.2.8p26
+Date: 1503055157
+
+

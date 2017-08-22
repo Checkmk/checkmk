@@ -13,6 +13,7 @@
     * 5096 FIX: mk_oracle_crs: crs_stat command is deprecated since Oracle 11gR2; Now the plugin handles that correctly
     * 4804 FIX: brocade_fcport: Fix limiting discovered ports by operational and physical status...
     * 5110 FIX: appdynamics_memory: Fixed crashing if max. available for heap or non-heap memory is zero
+    * 5113 FIX: cifsmounts, nfsmounts: Fixed wrong reported error message if user has not right permissions on mount point
     * 5114 FIX: ps, ps.perf: Allow "/" in process name in manual checks
 
 

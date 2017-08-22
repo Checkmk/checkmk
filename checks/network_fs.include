@@ -24,45 +24,73 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example out from agent:
+
 # <<<...mounts>>>
 # /foobar hanging 0 0 0 0
 # /with spaces ok 217492 123563 112515 524288
+# /with spaces Permission denied
 
-def inventory_network_fs_mounts(info):
-    return [ (" ".join(line[:-5]), None) for line in info ]
 
-def check_network_fs_mounts(item, _no_params, info):
+def parse_network_fs_mounts(info):
+    parsed = {}
     for line in info:
-        mountpoint = " ".join(line[:-5])
-        if mountpoint == item:
-            # On some operating systems there is no information about
-            # used and free space, but just dahshes (e.g. AIX)
-            if line[-4] == '-':
-                if line[-5] == 'ok':
-                   return 0, "mount seems OK"
-                else:
-                   return 2, "Server not responding"
+        if " ".join(line[-2:]) == "Permission denied":
+            parsed.setdefault(" ".join(line[:-2]), {"state": "Permission denied"})
+
+        else:
+            parsed.setdefault(" ".join(line[:-5]), {
+                "state": line[-5],
+                "data": line[-4:],
+            })
+
+    return parsed
 
 
-            size_blocks = int(line[-4])
-            free_blocks = int(line[-2]) # for non-root user
-            blocksize = int(line[-1])
+def inventory_network_fs_mounts(parsed):
+    for mp in parsed:
+        yield mp, None
 
-            if size_blocks <= 0 or free_blocks < 0 or blocksize > 1024*1024:
-                return (2, "Stale fs handle")
 
-            if line[-5] == 'ok':
-                gb = 1024 * 1024 * 1024.0
-                size_gb = (size_blocks * blocksize) / gb
-                if size_gb == 0:
-                    return (0, "server is responding")
+def check_network_fs_mounts(item, params, parsed):
+    if item in parsed:
+        attrs = parsed[item]
+        state = attrs["state"]
+        data = attrs.get("data")
 
-                free_gb = (free_blocks * blocksize) / gb
-                used_gb = size_gb - free_gb
-                used_perc = 100.0 * used_gb / size_gb
-                return (0, "%.1f%% used (%.1f of %.1f GB)" % (used_perc, used_gb, size_gb))
+        if state == "Permission denied" or data is None:
+            return 2, "Permissions denied"
+
+        size_blocks_, unused_, free_blocks_, block_size_ = data
+        if size_blocks_ == "-":
+            if state == 'ok':
+               return 0, "mount seems OK"
             else:
-                return (2, "server not responding")
-    return (3, "not mounted")
+               return 2, "Server not responding"
 
+        size_blocks = int(size_blocks_)
+        free_blocks = int(free_blocks_) # for non-root user
+        blocksize   = int(block_size_)
+
+        if size_blocks <= 0 or free_blocks < 0 or blocksize > 1024*1024:
+            return 2, "Stale fs handle"
+
+        size_bytes = size_blocks * blocksize
+        free_bytes = free_blocks * blocksize
+        used_bytes = size_bytes - free_bytes
+        used_perc  = 100.0 * used_bytes / size_bytes
+        perfdata   = None
+        if params is not None and params.get("has_perfdata"):
+            perfdata = [("fs_size", size_bytes), ("fs_used", used_bytes)]
+
+        if state == 'ok':
+            if size_bytes == 0:
+                return 0, "server is responding", perfdata
+
+            return 0, "%.1f%% used (%s of %s)" % \
+                      (used_perc, get_bytes_human_readable(used_bytes),
+                       get_bytes_human_readable(size_bytes)), perfdata
+
+        else:
+            return 2, "server not responding", perfdata
+
+    return 3, "%s not mounted" % item

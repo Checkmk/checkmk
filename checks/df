@@ -94,49 +94,43 @@ def parse_df(info):
     df_blocks = []
     df_inodes = []
     btrfs_devices = set() # We might generalize that later
-    lines = iter(info)
 
-    try:
-        is_inode = False
-        while True:
-            line = lines.next()
-            if line[-1] == '[df_inodes_start]':
-                is_inode = True
-                continue
-            elif line[-1] == '[df_inodes_end]':
-                is_inode = False
-                continue
+    is_inode = False
+    for line in info:
+        if line[-1] == '[df_inodes_start]':
+            is_inode = True
+            continue
+        elif line[-1] == '[df_inodes_end]':
+            is_inode = False
+            continue
 
-            try:
-                int(line[1])
-            except ValueError:
-                pass
+        try:
+            int(line[1])
+        except ValueError:
+            pass
+        else:
+            line = [ line[0], None ] + line[1:]
+
+        if not is_inode:
+            # Handle known cases, where the file system contains spaces
+            for index, entry in enumerate(line):
+                if entry == "NTFS":
+                    line = [ " ".join(line[:index]) ] + [line[index]] + line[index+1:index+5] + [ " ".join(line[index+5:]) ]
+                    break
+
+            if line[2] == "File" and line[3] == "System":
+                line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
+
+            if line[1] == "btrfs":
+                device = line[0]
+                if device not in btrfs_devices:
+                    btrfs_devices.add(device)
+                    df_blocks.append(line[:6] + [ "btrfs " + line[0] ]) # replace mount point with device
+
             else:
-                line = [ line[0], None ] + line[1:]
-
-            if not is_inode:
-                # Handle known cases, where the file system contains spaces
-                for index, entry in enumerate(line):
-                    if entry == "NTFS":
-                        line = [ " ".join(line[:index]) ] + [line[index]] + line[index+1:index+5] + [ " ".join(line[index+5:]) ]
-                        break
-
-                if line[2] == "File" and line[3] == "System":
-                    line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
-
-                if line[1] == "btrfs":
-                    device = line[0]
-                    if device not in btrfs_devices:
-                        btrfs_devices.add(device)
-                        df_blocks.append(line[:6] + [ "btrfs " + line[0] ]) # replace mount point with device
-
-                else:
-                    df_blocks.append(line)
-            else:
-                df_inodes.append(line)
-
-    except StopIteration:
-        pass
+                df_blocks.append(line)
+        else:
+            df_inodes.append(line)
 
     return df_blocks, df_inodes
 

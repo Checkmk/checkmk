@@ -1,0 +1,10 @@
+Title: zfs_arc_cache: Fixed wrong detected lines from agent output if they contain no counters, eg. 'class = misc'
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 1.5.0i1
+Date: 1503394551
+Class: fix
+
+

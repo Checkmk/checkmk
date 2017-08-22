@@ -1144,6 +1144,16 @@ class CMKWebSession(WebSession):
                 "Failed to activate %s: %r" % (site_id, status)
             assert status["_time_ended"] > time_started
 
+        # HACK: Activating changes can involve an asynchronous(!) monitoring
+        # core restart/reload, so e.g. querying a Livestatus table immediately
+        # might not reflect the changes yet. The right way to handle this would
+        # be polling the "program_start" column of the "status" table until the
+        # reload is complete. But this will only work if there is an actual
+        # restart/reload involved, which we don't know here, only our caller.
+        # Ugly workaround: Wait a moment and hope for the best, wasting a few
+        # seconds is better than a false positive during testing...  >:-P
+        time.sleep(2)
+
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
         result = self._api_request("webapi.py?action=get_graph", {

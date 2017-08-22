@@ -812,7 +812,7 @@ class APICallHosttags(APICallCollection):
         hosttags_dict = hosttags_config.get_dict_format()
         if "configuration_hash" in request:
             validate_config_hash(request["configuration_hash"], hosttags_dict)
-        del request["configuration_hash"]
+            del request["configuration_hash"]
 
         # Check for conflicts with existing configuration
         # Tags may be either specified grouped in a host/folder configuration, e.g agent/cmk-agent,

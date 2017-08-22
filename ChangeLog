@@ -15,6 +15,7 @@
     * 5110 FIX: appdynamics_memory: Fixed crashing if max. available for heap or non-heap memory is zero
     * 5113 FIX: cifsmounts, nfsmounts: Fixed wrong reported error message if user has not right permissions on mount point
     * 5114 FIX: ps, ps.perf: Allow "/" in process name in manual checks
+    * 5115 FIX: zfs_arc_cache: Fixed wrong detected lines from agent output if they contain no counters, eg. 'class = misc'
 
 
 1.2.8p25:

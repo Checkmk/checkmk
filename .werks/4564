@@ -1,0 +1,14 @@
+Title: Compatibility fix for windows agent updater
+Level: 1
+Component: agents
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.5.0i1
+Date: 1503477269
+
+The command cmk-update-agent sometimes fails with an error message like 
+"Loadlibrary() argument 1 must be string not unicode error" when running on Windows.
+The error cause is an incompatibility within Python 2.7.13 and some Python libraries.
+We fix this issue by using Python 2.7.12 instead.

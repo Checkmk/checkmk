@@ -842,7 +842,7 @@ class APICallHosttags(APICallCollection):
                                       "configuration: %s") % ", ".join(missing_tags))
 
         changed_hosttags_config.save()
-        add_change("edit-hosttags", _("Updated host tags through Web-API"))
+        watolib.add_change("edit-hosttags", _("Updated host tags through Web-API"))
 
 
     def _get_used_grouped_tags(self):

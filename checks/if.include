@@ -311,8 +311,6 @@ def inventory_if_common(info, has_nodeinfo = False):
         group_patterns = _prepare_if_group_patterns_from_conf()
 
         local_seen  = set()
-        seen_items  = set()
-        duplicate   = set()
         have_groups = {}
 
         # Determine whether single, grouped or both
@@ -404,24 +402,17 @@ def inventory_if_common(info, has_nodeinfo = False):
                 is_only_in_group = True
 
             # Prepare single interfaces
-            if not is_only_in_group:
-                if ifIndex in global_seen:
-                    continue
+            if not is_only_in_group and ifIndex not in global_seen and \
+               ifType in porttypes and ifOperStatus in portstates and \
+               port_match(ifAlias, match_alias) and port_match(ifDescr, match_desc):
+                params = {}
+                if if_inventory_monitor_state:
+                    params["state"] = [ ifOperStatus ]
 
-                if item in seen_items: # duplicate
-                    duplicate.add(item)
-                seen_items.add(item)
-
-                if ifType in porttypes and ifOperStatus in portstates and \
-                    port_match(ifAlias, match_alias) and port_match(ifDescr, match_desc):
-                    params = {}
-                    if if_inventory_monitor_state:
-                        params["state"] = [ ifOperStatus ]
-
-                    if ifSpeed != "" and if_inventory_monitor_speed:
-                        params["speed"] = int(ifSpeed)
-                    local_seen.add(ifIndex)
-                    pre_inventory.append( (item, "%r" % params, int(ifIndex)) )
+                if ifSpeed != "" and if_inventory_monitor_speed:
+                    params["speed"] = int(ifSpeed)
+                local_seen.add(ifIndex)
+                pre_inventory.append((item, "%r" % params, int(ifIndex)))
 
         global_seen = global_seen.union(local_seen)
 
@@ -464,9 +455,11 @@ def inventory_if_common(info, has_nodeinfo = False):
                 pre_inventory.append((group_name, "%r" % params, 1))
 
     inventory = []
+    s = set()
+    duplicates = set(x[0] for x in pre_inventory if x[0] in s or s.add(x[0]))
     # Check for duplicate items (e.g. when using Alias as item and the alias is not unique)
     for item, params, index in pre_inventory:
-        if item in duplicate:
+        if item in duplicates:
             new_item = "%s %d" % (item, index)
         else:
             new_item = item

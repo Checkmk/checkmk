@@ -36,9 +36,9 @@
 
 using minutes_d = std::chrono::duration<double, std::ratio<60>>;
 
-inline double elapsed_ms_since(std::chrono::system_clock::time_point then) {
+inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {
     using namespace std::chrono;
-    return duration_cast<duration<double, std::milli>>(system_clock::now() -
+    return duration_cast<duration<double, std::milli>>(steady_clock::now() -
                                                        then)
         .count();
 }

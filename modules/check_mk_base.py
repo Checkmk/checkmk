@@ -682,7 +682,7 @@ def read_cache_file(relpath, max_cache_age):
         or (simulation_mode and not opt_no_cache) ):
         if cachefile_age(cachefile) <= max_cache_age or simulation_mode:
             f = open(cachefile, "r")
-            result = f.read(10000000)
+            result = f.read(100000000)
             f.close()
             if len(result) > 0:
                 console.verbose("Using data from cachefile %s.\n" % cachefile)
